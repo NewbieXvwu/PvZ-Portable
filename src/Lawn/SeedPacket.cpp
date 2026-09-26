@@ -918,8 +918,8 @@ bool SeedPacket::MouseHitTest(int theX, int theY, HitResult* theHitResult)
 
 SeedBank::SeedBank()
 {
-	mWidth = IMAGE_SEEDBANK->GetWidth();
-	mHeight = IMAGE_SEEDBANK->GetHeight();
+	mWidth = IMAGE_SEEDBANK ? IMAGE_SEEDBANK->GetWidth() : 0;
+	mHeight = IMAGE_SEEDBANK ? IMAGE_SEEDBANK->GetHeight() : 0;
 
 	mNumPackets = 0;
 	mConveyorBeltCounter = 0;
@@ -1165,7 +1165,7 @@ void SeedBank::UpdateConveyorBelt()
 void SeedBank::UpdateWidth()
 {
 	mNumPackets = mBoard->GetNumSeedsInBank();
-	mWidth = IMAGE_SEEDBANK->GetWidth() + mBoard->GetSeedBankExtraWidth();
+	mWidth = (IMAGE_SEEDBANK ? IMAGE_SEEDBANK->GetWidth() : 0) + mBoard->GetSeedBankExtraWidth();
 	for (int i = 0; i < mNumPackets; i++)
 	{
 		mSeedPackets[i].mX = mBoard->GetSeedPacketPositionX(i);

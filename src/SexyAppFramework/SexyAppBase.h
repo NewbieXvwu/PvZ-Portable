@@ -172,6 +172,7 @@ public:
 	double					mDemoMusicVolume;
 	double					mDemoSfxVolume;
 	bool					mNoSoundNeeded;
+	bool						mHeadlessMode;
 	bool					mWantFMod;
 	bool					mCmdLineParsed;
 	int						mArgc;

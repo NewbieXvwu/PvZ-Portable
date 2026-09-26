@@ -318,6 +318,7 @@ SexyAppBase::SexyAppBase()
 	mAlphaDisabled = false;
 	mDebugKeysEnabled = false;
 	mNoSoundNeeded = false;
+	mHeadlessMode = false;
 	mWantFMod = false;
 
 	mSyncRefreshRate = 100;
@@ -3303,6 +3304,11 @@ void SexyAppBase::HandleCmdLineParam(std::string_view theParamName, std::string_
 	{
 		mIsScreenSaver = true;
 	}
+	else if (theParamName == "-headless")
+	{
+		mHeadlessMode = true;
+		mNoSoundNeeded = true;
+	}
 	else if (theParamName == "-resdir")
 	{
 		mResourceDir = std::string(theParamValue);
@@ -3463,9 +3469,10 @@ void SexyAppBase::Init()
 
 	mWidgetManager->Resize(Rect(0, 0, mWidth, mHeight), Rect(0, 0, mWidth, mHeight));
 
-	MakeWindow();
+	if (!mHeadlessMode)
+		MakeWindow();
 
-	if (mGLInterface == nullptr)
+	if (!mHeadlessMode && mGLInterface == nullptr)
 	{
 		Sexy::LogErrorLn("FATAL: Failed to create OpenGL interface.");
 		mShutdown = true;
@@ -3486,7 +3493,7 @@ void SexyAppBase::Init()
 		mSyncRefreshRate = mDemoBuffer.ReadByte();
 	}
 
-	if (mSoundManager == nullptr)
+	if (!mHeadlessMode && mSoundManager == nullptr)
 		mSoundManager = std::make_unique<SDLSoundManager>();
 
 	SetSfxVolume(mSfxVolume);
@@ -3495,14 +3502,15 @@ void SexyAppBase::Init()
 
 	SetMusicVolume(mMusicVolume);
 
-	if (IsScreenSaver())
+	if (!mHeadlessMode && IsScreenSaver())
 	{
 		SetCursor(CURSOR_NONE);
 	}
 
 	InitHook();
 
-	InitInput();
+	if (!mHeadlessMode)
+		InitInput();
 
 	mInitialized = true;
 }
@@ -4101,8 +4109,15 @@ void SexyAppBase::SetMasterVolume(double theMasterVolume)
 
 void SexyAppBase::AddMemoryImage(MemoryImage* theMemoryImage)
 {
-	std::scoped_lock anAutoCrit(mGLInterface->mCritSect);
-	mMemoryImageSet.insert(theMemoryImage);
+	if (mGLInterface != nullptr)
+	{
+		std::scoped_lock anAutoCrit(mGLInterface->mCritSect);
+		mMemoryImageSet.insert(theMemoryImage);
+	}
+	else
+	{
+		mMemoryImageSet.insert(theMemoryImage);
+	}
 }
 
 void SexyAppBase::RemoveMemoryImage(MemoryImage* theMemoryImage)
@@ -4113,6 +4128,10 @@ void SexyAppBase::RemoveMemoryImage(MemoryImage* theMemoryImage)
 		MemoryImageSet::iterator anItr = mMemoryImageSet.find(theMemoryImage);
 		if (anItr != mMemoryImageSet.end())
 			mMemoryImageSet.erase(anItr);
+	}
+	else
+	{
+		mMemoryImageSet.erase(theMemoryImage);
 	}
 
 	Remove3DData(theMemoryImage);

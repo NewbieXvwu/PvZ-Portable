@@ -7418,6 +7418,8 @@ void Zombie::BungeeDie()
 
 void Zombie::DieNoLoot()
 {
+	if (!mDead)
+		mBoard->mZombiesKilled++;
 	StopZombieSound();
 	AttachmentDie(mAttachmentID);
 	mApp->RemoveReanimation(mBodyReanimID);

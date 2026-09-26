@@ -23,10 +23,13 @@
 #define __SAVEGAMECONTEXT_H__
 
 #include <string>
+#include <vector>
 
 class Board;
 
 bool				LawnLoadGame(Board* theBoard, const std::string& theFilePath);
 bool				LawnSaveGame(Board* theBoard, const std::string& theFilePath);
+bool				LawnLoadGameFromMemory(Board* theBoard, const std::vector<unsigned char>& theData);
+bool				LawnSaveGameToMemory(Board* theBoard, std::vector<unsigned char>& theData);
 
 #endif

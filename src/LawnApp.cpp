@@ -23,11 +23,17 @@
 #include <cstdarg>
 #include <cstdio>
 #include <format>
+#include <sstream>
+#include <cstdlib>
 #include "LawnApp.h"
 #include "Resources.h"
 #include "Lawn/LawnCommon.h"
 #include "Lawn/Board.h"
+#include "Lawn/Coin.h"
+#include "Lawn/CursorObject.h"
 #include "Lawn/Plant.h"
+#include "Lawn/Projectile.h"
+#include "Lawn/SeedPacket.h"
 #include "Lawn/Zombie.h"
 #include "Lawn/Cutscene.h"
 #include "GameConstants.h"
@@ -166,6 +172,7 @@ LawnApp::LawnApp()
 	mCrazyDaveBlinkCounter = 0;
 	mCrazyDaveBlinkReanimID = ReanimationID::REANIMATIONID_NULL;
 	mCrazyDaveMessageIndex = -1;
+	mEnvironmentMode = false;
 }
 
 LawnApp::~LawnApp()
@@ -242,7 +249,7 @@ void LawnApp::Shutdown()
 void LawnApp::ShutdownHook()
 {
 	// Save mid-level game while the music is still alive, before Shutdown() stops it.
-	if (mBoard)
+	if (mBoard && !mEnvironmentMode)
 	{
 		mBoardResult = BoardResult::BOARDRESULT_QUIT_APP;
 		mBoard->TryToSaveGame();
@@ -1204,10 +1211,13 @@ void LawnApp::Init()
 	mMaxPlays = GetInteger("MaxPlays", 0);
 	mMaxTime = GetInteger("MaxTime", 60);
 
-	mTitleScreen = std::make_unique<TitleScreen>(this);
-	mTitleScreen->Resize(0, 0, mWidth, mHeight);
-	mWidgetManager->AddWidget(mTitleScreen.get());
-	mWidgetManager->SetFocus(mTitleScreen.get());
+	if (!mHeadlessMode && !mEnvironmentMode)
+	{
+		mTitleScreen = std::make_unique<TitleScreen>(this);
+		mTitleScreen->Resize(0, 0, mWidth, mHeight);
+		mWidgetManager->AddWidget(mTitleScreen.get());
+		mWidgetManager->SetFocus(mTitleScreen.get());
+	}
 
 #ifdef PVZ_DEBUG
 	int aDuration = mTimer.GetDuration();
@@ -1248,14 +1258,314 @@ void LawnApp::Init()
 	mTimer.Start();
 
 	ReanimatorLoadDefinitions(gLawnReanimationArray, ReanimationType::NUM_REANIMS);
-	ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_LOADBAR_SPROUT, true);
-	ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_LOADBAR_ZOMBIEHEAD, true);
+	if (!mHeadlessMode)
+	{
+		ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_LOADBAR_SPROUT, true);
+		ReanimatorEnsureDefinitionLoaded(ReanimationType::REANIM_LOADBAR_ZOMBIEHEAD, true);
+	}
 
 #ifdef PVZ_DEBUG
 	aDuration = mTimer.GetDuration();
 	PvzpLogLn("loading: 'loaderbar' {} ms", aDuration);
-#endif
+	#endif
 	mTimer.Start();
+	if (mEnvironmentMode)
+	{
+		LoadingThreadProc();
+		mLoadingThreadCompleted = true;
+		mLoaded = !mLoadingFailed;
+	}
+}
+
+bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedType>& deck)
+{
+	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || deck.empty() || deck.size() > SEEDBANK_MAX)
+		return false;
+
+	if (!mPlayerInfo)
+	{
+		mPlayerInfo = mProfileMgr->GetAnyProfile();
+		if (!mPlayerInfo)
+			mPlayerInfo = mProfileMgr->AddProfile("PvZEnv");
+	}
+	if (!mPlayerInfo)
+		return false;
+
+	mPlayerInfo->mLevel = level;
+	mPlayerInfo->mFinishedAdventure = 1;
+	std::fill(std::begin(mPlayerInfo->mPurchases), std::end(mPlayerInfo->mPurchases), 0);
+	mGameMode = GameMode::GAMEMODE_ADVENTURE;
+	mGameScene = GameScenes::SCENE_LOADING;
+	mBoardResult = BoardResult::BOARDRESULT_NONE;
+	mAppRandSeed = static_cast<int>(seed);
+	mRandSeed = seed;
+	Sexy::SRand(seed);
+	std::srand(seed);
+	BoardInitForPlayer();
+
+	MakeNewBoard();
+	mBoard->InitLevel();
+	mBoard->mSeedBank->mNumPackets = static_cast<int>(deck.size());
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		packet.mIndex = i;
+		packet.mX = mBoard->GetSeedPacketPositionX(i);
+		packet.mY = 8;
+		packet.SetPacketType(deck[i]);
+	}
+	mBoard->mTutorialState = TutorialState::TUTORIAL_OFF;
+	mBoard->mTutorialTimer = -1;
+	mBoard->ClearAdvice(AdviceType::ADVICE_NONE);
+	mMusic->mMusicDisabled = true;
+	mGameScene = GameScenes::SCENE_PLAYING;
+	mBoard->StartLevel();
+	return true;
+}
+
+bool LawnApp::EnvironmentPlant(int packetIndex, int col, int row)
+{
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || col < 0 || col >= MAX_GRID_SIZE_X || row < 0 || row >= MAX_GRID_SIZE_Y ||
+		packetIndex < 0 || packetIndex >= mBoard->mSeedBank->mNumPackets)
+		return false;
+
+	SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[packetIndex];
+	if (!packet.CanPickUp())
+		return false;
+	SeedType seed = packet.mPacketType == SeedType::SEED_IMITATER && packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
+	if (mBoard->CanPlantAt(col, row, seed) != PlantingReason::PLANTING_OK)
+		return false;
+
+	CursorObject& cursor = *mBoard->mCursorObject;
+	cursor.mCursorType = CursorType::CURSOR_TYPE_PLANT_FROM_BANK;
+	cursor.mType = packet.mPacketType;
+	cursor.mImitaterType = packet.mImitaterType;
+	cursor.mSeedBankIndex = packetIndex;
+	mBoard->MouseDownWithPlant(mBoard->GridToPixelX(col, row) + 40, mBoard->GridToPixelY(col, row) + 40, 1);
+	return true;
+}
+
+bool LawnApp::EnvironmentShovel(int col, int row)
+{
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || col < 0 || col >= MAX_GRID_SIZE_X || row < 0 || row >= MAX_GRID_SIZE_Y)
+		return false;
+
+	Plant* plant = mBoard->GetTopPlantAt(col, row, PlantPriority::TOPPLANT_ANY);
+	if (!plant)
+		return false;
+	uint32_t shoveled = mBoard->mPlantsShoveled;
+	mBoard->mCursorObject->mCursorType = CursorType::CURSOR_TYPE_SHOVEL;
+	mBoard->MouseDownWithTool(mBoard->GridToPixelX(col, row) + 40, mBoard->GridToPixelY(col, row) + 40, 1, CursorType::CURSOR_TYPE_SHOVEL);
+	mBoard->ClearCursor();
+	return mBoard->mPlantsShoveled != shoveled;
+}
+
+void LawnApp::EnvironmentWait(int ticks)
+{
+	if (!mBoard || ticks < 0 || ticks > 1000000)
+		return;
+	for (int i = 0; i < ticks && !EnvironmentTerminal(); ++i)
+	{
+		mBoard->ProcessDeleteQueue();
+		if (mLoadingThreadCompleted && mEffectSystem)
+			mEffectSystem->ProcessDeleteQueue();
+		for (Coin* coin : mBoard->mCoins)
+		{
+			if (!coin->mDead && coin->IsSun())
+				coin->ScoreCoin();
+		}
+		mBoard->Update();
+	}
+}
+
+int LawnApp::EnvironmentWaitDecision(int maxTicks)
+{
+	if (!mBoard || maxTicks < 1 || maxTicks > 1000000 || EnvironmentTerminal())
+		return 0;
+
+	auto decisionSignature = [this]()
+	{
+		std::ostringstream signature;
+		signature << mBoard->mCurrentWave << ',' << mBoard->mTotalSpawnedWaves << ',' << mBoard->mSunMoney / 50
+			<< ',' << mBoard->mTriggeredLawnMowers << ',' << static_cast<int>(mGameScene) << ',' << mBoard->mLevelComplete;
+		for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+		{
+			SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+			signature << '|' << static_cast<int>(packet.mPacketType) << ':' << packet.CanPickUp();
+		}
+		for (const Plant* plant : mBoard->mPlants)
+		{
+			if (!plant->mDead)
+				signature << '|' << static_cast<int>(plant->mSeedType) << ':' << plant->mPlantCol << ':' << plant->mRow << ':' << plant->mPlantHealth / 100;
+		}
+		for (const Zombie* zombie : mBoard->mZombies)
+		{
+			if (!zombie->mDead)
+				signature << '|' << static_cast<int>(zombie->mZombieType) << ':' << zombie->mRow << ':'
+					<< static_cast<int>(zombie->mPosX / 180.0f) << ':' << zombie->mBodyHealth / 100 << ':'
+					<< zombie->mHelmHealth / 100 << ':' << zombie->mShieldHealth / 100;
+		}
+		for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+			for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+				signature << '|' << static_cast<int>(mBoard->mGridSquareType[col][row]);
+		return signature.str();
+	};
+
+	const std::string initialSignature = decisionSignature();
+	int ticksAdvanced = 0;
+		// ponytail: the 300-tick floor limits frequent no-op decisions; lower it when faster reactions are needed.
+	while (ticksAdvanced < maxTicks && !EnvironmentTerminal())
+	{
+		mBoard->ProcessDeleteQueue();
+		if (mLoadingThreadCompleted && mEffectSystem)
+			mEffectSystem->ProcessDeleteQueue();
+		for (Coin* coin : mBoard->mCoins)
+		{
+			if (!coin->mDead && coin->IsSun())
+				coin->ScoreCoin();
+		}
+		mBoard->Update();
+		++ticksAdvanced;
+		if (ticksAdvanced >= std::min(maxTicks, 300) && decisionSignature() != initialSignature)
+			break;
+	}
+	return ticksAdvanced;
+}
+
+bool LawnApp::EnvironmentTerminal() const
+{
+	return !mBoard || mBoard->mLevelComplete || mBoardResult == BoardResult::BOARDRESULT_WON ||
+		mBoardResult == BoardResult::BOARDRESULT_LOST || mGameScene == GameScenes::SCENE_ZOMBIES_WON;
+}
+
+std::string LawnApp::EnvironmentObservation(bool privileged) const
+{
+	if (!mBoard)
+		return "null";
+
+	std::ostringstream out;
+	out << "{\"level\":" << mBoard->mLevel << ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
+		<< ",\"tick\":" << mBoard->mMainCounter
+		<< ",\"sun\":" << mBoard->mSunMoney << ",\"wave\":" << mBoard->mCurrentWave
+		<< ",\"wave_count\":" << mBoard->mNumWaves
+		<< ",\"terminal\":" << (EnvironmentTerminal() ? "true" : "false")
+		<< ",\"result\":" << static_cast<int>(mBoardResult) << ",\"grid\":[";
+	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+	{
+		if (row) out << ',';
+		out << '[';
+		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+		{
+			if (col) out << ',';
+			out << static_cast<int>(mBoard->mGridSquareType[col][row]);
+		}
+		out << ']';
+	}
+	out << "],\"packets\":[";
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		if (i) out << ',';
+		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		out << "{\"index\":" << i << ",\"type\":" << static_cast<int>(packet.mPacketType)
+			<< ",\"imitater_type\":" << static_cast<int>(packet.mImitaterType)
+			<< ",\"active\":" << (packet.mActive ? "true" : "false")
+			<< ",\"cooldown\":" << packet.mRefreshCounter << '}';
+	}
+	out << "],\"plants\":[";
+	bool first = true;
+	for (const Plant* plant : mBoard->mPlants)
+	{
+		if (plant->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << "{\"type\":" << static_cast<int>(plant->mSeedType) << ",\"imitater_type\":" << static_cast<int>(plant->mImitaterType)
+			<< ",\"col\":" << plant->mPlantCol << ",\"row\":" << plant->mRow << ",\"health\":" << plant->mPlantHealth << '}';
+	}
+	out << "],\"zombies\":[";
+	first = true;
+	for (const Zombie* zombie : mBoard->mZombies)
+	{
+		if (zombie->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
+			<< ",\"x\":" << zombie->mPosX << ",\"y\":" << zombie->mPosY << ",\"body_health\":" << zombie->mBodyHealth
+			<< ",\"helm_health\":" << zombie->mHelmHealth << ",\"shield_health\":" << zombie->mShieldHealth << '}';
+	}
+	out << "],\"coins\":[";
+	first = true;
+	for (const Coin* coin : mBoard->mCoins)
+	{
+		if (coin->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << "{\"type\":" << static_cast<int>(coin->mType) << ",\"x\":" << coin->mPosX << ",\"y\":" << coin->mPosY << '}';
+	}
+	out << "],\"projectiles\":[";
+	first = true;
+	for (const Projectile* projectile : mBoard->mProjectiles)
+	{
+		if (projectile->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << "{\"type\":" << static_cast<int>(projectile->mProjectileType) << ",\"row\":" << projectile->mRow
+			<< ",\"x\":" << projectile->mPosX << ",\"y\":" << projectile->mPosY << ",\"z\":" << projectile->mPosZ
+			<< ",\"vx\":" << projectile->mVelX << ",\"vy\":" << projectile->mVelY << ",\"age\":" << projectile->mProjectileAge << '}';
+	}
+	out << ']';
+	out << ",\"legal_actions\":{\"plants\":[";
+	bool firstAction = true;
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		if (!packet.CanPickUp()) continue;
+		SeedType seed = packet.mPacketType == SeedType::SEED_IMITATER && packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
+		for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+			for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+				if (mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
+				{
+					if (!firstAction) out << ',';
+					firstAction = false;
+					out << "{\"packet\":" << i << ",\"col\":" << col << ",\"row\":" << row << '}';
+				}
+	}
+	out << "],\"shovels\":[";
+	firstAction = true;
+	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+			if (mBoard->GetTopPlantAt(col, row, PlantPriority::TOPPLANT_ANY) != nullptr)
+			{
+				if (!firstAction) out << ',';
+				firstAction = false;
+				out << '[' << col << ',' << row << ']';
+			}
+	out << "],\"wait\":true}";
+	if (privileged)
+	{
+		const std::string aRandState = GetRandState();
+		constexpr char aHex[] = "0123456789abcdef";
+		out << ",\"hidden\":{\"wave_timer\":" << mBoard->mZombieCountDown << ",\"app_rand_seed\":" << mAppRandSeed
+			<< ",\"rand_seed\":" << mRandSeed << ",\"rand_state_hex\":\"";
+		for (unsigned char aByte : aRandState)
+			out << aHex[aByte >> 4] << aHex[aByte & 0x0F];
+		out << "\",\"zombies_in_wave\":[";
+		for (int wave = 0; wave < mBoard->mNumWaves; ++wave)
+		{
+			if (wave) out << ',';
+			out << '[';
+			bool firstZombie = true;
+			for (int i = 0; i < MAX_ZOMBIES_IN_WAVE && mBoard->mZombiesInWave[wave][i] != ZombieType::ZOMBIE_INVALID; ++i)
+			{
+				if (!firstZombie) out << ',';
+				firstZombie = false;
+				out << static_cast<int>(mBoard->mZombiesInWave[wave][i]);
+			}
+			out << ']';
+		}
+		out << "]}";
+	}
+	out << '}';
+	return out.str();
 }
 
 bool LawnApp::ChangeDirHook(const char* /*theIntendedPath*/)
@@ -1278,7 +1588,18 @@ bool LawnApp::DebugKeyDown(int theKey)
 
 void LawnApp::HandleCmdLineParam(std::string_view theParamName, std::string_view theParamValue)
 {
-	if (theParamName == "-cheat")
+	if (theParamName == "-env")
+	{
+		mEnvironmentMode = true;
+		mHeadlessMode = true;
+		mNoSoundNeeded = true;
+	}
+	else if (theParamName == "-env-visible")
+	{
+		mEnvironmentMode = true;
+		mNoSoundNeeded = true;
+	}
+	else if (theParamName == "-cheat")
 	{
 #ifdef PVZ_DEBUG
 		mCheatKeys = true;
@@ -1634,7 +1955,7 @@ void LawnApp::LoadGroup(const char* theGroupName, int theGroupAveMsToLoad)
 
 void LawnApp::LoadingThreadProc()
 {
-	if (!PvzpLoadResources("LoaderBar"))
+	if (!mHeadlessMode && !PvzpLoadResources("LoaderBar"))
 		return;
 
 	PvzpStringListLoad("Properties/LawnStrings.txt");
@@ -1653,6 +1974,8 @@ void LawnApp::LoadingThreadProc()
 	int group_ave_ms_to_load[] = { 54, 9, 54 };
 	for (int i = 0; i < 3; i++)
 	{
+		if (mNoSoundNeeded && i == 2)
+			continue;
 		mNumLoadingThreadTasks += mResourceManager->GetNumResources(groups[i]) * group_ave_ms_to_load[i];
 	}
 	mNumLoadingThreadTasks += 636;
@@ -1673,7 +1996,8 @@ void LawnApp::LoadingThreadProc()
 	aHesitationResources.EndBracket();
 	PvzpLogLn("loading '{}' {} ms", "resources", static_cast<int>(aTimer.GetDuration()));
 
-	mMusic->MusicInit();
+	if (!mNoSoundNeeded)
+		mMusic->MusicInit();
 	// aDuration goes unused
 	//int aDuration = max(aTimer.GetDuration(), 0.0);
 	aTimer.Start();
@@ -1704,7 +2028,8 @@ void LawnApp::LoadingThreadProc()
 	aTimer.Start();
 
 	GetNumPreloadingTasks();
-	LoadGroup("LoadingSounds", 54);
+	if (!mNoSoundNeeded)
+		LoadGroup("LoadingSounds", 54);
 }
 
 void LawnApp::FastLoad(GameMode theGameMode)
@@ -1953,7 +2278,7 @@ void LawnApp::CenterDialog(Dialog* theDialog, int theWidth, int theHeight)
 
 void LawnApp::PlayFoley(FoleyType theFoleyType)
 {
-	if (!mMuteSoundsForCutscene)
+	if (!mEnvironmentMode && !mHeadlessMode && !mMuteSoundsForCutscene)
 	{
 		mSoundSystem->PlayFoley(theFoleyType);
 	}
@@ -1961,7 +2286,7 @@ void LawnApp::PlayFoley(FoleyType theFoleyType)
 
 void LawnApp::PlayFoleyPitch(FoleyType theFoleyType, float thePitch)
 {
-	if (!mMuteSoundsForCutscene)
+	if (!mEnvironmentMode && !mHeadlessMode && !mMuteSoundsForCutscene)
 	{
 		mSoundSystem->PlayFoleyPitch(theFoleyType, thePitch);
 	}
@@ -2312,6 +2637,8 @@ PvzpParticleSystem* LawnApp::AddPvzpParticle(float theX, float theY, int theRend
 
 ParticleSystemID LawnApp::ParticleGetID(PvzpParticleSystem* theParticle)
 {
+	if (theParticle == nullptr)
+		return ParticleSystemID::PARTICLESYSTEMID_NULL;
 	return (ParticleSystemID)mEffectSystem->mParticleHolder->mParticleSystems.DataArrayGetID(theParticle);
 }
 

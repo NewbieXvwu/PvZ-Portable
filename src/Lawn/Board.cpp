@@ -153,6 +153,8 @@ Board::Board(LawnApp* theApp)
 	mGravesCleared = 0;
 	mPlantsEaten = 0;
 	mPlantsShoveled = 0;
+	mZombiesKilled = 0;
+	mSunMoneyProduced = 0;
 	mPeaShooterUsed = false;
 	mCatapultPlantsUsed = false;
 	mMushroomAndCoffeeBeansOnly = true;
@@ -612,6 +614,8 @@ void Board::PickZombieWaves()
 	ZombiePickerInit(&aZombiePicker);
 	ZombieType aIntroZombieType = GetIntroducedZombieType();
 	PVZP_ASSERT(mNumWaves <= MAX_ZOMBIE_WAVES);
+	for (auto& aWave : mZombiesInWave)
+		std::fill(std::begin(aWave), std::end(aWave), ZombieType::ZOMBIE_INVALID);
 
 	for (int aWave = 0; aWave < mNumWaves; aWave++)
 	{
@@ -1957,6 +1961,8 @@ Coin* Board::AddCoin(int theX, int theY, CoinType theCoinType, CoinMotion theCoi
 {
 	Coin* aCoin = mCoins.DataArrayAlloc();
 	aCoin->CoinInitialize(theX, theY, theCoinType, theCoinMotion);
+	if (aCoin->IsSun())
+		mSunMoneyProduced += aCoin->GetSunValue();
 	if (mApp->IsFirstTimeAdventureMode() && mLevel == 1)
 	{
 		DisplayAdvice("[ADVICE_CLICK_ON_SUN]", MessageStyle::MESSAGE_STYLE_TUTORIAL_LEVEL1_STAY, AdviceType::ADVICE_CLICK_ON_SUN);
@@ -4362,7 +4368,8 @@ void Board::PickUpTool(GameObjectType theObjectType)
 
 void Board::MouseDown(int x, int y, int theClickCount)
 {
-	UpdateMousePosition();
+	if (!mApp->mHeadlessMode)
+		UpdateMousePosition();
 	Widget::MouseDown(x, y, theClickCount);
 	mIgnoreMouseUp = !CanInteractWithBoardButtons();
 	if (mTimeStopCounter > 0)
@@ -5699,7 +5706,8 @@ void Board::Update()
 
 	mBoardUpdateCounter++;
 	mCutScene->Update();
-	UpdateMousePosition();
+	if (!mApp->mHeadlessMode)
+		UpdateMousePosition();
 	if (mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN)
 	{
 		mApp->mZenGarden->ZenGardenUpdate();

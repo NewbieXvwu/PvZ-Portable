@@ -26,6 +26,7 @@
 #include "SexyAppFramework/SexyApp.h"
 #include "PvzpLib/PvzpFoley.h"
 #include <memory>
+#include <vector>
 
 class Board;
 class GameSelector;
@@ -136,6 +137,7 @@ public:
 	TrialType						mTrialType;
 	bool							mDebugTrialLocked;
 	bool							mMuteSoundsForCutscene;
+	bool							mEnvironmentMode;
 
 public:
 	LawnApp();
@@ -203,6 +205,13 @@ public:
 	void							Shutdown() override;
 	void							ShutdownHook() override;
 	void							Init() override;
+	bool							EnvironmentReset(int level, uint32_t seed, const std::vector<SeedType>& deck);
+	bool							EnvironmentPlant(int packet, int col, int row);
+	bool							EnvironmentShovel(int col, int row);
+	void							EnvironmentWait(int ticks);
+	int								EnvironmentWaitDecision(int maxTicks);
+	bool							EnvironmentTerminal() const;
+	std::string					EnvironmentObservation(bool privileged = false) const;
 	void							Start() override;
 	Dialog*							NewDialog(int theDialogId, bool isModal, const std::string& theDialogHeader, const std::string& theDialogLines, const std::string& theDialogFooter, int theButtonMode) override;
 	bool							KillDialog(int theDialogId) override;

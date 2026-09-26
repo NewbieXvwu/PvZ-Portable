@@ -1114,7 +1114,8 @@ GLInterface::GLInterface(SexyAppBase* theApp)
 GLInterface::~GLInterface()
 {
 	mScreenImage.reset();
-	Flush();
+	if (!mApp->mShutdown)
+		Flush();
 	for (auto *img : mImageSet)
 	{
 		delete (TextureData*)img->mRenderData;

@@ -238,6 +238,8 @@ public:
 	uint32_t						mGravesCleared;
 	uint32_t						mPlantsEaten;
 	uint32_t						mPlantsShoveled;
+	uint32_t						mZombiesKilled;
+	uint32_t						mSunMoneyProduced;
 	bool							mPeaShooterUsed;										//+0x5784
 	bool							mCatapultPlantsUsed;									//+0x5785
 	bool							mMushroomAndCoffeeBeansOnly;							//+0x5790

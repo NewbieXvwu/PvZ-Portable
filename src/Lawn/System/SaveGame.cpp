@@ -2241,11 +2241,8 @@ static void FixBoardAfterLoad(Board* theBoard)
 	theBoard->mApp->mMusic->mMusicInterface = theBoard->mApp->mMusicInterface.get();
 }
 
-static bool LawnLoadGameV4(Board* theBoard, const std::string& theFilePath)
+static bool LawnLoadGameV4(Board* theBoard, Buffer& aBuffer)
 {
-	Buffer aBuffer;
-	if (!gSexyAppBase->ReadBufferFromFile(theFilePath, &aBuffer, false))
-		return false;
 	if (static_cast<uint32_t>(aBuffer.GetDataLen()) < sizeof(SaveFileHeaderV4))
 		return false;
 
@@ -2290,6 +2287,19 @@ static bool LawnLoadGameV4(Board* theBoard, const std::string& theFilePath)
 	FixBoardAfterLoad(theBoard);
 	theBoard->mApp->mGameScene = GameScenes::SCENE_PLAYING;
 	return true;
+}
+
+static bool LawnLoadGameV4(Board* theBoard, const std::string& theFilePath)
+{
+	Buffer aBuffer;
+	return gSexyAppBase->ReadBufferFromFile(theFilePath, &aBuffer, false) && LawnLoadGameV4(theBoard, aBuffer);
+}
+
+bool LawnLoadGameFromMemory(Board* theBoard, const std::vector<unsigned char>& theData)
+{
+	Buffer aBuffer;
+	aBuffer.SetData(theData);
+	return LawnLoadGameV4(theBoard, aBuffer);
 }
 
 // Legacy mid-level save support
@@ -2790,7 +2800,7 @@ bool LawnLoadGame(Board* theBoard, const std::string& theFilePath)
 	return true;
 }
 
-bool LawnSaveGame(Board* theBoard, const std::string& theFilePath)
+bool LawnSaveGameToMemory(Board* theBoard, std::vector<unsigned char>& theData)
 {
 	std::vector<unsigned char> aPayload;
 	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_BOARD_BASE, theBoard)) return false;
@@ -2825,5 +2835,13 @@ bool LawnSaveGame(Board* theBoard, const std::string& theFilePath)
 	memcpy(aOutBuffer.data(), &aHeader, sizeof(aHeader));
 	memcpy(aOutBuffer.data() + sizeof(aHeader), aPayload.data(), aPayload.size());
 
-	return gSexyAppBase->WriteBytesToFile(theFilePath, aOutBuffer.data(), static_cast<int>(aOutBuffer.size()));
+	theData = std::move(aOutBuffer);
+	return true;
+}
+
+bool LawnSaveGame(Board* theBoard, const std::string& theFilePath)
+{
+	std::vector<unsigned char> aData;
+	return LawnSaveGameToMemory(theBoard, aData) &&
+		gSexyAppBase->WriteBytesToFile(theFilePath, aData.data(), static_cast<int>(aData.size()));
 }
