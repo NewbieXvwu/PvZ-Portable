@@ -1,0 +1,8 @@
+*
+!.gitignore
+!adventure2_level7/
+adventure2_level7/*
+!adventure2_level7/seeds/
+adventure2_level7/seeds/*
+!adventure2_level7/seeds/dev.json
+!adventure2_level7/seeds/test.json
