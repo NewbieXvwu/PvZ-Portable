@@ -17,16 +17,9 @@ import torch
 from torch.nn import functional as F
 
 from benchmark_pvz_agent import DEFAULT_SEEDS, read_seed_set
-from pvz_agent import (
-    DISCOUNT_REFERENCE_TICKS,
-    GameplayModelV1,
-    MODEL_ARCHITECTURE_VERSION,
-    MODEL_CONFIG,
-    VALUE_GAMMA,
-    VALUE_SEMANTICS,
-    resolve_device,
-    select_action,
-)
+from pvz_agent_model import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
+                             resolve_device, select_action)
+from pvz_value import DISCOUNT_REFERENCE_TICKS, SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
@@ -159,22 +152,17 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
             for transition in transitions[start:end]:
                 output = model.step(transition["observation"], hidden, transition["previous_action"],
                                     transition["elapsed_since_previous_observation"], transition["events"])
-                _, log_prob, entropy = select_action(model, output, transition["observation"],
-                                                     action=transition["action"])
+                _, log_prob, entropy = select_action(model, output, transition["observation"], action=transition["action"])
                 hidden = output["hidden"]
                 log_probs.append(log_prob)
                 values.append(output["value"].squeeze())
                 entropies_for_chunk.append(entropy)
             new_log_prob = torch.stack(log_probs)
-            old_log_prob = torch.tensor([transition["log_prob"] for transition in transitions[start:end]],
-                                        dtype=torch.float32, device=device)
-            advantage = torch.stack([transition["normalized_advantage"]
-                                     for transition in transitions[start:end]])
+            old_log_prob = torch.tensor([transition["log_prob"] for transition in transitions[start:end]], dtype=torch.float32, device=device)
+            advantage = torch.stack([transition["normalized_advantage"] for transition in transitions[start:end]])
             ratio = torch.exp(new_log_prob - old_log_prob)
-            policy_loss = -torch.minimum(ratio * advantage,
-                                         ratio.clamp(1 - clip_epsilon, 1 + clip_epsilon) * advantage).mean()
-            returns = torch.tensor([transition["return"] for transition in transitions[start:end]],
-                                   dtype=torch.float32, device=device)
+            policy_loss = -torch.minimum(ratio * advantage, ratio.clamp(1 - clip_epsilon, 1 + clip_epsilon) * advantage).mean()
+            returns = torch.tensor([transition["return"] for transition in transitions[start:end]], dtype=torch.float32, device=device)
             value_loss = F.mse_loss(torch.stack(values), returns)
             entropy = torch.stack(entropies_for_chunk).mean()
             loss = policy_loss + value_coefficient * value_loss - entropy_coefficient * entropy
@@ -193,19 +181,16 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
 
 def episode_hash(episode: dict[str, Any]) -> str:
     steps = [{key: transition[key] for key in
-              ("observation", "previous_action", "elapsed_since_previous_observation", "action_duration_ticks",
-               "events", "action", "log_prob", "value", "reward")}
+              ("observation", "previous_action", "elapsed_since_previous_observation", "action_duration_ticks", "events", "action", "log_prob", "value", "reward")}
              for transition in episode["transitions"]]
-    payload = json.dumps({"seed": episode["seed"], "steps": steps,
-                          "result": episode["result"]}, separators=(",", ":"), sort_keys=True)
+    payload = json.dumps({"seed": episode["seed"], "steps": steps, "result": episode["result"]}, separators=(",", ":"), sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--resource-dir", default=os.environ.get("PVZ_RESOURCE_DIR"))
-    parser.add_argument("--init-checkpoint", type=Path,
-                        default=ROOT / "artifacts" / "adventure2_level7" / "gameplay_model_v1.pt")
+    parser.add_argument("--init-checkpoint", type=Path, default=ROOT / "artifacts" / "adventure2_level7" / "gameplay_model_v1.pt")
     parser.add_argument("--seeds", type=Path, default=DEFAULT_SEEDS)
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts" / "adventure2_level7")
     parser.add_argument("--level", type=int, default=LEVEL)
@@ -228,10 +213,8 @@ def main() -> None:
     args = parser.parse_args()
     if not args.resource_dir:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
-    if args.updates < 1 or args.rollout_episodes < 1 or args.ppo_epochs < 1:
-        parser.error("updates, rollout episodes, and PPO epochs must be positive")
-    if args.sequence_length < 1:
-        parser.error("sequence length must be positive")
+    if args.updates < 1 or args.rollout_episodes < 1 or args.ppo_epochs < 1 or args.sequence_length < 1:
+        parser.error("updates, rollout episodes, PPO epochs, and sequence length must be positive")
     if not 0.0 < args.gae_lambda <= 1.0:
         parser.error("--gae-lambda must be in (0, 1]")
     if args.train_seed_start >= args.train_seed_end:
@@ -252,6 +235,7 @@ def main() -> None:
     provenance = initial["provenance"]
     if (initial["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
             or initial.get("value_semantics") != VALUE_SEMANTICS
+            or provenance.get("search_label_version") != SEARCH_LABEL_VERSION
             or provenance["observation_version"] != 2 or provenance["task_version"] != 2):
         raise ValueError("initial checkpoint does not match the current model and discounted-value semantics")
     model = GameplayModelV1().to(device)
@@ -302,16 +286,16 @@ def main() -> None:
                 "git_sha": revision, "git_dirty": dirty,
                 "command": {"argv": sys.argv, "arguments": config},
                 "trajectory_sha256": {
-                    "teacher": sha256_file(trajectory_dir / "teacher_trajectories.json.gz"),
-                    "dagger": sha256_file(trajectory_dir / "dagger_trajectories.json.gz"),
+                    "search": sha256_file(trajectory_dir / "search_trajectories.json.gz"),
+                    "dagger_search": sha256_file(trajectory_dir / "dagger_search_trajectories.json.gz"),
                     "ppo_rollouts_by_seed": trajectory_hashes,
                 },
                 "resource_sha256": resource_hashes,
                 "frozen_evaluation_seed_sha256": sha256_file(args.seeds),
                 "initial_checkpoint_sha256": initial_checkpoint_sha,
-                "random_seeds": {"python_torch": args.seed, "training_seed_range": [args.train_seed_start,
-                                                                                      args.train_seed_end - 1]},
+                "random_seeds": {"python_torch": args.seed, "training_seed_range": [args.train_seed_start, args.train_seed_end - 1]},
                 "model_config": MODEL_CONFIG, "observation_version": 2, "task_version": 2,
+                "search_label_version": SEARCH_LABEL_VERSION,
                 "value_semantics": VALUE_SEMANTICS,
             }
             torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
