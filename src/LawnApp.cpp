@@ -1364,6 +1364,11 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 	MakeNewBoard();
 	mBoard->InitLevel();
 	mBoard->mCutScene->PlaceLawnItems();
+	for (LawnMower* mower : mBoard->mLawnMowers)
+	{
+		mower->mVisible = true;
+		mower->mPosX = -21.0f;
+	}
 	mBoard->mSeedBank->mNumPackets = static_cast<int>(deck.size());
 	mBoard->mSeedBank->UpdateWidth();
 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
