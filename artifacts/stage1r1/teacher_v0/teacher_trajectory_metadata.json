@@ -1,0 +1,62 @@
+{
+  "provenance": {
+    "git_sha": "9687ce0e2d2f3403b02c83f7e47385a0cb5ce9a7",
+    "git_dirty": false,
+    "command": {
+      "argv": [
+        "python/train_pvz_agent.py",
+        "--resource-dir",
+        "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN",
+        "--output-dir",
+        "artifacts/stage1r1/teacher_v0",
+        "--train-seeds",
+        "0,1,2,3,4,5,6",
+        "--dagger-seeds",
+        "0,1,2,3,4,5,6,7",
+        "--eval-seeds",
+        "8,9,10,11",
+        "--epochs",
+        "8"
+      ],
+      "arguments": {
+        "resource_dir": "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN",
+        "output_dir": "artifacts/stage1r1/teacher_v0",
+        "train_seeds": "0,1,2,3,4,5,6",
+        "dagger_seeds": "0,1,2,3,4,5,6,7",
+        "eval_seeds": "8,9,10,11",
+        "epochs": 8,
+        "collect_only": false,
+        "train_only": false
+      }
+    },
+    "trajectory_sha256": {
+      "teacher": "417f295d22f02a1fc7d7d5966143a3db779a57464312ea48a060d1a194e68ac0"
+    },
+    "resource_sha256": {
+      "main.pak": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+      "properties/partner.xml": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3"
+    },
+    "random_seeds": {
+      "python": 17,
+      "torch": 17,
+      "teacher_episodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "dagger_episodes": []
+    },
+    "model_config": {
+      "layers": 4,
+      "width": 192,
+      "heads": 6,
+      "ff_width": 768,
+      "gru_layers": 2,
+      "gru_width": 256
+    }
+  }
+}

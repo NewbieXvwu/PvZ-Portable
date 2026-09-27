@@ -132,34 +132,7 @@ static void RunEnvironment(LawnApp* app)
 		bool hasSnapshotId = false;
 		int snapshotId = 0;
 		int ticksAdvanced = -1;
-		if (command == "RESET")
-		{
-			int level = 0;
-			uint32_t seed = 0;
-			std::string deckText;
-			input >> level >> seed >> deckText;
-			std::vector<SeedType> deck;
-			std::istringstream deckInput(deckText);
-			std::string type;
-			while (std::getline(deckInput, type, ','))
-			{
-				std::istringstream typeInput(type);
-				int value = -1;
-				if (!(typeInput >> value) || value < 0 || value >= SeedType::NUM_SEED_TYPES)
-				{
-					deck.clear();
-					break;
-				}
-				deck.push_back(static_cast<SeedType>(value));
-			}
-			ok = !deck.empty() && app->EnvironmentReset(level, seed, deck);
-			if (ok)
-			{
-				snapshots.clear();
-				nextSnapshotId = 1;
-			}
-		}
-		else if (command == "RESET_V1")
+		if (command == "RESET_V1")
 		{
 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
 			uint32_t seed = 0;

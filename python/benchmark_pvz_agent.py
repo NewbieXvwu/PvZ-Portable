@@ -15,14 +15,15 @@ from typing import Any
 
 import torch
 
-from pvz_agent import GameplayModelV0, TeacherPolicy, predict_action
+from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, TeacherPolicy,
+                       predict_action, resolve_device)
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SEEDS = ROOT / "artifacts" / "gameplay-v0" / "benchmark_seeds.json"
+DEFAULT_SEEDS = ROOT / "artifacts" / "adventure2_level7" / "seeds" / "test.json"
 
 
 def sha256_file(path: Path) -> str:
@@ -44,35 +45,37 @@ def git_metadata() -> dict[str, Any]:
         return {"git_sha": None, "git_dirty": None}
 
 
-def read_seed_set(path: Path) -> list[int]:
+def read_seed_set(path: Path, level: int = LEVEL) -> list[int]:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("level") != LEVEL or data.get("playthrough") != 2:
-        raise ValueError("frozen seed file must specify Adventure I 1-7, playthrough 2")
-    if "seeds" in data:
-        seeds = [int(seed) for seed in data["seeds"]]
-    else:
-        first = int(data["first_seed"])
-        seeds = list(range(first, first + int(data["count"])))
+    if data["schema_version"] != 1 or data["level"] != level or data["playthrough"] != 2:
+        raise ValueError("frozen seed file must use schema 1 for Adventure-II and playthrough 2")
+    first = int(data["first_seed"])
+    seeds = list(range(first, first + int(data["count"])))
     if len(seeds) < 256 or len(set(seeds)) != len(seeds) or any(seed < 0 for seed in seeds):
         raise ValueError("frozen evaluation seed file must contain at least 256 unique seeds")
     return seeds
 
 
-def checkpoint_model(path: Path, device: torch.device) -> tuple[GameplayModelV0, dict[str, Any]]:
+def checkpoint_model(path: Path, device: torch.device) -> tuple[GameplayModelV1, dict[str, Any]]:
     checkpoint = torch.load(path, map_location=device, weights_only=False)
-    model = GameplayModelV0().to(device)
+    provenance = checkpoint["provenance"]
+    if (checkpoint["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
+            or provenance["observation_version"] != 2 or provenance["task_version"] != 2):
+        raise ValueError("checkpoint versions do not match the current model, observation, and task")
+    model = GameplayModelV1().to(device)
     model.load_state_dict(checkpoint["state_dict"])
     model.eval()
     return model, checkpoint
 
 
-def run_episode(env: PvZEnv, seed: int, model: GameplayModelV0 | None,
+def run_episode(env: PvZEnv, seed: int, model: GameplayModelV1 | None,
                 clear_hidden: bool, zombie_count_multiplier: float,
-                replay_dir: Path, policy_label: str) -> dict[str, Any]:
-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext(),
+                replay_dir: Path, policy_label: str, level: int = LEVEL,
+                deck: tuple[int, ...] = DECK) -> dict[str, Any]:
+    task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
                     zombie_count_multiplier=zombie_count_multiplier)
     reset_started = time.perf_counter()
-    observation, _ = env.reset(deck=DECK, task=task)
+    observation, _ = env.reset(deck=deck, task=task)
     reset_seconds = time.perf_counter() - reset_started
     hidden = None
     previous_action = None
@@ -165,6 +168,9 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--resource-dir", default=os.environ.get("PVZ_RESOURCE_DIR"))
     parser.add_argument("--seeds", type=Path, default=DEFAULT_SEEDS)
+    parser.add_argument("--level", type=int, default=LEVEL)
+    parser.add_argument("--deck", type=lambda value: tuple(map(int, value.split(","))), default=DECK)
+    parser.add_argument("--device", choices=("auto", "cuda", "mps", "cpu"), default="auto")
     parser.add_argument("--checkpoint", action="append", type=parse_checkpoint, default=[])
     parser.add_argument("--teacher", action="store_true")
     parser.add_argument("--clear-hidden", action="store_true")
@@ -182,10 +188,10 @@ def main() -> None:
     if len(set(labels)) != len(labels):
         parser.error("policy labels must be unique")
 
-    seeds = read_seed_set(args.seeds)
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    seeds = read_seed_set(args.seeds, args.level)
+    device = resolve_device(args.device)
     torch.set_num_threads(1)
-    policies: list[tuple[str, GameplayModelV0 | None, dict[str, Any]]] = []
+    policies: list[tuple[str, GameplayModelV1 | None, dict[str, Any]]] = []
     if args.teacher:
         policies.append(("teacher", None, {}))
     for label, path in args.checkpoint:
@@ -204,7 +210,7 @@ def main() -> None:
             records = []
             for index, seed in enumerate(seeds, start=1):
                 record = run_episode(env, seed, model, args.clear_hidden, args.zombie_count_multiplier,
-                                     replay_dir, label)
+                                     replay_dir, label, args.level, args.deck)
                 records.append(record)
                 if index % 16 == 0 or index == len(seeds):
                     print(f"{label} {index}/{len(seeds)} wins={sum(row['won'] for row in records)}",
@@ -224,9 +230,9 @@ def main() -> None:
                 pass
     args.output.parent.mkdir(parents=True, exist_ok=True)
     result = {
-        **git_metadata(), "level": LEVEL, "playthrough": 2, "deck": list(DECK),
+        **git_metadata(), "level": args.level, "playthrough": 2, "deck": args.deck,
         "zombie_count_multiplier": args.zombie_count_multiplier,
-        "profile": "Adventure I, six slots, no store items",
+        "profile": "Adventure-II, six slots, no store items",
         "seed_file": str(args.seeds.resolve()), "seed_file_sha256": sha256_file(args.seeds),
         "seed_count": len(seeds), "seed_range": [min(seeds), max(seeds)],
         "device": str(device), "clear_hidden": args.clear_hidden,

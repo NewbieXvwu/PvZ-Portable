@@ -1,0 +1,36 @@
+{
+  "environment_versions": {
+    "current_observation_version": 2,
+    "current_task_version": 2
+  },
+  "datasets_and_results": {
+    "status": "pre_fix",
+    "reason": "Generated before the shared logic tick, normal intro fast-forward, playthrough=2 baseline, and observation version 2.",
+    "paths": [
+      "artifacts/gameplay-v0/teacher_trajectories.json.gz",
+      "artifacts/gameplay-v0/dagger_trajectories.json.gz",
+      "artifacts/gameplay-v0/gameplay_model_v0.pt",
+      "artifacts/gameplay-v0/training_summary.json",
+      "artifacts/stage1r/teacher_trajectories.json.gz",
+      "artifacts/stage1r/dagger_trajectories.json.gz",
+      "artifacts/stage1r/gameplay_model_v0.pt",
+      "artifacts/stage1r/gameplay_model_v0_bc.pt",
+      "artifacts/stage1r/gameplay_model_v0_bc.json",
+      "artifacts/stage1r/gameplay_model_v0_ppo.pt",
+      "artifacts/stage1r/training_summary.json",
+      "artifacts/stage1r/ppo_training_summary.json",
+      "artifacts/stage1r/baseline_256.json",
+      "artifacts/stage1r/ppo_256.json",
+      "artifacts/stage1r/ppo_hidden_reset_256.json",
+      "artifacts/stage1r/ppo_no_relation_bias_256.json",
+      "artifacts/stage1r1/teacher_v0/teacher_trajectories.json.gz",
+      "artifacts/stage1r1/teacher_v0/dagger_trajectories.json.gz",
+      "artifacts/stage1r1/teacher_v0/gameplay_model_v0.pt",
+      "artifacts/stage1r1/teacher_v0/gameplay_model_v0_bc.pt",
+      "artifacts/stage1r1/teacher_v0/gameplay_model_v0_bc.json",
+      "artifacts/stage1r1/teacher_v0/teacher_trajectory_metadata.json",
+      "artifacts/stage1r1/teacher_v0/training_summary.json",
+      "artifacts/human_play.json"
+    ]
+  }
+}

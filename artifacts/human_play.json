@@ -1,0 +1,14 @@
+{
+  "won": true,
+  "result": 1,
+  "level": 7,
+  "zombie_multiplier": 3,
+  "wave": 20,
+  "total_waves": 20,
+  "ticks": 51382,
+  "seconds": 513.82,
+  "zombies_killed": 207,
+  "plants_eaten": 14,
+  "mower_triggered": 0,
+  "sun_produced": 5250
+}

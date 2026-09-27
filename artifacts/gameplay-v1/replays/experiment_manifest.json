@@ -1,0 +1,19 @@
+{
+  "source_revision": "9687ce0e2d2f3403b02c83f7e47385a0cb5ce9a7",
+  "source_dirty": true,
+  "working_tree_patch_sha256": "be0d15a12f2c6e2d3c9b5c9d5cde53da92c35976c3027911f55ae6740172de92",
+  "build_config": {
+    "BUILD_STATIC": "OFF",
+    "CMAKE_BUILD_TYPE": "Release",
+    "CMAKE_CXX_COMPILER": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++",
+    "CMAKE_CXX_FLAGS": "",
+    "DO_FIX_BUGS": "OFF",
+    "LOW_MEMORY": "OFF",
+    "PVZ_DEBUG": "OFF",
+    "CMAKE_GENERATOR": "Ninja"
+  },
+  "resource_sha256": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+  "properties_partner_sha256": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3",
+  "executable_sha256": "020de3cad4b6a804b1f110a0be865f8a884ee5cd8620679ab338a54e00e59767",
+  "working_tree_patch": "working_tree.patch"
+}

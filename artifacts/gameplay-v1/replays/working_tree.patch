@@ -1,0 +1,1742 @@
+diff --git a/TODO.md b/TODO.md
+index 35d1261..b759cd8 100644
+--- a/TODO.md
++++ b/TODO.md
+@@ -1,18 +1,18 @@
+-# PvZEnv v0
++# PvZEnv
+ 
+ ## 目标与边界
+ 
+ 先交付一个可复现、可由 Python 调用的 PvZ 游戏环境，为后续训练自主控制器和研究不同决策方法打底。首个完整闭环使用一关普通白天冒险关，再验证白天、夜晚、泳池、迷雾和屋顶场景的状态与动作接口。
+ 
+-策略观测只包含当前可见状态和公开规则。未来详细出怪队列、随机数状态及隐藏计时器只通过研究用完整状态接口提供。环境返回客观事件和胜负结果，奖励由训练端定义。
++策略观测包含场上全部存活僵尸，即使僵尸位于雾后也可见；雾仍按游戏规则影响画面和战斗。未来详细出怪队列、随机数状态及隐藏计时器只通过研究用完整状态接口提供。环境返回客观事件和胜负结果，奖励由训练端定义。
+ 
+ 标准资源基线采用用户提供的 PvZ GOTY English `1.2.0.1073`：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN/main.pak`，SHA-256 为 `7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421`；`properties/partner.xml` 的 SHA-256 为 `69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3`。资源留在本机下载目录，不进入仓库；Python 入口把资源所在目录传给 `-resdir`。
+ 
+-PvZ 的部分战斗后果由 Reanimation 动画进度、轨道变换和关键事件触发。无画面模式跳过窗口创建、绘制和声音输出，但仍加载并逐 tick 更新完整动画与效果资源；不能用空动画轨道替代真实资源。内存快照必须恢复影响后续逻辑的动画时间、轨道实例和挂接状态。当前两种模式已在 6 个检查点逐项比较公开观测和特权状态，覆盖到 tick 2800，结果一致。
++PvZ 的部分战斗后果由 Reanimation 动画进度、轨道变换和关键事件触发。桌面与环境模式现在共用 `AdvanceLogicTick()`；快照恢复 `mAppCounter`、随机状态、实体和动画。旧的 6 个检查点只覆盖此前的环境循环，当前代码的逐 tick 可视/无画面验证由 `python/verify_env_equivalence.py` 执行。
+ 
+-GitHub fork 为 [NewbieXvwu/PvZ-Portable](https://github.com/NewbieXvwu/PvZ-Portable)。开发分支 `pvz-env` 以 `0.2.4` 提交 `a0f676a` 为基线，官方仓库保留为 `upstream`；当前上游 `main` 已前进到 `f0c5f39`，实验分支不跟随该分支漂移。Python 入口 `python/pvz_env.py` 通过 `PvZEnv(resource_dir="/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")` 使用这份资源。每次环境重置都会将冒险进度设为已通关状态并关闭教程，因此 1-1 按重玩关卡规则运行，不等同于首次冒险的教程局。
++GitHub fork 为 [NewbieXvwu/PvZ-Portable](https://github.com/NewbieXvwu/PvZ-Portable)。Python 入口 `python/pvz_env.py` 通过 `PvZEnv(resource_dir=...)` 使用游戏资源。训练基线固定为 `playthrough=2`，环境拒绝 `playthrough=1`，直到首次冒险教程流程得到完整实现。
+ 
+-首版暂不实现神经网络、PPO、LLM Teacher、MCTS、非种植类小游戏或多进程并行。后续教师数据通过完整自动对局生成，不手工准备大量残局。
++仓库已有 Teacher、BC、DAgger 和 PPO 训练入口，旧训练数据与评估结果列在 `artifacts/data_status.json` 并标记为修复前记录。多进程环境池和批量推理要在基准剖析后实现；教师数据通过完整自动对局生成。
+ 
+ ## 阶段一：Fork 上游并建立基线
+ 
+@@ -26,7 +26,7 @@ GitHub fork 为 [NewbieXvwu/PvZ-Portable](https://github.com/NewbieXvwu/PvZ-Port
+ ## 阶段二：在 fork 中实现无画面运行和游戏控制入口
+ 
+ - [x] 增加无画面运行路径，跳过窗口创建、绘制和声音输出，同时完整加载并更新 Reanimation；只批量推进游戏逻辑 tick。已用 1.2.0.1073 资源验证向日葵、僵尸和豌豆发射能在无窗口模式运行。
+-- [x] 保留可视运行方式；相同关卡、种子和动作序列在可视与无画面模式下的 6 个公开观测及特权状态检查点完全相同。
++- [x] 保留可视运行方式；桌面和环境路径共用逐 tick 逻辑入口。`python/verify_env_equivalence.py` 提供逐 tick 观测、事件、完整状态和快照恢复差分验证。
+ - [x] 增加无需菜单交互的关卡重置入口，接受关卡、随机种子和卡组。
+ - [x] 暴露游戏语义动作：种植、铲除和等待指定 tick；首版默认自动收集阳光，不模拟鼠标移动与点击。
+ - [x] 明确非法动作的结果，并提供当前合法动作集合或动作掩码。
+@@ -37,7 +37,7 @@ GitHub fork 为 [NewbieXvwu/PvZ-Portable](https://github.com/NewbieXvwu/PvZ-Port
+ - [x] 提供算法无关的 C++ 环境入口，支持重置、动作执行、逻辑推进、观测、完整状态、快照和恢复。
+ - [x] 提供薄 Python 封装，采用 Gymnasium 风格的重置与步进返回值，不将具体学习算法写入环境核心。
+ - [x] 结构化观测包含格子、植物、僵尸、阳光、投射物、卡片、波次与合法动作；多地形结构仍待核验。
+-- [x] 分离策略观测与研究用完整状态。策略观测不含未来详细出怪表、RNG 状态和隐藏计时器；研究接口保留隐藏波次信息。
++- [x] 分离策略观测与研究用完整状态。策略观测显示雾后的存活僵尸，但不含未来详细出怪表、RNG 状态和隐藏计时器；研究接口保留这些信息。
+ - [x] 事件覆盖击杀僵尸、植物被吃、阳光产生与消耗、小推车触发、波次开始及胜负。
+ - [x] 实现内存 `snapshot/restore`，复用 `.v4` 状态序列化并单独保存随机数发生器和环境事件计数；已核对序列化包含 Reanimation 动画时间、轨道实例及挂接，并在豌豆投射物飞行时恢复快照，后续观测逐项一致。
+ 
+@@ -45,22 +45,24 @@ GitHub fork 为 [NewbieXvwu/PvZ-Portable](https://github.com/NewbieXvwu/PvZ-Port
+ 
+ - [x] 固定输入的冒烟轨迹可复现并生成状态摘要；完整对局的跨进程复现通过。
+ - [x] 已核验保存快照、执行动作、恢复快照并重放后，观测完全一致。
+-- [x] 录像记录包含环境提交、资源摘要、关卡、种子、卡组、动作和状态摘要，并支持按记录重放。
++- [x] v3 回放采用 JSON Lines，可选 gzip；每个实验只写一份含源码修订、脏工作区补丁、构建项、资源与可执行文件摘要的清单。回放逐操作记录实际动作、事件、tick、快照与终局；仍能读取 v2。
+ - [x] 已在白天、夜晚、泳池、迷雾和屋顶各重置一关，核验背景编号、6×9 网格、投射物字段及合法动作；屋顶卡组使用花盆。
+ - [x] 在普通白天 1-1 完成完整对局并核验最终胜负：20/20 波、34,475 tick、胜利；新进程逐操作重放 134 条记录，最终状态摘要一致。
+-- [x] 用随机合法动作控制器连续运行 3 局，均无崩溃；每局在新进程逐操作重放后，最终状态摘要完全一致。
++- [ ] 修复后重建 Teacher、BC、DAgger、PPO 数据与冻结基准；旧数据状态见 `artifacts/data_status.json`。
++- [ ] 运行逐 tick 可视/无画面差分，覆盖舞王、墓碑、迷雾、Boss、卡片冷却和动画中途快照恢复。
++- [ ] 测环境 tick 与完整策略吞吐、reset 耗时和 worker 内存，再决定是否引入常驻 worker 池、批量推理或紧凑 IPC。
+ 
+-## v0 验收条件
++## 当前验收条件
+ 
+ - Python 无需点击菜单即可重置普通关卡、读取结构化观测并执行种植、铲除、定 tick 等待和推进到决策时刻。
+ - 策略观测与研究用完整状态隔离，环境不内置奖励函数。
+ - 固定输入可复现；快照恢复后轨迹一致；录像记录可跨进程重放。
+-- 无画面与可视运行得到相同的逻辑结果。
++- 可视与无画面逐 tick 状态差分通过。
+ - 至少覆盖五种常见地形的状态与动作接口，并完成一关普通白天关的完整对局闭环。
+ 
+-## v0 之后
++## 后续扩展
+ 
+-先测随机基线、简单规则基线、模拟速度、快照成本和不同种子的通关率，再决定行为克隆、PPO、LLM Teacher 或搜索的优先顺序。若开展 LLM Teacher 与搜索教师的比较，使用相同关卡、种子和计算预算；教师以整局闭环自动生成轨迹，不人工制作大批残局。
++根据吞吐剖析评估常驻子进程和批量推理；`WAIT_DECISION` 签名优化、资源预派生共享、低内存和仅加载图像元数据只在剖析确认瓶颈后推进。Cob Cannon 控制、快照释放接口、环境专用构建目标及 `.dmo` 与语义回放关联作为可选项。验证与 PopCap 原版的等价性需要对应原版程序和 `properties` 作为外部参照。
+ 
+ ## 本机运行记录
+ 
+diff --git a/python/benchmark_pvz_agent.py b/python/benchmark_pvz_agent.py
+index a269780..8420fcf 100644
+--- a/python/benchmark_pvz_agent.py
++++ b/python/benchmark_pvz_agent.py
+@@ -15,7 +15,7 @@ from typing import Any
+ 
+ import torch
+ 
+-from pvz_agent import GameplayModelV0, predict_action, teacher_action
++from pvz_agent import GameplayModelV0, TeacherPolicy, predict_action
+ from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
+ 
+ 
+@@ -46,8 +46,8 @@ def git_metadata() -> dict[str, Any]:
+ 
+ def read_seed_set(path: Path) -> list[int]:
+     data = json.loads(path.read_text(encoding="utf-8"))
+-    if data.get("level") != LEVEL or data.get("playthrough") != 1:
+-        raise ValueError("frozen seed file must specify Adventure I 1-7, playthrough 1")
++    if data.get("level") != LEVEL or data.get("playthrough") != 2:
++        raise ValueError("frozen seed file must specify Adventure I 1-7, playthrough 2")
+     if "seeds" in data:
+         seeds = [int(seed) for seed in data["seeds"]]
+     else:
+@@ -67,19 +67,25 @@ def checkpoint_model(path: Path, device: torch.device) -> tuple[GameplayModelV0,
+ 
+ 
+ def run_episode(env: PvZEnv, seed: int, model: GameplayModelV0 | None,
+-                clear_hidden: bool) -> dict[str, Any]:
+-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
++                clear_hidden: bool, zombie_count_multiplier: float,
++                replay_dir: Path, policy_label: str) -> dict[str, Any]:
++    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext(),
++                    zombie_count_multiplier=zombie_count_multiplier)
++    reset_started = time.perf_counter()
+     observation, _ = env.reset(deck=DECK, task=task)
++    reset_seconds = time.perf_counter() - reset_started
+     hidden = None
+     previous_action = None
+     delta_ticks = 0
+     events: dict[str, Any] = {}
+     event_totals = Counter()
+     actions = 0
++    ticks_advanced = 0
+     started = time.perf_counter()
++    teacher = TeacherPolicy() if model is None else None
+     while not observation["terminal"] and actions < 2000:
+         if model is None:
+-            action = teacher_action(observation)
++            action = teacher.advice(observation).action
+         else:
+             with torch.inference_mode():
+                 action, next_hidden, _ = predict_action(
+@@ -87,25 +93,35 @@ def run_episode(env: PvZEnv, seed: int, model: GameplayModelV0 | None,
+                     previous_action, delta_ticks, events,
+                 )
+             hidden = next_hidden
++        before = observation
+         observation, _, done, _, info = env.step(action)
+         if not info.get("ok"):
+             raise RuntimeError(f"illegal action on seed {seed}: {action}")
++        if teacher is not None:
++            teacher.record_action(before, action)
+         for key, value in info["events"].items():
+             if isinstance(value, (int, float)):
+                 event_totals[key] += value
+         previous_action = action
+         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
++        ticks_advanced += delta_ticks
+         events = info["events"]
+         actions += 1
+         if done:
+             break
+     if not observation["terminal"]:
+         raise RuntimeError(f"benchmark episode exceeded 2000 decisions on seed {seed}")
++    safe_label = "".join(character if character.isalnum() or character in "-_" else "_" for character in policy_label)
++    replay_id = f"{safe_label}_seed_{seed}.jsonl.gz"
++    env.save_replay(replay_dir / replay_id)
+     return {
+-        "seed": seed, "won": observation["result"] == 1, "result": observation["result"],
++        "seed": seed, "replay_id": replay_id, "won": observation["result"] == 1, "result": observation["result"],
+         "terminal": bool(observation["terminal"]), "wave": observation["wave"],
+         "wave_count": observation["wave_count"], "tick": observation["tick"],
+-        "actions": actions, "plants_eaten": int(event_totals["plants_eaten"]),
++        "actions": actions, "ticks_advanced": ticks_advanced, "reset_seconds": round(reset_seconds, 4),
++        "ticks_per_second": round(ticks_advanced / max(time.perf_counter() - started, 1e-9), 2),
++        "actions_per_second": round(actions / max(time.perf_counter() - started, 1e-9), 2),
++        "plants_eaten": int(event_totals["plants_eaten"]),
+         "mower_triggers": int(event_totals["mower_triggered"]),
+         "seconds": round(time.perf_counter() - started, 4),
+     }
+@@ -127,6 +143,9 @@ def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
+         "failure_wave_distribution": dict(sorted(Counter(str(record["wave"]) for record in losses).items(),
+                                                   key=lambda item: int(item[0]))),
+         "mean_actions": mean("actions"), "mean_plants_eaten": mean("plants_eaten"),
++        "mean_ticks_per_second": mean("ticks_per_second"),
++        "mean_actions_per_second": mean("actions_per_second"),
++        "mean_reset_seconds": mean("reset_seconds"),
+         "plants_eaten_total": sum(record["plants_eaten"] for record in records),
+         "mower_triggers_total": sum(record["mower_triggers"] for record in records),
+         "mean_mower_triggers": mean("mower_triggers"),
+@@ -150,10 +169,13 @@ def main() -> None:
+     parser.add_argument("--teacher", action="store_true")
+     parser.add_argument("--clear-hidden", action="store_true")
+     parser.add_argument("--no-relation-bias", action="store_true")
++    parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
+     parser.add_argument("--output", type=Path, required=True)
+     args = parser.parse_args()
+     if not args.resource_dir:
+         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
++    if not 1.0 <= args.zombie_count_multiplier <= 10.0:
++        parser.error("--zombie-count-multiplier must be from 1 to 10")
+     if not args.teacher and not args.checkpoint:
+         parser.error("select --teacher and/or --checkpoint LABEL=PATH")
+     labels = (["teacher"] if args.teacher else []) + [label for label, _ in args.checkpoint]
+@@ -176,11 +198,13 @@ def main() -> None:
+ 
+     all_records = {}
+     resource_metadata = None
++    replay_dir = args.output.parent / f"{args.output.stem}_replays"
+     with PvZEnv(resource_dir=args.resource_dir) as env:
+         for label, model, checkpoint_info in policies:
+             records = []
+             for index, seed in enumerate(seeds, start=1):
+-                record = run_episode(env, seed, model, args.clear_hidden)
++                record = run_episode(env, seed, model, args.clear_hidden, args.zombie_count_multiplier,
++                                     replay_dir, label)
+                 records.append(record)
+                 if index % 16 == 0 or index == len(seeds):
+                     print(f"{label} {index}/{len(seeds)} wins={sum(row['won'] for row in records)}",
+@@ -190,16 +214,26 @@ def main() -> None:
+                                      "properties_partner_sha256": env.episode["properties_partner_sha256"]}
+             all_records[label] = {"checkpoint": checkpoint_info, "metrics": summarize(records),
+                                   "episodes": records}
++        worker_rss_bytes = None
++        if env._process is not None:
++            try:
++                rss_kib = subprocess.run(["ps", "-o", "rss=", "-p", str(env._process.pid)],
++                                         check=True, capture_output=True, text=True).stdout.strip()
++                worker_rss_bytes = int(rss_kib) * 1024
++            except (OSError, subprocess.CalledProcessError, ValueError):
++                pass
+     args.output.parent.mkdir(parents=True, exist_ok=True)
+     result = {
+-        **git_metadata(), "level": LEVEL, "playthrough": 1, "deck": list(DECK),
++        **git_metadata(), "level": LEVEL, "playthrough": 2, "deck": list(DECK),
++        "zombie_count_multiplier": args.zombie_count_multiplier,
+         "profile": "Adventure I, six slots, no store items",
+         "seed_file": str(args.seeds.resolve()), "seed_file_sha256": sha256_file(args.seeds),
+         "seed_count": len(seeds), "seed_range": [min(seeds), max(seeds)],
+         "device": str(device), "clear_hidden": args.clear_hidden,
++        "replay_directory": str(replay_dir.resolve()),
+         "relation_bias": not args.no_relation_bias,
+         "command": {"argv": sys.argv, "resource": args.resource_dir},
+-        "resources": resource_metadata, "policies": all_records,
++        "resources": resource_metadata, "worker_rss_bytes": worker_rss_bytes, "policies": all_records,
+     }
+     args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+     print(f"saved {args.output}", flush=True)
+diff --git a/python/pvz_agent.py b/python/pvz_agent.py
+index 8554313..1813bdf 100644
+--- a/python/pvz_agent.py
++++ b/python/pvz_agent.py
+@@ -3,6 +3,7 @@
+ from __future__ import annotations
+ 
+ import math
++from dataclasses import dataclass
+ from typing import Any
+ 
+ import torch
+@@ -490,7 +491,7 @@ def behavior_cloning_loss(model: GameplayModelV0, output: dict[str, Any], observ
+     return torch.stack(losses).sum()
+ 
+ 
+-def teacher_action(observation: dict[str, Any]) -> dict[str, Any]:
++def teacher_v0_action(observation: dict[str, Any]) -> dict[str, Any]:
+     rows = sorted({cell["row"] for cell in observation["cells"] if cell["row_type"] > 0})
+     plants, zombies, sun = observation["plants"], observation["zombies"], observation["sun"]
+     packets = {packet["type"]: packet for packet in observation["packets"]}
+@@ -564,3 +565,250 @@ def teacher_action(observation: dict[str, Any]) -> dict[str, Any]:
+     if chosen is not None:
+         return {"type": "plant", **chosen}
+     return {"type": "wait", "ticks": 300}
++
++
++@dataclass(frozen=True)
++class TeacherAdvice:
++    action: dict[str, Any]
++    candidates: list[tuple[dict[str, Any], float]]
++
++
++def teacher_advice(observation: dict[str, Any], sunflower_placements: int = 0) -> TeacherAdvice:
++    rows = sorted({cell["row"] for cell in observation["cells"] if cell["row_type"] > 0})
++    zombies = observation["zombies"]
++    plants = observation["plants"]
++    zombie_multiplier = max(1.0, float(observation.get("zombie_count_multiplier", 1.0)))
++    safe_shot_gap = 240.0 + 30.0 * (zombie_multiplier - 1.0)
++    emergency_front = max(180.0, 450.0 - 50.0 * (zombie_multiplier - 1.0))
++    packets = {packet["index"]: packet for packet in observation["packets"]}
++    legal = observation["legal_actions"]
++    plants_by_row = {row: [] for row in rows}
++    zombies_by_row = {row: [zombie for zombie in zombies if zombie["row"] == row] for row in rows}
++
++    def plant_type(plant: dict[str, Any]) -> int:
++        return plant["imitater_type"] if plant["type"] == 48 and plant["imitater_type"] >= 0 else plant["type"]
++
++    for plant in plants:
++        if plant["row"] in plants_by_row:
++            plants_by_row[plant["row"]].append(plant)
++
++    def zombie_urgency(zombie: dict[str, Any]) -> float:
++        return max(0.0, min(1.0, (650.0 - zombie["x"]) / 420.0))
++
++    def zombie_hp(zombie: dict[str, Any]) -> float:
++        return sum(max(0.0, zombie.get(key, 0.0)) for key in ("body_health", "helm_health", "shield_health"))
++
++    def expected_shots(zombie: dict[str, Any], plant_x: float) -> float:
++        speed = abs(zombie.get("velocity_x", 0.0))
++        if speed <= 0.01:
++            return 0.0
++        firing_window = max(0.0, (zombie["x"] - plant_x - 80.0) / speed)
++        projectile_travel = max(0.0, zombie["x"] - plant_x) / 5.0
++        return max(0.0, firing_window - projectile_travel) / 150.0
++
++    attackers = {
++        row: [p for p in plants_by_row[row]
++              if plant_type(p) in (0, 5) and not p["squished"]
++              and p["health"] > 0.1 * max(1, p["max_health"])
++              and min((z["x"] for z in zombies_by_row[row]), default=9999.0) > 160 + 80 * p["col"]]
++        for row in rows
++    }
++    wallnuts = {row: [p for p in plants_by_row[row] if plant_type(p) == 3 and not p["squished"]]
++                for row in rows}
++    mine_rows = {row for row in rows if any(plant_type(p) == 4 for p in plants_by_row[row])}
++    uncovered_rows = {row for row in rows if zombies_by_row[row] and not attackers[row]}
++    ready_mowers = {defense["row"] for defense in observation["defenses"] if defense["state"] == 1}
++    sunflowers = [p for p in plants if plant_type(p) == 1]
++    active_shooter_rows = sum(bool(attackers[row]) for row in rows)
++    shooter_rows_built = sum(any(plant_type(p) in (0, 5) and not p["squished"] and
++                                 p["health"] > 0.1 * max(1, p["max_health"])
++                                 for p in plants_by_row[row]) for row in rows)
++    shooter_rows_before_economy = min(len(rows), max(2, math.ceil(zombie_multiplier)))
++    sunflower_goal = min(8, 2 + math.ceil(zombie_multiplier - 1.0)) if observation["wave"] < 3 else min(8, 3 + round(zombie_multiplier - 1.0))
++    if observation["wave"] >= 10:
++        sunflower_goal = 8
++    elif active_shooter_rows == len(rows):
++        sunflower_goal = max(sunflower_goal, 5)
++    sunflower_budget = sunflower_goal + math.ceil(zombie_multiplier)
++    mower_defense_front = 500.0 + 40.0 * (zombie_multiplier - 1.0)
++    sunflower_safety_front = mower_defense_front
++    rake_rows = {item["row"] for item in observation["grid_items"] if item["type"] == 11 and item["state"] == 26}
++    reserve_target = round(100.0 + 25.0 * (zombie_multiplier - 1.0))
++    coverage_bonus = 24.0 + 12.0 * (zombie_multiplier - 1.0)
++    sun = observation["sun"]
++    scores: list[tuple[dict[str, Any], float]] = []
++
++    def add(action: dict[str, Any], score: float) -> None:
++        scores.append((action, score))
++
++    for placement in legal["plants"]:
++        packet = packets[placement["packet"]]
++        seed_type = packet["imitater_type"] if packet["type"] == 48 else packet["type"]
++        row, col = placement["row"], placement["col"]
++        lane_zombies = zombies_by_row[row]
++        front = min((z["x"] for z in lane_zombies), default=9999.0)
++        urgency = max((zombie_urgency(z) for z in lane_zombies), default=0.0)
++        pressure = sum((1.0 + zombie_urgency(z)) * min(3.0, max(0.5, zombie_hp(z) / 200.0)) for z in lane_zombies)
++        count_attackers = len(attackers[row])
++        mower_risk = max(0.0, min(1.0, (450.0 - front) / 300.0)) if row in ready_mowers else 0.0
++        plant_x = 80 + 80 * col
++        action = {"type": "plant", **placement}
++        cost = packet["cost"]
++        if sun < cost:
++            continue
++        reserve_penalty = 100.0 if sun - cost < reserve_target else 0.0
++
++        if seed_type in (0, 5):
++            if front <= emergency_front or not attackers[row]:
++                reserve_penalty = 0.0
++            if seed_type == 0 and not attackers[row] and front > mower_defense_front and sun < 150:
++                reserve_penalty = 200.0
++            targets = [z for z in lane_zombies if z["x"] > plant_x + 80]
++            if targets:
++                useful_count = sum(1 for z in targets if z["x"] > plant_x + 180)
++                value = (25.0 if seed_type == 5 else 22.0) + 10.0 * urgency
++                value += min(30.0, pressure * 4.0) / (1 + count_attackers * 0.5)
++                value += min(4.0, useful_count * 0.7) - count_attackers * 4.0
++                gap = min(z["x"] - plant_x for z in targets)
++                value += max(-5.0, 7.0 - abs(gap - safe_shot_gap) / 35.0) + 12.0 * mower_risk
++                value += coverage_bonus if row in uncovered_rows else -coverage_bonus * len(uncovered_rows)
++                needed_attackers = min(3, max(1, (len(targets) + 1) // 2))
++                value += 20.0 * max(0, needed_attackers - count_attackers)
++                extra_damage = 0.0
++                for zombie in targets:
++                    shots = expected_shots(zombie, plant_x) * (1.75 if seed_type == 5 else 1.0)
++                    current = min(zombie_hp(zombie), count_attackers * shots * 20.0)
++                    added = min(zombie_hp(zombie), (count_attackers + 1) * shots * 20.0)
++                    extra_damage += added - current
++                value += min(200.0, extra_damage * 0.5)
++                if seed_type == 5:
++                    value += 40.0 + min(8.0, pressure) + 8.0 * (zombie_multiplier - 1.0)
++                    reserve_penalty = 0.0
++                if row in ready_mowers and front < mower_defense_front:
++                    value += 600.0
++                    reserve_penalty = 0.0
++                add(action, value - cost * 0.01 - reserve_penalty)
++            elif not lane_zombies and count_attackers == 0:
++                value = (8.0 if seed_type == 0 else 5.0) + (2.0 if col == 2 else 0.0)
++                if seed_type == 0:
++                    value += 12.0 * (zombie_multiplier - 1.0)
++                add(action, value - cost * 0.01 - reserve_penalty)
++            continue
++
++        if seed_type == 3 and lane_zombies and not wallnuts[row] and plant_x < front - 35:
++            # Put the blocker on the house side of the front zombie, as close as a safe legal tile allows.
++            value = 6.0 + 11.0 * urgency + min(4.0, pressure) + 10.0 * mower_risk
++            value += max(-5.0, 7.0 - abs((front - plant_x) - safe_shot_gap) / 35.0)
++            value -= cost * 0.01
++            if row in ready_mowers and front < emergency_front + 70 and (attackers[row] or front < 200):
++                reserve_penalty = 0.0
++            add(action, (value if attackers[row] else value - 5.0) - reserve_penalty)
++        elif seed_type == 4 and lane_zombies and row not in mine_rows:
++            viable = []
++            for zombie in lane_zombies:
++                speed = abs(zombie.get("velocity_x", 0.0))
++                distance = zombie["x"] - plant_x - 25
++                if speed > 0.01 and distance > 0:
++                    arrival = distance / speed
++                    if arrival >= 3200:
++                        viable.append(arrival)
++            if viable:
++                arrival = min(viable)
++                value = 3.0 + min(3.0, len(lane_zombies)) * 1.2 + 2.0 * urgency
++                value -= abs(arrival - 2600.0) / 900.0 + min(8.0, count_attackers * 5.0)
++                if not attackers[row]:
++                    value += 16.0 + max(0.0, 8.0 - abs(arrival - 2600.0) / 350.0)
++                    if observation["wave"] <= 1:
++                        reserve_penalty = 0.0
++                add(action, value - cost * 0.01 - reserve_penalty)
++        elif seed_type == 2:
++            targets = [z for z in zombies if abs(z["row"] - row) <= 1 and abs(z["x"] - plant_x) <= 115]
++            if targets:
++                value = 8.0 + sum(
++                    15.0 + 20.0 * zombie_urgency(z) + min(8.0, zombie_hp(z) / 180.0)
++                    + 10.0 * (zombie_multiplier - 1.0)
++                    for z in targets
++                )
++                if len(targets) >= 2 and max(zombie_urgency(z) for z in targets) > 0.35:
++                    reserve_penalty = 0.0
++                if any(z["row"] in ready_mowers and z["x"] < emergency_front - 70 for z in targets):
++                    value += 14.0
++                    reserve_penalty = 0.0
++                if any(z["row"] in ready_mowers and z["x"] < mower_defense_front for z in targets):
++                    value += 50.0
++                    reserve_penalty = 0.0
++                uncovered_targets = sum(z["row"] in uncovered_rows for z in targets)
++                value += coverage_bonus * uncovered_targets
++                if not uncovered_targets and uncovered_rows:
++                    value -= coverage_bonus * len(uncovered_rows)
++                add(action, value - cost * 0.015 - reserve_penalty)
++        elif seed_type == 1:
++            opening_sunflowers = max(1, round(2.0 / zombie_multiplier))
++            if (sunflower_placements >= opening_sunflowers and
++                    shooter_rows_built < shooter_rows_before_economy):
++                continue
++            if sunflower_placements >= opening_sunflowers and sun < 150:
++                continue
++            if len(sunflowers) >= sunflower_goal or sunflower_placements >= sunflower_budget:
++                continue
++            row_front = min((z["x"] for z in lane_zombies), default=9999.0)
++            if lane_zombies and row_front < sunflower_safety_front and not any(p["col"] > col for p in wallnuts[row]):
++                continue
++            reserve_penalty = 0.0
++            safety = max(0.0, min(1.0, (row_front - 420.0) / 300.0))
++            economy = max(-3.0, 16.0 - len(sunflowers) * 3.5)
++            economy += max(0, sunflower_goal - max(len(sunflowers), sunflower_placements)) * 8.0
++            add(action, economy + safety * 4.0 + (1.0 if col == 1 else 0.0) - cost * 0.01)
++
++    for col, row in legal["shovels"]:
++        plant = next((p for p in plants_by_row[row] if p["col"] == col), None)
++        if plant is None:
++            continue
++        durability = plant["health"] / max(1, plant["max_health"])
++        nearest = min((z["x"] for z in zombies_by_row[row]), default=9999.0)
++        if plant.get("squished") or (durability < 0.12 and nearest > 620):
++            add({"type": "shovel", "col": col, "row": row}, 4.0 - durability)
++
++    if not zombies:
++        wait_ticks, wait_score = 600, 3.0
++    else:
++        nearest = min(zombie["x"] for zombie in zombies)
++        wait_ticks = 150 if nearest < 380 else 300 if nearest < 540 else 600
++        mower_front = min((zombie["x"] for zombie in zombies if zombie["row"] in ready_mowers),
++                          default=9999.0)
++        if mower_front < mower_defense_front:
++            wait_ticks = min(wait_ticks, 30)
++        elif nearest < 540:
++            wait_ticks = min(wait_ticks, 60)
++        wait_score = 0.0 if nearest < 540 else 4.0
++        if any(zombie["row"] in ready_mowers and zombie["x"] < emergency_front for zombie in zombies):
++            wait_score -= 6.0
++        if any(zombie["row"] in rake_rows and zombie["x"] > 600 for zombie in zombies):
++            wait_score += 3.0
++    add({"type": "wait", "ticks": wait_ticks}, wait_score)
++
++    scores.sort(key=lambda item: item[1], reverse=True)
++    candidates = scores[:8]
++    return TeacherAdvice(action=candidates[0][0], candidates=candidates)
++
++
++def teacher_action(observation: dict[str, Any]) -> dict[str, Any]:
++    return teacher_advice(observation).action
++
++
++class TeacherPolicy:
++    def __init__(self) -> None:
++        self.sunflower_placements = 0
++
++    def advice(self, observation: dict[str, Any]) -> TeacherAdvice:
++        return teacher_advice(observation, self.sunflower_placements)
++
++    def record_action(self, observation: dict[str, Any], action: dict[str, Any]) -> None:
++        if action.get("type") != "plant":
++            return
++        packet = next((item for item in observation["packets"] if item["index"] == action["packet"]), None)
++        if packet is None:
++            return
++        seed_type = packet["imitater_type"] if packet["type"] == 48 else packet["type"]
++        if seed_type == 1:
++            self.sunflower_placements += 1
+diff --git a/python/pvz_env.py b/python/pvz_env.py
+index 6c6a7d6..6f95002 100644
+--- a/python/pvz_env.py
++++ b/python/pvz_env.py
+@@ -4,6 +4,7 @@ from __future__ import annotations
+ 
+ import json
+ import hashlib
++import gzip
+ import os
+ from pathlib import Path
+ import subprocess
+@@ -27,10 +28,11 @@ class PlayerProfileContext:
+ class TaskSpec:
+     level: int = 1
+     seed: int = 0
+-    playthrough: int = 1
++    playthrough: int = 2
+     profile: PlayerProfileContext = field(default_factory=PlayerProfileContext)
+     forced_seeds: tuple[int, ...] = ()
+     loadout_mode: str = "fixed"
++    zombie_count_multiplier: float = 1.0
+ 
+ 
+ @dataclass(frozen=True)
+@@ -68,18 +70,22 @@ class PvZEnv:
+         executable: str | os.PathLike[str] | None = None,
+         save_dir: str | os.PathLike[str] | None = None,
+         headless: bool = True,
++        debug_replay: bool = False,
+     ) -> None:
+         root = Path(__file__).resolve().parent.parent
+         binary_name = "pvz-portable.exe" if os.name == "nt" else "pvz-portable"
+         self.executable = Path(executable) if executable else root / "build" / binary_name
+         self.resource_dir = Path(resource_dir).expanduser().resolve()
+         self.headless = headless
++        self.debug_replay = debug_replay
++        self._root = root
+         self._resource_sha256 = self._hash_file(self.resource_dir / "main.pak")
+         self._properties_sha256 = self._hash_file(self.resource_dir / "properties" / "partner.xml")
+         self.save_dir = Path(save_dir).expanduser().resolve() if save_dir else None
+         self._temporary_save: tempfile.TemporaryDirectory[str] | None = None
+         self._process: subprocess.Popen[str] | None = None
+         self._reset_done = False
++        self._last_response: dict[str, Any] = {}
+         self.episode: dict[str, Any] | None = None
+         self._source_revision, self._source_dirty = self._git_metadata(root)
+ 
+@@ -89,9 +95,15 @@ class PvZEnv:
+             revision = subprocess.run(
+                 ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
+             ).stdout.strip()
+-            dirty = bool(subprocess.run(
+-                ["git", "status", "--porcelain"], cwd=root, check=True, capture_output=True, text=True
+-            ).stdout)
++            status = subprocess.run(
++                ["git", "status", "--porcelain", "--untracked-files=all"],
++                cwd=root, check=True, capture_output=True, text=True
++            ).stdout
++            dirty = any(
++                Path(line[3:].strip().split(" -> ")[-1]).name not in {"experiment_manifest.json", "working_tree.patch"}
++                and not line[3:].strip().endswith((".jsonl", ".jsonl.gz"))
++                for line in status.splitlines()
++            )
+             return revision, dirty
+         except (OSError, subprocess.CalledProcessError):
+             return None, None
+@@ -154,7 +166,8 @@ class PvZEnv:
+             raise RuntimeError("environment process is not running")
+         process.stdin.write(command + "\n")
+         process.stdin.flush()
+-        return self._read_message()
++        self._last_response = self._read_message()
++        return self._last_response
+ 
+     def reset(
+         self,
+@@ -174,8 +187,11 @@ class PvZEnv:
+         profile = task.profile
+         if task.loadout_mode != "fixed":
+             raise ValueError("only fixed loadouts are supported")
+-        if type(task.playthrough) is not int or task.playthrough not in (1, 2):
+-            raise ValueError("playthrough must be 1 or 2")
++        if (type(task.zombie_count_multiplier) not in (int, float) or
++                not 1.0 <= task.zombie_count_multiplier <= 10.0):
++            raise ValueError("zombie_count_multiplier must be from 1 to 10")
++        if type(task.playthrough) is not int or task.playthrough != 2:
++            raise ValueError("only replay semantics (playthrough=2) are supported")
+         if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:
+             raise ValueError("seed_slot_count must be from 6 to 10")
+         if type(profile.rake_charges) is not int or profile.rake_charges < 0:
+@@ -188,8 +204,8 @@ class PvZEnv:
+             raise ValueError("owned_upgrade_plants must contain upgrade seed IDs 40 through 47")
+         if len(set(profile.owned_upgrade_plants)) != len(profile.owned_upgrade_plants):
+             raise ValueError("owned_upgrade_plants must not contain duplicates")
+-        if len(task.forced_seeds) > 3 or (task.playthrough == 1 and task.forced_seeds):
+-            raise ValueError("forced_seeds are available only on playthrough 2, up to three cards")
++        if len(task.forced_seeds) > 3:
++            raise ValueError("forced_seeds support up to three cards")
+         if any(type(value) is not int or not 0 <= value < 40 for value in task.forced_seeds):
+             raise ValueError("forced_seeds must contain base plant IDs from 0 through 39")
+         if len(set(task.forced_seeds)) != len(task.forced_seeds):
+@@ -230,13 +246,13 @@ class PvZEnv:
+             f"RESET_V1 {level} {seed} {task.playthrough} {profile.seed_slot_count} "
+             f"{int(profile.imitater_owned)} {int(profile.first_aid_owned)} "
+             f"{int(profile.pool_cleaner_owned)} {int(profile.roof_cleaner_owned)} {profile.rake_charges} "
+-            f"{upgrades} {forced} {deck_text}"
++            f"{upgrades} {forced} {deck_text} {task.zombie_count_multiplier:g}"
+         )
+         if not response.get("ok") or response.get("observation") is None:
+             raise ValueError(f"PvZ-Portable rejected reset: {response}")
+         self._reset_done = True
+         self.episode = {
+-            "format_version": 2,
++            "format_version": 3,
+             "source_revision": self._source_revision,
+             "source_dirty": self._source_dirty,
+             "resource_sha256": self._resource_sha256,
+@@ -251,10 +267,11 @@ class PvZEnv:
+                 "profile": asdict(profile),
+                 "forced_seeds": list(task.forced_seeds),
+                 "loadout_mode": task.loadout_mode,
++                "zombie_count_multiplier": task.zombie_count_multiplier,
+             },
+             "initial_state": self._state_record(response["observation"]),
+-            "actions": [],
+             "operations": [],
++            "final_state": self._state_record(response["observation"]),
+         }
+         return response["observation"], {"events": response.get("events", {})}
+ 
+@@ -290,9 +307,12 @@ class PvZEnv:
+         info = {"ok": response.get("ok", False), "events": response.get("events", {})}
+         if "ticks_advanced" in response:
+             info["ticks_advanced"] = response["ticks_advanced"]
+-        self._record_operation({"kind": "step", "action": dict(action)}, observation)
+-        if self.episode is not None:
+-            self.episode["actions"].append(dict(action))
++        ticks_advanced = info.get("ticks_advanced", action.get("ticks", 0) if kind == "wait" else 0)
++        actual_action = dict(action)
++        if kind == "wait_decision":
++            actual_action = {"type": "wait", "ticks": ticks_advanced}
++        self._record_operation({"kind": "action", "request": dict(action), "action": actual_action,
++                                "ticks_advanced": ticks_advanced}, observation, info["events"])
+         return observation, 0.0, bool(observation.get("terminal")), False, info
+ 
+     def observe(self) -> dict[str, Any]:
+@@ -315,7 +335,7 @@ class PvZEnv:
+         if not response.get("ok") or "snapshot_id" not in response:
+             raise RuntimeError(f"environment could not save a snapshot: {response}")
+         snapshot_id = int(response["snapshot_id"])
+-        self._record_operation({"kind": "snapshot", "id": snapshot_id}, response["observation"])
++        self._record_operation({"kind": "snapshot", "id": snapshot_id}, response["observation"], response.get("events", {}))
+         return snapshot_id
+ 
+     def restore(self, snapshot_id: int) -> dict[str, Any]:
+@@ -325,17 +345,36 @@ class PvZEnv:
+         if not response.get("ok") or response.get("observation") is None:
+             raise ValueError(f"environment could not restore snapshot {snapshot_id}: {response}")
+         observation = response["observation"]
+-        self._record_operation({"kind": "restore", "id": snapshot_id}, observation)
++        self._record_operation({"kind": "restore", "id": snapshot_id}, observation, response.get("events", {}))
+         return observation
+ 
+     def save_replay(self, path: str | os.PathLike[str]) -> None:
+         if self.episode is None:
+             raise RuntimeError("call reset() before saving a replay")
+-        Path(path).write_text(json.dumps(self.episode, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+-
+-    def replay_record(self, record: dict[str, Any]) -> dict[str, Any]:
+-        if record.get("format_version", 1) >= 2:
++        output = Path(path)
++        output.parent.mkdir(parents=True, exist_ok=True)
++        manifest = self._write_manifest(output.parent)
++        header = {key: value for key, value in self.episode.items() if key not in ("operations", "final_state")}
++        header["record_type"] = "header"
++        header["manifest"] = manifest
++        footer = {"record_type": "footer", "final_state": self.episode["final_state"]}
++        if output.name.endswith(".gz"):
++            with gzip.open(output, "wt", encoding="utf-8", compresslevel=6) as stream:
++                for item in [header, *self.episode["operations"], footer]:
++                    stream.write(json.dumps(item, ensure_ascii=False, separators=(",", ":")) + "\n")
++        else:
++            with output.open("w", encoding="utf-8") as stream:
++                for item in [header, *self.episode["operations"], footer]:
++                    stream.write(json.dumps(item, ensure_ascii=False, separators=(",", ":")) + "\n")
++
++    def replay_record(self, record: dict[str, Any], allow_version_mismatch: bool = False,
++                      manifest_directory: Path | None = None) -> dict[str, Any]:
++        version = record.get("format_version", 1)
++        if version >= 3:
++            self._check_manifest(record.get("manifest"), manifest_directory, allow_version_mismatch)
++        if version >= 2:
+             task_data = record["task"]
++            task_data = dict(task_data)
+             task_data["profile"] = PlayerProfileContext(**task_data["profile"])
+             task_data["forced_seeds"] = tuple(task_data["forced_seeds"])
+             observation, _ = self.reset(deck=[SeedCard(**card) for card in record["deck"]], task=TaskSpec(**task_data))
+@@ -346,13 +385,24 @@ class PvZEnv:
+                 )
+             )
+         expected = record.get("initial_state")
+-        if expected is not None and self._state_record(observation) != expected:
++        state_record = self._state_record if version >= 3 else self._state_record_v2
++        if expected is not None and version < 3:
++            expected = {key: value for key, value in expected.items() if key != "observation_sha256"}
++            actual = {key: value for key, value in state_record(observation).items() if key != "observation_sha256"}
++        else:
++            actual = state_record(observation)
++        if expected is not None and actual != expected:
+             raise RuntimeError("replay diverged immediately after reset")
+         snapshot_ids: dict[int, int] = {}
+         for index, operation in enumerate(record.get("operations", [])):
+             kind = operation["kind"]
+-            if kind == "step":
+-                observation, _, _, _, _ = self.step(operation["action"])
++            if kind in ("action", "step"):
++                action = operation.get("action", operation.get("request"))
++                observation, _, _, _, info = self.step(action)
++                if version >= 3 and info["events"] != operation.get("events", {}):
++                    raise RuntimeError(f"replay events diverged at operation {index}")
++                if version >= 3 and info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0) != operation.get("ticks_advanced", 0):
++                    raise RuntimeError(f"replay tick count diverged at operation {index}")
+             elif kind == "snapshot":
+                 snapshot_ids[operation["id"]] = self.snapshot()
+                 observation = self.observe()
+@@ -360,16 +410,61 @@ class PvZEnv:
+                 observation = self.restore(snapshot_ids[operation["id"]])
+             else:
+                 raise ValueError(f"unknown replay operation: {kind}")
+-            if self._state_record(observation) != operation["state"]:
++            actual = state_record(observation)
++            expected = operation["state"]
++            if version < 3:
++                actual = {key: value for key, value in actual.items() if key != "observation_sha256"}
++                expected = {key: value for key, value in expected.items() if key != "observation_sha256"}
++            if actual != expected:
+                 raise RuntimeError(f"replay diverged at operation {index}")
++            if operation.get("debug_state_sha256") and self._debug_state_sha256() != operation["debug_state_sha256"]:
++                raise RuntimeError(f"full game state diverged at operation {index}")
++        if version >= 3 and self._state_record(observation) != record.get("final_state"):
++            raise RuntimeError("replay terminal state diverged")
+         return observation
+ 
+-    def replay_file(self, path: str | os.PathLike[str]) -> dict[str, Any]:
+-        record = json.loads(Path(path).read_text(encoding="utf-8"))
+-        return self.replay_record(record)
++    def replay_file(self, path: str | os.PathLike[str], allow_version_mismatch: bool = False) -> dict[str, Any]:
++        source = Path(path)
++        opener = gzip.open if source.name.endswith(".gz") else open
++        with opener(source, "rt", encoding="utf-8") as stream:
++            first = stream.readline()
++            if not first:
++                raise ValueError("empty replay file")
++            try:
++                header = json.loads(first)
++            except json.JSONDecodeError:
++                stream.seek(0)
++                record = json.load(stream)
++            else:
++                if header.get("record_type") != "header":
++                    stream.seek(0)
++                    record = json.load(stream)
++                else:
++                    record = header
++                    record["operations"] = []
++                    for line in stream:
++                        item = json.loads(line)
++                        if item.get("record_type") == "footer":
++                            record["final_state"] = item["final_state"]
++                        else:
++                            record["operations"].append(item)
++        return self.replay_record(record, allow_version_mismatch, source.parent)
+ 
+     @staticmethod
+     def _state_record(observation: dict[str, Any]) -> dict[str, Any]:
++        return {
++            "tick": observation["tick"],
++            "wave": observation["wave"],
++            "wave_count": observation["wave_count"],
++            "sun": observation["sun"],
++            "plants": len(observation["plants"]),
++            "zombies": len(observation["zombies"]),
++            "terminal": observation["terminal"],
++            "result": observation["result"],
++        }
++
++    @staticmethod
++    def _state_record_v2(observation: dict[str, Any]) -> dict[str, Any]:
+         canonical = json.dumps(observation, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+         return {
+             "tick": observation["tick"],
+@@ -381,10 +476,106 @@ class PvZEnv:
+             "observation_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+         }
+ 
+-    def _record_operation(self, operation: dict[str, Any], observation: dict[str, Any]) -> None:
++    def _record_operation(self, operation: dict[str, Any], observation: dict[str, Any],
++                          events: dict[str, Any] | None = None) -> None:
+         if self.episode is not None:
++            operation["record_type"] = "operation"
++            operation["events"] = events if events is not None else {}
++            operation["tick"] = observation["tick"]
+             operation["state"] = self._state_record(observation)
++            if self.debug_replay:
++                operation["debug_state_sha256"] = self._debug_state_sha256()
+             self.episode["operations"].append(operation)
++            self.episode["final_state"] = operation["state"]
++
++    def _debug_state_sha256(self) -> str:
++        state = self.privileged_state()
++        canonical = json.dumps(state, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
++        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
++
++    def _manifest_data(self) -> tuple[dict[str, Any], bytes]:
++        revision, _ = self._git_metadata(self._root)
++        tracked = subprocess.run(
++            ["git", "diff", "HEAD", "--binary", "--", ".", ":(exclude)artifacts/**"],
++            cwd=self._root, check=True, capture_output=True
++        ).stdout
++        untracked_paths = subprocess.run(
++            ["git", "ls-files", "--others", "--exclude-standard", "-z"],
++            cwd=self._root, check=True, capture_output=True,
++        ).stdout.split(b"\0")
++        untracked = []
++        for raw_path in untracked_paths:
++            if raw_path:
++                path = os.fsdecode(raw_path)
++                if path.startswith("artifacts/") or Path(path).name in {"experiment_manifest.json", "working_tree.patch"} or path.endswith((".jsonl", ".jsonl.gz")):
++                    continue
++                diff = subprocess.run(
++                    ["git", "diff", "--no-index", "--binary", "/dev/null", path],
++                    cwd=self._root, capture_output=True,
++                )
++                untracked.append(diff.stdout)
++        patch = tracked + b"".join(untracked)
++        cache = self._root / "build" / "CMakeCache.txt"
++        build_config: dict[str, str] = {}
++        if cache.is_file():
++            for line in cache.read_text(encoding="utf-8", errors="replace").splitlines():
++                if line and not line.startswith("#") and "=" in line:
++                    key, value = line.split("=", 1)
++                    if key.split(":", 1)[0] in {
++                        "BUILD_STATIC", "CMAKE_BUILD_TYPE", "CMAKE_CXX_COMPILER", "CMAKE_CXX_FLAGS",
++                        "CMAKE_GENERATOR", "DO_FIX_BUGS", "LOW_MEMORY", "PVZ_DEBUG",
++                    }:
++                        build_config[key.split(":", 1)[0]] = value
++        executable_sha256 = self._hash_file(self.executable) if self.executable.is_file() else None
++        data = {
++            "source_revision": revision,
++            "source_dirty": bool(patch),
++            "working_tree_patch_sha256": hashlib.sha256(patch).hexdigest(),
++            "build_config": build_config,
++            "resource_sha256": self._resource_sha256,
++            "properties_partner_sha256": self._properties_sha256,
++            "executable_sha256": executable_sha256,
++        }
++        return data, patch
++
++    def _write_manifest(self, directory: Path) -> dict[str, str]:
++        path = directory / "experiment_manifest.json"
++        patch_path = directory / "working_tree.patch"
++        current, patch = self._manifest_data()
++        if path.exists():
++            manifest = json.loads(path.read_text(encoding="utf-8"))
++            if any(manifest.get(key) != current.get(key) for key in current):
++                raise RuntimeError(f"experiment manifest belongs to a different build: {path}")
++            if not patch_path.is_file() or hashlib.sha256(patch_path.read_bytes()).hexdigest() != manifest.get("working_tree_patch_sha256"):
++                raise RuntimeError(f"experiment working tree patch is missing or changed: {patch_path}")
++        else:
++            patch_path.write_bytes(patch)
++            manifest = {**current, "working_tree_patch": patch_path.name}
++            path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
++        digest = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
++        return {"path": path.name, "sha256": digest}
++
++    def _check_manifest(self, reference: dict[str, str] | None, directory: Path | None,
++                        allow_version_mismatch: bool) -> None:
++        if not reference or directory is None:
++            raise ValueError("v3 replay has no experiment manifest reference")
++        path = directory / reference["path"]
++        if not path.is_file():
++            raise FileNotFoundError(f"replay manifest not found: {path}")
++        manifest = json.loads(path.read_text(encoding="utf-8"))
++        digest = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
++        if digest != reference["sha256"]:
++            raise ValueError(f"replay manifest digest mismatch: {path}")
++        patch_path = path.parent / manifest.get("working_tree_patch", "")
++        if not patch_path.is_file() or hashlib.sha256(patch_path.read_bytes()).hexdigest() != manifest.get("working_tree_patch_sha256"):
++            raise ValueError(f"replay working tree patch is missing or corrupted: {patch_path}")
++        if allow_version_mismatch:
++            return
++        current, _ = self._manifest_data()
++        mismatches = [key for key, value in current.items() if manifest.get(key) != value]
++        if mismatches:
++            raise RuntimeError("replay manifest mismatch: " + ", ".join(mismatches) +
++                               "; pass allow_version_mismatch=True to replay across versions")
+ 
+     @staticmethod
+     def _coordinates(action: dict[str, Any], keys: tuple[str, ...]) -> tuple[int, ...]:
+diff --git a/python/train_pvz_agent.py b/python/train_pvz_agent.py
+index 6311e5f..d994f35 100644
+--- a/python/train_pvz_agent.py
++++ b/python/train_pvz_agent.py
+@@ -17,7 +17,7 @@ from typing import Any
+ import torch
+ from torch.nn import functional as F
+ 
+-from pvz_agent import GameplayModelV0, MODEL_CONFIG, behavior_cloning_loss, predict_action, teacher_action
++from pvz_agent import GameplayModelV0, MODEL_CONFIG, TeacherPolicy, behavior_cloning_loss, predict_action
+ from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
+ 
+ 
+@@ -29,44 +29,55 @@ def parse_seeds(text: str) -> list[int]:
+     return [int(value) for value in text.split(",") if value.strip()]
+ 
+ 
+-def collect_episode(env: PvZEnv, seed: int, max_actions: int = 900) -> dict[str, Any]:
+-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
++def collect_episode(env: PvZEnv, seed: int, replay_dir: Path, max_actions: int = 900) -> dict[str, Any]:
++    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
+     observation, _ = env.reset(deck=DECK, task=task)
+     steps: list[dict[str, Any]] = []
+     delta_ticks = 0
+     events: dict[str, Any] = {}
+-    for _ in range(max_actions):
+-        action = teacher_action(observation)
+-        steps.append({"observation": observation, "action": action, "delta_ticks": delta_ticks, "events": events})
++    teacher = TeacherPolicy()
++    for decision_index in range(max_actions):
++        action = teacher.advice(observation).action
++        steps.append({"decision_index": decision_index, "observation": observation, "action": action,
++                      "delta_ticks": delta_ticks, "events": events})
++        before = observation
+         observation, _, done, _, info = env.step(action)
+         if not info.get("ok"):
+             raise RuntimeError(f"teacher selected an illegal action on seed {seed}: {action}")
++        teacher.record_action(before, action)
+         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+         events = info["events"]
+         if done:
+             won = observation["result"] == 1
+-            return {"seed": seed, "steps": steps, "won": won, "result": observation["result"],
++            replay_id = f"teacher_seed_{seed}.jsonl.gz"
++            env.save_replay(replay_dir / replay_id)
++            return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
++                    "steps": steps, "won": won, "result": observation["result"],
+                     "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
+     raise RuntimeError(f"teacher episode exceeded {max_actions} decisions on seed {seed}")
+ 
+ 
+-def collect_dagger_episode(model: GameplayModelV0, env: PvZEnv, seed: int, device: torch.device) -> dict[str, Any]:
+-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
++def collect_dagger_episode(model: GameplayModelV0, env: PvZEnv, seed: int, device: torch.device,
++                           replay_dir: Path) -> dict[str, Any]:
++    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
+     observation, _ = env.reset(deck=DECK, task=task)
+     steps: list[dict[str, Any]] = []
+     hidden = None
+     previous_action = None
+     delta_ticks = 0
+     events: dict[str, Any] = {}
+-    for _ in range(900):
+-        label = teacher_action(observation)
+-        steps.append({"observation": observation, "action": label, "previous_action": previous_action,
++    teacher = TeacherPolicy()
++    for decision_index in range(900):
++        label = teacher.advice(observation).action
++        steps.append({"decision_index": decision_index, "observation": observation, "action": label, "previous_action": previous_action,
+                       "delta_ticks": delta_ticks, "events": events})
+         with torch.inference_mode():
+             action, hidden, _ = predict_action(model, observation, hidden, previous_action, delta_ticks, events)
++        before = observation
+         observation, _, done, _, info = env.step(action)
+         if not info.get("ok"):
+             raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
++        teacher.record_action(before, action)
+         previous_action = action
+         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+         events = info["events"]
+@@ -74,7 +85,10 @@ def collect_dagger_episode(model: GameplayModelV0, env: PvZEnv, seed: int, devic
+             break
+     if not observation["terminal"]:
+         raise RuntimeError(f"DAgger episode exceeded 900 decisions on seed {seed}")
+-    return {"seed": seed, "steps": steps, "won": observation["result"] == 1, "result": observation["result"],
++    replay_id = f"dagger_seed_{seed}.jsonl.gz"
++    env.save_replay(replay_dir / replay_id)
++    return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
++            "steps": steps, "won": observation["result"] == 1, "result": observation["result"],
+             "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
+ 
+ 
+@@ -111,6 +125,7 @@ def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seed
+     cli["output_dir"] = str(args.output_dir)
+     return {
+         "git_sha": git_sha, "git_dirty": git_dirty,
++        "observation_version": 2, "task_version": 2,
+         "command": {"argv": list(sys.argv), "arguments": cli},
+         "trajectory_sha256": {name: sha256_file(path) for name, path in data_paths.items()},
+         "resource_sha256": {
+@@ -197,7 +212,7 @@ def evaluate(model: GameplayModelV0, env: PvZEnv, seeds: list[int], device: torc
+     model.eval()
+     records = []
+     for seed in seeds:
+-        task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
++        task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
+         observation, _ = env.reset(deck=DECK, task=task)
+         hidden = None
+         previous_action = None
+@@ -249,6 +264,7 @@ def main() -> None:
+     torch.set_num_threads(1)
+     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+     args.output_dir.mkdir(parents=True, exist_ok=True)
++    replay_dir = args.output_dir / "replays"
+     data_path = args.output_dir / "teacher_trajectories.json.gz"
+     train_seeds = parse_seeds(args.train_seeds)
+     dagger_seeds = parse_seeds(args.dagger_seeds) if args.dagger_seeds else train_seeds
+@@ -257,7 +273,7 @@ def main() -> None:
+         episodes = []
+         with PvZEnv(resource_dir=args.resource_dir) as env:
+             for seed in train_seeds:
+-                episode = collect_episode(env, seed)
++                episode = collect_episode(env, seed, replay_dir)
+                 episodes.append(episode)
+                 print(f"teacher seed={seed} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
+                       f"tick={episode['tick']} steps={len(episode['steps'])}", flush=True)
+@@ -273,6 +289,8 @@ def main() -> None:
+             return
+     else:
+         episodes = read_episodes(data_path)
++        if any(episode.get("observation_version") != 2 or episode.get("task_version") != 2 for episode in episodes):
++            raise ValueError("training trajectories predate the current environment; recollect them without --train-only")
+ 
+     model = GameplayModelV0().to(device)
+     parameter_count = sum(parameter.numel() for parameter in model.parameters())
+@@ -289,7 +307,7 @@ def main() -> None:
+                     "training_seeds": [episode["seed"] for episode in episodes], "losses": losses},
+                    indent=2) + "\n", encoding="utf-8")
+     with PvZEnv(resource_dir=args.resource_dir) as env:
+-        dagger_episodes = [collect_dagger_episode(model, env, seed, device) for seed in dagger_seeds]
++        dagger_episodes = [collect_dagger_episode(model, env, seed, device, replay_dir) for seed in dagger_seeds]
+         dagger_path = args.output_dir / "dagger_trajectories.json.gz"
+         write_episodes(dagger_path, dagger_episodes)
+         for episode in dagger_episodes:
+@@ -306,8 +324,8 @@ def main() -> None:
+                     parameter_count=parameter_count, epochs=args.epochs, losses=losses,
+                     evaluation=results)
+     summary = {
+-        "model": checkpoint.name, "protocol_version": 1, "observation_version": 1,
+-        "level": LEVEL, "playthrough": 1, "deck": list(DECK), "device": str(device),
++        "model": checkpoint.name, "protocol_version": 1, "observation_version": 2, "task_version": 2,
++        "level": LEVEL, "playthrough": 2, "deck": list(DECK), "device": str(device),
+         "parameter_count": parameter_count, "training_episodes": len(episodes),
+         "training_steps": sum(len(episode["steps"]) for episode in episodes),
+         "training_seeds": [episode["seed"] for episode in episodes], "plant_action_weight": plant_weight,
+diff --git a/python/train_pvz_ppo.py b/python/train_pvz_ppo.py
+index 924c83c..1dfa6ff 100644
+--- a/python/train_pvz_ppo.py
++++ b/python/train_pvz_ppo.py
+@@ -46,8 +46,8 @@ def git_metadata() -> tuple[str | None, bool | None]:
+ 
+ 
+ def collect_episode(model: GameplayModelV0, env: PvZEnv, seed: int,
+-                    max_actions: int) -> dict[str, Any]:
+-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
++                    max_actions: int, replay_path: Path) -> dict[str, Any]:
++    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
+     observation, _ = env.reset(deck=DECK, task=task)
+     hidden = None
+     previous_action = None
+@@ -55,12 +55,13 @@ def collect_episode(model: GameplayModelV0, env: PvZEnv, seed: int,
+     events: dict[str, Any] = {}
+     transitions = []
+     started = time.perf_counter()
+-    for _ in range(max_actions):
++    for decision_index in range(max_actions):
+         hidden_before = None if hidden is None else hidden.detach().clone()
+         with torch.no_grad():
+             output = model.step(observation, hidden, previous_action, delta_ticks, events)
+             action, log_prob, _ = select_action(model, output, observation)
+         transitions.append({
++            "decision_index": decision_index,
+             "observation": observation, "previous_action": previous_action,
+             "delta_ticks": delta_ticks, "events": events, "action": action,
+             "log_prob": float(log_prob.item()), "value": float(output["value"].item()),
+@@ -81,7 +82,8 @@ def collect_episode(model: GameplayModelV0, env: PvZEnv, seed: int,
+     transitions[-1]["reward"] = 1.0 if won else -1.0
+     for transition in transitions[:-1]:
+         transition["reward"] = 0.0
+-    return {"seed": seed, "won": won, "result": observation["result"],
++    env.save_replay(replay_path)
++    return {"seed": seed, "replay_id": replay_path.name, "won": won, "result": observation["result"],
+             "wave": observation["wave"], "wave_count": observation["wave_count"],
+             "tick": observation["tick"], "seconds": time.perf_counter() - started,
+             "transitions": transitions}
+@@ -207,6 +209,8 @@ def main() -> None:
+     initial_checkpoint_sha = sha256_file(args.init_checkpoint)
+     trajectory_dir = args.init_checkpoint.expanduser().resolve().parent
+     initial = torch.load(args.init_checkpoint, map_location=device, weights_only=False)
++    if initial.get("provenance", {}).get("observation_version") != 2:
++        raise ValueError("initial checkpoint predates the current observation version; rebuild teacher and BC data first")
+     model = GameplayModelV0().to(device)
+     model.load_state_dict(initial["state_dict"])
+     model.eval()
+@@ -227,7 +231,9 @@ def main() -> None:
+     with PvZEnv(resource_dir=resource_dir) as env:
+         for update in range(1, args.updates + 1):
+             seeds = random.sample(train_seeds, args.rollout_episodes)
+-            episodes = [collect_episode(model, env, seed, args.max_actions) for seed in seeds]
++            episodes = [collect_episode(model, env, seed, args.max_actions,
++                                        args.output_dir / "replays" / f"ppo_update_{update}_seed_{seed}.jsonl.gz")
++                        for seed in seeds]
+             add_advantages(episodes, args.gamma, args.gae_lambda)
+             losses = train_update(model, episodes, optimizer, device, args.ppo_epochs,
+                                   args.sequence_length, args.clip_epsilon,
+@@ -236,7 +242,7 @@ def main() -> None:
+             trajectory_hashes.update(hashes)
+             row = {"update": update, "seeds": seeds,
+                    "wins": sum(episode["won"] for episode in episodes),
+-                   "episodes": [{"seed": episode["seed"], "won": episode["won"],
++                   "episodes": [{"seed": episode["seed"], "replay_id": episode["replay_id"], "won": episode["won"],
+                                  "wave": episode["wave"], "actions": len(episode["transitions"]),
+                                  "seconds": round(episode["seconds"], 3),
+                                  "sha256": hashes[f"{update}:{episode['seed']}"]}
+@@ -258,7 +264,7 @@ def main() -> None:
+                 "initial_checkpoint_sha256": initial_checkpoint_sha,
+                 "random_seeds": {"python_torch": args.seed, "training_seed_range": [args.train_seed_start,
+                                                                                       args.train_seed_end - 1]},
+-                "model_config": MODEL_CONFIG,
++                "model_config": MODEL_CONFIG, "observation_version": 2, "task_version": 2,
+             }
+             torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
+                         "config": MODEL_CONFIG, "level": LEVEL, "deck": DECK,
+diff --git a/src/Lawn/Board.cpp b/src/Lawn/Board.cpp
+index dfed9d9..e22915c 100644
+--- a/src/Lawn/Board.cpp
++++ b/src/Lawn/Board.cpp
+@@ -21,6 +21,7 @@
+ 
+ #include <time.h>
+ #include <algorithm>
++#include <cmath>
+ #include <SDL.h>
+ #include <format>
+ #include "ZenGarden.h"
+@@ -768,6 +769,7 @@ void Board::PickZombieWaves()
+ 			ZombieType aZombieType = PickZombieType(aZombiePoints, aWave, &aZombiePicker);
+ 			PutZombieInWave(aZombieType, aWave, &aZombiePicker);
+ 		}
++
+ 	}
+ }
+ 
+@@ -4902,15 +4904,16 @@ int Board::TotalZombiesHealthInWave(int theWaveIndex)
+ void Board::SpawnZombieWave()
+ {
+ 	mChallenge->SpawnZombieWave();
++	const int aBaseCount = NumberZombiesInWave(mCurrentWave);
++	const double aMultiplier = mApp->mEnvironmentMode ? mApp->mEnvironmentTaskSpec.zombieCountMultiplier : mApp->mZombieMultiplier;
++	const int aSpawnCount = aBaseCount > 0 ? static_cast<int>(std::lround(aBaseCount * aMultiplier)) : 0;
+ 	if (mApp->IsBungeeBlitzLevel())
+ 	{
+ 		BungeeDropGrid aBungeeDropGrid;
+ 		SetupBungeeDrop(&aBungeeDropGrid);
+-		for (int i = 0; i < MAX_ZOMBIES_IN_WAVE; i++)
++		for (int i = 0; i < aSpawnCount; i++)
+ 		{
+-			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i];
+-			if (aZombieType == ZombieType::ZOMBIE_INVALID)
+-				break;
++			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i % aBaseCount];
+ 
+ 			if (aZombieType == ZombieType::ZOMBIE_BUNGEE || aZombieType == ZombieType::ZOMBIE_ZAMBONI)
+ 			{
+@@ -4925,11 +4928,9 @@ void Board::SpawnZombieWave()
+ 	else
+ 	{
+ 		PVZP_ASSERT(mCurrentWave >= 0 && mCurrentWave < MAX_ZOMBIE_WAVES && mCurrentWave < mNumWaves);
+-		for (int i = 0; i < MAX_ZOMBIES_IN_WAVE; i++)
++		for (int i = 0; i < aSpawnCount; i++)
+ 		{
+-			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i];
+-			if (aZombieType == ZombieType::ZOMBIE_INVALID)
+-				break;
++			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i % aBaseCount];
+ 
+ 			if (aZombieType == ZombieType::ZOMBIE_BOBSLED && !CanAddBobSled())
+ 			{
+diff --git a/src/Lawn/SeedPacket.cpp b/src/Lawn/SeedPacket.cpp
+index 562d4ee..46875df 100644
+--- a/src/Lawn/SeedPacket.cpp
++++ b/src/Lawn/SeedPacket.cpp
+@@ -1162,9 +1162,9 @@ void SeedBank::UpdateConveyorBelt()
+ 	}
+ }
+ 
+-void SeedBank::UpdateWidth()
++void SeedBank::UpdateWidth(int theNumPackets)
+ {
+-	mNumPackets = mBoard->GetNumSeedsInBank();
++	mNumPackets = theNumPackets < 0 ? mBoard->GetNumSeedsInBank() : theNumPackets;
+ 	mWidth = (IMAGE_SEEDBANK ? IMAGE_SEEDBANK->GetWidth() : 0) + mBoard->GetSeedBankExtraWidth();
+ 	for (int i = 0; i < mNumPackets; i++)
+ 	{
+diff --git a/src/Lawn/SeedPacket.h b/src/Lawn/SeedPacket.h
+index 8bb4922..996e399 100644
+--- a/src/Lawn/SeedPacket.h
++++ b/src/Lawn/SeedPacket.h
+@@ -81,7 +81,7 @@ public:
+ 	int				    GetNumSeedsOnConveyorBelt();
+ 	int		CountOfTypeOnConveyorBelt(SeedType theSeedType);
+ 	void			    UpdateConveyorBelt();
+-	void			    UpdateWidth();
++	void			    UpdateWidth(int theNumPackets = -1);
+ 	void			    RefreshAllPackets();
+ };
+ 
+diff --git a/src/Lawn/System/Music.cpp b/src/Lawn/System/Music.cpp
+index aa8346c..de323a0 100644
+--- a/src/Lawn/System/Music.cpp
++++ b/src/Lawn/System/Music.cpp
+@@ -581,6 +581,8 @@ void Music::MusicUpdate()
+ 
+ void Music::MakeSureMusicIsPlaying(MusicTune theMusicTune)
+ {
++	if (mMusicDisabled)
++		return;
+ 	if (mCurMusicTune != theMusicTune)
+ 	{
+ 		StopAllMusic();
+diff --git a/src/Lawn/System/SaveGame.cpp b/src/Lawn/System/SaveGame.cpp
+index 06a3261..ca897c1 100644
+--- a/src/Lawn/System/SaveGame.cpp
++++ b/src/Lawn/System/SaveGame.cpp
+@@ -2263,6 +2263,9 @@ static bool LawnLoadGameV4(Board* theBoard, Buffer& aBuffer)
+ 	if (aCrc != aHeader.mPayloadCrc)
+ 		return false;
+ 
++	for (PvzpParticleSystem* aParticleSystem : theBoard->mApp->mEffectSystem->mParticleHolder->mParticleSystems)
++		aParticleSystem->ParticleSystemDie();
++
+ 	TLVReader aReader(aPayload, aHeader.mPayloadSize);
+ 	bool aBaseLoaded = false;
+ 	while (aReader.mOk && aReader.mPos < aReader.mSize)
+diff --git a/src/LawnApp.cpp b/src/LawnApp.cpp
+index b5b35ab..c854609 100644
+--- a/src/LawnApp.cpp
++++ b/src/LawnApp.cpp
+@@ -24,6 +24,8 @@
+ #include <cstdio>
+ #include <format>
+ #include <sstream>
++#include <fstream>
++#include <iostream>
+ #include <cstdlib>
+ #include "LawnApp.h"
+ #include "Resources.h"
+@@ -75,6 +77,7 @@
+ #include "widget/WidgetManager.h"
+ #include "misc/ResourceManager.h"
+ #include <algorithm>
++#include <cmath>
+ 
+ #include "widget/Checkbox.h"
+ #include "widget/Dialog.h"
+@@ -173,6 +176,9 @@ LawnApp::LawnApp()
+ 	mCrazyDaveBlinkReanimID = ReanimationID::REANIMATIONID_NULL;
+ 	mCrazyDaveMessageIndex = -1;
+ 	mEnvironmentMode = false;
++	mZombieMultiplier = 1.0;
++	mPlayLevel = 0;
++	mRecordOutputPath = "";
+ }
+ 
+ LawnApp::~LawnApp()
+@@ -274,6 +280,31 @@ void LawnApp::KillBoard()
+ 			EraseFile(aLegacyFileName);
+ 		}
+ 
++		if (!mRecordOutputPath.empty() && (
++			mBoardResult == BoardResult::BOARDRESULT_WON ||
++			mBoardResult == BoardResult::BOARDRESULT_LOST))
++		{
++			std::ofstream out(mRecordOutputPath);
++			if (out.is_open())
++			{
++				out << "{\n"
++					<< "  \"won\": " << (mBoardResult == BoardResult::BOARDRESULT_WON ? "true" : "false") << ",\n"
++					<< "  \"result\": " << static_cast<int>(mBoardResult) << ",\n"
++					<< "  \"level\": " << mBoard->mLevel << ",\n"
++					<< "  \"zombie_multiplier\": " << mZombieMultiplier << ",\n"
++					<< "  \"wave\": " << mBoard->mCurrentWave << ",\n"
++					<< "  \"total_waves\": " << mBoard->mNumWaves << ",\n"
++					<< "  \"ticks\": " << mBoard->mMainCounter << ",\n"
++					<< "  \"seconds\": " << (mBoard->mMainCounter / 100.0) << ",\n"
++					<< "  \"zombies_killed\": " << mBoard->mZombiesKilled << ",\n"
++					<< "  \"plants_eaten\": " << mBoard->mPlantsEaten << ",\n"
++					<< "  \"mower_triggered\": " << mBoard->mTriggeredLawnMowers << ",\n"
++					<< "  \"sun_produced\": " << mBoard->mSunMoneyProduced << "\n"
++					<< "}\n";
++				std::cout << "\n[PvZ Play Record] Match saved to " << mRecordOutputPath << std::endl;
++			}
++		}
++
+ 		mBoard->DisposeBoard();
+ 		mWidgetManager->RemoveWidget(mBoard);
+ 		SafeDeleteWidget(mBoard);
+@@ -1295,9 +1326,9 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedT
+ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task)
+ {
+ 	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || deck.empty() || deck.size() > SEEDBANK_MAX ||
+-		task.playthrough < 1 || task.playthrough > 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
+-		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || task.forcedSeeds.size() > 3 ||
+-		(task.playthrough == 1 && !task.forcedSeeds.empty()))
++		task.playthrough != 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
++		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || !std::isfinite(task.zombieCountMultiplier) ||
++		task.zombieCountMultiplier < 1.0 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3)
+ 		return false;
+ 
+ 	if (!mPlayerInfo)
+@@ -1363,14 +1394,13 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
+ 
+ 	MakeNewBoard();
+ 	mBoard->InitLevel();
+-	mBoard->mCutScene->PlaceLawnItems();
+-	for (LawnMower* mower : mBoard->mLawnMowers)
+-	{
+-		mower->mVisible = true;
+-		mower->mPosX = -21.0f;
+-	}
+-	mBoard->mSeedBank->mNumPackets = static_cast<int>(deck.size());
+-	mBoard->mSeedBank->UpdateWidth();
++	mMusic->mMusicDisabled = true;
++	mGameScene = GameScenes::SCENE_LEVEL_INTRO;
++	ShowSeedChooserScreen();
++	mBoard->mCutScene->StartLevelIntro();
++	mBoard->mCutScene->mCutsceneTime = 1000000;
++	mBoard->mCutScene->CancelIntro();
++		mBoard->mSeedBank->UpdateWidth(static_cast<int>(deck.size()));
+ 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+ 	{
+ 		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+@@ -1382,9 +1412,12 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
+ 	mBoard->mTutorialState = TutorialState::TUTORIAL_OFF;
+ 	mBoard->mTutorialTimer = -1;
+ 	mBoard->ClearAdvice(AdviceType::ADVICE_NONE);
+-	mMusic->mMusicDisabled = true;
+-	mGameScene = GameScenes::SCENE_PLAYING;
+-	mBoard->StartLevel();
++	StartPlaying();
++	mAppCounter = 0;
++	mAppRandSeed = static_cast<int>(seed);
++	mRandSeed = seed;
++	Sexy::SRand(seed);
++	std::srand(seed);
+ 	return true;
+ }
+ 
+@@ -1401,6 +1434,7 @@ bool LawnApp::EnvironmentPlant(int packetIndex, int col, int row)
+ 	if (mBoard->CanPlantAt(col, row, seed) != PlantingReason::PLANTING_OK)
+ 		return false;
+ 
++	packet.Deactivate();
+ 	CursorObject& cursor = *mBoard->mCursorObject;
+ 	cursor.mCursorType = CursorType::CURSOR_TYPE_PLANT_FROM_BANK;
+ 	cursor.mType = packet.mPacketType;
+@@ -1431,18 +1465,25 @@ void LawnApp::EnvironmentWait(int ticks)
+ 		return;
+ 	for (int i = 0; i < ticks && !EnvironmentTerminal(); ++i)
+ 	{
+-		mBoard->ProcessDeleteQueue();
+-		if (mLoadingThreadCompleted && mEffectSystem)
+-			mEffectSystem->ProcessDeleteQueue();
+ 		for (Coin* coin : mBoard->mCoins)
+ 		{
+ 			if (!coin->mDead && coin->IsSun())
+ 				coin->ScoreCoin();
+ 		}
+-		mBoard->Update();
++		AdvanceLogicTick();
+ 	}
+ }
+ 
++void LawnApp::AdvanceLogicTick()
++{
++	++mAppCounter;
++	if (mBoard)
++		mBoard->ProcessDeleteQueue();
++	if (mLoadingThreadCompleted && mEffectSystem)
++		mEffectSystem->ProcessDeleteQueue();
++	SexyApp::UpdateFrames();
++}
++
+ int LawnApp::EnvironmentWaitDecision(int maxTicks)
+ {
+ 	if (!mBoard || maxTicks < 1 || maxTicks > 1000000 || EnvironmentTerminal())
+@@ -1478,18 +1519,15 @@ int LawnApp::EnvironmentWaitDecision(int maxTicks)
+ 
+ 	const std::string initialSignature = decisionSignature();
+ 	int ticksAdvanced = 0;
+-		// ponytail: the 300-tick floor limits frequent no-op decisions; lower it when faster reactions are needed.
++	// ponytail: the 300-tick floor limits frequent no-op decisions; lower it when faster reactions are needed.
+ 	while (ticksAdvanced < maxTicks && !EnvironmentTerminal())
+ 	{
+-		mBoard->ProcessDeleteQueue();
+-		if (mLoadingThreadCompleted && mEffectSystem)
+-			mEffectSystem->ProcessDeleteQueue();
+ 		for (Coin* coin : mBoard->mCoins)
+ 		{
+ 			if (!coin->mDead && coin->IsSun())
+ 				coin->ScoreCoin();
+ 		}
+-		mBoard->Update();
++		AdvanceLogicTick();
+ 		++ticksAdvanced;
+ 		if (ticksAdvanced >= std::min(maxTicks, 300) && decisionSignature() != initialSignature)
+ 			break;
+@@ -1509,8 +1547,10 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
+ 		return "null";
+ 
+ 	std::ostringstream out;
+-	out << "{\"protocol_version\":1,\"observation_version\":1,\"task_version\":1,\"level\":" << mBoard->mLevel
+-		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough << ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
++	out << "{\"protocol_version\":1,\"observation_version\":2,\"task_version\":2,\"level\":" << mBoard->mLevel
++		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough
++		<< ",\"zombie_count_multiplier\":" << mEnvironmentTaskSpec.zombieCountMultiplier
++		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
+ 		<< ",\"night\":" << (mBoard->StageIsNight() ? "true" : "false")
+ 		<< ",\"pool\":" << (mBoard->StageHasPool() ? "true" : "false")
+ 		<< ",\"fog\":" << (mBoard->StageHasFog() ? "true" : "false")
+@@ -1724,7 +1764,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
+ 	{
+ 		const std::string aRandState = GetRandState();
+ 		constexpr char aHex[] = "0123456789abcdef";
+-		out << ",\"hidden\":{\"wave_timer\":" << mBoard->mZombieCountDown << ",\"app_rand_seed\":" << mAppRandSeed
++		out << ",\"hidden\":{\"app_counter\":" << mAppCounter << ",\"wave_timer\":" << mBoard->mZombieCountDown << ",\"app_rand_seed\":" << mAppRandSeed
+ 			<< ",\"rand_seed\":" << mRandSeed << ",\"rand_state_hex\":\"";
+ 		for (unsigned char aByte : aRandState)
+ 			out << aHex[aByte >> 4] << aHex[aByte & 0x0F];
+@@ -1742,6 +1782,32 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
+ 			}
+ 			out << ']';
+ 		}
++		out << "],\"reanimations\":[";
++		if (mEffectSystem && mEffectSystem->mReanimationHolder)
++		{
++			bool firstReanimation = true;
++			for (const Reanimation* reanimation : mEffectSystem->mReanimationHolder->mReanimations)
++			{
++				if (!firstReanimation) out << ',';
++				firstReanimation = false;
++				out << "{\"type\":" << static_cast<int>(reanimation->mReanimationType)
++					<< ",\"dead\":" << (reanimation->mDead ? "true" : "false")
++					<< ",\"time\":" << reanimation->mAnimTime << ",\"last_time\":" << reanimation->mLastFrameTime
++					<< ",\"rate\":" << reanimation->mAnimRate << ",\"loop_type\":" << static_cast<int>(reanimation->mLoopType)
++					<< ",\"loop_count\":" << reanimation->mLoopCount << ",\"frame_start\":" << reanimation->mFrameStart
++					<< ",\"frame_count\":" << reanimation->mFrameCount << ",\"tracks\":[";
++				int trackCount = reanimation->mDefinition && reanimation->mTrackInstances ? reanimation->mDefinition->mTracks.count : 0;
++				for (int trackIndex = 0; trackIndex < trackCount; ++trackIndex)
++				{
++					if (trackIndex) out << ',';
++					const ReanimatorTrackInstance& track = reanimation->mTrackInstances[trackIndex];
++					out << "{\"attachment\":" << static_cast<unsigned int>(track.mAttachmentID)
++						<< ",\"blend_counter\":" << track.mBlendCounter << ",\"blend_time\":" << track.mBlendTime
++						<< ",\"render_group\":" << track.mRenderGroup << '}';
++				}
++				out << "]}";
++			}
++		}
+ 		out << "]}";
+ 	}
+ 	out << '}';
+@@ -1786,6 +1852,18 @@ void LawnApp::HandleCmdLineParam(std::string_view theParamName, std::string_view
+ 		mDebugKeysEnabled = true;
+ #endif
+ 	}
++	else if (theParamName == "-multiplier" && !theParamValue.empty())
++	{
++		mZombieMultiplier = std::atof(std::string(theParamValue).c_str());
++	}
++	else if (theParamName == "-play-level" && !theParamValue.empty())
++	{
++		mPlayLevel = std::atoi(std::string(theParamValue).c_str());
++	}
++	else if (theParamName == "-record-output" && !theParamValue.empty())
++	{
++		mRecordOutputPath = std::string(theParamValue);
++	}
+ 	else
+ 	{
+ 		SexyApp::HandleCmdLineParam(theParamName, theParamValue);
+@@ -2080,18 +2158,7 @@ void LawnApp::UpdateFrames()
+ 
+ 	for (int i = 0; i < aUpdateCount; i++)
+ 	{
+-		mAppCounter++;
+-
+-		if (mBoard)
+-		{
+-			mBoard->ProcessDeleteQueue();
+-		}
+-		if (mLoadingThreadCompleted && mEffectSystem)
+-		{
+-			mEffectSystem->ProcessDeleteQueue();
+-		}
+-
+-		SexyApp::UpdateFrames();
++		AdvanceLogicTick();
+ 
+ 		mMusic->MusicUpdate();
+ 
+@@ -2234,6 +2301,24 @@ void LawnApp::LoadingCompleted()
+ 
+ 	mResourceManager->DeleteImage("IMAGE_TITLESCREEN");
+ 
++	if (mPlayLevel > 0)
++	{
++		if (!mPlayerInfo)
++		{
++			mPlayerInfo = mProfileMgr->GetAnyProfile();
++			if (!mPlayerInfo)
++				mPlayerInfo = mProfileMgr->AddProfile("Human");
++		}
++		if (mPlayerInfo)
++		{
++			mPlayerInfo->SetLevel(mPlayLevel);
++			mPlayerInfo->mFinishedAdventure = 0;
++		}
++		mGameMode = GameMode::GAMEMODE_ADVENTURE;
++		PreNewGame(GameMode::GAMEMODE_ADVENTURE, false);
++		return;
++	}
++
+ 	ShowGameSelector();
+ }
+ 
+diff --git a/src/LawnApp.h b/src/LawnApp.h
+index 2b94c7b..890bacd 100644
+--- a/src/LawnApp.h
++++ b/src/LawnApp.h
+@@ -76,6 +76,7 @@ struct EnvironmentTaskSpec
+ 	bool poolCleanerOwned = false;
+ 	bool roofCleanerOwned = false;
+ 	int rakeCharges = 0;
++	double zombieCountMultiplier = 1.0;
+ 	std::vector<SeedType> forcedSeeds;
+ };
+ 
+@@ -158,6 +159,9 @@ public:
+ 	bool							mDebugTrialLocked;
+ 	bool							mMuteSoundsForCutscene;
+ 	bool							mEnvironmentMode;
++	double							mZombieMultiplier;
++	int								mPlayLevel;
++	std::string						mRecordOutputPath;
+ 
+ public:
+ 	LawnApp();
+@@ -249,6 +253,7 @@ public:
+ 	void							ButtonMouseLeave(int theId) override;
+ 	void							ButtonMouseMove(int theId, int theX, int theY) override;
+ 	void							UpdateFrames() override;
++	void							AdvanceLogicTick();
+ 	bool							UpdateAppStep(bool* updated) override;
+ 	bool							UpdateApp() override;
+ 	bool					IsAdventureMode();
+diff --git a/src/SexyAppFramework/SexyAppBase.cpp b/src/SexyAppFramework/SexyAppBase.cpp
+index a698a99..a25f6e1 100644
+--- a/src/SexyAppFramework/SexyAppBase.cpp
++++ b/src/SexyAppFramework/SexyAppBase.cpp
+@@ -3200,6 +3200,7 @@ static bool ParamTakesValue(std::string_view theParamName)
+ {
+ 	static constexpr std::string_view kValueParams[] = {
+ 		"-play", "-playnum", "-record", "-recnum", "-resdir", "-savedir",
++		"-multiplier", "-play-level", "-record-output",
+ 	};
+ 	return std::ranges::find(kValueParams, theParamName) != std::end(kValueParams);
+ }
+diff --git a/src/main.cpp b/src/main.cpp
+index 6553771..b453a4a 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -50,6 +50,7 @@ struct EnvironmentSnapshot
+ 	std::string randState;
+ 	int appRandSeed;
+ 	uint32_t randSeed;
++	uint32_t appCounter;
+ 	uint32_t zombiesKilled;
+ 	uint32_t plantsEaten;
+ 	uint32_t sunProduced;
+@@ -162,13 +163,20 @@ static void RunEnvironment(LawnApp* app)
+ 		{
+ 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
+ 			uint32_t seed = 0;
+-			std::string upgradesText, forcedText, deckText;
++			std::string upgradesText, forcedText, deckText, multiplierText;
+ 			input >> level >> seed >> playthrough >> slots >> imitater >> firstAid >> poolCleaner >> roofCleaner >> rake
+ 				>> upgradesText >> forcedText >> deckText;
+ 			std::vector<int> upgrades, forced;
+ 			std::vector<EnvironmentSeed> deck;
+ 			EnvironmentTaskSpec task;
+ 			bool parsed = !input.fail() && ParseIntList(upgradesText, upgrades) && ParseIntList(forcedText, forced) && ParseDeck(deckText, deck);
++			if (parsed && input >> multiplierText)
++			{
++				std::istringstream multiplierInput(multiplierText);
++				parsed = static_cast<bool>(multiplierInput >> task.zombieCountMultiplier) && multiplierInput.peek() == std::char_traits<char>::eof();
++				std::string extra;
++				if (input >> extra) parsed = false;
++			}
+ 			if (parsed && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&
+ 				(poolCleaner == 0 || poolCleaner == 1) && (roofCleaner == 0 || roofCleaner == 1))
+ 			{
+@@ -231,7 +239,8 @@ static void RunEnvironment(LawnApp* app)
+ 			{
+ 				snapshot.randState = GetRandState();
+ 				snapshot.appRandSeed = app->mAppRandSeed;
+-				snapshot.randSeed = app->mRandSeed;
++					snapshot.randSeed = app->mRandSeed;
++					snapshot.appCounter = app->mAppCounter;
+ 				snapshot.zombiesKilled = app->mBoard->mZombiesKilled;
+ 				snapshot.plantsEaten = app->mBoard->mPlantsEaten;
+ 				snapshot.sunProduced = app->mBoard->mSunMoneyProduced;
+@@ -255,7 +264,8 @@ static void RunEnvironment(LawnApp* app)
+ 				{
+ 					SetRandState(snapshot.randState);
+ 					app->mAppRandSeed = snapshot.appRandSeed;
+-					app->mRandSeed = snapshot.randSeed;
++						app->mRandSeed = snapshot.randSeed;
++						app->mAppCounter = snapshot.appCounter;
+ 					app->mBoard->mZombiesKilled = snapshot.zombiesKilled;
+ 					app->mBoard->mPlantsEaten = snapshot.plantsEaten;
+ 					app->mBoard->mSunMoneyProduced = snapshot.sunProduced;
+diff --git a/python/verify_env_equivalence.py b/python/verify_env_equivalence.py
+new file mode 100644
+index 0000000..f5b1a02
+--- /dev/null
++++ b/python/verify_env_equivalence.py
+@@ -0,0 +1,96 @@
++"""Compare visible and headless environment ticks from identical resets."""
++
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++from pathlib import Path
++from typing import Any
++
++from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
++
++
++DECK = (0, 1, 2, 3, 4, 5)
++
++
++def digest(value: Any) -> str:
++    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
++    return hashlib.sha256(encoded).hexdigest()
++
++
++def compare_pair(headless: PvZEnv, visible: PvZEnv, action: dict[str, Any]) -> dict[str, Any]:
++    results = [env.step(action) for env in (headless, visible)]
++    left, right = results
++    if not left[4]["ok"] or not right[4]["ok"]:
++        raise RuntimeError(f"action rejected: {action}")
++    if left[0] != right[0] or left[4]["events"] != right[4]["events"]:
++        raise RuntimeError(f"observation or events diverged after {action}")
++    left_debug = headless.episode["operations"][-1].get("debug_state_sha256")
++    right_debug = visible.episode["operations"][-1].get("debug_state_sha256")
++    if left_debug != right_debug:
++        raise RuntimeError(f"full game state diverged after {action}: {left_debug} != {right_debug}")
++    return left[0]
++
++
++def main() -> None:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--resource-dir", type=Path, required=True)
++    parser.add_argument("--executable", type=Path)
++    parser.add_argument("--levels", type=int, nargs="+", default=[12, 18, 31, 50])
++    parser.add_argument("--ticks", type=int, default=1500)
++    args = parser.parse_args()
++    if args.ticks < 1:
++        parser.error("--ticks must be positive")
++
++    for level in args.levels:
++        task = TaskSpec(level=level, seed=1701, playthrough=2, profile=PlayerProfileContext())
++        with PvZEnv(args.resource_dir, args.executable, headless=True, debug_replay=True) as headless, \
++                PvZEnv(args.resource_dir, args.executable, headless=False, debug_replay=True) as visible:
++            observations = [env.reset(deck=DECK, task=task)[0] for env in (headless, visible)]
++            if observations[0] != observations[1]:
++                raise RuntimeError(f"reset state diverged at level {level}")
++            states = [env.privileged_state() for env in (headless, visible)]
++            if digest(states[0]) != digest(states[1]):
++                raise RuntimeError(f"reset full state diverged at level {level}")
++
++            legal = next((item for item in observations[0]["legal_actions"]["plants"] if item["packet"] == 0), None)
++            if legal is None:
++                legal = next(iter(observations[0]["legal_actions"]["plants"]), None)
++            cooldown_packet = None
++            cooldown_ready_tick = 0
++            if legal is not None:
++                original_card_type = observations[0]["packets"][legal["packet"]]["type"]
++                state = compare_pair(headless, visible, {"type": "plant", **legal})
++                packet = state["packets"][legal["packet"]]
++                if packet["type"] == original_card_type:
++                    cooldown_packet = legal["packet"]
++                    if packet["active"] or packet["refresh_time"] <= 0:
++                        raise RuntimeError(f"planted card did not enter cooldown at level {level}")
++                    cooldown_ready_tick = state["tick"] + packet["refresh_time"]
++            elif level != 50:
++                raise RuntimeError(f"no card can be planted to check cooldown at level {level}")
++            for _ in range(20):
++                compare_pair(headless, visible, {"type": "wait", "ticks": 1})
++            snapshot_ids = [env.snapshot() for env in (headless, visible)]
++            compare_pair(headless, visible, {"type": "wait", "ticks": 1})
++            restored = [env.restore(snapshot_id) for env, snapshot_id in zip((headless, visible), snapshot_ids)]
++            if restored[0] != restored[1] or digest(headless.privileged_state()) != digest(visible.privileged_state()):
++                raise RuntimeError(f"snapshot restore diverged at level {level}")
++
++            state = restored[0]
++            for _ in range(args.ticks):
++                state = compare_pair(headless, visible, {"type": "wait", "ticks": 1})
++                if state["terminal"]:
++                    break
++            if cooldown_packet is not None and state["tick"] >= cooldown_ready_tick:
++                packet = state["packets"][cooldown_packet]
++                if not packet["active"] or packet["cooldown"] != 0:
++                    raise RuntimeError(f"planted card did not refresh at level {level}: {packet}")
++            print(json.dumps({"level": level, "tick": state["tick"], "fog": state["fog"],
++                              "card_cooldown_checked": cooldown_packet is not None,
++                              "night": state["night"], "visible_headless_equal": True}))
++
++
++if __name__ == "__main__":
++    main()

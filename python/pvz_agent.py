@@ -1,4 +1,4 @@
-"""Structured recurrent GameplayModel-v0 policy and behavior-cloning helpers."""
+"""Structured recurrent GameplayModel-v1 policy and behavior-cloning helpers."""
 
 from __future__ import annotations
 
@@ -25,7 +25,18 @@ TOKEN_KINDS = {
 }
 WAIT_TICKS = (150, 300, 600, 1200, 2400)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
+MODEL_ARCHITECTURE_VERSION = 1
 FEATURE_COUNT = 32
+
+
+def resolve_device(requested: str = "auto") -> torch.device:
+    if requested == "auto":
+        requested = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    if requested == "cuda" and not torch.cuda.is_available():
+        raise ValueError("CUDA is unavailable")
+    if requested == "mps" and not torch.backends.mps.is_available():
+        raise ValueError("MPS is unavailable")
+    return torch.device(requested)
 
 
 def _ratio(value: float, scale: float) -> float:
@@ -61,6 +72,7 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
     add("global", values=(
         _ratio(observation["sun"], 1000), _ratio(observation["wave"], max(observation["wave_count"], 1)),
         _ratio(observation["tick"], 60000), _ratio(observation["wave_count"], 30),
+        _ratio(observation["zombie_count_multiplier"], 10),
         float(observation["night"]), float(observation["pool"]), float(observation["fog"]), float(observation["roof"]),
         _ratio(len(plants), 40), _ratio(len(zombies), 40), _ratio(len(projectiles), 50),
         float(observation["terminal"]), _ratio(observation["result"], 2),
@@ -206,7 +218,7 @@ class RelationLayer(nn.Module):
         return x
 
 
-class GameplayModelV0(nn.Module):
+class GameplayModelV1(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         width = MODEL_CONFIG["width"]
@@ -355,7 +367,7 @@ class GameplayModelV0(nn.Module):
 
 
 def select_action(
-    model: GameplayModelV0,
+    model: GameplayModelV1,
     output: dict[str, Any],
     observation: dict[str, Any],
     action: dict[str, Any] | None = None,
@@ -440,7 +452,7 @@ def select_action(
 
 @torch.no_grad()
 def predict_action(
-    model: GameplayModelV0,
+    model: GameplayModelV1,
     observation: dict[str, Any],
     hidden: Tensor | None,
     previous_action: dict[str, Any] | None,
@@ -452,7 +464,7 @@ def predict_action(
     return action, output["hidden"], output
 
 
-def behavior_cloning_loss(model: GameplayModelV0, output: dict[str, Any], observation: dict[str, Any], action: dict[str, Any], plant_weight: float = 1.0) -> Tensor:
+def behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any], action: dict[str, Any], plant_weight: float = 1.0) -> Tensor:
     legal = observation["legal_actions"]
     device = output["type_logits"].device
     valid_packets = sorted({item["packet"] for item in legal["plants"]})
@@ -489,82 +501,6 @@ def behavior_cloning_loss(model: GameplayModelV0, output: dict[str, Any], observ
         duration = min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - target_ticks))
         losses.append(F.cross_entropy(output["wait_logits"].unsqueeze(0), torch.tensor([duration], device=device)))
     return torch.stack(losses).sum()
-
-
-def teacher_v0_action(observation: dict[str, Any]) -> dict[str, Any]:
-    rows = sorted({cell["row"] for cell in observation["cells"] if cell["row_type"] > 0})
-    plants, zombies, sun = observation["plants"], observation["zombies"], observation["sun"]
-    packets = {packet["type"]: packet for packet in observation["packets"]}
-    legal = observation["legal_actions"]["plants"]
-    attackers = [plant for plant in plants if plant["type"] in (0, 5)]
-    shooter_rows = {plant["row"] for plant in attackers}
-    zombies_by_row = {row: [zombie for zombie in zombies if zombie["row"] == row] for row in rows}
-    chosen = None
-
-    if sun >= 150 and packets[2]["active"] and packets[2]["cooldown"] == 0:
-        for row in rows:
-            close = [zombie for zombie in zombies_by_row[row] if zombie["x"] < 320]
-            if len(close) >= 2:
-                choices = [a for a in legal if a["packet"] == packets[2]["index"] and a["row"] == row and 1 <= a["col"] <= 4]
-                if choices:
-                    chosen = min(choices, key=lambda a: abs(a["col"] - 2))
-                    break
-
-    if chosen is None and sun >= 50 and packets[3]["active"] and packets[3]["cooldown"] == 0:
-        for row in rows:
-            has_threat = any(zombie["x"] < 400 for zombie in zombies_by_row[row])
-            has_wallnut = any(plant["type"] == 3 and plant["row"] == row and plant["col"] >= 3 for plant in plants)
-            if has_threat and not has_wallnut:
-                choices = [a for a in legal if a["packet"] == packets[3]["index"] and a["row"] == row and a["col"] == 4]
-                if choices:
-                    chosen = choices[0]
-                    break
-
-    target_rows = [row for row in rows if zombies_by_row[row] and row not in shooter_rows]
-    if not target_rows:
-        target_rows = [row for row in rows if row not in shooter_rows]
-    if chosen is None and target_rows:
-        row = min(target_rows, key=lambda r: (min((z["x"] for z in zombies_by_row[r]), default=9999), abs(r - 2)))
-        for seed_type, cost in ((0, 100), (5, 175)):
-            packet = packets[seed_type]
-            if sun >= cost and packet["active"] and packet["cooldown"] == 0:
-                choices = [a for a in legal if a["packet"] == packet["index"] and a["row"] == row and 2 <= a["col"] <= 4]
-                if choices:
-                    chosen = min(choices, key=lambda a: abs(a["col"] - 3))
-                    break
-
-    sunflowers = [plant for plant in plants if plant["type"] == 1]
-    sunflower_target = 2 if len(shooter_rows) < len(rows) else 5
-    if chosen is None and sun >= 50 and len(sunflowers) < sunflower_target and packets[1]["active"] and packets[1]["cooldown"] == 0:
-        occupied = {(plant["row"], plant["col"]) for plant in plants}
-        choices = [a for a in legal if a["packet"] == packets[1]["index"] and a["col"] in (0, 1) and (a["row"], a["col"]) not in occupied]
-        if choices:
-            chosen = min(choices, key=lambda a: (abs(a["row"] - 2), a["col"]))
-
-    if chosen is None and sun >= 175 and packets[5]["active"] and packets[5]["cooldown"] == 0:
-        choices = [a for a in legal if a["packet"] == packets[5]["index"] and a["row"] in shooter_rows and 2 <= a["col"] <= 4]
-        urgent = [a for a in choices if zombies_by_row[a["row"]]]
-        if urgent:
-            chosen = min(urgent, key=lambda a: (min(z["x"] for z in zombies_by_row[a["row"]]), abs(a["col"] - 3)))
-
-    if chosen is None and sun >= 100 and packets[0]["active"] and packets[0]["cooldown"] == 0:
-        counts = {row: sum(plant["row"] == row and plant["type"] in (0, 5) for plant in plants) for row in rows}
-        candidates = [row for row in rows if counts[row] < 2]
-        if candidates:
-            row = min(candidates, key=lambda r: (counts[r], abs(r - 2)))
-            choices = [a for a in legal if a["packet"] == packets[0]["index"] and a["row"] == row and 2 <= a["col"] <= 4]
-            if choices:
-                chosen = min(choices, key=lambda a: abs(a["col"] - 3))
-
-    if chosen is None and sun >= 50 and len(sunflowers) < 8 and packets[1]["active"] and packets[1]["cooldown"] == 0:
-        occupied = {(plant["row"], plant["col"]) for plant in plants}
-        choices = [a for a in legal if a["packet"] == packets[1]["index"] and a["col"] in (0, 1) and (a["row"], a["col"]) not in occupied]
-        if choices:
-            chosen = min(choices, key=lambda a: (abs(a["row"] - 2), a["col"]))
-
-    if chosen is not None:
-        return {"type": "plant", **chosen}
-    return {"type": "wait", "ticks": 300}
 
 
 @dataclass(frozen=True)
@@ -787,10 +723,6 @@ def teacher_advice(observation: dict[str, Any], sunflower_placements: int = 0) -
     scores.sort(key=lambda item: item[1], reverse=True)
     candidates = scores[:8]
     return TeacherAdvice(action=candidates[0][0], candidates=candidates)
-
-
-def teacher_action(observation: dict[str, Any]) -> dict[str, Any]:
-    return teacher_advice(observation).action
 
 
 class TeacherPolicy:

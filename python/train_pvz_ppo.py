@@ -1,4 +1,4 @@
-"""Train a recurrent PPO policy on Adventure I 1-7 from a DAgger checkpoint."""
+"""Train a recurrent PPO policy on Adventure-II from a DAgger checkpoint."""
 
 from __future__ import annotations
 
@@ -17,12 +17,14 @@ import torch
 from torch.nn import functional as F
 
 from benchmark_pvz_agent import DEFAULT_SEEDS, read_seed_set
-from pvz_agent import GameplayModelV0, MODEL_CONFIG, select_action
+from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
+                       resolve_device, select_action)
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
+DISCOUNT_REFERENCE_TICKS = 300
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -45,34 +47,42 @@ def git_metadata() -> tuple[str | None, bool | None]:
         return None, None
 
 
-def collect_episode(model: GameplayModelV0, env: PvZEnv, seed: int,
-                    max_actions: int, replay_path: Path) -> dict[str, Any]:
-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
-    observation, _ = env.reset(deck=DECK, task=task)
+def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
+                    max_actions: int, replay_path: Path, level: int = LEVEL,
+                    deck: tuple[int, ...] = DECK, zombie_count_multiplier: float = 1.0) -> dict[str, Any]:
+    task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
+                    zombie_count_multiplier=zombie_count_multiplier)
+    observation, _ = env.reset(deck=deck, task=task)
     hidden = None
     previous_action = None
-    delta_ticks = 0
+    elapsed_since_previous_observation = 0
     events: dict[str, Any] = {}
     transitions = []
     started = time.perf_counter()
     for decision_index in range(max_actions):
         hidden_before = None if hidden is None else hidden.detach().clone()
         with torch.no_grad():
-            output = model.step(observation, hidden, previous_action, delta_ticks, events)
+            output = model.step(observation, hidden, previous_action,
+                                elapsed_since_previous_observation, events)
             action, log_prob, _ = select_action(model, output, observation)
-        transitions.append({
+        transition = {
             "decision_index": decision_index,
             "observation": observation, "previous_action": previous_action,
-            "delta_ticks": delta_ticks, "events": events, "action": action,
+            "elapsed_since_previous_observation": elapsed_since_previous_observation,
+            "events": events, "action": action,
             "log_prob": float(log_prob.item()), "value": float(output["value"].item()),
             "hidden": hidden_before,
-        })
+        }
+        transitions.append(transition)
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
             raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
         hidden = output["hidden"]
         previous_action = action
-        delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+        transition["action_duration_ticks"] = info.get(
+            "ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0
+        )
+        elapsed_since_previous_observation = transition["action_duration_ticks"]
         events = info["events"]
         if done:
             break
@@ -96,13 +106,14 @@ def add_advantages(episodes: list[dict[str, Any]], gamma: float, gae_lambda: flo
         for index in range(len(transitions) - 1, -1, -1):
             transition = transitions[index]
             next_value = transitions[index + 1]["value"] if index + 1 < len(transitions) else 0.0
-            delta = transition["reward"] + gamma * next_value - transition["value"]
-            advantage = delta + gamma * gae_lambda * advantage
+            discount = gamma ** (transition["action_duration_ticks"] / DISCOUNT_REFERENCE_TICKS)
+            delta = transition["reward"] + discount * next_value - transition["value"]
+            advantage = delta + discount * gae_lambda * advantage
             transition["advantage"] = advantage
             transition["return"] = advantage + transition["value"]
 
 
-def train_update(model: GameplayModelV0, episodes: list[dict[str, Any]], optimizer: torch.optim.Optimizer,
+def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimizer: torch.optim.Optimizer,
                  device: torch.device, ppo_epochs: int, sequence_length: int,
                  clip_epsilon: float, value_coefficient: float, entropy_coefficient: float) -> dict[str, float]:
     advantages = torch.tensor([transition["advantage"] for episode in episodes
@@ -128,7 +139,7 @@ def train_update(model: GameplayModelV0, episodes: list[dict[str, Any]], optimiz
             log_probs, values, entropies_for_chunk = [], [], []
             for transition in transitions[start:end]:
                 output = model.step(transition["observation"], hidden, transition["previous_action"],
-                                    transition["delta_ticks"], transition["events"])
+                                    transition["elapsed_since_previous_observation"], transition["events"])
                 _, log_prob, entropy = select_action(model, output, transition["observation"],
                                                      action=transition["action"])
                 hidden = output["hidden"]
@@ -163,7 +174,8 @@ def train_update(model: GameplayModelV0, episodes: list[dict[str, Any]], optimiz
 
 def episode_hash(episode: dict[str, Any]) -> str:
     steps = [{key: transition[key] for key in
-              ("observation", "previous_action", "delta_ticks", "events", "action", "log_prob", "value", "reward")}
+              ("observation", "previous_action", "elapsed_since_previous_observation", "action_duration_ticks",
+               "events", "action", "log_prob", "value", "reward")}
              for transition in episode["transitions"]]
     payload = json.dumps({"seed": episode["seed"], "steps": steps,
                           "result": episode["result"]}, separators=(",", ":"), sort_keys=True)
@@ -174,9 +186,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--resource-dir", default=os.environ.get("PVZ_RESOURCE_DIR"))
     parser.add_argument("--init-checkpoint", type=Path,
-                        default=ROOT / "artifacts" / "gameplay-v0" / "gameplay_model_v0.pt")
+                        default=ROOT / "artifacts" / "adventure2_level7" / "gameplay_model_v1.pt")
     parser.add_argument("--seeds", type=Path, default=DEFAULT_SEEDS)
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts" / "gameplay-v0")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts" / "adventure2_level7")
+    parser.add_argument("--level", type=int, default=LEVEL)
+    parser.add_argument("--deck", type=lambda value: tuple(map(int, value.split(","))), default=DECK)
+    parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
+    parser.add_argument("--device", choices=("auto", "cuda", "mps", "cpu"), default="auto")
     parser.add_argument("--updates", type=int, default=12)
     parser.add_argument("--rollout-episodes", type=int, default=8)
     parser.add_argument("--ppo-epochs", type=int, default=2)
@@ -198,25 +214,29 @@ def main() -> None:
         parser.error("updates, rollout episodes, and PPO epochs must be positive")
     if args.train_seed_start >= args.train_seed_end:
         parser.error("training seed range must be nonempty")
-    evaluation_seeds = set(read_seed_set(args.seeds))
+    if not 1.0 <= args.zombie_count_multiplier <= 10.0:
+        parser.error("--zombie-count-multiplier must be from 1 to 10")
+    evaluation_seeds = set(read_seed_set(args.seeds, args.level))
     if any(args.train_seed_start <= seed < args.train_seed_end for seed in evaluation_seeds):
         parser.error("training seed range overlaps the frozen evaluation seeds")
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
     torch.set_num_threads(1)
-    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    device = resolve_device(args.device)
     initial_checkpoint_sha = sha256_file(args.init_checkpoint)
     trajectory_dir = args.init_checkpoint.expanduser().resolve().parent
     initial = torch.load(args.init_checkpoint, map_location=device, weights_only=False)
-    if initial.get("provenance", {}).get("observation_version") != 2:
-        raise ValueError("initial checkpoint predates the current observation version; rebuild teacher and BC data first")
-    model = GameplayModelV0().to(device)
+    provenance = initial["provenance"]
+    if (initial["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
+            or provenance["observation_version"] != 2 or provenance["task_version"] != 2):
+        raise ValueError("initial checkpoint versions do not match the current model, observation, and task")
+    model = GameplayModelV1().to(device)
     model.load_state_dict(initial["state_dict"])
     model.eval()
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = args.output_dir / "gameplay_model_v0_ppo.pt"
+    checkpoint_path = args.output_dir / "gameplay_model_v1_ppo.pt"
     summary_path = args.output_dir / "ppo_training_summary.json"
     revision, dirty = git_metadata()
     resource_dir = Path(args.resource_dir).expanduser().resolve()
@@ -226,13 +246,16 @@ def main() -> None:
     history = []
     config = {key: value for key, value in vars(args).items()}
     config.update({"resource_dir": str(resource_dir), "init_checkpoint": str(args.init_checkpoint),
-                   "seeds": str(args.seeds), "output_dir": str(args.output_dir)})
+                   "seeds": str(args.seeds), "output_dir": str(args.output_dir),
+                   "discount_reference_ticks": DISCOUNT_REFERENCE_TICKS,
+                   "resolved_device": str(device)})
     train_seeds = list(range(args.train_seed_start, args.train_seed_end))
     with PvZEnv(resource_dir=resource_dir) as env:
         for update in range(1, args.updates + 1):
             seeds = random.sample(train_seeds, args.rollout_episodes)
             episodes = [collect_episode(model, env, seed, args.max_actions,
-                                        args.output_dir / "replays" / f"ppo_update_{update}_seed_{seed}.jsonl.gz")
+                                        args.output_dir / "replays" / f"ppo_update_{update}_seed_{seed}.jsonl.gz",
+                                        args.level, args.deck, args.zombie_count_multiplier)
                         for seed in seeds]
             add_advantages(episodes, args.gamma, args.gae_lambda)
             losses = train_update(model, episodes, optimizer, device, args.ppo_epochs,
@@ -267,8 +290,9 @@ def main() -> None:
                 "model_config": MODEL_CONFIG, "observation_version": 2, "task_version": 2,
             }
             torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
-                        "config": MODEL_CONFIG, "level": LEVEL, "deck": DECK,
-                        "profile": "Adventure I, six slots, no store items",
+                        "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
+                        "config": MODEL_CONFIG, "level": args.level, "deck": args.deck,
+                        "profile": "Adventure-II, six slots, no store items",
                         "update": update, "ppo_config": config, "losses": losses,
                         "provenance": provenance}, checkpoint_path)
             summary = {"checkpoint": checkpoint_path.name, "provenance": provenance,

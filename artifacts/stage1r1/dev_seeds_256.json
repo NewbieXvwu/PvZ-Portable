@@ -1,8 +1,0 @@
-{
-  "level": 7,
-  "playthrough": 1,
-  "first_seed": 10000,
-  "count": 256,
-  "role": "development",
-  "environment": "post-mower-init-fix"
-}

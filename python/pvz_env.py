@@ -367,41 +367,26 @@ class PvZEnv:
                 for item in [header, *self.episode["operations"], footer]:
                     stream.write(json.dumps(item, ensure_ascii=False, separators=(",", ":")) + "\n")
 
-    def replay_record(self, record: dict[str, Any], allow_version_mismatch: bool = False,
-                      manifest_directory: Path | None = None) -> dict[str, Any]:
-        version = record.get("format_version", 1)
-        if version >= 3:
-            self._check_manifest(record.get("manifest"), manifest_directory, allow_version_mismatch)
-        if version >= 2:
-            task_data = record["task"]
-            task_data = dict(task_data)
-            task_data["profile"] = PlayerProfileContext(**task_data["profile"])
-            task_data["forced_seeds"] = tuple(task_data["forced_seeds"])
-            observation, _ = self.reset(deck=[SeedCard(**card) for card in record["deck"]], task=TaskSpec(**task_data))
-        else:
-            observation, _ = self.reset(
-                record["level"], record["seed"], record["deck"], task=TaskSpec(
-                    level=record["level"], seed=record["seed"], playthrough=2
-                )
-            )
-        expected = record.get("initial_state")
-        state_record = self._state_record if version >= 3 else self._state_record_v2
-        if expected is not None and version < 3:
-            expected = {key: value for key, value in expected.items() if key != "observation_sha256"}
-            actual = {key: value for key, value in state_record(observation).items() if key != "observation_sha256"}
-        else:
-            actual = state_record(observation)
-        if expected is not None and actual != expected:
+    def replay_record(self, record: dict[str, Any], manifest_directory: Path | None = None) -> dict[str, Any]:
+        version = record.get("format_version")
+        if version != 3:
+            raise ValueError(f"unsupported replay version: {version}")
+        self._check_manifest(record["manifest"], manifest_directory)
+        task_data = dict(record["task"])
+        task_data["profile"] = PlayerProfileContext(**task_data["profile"])
+        task_data["forced_seeds"] = tuple(task_data["forced_seeds"])
+        observation, _ = self.reset(deck=[SeedCard(**card) for card in record["deck"]], task=TaskSpec(**task_data))
+        if self._state_record(observation) != record["initial_state"]:
             raise RuntimeError("replay diverged immediately after reset")
         snapshot_ids: dict[int, int] = {}
-        for index, operation in enumerate(record.get("operations", [])):
+        for index, operation in enumerate(record["operations"]):
             kind = operation["kind"]
-            if kind in ("action", "step"):
-                action = operation.get("action", operation.get("request"))
+            if kind == "action":
+                action = operation["action"]
                 observation, _, _, _, info = self.step(action)
-                if version >= 3 and info["events"] != operation.get("events", {}):
+                if info["events"] != operation["events"]:
                     raise RuntimeError(f"replay events diverged at operation {index}")
-                if version >= 3 and info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0) != operation.get("ticks_advanced", 0):
+                if info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0) != operation["ticks_advanced"]:
                     raise RuntimeError(f"replay tick count diverged at operation {index}")
             elif kind == "snapshot":
                 snapshot_ids[operation["id"]] = self.snapshot()
@@ -410,45 +395,42 @@ class PvZEnv:
                 observation = self.restore(snapshot_ids[operation["id"]])
             else:
                 raise ValueError(f"unknown replay operation: {kind}")
-            actual = state_record(observation)
+            actual = self._state_record(observation)
             expected = operation["state"]
-            if version < 3:
-                actual = {key: value for key, value in actual.items() if key != "observation_sha256"}
-                expected = {key: value for key, value in expected.items() if key != "observation_sha256"}
             if actual != expected:
                 raise RuntimeError(f"replay diverged at operation {index}")
             if operation.get("debug_state_sha256") and self._debug_state_sha256() != operation["debug_state_sha256"]:
                 raise RuntimeError(f"full game state diverged at operation {index}")
-        if version >= 3 and self._state_record(observation) != record.get("final_state"):
+        if self._state_record(observation) != record["final_state"]:
             raise RuntimeError("replay terminal state diverged")
         return observation
 
-    def replay_file(self, path: str | os.PathLike[str], allow_version_mismatch: bool = False) -> dict[str, Any]:
+    def replay_file(self, path: str | os.PathLike[str]) -> dict[str, Any]:
         source = Path(path)
         opener = gzip.open if source.name.endswith(".gz") else open
         with opener(source, "rt", encoding="utf-8") as stream:
             first = stream.readline()
             if not first:
                 raise ValueError("empty replay file")
-            try:
-                header = json.loads(first)
-            except json.JSONDecodeError:
-                stream.seek(0)
-                record = json.load(stream)
-            else:
-                if header.get("record_type") != "header":
-                    stream.seek(0)
-                    record = json.load(stream)
+            record = json.loads(first)
+            if record.get("format_version") != 3:
+                raise ValueError(f"unsupported replay version: {record.get('format_version')}")
+            if record.get("record_type") != "header":
+                raise ValueError("unsupported replay file format")
+            record["operations"] = []
+            footer_found = False
+            for line in stream:
+                item = json.loads(line)
+                if item["record_type"] == "footer" and not footer_found:
+                    record["final_state"] = item["final_state"]
+                    footer_found = True
+                elif item["record_type"] == "operation" and not footer_found:
+                    record["operations"].append(item)
                 else:
-                    record = header
-                    record["operations"] = []
-                    for line in stream:
-                        item = json.loads(line)
-                        if item.get("record_type") == "footer":
-                            record["final_state"] = item["final_state"]
-                        else:
-                            record["operations"].append(item)
-        return self.replay_record(record, allow_version_mismatch, source.parent)
+                    raise ValueError(f"invalid replay record: {item['record_type']}")
+            if not footer_found:
+                raise ValueError("replay file has no footer")
+        return self.replay_record(record, source.parent)
 
     @staticmethod
     def _state_record(observation: dict[str, Any]) -> dict[str, Any]:
@@ -461,19 +443,6 @@ class PvZEnv:
             "zombies": len(observation["zombies"]),
             "terminal": observation["terminal"],
             "result": observation["result"],
-        }
-
-    @staticmethod
-    def _state_record_v2(observation: dict[str, Any]) -> dict[str, Any]:
-        canonical = json.dumps(observation, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-        return {
-            "tick": observation["tick"],
-            "wave": observation["wave"],
-            "sun": observation["sun"],
-            "plants": len(observation["plants"]),
-            "zombies": len(observation["zombies"]),
-            "terminal": observation["terminal"],
-            "observation_sha256": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
         }
 
     def _record_operation(self, operation: dict[str, Any], observation: dict[str, Any],
@@ -555,8 +524,7 @@ class PvZEnv:
         digest = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         return {"path": path.name, "sha256": digest}
 
-    def _check_manifest(self, reference: dict[str, str] | None, directory: Path | None,
-                        allow_version_mismatch: bool) -> None:
+    def _check_manifest(self, reference: dict[str, str], directory: Path | None) -> None:
         if not reference or directory is None:
             raise ValueError("v3 replay has no experiment manifest reference")
         path = directory / reference["path"]
@@ -569,13 +537,11 @@ class PvZEnv:
         patch_path = path.parent / manifest.get("working_tree_patch", "")
         if not patch_path.is_file() or hashlib.sha256(patch_path.read_bytes()).hexdigest() != manifest.get("working_tree_patch_sha256"):
             raise ValueError(f"replay working tree patch is missing or corrupted: {patch_path}")
-        if allow_version_mismatch:
-            return
         current, _ = self._manifest_data()
         mismatches = [key for key, value in current.items() if manifest.get(key) != value]
         if mismatches:
             raise RuntimeError("replay manifest mismatch: " + ", ".join(mismatches) +
-                               "; pass allow_version_mismatch=True to replay across versions")
+                               "; replay with the matching Git revision")
 
     @staticmethod
     def _coordinates(action: dict[str, Any], keys: tuple[str, ...]) -> tuple[int, ...]:
