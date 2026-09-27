@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import unittest
 
-from pvz_agent import VALUE_GAMMA
+from pvz_value import VALUE_GAMMA
 from train_pvz_agent import validate_seed_sets
 from train_pvz_ppo import add_advantages
 
@@ -20,7 +20,7 @@ class TrainingSemanticsTests(unittest.TestCase):
         self.assertAlmostEqual(transitions[1]["advantage"], VALUE_GAMMA)
         self.assertAlmostEqual(transitions[0]["advantage"], VALUE_GAMMA)
 
-    def test_trace_lambda_is_scaled_by_elapsed_time(self) -> None:
+    def test_time_based_lambda_matches_reference_ticks(self) -> None:
         episodes = [{"transitions": [
             {"action_duration_ticks": 300, "reward": 0.0, "value": 0.0},
             {"action_duration_ticks": 300, "reward": 1.0, "value": 0.0},
@@ -31,13 +31,13 @@ class TrainingSemanticsTests(unittest.TestCase):
         self.assertAlmostEqual(transitions[0]["advantage"], VALUE_GAMMA * 0.5 * VALUE_GAMMA)
 
     def test_seed_sets_must_be_unique_and_disjoint(self) -> None:
-        validate_seed_sets([0, 1], [10, 11], [30, 31])
+        validate_seed_sets([1, 2], [3, 4], [5, 6])
         with self.assertRaises(ValueError):
-            validate_seed_sets([0, 0], [10], [30])
+            validate_seed_sets([1, 1], [3], [5])
         with self.assertRaises(ValueError):
-            validate_seed_sets([0, 1], [1, 2], [30])
+            validate_seed_sets([1, 2], [2, 3], [5])
         with self.assertRaises(ValueError):
-            validate_seed_sets([0, 1], [10, 11], [11, 30])
+            validate_seed_sets([1, 2], [3, 4], [4, 5])
 
 
 if __name__ == "__main__":
