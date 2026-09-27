@@ -3200,6 +3200,7 @@ static bool ParamTakesValue(std::string_view theParamName)
 {
 	static constexpr std::string_view kValueParams[] = {
 		"-play", "-playnum", "-record", "-recnum", "-resdir", "-savedir",
+		"-multiplier", "-play-level", "-record-output",
 	};
 	return std::ranges::find(kValueParams, theParamName) != std::end(kValueParams);
 }

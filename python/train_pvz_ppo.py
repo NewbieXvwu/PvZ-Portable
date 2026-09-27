@@ -46,8 +46,8 @@ def git_metadata() -> tuple[str | None, bool | None]:
 
 
 def collect_episode(model: GameplayModelV0, env: PvZEnv, seed: int,
-                    max_actions: int) -> dict[str, Any]:
-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
+                    max_actions: int, replay_path: Path) -> dict[str, Any]:
+    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
     observation, _ = env.reset(deck=DECK, task=task)
     hidden = None
     previous_action = None
@@ -55,12 +55,13 @@ def collect_episode(model: GameplayModelV0, env: PvZEnv, seed: int,
     events: dict[str, Any] = {}
     transitions = []
     started = time.perf_counter()
-    for _ in range(max_actions):
+    for decision_index in range(max_actions):
         hidden_before = None if hidden is None else hidden.detach().clone()
         with torch.no_grad():
             output = model.step(observation, hidden, previous_action, delta_ticks, events)
             action, log_prob, _ = select_action(model, output, observation)
         transitions.append({
+            "decision_index": decision_index,
             "observation": observation, "previous_action": previous_action,
             "delta_ticks": delta_ticks, "events": events, "action": action,
             "log_prob": float(log_prob.item()), "value": float(output["value"].item()),
@@ -81,7 +82,8 @@ def collect_episode(model: GameplayModelV0, env: PvZEnv, seed: int,
     transitions[-1]["reward"] = 1.0 if won else -1.0
     for transition in transitions[:-1]:
         transition["reward"] = 0.0
-    return {"seed": seed, "won": won, "result": observation["result"],
+    env.save_replay(replay_path)
+    return {"seed": seed, "replay_id": replay_path.name, "won": won, "result": observation["result"],
             "wave": observation["wave"], "wave_count": observation["wave_count"],
             "tick": observation["tick"], "seconds": time.perf_counter() - started,
             "transitions": transitions}
@@ -207,6 +209,8 @@ def main() -> None:
     initial_checkpoint_sha = sha256_file(args.init_checkpoint)
     trajectory_dir = args.init_checkpoint.expanduser().resolve().parent
     initial = torch.load(args.init_checkpoint, map_location=device, weights_only=False)
+    if initial.get("provenance", {}).get("observation_version") != 2:
+        raise ValueError("initial checkpoint predates the current observation version; rebuild teacher and BC data first")
     model = GameplayModelV0().to(device)
     model.load_state_dict(initial["state_dict"])
     model.eval()
@@ -227,7 +231,9 @@ def main() -> None:
     with PvZEnv(resource_dir=resource_dir) as env:
         for update in range(1, args.updates + 1):
             seeds = random.sample(train_seeds, args.rollout_episodes)
-            episodes = [collect_episode(model, env, seed, args.max_actions) for seed in seeds]
+            episodes = [collect_episode(model, env, seed, args.max_actions,
+                                        args.output_dir / "replays" / f"ppo_update_{update}_seed_{seed}.jsonl.gz")
+                        for seed in seeds]
             add_advantages(episodes, args.gamma, args.gae_lambda)
             losses = train_update(model, episodes, optimizer, device, args.ppo_epochs,
                                   args.sequence_length, args.clip_epsilon,
@@ -236,7 +242,7 @@ def main() -> None:
             trajectory_hashes.update(hashes)
             row = {"update": update, "seeds": seeds,
                    "wins": sum(episode["won"] for episode in episodes),
-                   "episodes": [{"seed": episode["seed"], "won": episode["won"],
+                   "episodes": [{"seed": episode["seed"], "replay_id": episode["replay_id"], "won": episode["won"],
                                  "wave": episode["wave"], "actions": len(episode["transitions"]),
                                  "seconds": round(episode["seconds"], 3),
                                  "sha256": hashes[f"{update}:{episode['seed']}"]}
@@ -258,7 +264,7 @@ def main() -> None:
                 "initial_checkpoint_sha256": initial_checkpoint_sha,
                 "random_seeds": {"python_torch": args.seed, "training_seed_range": [args.train_seed_start,
                                                                                       args.train_seed_end - 1]},
-                "model_config": MODEL_CONFIG,
+                "model_config": MODEL_CONFIG, "observation_version": 2, "task_version": 2,
             }
             torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
                         "config": MODEL_CONFIG, "level": LEVEL, "deck": DECK,

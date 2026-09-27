@@ -15,7 +15,7 @@ from typing import Any
 
 import torch
 
-from pvz_agent import GameplayModelV0, predict_action, teacher_action
+from pvz_agent import GameplayModelV0, TeacherPolicy, predict_action
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
@@ -46,8 +46,8 @@ def git_metadata() -> dict[str, Any]:
 
 def read_seed_set(path: Path) -> list[int]:
     data = json.loads(path.read_text(encoding="utf-8"))
-    if data.get("level") != LEVEL or data.get("playthrough") != 1:
-        raise ValueError("frozen seed file must specify Adventure I 1-7, playthrough 1")
+    if data.get("level") != LEVEL or data.get("playthrough") != 2:
+        raise ValueError("frozen seed file must specify Adventure I 1-7, playthrough 2")
     if "seeds" in data:
         seeds = [int(seed) for seed in data["seeds"]]
     else:
@@ -67,19 +67,25 @@ def checkpoint_model(path: Path, device: torch.device) -> tuple[GameplayModelV0,
 
 
 def run_episode(env: PvZEnv, seed: int, model: GameplayModelV0 | None,
-                clear_hidden: bool) -> dict[str, Any]:
-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
+                clear_hidden: bool, zombie_count_multiplier: float,
+                replay_dir: Path, policy_label: str) -> dict[str, Any]:
+    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext(),
+                    zombie_count_multiplier=zombie_count_multiplier)
+    reset_started = time.perf_counter()
     observation, _ = env.reset(deck=DECK, task=task)
+    reset_seconds = time.perf_counter() - reset_started
     hidden = None
     previous_action = None
     delta_ticks = 0
     events: dict[str, Any] = {}
     event_totals = Counter()
     actions = 0
+    ticks_advanced = 0
     started = time.perf_counter()
+    teacher = TeacherPolicy() if model is None else None
     while not observation["terminal"] and actions < 2000:
         if model is None:
-            action = teacher_action(observation)
+            action = teacher.advice(observation).action
         else:
             with torch.inference_mode():
                 action, next_hidden, _ = predict_action(
@@ -87,25 +93,35 @@ def run_episode(env: PvZEnv, seed: int, model: GameplayModelV0 | None,
                     previous_action, delta_ticks, events,
                 )
             hidden = next_hidden
+        before = observation
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
             raise RuntimeError(f"illegal action on seed {seed}: {action}")
+        if teacher is not None:
+            teacher.record_action(before, action)
         for key, value in info["events"].items():
             if isinstance(value, (int, float)):
                 event_totals[key] += value
         previous_action = action
         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+        ticks_advanced += delta_ticks
         events = info["events"]
         actions += 1
         if done:
             break
     if not observation["terminal"]:
         raise RuntimeError(f"benchmark episode exceeded 2000 decisions on seed {seed}")
+    safe_label = "".join(character if character.isalnum() or character in "-_" else "_" for character in policy_label)
+    replay_id = f"{safe_label}_seed_{seed}.jsonl.gz"
+    env.save_replay(replay_dir / replay_id)
     return {
-        "seed": seed, "won": observation["result"] == 1, "result": observation["result"],
+        "seed": seed, "replay_id": replay_id, "won": observation["result"] == 1, "result": observation["result"],
         "terminal": bool(observation["terminal"]), "wave": observation["wave"],
         "wave_count": observation["wave_count"], "tick": observation["tick"],
-        "actions": actions, "plants_eaten": int(event_totals["plants_eaten"]),
+        "actions": actions, "ticks_advanced": ticks_advanced, "reset_seconds": round(reset_seconds, 4),
+        "ticks_per_second": round(ticks_advanced / max(time.perf_counter() - started, 1e-9), 2),
+        "actions_per_second": round(actions / max(time.perf_counter() - started, 1e-9), 2),
+        "plants_eaten": int(event_totals["plants_eaten"]),
         "mower_triggers": int(event_totals["mower_triggered"]),
         "seconds": round(time.perf_counter() - started, 4),
     }
@@ -127,6 +143,9 @@ def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
         "failure_wave_distribution": dict(sorted(Counter(str(record["wave"]) for record in losses).items(),
                                                   key=lambda item: int(item[0]))),
         "mean_actions": mean("actions"), "mean_plants_eaten": mean("plants_eaten"),
+        "mean_ticks_per_second": mean("ticks_per_second"),
+        "mean_actions_per_second": mean("actions_per_second"),
+        "mean_reset_seconds": mean("reset_seconds"),
         "plants_eaten_total": sum(record["plants_eaten"] for record in records),
         "mower_triggers_total": sum(record["mower_triggers"] for record in records),
         "mean_mower_triggers": mean("mower_triggers"),
@@ -150,10 +169,13 @@ def main() -> None:
     parser.add_argument("--teacher", action="store_true")
     parser.add_argument("--clear-hidden", action="store_true")
     parser.add_argument("--no-relation-bias", action="store_true")
+    parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if not args.resource_dir:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
+    if not 1.0 <= args.zombie_count_multiplier <= 10.0:
+        parser.error("--zombie-count-multiplier must be from 1 to 10")
     if not args.teacher and not args.checkpoint:
         parser.error("select --teacher and/or --checkpoint LABEL=PATH")
     labels = (["teacher"] if args.teacher else []) + [label for label, _ in args.checkpoint]
@@ -176,11 +198,13 @@ def main() -> None:
 
     all_records = {}
     resource_metadata = None
+    replay_dir = args.output.parent / f"{args.output.stem}_replays"
     with PvZEnv(resource_dir=args.resource_dir) as env:
         for label, model, checkpoint_info in policies:
             records = []
             for index, seed in enumerate(seeds, start=1):
-                record = run_episode(env, seed, model, args.clear_hidden)
+                record = run_episode(env, seed, model, args.clear_hidden, args.zombie_count_multiplier,
+                                     replay_dir, label)
                 records.append(record)
                 if index % 16 == 0 or index == len(seeds):
                     print(f"{label} {index}/{len(seeds)} wins={sum(row['won'] for row in records)}",
@@ -190,16 +214,26 @@ def main() -> None:
                                      "properties_partner_sha256": env.episode["properties_partner_sha256"]}
             all_records[label] = {"checkpoint": checkpoint_info, "metrics": summarize(records),
                                   "episodes": records}
+        worker_rss_bytes = None
+        if env._process is not None:
+            try:
+                rss_kib = subprocess.run(["ps", "-o", "rss=", "-p", str(env._process.pid)],
+                                         check=True, capture_output=True, text=True).stdout.strip()
+                worker_rss_bytes = int(rss_kib) * 1024
+            except (OSError, subprocess.CalledProcessError, ValueError):
+                pass
     args.output.parent.mkdir(parents=True, exist_ok=True)
     result = {
-        **git_metadata(), "level": LEVEL, "playthrough": 1, "deck": list(DECK),
+        **git_metadata(), "level": LEVEL, "playthrough": 2, "deck": list(DECK),
+        "zombie_count_multiplier": args.zombie_count_multiplier,
         "profile": "Adventure I, six slots, no store items",
         "seed_file": str(args.seeds.resolve()), "seed_file_sha256": sha256_file(args.seeds),
         "seed_count": len(seeds), "seed_range": [min(seeds), max(seeds)],
         "device": str(device), "clear_hidden": args.clear_hidden,
+        "replay_directory": str(replay_dir.resolve()),
         "relation_bias": not args.no_relation_bias,
         "command": {"argv": sys.argv, "resource": args.resource_dir},
-        "resources": resource_metadata, "policies": all_records,
+        "resources": resource_metadata, "worker_rss_bytes": worker_rss_bytes, "policies": all_records,
     }
     args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
     print(f"saved {args.output}", flush=True)

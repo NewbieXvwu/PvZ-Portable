@@ -1162,9 +1162,9 @@ void SeedBank::UpdateConveyorBelt()
 	}
 }
 
-void SeedBank::UpdateWidth()
+void SeedBank::UpdateWidth(int theNumPackets)
 {
-	mNumPackets = mBoard->GetNumSeedsInBank();
+	mNumPackets = theNumPackets < 0 ? mBoard->GetNumSeedsInBank() : theNumPackets;
 	mWidth = (IMAGE_SEEDBANK ? IMAGE_SEEDBANK->GetWidth() : 0) + mBoard->GetSeedBankExtraWidth();
 	for (int i = 0; i < mNumPackets; i++)
 	{

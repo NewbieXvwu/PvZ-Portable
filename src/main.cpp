@@ -50,6 +50,7 @@ struct EnvironmentSnapshot
 	std::string randState;
 	int appRandSeed;
 	uint32_t randSeed;
+	uint32_t appCounter;
 	uint32_t zombiesKilled;
 	uint32_t plantsEaten;
 	uint32_t sunProduced;
@@ -162,13 +163,20 @@ static void RunEnvironment(LawnApp* app)
 		{
 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
 			uint32_t seed = 0;
-			std::string upgradesText, forcedText, deckText;
+			std::string upgradesText, forcedText, deckText, multiplierText;
 			input >> level >> seed >> playthrough >> slots >> imitater >> firstAid >> poolCleaner >> roofCleaner >> rake
 				>> upgradesText >> forcedText >> deckText;
 			std::vector<int> upgrades, forced;
 			std::vector<EnvironmentSeed> deck;
 			EnvironmentTaskSpec task;
 			bool parsed = !input.fail() && ParseIntList(upgradesText, upgrades) && ParseIntList(forcedText, forced) && ParseDeck(deckText, deck);
+			if (parsed && input >> multiplierText)
+			{
+				std::istringstream multiplierInput(multiplierText);
+				parsed = static_cast<bool>(multiplierInput >> task.zombieCountMultiplier) && multiplierInput.peek() == std::char_traits<char>::eof();
+				std::string extra;
+				if (input >> extra) parsed = false;
+			}
 			if (parsed && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&
 				(poolCleaner == 0 || poolCleaner == 1) && (roofCleaner == 0 || roofCleaner == 1))
 			{
@@ -231,7 +239,8 @@ static void RunEnvironment(LawnApp* app)
 			{
 				snapshot.randState = GetRandState();
 				snapshot.appRandSeed = app->mAppRandSeed;
-				snapshot.randSeed = app->mRandSeed;
+					snapshot.randSeed = app->mRandSeed;
+					snapshot.appCounter = app->mAppCounter;
 				snapshot.zombiesKilled = app->mBoard->mZombiesKilled;
 				snapshot.plantsEaten = app->mBoard->mPlantsEaten;
 				snapshot.sunProduced = app->mBoard->mSunMoneyProduced;
@@ -255,7 +264,8 @@ static void RunEnvironment(LawnApp* app)
 				{
 					SetRandState(snapshot.randState);
 					app->mAppRandSeed = snapshot.appRandSeed;
-					app->mRandSeed = snapshot.randSeed;
+						app->mRandSeed = snapshot.randSeed;
+						app->mAppCounter = snapshot.appCounter;
 					app->mBoard->mZombiesKilled = snapshot.zombiesKilled;
 					app->mBoard->mPlantsEaten = snapshot.plantsEaten;
 					app->mBoard->mSunMoneyProduced = snapshot.sunProduced;

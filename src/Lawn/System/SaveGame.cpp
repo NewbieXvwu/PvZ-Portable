@@ -2263,6 +2263,9 @@ static bool LawnLoadGameV4(Board* theBoard, Buffer& aBuffer)
 	if (aCrc != aHeader.mPayloadCrc)
 		return false;
 
+	for (PvzpParticleSystem* aParticleSystem : theBoard->mApp->mEffectSystem->mParticleHolder->mParticleSystems)
+		aParticleSystem->ParticleSystemDie();
+
 	TLVReader aReader(aPayload, aHeader.mPayloadSize);
 	bool aBaseLoaded = false;
 	while (aReader.mOk && aReader.mPos < aReader.mSize)

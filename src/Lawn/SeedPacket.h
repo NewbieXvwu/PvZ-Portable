@@ -81,7 +81,7 @@ public:
 	int				    GetNumSeedsOnConveyorBelt();
 	int		CountOfTypeOnConveyorBelt(SeedType theSeedType);
 	void			    UpdateConveyorBelt();
-	void			    UpdateWidth();
+	void			    UpdateWidth(int theNumPackets = -1);
 	void			    RefreshAllPackets();
 };
 

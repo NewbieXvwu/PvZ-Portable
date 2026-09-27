@@ -24,6 +24,8 @@
 #include <cstdio>
 #include <format>
 #include <sstream>
+#include <fstream>
+#include <iostream>
 #include <cstdlib>
 #include "LawnApp.h"
 #include "Resources.h"
@@ -75,6 +77,7 @@
 #include "widget/WidgetManager.h"
 #include "misc/ResourceManager.h"
 #include <algorithm>
+#include <cmath>
 
 #include "widget/Checkbox.h"
 #include "widget/Dialog.h"
@@ -173,6 +176,9 @@ LawnApp::LawnApp()
 	mCrazyDaveBlinkReanimID = ReanimationID::REANIMATIONID_NULL;
 	mCrazyDaveMessageIndex = -1;
 	mEnvironmentMode = false;
+	mZombieMultiplier = 1.0;
+	mPlayLevel = 0;
+	mRecordOutputPath = "";
 }
 
 LawnApp::~LawnApp()
@@ -272,6 +278,31 @@ void LawnApp::KillBoard()
 			EraseFile(aFileName);
 			std::string aLegacyFileName = GetLegacySavedGameName(mGameMode, mPlayerInfo->mId);
 			EraseFile(aLegacyFileName);
+		}
+
+		if (!mRecordOutputPath.empty() && (
+			mBoardResult == BoardResult::BOARDRESULT_WON ||
+			mBoardResult == BoardResult::BOARDRESULT_LOST))
+		{
+			std::ofstream out(mRecordOutputPath);
+			if (out.is_open())
+			{
+				out << "{\n"
+					<< "  \"won\": " << (mBoardResult == BoardResult::BOARDRESULT_WON ? "true" : "false") << ",\n"
+					<< "  \"result\": " << static_cast<int>(mBoardResult) << ",\n"
+					<< "  \"level\": " << mBoard->mLevel << ",\n"
+					<< "  \"zombie_multiplier\": " << mZombieMultiplier << ",\n"
+					<< "  \"wave\": " << mBoard->mCurrentWave << ",\n"
+					<< "  \"total_waves\": " << mBoard->mNumWaves << ",\n"
+					<< "  \"ticks\": " << mBoard->mMainCounter << ",\n"
+					<< "  \"seconds\": " << (mBoard->mMainCounter / 100.0) << ",\n"
+					<< "  \"zombies_killed\": " << mBoard->mZombiesKilled << ",\n"
+					<< "  \"plants_eaten\": " << mBoard->mPlantsEaten << ",\n"
+					<< "  \"mower_triggered\": " << mBoard->mTriggeredLawnMowers << ",\n"
+					<< "  \"sun_produced\": " << mBoard->mSunMoneyProduced << "\n"
+					<< "}\n";
+				std::cout << "\n[PvZ Play Record] Match saved to " << mRecordOutputPath << std::endl;
+			}
 		}
 
 		mBoard->DisposeBoard();
@@ -1295,9 +1326,9 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedT
 bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task)
 {
 	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || deck.empty() || deck.size() > SEEDBANK_MAX ||
-		task.playthrough < 1 || task.playthrough > 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
-		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || task.forcedSeeds.size() > 3 ||
-		(task.playthrough == 1 && !task.forcedSeeds.empty()))
+		task.playthrough != 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
+		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || !std::isfinite(task.zombieCountMultiplier) ||
+		task.zombieCountMultiplier < 1.0 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3)
 		return false;
 
 	if (!mPlayerInfo)
@@ -1363,14 +1394,13 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 
 	MakeNewBoard();
 	mBoard->InitLevel();
-	mBoard->mCutScene->PlaceLawnItems();
-	for (LawnMower* mower : mBoard->mLawnMowers)
-	{
-		mower->mVisible = true;
-		mower->mPosX = -21.0f;
-	}
-	mBoard->mSeedBank->mNumPackets = static_cast<int>(deck.size());
-	mBoard->mSeedBank->UpdateWidth();
+	mMusic->mMusicDisabled = true;
+	mGameScene = GameScenes::SCENE_LEVEL_INTRO;
+	ShowSeedChooserScreen();
+	mBoard->mCutScene->StartLevelIntro();
+	mBoard->mCutScene->mCutsceneTime = 1000000;
+	mBoard->mCutScene->CancelIntro();
+		mBoard->mSeedBank->UpdateWidth(static_cast<int>(deck.size()));
 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
 	{
 		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
@@ -1382,9 +1412,12 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 	mBoard->mTutorialState = TutorialState::TUTORIAL_OFF;
 	mBoard->mTutorialTimer = -1;
 	mBoard->ClearAdvice(AdviceType::ADVICE_NONE);
-	mMusic->mMusicDisabled = true;
-	mGameScene = GameScenes::SCENE_PLAYING;
-	mBoard->StartLevel();
+	StartPlaying();
+	mAppCounter = 0;
+	mAppRandSeed = static_cast<int>(seed);
+	mRandSeed = seed;
+	Sexy::SRand(seed);
+	std::srand(seed);
 	return true;
 }
 
@@ -1401,6 +1434,7 @@ bool LawnApp::EnvironmentPlant(int packetIndex, int col, int row)
 	if (mBoard->CanPlantAt(col, row, seed) != PlantingReason::PLANTING_OK)
 		return false;
 
+	packet.Deactivate();
 	CursorObject& cursor = *mBoard->mCursorObject;
 	cursor.mCursorType = CursorType::CURSOR_TYPE_PLANT_FROM_BANK;
 	cursor.mType = packet.mPacketType;
@@ -1431,16 +1465,23 @@ void LawnApp::EnvironmentWait(int ticks)
 		return;
 	for (int i = 0; i < ticks && !EnvironmentTerminal(); ++i)
 	{
-		mBoard->ProcessDeleteQueue();
-		if (mLoadingThreadCompleted && mEffectSystem)
-			mEffectSystem->ProcessDeleteQueue();
 		for (Coin* coin : mBoard->mCoins)
 		{
 			if (!coin->mDead && coin->IsSun())
 				coin->ScoreCoin();
 		}
-		mBoard->Update();
+		AdvanceLogicTick();
 	}
+}
+
+void LawnApp::AdvanceLogicTick()
+{
+	++mAppCounter;
+	if (mBoard)
+		mBoard->ProcessDeleteQueue();
+	if (mLoadingThreadCompleted && mEffectSystem)
+		mEffectSystem->ProcessDeleteQueue();
+	SexyApp::UpdateFrames();
 }
 
 int LawnApp::EnvironmentWaitDecision(int maxTicks)
@@ -1478,18 +1519,15 @@ int LawnApp::EnvironmentWaitDecision(int maxTicks)
 
 	const std::string initialSignature = decisionSignature();
 	int ticksAdvanced = 0;
-		// ponytail: the 300-tick floor limits frequent no-op decisions; lower it when faster reactions are needed.
+	// ponytail: the 300-tick floor limits frequent no-op decisions; lower it when faster reactions are needed.
 	while (ticksAdvanced < maxTicks && !EnvironmentTerminal())
 	{
-		mBoard->ProcessDeleteQueue();
-		if (mLoadingThreadCompleted && mEffectSystem)
-			mEffectSystem->ProcessDeleteQueue();
 		for (Coin* coin : mBoard->mCoins)
 		{
 			if (!coin->mDead && coin->IsSun())
 				coin->ScoreCoin();
 		}
-		mBoard->Update();
+		AdvanceLogicTick();
 		++ticksAdvanced;
 		if (ticksAdvanced >= std::min(maxTicks, 300) && decisionSignature() != initialSignature)
 			break;
@@ -1509,8 +1547,10 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		return "null";
 
 	std::ostringstream out;
-	out << "{\"protocol_version\":1,\"observation_version\":1,\"task_version\":1,\"level\":" << mBoard->mLevel
-		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough << ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
+	out << "{\"protocol_version\":1,\"observation_version\":2,\"task_version\":2,\"level\":" << mBoard->mLevel
+		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough
+		<< ",\"zombie_count_multiplier\":" << mEnvironmentTaskSpec.zombieCountMultiplier
+		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
 		<< ",\"night\":" << (mBoard->StageIsNight() ? "true" : "false")
 		<< ",\"pool\":" << (mBoard->StageHasPool() ? "true" : "false")
 		<< ",\"fog\":" << (mBoard->StageHasFog() ? "true" : "false")
@@ -1724,7 +1764,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	{
 		const std::string aRandState = GetRandState();
 		constexpr char aHex[] = "0123456789abcdef";
-		out << ",\"hidden\":{\"wave_timer\":" << mBoard->mZombieCountDown << ",\"app_rand_seed\":" << mAppRandSeed
+		out << ",\"hidden\":{\"app_counter\":" << mAppCounter << ",\"wave_timer\":" << mBoard->mZombieCountDown << ",\"app_rand_seed\":" << mAppRandSeed
 			<< ",\"rand_seed\":" << mRandSeed << ",\"rand_state_hex\":\"";
 		for (unsigned char aByte : aRandState)
 			out << aHex[aByte >> 4] << aHex[aByte & 0x0F];
@@ -1741,6 +1781,32 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				out << static_cast<int>(mBoard->mZombiesInWave[wave][i]);
 			}
 			out << ']';
+		}
+		out << "],\"reanimations\":[";
+		if (mEffectSystem && mEffectSystem->mReanimationHolder)
+		{
+			bool firstReanimation = true;
+			for (const Reanimation* reanimation : mEffectSystem->mReanimationHolder->mReanimations)
+			{
+				if (!firstReanimation) out << ',';
+				firstReanimation = false;
+				out << "{\"type\":" << static_cast<int>(reanimation->mReanimationType)
+					<< ",\"dead\":" << (reanimation->mDead ? "true" : "false")
+					<< ",\"time\":" << reanimation->mAnimTime << ",\"last_time\":" << reanimation->mLastFrameTime
+					<< ",\"rate\":" << reanimation->mAnimRate << ",\"loop_type\":" << static_cast<int>(reanimation->mLoopType)
+					<< ",\"loop_count\":" << reanimation->mLoopCount << ",\"frame_start\":" << reanimation->mFrameStart
+					<< ",\"frame_count\":" << reanimation->mFrameCount << ",\"tracks\":[";
+				int trackCount = reanimation->mDefinition && reanimation->mTrackInstances ? reanimation->mDefinition->mTracks.count : 0;
+				for (int trackIndex = 0; trackIndex < trackCount; ++trackIndex)
+				{
+					if (trackIndex) out << ',';
+					const ReanimatorTrackInstance& track = reanimation->mTrackInstances[trackIndex];
+					out << "{\"attachment\":" << static_cast<unsigned int>(track.mAttachmentID)
+						<< ",\"blend_counter\":" << track.mBlendCounter << ",\"blend_time\":" << track.mBlendTime
+						<< ",\"render_group\":" << track.mRenderGroup << '}';
+				}
+				out << "]}";
+			}
 		}
 		out << "]}";
 	}
@@ -1785,6 +1851,18 @@ void LawnApp::HandleCmdLineParam(std::string_view theParamName, std::string_view
 		mCheatKeys = true;
 		mDebugKeysEnabled = true;
 #endif
+	}
+	else if (theParamName == "-multiplier" && !theParamValue.empty())
+	{
+		mZombieMultiplier = std::atof(std::string(theParamValue).c_str());
+	}
+	else if (theParamName == "-play-level" && !theParamValue.empty())
+	{
+		mPlayLevel = std::atoi(std::string(theParamValue).c_str());
+	}
+	else if (theParamName == "-record-output" && !theParamValue.empty())
+	{
+		mRecordOutputPath = std::string(theParamValue);
 	}
 	else
 	{
@@ -2080,18 +2158,7 @@ void LawnApp::UpdateFrames()
 
 	for (int i = 0; i < aUpdateCount; i++)
 	{
-		mAppCounter++;
-
-		if (mBoard)
-		{
-			mBoard->ProcessDeleteQueue();
-		}
-		if (mLoadingThreadCompleted && mEffectSystem)
-		{
-			mEffectSystem->ProcessDeleteQueue();
-		}
-
-		SexyApp::UpdateFrames();
+		AdvanceLogicTick();
 
 		mMusic->MusicUpdate();
 
@@ -2233,6 +2300,24 @@ void LawnApp::LoadingCompleted()
 	SafeDeleteWidget(mTitleScreen.release());
 
 	mResourceManager->DeleteImage("IMAGE_TITLESCREEN");
+
+	if (mPlayLevel > 0)
+	{
+		if (!mPlayerInfo)
+		{
+			mPlayerInfo = mProfileMgr->GetAnyProfile();
+			if (!mPlayerInfo)
+				mPlayerInfo = mProfileMgr->AddProfile("Human");
+		}
+		if (mPlayerInfo)
+		{
+			mPlayerInfo->SetLevel(mPlayLevel);
+			mPlayerInfo->mFinishedAdventure = 0;
+		}
+		mGameMode = GameMode::GAMEMODE_ADVENTURE;
+		PreNewGame(GameMode::GAMEMODE_ADVENTURE, false);
+		return;
+	}
 
 	ShowGameSelector();
 }

@@ -76,6 +76,7 @@ struct EnvironmentTaskSpec
 	bool poolCleanerOwned = false;
 	bool roofCleanerOwned = false;
 	int rakeCharges = 0;
+	double zombieCountMultiplier = 1.0;
 	std::vector<SeedType> forcedSeeds;
 };
 
@@ -158,6 +159,9 @@ public:
 	bool							mDebugTrialLocked;
 	bool							mMuteSoundsForCutscene;
 	bool							mEnvironmentMode;
+	double							mZombieMultiplier;
+	int								mPlayLevel;
+	std::string						mRecordOutputPath;
 
 public:
 	LawnApp();
@@ -249,6 +253,7 @@ public:
 	void							ButtonMouseLeave(int theId) override;
 	void							ButtonMouseMove(int theId, int theX, int theY) override;
 	void							UpdateFrames() override;
+	void							AdvanceLogicTick();
 	bool							UpdateAppStep(bool* updated) override;
 	bool							UpdateApp() override;
 	bool					IsAdventureMode();

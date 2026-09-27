@@ -581,6 +581,8 @@ void Music::MusicUpdate()
 
 void Music::MakeSureMusicIsPlaying(MusicTune theMusicTune)
 {
+	if (mMusicDisabled)
+		return;
 	if (mCurMusicTune != theMusicTune)
 	{
 		StopAllMusic();

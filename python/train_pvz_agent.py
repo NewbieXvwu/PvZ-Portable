@@ -17,7 +17,7 @@ from typing import Any
 import torch
 from torch.nn import functional as F
 
-from pvz_agent import GameplayModelV0, MODEL_CONFIG, behavior_cloning_loss, predict_action, teacher_action
+from pvz_agent import GameplayModelV0, MODEL_CONFIG, TeacherPolicy, behavior_cloning_loss, predict_action
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
@@ -29,52 +29,66 @@ def parse_seeds(text: str) -> list[int]:
     return [int(value) for value in text.split(",") if value.strip()]
 
 
-def collect_episode(env: PvZEnv, seed: int, max_actions: int = 900) -> dict[str, Any]:
-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
+def collect_episode(env: PvZEnv, seed: int, replay_dir: Path, max_actions: int = 2000) -> dict[str, Any]:
+    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
     observation, _ = env.reset(deck=DECK, task=task)
     steps: list[dict[str, Any]] = []
     delta_ticks = 0
     events: dict[str, Any] = {}
-    for _ in range(max_actions):
-        action = teacher_action(observation)
-        steps.append({"observation": observation, "action": action, "delta_ticks": delta_ticks, "events": events})
+    teacher = TeacherPolicy()
+    for decision_index in range(max_actions):
+        action = teacher.advice(observation).action
+        steps.append({"decision_index": decision_index, "observation": observation, "action": action,
+                      "delta_ticks": delta_ticks, "events": events})
+        before = observation
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
             raise RuntimeError(f"teacher selected an illegal action on seed {seed}: {action}")
+        teacher.record_action(before, action)
         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
         events = info["events"]
         if done:
             won = observation["result"] == 1
-            return {"seed": seed, "steps": steps, "won": won, "result": observation["result"],
+            replay_id = f"teacher_seed_{seed}.jsonl.gz"
+            env.save_replay(replay_dir / replay_id)
+            return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
+                    "steps": steps, "won": won, "result": observation["result"],
                     "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
     raise RuntimeError(f"teacher episode exceeded {max_actions} decisions on seed {seed}")
 
 
-def collect_dagger_episode(model: GameplayModelV0, env: PvZEnv, seed: int, device: torch.device) -> dict[str, Any]:
-    task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
+def collect_dagger_episode(model: GameplayModelV0, env: PvZEnv, seed: int, device: torch.device,
+                           replay_dir: Path, max_actions: int = 2000) -> dict[str, Any]:
+    task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
     observation, _ = env.reset(deck=DECK, task=task)
     steps: list[dict[str, Any]] = []
     hidden = None
     previous_action = None
     delta_ticks = 0
     events: dict[str, Any] = {}
-    for _ in range(900):
-        label = teacher_action(observation)
-        steps.append({"observation": observation, "action": label, "previous_action": previous_action,
+    teacher = TeacherPolicy()
+    for decision_index in range(max_actions):
+        label = teacher.advice(observation).action
+        steps.append({"decision_index": decision_index, "observation": observation, "action": label, "previous_action": previous_action,
                       "delta_ticks": delta_ticks, "events": events})
         with torch.inference_mode():
             action, hidden, _ = predict_action(model, observation, hidden, previous_action, delta_ticks, events)
+        before = observation
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
             raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
+        teacher.record_action(before, action)
         previous_action = action
         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
         events = info["events"]
         if done:
             break
     if not observation["terminal"]:
-        raise RuntimeError(f"DAgger episode exceeded 900 decisions on seed {seed}")
-    return {"seed": seed, "steps": steps, "won": observation["result"] == 1, "result": observation["result"],
+        raise RuntimeError(f"DAgger episode exceeded {max_actions} decisions on seed {seed}")
+    replay_id = f"dagger_seed_{seed}.jsonl.gz"
+    env.save_replay(replay_dir / replay_id)
+    return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
+            "steps": steps, "won": observation["result"] == 1, "result": observation["result"],
             "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
 
 
@@ -111,6 +125,7 @@ def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seed
     cli["output_dir"] = str(args.output_dir)
     return {
         "git_sha": git_sha, "git_dirty": git_dirty,
+        "observation_version": 2, "task_version": 2,
         "command": {"argv": list(sys.argv), "arguments": cli},
         "trajectory_sha256": {name: sha256_file(path) for name, path in data_paths.items()},
         "resource_sha256": {
@@ -193,11 +208,12 @@ def train(model: GameplayModelV0, episodes: list[dict[str, Any]], epochs: int, d
     return history, plant_weight
 
 
-def evaluate(model: GameplayModelV0, env: PvZEnv, seeds: list[int], device: torch.device) -> list[dict[str, Any]]:
+def evaluate(model: GameplayModelV0, env: PvZEnv, seeds: list[int], device: torch.device,
+             max_actions: int = 2000) -> list[dict[str, Any]]:
     model.eval()
     records = []
     for seed in seeds:
-        task = TaskSpec(level=LEVEL, seed=seed, playthrough=1, profile=PlayerProfileContext())
+        task = TaskSpec(level=LEVEL, seed=seed, playthrough=2, profile=PlayerProfileContext())
         observation, _ = env.reset(deck=DECK, task=task)
         hidden = None
         previous_action = None
@@ -205,7 +221,7 @@ def evaluate(model: GameplayModelV0, env: PvZEnv, seeds: list[int], device: torc
         events: dict[str, Any] = {}
         actions = 0
         started = time.time()
-        while not observation["terminal"] and actions < 900:
+        while not observation["terminal"] and actions < max_actions:
             with torch.inference_mode():
                 action, hidden, _ = predict_action(model, observation, hidden, previous_action, delta_ticks, events)
             observation, _, done, _, info = env.step(action)
@@ -218,7 +234,7 @@ def evaluate(model: GameplayModelV0, env: PvZEnv, seeds: list[int], device: torc
             if done:
                 break
         if not observation["terminal"]:
-            raise RuntimeError(f"evaluation exceeded 900 decisions on seed {seed}")
+            raise RuntimeError(f"evaluation exceeded {max_actions} decisions on seed {seed}")
         record = {
             "seed": seed, "won": observation["result"] == 1, "result": observation["result"],
             "wave": observation["wave"], "wave_count": observation["wave_count"],
@@ -240,15 +256,21 @@ def main() -> None:
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--collect-only", action="store_true")
     parser.add_argument("--train-only", action="store_true")
+    parser.add_argument("--allow-losses", action="store_true",
+                        help="keep terminal losses in the trajectory data instead of stopping")
+    parser.add_argument("--max-actions", type=int, default=2000)
     args = parser.parse_args()
     if not args.resource_dir:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
+    if args.max_actions < 1:
+        parser.error("--max-actions must be positive")
 
     torch.manual_seed(17)
     random.seed(17)
     torch.set_num_threads(1)
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     args.output_dir.mkdir(parents=True, exist_ok=True)
+    replay_dir = args.output_dir / "replays"
     data_path = args.output_dir / "teacher_trajectories.json.gz"
     train_seeds = parse_seeds(args.train_seeds)
     dagger_seeds = parse_seeds(args.dagger_seeds) if args.dagger_seeds else train_seeds
@@ -257,11 +279,11 @@ def main() -> None:
         episodes = []
         with PvZEnv(resource_dir=args.resource_dir) as env:
             for seed in train_seeds:
-                episode = collect_episode(env, seed)
+                episode = collect_episode(env, seed, replay_dir, args.max_actions)
                 episodes.append(episode)
                 print(f"teacher seed={seed} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
                       f"tick={episode['tick']} steps={len(episode['steps'])}", flush=True)
-        if not all(episode["won"] for episode in episodes):
+        if not args.allow_losses and not all(episode["won"] for episode in episodes):
             failed = [episode["seed"] for episode in episodes if not episode["won"]]
             raise RuntimeError(f"teacher did not complete seeds {failed}; adjust the teacher before training")
         write_episodes(data_path, episodes)
@@ -273,6 +295,8 @@ def main() -> None:
             return
     else:
         episodes = read_episodes(data_path)
+        if any(episode.get("observation_version") != 2 or episode.get("task_version") != 2 for episode in episodes):
+            raise ValueError("training trajectories predate the current environment; recollect them without --train-only")
 
     model = GameplayModelV0().to(device)
     parameter_count = sum(parameter.numel() for parameter in model.parameters())
@@ -289,7 +313,8 @@ def main() -> None:
                     "training_seeds": [episode["seed"] for episode in episodes], "losses": losses},
                    indent=2) + "\n", encoding="utf-8")
     with PvZEnv(resource_dir=args.resource_dir) as env:
-        dagger_episodes = [collect_dagger_episode(model, env, seed, device) for seed in dagger_seeds]
+        dagger_episodes = [collect_dagger_episode(model, env, seed, device, replay_dir, args.max_actions)
+                           for seed in dagger_seeds]
         dagger_path = args.output_dir / "dagger_trajectories.json.gz"
         write_episodes(dagger_path, dagger_episodes)
         for episode in dagger_episodes:
@@ -297,7 +322,7 @@ def main() -> None:
                   f"tick={episode['tick']} steps={len(episode['steps'])}", flush=True)
         episodes.extend(dagger_episodes)
         losses, plant_weight = train(model, episodes, args.epochs, device)
-        results = evaluate(model, env, parse_seeds(args.eval_seeds), device)
+        results = evaluate(model, env, parse_seeds(args.eval_seeds), device, args.max_actions)
     checkpoint = args.output_dir / "gameplay_model_v0.pt"
     final_metadata = provenance(args, {"teacher": data_path, "dagger": dagger_path},
                                 train_seeds, dagger_seeds)
@@ -306,8 +331,8 @@ def main() -> None:
                     parameter_count=parameter_count, epochs=args.epochs, losses=losses,
                     evaluation=results)
     summary = {
-        "model": checkpoint.name, "protocol_version": 1, "observation_version": 1,
-        "level": LEVEL, "playthrough": 1, "deck": list(DECK), "device": str(device),
+        "model": checkpoint.name, "protocol_version": 1, "observation_version": 2, "task_version": 2,
+        "level": LEVEL, "playthrough": 2, "deck": list(DECK), "device": str(device),
         "parameter_count": parameter_count, "training_episodes": len(episodes),
         "training_steps": sum(len(episode["steps"]) for episode in episodes),
         "training_seeds": [episode["seed"] for episode in episodes], "plant_action_weight": plant_weight,

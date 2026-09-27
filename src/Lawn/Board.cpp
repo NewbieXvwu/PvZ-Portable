@@ -21,6 +21,7 @@
 
 #include <time.h>
 #include <algorithm>
+#include <cmath>
 #include <SDL.h>
 #include <format>
 #include "ZenGarden.h"
@@ -768,6 +769,7 @@ void Board::PickZombieWaves()
 			ZombieType aZombieType = PickZombieType(aZombiePoints, aWave, &aZombiePicker);
 			PutZombieInWave(aZombieType, aWave, &aZombiePicker);
 		}
+
 	}
 }
 
@@ -4902,15 +4904,16 @@ int Board::TotalZombiesHealthInWave(int theWaveIndex)
 void Board::SpawnZombieWave()
 {
 	mChallenge->SpawnZombieWave();
+	const int aBaseCount = NumberZombiesInWave(mCurrentWave);
+	const double aMultiplier = mApp->mEnvironmentMode ? mApp->mEnvironmentTaskSpec.zombieCountMultiplier : mApp->mZombieMultiplier;
+	const int aSpawnCount = aBaseCount > 0 ? static_cast<int>(std::lround(aBaseCount * aMultiplier)) : 0;
 	if (mApp->IsBungeeBlitzLevel())
 	{
 		BungeeDropGrid aBungeeDropGrid;
 		SetupBungeeDrop(&aBungeeDropGrid);
-		for (int i = 0; i < MAX_ZOMBIES_IN_WAVE; i++)
+		for (int i = 0; i < aSpawnCount; i++)
 		{
-			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i];
-			if (aZombieType == ZombieType::ZOMBIE_INVALID)
-				break;
+			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i % aBaseCount];
 
 			if (aZombieType == ZombieType::ZOMBIE_BUNGEE || aZombieType == ZombieType::ZOMBIE_ZAMBONI)
 			{
@@ -4925,11 +4928,9 @@ void Board::SpawnZombieWave()
 	else
 	{
 		PVZP_ASSERT(mCurrentWave >= 0 && mCurrentWave < MAX_ZOMBIE_WAVES && mCurrentWave < mNumWaves);
-		for (int i = 0; i < MAX_ZOMBIES_IN_WAVE; i++)
+		for (int i = 0; i < aSpawnCount; i++)
 		{
-			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i];
-			if (aZombieType == ZombieType::ZOMBIE_INVALID)
-				break;
+			ZombieType aZombieType = mZombiesInWave[mCurrentWave][i % aBaseCount];
 
 			if (aZombieType == ZombieType::ZOMBIE_BOBSLED && !CanAddBobSled())
 			{
