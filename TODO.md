@@ -1,72 +1,37 @@
 # PvZEnv
 
-## 目标与边界
+## 当前目标
 
-先交付一个可复现、可由 Python 调用的 PvZ 游戏环境，为后续训练自主控制器和研究不同决策方法打底。首个完整闭环使用一关普通白天冒险关，再验证白天、夜晚、泳池、迷雾和屋顶场景的状态与动作接口。
+构建可复现、可批量运行、可由 Python 控制的 Plants vs. Zombies 环境，并用高保真模拟器搜索生成教师数据，训练最终自主控制器。
 
-策略观测包含场上全部存活僵尸，即使僵尸位于雾后也可见；雾仍按游戏规则影响画面和战斗。未来详细出怪队列、随机数状态及隐藏计时器只通过研究用完整状态接口提供。环境返回客观事件和胜负结果，奖励由训练端定义。
+当前训练基线使用 Adventure-II、`playthrough=2`。策略观测包含场上全部存活僵尸；未来出怪表、随机数状态和隐藏计时器只属于研究用完整状态。环境只返回客观状态、事件和胜负，奖励与搜索评价由训练端定义。
 
-标准资源基线采用用户提供的 PvZ GOTY English `1.2.0.1073`：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN/main.pak`，SHA-256 为 `7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421`；`properties/partner.xml` 的 SHA-256 为 `69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3`。资源留在本机下载目录，不进入仓库；Python 入口把资源所在目录传给 `-resdir`。
+标准资源基线采用 PvZ GOTY English `1.2.0.1073`。游戏资源不进入仓库，Python 入口通过 `PvZEnv(resource_dir=...)` 指定资源目录。
 
-PvZ 的部分战斗后果由 Reanimation 动画进度、轨道变换和关键事件触发。桌面与环境模式现在共用 `AdvanceLogicTick()`；快照恢复 `mAppCounter`、随机状态、实体和动画。旧的 6 个检查点只覆盖此前的环境循环，当前代码的逐 tick 可视/无画面验证由 `python/verify_env_equivalence.py` 执行。
+## 已完成
 
-GitHub fork 为 [NewbieXvwu/PvZ-Portable](https://github.com/NewbieXvwu/PvZ-Portable)。Python 入口 `python/pvz_env.py` 通过 `PvZEnv(resource_dir=...)` 使用游戏资源。训练基线固定为 `playthrough=2`，环境拒绝 `playthrough=1`，直到首次冒险教程流程得到完整实现。
-
-仓库已有 Teacher、BC、DAgger 和 PPO 训练入口，旧训练数据与评估结果列在 `artifacts/data_status.json` 并标记为修复前记录。多进程环境池和批量推理要在基准剖析后实现；教师数据通过完整自动对局生成。
-
-## 阶段一：Fork 上游并建立基线
-
-- [x] 从 PvZ-Portable 官方仓库 fork；`pvz-env` 分支固定基于 `0.2.4`（提交 `a0f676a`），保留官方 `upstream` 远端并记录基线提交。
-- [x] 核对并遵守上游 LGPL-3.0-or-later 许可；游戏资源由使用者自行提供，不将资源文件提交到仓库。
-- [x] 在 macOS 构建并启动普通可视程序，4 秒渲染循环后干净退出；记录 CMake 3.31.10、Apple Clang 21.0.0、资源路径及启动命令。桌面锁定期间无法目视确认窗口内容。
-- [x] 定位游戏主循环、逻辑更新、关卡初始化、随机数、存档和录像回放的实现，确认可复用的入口与需要修改的最小范围。
-
-参考：[PvZ-Portable 发布页](https://github.com/wszqkzqk/PvZ-Portable/releases)、[项目说明与许可](https://github.com/wszqkzqk/PvZ-Portable)。
-
-## 阶段二：在 fork 中实现无画面运行和游戏控制入口
-
-- [x] 增加无画面运行路径，跳过窗口创建、绘制和声音输出，同时完整加载并更新 Reanimation；只批量推进游戏逻辑 tick。已用 1.2.0.1073 资源验证向日葵、僵尸和豌豆发射能在无窗口模式运行。
-- [x] 保留可视运行方式；桌面和环境路径共用逐 tick 逻辑入口。`python/verify_env_equivalence.py` 提供逐 tick 观测、事件、完整状态和快照恢复差分验证。
-- [x] 增加无需菜单交互的关卡重置入口，接受关卡、随机种子和卡组。
-- [x] 暴露游戏语义动作：种植、铲除和等待指定 tick；首版默认自动收集阳光，不模拟鼠标移动与点击。
-- [x] 明确非法动作的结果，并提供当前合法动作集合或动作掩码。
-- [x] 提供推进到下一个决策时刻的快速接口；完整 1-1 胜局推进 34,475 tick，共 134 次策略动作。300 tick 最短推进下该规则策略获胜，提高到 360 tick 会在第 3 波失守，因此保留 300 tick 响应设置。
-
-## 阶段三：实现环境状态、快照与 Python 接口
-
-- [x] 提供算法无关的 C++ 环境入口，支持重置、动作执行、逻辑推进、观测、完整状态、快照和恢复。
-- [x] 提供薄 Python 封装，采用 Gymnasium 风格的重置与步进返回值，不将具体学习算法写入环境核心。
-- [x] 结构化观测包含格子、植物、僵尸、阳光、投射物、卡片、波次与合法动作；多地形结构仍待核验。
-- [x] 分离策略观测与研究用完整状态。策略观测显示雾后的存活僵尸，但不含未来详细出怪表、RNG 状态和隐藏计时器；研究接口保留这些信息。
-- [x] 事件覆盖击杀僵尸、植物被吃、阳光产生与消耗、小推车触发、波次开始及胜负。
-- [x] 实现内存 `snapshot/restore`，复用 `.v4` 状态序列化并单独保存随机数发生器和环境事件计数；已核对序列化包含 Reanimation 动画时间、轨道实例及挂接，并在豌豆投射物飞行时恢复快照，后续观测逐项一致。
-
-## 阶段四：可复现记录与场景验证
-
-- [x] 固定输入的冒烟轨迹可复现并生成状态摘要；完整对局的跨进程复现通过。
-- [x] 已核验保存快照、执行动作、恢复快照并重放后，观测完全一致。
-- [x] v3 回放采用 JSON Lines，可选 gzip；每个实验只写一份含源码修订、脏工作区补丁、构建项、资源与可执行文件摘要的清单。当前只读取 v3，并要求匹配的 Git 修订。
-- [x] 已在白天、夜晚、泳池、迷雾和屋顶各重置一关，核验背景编号、6×9 网格、投射物字段及合法动作；屋顶卡组使用花盆。
-- [x] 在普通白天 1-1 完成完整对局并核验最终胜负：20/20 波、34,475 tick、胜利；新进程逐操作重放 134 条记录，最终状态摘要一致。
-- [ ] 修复后重建 Teacher、BC、DAgger、PPO 数据与冻结基准；旧数据状态见 `artifacts/data_status.json`。
-- [ ] 运行逐 tick 可视/无画面差分，覆盖舞王、墓碑、迷雾、Boss、卡片冷却和动画中途快照恢复。
-- [ ] 测环境 tick 与完整策略吞吐、reset 耗时和 worker 内存，再决定是否引入常驻 worker 池、批量推理或紧凑 IPC。
+- 无画面环境与可视模式共用 `AdvanceLogicTick()`，支持确定性 reset、plant、shovel、固定 tick 等待和事件等待。
+- 结构化观测覆盖格子、植物、僵尸、阳光、投射物、卡片、波次、合法动作与客观事件。
+- 内存 snapshot/restore 保存棋盘、随机状态、计数器和动画相关状态；`verify_env_equivalence.py` 用于可视/无画面与恢复后的逐 tick 等价性验证。
+- `WAIT_DECISION` 使用自适应反应窗口和紧凑状态签名；危险状态可更快返回。
+- 搜索路径支持轻量快照命令和 `BRANCH_SNAPSHOT_FAST`，减少搜索中的 IPC 与无用观测序列化。
+- SearchTeacher 只依赖模拟器、合法动作、通用状态几何和可选模型候选提案。搜索由 `horizon_ticks` 定义游戏时间范围，由 `simulation_budget` 定义计算预算，并用 `max_same_tick_actions` 防止零 tick 动作无限展开。
+- 搜索结果按 `确定胜利 > 未终局 > 确定失败` 排序；BC、搜索与 PPO 使用统一的按游戏 tick 折扣终局价值语义。
+- BC、DAgger、PPO 训练入口和冻结 seed benchmark 已接入当前模型与搜索教师。
 
 ## 当前验收条件
 
-- Python 无需点击菜单即可重置普通关卡、读取结构化观测并执行种植、铲除、定 tick 等待和推进到决策时刻。
-- 策略观测与研究用完整状态隔离，环境不内置奖励函数。
-- 固定输入可复现；快照恢复后轨迹一致；录像记录可跨进程重放。
-- 可视与无画面逐 tick 状态差分通过。
-- 至少覆盖五种常见地形的状态与动作接口，并完成一关普通白天关的完整对局闭环。
+- Python 无需菜单交互即可重置普通关卡并完成完整自动对局。
+- 固定 seed 与固定动作序列可复现；snapshot 恢复后重放轨迹一致。
+- 搜索教师在固定 `horizon_ticks` 下比较分支，计算预算不会改变游戏时间语义。
+- 教师、DAgger 和评估 seed 集唯一且互斥。
+- 冻结测试集至少包含 256 个唯一 seed，训练数据不得使用这些 seed。
+- checkpoint 必须声明并匹配当前模型架构、观测版本、任务版本和 value semantics。
 
-## 后续扩展
+## 接下来
 
-根据吞吐剖析评估常驻子进程和批量推理；`WAIT_DECISION` 签名优化、资源预派生共享、低内存和仅加载图像元数据只在剖析确认瓶颈后推进。Cob Cannon 控制、快照释放接口、环境专用构建目标及 `.dmo` 与语义回放关联作为可选项。验证与 PopCap 原版的等价性需要对应原版程序和 `properties` 作为外部参照。
-
-## 本机运行记录
-
-- 构建：`cmake -G Ninja -B build`，然后 `cmake --build build --parallel 4`；本次使用 CMake 3.31.10 和 Apple Clang 21.0.0。
-- 普通可视程序：`./build/pvz-portable -resdir "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN" -savedir /tmp/pvz-visible-startup`。
-- Python 环境：`PYTHONPATH=python` 后导入 `from pvz_env import PvZEnv`，并以 `PvZEnv(resource_dir="/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")` 创建实例；`headless=False` 可切换到可视控制模式。
-- 资源 SHA-256：`main.pak` 为 `7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421`，`properties/partner.xml` 为 `69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3`。
+- 从当前 SearchTeacher 生成搜索监督与 DAgger 数据。
+- 在冻结 256 seeds 上测 SearchTeacher 与训练后模型的胜率、失败波次、植物损失、割草机触发、搜索模拟量、策略熵和吞吐。
+- 跑完整 C++ 构建以及逐 tick 可视/无画面差分，覆盖舞王、墓碑、迷雾、Boss、卡片冷却和动画中途 snapshot 恢复。
+- 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。
+- 扩展到白天、夜晚、泳池、迷雾和屋顶等地形，检查候选生成与模型动作头在不同卡组上的覆盖率。
