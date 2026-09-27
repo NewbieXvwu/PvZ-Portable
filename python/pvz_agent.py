@@ -158,6 +158,7 @@ class RelationAttention(nn.Module):
         super().__init__()
         self.heads = heads
         self.head_width = width // heads
+        self.relation_bias_enabled = True
         self.qkv = nn.Linear(width, width * 3)
         self.projection = nn.Linear(width, width)
         self.kind_pair_bias = nn.Parameter(torch.zeros(heads, len(TOKEN_KINDS), len(TOKEN_KINDS)))
@@ -171,17 +172,19 @@ class RelationAttention(nn.Module):
         query, key, value = qkv.unbind(0)
         scale = self.head_width ** -0.5
         scores = torch.matmul(query, key.transpose(-2, -1)) * scale
-        kind_pair = self.kind_pair_bias[:, kinds[:, None], kinds[None, :]]
-        row_known = (rows[:, None] >= 0) & (rows[None, :] >= 0)
-        col_known = (cols[:, None] >= 0) & (cols[None, :] >= 0)
-        row_delta = (rows[:, None] - rows[None, :]).clamp(-5, 5) + 5
-        col_delta = (cols[:, None] - cols[None, :]).clamp(-8, 8) + 8
-        row_bucket = torch.where(row_known, row_delta, 11)
-        col_bucket = torch.where(col_known, col_delta, 17)
-        same_cell = (row_known & col_known & (rows[:, None] == rows[None, :]) & (cols[:, None] == cols[None, :])).long()
-        relation = kind_pair + self.row_bias(row_bucket).permute(2, 0, 1)
-        relation = relation + self.col_bias(col_bucket).permute(2, 0, 1) + self.same_cell_bias(same_cell).permute(2, 0, 1)
-        attended = torch.softmax(scores + relation.unsqueeze(0), dim=-1)
+        if self.relation_bias_enabled:
+            kind_pair = self.kind_pair_bias[:, kinds[:, None], kinds[None, :]]
+            row_known = (rows[:, None] >= 0) & (rows[None, :] >= 0)
+            col_known = (cols[:, None] >= 0) & (cols[None, :] >= 0)
+            row_delta = (rows[:, None] - rows[None, :]).clamp(-5, 5) + 5
+            col_delta = (cols[:, None] - cols[None, :]).clamp(-8, 8) + 8
+            row_bucket = torch.where(row_known, row_delta, 11)
+            col_bucket = torch.where(col_known, col_delta, 17)
+            same_cell = (row_known & col_known & (rows[:, None] == rows[None, :]) & (cols[:, None] == cols[None, :])).long()
+            relation = kind_pair + self.row_bias(row_bucket).permute(2, 0, 1)
+            relation = relation + self.col_bias(col_bucket).permute(2, 0, 1) + self.same_cell_bias(same_cell).permute(2, 0, 1)
+            scores = scores + relation.unsqueeze(0)
+        attended = torch.softmax(scores, dim=-1)
         value = torch.matmul(attended, value).transpose(1, 2).contiguous().view(batch, count, width)
         return self.projection(value)
 
@@ -350,6 +353,90 @@ class GameplayModelV0(nn.Module):
         return self.privileged_critic(torch.cat((output["belief"], extra), dim=-1))
 
 
+def select_action(
+    model: GameplayModelV0,
+    output: dict[str, Any],
+    observation: dict[str, Any],
+    action: dict[str, Any] | None = None,
+    deterministic: bool = False,
+) -> tuple[dict[str, Any], Tensor, Tensor]:
+    device = output["type_logits"].device
+    legal = observation["legal_actions"]
+    valid_packets = sorted({item["packet"] for item in legal["plants"]})
+    valid_shovels = {row * 9 + col for col, row in legal["shovels"]}
+    type_logits = output["type_logits"].clone()
+    type_logits[0] = type_logits[0] if valid_packets else -1e9
+    type_logits[1] = type_logits[1] if valid_shovels else -1e9
+    type_dist = torch.distributions.Categorical(logits=type_logits)
+    action_types = {"plant": 0, "shovel": 1, "wait": 2, "wait_decision": 2}
+    if action is not None and action.get("type") not in action_types:
+        raise ValueError(f"unsupported action type: {action.get('type')}")
+    type_index = (type_logits.argmax() if deterministic else type_dist.sample()) if action is None else torch.tensor(
+        action_types[action["type"]], device=device
+    )
+    if action is not None and ((int(type_index.item()) == 0 and not valid_packets)
+                               or (int(type_index.item()) == 1 and not valid_shovels)):
+        raise ValueError(f"action is illegal in this observation: {action}")
+    log_prob = type_dist.log_prob(type_index)
+    entropy = type_dist.entropy()
+    action_type = int(type_index.item())
+
+    if action_type == 0:
+        packet_logits = output["packet_logits"].clone()
+        allowed = set(valid_packets)
+        for index, packet_id in enumerate(output["packet_ids"]):
+            if packet_id not in allowed:
+                packet_logits[index] = -1e9
+        packet_dist = torch.distributions.Categorical(logits=packet_logits)
+        if action is not None and action["packet"] not in allowed:
+            raise ValueError(f"illegal plant packet: {action}")
+        packet_index = (packet_logits.argmax() if deterministic else packet_dist.sample()) if action is None else torch.tensor(
+            output["packet_ids"].index(action["packet"]), device=device
+        )
+        packet = output["packet_ids"][int(packet_index.item())]
+        log_prob = log_prob + packet_dist.log_prob(packet_index)
+        entropy = entropy + packet_dist.entropy()
+        cell_logits = model.plant_cell_scores(output, packet)
+        valid_cells = {a["row"] * 9 + a["col"] for a in legal["plants"] if a["packet"] == packet}
+        for cell in range(54):
+            if cell not in valid_cells:
+                cell_logits[cell] = -1e9
+        cell_dist = torch.distributions.Categorical(logits=cell_logits)
+        if action is not None and action["row"] * 9 + action["col"] not in valid_cells:
+            raise ValueError(f"illegal plant cell: {action}")
+        cell_index = (cell_logits.argmax() if deterministic else cell_dist.sample()) if action is None else torch.tensor(
+            action["row"] * 9 + action["col"], device=device
+        )
+        cell = int(cell_index.item())
+        log_prob = log_prob + cell_dist.log_prob(cell_index)
+        entropy = entropy + cell_dist.entropy()
+        selected = {"type": "plant", "packet": packet, "col": cell % 9, "row": cell // 9} if action is None else dict(action)
+    elif action_type == 1:
+        cell_logits = model.shovel_cell_scores(output)
+        for cell in range(54):
+            if cell not in valid_shovels:
+                cell_logits[cell] = -1e9
+        cell_dist = torch.distributions.Categorical(logits=cell_logits)
+        if action is not None and action["row"] * 9 + action["col"] not in valid_shovels:
+            raise ValueError(f"illegal shovel cell: {action}")
+        cell_index = (cell_logits.argmax() if deterministic else cell_dist.sample()) if action is None else torch.tensor(
+            action["row"] * 9 + action["col"], device=device
+        )
+        cell = int(cell_index.item())
+        log_prob = log_prob + cell_dist.log_prob(cell_index)
+        entropy = entropy + cell_dist.entropy()
+        selected = {"type": "shovel", "col": cell % 9, "row": cell // 9} if action is None else dict(action)
+    else:
+        wait_dist = torch.distributions.Categorical(logits=output["wait_logits"])
+        duration = (output["wait_logits"].argmax() if deterministic else wait_dist.sample()) if action is None else torch.tensor(
+            min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - action.get("ticks", 300))), device=device
+        )
+        log_prob = log_prob + wait_dist.log_prob(duration)
+        entropy = entropy + wait_dist.entropy()
+        selected = {"type": "wait", "ticks": WAIT_TICKS[int(duration.item())]} if action is None else dict(action)
+    return selected, log_prob, entropy
+
+
 @torch.no_grad()
 def predict_action(
     model: GameplayModelV0,
@@ -360,39 +447,7 @@ def predict_action(
     events: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], Tensor, dict[str, Any]]:
     output = model.step(observation, hidden, previous_action, delta_ticks, events)
-    device = output["type_logits"].device
-    legal = observation["legal_actions"]
-    valid_packets = sorted({item["packet"] for item in legal["plants"]})
-    valid_shovels = [row * 9 + col for col, row in legal["shovels"]]
-    type_logits = output["type_logits"].clone()
-    type_logits[0] = type_logits[0] if valid_packets else -1e9
-    type_logits[1] = type_logits[1] if valid_shovels else -1e9
-    action_type = int(type_logits.argmax().item())
-
-    if action_type == 0:
-        packet_logits = output["packet_logits"].clone()
-        allowed = set(valid_packets)
-        for index, packet_id in enumerate(output["packet_ids"]):
-            if packet_id not in allowed:
-                packet_logits[index] = -1e9
-        packet = output["packet_ids"][int(packet_logits.argmax().item())]
-        cell_logits = model.plant_cell_scores(output, packet)
-        valid_cells = {a["row"] * 9 + a["col"] for a in legal["plants"] if a["packet"] == packet}
-        for cell in range(54):
-            if cell not in valid_cells:
-                cell_logits[cell] = -1e9
-        cell = int(cell_logits.argmax().item())
-        action = {"type": "plant", "packet": packet, "col": cell % 9, "row": cell // 9}
-    elif action_type == 1:
-        cell_logits = model.shovel_cell_scores(output)
-        for cell in range(54):
-            if cell not in valid_shovels:
-                cell_logits[cell] = -1e9
-        cell = int(cell_logits.argmax().item())
-        action = {"type": "shovel", "col": cell % 9, "row": cell // 9}
-    else:
-        duration = int(output["wait_logits"].argmax().item())
-        action = {"type": "wait", "ticks": WAIT_TICKS[duration]}
+    action, _, _ = select_action(model, output, observation, deterministic=True)
     return action, output["hidden"], output
 
 

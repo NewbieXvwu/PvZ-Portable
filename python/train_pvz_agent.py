@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
+import os
 import random
+import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -17,7 +21,6 @@ from pvz_agent import GameplayModelV0, MODEL_CONFIG, behavior_cloning_loss, pred
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
-RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
 
@@ -44,8 +47,7 @@ def collect_episode(env: PvZEnv, seed: int, max_actions: int = 900) -> dict[str,
             won = observation["result"] == 1
             return {"seed": seed, "steps": steps, "won": won, "result": observation["result"],
                     "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
-    return {"seed": seed, "steps": steps, "won": False, "result": observation["result"],
-            "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
+    raise RuntimeError(f"teacher episode exceeded {max_actions} decisions on seed {seed}")
 
 
 def collect_dagger_episode(model: GameplayModelV0, env: PvZEnv, seed: int, device: torch.device) -> dict[str, Any]:
@@ -70,6 +72,8 @@ def collect_dagger_episode(model: GameplayModelV0, env: PvZEnv, seed: int, devic
         events = info["events"]
         if done:
             break
+    if not observation["terminal"]:
+        raise RuntimeError(f"DAgger episode exceeded 900 decisions on seed {seed}")
     return {"seed": seed, "steps": steps, "won": observation["result"] == 1, "result": observation["result"],
             "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
 
@@ -83,6 +87,47 @@ def write_episodes(path: Path, episodes: list[dict[str, Any]]) -> None:
 def read_episodes(path: Path) -> list[dict[str, Any]]:
     with gzip.open(path, "rt", encoding="utf-8") as stream:
         return json.load(stream)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seeds: list[int], dagger_seeds: list[int]) -> dict[str, Any]:
+    root = Path(__file__).resolve().parent.parent
+    try:
+        git_sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True,
+                                 capture_output=True, text=True).stdout.strip()
+        git_dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=root, check=True,
+                                        capture_output=True, text=True).stdout)
+    except (OSError, subprocess.CalledProcessError):
+        git_sha, git_dirty = None, None
+    resource_dir = Path(args.resource_dir).expanduser().resolve()
+    cli = vars(args).copy()
+    cli["output_dir"] = str(args.output_dir)
+    return {
+        "git_sha": git_sha, "git_dirty": git_dirty,
+        "command": {"argv": list(sys.argv), "arguments": cli},
+        "trajectory_sha256": {name: sha256_file(path) for name, path in data_paths.items()},
+        "resource_sha256": {
+            "main.pak": sha256_file(resource_dir / "main.pak"),
+            "properties/partner.xml": sha256_file(resource_dir / "properties" / "partner.xml"),
+        },
+        "random_seeds": {"python": 17, "torch": 17, "teacher_episodes": train_seeds,
+                         "dagger_episodes": dagger_seeds},
+        "model_config": MODEL_CONFIG,
+    }
+
+
+def save_checkpoint(path: Path, model: GameplayModelV0, metadata: dict[str, Any], **fields: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
+                "config": MODEL_CONFIG, "level": LEVEL, "deck": DECK,
+                "profile": "Adventure I, six slots, no store items", "provenance": metadata, **fields}, path)
 
 
 def episode_targets(steps: list[dict[str, Any]], index: int, device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
@@ -172,6 +217,8 @@ def evaluate(model: GameplayModelV0, env: PvZEnv, seeds: list[int], device: torc
             actions += 1
             if done:
                 break
+        if not observation["terminal"]:
+            raise RuntimeError(f"evaluation exceeded 900 decisions on seed {seed}")
         record = {
             "seed": seed, "won": observation["result"] == 1, "result": observation["result"],
             "wave": observation["wave"], "wave_count": observation["wave_count"],
@@ -185,14 +232,17 @@ def evaluate(model: GameplayModelV0, env: PvZEnv, seeds: list[int], device: torc
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--resource-dir", default=RESOURCE_DIR)
+    parser.add_argument("--resource-dir", default=os.environ.get("PVZ_RESOURCE_DIR"))
     parser.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parent.parent / "artifacts" / "gameplay-v0")
     parser.add_argument("--train-seeds", default="0,1,2,3,4,5,6,7")
+    parser.add_argument("--dagger-seeds", default=None)
     parser.add_argument("--eval-seeds", default="8,9,10,11")
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--collect-only", action="store_true")
     parser.add_argument("--train-only", action="store_true")
     args = parser.parse_args()
+    if not args.resource_dir:
+        parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
 
     torch.manual_seed(17)
     random.seed(17)
@@ -200,12 +250,13 @@ def main() -> None:
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
     args.output_dir.mkdir(parents=True, exist_ok=True)
     data_path = args.output_dir / "teacher_trajectories.json.gz"
+    train_seeds = parse_seeds(args.train_seeds)
+    dagger_seeds = parse_seeds(args.dagger_seeds) if args.dagger_seeds else train_seeds
 
     if not args.train_only:
-        seeds = parse_seeds(args.train_seeds)
         episodes = []
         with PvZEnv(resource_dir=args.resource_dir) as env:
-            for seed in seeds:
+            for seed in train_seeds:
                 episode = collect_episode(env, seed)
                 episodes.append(episode)
                 print(f"teacher seed={seed} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
@@ -215,6 +266,9 @@ def main() -> None:
             raise RuntimeError(f"teacher did not complete seeds {failed}; adjust the teacher before training")
         write_episodes(data_path, episodes)
         print(f"saved {sum(len(e['steps']) for e in episodes)} demonstrations to {data_path}", flush=True)
+        teacher_metadata = provenance(args, {"teacher": data_path}, train_seeds, [])
+        (args.output_dir / "teacher_trajectory_metadata.json").write_text(
+            json.dumps({"provenance": teacher_metadata}, indent=2) + "\n", encoding="utf-8")
         if args.collect_only:
             return
     else:
@@ -224,9 +278,20 @@ def main() -> None:
     parameter_count = sum(parameter.numel() for parameter in model.parameters())
     print(f"training on {device}; parameters={parameter_count:,}; architecture={MODEL_CONFIG}", flush=True)
     losses, plant_weight = train(model, episodes, args.epochs, device)
+    teacher_data = {"teacher": data_path}
+    bc_metadata = provenance(args, teacher_data, [episode["seed"] for episode in episodes], [])
+    bc_checkpoint = args.output_dir / "gameplay_model_v0_bc.pt"
+    save_checkpoint(bc_checkpoint, model, bc_metadata, plant_action_weight=plant_weight,
+                    training_seeds=[episode["seed"] for episode in episodes],
+                    parameter_count=parameter_count, epochs=args.epochs, losses=losses)
+    (args.output_dir / "gameplay_model_v0_bc.json").write_text(
+        json.dumps({"checkpoint": bc_checkpoint.name, "provenance": bc_metadata,
+                    "training_seeds": [episode["seed"] for episode in episodes], "losses": losses},
+                   indent=2) + "\n", encoding="utf-8")
     with PvZEnv(resource_dir=args.resource_dir) as env:
-        dagger_episodes = [collect_dagger_episode(model, env, seed, device) for seed in parse_seeds(args.train_seeds)]
-        write_episodes(args.output_dir / "dagger_trajectories.json.gz", dagger_episodes)
+        dagger_episodes = [collect_dagger_episode(model, env, seed, device) for seed in dagger_seeds]
+        dagger_path = args.output_dir / "dagger_trajectories.json.gz"
+        write_episodes(dagger_path, dagger_episodes)
         for episode in dagger_episodes:
             print(f"dagger seed={episode['seed']} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
                   f"tick={episode['tick']} steps={len(episode['steps'])}", flush=True)
@@ -234,13 +299,12 @@ def main() -> None:
         losses, plant_weight = train(model, episodes, args.epochs, device)
         results = evaluate(model, env, parse_seeds(args.eval_seeds), device)
     checkpoint = args.output_dir / "gameplay_model_v0.pt"
-    torch.save({
-        "state_dict": model.cpu().state_dict(), "config": MODEL_CONFIG,
-        "level": LEVEL, "deck": DECK, "profile": "Adventure I, six slots, no store items",
-        "plant_action_weight": plant_weight,
-        "training_seeds": [episode["seed"] for episode in episodes],
-        "parameter_count": parameter_count, "epochs": args.epochs, "losses": losses, "evaluation": results,
-    }, checkpoint)
+    final_metadata = provenance(args, {"teacher": data_path, "dagger": dagger_path},
+                                train_seeds, dagger_seeds)
+    save_checkpoint(checkpoint, model, final_metadata, plant_action_weight=plant_weight,
+                    training_seeds=[episode["seed"] for episode in episodes],
+                    parameter_count=parameter_count, epochs=args.epochs, losses=losses,
+                    evaluation=results)
     summary = {
         "model": checkpoint.name, "protocol_version": 1, "observation_version": 1,
         "level": LEVEL, "playthrough": 1, "deck": list(DECK), "device": str(device),
@@ -248,6 +312,7 @@ def main() -> None:
         "training_steps": sum(len(episode["steps"]) for episode in episodes),
         "training_seeds": [episode["seed"] for episode in episodes], "plant_action_weight": plant_weight,
         "losses": losses,
+        "provenance": final_metadata,
         "evaluation": results, "wins": sum(record["won"] for record in results),
         "evaluation_count": len(results),
     }
