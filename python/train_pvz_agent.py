@@ -17,14 +17,24 @@ from typing import Any
 import torch
 from torch.nn import functional as F
 
-from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG, SearchTeacher,
-                       behavior_cloning_loss, predict_action, resolve_device)
+from pvz_agent import (
+    GameplayModelV1,
+    MODEL_ARCHITECTURE_VERSION,
+    MODEL_CONFIG,
+    SearchTeacher,
+    VALUE_GAMMA,
+    VALUE_SEMANTICS,
+    behavior_cloning_loss,
+    discounted_terminal_value,
+    predict_action,
+    resolve_device,
+)
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
-TEACHER_LABEL_VERSION = 3
+TEACHER_LABEL_VERSION = 4
 
 
 def parse_seeds(text: str) -> list[int]:
@@ -33,6 +43,16 @@ def parse_seeds(text: str) -> list[int]:
 
 def contiguous_seeds(start: int, count: int) -> list[int]:
     return list(range(start, start + count))
+
+
+def validate_seed_sets(train_seeds: list[int], dagger_seeds: list[int], eval_seeds: list[int]) -> None:
+    train, dagger, evaluation = set(train_seeds), set(dagger_seeds), set(eval_seeds)
+    if len(train) != len(train_seeds) or len(dagger) != len(dagger_seeds) or len(evaluation) != len(eval_seeds):
+        raise ValueError("teacher, DAgger, and evaluation seed sets must each contain unique seeds")
+    if train & dagger:
+        raise ValueError("teacher and DAgger seed sets must be disjoint")
+    if evaluation & (train | dagger):
+        raise ValueError("evaluation seeds must be disjoint from teacher and DAgger seeds")
 
 
 def collect_episode(env: PvZEnv, seed: int, replay_dir: Path, max_actions: int = 2000,
@@ -169,7 +189,7 @@ def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seed
     return {
         "git_sha": git_sha, "git_dirty": git_dirty,
         "observation_version": 2, "task_version": 2, "teacher_label_version": TEACHER_LABEL_VERSION,
-        "value_range": [-1, 1],
+        "value_range": [-1, 1], "value_gamma": VALUE_GAMMA, "value_semantics": VALUE_SEMANTICS,
         "command": {"argv": list(sys.argv), "arguments": cli},
         "trajectory_sha256": {name: sha256_file(path) for name, path in data_paths.items()},
         "resource_sha256": {
@@ -186,6 +206,7 @@ def save_checkpoint(path: Path, model: GameplayModelV1, metadata: dict[str, Any]
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
                 "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
+                "value_semantics": VALUE_SEMANTICS,
                 "config": MODEL_CONFIG, "level": metadata["command"]["arguments"]["level"],
                 "deck": metadata["command"]["arguments"]["deck"],
                 "profile": "Adventure-II, six slots, no store items", "provenance": metadata, **fields}, path)
@@ -217,6 +238,7 @@ def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, d
         for episode_index in order:
             episode = episodes[episode_index]
             steps = episode["steps"]
+            terminal_tick = int(episode["tick"])
             for start in range(0, len(steps), 64):
                 burn_start = max(0, start - 32)
                 hidden = None
@@ -240,7 +262,8 @@ def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, d
                     )
                     lanes, next_wave = episode_targets(steps, index, device)
                     won = bool(episode["won"])
-                    value_target = 1.0 if won else -1.0
+                    remaining_ticks = max(0, terminal_tick - int(step["observation"]["tick"]))
+                    value_target = discounted_terminal_value(won, remaining_ticks)
                     outcome_class = 1 if won else 0
                     loss = loss + 0.05 * F.mse_loss(output["value"], torch.full_like(output["value"], value_target))
                     loss = loss + 0.05 * F.cross_entropy(
@@ -335,10 +358,7 @@ def main() -> None:
     eval_seeds = parse_seeds(args.eval_seeds)
     train_seeds = contiguous_seeds(args.train_seed_start, args.train_episodes)
     all_dagger_seeds = contiguous_seeds(args.dagger_seed_start, args.dagger_episodes * args.dagger_rounds)
-    if set(train_seeds) & set(all_dagger_seeds):
-        parser.error("teacher and DAgger seed sets must be disjoint")
-    if set(eval_seeds) & (set(train_seeds) | set(all_dagger_seeds)):
-        parser.error("evaluation seeds must be disjoint from teacher and DAgger seeds")
+    validate_seed_sets(train_seeds, all_dagger_seeds, eval_seeds)
 
     torch.manual_seed(17)
     random.seed(17)
@@ -372,7 +392,8 @@ def main() -> None:
         if any(episode.get("observation_version") != 2 or episode.get("task_version") != 2
                or episode.get("teacher_label_version") != TEACHER_LABEL_VERSION for episode in episodes):
             raise ValueError("training trajectories do not match the current search-teacher schema; recollect them")
-        train_seeds = [episode["seed"] for episode in episodes]
+        train_seeds = [int(episode["seed"]) for episode in episodes]
+        validate_seed_sets(train_seeds, all_dagger_seeds, eval_seeds)
 
     model = GameplayModelV1().to(device)
     parameter_count = sum(parameter.numel() for parameter in model.parameters())
@@ -421,6 +442,7 @@ def main() -> None:
         "model": checkpoint.name, "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
         "protocol_version": 2, "observation_version": 2, "task_version": 2,
         "teacher_label_version": TEACHER_LABEL_VERSION, "value_range": [-1, 1],
+        "value_gamma": VALUE_GAMMA, "value_semantics": VALUE_SEMANTICS,
         "level": args.level, "playthrough": 2, "deck": args.deck,
         "zombie_count_multiplier": args.zombie_count_multiplier, "device": str(device),
         "parameter_count": parameter_count, "training_episodes": len(episodes),

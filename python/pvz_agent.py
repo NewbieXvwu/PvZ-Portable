@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import math
+from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Iterator
 
 import torch
 from torch import Tensor
@@ -24,8 +25,15 @@ from pvz_teacher import TeacherAdvice, TeacherPolicy, teacher_advice
 
 
 DISCOUNT_REFERENCE_TICKS = 300
-SEARCH_GAMMA = 0.99
+VALUE_GAMMA = 0.99
+VALUE_SEMANTICS = "discounted_terminal_v1"
+SEARCH_GAMMA = VALUE_GAMMA
 SEARCH_POLICY_TEMPERATURE = 0.20
+
+
+def discounted_terminal_value(won: bool, remaining_ticks: int) -> float:
+    sign = 1.0 if won else -1.0
+    return sign * VALUE_GAMMA ** (max(0, int(remaining_ticks)) / DISCOUNT_REFERENCE_TICKS)
 
 
 def behavior_cloning_loss(
@@ -37,7 +45,7 @@ def behavior_cloning_loss(
     candidate_actions: list[dict[str, Any]] | None = None,
     search_policy: list[float] | None = None,
 ) -> Tensor:
-    """Distill search probabilities exactly; use hard BC only when search labels are absent."""
+    """Distill search probabilities exactly; use weighted hard BC only without search labels."""
     if candidate_actions and search_policy and len(candidate_actions) == len(search_policy):
         log_probs = torch.stack([
             select_action(model, output, observation, action=candidate)[1]
@@ -72,6 +80,8 @@ class SearchTeacher:
                  learned_value_weight: float = 0.15, max_same_tick_actions: int = 2) -> None:
         if min(beam_width, max_decisions, candidate_limit, horizon_ticks, max_same_tick_actions) < 1:
             raise ValueError("search width, decisions, candidates, horizon, and same-tick limit must be positive")
+        if horizon_ticks < WAIT_DECISION_TICKS:
+            raise ValueError(f"search horizon must be at least {WAIT_DECISION_TICKS} ticks")
         if not 0.0 <= learned_value_weight <= 1.0:
             raise ValueError("learned value weight must be from 0 to 1")
         self.env = env
@@ -93,6 +103,30 @@ class SearchTeacher:
     @staticmethod
     def _action_key(action: dict[str, Any]) -> tuple[tuple[str, Any], ...]:
         return tuple(sorted(action.items()))
+
+    @staticmethod
+    def _outcome_rank(outcome: int | None) -> int:
+        if outcome == 1:
+            return 2
+        if outcome is None:
+            return 1
+        return 0
+
+    @classmethod
+    def _result_key(cls, outcome: int | None, score: float) -> tuple[int, float]:
+        return cls._outcome_rank(outcome), score
+
+    @classmethod
+    def _policy_from_results(cls, results: list[tuple[dict[str, Any], float, int | None, int, int]]) -> list[float]:
+        if not results:
+            return []
+        best_rank = max(cls._outcome_rank(item[2]) for item in results)
+        eligible = [cls._outcome_rank(item[2]) == best_rank for item in results]
+        top = max(item[1] for item, keep in zip(results, eligible) if keep)
+        weights = [math.exp((item[1] - top) / SEARCH_POLICY_TEMPERATURE) if keep else 0.0
+                   for item, keep in zip(results, eligible)]
+        total = sum(weights)
+        return [weight / total for weight in weights]
 
     @staticmethod
     def _state_heuristic(observation: dict[str, Any]) -> float:
@@ -150,9 +184,40 @@ class SearchTeacher:
         w = self.learned_value_weight
         return (1.0 - w) * heuristic + w * learned
 
+    def _snapshot_fast(self) -> int:
+        response = self.env._command("SNAPSHOT_FAST")
+        if not response.get("ok") or "snapshot_id" not in response:
+            raise RuntimeError(f"environment could not save a fast snapshot: {response}")
+        return int(response["snapshot_id"])
+
+    def _restore_fast(self, snapshot_id: int) -> None:
+        response = self.env._command(f"RESTORE_FAST {snapshot_id}")
+        if not response.get("ok"):
+            raise RuntimeError(f"environment could not restore fast snapshot {snapshot_id}: {response}")
+
+    def _release_fast(self, snapshot_id: int) -> None:
+        response = self.env._command(f"DROP_SNAPSHOT_FAST {snapshot_id}")
+        if not response.get("ok"):
+            raise RuntimeError(f"environment could not release fast snapshot {snapshot_id}: {response}")
+
+    @contextmanager
+    def _speculative_fast(self) -> Iterator[int]:
+        if not self.env._reset_done or self.env.episode is None:
+            raise RuntimeError("call reset() before search")
+        operation_count = len(self.env.episode["operations"])
+        final_state = self.env.episode["final_state"]
+        snapshot_id = self._snapshot_fast()
+        try:
+            yield snapshot_id
+        finally:
+            self._restore_fast(snapshot_id)
+            del self.env.episode["operations"][operation_count:]
+            self.env.episode["final_state"] = final_state
+            self._release_fast(snapshot_id)
+
     def _release(self, snapshot_id: int) -> None:
         if snapshot_id != self._root_snapshot and snapshot_id in self._snapshots:
-            self.env.release_snapshot(snapshot_id)
+            self._release_fast(snapshot_id)
             self._snapshots.remove(snapshot_id)
 
     @staticmethod
@@ -207,6 +272,21 @@ class SearchTeacher:
         else:
             ticks = 300
         return {"type": "wait", "ticks": ticks}
+
+    @staticmethod
+    def _fit_action_to_remaining(action: dict[str, Any], remaining_ticks: int) -> dict[str, Any] | None:
+        if remaining_ticks <= 0:
+            return None
+        fitted = dict(action)
+        if fitted.get("type") == "wait":
+            fitted["ticks"] = min(int(fitted.get("ticks", remaining_ticks)), remaining_ticks)
+            if fitted["ticks"] < 1:
+                return None
+        elif fitted.get("type") == "wait_decision":
+            fitted["max_ticks"] = min(int(fitted.get("max_ticks", WAIT_DECISION_TICKS)), remaining_ticks)
+            if fitted["max_ticks"] < 1:
+                return None
+        return fitted
 
     def _model_proposals(self, observation: dict[str, Any], output: dict[str, Any] | None,
                          limit: int) -> list[dict[str, Any]]:
@@ -276,7 +356,7 @@ class SearchTeacher:
 
     def _candidate_actions(self, observation: dict[str, Any], output: dict[str, Any] | None,
                            sunflower_placements: int, limit: int, root: bool,
-                           allow_instant: bool = True) -> list[dict[str, Any]]:
+                           remaining_ticks: int, allow_instant: bool = True) -> list[dict[str, Any]]:
         legal = observation["legal_actions"]
         candidates: list[dict[str, Any]] = []
         seen: set[tuple[tuple[str, Any], ...]] = set()
@@ -286,10 +366,13 @@ class SearchTeacher:
                 return
             if not allow_instant and action.get("type") in ("plant", "shovel"):
                 return
-            key = self._action_key(action)
+            fitted = self._fit_action_to_remaining(action, remaining_ticks)
+            if fitted is None:
+                return
+            key = self._action_key(fitted)
             if key not in seen:
                 seen.add(key)
-                candidates.append(action)
+                candidates.append(fitted)
 
         heuristic = [action for action, _ in teacher_advice(observation, sunflower_placements).candidates]
         structured: list[dict[str, Any]] = []
@@ -306,7 +389,7 @@ class SearchTeacher:
                 structured.append({"type": "shovel", "col": col, "row": row})
 
         if legal.get("wait", True):
-            add({"type": "wait_decision", "max_ticks": WAIT_DECISION_TICKS})
+            add({"type": "wait_decision", "max_ticks": min(WAIT_DECISION_TICKS, remaining_ticks)})
             if root:
                 for ticks in WAIT_TICKS:
                     add({"type": "wait", "ticks": ticks})
@@ -344,34 +427,40 @@ class SearchTeacher:
         return candidates
 
     def _step_from_snapshot(self, node: _SearchNode, action: dict[str, Any]) -> tuple[_SearchNode | None, tuple[float, int | None, int, int], int]:
-        self.env.restore(node.snapshot_id)
-        next_observation, _, done, _, info = self.env.step(action)
+        remaining = self.horizon_ticks - node.elapsed_ticks
+        fitted_action = self._fit_action_to_remaining(action, remaining)
+        if fitted_action is None:
+            return None, (float("-inf"), None, node.elapsed_ticks, node.decisions), 0
+        self._restore_fast(node.snapshot_id)
+        next_observation, _, done, _, info = self.env.step(fitted_action)
         if not info.get("ok"):
             return None, (float("-inf"), None, node.elapsed_ticks, node.decisions), 0
-        reported = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+        reported = info.get("ticks_advanced", fitted_action.get("ticks", 0) if fitted_action["type"] == "wait" else 0)
         advanced = max(int(reported), int(next_observation["tick"]) - int(node.observation["tick"]), 0)
+        if advanced > remaining:
+            raise RuntimeError(f"search action exceeded horizon by {advanced - remaining} ticks: {fitted_action}")
         events = info["events"]
-        next_sunflowers = node.sunflower_placements + int(self._is_sunflower_action(node.observation, action))
-        next_same_tick = node.same_tick_actions + 1 if advanced == 0 and action["type"] in ("plant", "shovel") else 0
+        next_sunflowers = node.sunflower_placements + int(self._is_sunflower_action(node.observation, fitted_action))
+        next_same_tick = node.same_tick_actions + 1 if advanced == 0 and fitted_action["type"] in ("plant", "shovel") else 0
         elapsed = node.elapsed_ticks + advanced
         decisions = node.decisions + 1
         step_discount = SEARCH_GAMMA ** (advanced / DISCOUNT_REFERENCE_TICKS)
         reward = self._transition_reward(events, done, next_observation["result"] == 1)
-        path_return = node.path_return + node.discount * reward
         discount = node.discount * step_discount
+        path_return = node.path_return + discount * reward
         child_output = None if done else self._model_output(
             next_observation, node.output["hidden"] if node.output is not None else None,
-            action, advanced, events,
+            fitted_action, advanced, events,
         )
         leaf = 0.0 if done else self._leaf_value(next_observation, child_output)
-        score = max(-1.0, min(1.0, path_return + discount * leaf))
+        score = path_return + discount * leaf
         outcome = int(next_observation["result"] == 1) if done else None
         complete = done or elapsed >= self.horizon_ticks
         exhausted = decisions >= self.max_decisions
         leaf_info = (score, outcome, elapsed, decisions)
         if complete or exhausted:
             return None, leaf_info, 1
-        snapshot_id = self.env.snapshot()
+        snapshot_id = self._snapshot_fast()
         self._snapshots.add(snapshot_id)
         return _SearchNode(next_observation, snapshot_id, child_output, next_sunflowers,
                            next_same_tick, elapsed, decisions, path_return, discount, score), leaf_info, 1
@@ -405,9 +494,10 @@ class SearchTeacher:
             expanded: list[_SearchNode] = []
             for node in beam:
                 allow_instant = node.same_tick_actions < self.max_same_tick_actions
+                remaining = self.horizon_ticks - node.elapsed_ticks
                 candidates = self._candidate_actions(
                     node.observation, node.output, node.sunflower_placements, self.candidate_limit,
-                    root=False, allow_instant=allow_instant,
+                    root=False, remaining_ticks=remaining, allow_instant=allow_instant,
                 )
                 for action in candidates:
                     next_node, next_leaf, count = self._step_from_snapshot(node, action)
@@ -430,25 +520,25 @@ class SearchTeacher:
         if not pool:
             return None
         if completed:
-            best = max(pool, key=lambda item: item[0])
+            best = max(pool, key=lambda item: self._result_key(item[1], item[0]))
         else:
             best = max(pool, key=lambda item: (item[2], item[0]))
             shortfall = max(0.0, 1.0 - best[2] / self.horizon_ticks)
-            best = (max(-1.0, best[0] - 0.15 * shortfall), best[1], best[2], best[3])
+            best = (best[0] - 0.15 * shortfall, best[1], best[2], best[3])
         return best[0], best[1], best[3], simulations, best[2]
 
     def advice(self, observation: dict[str, Any], hidden: Tensor | None = None,
                previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
                events: dict[str, Any] | None = None) -> TeacherAdvice:
         with torch.inference_mode():
-            with self.env.speculative() as root_snapshot:
+            with self._speculative_fast() as root_snapshot:
                 self._root_snapshot = root_snapshot
                 self._snapshots = set()
                 try:
                     root_output = self._model_output(observation, hidden, previous_action, delta_ticks, events)
                     root_actions = self._candidate_actions(
                         observation, root_output, self.policy.sunflower_placements,
-                        self.root_candidate_limit, root=True,
+                        self.root_candidate_limit, root=True, remaining_ticks=self.horizon_ticks,
                     )
                     results: list[tuple[dict[str, Any], float, int | None, int, int]] = []
                     simulation_count = 0
@@ -461,15 +551,17 @@ class SearchTeacher:
                         simulation_count += count
                     if not results:
                         return self.policy.advice(observation)
-                    results.sort(key=lambda item: item[1], reverse=True)
+                    results.sort(key=lambda item: self._result_key(item[2], item[1]), reverse=True)
                     actions = [item[0] for item in results]
                     scores = [item[1] for item in results]
-                    top = scores[0]
-                    exponents = [math.exp((value - top) / SEARCH_POLICY_TEMPERATURE) for value in scores]
-                    total = sum(exponents)
-                    probabilities = [value / total for value in exponents]
-                    margin = top - scores[1] if len(scores) > 1 else top + 1.0
+                    probabilities = self._policy_from_results(results)
                     best = results[0]
+                    if len(results) == 1:
+                        margin = 2.0
+                    elif self._outcome_rank(best[2]) != self._outcome_rank(results[1][2]):
+                        margin = float(self._outcome_rank(best[2]) - self._outcome_rank(results[1][2]))
+                    else:
+                        margin = best[1] - results[1][1]
                     return TeacherAdvice(
                         action=best[0], candidates=list(zip(actions, scores)), search_policy=probabilities,
                         best_second_margin=margin, search_depth=best[3], simulation_count=simulation_count,

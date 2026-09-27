@@ -17,7 +17,7 @@ from typing import Any
 import torch
 
 from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, SearchTeacher, TeacherPolicy,
-                       predict_action, resolve_device)
+                       VALUE_SEMANTICS, predict_action, resolve_device)
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
@@ -61,8 +61,9 @@ def checkpoint_model(path: Path, device: torch.device) -> tuple[GameplayModelV1,
     checkpoint = torch.load(path, map_location=device, weights_only=False)
     provenance = checkpoint["provenance"]
     if (checkpoint["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
+            or checkpoint.get("value_semantics") != VALUE_SEMANTICS
             or provenance["observation_version"] != 2 or provenance["task_version"] != 2):
-        raise ValueError("checkpoint versions do not match the current model, observation, and task")
+        raise ValueError("checkpoint does not match the current model and discounted-value semantics")
     model = GameplayModelV1().to(device)
     model.load_state_dict(checkpoint["state_dict"])
     model.eval()

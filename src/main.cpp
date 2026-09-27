@@ -21,13 +21,18 @@
 
 #include "LawnApp.h"
 #include "Lawn/Board.h"
+#include "Lawn/Coin.h"
+#include "Lawn/Plant.h"
+#include "Lawn/SeedPacket.h"
 #include "Lawn/System/SaveGame.h"
+#include "Lawn/Zombie.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
 #include <charconv>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -115,6 +120,114 @@ static EnvCounters ReadCounters(LawnApp* app)
 		app->mBoard->mPlantsEaten, static_cast<uint32_t>(app->mBoard->mTriggeredLawnMowers), app->mBoard->mTotalSpawnedWaves };
 }
 
+static int EnvironmentReactionFloor(const LawnApp* app)
+{
+	float nearest = std::numeric_limits<float>::infinity();
+	for (const Zombie* zombie : app->mBoard->mZombies)
+	{
+		if (!zombie->mDead)
+			nearest = std::min(nearest, zombie->mPosX);
+	}
+	if (nearest < 360.0f) return 30;
+	if (nearest < 560.0f) return 60;
+	return 150;
+}
+
+static int EnvironmentZombieZone(float x)
+{
+	if (x < 220.0f) return 4;
+	if (x < 300.0f) return 3;
+	if (x < 400.0f) return 2;
+	if (x < 500.0f) return 1;
+	return 0;
+}
+
+static std::string EnvironmentDecisionSignature(LawnApp* app)
+{
+	std::ostringstream signature;
+	signature << app->mBoard->mCurrentWave << ',' << app->mBoard->mTotalSpawnedWaves << ',' << app->mBoard->mSunMoney / 25
+		<< ',' << app->mBoard->mTriggeredLawnMowers << ',' << static_cast<int>(app->mGameScene) << ',' << app->mBoard->mLevelComplete;
+	for (int i = 0; i < app->mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[i];
+		signature << '|' << static_cast<int>(packet.mPacketType) << ':' << packet.CanPickUp();
+	}
+	for (const Plant* plant : app->mBoard->mPlants)
+	{
+		if (!plant->mDead)
+			signature << '|' << static_cast<int>(plant->mSeedType) << ':' << plant->mPlantCol << ':' << plant->mRow
+				<< ':' << plant->mPlantHealth / 50;
+	}
+	for (const Zombie* zombie : app->mBoard->mZombies)
+	{
+		if (!zombie->mDead)
+			signature << '|' << static_cast<int>(zombie->mZombieType) << ':' << zombie->mRow << ':'
+				<< static_cast<int>(zombie->mPosX / 60.0f) << ':' << EnvironmentZombieZone(zombie->mPosX) << ':'
+				<< zombie->mBodyHealth / 50 << ':' << zombie->mHelmHealth / 50 << ':' << zombie->mShieldHealth / 50
+				<< ':' << zombie->mIsEating;
+	}
+	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+			signature << '|' << static_cast<int>(app->mBoard->mGridSquareType[col][row]);
+	return signature.str();
+}
+
+static int EnvironmentWaitDecisionAdaptive(LawnApp* app, int maxTicks)
+{
+	if (!app->mBoard || maxTicks < 1 || maxTicks > 1000000 || app->EnvironmentTerminal())
+		return 0;
+	const std::string initialSignature = EnvironmentDecisionSignature(app);
+	int ticksAdvanced = 0;
+	while (ticksAdvanced < maxTicks && !app->EnvironmentTerminal())
+	{
+		for (Coin* coin : app->mBoard->mCoins)
+		{
+			if (!coin->mDead && coin->IsSun())
+				coin->ScoreCoin();
+		}
+		app->AdvanceLogicTick();
+		++ticksAdvanced;
+		const int reactionFloor = std::min(maxTicks, EnvironmentReactionFloor(app));
+		if (ticksAdvanced >= reactionFloor && EnvironmentDecisionSignature(app) != initialSignature)
+			break;
+	}
+	return ticksAdvanced;
+}
+
+static bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
+{
+	if (!app->mBoard || !LawnSaveGameToMemory(app->mBoard, snapshot.board))
+		return false;
+	snapshot.randState = GetRandState();
+	snapshot.appRandSeed = app->mAppRandSeed;
+	snapshot.randSeed = app->mRandSeed;
+	snapshot.appCounter = app->mAppCounter;
+	snapshot.zombiesKilled = app->mBoard->mZombiesKilled;
+	snapshot.plantsEaten = app->mBoard->mPlantsEaten;
+	snapshot.sunProduced = app->mBoard->mSunMoneyProduced;
+	snapshot.triggeredLawnMowers = app->mBoard->mTriggeredLawnMowers;
+	snapshot.gameScene = app->mGameScene;
+	snapshot.boardResult = app->mBoardResult;
+	return true;
+}
+
+static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& snapshot)
+{
+	if (!app->mBoard || !LawnLoadGameFromMemory(app->mBoard, snapshot.board))
+		return false;
+	SetRandState(snapshot.randState);
+	app->mAppRandSeed = snapshot.appRandSeed;
+	app->mRandSeed = snapshot.randSeed;
+	app->mAppCounter = snapshot.appCounter;
+	app->mBoard->mZombiesKilled = snapshot.zombiesKilled;
+	app->mBoard->mPlantsEaten = snapshot.plantsEaten;
+	app->mBoard->mSunMoneyProduced = snapshot.sunProduced;
+	app->mBoard->mTriggeredLawnMowers = snapshot.triggeredLawnMowers;
+	app->mGameScene = snapshot.gameScene;
+	app->mBoardResult = snapshot.boardResult;
+	return true;
+}
+
 static void RunEnvironment(LawnApp* app)
 {
 	std::string line;
@@ -130,6 +243,7 @@ static void RunEnvironment(LawnApp* app)
 		bool ok = false;
 		bool privileged = false;
 		bool hasSnapshotId = false;
+		bool minimalResponse = false;
 		int snapshotId = 0;
 		int ticksAdvanced = -1;
 		if (command == "RESET_V1")
@@ -196,7 +310,7 @@ static void RunEnvironment(LawnApp* app)
 		{
 			int maxTicks = -1;
 			input >> maxTicks;
-			ticksAdvanced = app->EnvironmentWaitDecision(maxTicks);
+			ticksAdvanced = EnvironmentWaitDecisionAdaptive(app, maxTicks);
 			ok = ticksAdvanced > 0;
 		}
 		else if (command == "OBS" || command == "PRIV")
@@ -204,53 +318,33 @@ static void RunEnvironment(LawnApp* app)
 			ok = app->mBoard != nullptr;
 			privileged = command == "PRIV";
 		}
-		else if (command == "SNAPSHOT")
+		else if (command == "SNAPSHOT" || command == "SNAPSHOT_FAST")
 		{
+			minimalResponse = command == "SNAPSHOT_FAST";
 			EnvironmentSnapshot snapshot{};
-			ok = app->mBoard && LawnSaveGameToMemory(app->mBoard, snapshot.board);
+			ok = SaveEnvironmentSnapshot(app, snapshot);
 			if (ok)
 			{
-				snapshot.randState = GetRandState();
-				snapshot.appRandSeed = app->mAppRandSeed;
-					snapshot.randSeed = app->mRandSeed;
-					snapshot.appCounter = app->mAppCounter;
-				snapshot.zombiesKilled = app->mBoard->mZombiesKilled;
-				snapshot.plantsEaten = app->mBoard->mPlantsEaten;
-				snapshot.sunProduced = app->mBoard->mSunMoneyProduced;
-				snapshot.triggeredLawnMowers = app->mBoard->mTriggeredLawnMowers;
-				snapshot.gameScene = app->mGameScene;
-				snapshot.boardResult = app->mBoardResult;
 				snapshotId = nextSnapshotId++;
 				snapshots.emplace(snapshotId, std::move(snapshot));
 				hasSnapshotId = true;
 			}
 		}
-		else if (command == "RESTORE")
+		else if (command == "RESTORE" || command == "RESTORE_FAST")
 		{
+			minimalResponse = command == "RESTORE_FAST";
 			input >> snapshotId;
 			auto it = snapshots.find(snapshotId);
-			if (it != snapshots.end() && app->mBoard)
+			if (it != snapshots.end())
 			{
-				const EnvironmentSnapshot& snapshot = it->second;
-				ok = LawnLoadGameFromMemory(app->mBoard, snapshot.board);
+				ok = RestoreEnvironmentSnapshot(app, it->second);
 				if (ok)
-				{
-					SetRandState(snapshot.randState);
-					app->mAppRandSeed = snapshot.appRandSeed;
-						app->mRandSeed = snapshot.randSeed;
-						app->mAppCounter = snapshot.appCounter;
-					app->mBoard->mZombiesKilled = snapshot.zombiesKilled;
-					app->mBoard->mPlantsEaten = snapshot.plantsEaten;
-					app->mBoard->mSunMoneyProduced = snapshot.sunProduced;
-					app->mBoard->mTriggeredLawnMowers = snapshot.triggeredLawnMowers;
-					app->mGameScene = snapshot.gameScene;
-					app->mBoardResult = snapshot.boardResult;
 					before = ReadCounters(app);
-				}
 			}
 		}
-		else if (command == "DROP_SNAPSHOT")
+		else if (command == "DROP_SNAPSHOT" || command == "DROP_SNAPSHOT_FAST")
 		{
+			minimalResponse = command == "DROP_SNAPSHOT_FAST";
 			input >> snapshotId;
 			ok = snapshots.erase(snapshotId) > 0;
 		}
@@ -258,6 +352,15 @@ static void RunEnvironment(LawnApp* app)
 		{
 			std::cout << "PVZENV {\"ok\":true,\"closed\":true}" << std::endl;
 			break;
+		}
+
+		if (minimalResponse)
+		{
+			std::cout << "PVZENV {\"protocol_version\":1,\"ok\":" << (ok ? "true" : "false");
+			if (hasSnapshotId)
+				std::cout << ",\"snapshot_id\":" << snapshotId;
+			std::cout << '}' << std::endl;
+			continue;
 		}
 
 		std::cout << "PVZENV {\"protocol_version\":1,\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);

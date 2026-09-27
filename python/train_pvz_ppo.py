@@ -17,14 +17,21 @@ import torch
 from torch.nn import functional as F
 
 from benchmark_pvz_agent import DEFAULT_SEEDS, read_seed_set
-from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
-                       resolve_device, select_action)
+from pvz_agent import (
+    DISCOUNT_REFERENCE_TICKS,
+    GameplayModelV1,
+    MODEL_ARCHITECTURE_VERSION,
+    MODEL_CONFIG,
+    VALUE_GAMMA,
+    VALUE_SEMANTICS,
+    resolve_device,
+    select_action,
+)
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
-DISCOUNT_REFERENCE_TICKS = 300
 ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -60,7 +67,6 @@ def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
     transitions = []
     started = time.perf_counter()
     for decision_index in range(max_actions):
-        hidden_before = None if hidden is None else hidden.detach().clone()
         with torch.no_grad():
             output = model.step(observation, hidden, previous_action,
                                 elapsed_since_previous_observation, events)
@@ -71,7 +77,6 @@ def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
             "elapsed_since_previous_observation": elapsed_since_previous_observation,
             "events": events, "action": action,
             "log_prob": float(log_prob.item()), "value": float(output["value"].item()),
-            "hidden": hidden_before,
         }
         transitions.append(transition)
         observation, _, done, _, info = env.step(action)
@@ -99,18 +104,33 @@ def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
             "transitions": transitions}
 
 
-def add_advantages(episodes: list[dict[str, Any]], gamma: float, gae_lambda: float) -> None:
+def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float) -> None:
     for episode in episodes:
         transitions = episode["transitions"]
         advantage = 0.0
         for index in range(len(transitions) - 1, -1, -1):
             transition = transitions[index]
+            duration_ratio = transition["action_duration_ticks"] / DISCOUNT_REFERENCE_TICKS
+            discount = VALUE_GAMMA ** duration_ratio
+            trace_discount = discount * (gae_lambda ** duration_ratio)
             next_value = transitions[index + 1]["value"] if index + 1 < len(transitions) else 0.0
-            discount = gamma ** (transition["action_duration_ticks"] / DISCOUNT_REFERENCE_TICKS)
-            delta = transition["reward"] + discount * next_value - transition["value"]
-            advantage = delta + discount * gae_lambda * advantage
+            end_of_step_reward = discount * transition["reward"]
+            delta = end_of_step_reward + discount * next_value - transition["value"]
+            advantage = delta + trace_discount * advantage
             transition["advantage"] = advantage
             transition["return"] = advantage + transition["value"]
+
+
+def _rebuild_hidden(model: GameplayModelV1, transitions: list[dict[str, Any]], start: int) -> torch.Tensor | None:
+    hidden = None
+    if start <= 0:
+        return hidden
+    with torch.no_grad():
+        for transition in transitions[:start]:
+            output = model.step(transition["observation"], hidden, transition["previous_action"],
+                                transition["elapsed_since_previous_observation"], transition["events"])
+            hidden = output["hidden"]
+    return None if hidden is None else hidden.detach()
 
 
 def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimizer: torch.optim.Optimizer,
@@ -134,8 +154,7 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         random.shuffle(chunks)
         for episode, start, end in chunks:
             transitions = episode["transitions"]
-            hidden = transitions[start]["hidden"]
-            hidden = None if hidden is None else hidden.to(device).detach()
+            hidden = _rebuild_hidden(model, transitions, start)
             log_probs, values, entropies_for_chunk = [], [], []
             for transition in transitions[start:end]:
                 output = model.step(transition["observation"], hidden, transition["previous_action"],
@@ -200,7 +219,6 @@ def main() -> None:
     parser.add_argument("--max-actions", type=int, default=1200)
     parser.add_argument("--learning-rate", type=float, default=3e-5)
     parser.add_argument("--clip-epsilon", type=float, default=0.2)
-    parser.add_argument("--gamma", type=float, default=0.99)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--value-coefficient", type=float, default=0.5)
     parser.add_argument("--entropy-coefficient", type=float, default=0.01)
@@ -212,6 +230,10 @@ def main() -> None:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
     if args.updates < 1 or args.rollout_episodes < 1 or args.ppo_epochs < 1:
         parser.error("updates, rollout episodes, and PPO epochs must be positive")
+    if args.sequence_length < 1:
+        parser.error("sequence length must be positive")
+    if not 0.0 < args.gae_lambda <= 1.0:
+        parser.error("--gae-lambda must be in (0, 1]")
     if args.train_seed_start >= args.train_seed_end:
         parser.error("training seed range must be nonempty")
     if not 1.0 <= args.zombie_count_multiplier <= 10.0:
@@ -229,8 +251,9 @@ def main() -> None:
     initial = torch.load(args.init_checkpoint, map_location=device, weights_only=False)
     provenance = initial["provenance"]
     if (initial["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
+            or initial.get("value_semantics") != VALUE_SEMANTICS
             or provenance["observation_version"] != 2 or provenance["task_version"] != 2):
-        raise ValueError("initial checkpoint versions do not match the current model, observation, and task")
+        raise ValueError("initial checkpoint does not match the current model and discounted-value semantics")
     model = GameplayModelV1().to(device)
     model.load_state_dict(initial["state_dict"])
     model.eval()
@@ -248,6 +271,7 @@ def main() -> None:
     config.update({"resource_dir": str(resource_dir), "init_checkpoint": str(args.init_checkpoint),
                    "seeds": str(args.seeds), "output_dir": str(args.output_dir),
                    "discount_reference_ticks": DISCOUNT_REFERENCE_TICKS,
+                   "value_gamma": VALUE_GAMMA, "value_semantics": VALUE_SEMANTICS,
                    "resolved_device": str(device)})
     train_seeds = list(range(args.train_seed_start, args.train_seed_end))
     with PvZEnv(resource_dir=resource_dir) as env:
@@ -257,7 +281,7 @@ def main() -> None:
                                         args.output_dir / "replays" / f"ppo_update_{update}_seed_{seed}.jsonl.gz",
                                         args.level, args.deck, args.zombie_count_multiplier)
                         for seed in seeds]
-            add_advantages(episodes, args.gamma, args.gae_lambda)
+            add_advantages(episodes, args.gae_lambda)
             losses = train_update(model, episodes, optimizer, device, args.ppo_epochs,
                                   args.sequence_length, args.clip_epsilon,
                                   args.value_coefficient, args.entropy_coefficient)
@@ -288,9 +312,11 @@ def main() -> None:
                 "random_seeds": {"python_torch": args.seed, "training_seed_range": [args.train_seed_start,
                                                                                       args.train_seed_end - 1]},
                 "model_config": MODEL_CONFIG, "observation_version": 2, "task_version": 2,
+                "value_semantics": VALUE_SEMANTICS,
             }
             torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
                         "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
+                        "value_semantics": VALUE_SEMANTICS,
                         "config": MODEL_CONFIG, "level": args.level, "deck": args.deck,
                         "profile": "Adventure-II, six slots, no store items",
                         "update": update, "ppo_config": config, "losses": losses,
