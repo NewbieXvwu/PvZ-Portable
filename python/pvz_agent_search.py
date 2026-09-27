@@ -220,7 +220,10 @@ class SearchTeacher(base.SearchTeacher):
         if score is None:
             return None
         value, selected_outcome, reached_depth = score, outcome, 1
-        if child is None or self.depth == 1:
+        if child is None:
+            return value, selected_outcome, reached_depth, simulations
+        if self.depth == 1:
+            self._release(child.snapshot_id)
             return value, selected_outcome, reached_depth, simulations
 
         beam = [child]
