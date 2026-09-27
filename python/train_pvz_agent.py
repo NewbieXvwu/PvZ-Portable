@@ -1,40 +1,29 @@
-"""Collect search-teacher episodes, train GameplayModel-v1, and run model-only games."""
+"""Collect simulator-search episodes, train GameplayModel-v1, and run model-only games."""
 
 from __future__ import annotations
 
 import argparse
 import gzip
-import hashlib
 import json
 import os
 import random
-import subprocess
-import sys
 import time
 from pathlib import Path
 from typing import Any
 
 import torch
-from torch.nn import functional as F
 
-from pvz_agent import (
-    GameplayModelV1,
-    MODEL_ARCHITECTURE_VERSION,
-    MODEL_CONFIG,
-    SearchTeacher,
-    VALUE_GAMMA,
-    VALUE_SEMANTICS,
-    behavior_cloning_loss,
-    discounted_terminal_value,
-    predict_action,
-    resolve_device,
-)
+from pvz_agent_model import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
+                             predict_action, resolve_device)
+from pvz_search import SearchTeacher
+from pvz_imitation import train
+from pvz_training_artifacts import provenance, save_checkpoint
+from pvz_value import SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
 
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
-TEACHER_LABEL_VERSION = 4
 
 
 def parse_seeds(text: str) -> list[int]:
@@ -48,56 +37,54 @@ def contiguous_seeds(start: int, count: int) -> list[int]:
 def validate_seed_sets(train_seeds: list[int], dagger_seeds: list[int], eval_seeds: list[int]) -> None:
     train, dagger, evaluation = set(train_seeds), set(dagger_seeds), set(eval_seeds)
     if len(train) != len(train_seeds) or len(dagger) != len(dagger_seeds) or len(evaluation) != len(eval_seeds):
-        raise ValueError("teacher, DAgger, and evaluation seed sets must each contain unique seeds")
+        raise ValueError("search, DAgger, and evaluation seed sets must each contain unique seeds")
     if train & dagger:
-        raise ValueError("teacher and DAgger seed sets must be disjoint")
+        raise ValueError("search and DAgger seed sets must be disjoint")
     if evaluation & (train | dagger):
-        raise ValueError("evaluation seeds must be disjoint from teacher and DAgger seeds")
+        raise ValueError("evaluation seeds must be disjoint from search and DAgger seeds")
 
 
 def collect_episode(env: PvZEnv, seed: int, replay_dir: Path, max_actions: int = 2000,
                     level: int = LEVEL, deck: tuple[int, ...] = DECK,
                     zombie_count_multiplier: float = 1.0, search_width: int = 3,
-                    search_max_decisions: int = 6, search_candidates: int = 6,
-                    search_horizon_ticks: int = 900) -> dict[str, Any]:
+                    search_candidates: int = 8, search_horizon_ticks: int = 900,
+                    search_simulation_budget: int = 64) -> dict[str, Any]:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
                     zombie_count_multiplier=zombie_count_multiplier)
     observation, _ = env.reset(deck=deck, task=task)
     steps: list[dict[str, Any]] = []
     delta_ticks = 0
     events: dict[str, Any] = {}
-    teacher = SearchTeacher(env, beam_width=search_width, max_decisions=search_max_decisions,
-                            candidate_limit=search_candidates, horizon_ticks=search_horizon_ticks)
+    searcher = SearchTeacher(env, beam_width=search_width, candidate_limit=search_candidates,
+                            horizon_ticks=search_horizon_ticks, simulation_budget=search_simulation_budget)
     for decision_index in range(max_actions):
-        advice = teacher.advice(observation, delta_ticks=delta_ticks, events=events)
+        advice = searcher.advice(observation, delta_ticks=delta_ticks, events=events)
         action = advice.action
-        steps.append(_teacher_labels({"decision_index": decision_index, "observation": observation, "action": action,
+        steps.append(_search_labels({"decision_index": decision_index, "observation": observation, "action": action,
                                       "delta_ticks": delta_ticks, "events": events}, advice))
-        before = observation
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
-            raise RuntimeError(f"teacher selected an illegal action on seed {seed}: {action}")
-        teacher.record_action(before, action)
+            raise RuntimeError(f"search selected an illegal action on seed {seed}: {action}")
         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
         events = info["events"]
         if done:
             won = observation["result"] == 1
             for step in steps:
                 step["episode_outcome"] = 1 if won else -1
-            replay_id = f"teacher_seed_{seed}.jsonl.gz"
+            replay_id = f"search_seed_{seed}.jsonl.gz"
             env.save_replay(replay_dir / replay_id)
             return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
-                    "teacher_label_version": TEACHER_LABEL_VERSION, "steps": steps, "won": won,
+                    "search_label_version": SEARCH_LABEL_VERSION, "steps": steps, "won": won,
                     "result": observation["result"], "tick": observation["tick"],
                     "wave": observation["wave"], "wave_count": observation["wave_count"]}
-    raise RuntimeError(f"teacher episode exceeded {max_actions} decisions on seed {seed}")
+    raise RuntimeError(f"search episode exceeded {max_actions} decisions on seed {seed}")
 
 
 def collect_dagger_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
                            replay_dir: Path, max_actions: int = 2000, level: int = LEVEL,
                            deck: tuple[int, ...] = DECK, zombie_count_multiplier: float = 1.0,
-                           search_width: int = 3, search_max_decisions: int = 6,
-                           search_candidates: int = 6, search_horizon_ticks: int = 900) -> dict[str, Any]:
+                           search_width: int = 3, search_candidates: int = 8,
+                           search_horizon_ticks: int = 900, search_simulation_budget: int = 64) -> dict[str, Any]:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
                     zombie_count_multiplier=zombie_count_multiplier)
     observation, _ = env.reset(deck=deck, task=task)
@@ -107,21 +94,19 @@ def collect_dagger_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
     delta_ticks = 0
     events: dict[str, Any] = {}
     model.eval()
-    teacher = SearchTeacher(env, model=model, beam_width=search_width, max_decisions=search_max_decisions,
-                            candidate_limit=search_candidates, horizon_ticks=search_horizon_ticks)
+    searcher = SearchTeacher(env, model=model, beam_width=search_width, candidate_limit=search_candidates,
+                            horizon_ticks=search_horizon_ticks, simulation_budget=search_simulation_budget)
     for decision_index in range(max_actions):
-        advice = teacher.advice(observation, hidden, previous_action, delta_ticks, events)
+        advice = searcher.advice(observation, hidden, previous_action, delta_ticks, events)
         label = advice.action
-        steps.append(_teacher_labels({"decision_index": decision_index, "observation": observation, "action": label,
+        steps.append(_search_labels({"decision_index": decision_index, "observation": observation, "action": label,
                                       "previous_action": previous_action, "delta_ticks": delta_ticks,
                                       "events": events}, advice))
         with torch.inference_mode():
             action, hidden, _ = predict_action(model, observation, hidden, previous_action, delta_ticks, events)
-        before = observation
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
             raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
-        teacher.record_action(before, action)
         previous_action = action
         delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
         events = info["events"]
@@ -135,12 +120,12 @@ def collect_dagger_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
     replay_id = f"dagger_seed_{seed}.jsonl.gz"
     env.save_replay(replay_dir / replay_id)
     return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
-            "teacher_label_version": TEACHER_LABEL_VERSION, "steps": steps, "won": won,
+            "search_label_version": SEARCH_LABEL_VERSION, "steps": steps, "won": won,
             "result": observation["result"], "tick": observation["tick"],
             "wave": observation["wave"], "wave_count": observation["wave_count"]}
 
 
-def _teacher_labels(step: dict[str, Any], advice: Any) -> dict[str, Any]:
+def _search_labels(step: dict[str, Any], advice: Any) -> dict[str, Any]:
     if advice.search_policy is None:
         step.update({"candidate_actions": [], "search_values": [], "search_policy": []})
     else:
@@ -148,7 +133,7 @@ def _teacher_labels(step: dict[str, Any], advice: Any) -> dict[str, Any]:
                      "search_values": [value for _, value in advice.candidates],
                      "search_policy": advice.search_policy})
     step.update({"best_action": advice.action, "best_second_margin": advice.best_second_margin,
-                 "search_depth": advice.search_depth, "search_elapsed_ticks": advice.search_elapsed_ticks,
+                 "search_elapsed_ticks": advice.search_elapsed_ticks,
                  "simulation_count": advice.simulation_count, "terminal_outcome": advice.terminal_outcome})
     return step
 
@@ -162,125 +147,6 @@ def write_episodes(path: Path, episodes: list[dict[str, Any]]) -> None:
 def read_episodes(path: Path) -> list[dict[str, Any]]:
     with gzip.open(path, "rt", encoding="utf-8") as stream:
         return json.load(stream)
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as file:
-        for chunk in iter(lambda: file.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seeds: list[int],
-               dagger_seeds: list[int], device: torch.device) -> dict[str, Any]:
-    root = Path(__file__).resolve().parent.parent
-    try:
-        git_sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True,
-                                 capture_output=True, text=True).stdout.strip()
-        git_dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=root, check=True,
-                                        capture_output=True, text=True).stdout)
-    except (OSError, subprocess.CalledProcessError):
-        git_sha, git_dirty = None, None
-    resource_dir = Path(args.resource_dir).expanduser().resolve()
-    cli = vars(args).copy()
-    cli["output_dir"] = str(args.output_dir)
-    cli["resolved_device"] = str(device)
-    return {
-        "git_sha": git_sha, "git_dirty": git_dirty,
-        "observation_version": 2, "task_version": 2, "teacher_label_version": TEACHER_LABEL_VERSION,
-        "value_range": [-1, 1], "value_gamma": VALUE_GAMMA, "value_semantics": VALUE_SEMANTICS,
-        "command": {"argv": list(sys.argv), "arguments": cli},
-        "trajectory_sha256": {name: sha256_file(path) for name, path in data_paths.items()},
-        "resource_sha256": {
-            "main.pak": sha256_file(resource_dir / "main.pak"),
-            "properties/partner.xml": sha256_file(resource_dir / "properties" / "partner.xml"),
-        },
-        "random_seeds": {"python": 17, "torch": 17, "teacher_episodes": train_seeds,
-                         "dagger_episodes": dagger_seeds},
-        "model_config": MODEL_CONFIG,
-    }
-
-
-def save_checkpoint(path: Path, model: GameplayModelV1, metadata: dict[str, Any], **fields: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
-                "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
-                "value_semantics": VALUE_SEMANTICS,
-                "config": MODEL_CONFIG, "level": metadata["command"]["arguments"]["level"],
-                "deck": metadata["command"]["arguments"]["deck"],
-                "profile": "Adventure-II, six slots, no store items", "provenance": metadata, **fields}, path)
-
-
-def episode_targets(steps: list[dict[str, Any]], index: int, device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
-    observation = steps[index]["observation"]
-    lanes = torch.zeros(1, 6, device=device)
-    for zombie in observation["zombies"]:
-        lanes[0, zombie["row"]] = 1
-    next_wave = 0.0
-    if index + 1 < len(steps):
-        next_wave = float(steps[index + 1]["events"].get("waves_started", 0) > 0)
-    return lanes, torch.tensor([next_wave], dtype=torch.float32, device=device)
-
-
-def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, device: torch.device) -> tuple[list[float], float]:
-    optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.01)
-    plant_steps = sum(step["action"]["type"] == "plant" for episode in episodes for step in episode["steps"])
-    other_steps = sum(len(episode["steps"]) for episode in episodes) - plant_steps
-    plant_weight = other_steps / max(plant_steps, 1)
-    history: list[float] = []
-    model.train()
-    for epoch in range(epochs):
-        order = list(range(len(episodes)))
-        random.shuffle(order)
-        total_loss = 0.0
-        total_steps = 0
-        for episode_index in order:
-            episode = episodes[episode_index]
-            steps = episode["steps"]
-            terminal_tick = int(episode["tick"])
-            for start in range(0, len(steps), 64):
-                burn_start = max(0, start - 32)
-                hidden = None
-                with torch.no_grad():
-                    for index in range(burn_start, start):
-                        previous = steps[index].get("previous_action", steps[index - 1]["action"] if index else None)
-                        warm = model.step(steps[index]["observation"], hidden, previous,
-                                          steps[index]["delta_ticks"], steps[index]["events"])
-                        hidden = warm["hidden"]
-                if hidden is not None:
-                    hidden = hidden.detach()
-                losses = []
-                for index in range(start, min(start + 64, len(steps))):
-                    step = steps[index]
-                    previous = step.get("previous_action", steps[index - 1]["action"] if index else None)
-                    output = model.step(step["observation"], hidden, previous, step["delta_ticks"], step["events"])
-                    hidden = output["hidden"]
-                    loss = behavior_cloning_loss(
-                        model, output, step["observation"], step["action"], plant_weight,
-                        step.get("candidate_actions"), step.get("search_policy"),
-                    )
-                    lanes, next_wave = episode_targets(steps, index, device)
-                    won = bool(episode["won"])
-                    remaining_ticks = max(0, terminal_tick - int(step["observation"]["tick"]))
-                    value_target = discounted_terminal_value(won, remaining_ticks)
-                    outcome_class = 1 if won else 0
-                    loss = loss + 0.05 * F.mse_loss(output["value"], torch.full_like(output["value"], value_target))
-                    loss = loss + 0.05 * F.cross_entropy(
-                        output["aux_outcome"], torch.full((1,), outcome_class, dtype=torch.long, device=device))
-                    loss = loss + 0.05 * F.binary_cross_entropy_with_logits(output["aux_lane_threat"], lanes)
-                    loss = loss + 0.05 * F.binary_cross_entropy_with_logits(output["aux_next_spawn"].view(1), next_wave)
-                    losses.append(loss)
-                optimizer.zero_grad(set_to_none=True)
-                torch.stack(losses).mean().backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-                optimizer.step()
-                total_loss += float(torch.stack([loss.detach() for loss in losses]).sum().item())
-                total_steps += len(losses)
-        epoch_loss = total_loss / max(total_steps, 1)
-        history.append(epoch_loss)
-        print(f"epoch {epoch + 1}/{epochs} loss={epoch_loss:.4f}", flush=True)
-    return history, plant_weight
 
 
 def evaluate(model: GameplayModelV1, env: PvZEnv, seeds: list[int], device: torch.device,
@@ -343,14 +209,14 @@ def main() -> None:
     parser.add_argument("--train-only", action="store_true")
     parser.add_argument("--max-actions", type=int, default=2000)
     parser.add_argument("--search-width", type=int, default=3)
-    parser.add_argument("--search-max-decisions", type=int, default=6)
-    parser.add_argument("--search-candidates", type=int, default=6)
+    parser.add_argument("--search-candidates", type=int, default=8)
     parser.add_argument("--search-horizon-ticks", type=int, default=900)
+    parser.add_argument("--search-simulation-budget", type=int, default=64)
     args = parser.parse_args()
     if not args.resource_dir:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
     if min(args.max_actions, args.train_episodes, args.dagger_episodes, args.dagger_rounds,
-           args.search_width, args.search_max_decisions, args.search_candidates, args.search_horizon_ticks) < 1:
+           args.search_width, args.search_candidates, args.search_horizon_ticks, args.search_simulation_budget) < 1:
         parser.error("episode counts and search parameters must be positive")
     if min(args.train_seed_start, args.dagger_seed_start) < 0:
         parser.error("seed starts must be non-negative")
@@ -366,7 +232,7 @@ def main() -> None:
     device = resolve_device(args.device)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     replay_dir = args.output_dir / "replays"
-    data_path = args.output_dir / "teacher_trajectories.json.gz"
+    data_path = args.output_dir / "search_trajectories.json.gz"
 
     if not args.train_only:
         episodes = []
@@ -374,24 +240,24 @@ def main() -> None:
             for seed in train_seeds:
                 episode = collect_episode(
                     env, seed, replay_dir, args.max_actions, args.level, tuple(args.deck),
-                    args.zombie_count_multiplier, args.search_width, args.search_max_decisions,
-                    args.search_candidates, args.search_horizon_ticks,
+                    args.zombie_count_multiplier, args.search_width, args.search_candidates,
+                    args.search_horizon_ticks, args.search_simulation_budget,
                 )
                 episodes.append(episode)
-                print(f"teacher seed={seed} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
+                print(f"search seed={seed} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
                       f"tick={episode['tick']} steps={len(episode['steps'])}", flush=True)
         write_episodes(data_path, episodes)
         print(f"saved {sum(len(e['steps']) for e in episodes)} demonstrations to {data_path}", flush=True)
-        teacher_metadata = provenance(args, {"teacher": data_path}, train_seeds, [], device)
-        (args.output_dir / "teacher_trajectory_metadata.json").write_text(
-            json.dumps({"provenance": teacher_metadata}, indent=2) + "\n", encoding="utf-8")
+        search_metadata = provenance(args, {"search": data_path}, train_seeds, [], device)
+        (args.output_dir / "search_trajectory_metadata.json").write_text(
+            json.dumps({"provenance": search_metadata}, indent=2) + "\n", encoding="utf-8")
         if args.collect_only:
             return
     else:
         episodes = read_episodes(data_path)
         if any(episode.get("observation_version") != 2 or episode.get("task_version") != 2
-               or episode.get("teacher_label_version") != TEACHER_LABEL_VERSION for episode in episodes):
-            raise ValueError("training trajectories do not match the current search-teacher schema; recollect them")
+               or episode.get("search_label_version") != SEARCH_LABEL_VERSION for episode in episodes):
+            raise ValueError("training trajectories do not match the current search schema; recollect them")
         train_seeds = [int(episode["seed"]) for episode in episodes]
         validate_seed_sets(train_seeds, all_dagger_seeds, eval_seeds)
 
@@ -399,7 +265,7 @@ def main() -> None:
     parameter_count = sum(parameter.numel() for parameter in model.parameters())
     print(f"training on {device}; parameters={parameter_count:,}; architecture={MODEL_CONFIG}", flush=True)
     losses, plant_weight = train(model, episodes, args.epochs, device)
-    bc_metadata = provenance(args, {"teacher": data_path}, train_seeds, [], device)
+    bc_metadata = provenance(args, {"search": data_path}, train_seeds, [], device)
     bc_checkpoint = args.output_dir / "gameplay_model_v1_bc.pt"
     save_checkpoint(bc_checkpoint, model, bc_metadata, plant_action_weight=plant_weight,
                     training_seeds=[episode["seed"] for episode in episodes],
@@ -409,7 +275,7 @@ def main() -> None:
                     "training_seeds": [episode["seed"] for episode in episodes], "losses": losses},
                    indent=2) + "\n", encoding="utf-8")
 
-    dagger_path = args.output_dir / "dagger_trajectories.json.gz"
+    dagger_path = args.output_dir / "dagger_search_trajectories.json.gz"
     dagger_episodes: list[dict[str, Any]] = []
     with PvZEnv(resource_dir=args.resource_dir) as env:
         for dagger_round in range(args.dagger_rounds):
@@ -417,8 +283,8 @@ def main() -> None:
             round_seeds = contiguous_seeds(round_start, args.dagger_episodes)
             new_episodes = [collect_dagger_episode(
                 model, env, seed, replay_dir, args.max_actions, args.level, tuple(args.deck),
-                args.zombie_count_multiplier, args.search_width, args.search_max_decisions,
-                args.search_candidates, args.search_horizon_ticks,
+                args.zombie_count_multiplier, args.search_width, args.search_candidates,
+                args.search_horizon_ticks, args.search_simulation_budget,
             ) for seed in round_seeds]
             dagger_episodes.extend(new_episodes)
             episodes.extend(new_episodes)
@@ -432,7 +298,7 @@ def main() -> None:
                            args.level, tuple(args.deck), args.zombie_count_multiplier)
 
     checkpoint = args.output_dir / "gameplay_model_v1.pt"
-    final_metadata = provenance(args, {"teacher": data_path, "dagger": dagger_path},
+    final_metadata = provenance(args, {"search": data_path, "dagger_search": dagger_path},
                                 train_seeds, all_dagger_seeds, device)
     save_checkpoint(checkpoint, model, final_metadata, plant_action_weight=plant_weight,
                     training_seeds=[episode["seed"] for episode in episodes],
@@ -440,8 +306,8 @@ def main() -> None:
                     evaluation=results)
     summary = {
         "model": checkpoint.name, "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
-        "protocol_version": 2, "observation_version": 2, "task_version": 2,
-        "teacher_label_version": TEACHER_LABEL_VERSION, "value_range": [-1, 1],
+        "protocol_version": 1, "observation_version": 2, "task_version": 2,
+        "search_label_version": SEARCH_LABEL_VERSION, "value_range": [-1, 1],
         "value_gamma": VALUE_GAMMA, "value_semantics": VALUE_SEMANTICS,
         "level": args.level, "playthrough": 2, "deck": args.deck,
         "zombie_count_multiplier": args.zombie_count_multiplier, "device": str(device),
