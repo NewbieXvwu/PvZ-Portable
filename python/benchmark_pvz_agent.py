@@ -6,6 +6,7 @@ import argparse
 from collections import Counter
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -72,8 +73,8 @@ def run_episode(env: PvZEnv, seed: int, model: GameplayModelV1 | None,
                 clear_hidden: bool, zombie_count_multiplier: float,
                 replay_dir: Path, policy_label: str, level: int = LEVEL,
                 deck: tuple[int, ...] = DECK, search_teacher: bool = False,
-                search_width: int = 4, search_depth: int = 3,
-                search_candidates: int = 4) -> dict[str, Any]:
+                search_width: int = 3, search_max_decisions: int = 6,
+                search_candidates: int = 6, search_horizon_ticks: int = 900) -> dict[str, Any]:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
                     zombie_count_multiplier=zombie_count_multiplier)
     reset_started = time.perf_counter()
@@ -86,13 +87,33 @@ def run_episode(env: PvZEnv, seed: int, model: GameplayModelV1 | None,
     event_totals = Counter()
     actions = 0
     ticks_advanced = 0
+    search_simulations = 0
+    search_changed = 0
+    search_margins: list[float] = []
+    search_entropies: list[float] = []
+    search_candidate_counts: list[int] = []
+    search_elapsed: list[int] = []
     started = time.perf_counter()
-    teacher = (SearchTeacher(env, beam_width=search_width, depth=search_depth,
-                             candidate_limit=search_candidates) if search_teacher else TeacherPolicy()) if model is None else None
+    teacher = (SearchTeacher(
+        env, beam_width=search_width, max_decisions=search_max_decisions,
+        candidate_limit=search_candidates, horizon_ticks=search_horizon_ticks,
+    ) if search_teacher else TeacherPolicy()) if model is None else None
     while not observation["terminal"] and actions < 2000:
         if model is None:
-            advice = teacher.advice(observation, delta_ticks=delta_ticks, events=events) if search_teacher else teacher.advice(observation)
-            action = advice.action
+            if search_teacher:
+                baseline = teacher.policy.advice(observation).action
+                advice = teacher.advice(observation, delta_ticks=delta_ticks, events=events)
+                action = advice.action
+                search_simulations += advice.simulation_count
+                search_changed += int(action != baseline)
+                if advice.best_second_margin is not None:
+                    search_margins.append(advice.best_second_margin)
+                if advice.search_policy:
+                    search_entropies.append(-sum(p * math.log(max(p, 1e-12)) for p in advice.search_policy))
+                    search_candidate_counts.append(len(advice.search_policy))
+                search_elapsed.append(advice.search_elapsed_ticks)
+            else:
+                action = teacher.advice(observation).action
         else:
             with torch.inference_mode():
                 action, next_hidden, _ = predict_action(
@@ -121,17 +142,29 @@ def run_episode(env: PvZEnv, seed: int, model: GameplayModelV1 | None,
     safe_label = "".join(character if character.isalnum() or character in "-_" else "_" for character in policy_label)
     replay_id = f"{safe_label}_seed_{seed}.jsonl.gz"
     env.save_replay(replay_dir / replay_id)
-    return {
+    elapsed_seconds = max(time.perf_counter() - started, 1e-9)
+    record = {
         "seed": seed, "replay_id": replay_id, "won": observation["result"] == 1, "result": observation["result"],
         "terminal": bool(observation["terminal"]), "wave": observation["wave"],
         "wave_count": observation["wave_count"], "tick": observation["tick"],
         "actions": actions, "ticks_advanced": ticks_advanced, "reset_seconds": round(reset_seconds, 4),
-        "ticks_per_second": round(ticks_advanced / max(time.perf_counter() - started, 1e-9), 2),
-        "actions_per_second": round(actions / max(time.perf_counter() - started, 1e-9), 2),
+        "ticks_per_second": round(ticks_advanced / elapsed_seconds, 2),
+        "actions_per_second": round(actions / elapsed_seconds, 2),
         "plants_eaten": int(event_totals["plants_eaten"]),
         "mower_triggers": int(event_totals["mower_triggered"]),
-        "seconds": round(time.perf_counter() - started, 4),
+        "seconds": round(elapsed_seconds, 4),
     }
+    if search_teacher:
+        record.update({
+            "search_simulations": search_simulations,
+            "search_mean_simulations_per_decision": search_simulations / max(actions, 1),
+            "search_changed_from_heuristic_rate": search_changed / max(actions, 1),
+            "search_mean_margin": sum(search_margins) / max(len(search_margins), 1),
+            "search_mean_entropy": sum(search_entropies) / max(len(search_entropies), 1),
+            "search_mean_candidate_count": sum(search_candidate_counts) / max(len(search_candidate_counts), 1),
+            "search_mean_elapsed_ticks": sum(search_elapsed) / max(len(search_elapsed), 1),
+        })
+    return record
 
 
 def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
@@ -144,7 +177,7 @@ def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
     margin = z * ((rate * (1 - rate) / count + z * z / (4 * count * count)) ** 0.5) / denominator
     losses = [record for record in records if not record["won"]]
     mean = lambda key: sum(record[key] for record in records) / count
-    return {
+    summary = {
         "count": count, "wins": wins, "win_rate": rate,
         "wilson_95": [max(0.0, center - margin), min(1.0, center + margin)],
         "failure_wave_distribution": dict(sorted(Counter(str(record["wave"]) for record in losses).items(),
@@ -159,6 +192,14 @@ def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
         "wall_seconds_total": sum(record["seconds"] for record in records),
         "wall_seconds_mean": mean("seconds"),
     }
+    for key in ("search_mean_simulations_per_decision", "search_changed_from_heuristic_rate",
+                "search_mean_margin", "search_mean_entropy", "search_mean_candidate_count",
+                "search_mean_elapsed_ticks"):
+        if key in records[0]:
+            summary[key] = mean(key)
+    if "search_simulations" in records[0]:
+        summary["search_simulations_total"] = sum(record["search_simulations"] for record in records)
+    return summary
 
 
 def parse_checkpoint(value: str) -> tuple[str, Path]:
@@ -178,9 +219,10 @@ def main() -> None:
     parser.add_argument("--checkpoint", action="append", type=parse_checkpoint, default=[])
     parser.add_argument("--teacher", action="store_true")
     parser.add_argument("--search-teacher", action="store_true")
-    parser.add_argument("--search-width", type=int, default=4)
-    parser.add_argument("--search-depth", type=int, default=3)
-    parser.add_argument("--search-candidates", type=int, default=4)
+    parser.add_argument("--search-width", type=int, default=3)
+    parser.add_argument("--search-max-decisions", type=int, default=6)
+    parser.add_argument("--search-candidates", type=int, default=6)
+    parser.add_argument("--search-horizon-ticks", type=int, default=900)
     parser.add_argument("--clear-hidden", action="store_true")
     parser.add_argument("--no-relation-bias", action="store_true")
     parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
@@ -190,8 +232,8 @@ def main() -> None:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
     if not 1.0 <= args.zombie_count_multiplier <= 10.0:
         parser.error("--zombie-count-multiplier must be from 1 to 10")
-    if min(args.search_width, args.search_depth, args.search_candidates) < 1:
-        parser.error("search width, depth, and candidate count must be positive")
+    if min(args.search_width, args.search_max_decisions, args.search_candidates, args.search_horizon_ticks) < 1:
+        parser.error("search parameters must be positive")
     if not args.teacher and not args.search_teacher and not args.checkpoint:
         parser.error("select --teacher, --search-teacher, and/or --checkpoint LABEL=PATH")
     labels = (["teacher"] if args.teacher else []) + (["search_teacher"] if args.search_teacher else []) + [label for label, _ in args.checkpoint]
@@ -205,9 +247,10 @@ def main() -> None:
     if args.teacher:
         policies.append(("teacher", None, {}))
     if args.search_teacher:
-        policies.append(("search_teacher", None, {"beam_width": args.search_width,
-                                                    "depth": args.search_depth,
-                                                    "candidates": args.search_candidates}))
+        policies.append(("search_teacher", None, {
+            "beam_width": args.search_width, "max_decisions": args.search_max_decisions,
+            "candidates": args.search_candidates, "horizon_ticks": args.search_horizon_ticks,
+        }))
     for label, path in args.checkpoint:
         model, checkpoint = checkpoint_model(path, device)
         if args.no_relation_bias:
@@ -223,13 +266,15 @@ def main() -> None:
         for label, model, checkpoint_info in policies:
             records = []
             for index, seed in enumerate(seeds, start=1):
-                record = run_episode(env, seed, model, args.clear_hidden, args.zombie_count_multiplier,
-                                     replay_dir, label, args.level, args.deck, label == "search_teacher",
-                                     args.search_width, args.search_depth, args.search_candidates)
+                record = run_episode(
+                    env, seed, model, args.clear_hidden, args.zombie_count_multiplier,
+                    replay_dir, label, args.level, args.deck, label == "search_teacher",
+                    args.search_width, args.search_max_decisions, args.search_candidates,
+                    args.search_horizon_ticks,
+                )
                 records.append(record)
                 if index % 16 == 0 or index == len(seeds):
-                    print(f"{label} {index}/{len(seeds)} wins={sum(row['won'] for row in records)}",
-                          flush=True)
+                    print(f"{label} {index}/{len(seeds)} wins={sum(row['won'] for row in records)}", flush=True)
             if resource_metadata is None and env.episode:
                 resource_metadata = {"resource_sha256": env.episode["resource_sha256"],
                                      "properties_partner_sha256": env.episode["properties_partner_sha256"]}

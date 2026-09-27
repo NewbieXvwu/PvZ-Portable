@@ -1,9 +1,8 @@
-"""Structured recurrent GameplayModel-v1 policy and behavior-cloning helpers."""
+"""Structured recurrent GameplayModel-v1 network and action distribution helpers."""
 
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
 from typing import Any
 
 import torch
@@ -23,10 +22,10 @@ TOKEN_KINDS = {
     "seed_packet": 8,
     "zombie_roster": 9,
 }
-WAIT_TICKS = (150, 300, 600, 1200, 2400)
-WAIT_DECISION_TICKS = 1800
+WAIT_TICKS = (60, 150, 300)
+WAIT_DECISION_TICKS = 900
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
-MODEL_ARCHITECTURE_VERSION = 2
+MODEL_ARCHITECTURE_VERSION = 3
 FEATURE_COUNT = 32
 
 
@@ -155,14 +154,13 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
     for zombie_type in observation["loadout_context"]["zombie_roster"]:
         add("zombie_roster", zombie_type, values=(1.0,))
 
-    device = torch.device("cpu")
     tensors = {
-        "kinds": torch.tensor(kinds, dtype=torch.long, device=device),
-        "categories": torch.tensor(categories, dtype=torch.long, device=device),
-        "variants": torch.tensor(variants, dtype=torch.long, device=device),
-        "features": torch.tensor(features, dtype=torch.float32, device=device),
-        "rows": torch.tensor(rows, dtype=torch.long, device=device),
-        "cols": torch.tensor(cols, dtype=torch.long, device=device),
+        "kinds": torch.tensor(kinds, dtype=torch.long),
+        "categories": torch.tensor(categories, dtype=torch.long),
+        "variants": torch.tensor(variants, dtype=torch.long),
+        "features": torch.tensor(features, dtype=torch.float32),
+        "rows": torch.tensor(rows, dtype=torch.long),
+        "cols": torch.tensor(cols, dtype=torch.long),
     }
     return tensors, {"packet_tokens": packet_tokens, "cell_tokens": cell_tokens}
 
@@ -184,8 +182,7 @@ class RelationAttention(nn.Module):
         batch, count, width = x.shape
         qkv = self.qkv(x).view(batch, count, 3, self.heads, self.head_width).permute(2, 0, 3, 1, 4)
         query, key, value = qkv.unbind(0)
-        scale = self.head_width ** -0.5
-        scores = torch.matmul(query, key.transpose(-2, -1)) * scale
+        scores = torch.matmul(query, key.transpose(-2, -1)) * (self.head_width ** -0.5)
         if self.relation_bias_enabled:
             kind_pair = self.kind_pair_bias[:, kinds[:, None], kinds[None, :]]
             row_known = (rows[:, None] >= 0) & (rows[None, :] >= 0)
@@ -194,9 +191,11 @@ class RelationAttention(nn.Module):
             col_delta = (cols[:, None] - cols[None, :]).clamp(-8, 8) + 8
             row_bucket = torch.where(row_known, row_delta, 11)
             col_bucket = torch.where(col_known, col_delta, 17)
-            same_cell = (row_known & col_known & (rows[:, None] == rows[None, :]) & (cols[:, None] == cols[None, :])).long()
+            same_cell = (row_known & col_known & (rows[:, None] == rows[None, :])
+                         & (cols[:, None] == cols[None, :])).long()
             relation = kind_pair + self.row_bias(row_bucket).permute(2, 0, 1)
-            relation = relation + self.col_bias(col_bucket).permute(2, 0, 1) + self.same_cell_bias(same_cell).permute(2, 0, 1)
+            relation = relation + self.col_bias(col_bucket).permute(2, 0, 1)
+            relation = relation + self.same_cell_bias(same_cell).permute(2, 0, 1)
             scores = scores + relation.unsqueeze(0)
         attended = torch.softmax(scores, dim=-1)
         value = torch.matmul(attended, value).transpose(1, 2).contiguous().view(batch, count, width)
@@ -215,7 +214,8 @@ class RelationLayer(nn.Module):
 
     def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor) -> Tensor:
         x = x + self.attention(self.attention_norm(x), kinds, rows, cols)
-        x = x + self.down(F.silu(self.gate(self.ff_norm(x))) * self.value(self.ff_norm(x)))
+        normalized = self.ff_norm(x)
+        x = x + self.down(F.silu(self.gate(normalized)) * self.value(normalized))
         return x
 
 
@@ -242,9 +242,7 @@ class GameplayModelV1(nn.Module):
         self.previous_action_projection = nn.Sequential(nn.Linear(256, 64), nn.SiLU())
         self.delta_embedding = nn.Embedding(32, 32)
         self.event_projection = nn.Sequential(nn.Linear(8, 32), nn.SiLU())
-        self.belief = nn.GRU(
-            width + 128, MODEL_CONFIG["gru_width"], MODEL_CONFIG["gru_layers"], batch_first=True
-        )
+        self.belief = nn.GRU(width + 128, MODEL_CONFIG["gru_width"], MODEL_CONFIG["gru_layers"], batch_first=True)
         hidden = MODEL_CONFIG["gru_width"]
         self.action_type = nn.Linear(hidden, 4)
         self.packet_query = nn.Linear(hidden, width)
@@ -289,14 +287,9 @@ class GameplayModelV1(nn.Module):
         ]
         return torch.tensor([values], dtype=torch.float32, device=device)
 
-    def step(
-        self,
-        observation: dict[str, Any],
-        hidden: Tensor | None = None,
-        previous_action: dict[str, Any] | None = None,
-        delta_ticks: int = 0,
-        events: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    def step(self, observation: dict[str, Any], hidden: Tensor | None = None,
+             previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
+             events: dict[str, Any] | None = None) -> dict[str, Any]:
         device = next(self.parameters()).device
         tensors, metadata = observation_tokens(observation)
         kinds = tensors["kinds"].to(device)
@@ -323,7 +316,8 @@ class GameplayModelV1(nn.Module):
 
         packet_ids = sorted(metadata["packet_tokens"])
         cell_ids = list(range(54))
-        packet_tokens = torch.stack([x[0, metadata["packet_tokens"][i]] for i in packet_ids]) if packet_ids else x.new_zeros((0, MODEL_CONFIG["width"]))
+        packet_tokens = (torch.stack([x[0, metadata["packet_tokens"][i]] for i in packet_ids])
+                         if packet_ids else x.new_zeros((0, MODEL_CONFIG["width"])))
         cell_tokens = torch.stack([x[0, metadata["cell_tokens"][i]] for i in cell_ids])
         packet_logits = (self.packet_key(packet_tokens) * self.packet_query(belief)).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
         return {
@@ -367,29 +361,25 @@ class GameplayModelV1(nn.Module):
         return self.privileged_critic(torch.cat((output["belief"], extra), dim=-1))
 
 
-def select_action(
-    model: GameplayModelV1,
-    output: dict[str, Any],
-    observation: dict[str, Any],
-    action: dict[str, Any] | None = None,
-    deterministic: bool = False,
-) -> tuple[dict[str, Any], Tensor, Tensor]:
+def select_action(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
+                  action: dict[str, Any] | None = None, deterministic: bool = False) -> tuple[dict[str, Any], Tensor, Tensor]:
     device = output["type_logits"].device
     legal = observation["legal_actions"]
     valid_packets = sorted({item["packet"] for item in legal["plants"]})
     valid_shovels = {row * 9 + col for col, row in legal["shovels"]}
     type_logits = output["type_logits"].clone()
-    type_logits[0] = type_logits[0] if valid_packets else -1e9
-    type_logits[1] = type_logits[1] if valid_shovels else -1e9
+    if not valid_packets:
+        type_logits[0] = -1e9
+    if not valid_shovels:
+        type_logits[1] = -1e9
     if not legal.get("wait", True):
         type_logits[2:] = -1e9
     type_dist = torch.distributions.Categorical(logits=type_logits)
     action_types = {"plant": 0, "shovel": 1, "wait": 2, "wait_decision": 3}
     if action is not None and action.get("type") not in action_types:
         raise ValueError(f"unsupported action type: {action.get('type')}")
-    type_index = (type_logits.argmax() if deterministic else type_dist.sample()) if action is None else torch.tensor(
-        action_types[action["type"]], device=device
-    )
+    type_index = ((type_logits.argmax() if deterministic else type_dist.sample()) if action is None
+                  else torch.tensor(action_types[action["type"]], device=device))
     if action is not None and ((int(type_index.item()) == 0 and not valid_packets)
                                or (int(type_index.item()) == 1 and not valid_shovels)
                                or (int(type_index.item()) >= 2 and not legal.get("wait", True))):
@@ -407,13 +397,12 @@ def select_action(
         packet_dist = torch.distributions.Categorical(logits=packet_logits)
         if action is not None and action["packet"] not in allowed:
             raise ValueError(f"illegal plant packet: {action}")
-        packet_index = (packet_logits.argmax() if deterministic else packet_dist.sample()) if action is None else torch.tensor(
-            output["packet_ids"].index(action["packet"]), device=device
-        )
+        packet_index = ((packet_logits.argmax() if deterministic else packet_dist.sample()) if action is None
+                        else torch.tensor(output["packet_ids"].index(action["packet"]), device=device))
         packet = output["packet_ids"][int(packet_index.item())]
         log_prob = log_prob + packet_dist.log_prob(packet_index)
         entropy = entropy + packet_dist.entropy()
-        cell_logits = model.plant_cell_scores(output, packet)
+        cell_logits = model.plant_cell_scores(output, packet).clone()
         valid_cells = {a["row"] * 9 + a["col"] for a in legal["plants"] if a["packet"] == packet}
         for cell in range(54):
             if cell not in valid_cells:
@@ -421,33 +410,31 @@ def select_action(
         cell_dist = torch.distributions.Categorical(logits=cell_logits)
         if action is not None and action["row"] * 9 + action["col"] not in valid_cells:
             raise ValueError(f"illegal plant cell: {action}")
-        cell_index = (cell_logits.argmax() if deterministic else cell_dist.sample()) if action is None else torch.tensor(
-            action["row"] * 9 + action["col"], device=device
-        )
+        cell_index = ((cell_logits.argmax() if deterministic else cell_dist.sample()) if action is None
+                      else torch.tensor(action["row"] * 9 + action["col"], device=device))
         cell = int(cell_index.item())
         log_prob = log_prob + cell_dist.log_prob(cell_index)
         entropy = entropy + cell_dist.entropy()
         selected = {"type": "plant", "packet": packet, "col": cell % 9, "row": cell // 9} if action is None else dict(action)
     elif action_type == 1:
-        cell_logits = model.shovel_cell_scores(output)
+        cell_logits = model.shovel_cell_scores(output).clone()
         for cell in range(54):
             if cell not in valid_shovels:
                 cell_logits[cell] = -1e9
         cell_dist = torch.distributions.Categorical(logits=cell_logits)
         if action is not None and action["row"] * 9 + action["col"] not in valid_shovels:
             raise ValueError(f"illegal shovel cell: {action}")
-        cell_index = (cell_logits.argmax() if deterministic else cell_dist.sample()) if action is None else torch.tensor(
-            action["row"] * 9 + action["col"], device=device
-        )
+        cell_index = ((cell_logits.argmax() if deterministic else cell_dist.sample()) if action is None
+                      else torch.tensor(action["row"] * 9 + action["col"], device=device))
         cell = int(cell_index.item())
         log_prob = log_prob + cell_dist.log_prob(cell_index)
         entropy = entropy + cell_dist.entropy()
         selected = {"type": "shovel", "col": cell % 9, "row": cell // 9} if action is None else dict(action)
     elif action_type == 2:
         wait_dist = torch.distributions.Categorical(logits=output["wait_logits"])
-        duration = (output["wait_logits"].argmax() if deterministic else wait_dist.sample()) if action is None else torch.tensor(
-            min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - action.get("ticks", 300))), device=device
-        )
+        duration = ((output["wait_logits"].argmax() if deterministic else wait_dist.sample()) if action is None
+                    else torch.tensor(min(range(len(WAIT_TICKS)),
+                                          key=lambda i: abs(WAIT_TICKS[i] - action.get("ticks", 150))), device=device))
         log_prob = log_prob + wait_dist.log_prob(duration)
         entropy = entropy + wait_dist.entropy()
         selected = {"type": "wait", "ticks": WAIT_TICKS[int(duration.item())]} if action is None else dict(action)
@@ -457,49 +444,27 @@ def select_action(
 
 
 @torch.no_grad()
-def predict_action(
-    model: GameplayModelV1,
-    observation: dict[str, Any],
-    hidden: Tensor | None,
-    previous_action: dict[str, Any] | None,
-    delta_ticks: int,
-    events: dict[str, Any] | None,
-) -> tuple[dict[str, Any], Tensor, dict[str, Any]]:
+def predict_action(model: GameplayModelV1, observation: dict[str, Any], hidden: Tensor | None,
+                   previous_action: dict[str, Any] | None, delta_ticks: int,
+                   events: dict[str, Any] | None) -> tuple[dict[str, Any], Tensor, dict[str, Any]]:
     output = model.step(observation, hidden, previous_action, delta_ticks, events)
     action, _, _ = select_action(model, output, observation, deterministic=True)
     return action, output["hidden"], output
 
 
-def behavior_cloning_loss(
-    model: GameplayModelV1,
-    output: dict[str, Any],
-    observation: dict[str, Any],
-    action: dict[str, Any],
-    plant_weight: float = 1.0,
-    candidate_actions: list[dict[str, Any]] | None = None,
-    search_policy: list[float] | None = None,
-) -> Tensor:
-    if candidate_actions and search_policy and len(candidate_actions) == len(search_policy):
-        log_probs = torch.stack([
-            select_action(model, output, observation, action=candidate)[1]
-            for candidate in candidate_actions
-        ])
-        probabilities = torch.tensor(search_policy, dtype=log_probs.dtype, device=log_probs.device)
-        action_weights = torch.tensor(
-            [plant_weight if candidate["type"] == "plant" else 1.0 for candidate in candidate_actions],
-            dtype=log_probs.dtype,
-            device=log_probs.device,
-        )
-        probabilities = probabilities * action_weights
-        return -(probabilities * log_probs).sum()
-
+def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
+                               action: dict[str, Any], plant_weight: float = 1.0) -> Tensor:
     legal = observation["legal_actions"]
     device = output["type_logits"].device
     valid_packets = sorted({item["packet"] for item in legal["plants"]})
     valid_shovels = [row * 9 + col for col, row in legal["shovels"]]
     type_logits = output["type_logits"].clone()
-    if not valid_packets: type_logits[0] = -1e9
-    if not valid_shovels: type_logits[1] = -1e9
+    if not valid_packets:
+        type_logits[0] = -1e9
+    if not valid_shovels:
+        type_logits[1] = -1e9
+    if not legal.get("wait", True):
+        type_logits[2:] = -1e9
     target_type = {"plant": 0, "shovel": 1, "wait": 2, "wait_decision": 3}[action["type"]]
     type_loss = F.cross_entropy(type_logits.unsqueeze(0), torch.tensor([target_type], device=device))
     losses = [type_loss * (plant_weight if target_type == 0 else 1.0)]
@@ -525,507 +490,7 @@ def behavior_cloning_loss(
         target_cell = action["row"] * 9 + action["col"]
         losses.append(F.cross_entropy(cell_logits.unsqueeze(0), torch.tensor([target_cell], device=device)))
     elif target_type == 2:
-        target_ticks = action.get("ticks", 300)
+        target_ticks = action.get("ticks", 150)
         duration = min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - target_ticks))
         losses.append(F.cross_entropy(output["wait_logits"].unsqueeze(0), torch.tensor([duration], device=device)))
     return torch.stack(losses).sum()
-
-
-@dataclass(frozen=True)
-class TeacherAdvice:
-    action: dict[str, Any]
-    candidates: list[tuple[dict[str, Any], float]]
-    search_policy: list[float] | None = None
-    best_second_margin: float | None = None
-    search_depth: int = 0
-    simulation_count: int = 0
-    terminal_outcome: int | None = None
-    search_value: float | None = None
-
-
-def teacher_advice(observation: dict[str, Any], sunflower_placements: int = 0) -> TeacherAdvice:
-    rows = sorted({cell["row"] for cell in observation["cells"] if cell["row_type"] > 0})
-    zombies = observation["zombies"]
-    plants = observation["plants"]
-    zombie_multiplier = max(1.0, float(observation.get("zombie_count_multiplier", 1.0)))
-    safe_shot_gap = 240.0 + 30.0 * (zombie_multiplier - 1.0)
-    emergency_front = max(180.0, 450.0 - 50.0 * (zombie_multiplier - 1.0))
-    packets = {packet["index"]: packet for packet in observation["packets"]}
-    legal = observation["legal_actions"]
-    plants_by_row = {row: [] for row in rows}
-    zombies_by_row = {row: [zombie for zombie in zombies if zombie["row"] == row] for row in rows}
-
-    def plant_type(plant: dict[str, Any]) -> int:
-        return plant["imitater_type"] if plant["type"] == 48 and plant["imitater_type"] >= 0 else plant["type"]
-
-    for plant in plants:
-        if plant["row"] in plants_by_row:
-            plants_by_row[plant["row"]].append(plant)
-
-    def zombie_urgency(zombie: dict[str, Any]) -> float:
-        return max(0.0, min(1.0, (650.0 - zombie["x"]) / 420.0))
-
-    def zombie_hp(zombie: dict[str, Any]) -> float:
-        return sum(max(0.0, zombie.get(key, 0.0)) for key in ("body_health", "helm_health", "shield_health"))
-
-    def expected_shots(zombie: dict[str, Any], plant_x: float) -> float:
-        speed = abs(zombie.get("velocity_x", 0.0))
-        if speed <= 0.01:
-            return 0.0
-        firing_window = max(0.0, (zombie["x"] - plant_x - 80.0) / speed)
-        projectile_travel = max(0.0, zombie["x"] - plant_x) / 5.0
-        return max(0.0, firing_window - projectile_travel) / 150.0
-
-    attackers = {
-        row: [p for p in plants_by_row[row]
-              if plant_type(p) in (0, 5) and not p["squished"]
-              and p["health"] > 0.1 * max(1, p["max_health"])
-              and min((z["x"] for z in zombies_by_row[row]), default=9999.0) > 160 + 80 * p["col"]]
-        for row in rows
-    }
-    wallnuts = {row: [p for p in plants_by_row[row] if plant_type(p) == 3 and not p["squished"]]
-                for row in rows}
-    mine_rows = {row for row in rows if any(plant_type(p) == 4 for p in plants_by_row[row])}
-    uncovered_rows = {row for row in rows if zombies_by_row[row] and not attackers[row]}
-    ready_mowers = {defense["row"] for defense in observation["defenses"] if defense["state"] == 1}
-    sunflowers = [p for p in plants if plant_type(p) == 1]
-    active_shooter_rows = sum(bool(attackers[row]) for row in rows)
-    shooter_rows_built = sum(any(plant_type(p) in (0, 5) and not p["squished"] and
-                                 p["health"] > 0.1 * max(1, p["max_health"])
-                                 for p in plants_by_row[row]) for row in rows)
-    shooter_rows_before_economy = min(len(rows), max(2, math.ceil(zombie_multiplier)))
-    sunflower_goal = min(8, 2 + math.ceil(zombie_multiplier - 1.0)) if observation["wave"] < 3 else min(8, 3 + round(zombie_multiplier - 1.0))
-    if observation["wave"] >= 10:
-        sunflower_goal = 8
-    elif active_shooter_rows == len(rows):
-        sunflower_goal = max(sunflower_goal, 5)
-    mower_defense_front = 500.0 + 40.0 * (zombie_multiplier - 1.0)
-    sunflower_safety_front = mower_defense_front
-    rake_rows = {item["row"] for item in observation["grid_items"] if item["type"] == 11 and item["state"] == 26}
-    reserve_target = round(100.0 + 25.0 * (zombie_multiplier - 1.0))
-    coverage_bonus = 24.0 + 12.0 * (zombie_multiplier - 1.0)
-    sun = observation["sun"]
-    scores: list[tuple[dict[str, Any], float]] = []
-
-    def add(action: dict[str, Any], score: float) -> None:
-        scores.append((action, score))
-
-    for placement in legal["plants"]:
-        packet = packets[placement["packet"]]
-        seed_type = packet["imitater_type"] if packet["type"] == 48 else packet["type"]
-        row, col = placement["row"], placement["col"]
-        lane_zombies = zombies_by_row[row]
-        front = min((z["x"] for z in lane_zombies), default=9999.0)
-        urgency = max((zombie_urgency(z) for z in lane_zombies), default=0.0)
-        pressure = sum((1.0 + zombie_urgency(z)) * min(3.0, max(0.5, zombie_hp(z) / 200.0)) for z in lane_zombies)
-        count_attackers = len(attackers[row])
-        mower_risk = max(0.0, min(1.0, (450.0 - front) / 300.0)) if row in ready_mowers else 0.0
-        plant_x = 80 + 80 * col
-        action = {"type": "plant", **placement}
-        cost = packet["cost"]
-        if sun < cost:
-            continue
-        reserve_penalty = 100.0 if sun - cost < reserve_target else 0.0
-
-        if seed_type in (0, 5):
-            if front <= emergency_front or not attackers[row]:
-                reserve_penalty = 0.0
-            if seed_type == 0 and not attackers[row] and front > mower_defense_front and sun < 150:
-                reserve_penalty = 200.0
-            targets = [z for z in lane_zombies if z["x"] > plant_x + 80]
-            if targets:
-                useful_count = sum(1 for z in targets if z["x"] > plant_x + 180)
-                value = (25.0 if seed_type == 5 else 22.0) + 10.0 * urgency
-                value += min(30.0, pressure * 4.0) / (1 + count_attackers * 0.5)
-                value += min(4.0, useful_count * 0.7) - count_attackers * 4.0
-                gap = min(z["x"] - plant_x for z in targets)
-                value += max(-5.0, 7.0 - abs(gap - safe_shot_gap) / 35.0) + 12.0 * mower_risk
-                value += coverage_bonus if row in uncovered_rows else -coverage_bonus * len(uncovered_rows)
-                needed_attackers = min(3, max(1, (len(targets) + 1) // 2))
-                value += 20.0 * max(0, needed_attackers - count_attackers)
-                extra_damage = 0.0
-                for zombie in targets:
-                    shots = expected_shots(zombie, plant_x) * (1.75 if seed_type == 5 else 1.0)
-                    current = min(zombie_hp(zombie), count_attackers * shots * 20.0)
-                    added = min(zombie_hp(zombie), (count_attackers + 1) * shots * 20.0)
-                    extra_damage += added - current
-                value += min(200.0, extra_damage * 0.5)
-                if seed_type == 5:
-                    value += 40.0 + min(8.0, pressure) + 8.0 * (zombie_multiplier - 1.0)
-                    reserve_penalty = 0.0
-                if row in ready_mowers and front < mower_defense_front:
-                    value += 600.0
-                    reserve_penalty = 0.0
-                add(action, value - cost * 0.01 - reserve_penalty)
-            elif not lane_zombies and count_attackers == 0:
-                value = (8.0 if seed_type == 0 else 5.0) + (2.0 if col == 2 else 0.0)
-                if seed_type == 0:
-                    value += 12.0 * (zombie_multiplier - 1.0)
-                add(action, value - cost * 0.01 - reserve_penalty)
-            continue
-
-        if seed_type == 3 and lane_zombies and not wallnuts[row] and plant_x < front - 35:
-            # Put the blocker on the house side of the front zombie, as close as a safe legal tile allows.
-            value = 6.0 + 11.0 * urgency + min(4.0, pressure) + 10.0 * mower_risk
-            value += max(-5.0, 7.0 - abs((front - plant_x) - safe_shot_gap) / 35.0)
-            value -= cost * 0.01
-            if row in ready_mowers and front < emergency_front + 70 and (attackers[row] or front < 200):
-                reserve_penalty = 0.0
-            add(action, (value if attackers[row] else value - 5.0) - reserve_penalty)
-        elif seed_type == 4 and lane_zombies and row not in mine_rows:
-            viable = []
-            for zombie in lane_zombies:
-                speed = abs(zombie.get("velocity_x", 0.0))
-                distance = zombie["x"] - plant_x - 25
-                if speed > 0.01 and distance > 0:
-                    arrival = distance / speed
-                    if arrival >= 3200:
-                        viable.append(arrival)
-            if viable:
-                arrival = min(viable)
-                value = 3.0 + min(3.0, len(lane_zombies)) * 1.2 + 2.0 * urgency
-                value -= abs(arrival - 2600.0) / 900.0 + min(8.0, count_attackers * 5.0)
-                if not attackers[row]:
-                    value += 16.0 + max(0.0, 8.0 - abs(arrival - 2600.0) / 350.0)
-                    if observation["wave"] <= 1:
-                        reserve_penalty = 0.0
-                add(action, value - cost * 0.01 - reserve_penalty)
-        elif seed_type == 2:
-            targets = [z for z in zombies if abs(z["row"] - row) <= 1 and abs(z["x"] - plant_x) <= 115]
-            if targets:
-                value = 8.0 + sum(
-                    15.0 + 20.0 * zombie_urgency(z) + min(8.0, zombie_hp(z) / 180.0)
-                    + 10.0 * (zombie_multiplier - 1.0)
-                    for z in targets
-                )
-                if len(targets) >= 2 and max(zombie_urgency(z) for z in targets) > 0.35:
-                    reserve_penalty = 0.0
-                if any(z["row"] in ready_mowers and z["x"] < emergency_front - 70 for z in targets):
-                    value += 14.0
-                    reserve_penalty = 0.0
-                if any(z["row"] in ready_mowers and z["x"] < mower_defense_front for z in targets):
-                    value += 50.0
-                    reserve_penalty = 0.0
-                uncovered_targets = sum(z["row"] in uncovered_rows for z in targets)
-                value += coverage_bonus * uncovered_targets
-                if not uncovered_targets and uncovered_rows:
-                    value -= coverage_bonus * len(uncovered_rows)
-                add(action, value - cost * 0.015 - reserve_penalty)
-        elif seed_type == 1:
-            opening_sunflowers = max(1, round(2.0 / zombie_multiplier))
-            if (sunflower_placements >= opening_sunflowers and
-                    shooter_rows_built < shooter_rows_before_economy):
-                continue
-            if len(sunflowers) >= sunflower_goal:
-                continue
-            row_front = min((z["x"] for z in lane_zombies), default=9999.0)
-            if lane_zombies and row_front < sunflower_safety_front and not any(p["col"] > col for p in wallnuts[row]):
-                continue
-            reserve_penalty = 0.0
-            safety = max(0.0, min(1.0, (row_front - 420.0) / 300.0))
-            economy = max(-3.0, 16.0 - len(sunflowers) * 3.5)
-            economy += max(0, sunflower_goal - max(len(sunflowers), sunflower_placements)) * 8.0
-            add(action, economy + safety * 4.0 + (1.0 if col == 1 else 0.0) - cost * 0.01)
-
-    for col, row in legal["shovels"]:
-        plant = next((p for p in plants_by_row[row] if p["col"] == col), None)
-        if plant is None:
-            continue
-        durability = plant["health"] / max(1, plant["max_health"])
-        nearest = min((z["x"] for z in zombies_by_row[row]), default=9999.0)
-        if plant.get("squished") or (durability < 0.12 and nearest > 620):
-            add({"type": "shovel", "col": col, "row": row}, 4.0 - durability)
-
-    if not zombies:
-        wait_action, wait_score = {"type": "wait_decision", "max_ticks": WAIT_DECISION_TICKS}, 3.0
-    else:
-        nearest = min(zombie["x"] for zombie in zombies)
-        mower_front = min((zombie["x"] for zombie in zombies if zombie["row"] in ready_mowers),
-                          default=9999.0)
-        wait_action = ({"type": "wait", "ticks": 150}
-                       if mower_front < mower_defense_front or nearest < 540
-                       else {"type": "wait_decision", "max_ticks": WAIT_DECISION_TICKS})
-        wait_score = 0.0 if nearest < 540 else 4.0
-        if any(zombie["row"] in ready_mowers and zombie["x"] < emergency_front for zombie in zombies):
-            wait_score -= 6.0
-        if any(zombie["row"] in rake_rows and zombie["x"] > 600 for zombie in zombies):
-            wait_score += 3.0
-    add(wait_action, wait_score)
-
-    scores.sort(key=lambda item: item[1], reverse=True)
-    candidates = scores[:8]
-    return TeacherAdvice(action=candidates[0][0], candidates=candidates)
-
-
-class TeacherPolicy:
-    def __init__(self) -> None:
-        self.sunflower_placements = 0
-
-    def advice(self, observation: dict[str, Any]) -> TeacherAdvice:
-        return teacher_advice(observation, self.sunflower_placements)
-
-    def record_action(self, observation: dict[str, Any], action: dict[str, Any]) -> None:
-        if action.get("type") != "plant":
-            return
-        packet = next((item for item in observation["packets"] if item["index"] == action["packet"]), None)
-        if packet is None:
-            return
-        seed_type = packet["imitater_type"] if packet["type"] == 48 else packet["type"]
-        if seed_type == 1:
-            self.sunflower_placements += 1
-
-
-@dataclass
-class _SearchNode:
-    observation: dict[str, Any]
-    snapshot_id: int
-    output: dict[str, Any] | None
-    first_action: dict[str, Any] | None
-    score: float
-
-
-class SearchTeacher:
-    def __init__(self, env: Any, model: GameplayModelV1 | None = None, beam_width: int = 4,
-                 depth: int = 3, candidate_limit: int = 4) -> None:
-        if beam_width < 1 or depth < 1 or candidate_limit < 1:
-            raise ValueError("search beam width, depth, and candidate limit must be positive")
-        self.env = env
-        self.model = model
-        self.beam_width = beam_width
-        self.depth = depth
-        self.candidate_limit = candidate_limit
-        self.policy = TeacherPolicy()
-        self._snapshots: set[int] = set()
-        self._root_snapshot = 0
-
-    def record_action(self, observation: dict[str, Any], action: dict[str, Any]) -> None:
-        self.policy.record_action(observation, action)
-
-    @staticmethod
-    def _action_key(action: dict[str, Any]) -> tuple[tuple[str, Any], ...]:
-        return tuple(sorted(action.items()))
-
-    @staticmethod
-    def _merge_events(*events: dict[str, Any]) -> dict[str, Any]:
-        merged: dict[str, Any] = {}
-        for event in events:
-            for key, value in event.items():
-                if key in ("level_won", "level_lost"):
-                    merged[key] = bool(merged.get(key, False) or value)
-                else:
-                    merged[key] = merged.get(key, 0) + value
-        return merged
-
-    @staticmethod
-    def _heuristic_value(observation: dict[str, Any], events: dict[str, Any] | None = None) -> float:
-        # ponytail: visible-state scoring has a short horizon; replace its weights with the learned critic when value labels are reliable.
-        if observation["terminal"]:
-            return 1.0 if observation["result"] == 1 else -1.0
-        rows = {cell["row"] for cell in observation["cells"] if cell["row_type"] > 0}
-        attackers: set[int] = set()
-        sunflowers = 0
-        blockers = 0
-        for plant in observation["plants"]:
-            kind = plant["imitater_type"] if plant["type"] == 48 else plant["type"]
-            if kind in (0, 5) and not plant["squished"] and plant["health"] > 0:
-                attackers.add(plant["row"])
-            elif kind == 1:
-                sunflowers += 1
-            elif kind == 3:
-                blockers += 1
-        coverage = len(attackers) / max(1, len(rows))
-        economy = min(sunflowers / 6.0, 1.0)
-        defense = min(blockers / max(1, len(rows)), 1.0)
-        progress = min(max(observation["wave"] / max(1, observation["wave_count"]), 0.0), 1.0)
-        sun = min(max(observation["sun"] / 1000.0, 0.0), 1.0)
-        threat = 0.0
-        for zombie in observation["zombies"]:
-            urgency = max(0.0, min(1.0, (700.0 - zombie["x"]) / 600.0))
-            health = sum(max(0.0, zombie.get(key, 0.0)) for key in
-                         ("body_health", "helm_health", "shield_health"))
-            threat += urgency * min(1.0, health / 1200.0)
-        threat = min(1.0, threat / max(1, len(rows)))
-        score = -0.2 + 0.22 * progress + 0.14 * economy + 0.07 * sun + 0.38 * coverage + 0.08 * defense - 0.48 * threat
-        if events:
-            score += min(0.04, max(0, events.get("zombies_killed", 0)) * 0.01)
-            score -= min(0.12, max(0, events.get("plants_eaten", 0)) * 0.04)
-            score -= min(0.12, max(0, events.get("mower_triggered", 0)) * 0.12)
-        return max(-1.0, min(1.0, score))
-
-    def _model_output(self, observation: dict[str, Any], hidden: Tensor | None,
-                      previous_action: dict[str, Any] | None, delta_ticks: int,
-                      events: dict[str, Any] | None) -> dict[str, Any] | None:
-        if self.model is None:
-            return None
-        return self.model.step(observation, hidden, previous_action, delta_ticks, events)
-
-    def _value(self, observation: dict[str, Any], output: dict[str, Any] | None,
-                events: dict[str, Any] | None) -> float:
-        heuristic = self._heuristic_value(observation, events)
-        if output is None:
-            return heuristic
-        learned = max(0.0, min(1.0, float(output["value"].item()))) * 2.0 - 1.0
-        return 0.5 * heuristic + 0.5 * learned
-
-    def _candidate_actions(self, observation: dict[str, Any], output: dict[str, Any] | None) -> list[dict[str, Any]]:
-        advice = self.policy.advice(observation)
-        heuristic = [action for action, _ in advice.candidates]
-        if output is None:
-            return heuristic[:self.candidate_limit]
-
-        count_from_each = max(1, self.candidate_limit // 2)
-        candidates = heuristic[:count_from_each]
-        legal_types = [0] if observation["legal_actions"]["plants"] else []
-        if observation["legal_actions"]["shovels"]:
-            legal_types.append(1)
-        if observation["legal_actions"].get("wait", True):
-            legal_types.extend((2, 3))
-        ranked_types = sorted(legal_types, key=lambda i: float(output["type_logits"][i].item()), reverse=True)
-        for type_index in ranked_types:
-            logits = output["type_logits"].clone()
-            logits[:] = -1e9
-            logits[type_index] = output["type_logits"][type_index]
-            forced_output = dict(output, type_logits=logits)
-            action, _, _ = select_action(self.model, forced_output, observation, deterministic=True)
-            if self._action_key(action) not in {self._action_key(item) for item in candidates}:
-                candidates.append(action)
-            if len(candidates) >= self.candidate_limit:
-                break
-        for action in heuristic:
-            if len(candidates) >= self.candidate_limit:
-                break
-            if self._action_key(action) not in {self._action_key(item) for item in candidates}:
-                candidates.append(action)
-        return candidates
-
-    def _release(self, snapshot_id: int) -> None:
-        if snapshot_id != self._root_snapshot and snapshot_id in self._snapshots:
-            self.env.release_snapshot(snapshot_id)
-            self._snapshots.remove(snapshot_id)
-
-    def _expand(self, node: _SearchNode) -> tuple[list[_SearchNode], dict[tuple[tuple[str, Any], ...], float],
-                                                  dict[tuple[tuple[str, Any], ...], int | None], int]:
-        children: list[_SearchNode] = []
-        values: dict[tuple[tuple[str, Any], ...], float] = {}
-        outcomes: dict[tuple[tuple[str, Any], ...], int | None] = {}
-        simulations = 0
-        candidates = self._candidate_actions(node.observation, node.output)
-        for action in candidates:
-            self.env.restore(node.snapshot_id)
-            next_observation, _, done, _, info = self.env.step(action)
-            if not info.get("ok"):
-                continue
-            advanced = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
-            next_events = info["events"]
-            if not done and action["type"] in ("plant", "shovel"):
-                next_observation, _, done, _, wait_info = self.env.step(
-                    {"type": "wait_decision", "max_ticks": WAIT_DECISION_TICKS}
-                )
-                if not wait_info.get("ok"):
-                    continue
-                advanced += wait_info.get("ticks_advanced", 0)
-                next_events = self._merge_events(next_events, wait_info["events"])
-            simulations += 1
-            first_action = node.first_action or action
-            action_key = self._action_key(first_action)
-            terminal_outcome = int(next_observation["result"] == 1) if done else None
-            child_output = None if done else self._model_output(
-                next_observation,
-                node.output["hidden"] if node.output is not None else None,
-                action,
-                advanced,
-                next_events,
-            )
-            score = self._value(next_observation, child_output, next_events)
-            if score >= values.get(action_key, -math.inf):
-                values[action_key] = score
-                if terminal_outcome is None:
-                    outcomes.pop(action_key, None)
-                else:
-                    outcomes[action_key] = terminal_outcome
-            if not done:
-                snapshot_id = self.env.snapshot()
-                self._snapshots.add(snapshot_id)
-                children.append(_SearchNode(next_observation, snapshot_id, child_output,
-                                            first_action, score))
-        return children, values, outcomes, simulations
-
-    def _prune(self, nodes: list[_SearchNode]) -> list[_SearchNode]:
-        nodes.sort(key=lambda node: node.score, reverse=True)
-        selected: list[_SearchNode] = []
-        seen_roots: set[tuple[tuple[str, Any], ...]] = set()
-        for node in nodes:
-            key = self._action_key(node.first_action) if node.first_action else ()
-            if key not in seen_roots:
-                selected.append(node)
-                seen_roots.add(key)
-                if len(selected) == self.beam_width:
-                    break
-        if len(selected) < self.beam_width:
-            selected_ids = {id(node) for node in selected}
-            selected.extend(node for node in nodes if id(node) not in selected_ids
-                            and len(selected) < self.beam_width)
-        selected_ids = {id(node) for node in selected}
-        for node in nodes:
-            if id(node) not in selected_ids:
-                self._release(node.snapshot_id)
-        return selected
-
-    def advice(self, observation: dict[str, Any], hidden: Tensor | None = None,
-               previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
-               events: dict[str, Any] | None = None) -> TeacherAdvice:
-        with torch.inference_mode():
-            with self.env.speculative() as root_snapshot:
-                self._root_snapshot = root_snapshot
-                self._snapshots = set()
-                try:
-                    root_output = self._model_output(observation, hidden, previous_action, delta_ticks, events)
-                    root = _SearchNode(observation, root_snapshot, root_output, None, 0.0)
-                    root_values: dict[tuple[tuple[str, Any], ...], float] = {}
-                    root_outcomes: dict[tuple[tuple[str, Any], ...], int | None] = {}
-                    simulation_count = 0
-                    reached_depth = 0
-                    beam, values, outcomes, count = self._expand(root)
-                    root_values.update(values)
-                    root_outcomes.update(outcomes)
-                    simulation_count += count
-                    reached_depth = 1 if count else 0
-                    beam = self._prune(beam)
-                    for _ in range(1, self.depth):
-                        expanded: list[_SearchNode] = []
-                        for node in beam:
-                            children, values, outcomes, count = self._expand(node)
-                            expanded.extend(children)
-                            root_values.update(values)
-                            for key in values:
-                                if key in outcomes:
-                                    root_outcomes[key] = outcomes[key]
-                                else:
-                                    root_outcomes.pop(key, None)
-                            simulation_count += count
-                            self._release(node.snapshot_id)
-                        if not expanded:
-                            break
-                        reached_depth += 1
-                        beam = self._prune(expanded)
-                    keyed = sorted(root_values.items(), key=lambda item: item[1], reverse=True)
-                    if not keyed:
-                        fallback = self.policy.advice(observation)
-                        return fallback
-                    actions = [dict(key) for key, _ in keyed]
-                    scores = [value for _, value in keyed]
-                    top = scores[0]
-                    exponents = [math.exp((value - top) / 0.25) for value in scores]
-                    total = sum(exponents)
-                    probabilities = [value / total for value in exponents]
-                    margin = top - scores[1] if len(scores) > 1 else top - (-1.0)
-                    best_key = keyed[0][0]
-                    return TeacherAdvice(
-                        action=actions[0], candidates=list(zip(actions, scores)), search_policy=probabilities,
-                        best_second_margin=margin, search_depth=reached_depth,
-                        simulation_count=simulation_count, terminal_outcome=root_outcomes.get(best_key),
-                        search_value=max(0.0, min(1.0, (top + 1.0) / 2.0)),
-                    )
-                finally:
-                    for snapshot_id in tuple(self._snapshots):
-                        self._release(snapshot_id)
