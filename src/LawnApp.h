@@ -60,6 +60,25 @@ namespace Sexy
 
 using namespace Sexy;
 
+struct EnvironmentSeed
+{
+	SeedType type = SeedType::SEED_NONE;
+	SeedType imitaterType = SeedType::SEED_NONE;
+};
+
+struct EnvironmentTaskSpec
+{
+	int playthrough = 1;
+	int seedSlotCount = 6;
+	std::vector<SeedType> ownedUpgradePlants;
+	bool imitaterOwned = false;
+	bool firstAidOwned = false;
+	bool poolCleanerOwned = false;
+	bool roofCleanerOwned = false;
+	int rakeCharges = 0;
+	std::vector<SeedType> forcedSeeds;
+};
+
 class LevelStats
 {
 public:
@@ -101,6 +120,7 @@ public:
 	std::unique_ptr<ReanimatorCache>	mReanimatorCache;
 	std::unique_ptr<ProfileMgr>		mProfileMgr;
 	PlayerInfo*						mPlayerInfo;
+	EnvironmentTaskSpec				mEnvironmentTaskSpec;
 	std::unique_ptr<LevelStats>		mLastLevelStats;
 	std::atomic<bool>					mCloseRequest;
 	uint32_t						mAppCounter;
@@ -206,12 +226,13 @@ public:
 	void							ShutdownHook() override;
 	void							Init() override;
 	bool							EnvironmentReset(int level, uint32_t seed, const std::vector<SeedType>& deck);
+	bool							EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task);
 	bool							EnvironmentPlant(int packet, int col, int row);
 	bool							EnvironmentShovel(int col, int row);
 	void							EnvironmentWait(int ticks);
 	int								EnvironmentWaitDecision(int maxTicks);
 	bool							EnvironmentTerminal() const;
-	std::string					EnvironmentObservation(bool privileged = false) const;
+	std::string					EnvironmentObservation(bool privileged = false);
 	void							Start() override;
 	Dialog*							NewDialog(int theDialogId, bool isModal, const std::string& theDialogHeader, const std::string& theDialogLines, const std::string& theDialogFooter, int theButtonMode) override;
 	bool							KillDialog(int theDialogId) override;

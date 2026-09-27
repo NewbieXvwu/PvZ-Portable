@@ -1,0 +1,91 @@
+{
+  "model": "gameplay_model_v0.pt",
+  "protocol_version": 1,
+  "observation_version": 1,
+  "level": 7,
+  "playthrough": 1,
+  "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "device": "mps",
+  "parameter_count": 3682451,
+  "training_episodes": 15,
+  "training_steps": 1799,
+  "training_seeds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "plant_action_weight": 3.409313725490196,
+  "losses": [
+    1.4169241507362167,
+    0.9721053811561537,
+    0.8505417316605344,
+    0.7678823496912373,
+    0.7278301909342284,
+    0.6736132923664816,
+    0.6281807954739438,
+    0.6010254394882185
+  ],
+  "evaluation": [
+    {
+      "seed": 8,
+      "won": true,
+      "result": 1,
+      "wave": 20,
+      "wave_count": 20,
+      "tick": 39535,
+      "actions": 192,
+      "seconds": 2.17
+    },
+    {
+      "seed": 9,
+      "won": true,
+      "result": 1,
+      "wave": 20,
+      "wave_count": 20,
+      "tick": 39117,
+      "actions": 187,
+      "seconds": 1.68
+    },
+    {
+      "seed": 10,
+      "won": true,
+      "result": 1,
+      "wave": 20,
+      "wave_count": 20,
+      "tick": 37776,
+      "actions": 177,
+      "seconds": 1.54
+    },
+    {
+      "seed": 11,
+      "won": false,
+      "result": 2,
+      "wave": 4,
+      "wave_count": 20,
+      "tick": 12537,
+      "actions": 63,
+      "seconds": 0.45
+    }
+  ],
+  "wins": 3,
+  "evaluation_count": 4
+}

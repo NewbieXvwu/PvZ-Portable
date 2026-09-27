@@ -25,6 +25,7 @@
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
+#include <charconv>
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -57,6 +58,54 @@ struct EnvironmentSnapshot
 	BoardResult boardResult;
 };
 
+static bool ParseInt(const std::string& text, int& value)
+{
+	const char* first = text.data();
+	const char* last = first + text.size();
+	auto parsed = std::from_chars(first, last, value);
+	return parsed.ec == std::errc() && parsed.ptr == last;
+}
+
+static bool ParseIntList(const std::string& text, std::vector<int>& values)
+{
+	values.clear();
+	if (text.empty() || text == "-") return true;
+	std::istringstream input(text);
+	std::string item;
+	while (std::getline(input, item, ','))
+	{
+		int value = 0;
+		if (!ParseInt(item, value)) return false;
+		values.push_back(value);
+	}
+	return !values.empty();
+}
+
+static bool ParseDeck(const std::string& text, std::vector<EnvironmentSeed>& deck)
+{
+	deck.clear();
+	if (text.empty() || text == "-") return false;
+	std::istringstream input(text);
+	std::string item;
+	while (std::getline(input, item, ','))
+	{
+		size_t separator = item.find(':');
+		int type = 0;
+		int imitaterType = static_cast<int>(SeedType::SEED_NONE);
+		if (!ParseInt(item.substr(0, separator), type) ||
+			(separator != std::string::npos && !ParseInt(item.substr(separator + 1), imitaterType)) ||
+			type < 0 || type >= SeedType::NUM_SEED_TYPES ||
+			(imitaterType != static_cast<int>(SeedType::SEED_NONE) &&
+				(imitaterType < 0 || imitaterType >= SeedType::NUM_SEED_TYPES)))
+		{
+			deck.clear();
+			return false;
+		}
+		deck.push_back({ static_cast<SeedType>(type), static_cast<SeedType>(imitaterType) });
+	}
+	return !deck.empty();
+}
+
 static EnvCounters ReadCounters(LawnApp* app)
 {
 	if (!app->mBoard)
@@ -70,7 +119,7 @@ static void RunEnvironment(LawnApp* app)
 	std::string line;
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
-	std::cout << "PVZENV {\"ready\":true}" << std::endl;
+	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		std::istringstream input(line);
@@ -103,6 +152,37 @@ static void RunEnvironment(LawnApp* app)
 				deck.push_back(static_cast<SeedType>(value));
 			}
 			ok = !deck.empty() && app->EnvironmentReset(level, seed, deck);
+			if (ok)
+			{
+				snapshots.clear();
+				nextSnapshotId = 1;
+			}
+		}
+		else if (command == "RESET_V1")
+		{
+			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
+			uint32_t seed = 0;
+			std::string upgradesText, forcedText, deckText;
+			input >> level >> seed >> playthrough >> slots >> imitater >> firstAid >> poolCleaner >> roofCleaner >> rake
+				>> upgradesText >> forcedText >> deckText;
+			std::vector<int> upgrades, forced;
+			std::vector<EnvironmentSeed> deck;
+			EnvironmentTaskSpec task;
+			bool parsed = !input.fail() && ParseIntList(upgradesText, upgrades) && ParseIntList(forcedText, forced) && ParseDeck(deckText, deck);
+			if (parsed && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&
+				(poolCleaner == 0 || poolCleaner == 1) && (roofCleaner == 0 || roofCleaner == 1))
+			{
+				task.playthrough = playthrough;
+				task.seedSlotCount = slots;
+				task.imitaterOwned = imitater != 0;
+				task.firstAidOwned = firstAid != 0;
+				task.poolCleanerOwned = poolCleaner != 0;
+				task.roofCleanerOwned = roofCleaner != 0;
+				task.rakeCharges = rake;
+				for (int value : upgrades) task.ownedUpgradePlants.push_back(static_cast<SeedType>(value));
+				for (int value : forced) task.forcedSeeds.push_back(static_cast<SeedType>(value));
+				ok = app->EnvironmentReset(level, seed, deck, task);
+			}
 			if (ok)
 			{
 				snapshots.clear();
@@ -192,7 +272,7 @@ static void RunEnvironment(LawnApp* app)
 			break;
 		}
 
-		std::cout << "PVZENV {\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);
+		std::cout << "PVZENV {\"protocol_version\":1,\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);
 		if (ticksAdvanced >= 0)
 			std::cout << ",\"ticks_advanced\":" << ticksAdvanced;
 		if (hasSnapshotId)

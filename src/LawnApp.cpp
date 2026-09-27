@@ -1279,7 +1279,25 @@ void LawnApp::Init()
 
 bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedType>& deck)
 {
-	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || deck.empty() || deck.size() > SEEDBANK_MAX)
+	EnvironmentTaskSpec task;
+	task.playthrough = 2;
+	task.seedSlotCount = std::clamp(static_cast<int>(deck.size()), 6, SEEDBANK_MAX);
+	task.imitaterOwned = true;
+	for (int i = 0; i < 8; ++i)
+		task.ownedUpgradePlants.push_back(static_cast<SeedType>(static_cast<int>(SeedType::SEED_GATLINGPEA) + i));
+	std::vector<EnvironmentSeed> cards;
+	cards.reserve(deck.size());
+	for (SeedType type : deck)
+		cards.push_back({ type, SeedType::SEED_NONE });
+	return EnvironmentReset(level, seed, cards, task);
+}
+
+bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task)
+{
+	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || deck.empty() || deck.size() > SEEDBANK_MAX ||
+		task.playthrough < 1 || task.playthrough > 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
+		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || task.forcedSeeds.size() > 3 ||
+		(task.playthrough == 1 && !task.forcedSeeds.empty()))
 		return false;
 
 	if (!mPlayerInfo)
@@ -1292,8 +1310,48 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedT
 		return false;
 
 	mPlayerInfo->mLevel = level;
-	mPlayerInfo->mFinishedAdventure = 1;
+	mPlayerInfo->mFinishedAdventure = task.playthrough - 1;
 	std::fill(std::begin(mPlayerInfo->mPurchases), std::end(mPlayerInfo->mPurchases), 0);
+	mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_PACKET_UPGRADE] = task.seedSlotCount - 6;
+	for (SeedType type : task.ownedUpgradePlants)
+	{
+		int upgrade = static_cast<int>(type) - static_cast<int>(SeedType::SEED_GATLINGPEA);
+		if (upgrade < 0 || upgrade >= 8)
+			return false;
+		mPlayerInfo->mPurchases[upgrade] = 1;
+	}
+	mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_PLANT_IMITATER] = task.imitaterOwned;
+	mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_FIRSTAID] = task.firstAidOwned;
+	mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_POOL_CLEANER] = task.poolCleanerOwned;
+	mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_ROOF_CLEANER] = task.roofCleanerOwned;
+	mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_RAKE] = task.rakeCharges;
+	mEnvironmentTaskSpec = task;
+	std::vector<int> selected;
+	for (const EnvironmentSeed& card : deck)
+	{
+		int type = static_cast<int>(card.type);
+		if (type < 0 || type >= SeedType::NUM_SEED_TYPES || std::find(selected.begin(), selected.end(), type) != selected.end())
+			return false;
+		if (card.type == SeedType::SEED_IMITATER)
+		{
+			int imitaterType = static_cast<int>(card.imitaterType);
+			if (!task.imitaterOwned || (card.imitaterType != SeedType::SEED_NONE &&
+				(imitaterType < 0 || imitaterType >= SeedType::NUM_SEED_TYPES || !HasSeedType(card.imitaterType))))
+				return false;
+		}
+		else if (card.imitaterType != SeedType::SEED_NONE || !HasSeedType(card.type))
+			return false;
+		selected.push_back(type);
+	}
+	for (size_t i = 0; i < task.forcedSeeds.size(); ++i)
+	{
+		SeedType forced = task.forcedSeeds[i];
+		if (static_cast<int>(forced) < 0 || forced >= SeedType::SEED_GATLINGPEA ||
+			std::find(task.forcedSeeds.begin(), task.forcedSeeds.begin() + i, forced) != task.forcedSeeds.begin() + i)
+			return false;
+		if (std::none_of(deck.begin(), deck.end(), [forced](const EnvironmentSeed& card) { return card.type == forced; }))
+			return false;
+	}
 	mGameMode = GameMode::GAMEMODE_ADVENTURE;
 	mGameScene = GameScenes::SCENE_LOADING;
 	mBoardResult = BoardResult::BOARDRESULT_NONE;
@@ -1305,14 +1363,16 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedT
 
 	MakeNewBoard();
 	mBoard->InitLevel();
+	mBoard->mCutScene->PlaceLawnItems();
 	mBoard->mSeedBank->mNumPackets = static_cast<int>(deck.size());
+	mBoard->mSeedBank->UpdateWidth();
 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
 	{
 		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
 		packet.mIndex = i;
 		packet.mX = mBoard->GetSeedPacketPositionX(i);
 		packet.mY = 8;
-		packet.SetPacketType(deck[i]);
+		packet.SetPacketType(deck[i].type, deck[i].imitaterType);
 	}
 	mBoard->mTutorialState = TutorialState::TUTORIAL_OFF;
 	mBoard->mTutorialTimer = -1;
@@ -1438,13 +1498,18 @@ bool LawnApp::EnvironmentTerminal() const
 		mBoardResult == BoardResult::BOARDRESULT_LOST || mGameScene == GameScenes::SCENE_ZOMBIES_WON;
 }
 
-std::string LawnApp::EnvironmentObservation(bool privileged) const
+std::string LawnApp::EnvironmentObservation(bool privileged)
 {
 	if (!mBoard)
 		return "null";
 
 	std::ostringstream out;
-	out << "{\"level\":" << mBoard->mLevel << ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
+	out << "{\"protocol_version\":1,\"observation_version\":1,\"task_version\":1,\"level\":" << mBoard->mLevel
+		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough << ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
+		<< ",\"night\":" << (mBoard->StageIsNight() ? "true" : "false")
+		<< ",\"pool\":" << (mBoard->StageHasPool() ? "true" : "false")
+		<< ",\"fog\":" << (mBoard->StageHasFog() ? "true" : "false")
+		<< ",\"roof\":" << (mBoard->StageHasRoof() ? "true" : "false")
 		<< ",\"tick\":" << mBoard->mMainCounter
 		<< ",\"sun\":" << mBoard->mSunMoney << ",\"wave\":" << mBoard->mCurrentWave
 		<< ",\"wave_count\":" << mBoard->mNumWaves
@@ -1461,25 +1526,102 @@ std::string LawnApp::EnvironmentObservation(bool privileged) const
 		}
 		out << ']';
 	}
+	out << "],\"player_profile\":{\"playthrough\":" << mEnvironmentTaskSpec.playthrough
+		<< ",\"seed_slot_count\":" << mEnvironmentTaskSpec.seedSlotCount << ",\"owned_upgrade_plants\":[";
+	for (size_t i = 0; i < mEnvironmentTaskSpec.ownedUpgradePlants.size(); ++i)
+	{
+		if (i) out << ',';
+		out << static_cast<int>(mEnvironmentTaskSpec.ownedUpgradePlants[i]);
+	}
+	out << "],\"imitater_owned\":" << (mEnvironmentTaskSpec.imitaterOwned ? "true" : "false")
+		<< ",\"first_aid_owned\":" << (mEnvironmentTaskSpec.firstAidOwned ? "true" : "false")
+		<< ",\"pool_cleaner_owned\":" << (mEnvironmentTaskSpec.poolCleanerOwned ? "true" : "false")
+		<< ",\"roof_cleaner_owned\":" << (mEnvironmentTaskSpec.roofCleanerOwned ? "true" : "false")
+		<< ",\"rake_charges\":" << mEnvironmentTaskSpec.rakeCharges
+		<< ",\"rake_charges_remaining\":" << mPlayerInfo->mPurchases[StoreItem::STORE_ITEM_RAKE] << "}"
+		<< ",\"loadout_context\":{\"mode\":\"fixed\",\"scene\":" << static_cast<int>(mBoard->mBackground)
+		<< ",\"seed_slot_count\":" << mEnvironmentTaskSpec.seedSlotCount << ",\"free_slots\":"
+		<< mEnvironmentTaskSpec.seedSlotCount - static_cast<int>(mEnvironmentTaskSpec.forcedSeeds.size())
+		<< ",\"available_plants\":[";
+	bool firstPlantType = true;
+	for (int type = 0; type < SeedType::NUM_SEED_TYPES; ++type)
+	{
+		if (!HasSeedType(static_cast<SeedType>(type))) continue;
+		if (!firstPlantType) out << ',';
+		firstPlantType = false;
+		out << type;
+	}
+	out << "],\"forced_seeds\":[";
+	for (size_t i = 0; i < mEnvironmentTaskSpec.forcedSeeds.size(); ++i)
+	{
+		if (i) out << ',';
+		out << static_cast<int>(mEnvironmentTaskSpec.forcedSeeds[i]);
+	}
+	out << "],\"zombie_roster\":[";
+	bool firstZombieType = true;
+	for (int type = 0; type < NUM_ZOMBIE_TYPES && type < 100; ++type)
+	{
+		if (!mBoard->mZombieAllowed[type]) continue;
+		if (!firstZombieType) out << ',';
+		firstZombieType = false;
+		out << type;
+	}
+	out << "]},\"cells\":[";
+	bool firstCell = true;
+	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+		{
+			if (!firstCell) out << ',';
+			firstCell = false;
+			out << "{\"row\":" << row << ",\"col\":" << col << ",\"terrain\":"
+				<< static_cast<int>(mBoard->mGridSquareType[col][row]) << ",\"row_type\":" << static_cast<int>(mBoard->mPlantRow[row])
+				<< ",\"plant_types\":[";
+			bool firstCellPlant = true;
+			for (const Plant* plant : mBoard->mPlants)
+				if (!plant->mDead && plant->mPlantCol == col && plant->mRow == row)
+				{
+					if (!firstCellPlant) out << ',';
+					firstCellPlant = false;
+					out << static_cast<int>(plant->mSeedType);
+				}
+			out << "],\"grid_item_types\":[";
+			bool firstCellItem = true;
+			for (const GridItem* item : mBoard->mGridItems)
+				if (!item->mDead && item->mGridX == col && item->mGridY == row)
+				{
+					if (!firstCellItem) out << ',';
+					firstCellItem = false;
+					out << static_cast<int>(item->mGridItemType);
+				}
+			out << "]}";
+		}
 	out << "],\"packets\":[";
 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
 	{
 		if (i) out << ',';
-		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
-		out << "{\"index\":" << i << ",\"type\":" << static_cast<int>(packet.mPacketType)
-			<< ",\"imitater_type\":" << static_cast<int>(packet.mImitaterType)
-			<< ",\"active\":" << (packet.mActive ? "true" : "false")
-			<< ",\"cooldown\":" << packet.mRefreshCounter << '}';
+			const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+			out << "{\"index\":" << i << ",\"type\":" << static_cast<int>(packet.mPacketType)
+				<< ",\"imitater_type\":" << static_cast<int>(packet.mImitaterType)
+				<< ",\"active\":" << (packet.mActive ? "true" : "false")
+				<< ",\"cooldown\":" << packet.mRefreshCounter << ",\"refresh_time\":" << packet.mRefreshTime
+				<< ",\"cost\":" << Plant::GetCost(packet.mPacketType, packet.mImitaterType) << '}';
 	}
 	out << "],\"plants\":[";
 	bool first = true;
 	for (const Plant* plant : mBoard->mPlants)
 	{
 		if (plant->mDead) continue;
-		if (!first) out << ',';
-		first = false;
-		out << "{\"type\":" << static_cast<int>(plant->mSeedType) << ",\"imitater_type\":" << static_cast<int>(plant->mImitaterType)
-			<< ",\"col\":" << plant->mPlantCol << ",\"row\":" << plant->mRow << ",\"health\":" << plant->mPlantHealth << '}';
+			if (!first) out << ',';
+			first = false;
+			out << "{\"type\":" << static_cast<int>(plant->mSeedType) << ",\"imitater_type\":" << static_cast<int>(plant->mImitaterType)
+				<< ",\"col\":" << plant->mPlantCol << ",\"row\":" << plant->mRow << ",\"health\":" << plant->mPlantHealth
+				<< ",\"max_health\":" << plant->mPlantMaxHealth << ",\"state\":" << static_cast<int>(plant->mState)
+				<< ",\"state_countdown\":" << plant->mStateCountdown << ",\"launch_counter\":" << plant->mLaunchCounter
+				<< ",\"launch_rate\":" << plant->mLaunchRate << ",\"shooting_counter\":" << plant->mShootingCounter
+				<< ",\"wake_up_counter\":" << plant->mWakeUpCounter << ",\"asleep\":" << (plant->mIsAsleep ? "true" : "false")
+				<< ",\"squished\":" << (plant->mSquished ? "true" : "false")
+				<< ",\"target_zombie_id\":" << static_cast<int>(plant->mTargetZombieID)
+				<< ",\"bungee_state\":" << static_cast<int>(plant->mOnBungeeState) << '}';
 	}
 	out << "],\"zombies\":[";
 	first = true;
@@ -1487,10 +1629,18 @@ std::string LawnApp::EnvironmentObservation(bool privileged) const
 	{
 		if (zombie->mDead) continue;
 		if (!first) out << ',';
-		first = false;
-		out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
-			<< ",\"x\":" << zombie->mPosX << ",\"y\":" << zombie->mPosY << ",\"body_health\":" << zombie->mBodyHealth
-			<< ",\"helm_health\":" << zombie->mHelmHealth << ",\"shield_health\":" << zombie->mShieldHealth << '}';
+			first = false;
+			out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
+				<< ",\"x\":" << zombie->mPosX << ",\"y\":" << zombie->mPosY << ",\"body_health\":" << zombie->mBodyHealth
+				<< ",\"body_max_health\":" << zombie->mBodyMaxHealth << ",\"helm_health\":" << zombie->mHelmHealth
+				<< ",\"helm_max_health\":" << zombie->mHelmMaxHealth << ",\"shield_health\":" << zombie->mShieldHealth
+				<< ",\"shield_max_health\":" << zombie->mShieldMaxHealth << ",\"phase\":" << static_cast<int>(zombie->mZombiePhase)
+				<< ",\"phase_counter\":" << zombie->mPhaseCounter << ",\"velocity_x\":" << zombie->mVelX
+				<< ",\"chilled\":" << zombie->mChilledCounter << ",\"buttered\":" << zombie->mButteredCounter
+				<< ",\"ice_trap\":" << zombie->mIceTrapCounter << ",\"has_head\":" << (zombie->mHasHead ? "true" : "false")
+				<< ",\"has_arm\":" << (zombie->mHasArm ? "true" : "false") << ",\"has_object\":" << (zombie->mHasObject ? "true" : "false")
+				<< ",\"is_eating\":" << (zombie->mIsEating ? "true" : "false") << ",\"target_col\":" << zombie->mTargetCol
+				<< ",\"target_row\":" << zombie->mTargetRow << '}';
 	}
 	out << "],\"coins\":[";
 	first = true;
@@ -1503,17 +1653,42 @@ std::string LawnApp::EnvironmentObservation(bool privileged) const
 	}
 	out << "],\"projectiles\":[";
 	first = true;
-	for (const Projectile* projectile : mBoard->mProjectiles)
+	for (Projectile* projectile : mBoard->mProjectiles)
 	{
 		if (projectile->mDead) continue;
 		if (!first) out << ',';
-		first = false;
-		out << "{\"type\":" << static_cast<int>(projectile->mProjectileType) << ",\"row\":" << projectile->mRow
-			<< ",\"x\":" << projectile->mPosX << ",\"y\":" << projectile->mPosY << ",\"z\":" << projectile->mPosZ
-			<< ",\"vx\":" << projectile->mVelX << ",\"vy\":" << projectile->mVelY << ",\"age\":" << projectile->mProjectileAge << '}';
+			first = false;
+			out << "{\"type\":" << static_cast<int>(projectile->mProjectileType) << ",\"row\":" << projectile->mRow
+				<< ",\"x\":" << projectile->mPosX << ",\"y\":" << projectile->mPosY << ",\"z\":" << projectile->mPosZ
+				<< ",\"vx\":" << projectile->mVelX << ",\"vy\":" << projectile->mVelY << ",\"vz\":" << projectile->mVelZ
+				<< ",\"motion\":" << static_cast<int>(projectile->mMotionType) << ",\"damage\":" << projectile->GetProjectileDef().mDamage
+				<< ",\"target_zombie_id\":" << static_cast<int>(projectile->mTargetZombieID)
+				<< ",\"age\":" << projectile->mProjectileAge << '}';
 	}
-	out << ']';
-	out << ",\"legal_actions\":{\"plants\":[";
+	out << "],\"defenses\":[";
+	first = true;
+	for (const LawnMower* mower : mBoard->mLawnMowers)
+	{
+		if (mower->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << "{\"type\":" << static_cast<int>(mower->mMowerType) << ",\"row\":" << mower->mRow
+			<< ",\"state\":" << static_cast<int>(mower->mMowerState) << ",\"x\":" << mower->mPosX
+			<< ",\"y\":" << mower->mPosY << '}';
+	}
+	out << "],\"grid_items\":[";
+	first = true;
+	for (const GridItem* item : mBoard->mGridItems)
+	{
+		if (item->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << "{\"type\":" << static_cast<int>(item->mGridItemType) << ",\"state\":" << static_cast<int>(item->mGridItemState)
+			<< ",\"col\":" << item->mGridX << ",\"row\":" << item->mGridY << ",\"counter\":" << item->mGridItemCounter
+			<< ",\"x\":" << item->mPosX << ",\"y\":" << item->mPosY
+			<< ",\"zombie_type\":" << static_cast<int>(item->mZombieType) << ",\"seed_type\":" << static_cast<int>(item->mSeedType) << '}';
+	}
+	out << "],\"legal_actions\":{\"plants\":[";
 	bool firstAction = true;
 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
 	{

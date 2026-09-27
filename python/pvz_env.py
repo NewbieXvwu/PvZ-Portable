@@ -8,7 +8,57 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+from dataclasses import asdict, dataclass, field
 from typing import Any, Sequence
+
+
+@dataclass(frozen=True)
+class PlayerProfileContext:
+    seed_slot_count: int = 6
+    owned_upgrade_plants: tuple[int, ...] = ()
+    imitater_owned: bool = False
+    first_aid_owned: bool = False
+    pool_cleaner_owned: bool = False
+    roof_cleaner_owned: bool = False
+    rake_charges: int = 0
+
+
+@dataclass(frozen=True)
+class TaskSpec:
+    level: int = 1
+    seed: int = 0
+    playthrough: int = 1
+    profile: PlayerProfileContext = field(default_factory=PlayerProfileContext)
+    forced_seeds: tuple[int, ...] = ()
+    loadout_mode: str = "fixed"
+
+
+@dataclass(frozen=True)
+class LoadoutContext:
+    scene: int
+    seed_slot_count: int
+    free_slots: int
+    available_plants: tuple[int, ...]
+    forced_seeds: tuple[int, ...]
+    zombie_roster: tuple[int, ...]
+
+    @classmethod
+    def from_observation(cls, observation: dict[str, Any]) -> "LoadoutContext":
+        context = observation["loadout_context"]
+        return cls(
+            scene=context["scene"],
+            seed_slot_count=context["seed_slot_count"],
+            free_slots=context["free_slots"],
+            available_plants=tuple(context["available_plants"]),
+            forced_seeds=tuple(context["forced_seeds"]),
+            zombie_roster=tuple(context["zombie_roster"]),
+        )
+
+
+@dataclass(frozen=True)
+class SeedCard:
+    seed_type: int
+    imitater_type: int | None = None
 
 
 class PvZEnv:
@@ -84,7 +134,7 @@ class PvZEnv:
             bufsize=1,
         )
         ready = self._read_message()
-        if not ready.get("ready"):
+        if not ready.get("ready") or ready.get("protocol_version") != 1:
             raise RuntimeError(f"PvZ-Portable did not enter environment mode: {ready}")
 
     def _read_message(self) -> dict[str, Any]:
@@ -110,27 +160,98 @@ class PvZEnv:
         self,
         level: int = 1,
         seed: int = 0,
-        deck: Sequence[int] = (0, 1, 2, 3, 4, 5),
+        deck: Sequence[int | SeedCard | tuple[int, int]] = (0, 1, 2, 3, 4, 5),
+        task: TaskSpec | None = None,
     ) -> tuple[dict[str, Any], dict[str, Any]]:
+        if task is not None:
+            level, seed = task.level, task.seed
         if type(level) is not int or not 1 <= level <= 50:
             raise ValueError("level must be an integer from 1 to 50")
         if type(seed) is not int or not 0 <= seed <= 0xFFFFFFFF:
             raise ValueError("seed must be an unsigned 32-bit integer")
-        if not deck or any(type(seed_type) is not int or seed_type < 0 for seed_type in deck):
-            raise ValueError("deck must contain non-negative integer seed types")
-        response = self._command(f"RESET {level} {seed} {','.join(map(str, deck))}")
+        if task is None:
+            task = TaskSpec(level=level, seed=seed)
+        profile = task.profile
+        if task.loadout_mode != "fixed":
+            raise ValueError("only fixed loadouts are supported")
+        if type(task.playthrough) is not int or task.playthrough not in (1, 2):
+            raise ValueError("playthrough must be 1 or 2")
+        if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:
+            raise ValueError("seed_slot_count must be from 6 to 10")
+        if type(profile.rake_charges) is not int or profile.rake_charges < 0:
+            raise ValueError("rake_charges must be a non-negative integer")
+        if any(type(value) is not bool for value in (
+            profile.imitater_owned, profile.first_aid_owned, profile.pool_cleaner_owned, profile.roof_cleaner_owned
+        )):
+            raise ValueError("profile ownership flags must be booleans")
+        if any(type(value) is not int or not 40 <= value <= 47 for value in profile.owned_upgrade_plants):
+            raise ValueError("owned_upgrade_plants must contain upgrade seed IDs 40 through 47")
+        if len(set(profile.owned_upgrade_plants)) != len(profile.owned_upgrade_plants):
+            raise ValueError("owned_upgrade_plants must not contain duplicates")
+        if len(task.forced_seeds) > 3 or (task.playthrough == 1 and task.forced_seeds):
+            raise ValueError("forced_seeds are available only on playthrough 2, up to three cards")
+        if any(type(value) is not int or not 0 <= value < 40 for value in task.forced_seeds):
+            raise ValueError("forced_seeds must contain base plant IDs from 0 through 39")
+        if len(set(task.forced_seeds)) != len(task.forced_seeds):
+            raise ValueError("forced_seeds must not contain duplicates")
+
+        cards: list[SeedCard] = []
+        for card in deck:
+            if type(card) is int:
+                cards.append(SeedCard(card))
+            elif isinstance(card, SeedCard):
+                cards.append(card)
+            elif isinstance(card, tuple) and len(card) == 2 and all(type(value) is int for value in card):
+                cards.append(SeedCard(card[0], card[1]))
+            else:
+                raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
+        if not cards or len(cards) > profile.seed_slot_count:
+            raise ValueError("deck must contain cards and fit the profile's seed slots")
+        if any(type(card.seed_type) is not int or card.seed_type < 0 or card.seed_type >= 49 or
+               (card.imitater_type is not None and
+                (type(card.imitater_type) is not int or not 0 <= card.imitater_type < 49 or card.imitater_type == 48)) or
+               (card.seed_type == 48) != (card.imitater_type is not None) for card in cards):
+            raise ValueError("deck contains an invalid seed type")
+        if any(card.seed_type == 48 for card in cards) and not profile.imitater_owned:
+            raise ValueError("an imitater card requires profile.imitater_owned")
+        card_types = [card.seed_type for card in cards]
+        if len(set(card_types)) != len(card_types):
+            raise ValueError("deck must not contain duplicate card types")
+        if any(seed_type not in card_types for seed_type in task.forced_seeds):
+            raise ValueError("deck must include every forced seed")
+
+        upgrades = ",".join(map(str, profile.owned_upgrade_plants)) or "-"
+        forced = ",".join(map(str, task.forced_seeds)) or "-"
+        deck_text = ",".join(
+            str(card.seed_type) if card.imitater_type is None else f"{card.seed_type}:{card.imitater_type}"
+            for card in cards
+        )
+        response = self._command(
+            f"RESET_V1 {level} {seed} {task.playthrough} {profile.seed_slot_count} "
+            f"{int(profile.imitater_owned)} {int(profile.first_aid_owned)} "
+            f"{int(profile.pool_cleaner_owned)} {int(profile.roof_cleaner_owned)} {profile.rake_charges} "
+            f"{upgrades} {forced} {deck_text}"
+        )
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
         self._reset_done = True
         self.episode = {
-            "format_version": 1,
+            "format_version": 2,
             "source_revision": self._source_revision,
             "source_dirty": self._source_dirty,
             "resource_sha256": self._resource_sha256,
             "properties_partner_sha256": self._properties_sha256,
             "level": level,
             "seed": seed,
-            "deck": list(deck),
+            "deck": [asdict(card) for card in cards],
+            "task": {
+                "level": level,
+                "seed": seed,
+                "playthrough": task.playthrough,
+                "profile": asdict(profile),
+                "forced_seeds": list(task.forced_seeds),
+                "loadout_mode": task.loadout_mode,
+            },
             "initial_state": self._state_record(response["observation"]),
             "actions": [],
             "operations": [],
@@ -186,6 +307,9 @@ class PvZEnv:
             raise RuntimeError(f"environment returned no state: {response}")
         return response["observation"]
 
+    def loadout_context(self) -> LoadoutContext:
+        return LoadoutContext.from_observation(self.observe())
+
     def snapshot(self) -> int:
         response = self._command("SNAPSHOT")
         if not response.get("ok") or "snapshot_id" not in response:
@@ -210,7 +334,17 @@ class PvZEnv:
         Path(path).write_text(json.dumps(self.episode, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     def replay_record(self, record: dict[str, Any]) -> dict[str, Any]:
-        observation, _ = self.reset(record["level"], record["seed"], record["deck"])
+        if record.get("format_version", 1) >= 2:
+            task_data = record["task"]
+            task_data["profile"] = PlayerProfileContext(**task_data["profile"])
+            task_data["forced_seeds"] = tuple(task_data["forced_seeds"])
+            observation, _ = self.reset(deck=[SeedCard(**card) for card in record["deck"]], task=TaskSpec(**task_data))
+        else:
+            observation, _ = self.reset(
+                record["level"], record["seed"], record["deck"], task=TaskSpec(
+                    level=record["level"], seed=record["seed"], playthrough=2
+                )
+            )
         expected = record.get("initial_state")
         if expected is not None and self._state_record(observation) != expected:
             raise RuntimeError("replay diverged immediately after reset")
