@@ -15,7 +15,7 @@ from typing import Any
 
 import torch
 
-from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, TeacherPolicy,
+from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, SearchTeacher, TeacherPolicy,
                        predict_action, resolve_device)
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
@@ -71,7 +71,9 @@ def checkpoint_model(path: Path, device: torch.device) -> tuple[GameplayModelV1,
 def run_episode(env: PvZEnv, seed: int, model: GameplayModelV1 | None,
                 clear_hidden: bool, zombie_count_multiplier: float,
                 replay_dir: Path, policy_label: str, level: int = LEVEL,
-                deck: tuple[int, ...] = DECK) -> dict[str, Any]:
+                deck: tuple[int, ...] = DECK, search_teacher: bool = False,
+                search_width: int = 4, search_depth: int = 3,
+                search_candidates: int = 4) -> dict[str, Any]:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
                     zombie_count_multiplier=zombie_count_multiplier)
     reset_started = time.perf_counter()
@@ -85,10 +87,12 @@ def run_episode(env: PvZEnv, seed: int, model: GameplayModelV1 | None,
     actions = 0
     ticks_advanced = 0
     started = time.perf_counter()
-    teacher = TeacherPolicy() if model is None else None
+    teacher = (SearchTeacher(env, beam_width=search_width, depth=search_depth,
+                             candidate_limit=search_candidates) if search_teacher else TeacherPolicy()) if model is None else None
     while not observation["terminal"] and actions < 2000:
         if model is None:
-            action = teacher.advice(observation).action
+            advice = teacher.advice(observation, delta_ticks=delta_ticks, events=events) if search_teacher else teacher.advice(observation)
+            action = advice.action
         else:
             with torch.inference_mode():
                 action, next_hidden, _ = predict_action(
@@ -173,6 +177,10 @@ def main() -> None:
     parser.add_argument("--device", choices=("auto", "cuda", "mps", "cpu"), default="auto")
     parser.add_argument("--checkpoint", action="append", type=parse_checkpoint, default=[])
     parser.add_argument("--teacher", action="store_true")
+    parser.add_argument("--search-teacher", action="store_true")
+    parser.add_argument("--search-width", type=int, default=4)
+    parser.add_argument("--search-depth", type=int, default=3)
+    parser.add_argument("--search-candidates", type=int, default=4)
     parser.add_argument("--clear-hidden", action="store_true")
     parser.add_argument("--no-relation-bias", action="store_true")
     parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
@@ -182,9 +190,11 @@ def main() -> None:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
     if not 1.0 <= args.zombie_count_multiplier <= 10.0:
         parser.error("--zombie-count-multiplier must be from 1 to 10")
-    if not args.teacher and not args.checkpoint:
-        parser.error("select --teacher and/or --checkpoint LABEL=PATH")
-    labels = (["teacher"] if args.teacher else []) + [label for label, _ in args.checkpoint]
+    if min(args.search_width, args.search_depth, args.search_candidates) < 1:
+        parser.error("search width, depth, and candidate count must be positive")
+    if not args.teacher and not args.search_teacher and not args.checkpoint:
+        parser.error("select --teacher, --search-teacher, and/or --checkpoint LABEL=PATH")
+    labels = (["teacher"] if args.teacher else []) + (["search_teacher"] if args.search_teacher else []) + [label for label, _ in args.checkpoint]
     if len(set(labels)) != len(labels):
         parser.error("policy labels must be unique")
 
@@ -194,6 +204,10 @@ def main() -> None:
     policies: list[tuple[str, GameplayModelV1 | None, dict[str, Any]]] = []
     if args.teacher:
         policies.append(("teacher", None, {}))
+    if args.search_teacher:
+        policies.append(("search_teacher", None, {"beam_width": args.search_width,
+                                                    "depth": args.search_depth,
+                                                    "candidates": args.search_candidates}))
     for label, path in args.checkpoint:
         model, checkpoint = checkpoint_model(path, device)
         if args.no_relation_bias:
@@ -210,7 +224,8 @@ def main() -> None:
             records = []
             for index, seed in enumerate(seeds, start=1):
                 record = run_episode(env, seed, model, args.clear_hidden, args.zombie_count_multiplier,
-                                     replay_dir, label, args.level, args.deck)
+                                     replay_dir, label, args.level, args.deck, label == "search_teacher",
+                                     args.search_width, args.search_depth, args.search_candidates)
                 records.append(record)
                 if index % 16 == 0 or index == len(seeds):
                     print(f"{label} {index}/{len(seeds)} wins={sum(row['won'] for row in records)}",

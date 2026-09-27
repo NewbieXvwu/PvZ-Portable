@@ -249,6 +249,11 @@ static void RunEnvironment(LawnApp* app)
 				}
 			}
 		}
+		else if (command == "DROP_SNAPSHOT")
+		{
+			input >> snapshotId;
+			ok = snapshots.erase(snapshotId) > 0;
+		}
 		else if (command == "QUIT")
 		{
 			std::cout << "PVZENV {\"ok\":true,\"closed\":true}" << std::endl;

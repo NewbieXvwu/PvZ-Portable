@@ -17,7 +17,7 @@ from typing import Any
 import torch
 from torch.nn import functional as F
 
-from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG, TeacherPolicy,
+from pvz_agent import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG, SearchTeacher,
                        behavior_cloning_loss, predict_action, resolve_device)
 from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
 
@@ -32,18 +32,21 @@ def parse_seeds(text: str) -> list[int]:
 
 def collect_episode(env: PvZEnv, seed: int, replay_dir: Path, max_actions: int = 2000,
                     level: int = LEVEL, deck: tuple[int, ...] = DECK,
-                    zombie_count_multiplier: float = 1.0) -> dict[str, Any]:
+                    zombie_count_multiplier: float = 1.0, search_width: int = 4,
+                    search_depth: int = 3, search_candidates: int = 4) -> dict[str, Any]:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
                     zombie_count_multiplier=zombie_count_multiplier)
     observation, _ = env.reset(deck=deck, task=task)
     steps: list[dict[str, Any]] = []
     delta_ticks = 0
     events: dict[str, Any] = {}
-    teacher = TeacherPolicy()
+    teacher = SearchTeacher(env, beam_width=search_width, depth=search_depth,
+                            candidate_limit=search_candidates)
     for decision_index in range(max_actions):
-        action = teacher.advice(observation).action
-        steps.append({"decision_index": decision_index, "observation": observation, "action": action,
-                      "delta_ticks": delta_ticks, "events": events})
+        advice = teacher.advice(observation, delta_ticks=delta_ticks, events=events)
+        action = advice.action
+        steps.append(_teacher_labels({"decision_index": decision_index, "observation": observation, "action": action,
+                                      "delta_ticks": delta_ticks, "events": events}, advice))
         before = observation
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
@@ -53,17 +56,21 @@ def collect_episode(env: PvZEnv, seed: int, replay_dir: Path, max_actions: int =
         events = info["events"]
         if done:
             won = observation["result"] == 1
+            for step in steps:
+                step["episode_outcome"] = int(won)
             replay_id = f"teacher_seed_{seed}.jsonl.gz"
             env.save_replay(replay_dir / replay_id)
             return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
-                    "steps": steps, "won": won, "result": observation["result"],
+                    "teacher_label_version": 1, "steps": steps, "won": won, "result": observation["result"],
                     "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
     raise RuntimeError(f"teacher episode exceeded {max_actions} decisions on seed {seed}")
 
 
 def collect_dagger_episode(model: GameplayModelV1, env: PvZEnv, seed: int, device: torch.device,
                            replay_dir: Path, max_actions: int = 2000, level: int = LEVEL,
-                           deck: tuple[int, ...] = DECK, zombie_count_multiplier: float = 1.0) -> dict[str, Any]:
+                           deck: tuple[int, ...] = DECK, zombie_count_multiplier: float = 1.0,
+                           search_width: int = 4, search_depth: int = 3,
+                           search_candidates: int = 4) -> dict[str, Any]:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
                     zombie_count_multiplier=zombie_count_multiplier)
     observation, _ = env.reset(deck=deck, task=task)
@@ -72,11 +79,15 @@ def collect_dagger_episode(model: GameplayModelV1, env: PvZEnv, seed: int, devic
     previous_action = None
     delta_ticks = 0
     events: dict[str, Any] = {}
-    teacher = TeacherPolicy()
+    model.eval()
+    teacher = SearchTeacher(env, model=model, beam_width=search_width, depth=search_depth,
+                            candidate_limit=search_candidates)
     for decision_index in range(max_actions):
-        label = teacher.advice(observation).action
-        steps.append({"decision_index": decision_index, "observation": observation, "action": label, "previous_action": previous_action,
-                      "delta_ticks": delta_ticks, "events": events})
+        advice = teacher.advice(observation, hidden, previous_action, delta_ticks, events)
+        label = advice.action
+        steps.append(_teacher_labels({"decision_index": decision_index, "observation": observation, "action": label,
+                                      "previous_action": previous_action, "delta_ticks": delta_ticks,
+                                      "events": events}, advice))
         with torch.inference_mode():
             action, hidden, _ = predict_action(model, observation, hidden, previous_action, delta_ticks, events)
         before = observation
@@ -91,11 +102,26 @@ def collect_dagger_episode(model: GameplayModelV1, env: PvZEnv, seed: int, devic
             break
     if not observation["terminal"]:
         raise RuntimeError(f"DAgger episode exceeded {max_actions} decisions on seed {seed}")
+    for step in steps:
+        step["episode_outcome"] = int(observation["result"] == 1)
     replay_id = f"dagger_seed_{seed}.jsonl.gz"
     env.save_replay(replay_dir / replay_id)
     return {"seed": seed, "replay_id": replay_id, "observation_version": 2, "task_version": 2,
-            "steps": steps, "won": observation["result"] == 1, "result": observation["result"],
+            "teacher_label_version": 1, "steps": steps, "won": observation["result"] == 1, "result": observation["result"],
             "tick": observation["tick"], "wave": observation["wave"], "wave_count": observation["wave_count"]}
+
+
+def _teacher_labels(step: dict[str, Any], advice: Any) -> dict[str, Any]:
+    if advice.search_policy is None:
+        step.update({"candidate_actions": [], "search_values": [], "search_policy": []})
+    else:
+        step.update({"candidate_actions": [action for action, _ in advice.candidates],
+                     "search_values": [value for _, value in advice.candidates],
+                     "search_policy": advice.search_policy})
+    step.update({"best_action": advice.action, "best_second_margin": advice.best_second_margin,
+                 "search_depth": advice.search_depth, "simulation_count": advice.simulation_count,
+                 "terminal_outcome": advice.terminal_outcome, "search_value": advice.search_value})
+    return step
 
 
 def write_episodes(path: Path, episodes: list[dict[str, Any]]) -> None:
@@ -198,10 +224,14 @@ def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, d
                     previous = step.get("previous_action", steps[index - 1]["action"] if index else None)
                     output = model.step(step["observation"], hidden, previous, step["delta_ticks"], step["events"])
                     hidden = output["hidden"]
-                    loss = behavior_cloning_loss(model, output, step["observation"], step["action"], plant_weight)
+                    loss = behavior_cloning_loss(
+                        model, output, step["observation"], step["action"], plant_weight,
+                        step.get("candidate_actions"), step.get("search_policy"),
+                    )
                     lanes, next_wave = episode_targets(steps, index, device)
                     outcome = float(episode.get("won", True))
-                    loss = loss + 0.05 * F.mse_loss(output["value"], torch.full_like(output["value"], outcome))
+                    value_target = float(step.get("search_value") if step.get("search_value") is not None else outcome)
+                    loss = loss + 0.05 * F.mse_loss(output["value"], torch.full_like(output["value"], value_target))
                     loss = loss + 0.05 * F.cross_entropy(output["aux_outcome"], torch.full((1,), int(outcome), dtype=torch.long, device=device))
                     loss = loss + 0.05 * F.binary_cross_entropy_with_logits(output["aux_lane_threat"], lanes)
                     loss = loss + 0.05 * F.binary_cross_entropy_with_logits(output["aux_next_spawn"].view(1), next_wave)
@@ -270,16 +300,22 @@ def main() -> None:
     parser.add_argument("--dagger-seeds", default=None)
     parser.add_argument("--eval-seeds", default="30000,30001,30002,30003")
     parser.add_argument("--epochs", type=int, default=8)
+    parser.add_argument("--dagger-rounds", type=int, default=1)
     parser.add_argument("--collect-only", action="store_true")
     parser.add_argument("--train-only", action="store_true")
-    parser.add_argument("--allow-losses", action="store_true",
-                        help="keep terminal losses in the trajectory data instead of stopping")
     parser.add_argument("--max-actions", type=int, default=2000)
+    parser.add_argument("--search-width", type=int, default=4)
+    parser.add_argument("--search-depth", type=int, default=3)
+    parser.add_argument("--search-candidates", type=int, default=4)
     args = parser.parse_args()
     if not args.resource_dir:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
     if args.max_actions < 1:
         parser.error("--max-actions must be positive")
+    if args.dagger_rounds < 1:
+        parser.error("--dagger-rounds must be positive")
+    if min(args.search_width, args.search_depth, args.search_candidates) < 1:
+        parser.error("search width, depth, and candidate count must be positive")
 
     torch.manual_seed(17)
     random.seed(17)
@@ -296,13 +332,11 @@ def main() -> None:
         with PvZEnv(resource_dir=args.resource_dir) as env:
             for seed in train_seeds:
                 episode = collect_episode(env, seed, replay_dir, args.max_actions, args.level, tuple(args.deck),
-                                          args.zombie_count_multiplier)
+                                          args.zombie_count_multiplier, args.search_width,
+                                          args.search_depth, args.search_candidates)
                 episodes.append(episode)
                 print(f"teacher seed={seed} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
                       f"tick={episode['tick']} steps={len(episode['steps'])}", flush=True)
-        if not args.allow_losses and not all(episode["won"] for episode in episodes):
-            failed = [episode["seed"] for episode in episodes if not episode["won"]]
-            raise RuntimeError(f"teacher did not complete seeds {failed}; adjust the teacher before training")
         write_episodes(data_path, episodes)
         print(f"saved {sum(len(e['steps']) for e in episodes)} demonstrations to {data_path}", flush=True)
         teacher_metadata = provenance(args, {"teacher": data_path}, train_seeds, [], device)
@@ -312,8 +346,9 @@ def main() -> None:
             return
     else:
         episodes = read_episodes(data_path)
-        if any(episode.get("observation_version") != 2 or episode.get("task_version") != 2 for episode in episodes):
-            raise ValueError("training trajectories predate the current environment; recollect them without --train-only")
+        if any(episode.get("observation_version") != 2 or episode.get("task_version") != 2
+               or episode.get("teacher_label_version") != 1 for episode in episodes):
+            raise ValueError("training trajectories predate the current environment or search teacher; recollect them without --train-only")
 
     model = GameplayModelV1().to(device)
     parameter_count = sum(parameter.numel() for parameter in model.parameters())
@@ -329,17 +364,22 @@ def main() -> None:
         json.dumps({"checkpoint": bc_checkpoint.name, "provenance": bc_metadata,
                     "training_seeds": [episode["seed"] for episode in episodes], "losses": losses},
                    indent=2) + "\n", encoding="utf-8")
+    dagger_path = args.output_dir / "dagger_trajectories.json.gz"
+    dagger_episodes = []
     with PvZEnv(resource_dir=args.resource_dir) as env:
-        dagger_episodes = [collect_dagger_episode(model, env, seed, device, replay_dir, args.max_actions,
-                                                  args.level, tuple(args.deck), args.zombie_count_multiplier)
-                           for seed in dagger_seeds]
-        dagger_path = args.output_dir / "dagger_trajectories.json.gz"
-        write_episodes(dagger_path, dagger_episodes)
-        for episode in dagger_episodes:
-            print(f"dagger seed={episode['seed']} won={episode['won']} wave={episode['wave']}/{episode['wave_count']} "
-                  f"tick={episode['tick']} steps={len(episode['steps'])}", flush=True)
-        episodes.extend(dagger_episodes)
-        losses, plant_weight = train(model, episodes, args.epochs, device)
+        for dagger_round in range(1, args.dagger_rounds + 1):
+            new_episodes = [collect_dagger_episode(
+                model, env, seed, device, replay_dir, args.max_actions, args.level, tuple(args.deck),
+                args.zombie_count_multiplier, args.search_width, args.search_depth, args.search_candidates,
+            ) for seed in dagger_seeds]
+            dagger_episodes.extend(new_episodes)
+            episodes.extend(new_episodes)
+            write_episodes(dagger_path, dagger_episodes)
+            for episode in new_episodes:
+                print(f"dagger round={dagger_round} seed={episode['seed']} won={episode['won']} "
+                      f"wave={episode['wave']}/{episode['wave_count']} tick={episode['tick']} "
+                      f"steps={len(episode['steps'])}", flush=True)
+            losses, plant_weight = train(model, episodes, args.epochs, device)
         results = evaluate(model, env, parse_seeds(args.eval_seeds), device, args.max_actions,
                            args.level, tuple(args.deck), args.zombie_count_multiplier)
     checkpoint = args.output_dir / "gameplay_model_v1.pt"

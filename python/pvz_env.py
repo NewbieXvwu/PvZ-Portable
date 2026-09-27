@@ -9,8 +9,9 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
-from typing import Any, Sequence
+from typing import Any, Iterator, Sequence
 
 
 @dataclass(frozen=True)
@@ -347,6 +348,28 @@ class PvZEnv:
         observation = response["observation"]
         self._record_operation({"kind": "restore", "id": snapshot_id}, observation, response.get("events", {}))
         return observation
+
+    def release_snapshot(self, snapshot_id: int) -> None:
+        if type(snapshot_id) is not int or snapshot_id < 1:
+            raise ValueError("snapshot_id must be a positive integer")
+        response = self._command(f"DROP_SNAPSHOT {snapshot_id}")
+        if not response.get("ok"):
+            raise ValueError(f"environment could not release snapshot {snapshot_id}: {response}")
+
+    @contextmanager
+    def speculative(self) -> Iterator[int]:
+        if not self._reset_done or self.episode is None:
+            raise RuntimeError("call reset() before speculative()")
+        operation_count = len(self.episode["operations"])
+        final_state = self.episode["final_state"]
+        snapshot_id = self.snapshot()
+        try:
+            yield snapshot_id
+        finally:
+            self.restore(snapshot_id)
+            del self.episode["operations"][operation_count:]
+            self.episode["final_state"] = final_state
+            self.release_snapshot(snapshot_id)
 
     def save_replay(self, path: str | os.PathLike[str]) -> None:
         if self.episode is None:
