@@ -38,6 +38,7 @@
 - 搜索消融报告位于台式机 `artifacts/adventure2_level7/search_ablation_dev256_comparison.json`。候选上限 12 全量 256 仍 0 胜，配对终局波次 57 高于默认、51 低于默认，均值仅 +0.016；simulation budget 128 全量 256 仍 0 胜，吞吐 1963 episodes/hour，但平均终局波次降至 3.355。budget512、width4 仅完成 32-seed 筛选，均无胜利且无明确收益。#10 采用默认 width3 / candidates8 / budget256。
 - #10 完成：train 0–63 搜索监督轨迹 64 集，DAgger 10000–10063 轨迹 64 集；`search_trajectories.json.gz` 与 `dagger_search_trajectories.json.gz` 的 checkpoint SHA256 均匹配。最终 `gameplay_model_v1.pt` 可重新加载，train、DAgger、value bootstrap/refinement、development、final-test seed 两两互斥。
 - DAgger 重训 8 epoch loss 为 2.48755、2.42823、2.39204、2.35809、2.32229、2.28290、2.24175、2.20700。最终模型在 development 256 上 0 胜，平均终局波次 3.398、平均动作 55.86；checkpoint 与 `training_summary.json` 均已落盘于台式机 `artifacts/adventure2_level7/`。
+- #11 完成：最终 `gameplay_model_v1.pt` 在 final-test 40000–41023 上唯一一次评测，1024/1024 seed 均有结果，checkpoint SHA256 匹配。0 胜，Wilson 95%=[0, 0.374%]，平均 56.03 动作、每局累计耗时均值 0.487 s；终局波次分布为 2:98、3:551、4:254、5:78、6:31、7:11、9:1。结构化结果保存在台式机 `artifacts/final_test_adventure2_level7/final_test_gameplay_v1.json`。
 
 ## 当前验收条件
 
@@ -52,7 +53,7 @@
 ## 接下来
 
 - 台式机开发样本 4 seeds 吞吐矩阵：1×1 为 35.2 s、2×1 为 21.4 s、4×1 为 14.7 s、4×2 为 14.6 s，RSS 约 231 MiB/worker；采集采用 `workers=4`、`collection_threads=1`。
-- 在冻结 final-test 40000–41023 上对最终模型做一次验收，随后检查多地形与不同卡组的候选覆盖、SearchValueModel 泛化。
+- 扩展到白天、夜晚、泳池、迷雾与屋顶地形，检查候选覆盖及 SearchValueModel 跨地形、跨卡组泛化。
 - 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。
   - **已完成（Python 侧）**：`search_value_features` 改为 numpy float64 累加器 + 视图，
     真实观测上 122.8 µs → 23.2 µs（5.3×），逐位等价（见 `CODE_REVIEW.md` §5.2 与
