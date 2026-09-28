@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import math
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Iterator
 
-import torch
-from torch import Tensor
-
-from pvz_agent_model import GameplayModelV1, WAIT_DECISION_TICKS
+from pvz_agent_model import WAIT_DECISION_TICKS
 from pvz_search_candidates import CandidateGenerator, fit_action_to_remaining, lane_pressure
+from pvz_search_value import SearchValueModel
 from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 
 SEARCH_POLICY_MIN_SCALE = 0.05
@@ -33,7 +31,7 @@ class SearchAdvice:
 class _SearchNode:
     observation: dict[str, Any]
     snapshot_id: int
-    output: dict[str, Any] | None
+    state_hash: str
     same_tick_actions: int
     elapsed_ticks: int
     path_return: float
@@ -42,23 +40,41 @@ class _SearchNode:
     diversity_key: tuple[Any, ...]
 
 
+@dataclass
+class _RootState:
+    action: dict[str, Any]
+    beam: list[_SearchNode] = field(default_factory=list)
+    leaves: list[tuple[float, int | None, int]] = field(default_factory=list)
+    simulations: int = 0
+    transpositions: dict[tuple[str, int, int], float] = field(default_factory=dict)
+
+
 class SearchTeacher:
-    def __init__(self, env: Any, model: GameplayModelV1 | None = None, beam_width: int = 3,
-                 candidate_limit: int = 8, horizon_ticks: int = 900,
-                 simulation_budget: int = 64, max_same_tick_actions: int = 2) -> None:
+    """State-only simulator search. It never reads the student policy/value model."""
+
+    def __init__(
+        self,
+        env: Any,
+        value_model: SearchValueModel | None = None,
+        beam_width: int = 3,
+        candidate_limit: int = 8,
+        horizon_ticks: int = 900,
+        simulation_budget: int = 256,
+        max_same_tick_actions: int = 2,
+    ) -> None:
         if min(beam_width, candidate_limit, horizon_ticks, simulation_budget, max_same_tick_actions) < 1:
             raise ValueError("search parameters must be positive")
         if horizon_ticks < WAIT_DECISION_TICKS:
             raise ValueError(f"search horizon must be at least {WAIT_DECISION_TICKS} ticks")
         self.env = env
-        self.model = model
+        self.value_model = value_model
         self.beam_width = beam_width
         self.candidate_limit = candidate_limit
-        self.root_candidate_limit = max(32, candidate_limit * 5)
+        self.root_candidate_limit = max(4, min(max(12, candidate_limit * 3), max(4, simulation_budget // 4)))
         self.horizon_ticks = horizon_ticks
         self.simulation_budget = simulation_budget
         self.max_same_tick_actions = max_same_tick_actions
-        self.candidate_generator = CandidateGenerator(model)
+        self.candidate_generator = CandidateGenerator()
         self._snapshots: set[int] = set()
         self._root_snapshot = 0
 
@@ -79,46 +95,53 @@ class SearchTeacher:
         if len(scores) == 1:
             return [1.0 if cls._outcome_rank(item[2]) == rank else 0.0 for item in results]
         mean = sum(scores) / len(scores)
-        scale = max(SEARCH_POLICY_MIN_SCALE, math.sqrt(sum((s - mean) ** 2 for s in scores) / len(scores)))
+        scale = max(SEARCH_POLICY_MIN_SCALE, math.sqrt(sum((score - mean) ** 2 for score in scores) / len(scores)))
         top = max(scores)
-        weights = [math.exp((item[1] - top) / scale) if cls._outcome_rank(item[2]) == rank else 0.0 for item in results]
+        weights = [
+            math.exp((item[1] - top) / scale) if cls._outcome_rank(item[2]) == rank else 0.0
+            for item in results
+        ]
         total = sum(weights)
         return [weight / total for weight in weights]
 
     @staticmethod
-    def _leaf_value(observation: dict[str, Any]) -> float:
+    def _bootstrap_leaf_value(observation: dict[str, Any]) -> float:
+        """Generic cold-start evaluator used only before SearchValueModel exists."""
         if observation["terminal"]:
             return 1.0 if observation["result"] == 1 else -1.0
         rows = {cell["row"] for cell in observation["cells"] if cell["row_type"] > 0}
         row_count = max(1, len(rows))
-        plants = [p for p in observation["plants"] if not p.get("squished") and p.get("health", 0) > 0]
-        coverage = len({p["row"] for p in plants if p["row"] in rows}) / row_count
-        health = min(1.0, sum(max(0.0, min(1.0, p.get("health", 0) / max(1, p.get("max_health", 1))))
-                              for p in plants) / (row_count * 3.0))
-        density = min(1.0, len(plants) / (row_count * 4.0))
-        defense = min(1.0, sum(d.get("state") == 1 for d in observation.get("defenses", [])) / row_count)
+        plants = [plant for plant in observation["plants"]
+                  if not plant.get("squished") and plant.get("health", 0) > 0]
+        coverage = len({plant["row"] for plant in plants if plant["row"] in rows}) / row_count
+        health = min(1.0, sum(
+            max(0.0, min(1.0, plant.get("health", 0) / max(1, plant.get("max_health", 1))))
+            for plant in plants
+        ) / (row_count * 3.0))
+        defense = min(1.0, sum(item.get("state") == 1 for item in observation.get("defenses", [])) / row_count)
         progress = min(max(observation["wave"] / max(1, observation["wave_count"]), 0.0), 1.0)
         sun = min(max(observation["sun"] / 1000.0, 0.0), 1.0)
         threat = min(1.0, sum(lane_pressure(observation).values()) / (row_count * 5.0))
         nearest = min((zombie["x"] for zombie in observation["zombies"]), default=900.0)
         breach = max(0.0, min(1.0, (420.0 - nearest) / 300.0))
-        value = (-0.16 + 0.18 * progress + 0.30 * coverage + 0.14 * health + 0.08 * density
-                 + 0.08 * sun + 0.10 * defense - 0.46 * threat - 0.20 * breach)
+        value = -0.12 + 0.18 * progress + 0.28 * coverage + 0.16 * health + 0.10 * sun + 0.10 * defense
+        value -= 0.48 * threat + 0.22 * breach
         return max(-1.0, min(1.0, value))
+
+    def _leaf_value(self, observation: dict[str, Any]) -> float:
+        if observation["terminal"]:
+            return 1.0 if observation["result"] == 1 else -1.0
+        if self.value_model is not None:
+            return self.value_model.predict(observation)
+        return self._bootstrap_leaf_value(observation)
 
     @staticmethod
     def _transition_reward(events: dict[str, Any], terminal: bool, won: bool) -> float:
-        reward = min(0.05, max(0, events.get("zombies_killed", 0)) * 0.01)
-        reward -= min(0.20, max(0, events.get("plants_eaten", 0)) * 0.05)
+        reward = -min(0.20, max(0, events.get("plants_eaten", 0)) * 0.05)
         reward -= min(0.25, max(0, events.get("mower_triggered", 0)) * 0.25)
         if terminal:
             reward += 1.0 if won else -1.0
         return reward
-
-    def _model_output(self, observation: dict[str, Any], hidden: Tensor | None,
-                      previous_action: dict[str, Any] | None, delta_ticks: int,
-                      events: dict[str, Any] | None) -> dict[str, Any] | None:
-        return None if self.model is None else self.model.step(observation, hidden, previous_action, delta_ticks, events)
 
     def _snapshot_fast(self) -> int:
         response = self.env._command("SNAPSHOT_FAST")
@@ -190,52 +213,96 @@ class SearchTeacher:
             return "wait", int(action["ticks"]) // 60
         return ("wait_decision",) if kind == "wait_decision" else (str(kind),)
 
-    def _branch_result(self, node: _SearchNode, action: dict[str, Any], branch: dict[str, Any]) -> tuple[_SearchNode | None, tuple[float, int | None, int]]:
+    def _branch_result(
+        self,
+        node: _SearchNode,
+        action: dict[str, Any],
+        branch: dict[str, Any],
+    ) -> tuple[_SearchNode | None, tuple[float, int | None, int]]:
         if not branch.get("ok") or branch.get("observation") is None:
             return None, (float("-inf"), None, node.elapsed_ticks)
-        obs = branch["observation"]
-        done = bool(obs.get("terminal"))
-        advanced = max(int(branch.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)),
-                       int(obs["tick"]) - int(node.observation["tick"]), 0)
+        observation = branch["observation"]
+        done = bool(observation.get("terminal"))
+        advanced = max(
+            int(branch.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)),
+            int(observation["tick"]) - int(node.observation["tick"]),
+            0,
+        )
         remaining = self.horizon_ticks - node.elapsed_ticks
         if advanced > remaining:
             raise RuntimeError(f"search action exceeded horizon: {action}")
         elapsed = node.elapsed_ticks + advanced
         snapshot_id = int(branch["snapshot_id"]) if branch.get("snapshot_id") is not None else None
-        if not done and snapshot_id is None:
-            raise RuntimeError(f"nonterminal branch returned no snapshot: {branch}")
+        state_hash = str(branch.get("state_hash", ""))
+        if not done and (snapshot_id is None or not state_hash):
+            raise RuntimeError(f"nonterminal branch must return snapshot and state_hash: {branch}")
         if snapshot_id is not None:
             self._snapshots.add(snapshot_id)
         try:
             events = branch.get("events", {})
             discount = node.discount * VALUE_GAMMA ** (advanced / DISCOUNT_REFERENCE_TICKS)
-            path_return = node.path_return + discount * self._transition_reward(events, done, obs["result"] == 1)
-            output = None if done else self._model_output(obs, node.output["hidden"] if node.output is not None else None,
-                                                         action, advanced, events)
-            score = path_return + discount * (0.0 if done else self._leaf_value(obs))
-            outcome = int(obs["result"] == 1) if done else None
+            path_return = node.path_return + discount * self._transition_reward(
+                events, done, observation["result"] == 1
+            )
+            score = path_return + discount * (0.0 if done else self._leaf_value(observation))
+            outcome = int(observation["result"] == 1) if done else None
             leaf = score, outcome, elapsed
             if done or elapsed >= self.horizon_ticks:
                 if snapshot_id is not None:
                     self._release(snapshot_id)
                 return None, leaf
             assert snapshot_id is not None
-            same_tick = node.same_tick_actions + 1 if advanced == 0 and action["type"] in ("plant", "shovel") else 0
-            return _SearchNode(obs, snapshot_id, output, same_tick, elapsed, path_return, discount, score,
-                               self._diversity_key(action)), leaf
+            same_tick = (
+                node.same_tick_actions + 1
+                if advanced == 0 and action["type"] in ("plant", "shovel")
+                else 0
+            )
+            return _SearchNode(
+                observation,
+                snapshot_id,
+                state_hash,
+                same_tick,
+                elapsed,
+                path_return,
+                discount,
+                score,
+                self._diversity_key(action),
+            ), leaf
         except Exception:
             if snapshot_id is not None:
                 self._release(snapshot_id)
             raise
 
-    def _expand_actions(self, node: _SearchNode, actions: list[dict[str, Any]]) -> list[tuple[_SearchNode | None, tuple[float, int | None, int]]]:
+    def _expand_actions(
+        self,
+        node: _SearchNode,
+        actions: list[dict[str, Any]],
+    ) -> list[tuple[_SearchNode | None, tuple[float, int | None, int]]]:
         remaining = self.horizon_ticks - node.elapsed_ticks
         fitted = [item for action in actions if (item := fit_action_to_remaining(action, remaining)) is not None]
         branches = self._branch_snapshot_fast(node.snapshot_id, fitted)
         return [self._branch_result(node, action, branch) for action, branch in zip(fitted, branches)]
 
+    @staticmethod
+    def _transposition_key(node: _SearchNode) -> tuple[str, int, int]:
+        return node.state_hash, node.elapsed_ticks, node.same_tick_actions
+
     def _prune(self, nodes: list[_SearchNode]) -> list[_SearchNode]:
-        ranked = sorted(nodes, key=lambda node: node.score + 0.05 * min(1.0, node.elapsed_ticks / self.horizon_ticks), reverse=True)
+        deduplicated: dict[tuple[str, int, int], _SearchNode] = {}
+        for node in nodes:
+            key = self._transposition_key(node)
+            previous = deduplicated.get(key)
+            if previous is None or node.score > previous.score:
+                if previous is not None:
+                    self._release(previous.snapshot_id)
+                deduplicated[key] = node
+            else:
+                self._release(node.snapshot_id)
+        ranked = sorted(
+            deduplicated.values(),
+            key=lambda node: node.score + 0.05 * min(1.0, node.elapsed_ticks / self.horizon_ticks),
+            reverse=True,
+        )
         selected: list[_SearchNode] = []
         groups: set[tuple[Any, ...]] = set()
         for node in ranked:
@@ -244,15 +311,15 @@ class SearchTeacher:
                 groups.add(node.diversity_key)
                 if len(selected) == self.beam_width:
                     break
-        ids = {id(node) for node in selected}
+        selected_ids = {id(node) for node in selected}
         for node in ranked:
             if len(selected) == self.beam_width:
                 break
-            if id(node) not in ids:
+            if id(node) not in selected_ids:
                 selected.append(node)
-                ids.add(id(node))
+                selected_ids.add(id(node))
         for node in nodes:
-            if id(node) not in ids:
+            if id(node) not in selected_ids:
                 self._release(node.snapshot_id)
         return selected
 
@@ -260,58 +327,121 @@ class SearchTeacher:
         shortfall = max(0.0, 1.0 - node.elapsed_ticks / self.horizon_ticks)
         return node.score - SEARCH_PARTIAL_SHORTFALL_PENALTY * shortfall, None, node.elapsed_ticks
 
-    def _search_branch(self, child: _SearchNode | None, leaf: tuple[float, int | None, int]) -> tuple[float, int | None, int, int]:
-        simulations = 1
-        leaves: list[tuple[float, int | None, int]] = []
-        if child is None:
-            return leaf[0], leaf[1], simulations, leaf[2]
-        beam = [child]
-        while beam and simulations < self.simulation_budget:
+    def _accept_node(self, root: _RootState, node: _SearchNode) -> bool:
+        key = self._transposition_key(node)
+        previous = root.transpositions.get(key)
+        if previous is not None and previous >= node.score:
+            self._release(node.snapshot_id)
+            return False
+        root.transpositions[key] = node.score
+        return True
+
+    def _advance_root(self, root: _RootState, budget: int) -> int:
+        spent = 0
+        while root.beam and spent < budget:
             expanded: list[_SearchNode] = []
             processed = 0
-            for index, node in enumerate(beam):
-                if simulations >= self.simulation_budget:
+            for index, node in enumerate(root.beam):
+                available = budget - spent
+                if available <= 0:
                     break
                 processed = index + 1
                 candidates = self.candidate_generator.actions(
-                    node.observation, node.output, self.candidate_limit, False,
+                    node.observation,
+                    self.candidate_limit,
+                    False,
                     self.horizon_ticks - node.elapsed_ticks,
                     node.same_tick_actions < self.max_same_tick_actions,
-                )
-                available = self.simulation_budget - simulations
-                limited = len(candidates) > available
-                candidates = candidates[:available]
+                )[:available]
                 if not candidates:
-                    leaves.append(self._partial_leaf(node))
+                    root.leaves.append(self._partial_leaf(node))
                     self._release(node.snapshot_id)
                     continue
-                branch_results = self._expand_actions(node, candidates)
-                simulations += len(candidates)
-                for next_node, next_leaf in branch_results:
-                    (leaves if next_node is None else expanded).append(next_leaf if next_node is None else next_node)
-                if limited:
-                    leaves.append(self._partial_leaf(node))
+                for next_node, next_leaf in self._expand_actions(node, candidates):
+                    spent += 1
+                    root.simulations += 1
+                    if next_node is None:
+                        root.leaves.append(next_leaf)
+                    elif self._accept_node(root, next_node):
+                        expanded.append(next_node)
                 self._release(node.snapshot_id)
-            for node in beam[processed:]:
-                leaves.append(self._partial_leaf(node))
-                self._release(node.snapshot_id)
-            if simulations >= self.simulation_budget:
-                if expanded:
-                    for node in self._prune(expanded):
-                        leaves.append(self._partial_leaf(node))
-                        self._release(node.snapshot_id)
-                beam = []
-            elif expanded:
-                beam = self._prune(expanded)
-            else:
-                beam = []
-        for node in beam:
-            leaves.append(self._partial_leaf(node))
+                if spent >= budget:
+                    break
+            expanded.extend(root.beam[processed:])
+            root.beam = self._prune(expanded) if expanded else []
+        return spent
+
+    def _estimate_root(self, root: _RootState) -> tuple[float, int | None, int]:
+        candidates = list(root.leaves)
+        candidates.extend(self._partial_leaf(node) for node in root.beam)
+        if not candidates:
+            return float("-inf"), None, 0
+        return max(candidates, key=lambda item: self._result_key(item[1], item[0]))
+
+    def _finish_root(self, root: _RootState) -> tuple[float, int | None, int]:
+        for node in root.beam:
+            root.leaves.append(self._partial_leaf(node))
             self._release(node.snapshot_id)
-        if not leaves:
-            return float("-inf"), None, simulations, 0
-        best = max(leaves, key=lambda item: self._result_key(item[1], item[0]))
-        return best[0], best[1], simulations, best[2]
+        root.beam = []
+        return self._estimate_root(root)
+
+    def _initialize_roots(self, root: _SearchNode, actions: list[dict[str, Any]]) -> list[_RootState]:
+        states: list[_RootState] = []
+        initial = self._expand_actions(root, actions)
+        for action, (child, leaf) in zip(actions, initial):
+            state = _RootState(action=action, simulations=1)
+            if child is None:
+                state.leaves.append(leaf)
+            else:
+                state.beam.append(child)
+                state.transpositions[self._transposition_key(child)] = child.score
+            states.append(state)
+        return states
+
+    def _successive_halving(
+        self,
+        roots: list[_RootState],
+        initial_cost: int,
+    ) -> tuple[list[tuple[dict[str, Any], float, int | None, int]], int]:
+        if not roots:
+            return [], initial_cost
+        remaining = max(0, self.simulation_budget - initial_cost)
+        active = list(roots)
+        stage_quota = max(2, min(4, self.candidate_limit))
+        while remaining > 0 and any(root.beam for root in active):
+            active.sort(
+                key=lambda root: self._result_key(self._estimate_root(root)[1], self._estimate_root(root)[0]),
+                reverse=True,
+            )
+            progressed = False
+            for root in active:
+                if remaining <= 0:
+                    break
+                if not root.beam:
+                    continue
+                allocation = min(stage_quota, remaining)
+                spent = self._advance_root(root, allocation)
+                remaining -= spent
+                progressed = progressed or spent > 0
+            if not progressed:
+                break
+            if len(active) > 1:
+                active.sort(
+                    key=lambda root: self._result_key(self._estimate_root(root)[1], self._estimate_root(root)[0]),
+                    reverse=True,
+                )
+                keep = max(1, (len(active) + 1) // 2)
+                for root in active[keep:]:
+                    self._finish_root(root)
+                active = active[:keep]
+            stage_quota = min(stage_quota * 2, self.simulation_budget)
+
+        results: list[tuple[dict[str, Any], float, int | None, int]] = []
+        for root in roots:
+            value, outcome, elapsed = self._finish_root(root)
+            if math.isfinite(value):
+                results.append((root.action, value, outcome, elapsed))
+        return results, sum(root.simulations for root in roots)
 
     @staticmethod
     def _fallback_action(observation: dict[str, Any]) -> dict[str, Any]:
@@ -325,30 +455,35 @@ class SearchTeacher:
             return {"type": "shovel", "col": col, "row": row}
         raise RuntimeError("environment exposed no legal action")
 
-    @torch.inference_mode()
-    def advice(self, observation: dict[str, Any], hidden: Tensor | None = None,
-               previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
-               events: dict[str, Any] | None = None) -> SearchAdvice:
+    def advice(self, observation: dict[str, Any]) -> SearchAdvice:
         with self._speculative_fast() as root_snapshot:
             self._root_snapshot = root_snapshot
             self._snapshots = set()
             try:
-                root_output = self._model_output(observation, hidden, previous_action, delta_ticks, events)
                 root_actions = self.candidate_generator.actions(
-                    observation, root_output, self.root_candidate_limit, True, self.horizon_ticks)
-                root = _SearchNode(observation, root_snapshot, root_output, 0, 0, 0.0, 1.0,
-                                   self._leaf_value(observation), ("root",))
-                initial = self._expand_actions(root, root_actions)
-                results: list[tuple[dict[str, Any], float, int | None, int]] = []
-                total = 0
-                for action, (child, leaf) in zip(root_actions, initial):
-                    value, outcome, count, elapsed = self._search_branch(child, leaf)
-                    total += count
-                    if math.isfinite(value):
-                        results.append((action, value, outcome, elapsed))
+                    observation,
+                    min(self.root_candidate_limit, self.simulation_budget),
+                    True,
+                    self.horizon_ticks,
+                )
+                root = _SearchNode(
+                    observation,
+                    root_snapshot,
+                    "root",
+                    0,
+                    0,
+                    0.0,
+                    1.0,
+                    self._leaf_value(observation),
+                    ("root",),
+                )
+                root_states = self._initialize_roots(root, root_actions)
+                results, total = self._successive_halving(root_states, len(root_states))
                 if not results:
                     action = self._fallback_action(observation)
-                    return SearchAdvice(action, [(action, self._leaf_value(observation))], [1.0], None, total, None, 0)
+                    return SearchAdvice(
+                        action, [(action, self._leaf_value(observation))], [1.0], None, total, None, 0
+                    )
                 results.sort(key=lambda item: self._result_key(item[2], item[1]), reverse=True)
                 policy = self._policy_from_results(results)
                 best = results[0]
@@ -358,8 +493,15 @@ class SearchTeacher:
                     margin = float(self._outcome_rank(best[2]) - self._outcome_rank(results[1][2]))
                 else:
                     margin = best[1] - results[1][1]
-                return SearchAdvice(best[0], [(item[0], item[1]) for item in results], policy, margin,
-                                    total, best[2], best[3])
+                return SearchAdvice(
+                    best[0],
+                    [(item[0], item[1]) for item in results],
+                    policy,
+                    margin,
+                    total,
+                    best[2],
+                    best[3],
+                )
             finally:
                 for snapshot_id in tuple(self._snapshots):
                     self._release(snapshot_id)

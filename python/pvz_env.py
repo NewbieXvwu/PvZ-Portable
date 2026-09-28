@@ -2,16 +2,20 @@
 
 from __future__ import annotations
 
-import json
-import hashlib
 import gzip
+import hashlib
+import json
 import os
+from contextlib import contextmanager
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 import subprocess
 import tempfile
-from contextlib import contextmanager
-from dataclasses import asdict, dataclass, field
 from typing import Any, Iterator, Sequence
+
+ENV_PROTOCOL_VERSION = 2
+REPLAY_FORMAT_VERSION = 4
+WAIT_DECISION_DEFAULT_TICKS = 900
 
 
 @dataclass(frozen=True)
@@ -147,8 +151,20 @@ class PvZEnv:
             bufsize=1,
         )
         ready = self._read_message()
-        if not ready.get("ready") or ready.get("protocol_version") != 1:
-            raise RuntimeError(f"PvZ-Portable did not enter environment mode: {ready}")
+        if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
+            self._abort_process()
+            raise RuntimeError(f"PvZ-Portable did not enter protocol-v{ENV_PROTOCOL_VERSION} environment mode: {ready}")
+
+    def _abort_process(self) -> None:
+        if self._process is not None:
+            if self._process.poll() is None:
+                self._process.terminate()
+            self._process.wait()
+            self._process = None
+        if self._temporary_save is not None:
+            self._temporary_save.cleanup()
+            self._temporary_save = None
+        self._reset_done = False
 
     def _read_message(self) -> dict[str, Any]:
         process = self._process
@@ -167,8 +183,15 @@ class PvZEnv:
             raise RuntimeError("environment process is not running")
         process.stdin.write(command + "\n")
         process.stdin.flush()
-        self._last_response = self._read_message()
-        return self._last_response
+        response = self._read_message()
+        if response.get("protocol_version") != ENV_PROTOCOL_VERSION:
+            actual = response.get("protocol_version")
+            self._abort_process()
+            raise RuntimeError(
+                f"environment protocol mismatch: expected {ENV_PROTOCOL_VERSION}, got {actual}"
+            )
+        self._last_response = response
+        return response
 
     def reset(
         self,
@@ -244,7 +267,7 @@ class PvZEnv:
             for card in cards
         )
         response = self._command(
-            f"RESET_V1 {level} {seed} {task.playthrough} {profile.seed_slot_count} "
+            f"RESET_V2 {level} {seed} {task.playthrough} {profile.seed_slot_count} "
             f"{int(profile.imitater_owned)} {int(profile.first_aid_owned)} "
             f"{int(profile.pool_cleaner_owned)} {int(profile.roof_cleaner_owned)} {profile.rake_charges} "
             f"{upgrades} {forced} {deck_text} {task.zombie_count_multiplier:g}"
@@ -253,7 +276,7 @@ class PvZEnv:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
         self._reset_done = True
         self.episode = {
-            "format_version": 3,
+            "format_version": REPLAY_FORMAT_VERSION,
             "source_revision": self._source_revision,
             "source_dirty": self._source_dirty,
             "resource_sha256": self._resource_sha256,
@@ -294,7 +317,7 @@ class PvZEnv:
                 raise ValueError("wait ticks must be an integer from 0 to 1000000")
             command = f"WAIT {ticks}"
         elif kind == "wait_decision":
-            max_ticks = action.get("max_ticks", 1800)
+            max_ticks = action.get("max_ticks", WAIT_DECISION_DEFAULT_TICKS)
             if type(max_ticks) is not int or not 1 <= max_ticks <= 1_000_000:
                 raise ValueError("max_ticks must be an integer from 1 to 1000000")
             command = f"WAIT_DECISION {max_ticks}"
@@ -336,7 +359,8 @@ class PvZEnv:
         if not response.get("ok") or "snapshot_id" not in response:
             raise RuntimeError(f"environment could not save a snapshot: {response}")
         snapshot_id = int(response["snapshot_id"])
-        self._record_operation({"kind": "snapshot", "id": snapshot_id}, response["observation"], response.get("events", {}))
+        self._record_operation({"kind": "snapshot", "id": snapshot_id}, response["observation"],
+                               response.get("events", {}))
         return snapshot_id
 
     def restore(self, snapshot_id: int) -> dict[str, Any]:
@@ -392,7 +416,7 @@ class PvZEnv:
 
     def replay_record(self, record: dict[str, Any], manifest_directory: Path | None = None) -> dict[str, Any]:
         version = record.get("format_version")
-        if version != 3:
+        if version != REPLAY_FORMAT_VERSION:
             raise ValueError(f"unsupported replay version: {version}")
         self._check_manifest(record["manifest"], manifest_directory)
         task_data = dict(record["task"])
@@ -436,7 +460,7 @@ class PvZEnv:
             if not first:
                 raise ValueError("empty replay file")
             record = json.loads(first)
-            if record.get("format_version") != 3:
+            if record.get("format_version") != REPLAY_FORMAT_VERSION:
                 raise ValueError(f"unsupported replay version: {record.get('format_version')}")
             if record.get("record_type") != "header":
                 raise ValueError("unsupported replay file format")
@@ -549,7 +573,7 @@ class PvZEnv:
 
     def _check_manifest(self, reference: dict[str, str], directory: Path | None) -> None:
         if not reference or directory is None:
-            raise ValueError("v3 replay has no experiment manifest reference")
+            raise ValueError(f"v{REPLAY_FORMAT_VERSION} replay has no experiment manifest reference")
         path = directory / reference["path"]
         if not path.is_file():
             raise FileNotFoundError(f"replay manifest not found: {path}")

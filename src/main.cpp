@@ -40,6 +40,8 @@
 #include <vector>
 using namespace Sexy;
 
+static constexpr int kEnvironmentProtocolVersion = 2;
+
 struct EnvCounters
 {
 	int sun = 0;
@@ -232,6 +234,41 @@ static bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
 	return true;
 }
 
+static uint64_t EnvironmentSnapshotHash(const EnvironmentSnapshot& snapshot)
+{
+	uint64_t hash = 1469598103934665603ULL;
+	auto mix = [&hash](uint64_t value)
+	{
+		for (int shift = 0; shift < 64; shift += 8)
+		{
+			hash ^= (value >> shift) & 0xFFULL;
+			hash *= 1099511628211ULL;
+		}
+	};
+	mix(snapshot.board.size());
+	for (unsigned char byte : snapshot.board)
+	{
+		hash ^= byte;
+		hash *= 1099511628211ULL;
+	}
+	mix(snapshot.randState.size());
+	for (unsigned char byte : snapshot.randState)
+	{
+		hash ^= byte;
+		hash *= 1099511628211ULL;
+	}
+	mix(static_cast<uint32_t>(snapshot.appRandSeed));
+	mix(snapshot.randSeed);
+	mix(snapshot.appCounter);
+	mix(snapshot.zombiesKilled);
+	mix(snapshot.plantsEaten);
+	mix(snapshot.sunProduced);
+	mix(static_cast<uint32_t>(snapshot.triggeredLawnMowers));
+	mix(static_cast<uint32_t>(snapshot.gameScene));
+	mix(static_cast<uint32_t>(snapshot.boardResult));
+	return hash;
+}
+
 static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& snapshot)
 {
 	if (!app->mBoard || !LawnLoadGameFromMemory(app->mBoard, snapshot.board))
@@ -305,7 +342,7 @@ static void RunEnvironment(LawnApp* app)
 	std::string line;
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
-	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":1}" << std::endl;
+	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion << '}' << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		std::istringstream input(line);
@@ -318,7 +355,7 @@ static void RunEnvironment(LawnApp* app)
 		bool minimalResponse = false;
 		int snapshotId = 0;
 		int ticksAdvanced = -1;
-		if (command == "RESET_V1")
+		if (command == "RESET_V2")
 		{
 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
 			uint32_t seed = 0;
@@ -377,7 +414,7 @@ static void RunEnvironment(LawnApp* app)
 				}
 			}
 			ok = static_cast<int>(specs.size()) == branchCount;
-			std::cout << "PVZENV {\"protocol_version\":1,\"ok\":" << (ok ? "true" : "false");
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false");
 			if (ok)
 			{
 				std::cout << ",\"branches\":[";
@@ -388,6 +425,7 @@ static void RunEnvironment(LawnApp* app)
 					bool branchOk = parent != snapshots.end() && RestoreEnvironmentSnapshot(app, parent->second);
 					int branchTicksAdvanced = -1;
 					int childSnapshotId = 0;
+					uint64_t childStateHash = 0;
 					bool hasChildSnapshot = false;
 					EnvCounters branchBefore = ReadCounters(app);
 					std::string observation = "null";
@@ -411,6 +449,7 @@ static void RunEnvironment(LawnApp* app)
 							branchOk = SaveEnvironmentSnapshot(app, child);
 							if (branchOk)
 							{
+								childStateHash = EnvironmentSnapshotHash(child);
 								childSnapshotId = nextSnapshotId++;
 								snapshots.emplace(childSnapshotId, std::move(child));
 								hasChildSnapshot = true;
@@ -421,7 +460,7 @@ static void RunEnvironment(LawnApp* app)
 					if (branchTicksAdvanced >= 0)
 						std::cout << ",\"ticks_advanced\":" << branchTicksAdvanced;
 					if (hasChildSnapshot)
-						std::cout << ",\"snapshot_id\":" << childSnapshotId;
+						std::cout << ",\"snapshot_id\":" << childSnapshotId << ",\"state_hash\":\"" << childStateHash << '\"';
 					std::cout << ",\"events\":{\"zombies_killed\":" << branchAfter.zombiesKilled - branchBefore.zombiesKilled
 						<< ",\"plants_eaten\":" << branchAfter.plantsEaten - branchBefore.plantsEaten
 						<< ",\"sun_produced\":" << branchAfter.sunProduced - branchBefore.sunProduced
@@ -473,20 +512,20 @@ static void RunEnvironment(LawnApp* app)
 		}
 		else if (command == "QUIT")
 		{
-			std::cout << "PVZENV {\"ok\":true,\"closed\":true}" << std::endl;
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true,\"closed\":true}" << std::endl;
 			break;
 		}
 
 		if (minimalResponse)
 		{
-			std::cout << "PVZENV {\"protocol_version\":1,\"ok\":" << (ok ? "true" : "false");
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false");
 			if (hasSnapshotId)
 				std::cout << ",\"snapshot_id\":" << snapshotId;
 			std::cout << '}' << std::endl;
 			continue;
 		}
 
-		std::cout << "PVZENV {\"protocol_version\":1,\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);
+		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);
 		if (ticksAdvanced >= 0)
 			std::cout << ",\"ticks_advanced\":" << ticksAdvanced;
 		if (hasSnapshotId)
