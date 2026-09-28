@@ -36,6 +36,8 @@
 - `artifacts/adventure2_level7/search_value_v2.pt` 已通过 CPU 重载与版本、feature、task signature 核验；protocol=3、search labels=3、feature=2、value semantics=`discounted_terminal_v1`。bootstrap/refinement、train 0–63、DAgger 10000–10063、development、final-test seed 集两两无交叉。
 - SearchValue v2 默认教师完成 development 256：0 胜，Wilson 95%=[0, 1.48%]，平均终局波次 3.570，75.82 动作/局，11.31 s/局，吞吐 1208 episodes/hour；筛选/深度模拟 374,511 / 2,405,303，平均 `effective_depth_budget` 236.67。
 - 搜索消融报告位于台式机 `artifacts/adventure2_level7/search_ablation_dev256_comparison.json`。候选上限 12 全量 256 仍 0 胜，配对终局波次 57 高于默认、51 低于默认，均值仅 +0.016；simulation budget 128 全量 256 仍 0 胜，吞吐 1963 episodes/hour，但平均终局波次降至 3.355。budget512、width4 仅完成 32-seed 筛选，均无胜利且无明确收益。#10 采用默认 width3 / candidates8 / budget256。
+- #10 完成：train 0–63 搜索监督轨迹 64 集，DAgger 10000–10063 轨迹 64 集；`search_trajectories.json.gz` 与 `dagger_search_trajectories.json.gz` 的 checkpoint SHA256 均匹配。最终 `gameplay_model_v1.pt` 可重新加载，train、DAgger、value bootstrap/refinement、development、final-test seed 两两互斥。
+- DAgger 重训 8 epoch loss 为 2.48755、2.42823、2.39204、2.35809、2.32229、2.28290、2.24175、2.20700。最终模型在 development 256 上 0 胜，平均终局波次 3.398、平均动作 55.86；checkpoint 与 `training_summary.json` 均已落盘于台式机 `artifacts/adventure2_level7/`。
 
 ## 当前验收条件
 
@@ -50,8 +52,7 @@
 ## 接下来
 
 - 台式机开发样本 4 seeds 吞吐矩阵：1×1 为 35.2 s、2×1 为 21.4 s、4×1 为 14.7 s、4×2 为 14.6 s，RSS 约 231 MiB/worker；采集采用 `workers=4`、`collection_threads=1`。
-- 按已选默认搜索配置生成 train 0–63 教师数据，完成 BC 与 DAgger 10000–10063 闭环训练。
-- 锁定模型后在 final-test 1024 seeds 上做一次最终验收，再检查多地形泛化。
+- 在冻结 final-test 40000–41023 上对最终模型做一次验收，随后检查多地形与不同卡组的候选覆盖、SearchValueModel 泛化。
 - 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。
   - **已完成（Python 侧）**：`search_value_features` 改为 numpy float64 累加器 + 视图，
     真实观测上 122.8 µs → 23.2 µs（5.3×），逐位等价（见 `CODE_REVIEW.md` §5.2 与
