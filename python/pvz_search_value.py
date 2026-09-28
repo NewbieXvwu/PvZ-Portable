@@ -285,7 +285,9 @@ def save_search_value(path: Path, model: SearchValueModel, task_signature: dict[
 
 
 def load_search_value(path: Path, device: torch.device,
-                      expected_task_signature: dict[str, Any]) -> tuple[SearchValueModel, dict[str, Any]]:
+                      expected_task_signature: dict[str, Any],
+                      allow_level_or_deck_mismatch: bool = False
+                      ) -> tuple[SearchValueModel, dict[str, Any]]:
     checkpoint = torch.load(path, map_location=device, weights_only=False)
     if checkpoint.get("search_value_version") != SEARCH_VALUE_VERSION:
         raise ValueError("search-value checkpoint version mismatch")
@@ -297,8 +299,16 @@ def load_search_value(path: Path, device: torch.device,
         raise ValueError("search-value label version mismatch")
     if checkpoint.get("value_semantics") != VALUE_SEMANTICS:
         raise ValueError("search-value semantics mismatch")
-    if checkpoint.get("task_signature") != expected_task_signature:
-        raise ValueError("search-value task signature mismatch")
+    checkpoint_task_signature = checkpoint.get("task_signature")
+    if checkpoint_task_signature != expected_task_signature:
+        if (not allow_level_or_deck_mismatch
+                or not isinstance(checkpoint_task_signature, dict)
+                or checkpoint_task_signature.keys() != expected_task_signature.keys()
+                or {key: value for key, value in checkpoint_task_signature.items()
+                    if key not in {"level", "deck"}}
+                != {key: value for key, value in expected_task_signature.items()
+                    if key not in {"level", "deck"}}):
+            raise ValueError("search-value task signature mismatch")
     model = SearchValueModel().to(device)
     model.load_state_dict(checkpoint["state_dict"])
     model.eval()

@@ -337,6 +337,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--search-value", type=Path,
                         help="SearchValueModel checkpoint; without it the audit scores "
                              "leaves with the bootstrap evaluator")
+    parser.add_argument("--allow-search-value-level-deck-mismatch", action="store_true",
+                        help="audit value-model transfer across levels/decks with matching resources")
     parser.add_argument("--modes", default="budget,sibling,recall")
     parser.add_argument("--stride", type=int, default=8, help="audit every Nth decision")
     parser.add_argument("--max-states", type=int, default=64)
@@ -374,6 +376,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         parser.error(f"unknown audit modes: {sorted(unknown)}")
     if not modes:
         parser.error("--modes must select at least one audit")
+    if args.allow_search_value_level_deck_mismatch and not args.search_value:
+        parser.error("level/deck transfer requires --search-value")
     return args
 
 
@@ -389,12 +393,18 @@ def main(argv: list[str] | None = None) -> None:
     value_model = None
     value_metadata: dict[str, Any] = {"source": "bootstrap evaluator"}
     if args.search_value:
-        value_model, checkpoint = load_search_value(args.search_value, device, current_task_signature)
+        value_model, checkpoint = load_search_value(
+            args.search_value,
+            device,
+            current_task_signature,
+            allow_level_or_deck_mismatch=args.allow_search_value_level_deck_mismatch,
+        )
         value_metadata = {
             "source": str(args.search_value.resolve()),
             "sha256": sha256_file(args.search_value),
             "bootstrap_seeds": checkpoint.get("bootstrap_seeds"),
             "refinement_seeds": checkpoint.get("refinement_seeds"),
+            "training_task_signature": checkpoint.get("task_signature"),
         }
 
     records: list[dict[str, Any]] = []
