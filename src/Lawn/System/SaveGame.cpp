@@ -45,11 +45,6 @@
 #include <type_traits>
 #include <vector>
 
-static constexpr const char* FILE_COMPILE_TIME_STRING = "Jul  2 201011:47:03"; // save files are tied to this exact timestamp string
-static constexpr const uint32_t SAVE_FILE_MAGIC_NUMBER = 0xFEEDDEAD;
-static constexpr const uint32_t SAVE_FILE_VERSION = 2U;
-static const uint32_t SAVE_FILE_DATE = crc32(0, (Bytef*)FILE_COMPILE_TIME_STRING, strlen(FILE_COMPILE_TIME_STRING));
-
 static constexpr const char SAVE_FILE_MAGIC_V4[12] = "PVZP_SAVE4";
 static constexpr const uint32_t SAVE_FILE_V4_VERSION = 1U;
 
@@ -59,13 +54,6 @@ struct SaveFileHeaderV4
 	uint32_t	mVersion;
 	uint32_t	mPayloadSize;
 	uint32_t	mPayloadCrc;
-};
-
-struct SaveFileHeader
-{
-	uint32_t	mMagicNumber;
-	uint32_t	mBuildVersion;
-	uint32_t	mBuildDate;
 };
 
 enum SaveChunkTypeV4
@@ -668,16 +656,33 @@ static void SyncCursorPreviewTailPortable(PortableSaveContext& theContext, Curso
 	theContext.SyncInt32(thePreview.mGridY);
 }
 
+static void SyncMessageLabelPortable(PortableSaveContext& theContext, char* theLabel)
+{
+	char aStableLabel[MAX_MESSAGE_LENGTH]{};
+	if (!theContext.mReading)
+	{
+		size_t aLength = 0;
+		while (aLength < sizeof(aStableLabel) - 1 && theLabel[aLength] != '\0')
+			++aLength;
+		memcpy(aStableLabel, theLabel, aLength);
+	}
+	theContext.SyncBytes(aStableLabel, static_cast<uint32_t>(sizeof(aStableLabel)));
+	if (theContext.mReading)
+		memcpy(theLabel, aStableLabel, sizeof(aStableLabel));
+}
+
 static void SyncMessageWidgetTailPortable(PortableSaveContext& theContext, MessageWidget& theWidget)
 {
-	theContext.SyncBytes(theWidget.mLabel, sizeof(theWidget.mLabel));
+	SyncMessageLabelPortable(theContext, theWidget.mLabel);
 	theContext.SyncInt32(theWidget.mDisplayTime);
 	theContext.SyncInt32(theWidget.mDuration);
 	SyncEnum32(theContext, theWidget.mMessageStyle);
 	SyncEnumU32Array(theContext, &theWidget.mTextReanimID[0], MAX_MESSAGE_LENGTH);
+	SyncInt32Array(theContext, &theWidget.mTextReanimByteOffset[0], MAX_MESSAGE_LENGTH);
+	theContext.SyncInt32(theWidget.mTextReanimCount);
 	SyncEnum32(theContext, theWidget.mReanimType);
 	theContext.SyncInt32(theWidget.mSlideOffTime);
-	theContext.SyncBytes(theWidget.mLabelNext, sizeof(theWidget.mLabelNext));
+	SyncMessageLabelPortable(theContext, theWidget.mLabelNext);
 	SyncEnum32(theContext, theWidget.mMessageStyleNext);
 }
 
@@ -1583,6 +1588,9 @@ enum BoardBaseFieldId : uint32_t
 	BOARD_FIELD_DIAMONDS_COLLECTED,
 	BOARD_FIELD_POTTED_PLANTS_COLLECTED,
 	BOARD_FIELD_CHOCOLATE_COLLECTED,
+	BOARD_FIELD_BOARD_UPDATE_COUNTER,
+	BOARD_FIELD_ZOMBIES_KILLED,
+	BOARD_FIELD_SUN_MONEY_PRODUCED,
 	BOARD_FIELD_COUNT
 };
 
@@ -1683,7 +1691,7 @@ static constexpr BoardBaseFieldEntry gBoardBaseFields[] = {
 	{ BOARD_FIELD_INTERVAL_DRAW_COUNT_START, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mIntervalDrawCountStart); } },
 	{ BOARD_FIELD_MIN_FPS, [](PortableSaveContext& c, Board* theBoard){ c.SyncFloat(theBoard->mMinFPS); } },
 	{ BOARD_FIELD_PRELOAD_TIME, [](PortableSaveContext& c, Board* theBoard){ c.SyncInt32(theBoard->mPreloadTime); } },
-	{ BOARD_FIELD_GAME_ID, [](PortableSaveContext& c, Board* theBoard){ int64_t aGameId = static_cast<int64_t>(theBoard->mGameID); c.SyncInt64(aGameId); if (c.mReading) theBoard->mGameID = static_cast<intptr_t>(aGameId); } },
+	{ BOARD_FIELD_GAME_ID, [](PortableSaveContext& c, Board*){ int64_t aStableGameId = 0; c.SyncInt64(aStableGameId); } },
 	{ BOARD_FIELD_GRAVES_CLEARED, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mGravesCleared); } },
 	{ BOARD_FIELD_PLANTS_EATEN, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mPlantsEaten); } },
 	{ BOARD_FIELD_PLANTS_SHOVELED, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mPlantsShoveled); } },
@@ -1697,6 +1705,9 @@ static constexpr BoardBaseFieldEntry gBoardBaseFields[] = {
 	{ BOARD_FIELD_DIAMONDS_COLLECTED, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mDiamondsCollected); } },
 	{ BOARD_FIELD_POTTED_PLANTS_COLLECTED, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mPottedPlantsCollected); } },
 	{ BOARD_FIELD_CHOCOLATE_COLLECTED, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mChocolateCollected); } },
+	{ BOARD_FIELD_BOARD_UPDATE_COUNTER, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mBoardUpdateCounter); } },
+	{ BOARD_FIELD_ZOMBIES_KILLED, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mZombiesKilled); } },
+	{ BOARD_FIELD_SUN_MONEY_PRODUCED, [](PortableSaveContext& c, Board* theBoard){ c.SyncUInt32(theBoard->mSunMoneyProduced); } },
 };
 
 // The enum is contiguous starting at 1: the table must cover every id, in id order, so readers can index it directly.
@@ -2306,501 +2317,11 @@ bool LawnLoadGameFromMemory(Board* theBoard, const std::vector<unsigned char>& t
 	return LawnLoadGameV4(theBoard, aBuffer);
 }
 
-// Legacy mid-level save support
-class SaveGameContext
-{
-public:
-	Sexy::Buffer	mBuffer;
-	bool			mFailed;
-	bool			mReading;
-
-public:
-	inline int		ByteLeftToRead() { return (mBuffer.mDataBitSize - mBuffer.mReadBitPos + 7) / 8; }
-	void			SyncBytes(void* theDest, int theReadSize);
-	void			SyncInt32(int32_t& theInt32);
-	void			SyncUInt32(uint32_t& theUInt32);
-	inline void		SyncInt(int& theInt)
-	{
-		int32_t aValue = theInt;
-		SyncInt32(aValue);
-		if (mReading)
-			theInt = aValue;
-	}
-	void			SyncReanimationDef(ReanimatorDefinition*& theDefinition);
-	void			SyncParticleDef(PvzpParticleDefinition*& theDefinition);
-	void			SyncTrailDef(TrailDefinition*& theDefinition);
-	void			SyncImage(Image*& theImage);
-};
-
-void SaveGameContext::SyncBytes(void* theDest, int theReadSize)
-{
-	int aReadSize = theReadSize;
-	if (mReading)
-	{
-		if (ByteLeftToRead() < 4)
-		{
-			mFailed = true;
-		}
-
-		aReadSize = mFailed ? 0 : mBuffer.ReadInt32();
-	}
-	else
-	{
-		mBuffer.WriteInt32(theReadSize);
-	}
-
-	if (mReading)
-	{
-		if (aReadSize != theReadSize || ByteLeftToRead() < theReadSize)
-		{
-			mFailed = true;
-		}
-
-		if (mFailed)
-		{
-			memset(theDest, 0, theReadSize);
-		}
-		else
-		{
-			mBuffer.ReadBytes((uchar*)theDest, theReadSize);
-		}
-	}
-	else
-	{
-		mBuffer.WriteBytes((uchar*)theDest, theReadSize);
-	}
-}
-
-void SaveGameContext::SyncInt32(int32_t& theInt32)
-{
-	if (mReading)
-	{
-		if (ByteLeftToRead() < 4)
-		{
-			mFailed = true;
-		}
-
-		theInt32 = mFailed ? 0 : mBuffer.ReadInt32();
-	}
-	else
-	{
-		mBuffer.WriteInt32(theInt32);
-	}
-}
-
-void SaveGameContext::SyncUInt32(uint32_t& theUInt32)
-{
-	if (mReading)
-	{
-		if (ByteLeftToRead() < 4)
-		{
-			mFailed = true;
-		}
-
-		theUInt32 = mFailed ? 0 : mBuffer.ReadUInt32();
-	}
-	else
-	{
-		mBuffer.WriteUInt32(theUInt32);
-	}
-}
-
-void SaveGameContext::SyncReanimationDef(ReanimatorDefinition*& theDefinition)
-{
-	if (mReading)
-	{
-		int aReanimType;
-		SyncInt(aReanimType);
-		if (aReanimType == static_cast<int>(ReanimationType::REANIM_NONE))
-		{
-			theDefinition = nullptr;
-		}
-		else if (aReanimType >= 0 && aReanimType < static_cast<int>(ReanimationType::NUM_REANIMS))
-		{
-			ReanimatorEnsureDefinitionLoaded(static_cast<ReanimationType>(aReanimType), true);
-			theDefinition = &gReanimatorDefArray[aReanimType];
-		}
-		else
-		{
-			mFailed = true;
-		}
-	}
-	else
-	{
-		int aReanimType = static_cast<int>(ReanimationType::REANIM_NONE);
-		for (int i = 0; i < static_cast<int>(ReanimationType::NUM_REANIMS); i++)
-		{
-			ReanimatorDefinition* aDef = &gReanimatorDefArray[i];
-			if (theDefinition == aDef)
-			{
-				aReanimType = i;
-				break;
-			}
-		}
-		SyncInt(aReanimType);
-	}
-}
-
-void SaveGameContext::SyncParticleDef(PvzpParticleDefinition*& theDefinition)
-{
-	if (mReading)
-	{
-		int aParticleType;
-		SyncInt(aParticleType);
-		if (aParticleType == static_cast<int>(ParticleEffect::PARTICLE_NONE))
-		{
-			theDefinition = nullptr;
-		}
-		else if (aParticleType >= 0 && aParticleType < static_cast<int>(ParticleEffect::NUM_PARTICLES))
-		{
-			theDefinition = &gParticleDefArray[aParticleType];
-		}
-		else
-		{
-			mFailed = true;
-		}
-	}
-	else
-	{
-		int aParticleType = static_cast<int>(ParticleEffect::PARTICLE_NONE);
-		for (int i = 0; i < static_cast<int>(ParticleEffect::NUM_PARTICLES); i++)
-		{
-			PvzpParticleDefinition* aDef = &gParticleDefArray[i];
-			if (theDefinition == aDef)
-			{
-				aParticleType = i;
-				break;
-			}
-		}
-		SyncInt(aParticleType);
-	}
-}
-
-void SaveGameContext::SyncTrailDef(TrailDefinition*& theDefinition)
-{
-	if (mReading)
-	{
-		int aTrailType;
-		SyncInt(aTrailType);
-		if (aTrailType == TrailType::TRAIL_NONE)
-		{
-			theDefinition = nullptr;
-		}
-		else if (aTrailType >= 0 && aTrailType < TrailType::NUM_TRAILS)
-		{
-			theDefinition = &gTrailDefArray[aTrailType];
-		}
-		else
-		{
-			mFailed = true;
-		}
-	}
-	else
-	{
-		int aTrailType = TrailType::TRAIL_NONE;
-		for (int i = 0; i < TrailType::NUM_TRAILS; i++)
-		{
-			TrailDefinition* aDef = &gTrailDefArray[i];
-			if (theDefinition == aDef)
-			{
-				aTrailType = i;
-				break;
-			}
-		}
-		SyncInt(aTrailType);
-	}
-}
-
-void SaveGameContext::SyncImage(Image*& theImage)
-{
-	if (mReading)
-	{
-		ResourceId aResID;
-		SyncInt((int&)aResID);
-		if (aResID == Sexy::ResourceId::RESOURCE_ID_MAX)
-		{
-			theImage = nullptr;
-		}
-		else
-		{
-			theImage = GetImageById(aResID);
-		}
-	}
-	else
-	{
-		ResourceId aResID;
-		if (theImage != nullptr)
-		{
-			aResID = GetIdByImage(theImage);
-		}
-		else
-		{
-			aResID = Sexy::ResourceId::RESOURCE_ID_MAX;
-		}
-		SyncInt((int&)aResID);
-	}
-}
-
-static void SyncDataIDList(PvzpList<uint32_t>* theDataIDList, SaveGameContext& theContext, PvzpAllocator* theAllocator)
-{
-	try
-	{
-		if (theContext.mReading)
-		{
-			if (theDataIDList)
-			{
-				theDataIDList->mHead = nullptr;
-				theDataIDList->mTail = nullptr;
-				theDataIDList->mSize = 0;
-				theDataIDList->SetAllocator(theAllocator);
-			}
-
-			int aCount;
-			theContext.SyncInt(aCount);
-			for (int i = 0; i < aCount; i++)
-			{
-				uint32_t aDataID;
-				theContext.SyncBytes(&aDataID, sizeof(aDataID));
-				theDataIDList->AddTail(aDataID);
-			}
-		}
-		else
-		{
-			int aCount = theDataIDList->mSize;
-			theContext.SyncInt(aCount);
-			for (PvzpListNode<uint32_t>* aNode = theDataIDList->mHead; aNode != nullptr; aNode = aNode->mNext)
-			{
-				uint32_t aDataID = aNode->mValue;
-				theContext.SyncBytes(&aDataID, sizeof(aDataID));
-			}
-		}
-	}
-	catch (std::exception&)
-	{
-		return;
-	}
-}
-
-static void SyncParticleEmitter(PvzpParticleSystem* theParticleSystem, PvzpParticleEmitter* theParticleEmitter, SaveGameContext& theContext)
-{
-	int aEmitterDefIndex = 0;
-	if (theContext.mReading)
-	{
-		theContext.SyncInt(aEmitterDefIndex);
-		theParticleEmitter->mParticleSystem = theParticleSystem;
-		theParticleEmitter->mEmitterDef = &theParticleSystem->mParticleDef->mEmitterDefs[aEmitterDefIndex];
-	}
-	else
-	{
-		aEmitterDefIndex = (reinterpret_cast<intptr_t>(theParticleEmitter->mEmitterDef) -
-			reinterpret_cast<intptr_t>(theParticleSystem->mParticleDef->mEmitterDefs)) / sizeof(PvzpEmitterDefinition);
-		theContext.SyncInt(aEmitterDefIndex);
-	}
-
-	theContext.SyncImage(theParticleEmitter->mImageOverride);
-	SyncDataIDList((PvzpList<uint32_t>*)&theParticleEmitter->mParticleList, theContext, &theParticleSystem->mParticleHolder->mParticleListNodeAllocator);
-	for (PvzpListNode<ParticleID>* aNode = theParticleEmitter->mParticleList.mHead; aNode != nullptr; aNode = aNode->mNext)
-	{
-		PvzpParticle* aParticle = theParticleSystem->mParticleHolder->mParticles.DataArrayGet(static_cast<uint32_t>(aNode->mValue));
-		if (theContext.mReading)
-		{
-			aParticle->mParticleEmitter = theParticleEmitter;
-		}
-	}
-}
-
-static void SyncParticleSystem(Board* theBoard, PvzpParticleSystem* theParticleSystem, SaveGameContext& theContext)
-{
-	theContext.SyncParticleDef(theParticleSystem->mParticleDef);
-	if (theContext.mReading)
-	{
-		theParticleSystem->mParticleHolder = theBoard->mApp->mEffectSystem->mParticleHolder.get();
-	}
-
-	SyncDataIDList((PvzpList<uint32_t>*)&theParticleSystem->mEmitterList, theContext, &theParticleSystem->mParticleHolder->mEmitterListNodeAllocator);
-	for (PvzpListNode<ParticleEmitterID>* aNode = theParticleSystem->mEmitterList.mHead; aNode != nullptr; aNode = aNode->mNext)
-	{
-		PvzpParticleEmitter* aEmitter = theParticleSystem->mParticleHolder->mEmitters.DataArrayGet(static_cast<uint32_t>(aNode->mValue));
-		SyncParticleEmitter(theParticleSystem, aEmitter, theContext);
-	}
-}
-
-static void SyncReanimation(Board* theBoard, Reanimation* theReanimation, SaveGameContext& theContext)
-{
-	theContext.SyncReanimationDef(theReanimation->mDefinition);
-	if (theContext.mReading)
-	{
-		theReanimation->mReanimationHolder = theBoard->mApp->mEffectSystem->mReanimationHolder.get();
-	}
-
-	if (theReanimation->mDefinition->mTracks.count != 0)
-	{
-		int aSize = theReanimation->mDefinition->mTracks.count * sizeof(ReanimatorTrackInstance);
-		if (theContext.mReading)
-		{
-			theReanimation->mTrackInstances = (ReanimatorTrackInstance*)FindGlobalAllocator(aSize)->Calloc(aSize);
-		}
-		theContext.SyncBytes(theReanimation->mTrackInstances, aSize);
-
-		for (int aTrackIndex = 0; aTrackIndex < theReanimation->mDefinition->mTracks.count; aTrackIndex++)
-		{
-			ReanimatorTrackInstance& aTrackInstance = theReanimation->mTrackInstances[aTrackIndex];
-			theContext.SyncImage(aTrackInstance.mImageOverride);
-
-			if (theContext.mReading)
-			{
-				aTrackInstance.mBlendTransform.mText = "";
-				PVZP_ASSERT(aTrackInstance.mBlendTransform.mFont == nullptr);
-				PVZP_ASSERT(aTrackInstance.mBlendTransform.mImage == nullptr);
-			}
-			else
-			{
-				PVZP_ASSERT(aTrackInstance.mBlendTransform.mText[0] == 0);
-				PVZP_ASSERT(aTrackInstance.mBlendTransform.mFont == nullptr);
-				PVZP_ASSERT(aTrackInstance.mBlendTransform.mImage == nullptr);
-			}
-		}
-	}
-}
-
-static void SyncTrail(Board* theBoard, Trail* theTrail, SaveGameContext& theContext)
-{
-	theContext.SyncTrailDef(theTrail->mDefinition);
-	if (theContext.mReading)
-	{
-		theTrail->mTrailHolder = theBoard->mApp->mEffectSystem->mTrailHolder.get();
-	}
-}
-
-template <typename T>
-struct LegacyDataArrayItem
-{
-	alignas(T) unsigned char mItem[sizeof(T)];
-	unsigned int mID;
-};
-
-template <typename T> inline static void SyncDataArray(SaveGameContext& theContext, DataArray<T>& theDataArray)
-{
-	theContext.SyncUInt32(theDataArray.mFreeListHead);
-	theContext.SyncUInt32(theDataArray.mMaxUsedCount);
-	theContext.SyncUInt32(theDataArray.mSize);
-	auto aBlock = std::make_unique<LegacyDataArrayItem<T>[]>(theDataArray.mMaxUsedCount);
-	if (!theContext.mReading)
-	{
-		for (uint32_t i = 0; i < theDataArray.mMaxUsedCount; i++)
-		{
-			auto& aSlot = aBlock[i];
-			std::copy_n(reinterpret_cast<unsigned char*>(&theDataArray.DataArrayGetItemAt(i)), sizeof(T), aSlot.mItem);
-			aSlot.mID = theDataArray.DataArrayGetIDAt(i);
-		}
-	}
-	theContext.SyncBytes(aBlock.get(), theDataArray.mMaxUsedCount * sizeof(aBlock[0]));
-	if (!theContext.mReading)
-		return;
-
-	for (uint32_t i = 0; i < theDataArray.mMaxUsedCount; i++)
-	{
-		auto& aSlot = aBlock[i];
-		theDataArray.DataArrayGetIDAt(i) = aSlot.mID;
-		if (aSlot.mID & DATA_ARRAY_KEY_MASK)
-			std::copy_n(aSlot.mItem, sizeof(T), reinterpret_cast<unsigned char*>(&theDataArray.DataArrayGetItemAt(i)));
-	}
-}
-
-static void SyncBoard(SaveGameContext& theContext, Board* theBoard)
-{
-	size_t offset = size_t(&theBoard->mPaused) - size_t(theBoard);
-	theContext.SyncBytes(&theBoard->mPaused, sizeof(Board) - offset);
-
-	SyncDataArray(theContext, theBoard->mZombies);
-	SyncDataArray(theContext, theBoard->mPlants);
-	SyncDataArray(theContext, theBoard->mProjectiles);
-	SyncDataArray(theContext, theBoard->mCoins);
-	SyncDataArray(theContext, theBoard->mLawnMowers);
-	SyncDataArray(theContext, theBoard->mGridItems);
-	SyncDataArray(theContext, theBoard->mApp->mEffectSystem->mParticleHolder->mParticleSystems);
-	SyncDataArray(theContext, theBoard->mApp->mEffectSystem->mParticleHolder->mEmitters);
-	SyncDataArray(theContext, theBoard->mApp->mEffectSystem->mParticleHolder->mParticles);
-	SyncDataArray(theContext, theBoard->mApp->mEffectSystem->mReanimationHolder->mReanimations);
-	SyncDataArray(theContext, theBoard->mApp->mEffectSystem->mTrailHolder->mTrails);
-	SyncDataArray(theContext, theBoard->mApp->mEffectSystem->mAttachmentHolder->mAttachments);
-
-	{
-		for (PvzpParticleSystem* aParticle : theBoard->mApp->mEffectSystem->mParticleHolder->mParticleSystems)
-		{
-			SyncParticleSystem(theBoard, aParticle, theContext);
-		}
-	}
-	{
-		for (Reanimation* aReanimation : theBoard->mApp->mEffectSystem->mReanimationHolder->mReanimations)
-		{
-			SyncReanimation(theBoard, aReanimation, theContext);
-		}
-	}
-	{
-		for (Trail* aTrail : theBoard->mApp->mEffectSystem->mTrailHolder->mTrails)
-		{
-			SyncTrail(theBoard, aTrail, theContext);
-		}
-	}
-
-	theContext.SyncBytes(theBoard->mCursorObject.get(), sizeof(CursorObject));
-	theContext.SyncBytes(theBoard->mCursorPreview.get(), sizeof(CursorPreview));
-	theContext.SyncBytes(theBoard->mAdvice.get(), sizeof(MessageWidget));
-	theContext.SyncBytes(theBoard->mSeedBank.get(), sizeof(SeedBank));
-	theContext.SyncBytes(theBoard->mChallenge.get(), sizeof(Challenge));
-	theContext.SyncBytes(theBoard->mApp->mMusic.get(), sizeof(Music));
-
-	if (theContext.mReading)
-	{
-		if (theContext.ByteLeftToRead() < 4)
-		{
-			theContext.mFailed = true;
-		}
-
-		if (theContext.mFailed || theContext.mBuffer.ReadUInt32() != SAVE_FILE_MAGIC_NUMBER)
-		{
-			theContext.mFailed = true;
-		}
-	}
-	else
-	{
-		theContext.mBuffer.WriteUInt32(SAVE_FILE_MAGIC_NUMBER);
-	}
-}
-
 bool LawnLoadGame(Board* theBoard, const std::string& theFilePath)
 {
-	if (LawnLoadGameV4(theBoard, theFilePath))
-	{
-		PvzpLogLn("Loaded save game (v4)");
-		return true;
-	}
-
-	SaveGameContext aContext;
-	aContext.mFailed = false;
-	aContext.mReading = true;
-	if (!gSexyAppBase->ReadBufferFromFile(theFilePath, &aContext.mBuffer, false))
-	{
+	if (!LawnLoadGameV4(theBoard, theFilePath))
 		return false;
-	}
-
-	SaveFileHeader aHeader;
-	aContext.SyncBytes(&aHeader, sizeof(aHeader));
-	if (aHeader.mMagicNumber != SAVE_FILE_MAGIC_NUMBER || aHeader.mBuildVersion != SAVE_FILE_VERSION || aHeader.mBuildDate != SAVE_FILE_DATE)
-	{
-		return false;
-	}
-
-	SyncBoard(aContext, theBoard);
-	if (aContext.mFailed)
-	{
-		return false;
-	}
-
-	PvzpLogLn("Loaded save game (legacy)");
-	FixBoardAfterLoad(theBoard);
-	theBoard->mApp->mGameScene = GameScenes::SCENE_PLAYING;
+	PvzpLogLn("Loaded save game (v4)");
 	return true;
 }
 
