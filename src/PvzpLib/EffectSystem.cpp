@@ -31,6 +31,26 @@
 
 EffectSystem* gEffectSystem = nullptr;
 
+// See EffectSystem.h: suppresses cross-generation effect teardown cascades while
+// the effect DataArrays are being replaced wholesale by a save-game load.
+static int gEffectSystemRestoreDepth = 0;
+
+int EffectSystemRestoreBegin()
+{
+	return ++gEffectSystemRestoreDepth;
+}
+
+void EffectSystemRestoreEnd()
+{
+	if (gEffectSystemRestoreDepth > 0)
+		--gEffectSystemRestoreDepth;
+}
+
+bool EffectSystemRestoreInProgress()
+{
+	return gEffectSystemRestoreDepth > 0;
+}
+
 EffectSystem::~EffectSystem()
 {
 	EffectSystemDispose();

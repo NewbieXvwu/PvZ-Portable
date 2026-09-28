@@ -8,19 +8,13 @@ from dataclasses import dataclass, field
 from typing import Any, Iterator
 
 from pvz_agent_model import WAIT_TICKS
+from pvz_env import BRANCH_BATCH_LIMIT, branch_action_token
 from pvz_search_candidates import CandidateGenerator, fit_action_to_remaining, lane_pressure
 from pvz_search_value import SearchValueModel
 from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 
 SEARCH_POLICY_MIN_SCALE = 0.05
 SEARCH_PARTIAL_SHORTFALL_PENALTY = 0.15
-
-# ``BRANCH_SNAPSHOT_FAST`` refuses more than this many specs in one command
-# (``src/main.cpp`` bounds ``branchCount`` at 128), so callers that want to expand
-# a wider action set have to chunk.  The search itself never gets near this --
-# the root request saturates at 96 and internal nodes use ``candidate_limit`` --
-# but the audit tools deliberately enumerate every legal placement.
-BRANCH_BATCH_LIMIT = 128
 
 
 @dataclass(frozen=True)
@@ -200,14 +194,7 @@ class SearchTeacher:
 
     @staticmethod
     def _branch_action_token(action: dict[str, Any]) -> str:
-        kind = action.get("type")
-        if kind == "plant":
-            return f"P:{int(action['packet'])}:{int(action['col'])}:{int(action['row'])}"
-        if kind == "shovel":
-            return f"S:{int(action['col'])}:{int(action['row'])}"
-        if kind == "wait":
-            return f"W:{int(action['ticks'])}"
-        raise ValueError(f"unsupported search action: {action}")
+        return branch_action_token(action)
 
     def _branch_snapshot_fast(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not actions:
@@ -217,12 +204,7 @@ class SearchTeacher:
                 f"BRANCH_SNAPSHOT_FAST accepts at most {BRANCH_BATCH_LIMIT} specs per command, "
                 f"got {len(actions)}"
             )
-        tokens = " ".join(self._branch_action_token(action) for action in actions)
-        response = self.env._command(f"BRANCH_SNAPSHOT_FAST {snapshot_id} {len(actions)} {tokens}")
-        branches = response.get("branches")
-        if not response.get("ok") or not isinstance(branches, list) or len(branches) != len(actions):
-            raise RuntimeError(f"branch evaluation failed: {response}")
-        return branches
+        return self.env.branch_snapshot(snapshot_id, actions)
 
     @staticmethod
     def _diversity_key(action: dict[str, Any]) -> tuple[Any, ...]:

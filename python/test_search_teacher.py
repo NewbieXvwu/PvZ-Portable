@@ -12,6 +12,7 @@ import unittest
 from typing import Any, cast
 
 from pvz_agent_model import WAIT_TICKS
+from pvz_env import branch_action_token
 from pvz_search import BRANCH_BATCH_LIMIT, SearchTeacher, _RootState, _SearchNode
 from pvz_search_candidates import CandidateGenerator, fit_action_to_remaining, shovel_proposals
 from pvz_search_value import SearchValueModel
@@ -125,6 +126,12 @@ class _FakeSimulator:
                 raise AssertionError(f"branch count disagrees with the token list: {command}")
             return {"ok": True, "branches": [self._branch(parent, token) for token in tokens]}
         raise AssertionError(f"unexpected command: {command}")
+
+    def branch_snapshot(self, snapshot_id: int, actions: list[dict]) -> list[dict]:
+        """Mirror ``PvZEnv.branch_snapshot`` so the search goes through the same surface."""
+        tokens = " ".join(branch_action_token(action) for action in actions)
+        response = self._command(f"BRANCH_SNAPSHOT_FAST {snapshot_id} {len(actions)} {tokens}")
+        return response["branches"]
 
     def _branch(self, parent: int, token: str) -> dict:
         board = dict(self._states[parent])
@@ -372,7 +379,9 @@ class SearchTeacherBookkeepingTests(unittest.TestCase):
 
     def test_unsupported_search_actions_are_rejected(self) -> None:
         searcher = SearchTeacher(_FakeSimulator())
-        with self.assertRaisesRegex(ValueError, "unsupported search action"):
+        # The branch encoding lives in ``pvz_env`` (the protocol module), so its message
+        # is the protocol's; the search must still refuse anything it cannot encode.
+        with self.assertRaisesRegex(ValueError, "unsupported branch action"):
             searcher._branch_action_token({"type": "sun"})
         with self.assertRaisesRegex(ValueError, "unsupported search action"):
             searcher._diversity_key({"type": "sun"})

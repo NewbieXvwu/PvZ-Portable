@@ -3672,6 +3672,20 @@ float PlantDrawHeightOffset(Board* theBoard, Plant* thePlant, SeedType theSeedTy
 void Plant::GetPeaHeadOffset(int& theOffsetX, int& theOffsetY)
 {
 	Reanimation* aBodyReanim = mApp->ReanimationTryToGet(mBodyReanimID);
+	if (aBodyReanim == nullptr)
+	{
+		// The body reanimation can be unresolvable while the plant still lives
+		// (e.g. a snapshot that captured it mid-teardown). Firing is not worth
+		// taking the whole simulator down for, so fall back to the plant origin;
+		// the trace keeps the condition visible instead of silently papering
+		// over it.
+		PvzpTraceWithoutSpamming("GetPeaHeadOffset: plant {} (seed {} col {} row {}) has no body reanimation {}",
+			static_cast<const void*>(this), static_cast<int>(mSeedType), mPlantCol, mRow,
+			static_cast<unsigned int>(mBodyReanimID));
+		theOffsetX = 0;
+		theOffsetY = 0;
+		return;
+	}
 
 	int aTrackIndex = 0;
 	if (aBodyReanim->TrackExists("anim_stem"))

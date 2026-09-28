@@ -11,7 +11,10 @@ import unittest
 from typing import Any
 
 from pvz_search import SearchTeacher
+from pvz_search import WAIT_TICKS
 from pvz_search_audit import (
+    RECALL_AT,
+    _scored_children,
     budget_consistency,
     candidate_recall,
     leaf_score,
@@ -19,6 +22,7 @@ from pvz_search_audit import (
     sibling_ranking,
     summarize,
 )
+from pvz_search_candidates import action_key
 from test_search_teacher import _FakeSimulator, _board, _observation
 
 
@@ -137,7 +141,7 @@ class CandidateRecallTests(unittest.TestCase):
         self.assertEqual(report["legal_actions"], 3 * 4 + 3)
         self.assertEqual(report["generated_actions"], report["legal_actions"])
         self.assertTrue(report["recall"]["generated"]["contains_best"])
-        self.assertEqual(report["recall"]["generated"]["recall@1"], 1.0)
+        self.assertEqual(report["recall"]["generated"]["top_k_coverage@1"], 1.0)
         self.assertEqual(report["screened_actions"], teacher.root_candidate_limit)
 
     def test_a_narrow_generator_is_reported_as_a_generation_loss(self) -> None:
@@ -156,7 +160,7 @@ class CandidateRecallTests(unittest.TestCase):
         # from the top, because the plant-count scorer ranks every plant above it.
         self.assertGreater(report["recall"]["generated"]["best_rank_inside"], 1)
 
-    def test_recall_never_exceeds_one(self) -> None:
+    def test_top_k_coverage_is_a_fraction(self) -> None:
         env = _FakeSimulator()
         teacher = SearchTeacher(env, simulation_budget=64, candidate_limit=2)
         observation = _observation(_board())
@@ -165,9 +169,38 @@ class CandidateRecallTests(unittest.TestCase):
 
         for name in ("generated", "screened"):
             for key, value in report["recall"][name].items():
-                if key.startswith("recall@"):
+                if key.startswith("top_k_coverage@"):
                     self.assertLessEqual(value, 1.0)
                     self.assertGreaterEqual(value, 0.0)
+
+    def test_top_k_coverage_is_the_reference_top_k_that_survives(self) -> None:
+        """Recompute the metric from the legal set, independently of the audit.
+
+        The name is deliberately not ``recall@K``: it normalises by ``K``, so it is
+        *not* monotone in ``K``.  A set that keeps the best action but drops the
+        third scores 1.0 at @1 and 0.667 at @3.  Pinning the formula here keeps the
+        documented meaning from drifting back to the monotone reading the name
+        would suggest.
+        """
+        env = _FakeSimulator()
+        teacher = SearchTeacher(env, simulation_budget=64, candidate_limit=2)
+        teacher.candidate_generator = _NarrowGenerator()
+        observation = _observation(_board())
+
+        report = candidate_recall(teacher, _StubValueModel(), observation, teacher.advice(observation))
+
+        legal = observation["legal_actions"]
+        everything = [{"type": "plant", **item} for item in legal["plants"]]
+        everything.extend({"type": "shovel", "col": col, "row": row} for col, row in legal["shovels"])
+        everything.extend({"type": "wait", "ticks": ticks} for ticks in WAIT_TICKS)
+        _, scores, _ = _scored_children(teacher, _StubValueModel(), observation, everything)
+        ranked = [action_key(action) for action, _ in
+                  sorted(zip(everything, scores), key=lambda item: item[1], reverse=True)]
+        kept = {action_key(action) for action in [{"type": "wait", "ticks": 60}]}
+
+        for k in RECALL_AT:
+            expected = len(set(ranked[:k]) & kept) / k
+            self.assertAlmostEqual(report["recall"]["generated"][f"top_k_coverage@{k}"], expected)
 
 
 class SiblingRankingTests(unittest.TestCase):

@@ -22,6 +22,7 @@
 #ifndef __DATAARRAY_H__
 #define __DATAARRAY_H__
 
+#include <algorithm>
 #include <iterator>
 #include <memory>
 #include <new>
@@ -34,7 +35,10 @@ enum
 	DATA_ARRAY_KEY_MASK = -65536,
 	DATA_ARRAY_KEY_SHIFT = 16,
 	DATA_ARRAY_MAX_SIZE = 65536,
-	DATA_ARRAY_KEY_FIRST = 1
+	DATA_ARRAY_KEY_FIRST = 1,
+	// The key a freshly initialised array hands out first.  ``DataArrayFreeAll`` returns
+	// the counter to this baseline; see the comment there.
+	DATA_ARRAY_KEY_INITIAL = 1001
 };
 
 template <typename T> class DataArray
@@ -50,7 +54,7 @@ public:
 	unsigned int			mMaxSize = 0U;
 	unsigned int			mFreeListHead = 0U;
 	unsigned int			mSize = 0U;
-	unsigned int			mNextKey = 1U;
+	unsigned int			mNextKey = DATA_ARRAY_KEY_INITIAL;
 	const char*				mName = nullptr;
 
 public:
@@ -67,7 +71,7 @@ public:
 		mItems = std::make_unique<DataArrayItem[]>(theMaxSize);
 		mItemIds = std::make_unique<unsigned int[]>(theMaxSize);
 		mMaxSize = theMaxSize;
-		mNextKey = 1001U;
+		mNextKey = DATA_ARRAY_KEY_INITIAL;
 		mName = theName;
 	}
 
@@ -80,6 +84,7 @@ public:
 		mMaxSize = 0U;
 		mFreeListHead = 0U;
 		mSize = 0U;
+		mNextKey = DATA_ARRAY_KEY_INITIAL;
 		mName = nullptr;
 	}
 
@@ -100,6 +105,22 @@ public:
 
 		mFreeListHead = 0U;
 		mMaxUsedCount = 0U;
+
+		// Return the key counter to its baseline as well.  Object ids are only unique
+		// *within* a generation, so a counter that keeps climbing across generations
+		// hands out different ids for the same objects in two otherwise identical
+		// episodes -- and that alone is enough to make the second episode in a process
+		// take a different path from the first, which breaks episode-to-episode
+		// reproducibility.  Every slot was just wiped, so restarting at the baseline
+		// cannot collide with anything still reachable.
+		mNextKey = DATA_ARRAY_KEY_INITIAL;
+
+		// Every slot is dead now, so every id lookup must fail. Leaving the old
+		// ids in place let DataArrayTryToGet hand out pointers to the
+		// value-initialised husks left behind by DataArrayResetItemAt, which
+		// resurrected "freed" objects for any caller still holding a stale id.
+		if (mItemIds)
+			std::fill_n(mItemIds.get(), mMaxSize, 0U);
 	}
 
 	inline unsigned int DataArrayGetID(T* theItem)
@@ -157,6 +178,24 @@ public:
 	{
 		PVZP_ASSERT(mSize < mMaxSize, "Data array full: {}", mName);
 		PVZP_ASSERT(mFreeListHead <= mMaxUsedCount, "DataArrayAlloc error in {}", mName);
+
+		// PVZP_ASSERT compiles out in Release, so enforce both invariants for
+		// real. A corrupted free list used to hand back an out-of-range slot and
+		// scribble over neighbouring memory in silence.
+		if (mFreeListHead > mMaxUsedCount)
+		{
+			PvzpTraceWithoutSpamming("DataArrayAlloc: '{}' free list corrupted (freeHead {} > maxUsed {}); appending instead",
+				mName, mFreeListHead, mMaxUsedCount);
+			mFreeListHead = mMaxUsedCount;
+		}
+
+		if (mFreeListHead == mMaxUsedCount && mMaxUsedCount >= mMaxSize)
+		{
+			PvzpTraceWithoutSpamming("DataArrayAlloc: '{}' is full ({} live of {} slots); allocation refused",
+				mName, mSize, mMaxSize);
+			return nullptr;
+		}
+
 		unsigned int aNext = mMaxUsedCount;
 		if (mFreeListHead == mMaxUsedCount)
 			mFreeListHead = ++mMaxUsedCount;

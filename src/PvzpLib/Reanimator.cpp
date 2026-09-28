@@ -1097,16 +1097,21 @@ void Reanimation::StartBlend(int theBlendTime)
 
 void Reanimation::ReanimationDie()
 {
-	if (!mDead)
+	if (mDead)
+		return;
+
+	mDead = true;
+
+	// While the effect arrays are being replaced wholesale the ids in this
+	// object's track instances belong to the outgoing generation and can alias
+	// the objects being restored; see EffectSystem.h.
+	if (mDefinition == nullptr || EffectSystemRestoreInProgress())
+		return;
+
+	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
 	{
-		mDead = true;
-		if (mDefinition == nullptr)
-			return;
-		for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
-		{
-			PVZP_ASSERT(mTrackInstances);
-			AttachmentDie(mTrackInstances[aTrackIndex].mAttachmentID);
-		}
+		PVZP_ASSERT(mTrackInstances);
+		AttachmentDie(mTrackInstances[aTrackIndex].mAttachmentID);
 	}
 }
 
@@ -1167,6 +1172,8 @@ Reanimation* ReanimationHolder::AllocReanimation(float theX, float theY, int the
 {
 	PVZP_ASSERT(mReanimations.mSize != mReanimations.mMaxSize);
 	Reanimation* aReanim = mReanimations.DataArrayAlloc();
+	if (aReanim == nullptr)
+		return nullptr;
 	aReanim->mRenderOrder = theRenderOrder;
 	aReanim->mReanimationHolder = this;
 	aReanim->ReanimationInitializeType(theX, theY, theReanimationType);

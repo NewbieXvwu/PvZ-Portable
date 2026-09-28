@@ -188,14 +188,83 @@ class LifecycleGuardTests(unittest.TestCase):
             self.env.replay_record({})
 
 
+class BranchSnapshotTests(unittest.TestCase):
+    """``BRANCH_SNAPSHOT_FAST`` is the command the search pays for every expansion.
+
+    Its spec encoding lives in ``pvz_env.branch_action_token`` and nowhere else, so these
+    tests pin the wire format that ``src/main.cpp::DecodeBranchAction`` parses.
+    """
+
+    def setUp(self) -> None:
+        self.env = PvZEnv(resource_dir="/nonexistent")
+        self.commands: list[str] = []
+
+    def _stub(self, branches: list[dict]) -> None:
+        def command(text: str) -> dict:
+            self.commands.append(text)
+            return {"ok": True, "branches": branches}
+
+        self.env._command = command  # type: ignore[method-assign]
+
+    def test_actions_are_encoded_as_colon_separated_tokens(self) -> None:
+        self._stub([{"ok": True}, {"ok": True}, {"ok": True}])
+
+        branches = self.env.branch_snapshot(7, [
+            {"type": "plant", "packet": 2, "col": 3, "row": 4},
+            {"type": "shovel", "col": 1, "row": 0},
+            {"type": "wait", "ticks": 60},
+        ])
+
+        self.assertEqual(len(branches), 3)
+        self.assertEqual(self.commands, ["BRANCH_SNAPSHOT_FAST 7 3 P:2:3:4 S:1:0 W:60"])
+
+    def test_snapshot_id_must_be_a_positive_integer(self) -> None:
+        self._stub([])
+        for snapshot_id in (0, -1, "1", 1.0, True):
+            with self.subTest(snapshot_id=snapshot_id):
+                with self.assertRaisesRegex(ValueError, "positive integer"):
+                    self.env.branch_snapshot(snapshot_id, [{"type": "wait", "ticks": 1}])
+        self.assertEqual(self.commands, [])
+
+    def test_an_empty_action_list_is_rejected_before_any_command(self) -> None:
+        self._stub([])
+
+        with self.assertRaisesRegex(ValueError, "non-empty list"):
+            self.env.branch_snapshot(1, [])
+
+        self.assertEqual(self.commands, [])
+
+    def test_more_than_the_batch_limit_is_rejected_before_any_command(self) -> None:
+        self._stub([])
+
+        with self.assertRaisesRegex(ValueError, "at most 128"):
+            self.env.branch_snapshot(1, [{"type": "wait", "ticks": 1}] * (pvz_env.BRANCH_BATCH_LIMIT + 1))
+
+        self.assertEqual(self.commands, [])
+
+    def test_a_response_with_the_wrong_branch_count_is_rejected(self) -> None:
+        """A truncated branch list must not be paired positionally with the actions."""
+        self._stub([{"ok": True}])
+
+        with self.assertRaisesRegex(ValueError, "could not branch"):
+            self.env.branch_snapshot(1, [{"type": "wait", "ticks": 1}, {"type": "wait", "ticks": 1}])
+
+    def test_unsupported_actions_are_rejected_by_the_encoder(self) -> None:
+        with self.assertRaisesRegex(ValueError, "unsupported branch action"):
+            pvz_env.branch_action_token({"type": "sun"})
+        with self.assertRaisesRegex(TypeError, "must be a dictionary"):
+            pvz_env.branch_action_token("wait")
+
+
 class SharedConstantTests(unittest.TestCase):
     def test_env_module_reexports_the_shared_protocol_versions(self) -> None:
         """pvz_env must not redefine the versions it validates against."""
         self.assertIs(pvz_env.ENV_PROTOCOL_VERSION, ENV_PROTOCOL_VERSION)
         self.assertIs(pvz_env.REPLAY_FORMAT_VERSION, REPLAY_FORMAT_VERSION)
         self.assertEqual(set(pvz_env.__all__), {
-            "ENV_PROTOCOL_VERSION", "REPLAY_FORMAT_VERSION", "LoadoutContext",
-            "PlayerProfileContext", "PvZEnv", "SeedCard", "TaskSpec", "training_task",
+            "BRANCH_BATCH_LIMIT", "ENV_PROTOCOL_VERSION", "REPLAY_FORMAT_VERSION",
+            "LoadoutContext", "PlayerProfileContext", "PvZEnv", "SeedCard",
+            "SimulatorExited", "TaskSpec", "branch_action_token", "training_task",
         })
 
     def test_training_task_is_the_single_shared_task_factory(self) -> None:

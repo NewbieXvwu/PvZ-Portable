@@ -596,7 +596,10 @@ void Attachment::AttachmentDie()
 		return;
 	}
 
-	if (!gEffectSystem)
+	// Without an effect system there is nothing to tear down; while one is being
+	// replaced wholesale the effect ids below belong to the outgoing generation
+	// and can alias the objects being restored (see EffectSystem.h).
+	if (!gEffectSystem || EffectSystemRestoreInProgress())
 	{
 		mNumEffects = 0;
 		mDead = true;

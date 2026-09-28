@@ -175,4 +175,36 @@ public:
 };
 extern EffectSystem* gEffectSystem;
 
+// Bulk-restore guard.
+//
+// A save-game load (and therefore every SNAPSHOT_FAST/RESTORE_FAST round trip)
+// replaces the whole effect world in one pass. During that pass the effect
+// DataArrays are transiently inconsistent: slots below the cursor already hold
+// the incoming generation, slots above it still hold the outgoing one. Object
+// ids are only unique *within* a generation, so two generations that share an
+// ancestor hand out identical ids to different objects.
+//
+// A dying object must therefore not walk its effect ids while a restore is in
+// flight: ReanimationDie -> AttachmentDie -> ReanimationDie would resolve an
+// outgoing id against an incoming object and kill the state being restored.
+// That is exactly how restored plants ended up holding dead body reanimations
+// (and how Plant::GetPeaHeadOffset later dereferenced a null Reanimation).
+//
+// While the guard is held, ReanimationDie and AttachmentDie mark the object dead
+// and stop; the arrays are wiped and re-read wholesale anyway, so no teardown is
+// needed.
+int  EffectSystemRestoreBegin();
+void EffectSystemRestoreEnd();
+bool EffectSystemRestoreInProgress();
+
+class EffectSystemRestoreScope
+{
+public:
+	EffectSystemRestoreScope() { EffectSystemRestoreBegin(); }
+	~EffectSystemRestoreScope() { EffectSystemRestoreEnd(); }
+
+	EffectSystemRestoreScope(const EffectSystemRestoreScope&) = delete;
+	EffectSystemRestoreScope& operator=(const EffectSystemRestoreScope&) = delete;
+};
+
 #endif

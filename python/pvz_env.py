@@ -23,15 +23,59 @@ from pvz_common import (
 )
 
 __all__ = [
+    "BRANCH_BATCH_LIMIT",
     "ENV_PROTOCOL_VERSION",
     "REPLAY_FORMAT_VERSION",
     "LoadoutContext",
     "PlayerProfileContext",
     "PvZEnv",
     "SeedCard",
+    "SimulatorExited",
     "TaskSpec",
+    "branch_action_token",
     "training_task",
 ]
+
+# ``BRANCH_SNAPSHOT_FAST`` refuses more than this many specs in one command
+# (``src/main.cpp`` bounds ``branchCount`` at 128), so callers that want to expand a
+# wider action set have to chunk.  The search itself never gets near this -- the root
+# request saturates at 96 and internal nodes use ``candidate_limit`` -- but the audit
+# tools deliberately enumerate every legal placement.
+BRANCH_BATCH_LIMIT = 128
+
+
+def branch_action_token(action: dict[str, Any]) -> str:
+    """Encode one action as the compact spec ``BRANCH_SNAPSHOT_FAST`` expects.
+
+    The protocol passes branch actions as a single space-delimited token per action,
+    with ``:`` as the field separator, because the command line itself is
+    whitespace-tokenised.  This is the only place that encoding is defined; the search
+    teacher and the equivalence harness both go through it.
+    """
+    if not isinstance(action, dict):
+        raise TypeError("action must be a dictionary")
+    kind = action.get("type")
+    if kind == "plant":
+        return f"P:{int(action['packet'])}:{int(action['col'])}:{int(action['row'])}"
+    if kind == "shovel":
+        return f"S:{int(action['col'])}:{int(action['row'])}"
+    if kind == "wait":
+        return f"W:{int(action['ticks'])}"
+    raise ValueError(f"unsupported branch action: {action}")
+
+
+class SimulatorExited(RuntimeError):
+    """The ``pvz-portable`` child process died without answering.
+
+    A crash is a distinct failure from a rejected command or a protocol mismatch, and
+    callers that are verifying behaviour (rather than driving training) need to tell them
+    apart: a segfault in the simulator is a divergence, not a bug in their own action
+    sequence.  Subclasses ``RuntimeError`` so existing handlers keep working.
+    """
+
+    def __init__(self, returncode: int | None) -> None:
+        self.returncode = returncode
+        super().__init__(f"PvZ-Portable exited unexpectedly with code {returncode}")
 
 
 @dataclass(frozen=True)
@@ -194,7 +238,7 @@ class PvZEnv:
         for line in process.stdout:
             if line.startswith("PVZENV "):
                 return json.loads(line[len("PVZENV ") :])
-        raise RuntimeError(f"PvZ-Portable exited unexpectedly with code {process.poll()}")
+        raise SimulatorExited(process.poll())
 
     def _command(self, command: str) -> dict[str, Any]:
         if self._process is None:
@@ -404,6 +448,37 @@ class PvZEnv:
         response = self._command(f"DROP_SNAPSHOT {snapshot_id}")
         if not response.get("ok"):
             raise ValueError(f"environment could not release snapshot {snapshot_id}: {response}")
+
+    def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Expand several actions from one parent snapshot in a single command.
+
+        ``BRANCH_SNAPSHOT_FAST`` is *defined* as, per branch, "restore the parent,
+        execute the action, save a child snapshot"; it exists so the search can pay one
+        command round trip instead of three.  Each returned record therefore carries the
+        branch's ``observation``, its ``snapshot_id``/``state_hash`` when the branch is
+        non-terminal, and its ``events``.
+
+        Two things the caller owns.  First, the child snapshots are registered with the
+        simulator and must be released with :meth:`release_snapshot`; the parent stays
+        valid.  Second, the simulator is left at the *last* branch's state, so the caller
+        has to restore whatever state it wants next.  Like the search teacher, this
+        bypasses the episode bookkeeping, so do not mix it with :meth:`save_replay`.
+        """
+        if type(snapshot_id) is not int or snapshot_id < 1:
+            raise ValueError("snapshot_id must be a positive integer")
+        if not isinstance(actions, list) or not actions:
+            raise ValueError("actions must be a non-empty list")
+        if len(actions) > BRANCH_BATCH_LIMIT:
+            raise ValueError(
+                f"BRANCH_SNAPSHOT_FAST accepts at most {BRANCH_BATCH_LIMIT} specs per command, "
+                f"got {len(actions)}"
+            )
+        tokens = " ".join(branch_action_token(action) for action in actions)
+        response = self._command(f"BRANCH_SNAPSHOT_FAST {snapshot_id} {len(actions)} {tokens}")
+        branches = response.get("branches")
+        if not response.get("ok") or not isinstance(branches, list) or len(branches) != len(actions):
+            raise ValueError(f"environment could not branch snapshot {snapshot_id}: {response}")
+        return branches
 
     @contextmanager
     def speculative(self) -> Iterator[int]:

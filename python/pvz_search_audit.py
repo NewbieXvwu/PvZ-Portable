@@ -189,6 +189,18 @@ def candidate_recall(
     The gap between ``everything`` and ``generated`` is generation loss, which no
     simulation budget can fix.  The gap between ``generated`` and ``screened`` is
     screening loss, which more budget could.
+
+    Loss is reported two ways, because they answer different questions:
+
+    * ``contains_best`` / ``best_rank_inside`` -- the single best legal action.
+      ``best_rank_inside`` is that action's position in the *reference* ranking of
+      every legal action, so ``1`` means the set kept it.
+    * ``top_k_coverage@K`` -- of the ``K`` highest-scoring legal actions, what
+      fraction the set retained.  This is deliberately *not* monotone in ``K``: it
+      normalises by ``K``, so a set that keeps the best action but drops the third
+      scores ``1.0`` at ``@1`` and ``0.667`` at ``@3``.  That is the point -- it
+      says how deep into the reference ranking the loss starts, which a single
+      ``contains_best`` flag cannot.
     """
     legal = observation["legal_actions"]
     everything = [{"type": "plant", **item} for item in legal["plants"]]
@@ -230,7 +242,7 @@ def candidate_recall(
         }
         for k in recall_at:
             top = set(best[:k])
-            entry[f"recall@{k}"] = len(top & keys) / len(top) if top else None
+            entry[f"top_k_coverage@{k}"] = len(top & keys) / len(top) if top else None
         report["recall"][name] = entry
     return report
 
@@ -311,9 +323,9 @@ def summarize(records: list[dict[str, Any]], modes: frozenset[str]) -> dict[str,
         }
         for name in ("generated", "screened"):
             for k in RECALL_AT:
-                summary["candidate_recall"][f"{name}_recall@{k}"] = _mean(
-                    [entry["recall"][name][f"recall@{k}"] for entry in entries
-                     if entry["recall"][name][f"recall@{k}"] is not None])
+                summary["candidate_recall"][f"{name}_top_k_coverage@{k}"] = _mean(
+                    [entry["recall"][name][f"top_k_coverage@{k}"] for entry in entries
+                     if entry["recall"][name][f"top_k_coverage@{k}"] is not None])
     return summary
 
 
