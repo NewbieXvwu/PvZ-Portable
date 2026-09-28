@@ -455,3 +455,6 @@ build-*/
 
 # Game recordings
 *.dmo
+
+# WorkBuddy agent workspace state (local only, never commit)
+.workbuddy-ai/

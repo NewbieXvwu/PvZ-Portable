@@ -234,7 +234,6 @@ public:
 	bool							EnvironmentPlant(int packet, int col, int row);
 	bool							EnvironmentShovel(int col, int row);
 	void							EnvironmentWait(int ticks);
-	int								EnvironmentWaitDecision(int maxTicks);
 	bool							EnvironmentTerminal() const;
 	std::string					EnvironmentObservation(bool privileged = false);
 	void							Start() override;

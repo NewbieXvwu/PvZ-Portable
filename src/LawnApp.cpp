@@ -1484,57 +1484,6 @@ void LawnApp::AdvanceLogicTick()
 	SexyApp::UpdateFrames();
 }
 
-int LawnApp::EnvironmentWaitDecision(int maxTicks)
-{
-	if (!mBoard || maxTicks < 1 || maxTicks > 1000000 || EnvironmentTerminal())
-		return 0;
-
-	auto decisionSignature = [this]()
-	{
-		std::ostringstream signature;
-		signature << mBoard->mCurrentWave << ',' << mBoard->mTotalSpawnedWaves << ',' << mBoard->mSunMoney / 50
-			<< ',' << mBoard->mTriggeredLawnMowers << ',' << static_cast<int>(mGameScene) << ',' << mBoard->mLevelComplete;
-		for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
-		{
-			SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
-			signature << '|' << static_cast<int>(packet.mPacketType) << ':' << packet.CanPickUp();
-		}
-		for (const Plant* plant : mBoard->mPlants)
-		{
-			if (!plant->mDead)
-				signature << '|' << static_cast<int>(plant->mSeedType) << ':' << plant->mPlantCol << ':' << plant->mRow << ':' << plant->mPlantHealth / 100;
-		}
-		for (const Zombie* zombie : mBoard->mZombies)
-		{
-			if (!zombie->mDead)
-				signature << '|' << static_cast<int>(zombie->mZombieType) << ':' << zombie->mRow << ':'
-					<< static_cast<int>(zombie->mPosX / 180.0f) << ':' << zombie->mBodyHealth / 100 << ':'
-					<< zombie->mHelmHealth / 100 << ':' << zombie->mShieldHealth / 100;
-		}
-		for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
-			for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
-				signature << '|' << static_cast<int>(mBoard->mGridSquareType[col][row]);
-		return signature.str();
-	};
-
-	const std::string initialSignature = decisionSignature();
-	int ticksAdvanced = 0;
-	// ponytail: the 300-tick floor limits frequent no-op decisions; lower it when faster reactions are needed.
-	while (ticksAdvanced < maxTicks && !EnvironmentTerminal())
-	{
-		for (Coin* coin : mBoard->mCoins)
-		{
-			if (!coin->mDead && coin->IsSun())
-				coin->ScoreCoin();
-		}
-		AdvanceLogicTick();
-		++ticksAdvanced;
-		if (ticksAdvanced >= std::min(maxTicks, 300) && decisionSignature() != initialSignature)
-			break;
-	}
-	return ticksAdvanced;
-}
-
 bool LawnApp::EnvironmentTerminal() const
 {
 	return !mBoard || mBoard->mLevelComplete || mBoardResult == BoardResult::BOARDRESULT_WON ||
@@ -1547,7 +1496,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		return "null";
 
 	std::ostringstream out;
-	out << "{\"protocol_version\":1,\"observation_version\":2,\"task_version\":2,\"level\":" << mBoard->mLevel
+	out << "{\"protocol_version\":3,\"observation_version\":2,\"task_version\":2,\"level\":" << mBoard->mLevel
 		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough
 		<< ",\"zombie_count_multiplier\":" << mEnvironmentTaskSpec.zombieCountMultiplier
 		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)

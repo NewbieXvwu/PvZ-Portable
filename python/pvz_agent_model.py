@@ -23,15 +23,34 @@ TOKEN_KINDS = {
     "zombie_roster": 9,
 }
 WAIT_TICKS = (60, 150, 300)
-WAIT_DECISION_TICKS = 900
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
-MODEL_ARCHITECTURE_VERSION = 3
+MODEL_ARCHITECTURE_VERSION = 4
 FEATURE_COUNT = 32
 
 
 def resolve_device(requested: str = "auto") -> torch.device:
+    """Resolve a ``--device`` choice, preferring CUDA and falling back to the CPU.
+
+    ``auto`` deliberately does **not** consider MPS.  Every model invocation in
+    this project is a batch-of-1 forward pass -- the search value model is
+    evaluated once per search leaf (~250 times per decision), and
+    ``GameplayModelV1.step`` carries a GRU hidden state so it is called one
+    observation at a time.  Measured on an Apple M5 Pro, MPS is slower on
+    exactly those shapes:
+
+    * ``SearchValueModel.predict`` 68 us -> 451 us, a 6.6x regression;
+    * ``advice()`` on the real simulator 162 ms -> 282 ms (leaf evaluation goes
+      from 8.5% to 47% of the search);
+    * a whole rollout episode 13.2 s -> 22.6 s.
+
+    MPS only wins once tensors are batched (value forward batch=256: 1.47x;
+    encoder batch=64: 2.44x), and no such path exists in the training loop.
+    The one place MPS does help is the backward pass of the student network
+    (1.29x), which is ~7.5 min of a ~50 min run and is dwarfed by the 30 min it
+    costs in rollout collection.  Pass ``--device mps`` explicitly to opt in.
+    """
     if requested == "auto":
-        requested = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+        requested = "cuda" if torch.cuda.is_available() else "cpu"
     if requested == "cuda" and not torch.cuda.is_available():
         raise ValueError("CUDA is unavailable")
     if requested == "mps" and not torch.backends.mps.is_available():
@@ -235,7 +254,7 @@ class GameplayModelV1(nn.Module):
         ])
         self.encoder_norm = nn.LayerNorm(width)
 
-        self.action_embedding = nn.Embedding(4, 64)
+        self.action_embedding = nn.Embedding(3, 64)
         self.previous_packet_embedding = nn.Embedding(12, 64)
         self.previous_cell_embedding = nn.Embedding(55, 64)
         self.previous_wait_embedding = nn.Embedding(len(WAIT_TICKS) + 1, 64)
@@ -244,7 +263,7 @@ class GameplayModelV1(nn.Module):
         self.event_projection = nn.Sequential(nn.Linear(8, 32), nn.SiLU())
         self.belief = nn.GRU(width + 128, MODEL_CONFIG["gru_width"], MODEL_CONFIG["gru_layers"], batch_first=True)
         hidden = MODEL_CONFIG["gru_width"]
-        self.action_type = nn.Linear(hidden, 4)
+        self.action_type = nn.Linear(hidden, 3)
         self.packet_query = nn.Linear(hidden, width)
         self.packet_key = nn.Linear(width, width)
         self.cell_key = nn.Linear(width, width)
@@ -261,7 +280,10 @@ class GameplayModelV1(nn.Module):
     def _previous_action(self, action: dict[str, Any] | None, device: torch.device) -> Tensor:
         if action is None:
             return torch.zeros(1, 64, device=device)
-        kind = {"plant": 0, "shovel": 1, "wait": 2, "wait_decision": 3}[action["type"]]
+        action_types = {"plant": 0, "shovel": 1, "wait": 2}
+        if action.get("type") not in action_types:
+            raise ValueError(f"unsupported action type: {action.get('type')}")
+        kind = action_types[action["type"]]
         packet = max(0, min(10, int(action.get("packet", -1)) + 1))
         cell = 0
         if "row" in action and "col" in action:
@@ -330,7 +352,7 @@ class GameplayModelV1(nn.Module):
             "packet_tokens": packet_tokens,
             "cell_tokens": cell_tokens,
             "cell_keys": self.cell_key(cell_tokens),
-            "value": self.value(belief).squeeze(-1),
+            "value": torch.tanh(self.value(belief)).squeeze(-1),
             "aux_next_spawn": self.aux_next_spawn(belief),
             "aux_lane_threat": self.aux_lane_threat(belief),
             "aux_outcome": self.aux_outcome(belief),
@@ -375,7 +397,7 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
     if not legal.get("wait", True):
         type_logits[2:] = -1e9
     type_dist = torch.distributions.Categorical(logits=type_logits)
-    action_types = {"plant": 0, "shovel": 1, "wait": 2, "wait_decision": 3}
+    action_types = {"plant": 0, "shovel": 1, "wait": 2}
     if action is not None and action.get("type") not in action_types:
         raise ValueError(f"unsupported action type: {action.get('type')}")
     type_index = ((type_logits.argmax() if deterministic else type_dist.sample()) if action is None
@@ -432,6 +454,8 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         selected = {"type": "shovel", "col": cell % 9, "row": cell // 9} if action is None else dict(action)
     elif action_type == 2:
         wait_dist = torch.distributions.Categorical(logits=output["wait_logits"])
+        if action is not None and action.get("ticks", 150) not in WAIT_TICKS:
+            raise ValueError(f"wait ticks must be one of {WAIT_TICKS}: {action}")
         duration = ((output["wait_logits"].argmax() if deterministic else wait_dist.sample()) if action is None
                     else torch.tensor(min(range(len(WAIT_TICKS)),
                                           key=lambda i: abs(WAIT_TICKS[i] - action.get("ticks", 150))), device=device))
@@ -439,7 +463,7 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         entropy = entropy + wait_dist.entropy()
         selected = {"type": "wait", "ticks": WAIT_TICKS[int(duration.item())]} if action is None else dict(action)
     else:
-        selected = {"type": "wait_decision", "max_ticks": WAIT_DECISION_TICKS} if action is None else dict(action)
+        raise ValueError(f"unsupported action index: {action_type}")
     return selected, log_prob, entropy
 
 
@@ -465,7 +489,10 @@ def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], o
         type_logits[1] = -1e9
     if not legal.get("wait", True):
         type_logits[2:] = -1e9
-    target_type = {"plant": 0, "shovel": 1, "wait": 2, "wait_decision": 3}[action["type"]]
+    action_types = {"plant": 0, "shovel": 1, "wait": 2}
+    if action.get("type") not in action_types:
+        raise ValueError(f"unsupported action type: {action.get('type')}")
+    target_type = action_types[action["type"]]
     type_loss = F.cross_entropy(type_logits.unsqueeze(0), torch.tensor([target_type], device=device))
     losses = [type_loss * (plant_weight if target_type == 0 else 1.0)]
     if target_type == 0:
@@ -491,6 +518,8 @@ def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], o
         losses.append(F.cross_entropy(cell_logits.unsqueeze(0), torch.tensor([target_cell], device=device)))
     elif target_type == 2:
         target_ticks = action.get("ticks", 150)
+        if target_ticks not in WAIT_TICKS:
+            raise ValueError(f"wait ticks must be one of {WAIT_TICKS}: {action}")
         duration = min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - target_ticks))
         losses.append(F.cross_entropy(output["wait_logits"].unsqueeze(0), torch.tensor([duration], device=device)))
     return torch.stack(losses).sum()

@@ -1,0 +1,11 @@
+# Runtime dependencies for the Python side (python/).
+#
+# Verified against torch 2.13.0 and numpy 2.5.1 on CPython 3.14.
+#
+# numpy is used directly and is *not* pulled in by torch: it backs the
+# float64 accumulator in ``pvz_search_value.search_value_features``, which is
+# ~5x faster than building a Python list of 4116 floats and handing it to
+# ``torch.tensor``.  See CODE_REVIEW.md ("Performance work") for the
+# bit-exactness argument that makes that substitution safe.
+torch>=2.0
+numpy>=1.24

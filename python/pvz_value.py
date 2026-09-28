@@ -3,7 +3,7 @@
 DISCOUNT_REFERENCE_TICKS = 300
 VALUE_GAMMA = 0.99
 VALUE_SEMANTICS = "discounted_terminal_v1"
-SEARCH_LABEL_VERSION = 2
+SEARCH_LABEL_VERSION = 3
 
 
 def discounted_terminal_value(won: bool, remaining_ticks: int) -> float:

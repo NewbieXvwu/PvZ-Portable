@@ -61,7 +61,7 @@ import yaml
 from dataclasses import dataclass, field
 from enum import IntEnum
 from pathlib import Path
-from typing import Any, Optional, Type
+from typing import Any, Type
 
 # ============================================================================
 # Constants
@@ -1545,7 +1545,7 @@ def parse_object_array(data: bytes, tail_parser, obj_name: str) -> tuple[dict[st
                 try:
                     tail = tail_parser(item.fields[100])
                     obj.update(tail)
-                except Exception as e:
+                except Exception:
                     obj["_tail_raw"] = base64.b64encode(item.fields[100]).decode('ascii')
             else:
                 # Inactive items - keep raw
@@ -1644,7 +1644,7 @@ def parse_save_file(data: bytes) -> SaveFile:
     expected_magic_base = b"PVZP_SAVE"
     
     if not magic.startswith(expected_magic_base):
-        print(f"Error: Invalid file format.")
+        print("Error: Invalid file format.")
         print(f"Expected magic starting with '{expected_magic_base.decode()}', got '{magic[:9].decode(errors='replace')}'")
         sys.exit(1)
         
@@ -1654,8 +1654,8 @@ def parse_save_file(data: bytes) -> SaveFile:
             version_char = magic[9:10]
             if version_char.isdigit():
                 found_version = int(version_char)
-                print(f"Error: Format version mismatch.")
-                print(f"This tool only supports v4 save files (PVZP_SAVE4).")
+                print("Error: Format version mismatch.")
+                print("This tool only supports v4 save files (PVZP_SAVE4).")
                 print(f"Found v{found_version} save file (PVZP_SAVE{found_version}).")
             else:
                 print(f"Error: Unknown magic format: {magic!r}")

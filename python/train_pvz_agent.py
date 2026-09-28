@@ -13,21 +13,29 @@ from typing import Any
 
 import torch
 
-from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG, predict_action, resolve_device
-from pvz_env import ENV_PROTOCOL_VERSION, PlayerProfileContext, PvZEnv, TaskSpec
+from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, predict_action, resolve_device
+from pvz_common import (
+    ENV_PROTOCOL_VERSION,
+    OBSERVATION_VERSION,
+    TASK_VERSION,
+    TRAINING_SEED,
+)
+from pvz_env import PvZEnv, training_task
 from pvz_imitation import train
 from pvz_search import SearchTeacher
 from pvz_search_value import SearchValueModel, load_search_value, save_search_value, train_search_value
 from pvz_seed_sets import DEFAULT_DEV_SEEDS, DEFAULT_TEST_SEEDS, read_seed_set
-from pvz_training_artifacts import provenance, save_checkpoint, sha256_file
+from pvz_training_artifacts import (
+    checkpoint_metadata,
+    provenance,
+    save_checkpoint,
+    sha256_file,
+    task_signature,
+)
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
-
-
-def contiguous_seeds(start: int, count: int) -> list[int]:
-    return list(range(start, start + count))
 
 
 def validate_seed_sets(**groups: list[int]) -> None:
@@ -41,11 +49,6 @@ def validate_seed_sets(**groups: list[int]) -> None:
             overlap = set(named[left]) & set(named[right])
             if overlap:
                 raise ValueError(f"{left} and {right} seed sets overlap: {sorted(overlap)[:8]}")
-
-
-def _task(seed: int, level: int, zombie_count_multiplier: float) -> TaskSpec:
-    return TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
-                    zombie_count_multiplier=zombie_count_multiplier)
 
 
 def _search_labels(step: dict[str, Any], advice: Any) -> dict[str, Any]:
@@ -75,12 +78,13 @@ def collect_search_episode(
     search_candidates: int,
     search_horizon_ticks: int,
     search_simulation_budget: int,
+    search_max_decisions: int,
     replay_prefix: str,
 ) -> dict[str, Any]:
-    observation, _ = env.reset(deck=deck, task=_task(seed, level, zombie_count_multiplier))
+    observation, _ = env.reset(deck=deck, task=training_task(seed, level, zombie_count_multiplier))
     searcher = SearchTeacher(env, value_model=value_model, beam_width=search_width,
                             candidate_limit=search_candidates, horizon_ticks=search_horizon_ticks,
-                            simulation_budget=search_simulation_budget)
+                            simulation_budget=search_simulation_budget, max_decisions=search_max_decisions)
     steps: list[dict[str, Any]] = []
     delta_ticks = 0
     events: dict[str, Any] = {}
@@ -97,7 +101,7 @@ def collect_search_episode(
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
             raise RuntimeError(f"search selected an illegal action on seed {seed}: {action}")
-        delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+        delta_ticks = info["ticks_advanced"]
         events = info["events"]
         if done:
             won = observation["result"] == 1
@@ -108,8 +112,8 @@ def collect_search_episode(
             return {
                 "seed": seed,
                 "replay_id": replay_id,
-                "observation_version": 2,
-                "task_version": 2,
+                "observation_version": OBSERVATION_VERSION,
+                "task_version": TASK_VERSION,
                 "search_label_version": SEARCH_LABEL_VERSION,
                 "steps": steps,
                 "won": won,
@@ -135,11 +139,12 @@ def collect_dagger_episode(
     search_candidates: int,
     search_horizon_ticks: int,
     search_simulation_budget: int,
+    search_max_decisions: int,
 ) -> dict[str, Any]:
-    observation, _ = env.reset(deck=deck, task=_task(seed, level, zombie_count_multiplier))
+    observation, _ = env.reset(deck=deck, task=training_task(seed, level, zombie_count_multiplier))
     searcher = SearchTeacher(env, value_model=search_value, beam_width=search_width,
                             candidate_limit=search_candidates, horizon_ticks=search_horizon_ticks,
-                            simulation_budget=search_simulation_budget)
+                            simulation_budget=search_simulation_budget, max_decisions=search_max_decisions)
     steps: list[dict[str, Any]] = []
     hidden = None
     previous_action = None
@@ -162,7 +167,7 @@ def collect_dagger_episode(
         if not info.get("ok"):
             raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
         previous_action = action
-        delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+        delta_ticks = info["ticks_advanced"]
         events = info["events"]
         if done:
             break
@@ -176,8 +181,8 @@ def collect_dagger_episode(
     return {
         "seed": seed,
         "replay_id": replay_id,
-        "observation_version": 2,
-        "task_version": 2,
+        "observation_version": OBSERVATION_VERSION,
+        "task_version": TASK_VERSION,
         "search_label_version": SEARCH_LABEL_VERSION,
         "steps": steps,
         "won": won,
@@ -200,13 +205,10 @@ def read_episodes(path: Path) -> list[dict[str, Any]]:
 
 
 def validate_episode_schema(episodes: list[dict[str, Any]]) -> None:
-    if any(episode.get("observation_version") != 2 or episode.get("task_version") != 2
+    if any(episode.get("observation_version") != OBSERVATION_VERSION
+           or episode.get("task_version") != TASK_VERSION
            or episode.get("search_label_version") != SEARCH_LABEL_VERSION for episode in episodes):
         raise ValueError("training trajectories do not match the current search schema; recollect them")
-
-
-def _search_value_metadata(checkpoint: dict[str, Any]) -> dict[str, Any]:
-    return {key: value for key, value in checkpoint.items() if key != "state_dict"}
 
 
 def evaluate(model: GameplayModelV1, env: PvZEnv, seeds: list[int], device: torch.device,
@@ -215,7 +217,7 @@ def evaluate(model: GameplayModelV1, env: PvZEnv, seeds: list[int], device: torc
     model.eval()
     records: list[dict[str, Any]] = []
     for seed in seeds:
-        observation, _ = env.reset(deck=deck, task=_task(seed, level, zombie_count_multiplier))
+        observation, _ = env.reset(deck=deck, task=training_task(seed, level, zombie_count_multiplier))
         hidden = None
         previous_action = None
         delta_ticks = 0
@@ -229,7 +231,7 @@ def evaluate(model: GameplayModelV1, env: PvZEnv, seeds: list[int], device: torc
             if not info.get("ok"):
                 raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
             previous_action = action
-            delta_ticks = info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)
+            delta_ticks = info["ticks_advanced"]
             events = info["events"]
             actions += 1
             if done:
@@ -258,7 +260,12 @@ def main() -> None:
     parser.add_argument("--deck", type=lambda text: [int(value) for value in text.split(",") if value],
                         default=list(DECK))
     parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
-    parser.add_argument("--device", choices=("auto", "cuda", "mps", "cpu"), default="auto")
+    parser.add_argument(
+        "--device", choices=("auto", "cuda", "mps", "cpu"), default="auto",
+        help="auto = cuda if available else cpu. MPS is never chosen automatically: every "
+             "model call here is a batch-of-1 forward pass, where MPS measured 1.71x slower "
+             "end to end. Pass --device mps explicitly to opt in.",
+    )
     parser.add_argument("--train-seed-start", type=int, default=0)
     parser.add_argument("--train-episodes", type=int, default=64)
     parser.add_argument("--dagger-seed-start", type=int, default=10000)
@@ -279,6 +286,7 @@ def main() -> None:
     parser.add_argument("--search-candidates", type=int, default=8)
     parser.add_argument("--search-horizon-ticks", type=int, default=900)
     parser.add_argument("--search-simulation-budget", type=int, default=256)
+    parser.add_argument("--search-max-decisions", type=int, default=64)
     args = parser.parse_args()
     if not args.resource_dir:
         parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
@@ -286,6 +294,7 @@ def main() -> None:
         args.max_actions, args.train_episodes, args.dagger_episodes, args.dagger_rounds,
         args.value_bootstrap_episodes, args.value_refinement_episodes, args.epochs, args.value_epochs,
         args.search_width, args.search_candidates, args.search_horizon_ticks, args.search_simulation_budget,
+        args.search_max_decisions,
     )
     if min(positive) < 1:
         parser.error("episode counts, epochs, and search parameters must be positive")
@@ -295,10 +304,13 @@ def main() -> None:
     if not 1.0 <= args.zombie_count_multiplier <= 10.0:
         parser.error("--zombie-count-multiplier must be from 1 to 10")
 
-    train_seeds = contiguous_seeds(args.train_seed_start, args.train_episodes)
-    dagger_seeds = contiguous_seeds(args.dagger_seed_start, args.dagger_episodes * args.dagger_rounds)
-    bootstrap_seeds = contiguous_seeds(args.value_bootstrap_seed_start, args.value_bootstrap_episodes)
-    refinement_seeds = contiguous_seeds(args.value_refinement_seed_start, args.value_refinement_episodes)
+    train_seeds = list(range(args.train_seed_start, args.train_seed_start + args.train_episodes))
+    dagger_seeds = list(range(args.dagger_seed_start,
+                              args.dagger_seed_start + args.dagger_episodes * args.dagger_rounds))
+    bootstrap_seeds = list(range(args.value_bootstrap_seed_start,
+                                 args.value_bootstrap_seed_start + args.value_bootstrap_episodes))
+    refinement_seeds = list(range(args.value_refinement_seed_start,
+                                  args.value_refinement_seed_start + args.value_refinement_episodes))
     dev_seeds = read_seed_set(args.dev_seeds, args.level, "development")
     test_seeds = read_seed_set(args.test_seeds, args.level, "final_test")
     validate_seed_sets(
@@ -310,8 +322,8 @@ def main() -> None:
         final_test=test_seeds,
     )
 
-    random.seed(17)
-    torch.manual_seed(17)
+    random.seed(TRAINING_SEED)
+    torch.manual_seed(TRAINING_SEED)
     torch.set_num_threads(1)
     device = resolve_device(args.device)
     args.output_dir.mkdir(parents=True, exist_ok=True)
@@ -319,13 +331,24 @@ def main() -> None:
     data_path = args.output_dir / "search_trajectories.json.gz"
     bootstrap_path = args.output_dir / "search_value_bootstrap.json.gz"
     refinement_path = args.output_dir / "search_value_refinement.json.gz"
-    search_value_path = args.output_dir / "search_value_v1.pt"
+    dagger_path = args.output_dir / "dagger_search_trajectories.json.gz"
+    search_value_path = args.output_dir / "search_value_v2.pt"
+    current_task_signature = task_signature(args.level, args.deck, args.zombie_count_multiplier, args.resource_dir)
 
     if args.train_only:
         episodes = read_episodes(data_path)
         validate_episode_schema(episodes)
         train_seeds = [int(episode["seed"]) for episode in episodes]
-        search_value, loaded_search_value_checkpoint = load_search_value(search_value_path, device)
+        # The dagger seed set must come from the trajectories actually on disk. Using the CLI
+        # defaults here would abort the run with an unrelated "seed sets overlap" error whenever
+        # the data was collected with a different --dagger-seed-start.
+        dagger_seeds = (
+            [int(episode["seed"]) for episode in read_episodes(dagger_path)]
+            if dagger_path.is_file() else []
+        )
+        search_value, loaded_search_value_checkpoint = load_search_value(
+            search_value_path, device, current_task_signature
+        )
         checkpoint_bootstrap = [int(seed) for seed in loaded_search_value_checkpoint.get("bootstrap_seeds", [])]
         checkpoint_refinement = [int(seed) for seed in loaded_search_value_checkpoint.get("refinement_seeds", [])]
         if not checkpoint_bootstrap or not checkpoint_refinement:
@@ -338,14 +361,15 @@ def main() -> None:
             development=dev_seeds,
             final_test=test_seeds,
         )
-        search_value_summary = _search_value_metadata(loaded_search_value_checkpoint)
+        search_value_summary = checkpoint_metadata(loaded_search_value_checkpoint)
     else:
         with PvZEnv(resource_dir=args.resource_dir) as env:
             bootstrap = [
                 collect_search_episode(
                     env, seed, replay_dir, None, args.max_actions, args.level, tuple(args.deck),
                     args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget, "value_bootstrap",
+                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions,
+                    "value_bootstrap",
                 )
                 for seed in bootstrap_seeds
             ]
@@ -357,7 +381,8 @@ def main() -> None:
                 collect_search_episode(
                     env, seed, replay_dir, search_value, args.max_actions, args.level, tuple(args.deck),
                     args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget, "value_refinement",
+                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions,
+                    "value_refinement",
                 )
                 for seed in refinement_seeds
             ]
@@ -366,6 +391,7 @@ def main() -> None:
             save_search_value(
                 search_value_path,
                 search_value,
+                task_signature=current_task_signature,
                 bootstrap_seeds=bootstrap_seeds,
                 refinement_seeds=refinement_seeds,
                 bootstrap_losses=bootstrap_losses,
@@ -382,7 +408,7 @@ def main() -> None:
                 collect_search_episode(
                     env, seed, replay_dir, search_value, args.max_actions, args.level, tuple(args.deck),
                     args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget, "search",
+                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions, "search",
                 )
                 for seed in train_seeds
             ]
@@ -394,7 +420,10 @@ def main() -> None:
     model = GameplayModelV1().to(device)
     parameter_count = sum(parameter.numel() for parameter in model.parameters())
     losses, plant_weight = train(model, episodes, args.epochs, device)
-    bc_metadata = provenance(args, {"search": data_path}, train_seeds, [], device)
+    # The BC checkpoint is written before DAgger collection, so it legitimately records an
+    # empty dagger episode list; the final checkpoint records the collected seeds.
+    bc_metadata = provenance(args, {"search": data_path}, train_seeds=train_seeds,
+                             dagger_seeds=[], device=device)
     bc_checkpoint = args.output_dir / "gameplay_model_v1_bc.pt"
     save_checkpoint(
         bc_checkpoint,
@@ -409,17 +438,16 @@ def main() -> None:
         search_value_sha256=search_value_sha256,
     )
 
-    dagger_path = args.output_dir / "dagger_search_trajectories.json.gz"
     dagger_episodes: list[dict[str, Any]] = []
     with PvZEnv(resource_dir=args.resource_dir) as env:
         for dagger_round in range(args.dagger_rounds):
             round_start = args.dagger_seed_start + dagger_round * args.dagger_episodes
-            round_seeds = contiguous_seeds(round_start, args.dagger_episodes)
+            round_seeds = list(range(round_start, round_start + args.dagger_episodes))
             new_episodes = [
                 collect_dagger_episode(
                     model, search_value, env, seed, replay_dir, args.max_actions, args.level, tuple(args.deck),
                     args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget,
+                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions,
                 )
                 for seed in round_seeds
             ]
@@ -436,9 +464,9 @@ def main() -> None:
     final_metadata = provenance(
         args,
         {"search": data_path, "dagger_search": dagger_path},
-        train_seeds,
-        dagger_seeds,
-        device,
+        train_seeds=train_seeds,
+        dagger_seeds=dagger_seeds,
+        device=device,
     )
     save_checkpoint(
         checkpoint,
@@ -457,8 +485,8 @@ def main() -> None:
         "model": checkpoint.name,
         "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
         "protocol_version": ENV_PROTOCOL_VERSION,
-        "observation_version": 2,
-        "task_version": 2,
+        "observation_version": OBSERVATION_VERSION,
+        "task_version": TASK_VERSION,
         "search_label_version": SEARCH_LABEL_VERSION,
         "value_range": [-1, 1],
         "value_gamma": VALUE_GAMMA,

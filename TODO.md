@@ -10,14 +10,13 @@
 
 ## 已完成
 
-- 无画面环境与可视模式共用 `AdvanceLogicTick()`，支持确定性 reset、plant、shovel、固定 tick 等待和事件等待。
+- 无画面环境与可视模式共用 `AdvanceLogicTick()`，支持确定性 reset、plant、shovel 和固定 tick 等待。
 - 环境协议升级到 v2；Python 只接受 v2，reset 使用 `RESET_V2`，旧二进制会在握手阶段直接失败。
 - 结构化观测覆盖格子、植物、僵尸、阳光、投射物、卡片、波次、合法动作与客观事件。
 - 内存 snapshot/restore 保存棋盘、随机状态、计数器和动画相关状态；`verify_env_equivalence.py` 用于可视/无画面与恢复后的逐 tick 等价性验证。
-- `WAIT_DECISION` 使用自适应反应窗口和紧凑状态签名；危险状态可更快返回。
 - 搜索路径支持轻量快照命令和 `BRANCH_SNAPSHOT_FAST`；批量分支同时返回完整快照状态哈希，用于 transposition 去重。
 - SearchTeacher 完全独立于学生网络。候选只来自合法动作、lane pressure、空间多样性、铲除与时间动作；学生策略和值头不会参与教师候选或叶子打分。
-- 搜索由 `horizon_ticks` 定义游戏时间范围，由整次决策共享的 `simulation_budget` 定义计算预算，并用 successive halving 把更多模拟分配给更有希望的根动作；`max_same_tick_actions` 只负责阻止零 tick 动作无限展开。
+- 搜索同时受 `horizon_ticks`、`max_decisions` 和整次决策共享的 `simulation_budget` 限制，并用 successive halving 把更多模拟分配给更有希望的根动作；`max_same_tick_actions` 也会阻止零 tick 动作无限展开。
 - 搜索结果按 `确定胜利 > 未终局 > 确定失败` 排序；BC、搜索与 PPO 使用统一的按游戏 tick 折扣终局价值语义。
 - 独立 `SearchValueModel` 只学习模拟器轨迹的真实折扣终局结果。冷启动、value refinement、最终策略教师数据使用互斥 seed；最终 SearchTeacher 使用冻结的独立 value 模型。
 - 训练期模型选择只使用冻结 development 256 seeds；final-test 1024 seeds 与训练、DAgger、value bootstrap/refinement、development 全部隔离，只用于最终验收。
@@ -28,7 +27,7 @@
 - Python 无需菜单交互即可重置普通关卡并完成完整自动对局。
 - 固定 seed 与固定动作序列可复现；snapshot 恢复后重放轨迹一致。
 - 搜索教师在固定 `horizon_ticks` 下比较分支，整次决策的模拟总量不超过 `simulation_budget`。
-- 搜索中相同 `(state_hash, elapsed_ticks, same_tick_actions)` 状态只保留得分更高的路径。
+- 搜索中相同 `(state_hash, elapsed_ticks, decision_count, same_tick_actions)` 状态只保留得分更高的路径。
 - 训练、DAgger、value bootstrap、value refinement、development 和 final-test seed 集各自唯一且两两互斥。
 - checkpoint 必须声明并匹配当前协议、模型架构、观测版本、任务版本、搜索标签版本和 value semantics。
 - final-test 1024 seeds 在最终验收前不得用于训练、调参或模型选择。
@@ -39,4 +38,41 @@
 - 在 development 256 seeds 上校准 search horizon、总 simulation budget、beam width 与 SearchValueModel；只依据 development 结果做选择。
 - 锁定配置后生成大规模搜索监督与 DAgger 数据，并在 final-test 1024 seeds 上做一次最终验收。
 - 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。
+  - **已完成（Python 侧）**：`search_value_features` 改为 numpy float64 累加器 + 视图，
+    真实观测上 122.8 µs → 23.2 µs（5.3×），逐位等价（见 `CODE_REVIEW.md` §5.2 与
+    `python/test_search_value_features.py`、`scripts/real_env_equivalence.py`）。
+    参考模拟器下 `advice()` 30.0 ms → 8.6 ms（3.49×）；真实模拟器下 186.5 ms → 164.6 ms（1.13–1.17×）。
+  - **下一步（C++ 侧）**：真实环境下 `advice()` 有 66% 花在等待 C++ 返回。已实测每分支固定开销
+    ~290 µs = `EnvironmentObservation` 90 µs + `LawnSaveGameToMemory` 101 µs +
+    `LawnLoadGameFromMemory` + 对整块 `board` 做 FNV-1a 的 `EnvironmentSnapshotHash`，
+    另有 1.7 µs/tick 的模拟成本。动 `BRANCH_SNAPSHOT_FAST` 前需先把
+    `verify_env_equivalence.py` 变成可自动化的回归。
 - 扩展到白天、夜晚、泳池、迷雾和屋顶等地形，检查状态候选覆盖和 SearchValueModel 在不同卡组上的泛化。
+
+## 已排除的路线（有实测数据，勿重复尝试）
+
+- **降精度换速度**：真实模拟器 160 次决策的误差预算约 1e-5~1e-4（margin 中位 6.2e-4，
+  排除 10.6% 的精确并列后没有任何一次低于 1e-7）。但 fp16/bf16/稀疏首层/float32 累加器
+  **全部比全精度更慢**（0.09×~1.00×）。**在 Apple M5 Pro 上用真实负载形状重测过**：
+  fp16 全 half 0.24×、bf16 首层 0.33× —— Apple 的矩阵协处理器（AMX）是 **fp32** 单元，
+  M 系列没有比 fp32 吞吐更高的 fp16/bf16 路径。这是结构性的，不是配置问题。
+  见 `CODE_REVIEW.md` §6.2。换到非 Apple 硬件仍需重测这一条。
+- **调 CPU 线程数**：threads=1/2/5/10/15 下 batch=1 恒为 15.1–15.3 µs、batch=256 恒为
+  272.7–275.2 µs。Accelerate/AMX 已在单线程吃满这条路径。`torch.get_num_threads()` 默认
+  返回 5 是 M5 Pro 的 P 核数，不是配置错误。
+- **把值模型放到 MPS**：batch=1 的形状上 MPS 全面更慢 —— `SearchValueModel.predict`
+  68 µs → 451 µs，真实模拟器上单次 `advice()` 162 ms → 282 ms，整集 rollout 13.2 s → 22.6 s
+  （1.71×）。一次完整训练净亏约 28 分钟。**`resolve_device("auto")` 已改为不再考虑 MPS**；
+  显式 `--device mps` 仍可用。见 `CODE_REVIEW.md` §6.5。
+- **指望 `encoder batch=64` 的 MPS 收益（2.44×）**：这个形状在真实训练路径里**不存在**。
+  `pvz_imitation.train` 的 `for start in range(0, len(steps), 64)` 只是梯度累积窗口，
+  循环体里仍是逐条 `model.step()`（GRU 隐状态串行传递），张量维度恒为 1。
+  除非把 encoder 跨 episode 批量化（大改，且 GRU 仍串行），否则拿不到。
+- **叶子估值批量化**：每批只有约 4.3 行，被 `F.linear` 非连续转置权重在 M≥2 时的
+  ~44 µs 固定开销吃光（14.79 vs 15.07 µs/row）。见 `CODE_REVIEW.md` §5.4。
+- **对特征向量做稀疏化**：特征只有 1.1%–3.3% 非零，但 `Linear(4116,128)` 在 batch=1 只要
+  6.59 µs（权重命中 L2/L3），`torch.nonzero` + fancy indexing 的索引构造开销远超省下的乘加，
+  实测慢 5.6 倍。
+
+**要提速只能「少算」，不能「算粗」**：减少叶子估值次数、更激进的剪枝、
+把 C++ 往返批得更狠。真实环境下 Python 侧全部优化到零端到端也只能 2.9×。

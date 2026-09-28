@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
 import random
-import subprocess
 import sys
 import time
 from typing import Any
@@ -18,7 +16,15 @@ from torch.nn import functional as F
 
 from pvz_agent_model import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
                              resolve_device, select_action)
-from pvz_env import ENV_PROTOCOL_VERSION, PlayerProfileContext, PvZEnv, TaskSpec
+from pvz_common import (
+    ENV_PROTOCOL_VERSION,
+    OBSERVATION_VERSION,
+    TASK_VERSION,
+    canonical_digest,
+    git_metadata,
+    sha256_file,
+)
+from pvz_env import PvZEnv, training_task
 from pvz_seed_sets import DEFAULT_DEV_SEEDS, DEFAULT_TEST_SEEDS, read_seed_set
 from pvz_value import DISCOUNT_REFERENCE_TICKS, SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 
@@ -27,30 +33,10 @@ DECK = (0, 1, 2, 3, 4, 5)
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as file:
-        for chunk in iter(lambda: file.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def git_metadata() -> tuple[str | None, bool | None]:
-    try:
-        revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT, check=True,
-                                  capture_output=True, text=True).stdout.strip()
-        dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, check=True,
-                                    capture_output=True, text=True).stdout)
-        return revision, dirty
-    except (OSError, subprocess.CalledProcessError):
-        return None, None
-
-
 def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
                     max_actions: int, replay_path: Path, level: int = LEVEL,
                     deck: tuple[int, ...] = DECK, zombie_count_multiplier: float = 1.0) -> dict[str, Any]:
-    task = TaskSpec(level=level, seed=seed, playthrough=2, profile=PlayerProfileContext(),
-                    zombie_count_multiplier=zombie_count_multiplier)
+    task = training_task(seed, level, zombie_count_multiplier)
     observation, _ = env.reset(deck=deck, task=task)
     hidden = None
     previous_action = None
@@ -79,9 +65,7 @@ def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
             raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
         hidden = output["hidden"]
         previous_action = action
-        transition["action_duration_ticks"] = info.get(
-            "ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0
-        )
+        transition["action_duration_ticks"] = info["ticks_advanced"]
         elapsed_since_previous_observation = transition["action_duration_ticks"]
         events = info["events"]
         if done:
@@ -216,12 +200,7 @@ def episode_hash(episode: dict[str, Any]) -> str:
             "action_duration_ticks", "events", "action", "log_prob", "value", "reward",
         )
     } for transition in episode["transitions"]]
-    payload = json.dumps(
-        {"seed": episode["seed"], "steps": steps, "result": episode["result"]},
-        separators=(",", ":"),
-        sort_keys=True,
-    )
-    return hashlib.sha256(payload.encode()).hexdigest()
+    return canonical_digest({"seed": episode["seed"], "steps": steps, "result": episode["result"]})
 
 
 def main() -> None:
@@ -235,7 +214,12 @@ def main() -> None:
     parser.add_argument("--level", type=int, default=LEVEL)
     parser.add_argument("--deck", type=lambda value: tuple(map(int, value.split(","))), default=DECK)
     parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
-    parser.add_argument("--device", choices=("auto", "cuda", "mps", "cpu"), default="auto")
+    parser.add_argument(
+        "--device", choices=("auto", "cuda", "mps", "cpu"), default="auto",
+        help="auto = cuda if available else cpu. MPS is never chosen automatically: every "
+             "model call here is a batch-of-1 forward pass, where MPS measured 1.71x slower "
+             "end to end. Pass --device mps explicitly to opt in.",
+    )
     parser.add_argument("--updates", type=int, default=12)
     parser.add_argument("--rollout-episodes", type=int, default=8)
     parser.add_argument("--ppo-epochs", type=int, default=2)
@@ -281,8 +265,8 @@ def main() -> None:
             or initial.get("value_semantics") != VALUE_SEMANTICS
             or provenance.get("protocol_version") != ENV_PROTOCOL_VERSION
             or provenance.get("search_label_version") != SEARCH_LABEL_VERSION
-            or provenance["observation_version"] != 2
-            or provenance["task_version"] != 2):
+            or provenance["observation_version"] != OBSERVATION_VERSION
+            or provenance["task_version"] != TASK_VERSION):
         raise ValueError("initial checkpoint does not match the current model/search semantics")
     model = GameplayModelV1().to(device)
     model.load_state_dict(initial["state_dict"])
@@ -291,7 +275,7 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = args.output_dir / "gameplay_model_v1_ppo.pt"
     summary_path = args.output_dir / "ppo_training_summary.json"
-    revision, dirty = git_metadata()
+    revision, dirty = git_metadata(ROOT)
     resource_dir = Path(args.resource_dir).expanduser().resolve()
     resource_hashes = {
         "main.pak": sha256_file(resource_dir / "main.pak"),
@@ -373,8 +357,8 @@ def main() -> None:
                     "training_seed_range": [args.train_seed_start, args.train_seed_end - 1],
                 },
                 "model_config": MODEL_CONFIG,
-                "observation_version": 2,
-                "task_version": 2,
+                "observation_version": OBSERVATION_VERSION,
+                "task_version": TASK_VERSION,
                 "search_label_version": SEARCH_LABEL_VERSION,
                 "value_semantics": VALUE_SEMANTICS,
             }

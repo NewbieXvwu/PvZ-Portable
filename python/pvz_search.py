@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import Any, Iterator
 
-from pvz_agent_model import WAIT_DECISION_TICKS
+from pvz_agent_model import WAIT_TICKS
 from pvz_search_candidates import CandidateGenerator, fit_action_to_remaining, lane_pressure
 from pvz_search_value import SearchValueModel
 from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
@@ -34,6 +34,7 @@ class _SearchNode:
     state_hash: str
     same_tick_actions: int
     elapsed_ticks: int
+    decision_count: int
     path_return: float
     discount: float
     score: float
@@ -46,7 +47,7 @@ class _RootState:
     beam: list[_SearchNode] = field(default_factory=list)
     leaves: list[tuple[float, int | None, int]] = field(default_factory=list)
     simulations: int = 0
-    transpositions: dict[tuple[str, int, int], float] = field(default_factory=dict)
+    transpositions: dict[tuple[str, int, int, int], float] = field(default_factory=dict)
 
 
 class SearchTeacher:
@@ -61,11 +62,10 @@ class SearchTeacher:
         horizon_ticks: int = 900,
         simulation_budget: int = 256,
         max_same_tick_actions: int = 2,
+        max_decisions: int = 64,
     ) -> None:
-        if min(beam_width, candidate_limit, horizon_ticks, simulation_budget, max_same_tick_actions) < 1:
+        if min(beam_width, candidate_limit, horizon_ticks, simulation_budget, max_same_tick_actions, max_decisions) < 1:
             raise ValueError("search parameters must be positive")
-        if horizon_ticks < WAIT_DECISION_TICKS:
-            raise ValueError(f"search horizon must be at least {WAIT_DECISION_TICKS} ticks")
         self.env = env
         self.value_model = value_model
         self.beam_width = beam_width
@@ -74,6 +74,7 @@ class SearchTeacher:
         self.horizon_ticks = horizon_ticks
         self.simulation_budget = simulation_budget
         self.max_same_tick_actions = max_same_tick_actions
+        self.max_decisions = max_decisions
         self.candidate_generator = CandidateGenerator()
         self._snapshots: set[int] = set()
         self._root_snapshot = 0
@@ -132,7 +133,7 @@ class SearchTeacher:
         if observation["terminal"]:
             return 1.0 if observation["result"] == 1 else -1.0
         if self.value_model is not None:
-            return self.value_model.predict(observation)
+            return max(-1.0, min(1.0, float(self.value_model.predict(observation))))
         return self._bootstrap_leaf_value(observation)
 
     @staticmethod
@@ -188,8 +189,6 @@ class SearchTeacher:
             return f"S:{int(action['col'])}:{int(action['row'])}"
         if kind == "wait":
             return f"W:{int(action['ticks'])}"
-        if kind == "wait_decision":
-            return f"D:{int(action.get('max_ticks', WAIT_DECISION_TICKS))}"
         raise ValueError(f"unsupported search action: {action}")
 
     def _branch_snapshot_fast(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -211,7 +210,7 @@ class SearchTeacher:
             return "shovel", int(action["row"])
         if kind == "wait":
             return "wait", int(action["ticks"]) // 60
-        return ("wait_decision",) if kind == "wait_decision" else (str(kind),)
+        raise ValueError(f"unsupported search action: {action}")
 
     def _branch_result(
         self,
@@ -223,15 +222,12 @@ class SearchTeacher:
             return None, (float("-inf"), None, node.elapsed_ticks)
         observation = branch["observation"]
         done = bool(observation.get("terminal"))
-        advanced = max(
-            int(branch.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0)),
-            int(observation["tick"]) - int(node.observation["tick"]),
-            0,
-        )
+        advanced = max(int(observation["tick"]) - int(node.observation["tick"]), 0)
         remaining = self.horizon_ticks - node.elapsed_ticks
         if advanced > remaining:
             raise RuntimeError(f"search action exceeded horizon: {action}")
         elapsed = node.elapsed_ticks + advanced
+        decision_count = node.decision_count + 1
         snapshot_id = int(branch["snapshot_id"]) if branch.get("snapshot_id") is not None else None
         state_hash = str(branch.get("state_hash", ""))
         if not done and (snapshot_id is None or not state_hash):
@@ -247,7 +243,7 @@ class SearchTeacher:
             score = path_return + discount * (0.0 if done else self._leaf_value(observation))
             outcome = int(observation["result"] == 1) if done else None
             leaf = score, outcome, elapsed
-            if done or elapsed >= self.horizon_ticks:
+            if done or elapsed >= self.horizon_ticks or decision_count >= self.max_decisions:
                 if snapshot_id is not None:
                     self._release(snapshot_id)
                 return None, leaf
@@ -263,6 +259,7 @@ class SearchTeacher:
                 state_hash,
                 same_tick,
                 elapsed,
+                decision_count,
                 path_return,
                 discount,
                 score,
@@ -284,11 +281,11 @@ class SearchTeacher:
         return [self._branch_result(node, action, branch) for action, branch in zip(fitted, branches)]
 
     @staticmethod
-    def _transposition_key(node: _SearchNode) -> tuple[str, int, int]:
-        return node.state_hash, node.elapsed_ticks, node.same_tick_actions
+    def _transposition_key(node: _SearchNode) -> tuple[str, int, int, int]:
+        return node.state_hash, node.elapsed_ticks, node.decision_count, node.same_tick_actions
 
     def _prune(self, nodes: list[_SearchNode]) -> list[_SearchNode]:
-        deduplicated: dict[tuple[str, int, int], _SearchNode] = {}
+        deduplicated: dict[tuple[str, int, int, int], _SearchNode] = {}
         for node in nodes:
             key = self._transposition_key(node)
             previous = deduplicated.get(key)
@@ -398,6 +395,48 @@ class SearchTeacher:
             states.append(state)
         return states
 
+    @staticmethod
+    def _root_diversity_key(action: dict[str, Any]) -> tuple[Any, ...]:
+        kind = action["type"]
+        if kind == "plant":
+            return kind, action["packet"], action["row"], action["col"] // 3
+        if kind == "shovel":
+            return kind, action["row"], action["col"] // 3
+        return kind, action["ticks"]
+
+    def _root_rank(self, root: _RootState) -> tuple[int, float]:
+        """Rank a root state by its best estimate.
+
+        Extracted so sorting evaluates ``_estimate_root`` exactly once per element.
+        """
+        score, outcome, _ = self._estimate_root(root)
+        return self._result_key(outcome, score)
+
+    def _screen_root_states(self, roots: list[_RootState]) -> list[_RootState]:
+        ranked = sorted(roots, key=self._root_rank, reverse=True)
+        selected: list[_RootState] = []
+        groups: set[tuple[Any, ...]] = set()
+        for root in ranked:
+            key = self._root_diversity_key(root.action)
+            if key not in groups:
+                selected.append(root)
+                groups.add(key)
+                if len(selected) == self.root_candidate_limit:
+                    break
+        selected_ids = {id(root) for root in selected}
+        for root in ranked:
+            if len(selected) == self.root_candidate_limit:
+                break
+            if id(root) not in selected_ids:
+                selected.append(root)
+                selected_ids.add(id(root))
+        for root in roots:
+            if id(root) not in selected_ids:
+                self._finish_root(root)
+        for root in selected:
+            root.simulations = 0
+        return selected
+
     def _successive_halving(
         self,
         roots: list[_RootState],
@@ -409,10 +448,7 @@ class SearchTeacher:
         active = list(roots)
         stage_quota = max(2, min(4, self.candidate_limit))
         while remaining > 0 and any(root.beam for root in active):
-            active.sort(
-                key=lambda root: self._result_key(self._estimate_root(root)[1], self._estimate_root(root)[0]),
-                reverse=True,
-            )
+            active.sort(key=self._root_rank, reverse=True)
             progressed = False
             for root in active:
                 if remaining <= 0:
@@ -426,10 +462,7 @@ class SearchTeacher:
             if not progressed:
                 break
             if len(active) > 1:
-                active.sort(
-                    key=lambda root: self._result_key(self._estimate_root(root)[1], self._estimate_root(root)[0]),
-                    reverse=True,
-                )
+                active.sort(key=self._root_rank, reverse=True)
                 keep = max(1, (len(active) + 1) // 2)
                 for root in active[keep:]:
                     self._finish_root(root)
@@ -447,7 +480,7 @@ class SearchTeacher:
     def _fallback_action(observation: dict[str, Any]) -> dict[str, Any]:
         legal = observation["legal_actions"]
         if legal.get("wait", True):
-            return {"type": "wait_decision", "max_ticks": WAIT_DECISION_TICKS}
+            return {"type": "wait", "ticks": WAIT_TICKS[0]}
         if legal["plants"]:
             return {"type": "plant", **legal["plants"][0]}
         if legal["shovels"]:
@@ -462,7 +495,7 @@ class SearchTeacher:
             try:
                 root_actions = self.candidate_generator.actions(
                     observation,
-                    min(self.root_candidate_limit, self.simulation_budget),
+                    min(max(1, self.simulation_budget // 2), max(32, self.root_candidate_limit * 4)),
                     True,
                     self.horizon_ticks,
                 )
@@ -472,13 +505,20 @@ class SearchTeacher:
                     "root",
                     0,
                     0,
+                    0,
                     0.0,
                     1.0,
-                    self._leaf_value(observation),
+                    # The root node is only ever used as an expansion origin
+                    # (snapshot/observation/elapsed/discount/decision_count/same_tick_actions);
+                    # its own score is never read, so evaluating the leaf value here would be
+                    # a wasted value-model forward pass on every decision.
+                    0.0,
                     ("root",),
                 )
-                root_states = self._initialize_roots(root, root_actions)
-                results, total = self._successive_halving(root_states, len(root_states))
+                root_states = self._screen_root_states(self._initialize_roots(root, root_actions))
+                screening_cost = len(root_actions)
+                results, depth_cost = self._successive_halving(root_states, screening_cost)
+                total = screening_cost + depth_cost
                 if not results:
                     action = self._fallback_action(observation)
                     return SearchAdvice(

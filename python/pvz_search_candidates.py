@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pvz_agent_model import WAIT_DECISION_TICKS, WAIT_TICKS
+from pvz_agent_model import WAIT_TICKS
 
 
 def action_key(action: dict[str, Any]) -> tuple[tuple[str, Any], ...]:
@@ -38,12 +38,12 @@ def fit_action_to_remaining(action: dict[str, Any], remaining_ticks: int) -> dic
     if remaining_ticks <= 0:
         return None
     fitted = dict(action)
-    if fitted.get("type") == "wait":
-        fitted["ticks"] = min(int(fitted.get("ticks", remaining_ticks)), remaining_ticks)
-        return fitted if fitted["ticks"] >= 1 else None
-    if fitted.get("type") == "wait_decision":
-        fitted["max_ticks"] = min(int(fitted.get("max_ticks", WAIT_DECISION_TICKS)), remaining_ticks)
-        return fitted if fitted["max_ticks"] >= 1 else None
+    kind = fitted.get("type")
+    if kind == "wait":
+        ticks = fitted.get("ticks")
+        return fitted if type(ticks) is int and ticks in WAIT_TICKS and ticks <= remaining_ticks else None
+    if kind not in ("plant", "shovel"):
+        raise ValueError(f"unsupported search action: {action}")
     return fitted
 
 
@@ -96,7 +96,7 @@ def shovel_proposals(observation: dict[str, Any], limit: int) -> list[dict[str, 
     pressure = lane_pressure(observation)
     cells = sorted(
         observation["legal_actions"]["shovels"],
-        key=lambda cell: (health.get(cell, 1.0), pressure.get(cell[1], 0.0), -cell[0]),
+        key=lambda cell: (health.get(tuple(cell), 1.0), pressure.get(cell[1], 0.0), -cell[0]),
     )
     return [{"type": "shovel", "col": col, "row": row} for col, row in cells[:limit]]
 
@@ -134,7 +134,6 @@ class CandidateGenerator:
 
         temporal: list[dict[str, Any]] = []
         if legal.get("wait", True):
-            temporal.append({"type": "wait_decision", "max_ticks": min(WAIT_DECISION_TICKS, remaining_ticks)})
             if root:
                 temporal.extend({"type": "wait", "ticks": ticks} for ticks in WAIT_TICKS)
             else:
@@ -142,7 +141,9 @@ class CandidateGenerator:
                 if not allow_instant:
                     temporal.extend({"type": "wait", "ticks": ticks} for ticks in WAIT_TICKS)
 
-        structural = round_robin(diverse_plant_groups(observation, 3 if root else 2)) if allow_instant else []
+        by_packet = {item["packet"] for item in legal["plants"]}
+        plant_limit = max(3, (limit + len(by_packet) - 1) // max(1, len(by_packet))) if root else 2
+        structural = round_robin(diverse_plant_groups(observation, plant_limit)) if allow_instant else []
         shovels = shovel_proposals(observation, 2 if root else 1) if allow_instant else []
         first: list[dict[str, Any]] = []
         extras: list[dict[str, Any]] = []
@@ -153,7 +154,7 @@ class CandidateGenerator:
             packets.add(packet)
 
         pools = (first, temporal, shovels, extras) if root else [temporal, first, shovels, extras]
-        ordered = [item for pool in pools for item in pool] if root else round_robin(list(pools))
+        ordered = round_robin(list(pools))
         for action in ordered:
             add(action)
             if len(candidates) >= limit:

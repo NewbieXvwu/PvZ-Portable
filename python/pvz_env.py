@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import gzip
-import hashlib
 import json
 import os
 from contextlib import contextmanager
@@ -13,9 +12,26 @@ import subprocess
 import tempfile
 from typing import Any, Iterator, Sequence
 
-ENV_PROTOCOL_VERSION = 2
-REPLAY_FORMAT_VERSION = 4
-WAIT_DECISION_DEFAULT_TICKS = 900
+from pvz_common import (
+    ENV_PROTOCOL_VERSION,
+    REPLAY_FORMAT_VERSION,
+    canonical_digest,
+    git_metadata,
+    is_generated_artifact,
+    sha256_bytes,
+    sha256_file,
+)
+
+__all__ = [
+    "ENV_PROTOCOL_VERSION",
+    "REPLAY_FORMAT_VERSION",
+    "LoadoutContext",
+    "PlayerProfileContext",
+    "PvZEnv",
+    "SeedCard",
+    "TaskSpec",
+    "training_task",
+]
 
 
 @dataclass(frozen=True)
@@ -38,6 +54,17 @@ class TaskSpec:
     forced_seeds: tuple[int, ...] = ()
     loadout_mode: str = "fixed"
     zombie_count_multiplier: float = 1.0
+
+
+def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -> TaskSpec:
+    """The single ``TaskSpec`` shared by search collection, DAgger, PPO rollouts and benchmarks."""
+    return TaskSpec(
+        level=level,
+        seed=seed,
+        playthrough=2,
+        profile=PlayerProfileContext(),
+        zombie_count_multiplier=zombie_count_multiplier,
+    )
 
 
 @dataclass(frozen=True)
@@ -84,42 +111,35 @@ class PvZEnv:
         self.headless = headless
         self.debug_replay = debug_replay
         self._root = root
-        self._resource_sha256 = self._hash_file(self.resource_dir / "main.pak")
-        self._properties_sha256 = self._hash_file(self.resource_dir / "properties" / "partner.xml")
         self.save_dir = Path(save_dir).expanduser().resolve() if save_dir else None
         self._temporary_save: tempfile.TemporaryDirectory[str] | None = None
         self._process: subprocess.Popen[str] | None = None
         self._reset_done = False
         self._last_response: dict[str, Any] = {}
         self.episode: dict[str, Any] | None = None
-        self._source_revision, self._source_dirty = self._git_metadata(root)
+        # Resource hashes and git metadata are computed on first use: hashing main.pak
+        # eagerly here would raise a bare FileNotFoundError before ``_start`` can report
+        # the friendly "main.pak not found in resource directory" message.
+        self._resource_sha256: str | None = None
+        self._properties_sha256: str | None = None
+        self._source_metadata: tuple[str | None, bool | None] | None = None
+        # Tick of the most recent observation, used to derive real tick deltas.
+        self._tick: int | None = None
 
-    @staticmethod
-    def _git_metadata(root: Path) -> tuple[str | None, bool | None]:
-        try:
-            revision = subprocess.run(
-                ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
-            ).stdout.strip()
-            status = subprocess.run(
-                ["git", "status", "--porcelain", "--untracked-files=all"],
-                cwd=root, check=True, capture_output=True, text=True
-            ).stdout
-            dirty = any(
-                Path(line[3:].strip().split(" -> ")[-1]).name not in {"experiment_manifest.json", "working_tree.patch"}
-                and not line[3:].strip().endswith((".jsonl", ".jsonl.gz"))
-                for line in status.splitlines()
-            )
-            return revision, dirty
-        except (OSError, subprocess.CalledProcessError):
-            return None, None
+    def _resource_hashes(self) -> tuple[str, str]:
+        if self._resource_sha256 is None or self._properties_sha256 is None:
+            self._resource_sha256 = sha256_file(self.resource_dir / "main.pak")
+            self._properties_sha256 = sha256_file(self.resource_dir / "properties" / "partner.xml")
+        return self._resource_sha256, self._properties_sha256
 
-    @staticmethod
-    def _hash_file(path: Path) -> str:
-        digest = hashlib.sha256()
-        with path.open("rb") as file:
-            for chunk in iter(lambda: file.read(1024 * 1024), b""):
-                digest.update(chunk)
-        return digest.hexdigest()
+    def _source_state(self) -> tuple[str | None, bool | None]:
+        if self._source_metadata is None:
+            self._source_metadata = git_metadata(self._root)
+        return self._source_metadata
+
+    def _adopt_tick(self, observation: dict[str, Any]) -> None:
+        if "tick" in observation:
+            self._tick = int(observation["tick"])
 
     def _start(self) -> None:
         if not self.executable.is_file():
@@ -165,6 +185,7 @@ class PvZEnv:
             self._temporary_save.cleanup()
             self._temporary_save = None
         self._reset_done = False
+        self._tick = None
 
     def _read_message(self) -> dict[str, Any]:
         process = self._process
@@ -275,12 +296,15 @@ class PvZEnv:
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
         self._reset_done = True
+        resource_sha256, properties_sha256 = self._resource_hashes()
+        source_revision, source_dirty = self._source_state()
+        self._adopt_tick(response["observation"])
         self.episode = {
             "format_version": REPLAY_FORMAT_VERSION,
-            "source_revision": self._source_revision,
-            "source_dirty": self._source_dirty,
-            "resource_sha256": self._resource_sha256,
-            "properties_partner_sha256": self._properties_sha256,
+            "source_revision": source_revision,
+            "source_dirty": source_dirty,
+            "resource_sha256": resource_sha256,
+            "properties_partner_sha256": properties_sha256,
             "level": level,
             "seed": seed,
             "deck": [asdict(card) for card in cards],
@@ -316,26 +340,25 @@ class PvZEnv:
             if type(ticks) is not int or not 0 <= ticks <= 1_000_000:
                 raise ValueError("wait ticks must be an integer from 0 to 1000000")
             command = f"WAIT {ticks}"
-        elif kind == "wait_decision":
-            max_ticks = action.get("max_ticks", WAIT_DECISION_DEFAULT_TICKS)
-            if type(max_ticks) is not int or not 1 <= max_ticks <= 1_000_000:
-                raise ValueError("max_ticks must be an integer from 1 to 1000000")
-            command = f"WAIT_DECISION {max_ticks}"
         else:
-            raise ValueError("action type must be 'plant', 'shovel', 'wait' or 'wait_decision'")
+            raise ValueError("action type must be 'plant', 'shovel' or 'wait'")
 
         response = self._command(command)
         observation = response.get("observation")
         if observation is None:
             raise RuntimeError(f"environment returned no observation: {response}")
-        info = {"ok": response.get("ok", False), "events": response.get("events", {})}
-        if "ticks_advanced" in response:
-            info["ticks_advanced"] = response["ticks_advanced"]
-        ticks_advanced = info.get("ticks_advanced", action.get("ticks", 0) if kind == "wait" else 0)
-        actual_action = dict(action)
-        if kind == "wait_decision":
-            actual_action = {"type": "wait", "ticks": ticks_advanced}
-        self._record_operation({"kind": "action", "request": dict(action), "action": actual_action,
+        # The real advance is the tick delta reported by the simulator, not the requested
+        # wait duration: the environment may end the level or clamp a wait early.
+        previous_tick = self._tick
+        tick = int(observation["tick"])
+        ticks_advanced = tick - previous_tick if previous_tick is not None else 0
+        self._tick = tick
+        info = {
+            "ok": response.get("ok", False),
+            "events": response.get("events", {}),
+            "ticks_advanced": ticks_advanced,
+        }
+        self._record_operation({"kind": "action", "request": dict(action), "action": dict(action),
                                 "ticks_advanced": ticks_advanced}, observation, info["events"])
         return observation, 0.0, bool(observation.get("terminal")), False, info
 
@@ -343,6 +366,7 @@ class PvZEnv:
         response = self._command("OBS")
         if response.get("observation") is None:
             raise RuntimeError(f"environment returned no observation: {response}")
+        self._adopt_tick(response["observation"])
         return response["observation"]
 
     def privileged_state(self) -> dict[str, Any]:
@@ -370,6 +394,7 @@ class PvZEnv:
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"environment could not restore snapshot {snapshot_id}: {response}")
         observation = response["observation"]
+        self._adopt_tick(observation)
         self._record_operation({"kind": "restore", "id": snapshot_id}, observation, response.get("events", {}))
         return observation
 
@@ -433,8 +458,11 @@ class PvZEnv:
                 observation, _, _, _, info = self.step(action)
                 if info["events"] != operation["events"]:
                     raise RuntimeError(f"replay events diverged at operation {index}")
-                if info.get("ticks_advanced", action.get("ticks", 0) if action["type"] == "wait" else 0) != operation["ticks_advanced"]:
-                    raise RuntimeError(f"replay tick count diverged at operation {index}")
+                if info["ticks_advanced"] != operation["ticks_advanced"]:
+                    raise RuntimeError(
+                        f"replay tick count diverged at operation {index}: "
+                        f"{info['ticks_advanced']} != {operation['ticks_advanced']}"
+                    )
             elif kind == "snapshot":
                 snapshot_ids[operation["id"]] = self.snapshot()
                 observation = self.observe()
@@ -505,12 +533,10 @@ class PvZEnv:
             self.episode["final_state"] = operation["state"]
 
     def _debug_state_sha256(self) -> str:
-        state = self.privileged_state()
-        canonical = json.dumps(state, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-        return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        return canonical_digest(self.privileged_state())
 
     def _manifest_data(self) -> tuple[dict[str, Any], bytes]:
-        revision, _ = self._git_metadata(self._root)
+        revision, _ = self._source_state()
         tracked = subprocess.run(
             ["git", "diff", "HEAD", "--binary", "--", ".", ":(exclude)artifacts/**"],
             cwd=self._root, check=True, capture_output=True
@@ -523,7 +549,7 @@ class PvZEnv:
         for raw_path in untracked_paths:
             if raw_path:
                 path = os.fsdecode(raw_path)
-                if path.startswith("artifacts/") or Path(path).name in {"experiment_manifest.json", "working_tree.patch"} or path.endswith((".jsonl", ".jsonl.gz")):
+                if is_generated_artifact(path):
                     continue
                 diff = subprocess.run(
                     ["git", "diff", "--no-index", "--binary", "/dev/null", path],
@@ -542,14 +568,15 @@ class PvZEnv:
                         "CMAKE_GENERATOR", "DO_FIX_BUGS", "LOW_MEMORY", "PVZ_DEBUG",
                     }:
                         build_config[key.split(":", 1)[0]] = value
-        executable_sha256 = self._hash_file(self.executable) if self.executable.is_file() else None
+        executable_sha256 = sha256_file(self.executable) if self.executable.is_file() else None
+        resource_sha256, properties_sha256 = self._resource_hashes()
         data = {
             "source_revision": revision,
             "source_dirty": bool(patch),
-            "working_tree_patch_sha256": hashlib.sha256(patch).hexdigest(),
+            "working_tree_patch_sha256": sha256_bytes(patch),
             "build_config": build_config,
-            "resource_sha256": self._resource_sha256,
-            "properties_partner_sha256": self._properties_sha256,
+            "resource_sha256": resource_sha256,
+            "properties_partner_sha256": properties_sha256,
             "executable_sha256": executable_sha256,
         }
         return data, patch
@@ -562,13 +589,13 @@ class PvZEnv:
             manifest = json.loads(path.read_text(encoding="utf-8"))
             if any(manifest.get(key) != current.get(key) for key in current):
                 raise RuntimeError(f"experiment manifest belongs to a different build: {path}")
-            if not patch_path.is_file() or hashlib.sha256(patch_path.read_bytes()).hexdigest() != manifest.get("working_tree_patch_sha256"):
+            if not patch_path.is_file() or sha256_bytes(patch_path.read_bytes()) != manifest.get("working_tree_patch_sha256"):
                 raise RuntimeError(f"experiment working tree patch is missing or changed: {patch_path}")
         else:
             patch_path.write_bytes(patch)
             manifest = {**current, "working_tree_patch": patch_path.name}
             path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        digest = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        digest = canonical_digest(manifest)
         return {"path": path.name, "sha256": digest}
 
     def _check_manifest(self, reference: dict[str, str], directory: Path | None) -> None:
@@ -578,11 +605,11 @@ class PvZEnv:
         if not path.is_file():
             raise FileNotFoundError(f"replay manifest not found: {path}")
         manifest = json.loads(path.read_text(encoding="utf-8"))
-        digest = hashlib.sha256(json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        digest = canonical_digest(manifest)
         if digest != reference["sha256"]:
             raise ValueError(f"replay manifest digest mismatch: {path}")
         patch_path = path.parent / manifest.get("working_tree_patch", "")
-        if not patch_path.is_file() or hashlib.sha256(patch_path.read_bytes()).hexdigest() != manifest.get("working_tree_patch_sha256"):
+        if not patch_path.is_file() or sha256_bytes(patch_path.read_bytes()) != manifest.get("working_tree_patch_sha256"):
             raise ValueError(f"replay working tree patch is missing or corrupted: {patch_path}")
         current, _ = self._manifest_data()
         mismatches = [key for key, value in current.items() if manifest.get(key) != value]
@@ -609,6 +636,7 @@ class PvZEnv:
             self._temporary_save.cleanup()
             self._temporary_save = None
         self._reset_done = False
+        self._tick = None
 
     def __enter__(self) -> "PvZEnv":
         return self

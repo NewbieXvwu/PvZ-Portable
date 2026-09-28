@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
-import subprocess
+from dataclasses import asdict
 import sys
 from pathlib import Path
 from typing import Any
@@ -12,16 +11,45 @@ from typing import Any
 import torch
 
 from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG
-from pvz_env import ENV_PROTOCOL_VERSION
+from pvz_common import (
+    ENV_PROTOCOL_VERSION,
+    OBSERVATION_VERSION,
+    TASK_VERSION,
+    TRAINING_SEED,
+    VALUE_RANGE,
+    git_metadata,
+    sha256_file,
+)
+from pvz_env import PlayerProfileContext
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 
+__all__ = ["checkpoint_metadata", "provenance", "save_checkpoint", "sha256_file", "task_signature"]
 
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as file:
-        for chunk in iter(lambda: file.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+
+def checkpoint_metadata(checkpoint: dict[str, Any]) -> dict[str, Any]:
+    """Return everything a checkpoint carries except its tensors.
+
+    Both the search-value summary and the benchmark checkpoint record used to
+    re-implement this one-liner; they now share it so the two summaries can never
+    drift apart.
+    """
+    return {key: value for key, value in checkpoint.items() if key != "state_dict"}
+
+
+def task_signature(level: int, deck: list[int] | tuple[int, ...], zombie_count_multiplier: float,
+                   resource_dir: str | Path) -> dict[str, Any]:
+    resources = Path(resource_dir).expanduser().resolve()
+    return {
+        "level": level,
+        "deck": list(deck),
+        "playthrough": 2,
+        "profile": asdict(PlayerProfileContext()),
+        "zombie_count_multiplier": zombie_count_multiplier,
+        "resource_sha256": {
+            "main.pak": sha256_file(resources / "main.pak"),
+            "properties/partner.xml": sha256_file(resources / "properties" / "partner.xml"),
+        },
+    }
 
 
 def _jsonable_cli_value(value: Any) -> Any:
@@ -35,13 +63,7 @@ def _jsonable_cli_value(value: Any) -> Any:
 def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seeds: list[int],
                dagger_seeds: list[int], device: torch.device) -> dict[str, Any]:
     root = Path(__file__).resolve().parent.parent
-    try:
-        git_sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=root, check=True,
-                                 capture_output=True, text=True).stdout.strip()
-        git_dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=root, check=True,
-                                        capture_output=True, text=True).stdout)
-    except (OSError, subprocess.CalledProcessError):
-        git_sha, git_dirty = None, None
+    git_sha, git_dirty = git_metadata(root)
     resource_dir = Path(args.resource_dir).expanduser().resolve()
     cli = {key: _jsonable_cli_value(value) for key, value in vars(args).items()}
     cli["resolved_device"] = str(device)
@@ -49,10 +71,10 @@ def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seed
         "git_sha": git_sha,
         "git_dirty": git_dirty,
         "protocol_version": ENV_PROTOCOL_VERSION,
-        "observation_version": 2,
-        "task_version": 2,
+        "observation_version": OBSERVATION_VERSION,
+        "task_version": TASK_VERSION,
         "search_label_version": SEARCH_LABEL_VERSION,
-        "value_range": [-1, 1],
+        "value_range": list(VALUE_RANGE),
         "value_gamma": VALUE_GAMMA,
         "value_semantics": VALUE_SEMANTICS,
         "command": {"argv": list(sys.argv), "arguments": cli},
@@ -62,8 +84,8 @@ def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seed
             "properties/partner.xml": sha256_file(resource_dir / "properties" / "partner.xml"),
         },
         "random_seeds": {
-            "python": 17,
-            "torch": 17,
+            "python": TRAINING_SEED,
+            "torch": TRAINING_SEED,
             "search_episodes": train_seeds,
             "dagger_episodes": dagger_seeds,
         },

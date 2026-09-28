@@ -3,20 +3,15 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
 
-from pvz_env import PlayerProfileContext, PvZEnv, TaskSpec
+from pvz_common import canonical_digest
+from pvz_env import PvZEnv, training_task
 
 
 DECK = (0, 1, 2, 3, 4, 5)
-
-
-def digest(value: Any) -> str:
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-    return hashlib.sha256(encoded).hexdigest()
 
 
 def compare_pair(headless: PvZEnv, visible: PvZEnv, action: dict[str, Any]) -> dict[str, Any]:
@@ -44,14 +39,14 @@ def main() -> None:
         parser.error("--ticks must be positive")
 
     for level in args.levels:
-        task = TaskSpec(level=level, seed=1701, playthrough=2, profile=PlayerProfileContext())
+        task = training_task(1701, level)
         with PvZEnv(args.resource_dir, args.executable, headless=True, debug_replay=True) as headless, \
                 PvZEnv(args.resource_dir, args.executable, headless=False, debug_replay=True) as visible:
             observations = [env.reset(deck=DECK, task=task)[0] for env in (headless, visible)]
             if observations[0] != observations[1]:
                 raise RuntimeError(f"reset state diverged at level {level}")
             states = [env.privileged_state() for env in (headless, visible)]
-            if digest(states[0]) != digest(states[1]):
+            if canonical_digest(states[0]) != canonical_digest(states[1]):
                 raise RuntimeError(f"reset full state diverged at level {level}")
 
             legal = next((item for item in observations[0]["legal_actions"]["plants"] if item["packet"] == 0), None)
@@ -75,7 +70,7 @@ def main() -> None:
             snapshot_ids = [env.snapshot() for env in (headless, visible)]
             compare_pair(headless, visible, {"type": "wait", "ticks": 1})
             restored = [env.restore(snapshot_id) for env, snapshot_id in zip((headless, visible), snapshot_ids)]
-            if restored[0] != restored[1] or digest(headless.privileged_state()) != digest(visible.privileged_state()):
+            if restored[0] != restored[1] or canonical_digest(headless.privileged_state()) != canonical_digest(visible.privileged_state()):
                 raise RuntimeError(f"snapshot restore diverged at level {level}")
 
             state = restored[0]

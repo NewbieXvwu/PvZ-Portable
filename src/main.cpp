@@ -40,7 +40,7 @@
 #include <vector>
 using namespace Sexy;
 
-static constexpr int kEnvironmentProtocolVersion = 2;
+static constexpr int kEnvironmentProtocolVersion = 3;
 
 struct EnvCounters
 {
@@ -123,100 +123,6 @@ static EnvCounters ReadCounters(LawnApp* app)
 		app->mBoard->mPlantsEaten, static_cast<uint32_t>(app->mBoard->mTriggeredLawnMowers), app->mBoard->mTotalSpawnedWaves };
 }
 
-static int EnvironmentReactionFloor(const LawnApp* app)
-{
-	float nearest = std::numeric_limits<float>::infinity();
-	for (const Zombie* zombie : app->mBoard->mZombies)
-	{
-		if (!zombie->mDead)
-			nearest = std::min(nearest, zombie->mPosX);
-	}
-	if (nearest < 360.0f) return 30;
-	if (nearest < 560.0f) return 60;
-	return 150;
-}
-
-static int EnvironmentZombieZone(float x)
-{
-	if (x < 220.0f) return 4;
-	if (x < 300.0f) return 3;
-	if (x < 400.0f) return 2;
-	if (x < 500.0f) return 1;
-	return 0;
-}
-
-static uint64_t EnvironmentDecisionSignature(LawnApp* app)
-{
-	uint64_t hash = 1469598103934665603ULL;
-	auto mix = [&hash](int64_t value)
-	{
-		hash ^= static_cast<uint64_t>(value);
-		hash *= 1099511628211ULL;
-	};
-	mix(app->mBoard->mCurrentWave);
-	mix(app->mBoard->mTotalSpawnedWaves);
-	mix(app->mBoard->mSunMoney / 25);
-	mix(app->mBoard->mTriggeredLawnMowers);
-	mix(static_cast<int>(app->mGameScene));
-	mix(app->mBoard->mLevelComplete);
-	for (int i = 0; i < app->mBoard->mSeedBank->mNumPackets; ++i)
-	{
-		SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[i];
-		mix(static_cast<int>(packet.mPacketType));
-		mix(packet.CanPickUp());
-	}
-	for (const Plant* plant : app->mBoard->mPlants)
-	{
-		if (!plant->mDead)
-		{
-			mix(static_cast<int>(plant->mSeedType));
-			mix(plant->mPlantCol);
-			mix(plant->mRow);
-			mix(plant->mPlantHealth / 50);
-		}
-	}
-	for (const Zombie* zombie : app->mBoard->mZombies)
-	{
-		if (!zombie->mDead)
-		{
-			mix(static_cast<int>(zombie->mZombieType));
-			mix(zombie->mRow);
-			mix(static_cast<int>(zombie->mPosX / 60.0f));
-			mix(EnvironmentZombieZone(zombie->mPosX));
-			mix(zombie->mBodyHealth / 50);
-			mix(zombie->mHelmHealth / 50);
-			mix(zombie->mShieldHealth / 50);
-			mix(zombie->mIsEating);
-		}
-	}
-	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
-		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
-			mix(static_cast<int>(app->mBoard->mGridSquareType[col][row]));
-	return hash;
-}
-
-static int EnvironmentWaitDecisionAdaptive(LawnApp* app, int maxTicks)
-{
-	if (!app->mBoard || maxTicks < 1 || maxTicks > 1000000 || app->EnvironmentTerminal())
-		return 0;
-	const uint64_t initialSignature = EnvironmentDecisionSignature(app);
-	int ticksAdvanced = 0;
-	while (ticksAdvanced < maxTicks && !app->EnvironmentTerminal())
-	{
-		for (Coin* coin : app->mBoard->mCoins)
-		{
-			if (!coin->mDead && coin->IsSun())
-				coin->ScoreCoin();
-		}
-		app->AdvanceLogicTick();
-		++ticksAdvanced;
-		const int reactionFloor = std::min(maxTicks, EnvironmentReactionFloor(app));
-		if (ticksAdvanced >= reactionFloor && EnvironmentDecisionSignature(app) != initialSignature)
-			break;
-	}
-	return ticksAdvanced;
-}
-
 static bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
 {
 	if (!app->mBoard || !LawnSaveGameToMemory(app->mBoard, snapshot.board))
@@ -287,7 +193,7 @@ static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& 
 }
 
 static bool ExecuteEnvironmentAction(LawnApp* app, const std::string& command,
-	std::istringstream& input, int& ticksAdvanced)
+	std::istringstream& input)
 {
 	if (command == "PLANT")
 	{
@@ -310,15 +216,6 @@ static bool ExecuteEnvironmentAction(LawnApp* app, const std::string& command,
 		app->EnvironmentWait(ticks);
 		return true;
 	}
-	if (command == "WAIT_DECISION")
-	{
-		int maxTicks = -1;
-		input >> maxTicks;
-		if (input.fail())
-			return false;
-		ticksAdvanced = EnvironmentWaitDecisionAdaptive(app, maxTicks);
-		return ticksAdvanced > 0;
-	}
 	return false;
 }
 
@@ -330,7 +227,6 @@ static bool DecodeBranchAction(const std::string& spec, std::string& command, st
 	if (kind == 'P') command = "PLANT";
 	else if (kind == 'S') command = "SHOVEL";
 	else if (kind == 'W') command = "WAIT";
-	else if (kind == 'D') command = "WAIT_DECISION";
 	else return false;
 	arguments = spec.substr(2);
 	std::replace(arguments.begin(), arguments.end(), ':', ' ');
@@ -354,7 +250,6 @@ static void RunEnvironment(LawnApp* app)
 		bool hasSnapshotId = false;
 		bool minimalResponse = false;
 		int snapshotId = 0;
-		int ticksAdvanced = -1;
 		if (command == "RESET_V2")
 		{
 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
@@ -393,9 +288,9 @@ static void RunEnvironment(LawnApp* app)
 				nextSnapshotId = 1;
 			}
 		}
-		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "WAIT_DECISION")
+		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT")
 		{
-			ok = ExecuteEnvironmentAction(app, command, input, ticksAdvanced);
+			ok = ExecuteEnvironmentAction(app, command, input);
 		}
 		else if (command == "BRANCH_SNAPSHOT_FAST")
 		{
@@ -423,7 +318,6 @@ static void RunEnvironment(LawnApp* app)
 					if (i != 0) std::cout << ',';
 					auto parent = snapshots.find(snapshotId);
 					bool branchOk = parent != snapshots.end() && RestoreEnvironmentSnapshot(app, parent->second);
-					int branchTicksAdvanced = -1;
 					int childSnapshotId = 0;
 					uint64_t childStateHash = 0;
 					bool hasChildSnapshot = false;
@@ -436,7 +330,7 @@ static void RunEnvironment(LawnApp* app)
 						if (branchOk)
 						{
 							std::istringstream actionInput(actionArguments);
-							branchOk = ExecuteEnvironmentAction(app, actionCommand, actionInput, branchTicksAdvanced);
+							branchOk = ExecuteEnvironmentAction(app, actionCommand, actionInput);
 						}
 					}
 					EnvCounters branchAfter = ReadCounters(app);
@@ -457,8 +351,6 @@ static void RunEnvironment(LawnApp* app)
 						}
 					}
 					std::cout << "{\"ok\":" << (branchOk ? "true" : "false") << ",\"observation\":" << observation;
-					if (branchTicksAdvanced >= 0)
-						std::cout << ",\"ticks_advanced\":" << branchTicksAdvanced;
 					if (hasChildSnapshot)
 						std::cout << ",\"snapshot_id\":" << childSnapshotId << ",\"state_hash\":\"" << childStateHash << '\"';
 					std::cout << ",\"events\":{\"zombies_killed\":" << branchAfter.zombiesKilled - branchBefore.zombiesKilled
@@ -526,8 +418,6 @@ static void RunEnvironment(LawnApp* app)
 		}
 
 		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);
-		if (ticksAdvanced >= 0)
-			std::cout << ",\"ticks_advanced\":" << ticksAdvanced;
 		if (hasSnapshotId)
 			std::cout << ",\"snapshot_id\":" << snapshotId;
 		if (app->mBoard)

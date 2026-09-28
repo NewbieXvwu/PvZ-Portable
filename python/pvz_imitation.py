@@ -8,28 +8,20 @@ import random
 import torch
 from torch.nn import functional as F
 
-from pvz_agent_model import GameplayModelV1, hard_behavior_cloning_loss, select_action
+from pvz_agent_model import GameplayModelV1, hard_behavior_cloning_loss
 from pvz_value import discounted_terminal_value
 
-
-def behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
-                          action: dict[str, Any], plant_weight: float,
-                          candidate_actions: list[dict[str, Any]] | None = None,
-                          search_policy: list[float] | None = None) -> torch.Tensor:
-    if candidate_actions and search_policy and len(candidate_actions) == len(search_policy):
-        log_probs = torch.stack([select_action(model, output, observation, action=candidate)[1]
-                                 for candidate in candidate_actions])
-        probs = torch.tensor(search_policy, dtype=log_probs.dtype, device=log_probs.device).clamp_min(0.0)
-        if float(probs.sum().item()) > 0.0:
-            return -((probs / probs.sum()) * log_probs).sum()
-    return hard_behavior_cloning_loss(model, output, observation, action, plant_weight)
+AUXILIARY_LOSS_WEIGHT = 0.05
+LANE_COUNT = 6
 
 
 def episode_targets(steps: list[dict[str, Any]], index: int, device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
     observation = steps[index]["observation"]
-    lanes = torch.zeros(1, 6, device=device)
+    lanes = torch.zeros(1, LANE_COUNT, device=device)
     for zombie in observation["zombies"]:
-        lanes[0, zombie["row"]] = 1
+        row = int(zombie["row"])
+        if 0 <= row < LANE_COUNT:
+            lanes[0, row] = 1
     next_wave = 0.0
     if index + 1 < len(steps):
         next_wave = float(steps[index + 1]["events"].get("waves_started", 0) > 0)
@@ -52,42 +44,35 @@ def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, d
             episode = episodes[episode_index]
             steps = episode["steps"]
             terminal_tick = int(episode["tick"])
+            hidden = None
             for start in range(0, len(steps), 64):
-                burn_start = max(0, start - 32)
-                hidden = None
-                with torch.no_grad():
-                    for index in range(burn_start, start):
-                        previous = steps[index].get("previous_action", steps[index - 1]["action"] if index else None)
-                        warm = model.step(steps[index]["observation"], hidden, previous,
-                                          steps[index]["delta_ticks"], steps[index]["events"])
-                        hidden = warm["hidden"]
-                if hidden is not None:
-                    hidden = hidden.detach()
                 losses = []
                 for index in range(start, min(start + 64, len(steps))):
                     step = steps[index]
                     previous = step.get("previous_action", steps[index - 1]["action"] if index else None)
                     output = model.step(step["observation"], hidden, previous, step["delta_ticks"], step["events"])
                     hidden = output["hidden"]
-                    loss = behavior_cloning_loss(
-                        model, output, step["observation"], step["action"], plant_weight,
-                        step.get("candidate_actions"), step.get("search_policy"),
-                    )
+                    loss = hard_behavior_cloning_loss(model, output, step["observation"], step["action"], plant_weight)
                     lanes, next_wave = episode_targets(steps, index, device)
                     won = bool(episode["won"])
                     remaining_ticks = max(0, terminal_tick - int(step["observation"]["tick"]))
                     value_target = discounted_terminal_value(won, remaining_ticks)
                     outcome_class = 1 if won else 0
-                    loss = loss + 0.05 * F.mse_loss(output["value"], torch.full_like(output["value"], value_target))
-                    loss = loss + 0.05 * F.cross_entropy(
+                    loss = loss + AUXILIARY_LOSS_WEIGHT * F.mse_loss(
+                        output["value"], torch.full_like(output["value"], value_target))
+                    loss = loss + AUXILIARY_LOSS_WEIGHT * F.cross_entropy(
                         output["aux_outcome"], torch.full((1,), outcome_class, dtype=torch.long, device=device))
-                    loss = loss + 0.05 * F.binary_cross_entropy_with_logits(output["aux_lane_threat"], lanes)
-                    loss = loss + 0.05 * F.binary_cross_entropy_with_logits(output["aux_next_spawn"].view(1), next_wave)
+                    loss = loss + AUXILIARY_LOSS_WEIGHT * F.binary_cross_entropy_with_logits(
+                        output["aux_lane_threat"], lanes)
+                    loss = loss + AUXILIARY_LOSS_WEIGHT * F.binary_cross_entropy_with_logits(
+                        output["aux_next_spawn"].view(1), next_wave)
                     losses.append(loss)
                 optimizer.zero_grad(set_to_none=True)
                 torch.stack(losses).mean().backward()
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step()
+                if hidden is not None:
+                    hidden = hidden.detach()
                 total_loss += float(torch.stack([loss.detach() for loss in losses]).sum().item())
                 total_steps += len(losses)
         epoch_loss = total_loss / max(total_steps, 1)
