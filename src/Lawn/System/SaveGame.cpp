@@ -110,13 +110,6 @@ static void AppendBytes(std::vector<unsigned char>& theOut, const void* theData,
 	theOut.insert(theOut.end(), aBytes, aBytes + theLen);
 }
 
-static void AppendChunk(std::vector<unsigned char>& theOut, uint32_t theChunkType, const std::vector<unsigned char>& theChunkData)
-{
-	AppendU32LE(theOut, theChunkType);
-	AppendU32LE(theOut, static_cast<uint32_t>(theChunkData.size()));
-	AppendBytes(theOut, theChunkData.data(), theChunkData.size());
-}
-
 class TLVReader
 {
 public:
@@ -2011,30 +2004,31 @@ static ChunkSyncFn GetChunkSyncFn(uint32_t theChunkType)
 	}
 }
 
-static bool WriteChunkV4(std::vector<unsigned char>& thePayload, uint32_t theChunkType, Board* theBoard)
+static bool WriteChunkV4(std::vector<unsigned char>& thePayload, uint32_t theChunkType, Board* theBoard,
+	DataWriter& theFieldWriter)
 {
 	ChunkSyncFn aSyncFn = GetChunkSyncFn(theChunkType);
 	if (!aSyncFn)
 		return true;
 
-	DataWriter aFieldWriter;
-	aFieldWriter.OpenMemory(0x4000);
-	PortableSaveContext aFieldContext(aFieldWriter);
+	// ``OpenMemory`` clears and re-reserves, so hoisting this writer out of the loop lets
+	// the twenty chunks share one buffer instead of allocating a fresh one each time.
+	theFieldWriter.OpenMemory(0x4000);
+	PortableSaveContext aFieldContext(theFieldWriter);
 	aSyncFn(aFieldContext, theBoard);
 	if (aFieldContext.mFailed)
 		return false;
 
-	DataWriter aChunkWriter;
-	aChunkWriter.OpenMemory(0x200);
-	aChunkWriter.WriteUInt32(SAVE4_CHUNK_VERSION);
-	aChunkWriter.WriteUInt32(1U);
-	aChunkWriter.WriteUInt32(aFieldWriter.GetDataLen());
-	aChunkWriter.WriteBytes(aFieldWriter.GetDataPtr(), aFieldWriter.GetDataLen());
-
-	std::vector<unsigned char> aChunk;
-	aChunk.resize(aChunkWriter.GetDataLen());
-	memcpy(aChunk.data(), aChunkWriter.GetDataPtr(), aChunkWriter.GetDataLen());
-	AppendChunk(thePayload, theChunkType, aChunk);
+	// Emit the chunk straight into the payload.  Building it in a second DataWriter, then
+	// copying it into a std::vector, then copying that into the payload meant three passes
+	// over the same bytes per chunk -- sixty per save -- for no change in the output.
+	const uint32_t aFieldLen = theFieldWriter.GetDataLen();
+	AppendU32LE(thePayload, theChunkType);
+	AppendU32LE(thePayload, 12U + aFieldLen);
+	AppendU32LE(thePayload, SAVE4_CHUNK_VERSION);
+	AppendU32LE(thePayload, 1U);
+	AppendU32LE(thePayload, aFieldLen);
+	AppendBytes(thePayload, theFieldWriter.GetDataPtr(), aFieldLen);
 	return true;
 }
 
@@ -2263,8 +2257,15 @@ static bool LawnLoadGameV4(Board* theBoard, Buffer& aBuffer)
 	if (aCrc != aHeader.mPayloadCrc)
 		return false;
 
-	for (PvzpParticleSystem* aParticleSystem : theBoard->mApp->mEffectSystem->mParticleHolder->mParticleSystems)
-		aParticleSystem->ParticleSystemDie();
+	// Replace the effect world before replaying any chunk. The guard keeps the
+	// outgoing generation's teardown from resolving its effect ids against the
+	// incoming one, and the wipe guarantees that no outgoing object survives
+	// outside the restored accounting (slots above the saved mMaxUsedCount used
+	// to linger with the outgoing generation's ids, which then aliased freshly
+	// restored reanimations on the next allocation). See EffectSystem.h.
+	EffectSystemRestoreScope aRestoreScope;
+	if (theBoard->mApp->mEffectSystem != nullptr)
+		theBoard->mApp->mEffectSystem->EffectSystemFreeAll();
 
 	TLVReader aReader(aPayload, aHeader.mPayloadSize);
 	bool aBaseLoaded = false;
@@ -2805,40 +2806,45 @@ bool LawnLoadGame(Board* theBoard, const std::string& theFilePath)
 
 bool LawnSaveGameToMemory(Board* theBoard, std::vector<unsigned char>& theData)
 {
+	// Lay the payload out *behind* a reserved header rather than building the payload and
+	// then copying the whole thing into a second buffer.  The save runs once per search
+	// branch, so that extra pass was a full copy of the board image every time.
 	std::vector<unsigned char> aPayload;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_BOARD_BASE, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_ZOMBIES, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PLANTS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PROJECTILES, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_COINS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_MOWERS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_GRIDITEMS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PARTICLE_EMITTERS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PARTICLE_PARTICLES, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PARTICLE_SYSTEMS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_REANIMATIONS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_TRAILS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_ATTACHMENTS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_CURSOR, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_CURSOR_PREVIEW, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_ADVICE, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_SEEDBANK, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_SEEDPACKETS, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_CHALLENGE, theBoard)) return false;
-	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_MUSIC, theBoard)) return false;
+	aPayload.resize(sizeof(SaveFileHeaderV4));
 
+	DataWriter aFieldWriter;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_BOARD_BASE, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_ZOMBIES, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PLANTS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PROJECTILES, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_COINS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_MOWERS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_GRIDITEMS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PARTICLE_EMITTERS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PARTICLE_PARTICLES, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_PARTICLE_SYSTEMS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_REANIMATIONS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_TRAILS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_ATTACHMENTS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_CURSOR, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_CURSOR_PREVIEW, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_ADVICE, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_SEEDBANK, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_SEEDPACKETS, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_CHALLENGE, theBoard, aFieldWriter)) return false;
+	if (!WriteChunkV4(aPayload, SAVE4_CHUNK_MUSIC, theBoard, aFieldWriter)) return false;
+
+	const size_t aPayloadSize = aPayload.size() - sizeof(SaveFileHeaderV4);
 	SaveFileHeaderV4 aHeader{};
 	memcpy(aHeader.mMagic, SAVE_FILE_MAGIC_V4, sizeof(aHeader.mMagic));
 	aHeader.mVersion = ToLE32(SAVE_FILE_V4_VERSION);
-	aHeader.mPayloadSize = ToLE32(static_cast<uint32_t>(aPayload.size()));
-	aHeader.mPayloadCrc = ToLE32(crc32(0, reinterpret_cast<Bytef*>(aPayload.data()), static_cast<uint32_t>(aPayload.size())));
+	aHeader.mPayloadSize = ToLE32(static_cast<uint32_t>(aPayloadSize));
+	aHeader.mPayloadCrc = ToLE32(crc32(0,
+		reinterpret_cast<Bytef*>(aPayload.data() + sizeof(SaveFileHeaderV4)),
+		static_cast<uint32_t>(aPayloadSize)));
+	memcpy(aPayload.data(), &aHeader, sizeof(aHeader));
 
-	std::vector<unsigned char> aOutBuffer;
-	aOutBuffer.resize(sizeof(aHeader) + aPayload.size());
-	memcpy(aOutBuffer.data(), &aHeader, sizeof(aHeader));
-	memcpy(aOutBuffer.data() + sizeof(aHeader), aPayload.data(), aPayload.size());
-
-	theData = std::move(aOutBuffer);
+	theData = std::move(aPayload);
 	return true;
 }
 

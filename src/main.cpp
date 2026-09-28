@@ -29,9 +29,12 @@
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
+#include <bit>
 #include <charconv>
+#include <chrono>
 #include <cstdlib>
 #include <cstdint>
+#include <cstring>
 #include <iostream>
 #include <limits>
 #include <sstream>
@@ -140,39 +143,70 @@ static bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
 	return true;
 }
 
+// Where the transposition key comes from.  The byte-at-a-time FNV-1a this replaced spent
+// 77 us on an 86 KB payload -- about a third of one ``BRANCH_SNAPSHOT_FAST`` branch --
+// because every input byte is one more link in a serial xor/multiply chain.  Folding a
+// whole 64-bit word per step keeps FNV's "xor then multiply" mixing and cuts the chain
+// eightfold.  The multiply only ever spreads a difference *upwards*, so the last words
+// leave the low bits under-mixed; ``finalise`` is MurmurHash3's fmix64 avalanche, which
+// fixes that.  Callers only ever compare hashes for equality, so the value itself is
+// opaque and changing it is not a compatibility break.
+static uint64_t FinaliseHash(uint64_t theKey)
+{
+	theKey ^= theKey >> 33;
+	theKey *= 0xff51afd7ed558ccdULL;
+	theKey ^= theKey >> 33;
+	theKey *= 0xc4ceb9fe1a85ec53ULL;
+	theKey ^= theKey >> 33;
+	return theKey;
+}
+
 static uint64_t EnvironmentSnapshotHash(const EnvironmentSnapshot& snapshot)
 {
+	constexpr uint64_t kPrime = 1099511628211ULL;
 	uint64_t hash = 1469598103934665603ULL;
-	auto mix = [&hash](uint64_t value)
+	auto mixWord = [&hash](uint64_t value)
 	{
-		for (int shift = 0; shift < 64; shift += 8)
+		hash ^= value;
+		hash *= kPrime;
+	};
+	auto mixBytes = [&hash, &mixWord](const void* theData, size_t theSize)
+	{
+		const unsigned char* aBytes = static_cast<const unsigned char*>(theData);
+		size_t aPosition = 0;
+		// ``memcpy`` of eight bytes compiles to a single unaligned load on every target
+		// that has one, so this is portable without a strict-aliasing or alignment worry.
+		for (; aPosition + sizeof(uint64_t) <= theSize; aPosition += sizeof(uint64_t))
 		{
-			hash ^= (value >> shift) & 0xFFULL;
-			hash *= 1099511628211ULL;
+			uint64_t aWord;
+			memcpy(&aWord, aBytes + aPosition, sizeof(aWord));
+			mixWord(aWord);
+		}
+		if (aPosition != theSize)
+		{
+			// Big-endian tail so the same bytes give the same word whatever the machine is.
+			uint64_t aTail = 0;
+			for (; aPosition < theSize; ++aPosition)
+				aTail = (aTail << 8) | aBytes[aPosition];
+			mixWord(aTail);
 		}
 	};
-	mix(snapshot.board.size());
-	for (unsigned char byte : snapshot.board)
-	{
-		hash ^= byte;
-		hash *= 1099511628211ULL;
-	}
-	mix(snapshot.randState.size());
-	for (unsigned char byte : snapshot.randState)
-	{
-		hash ^= byte;
-		hash *= 1099511628211ULL;
-	}
-	mix(static_cast<uint32_t>(snapshot.appRandSeed));
-	mix(snapshot.randSeed);
-	mix(snapshot.appCounter);
-	mix(snapshot.zombiesKilled);
-	mix(snapshot.plantsEaten);
-	mix(snapshot.sunProduced);
-	mix(static_cast<uint32_t>(snapshot.triggeredLawnMowers));
-	mix(static_cast<uint32_t>(snapshot.gameScene));
-	mix(static_cast<uint32_t>(snapshot.boardResult));
-	return hash;
+	// Lengths first, so a payload that merely ends in zero words cannot collide with a
+	// shorter one.
+	mixWord(static_cast<uint64_t>(snapshot.board.size()));
+	mixBytes(snapshot.board.data(), snapshot.board.size());
+	mixWord(static_cast<uint64_t>(snapshot.randState.size()));
+	mixBytes(snapshot.randState.data(), snapshot.randState.size());
+	mixWord(static_cast<uint32_t>(snapshot.appRandSeed));
+	mixWord(snapshot.randSeed);
+	mixWord(snapshot.appCounter);
+	mixWord(snapshot.zombiesKilled);
+	mixWord(snapshot.plantsEaten);
+	mixWord(snapshot.sunProduced);
+	mixWord(static_cast<uint32_t>(snapshot.triggeredLawnMowers));
+	mixWord(static_cast<uint32_t>(snapshot.gameScene));
+	mixWord(static_cast<uint32_t>(snapshot.boardResult));
+	return FinaliseHash(hash);
 }
 
 static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& snapshot)
@@ -291,6 +325,58 @@ static void RunEnvironment(LawnApp* app)
 		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT")
 		{
 			ok = ExecuteEnvironmentAction(app, command, input);
+		}
+		else if (command == "BENCH_SNAPSHOT")
+		{
+			// Split the cost of one BRANCH_SNAPSHOT_FAST branch into its ingredients.  The
+			// search is dominated by that round trip, and "save" versus "restore" versus
+			// "hash" need very different fixes -- so an optimisation should be attributed by
+			// measurement, not by guesswork.  ``scripts/branch_benchmark.py`` times the whole
+			// command from Python; this is the in-process view that separates the parts the
+			// Python timer lumps together with transport and JSON parsing.
+			int reps = 0;
+			input >> reps;
+			reps = std::clamp(reps, 1, 20000);
+			using Clock = std::chrono::steady_clock;
+			auto measure = [&](auto&& body)
+			{
+				std::vector<double> samples;
+				samples.reserve(static_cast<size_t>(reps));
+				for (int i = 0; i < reps; ++i)
+				{
+					auto started = Clock::now();
+					body();
+					samples.push_back(std::chrono::duration<double, std::micro>(Clock::now() - started).count());
+				}
+				std::sort(samples.begin(), samples.end());
+				double total = 0.0;
+				for (double sample : samples) total += sample;
+				return std::pair<double, double>{ samples[samples.size() / 2], total / static_cast<double>(samples.size()) };
+			};
+			EnvironmentSnapshot parent{};
+			bool haveParent = app->mBoard && SaveEnvironmentSnapshot(app, parent);
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+				<< ",\"ok\":" << (haveParent ? "true" : "false") << ",\"reps\":" << reps;
+			if (haveParent)
+			{
+				std::vector<unsigned char> reused;
+				auto emit = [&](const char* name, const std::pair<double, double>& stats)
+				{
+					std::cout << ",\"" << name << "\":{\"median_us\":" << stats.first << ",\"mean_us\":" << stats.second << '}';
+				};
+				// Every body has to feed a volatile sink: the compiler is entitled to delete a
+				// call whose result is unused and it happily did, turning "hash" into 0 us.
+				static volatile uint64_t aSink = 0;
+				emit("save_fresh", measure([&] { std::vector<unsigned char> out; LawnSaveGameToMemory(app->mBoard, out); aSink += out.size(); }));
+				emit("save_reused", measure([&] { reused.clear(); LawnSaveGameToMemory(app->mBoard, reused); aSink += reused.size(); }));
+				emit("restore", measure([&] { aSink += LawnLoadGameFromMemory(app->mBoard, parent.board) ? 1 : 0; }));
+				emit("hash", measure([&] { aSink += EnvironmentSnapshotHash(parent); }));
+				emit("observation", measure([&] { aSink += app->EnvironmentObservation(false).size(); }));
+				std::cout << ",\"payload_bytes\":" << parent.board.size()
+					<< ",\"rand_state_bytes\":" << parent.randState.size();
+			}
+			std::cout << '}' << std::endl;
+			continue;
 		}
 		else if (command == "BRANCH_SNAPSHOT_FAST")
 		{

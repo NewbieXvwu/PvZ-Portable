@@ -54,7 +54,45 @@
     ~290 µs = `EnvironmentObservation` 90 µs + `LawnSaveGameToMemory` 101 µs +
     `LawnLoadGameFromMemory` + 对整块 `board` 做 FNV-1a 的 `EnvironmentSnapshotHash`，
     另有 1.7 µs/tick 的模拟成本。动 `BRANCH_SNAPSHOT_FAST` 前需先把
-    `verify_env_equivalence.py` 变成可自动化的回归。
+    `verify_env_equivalence.py` 变成可自动化的回归。**该回归已就位**（mutation 验证见
+    `CODE_REVIEW.md` §5.6）。
+  - **已完成（C++ 侧，两轮）**：新协议命令 `BENCH_SNAPSHOT <reps>` 给出进程内分项剖面
+    （`scripts/branch_benchmark.py` 给的是含传输与 JSON 解析的端到端口径）。在 level 8 /
+    seed 30000 / tick 2192 的板面（4 植物 / 10 僵尸 / 19 动画，载荷 86,424 B）上：
+
+    | 成分 | 轮次前 | 轮次后 |
+    |---|---|---|
+    | `EnvironmentSnapshotHash` | 77.2 µs | **9.7 µs**（8.0×） |
+    | `LawnSaveGameToMemory` | 89.1 µs | 86.8 µs |
+    | `LawnLoadGameFromMemory` | 68.7 µs | 68.4 µs |
+    | `EnvironmentObservation` | 23.2 µs | 22.2 µs |
+    | **端到端单分支** | **343.8 µs** | **256.1 µs**（−27%） |
+
+    * 轮次一：`SaveGame.cpp` 的 `WriteChunkV4` 直接写进 payload，去掉「字段 writer → chunk
+      writer → 临时 vector → AppendChunk」的三遍拷贝；48 个板面状态新旧写入器逐字节相同
+      （`identical: true` / `stable: true`）。
+    * 轮次二：`EnvironmentSnapshotHash` 从逐字节 FNV-1a 改成 **64 位字折叠 + MurmurHash3
+      fmix64 雪崩**。逐字节版的每个输入字节都是串行 xor/乘法链上的一环，86 KB 上花 77 µs。
+      **哈希值本身是不透明的转置键，改写不算兼容性破坏**；雪崩实测（3000 次真实载荷单比特翻转）
+      反而更好：均值 32.08 bits（旧 30.74）、最低 20 bits（旧 19）、碰撞 0。
+    * 等价性：`scripts/binary_search_equivalence.py` 用两个二进制在同一真实状态下跑
+      `SearchTeacher.advice`，比较动作、全部候选打分、蒸馏策略、margin、终局、模拟计数与
+      筛选/深度预算拆分 —— **3/3 种子逐位一致**，真实 `advice()` 159.8 → 142.7 ms（1.12–1.16×）。
+      该脚本刻意**不比较 `state_hash`**：它是转置键，改写哈希必然改变数字但不应改变任何去重决策，
+      比较它会在一次合法优化上误报。
+  - **剩下的成本（未动）**：`LawnSaveGameToMemory` 86.8 µs 与 `LawnLoadGameFromMemory`
+    68.4 µs 仍是 C++ 侧大头；另有约 73 µs/分支落在 Python 侧的 JSON 解析与管道传输上
+    （`OBS` 端到端 83 µs 而 C++ 内只 22 µs）。单个叶子之外还有一个结构性机会：
+    一批 32 个分支里真正被保留下来的快照远少于 32，为「先不存快照地评估、只重算保留下来的那几个」
+    加一条命令可以省掉被丢弃分支的 86.8 µs/个；这是协议与搜索的改动，不是纯 C++ 优化，
+    先量清楚存活率再决定。
+- **已知风险（未修）**：存档载荷里有裸指针。`SyncBoard` 用
+  `SyncBytes(&theBoard->mPaused, sizeof(Board) - offset)` 整块序列化 `Board`，另外还有
+  `sizeof(SeedBank)` / `sizeof(Challenge)` / `sizeof(CursorObject)` / `sizeof(CursorPreview)` /
+  `sizeof(MessageWidget)` / `sizeof(Music)`。后果有两个：
+  `state_hash` **只在单进程内可用**（换进程指针值就变，跨进程比较无意义）；
+  且恢复时会把上一次的指针值写回 `Board`，是一颗潜在 use-after-free 地雷。
+  要动就得连存档格式一起动，风险不小，单独开一条任务。
 - 扩展到白天、夜晚、泳池、迷雾和屋顶等地形，检查状态候选覆盖和 SearchValueModel 在不同卡组上的泛化。
 
 ## 已排除的路线（有实测数据，勿重复尝试）
