@@ -16,7 +16,13 @@ from typing import Any
 
 import torch
 
-from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, predict_action, resolve_device
+from pvz_agent_model import (
+    GameplayModelV1,
+    MODEL_ARCHITECTURE_VERSION,
+    configure_torch_threads,
+    predict_action,
+    resolve_device,
+)
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
     OBSERVATION_VERSION,
@@ -84,6 +90,10 @@ def run_episode(
     search_entropies: list[float] = []
     search_candidate_counts: list[int] = []
     search_elapsed: list[int] = []
+    search_screening_simulations = 0
+    search_depth_simulations = 0
+    search_root_actions: list[int] = []
+    search_effective_depth: list[int] = []
     last_label_tick: int | None = None
     started = time.perf_counter()
     while not observation["terminal"] and actions < max_actions:
@@ -102,6 +112,10 @@ def run_episode(
                 })
                 last_label_tick = observation["tick"]
             search_simulations += advice.simulation_count
+            search_screening_simulations += advice.screening_simulations
+            search_depth_simulations += advice.depth_simulations
+            search_root_actions.append(advice.root_actions_generated)
+            search_effective_depth.append(advice.effective_depth_budget)
             if advice.best_second_margin is not None:
                 search_margins.append(advice.best_second_margin)
             if advice.search_policy:
@@ -165,6 +179,12 @@ def run_episode(
             "search_mean_entropy": sum(search_entropies) / max(len(search_entropies), 1),
             "search_mean_candidate_count": sum(search_candidate_counts) / max(len(search_candidate_counts), 1),
             "search_mean_elapsed_ticks": sum(search_elapsed) / max(len(search_elapsed), 1),
+            # The screening/depth split, so a budget sweep can be read as depth budget
+            # rather than as the raw number handed to SearchTeacher.
+            "search_screening_simulations": search_screening_simulations,
+            "search_depth_simulations": search_depth_simulations,
+            "search_mean_root_actions": sum(search_root_actions) / max(len(search_root_actions), 1),
+            "search_mean_effective_depth_budget": sum(search_effective_depth) / max(len(search_effective_depth), 1),
         })
     return record
 
@@ -209,11 +229,18 @@ def summarize(records: list[dict[str, Any]]) -> dict[str, Any]:
         "search_mean_entropy",
         "search_mean_candidate_count",
         "search_mean_elapsed_ticks",
+        "search_mean_root_actions",
+        "search_mean_effective_depth_budget",
     ):
         if key in records[0]:
             summary[key] = mean(key)
     if "search_simulations" in records[0]:
         summary["search_simulations_total"] = sum(record["search_simulations"] for record in records)
+    if "search_screening_simulations" in records[0]:
+        summary["search_screening_simulations_total"] = sum(
+            record["search_screening_simulations"] for record in records)
+        summary["search_depth_simulations_total"] = sum(
+            record["search_depth_simulations"] for record in records)
     return summary
 
 
@@ -237,6 +264,13 @@ def main() -> None:
         help="auto = cuda if available else cpu. MPS is never chosen automatically: every "
              "model call here is a batch-of-1 forward pass, where MPS measured 1.71x slower "
              "end to end. Pass --device mps explicitly to opt in.",
+    )
+    parser.add_argument(
+        "--threads", type=int, default=0,
+        help="CPU thread count for torch; 0 selects the measured default (4). Thread count "
+             "perturbs results only in the low order bits (<=6e-7 relative), far below the "
+             "1e-5..1e-4 decision error budget. Pass --threads 1 for bit-compatibility with "
+             "an older run.",
     )
     parser.add_argument("--checkpoint", action="append", type=parse_checkpoint, default=[])
     parser.add_argument("--search-value", type=Path)
@@ -270,7 +304,7 @@ def main() -> None:
     seed_path = args.seeds or (DEFAULT_TEST_SEEDS if args.final_test else DEFAULT_DEV_SEEDS)
     seeds = read_seed_set(seed_path, args.level, evaluation_role)
     device = resolve_device(args.device)
-    torch.set_num_threads(1)
+    configure_torch_threads(args.threads)
     current_task_signature = task_signature(
         args.level, args.deck, args.zombie_count_multiplier, args.resource_dir
     )

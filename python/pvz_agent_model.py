@@ -58,6 +58,46 @@ def resolve_device(requested: str = "auto") -> torch.device:
     return torch.device(requested)
 
 
+# Four threads was the best measured setting on both machines tested (an Apple
+# M5 Pro and an i7-12700F); see ``scripts/thread_effect.py`` for the sweep.
+DEFAULT_TORCH_THREADS = 4
+
+
+def configure_torch_threads(requested: int = 0) -> int:
+    """Pin the CPU thread count and return the value actually applied.
+
+    The training entry points used to hard-code ``torch.set_num_threads(1)`` right
+    next to ``random.seed`` / ``torch.manual_seed`` -- a reproducibility choice.
+    That pin is free on Apple Silicon (Accelerate already saturates a single
+    thread) but expensive on an x86 desktop, where four threads run the
+    batch-of-1 search shape **2.0x** faster and the 64-step training window
+    **1.7x** faster.
+
+    Thread count does perturb the low-order bits, but far below anything that
+    matters here.  Measured against ``threads=1``:
+
+    ==================  ====================  =====================
+    quantity            i7-12700F (rel.)      M5 Pro (rel.)
+    ==================  ====================  =====================
+    value forward       4.0e-07               0 (bit-identical)
+    gameplay step       2.3e-07               0 (bit-identical)
+    after 64-step win.  6.1e-07               7.0e-10
+    ==================  ====================  =====================
+
+    The decision error budget measured on the real simulator is 1e-5..1e-4, so
+    these differences are two or more orders of magnitude too small to flip a
+    search decision or change training behaviour.
+
+    Reproducibility survives as long as the value is *pinned*: the same machine
+    at the same thread count is deterministic either way.  Pass ``--threads 1``
+    when you need bit-compatibility with artifacts from an older run; ``0`` (the
+    default) means :data:`DEFAULT_TORCH_THREADS`.
+    """
+    resolved = DEFAULT_TORCH_THREADS if requested <= 0 else requested
+    torch.set_num_threads(resolved)
+    return resolved
+
+
 def _ratio(value: float, scale: float) -> float:
     return max(-2.0, min(2.0, float(value) / scale))
 
@@ -523,3 +563,57 @@ def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], o
         duration = min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - target_ticks))
         losses.append(F.cross_entropy(output["wait_logits"].unsqueeze(0), torch.tensor([duration], device=device)))
     return torch.stack(losses).sum()
+
+
+def factored_action_log_prob(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
+                             action: dict[str, Any]) -> Tensor:
+    """``log p(action)`` under the model's factored action distribution.
+
+    ``select_action`` already computes exactly this, and it is the same
+    factorisation ``hard_behavior_cloning_loss`` assumes when it sums the
+    type/packet/cell cross-entropies: a plant is scored as
+    ``p(type) * p(packet) * p(cell | packet)``, so the three factors can never be
+    recombined into an action the teacher never proposed.
+
+    Routing the soft-label term through ``select_action`` rather than re-deriving
+    the masking is what makes ``-factored_action_log_prob`` provably equal to
+    ``hard_behavior_cloning_loss`` for the same action, and the tests pin that.
+    """
+    _, log_prob, _ = select_action(model, output, observation, action=action)
+    return log_prob
+
+
+def soft_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
+                               candidates: list[dict[str, Any]], policy: list[float],
+                               plant_weight: float = 1.0) -> Tensor:
+    """Expected negative log-likelihood of the search teacher's *whole* candidate set.
+
+    The teacher emits a distribution over every root candidate
+    (``SearchTeacher._policy_from_results`` concentrates it on the best outcome
+    class and softmaxes the scores within it).  Training only on its argmax --
+    which is what ``hard_behavior_cloning_loss`` does -- discards the margin
+    between the runner-up lines, even though ``collect_search_episode`` already
+    writes that distribution into every step.
+
+    ``plant_weight`` is applied per candidate and the weights are then
+    renormalised, so the result stays an expectation (weights sum to one) while
+    plant candidates carry the same upweighting the hard loss gives its type
+    factor.
+    """
+    if len(candidates) != len(policy):
+        raise ValueError(f"{len(candidates)} candidates but {len(policy)} policy entries")
+    weighted: list[tuple[dict[str, Any], float]] = []
+    for action, probability in zip(candidates, policy):
+        weight = max(0.0, float(probability))
+        if weight <= 0.0:
+            continue
+        if plant_weight != 1.0 and action.get("type") == "plant":
+            weight *= plant_weight
+        weighted.append((action, weight))
+    total = sum(weight for _, weight in weighted)
+    if total <= 0.0:
+        raise ValueError("search policy assigns no probability to any candidate")
+    return torch.stack([
+        -(weight / total) * factored_action_log_prob(model, output, observation, action)
+        for action, weight in weighted
+    ]).sum()

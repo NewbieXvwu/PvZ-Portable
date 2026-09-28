@@ -8,11 +8,17 @@ import random
 import torch
 from torch.nn import functional as F
 
-from pvz_agent_model import GameplayModelV1, hard_behavior_cloning_loss
+from pvz_agent_model import GameplayModelV1, hard_behavior_cloning_loss, soft_behavior_cloning_loss
 from pvz_value import discounted_terminal_value
 
 AUXILIARY_LOSS_WEIGHT = 0.05
 LANE_COUNT = 6
+
+# Weight of the soft-label term relative to the hard one.  The search teacher
+# already writes a distribution over its whole root candidate set into every step;
+# training on the argmax alone throws that away.  Zero restores the previous
+# behaviour exactly, which is what `--soft-label-weight 0` is for.
+SOFT_LABEL_WEIGHT = 0.5
 
 
 def episode_targets(steps: list[dict[str, Any]], index: int, device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
@@ -28,7 +34,10 @@ def episode_targets(steps: list[dict[str, Any]], index: int, device: torch.devic
     return lanes, torch.tensor([next_wave], dtype=torch.float32, device=device)
 
 
-def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, device: torch.device) -> tuple[list[float], float]:
+def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, device: torch.device,
+          soft_label_weight: float = SOFT_LABEL_WEIGHT) -> tuple[list[float], float]:
+    if soft_label_weight < 0.0:
+        raise ValueError("soft label weight must be non-negative")
     optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4, weight_decay=0.01)
     plant_steps = sum(step["action"]["type"] == "plant" for episode in episodes for step in episode["steps"])
     other_steps = sum(len(episode["steps"]) for episode in episodes) - plant_steps
@@ -53,6 +62,14 @@ def train(model: GameplayModelV1, episodes: list[dict[str, Any]], epochs: int, d
                     output = model.step(step["observation"], hidden, previous, step["delta_ticks"], step["events"])
                     hidden = output["hidden"]
                     loss = hard_behavior_cloning_loss(model, output, step["observation"], step["action"], plant_weight)
+                    if soft_label_weight > 0.0:
+                        candidates = step.get("candidate_actions") or []
+                        policy = step.get("search_policy") or []
+                        # DAgger steps carry the same search labels, so this only skips
+                        # data that predates the labels rather than a whole collection pass.
+                        if candidates and policy:
+                            loss = loss + soft_label_weight * soft_behavior_cloning_loss(
+                                model, output, step["observation"], candidates, policy, plant_weight)
                     lanes, next_wave = episode_targets(steps, index, device)
                     won = bool(episode["won"])
                     remaining_ticks = max(0, terminal_tick - int(step["observation"]["tick"]))

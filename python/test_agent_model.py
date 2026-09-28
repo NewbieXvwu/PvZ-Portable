@@ -14,16 +14,20 @@ import unittest
 import torch
 
 from pvz_agent_model import (
+    DEFAULT_TORCH_THREADS,
     FEATURE_COUNT,
     MODEL_CONFIG,
     TOKEN_KINDS,
     WAIT_TICKS,
     GameplayModelV1,
+    configure_torch_threads,
+    factored_action_log_prob,
     hard_behavior_cloning_loss,
     observation_tokens,
     predict_action,
     resolve_device,
     select_action,
+    soft_behavior_cloning_loss,
 )
 from pvz_imitation import LANE_COUNT, episode_targets, train
 
@@ -215,6 +219,52 @@ class GameplayModelTests(unittest.TestCase):
             self.assertEqual(resolve_device("mps").type, "mps")
 
 
+class TorchThreadPolicyTests(unittest.TestCase):
+    """The ``--threads`` knob is a reproducibility choice, not a correctness one.
+
+    Training entry points used to hard-code ``torch.set_num_threads(1)``.  That pin
+    is free on Apple Silicon but costs 2.0x on an x86 desktop, so it is now a
+    parameter.  What must stay true is that the *resolved* value is the one that
+    gets applied and reported -- a run that silently used a different thread count
+    than its provenance records would be untraceable.
+    """
+
+    def setUp(self) -> None:
+        self._original = torch.get_num_threads()
+        self.addCleanup(torch.set_num_threads, self._original)
+
+    def test_zero_and_negative_select_the_measured_default(self) -> None:
+        for requested in (0, -1, -64):
+            with self.subTest(requested=requested):
+                self.assertEqual(configure_torch_threads(requested), DEFAULT_TORCH_THREADS)
+                self.assertEqual(torch.get_num_threads(), DEFAULT_TORCH_THREADS)
+        self.assertGreaterEqual(DEFAULT_TORCH_THREADS, 1)
+
+    def test_an_explicit_count_is_applied_verbatim_and_returned(self) -> None:
+        for requested in (1, 2, 3, 7):
+            with self.subTest(requested=requested):
+                self.assertEqual(configure_torch_threads(requested), requested)
+                self.assertEqual(torch.get_num_threads(), requested)
+
+    def test_a_fixed_thread_count_is_deterministic_across_calls(self) -> None:
+        """The documented contract: same machine + same thread count => same bits.
+
+        This is what makes the knob safe to expose at all.  ``--threads 1`` and
+        ``--threads 4`` do not agree bit-for-bit on x86, but a run stays
+        reproducible *given the thread count its provenance records*.
+        """
+        torch.manual_seed(3)
+        model = GameplayModelV1().eval()
+        source = observation()
+        outputs = []
+        for _ in range(2):
+            self.assertEqual(configure_torch_threads(2), torch.get_num_threads())
+            with torch.no_grad():
+                outputs.append(model.step(source))
+        self.assertTrue(torch.equal(outputs[0]["packet_logits"], outputs[1]["packet_logits"]))
+        self.assertTrue(torch.equal(outputs[0]["value"], outputs[1]["value"]))
+
+
 class SelectActionTests(unittest.TestCase):
     def setUp(self) -> None:
         torch.manual_seed(0)
@@ -349,6 +399,154 @@ class BehaviorCloningLossTests(unittest.TestCase):
                 after = self._loss(action, source)
 
                 self.assertLess(float(after.detach()), float(before.detach()))
+
+
+class SoftLabelDistillationTests(unittest.TestCase):
+    """The teacher writes a distribution over its whole candidate set; these pin that it is used.
+
+    ``collect_search_episode`` records ``candidate_actions`` / ``search_policy`` on every
+    step, and until now nothing read them: training minimised the cross-entropy of the
+    single executed action and threw the margin between the runner-up lines away.
+    """
+
+    def setUp(self) -> None:
+        torch.manual_seed(0)
+        self.model = GameplayModelV1()
+        self.source = observation()
+        self.demonstrated = {"type": "plant", "packet": 0, "row": 1, "col": 2}
+        self.alternative = {"type": "wait", "ticks": 300}
+
+    def _output(self) -> dict:
+        return self.model.step(self.source)
+
+    def _hard(self, action: dict) -> float:
+        return float(hard_behavior_cloning_loss(self.model, self._output(), self.source, action).detach())
+
+    def _log_prob(self, output: dict, action: dict) -> float:
+        return float(factored_action_log_prob(self.model, output, self.source, action).detach())
+
+    def test_factored_log_prob_is_the_negative_of_the_hard_loss(self) -> None:
+        """The soft term must score a candidate exactly the way the hard loss scores it.
+
+        ``hard_behavior_cloning_loss`` sums the type/packet/cell cross-entropies and
+        ``select_action`` multiplies those same three factors, so the two views of one
+        action have to agree; if they did not, soft and hard supervision would be
+        pulling on two different objectives.
+        """
+        output = self._output()
+        for action in ({"type": "plant", "packet": 1, "row": 1, "col": 3},
+                       {"type": "shovel", "col": 3, "row": 2},
+                       {"type": "wait", "ticks": 150}):
+            with self.subTest(action=action):
+                hard = hard_behavior_cloning_loss(self.model, output, self.source, action, plant_weight=1.0)
+                self.assertAlmostEqual(-self._log_prob(output, action), float(hard.detach()), places=6)
+
+    def test_a_one_hot_policy_reduces_to_the_hard_loss(self) -> None:
+        output = self._output()
+
+        soft = soft_behavior_cloning_loss(self.model, output, self.source, [self.demonstrated], [1.0])
+
+        self.assertAlmostEqual(float(soft.detach()), self._hard(self.demonstrated), places=6)
+
+    def test_the_soft_loss_interpolates_the_candidate_losses(self) -> None:
+        output = self._output()
+
+        soft = soft_behavior_cloning_loss(self.model, output, self.source,
+                                          [self.demonstrated, self.alternative], [0.75, 0.25])
+
+        expected = 0.75 * self._hard(self.demonstrated) + 0.25 * self._hard(self.alternative)
+        self.assertAlmostEqual(float(soft.detach()), float(expected), places=6)
+
+    def test_candidates_with_no_policy_mass_are_dropped(self) -> None:
+        output = self._output()
+
+        with_zero = soft_behavior_cloning_loss(self.model, output, self.source,
+                                               [self.demonstrated, self.alternative], [1.0, 0.0])
+        alone = soft_behavior_cloning_loss(self.model, output, self.source, [self.demonstrated], [1.0])
+
+        self.assertAlmostEqual(float(with_zero.detach()), float(alone.detach()), places=6)
+
+    def test_plant_weight_renormalises_the_soft_target(self) -> None:
+        """Upweighting plants must change the mixture, not the total mass of the target."""
+        output = self._output()
+
+        weighted = soft_behavior_cloning_loss(self.model, output, self.source,
+                                              [self.demonstrated, self.alternative], [0.5, 0.5],
+                                              plant_weight=3.0)
+
+        expected = ((3.0 * 0.5) * self._hard(self.demonstrated)
+                    + 0.5 * self._hard(self.alternative)) / (3.0 * 0.5 + 0.5)
+        self.assertAlmostEqual(float(weighted.detach()), float(expected), places=6)
+
+    def test_malformed_policy_input_is_rejected(self) -> None:
+        output = self._output()
+
+        with self.assertRaisesRegex(ValueError, "candidates but"):
+            soft_behavior_cloning_loss(self.model, output, self.source, [self.demonstrated], [0.5, 0.5])
+        with self.assertRaisesRegex(ValueError, "no probability"):
+            soft_behavior_cloning_loss(self.model, output, self.source, [self.demonstrated], [0.0])
+
+    def _episode(self, policy: list[float]) -> dict:
+        return {
+            "tick": 660,
+            "won": True,
+            "steps": [{
+                "observation": self.source,
+                "action": self.demonstrated,
+                "delta_ticks": 60,
+                "events": {},
+                "candidate_actions": [self.demonstrated, self.alternative],
+                "search_values": [0.0, 0.0],
+                "search_policy": policy,
+                "best_action": self.demonstrated,
+            }],
+        }
+
+    def _alternative_margin(self) -> float:
+        output = self._output()
+        return self._log_prob(output, self.alternative) - self._log_prob(output, self.demonstrated)
+
+    def test_the_soft_target_pulls_the_model_towards_the_search_distribution(self) -> None:
+        """The point of the term: a teacher preference for the runner-up must reach the student.
+
+        The demonstrated action is the plant while the search put 0.9 of its mass on the
+        wait, so a soft term that is actually wired in has to raise the wait's log
+        probability relative to the plant's.
+        """
+        episode = self._episode([0.1, 0.9])
+        before = self._alternative_margin()
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            train(self.model, [episode], epochs=20, device=torch.device("cpu"), soft_label_weight=4.0)
+
+        self.assertGreater(self._alternative_margin(), before)
+
+    def test_zero_soft_weight_leaves_the_demonstration_alone(self) -> None:
+        """``--soft-label-weight 0`` has to restore argmax-only behaviour cloning exactly."""
+        episode = self._episode([0.1, 0.9])
+        before = self._alternative_margin()
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            train(self.model, [episode], epochs=20, device=torch.device("cpu"), soft_label_weight=0.0)
+
+        self.assertLess(self._alternative_margin(), before)
+
+    def test_a_step_without_search_labels_still_trains(self) -> None:
+        """Trajectories collected before the labels existed must not break the run."""
+        episode = self._episode([0.1, 0.9])
+        episode["steps"][0].pop("candidate_actions")
+        episode["steps"][0].pop("search_policy")
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            history, _ = train(self.model, [episode], epochs=1, device=torch.device("cpu"))
+
+        self.assertEqual(len(history), 1)
+        self.assertTrue(math.isfinite(history[0]))
+
+    def test_a_negative_soft_weight_is_rejected(self) -> None:
+        with self.assertRaisesRegex(ValueError, "non-negative"):
+            train(self.model, [self._episode([1.0, 0.0])], epochs=1, device=torch.device("cpu"),
+                  soft_label_weight=-0.5)
 
 
 class ImitationTargetTests(unittest.TestCase):

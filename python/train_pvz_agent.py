@@ -13,7 +13,13 @@ from typing import Any
 
 import torch
 
-from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, predict_action, resolve_device
+from pvz_agent_model import (
+    GameplayModelV1,
+    MODEL_ARCHITECTURE_VERSION,
+    configure_torch_threads,
+    predict_action,
+    resolve_device,
+)
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
     OBSERVATION_VERSION,
@@ -21,7 +27,7 @@ from pvz_common import (
     TRAINING_SEED,
 )
 from pvz_env import PvZEnv, training_task
-from pvz_imitation import train
+from pvz_imitation import SOFT_LABEL_WEIGHT, train
 from pvz_search import SearchTeacher
 from pvz_search_value import SearchValueModel, load_search_value, save_search_value, train_search_value
 from pvz_seed_sets import DEFAULT_DEV_SEEDS, DEFAULT_TEST_SEEDS, read_seed_set
@@ -61,6 +67,14 @@ def _search_labels(step: dict[str, Any], advice: Any) -> dict[str, Any]:
         "search_elapsed_ticks": advice.search_elapsed_ticks,
         "simulation_count": advice.simulation_count,
         "terminal_outcome": advice.terminal_outcome,
+        # Screening/depth split. Recorded per step so a later analysis can tell how much
+        # of the budget ever reached a multi-step line, instead of assuming
+        # ``simulation_count`` is search depth.
+        "screening_simulations": advice.screening_simulations,
+        "depth_simulations": advice.depth_simulations,
+        "effective_depth_budget": advice.effective_depth_budget,
+        "root_actions_generated": advice.root_actions_generated,
+        "root_candidates_screened": advice.root_candidates_screened,
     })
     return step
 
@@ -266,6 +280,13 @@ def main() -> None:
              "model call here is a batch-of-1 forward pass, where MPS measured 1.71x slower "
              "end to end. Pass --device mps explicitly to opt in.",
     )
+    parser.add_argument(
+        "--threads", type=int, default=0,
+        help="CPU thread count for torch; 0 selects the measured default (4). This is a "
+             "reproducibility knob, not a correctness one: thread count perturbs the low "
+             "order bits (<=6e-7 relative) but the decision error budget is 1e-5..1e-4. "
+             "Pass --threads 1 only to reproduce artifacts from an older run.",
+    )
     parser.add_argument("--train-seed-start", type=int, default=0)
     parser.add_argument("--train-episodes", type=int, default=64)
     parser.add_argument("--dagger-seed-start", type=int, default=10000)
@@ -278,6 +299,9 @@ def main() -> None:
     parser.add_argument("--test-seeds", type=Path, default=DEFAULT_TEST_SEEDS)
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--value-epochs", type=int, default=8)
+    parser.add_argument("--soft-label-weight", type=float, default=SOFT_LABEL_WEIGHT,
+                        help="weight of the search-distribution distillation term; 0 restores "
+                             "argmax-only behaviour cloning")
     parser.add_argument("--dagger-rounds", type=int, default=1)
     parser.add_argument("--collect-only", action="store_true")
     parser.add_argument("--train-only", action="store_true")
@@ -298,6 +322,8 @@ def main() -> None:
     )
     if min(positive) < 1:
         parser.error("episode counts, epochs, and search parameters must be positive")
+    if args.soft_label_weight < 0.0:
+        parser.error("--soft-label-weight must be non-negative")
     if min(args.train_seed_start, args.dagger_seed_start, args.value_bootstrap_seed_start,
            args.value_refinement_seed_start) < 0:
         parser.error("seed starts must be non-negative")
@@ -324,7 +350,7 @@ def main() -> None:
 
     random.seed(TRAINING_SEED)
     torch.manual_seed(TRAINING_SEED)
-    torch.set_num_threads(1)
+    configure_torch_threads(args.threads)
     device = resolve_device(args.device)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     replay_dir = args.output_dir / "replays"
@@ -419,7 +445,8 @@ def main() -> None:
     search_value_sha256 = sha256_file(search_value_path)
     model = GameplayModelV1().to(device)
     parameter_count = sum(parameter.numel() for parameter in model.parameters())
-    losses, plant_weight = train(model, episodes, args.epochs, device)
+    losses, plant_weight = train(model, episodes, args.epochs, device,
+                                          soft_label_weight=args.soft_label_weight)
     # The BC checkpoint is written before DAgger collection, so it legitimately records an
     # empty dagger episode list; the final checkpoint records the collected seeds.
     bc_metadata = provenance(args, {"search": data_path}, train_seeds=train_seeds,
@@ -454,7 +481,8 @@ def main() -> None:
             dagger_episodes.extend(new_episodes)
             episodes.extend(new_episodes)
             write_episodes(dagger_path, dagger_episodes)
-            losses, plant_weight = train(model, episodes, args.epochs, device)
+            losses, plant_weight = train(model, episodes, args.epochs, device,
+                                          soft_label_weight=args.soft_label_weight)
         results = evaluate(
             model, env, dev_seeds, device, args.max_actions, args.level,
             tuple(args.deck), args.zombie_count_multiplier,

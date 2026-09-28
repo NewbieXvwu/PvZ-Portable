@@ -15,6 +15,13 @@ from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 SEARCH_POLICY_MIN_SCALE = 0.05
 SEARCH_PARTIAL_SHORTFALL_PENALTY = 0.15
 
+# ``BRANCH_SNAPSHOT_FAST`` refuses more than this many specs in one command
+# (``src/main.cpp`` bounds ``branchCount`` at 128), so callers that want to expand
+# a wider action set have to chunk.  The search itself never gets near this --
+# the root request saturates at 96 and internal nodes use ``candidate_limit`` --
+# but the audit tools deliberately enumerate every legal placement.
+BRANCH_BATCH_LIMIT = 128
+
 
 @dataclass(frozen=True)
 class SearchAdvice:
@@ -25,6 +32,17 @@ class SearchAdvice:
     simulation_count: int
     terminal_outcome: int | None
     search_elapsed_ticks: int
+    # ``simulation_budget`` is not the depth of the search.  Every root candidate
+    # costs one simulation before any line is extended, so the amount actually
+    # available to ``_successive_halving`` is ``simulation_budget - screening_simulations``.
+    # Recording the split here is what makes a budget ablation interpretable: a run
+    # at ``simulation_budget=128`` spends half of it on screening and is therefore
+    # not "half of 256", it is a different regime.
+    root_actions_generated: int = 0
+    root_candidates_screened: int = 0
+    screening_simulations: int = 0
+    depth_simulations: int = 0
+    effective_depth_budget: int = 0
 
 
 @dataclass
@@ -194,6 +212,11 @@ class SearchTeacher:
     def _branch_snapshot_fast(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not actions:
             return []
+        if len(actions) > BRANCH_BATCH_LIMIT:
+            raise ValueError(
+                f"BRANCH_SNAPSHOT_FAST accepts at most {BRANCH_BATCH_LIMIT} specs per command, "
+                f"got {len(actions)}"
+            )
         tokens = " ".join(self._branch_action_token(action) for action in actions)
         response = self.env._command(f"BRANCH_SNAPSHOT_FAST {snapshot_id} {len(actions)} {tokens}")
         branches = response.get("branches")
@@ -270,15 +293,39 @@ class SearchTeacher:
                 self._release(snapshot_id)
             raise
 
+    def _fit_to_remaining(self, node: _SearchNode, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Drop the actions that cannot fit in *node*'s remaining horizon.
+
+        Callers that need to keep action and result aligned must expand through
+        :meth:`_expand_paired`; re-deriving this list next to a separate expansion
+        is what allowed the two to drift apart.
+        """
+        remaining = self.horizon_ticks - node.elapsed_ticks
+        return [item for action in actions if (item := fit_action_to_remaining(action, remaining)) is not None]
+
+    def _expand_paired(
+        self,
+        node: _SearchNode,
+        actions: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], list[tuple[_SearchNode | None, tuple[float, int | None, int]]]]:
+        """Branch *actions* and return ``(fitted_actions, results)`` positionally aligned.
+
+        ``_branch_snapshot_fast`` only sees the *fitted* actions, so pairing its
+        results back against the caller's original list silently misaligns every
+        action with its neighbour's outcome as soon as one action is dropped for
+        not fitting the remaining horizon.  Returning both lists from one place
+        makes that impossible.
+        """
+        fitted = self._fit_to_remaining(node, actions)
+        branches = self._branch_snapshot_fast(node.snapshot_id, fitted)
+        return fitted, [self._branch_result(node, action, branch) for action, branch in zip(fitted, branches)]
+
     def _expand_actions(
         self,
         node: _SearchNode,
         actions: list[dict[str, Any]],
     ) -> list[tuple[_SearchNode | None, tuple[float, int | None, int]]]:
-        remaining = self.horizon_ticks - node.elapsed_ticks
-        fitted = [item for action in actions if (item := fit_action_to_remaining(action, remaining)) is not None]
-        branches = self._branch_snapshot_fast(node.snapshot_id, fitted)
-        return [self._branch_result(node, action, branch) for action, branch in zip(fitted, branches)]
+        return self._expand_paired(node, actions)[1]
 
     @staticmethod
     def _transposition_key(node: _SearchNode) -> tuple[str, int, int, int]:
@@ -384,8 +431,8 @@ class SearchTeacher:
 
     def _initialize_roots(self, root: _SearchNode, actions: list[dict[str, Any]]) -> list[_RootState]:
         states: list[_RootState] = []
-        initial = self._expand_actions(root, actions)
-        for action, (child, leaf) in zip(actions, initial):
+        fitted, initial = self._expand_paired(root, actions)
+        for action, (child, leaf) in zip(fitted, initial):
             state = _RootState(action=action, simulations=1)
             if child is None:
                 state.leaves.append(leaf)
@@ -488,6 +535,59 @@ class SearchTeacher:
             return {"type": "shovel", "col": col, "row": row}
         raise RuntimeError("environment exposed no legal action")
 
+    def one_step_children(
+        self,
+        observation: dict[str, Any],
+        actions: list[dict[str, Any]],
+    ) -> list[tuple[dict[str, Any], dict[str, Any] | None]]:
+        """Return the observation each action leads to, without searching past it.
+
+        These are the counterfactual leaves the value model is asked to score most
+        often: the search branches *every* root candidate before it extends a single
+        line, so one-step children dominate ``_leaf_value`` calls.  The audit tools
+        need to look at them directly, and re-deriving the snapshot protocol outside
+        this class is how the two would drift apart.
+
+        Returns ``(action, child_observation)`` pairs, with ``None`` for an action
+        that ended the level.  Actions come back alongside their child so a caller
+        cannot misalign them: actions that do not fit ``horizon_ticks`` are dropped
+        here, and a caller that paired the results against its own list would
+        silently shift every remaining action onto its neighbour's outcome.
+
+        Expands in ``BRANCH_BATCH_LIMIT`` chunks, because the protocol refuses a
+        wider command than that and the audit tools deliberately enumerate every
+        legal placement.
+        """
+        children: list[tuple[dict[str, Any], dict[str, Any] | None]] = []
+        with self._speculative_fast() as root_snapshot:
+            self._root_snapshot = root_snapshot
+            self._snapshots = set()
+            try:
+                root = _SearchNode(observation, root_snapshot, "root", 0, 0, 0, 0.0, 1.0, 0.0, ("root",))
+                fitted = self._fit_to_remaining(root, actions)
+                for start in range(0, len(fitted), BRANCH_BATCH_LIMIT):
+                    chunk = fitted[start:start + BRANCH_BATCH_LIMIT]
+                    for action, branch in zip(chunk, self._branch_snapshot_fast(root_snapshot, chunk)):
+                        child, _ = self._branch_result(root, action, branch)
+                        children.append((action, None if child is None else child.observation))
+                return children
+            finally:
+                for snapshot_id in tuple(self._snapshots):
+                    self._release(snapshot_id)
+
+    @property
+    def root_request_limit(self) -> int:
+        """How many raw root actions ``advice`` asks the generator for.
+
+        The second term is slack so diversity screening has something to choose
+        from; the first one is the budget guard.  Without it a small budget is
+        spent *entirely* on screening -- at ``budget=64, candidate_limit=8`` the
+        generator would be asked for 64 actions out of a budget of 64, leaving
+        ``_successive_halving`` nothing to expand with.  Exposed because the audit
+        tools have to reproduce the search's own candidate request exactly.
+        """
+        return min(max(1, self.simulation_budget // 2), max(32, self.root_candidate_limit * 4))
+
     def advice(self, observation: dict[str, Any]) -> SearchAdvice:
         with self._speculative_fast() as root_snapshot:
             self._root_snapshot = root_snapshot
@@ -495,7 +595,7 @@ class SearchTeacher:
             try:
                 root_actions = self.candidate_generator.actions(
                     observation,
-                    min(max(1, self.simulation_budget // 2), max(32, self.root_candidate_limit * 4)),
+                    self.root_request_limit,
                     True,
                     self.horizon_ticks,
                 )
@@ -515,14 +615,27 @@ class SearchTeacher:
                     0.0,
                     ("root",),
                 )
-                root_states = self._screen_root_states(self._initialize_roots(root, root_actions))
-                screening_cost = len(root_actions)
+                initial_states = self._initialize_roots(root, root_actions)
+                root_states = self._screen_root_states(initial_states)
+                # Reserve exactly what screening spent.  ``_initialize_roots`` drops the
+                # actions that do not fit the horizon, so ``len(initial_states)`` can be
+                # smaller than ``len(root_actions)``; reserving the request rather than the
+                # spend would quietly hand the depth search less budget than it has.
+                screening_cost = len(initial_states)
                 results, depth_cost = self._successive_halving(root_states, screening_cost)
                 total = screening_cost + depth_cost
+                accounting = {
+                    "root_actions_generated": len(root_actions),
+                    "root_candidates_screened": len(root_states),
+                    "screening_simulations": screening_cost,
+                    "depth_simulations": depth_cost,
+                    "effective_depth_budget": max(0, self.simulation_budget - screening_cost),
+                }
                 if not results:
                     action = self._fallback_action(observation)
                     return SearchAdvice(
-                        action, [(action, self._leaf_value(observation))], [1.0], None, total, None, 0
+                        action, [(action, self._leaf_value(observation))], [1.0], None, total, None, 0,
+                        **accounting,
                     )
                 results.sort(key=lambda item: self._result_key(item[2], item[1]), reverse=True)
                 policy = self._policy_from_results(results)
@@ -541,6 +654,7 @@ class SearchTeacher:
                     total,
                     best[2],
                     best[3],
+                    **accounting,
                 )
             finally:
                 for snapshot_id in tuple(self._snapshots):

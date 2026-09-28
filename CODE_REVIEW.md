@@ -1,7 +1,7 @@
 # PvZAgent Python 训练层代码评审 · 修复报告
 
 评审范围：`python/`（PvZ1 模拟器魔改出的 AI 训练环境新增代码）
-首次评审快照：2026-09-28 19:33　|　修复完成：2026-09-28 19:56　|　性能优化：2026-09-28 20:20　|　Apple Silicon 设备策略：2026-09-28 20:35
+首次评审快照：2026-09-28 19:33　|　修复完成：2026-09-28 19:56　|　性能优化：2026-09-28 20:20　|　Apple Silicon 设备策略：2026-09-28 20:35　|　线程数策略：2026-09-28 21:10
 运行环境：系统 Python 3.14（torch 2.13.0、numpy 2.5.1）；`pytest` 未安装，改用 `python3 -m unittest discover -p "test_*.py"`
 静态检查：`pyflakes`（安装在隔离 venv `~/.workbuddy-ai/binaries/python/envs/default`）
 硬件：Apple M5 Pro，15 核（5 P + 10 E），arm64
@@ -12,19 +12,22 @@
 
 ## 0. 结论
 
-**全部 17 条生产问题（P1–P17）与 8 条测试问题（T1–T8）已修复；随后完成一轮搜索吞吐优化（见 §5），并修正了一个会让训练慢 1.55× 的设备默认值（见 §6.5）。**
+**全部 17 条生产问题（P1–P17）与 8 条测试问题（T1–T8）已修复；随后完成一轮搜索吞吐优化（见 §5），修正了一个会让训练慢 1.55× 的设备默认值（见 §6.5），并把复现性用的线程数 pin 改成了参数（见 §6.6）。**
 
-| 指标 | 修复前 | 修复后 | 性能优化后 | 设备修复后 |
-|---|---|---|---|---|
-| 测试数 | 26 | 121 | 139 | **141** |
-| 测试耗时 | 0.007s | 0.99s | 1.09s | 1.30s |
-| `pyflakes` 未定义名称 | 7 处（`hashlib`） | **0** | **0** | **0** |
-| `pyflakes` 未使用导入 | 有 | **0** | **0** | **0** |
-| 变异测试捕获率 | — | **24 / 25** | **14 / 17**（3 项为构造性等价变异） | 同上 |
-| `advice()`（参考模拟器） | — | 30.0 ms | **8.6 ms（3.49×）** | 同 |
-| `advice()`（真实 C++ 模拟器） | — | 186.5 ms | **164.6 ms（1.13–1.17×）** | 同 |
-| `search_value_features`（真实观测） | — | 122.8 µs | **23.2 µs（5.3×）** | 同 |
-| `--device auto` 在 Apple Silicon 上 | — | mps（慢 1.71×） | mps | **cpu** |
+| 指标 | 修复前 | 修复后 | 性能优化后 | 设备修复后 | 线程数放开后 |
+|---|---|---|---|---|---|
+| 测试数 | 26 | 121 | 139 | 141 | **184** |
+| 测试耗时 | 0.007s | 0.99s | 1.09s | 1.30s | **1.58s** |
+| `pyflakes` 未定义名称 | 7 处（`hashlib`） | **0** | **0** | **0** | **0** |
+| `pyflakes` 未使用导入 | 有 | **0** | **0** | **0** | **0** |
+| 变异测试捕获率 | — | **24 / 25** | **14 / 17**（3 项为构造性等价变异） | 同上 | 同上 |
+| `advice()`（参考模拟器） | — | 30.0 ms | **8.6 ms（3.49×）** | 同 | 同 |
+| `advice()`（真实 C++ 模拟器） | — | 186.5 ms | **164.6 ms（1.13–1.17×）** | 同 | 同 |
+| `search_value_features`（真实观测） | — | 122.8 µs | **23.2 µs（5.3×）** | 同 | 同 |
+| `--device auto` 在 Apple Silicon 上 | — | mps（慢 1.71×） | mps | **cpu** | cpu |
+| CPU 线程数 | — | 1（硬编码） | 1 | 1 | **4（`--threads`，可调）** |
+
+> 测试数从 141 跳到 184，是因为工作树里还有三批**已写完但未提交**的改动（搜索预算记账、策略分布蒸馏、搜索审计工具），它们各自带来了新用例；见 §7。
 
 **验证方式**：不只跑测试。对生产代码注入了 25 个人工缺陷（把 `elapsed_ticks` 恒置 0、让 transposition 忽略 `state_hash`、让快照永不释放、让 GAE 丢掉 tick 比率、取消越界保护、恢复 P8/P9 回归……），确认测试能捕获其中的 24 个。修复前的测试套件对**全部 25 个变异都无反应**。性能优化阶段另注入 17 个缺陷，捕获 14 个。
 
@@ -516,9 +519,78 @@ MPS 仍可通过显式 `--device mps` 使用。理由与全部实测数字都写
 学生模型放 MPS（训练阶段 1.29×）。但训练只占 7.5 min / 50 min，收益约 1.7 min（3.4%），
 还要引入双设备参数与设备相关数值，**当前不值得**。真正的杠杆仍然是 §5.5 的 C++ 快照开销。
 
+### 6.6 线程数：把复现性 pin 变成参数
+
+问题：「不需要绝对精度一致，在尽量不影响研究的前提下，可以少量牺牲精度换速度。」
+实测脚本：`scripts/thread_effect.py`（两台机器都跑过）。
+
+三个训练入口此前都把 `torch.set_num_threads(1)` 硬编码在 `random.seed` /
+`torch.manual_seed` **紧邻处** —— 意图明确是复现性，不是性能。但它的代价两台机器完全不同：
+
+| 量（相对 `threads=1`） | i7-12700F + RTX 5080 | Apple M5 Pro |
+|---|---|---|
+| leaf `predict` | **2.0×（threads=4 最优）** | 平坦（Accelerate 已吃满单线程） |
+| 64 步前向+反向 | **1.7×** | 平坦 |
+| 一次完整训练运行 | 32.0 min → **21.3 min** | 无变化 |
+
+线程数**确实会扰动数值**，所以这一步不是「无代价的开关」，必须量化：
+
+| 量（相对 `threads=1`，相对误差） | i7-12700F | M5 Pro |
+|---|---|---|
+| value forward | 4.0e-07 | 0（逐位一致） |
+| gameplay `step` | 2.3e-07 | 0（逐位一致） |
+| 64 步训练窗口后的权重 | 6.1e-07 | 7.0e-10 |
+
+对照 §6.1 实测的决策误差预算 **1e-5 ~ 1e-4**：全部偏差低 **2 个数量级以上**，
+翻不动任何一次搜索决策。作为参照，同一次测量里「换设备（CPU↔MPS）」的偏差是 7.3e-9 ——
+线程数的扰动比它还小一个量级。
+
+**落地方式**：
+
+* `pvz_agent_model.configure_torch_threads(requested)` 负责设置并**返回实际生效的值**，
+  默认 `DEFAULT_TORCH_THREADS = 4`（`requested <= 0` 时取默认）。
+* 四个入口（`train_pvz_agent.py`、`train_pvz_ppo.py`、`benchmark_pvz_agent.py`、
+  `pvz_search_audit.py`）新增 `--threads`。`train_pvz_agent.py` 的 `provenance()`
+  会把 `vars(args)` 整个记进 checkpoint，所以**线程数自动进溯源记录**，不需要额外字段。
+* 需要与旧产物逐位对齐时用 `--threads 1`。
+* 三个单元测试锁定契约：默认值与「`<=0` 即默认」的映射、显式值被原样应用且原样返回
+  （防止 setter 变成 no-op 而返回值照旧撒谎）、同一线程数下两次前向逐位一致。
+
+**为什么不是「无脑调大」**：`threads=16` 在 20 逻辑核的 i7-12700F 上比 `threads=4` 更慢 ——
+batch-of-1 的形状下，线程同步开销超过了并行收益。4 是两台机器上实测的最优点，
+不是「越多越好」的猜测。
+
 ---
 
-## 7. 遗留事项
+## 7. 本轮一并落地的三项改动
+
+这三项与性能无关，但和工作树里同一批未提交改动一起落地，且都直接影响后续实验的可解释性，
+故一并记录。
+
+1. **搜索预算记账（`SearchAdvice` 新增 5 个字段）**。`simulation_budget` **不是搜索深度**：
+   每个根候选在任何一条线被展开前都要先花 1 次模拟，所以真正留给 `_successive_halving`
+   的是 `simulation_budget - screening_simulations`。以前只记 `simulation_count`，
+   于是「`budget=128` 的跑分」被误读成「256 的一半」，其实它是一个不同的工作点。
+   现在 `screening_simulations` / `depth_simulations` / `effective_depth_budget` /
+   `root_actions_generated` / `root_candidates_screened` 逐决策落盘。
+2. **策略分布蒸馏（`pvz_imitation.SOFT_LABEL_WEIGHT`，默认 0.5）**。搜索教师本来就把整个
+   根候选集上的分布写进了每一步，只对 argmax 做行为克隆等于把它扔掉。新增
+   `soft_behavior_cloning_loss` 项，`--soft-label-weight 0` 精确还原旧行为。
+   DAgger 步骤带同样的标签，所以旧数据只是被跳过，而不是要重采一轮。
+3. **搜索审计工具（`python/pvz_search_audit.py`，18 个用例）**。值模型是在教师**访问过**的
+   状态上训练的，却被查询在每个根候选的**反事实一步子节点**上 —— 训练集上的 MSE 检测不到
+   这种错配。工具用 `sibling_ranking` 直接测「兄弟排序是否与更深搜索一致」，
+   用 `candidate_recall` 把生成与筛选两级的召回损失分开测，并只允许 development 种子。
+
+顺带修掉的两个对齐缺陷：`_expand_actions` 以前把 `zip(actions, ...)` 与自己的
+`fit_action_to_remaining` 过滤配在一起，一旦某个动作因剩余 horizon 不足被丢弃，
+**后面每个动作都会对上邻居的结果**；现在 `_expand_paired` 从一处同时返回两个对齐的列表。
+`_branch_snapshot_fast` 现在显式拒绝超过 `BRANCH_BATCH_LIMIT = 128` 的批量
+（`src/main.cpp` 把 `branchCount` 上界设为 128），审计工具按 128 分块展开全量合法动作。
+
+---
+
+## 8. 遗留事项
 
 1. **CI 不跑 Python 测试**。`.github/workflows/ci.yml` 只构建 C++。P14/P15 这类「测试全绿但生产代码一调就炸」的缺陷，只要 CI 里有一步 `unittest discover` 就会当场暴露。建议加入。
 2. **`test_env_protocol.py` 的 manifest 用例依赖 git 工作树**。它在非 git 检出里会自动 `skip`，在 CI 的浅克隆上需要确认 `git diff --binary` 可用。
@@ -533,6 +605,14 @@ MPS 仍可通过显式 `--device mps` 使用。理由与全部实测数字都写
    `test_auto_never_selects_mps`（§6.5）同样只在 Apple Silicon 上有区分度 —— 在 CUDA 主机上
    `auto` 本来就走 `cuda`，该断言恒真。MPS 分支的实际行为由 `scripts/device_benchmark.py`
    与 `scripts/device_policy.py` 在真机上覆盖，这两个脚本**不参与 CI**。
-6. **`test_pvz_search_teacher.py` / `test_pvz_training_semantics.py` 的删除尚未提交**。历史上同一份测试曾同时存在于 4 个文件、39 个用例（见 T7）。建议在提交信息里明确记录这次合并，避免再次分裂。
+6. **`test_pvz_search_teacher.py` / `test_pvz_training_semantics.py` 的删除已在 `769e44c` 落地**。历史上同一份测试曾同时存在于 4 个文件、39 个用例（见 T7）。提交信息里已记录这次合并，避免再次分裂。
 7. **仓库此前没有任何依赖声明文件**，本轮新增了 `requirements.txt`（`torch`、`numpy`）。注意
    `numpy` **不是** torch 的依赖（已核对两个包的 `Requires-Dist`），是本次为性能优化显式引入的。
+8. **线程数策略的验证是「两台机器 + 一次实测」，不是持续保证**。`--threads` 的三个单元测试
+   （§6.6）是纯逻辑断言，在 CI 上完全有效；但「4 是最优点」这个**结论**只由
+   `scripts/thread_effect.py` 在两台具体机器上支撑，该脚本不参与 CI。换 CPU 架构
+   （更多 P 核、NUMA、AMD 的 CCD 拓扑）时应重跑一次，而不是照抄 4。
+9. **`scripts/thread_effect.py` 与 `scripts/device_benchmark.py` 对同一件事给出的倍数略有差异**
+   （线程数 leaf 2.2× vs 2.0×，训练 1.6× vs 1.7×）。原因是两者的测量路径不同：
+   前者用合成观测、后者用真实训练内循环，且都没有做多轮取中位数。**结论方向一致，
+   具体倍数不可当精确值引用。**

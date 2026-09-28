@@ -21,6 +21,14 @@
 - 独立 `SearchValueModel` 只学习模拟器轨迹的真实折扣终局结果。冷启动、value refinement、最终策略教师数据使用互斥 seed；最终 SearchTeacher 使用冻结的独立 value 模型。
 - 训练期模型选择只使用冻结 development 256 seeds；final-test 1024 seeds 与训练、DAgger、value bootstrap/refinement、development 全部隔离，只用于最终验收。
 - BC、DAgger、PPO 训练入口和冻结 seed benchmark 已接入当前模型与搜索教师。
+- 搜索决策落盘时区分**筛选**与**深度**两段模拟预算（`screening_simulations` /
+  `depth_simulations` / `effective_depth_budget`），因为 `simulation_budget` 不是搜索深度：
+  每个根候选在任何一条线展开前都要先花 1 次模拟。
+- BC 除 argmax 行为克隆外，还用 `--soft-label-weight`（默认 0.5）蒸馏搜索教师在根候选集上的
+  完整分布；`0` 精确还原旧行为。
+- `python/pvz_search_audit.py` 在 development 种子上审计两件设计无法自证的事：
+  值模型在**反事实一步子节点**上的兄弟排序是否与更深搜索一致（`sibling_ranking`），
+  以及候选生成 + 筛选两级各自丢掉了多少合法动作（`candidate_recall`）。
 
 ## 当前验收条件
 
@@ -57,9 +65,14 @@
   fp16 全 half 0.24×、bf16 首层 0.33× —— Apple 的矩阵协处理器（AMX）是 **fp32** 单元，
   M 系列没有比 fp32 吞吐更高的 fp16/bf16 路径。这是结构性的，不是配置问题。
   见 `CODE_REVIEW.md` §6.2。换到非 Apple 硬件仍需重测这一条。
-- **调 CPU 线程数**：threads=1/2/5/10/15 下 batch=1 恒为 15.1–15.3 µs、batch=256 恒为
-  272.7–275.2 µs。Accelerate/AMX 已在单线程吃满这条路径。`torch.get_num_threads()` 默认
-  返回 5 是 M5 Pro 的 P 核数，不是配置错误。
+- **调 CPU 线程数**（**结论已更正：这条只在 Apple Silicon 上成立，不是普适结论**）：
+  M5 Pro 上 threads=1/2/5/10/15 下 batch=1 恒为 15.1–15.3 µs、batch=256 恒为
+  272.7–275.2 µs，Accelerate/AMX 已在单线程吃满这条路径；`torch.get_num_threads()`
+  默认返回 5 是 P 核数，不是配置错误。**但在 x86 上完全相反**：i7-12700F 上
+  threads=4 比 threads=1 快 2.0×（leaf）/1.7×（64 步训练），一次完整训练
+  32.0 min → 21.3 min。因此这**不再是「已排除」**，而是改成了可配参数
+  `--threads`（默认 4，`--threads 1` 复现旧产物），数值扰动 4e-7~6e-7，
+  低于误差预算两个数量级。见 `CODE_REVIEW.md` §6.6。
 - **把值模型放到 MPS**：batch=1 的形状上 MPS 全面更慢 —— `SearchValueModel.predict`
   68 µs → 451 µs，真实模拟器上单次 `advice()` 162 ms → 282 ms，整集 rollout 13.2 s → 22.6 s
   （1.71×）。一次完整训练净亏约 28 分钟。**`resolve_device("auto")` 已改为不再考虑 MPS**；
@@ -76,3 +89,17 @@
 
 **要提速只能「少算」，不能「算粗」**：减少叶子估值次数、更激进的剪枝、
 把 C++ 往返批得更狠。真实环境下 Python 侧全部优化到零端到端也只能 2.9×。
+
+## 两台机器的推荐配置
+
+实测于 Apple M5 Pro 与 i7-12700F + RTX 5080（`scripts/thread_effect.py` 的决策矩阵，
+按「192 集 rollout + 32768 步训练」折算）：
+
+| 机器 | 推荐 | 实测最优 | 实测最差 |
+|---|---|---|---|
+| Apple M5 Pro | `--device cpu`（默认即是），不要用 MPS | 11.3 min（值模型 CPU + 学生网络 MPS 拆设备） | `--device mps` 64.7 min |
+| i7-12700F + RTX 5080 | `--device cuda --threads 4` | **15.4 min** | `--device cpu --threads 1` 32.0 min |
+
+`--device auto` 在两边都会选对（CUDA 优先，否则 CPU），所以台式机上真正需要显式加的
+只有 `--threads 4` —— 而它已经是默认值。**唯一需要显式指定的是「要与旧产物逐位对齐」时的
+`--threads 1`。**

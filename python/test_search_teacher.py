@@ -12,7 +12,7 @@ import unittest
 from typing import Any, cast
 
 from pvz_agent_model import WAIT_TICKS
-from pvz_search import SearchTeacher, _RootState, _SearchNode
+from pvz_search import BRANCH_BATCH_LIMIT, SearchTeacher, _RootState, _SearchNode
 from pvz_search_candidates import CandidateGenerator, fit_action_to_remaining, shovel_proposals
 from pvz_search_value import SearchValueModel
 from pvz_value import VALUE_GAMMA, discounted_terminal_value
@@ -440,6 +440,80 @@ class SearchTeacherScoringTests(unittest.TestCase):
             fallback({"legal_actions": {"plants": [], "shovels": [], "wait": False}})
 
 
+class OneStepChildrenTests(unittest.TestCase):
+    """``one_step_children`` is the counterfactual-leaf view the audit tools consume."""
+
+    def test_every_action_comes_back_with_its_own_child(self) -> None:
+        env = _FakeSimulator()
+        searcher = SearchTeacher(env, horizon_ticks=900)
+        plant = {"type": "plant", "packet": 0, "row": 0, "col": 1}
+
+        children = searcher.one_step_children(_observation(_board()), [{"type": "wait", "ticks": 60}, plant])
+
+        self.assertEqual([action for action, _ in children], [{"type": "wait", "ticks": 60}, plant])
+        self.assertEqual(children[0][1]["tick"], ROOT_TICK + 60)
+        self.assertEqual(children[1][1]["tick"], ROOT_TICK)
+        self.assertEqual([(item["row"], item["col"]) for item in children[1][1]["plants"]], [(0, 1)])
+
+    def test_actions_that_do_not_fit_the_horizon_are_dropped_with_their_child(self) -> None:
+        env = _FakeSimulator()
+        searcher = SearchTeacher(env, horizon_ticks=150)
+        plant = {"type": "plant", "packet": 0, "row": 0, "col": 1}
+
+        children = searcher.one_step_children(_observation(_board()),
+                                              [{"type": "wait", "ticks": 300}, plant])
+
+        self.assertEqual([action for action, _ in children], [plant])
+
+    def test_an_action_that_ends_the_level_has_no_child(self) -> None:
+        env = _FakeSimulator(terminal_tick=ROOT_TICK + 60)
+        searcher = SearchTeacher(env, horizon_ticks=900)
+
+        children = searcher.one_step_children(_observation(_board()), [{"type": "wait", "ticks": 60}])
+
+        self.assertEqual(len(children), 1)
+        self.assertIsNone(children[0][1])
+
+    def test_a_wider_action_set_than_the_protocol_allows_is_chunked(self) -> None:
+        """The protocol refuses more than ``BRANCH_BATCH_LIMIT`` specs in one command."""
+        env = _FakeSimulator()
+        searcher = SearchTeacher(env, horizon_ticks=900)
+        actions = [{"type": "plant", "packet": packet, "row": row, "col": col}
+                   for packet in range(5) for row in range(5) for col in range(9)]
+        self.assertGreater(len(actions), BRANCH_BATCH_LIMIT)
+
+        children = searcher.one_step_children(_observation(_board()), actions)
+
+        self.assertEqual(len(children), len(actions))
+        self.assertTrue(all(child is not None for _, child in children))
+
+    def test_an_oversized_branch_command_is_rejected_rather_than_truncated(self) -> None:
+        """Silently sending 129 specs would let the C++ side answer `ok:false` mid-search."""
+        env = _FakeSimulator()
+        searcher = SearchTeacher(env, horizon_ticks=900)
+        actions = [{"type": "wait", "ticks": 60}] * (BRANCH_BATCH_LIMIT + 1)
+
+        with self.assertRaisesRegex(ValueError, "at most"):
+            searcher._branch_snapshot_fast(1, actions)
+
+    def test_children_are_released_even_though_only_the_observations_escape(self) -> None:
+        env = _FakeSimulator()
+        searcher = SearchTeacher(env, horizon_ticks=900)
+
+        searcher.one_step_children(_observation(_board()),
+                                   [{"type": "plant", "packet": 0, "row": 0, "col": 1}])
+
+        self.assertTrue(env.issued, "the audit never asked for a snapshot")
+        self.assertEqual(set(env.issued) - env.dropped, set(), "a child snapshot leaked")
+
+    def test_unsupported_search_actions_are_rejected(self) -> None:
+        env = _FakeSimulator()
+        searcher = SearchTeacher(env, horizon_ticks=900)
+
+        with self.assertRaises(ValueError):
+            searcher.one_step_children(_observation(_board()), [{"type": "sun"}])
+
+
 class SearchTeacherDecisionTests(unittest.TestCase):
     def test_global_simulation_budget_bounds_entire_decision(self) -> None:
         searcher = SearchTeacher(_FakeSimulator(), simulation_budget=24, candidate_limit=2)
@@ -502,6 +576,121 @@ class SearchTeacherDecisionTests(unittest.TestCase):
         self.assertGreater(advice.simulation_count, len(advice.candidates))
         self.assertAlmostEqual(sum(advice.search_policy), 1.0)
         self.assertIn(advice.action, [action for action, _ in advice.candidates])
+
+    def test_root_initialisation_pairs_each_action_with_its_own_branch(self) -> None:
+        """A dropped action must not shift every later action onto its neighbour's result.
+
+        ``_branch_snapshot_fast`` is only ever handed the actions that fit the
+        remaining horizon, so pairing its results back against the caller's
+        *original* action list misaligns them the moment one action is filtered
+        out.  A 300-tick wait does not fit a 150-tick horizon; a plant always
+        does.  If the two lists drift, the surviving root state reports the wait
+        as its action while carrying the plant's branch -- and the search would
+        then credit the plant's outcome to an action it never took.
+        """
+        env = _FakeSimulator()
+        root = _root_node(env)
+        plant = {"type": "plant", "packet": 0, "row": 0, "col": 1}
+        searcher = SearchTeacher(env, horizon_ticks=150, candidate_limit=2)
+
+        states = searcher._initialize_roots(root, [{"type": "wait", "ticks": 300}, plant])
+
+        self.assertEqual([state.action for state in states], [plant])
+        self.assertEqual(searcher._fit_to_remaining(root, [{"type": "wait", "ticks": 300}]), [])
+        self.assertEqual(searcher._fit_to_remaining(root, [plant]), [plant])
+
+    def test_root_initialisation_keeps_every_action_when_all_of_them_fit(self) -> None:
+        env = _FakeSimulator()
+        root = _root_node(env)
+        actions = [
+            {"type": "wait", "ticks": 60},
+            {"type": "plant", "packet": 0, "row": 0, "col": 1},
+            {"type": "plant", "packet": 1, "row": 1, "col": 3},
+        ]
+        searcher = SearchTeacher(env, horizon_ticks=900, candidate_limit=2)
+
+        states = searcher._initialize_roots(root, actions)
+
+        self.assertEqual([state.action for state in states], actions)
+
+    def test_advice_reports_the_screening_and_depth_split(self) -> None:
+        """``simulation_count`` alone cannot be read as search depth.
+
+        Every root candidate costs one simulation before any line is extended, so
+        the depth search only gets ``simulation_budget - screening_simulations``.
+        Without this split a budget sweep looks like "128 / 256 / 512 of depth"
+        when it is really three different screening-to-depth ratios.
+        """
+        for budget in (64, 128, 256, 512):
+            with self.subTest(budget=budget):
+                searcher = SearchTeacher(_FakeSimulator(), simulation_budget=budget, candidate_limit=8)
+
+                advice = searcher.advice(_observation(_board()))
+
+                self.assertEqual(advice.screening_simulations + advice.depth_simulations,
+                                 advice.simulation_count)
+                self.assertEqual(advice.screening_simulations, advice.root_actions_generated)
+                self.assertEqual(advice.effective_depth_budget,
+                                 max(0, budget - advice.screening_simulations))
+                self.assertEqual(advice.root_candidates_screened,
+                                 min(advice.root_actions_generated, searcher.root_candidate_limit))
+                self.assertLessEqual(advice.simulation_count, budget)
+
+    def test_a_small_budget_spends_most_of_itself_on_root_screening(self) -> None:
+        """Pin the actual numbers a budget ablation has to be read against.
+
+        The fake board above only offers a handful of legal actions, so screening
+        never binds there.  This generator hands back ``limit`` distinct actions
+        instead, which is what the budget guard in ``advice`` is protecting
+        against: at ``budget=128`` half of the budget is screening and the depth
+        search is left with 64, whereas at 256 and above the request saturates at
+        ``max(32, root_candidate_limit * 4)`` and the depth budget stops growing
+        in step with ``simulation_budget``.
+        """
+        pool = [{"type": "plant", "packet": packet, "row": row, "col": col}
+                for packet in (0, 1, 2) for row in range(5) for col in range(9)]
+
+        class _WideGenerator:
+            def actions(self, observation, limit, root, remaining_ticks, allow_instant=True):
+                return [dict(action) for action in pool[:limit]]
+
+        expected = {64: (32, 32), 128: (64, 64), 256: (96, 160), 512: (96, 416)}
+        for budget, (screening, depth_budget) in expected.items():
+            with self.subTest(budget=budget):
+                searcher = SearchTeacher(_FakeSimulator(), simulation_budget=budget, candidate_limit=8)
+                searcher.candidate_generator = _WideGenerator()
+
+                advice = searcher.advice(_observation(_board()))
+
+                self.assertEqual(advice.screening_simulations, screening)
+                self.assertEqual(advice.effective_depth_budget, depth_budget)
+                self.assertLessEqual(advice.simulation_count, budget)
+
+    def test_screening_accounting_counts_branches_not_requests(self) -> None:
+        """A root action that cannot fit the horizon is never simulated, so it costs nothing.
+
+        The candidate generator normally pre-fits at ``horizon_ticks`` and the
+        request and the spend agree, but the accounting must not *depend* on that:
+        reserving the requested count instead of the branched count would
+        under-fund the depth search by exactly the number of dropped actions.
+        """
+        searcher = SearchTeacher(_FakeSimulator(), horizon_ticks=150, simulation_budget=64,
+                                 candidate_limit=8)
+
+        class _StaleGenerator:
+            def actions(self, observation, limit, root, remaining_ticks, allow_instant=True):
+                return [{"type": "wait", "ticks": 300},
+                        {"type": "plant", "packet": 0, "row": 0, "col": 1}]
+
+        searcher.candidate_generator = _StaleGenerator()
+
+        advice = searcher.advice(_observation(_board()))
+
+        self.assertEqual(advice.root_actions_generated, 2)
+        self.assertEqual(advice.screening_simulations, 1)
+        self.assertEqual(advice.effective_depth_budget, 63)
+        self.assertEqual(advice.screening_simulations + advice.depth_simulations,
+                         advice.simulation_count)
 
     def test_max_decisions_stops_search_even_when_tick_horizon_remains(self) -> None:
         env = _FakeSimulator()

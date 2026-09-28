@@ -15,7 +15,7 @@ import torch
 from torch.nn import functional as F
 
 from pvz_agent_model import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
-                             resolve_device, select_action)
+                             configure_torch_threads, resolve_device, select_action)
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
     OBSERVATION_VERSION,
@@ -220,6 +220,13 @@ def main() -> None:
              "model call here is a batch-of-1 forward pass, where MPS measured 1.71x slower "
              "end to end. Pass --device mps explicitly to opt in.",
     )
+    parser.add_argument(
+        "--threads", type=int, default=0,
+        help="CPU thread count for torch; 0 selects the measured default (4). This is a "
+             "reproducibility knob, not a correctness one: thread count perturbs the low "
+             "order bits (<=6e-7 relative) but the decision error budget is 1e-5..1e-4. "
+             "Pass --threads 1 only to reproduce artifacts from an older run.",
+    )
     parser.add_argument("--updates", type=int, default=12)
     parser.add_argument("--rollout-episodes", type=int, default=8)
     parser.add_argument("--ppo-epochs", type=int, default=2)
@@ -255,7 +262,7 @@ def main() -> None:
 
     random.seed(args.seed)
     torch.manual_seed(args.seed)
-    torch.set_num_threads(1)
+    configure_torch_threads(args.threads)
     device = resolve_device(args.device)
     initial_checkpoint_sha = sha256_file(args.init_checkpoint)
     trajectory_dir = args.init_checkpoint.expanduser().resolve().parent
