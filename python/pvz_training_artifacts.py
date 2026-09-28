@@ -21,6 +21,7 @@ from pvz_common import (
     sha256_file,
 )
 from pvz_env import PlayerProfileContext
+from pvz_seed_jobs import atomic_write
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 
 __all__ = ["checkpoint_metadata", "provenance", "save_checkpoint", "sha256_file", "task_signature"]
@@ -94,8 +95,7 @@ def provenance(args: argparse.Namespace, data_paths: dict[str, Path], train_seed
 
 
 def save_checkpoint(path: Path, model: GameplayModelV1, metadata: dict[str, Any], **fields: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({
+    checkpoint = {
         "state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
         "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
         "value_semantics": VALUE_SEMANTICS,
@@ -105,4 +105,5 @@ def save_checkpoint(path: Path, model: GameplayModelV1, metadata: dict[str, Any]
         "profile": "Adventure-II, six slots, no store items",
         "provenance": metadata,
         **fields,
-    }, path)
+    }
+    atomic_write(path, lambda temporary_path: torch.save(checkpoint, temporary_path))

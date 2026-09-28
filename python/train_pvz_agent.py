@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import json
 import os
 import random
 import time
+from multiprocessing.util import Finalize
 from pathlib import Path
 from typing import Any
 
@@ -25,12 +27,14 @@ from pvz_common import (
     OBSERVATION_VERSION,
     TASK_VERSION,
     TRAINING_SEED,
+    git_metadata,
 )
 from pvz_env import PvZEnv, training_task
 from pvz_imitation import SOFT_LABEL_WEIGHT, train
 from pvz_search import SearchTeacher
 from pvz_search_value import SearchValueModel, load_search_value, save_search_value, train_search_value
 from pvz_seed_sets import DEFAULT_DEV_SEEDS, DEFAULT_TEST_SEEDS, read_seed_set
+from pvz_seed_jobs import atomic_json, run_seed_jobs, seed_job_directory
 from pvz_training_artifacts import (
     checkpoint_metadata,
     provenance,
@@ -42,6 +46,186 @@ from pvz_value import SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 
 LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
+
+_COLLECTION_ENV: PvZEnv | None = None
+_COLLECTION_VALUE_MODEL: SearchValueModel | None = None
+_COLLECTION_GAMEPLAY_MODEL: GameplayModelV1 | None = None
+_COLLECTION_SETTINGS: dict[str, Any] = {}
+_COLLECTION_FINALIZER: Finalize | None = None
+
+
+def _close_collection_worker() -> None:
+    if _COLLECTION_ENV is not None:
+        _COLLECTION_ENV.close()
+
+
+def _initialize_collection_worker(
+    resource_dir: str,
+    settings: dict[str, Any],
+    value_state: dict[str, torch.Tensor] | None,
+    gameplay_state: dict[str, torch.Tensor] | None,
+) -> None:
+    global _COLLECTION_ENV, _COLLECTION_VALUE_MODEL, _COLLECTION_GAMEPLAY_MODEL
+    global _COLLECTION_SETTINGS, _COLLECTION_FINALIZER
+    configure_torch_threads(settings["collection_threads"])
+    _COLLECTION_ENV = PvZEnv(resource_dir)
+    _COLLECTION_VALUE_MODEL = None
+    _COLLECTION_GAMEPLAY_MODEL = None
+    if value_state is not None:
+        _COLLECTION_VALUE_MODEL = SearchValueModel()
+        _COLLECTION_VALUE_MODEL.load_state_dict(value_state)
+        _COLLECTION_VALUE_MODEL.eval()
+    if gameplay_state is not None:
+        _COLLECTION_GAMEPLAY_MODEL = GameplayModelV1()
+        _COLLECTION_GAMEPLAY_MODEL.load_state_dict(gameplay_state)
+        _COLLECTION_GAMEPLAY_MODEL.eval()
+    _COLLECTION_SETTINGS = settings
+    _COLLECTION_FINALIZER = Finalize(None, _close_collection_worker, exitpriority=10)
+
+
+def _collect_search_worker(seed: int) -> dict[str, Any]:
+    settings = _COLLECTION_SETTINGS
+    if _COLLECTION_ENV is None:
+        raise RuntimeError("search collection worker was not initialized")
+    return collect_search_episode(
+        _COLLECTION_ENV,
+        seed,
+        Path(settings["replay_dir"]),
+        _COLLECTION_VALUE_MODEL,
+        settings["max_actions"],
+        settings["level"],
+        tuple(settings["deck"]),
+        settings["zombie_count_multiplier"],
+        settings["search_width"],
+        settings["search_candidates"],
+        settings["search_horizon_ticks"],
+        settings["search_simulation_budget"],
+        settings["search_max_decisions"],
+        settings["replay_prefix"],
+    )
+
+
+def _collect_dagger_worker(seed: int) -> dict[str, Any]:
+    settings = _COLLECTION_SETTINGS
+    if (_COLLECTION_ENV is None or _COLLECTION_VALUE_MODEL is None
+            or _COLLECTION_GAMEPLAY_MODEL is None):
+        raise RuntimeError("DAgger collection worker was not initialized")
+    return collect_dagger_episode(
+        _COLLECTION_GAMEPLAY_MODEL,
+        _COLLECTION_VALUE_MODEL,
+        _COLLECTION_ENV,
+        seed,
+        Path(settings["replay_dir"]),
+        settings["max_actions"],
+        settings["level"],
+        tuple(settings["deck"]),
+        settings["zombie_count_multiplier"],
+        settings["search_width"],
+        settings["search_candidates"],
+        settings["search_horizon_ticks"],
+        settings["search_simulation_budget"],
+        settings["search_max_decisions"],
+    )
+
+
+def _model_state(model: torch.nn.Module | None) -> dict[str, torch.Tensor] | None:
+    if model is None:
+        return None
+    return {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+
+
+def _model_state_sha256(state: dict[str, torch.Tensor] | None) -> str | None:
+    if state is None:
+        return None
+    digest = hashlib.sha256()
+    for key, value in sorted(state.items()):
+        digest.update(key.encode("utf-8"))
+        digest.update(value.contiguous().numpy().tobytes())
+    return digest.hexdigest()
+
+
+def _collection_runtime_signature() -> dict[str, Any]:
+    root = Path(__file__).resolve().parent.parent
+    python_dir = Path(__file__).resolve().parent
+    git_sha, git_dirty = git_metadata(root)
+    sources = (
+        "train_pvz_agent.py", "pvz_env.py", "pvz_search.py", "pvz_search_value.py",
+        "pvz_search_candidates.py", "pvz_search_diagnostics.py", "pvz_common.py", "pvz_value.py",
+        "pvz_seed_jobs.py", "pvz_seed_sets.py",
+    )
+    return {
+        "git_sha": git_sha,
+        "git_dirty": git_dirty,
+        "source_sha256": {name: sha256_file(python_dir / name) for name in sources},
+        "simulator_sha256": sha256_file(root / "build" / "pvz-portable"),
+    }
+
+
+def _collect_training_seeds(
+    stage: str,
+    seeds: list[int],
+    output_path: Path | None,
+    args: argparse.Namespace,
+    current_task_signature: dict[str, Any],
+    runtime_signature: dict[str, Any],
+    worker: Any,
+    *,
+    value_model: SearchValueModel | None = None,
+    gameplay_model: GameplayModelV1 | None = None,
+) -> list[dict[str, Any]]:
+    replay_dir = args.output_dir / "replays"
+    settings = {
+        "replay_dir": str(replay_dir),
+        "replay_prefix": stage,
+        "max_actions": args.max_actions,
+        "level": args.level,
+        "deck": list(args.deck),
+        "zombie_count_multiplier": args.zombie_count_multiplier,
+        "search_width": args.search_width,
+        "search_candidates": args.search_candidates,
+        "search_horizon_ticks": args.search_horizon_ticks,
+        "search_simulation_budget": args.search_simulation_budget,
+        "search_max_decisions": args.search_max_decisions,
+        "collection_threads": args.collection_threads,
+    }
+    value_state = _model_state(value_model)
+    gameplay_state = _model_state(gameplay_model)
+    metadata = {
+        "stage": stage,
+        "seeds": seeds,
+        "task_signature": current_task_signature,
+        "observation_version": OBSERVATION_VERSION,
+        "task_version": TASK_VERSION,
+        "search_label_version": SEARCH_LABEL_VERSION,
+        "max_actions": args.max_actions,
+        "search": {
+            "width": args.search_width,
+            "candidates": args.search_candidates,
+            "horizon_ticks": args.search_horizon_ticks,
+            "simulation_budget": args.search_simulation_budget,
+            "max_decisions": args.search_max_decisions,
+        },
+        "worker_configuration": {
+            "workers": args.workers,
+            "torch_threads": args.collection_threads,
+        },
+        "value_model_sha256": _model_state_sha256(value_state),
+        "gameplay_model_sha256": _model_state_sha256(gameplay_state),
+        "runtime": runtime_signature,
+    }
+    episodes = run_seed_jobs(
+        seeds,
+        seed_job_directory(args.output_dir, stage, metadata),
+        metadata,
+        worker,
+        workers=args.workers,
+        initializer=_initialize_collection_worker,
+        initargs=(args.resource_dir, settings, value_state, gameplay_state),
+        label=stage,
+    )
+    if output_path is not None:
+        write_episodes(output_path, episodes)
+    return episodes
 
 
 def validate_seed_sets(**groups: list[int]) -> None:
@@ -208,9 +392,7 @@ def collect_dagger_episode(
 
 
 def write_episodes(path: Path, episodes: list[dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(path, "wt", encoding="utf-8", compresslevel=6) as stream:
-        json.dump(episodes, stream, separators=(",", ":"), ensure_ascii=False)
+    atomic_json(path, episodes, compressed=True)
 
 
 def read_episodes(path: Path) -> list[dict[str, Any]]:
@@ -287,6 +469,10 @@ def main() -> None:
              "order bits (<=6e-7 relative) but the decision error budget is 1e-5..1e-4. "
              "Pass --threads 1 only to reproduce artifacts from an older run.",
     )
+    parser.add_argument("--workers", type=int, default=1,
+                        help="spawned simulator workers used for per-seed collection")
+    parser.add_argument("--collection-threads", type=int, default=1,
+                        help="torch CPU threads per collection worker")
     parser.add_argument("--train-seed-start", type=int, default=0)
     parser.add_argument("--train-episodes", type=int, default=64)
     parser.add_argument("--dagger-seed-start", type=int, default=10000)
@@ -304,6 +490,8 @@ def main() -> None:
                              "argmax-only behaviour cloning")
     parser.add_argument("--dagger-rounds", type=int, default=1)
     parser.add_argument("--collect-only", action="store_true")
+    parser.add_argument("--value-only", action="store_true",
+                        help="collect value data and save the SearchValue checkpoint")
     parser.add_argument("--train-only", action="store_true")
     parser.add_argument("--max-actions", type=int, default=2000)
     parser.add_argument("--search-width", type=int, default=3)
@@ -318,12 +506,14 @@ def main() -> None:
         args.max_actions, args.train_episodes, args.dagger_episodes, args.dagger_rounds,
         args.value_bootstrap_episodes, args.value_refinement_episodes, args.epochs, args.value_epochs,
         args.search_width, args.search_candidates, args.search_horizon_ticks, args.search_simulation_budget,
-        args.search_max_decisions,
+        args.search_max_decisions, args.workers, args.collection_threads,
     )
     if min(positive) < 1:
         parser.error("episode counts, epochs, and search parameters must be positive")
     if args.soft_label_weight < 0.0:
         parser.error("--soft-label-weight must be non-negative")
+    if args.value_only and args.train_only:
+        parser.error("--value-only cannot be combined with --train-only")
     if min(args.train_seed_start, args.dagger_seed_start, args.value_bootstrap_seed_start,
            args.value_refinement_seed_start) < 0:
         parser.error("seed starts must be non-negative")
@@ -360,6 +550,7 @@ def main() -> None:
     dagger_path = args.output_dir / "dagger_search_trajectories.json.gz"
     search_value_path = args.output_dir / "search_value_v2.pt"
     current_task_signature = task_signature(args.level, args.deck, args.zombie_count_multiplier, args.resource_dir)
+    runtime_signature = _collection_runtime_signature()
 
     if args.train_only:
         episodes = read_episodes(data_path)
@@ -389,56 +580,43 @@ def main() -> None:
         )
         search_value_summary = checkpoint_metadata(loaded_search_value_checkpoint)
     else:
-        with PvZEnv(resource_dir=args.resource_dir) as env:
-            bootstrap = [
-                collect_search_episode(
-                    env, seed, replay_dir, None, args.max_actions, args.level, tuple(args.deck),
-                    args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions,
-                    "value_bootstrap",
-                )
-                for seed in bootstrap_seeds
-            ]
-            write_episodes(bootstrap_path, bootstrap)
-            search_value = SearchValueModel().to(device)
-            bootstrap_losses = train_search_value(search_value, bootstrap, args.value_epochs, device)
+        bootstrap = _collect_training_seeds(
+            "value_bootstrap", bootstrap_seeds, bootstrap_path, args, current_task_signature,
+            runtime_signature, _collect_search_worker,
+        )
+        search_value = SearchValueModel().to(device)
+        bootstrap_losses = train_search_value(search_value, bootstrap, args.value_epochs, device)
 
-            refinement = [
-                collect_search_episode(
-                    env, seed, replay_dir, search_value, args.max_actions, args.level, tuple(args.deck),
-                    args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions,
-                    "value_refinement",
-                )
-                for seed in refinement_seeds
-            ]
-            write_episodes(refinement_path, refinement)
-            refinement_losses = train_search_value(search_value, bootstrap + refinement, args.value_epochs, device)
-            save_search_value(
-                search_value_path,
-                search_value,
-                task_signature=current_task_signature,
-                bootstrap_seeds=bootstrap_seeds,
-                refinement_seeds=refinement_seeds,
-                bootstrap_losses=bootstrap_losses,
-                refinement_losses=refinement_losses,
-            )
-            search_value_summary = {
-                "bootstrap_seeds": bootstrap_seeds,
-                "refinement_seeds": refinement_seeds,
-                "bootstrap_losses": bootstrap_losses,
-                "refinement_losses": refinement_losses,
-            }
+        refinement = _collect_training_seeds(
+            "value_refinement", refinement_seeds, refinement_path, args, current_task_signature,
+            runtime_signature, _collect_search_worker, value_model=search_value,
+        )
+        refinement_losses = train_search_value(search_value, bootstrap + refinement, args.value_epochs, device)
+        save_search_value(
+            search_value_path,
+            search_value,
+            task_signature=current_task_signature,
+            bootstrap_seeds=bootstrap_seeds,
+            refinement_seeds=refinement_seeds,
+            bootstrap_losses=bootstrap_losses,
+            refinement_losses=refinement_losses,
+            collection_workers=args.workers,
+            collection_torch_threads=args.collection_threads,
+        )
+        search_value_summary = {
+            "bootstrap_seeds": bootstrap_seeds,
+            "refinement_seeds": refinement_seeds,
+            "bootstrap_losses": bootstrap_losses,
+            "refinement_losses": refinement_losses,
+        }
+        if args.value_only:
+            print(f"search_value_checkpoint={search_value_path}", flush=True)
+            return
 
-            episodes = [
-                collect_search_episode(
-                    env, seed, replay_dir, search_value, args.max_actions, args.level, tuple(args.deck),
-                    args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions, "search",
-                )
-                for seed in train_seeds
-            ]
-        write_episodes(data_path, episodes)
+        episodes = _collect_training_seeds(
+            "search", train_seeds, data_path, args, current_task_signature,
+            runtime_signature, _collect_search_worker, value_model=search_value,
+        )
         if args.collect_only:
             return
 
@@ -466,23 +644,20 @@ def main() -> None:
     )
 
     dagger_episodes: list[dict[str, Any]] = []
+    for dagger_round in range(args.dagger_rounds):
+        round_start = args.dagger_seed_start + dagger_round * args.dagger_episodes
+        round_seeds = list(range(round_start, round_start + args.dagger_episodes))
+        new_episodes = _collect_training_seeds(
+            f"dagger_round_{dagger_round}", round_seeds, None, args, current_task_signature,
+            runtime_signature, _collect_dagger_worker, value_model=search_value, gameplay_model=model,
+        )
+        dagger_episodes.extend(new_episodes)
+        episodes.extend(new_episodes)
+        write_episodes(dagger_path, dagger_episodes)
+        losses, plant_weight = train(model, episodes, args.epochs, device,
+                                      soft_label_weight=args.soft_label_weight)
+    dagger_seeds = [int(episode["seed"]) for episode in dagger_episodes]
     with PvZEnv(resource_dir=args.resource_dir) as env:
-        for dagger_round in range(args.dagger_rounds):
-            round_start = args.dagger_seed_start + dagger_round * args.dagger_episodes
-            round_seeds = list(range(round_start, round_start + args.dagger_episodes))
-            new_episodes = [
-                collect_dagger_episode(
-                    model, search_value, env, seed, replay_dir, args.max_actions, args.level, tuple(args.deck),
-                    args.zombie_count_multiplier, args.search_width, args.search_candidates,
-                    args.search_horizon_ticks, args.search_simulation_budget, args.search_max_decisions,
-                )
-                for seed in round_seeds
-            ]
-            dagger_episodes.extend(new_episodes)
-            episodes.extend(new_episodes)
-            write_episodes(dagger_path, dagger_episodes)
-            losses, plant_weight = train(model, episodes, args.epochs, device,
-                                          soft_label_weight=args.soft_label_weight)
         results = evaluate(
             model, env, dev_seeds, device, args.max_actions, args.level,
             tuple(args.deck), args.zombie_count_multiplier,
@@ -522,6 +697,8 @@ def main() -> None:
         "search_value_checkpoint": search_value_path.name,
         "search_value_sha256": search_value_sha256,
         "search_value_training": search_value_summary,
+        "collection_workers": args.workers,
+        "collection_torch_threads": args.collection_threads,
         "level": args.level,
         "deck": args.deck,
         "training_episodes": len(episodes),
@@ -536,9 +713,7 @@ def main() -> None:
         "losses": losses,
         "provenance": final_metadata,
     }
-    (args.output_dir / "training_summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
-    )
+    atomic_json(args.output_dir / "training_summary.json", summary)
     print(f"checkpoint={checkpoint}", flush=True)
 
 

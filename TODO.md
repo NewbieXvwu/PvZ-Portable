@@ -21,6 +21,7 @@
 - 独立 `SearchValueModel` 只学习模拟器轨迹的真实折扣终局结果。冷启动、value refinement、最终策略教师数据使用互斥 seed；最终 SearchTeacher 使用冻结的独立 value 模型。
 - 训练期模型选择只使用冻结 development 256 seeds；final-test 1024 seeds 与训练、DAgger、value bootstrap/refinement、development 全部隔离，只用于最终验收。
 - BC、DAgger、PPO 训练入口和冻结 seed benchmark 已接入当前模型与搜索教师。
+- 训练采集与 benchmark 共用 spawn worker 和逐 seed 原子分片；任务 metadata 匹配时可跳过已完成 seed，汇总后统一重算指标。训练入口有 `--value-only`，避免 value checkpoint 后误跑普通搜索采集。
 - 搜索决策落盘时区分**筛选**与**深度**两段模拟预算（`screening_simulations` /
   `depth_simulations` / `effective_depth_budget`），因为 `simulation_budget` 不是搜索深度：
   每个根候选在任何一条线展开前都要先花 1 次模拟。
@@ -42,7 +43,7 @@
 
 ## 接下来
 
-- 跑完整 C++ 构建以及逐 tick 可视/无画面差分，覆盖舞王、墓碑、迷雾、Boss、卡片冷却和动画中途 snapshot 恢复。
+- 在台式机实测 `workers × torch_threads` 的稳定吞吐与资源占用，再运行完整 value bootstrap/refinement。
 - 在 development 256 seeds 上校准 search horizon、总 simulation budget、beam width 与 SearchValueModel；只依据 development 结果做选择。
 - 锁定配置后生成大规模搜索监督与 DAgger 数据，并在 final-test 1024 seeds 上做一次最终验收。
 - 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。

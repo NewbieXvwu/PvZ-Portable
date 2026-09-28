@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-import gzip
-import json
+import hashlib
 import math
 import os
 from pathlib import Path
 import subprocess
 import sys
 import time
+from multiprocessing.util import Finalize
 from typing import Any
 
 import torch
@@ -21,7 +21,6 @@ from pvz_agent_model import (
     MODEL_ARCHITECTURE_VERSION,
     configure_torch_threads,
     predict_action,
-    resolve_device,
 )
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
@@ -33,8 +32,9 @@ from pvz_common import (
 from pvz_env import PvZEnv, training_task
 from pvz_search import SearchTeacher
 from pvz_search_diagnostics import visible_state_key
-from pvz_search_value import load_search_value
+from pvz_search_value import SearchValueModel, load_search_value
 from pvz_seed_sets import DEFAULT_DEV_SEEDS, DEFAULT_TEST_SEEDS, read_seed_set
+from pvz_seed_jobs import atomic_json, run_seed_jobs, seed_job_directory
 from pvz_training_artifacts import checkpoint_metadata, task_signature
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_SEMANTICS
 
@@ -42,6 +42,116 @@ LEVEL = 7
 DECK = (0, 1, 2, 3, 4, 5)
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_MAX_ACTIONS = 2000
+
+_BENCH_ENV: PvZEnv | None = None
+_BENCH_MODEL: GameplayModelV1 | None = None
+_BENCH_VALUE_MODEL: SearchValueModel | None = None
+_BENCH_SEARCHER: SearchTeacher | None = None
+_BENCH_SETTINGS: dict[str, Any] = {}
+_BENCH_FINALIZER: Finalize | None = None
+
+
+def _close_benchmark_worker() -> None:
+    if _BENCH_ENV is not None:
+        _BENCH_ENV.close()
+
+
+def _initialize_benchmark_worker(
+    resource_dir: str,
+    settings: dict[str, Any],
+    policy_kind: str,
+    model_state: dict[str, torch.Tensor] | None,
+) -> None:
+    global _BENCH_ENV, _BENCH_MODEL, _BENCH_VALUE_MODEL, _BENCH_SEARCHER
+    global _BENCH_SETTINGS, _BENCH_FINALIZER
+    configure_torch_threads(settings["collection_threads"])
+    _BENCH_ENV = PvZEnv(resource_dir)
+    _BENCH_MODEL = None
+    _BENCH_VALUE_MODEL = None
+    _BENCH_SEARCHER = None
+    if policy_kind == "search_teacher":
+        if model_state is None:
+            raise ValueError("search-teacher worker needs value-model weights")
+        _BENCH_VALUE_MODEL = SearchValueModel()
+        _BENCH_VALUE_MODEL.load_state_dict(model_state)
+        _BENCH_VALUE_MODEL.eval()
+        _BENCH_SEARCHER = SearchTeacher(
+            _BENCH_ENV,
+            value_model=_BENCH_VALUE_MODEL,
+            beam_width=settings["search_width"],
+            candidate_limit=settings["search_candidates"],
+            horizon_ticks=settings["search_horizon_ticks"],
+            simulation_budget=settings["search_simulation_budget"],
+            max_decisions=settings["search_max_decisions"],
+        )
+    else:
+        if model_state is None:
+            raise ValueError("policy worker needs model weights")
+        _BENCH_MODEL = GameplayModelV1()
+        _BENCH_MODEL.load_state_dict(model_state)
+        if settings["no_relation_bias"]:
+            for layer in _BENCH_MODEL.encoder:
+                layer.attention.relation_bias_enabled = False
+        _BENCH_MODEL.eval()
+    _BENCH_SETTINGS = settings
+    _BENCH_FINALIZER = Finalize(None, _close_benchmark_worker, exitpriority=10)
+
+
+def _benchmark_seed_worker(seed: int) -> dict[str, Any]:
+    if _BENCH_ENV is None:
+        raise RuntimeError("benchmark worker was not initialized")
+    settings = _BENCH_SETTINGS
+    samples: list[dict[str, Any]] = []
+    record = run_episode(
+        _BENCH_ENV,
+        seed,
+        _BENCH_MODEL,
+        _BENCH_SEARCHER,
+        settings["clear_hidden"],
+        settings["zombie_count_multiplier"],
+        Path(settings["replay_dir"]),
+        settings["policy_label"],
+        settings["level"],
+        tuple(settings["deck"]),
+        settings["max_actions"],
+        samples if settings["collect_label_samples"] else None,
+    )
+    episode = _BENCH_ENV.episode or {}
+    resources = {
+        "resource_sha256": episode.get("resource_sha256"),
+        "properties_partner_sha256": episode.get("properties_partner_sha256"),
+    }
+    worker_rss_bytes = None
+    if _BENCH_ENV._process is not None:
+        try:
+            rss_kib = subprocess.run(
+                ["ps", "-o", "rss=", "-p", str(_BENCH_ENV._process.pid)],
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            worker_rss_bytes = int(rss_kib) * 1024
+        except (OSError, subprocess.CalledProcessError, ValueError):
+            pass
+    return {
+        "seed": seed,
+        "record": record,
+        "label_samples": samples,
+        "resources": resources,
+        "worker_rss_bytes": worker_rss_bytes,
+    }
+
+
+def _cpu_state(model: torch.nn.Module) -> dict[str, torch.Tensor]:
+    return {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+
+
+def _state_sha256(state: dict[str, torch.Tensor]) -> str:
+    digest = hashlib.sha256()
+    for key, value in sorted(state.items()):
+        digest.update(key.encode("utf-8"))
+        digest.update(value.contiguous().numpy().tobytes())
+    return digest.hexdigest()
 
 
 def checkpoint_model(path: Path, device: torch.device) -> tuple[GameplayModelV1, dict[str, Any]]:
@@ -259,19 +369,10 @@ def main() -> None:
     parser.add_argument("--search-label-diagnostics", type=Path)
     parser.add_argument("--level", type=int, default=LEVEL)
     parser.add_argument("--deck", type=lambda value: tuple(map(int, value.split(","))), default=DECK)
-    parser.add_argument(
-        "--device", choices=("auto", "cuda", "mps", "cpu"), default="auto",
-        help="auto = cuda if available else cpu. MPS is never chosen automatically: every "
-             "model call here is a batch-of-1 forward pass, where MPS measured 1.71x slower "
-             "end to end. Pass --device mps explicitly to opt in.",
-    )
-    parser.add_argument(
-        "--threads", type=int, default=0,
-        help="CPU thread count for torch; 0 selects the measured default (4). Thread count "
-             "perturbs results only in the low order bits (<=6e-7 relative), far below the "
-             "1e-5..1e-4 decision error budget. Pass --threads 1 for bit-compatibility with "
-             "an older run.",
-    )
+    parser.add_argument("--workers", type=int, default=1,
+                        help="spawned simulator workers used for per-seed collection")
+    parser.add_argument("--collection-threads", type=int, default=1,
+                        help="torch CPU threads per collection worker")
     parser.add_argument("--checkpoint", action="append", type=parse_checkpoint, default=[])
     parser.add_argument("--search-value", type=Path)
     parser.add_argument("--search-width", type=int, default=3)
@@ -292,7 +393,8 @@ def main() -> None:
     if args.search_label_diagnostics and (not args.search_value or args.final_test):
         parser.error("search label diagnostics require --search-value and development seeds")
     if min(args.search_width, args.search_candidates, args.search_horizon_ticks,
-           args.search_simulation_budget, args.search_max_decisions, args.max_actions) < 1:
+           args.search_simulation_budget, args.search_max_decisions, args.max_actions,
+           args.workers, args.collection_threads) < 1:
         parser.error("search parameters and --max-actions must be positive")
     if not 1.0 <= args.zombie_count_multiplier <= 10.0:
         parser.error("--zombie-count-multiplier must be from 1 to 10")
@@ -303,11 +405,23 @@ def main() -> None:
     evaluation_role = "final_test" if args.final_test else "development"
     seed_path = args.seeds or (DEFAULT_TEST_SEEDS if args.final_test else DEFAULT_DEV_SEEDS)
     seeds = read_seed_set(seed_path, args.level, evaluation_role)
-    device = resolve_device(args.device)
-    configure_torch_threads(args.threads)
+    device = torch.device("cpu")
     current_task_signature = task_signature(
         args.level, args.deck, args.zombie_count_multiplier, args.resource_dir
     )
+    git_sha, git_dirty = git_metadata(ROOT)
+    source_names = (
+        "benchmark_pvz_agent.py", "pvz_agent_model.py", "pvz_common.py", "pvz_env.py",
+        "pvz_search.py", "pvz_search_candidates.py", "pvz_search_diagnostics.py",
+        "pvz_search_value.py", "pvz_seed_jobs.py", "pvz_seed_sets.py", "pvz_training_artifacts.py",
+        "pvz_value.py",
+    )
+    runtime_signature = {
+        "git_sha": git_sha,
+        "git_dirty": git_dirty,
+        "source_sha256": {name: sha256_file(ROOT / "python" / name) for name in source_names},
+        "simulator_sha256": sha256_file(ROOT / "build" / "pvz-portable"),
+    }
     policies: list[tuple[str, GameplayModelV1 | None, Any, dict[str, Any]]] = []
     if args.search_value:
         value_model, value_checkpoint = load_search_value(
@@ -333,48 +447,80 @@ def main() -> None:
     label_samples: list[dict[str, Any]] = []
     resource_metadata = None
     replay_dir = args.output.parent / f"{args.output.stem}_replays"
-    with PvZEnv(resource_dir=args.resource_dir) as env:
-        for label, model, value_model, metadata in policies:
-            searcher = SearchTeacher(
-                env,
-                value_model=value_model,
-                beam_width=args.search_width,
-                candidate_limit=args.search_candidates,
-                horizon_ticks=args.search_horizon_ticks,
-                simulation_budget=args.search_simulation_budget,
-                max_decisions=args.search_max_decisions,
-            ) if value_model is not None else None
-            records: list[dict[str, Any]] = []
-            for index, seed in enumerate(seeds, start=1):
-                record = run_episode(
-                    env, seed, model, searcher, args.clear_hidden, args.zombie_count_multiplier,
-                    replay_dir, label, args.level, args.deck, args.max_actions,
-                    label_samples if args.search_label_diagnostics and label == "search_teacher" else None,
-                )
-                records.append(record)
-                if index % 16 == 0 or index == len(seeds):
-                    print(f"{label} {index}/{len(seeds)} wins={sum(row['won'] for row in records)}", flush=True)
-            if resource_metadata is None and env.episode:
-                resource_metadata = {
-                    "resource_sha256": env.episode["resource_sha256"],
-                    "properties_partner_sha256": env.episode["properties_partner_sha256"],
-                }
-            all_records[label] = {"checkpoint": metadata, "metrics": summarize(records), "episodes": records}
-        worker_rss_bytes = None
-        if env._process is not None:
-            try:
-                rss_kib = subprocess.run(
-                    ["ps", "-o", "rss=", "-p", str(env._process.pid)],
-                    check=True,
-                    capture_output=True,
-                    text=True,
-                ).stdout.strip()
-                worker_rss_bytes = int(rss_kib) * 1024
-            except (OSError, subprocess.CalledProcessError, ValueError):
-                pass
-
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    git_sha, git_dirty = git_metadata(ROOT)
+    worker_rss_values: list[int] = []
+    for label, model, value_model, policy_metadata in policies:
+        policy_kind = "search_teacher" if value_model is not None else "gameplay"
+        policy_model = value_model if value_model is not None else model
+        if policy_model is None:
+            raise RuntimeError(f"policy {label} has no model")
+        model_state = _cpu_state(policy_model)
+        collect_label_samples = bool(args.search_label_diagnostics and label == "search_teacher")
+        settings = {
+            "collection_threads": args.collection_threads,
+            "search_width": args.search_width,
+            "search_candidates": args.search_candidates,
+            "search_horizon_ticks": args.search_horizon_ticks,
+            "search_simulation_budget": args.search_simulation_budget,
+            "search_max_decisions": args.search_max_decisions,
+            "clear_hidden": args.clear_hidden,
+            "no_relation_bias": args.no_relation_bias,
+            "zombie_count_multiplier": args.zombie_count_multiplier,
+            "replay_dir": str(replay_dir),
+            "policy_label": label,
+            "level": args.level,
+            "deck": args.deck,
+            "max_actions": args.max_actions,
+            "collect_label_samples": collect_label_samples,
+        }
+        job_metadata = {
+            "evaluation_role": evaluation_role,
+            "seed_file_sha256": sha256_file(seed_path),
+            "seeds": seeds,
+            "task_signature": current_task_signature,
+            "policy_label": label,
+            "policy_sha256": policy_metadata["sha256"],
+            "model_state_sha256": _state_sha256(model_state),
+            "search": {
+                "width": args.search_width,
+                "candidates": args.search_candidates,
+                "horizon_ticks": args.search_horizon_ticks,
+                "simulation_budget": args.search_simulation_budget,
+                "max_decisions": args.search_max_decisions,
+            },
+            "clear_hidden": args.clear_hidden,
+            "relation_bias": not args.no_relation_bias,
+            "max_actions": args.max_actions,
+            "label_diagnostics": collect_label_samples,
+            "worker_configuration": {
+                "workers": args.workers,
+                "torch_threads": args.collection_threads,
+            },
+            "runtime": runtime_signature,
+        }
+        job_results = run_seed_jobs(
+            seeds,
+            seed_job_directory(args.output.parent, "benchmark", job_metadata),
+            job_metadata,
+            _benchmark_seed_worker,
+            workers=args.workers,
+            initializer=_initialize_benchmark_worker,
+            initargs=(args.resource_dir, settings, policy_kind, model_state),
+            label=label,
+        )
+        records = [row["record"] for row in job_results]
+        if collect_label_samples:
+            label_samples.extend(sample for row in job_results for sample in row["label_samples"])
+        if resource_metadata is None and job_results:
+            resource_metadata = job_results[0]["resources"]
+        worker_rss_values.extend(
+            row["worker_rss_bytes"] for row in job_results if row["worker_rss_bytes"] is not None
+        )
+        all_records[label] = {
+            "checkpoint": policy_metadata,
+            "metrics": summarize(records),
+            "episodes": records,
+        }
+    worker_rss_bytes = max(worker_rss_values, default=None)
     result = {
         "git_sha": git_sha,
         "git_dirty": git_dirty,
@@ -391,7 +537,12 @@ def main() -> None:
         "seed_file_sha256": sha256_file(seed_path),
         "seed_count": len(seeds),
         "seed_range": [min(seeds), max(seeds)],
-        "device": str(device),
+        "device": "cpu",
+        "worker_configuration": {
+            "workers": args.workers,
+            "collection_torch_threads": args.collection_threads,
+            "max_workers_per_policy": min(args.workers, len(seeds)),
+        },
         "clear_hidden": args.clear_hidden,
         "replay_directory": str(replay_dir.resolve()),
         "relation_bias": not args.no_relation_bias,
@@ -400,11 +551,9 @@ def main() -> None:
         "worker_rss_bytes": worker_rss_bytes,
         "policies": all_records,
     }
-    args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    atomic_json(args.output, result)
     if args.search_label_diagnostics:
-        args.search_label_diagnostics.parent.mkdir(parents=True, exist_ok=True)
-        with gzip.open(args.search_label_diagnostics, "wt", encoding="utf-8", compresslevel=6) as stream:
-            json.dump({
+        atomic_json(args.search_label_diagnostics, {
                 "evaluation_role": evaluation_role,
                 "seed_file_sha256": sha256_file(seed_path),
                 "task_signature": current_task_signature,
@@ -415,7 +564,7 @@ def main() -> None:
                 "max_decisions": args.search_max_decisions,
                 "search_value_sha256": sha256_file(args.search_value),
                 "samples": label_samples,
-            }, stream, separators=(",", ":"))
+            }, compressed=True)
     print(f"saved {args.output}", flush=True)
 
 

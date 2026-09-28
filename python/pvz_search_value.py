@@ -12,6 +12,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from pvz_common import ENV_PROTOCOL_VERSION
+from pvz_seed_jobs import atomic_write
 from pvz_search_candidates import lane_pressure
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_SEMANTICS, discounted_terminal_value
 
@@ -270,8 +271,7 @@ def train_search_value(
 
 
 def save_search_value(path: Path, model: SearchValueModel, task_signature: dict[str, Any], **metadata: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    torch.save({
+    checkpoint = {
         "state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
         "search_value_version": SEARCH_VALUE_VERSION,
         "feature_version": SEARCH_VALUE_FEATURE_VERSION,
@@ -280,7 +280,8 @@ def save_search_value(path: Path, model: SearchValueModel, task_signature: dict[
         "value_semantics": VALUE_SEMANTICS,
         "task_signature": task_signature,
         **metadata,
-    }, path)
+    }
+    atomic_write(path, lambda temporary_path: torch.save(checkpoint, temporary_path))
 
 
 def load_search_value(path: Path, device: torch.device,
