@@ -32,6 +32,8 @@
   以及候选生成 + 筛选两级各自丢掉了多少合法动作（`candidate_recall`）。
 - 存档改为只使用显式字段保存状态，移除了旧版整块对象布局存档和裸指针恢复路径；稳定化消息文本尾部与运行时 `mGameID`，补齐棋盘计数器字段。
 - 两个全新进程的 30 个快照样本、240 个分支哈希逐字节一致；`verify_env_equivalence.py` 全量通过，SearchTeacher 在 development seeds 30000–30001 上等价。Linux g++ 构建通过，SDL-Mixer-X 的 C++ `mp3utils_test` 为 1/1，Python unittest 为 192/192。
+- 台式机已完成 SearchValue v2 正式管线：bootstrap seeds 20000–20031、refinement seeds 21000–21031，各 32 集；两段各训练 8 epoch。loss 历史分别从 0.152216 降至 0.009705、从 0.049708 降至 0.008806，完整历史已写入 checkpoint。
+- `artifacts/adventure2_level7/search_value_v2.pt` 已通过 CPU 重载与版本、feature、task signature 核验；protocol=3、search labels=3、feature=2、value semantics=`discounted_terminal_v1`。bootstrap/refinement、train 0–63、DAgger 10000–10063、development、final-test seed 集两两无交叉。
 
 ## 当前验收条件
 
@@ -45,7 +47,8 @@
 
 ## 接下来
 
-- 台式机开发样本 4 seeds 吞吐矩阵已测完：1×1 为 35.2 s、2×1 为 21.4 s、4×1 为 14.7 s、4×2 为 14.6 s，RSS 约 231 MiB/worker；采集采用 `workers=4`、`collection_threads=1`。开始完整 value bootstrap/refinement。
+- 台式机开发样本 4 seeds 吞吐矩阵已测完：1×1 为 35.2 s、2×1 为 21.4 s、4×1 为 14.7 s、4×2 为 14.6 s，RSS 约 231 MiB/worker；采集采用 `workers=4`、`collection_threads=1`。
+- 使用 SearchValue v2 在 development 30000–30255 上完成默认 SearchTeacher 成绩单，再做重点搜索配置消融。
 - 在 development 256 seeds 上校准 search horizon、总 simulation budget、beam width 与 SearchValueModel；只依据 development 结果做选择。
 - 锁定配置后生成大规模搜索监督与 DAgger 数据，并在 final-test 1024 seeds 上做一次最终验收。
 - 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。
