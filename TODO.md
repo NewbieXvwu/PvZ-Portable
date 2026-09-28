@@ -30,6 +30,8 @@
 - `python/pvz_search_audit.py` 在 development 种子上审计两件设计无法自证的事：
   值模型在**反事实一步子节点**上的兄弟排序是否与更深搜索一致（`sibling_ranking`），
   以及候选生成 + 筛选两级各自丢掉了多少合法动作（`candidate_recall`）。
+- 存档改为只使用显式字段保存状态，移除了旧版整块对象布局存档和裸指针恢复路径；稳定化消息文本尾部与运行时 `mGameID`，补齐棋盘计数器字段。
+- 两个全新进程的 30 个快照样本、240 个分支哈希逐字节一致；`verify_env_equivalence.py` 全量通过，SearchTeacher 在 development seeds 30000–30001 上等价。Linux g++ 构建通过，SDL-Mixer-X 的 C++ `mp3utils_test` 为 1/1，Python unittest 为 192/192。
 
 ## 当前验收条件
 
@@ -43,7 +45,7 @@
 
 ## 接下来
 
-- 在台式机实测 `workers × torch_threads` 的稳定吞吐与资源占用，再运行完整 value bootstrap/refinement。
+- 台式机开发样本 4 seeds 吞吐矩阵已测完：1×1 为 35.2 s、2×1 为 21.4 s、4×1 为 14.7 s、4×2 为 14.6 s，RSS 约 231 MiB/worker；采集采用 `workers=4`、`collection_threads=1`。开始完整 value bootstrap/refinement。
 - 在 development 256 seeds 上校准 search horizon、总 simulation budget、beam width 与 SearchValueModel；只依据 development 结果做选择。
 - 锁定配置后生成大规模搜索监督与 DAgger 数据，并在 final-test 1024 seeds 上做一次最终验收。
 - 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。
@@ -81,19 +83,14 @@
       筛选/深度预算拆分 —— **3/3 种子逐位一致**，真实 `advice()` 159.8 → 142.7 ms（1.12–1.16×）。
       该脚本刻意**不比较 `state_hash`**：它是转置键，改写哈希必然改变数字但不应改变任何去重决策，
       比较它会在一次合法优化上误报。
-  - **剩下的成本（未动）**：`LawnSaveGameToMemory` 86.8 µs 与 `LawnLoadGameFromMemory`
-    68.4 µs 仍是 C++ 侧大头；另有约 73 µs/分支落在 Python 侧的 JSON 解析与管道传输上
+  - **指针修复后的实测**：同一 level 8 / seed 30000 / tick 2192 板面载荷为 86,976 B，较修复前 86,424 B 增加 552 B（0.64%）；save 84.1 µs、restore 70.2 µs、hash 9.7 µs、observation 21.3 µs，与此前测量处于同一量级。
+  - **剩下的成本（未动）**：`LawnSaveGameToMemory` 与 `LawnLoadGameFromMemory`
+    仍是 C++ 侧大头；另有约 73 µs/分支落在 Python 侧的 JSON 解析与管道传输上
     （`OBS` 端到端 83 µs 而 C++ 内只 22 µs）。单个叶子之外还有一个结构性机会：
     一批 32 个分支里真正被保留下来的快照远少于 32，为「先不存快照地评估、只重算保留下来的那几个」
     加一条命令可以省掉被丢弃分支的 86.8 µs/个；这是协议与搜索的改动，不是纯 C++ 优化，
     先量清楚存活率再决定。
-- **已知风险（未修）**：存档载荷里有裸指针。`SyncBoard` 用
-  `SyncBytes(&theBoard->mPaused, sizeof(Board) - offset)` 整块序列化 `Board`，另外还有
-  `sizeof(SeedBank)` / `sizeof(Challenge)` / `sizeof(CursorObject)` / `sizeof(CursorPreview)` /
-  `sizeof(MessageWidget)` / `sizeof(Music)`。后果有两个：
-  `state_hash` **只在单进程内可用**（换进程指针值就变，跨进程比较无意义）；
-  且恢复时会把上一次的指针值写回 `Board`，是一颗潜在 use-after-free 地雷。
-  要动就得连存档格式一起动，风险不小，单独开一条任务。
+- **已完成（指针序列化修复）**：v4 的 Board 及子对象字段逐项序列化，不再保存对象内存布局或裸指针；旧版 raw-layout 加载器已删除（允许不兼容旧存档）。`mGameID` 写固定值，消息标签零填充未初始化尾字节，并补齐 `mTextReanimByteOffset`、`mTextReanimCount`、`mBoardUpdateCounter`、`mZombiesKilled`、`mSunMoneyProduced`。同一板面双进程快照逐字节一致；`verify_env_equivalence.py` 7 个关卡全部通过（包括 rewind stress、snapshot restore、`BRANCH_SNAPSHOT_FAST`），SearchTeacher 两颗开发种子所有候选分数、动作、策略分布、margin、终局及模拟预算拆分一致。Linux 项目构建通过；CTest 根目录没有登记项目测试，SDL-Mixer-X 子目录 `mp3utils_test` 1/1 通过。
 - 扩展到白天、夜晚、泳池、迷雾和屋顶等地形，检查状态候选覆盖和 SearchValueModel 在不同卡组上的泛化。
 
 ## 已排除的路线（有实测数据，勿重复尝试）
