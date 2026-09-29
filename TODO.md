@@ -331,6 +331,20 @@ aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
   Ng/Harada/Russell 1999）。**不得使用任意常数惩罚**——当前 `_transition_reward` 那种
   0.05/株的写法会污染目标，必须替换而不是沿用。
 
+**实现约束（T5 专用，防止设计漂移）**：
+
+- **动作空间沿用现有的 factored 分布**（type → packet → cell / wait 三档）。
+  意图空间与分层是 T6 的事，T5 不做——T6 的门禁需要 T5 的扁平架构作对照基线。
+- **critic 允许使用特权信息**（`privileged_state` 的 wave_timer / zombies_in_wave），
+  即不对称 actor-critic：训练时 critic 可以看执行时看不到的信息，这是标准且合法的做法。
+  `DESIGN.md` §4.4 中"privileged 拿去当 critic 是错用"的表述**在此修正**——错用的是
+  学生 value 头的蒸馏标签来源，不是 PPO critic 本身。actor 侧仍然只用普通观测。
+- **Φ 的具体形式允许调整**（如 `sun/1000 + 火力血量占比 + wave/wave_count` 的加权），
+  因为势函数形式在理论上不改变最优策略；但**必须在证据文件中记录实际使用的 Φ**。
+- **不得把规则脚本的任何轨迹、动作或候选排序混入训练数据**（铁律 4）。
+  脚本只作为 T4 已建好的评估对照。
+- **T4 的评估器是 T5 门禁的唯一裁判**，训练中不得修改它（已冻结）。
+
 **门禁**：
 
 | 指标 | 阈值 |
