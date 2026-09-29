@@ -264,7 +264,7 @@ bool Board::AreEnemyZombiesOnScreen()
 	{
 		if (aZombie->mDead)
 			continue;
-		if (aZombie->mHasHead && !aZombie->IsDeadOrDying() && !aZombie->mMindControlled)
+		if (aZombie->mHasHead && !aZombie->IsDeadOrDying() && !aZombie->mMindControlled && aZombie->IsOnBoard())
 		{
 			return true;
 		}
