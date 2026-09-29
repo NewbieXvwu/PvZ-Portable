@@ -669,6 +669,7 @@ def main() -> None:
                            "checkpoint": None if init_checkpoint is None else str(init_checkpoint),
                            "checkpoint_sha256": initial_sha,
                            "baseline_comparison": initialization_baseline},
+        "initialization_baseline": initialization_baseline,
         "motivation": args.motivation or "Run 1: PPO from the T4 seed-0 random initialization with frozen task-family rollouts.",
         "previous_curve_comparison": (
             {"source": "T4 baseline", "heldout_pass_rate": baseline["gate_set"]["pass_rate"]}

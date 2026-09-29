@@ -26,10 +26,11 @@ TOKEN_KINDS = {
     "grid_item": 7,
     "seed_packet": 8,
     "zombie_roster": 9,
+    "lane": 10,
 }
 WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
-MODEL_ARCHITECTURE_VERSION = 4
+MODEL_ARCHITECTURE_VERSION = 5
 FEATURE_COUNT = 32
 FLEX_ATTENTION_AVAILABLE = flex_attention is not None and hasattr(torch, "compile")
 _COMPILED_FLEX_ATTENTION = (
@@ -111,6 +112,63 @@ def _ratio(value: float, scale: float) -> float:
     return max(-2.0, min(2.0, float(value) / scale))
 
 
+ECONOMIC_PLANT_TYPES = frozenset({1, 9, 38, 41})
+SHOOTER_PLANT_TYPES = frozenset({
+    0, 5, 7, 8, 10, 13, 18, 24, 26, 28, 29, 32, 34, 39, 40, 42, 43, 44, 47, 52,
+})
+
+
+def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
+    """Compute trainable row summaries and global economy/wave features from an observation."""
+    row_threat = [0.0] * 6
+    row_nearest = [1.0] * 6
+    row_shooters = [0] * 6
+    row_plant_health = [0.0] * 6
+    row_zombie_seen = [False] * 6
+    economic_count = 0
+    shooter_count = 0
+
+    for zombie in observation["zombies"]:
+        row = int(zombie["row"])
+        if not 0 <= row < 6:
+            continue
+        distance = max(0.0, min(1.0, (float(zombie["x"]) - 40.0) / 860.0))
+        health = max(0.0, float(zombie["body_health"]) + float(zombie["helm_health"])
+                     + float(zombie["shield_health"]))
+        row_threat[row] += (1.0 - distance) * (1.0 + max(0.0, min(1.0, health / 2000.0)))
+        row_nearest[row] = min(row_nearest[row], distance)
+        row_zombie_seen[row] = True
+
+    for plant in observation["plants"]:
+        row = int(plant["row"])
+        if not 0 <= row < 6:
+            continue
+        plant_type = int(plant["type"])
+        if plant_type == 48 and int(plant.get("imitater_type", -1)) >= 0:
+            plant_type = int(plant["imitater_type"])
+        if plant_type in ECONOMIC_PLANT_TYPES:
+            economic_count += 1
+        if plant_type in SHOOTER_PLANT_TYPES:
+            shooter_count += 1
+            row_shooters[row] += 1
+        row_plant_health[row] += max(0.0, float(plant["health"]))
+
+    lane_features = [
+        (_ratio(row_threat[row], 5.0), row_nearest[row] if row_zombie_seen[row] else 1.0,
+         _ratio(row_shooters[row], 5.0), _ratio(row_plant_health[row], 3000.0))
+        for row in range(6)
+    ]
+    wave_count = max(1, int(observation["wave_count"]))
+    wave_progress = max(0.0, min(1.0, float(observation["wave"]) / wave_count))
+    return {
+        "lane_features": lane_features,
+        "sun_income_rate": float(observation["sun_income_rate"]),
+        "economic_fire_ratio": economic_count / max(1, shooter_count),
+        "wave_progress": wave_progress,
+        "next_wave_distance": max(0.0, min(1.0, float(observation["wave_timer"]) / 6000.0)),
+    }
+
+
 def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], dict[str, Any]]:
     kinds: list[int] = []
     categories: list[int] = []
@@ -120,6 +178,8 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
     cols: list[int] = []
     packet_tokens: dict[int, int] = {}
     cell_tokens: dict[int, int] = {}
+    lane_tokens: dict[int, int] = {}
+    derived = derive_observation_features(observation)
 
     def add(kind: str, category: int = -1, variant: int = -1, values: tuple[float, ...] = (),
             row: int = -1, col: int = -1) -> int:
@@ -144,6 +204,9 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
         float(observation["night"]), float(observation["pool"]), float(observation["fog"]), float(observation["roof"]),
         _ratio(len(plants), 40), _ratio(len(zombies), 40), _ratio(len(projectiles), 50),
         float(observation["terminal"]), _ratio(observation["result"], 2),
+        _ratio(derived["sun_income_rate"], 50.0),
+        _ratio(derived["economic_fire_ratio"], 1.0),
+        derived["wave_progress"], derived["next_wave_distance"],
     ))
     profile = observation["player_profile"]
     add("profile", values=(
@@ -161,6 +224,9 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
             _ratio(len(cell["plant_types"]), 5), float(11 in item_types), float(1 in item_types),
             float(2 in item_types),
         ), row=row, col=col)
+
+    for row, values in enumerate(derived["lane_features"]):
+        lane_tokens[row] = add("lane", row=row, values=values)
 
     for plant in plants:
         row, col = plant["row"], plant["col"]
@@ -226,11 +292,15 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
         "kinds": torch.tensor(kinds, dtype=torch.long),
         "categories": torch.tensor(categories, dtype=torch.long),
         "variants": torch.tensor(variants, dtype=torch.long),
-        "features": torch.tensor(features, dtype=torch.float32),
+        # Rollouts store packed token features as float16. Round here as well so
+        # inference and PPO replay consume the same values instead of allowing a
+        # storage conversion to change a close action ranking.
+        "features": torch.tensor(features, dtype=torch.float16).to(torch.float32),
         "rows": torch.tensor(rows, dtype=torch.long),
         "cols": torch.tensor(cols, dtype=torch.long),
     }
-    return tensors, {"packet_tokens": packet_tokens, "cell_tokens": cell_tokens}
+    return tensors, {"packet_tokens": packet_tokens, "cell_tokens": cell_tokens,
+                     "lane_tokens": lane_tokens}
 
 
 TOKEN_ID_FIELDS = ("kinds", "categories", "variants", "rows", "cols")
@@ -415,7 +485,13 @@ class GameplayModelV1(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         width = MODEL_CONFIG["width"]
-        self.kind_embedding = nn.Embedding(len(TOKEN_KINDS), width)
+        # Preserve the seed-0 initialization stream for every pre-existing weight.
+        # The new lane-kind row is initialized with a private generator, so adding
+        # this vocabulary entry does not shift all later parameters' RNG draws.
+        self.kind_embedding = nn.Embedding(TOKEN_KINDS["lane"], width)
+        lane_generator = torch.Generator(device="cpu").manual_seed(50_210)
+        lane_embedding = torch.empty(1, width).normal_(generator=lane_generator)
+        self.kind_embedding.weight = nn.Parameter(torch.cat((self.kind_embedding.weight.detach(), lane_embedding)))
         self.category_embedding = nn.Embedding(128, width)
         self.variant_embedding = nn.Embedding(128, width)
         self.feature_projection = nn.Sequential(nn.Linear(FEATURE_COUNT, width), nn.SiLU(), nn.Linear(width, width))

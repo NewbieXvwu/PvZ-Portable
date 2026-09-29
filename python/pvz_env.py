@@ -5,6 +5,7 @@ from __future__ import annotations
 import gzip
 import json
 import os
+from collections import deque
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -171,6 +172,35 @@ class PvZEnv:
         self._source_metadata: tuple[str | None, bool | None] | None = None
         # Tick of the most recent observation, used to derive real tick deltas.
         self._tick: int | None = None
+        self._sun_income_window_ticks = 6000
+        self._sun_production_history: deque[tuple[int, int]] = deque()
+        self._sun_history_start_tick: int | None = None
+        self._sun_history_snapshots: dict[int, tuple[list[tuple[int, int]], int | None]] = {}
+
+    def _annotate_observation(self, observation: dict[str, Any],
+                              events: dict[str, Any] | None = None,
+                              reset_history: bool = False) -> dict[str, Any]:
+        if "wave_timer" not in observation:
+            raise RuntimeError("environment observation is missing the public wave_timer field")
+        tick = int(observation["tick"])
+        if reset_history:
+            self._sun_production_history.clear()
+            self._sun_history_start_tick = tick
+            self._sun_history_snapshots.clear()
+        if self._sun_history_start_tick is None:
+            self._sun_history_start_tick = tick
+        if events is not None:
+            produced = int(events.get("sun_produced", 0))
+            if produced > 0:
+                self._sun_production_history.append((tick, produced))
+        cutoff = tick - self._sun_income_window_ticks
+        while self._sun_production_history and self._sun_production_history[0][0] < cutoff:
+            self._sun_production_history.popleft()
+        elapsed = max(0, min(self._sun_income_window_ticks, tick - self._sun_history_start_tick))
+        produced = sum(amount for sample_tick, amount in self._sun_production_history
+                       if sample_tick >= cutoff)
+        observation["sun_income_rate"] = produced * 1000.0 / elapsed if elapsed else 0.0
+        return observation
 
     def _resource_hashes(self) -> tuple[str, str]:
         if self._resource_sha256 is None or self._properties_sha256 is None:
@@ -232,6 +262,9 @@ class PvZEnv:
             self._temporary_save = None
         self._reset_done = False
         self._tick = None
+        self._sun_production_history.clear()
+        self._sun_history_start_tick = None
+        self._sun_history_snapshots.clear()
 
     def _read_message(self) -> dict[str, Any]:
         process = self._process
@@ -354,9 +387,11 @@ class PvZEnv:
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
         self._reset_done = True
+        observation = self._annotate_observation(
+            response["observation"], response.get("events", {}), reset_history=True)
         resource_sha256, properties_sha256 = self._resource_hashes()
         source_revision, source_dirty = self._source_state()
-        self._adopt_tick(response["observation"])
+        self._adopt_tick(observation)
         self.episode = {
             "format_version": REPLAY_FORMAT_VERSION,
             "source_revision": source_revision,
@@ -377,11 +412,11 @@ class PvZEnv:
                 "wave_cap": task.wave_cap,
                 "preplanted": [list(plant) for plant in task.preplanted],
             },
-            "initial_state": self._state_record(response["observation"]),
+            "initial_state": self._state_record(observation),
             "operations": [],
-            "final_state": self._state_record(response["observation"]),
+            "final_state": self._state_record(observation),
         }
-        return response["observation"], {"events": response.get("events", {})}
+        return observation, {"events": response.get("events", {})}
 
     def step(self, action: dict[str, Any]) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
         if not self._reset_done:
@@ -407,6 +442,8 @@ class PvZEnv:
         observation = response.get("observation")
         if observation is None:
             raise RuntimeError(f"environment returned no observation: {response}")
+        events = response.get("events", {})
+        self._annotate_observation(observation, events)
         # The real advance is the tick delta reported by the simulator, not the requested
         # wait duration: the environment may end the level or clamp a wait early.
         previous_tick = self._tick
@@ -415,7 +452,7 @@ class PvZEnv:
         self._tick = tick
         info = {
             "ok": response.get("ok", False),
-            "events": response.get("events", {}),
+            "events": events,
             "ticks_advanced": ticks_advanced,
         }
         self._record_operation({"kind": "action", "request": dict(action), "action": dict(action),
@@ -427,7 +464,7 @@ class PvZEnv:
         if response.get("observation") is None:
             raise RuntimeError(f"environment returned no observation: {response}")
         self._adopt_tick(response["observation"])
-        return response["observation"]
+        return self._annotate_observation(response["observation"], response.get("events", {}))
 
     def privileged_state(self) -> dict[str, Any]:
         response = self._command("PRIV")
@@ -450,6 +487,8 @@ class PvZEnv:
         if not response.get("ok") or "snapshot_id" not in response:
             raise RuntimeError(f"environment could not save a snapshot: {response}")
         snapshot_id = int(response["snapshot_id"])
+        self._sun_history_snapshots[snapshot_id] = (
+            list(self._sun_production_history), self._sun_history_start_tick)
         self._record_operation({"kind": "snapshot", "id": snapshot_id}, response["observation"],
                                response.get("events", {}))
         return snapshot_id
@@ -461,7 +500,12 @@ class PvZEnv:
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"environment could not restore snapshot {snapshot_id}: {response}")
         observation = response["observation"]
+        history = self._sun_history_snapshots.get(snapshot_id)
+        if history is not None:
+            self._sun_production_history = deque(history[0])
+            self._sun_history_start_tick = history[1]
         self._adopt_tick(observation)
+        self._annotate_observation(observation)
         self._record_operation({"kind": "restore", "id": snapshot_id}, observation, response.get("events", {}))
         return observation
 
@@ -471,6 +515,7 @@ class PvZEnv:
         response = self._command(f"DROP_SNAPSHOT {snapshot_id}")
         if not response.get("ok"):
             raise ValueError(f"environment could not release snapshot {snapshot_id}: {response}")
+        self._sun_history_snapshots.pop(snapshot_id, None)
 
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Expand several actions from one parent snapshot in a single command.
@@ -501,6 +546,17 @@ class PvZEnv:
         branches = response.get("branches")
         if not response.get("ok") or not isinstance(branches, list) or len(branches) != len(actions):
             raise ValueError(f"environment could not branch snapshot {snapshot_id}: {response}")
+        base_history = list(self._sun_production_history)
+        base_start = self._sun_history_start_tick
+        try:
+            for branch in branches:
+                self._sun_production_history = deque(base_history)
+                self._sun_history_start_tick = base_start
+                if branch.get("observation") is not None:
+                    self._annotate_observation(branch["observation"], branch.get("events", {}))
+        finally:
+            self._sun_production_history = deque(base_history)
+            self._sun_history_start_tick = base_start
         return branches
 
     @contextmanager
@@ -736,6 +792,9 @@ class PvZEnv:
             self._temporary_save = None
         self._reset_done = False
         self._tick = None
+        self._sun_production_history.clear()
+        self._sun_history_start_tick = None
+        self._sun_history_snapshots.clear()
 
     def __enter__(self) -> "PvZEnv":
         return self

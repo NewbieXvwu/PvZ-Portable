@@ -75,6 +75,14 @@ class Stage0EvaluationTests(unittest.TestCase):
         cls.train_tasks = json.loads((ROOT / "artifacts/task_family/train.json").read_text())["tasks"]
         cls.stage0_tasks = task_family._curriculum_tasks(cls.train_tasks, "cap1")
 
+    def test_t4_cap1_baseline_covers_all_320_frozen_seeds(self) -> None:
+        train, heldout = task_family._task_family()
+        gate_tasks, reference_tasks = task_family._heldout_tasks(heldout)
+        baseline = task_family._baseline(train["tasks"], gate_tasks, reference_tasks)
+        self.assertEqual(baseline["stage0_set"]["sample_count"], 320)
+        self.assertEqual(baseline["stage0_set"]["pass_rate"], 0.0)
+        self.assertEqual(baseline["stage0_set"]["task_count"], 5)
+
     def test_evaluation_runs_heldout_and_full_cap1_sets_in_one_env(self) -> None:
         class StubModel:
             def eval(self):
@@ -167,6 +175,8 @@ class Stage0EvaluationTests(unittest.TestCase):
             self.assertEqual(override, {"used": True, "reason": "documented stage0 exception"})
             with self.assertRaisesRegex(ValueError, "requires --motivation"):
                 task_family._check_stage0_gate(self.train_tasks, True, None, gate_path)
+            gate_path.write_text(json.dumps({"result": "pass"}))
+            self.assertIsNone(task_family._check_stage0_gate(self.train_tasks, False, None, gate_path))
 
     def test_changed_seed0_hash_requires_note_and_records_both_hashes(self) -> None:
         with mock.patch.object(task_family, "MODEL_ARCHITECTURE_VERSION", 5):

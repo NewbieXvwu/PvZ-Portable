@@ -17,11 +17,13 @@ import torch
 from pvz_agent_model import (
     DEFAULT_TORCH_THREADS,
     FEATURE_COUNT,
+    MODEL_ARCHITECTURE_VERSION,
     MODEL_CONFIG,
     TOKEN_KINDS,
     WAIT_TICKS,
     GameplayModelV1,
     configure_torch_threads,
+    derive_observation_features,
     factored_action_log_prob,
     hard_behavior_cloning_loss,
     legal_summary,
@@ -80,6 +82,8 @@ def observation(**overrides: object) -> dict:
         "tick": 600,
         "wave": 3,
         "wave_count": 20,
+        "wave_timer": 2400,
+        "sun_income_rate": 12.0,
         "sun": 175,
         "night": False,
         "pool": False,
@@ -118,12 +122,17 @@ class ObservationTokenTests(unittest.TestCase):
     def test_token_stream_covers_every_entity(self) -> None:
         tensors, metadata = observation_tokens(observation())
 
-        # global + profile + 54 cells + plant + zombie + projectile + defense + 6 packets + 3 roster
-        expected = 2 + CELL_COUNT + 4 + 6 + 3
+        # global + profile + 54 cells + 6 lane summaries + plant + zombie + projectile + defense + 6 packets + 3 roster
+        expected = 2 + CELL_COUNT + 6 + 4 + 6 + 3
         for name in ("kinds", "categories", "variants", "rows", "cols"):
             self.assertEqual(tuple(tensors[name].shape), (expected,), name)
         self.assertEqual(tuple(tensors["features"].shape), (expected, FEATURE_COUNT))
         self.assertEqual(tensors["features"].dtype, torch.float32)
+
+    def test_lane_vocabulary_bumps_the_architecture_version(self) -> None:
+        self.assertEqual(MODEL_ARCHITECTURE_VERSION, 5)
+        self.assertEqual(TOKEN_KINDS["lane"], 10)
+        self.assertEqual(len(TOKEN_KINDS), 11)
 
     def test_cell_tokens_are_indexed_by_row_major_position(self) -> None:
         """``select_action`` builds cell ids as ``row * 9 + col``; the tokens must agree."""
@@ -143,6 +152,42 @@ class ObservationTokenTests(unittest.TestCase):
         for index, token in metadata["packet_tokens"].items():
             self.assertEqual(int(tensors["kinds"][token]), TOKEN_KINDS["seed_packet"])
             self.assertEqual(int(tensors["categories"][token]), source["packets"][index]["type"] + 1)
+
+    def test_lane_tokens_are_six_row_aggregates_and_enter_attention(self) -> None:
+        source = observation()
+        tensors, metadata = observation_tokens(source)
+        lane_positions = [index for index, kind in enumerate(tensors["kinds"])
+                          if int(kind) == TOKEN_KINDS["lane"]]
+
+        self.assertEqual(len(lane_positions), ROW_COUNT)
+        self.assertEqual(set(metadata["lane_tokens"]), set(range(ROW_COUNT)))
+        self.assertEqual([int(tensors["rows"][index]) for index in lane_positions], list(range(ROW_COUNT)))
+
+        seen_attention_kinds = []
+        with torch.random.fork_rng(devices=[]):
+            model = GameplayModelV1().eval()
+            handle = model.encoder[0].attention.register_forward_pre_hook(
+                lambda _module, args: seen_attention_kinds.append(args[1].detach().clone()))
+            try:
+                model.step(source)
+            finally:
+                handle.remove()
+        self.assertEqual(int((seen_attention_kinds[0] == TOKEN_KINDS["lane"]).sum()), ROW_COUNT)
+
+    def test_derived_features_change_with_observation_state(self) -> None:
+        source = observation(
+            plants=[_plant(type=1, row=2, health=250), _plant(type=0, row=2, health=100)],
+            zombies=[_zombie(row=2, x=470.0, body_health=1000, body_max_health=1000)],
+            sun_income_rate=25.0, wave=4, wave_count=20, wave_timer=1200)
+        features = derive_observation_features(source)
+        self.assertGreater(features["lane_features"][2][0], 0.0)
+        self.assertLess(features["lane_features"][2][1], 1.0)
+        self.assertGreater(features["lane_features"][2][2], 0.0)
+        self.assertGreater(features["lane_features"][2][3], 0.0)
+        self.assertEqual(features["sun_income_rate"], 25.0)
+        self.assertEqual(features["economic_fire_ratio"], 1.0)
+        self.assertAlmostEqual(features["wave_progress"], 0.2)
+        self.assertAlmostEqual(features["next_wave_distance"], 0.2)
 
     def test_entity_types_are_clamped_into_the_embedding_range(self) -> None:
         source = observation(zombies=[_zombie(type=5000)], plants=[_plant(type=-99, imitater_type=9999)])
@@ -176,7 +221,10 @@ class ObservationTokenTests(unittest.TestCase):
             restored = model.step_tokens(restored_tensors, restored_metadata, source["wave"],
                                          None, None, 0, {})
             legal = legal_summary(source["legal_actions"])
+            torch.testing.assert_close(restored["type_logits"], direct["type_logits"], rtol=0, atol=0)
+            action_rng_state = torch.random.get_rng_state()
             direct_action, _, _ = select_action(model, direct, legal)
+            torch.random.set_rng_state(action_rng_state)
             restored_action, _, _ = select_action(model, restored, legal)
         self.assertEqual(restored_action, direct_action)
 

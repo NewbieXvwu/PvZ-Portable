@@ -220,6 +220,7 @@ def _observation(**overrides: Any) -> dict:
     occupied = {(plant["row"], plant["col"]) for plant in plant_records}
     base = {
         "terminal": False, "result": 0, "tick": 5400, "wave": 7, "wave_count": 20,
+        "wave_timer": 3000, "sun_income_rate": 12.0,
         "sun": 175, "night": False, "pool": False, "fog": False, "roof": False,
         "zombie_count_multiplier": 1.0,
         "player_profile": {"playthrough": 2, "seed_slot_count": 6, "owned_upgrade_plants": [],

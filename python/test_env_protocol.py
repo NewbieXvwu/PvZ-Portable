@@ -118,7 +118,7 @@ class ResetValidationTests(unittest.TestCase):
             env = PvZEnv(resource_dir=resources)
             commands: list[str] = []
             observation = {
-                "tick": 0, "wave": 0, "wave_count": 30, "sun": 50,
+                "tick": 0, "wave": 0, "wave_count": 30, "wave_timer": 3000, "sun": 50,
                 "plants": [], "zombies": [], "terminal": False, "result": 0,
             }
 
@@ -316,6 +316,28 @@ class SharedConstantTests(unittest.TestCase):
         self.assertEqual(context.forced_seeds, (2,))
         self.assertEqual(context.zombie_roster, (0, 3))
 
+
+class ObservationDerivedInputTests(unittest.TestCase):
+    @staticmethod
+    def _observation(tick: int) -> dict:
+        return {"tick": tick, "wave_timer": 2000}
+
+    def test_sun_income_rate_uses_real_production_in_a_6000_tick_window(self) -> None:
+        env = PvZEnv(resource_dir="/nonexistent")
+        first = env._annotate_observation(self._observation(0), reset_history=True)
+        second = env._annotate_observation(self._observation(3000), {"sun_produced": 30})
+        third = env._annotate_observation(self._observation(8000), {"sun_produced": 12})
+        fourth = env._annotate_observation(self._observation(10000))
+
+        self.assertEqual(first["sun_income_rate"], 0.0)
+        self.assertEqual(second["sun_income_rate"], 10.0)
+        self.assertEqual(third["sun_income_rate"], 7.0)
+        self.assertEqual(fourth["sun_income_rate"], 2.0)
+
+    def test_wave_timer_must_be_present_in_real_observation(self) -> None:
+        env = PvZEnv(resource_dir="/nonexistent")
+        with self.assertRaisesRegex(RuntimeError, "missing the public wave_timer field"):
+            env._annotate_observation({"tick": 10}, reset_history=True)
 
 class ExperimentManifestTests(unittest.TestCase):
     """The manifest is written by ``save_replay`` and re-verified when a replay is loaded.
