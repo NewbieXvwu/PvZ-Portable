@@ -17,7 +17,7 @@ from torch.nn import functional as F
 
 from pvz_agent_model import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
                              configure_torch_threads, legal_summary, observation_tokens,
-                             pack_tokens, resolve_device, select_action, unpack_tokens)
+                             pack_tokens, replay_log_probs, resolve_device, select_action)
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
     OBSERVATION_VERSION,
@@ -223,18 +223,11 @@ def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float) -> None:
 
 
 def _rebuild_hidden(model: GameplayModelV1, transitions: list[dict[str, Any]], start: int) -> torch.Tensor | None:
-    hidden = None
     if start <= 0:
-        return hidden
+        return None
     with torch.no_grad():
-        for transition in transitions[:start]:
-            tensors, metadata = unpack_tokens(transition["tokens"], next(model.parameters()).device)
-            output = model.step_tokens(tensors, metadata, transition["wave"], hidden,
-                                       transition["previous_action"],
-                                       transition["elapsed_since_previous_observation"],
-                                       transition["events"])
-            hidden = output["hidden"]
-    return None if hidden is None else hidden.detach()
+        _, hidden = model.forward_chunk(transitions[:start], None)
+    return hidden
 
 
 def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimizer: torch.optim.Optimizer,
@@ -264,22 +257,13 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         for episode, start, end in chunks:
             transitions = episode["transitions"]
             hidden = _rebuild_hidden(model, transitions, start)
-            log_probs, values, entropies_for_chunk = [], [], []
-            for transition in transitions[start:end]:
-                tensors, metadata = unpack_tokens(transition["tokens"], device)
-                output = model.step_tokens(tensors, metadata, transition["wave"], hidden,
-                                           transition["previous_action"],
-                                           transition["elapsed_since_previous_observation"],
-                                           transition["events"])
-                _, log_prob, entropy = select_action(
-                    model, output, transition["legal"], action=transition["action"]
-                )
-                hidden = output["hidden"]
-                log_probs.append(log_prob)
-                value = model.privileged_value_from_extra(output, transition["critic_extra"])
-                values.append(value.squeeze())
-                entropies_for_chunk.append(entropy)
-            new_log_prob = torch.stack(log_probs)
+            outputs, _ = model.forward_chunk(transitions[start:end], hidden)
+            log_probs, entropies_for_chunk = replay_log_probs(model, outputs, transitions[start:end])
+            belief = torch.cat([output["belief"] for output in outputs], dim=0)
+            extras = torch.tensor([transition["critic_extra"] for transition in transitions[start:end]],
+                                  dtype=torch.float32, device=device)
+            values = list(model.privileged_value_batch(belief, extras).squeeze(-1))
+            new_log_prob = log_probs
             old_log_prob = torch.tensor(
                 [transition["log_prob"] for transition in transitions[start:end]],
                 dtype=torch.float32,
@@ -299,7 +283,7 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                 device=device,
             )
             value_loss = F.mse_loss(torch.stack(values), returns)
-            entropy = torch.stack(entropies_for_chunk).mean()
+            entropy = entropies_for_chunk.mean()
             loss = policy_loss + value_coefficient * value_loss - entropy_coefficient * entropy
             if not torch.isfinite(loss):
                 raise FloatingPointError("PPO loss became non-finite")

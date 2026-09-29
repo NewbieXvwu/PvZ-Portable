@@ -307,25 +307,39 @@ class RelationAttention(nn.Module):
         self.col_bias = nn.Embedding(18, heads)
         self.same_cell_bias = nn.Embedding(2, heads)
 
-    def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor) -> Tensor:
+    def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
+                key_mask: Tensor | None = None) -> Tensor:
         batch, count, width = x.shape
+        if kinds.dim() == 1:
+            # Single-step call: kinds/rows/cols are (count,).  Lift to (batch, count)
+            # so relation biases compute per sample; for batch=1 the arithmetic is
+            # identical to the original 1-D form.
+            kinds = kinds.unsqueeze(0)
+            rows = rows.unsqueeze(0)
+            cols = cols.unsqueeze(0)
         qkv = self.qkv(x).view(batch, count, 3, self.heads, self.head_width).permute(2, 0, 3, 1, 4)
         query, key, value = qkv.unbind(0)
         scores = torch.matmul(query, key.transpose(-2, -1)) * (self.head_width ** -0.5)
+        if key_mask is not None:
+            # key_mask: (batch, count), True on real tokens.  -1e9 (not -inf) so a
+            # padded *query* row still yields finite values -- NaN backward flow is
+            # worse than a discarded zero.  Padded queries are never gathered.
+            scores = scores.masked_fill(~key_mask[:, None, None, :], -1e9)
         if self.relation_bias_enabled:
-            kind_pair = self.kind_pair_bias[:, kinds[:, None], kinds[None, :]]
-            row_known = (rows[:, None] >= 0) & (rows[None, :] >= 0)
-            col_known = (cols[:, None] >= 0) & (cols[None, :] >= 0)
-            row_delta = (rows[:, None] - rows[None, :]).clamp(-5, 5) + 5
-            col_delta = (cols[:, None] - cols[None, :]).clamp(-8, 8) + 8
+            kind_pair = self.kind_pair_bias[:, kinds[:, :, None], kinds[:, None, :]]
+            row_known = (rows[:, :, None] >= 0) & (rows[:, None, :] >= 0)
+            col_known = (cols[:, :, None] >= 0) & (cols[:, None, :] >= 0)
+            row_delta = (rows[:, :, None] - rows[:, None, :]).clamp(-5, 5) + 5
+            col_delta = (cols[:, :, None] - cols[:, None, :]).clamp(-8, 8) + 8
             row_bucket = torch.where(row_known, row_delta, 11)
             col_bucket = torch.where(col_known, col_delta, 17)
-            same_cell = (row_known & col_known & (rows[:, None] == rows[None, :])
-                         & (cols[:, None] == cols[None, :])).long()
-            relation = kind_pair + self.row_bias(row_bucket).permute(2, 0, 1)
-            relation = relation + self.col_bias(col_bucket).permute(2, 0, 1)
-            relation = relation + self.same_cell_bias(same_cell).permute(2, 0, 1)
-            scores = scores + relation.unsqueeze(0)
+            same_cell = (row_known & col_known & (rows[:, :, None] == rows[:, None, :])
+                         & (cols[:, :, None] == cols[:, None, :])).long()
+            relation = kind_pair
+            relation = relation + self.row_bias(row_bucket).permute(3, 0, 1, 2)
+            relation = relation + self.col_bias(col_bucket).permute(3, 0, 1, 2)
+            relation = relation + self.same_cell_bias(same_cell).permute(3, 0, 1, 2)
+            scores = scores + relation.permute(1, 0, 2, 3)
         attended = torch.softmax(scores, dim=-1)
         value = torch.matmul(attended, value).transpose(1, 2).contiguous().view(batch, count, width)
         return self.projection(value)
@@ -341,12 +355,12 @@ class RelationLayer(nn.Module):
         self.value = nn.Linear(width, ff_width)
         self.down = nn.Linear(ff_width, width)
 
-    def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor) -> Tensor:
-        x = x + self.attention(self.attention_norm(x), kinds, rows, cols)
+    def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
+                key_mask: Tensor | None = None) -> Tensor:
+        x = x + self.attention(self.attention_norm(x), kinds, rows, cols, key_mask)
         normalized = self.ff_norm(x)
         x = x + self.down(F.silu(self.gate(normalized)) * self.value(normalized))
         return x
-
 
 class GameplayModelV1(nn.Module):
     def __init__(self) -> None:
@@ -481,6 +495,156 @@ class GameplayModelV1(nn.Module):
             "wave_index": wave,
         }
 
+    def _previous_action_batch(self, actions: list[dict[str, Any] | None], device: torch.device) -> Tensor:
+        """Batch form of ``_previous_action``; None rows stay exactly zero."""
+        action_types = {"plant": 0, "shovel": 1, "wait": 2}
+        kinds, packets, cells, durations = [], [], [], []
+        for action in actions:
+            if action is None:
+                kinds.append(0)
+                packets.append(0)
+                cells.append(0)
+                durations.append(0)
+                continue
+            kind = action_types[action["type"]]
+            packet = max(0, min(10, int(action.get("packet", -1)) + 1))
+            cell = 0
+            if "row" in action and "col" in action:
+                cell = max(0, min(54, int(action["row"]) * 9 + int(action["col"]) + 1))
+            ticks = action.get("ticks", 0)
+            duration = (min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - ticks)) + 1
+                        if ticks else 0)
+            kinds.append(kind)
+            packets.append(packet)
+            cells.append(cell)
+            durations.append(duration)
+        index = torch.tensor(list(zip(kinds, packets, cells, durations)), dtype=torch.long, device=device)
+        parts = torch.cat((
+            self.action_embedding(index[:, 0]),
+            self.previous_packet_embedding(index[:, 1]),
+            self.previous_cell_embedding(index[:, 2]),
+            self.previous_wait_embedding(index[:, 3]),
+        ), dim=-1)
+        vector = self.previous_action_projection(parts)
+        present = torch.tensor([action is not None for action in actions], device=device)
+        return vector * present[:, None].to(vector.dtype)
+
+    @staticmethod
+    def _event_features_batch(events_list: list[dict[str, Any] | None], device: torch.device) -> Tensor:
+        rows = []
+        for events in events_list:
+            events = events or {}
+            rows.append([
+                _ratio(events.get("zombies_killed", 0), 10), _ratio(events.get("plants_eaten", 0), 5),
+                _ratio(events.get("sun_produced", 0), 250), _ratio(events.get("sun_spent", 0), 300),
+                float(events.get("mower_triggered", 0) > 0), _ratio(events.get("waves_started", 0), 3),
+                float(events.get("level_won", False)), float(events.get("level_lost", False)),
+            ])
+        return torch.tensor(rows, dtype=torch.float32, device=device)
+
+    def forward_chunk(self, transitions: list[dict[str, Any]], hidden: Tensor | None = None
+                      ) -> tuple[list[dict[str, Any]], Tensor]:
+        """Run a whole truncated-BPTT chunk as ONE batched forward.
+
+        Equivalent to calling :meth:`step_tokens` once per transition (identical
+        weight paths, padding keys masked out of the attention), except that
+        GEMM blocking may differ so results agree to ~1e-6 rather than bitwise.
+        Replaces the per-step batch=1 loop that made PPO updates take 95% of
+        wall time even though the network itself is tiny.
+
+        Each transition must carry: "tokens" (packed), "wave",
+        "previous_action", "elapsed_since_previous_observation", "events".
+        Returns per-step outputs shaped like step_tokens outputs, plus the final
+        GRU hidden (only that one crosses the chunk boundary -- BPTT truncation).
+        """
+        device = next(self.parameters()).device
+        count = len(transitions)
+        packed_list = [transition["tokens"] for transition in transitions]
+        lengths = np.array([packed["ids"].shape[0] for packed in packed_list], dtype=np.int64)
+        l_max = int(lengths.max())
+        ids = np.zeros((count, l_max, len(TOKEN_ID_FIELDS)), dtype=np.int64)
+        features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float32)
+        key_mask = np.zeros((count, l_max), dtype=bool)
+        for index, packed in enumerate(packed_list):
+            real = packed["ids"].shape[0]
+            ids[index, :real] = packed["ids"]
+            features[index, :real] = packed["features"]
+            key_mask[index, :real] = True
+        p_max = max(max(1, packed["packet_ids"].shape[0]) for packed in packed_list)
+        packet_index = np.zeros((count, p_max), dtype=np.int64)
+        packet_counts = []
+        for index, packed in enumerate(packed_list):
+            many = packed["packet_ids"].shape[0]
+            packet_counts.append(many)
+            if many:
+                packet_index[index, :many] = packed["packet_index"]
+        cell_index = np.stack([packed["cell_index"] for packed in packed_list])
+
+        ids_t = torch.from_numpy(ids).to(device)
+        kinds = ids_t[:, :, 0]
+        rows = ids_t[:, :, 3]
+        cols = ids_t[:, :, 4]
+        x = (self.kind_embedding(kinds)
+             + self.category_embedding(ids_t[:, :, 1])
+             + self.variant_embedding(ids_t[:, :, 2])
+             + self.feature_projection(torch.from_numpy(features).to(device))
+             + self.row_embedding((rows + 1).clamp(0, 7))
+             + self.col_embedding((cols + 1).clamp(0, 10)))
+        mask = torch.from_numpy(key_mask).to(device)
+        for layer in self.encoder:
+            x = layer(x, kinds, rows, cols, mask)
+        x = self.encoder_norm(x)
+
+        action_vector = self._previous_action_batch(
+            [transition["previous_action"] for transition in transitions], device)
+        delta_index = torch.tensor(
+            [min(31, max(0, int(math.log2(max(0, int(transition["elapsed_since_previous_observation"])) + 1))))
+             for transition in transitions], dtype=torch.long, device=device)
+        delta_vector = self.delta_embedding(delta_index)
+        event_vector = self.event_projection(self._event_features_batch(
+            [transition["events"] for transition in transitions], device))
+        recurrent_input = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1)
+        if hidden is None:
+            hidden = torch.zeros(MODEL_CONFIG["gru_layers"], 1, MODEL_CONFIG["gru_width"], device=device)
+        belief_seq, hidden_out = self.belief(recurrent_input.unsqueeze(0), hidden)
+        belief = belief_seq[0]
+
+        type_logits = self.action_type(belief)
+        wait_logits = self.wait_duration(belief)
+        value_out = torch.tanh(self.value(belief))
+        aux_next_spawn = self.aux_next_spawn(belief)
+        aux_lane_threat = self.aux_lane_threat(belief)
+        aux_outcome = self.aux_outcome(belief)
+        packet_query_all = self.packet_query(belief)
+        arange = torch.arange(count, device=device)
+        cell_tokens = x[arange[:, None], torch.from_numpy(cell_index).to(device)]
+        cell_keys = self.cell_key(cell_tokens)
+        packet_tokens = x[arange[:, None], torch.from_numpy(packet_index).to(device)]
+        packet_keys = self.packet_key(packet_tokens)
+        packet_logits = (packet_keys * packet_query_all[:, None, :]).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
+
+        outputs = []
+        for index, transition in enumerate(transitions):
+            many = packet_counts[index]
+            outputs.append({
+                "hidden": None,
+                "belief": belief[index:index + 1],
+                "type_logits": type_logits[index],
+                "wait_logits": wait_logits[index],
+                "packet_logits": packet_logits[index, :many],
+                "packet_ids": [int(value) for value in transition["tokens"]["packet_ids"]],
+                "packet_tokens": packet_tokens[index, :many],
+                "cell_tokens": cell_tokens[index],
+                "cell_keys": cell_keys[index],
+                "value": value_out[index],
+                "aux_next_spawn": aux_next_spawn[index:index + 1],
+                "aux_lane_threat": aux_lane_threat[index:index + 1],
+                "aux_outcome": aux_outcome[index:index + 1],
+                "wave_index": transition["wave"],
+            })
+        outputs[-1]["hidden"] = hidden_out
+        return outputs, hidden_out
+
     def plant_cell_scores(self, output: dict[str, Any], packet: int) -> Tensor:
         packet_index = output["packet_ids"].index(packet)
         query = self.plant_cell_query(torch.cat((output["belief"], output["packet_tokens"][packet_index].unsqueeze(0)), dim=-1))
@@ -513,6 +677,11 @@ class GameplayModelV1(nn.Module):
         device = output["belief"].device
         extra_features = self.privileged_features(torch.tensor([extra], dtype=torch.float32, device=device))
         return self.privileged_critic(torch.cat((output["belief"], extra_features), dim=-1))
+
+    def privileged_value_batch(self, belief: Tensor, extras: Tensor) -> Tensor:
+        """Batch form of ``privileged_value_from_extra``: belief (T,H), extras (T,16)."""
+        extra_features = self.privileged_features(extras)
+        return self.privileged_critic(torch.cat((belief, extra_features), dim=-1))
 
     def privileged_value(self, output: dict[str, Any], privileged_state: dict[str, Any] | None) -> Tensor:
         return self.privileged_value_from_extra(
@@ -603,6 +772,115 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
     else:
         raise ValueError(f"unsupported action index: {action_type}")
     return selected, log_prob, entropy
+
+
+def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
+                     transitions: list[dict[str, Any]]) -> tuple[Tensor, Tensor]:
+    """Batched PPO replay: (log_prob, entropy) of the recorded actions.
+
+    Semantically identical to calling ``select_action(model, output, legal,
+    action=recorded)`` per transition and stacking the results, but evaluates
+    every distribution in one tensor op per chunk instead of ~30 small ops per
+    transition.  Only the sampling call sites differ (replay never samples);
+    masking follows exactly the same -1e9 convention, so probabilities match to
+    GEMM tolerance (~1e-6).
+    """
+    device = outputs[0]["type_logits"].device
+    total = len(outputs)
+    action_types = {"plant": 0, "shovel": 1, "wait": 2}
+
+    type_logits = torch.stack([output["type_logits"] for output in outputs])
+    wait_logits = torch.stack([output["wait_logits"] for output in outputs])
+    belief = torch.cat([output["belief"] for output in outputs], dim=0)
+    cell_keys = torch.stack([output["cell_keys"] for output in outputs])
+
+    p_max = max(1, max(output["packet_logits"].shape[0] for output in outputs))
+    packet_logits = torch.full((total, p_max), -1e9, device=device)
+    packet_ids_rows = []
+    for row, output in enumerate(outputs):
+        many = output["packet_logits"].shape[0]
+        if many:
+            packet_logits[row, :many] = output["packet_logits"]
+        packet_ids_rows.append(list(output["packet_ids"]))
+
+    type_index = torch.tensor([action_types[tr["action"]["type"]] for tr in transitions],
+                              dtype=torch.long, device=device)
+    type_mask = torch.zeros(total, 3, dtype=torch.bool, device=device)
+    for row, tr in enumerate(transitions):
+        legal = tr["legal"]
+        type_mask[row, 0] = len(legal["packets"]) > 0
+        type_mask[row, 1] = legal["shovel_mask"] != 0
+        type_mask[row, 2] = legal["wait"]
+    type_dist = torch.distributions.Categorical(logits=type_logits.masked_fill(~type_mask, -1e9))
+    log_prob = type_dist.log_prob(type_index)
+    entropy = type_dist.entropy()
+
+    plant_rows = [i for i, tr in enumerate(transitions) if tr["action"]["type"] == "plant"]
+    shovel_rows = [i for i, tr in enumerate(transitions) if tr["action"]["type"] == "shovel"]
+    wait_rows = [i for i, tr in enumerate(transitions) if tr["action"]["type"] == "wait"]
+    add_lp = torch.zeros(total, device=device)
+    add_ent = torch.zeros(total, device=device)
+
+    if plant_rows:
+        sel_pos = torch.zeros(len(plant_rows), dtype=torch.long)
+        packet_mask = torch.zeros(len(plant_rows), p_max, dtype=torch.bool)
+        for r, i in enumerate(plant_rows):
+            allowed = set(transitions[i]["legal"]["packets"])
+            sel_pos[r] = packet_ids_rows[i].index(transitions[i]["action"]["packet"])
+            for j, pid in enumerate(packet_ids_rows[i]):
+                packet_mask[r, j] = pid in allowed
+        packet_dist = torch.distributions.Categorical(
+            logits=packet_logits[plant_rows].masked_fill(~packet_mask, -1e9))
+        lp_packet = packet_dist.log_prob(sel_pos.to(device))
+        ent_packet = packet_dist.entropy()
+
+        sel_tokens = torch.stack([outputs[i]["packet_tokens"][int(sel_pos[r])]
+                                  for r, i in enumerate(plant_rows)])
+        query = model.plant_cell_query(torch.cat((belief[plant_rows], sel_tokens), dim=-1))
+        cell_logits = (torch.einsum("nw,ntw->nt", query, cell_keys[plant_rows])
+                       / math.sqrt(MODEL_CONFIG["width"]))
+        bits = torch.tensor([dict(zip(transitions[i]["legal"]["packets"],
+                                      transitions[i]["legal"]["plant_mask"]))[
+                                  transitions[i]["action"]["packet"]] for i in plant_rows],
+                            dtype=torch.long)
+        cell_mask = ((bits[:, None] >> torch.arange(54)[None, :]) & 1) == 1
+        cell_dist = torch.distributions.Categorical(
+            logits=cell_logits.masked_fill(~cell_mask.to(device), -1e9))
+        cell_index = torch.tensor([transitions[i]["action"]["row"] * 9 + transitions[i]["action"]["col"]
+                                   for i in plant_rows], dtype=torch.long, device=device)
+        lp_cell = cell_dist.log_prob(cell_index)
+        ent_cell = cell_dist.entropy()
+
+        rows_t = torch.tensor(plant_rows, dtype=torch.long, device=device)
+        add_lp = add_lp.index_put((rows_t,), lp_packet + lp_cell)
+        add_ent = add_ent.index_put((rows_t,), ent_packet + ent_cell)
+
+    if shovel_rows:
+        query = model.shovel_cell_query(belief[shovel_rows])
+        cell_logits = (torch.einsum("nw,ntw->nt", query, cell_keys[shovel_rows])
+                       / math.sqrt(MODEL_CONFIG["width"]))
+        bits = torch.tensor([transitions[i]["legal"]["shovel_mask"] for i in shovel_rows],
+                            dtype=torch.long)
+        cell_mask = ((bits[:, None] >> torch.arange(54)[None, :]) & 1) == 1
+        cell_dist = torch.distributions.Categorical(
+            logits=cell_logits.masked_fill(~cell_mask.to(device), -1e9))
+        cell_index = torch.tensor([transitions[i]["action"]["row"] * 9 + transitions[i]["action"]["col"]
+                                   for i in shovel_rows], dtype=torch.long, device=device)
+        rows_t = torch.tensor(shovel_rows, dtype=torch.long, device=device)
+        add_lp = add_lp.index_put((rows_t,), cell_dist.log_prob(cell_index))
+        add_ent = add_ent.index_put((rows_t,), cell_dist.entropy())
+
+    if wait_rows:
+        duration = torch.tensor([
+            min(range(len(WAIT_TICKS)),
+                key=lambda k: abs(WAIT_TICKS[k] - transitions[i]["action"].get("ticks", 150)))
+            for i in wait_rows], dtype=torch.long, device=device)
+        wait_dist = torch.distributions.Categorical(logits=wait_logits[wait_rows])
+        rows_t = torch.tensor(wait_rows, dtype=torch.long, device=device)
+        add_lp = add_lp.index_put((rows_t,), wait_dist.log_prob(duration))
+        add_ent = add_ent.index_put((rows_t,), wait_dist.entropy())
+
+    return log_prob + add_lp, entropy + add_ent
 
 
 @torch.no_grad()
