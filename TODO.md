@@ -587,6 +587,15 @@ i7-12700F 单核约为此机一半，**若 GPU 红利不成立，台式机未必
   kernel launch —— 台式机开工时必须实测 `--minibatch-chunks` 1/16/64/128 四档
   （`--device cuda`），报告每档更新耗时与峰值显存，据此定正式配置（见 MEMORY_BUDGET.md §7）。
 
+**2026-09-29 台式机实测结论（已合入，HEAD `02125b9`）**：CPU 上分层批是负优化（2000 局
+×51 步×2 epoch：逐条 773 s → 单 chunk 750 s → 分层批 16/128 均为 852 s），**默认值保持 1**。
+CUDA 上大 batch 的红利**确实存在但来源是 attention kernel 而非"矩阵更大"**：
+`--minibatch-chunks 16` + exact FlexAttention 使 2000 局更新 **404 s → 188 s（2.15×）**，
+峰值显存分配 2.07 GB/预留 5.88 GB（dense 为 2.49/6.44 GB），loss 与梯度范数与 dense 一致
+（policy 0.12451 vs 0.12455，grad norm 1.488 vs 1.489）。**正式 T5 用 `--device cuda`、
+sequence 16、chunks 16、lr 1e-4、attention `auto`**。证据：`artifacts/t5/perf/ppo_update_2000_{flex,dense}.json`、
+`attention_sweep.json`。
+
 ### 5.1 交接状态（执行环境已搬到台式机，笔记本离线）
 
 **2026-09-29 交接**：笔记本上的全部 30 个提交已推送到 `origin/pvz-env`，
@@ -614,6 +623,28 @@ git status -sb                     # 看是否与 origin 有分歧、是否有�
   门禁的 `worktree_clean` 会直接判 false，等于白跑。
 
 **每次提交门禁证据后必须 `git push origin pvz-env`**（见 §2.3），这是结果能回到审阅方的唯一通道。
+
+#### 交接已闭环（2026-09-29 晚）
+
+台式机那一轮**只做吞吐/协议/attention 优化，没有跑正式 T5**（无 `gates/T5.json`）。它的 7 个提交
+已推送并合入，两边 HEAD 一致为 `02125b9`：
+
+- `a762deb` PPO 轨迹 shard 紧凑化 + NPZ（60 步恢复对象 956 KB → 496 KB，序列化比 gzip JSON 快 4.9×）
+- `88a5d30` GAE 测试期望修正（**顺带修好本机原有 3 个旧设计测试失败，现在 113 项全绿**）
+- `f6f8b8b` `Board.cpp` 单波进度条除零
+- `5fb13b6` `CRITIC_INPUTS` 协议 4 + CUDA FlexAttention
+- `771700d` 按实测配置 T5 rollout worker 与 PPO batch
+- `9a043b3` 三个 benchmark 脚本
+- `02125b9` 两份报告（`T5_PERFORMANCE_REPORT.md`、`OPTIMIZATION_TASKS.md`）
+
+**worker 选型（正式 `run_seed_jobs` 同一批 2,000 局实测）**：18×1 为 161.6 s / **44,565.9 局/h** 最快，
+16×1 为 163.5 s / 44,024.6，20×1 反降到 174.7 s / 41,221.3。**单核门禁重跑 6,273.8 局/h（>5,000 通过）**。
+配置写入 `artifacts/t5/throughput.json`，正式 T5 默认 **CPU/18 worker/每 worker 1 线程**。
+
+**WSL OOM 的第二个根因（本机之外）**：18 个 worker 进程树 RSS 合计峰值 **19,168 MB**，与训练的
+约 3.8 GB CPU RSS、约 2 GB CUDA 分配**同时**存在。进程池目前每次 2,000 局更新重建一次；报告明确
+**不提交持久池**（省下的启动开销不值这份内存）。在 16 GB WSL 上跑正式 T5 前，先按 `MEMORY_BUDGET.md` §4
+把 `.wslconfig` 上限调够，或接受 18 worker 的峰值需求。
 
 ### 已排除的路线（有实测数据，勿重复尝试）
 
@@ -661,16 +692,20 @@ git status -sb                     # 看是否与 origin 有分歧、是否有�
 - **T0 的 L0 修复已成功**（提交 `a871927`）：level 7 / seed 30000 在 **tick 65,401 获胜**
   （修复前 1,796,340 tick 永不终局），seed 30001 亦获胜。seed 30002 / 30003 分别在第 10、7 波
   正常失败——已确认是脚本策略强度问题，**不是环境阻塞**。
-- **执行环境已搬到台式机**（2026-09-29）：笔记本已推送全部提交（`f07bd9e`）并离线，
-  同步与证据回传全部走 `origin/pvz-env`，开工步骤见 §5.1。
-- **内存诊断已完成**（2026-09-29，`MEMORY_BUDGET.md`）：WSL 吃满 16 GB 的根因是轨迹缓冲以
-  Python 对象驻留（185 KiB/transition），2,000 局批需要 27.8 GiB。三项改动规格已写好，
-  **等台式机当前这轮结束后再合并实现**。
-- **"更新占 95% → GPU 强项 → 迁台式机"的推理已被推翻**（同上 §3.3/§6）：
-  真实原因是 batch=1 串行 + 每 epoch 重做 token 化。台式机是否更快**必须实测**。
-- 当前待办：**T5，在台式机执行**。顺序为：按 §5.1 拉取代码 → 实测 `workers × torch_threads` 组合 →
-  报告 rollout/更新耗时拆分 → **阶段 0 验证门**（cap1，≤10,000 局，判据 >50%）→
-  通过后再进阶段 1 正式训练 → **停止等待确认，不得开始 T6**。
+- **执行环境已搬到台式机**（2026-09-29）：同步与证据回传全部走 `origin/pvz-env`。
+- **内存诊断 + 三项优化已落地并合并**（2026-09-29，`MEMORY_BUDGET.md`）：WSL 吃满 16 GB 的根因有两条——
+  轨迹缓冲以 Python 对象驻留（185 KiB/transition，2,000 局批需 27.8 GiB）与 18 worker 进程树 RSS 19 GB。
+  前者已修（transition → 13.1 KiB，−93%，`torch.equal` 逐位等价；批缓冲 → 约 1.8 GiB，实测峰值 902 MiB），
+  后者按实测**不引入持久池**（见 §5.1）。
+- **"更新占 95% → GPU 强项"的推理已被部分修正**：真实瓶颈是 batch=1 串行 + 每 epoch 重做 token 化，
+  但 CUDA 大 batch 确有效益——**来源是 attention kernel**（exact Flex 2.15×），不是"矩阵更大"。
+- 当前待办：**T5 正式训练，在台式机上执行**（**至今无 `gates/T5.json`，T5 尚未开始**）。顺序为：
+  按 §5.1 确认 HEAD = `02125b9` → 清理 `artifacts/t5/training_state.json`（本机已删；残留会让下次 T5
+  被当成 run 2 并从协议 3 旧 checkpoint 续训）→ 用 §5.1 的实测配置（CPU/18 worker、CUDA/chunks 16/lr 1e-4）
+  → **阶段 0 验证门**（cap1/1.0 的 5 个任务，≤10,000 局，判据 pass rate <5% → >50%）→
+  通过后再进阶段 1 正式训练（20 任务，门禁 = heldout ∩ (cap3, ×1.0) ≥90%）→ **停止等待确认，不得开始 T6**。
+  注意：台式机那一轮的 smoke 显示"一次 2,000 局 Flex 更新后仍 0/20 胜出、终局 wave 分布不变"，
+  所以阶段 0 这道门是真正的裁判。
 - T6 及以后（分层网络 + 意图动作空间）需要设计判断，本次无人值守不推进。
 - **T2 的语义与实现规范已在本文档 2.1–2.3 定死**（`preplanted` 走 `Board::AddPlant`，
   不自动配底座、失败即报错）。执行时按文档实现，不要另行设计。

@@ -206,3 +206,43 @@ python python/train_pvz_ppo_task_family.py --device cuda --minibatch-chunks 64 -
 minibatch_chunks > 1 时优化器步数减少约 minibatch_chunks 倍，**等效学习率必须上调**
 （建议从 1e-4 起测，阶段 0 学习信号验证门是最终裁判——10,000 局内 cap1/1.0 任务
 pass rate 升不到 50% 就是配置错了，按 §3 停下诊断，不许加样本硬凑）。
+
+---
+
+## 8. 台式机实测回填（2026-09-29，已合入 HEAD `02125b9`）
+
+**§7 教训 3 的预测被证实，但机制需要修正**：CUDA 大 batch 的红利确实存在，
+**但来源是 attention kernel 的实现，不是"矩阵更大"**。
+
+| 配置（RTX 5080，2,000 局，127,877 transitions，2 epochs） | 耗时 | 峰值分配 |
+|---|---|---|
+| dense relation attention，chunks 16 | 404.4 s | 2.49 GB |
+| **exact FlexAttention，chunks 16** | **184.4 s（2.15×）** | **2.07 GB** |
+
+同层 forward+backward（256 帧×89 token×192 width）：dense 71.7 ms / 547.8 MB →
+exact Flex 18.9 ms / 330.0 MB，输出 RMS 误差 1.75e-7。**Flex 保留了 kind/row/column/same-cell
+学习关系偏置**（不是靠简化注意力换速度）；loss 与梯度范数与 dense 一致
+（policy 0.12451 vs 0.12455，grad norm 1.488 vs 1.489）。
+
+**正式 T5 参数已定**：`--device cuda`、sequence 16、`--minibatch-chunks 16`、lr 1e-4、attention `auto`。
+
+### WSL OOM 的第二条根因（§2 内存账的补充）
+
+§2 只算了**轨迹缓冲**（27.8 GiB），台式机实测发现**另一条独立的大头**：
+
+| 项 | 峰值 |
+|---|---|
+| 18 worker 进程树 RSS 合计 | **19,168 MB** |
+| 训练进程 CPU RSS | 约 3.8 GB |
+| CUDA 峰值预留 | 5.88 GB |
+
+三者**同时存在**。进程池每次 2,000 局更新重建一次；报告明确**不提交持久池**
+（跨更新保留省下的启动开销不值这份常驻内存）。→ 16 GB WSL 跑正式 T5 前必须先按 §4
+把 `.wslconfig` 上限调够，否则这条根因会单独把机器打穿。
+
+### 复现脚本
+
+`scripts/t5_worker_batch_benchmark.py`、`scripts/ppo_update_benchmark.py`、
+`scripts/attention_benchmark.py`、`scripts/trajectory_storage_benchmark.py`；
+证据在 `artifacts/t5/perf/`（被 `.gitignore` 忽略，需随工作区一起搬）。
+汇总报告：`T5_PERFORMANCE_REPORT.md`、`OPTIMIZATION_TASKS.md`。
