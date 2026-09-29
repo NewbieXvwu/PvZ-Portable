@@ -222,17 +222,21 @@ def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float) -> None:
             transition["return"] = advantage + transition["value"]
 
 
-def _rebuild_hidden(model: GameplayModelV1, transitions: list[dict[str, Any]], start: int) -> torch.Tensor | None:
-    if start <= 0:
-        return None
-    with torch.no_grad():
-        _, hidden = model.forward_chunk(transitions[:start], None)
-    return hidden
-
 
 def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimizer: torch.optim.Optimizer,
                  device: torch.device, ppo_epochs: int, sequence_length: int,
-                 clip_epsilon: float, value_coefficient: float, entropy_coefficient: float) -> dict[str, float]:
+                 clip_epsilon: float, value_coefficient: float, entropy_coefficient: float,
+                 minibatch_chunks: int = 1) -> dict[str, float]:
+    """Layered-batch PPO update.
+
+    Semantics CHANGE vs the previous per-chunk loop: chunks at the same position
+    across episodes form a layer, a layer runs as ONE batched forward (hidden
+    flows along layers, replacing per-chunk prefix rebuilds), and the optimizer
+    steps once per minibatch of chunks instead of once per chunk.  Effective
+    batch grows by ~minibatch_chunks, so the learning rate must be retuned
+    (default raised accordingly); the stage-0 learning-signal gate is the
+    arbiter of whether the new configuration actually learns.
+    """
     advantages = torch.tensor([
         transition["advantage"] for episode in episodes for transition in episode["transitions"]
     ], dtype=torch.float32, device=device)
@@ -245,57 +249,80 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
             transition["normalized_advantage"] = advantages[offset]
             offset += 1
 
-    chunks = [
-        (episode, start, min(start + sequence_length, len(episode["transitions"])))
-        for episode in episodes
-        for start in range(0, len(episode["transitions"]), sequence_length)
-    ]
+    # cut chunks and group them by position across episodes; each chunk knows
+    # the key of its predecessor (same episode, previous position) so hidden
+    # can flow layer by layer instead of rebuilding prefixes per chunk
+    layers: list[list[tuple[int, dict[str, Any], int, int]]] = []
+    previous_key: dict[int, int | None] = {}
+    key_counter = 0
+    for episode in episodes:
+        transitions = episode["transitions"]
+        prev_key = None
+        for position, start in enumerate(range(0, len(transitions), sequence_length)):
+            end = min(start + sequence_length, len(transitions))
+            while len(layers) <= position:
+                layers.append([])
+            key_counter += 1
+            key = key_counter
+            previous_key[key] = prev_key
+            layers[position].append((key, episode, start, end))
+            prev_key = key
+
     policy_losses, value_losses, entropies = [], [], []
     model.train()
     for _ in range(ppo_epochs):
-        random.shuffle(chunks)
-        for episode, start, end in chunks:
-            transitions = episode["transitions"]
-            hidden = _rebuild_hidden(model, transitions, start)
-            outputs, _ = model.forward_chunk(transitions[start:end], hidden)
-            log_probs, entropies_for_chunk = replay_log_probs(model, outputs, transitions[start:end])
-            belief = torch.cat([output["belief"] for output in outputs], dim=0)
-            extras = torch.tensor([transition["critic_extra"] for transition in transitions[start:end]],
-                                  dtype=torch.float32, device=device)
-            values = list(model.privileged_value_batch(belief, extras).squeeze(-1))
-            new_log_prob = log_probs
-            old_log_prob = torch.tensor(
-                [transition["log_prob"] for transition in transitions[start:end]],
-                dtype=torch.float32,
-                device=device,
-            )
-            advantage = torch.stack([
-                transition["normalized_advantage"] for transition in transitions[start:end]
-            ])
-            ratio = torch.exp(new_log_prob - old_log_prob)
-            policy_loss = -torch.minimum(
-                ratio * advantage,
-                ratio.clamp(1 - clip_epsilon, 1 + clip_epsilon) * advantage,
-            ).mean()
-            returns = torch.tensor(
-                [transition["return"] for transition in transitions[start:end]],
-                dtype=torch.float32,
-                device=device,
-            )
-            value_loss = F.mse_loss(torch.stack(values), returns)
-            entropy = entropies_for_chunk.mean()
-            loss = policy_loss + value_coefficient * value_loss - entropy_coefficient * entropy
-            if not torch.isfinite(loss):
-                raise FloatingPointError("PPO loss became non-finite")
-            optimizer.zero_grad(set_to_none=True)
-            loss.backward()
-            gradient_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-            if not torch.isfinite(gradient_norm):
-                raise FloatingPointError("PPO gradient norm became non-finite")
-            optimizer.step()
-            policy_losses.append(float(policy_loss.detach().item()))
-            value_losses.append(float(value_loss.detach().item()))
-            entropies.append(float(entropy.detach().item()))
+        # hidden chains are recomputed every epoch: parameters may have moved
+        hidden_by_key: dict[int, torch.Tensor | None] = {
+            key: None for key in previous_key
+        }
+        for layer in layers:
+            random.shuffle(layer)
+            for batch_start in range(0, len(layer), minibatch_chunks):
+                batch = layer[batch_start:batch_start + minibatch_chunks]
+                sequences = [episode["transitions"][start:end] for _, episode, start, end in batch]
+                hiddens = [hidden_by_key[key] for key, _, _, _ in batch]
+                outputs, hidden_out = model.forward_sequences(sequences, hiddens)
+                flat_transitions = [transition for sequence in sequences for transition in sequence]
+                log_probs, entropies_for_chunk = replay_log_probs(model, outputs, flat_transitions)
+                belief = torch.cat([output["belief"] for output in outputs], dim=0)
+                extras = torch.tensor([transition["critic_extra"] for transition in flat_transitions],
+                                      dtype=torch.float32, device=device)
+                values = model.privileged_value_batch(belief, extras).squeeze(-1)
+                new_log_prob = log_probs
+                old_log_prob = torch.tensor(
+                    [transition["log_prob"] for transition in flat_transitions],
+                    dtype=torch.float32,
+                    device=device,
+                )
+                advantage = torch.stack([
+                    transition["normalized_advantage"] for transition in flat_transitions
+                ])
+                ratio = torch.exp(new_log_prob - old_log_prob)
+                policy_loss = -torch.minimum(
+                    ratio * advantage,
+                    ratio.clamp(1 - clip_epsilon, 1 + clip_epsilon) * advantage,
+                ).mean()
+                returns = torch.tensor(
+                    [transition["return"] for transition in flat_transitions],
+                    dtype=torch.float32,
+                    device=device,
+                )
+                value_loss = F.mse_loss(values, returns)
+                entropy = entropies_for_chunk.mean()
+                loss = policy_loss + value_coefficient * value_loss - entropy_coefficient * entropy
+                if not torch.isfinite(loss):
+                    raise FloatingPointError("PPO loss became non-finite")
+                optimizer.zero_grad(set_to_none=True)
+                loss.backward()
+                gradient_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                if not torch.isfinite(gradient_norm):
+                    raise FloatingPointError("PPO gradient norm became non-finite")
+                optimizer.step()
+                policy_losses.append(float(policy_loss.detach().item()))
+                value_losses.append(float(value_loss.detach().item()))
+                entropies.append(float(entropy.detach().item()))
+                for b, (key, _, _, _) in enumerate(batch):
+                    hidden_by_key[key] = hidden_out[:, b, :].detach()
     model.eval()
     return {
         "policy_loss": sum(policy_losses) / len(policy_losses),

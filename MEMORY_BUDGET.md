@@ -170,3 +170,39 @@ Python 侧 token 化**（§3.2/§3.3），不是"矩阵太大"。在 batch=1、�
 **正确顺序是"先 batch 化，再选机器"，而不是"先迁机器，再优化"。**
 当前台式机上那轮让它跑完不打断（它产出的是学习信号验证门的结果，与吞吐无关），
 但**下一轮开始前必须先把 §3.1–§3.3 做完再重新测机器选择**。
+
+---
+
+## 7. 实施结果（2026-09-29 当天完成，提交 fe4d9e6 / 801dbc2 及后续）
+
+### 已落地
+
+| 改动 | 效果 | 语义 |
+|---|---|---|
+| §3.1 privileged_state → 16 维 critic_extra | transition 184.6 → 108 KiB | **逐位等价**（torch.equal 验证） |
+| §3.2 observation → 打包 token（2 个 numpy 数组）+ legal bitmask | 184.6 → **13.1 KiB（−93%）** | 逐位等价 |
+| §3.3 forward_chunk：chunk 内一次 encoder + GRU 序列化 + 批量重放 | 更新 3.5 → 0.375 s/局 | GEMM 容差级（≤4.8e-7） |
+| 分层批 forward_sequences（跨 episode，hidden 沿层传递） | **CPU 上负优化**（852s vs 750s） | 语义变更（per-minibatch step） |
+
+**实测教训（2026-09-29，Mac CPU）：**
+1. 2000 局 × 51 步 × 2 epochs 批更新：逐条 773s → 单 chunk 批化 750s → 分层批(128) 852s。
+   **batch 化在 CPU 上的收益到单 chunk 就到顶**——RelationAttention 的 gather/permute/softmax
+   部分（(N, heads, L, L) 级别）随 batch 线性扩展、无摊薄，GEMM 摊开的 kernel 开销不是瓶颈。
+2. 分层批 minibatch=128 时注意力激活约 767 MB/层、4 层反向保存 → 峰值 6.6 GB。
+   **16 GB 机器上 minibatch_chunks × T × L² × heads × 4B ≈ scores 内存，建议 ≤ 32。**
+3. **大 batch 的红利在 GPU**：softmax/matmul/gather 都是大核操作，batch 大才能摊 kernel launch。
+   台式机开工时必须按 §5.3 的顺序实测：`--minibatch-chunks` 1 / 16 / 64 / 128 四档，
+   `--device cuda`，报告每档的更新耗时与峰值显存，据此定正式配置。
+
+### 台式机开工参数建议
+
+```bash
+# 安全基线（语义与旧版一致，lr 含义不变）
+python python/train_pvz_ppo_task_family.py --device cuda --minibatch-chunks 1 ...
+# GPU 批量红利（先跑 15 分钟吞吐实验再决定）
+python python/train_pvz_ppo_task_family.py --device cuda --minibatch-chunks 64 --learning-rate 1e-4 ...
+```
+
+minibatch_chunks > 1 时优化器步数减少约 minibatch_chunks 倍，**等效学习率必须上调**
+（建议从 1e-4 起测，阶段 0 学习信号验证门是最终裁判——10,000 局内 cap1/1.0 任务
+pass rate 升不到 50% 就是配置错了，按 §3 停下诊断，不许加样本硬凑）。

@@ -391,6 +391,12 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--max-actions", type=int, default=4000)
     parser.add_argument("--max-episodes-per-run", type=int, default=20_000)
     parser.add_argument("--learning-rate", type=float, default=3e-5)
+    parser.add_argument("--minibatch-chunks", type=int, default=1,
+                        help="chunks per optimizer step in the layered PPO update. "
+                             "1 keeps the original per-chunk semantics (CPU-safe). "
+                             "On CUDA, 64-256 amortizes kernel launches and is where "
+                             "the RTX 5080 actually pays off -- must be measured first, "
+                             "and lr must be retuned upward when raising this.")
     parser.add_argument("--clip-epsilon", type=float, default=0.2)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--value-coefficient", type=float, default=0.5)
@@ -602,6 +608,7 @@ def main() -> None:
         losses = train_update(
             model, episodes, optimizer, device, args.ppo_epochs, args.sequence_length,
             args.clip_epsilon, args.value_coefficient, args.entropy_coefficient,
+            minibatch_chunks=args.minibatch_chunks,
         )
         update += 1
         run_episodes += len(episodes)

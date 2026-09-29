@@ -572,20 +572,20 @@ i7-12700F 单核约为此机一半，**若 GPU 红利不成立，台式机未必
 
 本机资源目录（仅在 Mac 上跑时用）：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN`。
 
-### 5.0 内存预算（WSL 16 GB 吃满的原因，必修）
+### 5.0 内存预算与轨迹表示（已实施，2026-09-29）
 
-诊断与改动规格见 **`MEMORY_BUDGET.md`**。一句话版：
+诊断见 **`MEMORY_BUDGET.md`**（含 §7 实施结果）。**三项改动已全部落地并验证**，
+台式机直接 `git pull` 即得：
 
-- 实测一个 transition 占 **184.6 KiB**（observation 42.4 KiB + privileged_state 76.9 KiB + 杂项），
-  而 `observation` pickle 后只有 4.0 KiB —— **Python 对象表示带来 10.6× 膨胀**。
-- 按 TODO 要求的"每次更新 ≥2,000 局"，轨迹缓冲需要 **27.8 GiB**，加上 8 workers 的
-  固定开销（模拟器 222 MB×8 + Python/torch ×8 ≈ 3.6–4.4 GB）**必然撑爆 16 GB**。吃满是必然，不是意外。
-- 三处浪费，按性价比做：`privileged_state` 存 77 KiB 只用了 200 字节（−42%，数值等价、零风险）→
-  observation 改为 rollout 时 token 化一次存张量（−80%）→ 训练循环 batch=1 改 batch 化（这才是吞吐解药）。
-- **本轮不实现**（台式机正在跑，避免双方代码分歧），等那轮结束后按文档合并。
-  唯一例外是 `.wslconfig` 调内存上限，它不碰仓库代码。
-- 动手前**先确认是不是真吃满**：WSL2 的 page cache 计入 `vmmem` 且不主动归还，
-  看 WSL 内 `free -m` 减掉 `buff/cache`，别看 Windows 任务管理器。
+- transition 由 184.6 KiB 降到 **13.1 KiB（−93%）**：privileged_state 只存 critic 用的
+  16 维向量，observation 只存打包 token，legal_actions 存 bitmask。
+- 2,000 局批的轨迹缓冲从 27.8 GiB 降到约 1.8 GiB，实测批更新峰值 0.9 GB —— **OOM 根因已消除**。
+- 训练前向已批量化（chunk 内一次 encoder + GRU 序列化 + 批量重放），语义与旧版一致
+  （等价性已验证：前向 2.7e-7、重放 4.8e-7、critic_extra 逐位相同）。
+- **新增 `--minibatch-chunks` 参数（默认 1）**：>1 时跨 episode 分层批、优化器按批 step，
+  **lr 必须上调**（建议 1e-4 起）。CPU 实测分层批是负优化，但 GPU 上大 batch 才能摊
+  kernel launch —— 台式机开工时必须实测 `--minibatch-chunks` 1/16/64/128 四档
+  （`--device cuda`），报告每档更新耗时与峰值显存，据此定正式配置（见 MEMORY_BUDGET.md §7）。
 
 ### 5.1 交接状态（执行环境已搬到台式机，笔记本离线）
 

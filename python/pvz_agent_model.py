@@ -544,24 +544,36 @@ class GameplayModelV1(nn.Module):
 
     def forward_chunk(self, transitions: list[dict[str, Any]], hidden: Tensor | None = None
                       ) -> tuple[list[dict[str, Any]], Tensor]:
-        """Run a whole truncated-BPTT chunk as ONE batched forward.
+        outputs, hidden_out = self.forward_sequences([transitions], [hidden])
+        return outputs, hidden_out[:, 0:1, :]
 
-        Equivalent to calling :meth:`step_tokens` once per transition (identical
-        weight paths, padding keys masked out of the attention), except that
-        GEMM blocking may differ so results agree to ~1e-6 rather than bitwise.
-        Replaces the per-step batch=1 loop that made PPO updates take 95% of
-        wall time even though the network itself is tiny.
+    def forward_sequences(self, sequences: list[list[dict[str, Any]]],
+                          hiddens: list[Tensor | None]) -> tuple[list[dict[str, Any]], Tensor]:
+        """Run many independent sequences as one batched forward.
 
-        Each transition must carry: "tokens" (packed), "wave",
-        "previous_action", "elapsed_since_previous_observation", "events".
-        Returns per-step outputs shaped like step_tokens outputs, plus the final
-        GRU hidden (only that one crosses the chunk boundary -- BPTT truncation).
+        This is the unit of work for layered PPO: every episode is cut into
+        fixed-length chunks, chunks at the same position across episodes form a
+        layer, and a layer is one forward_sequences call.  Variable sequence
+        lengths are handled with pack_padded_sequence, so the returned hidden is
+        each sequence's own true final hidden (pad steps never touch it).
+
+        Equivalent to calling step_tokens once per transition (identical weight
+        paths, padding keys masked out of attention); GEMM blocking differs, so
+        results agree to ~1e-6 rather than bitwise.
+
+        Returns (outputs flat in sequence order, hidden_out (gru_layers, B, H)).
         """
         device = next(self.parameters()).device
-        count = len(transitions)
-        packed_list = [transition["tokens"] for transition in transitions]
-        lengths = np.array([packed["ids"].shape[0] for packed in packed_list], dtype=np.int64)
-        l_max = int(lengths.max())
+        lengths_seq = np.array([len(sequence) for sequence in sequences], dtype=np.int64)
+        t_max = int(lengths_seq.max())
+        flat = [transition for sequence in sequences for transition in sequence]
+        count = len(flat)
+        offsets = np.concatenate(([0], np.cumsum(lengths_seq)))
+
+        # token padding over all flattened transitions
+        packed_list = [transition["tokens"] for transition in flat]
+        token_lengths = np.array([packed["ids"].shape[0] for packed in packed_list], dtype=np.int64)
+        l_max = int(token_lengths.max())
         ids = np.zeros((count, l_max, len(TOKEN_ID_FIELDS)), dtype=np.int64)
         features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float32)
         key_mask = np.zeros((count, l_max), dtype=bool)
@@ -596,18 +608,33 @@ class GameplayModelV1(nn.Module):
         x = self.encoder_norm(x)
 
         action_vector = self._previous_action_batch(
-            [transition["previous_action"] for transition in transitions], device)
+            [transition["previous_action"] for transition in flat], device)
         delta_index = torch.tensor(
             [min(31, max(0, int(math.log2(max(0, int(transition["elapsed_since_previous_observation"])) + 1))))
-             for transition in transitions], dtype=torch.long, device=device)
+             for transition in flat], dtype=torch.long, device=device)
         delta_vector = self.delta_embedding(delta_index)
         event_vector = self.event_projection(self._event_features_batch(
-            [transition["events"] for transition in transitions], device))
-        recurrent_input = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1)
-        if hidden is None:
-            hidden = torch.zeros(MODEL_CONFIG["gru_layers"], 1, MODEL_CONFIG["gru_width"], device=device)
-        belief_seq, hidden_out = self.belief(recurrent_input.unsqueeze(0), hidden)
-        belief = belief_seq[0]
+            [transition["events"] for transition in flat], device))
+        recurrent_flat = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1)
+
+        # regroup the flattened steps into (B, T_max, D) grid for the GRU;
+        # grid[b, t] = flat index for real steps, -1 on padding
+        batch = len(sequences)
+        grid = np.full((batch, t_max), -1, dtype=np.int64)
+        for b in range(batch):
+            grid[b, :lengths_seq[b]] = np.arange(offsets[b], offsets[b + 1])
+        grid_t = torch.from_numpy(grid).to(device)
+        recurrent = recurrent_flat[grid_t.clamp(min=0)]
+        seq_lengths = torch.from_numpy(lengths_seq).to(device)
+        packed_input = nn.utils.rnn.pack_padded_sequence(
+            recurrent, seq_lengths.cpu(), batch_first=True, enforce_sorted=False)
+        hidden_in = torch.zeros(MODEL_CONFIG["gru_layers"], batch, MODEL_CONFIG["gru_width"], device=device)
+        for b, start_hidden in enumerate(hiddens):
+            if start_hidden is not None:
+                hidden_in[:, b, :] = start_hidden
+        belief_seq, hidden_out = self.belief(packed_input, hidden_in)
+        belief_padded, _ = nn.utils.rnn.pad_packed_sequence(belief_seq, batch_first=True, total_length=t_max)
+        belief = belief_padded[grid_t >= 0]  # (N, H); row-major mask order == flat order
 
         type_logits = self.action_type(belief)
         wait_logits = self.wait_duration(belief)
@@ -624,7 +651,7 @@ class GameplayModelV1(nn.Module):
         packet_logits = (packet_keys * packet_query_all[:, None, :]).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
 
         outputs = []
-        for index, transition in enumerate(transitions):
+        for index, transition in enumerate(flat):
             many = packet_counts[index]
             outputs.append({
                 "hidden": None,
@@ -642,7 +669,6 @@ class GameplayModelV1(nn.Module):
                 "aux_outcome": aux_outcome[index:index + 1],
                 "wave_index": transition["wave"],
             })
-        outputs[-1]["hidden"] = hidden_out
         return outputs, hidden_out
 
     def plant_cell_scores(self, output: dict[str, Any], packet: int) -> Tensor:
