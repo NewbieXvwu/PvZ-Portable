@@ -22,6 +22,15 @@ def result_fields(result: dict) -> dict:
     return {key: result[key] for key in ("won", "terminal", "wave", "wave_count", "tick")}
 
 
+def wave_table(env: PvZEnv, seed: int, wave_cap: int | None) -> list[list[int]]:
+    task = TaskSpec(level=7, seed=seed, wave_cap=wave_cap)
+    env.reset(deck=(0, 1, 2, 3, 4, 5), task=task)
+    response = env._command("PRIV")
+    if not response.get("ok") or response["observation"] is None:
+        raise AssertionError("could not read generated zombie wave table")
+    return response["observation"]["hidden"]["zombies_in_wave"]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--resource-dir", required=True)
@@ -29,6 +38,17 @@ def main() -> None:
 
     results = {}
     with PvZEnv(args.resource_dir) as env:
+        full_waves = wave_table(env, 30000, None)
+        capped_waves = wave_table(env, 30000, 3)
+        assert len(capped_waves) == 3 and capped_waves == full_waves[:3]
+        results["wave_composition_consistency"] = {
+            "seed": 30000,
+            "full_wave_count": len(full_waves),
+            "wave_cap": 3,
+            "capped_waves": capped_waves,
+            "matches_full_wave_prefix": True,
+        }
+
         baseline = run(env, 30000, 7)
         assert baseline["won"] and baseline["wave_count"] == 30
         assert baseline["tick"] == 65401

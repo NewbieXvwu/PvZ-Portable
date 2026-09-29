@@ -421,7 +421,7 @@ public:
 	void							MouseDownCobcannonFire(int x, int y, int theClickCount);
 	int								KillAllZombiesInRadius(int theRow, int theX, int theY, int theRadius, int theRowRange, bool theBurn, int theDamageRangeFlags);
 	int					GetSeedBankExtraWidth();
-	bool							IsFlagWave(int theWaveNumber);
+	bool							IsFlagWave(int theWaveNumber, int theNumWaves = -1);
 	void							DrawHouseDoorTop(Graphics* g);
 	void							DrawHouseDoorBottom(Graphics* g);
 	Zombie*							GetBossZombie();
@@ -475,7 +475,7 @@ public:
 	GridItem*						GetGridItemAt(GridItemType theGridItemType, int theGridX, int theGridY);
 	bool							ProgressMeterHasFlags();
 	bool					IsLastStandFinalStage();
-	int					GetNumWavesPerFlag();
+	int					GetNumWavesPerFlag(int theNumWaves = -1);
 	int								GetCurrentPlantCost(SeedType theSeedType, SeedType theImitaterType);
 	bool					PlantUsesAcceleratedPricing(SeedType theSeedType);
 	void							FreezeEffectsForCutscene(bool theFreeze);

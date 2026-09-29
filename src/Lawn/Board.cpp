@@ -520,17 +520,18 @@ void Board::AddGraveStones(int theGridX, int theCount, MTRand& theLevelRNG)
 	}
 }
 
-int Board::GetNumWavesPerFlag()
+int Board::GetNumWavesPerFlag(int theNumWaves)
 {
-	return (mApp->IsFirstTimeAdventureMode() && mNumWaves < 10) ? mNumWaves : 10;
+	if (theNumWaves < 0) theNumWaves = mNumWaves;
+	return (mApp->IsFirstTimeAdventureMode() && theNumWaves < 10) ? theNumWaves : 10;
 }
 
-bool Board::IsFlagWave(int theWaveNumber)
+bool Board::IsFlagWave(int theWaveNumber, int theNumWaves)
 {
 	if (mApp->IsFirstTimeAdventureMode() && mLevel == 1)
 		return false;
 
-	int aWavesPerFlag = GetNumWavesPerFlag();
+	int aWavesPerFlag = GetNumWavesPerFlag(theNumWaves);
 	return theWaveNumber % aWavesPerFlag == aWavesPerFlag - 1;
 }
 
@@ -611,8 +612,11 @@ void Board::PickZombieWaves()
 			mNumWaves = 40;
 	}
 
-	const int mWaveCap = mApp->mEnvironmentTaskSpec.waveCap;
-	if (mWaveCap > 0 && mNumWaves > mWaveCap) mNumWaves = mWaveCap;
+	const int aFullWaves = mNumWaves;
+	const int aWaveCap = mApp->mEnvironmentTaskSpec.waveCap;
+	if (aWaveCap > 0 && mNumWaves > aWaveCap) mNumWaves = aWaveCap;
+	const int aWavesToGenerate = mNumWaves;
+	mNumWaves = aFullWaves;
 	ZombiePicker aZombiePicker;
 	ZombiePickerInit(&aZombiePicker);
 	ZombieType aIntroZombieType = GetIntroducedZombieType();
@@ -620,13 +624,13 @@ void Board::PickZombieWaves()
 	for (auto& aWave : mZombiesInWave)
 		std::fill(std::begin(aWave), std::end(aWave), ZombieType::ZOMBIE_INVALID);
 
-	for (int aWave = 0; aWave < mNumWaves; aWave++)
+	for (int aWave = 0; aWave < aWavesToGenerate; aWave++)
 	{
 		ZombiePickerInitForWave(&aZombiePicker);
 		mZombiesInWave[aWave][0] = ZombieType::ZOMBIE_INVALID;
 
-		bool aIsFlagWave = IsFlagWave(aWave);
-		bool aIsFinalWave = aWave == mNumWaves - 1;
+		bool aIsFlagWave = IsFlagWave(aWave, aFullWaves);
+		bool aIsFinalWave = aWave == aFullWaves - 1;
 
 		if (mApp->IsBungeeBlitzLevel() && aIsFlagWave)
 		{
@@ -705,12 +709,12 @@ void Board::PickZombieWaves()
 			}
 			else if (aIntroZombieType == ZombieType::ZOMBIE_YETI)
 			{
-				if (aWave == mNumWaves / 2 && !mApp->mSawYeti)
+				if (aWave == aFullWaves / 2 && !mApp->mSawYeti)
 				{
 					aSpawnIntro = true;
 				}
 			}
-			else if (aWave == mNumWaves / 2 || aIsFinalWave)
+			else if (aWave == aFullWaves / 2 || aIsFinalWave)
 			{
 				aSpawnIntro = true;
 			}
@@ -773,6 +777,7 @@ void Board::PickZombieWaves()
 		}
 
 	}
+	mNumWaves = aWavesToGenerate;
 }
 
 int Board::GetLevelRandSeed()
