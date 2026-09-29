@@ -88,6 +88,10 @@
 
 `worktree_clean` 必须为 `true`（先提交再评估）。`protected_assets_unmodified` 必须为 `true`。
 
+**证据必须回到远程**：写完证据文件后 `git commit` 并 **`git push origin pvz-env`**。
+执行机与审阅机不是同一台（见 §5.1），不推送的证据等于不存在——无法核验、也无法据此放行下一任务。
+`commit` 字段填的 HEAD 必须是**已推送到 origin** 的那个。
+
 ### 2.4 受保护资产（禁止修改，除非任务明确要求）
 
 - `artifacts/**/seeds/**` — 全部冻结 seed 集
@@ -559,6 +563,34 @@ aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
 
 本机资源目录（仅在 Mac 上跑时用）：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN`。
 
+### 5.1 交接状态（执行环境已搬到台式机，笔记本离线）
+
+**2026-09-29 交接**：笔记本上的全部 30 个提交已推送到 `origin/pvz-env`，
+HEAD = `f07bd9e`（含 T0–T4 全部代码、`gates/T0..T4.json` 与 seed 级结果、
+`artifacts/task_family/{train,heldout}.json`、本文档、`DESIGN.md`）。
+**笔记本不再参与执行**，之后所有代码与证据的往返都走 `origin`，不要再尝试从笔记本拷贝文件。
+
+台式机开工第一步（**逐条执行，不要跳**）：
+
+```bash
+cd ~/PvZ-Portable
+git fetch origin
+git branch --show-current          # 记下当前分支
+git status -sb                     # 看是否与 origin 有分歧、是否有未提交改动
+```
+
+- 若当前分支**不是** `pvz-env`：
+  - 有未提交改动 → **先归档，不要丢弃**：`git stash push -u -m "wsl-local-<日期>"`
+    （或提交到本地分支 `wsl-local-backup`），并在报告里说明归档了什么。
+  - 再 `git checkout pvz-env`；若分支不存在则 `git checkout -b pvz-env origin/pvz-env`。
+- 然后 `git pull --ff-only origin pvz-env`，确认 HEAD 为 `f07bd9e`（`git log --oneline -1`）。
+- **`--ff-only` 失败时不要用 `--force`、不要 `reset --hard`**：说明本地有提交历史分歧，
+  按 §3 停下报告，由人工判断哪些本地产物要保留。
+- 同步完成后工作区必须是干净的（`git status -sb` 只显示分支行）。带脏工作区开跑，
+  门禁的 `worktree_clean` 会直接判 false，等于白跑。
+
+**每次提交门禁证据后必须 `git push origin pvz-env`**（见 §2.3），这是结果能回到审阅方的唯一通道。
+
 ### 已排除的路线（有实测数据，勿重复尝试）
 
 - **降精度换速度**：fp16 / bf16 / 稀疏首层 / float32 累加器**全部比全精度更慢**
@@ -605,7 +637,9 @@ aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
 - **T0 的 L0 修复已成功**（提交 `a871927`）：level 7 / seed 30000 在 **tick 65,401 获胜**
   （修复前 1,796,340 tick 永不终局），seed 30001 亦获胜。seed 30002 / 30003 分别在第 10、7 波
   正常失败——已确认是脚本策略强度问题，**不是环境阻塞**。
-- 当前待办：**T5，在台式机执行**。顺序为：同步代码 → 实测 `workers × torch_threads` 组合 →
+- **执行环境已搬到台式机**（2026-09-29）：笔记本已推送全部提交（`f07bd9e`）并离线，
+  同步与证据回传全部走 `origin/pvz-env`，开工步骤见 §5.1。
+- 当前待办：**T5，在台式机执行**。顺序为：按 §5.1 拉取代码 → 实测 `workers × torch_threads` 组合 →
   报告 rollout/更新耗时拆分 → **阶段 0 验证门**（cap1，≤10,000 局，判据 >50%）→
   通过后再进阶段 1 正式训练 → **停止等待确认，不得开始 T6**。
 - T6 及以后（分层网络 + 意图动作空间）需要设计判断，本次无人值守不推进。
