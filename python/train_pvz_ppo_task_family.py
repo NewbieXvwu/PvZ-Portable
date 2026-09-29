@@ -51,6 +51,7 @@ DEFAULT_RESOURCE_DIR = Path.home() / ".cache/pvz-research-resources"
 CORE_THRESHOLD = 5000.0
 WIN_THRESHOLD = 0.90
 MAX_FORMAL_RUNS = 8
+T4_MODEL_ARCHITECTURE_VERSION = 4
 HARD_STOP_EPISODES = 20_000
 HARD_STOP_PASS_RATE = 0.20
 HARD_STOP_IMPROVEMENT = 0.05
@@ -131,11 +132,31 @@ def _baseline(train_tasks: list[dict[str, Any]], gate_tasks: list[dict[str, Any]
             "per_task": {task_id: profile["pass_rate"] for task_id, profile in task_profiles.items()},
         }
 
+    stage0_tasks = _curriculum_tasks(train_tasks, "cap1")
+    stage0_profiles = {task["task_id"]: profiles["train"][task["task_id"]]
+                       for task in stage0_tasks}
+    stage0_count = sum(profile["sample_count"] for profile in stage0_profiles.values())
+    stage0_passes = sum(round(profile["pass_rate"] * profile["sample_count"])
+                        for profile in stage0_profiles.values())
+    stage0_terminal = Counter()
+    for profile in stage0_profiles.values():
+        stage0_terminal.update(profile["terminal_wave_histogram"])
+    stage0_baseline = {
+        "task_count": len(stage0_tasks),
+        "sample_count": stage0_count,
+        "passes": stage0_passes,
+        "pass_rate": stage0_passes / stage0_count,
+        "terminal_wave_histogram": dict(stage0_terminal),
+        "failure_terminal_wave_histogram": dict(stage0_terminal),
+        "per_task": stage0_profiles,
+    }
+
     return {
         "t4_commit": evidence["commit"],
         "train_task_pass_rates": train_rates,
         "gate_set": summarize(gate_tasks),
         "reference_set": summarize(reference_tasks),
+        "stage0_set": stage0_baseline,
         "t0_rule_script_control": evidence["metrics"]["controls"]["t0_rule_script"],
         "t0_rule_script_control_fail_terminal_wave_histogram": dict(Counter(
             str(row["terminal_wave"]) for row in t0_failures
@@ -199,14 +220,21 @@ def _assignments(tasks: list[dict[str, Any]], job_ids: list[int], rng: random.Ra
 
 
 def _evaluate(model: GameplayModelV1, resource_dir: Path, tasks: list[dict[str, Any]],
-              gate_tasks: list[dict[str, Any]], episodes: int, output_dir: Path) -> dict[str, Any]:
+              gate_tasks: list[dict[str, Any]], stage0_tasks: list[dict[str, Any]],
+              episodes: int, output_dir: Path) -> dict[str, Any]:
     eval_model = GameplayModelV1().eval()
     eval_model.load_state_dict({key: value.detach().cpu() for key, value in model.state_dict().items()})
     records: dict[str, list[dict[str, Any]]] = {}
+    stage0_records: dict[str, list[dict[str, Any]]] = {}
     configure_torch_threads(1)
     with PvZEnv(resource_dir=resource_dir) as env:
         for task in tasks:
             records[task["task_id"]] = [
+                t4_capability_profile.run_episode(env, task, seed, "checkpoint", eval_model)
+                for seed in task["seeds"]
+            ]
+        for task in stage0_tasks:
+            stage0_records[task["task_id"]] = [
                 t4_capability_profile.run_episode(env, task, seed, "checkpoint", eval_model)
                 for seed in task["seeds"]
             ]
@@ -215,8 +243,14 @@ def _evaluate(model: GameplayModelV1, resource_dir: Path, tasks: list[dict[str, 
     reference_records = [record for rows in records.values() for record in rows]
     gate_summary = t4_capability_profile.summarize_episodes(gate_records)
     reference_summary = t4_capability_profile.summarize_episodes(reference_records)
+    stage0_records_flat = [record for rows in stage0_records.values() for record in rows]
+    stage0_summary = t4_capability_profile.summarize_episodes(stage0_records_flat)
     raw_path = output_dir / "evaluations" / f"heldout_{episodes:07d}.json.gz"
-    atomic_json(raw_path, {"cumulative_episodes": episodes, "seed_results": records}, compressed=True)
+    atomic_json(raw_path, {
+        "cumulative_episodes": episodes,
+        "seed_results": records,
+        "stage0_seed_results": stage0_records,
+    }, compressed=True)
     return {
         "cumulative_episodes": episodes,
         "gate_set": {
@@ -243,12 +277,27 @@ def _evaluate(model: GameplayModelV1, resource_dir: Path, tasks: list[dict[str, 
                 for task_id, rows in records.items()
             },
         },
+        "stage0_set": {
+            "task_count": len(stage0_tasks),
+            "sample_count": stage0_summary["sample_count"],
+            "passes": round(stage0_summary["pass_rate"] * stage0_summary["sample_count"]),
+            "pass_rate": stage0_summary["pass_rate"],
+            "terminal_wave_histogram": stage0_summary["terminal_wave_histogram"],
+            "failure_terminal_wave_histogram": dict(Counter(
+                str(record["terminal_wave"]) for record in stage0_records_flat if not record["won"]
+            )),
+            "per_task": {
+                task_id: t4_capability_profile.summarize_episodes(rows)
+                for task_id, rows in stage0_records.items()
+            },
+        },
         "raw_seed_results_path": str(raw_path.relative_to(ROOT)),
     }
 
 
 def _curve_row(episodes: int, train_tasks: list[dict[str, Any]],
-               gate_rate: float, reference_rate: float, source: str) -> dict[str, Any]:
+               gate_rate: float, reference_rate: float, stage0_rate: float,
+               source: str) -> dict[str, Any]:
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "cumulative_training_episodes": episodes,
@@ -260,6 +309,7 @@ def _curve_row(episodes: int, train_tasks: list[dict[str, Any]],
         },
         "heldout_cap3_x1_pass_rate": gate_rate,
         "heldout_cap3_all_reference_pass_rate": reference_rate,
+        "stage0_pass_rate": stage0_rate,
         "evaluation_source": source,
     }
 
@@ -286,6 +336,43 @@ def _save_checkpoint(path: Path, model: GameplayModelV1, config: dict[str, Any],
 def _save_state(path: Path, state: dict[str, Any], curve_path: Path) -> None:
     atomic_json(path, state)
     atomic_json(curve_path, state["learning_curve"])
+
+
+def _check_stage0_gate(curriculum_tasks: list[dict[str, Any]], ignore_gate: bool,
+                       motivation: str | None, gate_path: Path | None = None) -> dict[str, Any] | None:
+    if ignore_gate and not motivation:
+        raise ValueError("--ignore-stage0-gate requires --motivation with a reason")
+    if len(curriculum_tasks) != 20:
+        return None
+    if ignore_gate:
+        return {"used": True, "reason": motivation}
+    gate_path = gate_path or ROOT / "artifacts/t5/stage0_gate.json"
+    if not gate_path.is_file():
+        raise RuntimeError("阶段 0 未通过，禁止进入阶段 1：stage0_gate.json 不存在")
+    gate = json.loads(gate_path.read_text(encoding="utf-8"))
+    if gate.get("result") != "pass":
+        raise RuntimeError("阶段 0 未通过，禁止进入阶段 1：stage0_gate.json 未通过")
+    return None
+
+
+def _seed0_initialization_baseline(actual_hash: str, t4_hash: str,
+                                  note: str | None) -> dict[str, Any] | None:
+    if actual_hash == t4_hash:
+        return None
+    if MODEL_ARCHITECTURE_VERSION > T4_MODEL_ARCHITECTURE_VERSION:
+        if not note:
+            raise RuntimeError("网络结构已变更，seed-0 初始化不再与 T4 基线一致；"
+                               "请传入 --initialization-note 说明 T4 基线为何已被取代")
+        return {"status": "superseded", "actual": actual_hash, "t4": t4_hash, "note": note}
+    raise RuntimeError("seed-0 initialization does not match the T4 baseline checkpoint")
+
+
+def _stage0_has_no_signal(pass_rate: float, tasks: list[dict[str, Any]]) -> bool:
+    return pass_rate == 0.0 and all(
+        len(TASK_RECENT[task["task_id"]]) == RECENT_WINDOW
+        and not any(TASK_RECENT[task["task_id"]])
+        for task in tasks
+    )
 
 
 def _curve_rises(curve: list[dict[str, Any]]) -> bool:
@@ -406,6 +493,10 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--run-number", type=int)
     parser.add_argument("--init-checkpoint", type=Path)
     parser.add_argument("--motivation")
+    parser.add_argument("--ignore-stage0-gate", action="store_true",
+                        help="explicitly override the stage 0 block; requires --motivation")
+    parser.add_argument("--initialization-note",
+                        help="explain why the changed network supersedes the T4 seed-0 baseline")
     parser.add_argument("--rollout-episodes", type=int, default=2000,
                         help="episodes collected before each PPO update; 2000 amortizes "
                              "the measured RTX 5080 update cost")
@@ -447,7 +538,10 @@ def main() -> None:
     state_path = output_dir / "training_state.json"
     curve_path = output_dir / "learning_curve.json"
     train, heldout = _task_family()
+    stage0_tasks = _curriculum_tasks(train["tasks"], "cap1")
     curriculum_tasks = _curriculum_tasks(train["tasks"], args.curriculum)
+    stage0_gate_override = _check_stage0_gate(
+        curriculum_tasks, args.ignore_stage0_gate, args.motivation)
     gate_tasks, reference_tasks = _heldout_tasks(heldout)
     baseline = _baseline(train["tasks"], gate_tasks, reference_tasks)
     protected_paths = (
@@ -479,6 +573,7 @@ def main() -> None:
                 "cumulative_episodes": 0,
                 "gate_set": baseline["gate_set"],
                 "reference_set": baseline["reference_set"],
+                "stage0_set": baseline["stage0_set"],
                 "source": "gates/T4.json; no baseline retest",
             }],
             "learning_curve": [{
@@ -487,6 +582,8 @@ def main() -> None:
                 "train_task_pass_rates_recent_64": baseline["train_task_pass_rates"],
                 "heldout_cap3_x1_pass_rate": baseline["gate_set"]["pass_rate"],
                 "heldout_cap3_all_reference_pass_rate": baseline["reference_set"]["pass_rate"],
+                "stage0_pass_rate": baseline["stage0_set"]["pass_rate"],
+                "curriculum_task_ids": [task["task_id"] for task in curriculum_tasks],
                 "evaluation_source": "gates/T4.json; no baseline retest",
             }],
             "recent_passes": {task["task_id"]: [] for task in train["tasks"]},
@@ -514,6 +611,7 @@ def main() -> None:
         init_checkpoint = previous_run_dir / "gameplay_model_v1_ppo.pt"
     configure_torch_threads(1)
     device = resolve_device(args.device)
+    initialization_baseline = None
     if init_checkpoint:
         initial = torch.load(init_checkpoint, map_location="cpu", weights_only=False)
         provenance = initial["provenance"]
@@ -534,10 +632,10 @@ def main() -> None:
         initial_sha = None
         initial_kind = "random_initialization"
         if args.initialization_seed == 0:
-            t4_state_hash = t4_capability_profile._state_sha256(model.state_dict())
+            actual_state_hash = t4_capability_profile._state_sha256(model.state_dict())
             expected = json.loads(T4_GATE_PATH.read_text(encoding="utf-8"))["metrics"]["checkpoint"]["state_sha256"]
-            if t4_state_hash != expected:
-                raise RuntimeError("seed-0 initialization does not match the T4 baseline checkpoint")
+            initialization_baseline = _seed0_initialization_baseline(
+                actual_state_hash, expected, args.initialization_note)
     model.eval()
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
     revision, dirty = git_metadata(ROOT)
@@ -559,6 +657,7 @@ def main() -> None:
         "train_manifest": str(TRAIN_PATH),
         "curriculum": args.curriculum,
         "curriculum_task_ids": [task["task_id"] for task in curriculum_tasks],
+        "stage0_gate_override": stage0_gate_override,
         "heldout_manifest": str(HELDOUT_PATH),
         "train_manifest_sha256": sha256_file(TRAIN_PATH),
         "heldout_manifest_sha256": sha256_file(HELDOUT_PATH),
@@ -568,7 +667,8 @@ def main() -> None:
         "reward": "terminal result +/-1 + discount*Phi(next)-Phi(current); no fixed penalties",
         "initialization": {"kind": initial_kind, "seed": args.initialization_seed,
                            "checkpoint": None if init_checkpoint is None else str(init_checkpoint),
-                           "checkpoint_sha256": initial_sha},
+                           "checkpoint_sha256": initial_sha,
+                           "baseline_comparison": initialization_baseline},
         "motivation": args.motivation or "Run 1: PPO from the T4 seed-0 random initialization with frozen task-family rollouts.",
         "previous_curve_comparison": (
             {"source": "T4 baseline", "heldout_pass_rate": baseline["gate_set"]["pass_rate"]}
@@ -685,7 +785,7 @@ def main() -> None:
             "episodes": len(episodes),
             "task_counts": {
                 task["task_id"]: sum(episode["task_id"] == task["task_id"] for episode in episodes)
-                for task in train["tasks"]
+                for task in curriculum_tasks
             },
             "losses": losses,
         }
@@ -696,6 +796,7 @@ def main() -> None:
                 or run_episodes >= args.max_episodes_per_run):
             eval_row = _evaluate(
                 model, resource_dir, reference_tasks, gate_tasks,
+                stage0_tasks,
                 state["cumulative_episodes"], output_dir,
             )
             latest_eval = eval_row
@@ -703,6 +804,7 @@ def main() -> None:
             state["learning_curve"].append(_curve_row(
                 state["cumulative_episodes"], curriculum_tasks,
                 eval_row["gate_set"]["pass_rate"], eval_row["reference_set"]["pass_rate"],
+                eval_row["stage0_set"]["pass_rate"],
                 eval_row["raw_seed_results_path"],
             ))
             last_curve_time = time.monotonic()
@@ -725,6 +827,30 @@ def main() -> None:
                         and improvement is not None and improvement < HARD_STOP_IMPROVEMENT):
                     state["stop_reason"] = "20k episodes: heldout pass rate below 20% and recent 5k improvement below 5 points"
                     stop = True
+            if (args.curriculum == "cap1"
+                    and _stage0_has_no_signal(
+                        eval_row["stage0_set"]["pass_rate"], stage0_tasks)):
+                state["stop_reason"] = "stage0_no_signal"
+                state["stage0_diagnosis"] = {
+                    "failure_layer": "stage0 learning signal",
+                    "observed": {
+                        "stage0_pass_rate": eval_row["stage0_set"]["pass_rate"],
+                        "stage0_sample_count": eval_row["stage0_set"]["sample_count"],
+                        "cap1_rolling_64_win_rates": {
+                            task["task_id"]: sum(TASK_RECENT[task["task_id"]]) / RECENT_WINDOW
+                            for task in stage0_tasks
+                        },
+                        "last_training_debug": state.get("last_training_debug"),
+                    },
+                    "required_review_order": [
+                        "terminal +/-1 reward contribution",
+                        "potential shaping magnitude versus terminal reward",
+                        "advantage normalization",
+                        "exploration and network signal",
+                    ],
+                    "continuation_answer": "再加样本会把同样的零胜失败放大；按工作令停止，不得跑满 10000 局或进入阶段 1。",
+                }
+                stop = True
             if stop:
                 state["runs"][-1]["status"] = state["stop_reason"]
 
@@ -737,6 +863,7 @@ def main() -> None:
             "trajectory_sha256": {"ppo_rollouts_by_update": {str(update): hashes}},
             "resource_sha256": resource_hashes,
             "initial_checkpoint_sha256": initial_sha,
+            "initialization_baseline": initialization_baseline,
             "task_family_manifest_sha256": {
                 "train": run_config["train_manifest_sha256"],
                 "heldout": run_config["heldout_manifest_sha256"],
