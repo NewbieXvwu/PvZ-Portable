@@ -1328,8 +1328,16 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || deck.empty() || deck.size() > SEEDBANK_MAX ||
 		task.playthrough != 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
 		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || !std::isfinite(task.zombieCountMultiplier) ||
-		task.zombieCountMultiplier < 1.0 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3)
+		task.zombieCountMultiplier < 1.0 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
+		task.waveCap < 0 || task.waveCap > FINAL_LEVEL)
 		return false;
+	for (const EnvironmentPreplanted& plant : task.preplanted)
+	{
+		int type = static_cast<int>(plant.type);
+		if (type < 0 || type > static_cast<int>(SeedType::SEED_IMITATER) || plant.row < 0 || plant.row >= MAX_GRID_SIZE_Y ||
+			plant.col < 0 || plant.col >= MAX_GRID_SIZE_X)
+			return false;
+	}
 
 	if (!mPlayerInfo)
 	{
@@ -1418,6 +1426,12 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 	mRandSeed = seed;
 	Sexy::SRand(seed);
 	std::srand(seed);
+	for (const EnvironmentPreplanted& plant : task.preplanted)
+	{
+		if (mBoard->CanPlantAt(plant.col, plant.row, plant.type) != PlantingReason::PLANTING_OK)
+			return false;
+		mBoard->AddPlant(plant.col, plant.row, plant.type, SeedType::SEED_NONE);
+	}
 	return true;
 }
 

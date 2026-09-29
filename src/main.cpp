@@ -118,6 +118,34 @@ static bool ParseDeck(const std::string& text, std::vector<EnvironmentSeed>& dec
 	return !deck.empty();
 }
 
+static bool ParsePreplanted(const std::string& text, std::vector<EnvironmentPreplanted>& plants)
+{
+	plants.clear();
+	if (text == "-") return true;
+	if (text.empty() || text.front() == ',' || text.back() == ',') return false;
+	std::istringstream input(text);
+	std::string item;
+	while (std::getline(input, item, ','))
+	{
+		size_t firstSeparator = item.find(':');
+		size_t secondSeparator = firstSeparator == std::string::npos ? std::string::npos : item.find(':', firstSeparator + 1);
+		int type = 0, row = 0, col = 0;
+		if (firstSeparator == std::string::npos || secondSeparator == std::string::npos ||
+			item.find(':', secondSeparator + 1) != std::string::npos ||
+			!ParseInt(item.substr(0, firstSeparator), type) ||
+			!ParseInt(item.substr(firstSeparator + 1, secondSeparator - firstSeparator - 1), row) ||
+			!ParseInt(item.substr(secondSeparator + 1), col) ||
+			type < 0 || type > static_cast<int>(SeedType::SEED_IMITATER) ||
+			row < 0 || row >= MAX_GRID_SIZE_Y || col < 0 || col >= MAX_GRID_SIZE_X)
+		{
+			plants.clear();
+			return false;
+		}
+		plants.push_back({ static_cast<SeedType>(type), row, col });
+	}
+	return !plants.empty();
+}
+
 static EnvCounters ReadCounters(LawnApp* app)
 {
 	if (!app->mBoard)
@@ -288,17 +316,22 @@ static void RunEnvironment(LawnApp* app)
 		{
 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
 			uint32_t seed = 0;
-			std::string upgradesText, forcedText, deckText, multiplierText;
+			std::string upgradesText, forcedText, deckText, multiplierText, preplantedText;
 			input >> level >> seed >> playthrough >> slots >> imitater >> firstAid >> poolCleaner >> roofCleaner >> rake
 				>> upgradesText >> forcedText >> deckText;
 			std::vector<int> upgrades, forced;
 			std::vector<EnvironmentSeed> deck;
 			EnvironmentTaskSpec task;
 			bool parsed = !input.fail() && ParseIntList(upgradesText, upgrades) && ParseIntList(forcedText, forced) && ParseDeck(deckText, deck);
-			if (parsed && input >> multiplierText)
+			if (parsed)
 			{
-				std::istringstream multiplierInput(multiplierText);
-				parsed = static_cast<bool>(multiplierInput >> task.zombieCountMultiplier) && multiplierInput.peek() == std::char_traits<char>::eof();
+				parsed = static_cast<bool>(input >> multiplierText >> task.waveCap >> preplantedText);
+				if (parsed)
+				{
+					std::istringstream multiplierInput(multiplierText);
+					parsed = static_cast<bool>(multiplierInput >> task.zombieCountMultiplier) &&
+						multiplierInput.peek() == std::char_traits<char>::eof() && ParsePreplanted(preplantedText, task.preplanted);
+				}
 				std::string extra;
 				if (input >> extra) parsed = false;
 			}

@@ -96,6 +96,13 @@ class ResetValidationTests(unittest.TestCase):
             (TaskSpec(level=1, seed=0, loadout_mode="random"), "only fixed loadouts"),
             (TaskSpec(level=1, seed=0, zombie_count_multiplier=0.5), "zombie_count_multiplier"),
             (TaskSpec(level=1, seed=0, zombie_count_multiplier=11.0), "zombie_count_multiplier"),
+            (TaskSpec(level=1, seed=0, wave_cap=0), "wave_cap"),
+            (TaskSpec(level=1, seed=0, wave_cap=51), "wave_cap"),
+            (TaskSpec(level=1, seed=0, wave_cap=True), "wave_cap"),
+            (TaskSpec(level=1, seed=0, preplanted=[(1, 0, 0)]), "preplanted must contain"),
+            (TaskSpec(level=1, seed=0, preplanted=((49, 0, 0),)), "preplanted seed_type"),
+            (TaskSpec(level=1, seed=0, preplanted=((1, 6, 0),)), "preplanted seed_type"),
+            (TaskSpec(level=1, seed=0, preplanted=((1, 0, 9),)), "preplanted seed_type"),
             (TaskSpec(level=1, seed=0, playthrough=1), r"playthrough=2"),
             (TaskSpec(level=1, seed=0, forced_seeds=(0, 1, 2, 3)), "up to three cards"),
             (TaskSpec(level=1, seed=0, forced_seeds=(0, 0)), "must not contain duplicates"),
@@ -105,6 +112,28 @@ class ResetValidationTests(unittest.TestCase):
             with self.subTest(task=task):
                 with self.assertRaisesRegex(ValueError, message):
                     self.env.reset(task=task)
+
+    def test_task_options_are_encoded_in_the_reset_protocol(self) -> None:
+        with _resource_dir() as resources:
+            env = PvZEnv(resource_dir=resources)
+            commands: list[str] = []
+            observation = {
+                "tick": 0, "wave": 0, "wave_count": 30, "sun": 50,
+                "plants": [], "zombies": [], "terminal": False, "result": 0,
+            }
+
+            def command(text: str) -> dict:
+                commands.append(text)
+                return {"ok": True, "observation": observation}
+
+            env._command = command  # type: ignore[method-assign]
+            env.reset(task=TaskSpec(level=7, seed=123, wave_cap=3, preplanted=((1, 1, 2), (0, 2, 4))))
+
+            self.assertEqual(commands, [
+                "RESET_V2 7 123 2 6 0 0 0 0 0 - - 0,1,2,3,4,5 1 3 1:1:2,0:2:4"
+            ])
+            self.assertEqual(env.episode["task"]["wave_cap"], 3)
+            self.assertEqual(env.episode["task"]["preplanted"], [[1, 1, 2], [0, 2, 4]])
 
     def test_profile_options_are_validated(self) -> None:
         cases = [

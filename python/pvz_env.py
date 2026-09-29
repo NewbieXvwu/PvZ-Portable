@@ -98,6 +98,8 @@ class TaskSpec:
     forced_seeds: tuple[int, ...] = ()
     loadout_mode: str = "fixed"
     zombie_count_multiplier: float = 1.0
+    wave_cap: int | None = None
+    preplanted: tuple[tuple[int, int, int], ...] = ()
 
 
 def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -> TaskSpec:
@@ -279,6 +281,16 @@ class PvZEnv:
         if (type(task.zombie_count_multiplier) not in (int, float) or
                 not 1.0 <= task.zombie_count_multiplier <= 10.0):
             raise ValueError("zombie_count_multiplier must be from 1 to 10")
+        if task.wave_cap is not None and (type(task.wave_cap) is not int or not 1 <= task.wave_cap <= 50):
+            raise ValueError("wave_cap must be None or an integer from 1 to 50")
+        if not isinstance(task.preplanted, tuple) or any(type(plant) is not tuple or len(plant) != 3
+                                                        for plant in task.preplanted):
+            raise ValueError("preplanted must contain (seed_type, row, col) tuples")
+        if any(type(seed_type) is not int or not 0 <= seed_type <= 48 or
+               type(row) is not int or not 0 <= row <= 5 or
+               type(col) is not int or not 0 <= col <= 8
+               for seed_type, row, col in task.preplanted):
+            raise ValueError("preplanted seed_type, row and col must be in range")
         if type(task.playthrough) is not int or task.playthrough != 2:
             raise ValueError("only replay semantics (playthrough=2) are supported")
         if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:
@@ -327,6 +339,7 @@ class PvZEnv:
 
         upgrades = ",".join(map(str, profile.owned_upgrade_plants)) or "-"
         forced = ",".join(map(str, task.forced_seeds)) or "-"
+        preplanted = ",".join(f"{seed_type}:{row}:{col}" for seed_type, row, col in task.preplanted) or "-"
         deck_text = ",".join(
             str(card.seed_type) if card.imitater_type is None else f"{card.seed_type}:{card.imitater_type}"
             for card in cards
@@ -335,7 +348,8 @@ class PvZEnv:
             f"RESET_V2 {level} {seed} {task.playthrough} {profile.seed_slot_count} "
             f"{int(profile.imitater_owned)} {int(profile.first_aid_owned)} "
             f"{int(profile.pool_cleaner_owned)} {int(profile.roof_cleaner_owned)} {profile.rake_charges} "
-            f"{upgrades} {forced} {deck_text} {task.zombie_count_multiplier:g}"
+            f"{upgrades} {forced} {deck_text} {task.zombie_count_multiplier:g} "
+            f"{task.wave_cap or 0} {preplanted}"
         )
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
@@ -360,6 +374,8 @@ class PvZEnv:
                 "forced_seeds": list(task.forced_seeds),
                 "loadout_mode": task.loadout_mode,
                 "zombie_count_multiplier": task.zombie_count_multiplier,
+                "wave_cap": task.wave_cap,
+                "preplanted": [list(plant) for plant in task.preplanted],
             },
             "initial_state": self._state_record(response["observation"]),
             "operations": [],
@@ -522,6 +538,7 @@ class PvZEnv:
         task_data = dict(record["task"])
         task_data["profile"] = PlayerProfileContext(**task_data["profile"])
         task_data["forced_seeds"] = tuple(task_data["forced_seeds"])
+        task_data["preplanted"] = tuple(tuple(plant) for plant in task_data.get("preplanted", ()))
         observation, _ = self.reset(deck=[SeedCard(**card) for card in record["deck"]], task=TaskSpec(**task_data))
         if self._state_record(observation) != record["initial_state"]:
             raise RuntimeError("replay diverged immediately after reset")

@@ -66,6 +66,13 @@ struct EnvironmentSeed
 	SeedType imitaterType = SeedType::SEED_NONE;
 };
 
+struct EnvironmentPreplanted
+{
+	SeedType type = SeedType::SEED_NONE;
+	int row = 0;
+	int col = 0;
+};
+
 struct EnvironmentTaskSpec
 {
 	int playthrough = 1;
@@ -78,6 +85,8 @@ struct EnvironmentTaskSpec
 	int rakeCharges = 0;
 	double zombieCountMultiplier = 1.0;
 	std::vector<SeedType> forcedSeeds;
+	int waveCap = 0;
+	std::vector<EnvironmentPreplanted> preplanted;
 };
 
 class LevelStats
