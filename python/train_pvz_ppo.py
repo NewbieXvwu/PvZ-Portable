@@ -24,7 +24,7 @@ from pvz_common import (
     git_metadata,
     sha256_file,
 )
-from pvz_env import PvZEnv, training_task
+from pvz_env import PvZEnv, TaskSpec, training_task
 from pvz_seed_sets import DEFAULT_DEV_SEEDS, DEFAULT_TEST_SEEDS, read_seed_set
 from pvz_value import DISCOUNT_REFERENCE_TICKS, SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
 
@@ -90,6 +90,107 @@ def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
     }
 
 
+def _task_spec(task: dict[str, Any], seed: int) -> TaskSpec:
+    return TaskSpec(
+        level=task["level"], seed=seed, playthrough=task["playthrough"],
+        zombie_count_multiplier=task["zombie_count_multiplier"], wave_cap=task["wave_cap"],
+        preplanted=tuple(tuple(plant) for plant in task["preplanted"]),
+    )
+
+
+def potential(observation: dict[str, Any]) -> float:
+    if observation["terminal"]:
+        return 0.0
+    sun = min(1.0, max(0.0, observation["sun"] / 1000.0))
+    progress = min(1.0, max(0.0, observation["wave"] / max(1, observation["wave_count"])))
+    health = [
+        min(1.0, max(0.0, plant.get("health", 0) / max(1, plant.get("max_health", 1))))
+        for plant in observation["plants"]
+        if not plant.get("squished") and plant.get("health", 0) > 0
+    ]
+    plant_health = sum(health) / len(health) if health else 0.0
+    return (sun + progress + plant_health) / 3.0
+
+
+def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, Any],
+                         environment_seed: int, job_id: int, max_actions: int) -> dict[str, Any]:
+    started = time.perf_counter()
+    observation, _ = env.reset(deck=task["deck"], task=_task_spec(task, environment_seed))
+    reset_seconds = time.perf_counter() - started
+    hidden = None
+    previous_action = None
+    elapsed_since_previous_observation = 0
+    events: dict[str, Any] = {}
+    transitions = []
+    model_seconds = 0.0
+    environment_seconds = reset_seconds
+    privileged_seconds = 0.0
+    for decision_index in range(max_actions):
+        privileged_started = time.perf_counter()
+        privileged_state = env.privileged_state()
+        privileged_seconds += time.perf_counter() - privileged_started
+        model_started = time.perf_counter()
+        with torch.no_grad():
+            output = model.step(observation, hidden, previous_action,
+                                elapsed_since_previous_observation, events)
+            action, log_prob, _ = select_action(model, output, observation)
+            value = model.privileged_value(output, privileged_state)
+        model_seconds += time.perf_counter() - model_started
+        current_potential = potential(observation)
+        transition = {
+            "decision_index": decision_index,
+            "observation": observation,
+            "previous_action": previous_action,
+            "elapsed_since_previous_observation": elapsed_since_previous_observation,
+            "events": events,
+            "privileged_state": privileged_state,
+            "action": action,
+            "log_prob": float(log_prob.item()),
+            "value": float(value.item()),
+            "potential": current_potential,
+        }
+        transitions.append(transition)
+        environment_started = time.perf_counter()
+        observation, _, done, _, info = env.step(action)
+        environment_seconds += time.perf_counter() - environment_started
+        if not info.get("ok"):
+            raise RuntimeError(f"model selected an illegal action on seed {environment_seed}: {action}")
+        hidden = output["hidden"]
+        previous_action = action
+        transition["action_duration_ticks"] = info["ticks_advanced"]
+        elapsed_since_previous_observation = transition["action_duration_ticks"]
+        events = info["events"]
+        duration_ratio = transition["action_duration_ticks"] / DISCOUNT_REFERENCE_TICKS
+        discount = VALUE_GAMMA ** duration_ratio
+        next_potential = potential(observation)
+        shaping_reward = discount * next_potential - current_potential
+        transition["shaping_reward"] = shaping_reward
+        transition["reward"] = shaping_reward
+        if done:
+            transition["reward"] += 1.0 if observation["result"] == 1 else -1.0
+            break
+    if not observation["terminal"]:
+        raise RuntimeError(f"PPO episode exceeded {max_actions} decisions on seed {environment_seed}")
+    elapsed = time.perf_counter() - started
+    return {
+        "seed": job_id,
+        "task_seed": environment_seed,
+        "task_id": task["task_id"],
+        "won": observation["result"] == 1,
+        "result": observation["result"],
+        "wave": observation["wave"],
+        "wave_count": observation["wave_count"],
+        "tick": observation["tick"],
+        "seconds": elapsed,
+        "profile_seconds": {
+            "model": model_seconds,
+            "environment": environment_seconds,
+            "privileged_state": privileged_seconds,
+        },
+        "transitions": transitions,
+    }
+
+
 def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float) -> None:
     for episode in episodes:
         transitions = episode["transitions"]
@@ -100,8 +201,7 @@ def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float) -> None:
             discount = VALUE_GAMMA ** duration_ratio
             trace_discount = discount * (gae_lambda ** duration_ratio)
             next_value = transitions[index + 1]["value"] if index + 1 < len(transitions) else 0.0
-            end_of_step_reward = discount * transition["reward"]
-            delta = end_of_step_reward + discount * next_value - transition["value"]
+            delta = transition["reward"] + discount * next_value - transition["value"]
             advantage = delta + trace_discount * advantage
             transition["advantage"] = advantage
             transition["return"] = advantage + transition["value"]
