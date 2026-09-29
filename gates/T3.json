@@ -1,0 +1,38 @@
+{
+  "task_id": "T3",
+  "commit": "497762f101a92b447b9ad0531a24e4aab6d9fb37",
+  "worktree_clean": true,
+  "reproduce_command": "python scripts/check_task_manifests.py --resource-dir /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN",
+  "gate_result": "pass",
+  "metrics": {
+    "training_tasks": 20,
+    "training_seeds": 1280,
+    "heldout_tasks": 20,
+    "heldout_tasks_by_terrain": {
+      "day": 4,
+      "night": 4,
+      "pool": 4,
+      "fog": 4,
+      "roof": 4
+    },
+    "heldout_seeds_per_task": 64,
+    "heldout_seeds": 1280,
+    "task_parameter_overlap": 0,
+    "seed_overlap": 0,
+    "historical_seed_overlap": 0,
+    "all_task_resets_match_manifest": true,
+    "overlap_mutation_rejected": true,
+    "heldout_manifest_sha256": "e7b26373faf8085934366d29aa2b484adb866f0335fa805d1efdb920cd4273f2"
+  },
+  "thresholds": {
+    "heldout_terrain_coverage": "at least 4 tasks each for day, night, pool, fog, and roof",
+    "seeds_per_heldout_task": "at least 16; 64 supplied to meet the Wilson sample-size floor",
+    "train_heldout_task_and_seed_overlap": 0,
+    "heldout_overlap_with_existing_development_or_final_test_seeds": 0,
+    "manifest_parameters_match_environment_reset": true,
+    "overlap_assertion_mutation": "must reject an injected shared task parameter tuple"
+  },
+  "raw_seed_results_path": "artifacts/task_family/heldout.json#/tasks",
+  "protected_assets_unmodified": true,
+  "notes": "The held-out manifest was frozen at artifacts/task_family/heldout.json. Development and final_test seed files remain separate, with explicit role and non-inclusion records in that manifest. All task resets were checked from a clean commit; sun_start is fixed at the observed Adventure-II value 50."
+}
