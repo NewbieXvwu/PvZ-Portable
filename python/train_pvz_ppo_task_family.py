@@ -72,6 +72,19 @@ def _task_family() -> tuple[dict[str, Any], dict[str, Any]]:
     return train, heldout
 
 
+def _curriculum_tasks(tasks: list[dict[str, Any]], curriculum: str) -> list[dict[str, Any]]:
+    if curriculum == "all":
+        selected = tasks
+    elif curriculum == "cap1":
+        selected = [task for task in tasks
+                    if task["wave_cap"] == 1 and task["zombie_count_multiplier"] == 1.0]
+    else:
+        raise ValueError(f"unsupported curriculum: {curriculum}")
+    if not selected:
+        raise ValueError(f"curriculum {curriculum!r} selected no training tasks")
+    return selected
+
+
 def _heldout_tasks(heldout: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     cap3 = [task for task in heldout["tasks"] if task["wave_cap"] == 3]
     gate = [task for task in cap3 if task["zombie_count_multiplier"] == 1.0]
@@ -239,6 +252,7 @@ def _curve_row(episodes: int, train_tasks: list[dict[str, Any]],
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "cumulative_training_episodes": episodes,
+        "curriculum_task_ids": [task["task_id"] for task in train_tasks],
         "train_task_pass_rates_recent_64": {
             task["task_id"]: (sum(TASK_RECENT[task["task_id"]]) / len(TASK_RECENT[task["task_id"]])
                               if TASK_RECENT[task["task_id"]] else None)
@@ -382,6 +396,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--resource-dir", type=Path,
                         default=Path(os.environ.get("PVZ_RESOURCE_DIR", DEFAULT_RESOURCE_DIR)))
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/t5")
+    parser.add_argument("--curriculum", choices=("all", "cap1"), default="all",
+                        help="sample all frozen tasks, or only wave_cap=1 and multiplier=1.0")
     parser.add_argument("--workers", type=int)
     parser.add_argument("--rollout-threads", type=int,
                         help="override the measured Torch threads per rollout worker")
@@ -431,6 +447,7 @@ def main() -> None:
     state_path = output_dir / "training_state.json"
     curve_path = output_dir / "learning_curve.json"
     train, heldout = _task_family()
+    curriculum_tasks = _curriculum_tasks(train["tasks"], args.curriculum)
     gate_tasks, reference_tasks = _heldout_tasks(heldout)
     baseline = _baseline(train["tasks"], gate_tasks, reference_tasks)
     protected_paths = (
@@ -540,6 +557,8 @@ def main() -> None:
         "rollout_worker_benchmark": throughput.get("selected_configuration"),
         "resource_dir": str(resource_dir),
         "train_manifest": str(TRAIN_PATH),
+        "curriculum": args.curriculum,
+        "curriculum_task_ids": [task["task_id"] for task in curriculum_tasks],
         "heldout_manifest": str(HELDOUT_PATH),
         "train_manifest_sha256": sha256_file(TRAIN_PATH),
         "heldout_manifest_sha256": sha256_file(HELDOUT_PATH),
@@ -588,7 +607,7 @@ def main() -> None:
         next_eval = ((state["cumulative_episodes"] // 5000) + 1) * 5000
         batch_size = min(args.rollout_episodes, remaining, next_eval - state["cumulative_episodes"])
         job_ids = list(range(run_episodes, run_episodes + batch_size))
-        assignments = _assignments(train["tasks"], job_ids, rng)
+        assignments = _assignments(curriculum_tasks, job_ids, rng)
         model_state = {key: value.detach().cpu() for key, value in model.state_dict().items()}
         model_hash = t4_capability_profile._state_sha256(model_state)
         metadata = {
@@ -682,7 +701,7 @@ def main() -> None:
             latest_eval = eval_row
             state["evaluations"].append(eval_row)
             state["learning_curve"].append(_curve_row(
-                state["cumulative_episodes"], train["tasks"],
+                state["cumulative_episodes"], curriculum_tasks,
                 eval_row["gate_set"]["pass_rate"], eval_row["reference_set"]["pass_rate"],
                 eval_row["raw_seed_results_path"],
             ))
