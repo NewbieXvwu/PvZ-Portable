@@ -1,0 +1,10 @@
+{
+  "command": "/Users/newbiexvwu/.local/share/mise/installs/python/3.14/bin/python3 scripts/scripted_baseline.py --resource-dir /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN --seeds 30000 30001 30002 30003",
+  "level": 7,
+  "results": [
+    {"seed": 30000, "won": true, "terminal": true, "wave": 30, "wave_count": 30, "tick": 65401, "actions": 1152, "plants": {"sunflower": 10, "peashooter": 11, "snowpea": 3, "wallnut": 1}},
+    {"seed": 30001, "won": true, "terminal": true, "wave": 30, "wave_count": 30, "tick": 63086, "actions": 1131, "plants": {"sunflower": 10, "peashooter": 10, "wallnut": 2, "snowpea": 4}},
+    {"seed": 30002, "won": false, "terminal": true, "wave": 10, "wave_count": 30, "tick": 23536, "actions": 426, "plants": {"sunflower": 9, "peashooter": 14, "wallnut": 1}},
+    {"seed": 30003, "won": false, "terminal": true, "wave": 7, "wave_count": 30, "tick": 14598, "actions": 270, "plants": {"sunflower": 10, "peashooter": 7, "potato_mine": 1, "wallnut": 1}}
+  ]
+}

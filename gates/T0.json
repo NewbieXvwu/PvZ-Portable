@@ -1,0 +1,31 @@
+{
+  "task_id": "T0",
+  "commit": "a871927f6468c91c599190278bec15bab0372fce",
+  "worktree_clean": false,
+  "reproduce_command": "/Users/newbiexvwu/.local/share/mise/installs/python/3.14/bin/python3 scripts/scripted_baseline.py --resource-dir /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN --seeds 30000 30001 30002 30003",
+  "gate_result": "fail",
+  "metrics": {
+    "level_7_seed_30000_won": true,
+    "level_7_seed_30000_tick": 65401,
+    "level_7_seed_30000_tick_threshold_pass": true,
+    "level_7_seeds_30001_to_30003_wins": 1,
+    "level_7_seeds_30001_to_30003_count": 3,
+    "level_7_seed_30001_won": true,
+    "level_7_seed_30002_won": false,
+    "level_7_seed_30003_won": false,
+    "level_1_terminal": "not_run",
+    "level_8_terminal": "not_run",
+    "level_20_terminal": "not_run"
+  },
+  "thresholds": {
+    "level_7_seed_30000_won": true,
+    "level_7_seed_30000_tick_max": 120000,
+    "level_7_seeds_30001_to_30003_wins_min": 2,
+    "level_1_terminal": true,
+    "level_8_terminal": true,
+    "level_20_terminal": true
+  },
+  "raw_seed_results_path": "gates/T0_seed_results.json",
+  "protected_assets_unmodified": false,
+  "notes": "The shared zombie query now excludes off-board cutscene/UI zombies; the build passed and level 7 seed 30000 won at tick 65401. T0 fails because only 1 of seeds 30001–30003 won (required 2). Seeds 30002 and 30003 ended in losses at waves 10 and 7, with 14 and 7 peashooters respectively, so the observed failing layer is the scripted policy's survival/offense behavior, not a nonterminal victory block. Level 1/8/20 checks were not run after the gate failed, as required by TODO.md §3. Next change after approval: record per-decision traces for the two failing seeds, identify the first preventable breach from those traces, then make a seed-independent adjustment to the T0 policy and rerun the complete frozen gate. The worktree was already dirty at task start: TODO.md was modified and DESIGN.md, FAILURE_ANALYSIS.md, GOAL.md, scripts/diagnose_teacher.py, and scripts/repro_value_collapse.py were untracked; none were staged or edited here."
+}
