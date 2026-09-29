@@ -1,0 +1,41 @@
+{
+  "task_id": "T1",
+  "gate_result": "pass",
+  "local_gate_result": "pass",
+  "command": "python -u scripts/t1_smoke.py --resource-dir $PVZ_RESOURCE_DIR",
+  "coverage": {
+    "levels": [1, 2, 7],
+    "seeds": [30000, 30001],
+    "maximum_terminal_tick": 120000,
+    "results": [
+      {"level": 1, "seed": 30000, "won": true, "terminal": true, "tick": 34374},
+      {"level": 1, "seed": 30001, "won": true, "terminal": true, "tick": 35263},
+      {"level": 2, "seed": 30000, "won": true, "terminal": true, "tick": 34374},
+      {"level": 2, "seed": 30001, "won": true, "terminal": true, "tick": 35263},
+      {"level": 7, "seed": 30000, "won": true, "terminal": true, "tick": 65401},
+      {"level": 7, "seed": 30001, "won": true, "terminal": true, "tick": 63086}
+    ]
+  },
+  "mutation_test": {
+    "mutation": "Removed aZombie->IsOnBoard() from Board::AreEnemyZombiesOnScreen() and rebuilt.",
+    "exit_code": 1,
+    "output": "FAIL level 1 seed 30000: preview zombies must be observed but excluded from enemy presence"
+  },
+  "restored_test": {
+    "mutation_reverted": true,
+    "exit_code": 0,
+    "output": [
+      "level 1 seed 30000: won=True terminal=True tick=34374",
+      "level 1 seed 30001: won=True terminal=True tick=35263",
+      "level 2 seed 30000: won=True terminal=True tick=34374",
+      "level 2 seed 30001: won=True terminal=True tick=35263",
+      "level 7 seed 30000: won=True terminal=True tick=65401",
+      "level 7 seed 30001: won=True terminal=True tick=63086",
+      "PASS: 3 levels x 2 seeds"
+    ]
+  },
+  "ci": {
+    "status": "locally_substituted",
+    "reason": "Per user instruction, local execution against the Downloads resource directory substitutes for GitHub Actions in this run."
+  }
+}
