@@ -5447,6 +5447,14 @@ void Board::UpdateProgressMeter()
 	}
 	else if (mCurrentWave != 0)
 	{
+		// A one-wave course has no interval between waves.  Avoid dividing by
+		// (mNumWaves - 1) below; its single wave fills the progress meter.
+		if (mNumWaves <= 1)
+		{
+			mProgressMeterWidth = 150;
+			return;
+		}
+
 		if (mFlagRaiseCounter > 0)
 			mFlagRaiseCounter--;
 
