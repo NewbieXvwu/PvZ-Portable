@@ -11,11 +11,13 @@ import sys
 import time
 from typing import Any
 
+import numpy as np
 import torch
 from torch.nn import functional as F
 
 from pvz_agent_model import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
-                             configure_torch_threads, resolve_device, select_action)
+                             configure_torch_threads, legal_summary, observation_tokens,
+                             pack_tokens, resolve_device, select_action, unpack_tokens)
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
     OBSERVATION_VERSION,
@@ -125,25 +127,35 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
     model_seconds = 0.0
     environment_seconds = reset_seconds
     privileged_seconds = 0.0
+    tokenization_seconds = 0.0
     for decision_index in range(max_actions):
         privileged_started = time.perf_counter()
         privileged_state = env.privileged_state()
         privileged_seconds += time.perf_counter() - privileged_started
+        tokenize_started = time.perf_counter()
+        tensors, metadata = observation_tokens(observation)
+        packed = pack_tokens(tensors, metadata)
+        legal = legal_summary(observation["legal_actions"])
+        wave = observation["wave"]
+        tokenization_seconds += time.perf_counter() - tokenize_started
         model_started = time.perf_counter()
         with torch.no_grad():
-            output = model.step(observation, hidden, previous_action,
-                                elapsed_since_previous_observation, events)
-            action, log_prob, _ = select_action(model, output, observation)
-            value = model.privileged_value(output, privileged_state)
+            output = model.step_tokens(tensors, metadata, wave, hidden, previous_action,
+                                       elapsed_since_previous_observation, events)
+            action, log_prob, _ = select_action(model, output, legal)
+            critic_extra = model.privileged_extra(privileged_state, wave)
+            value = model.privileged_value_from_extra(output, critic_extra)
         model_seconds += time.perf_counter() - model_started
         current_potential = potential(observation)
         transition = {
             "decision_index": decision_index,
-            "observation": observation,
+            "tokens": packed,
+            "wave": wave,
+            "legal": legal,
             "previous_action": previous_action,
             "elapsed_since_previous_observation": elapsed_since_previous_observation,
             "events": events,
-            "privileged_state": privileged_state,
+            "critic_extra": critic_extra,
             "action": action,
             "log_prob": float(log_prob.item()),
             "value": float(value.item()),
@@ -188,6 +200,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
             "model": model_seconds,
             "environment": environment_seconds,
             "privileged_state": privileged_seconds,
+            "tokenization": tokenization_seconds,
         },
         "transitions": transitions,
     }
@@ -215,8 +228,11 @@ def _rebuild_hidden(model: GameplayModelV1, transitions: list[dict[str, Any]], s
         return hidden
     with torch.no_grad():
         for transition in transitions[:start]:
-            output = model.step(transition["observation"], hidden, transition["previous_action"],
-                                transition["elapsed_since_previous_observation"], transition["events"])
+            tensors, metadata = unpack_tokens(transition["tokens"], next(model.parameters()).device)
+            output = model.step_tokens(tensors, metadata, transition["wave"], hidden,
+                                       transition["previous_action"],
+                                       transition["elapsed_since_previous_observation"],
+                                       transition["events"])
             hidden = output["hidden"]
     return None if hidden is None else hidden.detach()
 
@@ -250,15 +266,17 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
             hidden = _rebuild_hidden(model, transitions, start)
             log_probs, values, entropies_for_chunk = [], [], []
             for transition in transitions[start:end]:
-                output = model.step(transition["observation"], hidden, transition["previous_action"],
-                                    transition["elapsed_since_previous_observation"], transition["events"])
+                tensors, metadata = unpack_tokens(transition["tokens"], device)
+                output = model.step_tokens(tensors, metadata, transition["wave"], hidden,
+                                           transition["previous_action"],
+                                           transition["elapsed_since_previous_observation"],
+                                           transition["events"])
                 _, log_prob, entropy = select_action(
-                    model, output, transition["observation"], action=transition["action"]
+                    model, output, transition["legal"], action=transition["action"]
                 )
                 hidden = output["hidden"]
                 log_probs.append(log_prob)
-                value = (model.privileged_value(output, transition["privileged_state"])
-                         if "privileged_state" in transition else output["value"])
+                value = model.privileged_value_from_extra(output, transition["critic_extra"])
                 values.append(value.squeeze())
                 entropies_for_chunk.append(entropy)
             new_log_prob = torch.stack(log_probs)
@@ -305,15 +323,26 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
     }
 
 
+def _jsonable(value: Any) -> Any:
+    """numpy arrays (packed tokens) are not JSON-serializable; lists are."""
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, dict):
+        return {key: _jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(item) for item in value]
+    return value
+
+
 def episode_hash(episode: dict[str, Any]) -> str:
-    steps = [{
+    steps = [_jsonable({
         key: transition[key]
         for key in (
-            "observation", "previous_action", "elapsed_since_previous_observation",
-            "action_duration_ticks", "events", "privileged_state", "action", "log_prob",
+            "tokens", "wave", "legal", "previous_action", "elapsed_since_previous_observation",
+            "action_duration_ticks", "events", "critic_extra", "action", "log_prob",
             "value", "potential", "shaping_reward", "terminal_outcome", "reward",
         ) if key in transition
-    } for transition in episode["transitions"]]
+    }) for transition in episode["transitions"]]
     return canonical_digest({
         "seed": episode["seed"], "task_seed": episode.get("task_seed"),
         "task_id": episode.get("task_id"), "steps": steps, "result": episode["result"],

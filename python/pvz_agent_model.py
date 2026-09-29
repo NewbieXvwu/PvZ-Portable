@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+import numpy as np
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
@@ -224,6 +225,75 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
     return tensors, {"packet_tokens": packet_tokens, "cell_tokens": cell_tokens}
 
 
+TOKEN_ID_FIELDS = ("kinds", "categories", "variants", "rows", "cols")
+
+
+def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any]) -> dict[str, Any]:
+    """Flatten a tokenization into contiguous numpy arrays for storage.
+
+    A raw observation costs ~42 KiB as Python objects (measured: 4.0 KiB pickled,
+    so the object representation inflates it 10.6x).  The packed form is
+    5*8 + 32*4 = 168 bytes per token -- about 11 KiB for a typical 70-token
+    board -- and pickles as two arrays instead of six tensors plus nested dicts.
+    """
+    ids = np.stack([tensors[field].numpy() for field in TOKEN_ID_FIELDS], axis=1).astype(np.int64)
+    packet_ids = sorted(metadata["packet_tokens"])
+    return {
+        "ids": ids,
+        "features": tensors["features"].numpy().astype(np.float32),
+        "cell_index": np.array([metadata["cell_tokens"][cell] for cell in range(54)], dtype=np.int64),
+        "packet_ids": np.array(packet_ids, dtype=np.int64),
+        "packet_index": np.array([metadata["packet_tokens"][packet] for packet in packet_ids], dtype=np.int64),
+    }
+
+
+def unpack_tokens(packed: dict[str, Any], device: torch.device) -> tuple[dict[str, Tensor], dict[str, Any]]:
+    """Inverse of :func:`pack_tokens`.  Cheap enough to call per training step."""
+    ids = torch.from_numpy(np.ascontiguousarray(packed["ids"])).to(device)
+    tensors = {field: ids[:, index].contiguous() for index, field in enumerate(TOKEN_ID_FIELDS)}
+    tensors["features"] = torch.from_numpy(np.ascontiguousarray(packed["features"])).to(device)
+    packet_ids = [int(value) for value in packed["packet_ids"]]
+    packet_index = [int(value) for value in packed["packet_index"]]
+    metadata = {
+        "packet_tokens": dict(zip(packet_ids, packet_index)),
+        "cell_tokens": {cell: int(packed["cell_index"][cell]) for cell in range(54)},
+    }
+    return tensors, metadata
+
+
+def legal_summary(legal_actions: dict[str, Any]) -> dict[str, Any]:
+    """Compact view of ``observation["legal_actions"]`` (9.3 KiB as objects).
+
+    Keeps exactly the sets ``select_action`` reads: which packets are plantable,
+    which cells each packet may go on, which cells are shovellable, and whether
+    waiting is allowed.  Cells are stored as 54-bit masks.
+    """
+    by_packet: dict[int, int] = {}
+    for item in legal_actions.get("plants", ()):
+        packet = int(item["packet"])
+        by_packet[packet] = by_packet.get(packet, 0) | (1 << (int(item["row"]) * 9 + int(item["col"])))
+    shovel_mask = 0
+    for col, row in legal_actions.get("shovels", ()):
+        shovel_mask |= 1 << (int(row) * 9 + int(col))
+    return {
+        "packets": tuple(sorted(by_packet)),
+        "plant_mask": tuple(by_packet[packet] for packet in sorted(by_packet)),
+        "shovel_mask": shovel_mask,
+        "wait": bool(legal_actions.get("wait", True)),
+    }
+
+
+def _legal_of(observation_or_summary: dict[str, Any]) -> dict[str, Any]:
+    """Accept either a raw observation (has ``legal_actions``) or a summary."""
+    if "legal_actions" in observation_or_summary:
+        return legal_summary(observation_or_summary["legal_actions"])
+    return observation_or_summary
+
+
+def _mask_cells(mask: int) -> set[int]:
+    return {cell for cell in range(54) if (mask >> cell) & 1}
+
+
 class RelationAttention(nn.Module):
     def __init__(self, width: int, heads: int) -> None:
         super().__init__()
@@ -352,8 +422,20 @@ class GameplayModelV1(nn.Module):
     def step(self, observation: dict[str, Any], hidden: Tensor | None = None,
              previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
              events: dict[str, Any] | None = None) -> dict[str, Any]:
-        device = next(self.parameters()).device
         tensors, metadata = observation_tokens(observation)
+        return self.step_tokens(tensors, metadata, observation["wave"], hidden,
+                                previous_action, delta_ticks, events)
+
+    def step_tokens(self, tensors: dict[str, Tensor], metadata: dict[str, Any], wave: int,
+                    hidden: Tensor | None = None, previous_action: dict[str, Any] | None = None,
+                    delta_ticks: int = 0, events: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Same forward as :meth:`step`, but over pre-tokenized input.
+
+        Rollouts tokenize once and store the packed tokens; training reuses them
+        for every PPO epoch instead of re-reading the 42 KiB observation dict
+        each time.  Tokenization is stateless, so results are identical.
+        """
+        device = next(self.parameters()).device
         kinds = tensors["kinds"].to(device)
         rows = tensors["rows"].to(device)
         cols = tensors["cols"].to(device)
@@ -396,7 +478,7 @@ class GameplayModelV1(nn.Module):
             "aux_next_spawn": self.aux_next_spawn(belief),
             "aux_lane_threat": self.aux_lane_threat(belief),
             "aux_outcome": self.aux_outcome(belief),
-            "wave_index": observation["wave"],
+            "wave_index": wave,
         }
 
     def plant_cell_scores(self, output: dict[str, Any], packet: int) -> Tensor:
@@ -408,33 +490,49 @@ class GameplayModelV1(nn.Module):
         query = self.shovel_cell_query(output["belief"])
         return (output["cell_keys"] * query).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
 
-    def privileged_value(self, output: dict[str, Any], privileged_state: dict[str, Any] | None) -> Tensor:
+    def privileged_extra(self, privileged_state: dict[str, Any] | None, wave_index: int) -> list[float]:
+        """Reduce a privileged state to the 16 floats the critic actually reads.
+
+        Measured: a full privileged_state costs 76.9 KiB as Python objects, but
+        only ``hidden["wave_timer"]`` and the current wave's zombie roster feed
+        the critic -- 99.7% of the stored bytes were never used.  Rollouts store
+        these 16 floats (196 bytes) instead of the state dict.
+        """
         values = [0.0] * 16
         if privileged_state:
             hidden = privileged_state.get("hidden", {})
             values[0] = _ratio(hidden.get("wave_timer", 0), 6000)
             waves = hidden.get("zombies_in_wave", [])
-            current = min(max(0, output["wave_index"]), max(0, len(waves) - 1))
+            current = min(max(0, wave_index), max(0, len(waves) - 1))
             for zombie_type in waves[current][:15] if waves else []:
                 if 0 <= zombie_type < 15:
                     values[1 + zombie_type] += 0.1
+        return values
+
+    def privileged_value_from_extra(self, output: dict[str, Any], extra: list[float]) -> Tensor:
         device = output["belief"].device
-        extra = self.privileged_features(torch.tensor([values], dtype=torch.float32, device=device))
-        return self.privileged_critic(torch.cat((output["belief"], extra), dim=-1))
+        extra_features = self.privileged_features(torch.tensor([extra], dtype=torch.float32, device=device))
+        return self.privileged_critic(torch.cat((output["belief"], extra_features), dim=-1))
+
+    def privileged_value(self, output: dict[str, Any], privileged_state: dict[str, Any] | None) -> Tensor:
+        return self.privileged_value_from_extra(
+            output, self.privileged_extra(privileged_state, output["wave_index"]))
 
 
 def select_action(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
                   action: dict[str, Any] | None = None, deterministic: bool = False) -> tuple[dict[str, Any], Tensor, Tensor]:
     device = output["type_logits"].device
-    legal = observation["legal_actions"]
-    valid_packets = sorted({item["packet"] for item in legal["plants"]})
-    valid_shovels = {row * 9 + col for col, row in legal["shovels"]}
+    legal = _legal_of(observation)
+    plant_masks = dict(zip(legal["packets"], legal["plant_mask"]))
+    valid_packets = list(legal["packets"])
+    valid_shovels = _mask_cells(legal["shovel_mask"])
+    wait_allowed = legal["wait"]
     type_logits = output["type_logits"].clone()
     if not valid_packets:
         type_logits[0] = -1e9
     if not valid_shovels:
         type_logits[1] = -1e9
-    if not legal.get("wait", True):
+    if not wait_allowed:
         type_logits[2:] = -1e9
     type_dist = torch.distributions.Categorical(logits=type_logits)
     action_types = {"plant": 0, "shovel": 1, "wait": 2}
@@ -444,7 +542,7 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
                   else torch.tensor(action_types[action["type"]], device=device))
     if action is not None and ((int(type_index.item()) == 0 and not valid_packets)
                                or (int(type_index.item()) == 1 and not valid_shovels)
-                               or (int(type_index.item()) >= 2 and not legal.get("wait", True))):
+                               or (int(type_index.item()) >= 2 and not wait_allowed)):
         raise ValueError(f"action is illegal in this observation: {action}")
     log_prob = type_dist.log_prob(type_index)
     entropy = type_dist.entropy()
@@ -465,7 +563,7 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         log_prob = log_prob + packet_dist.log_prob(packet_index)
         entropy = entropy + packet_dist.entropy()
         cell_logits = model.plant_cell_scores(output, packet).clone()
-        valid_cells = {a["row"] * 9 + a["col"] for a in legal["plants"] if a["packet"] == packet}
+        valid_cells = _mask_cells(plant_masks[packet])
         for cell in range(54):
             if cell not in valid_cells:
                 cell_logits[cell] = -1e9
