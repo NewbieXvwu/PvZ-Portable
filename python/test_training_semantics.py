@@ -43,8 +43,8 @@ class AdvantageEstimationTests(unittest.TestCase):
         add_advantages(episodes, gae_lambda=0.5)
 
         first, second = episodes[0]["transitions"]
-        self.assertAlmostEqual(second["advantage"], VALUE_GAMMA)
-        self.assertAlmostEqual(first["advantage"], VALUE_GAMMA)
+        self.assertAlmostEqual(second["advantage"], 1.0)
+        self.assertAlmostEqual(first["advantage"], 1.0)
 
     def test_trace_discount_uses_the_tick_ratio(self) -> None:
         """A 300-tick action discounts gamma and lambda by one full reference span."""
@@ -53,26 +53,26 @@ class AdvantageEstimationTests(unittest.TestCase):
         add_advantages(episodes, gae_lambda=0.5)
 
         first, second = episodes[0]["transitions"]
-        self.assertAlmostEqual(second["advantage"], VALUE_GAMMA)
-        self.assertAlmostEqual(first["advantage"], VALUE_GAMMA * 0.5 * VALUE_GAMMA)
+        self.assertAlmostEqual(second["advantage"], 1.0)
+        self.assertAlmostEqual(first["advantage"], VALUE_GAMMA * 0.5)
 
     def test_bootstrapped_values_enter_the_advantage(self) -> None:
         """With lambda=1 the recurrence is closed form, so the numbers are hand-derivable.
 
-        d = 0.99 for a 300-tick action, so
-          delta_1 = 0.99 * 1.0 - 0.2 = 0.79
+        d = 0.99 for a 300-tick action. The episode ends after the second action, so
+          delta_1 = 1.0 - 0.2 = 0.8
           delta_0 = 0.99 * 0.2 - 0.5 = -0.302
-          A_1 = 0.79, A_0 = -0.302 + 0.99 * 0.79 = 0.4801
+          A_1 = 0.8, A_0 = -0.302 + 0.99 * 0.8 = 0.49
         """
         episodes = _episode([_transition(300, 0.0, 0.5), _transition(300, 1.0, 0.2)])
 
         add_advantages(episodes, gae_lambda=1.0)
 
         first, second = episodes[0]["transitions"]
-        self.assertAlmostEqual(second["advantage"], 0.79)
-        self.assertAlmostEqual(second["return"], 0.99)
-        self.assertAlmostEqual(first["advantage"], 0.4801)
-        self.assertAlmostEqual(first["return"], 0.9801)
+        self.assertAlmostEqual(second["advantage"], 0.8)
+        self.assertAlmostEqual(second["return"], 1.0)
+        self.assertAlmostEqual(first["advantage"], 0.49)
+        self.assertAlmostEqual(first["return"], 0.99)
 
     def test_returns_are_advantages_plus_the_state_value(self) -> None:
         episodes = _episode([_transition(60, 0.0, -0.4), _transition(150, 0.5, 0.25)])
