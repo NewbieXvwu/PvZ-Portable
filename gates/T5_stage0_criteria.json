@@ -1,0 +1,29 @@
+{
+  "stage": "T5-stage0",
+  "preregistered_at": "2026-09-29T16:43:45Z",
+  "curriculum": "cap1",
+  "eval_set": {
+    "source": "artifacts/task_family/train.json",
+    "filter": {
+      "wave_cap": 1,
+      "zombie_count_multiplier": 1.0
+    },
+    "task_ids": [
+      "train_day_1",
+      "train_night_1",
+      "train_pool_1",
+      "train_fog_1",
+      "train_roof_1"
+    ],
+    "seeds_per_task": 64
+  },
+  "baseline_pass_rate": 0.0,
+  "baseline_evidence": "gates/T4.json metrics.per_task.train.*.pass_rate == 0.0000 (n=64 each)",
+  "target_pass_rate": 0.5,
+  "episode_budget": 10000,
+  "early_stop": {
+    "checked_at_episodes": 5000,
+    "condition": "stage0_set.pass_rate == 0.0 AND all cap1 rolling-64 train win rates == 0.0",
+    "action": "stop and write diagnosis; do NOT run to 10000; do NOT start stage 1"
+  }
+}
