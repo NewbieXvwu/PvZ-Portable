@@ -43,7 +43,7 @@
 #include <vector>
 using namespace Sexy;
 
-static constexpr int kEnvironmentProtocolVersion = 3;
+static constexpr int kEnvironmentProtocolVersion = 4;
 
 struct EnvCounters
 {
@@ -520,6 +520,34 @@ static void RunEnvironment(LawnApp* app)
 			minimalResponse = command == "DROP_SNAPSHOT_FAST";
 			input >> snapshotId;
 			ok = snapshots.erase(snapshotId) > 0;
+		}
+		else if (command == "CRITIC_INPUTS")
+		{
+			int waveIndex = 0;
+			input >> waveIndex;
+			ok = !input.fail() && app->mBoard != nullptr;
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+				<< ",\"ok\":" << (ok ? "true" : "false");
+			if (ok)
+			{
+				Board* board = app->mBoard;
+				std::cout << ",\"wave_timer\":" << board->mZombieCountDown << ",\"wave_zombies\":[";
+				if (board->mNumWaves > 0)
+				{
+					const int selectedWave = std::clamp(waveIndex, 0, board->mNumWaves - 1);
+					bool firstZombie = true;
+					for (int i = 0; i < std::min(15, MAX_ZOMBIES_IN_WAVE) &&
+						board->mZombiesInWave[selectedWave][i] != ZombieType::ZOMBIE_INVALID; ++i)
+					{
+						if (!firstZombie) std::cout << ',';
+						firstZombie = false;
+						std::cout << static_cast<int>(board->mZombiesInWave[selectedWave][i]);
+					}
+				}
+				std::cout << ']';
+			}
+			std::cout << '}' << std::endl;
+			continue;
 		}
 		else if (command == "QUIT")
 		{

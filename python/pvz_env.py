@@ -435,6 +435,13 @@ class PvZEnv:
             raise RuntimeError(f"environment returned no state: {response}")
         return response["observation"]
 
+    def critic_inputs(self, wave_index: int) -> dict[str, Any]:
+        response = self._command(f"CRITIC_INPUTS {int(wave_index)}")
+        if (not response.get("ok") or type(response.get("wave_timer")) is not int
+                or not isinstance(response.get("wave_zombies"), list)):
+            raise RuntimeError(f"environment returned invalid critic inputs: {response}")
+        return response
+
     def loadout_context(self) -> LoadoutContext:
         return LoadoutContext.from_observation(self.observe())
 

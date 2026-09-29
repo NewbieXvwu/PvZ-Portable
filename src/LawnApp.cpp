@@ -1510,7 +1510,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		return "null";
 
 	std::ostringstream out;
-	out << "{\"protocol_version\":3,\"observation_version\":2,\"task_version\":2,\"level\":" << mBoard->mLevel
+	out << "{\"protocol_version\":4,\"observation_version\":2,\"task_version\":2,\"level\":" << mBoard->mLevel
 		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough
 		<< ",\"zombie_count_multiplier\":" << mEnvironmentTaskSpec.zombieCountMultiplier
 		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)

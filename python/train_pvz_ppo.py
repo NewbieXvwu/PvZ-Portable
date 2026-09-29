@@ -15,7 +15,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from pvz_agent_model import (GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
+from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
                              configure_torch_threads, legal_summary, observation_tokens,
                              pack_tokens, replay_log_probs, resolve_device, select_action)
 from pvz_common import (
@@ -126,24 +126,25 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
     transitions = []
     model_seconds = 0.0
     environment_seconds = reset_seconds
-    privileged_seconds = 0.0
+    critic_inputs_seconds = 0.0
     tokenization_seconds = 0.0
     for decision_index in range(max_actions):
-        privileged_started = time.perf_counter()
-        privileged_state = env.privileged_state()
-        privileged_seconds += time.perf_counter() - privileged_started
+        wave = observation["wave"]
+        critic_started = time.perf_counter()
+        critic_inputs = env.critic_inputs(wave)
+        critic_inputs_seconds += time.perf_counter() - critic_started
         tokenize_started = time.perf_counter()
         tensors, metadata = observation_tokens(observation)
         packed = pack_tokens(tensors, metadata)
         legal = legal_summary(observation["legal_actions"])
-        wave = observation["wave"]
         tokenization_seconds += time.perf_counter() - tokenize_started
         model_started = time.perf_counter()
         with torch.no_grad():
             output = model.step_tokens(tensors, metadata, wave, hidden, previous_action,
                                        elapsed_since_previous_observation, events)
             action, log_prob, _ = select_action(model, output, legal)
-            critic_extra = model.privileged_extra(privileged_state, wave)
+            critic_extra = model.privileged_extra_from_inputs(
+                critic_inputs["wave_timer"], critic_inputs["wave_zombies"])
             value = model.privileged_value_from_extra(output, critic_extra)
         model_seconds += time.perf_counter() - model_started
         current_potential = potential(observation)
@@ -199,7 +200,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         "profile_seconds": {
             "model": model_seconds,
             "environment": environment_seconds,
-            "privileged_state": privileged_seconds,
+            "critic_inputs": critic_inputs_seconds,
             "tokenization": tokenization_seconds,
         },
         "transitions": transitions,
@@ -226,7 +227,8 @@ def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float) -> None:
 def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimizer: torch.optim.Optimizer,
                  device: torch.device, ppo_epochs: int, sequence_length: int,
                  clip_epsilon: float, value_coefficient: float, entropy_coefficient: float,
-                 minibatch_chunks: int = 1) -> dict[str, float]:
+                 minibatch_chunks: int = 1,
+                 attention_backend: str = "auto") -> dict[str, float]:
     """Layered-batch PPO update.
 
     Semantics CHANGE vs the previous per-chunk loop: chunks at the same position
@@ -248,6 +250,15 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         for transition in episode["transitions"]:
             transition["normalized_advantage"] = advantages[offset]
             offset += 1
+
+    if attention_backend not in ("auto", "dense", "flex"):
+        raise ValueError(f"unsupported attention backend: {attention_backend}")
+    if attention_backend == "flex" and (device.type != "cuda" or not FLEX_ATTENTION_AVAILABLE):
+        raise ValueError("FlexAttention updates require CUDA and a supported PyTorch build")
+    use_flex = (device.type == "cuda" and attention_backend != "dense"
+                and FLEX_ATTENTION_AVAILABLE)
+    for layer in model.encoder:
+        layer.attention.use_flex_attention = use_flex
 
     # cut chunks and group them by position across episodes; each chunk knows
     # the key of its predecessor (same episode, previous position) so hidden

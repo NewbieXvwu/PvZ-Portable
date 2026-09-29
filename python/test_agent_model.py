@@ -29,6 +29,7 @@ from pvz_agent_model import (
     pack_tokens,
     predict_action,
     resolve_device,
+    replay_log_probs,
     select_action,
     soft_behavior_cloning_loss,
     unpack_tokens,
@@ -179,6 +180,18 @@ class ObservationTokenTests(unittest.TestCase):
             restored_action, _, _ = select_action(model, restored, legal)
         self.assertEqual(restored_action, direct_action)
 
+        transition = {
+            "tokens": packed,
+            "previous_action": None,
+            "elapsed_since_previous_observation": 0,
+            "events": {},
+            "wave": source["wave"],
+        }
+        with torch.no_grad():
+            batched, _ = model.forward_sequences([[transition]], [None])
+        torch.testing.assert_close(batched[0]["type_logits"], direct["type_logits"],
+                                   rtol=1e-5, atol=1e-6)
+
 
 class GameplayModelTests(unittest.TestCase):
     def setUp(self) -> None:
@@ -199,6 +212,50 @@ class GameplayModelTests(unittest.TestCase):
         self.assertEqual(tuple(output["cell_keys"].shape), (CELL_COUNT, MODEL_CONFIG["width"]))
         self.assertEqual(tuple(output["value"].shape), (1,))
         self.assertEqual(output["wave_index"], source["wave"])
+
+    def test_compact_critic_inputs_match_the_full_privileged_state(self) -> None:
+        privileged = {"hidden": {
+            "wave_timer": 3400,
+            "zombies_in_wave": [[0, 1, 1, 14, 15, 0], [2, 2, 3]],
+        }}
+        for wave in (-2, 0, 1, 50):
+            full = self.model.privileged_extra(privileged, wave)
+            selected = privileged["hidden"]["zombies_in_wave"][min(max(0, wave), 1)]
+            compact = self.model.privileged_extra_from_inputs(3400, selected)
+            self.assertEqual(compact, full)
+
+    def test_batched_replay_masks_work_on_the_model_device(self) -> None:
+        source = observation()
+        legal = legal_summary(source["legal_actions"])
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model = GameplayModelV1().to(device).eval()
+        tensors, metadata = observation_tokens(source)
+        packed = pack_tokens(tensors, metadata)
+        transition = {
+            "tokens": packed,
+            "previous_action": None,
+            "elapsed_since_previous_observation": 0,
+            "events": {},
+            "wave": source["wave"],
+            "legal": legal,
+        }
+        actions = [
+            {"type": "plant", "packet": legal["packets"][0],
+             "row": 0, "col": 0},
+            {"type": "shovel", "row": 2, "col": 3},
+            {"type": "wait", "ticks": 150},
+        ]
+        # The fixture has at least one legal cell for packet 0, one shovel cell, and wait.
+        plant = source["legal_actions"]["plants"][0]
+        actions[0].update({"row": plant["row"], "col": plant["col"]})
+        with torch.no_grad():
+            outputs, _ = model.forward_sequences([[
+                {**transition, "action": action} for action in actions
+            ]], [None])
+            log_probs, entropies = replay_log_probs(
+                model, outputs, [{**transition, "action": action} for action in actions])
+        self.assertTrue(torch.isfinite(log_probs).all())
+        self.assertTrue(torch.isfinite(entropies).all())
 
     def test_hidden_state_advances_with_the_recurrence(self) -> None:
         source = observation()

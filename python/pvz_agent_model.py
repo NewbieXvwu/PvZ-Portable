@@ -9,6 +9,10 @@ import numpy as np
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
+try:
+    from torch.nn.attention.flex_attention import flex_attention
+except ImportError:  # pragma: no cover - depends on the installed PyTorch build
+    flex_attention = None
 
 
 TOKEN_KINDS = {
@@ -27,6 +31,10 @@ WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
 MODEL_ARCHITECTURE_VERSION = 4
 FEATURE_COUNT = 32
+FLEX_ATTENTION_AVAILABLE = flex_attention is not None and hasattr(torch, "compile")
+_COMPILED_FLEX_ATTENTION = (
+    torch.compile(flex_attention, dynamic=True) if FLEX_ATTENTION_AVAILABLE else None
+)
 
 
 def resolve_device(requested: str = "auto") -> torch.device:
@@ -301,6 +309,7 @@ class RelationAttention(nn.Module):
         self.heads = heads
         self.head_width = width // heads
         self.relation_bias_enabled = True
+        self.use_flex_attention = False
         self.qkv = nn.Linear(width, width * 3)
         self.projection = nn.Linear(width, width)
         self.kind_pair_bias = nn.Parameter(torch.zeros(heads, len(TOKEN_KINDS), len(TOKEN_KINDS)))
@@ -320,12 +329,51 @@ class RelationAttention(nn.Module):
             cols = cols.unsqueeze(0)
         qkv = self.qkv(x).view(batch, count, 3, self.heads, self.head_width).permute(2, 0, 3, 1, 4)
         query, key, value = qkv.unbind(0)
+        if (self.use_flex_attention and _COMPILED_FLEX_ATTENTION is not None
+                and query.device.type == "cuda" and batch >= 32):
+            kind_bias = self.kind_pair_bias
+            row_bias = self.row_bias.weight
+            col_bias = self.col_bias.weight
+            same_bias = self.same_cell_bias.weight
+
+            def relation_score(score: Tensor, batch_index: Tensor, head: Tensor,
+                               query_index: Tensor, key_index: Tensor) -> Tensor:
+                query_kind = kinds[batch_index, query_index]
+                key_kind = kinds[batch_index, key_index]
+                query_row = rows[batch_index, query_index]
+                key_row = rows[batch_index, key_index]
+                query_col = cols[batch_index, query_index]
+                key_col = cols[batch_index, key_index]
+                row_known = (query_row >= 0) & (key_row >= 0)
+                col_known = (query_col >= 0) & (key_col >= 0)
+                row_bucket = torch.where(
+                    row_known, (query_row - key_row).clamp(-5, 5) + 5, 11)
+                col_bucket = torch.where(
+                    col_known, (query_col - key_col).clamp(-8, 8) + 8, 17)
+                same_cell = (row_known & col_known & (query_row == key_row)
+                             & (query_col == key_col)).long()
+                relation = (kind_bias[head, query_kind, key_kind]
+                            + row_bias[row_bucket, head]
+                            + col_bias[col_bucket, head]
+                            + same_bias[same_cell, head])
+                score = score + relation
+                if key_mask is not None:
+                    score = score.masked_fill(
+                        ~key_mask[batch_index, key_index], torch.finfo(score.dtype).min)
+                return score
+
+            attended = _COMPILED_FLEX_ATTENTION(
+                query, key, value,
+                score_mod=relation_score if self.relation_bias_enabled else None,
+            )
+            attended = attended.transpose(1, 2).contiguous().view(batch, count, width)
+            return self.projection(attended)
         scores = torch.matmul(query, key.transpose(-2, -1)) * (self.head_width ** -0.5)
         if key_mask is not None:
-            # key_mask: (batch, count), True on real tokens.  -1e9 (not -inf) so a
-            # padded *query* row still yields finite values -- NaN backward flow is
-            # worse than a discarded zero.  Padded queries are never gathered.
-            scores = scores.masked_fill(~key_mask[:, None, None, :], -1e9)
+            # key_mask: (batch, count), True on real tokens. Use the dtype's finite
+            # minimum so a padded query row remains finite under FP16 autocast too.
+            # Padded queries are never gathered.
+            scores = scores.masked_fill(~key_mask[:, None, None, :], torch.finfo(scores.dtype).min)
         if self.relation_bias_enabled:
             kind_pair = self.kind_pair_bias[:, kinds[:, :, None], kinds[:, None, :]]
             row_known = (rows[:, :, None] >= 0) & (rows[:, None, :] >= 0)
@@ -645,9 +693,11 @@ class GameplayModelV1(nn.Module):
         aux_outcome = self.aux_outcome(belief)
         packet_query_all = self.packet_query(belief)
         arange = torch.arange(count, device=device)
-        cell_tokens = x[arange[:, None], torch.from_numpy(cell_index).to(device)]
+        cell_index_t = torch.from_numpy(cell_index).to(device=device, dtype=torch.long)
+        packet_index_t = torch.from_numpy(packet_index).to(device=device, dtype=torch.long)
+        cell_tokens = x[arange[:, None], cell_index_t]
         cell_keys = self.cell_key(cell_tokens)
-        packet_tokens = x[arange[:, None], torch.from_numpy(packet_index).to(device)]
+        packet_tokens = x[arange[:, None], packet_index_t]
         packet_keys = self.packet_key(packet_tokens)
         packet_logits = (packet_keys * packet_query_all[:, None, :]).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
 
@@ -689,15 +739,21 @@ class GameplayModelV1(nn.Module):
         the critic -- 99.7% of the stored bytes were never used.  Rollouts store
         these 16 floats (196 bytes) instead of the state dict.
         """
+        if not privileged_state:
+            return [0.0] * 16
+        hidden = privileged_state.get("hidden", {})
+        waves = hidden.get("zombies_in_wave", [])
+        current = min(max(0, wave_index), max(0, len(waves) - 1))
+        return self.privileged_extra_from_inputs(
+            hidden.get("wave_timer", 0), waves[current] if waves else [])
+
+    @staticmethod
+    def privileged_extra_from_inputs(wave_timer: int, wave_zombies: list[int]) -> list[float]:
         values = [0.0] * 16
-        if privileged_state:
-            hidden = privileged_state.get("hidden", {})
-            values[0] = _ratio(hidden.get("wave_timer", 0), 6000)
-            waves = hidden.get("zombies_in_wave", [])
-            current = min(max(0, wave_index), max(0, len(waves) - 1))
-            for zombie_type in waves[current][:15] if waves else []:
-                if 0 <= zombie_type < 15:
-                    values[1 + zombie_type] += 0.1
+        values[0] = _ratio(wave_timer, 6000)
+        for zombie_type in wave_zombies[:15]:
+            if 0 <= zombie_type < 15:
+                values[1 + zombie_type] += 0.1
         return values
 
     def privileged_value_from_extra(self, output: dict[str, Any], extra: list[float]) -> Tensor:
@@ -725,11 +781,11 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
     wait_allowed = legal["wait"]
     type_logits = output["type_logits"].clone()
     if not valid_packets:
-        type_logits[0] = -1e9
+        type_logits[0] = torch.finfo(type_logits.dtype).min
     if not valid_shovels:
-        type_logits[1] = -1e9
+        type_logits[1] = torch.finfo(type_logits.dtype).min
     if not wait_allowed:
-        type_logits[2:] = -1e9
+        type_logits[2:] = torch.finfo(type_logits.dtype).min
     type_dist = torch.distributions.Categorical(logits=type_logits)
     action_types = {"plant": 0, "shovel": 1, "wait": 2}
     if action is not None and action.get("type") not in action_types:
@@ -749,7 +805,7 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         allowed = set(valid_packets)
         for index, packet_id in enumerate(output["packet_ids"]):
             if packet_id not in allowed:
-                packet_logits[index] = -1e9
+                packet_logits[index] = torch.finfo(packet_logits.dtype).min
         packet_dist = torch.distributions.Categorical(logits=packet_logits)
         if action is not None and action["packet"] not in allowed:
             raise ValueError(f"illegal plant packet: {action}")
@@ -762,7 +818,7 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         valid_cells = _mask_cells(plant_masks[packet])
         for cell in range(54):
             if cell not in valid_cells:
-                cell_logits[cell] = -1e9
+                cell_logits[cell] = torch.finfo(cell_logits.dtype).min
         cell_dist = torch.distributions.Categorical(logits=cell_logits)
         if action is not None and action["row"] * 9 + action["col"] not in valid_cells:
             raise ValueError(f"illegal plant cell: {action}")
@@ -776,7 +832,7 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         cell_logits = model.shovel_cell_scores(output).clone()
         for cell in range(54):
             if cell not in valid_shovels:
-                cell_logits[cell] = -1e9
+                cell_logits[cell] = torch.finfo(cell_logits.dtype).min
         cell_dist = torch.distributions.Categorical(logits=cell_logits)
         if action is not None and action["row"] * 9 + action["col"] not in valid_shovels:
             raise ValueError(f"illegal shovel cell: {action}")
@@ -809,7 +865,7 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
     action=recorded)`` per transition and stacking the results, but evaluates
     every distribution in one tensor op per chunk instead of ~30 small ops per
     transition.  Only the sampling call sites differ (replay never samples);
-    masking follows exactly the same -1e9 convention, so probabilities match to
+    masking follows the same finite minimum convention, so probabilities match to
     GEMM tolerance (~1e-6).
     """
     device = outputs[0]["type_logits"].device
@@ -838,7 +894,8 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
         type_mask[row, 0] = len(legal["packets"]) > 0
         type_mask[row, 1] = legal["shovel_mask"] != 0
         type_mask[row, 2] = legal["wait"]
-    type_dist = torch.distributions.Categorical(logits=type_logits.masked_fill(~type_mask, -1e9))
+    type_dist = torch.distributions.Categorical(
+        logits=type_logits.masked_fill(~type_mask, torch.finfo(type_logits.dtype).min))
     log_prob = type_dist.log_prob(type_index)
     entropy = type_dist.entropy()
 
@@ -849,15 +906,16 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
     add_ent = torch.zeros(total, device=device)
 
     if plant_rows:
-        sel_pos = torch.zeros(len(plant_rows), dtype=torch.long)
-        packet_mask = torch.zeros(len(plant_rows), p_max, dtype=torch.bool)
+        sel_pos = torch.zeros(len(plant_rows), dtype=torch.long, device=device)
+        packet_mask = torch.zeros(len(plant_rows), p_max, dtype=torch.bool, device=device)
         for r, i in enumerate(plant_rows):
             allowed = set(transitions[i]["legal"]["packets"])
             sel_pos[r] = packet_ids_rows[i].index(transitions[i]["action"]["packet"])
             for j, pid in enumerate(packet_ids_rows[i]):
                 packet_mask[r, j] = pid in allowed
         packet_dist = torch.distributions.Categorical(
-            logits=packet_logits[plant_rows].masked_fill(~packet_mask, -1e9))
+            logits=packet_logits[plant_rows].masked_fill(
+                ~packet_mask, torch.finfo(packet_logits.dtype).min))
         lp_packet = packet_dist.log_prob(sel_pos.to(device))
         ent_packet = packet_dist.entropy()
 
@@ -869,10 +927,10 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
         bits = torch.tensor([dict(zip(transitions[i]["legal"]["packets"],
                                       transitions[i]["legal"]["plant_mask"]))[
                                   transitions[i]["action"]["packet"]] for i in plant_rows],
-                            dtype=torch.long)
-        cell_mask = ((bits[:, None] >> torch.arange(54)[None, :]) & 1) == 1
+                            dtype=torch.long, device=device)
+        cell_mask = ((bits[:, None] >> torch.arange(54, device=device)[None, :]) & 1) == 1
         cell_dist = torch.distributions.Categorical(
-            logits=cell_logits.masked_fill(~cell_mask.to(device), -1e9))
+            logits=cell_logits.masked_fill(~cell_mask, torch.finfo(cell_logits.dtype).min))
         cell_index = torch.tensor([transitions[i]["action"]["row"] * 9 + transitions[i]["action"]["col"]
                                    for i in plant_rows], dtype=torch.long, device=device)
         lp_cell = cell_dist.log_prob(cell_index)
@@ -887,10 +945,10 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
         cell_logits = (torch.einsum("nw,ntw->nt", query, cell_keys[shovel_rows])
                        / math.sqrt(MODEL_CONFIG["width"]))
         bits = torch.tensor([transitions[i]["legal"]["shovel_mask"] for i in shovel_rows],
-                            dtype=torch.long)
-        cell_mask = ((bits[:, None] >> torch.arange(54)[None, :]) & 1) == 1
+                            dtype=torch.long, device=device)
+        cell_mask = ((bits[:, None] >> torch.arange(54, device=device)[None, :]) & 1) == 1
         cell_dist = torch.distributions.Categorical(
-            logits=cell_logits.masked_fill(~cell_mask.to(device), -1e9))
+            logits=cell_logits.masked_fill(~cell_mask, torch.finfo(cell_logits.dtype).min))
         cell_index = torch.tensor([transitions[i]["action"]["row"] * 9 + transitions[i]["action"]["col"]
                                    for i in shovel_rows], dtype=torch.long, device=device)
         rows_t = torch.tensor(shovel_rows, dtype=torch.long, device=device)
@@ -927,11 +985,11 @@ def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], o
     valid_shovels = [row * 9 + col for col, row in legal["shovels"]]
     type_logits = output["type_logits"].clone()
     if not valid_packets:
-        type_logits[0] = -1e9
+        type_logits[0] = torch.finfo(type_logits.dtype).min
     if not valid_shovels:
-        type_logits[1] = -1e9
+        type_logits[1] = torch.finfo(type_logits.dtype).min
     if not legal.get("wait", True):
-        type_logits[2:] = -1e9
+        type_logits[2:] = torch.finfo(type_logits.dtype).min
     action_types = {"plant": 0, "shovel": 1, "wait": 2}
     if action.get("type") not in action_types:
         raise ValueError(f"unsupported action type: {action.get('type')}")
@@ -942,21 +1000,21 @@ def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], o
         packet_logits = output["packet_logits"].clone()
         for index, packet_id in enumerate(output["packet_ids"]):
             if packet_id not in valid_packets:
-                packet_logits[index] = -1e9
+                packet_logits[index] = torch.finfo(packet_logits.dtype).min
         packet_index = output["packet_ids"].index(action["packet"])
         losses.append(F.cross_entropy(packet_logits.unsqueeze(0), torch.tensor([packet_index], device=device)))
         cell_logits = model.plant_cell_scores(output, action["packet"]).clone()
         valid_cells = {a["row"] * 9 + a["col"] for a in legal["plants"] if a["packet"] == action["packet"]}
         for cell in range(54):
             if cell not in valid_cells:
-                cell_logits[cell] = -1e9
+                cell_logits[cell] = torch.finfo(cell_logits.dtype).min
         target_cell = action["row"] * 9 + action["col"]
         losses.append(F.cross_entropy(cell_logits.unsqueeze(0), torch.tensor([target_cell], device=device)))
     elif target_type == 1:
         cell_logits = model.shovel_cell_scores(output).clone()
         for cell in range(54):
             if cell not in valid_shovels:
-                cell_logits[cell] = -1e9
+                cell_logits[cell] = torch.finfo(cell_logits.dtype).min
         target_cell = action["row"] * 9 + action["col"]
         losses.append(F.cross_entropy(cell_logits.unsqueeze(0), torch.tensor([target_cell], device=device)))
     elif target_type == 2:

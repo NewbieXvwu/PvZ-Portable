@@ -61,7 +61,7 @@ class SharedDigestTests(unittest.TestCase):
             self.assertEqual(git_metadata(Path(directory)), (None, None))
 
     def test_version_constants_are_the_documented_values(self) -> None:
-        self.assertEqual(ENV_PROTOCOL_VERSION, 3)
+        self.assertEqual(ENV_PROTOCOL_VERSION, 4)
         self.assertEqual(REPLAY_FORMAT_VERSION, 5)
         self.assertEqual(OBSERVATION_VERSION, 2)
         self.assertEqual(TASK_VERSION, 2)

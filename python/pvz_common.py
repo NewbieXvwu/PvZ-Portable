@@ -17,7 +17,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-ENV_PROTOCOL_VERSION = 3
+ENV_PROTOCOL_VERSION = 4
 REPLAY_FORMAT_VERSION = 5
 OBSERVATION_VERSION = 2
 TASK_VERSION = 2
