@@ -1,0 +1,79 @@
+{
+  "task_id": "T2",
+  "commit": "26e13bc57ad677449b2c9034046f375b27f8fefc",
+  "worktree_clean": true,
+  "reproduce_command": "cmake --build build --parallel 4 && python -m unittest discover -s python -p 'test*.py' && python -u scripts/t2_gate.py --resource-dir /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN",
+  "gate_result": "pass",
+  "metrics": {
+    "wave_composition_consistency": {
+      "seed": 30000,
+      "full_wave_count": 30,
+      "wave_cap": 3,
+      "full_first_three": [[0], [0], [0]],
+      "capped_waves": [[0], [0], [0]],
+      "matches_full_wave_prefix": true
+    },
+    "default_level_7_seed_30000": {
+      "won": true,
+      "terminal": true,
+      "wave": 30,
+      "wave_count": 30,
+      "tick": 65401
+    },
+    "wave_cap_50_does_not_expand": {
+      "won": true,
+      "terminal": true,
+      "wave": 30,
+      "wave_count": 30,
+      "tick": 65401
+    },
+    "wave_cap_3": [
+      {"seed": 30000, "won": true, "terminal": true, "wave": 3, "wave_count": 3, "tick": 7686},
+      {"seed": 30001, "won": true, "terminal": true, "wave": 3, "wave_count": 3, "tick": 9113},
+      {"seed": 30002, "won": true, "terminal": true, "wave": 3, "wave_count": 3, "tick": 9158}
+    ],
+    "wave_cap_1": {
+      "won": true,
+      "terminal": true,
+      "wave": 1,
+      "wave_count": 1,
+      "tick": 3781
+    },
+    "preplanted_without_sunflower_card": {
+      "plants": [[1, 0, 0], [1, 1, 0]],
+      "sun_before": 50,
+      "sun_after_reset": 50,
+      "packet_types_unchanged": true
+    },
+    "preplanted_game": {
+      "won": true,
+      "terminal": true,
+      "wave": 30,
+      "wave_count": 30,
+      "tick": 58362
+    },
+    "pool_peashooter_without_lilypad": {
+      "reset_rejected": true,
+      "error": "PvZ-Portable rejected reset"
+    },
+    "zombie_count_multiplier_range": {
+      "minimum": 1.0,
+      "maximum": 10.0,
+      "python_unit_tests": 193,
+      "python_unit_tests_result": "pass"
+    }
+  },
+  "thresholds": {
+    "wave_composition_consistency": "wave_cap=3 matches the first three uncapped waves exactly for the same seed",
+    "wave_cap_3": "three level 7 seeds win after wave 3 and each tick is below 30000",
+    "wave_cap_1": "terminal after wave 1",
+    "wave_cap_none": "30 waves and the pre-T2 result tick 65401",
+    "wave_cap_above_full_waves": "does not expand the 30-wave level",
+    "preplanted": "two exact sunflower positions; no sun or packet change; win remains true",
+    "invalid_pool_preplant": "reset rejects a peashooter without a lily pad",
+    "zombie_count_multiplier": "range remains [1.0, 10.0]"
+  },
+  "raw_seed_results_path": "gates/T2.json#/metrics/wave_cap_3",
+  "protected_assets_unmodified": true,
+  "notes": "The wave-composition comparison ran first and matched. Full T2 gate and Python suite then passed on the recorded clean commit."
+}
