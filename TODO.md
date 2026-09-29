@@ -184,20 +184,71 @@
 
 **目标**：给课程与能力拆解提供物理前提。**没有 `wave_cap`，后面所有任务都无法做。**
 
-**做法**：`TaskSpec` 增加 `wave_cap: int | None`（截断 `mNumWaves`，None = 不截断）与
-`preplanted: tuple[(seed_type, row, col), ...]`（开局预置植物）。`RESET_V2` 协议需相应扩展，
-`reset()` 要校验新参数。
+**下面的语义与实现规范已经定死，按此执行，不要自行设计。**
 
-**门禁**：
+#### 2.1 语义
+
+**`wave_cap: int | None`** — 本次对局的波数上限。
+
+- 对局只生成 `min(mNumWaves, wave_cap)` 波；最后一波自动成为 final wave（有旗帜），走**正常通关判定**。
+- `None` 或 `0` = 不截断，等于现有行为。
+- **只允许截断，不允许放大**：`wave_cap > mNumWaves` 时取 `mNumWaves`，不得扩展波表。
+
+**`preplanted: tuple[(seed_type, row, col), ...]`** — 开局预置植物。
+
+- 按列表顺序逐株种植；**不消耗阳光、不消耗卡片、不触发冷却、不受 deck 限制**。
+- **不自动配底座**：泳池/屋顶需要 LilyPad / FlowerPot 时，调用方必须在列表里显式先声明底座、
+  再声明植物。
+- 任一株因地形非法无法种植 → **整次 reset 失败并报错**，不得静默跳过。
+
+#### 2.2 实现规范
+
+**C++ 侧**
+
+1. `EnvironmentTaskSpec` 增加 `waveCap`（`0` = 不限）与预置植物列表。
+2. `Board::InitLevel` 中 `mNumWaves` 赋值段（`src/Lawn/Board.cpp:581–617`）**之后**、
+   `PVZP_ASSERT(mNumWaves <= MAX_ZOMBIE_WAVES)`（617 行）**之前**插入：
+
+   ```cpp
+   if (mWaveCap > 0 && mNumWaves > mWaveCap) mNumWaves = mWaveCap;
+   ```
+
+   **必须在波次生成循环（621 行起）之前生效。** 这样 `aIsFinalWave`、旗帜标记、
+   `mCurrentWave == mNumWaves - 1` 的最后一波判定、以及通关判定全部自动正确，
+   **不需要改任何其他波次逻辑**。这是选这个插入点的唯一原因，别挪位置。
+
+3. 预置植物用 `Board::AddPlant(col, row, seedType, SeedType::SEED_NONE)`
+   （已有接口，`Board.cpp:2079`），在 `EnvironmentReset` 完成后、返回观察前执行。
+   **不要走 `EnvironmentPlant`**——它会 `packet.Deactivate()` 消耗卡片并进入冷却。
+
+**协议**：`RESET_V2` 末尾追加 `{wave_cap} {preplanted}`。
+
+- `wave_cap`：整数，`0` = 不限。
+- `preplanted`：逗号分隔的 `type:row:col`，`-` = 无。
+- 注意 `src/main.cpp:303` 的 `if (input >> extra) parsed = false;` 多余参数检查——
+  扩展后必须把它移到新参数**之后**，否则新参数会被判为多余而导致解析失败。
+
+**Python 侧**：`TaskSpec` 增加 `wave_cap: int | None = None` 与
+`preplanted: tuple[tuple[int, int, int], ...] = ()`；`reset()` 校验
+（`wave_cap` 为 `None` 或 1–50；每项 `seed_type ∈ [0,48]`、`row ∈ [0,5]`、`col ∈ [0,8]`）。
+
+#### 2.3 门禁（全部满足）
 
 | 指标 | 阈值 |
 |---|---|
-| `wave_cap=3` 的 level 7，3 个 seed | 均可终局且可胜（用 T0 的规则脚本验证） |
-| `preplanted` 2 株向日葵 | 开局植物数与位置正确，`won` 不受影响 |
-| **回归**：不指定新参数时 | level 7 行为与 T2 之前**完全一致**（用 `scripts/binary_search_equivalence.py` 或等价检查证明） |
-| `zombie_count_multiplier` 现有约束 | 保持 [1.0, 10.0]，不得放宽下界 |
+| level 7 `wave_cap=3`，3 个 seed | 第 3 波后**正常通关**（`won == True`），终局 tick 应 < 30,000 |
+| level 7 `wave_cap=1` | 第 1 波后终局 |
+| level 7 `wave_cap=None` | 仍为 30 波，与改动前一致 |
+| `preplanted` 2 株向日葵（`seed_type=1`） | 开局植物数 = 2，位置精确匹配，`won` 不受影响 |
+| 泳池关卡无水莲处预置豌豆 | **reset 失败并报错**，不得静默成功 |
+| **回归** | 不指定新参数时 level 7 / seed 30000 结果与 T2 之前一致 |
+| `zombie_count_multiplier` | 保持 [1.0, 10.0]，不得放宽下界 |
 
-**禁止**：不得为了省事把 `wave_cap` 实现成"到达波数后强行判负"——它必须是正常的通关判定。
+**禁止**：
+
+- 不得把 `wave_cap` 实现成"到达波数后强行判负"——必须是正常通关判定（会 `won`）。
+- 不得自动补 LilyPad / FlowerPot。
+- 不得静默跳过种植失败。
 
 **交付**：`gates/T2.json`
 
@@ -219,6 +270,9 @@
 - 任务 manifest 落盘（JSON），含每个任务的完整参数与 seed 列表。
 - 训练池与 held-out 集**零重叠**，用脚本断言（不是肉眼检查）。
 - 现有冻结 seed 集（development / final_test）与 held-out 集的关系在 manifest 中明确声明。
+
+**held-out manifest 一经落盘即纳入 §2.4 受保护资产**，后续任何任务不得修改——
+它是全部泛化结论的基准，改它就等于改答案。
 
 **交付**：manifest 文件 + 重叠性断言脚本 + `gates/T3.json`
 
@@ -411,6 +465,12 @@ aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
 - 上一轮（教师蒸馏路线）已确认失败并停止：`FAILURE_ANALYSIS.md`。
   教师 dev 0/256，学生 final-test 0/1024。**不要试图挽救这条路线。**
 - 新设计已定稿：`DESIGN.md`。
-- 待执行：**T0**（下一步就是这个）。
+- **T0 的 L0 修复已成功**（提交 `a871927`）：level 7 / seed 30000 在 **tick 65,401 获胜**
+  （修复前 1,796,340 tick 永不终局），seed 30001 亦获胜。seed 30002 / 30003 分别在第 10、7 波
+  正常失败——已确认是脚本策略强度问题，**不是环境阻塞**。
+- 当前待办：T0 补跑（level 1/8/20 + 记录失败局终局原因）后重跑门禁，然后 T1 → T4。
+- **T2 的语义与实现规范已在本文档 2.1–2.3 定死**（`wave_cap` 只截断不放大，插入点固定在
+  `mNumWaves` 赋值段之后、波次生成循环之前；`preplanted` 走 `Board::AddPlant`，不自动配底座、
+  失败即报错）。执行时按文档实现，不要另行设计。
 - 遗留独立任务：裸指针序列化修复—**已完成**（v4 字段逐项序列化，双进程逐字节一致，
   `verify_env_equivalence.py` 7 关卡全通过）。无需再做。
