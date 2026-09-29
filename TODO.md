@@ -616,7 +616,8 @@ git status -sb                     # 看是否与 origin 有分歧、是否有�
   - 有未提交改动 → **先归档，不要丢弃**：`git stash push -u -m "wsl-local-<日期>"`
     （或提交到本地分支 `wsl-local-backup`），并在报告里说明归档了什么。
   - 再 `git checkout pvz-env`；若分支不存在则 `git checkout -b pvz-env origin/pvz-env`。
-- 然后 `git pull --ff-only origin pvz-env`，确认 HEAD 为 `f07bd9e`（`git log --oneline -1`）。
+- 然后 `git pull --ff-only origin pvz-env`，确认 HEAD 为 **`9ee8756`**（`git log --oneline -1`；
+  至少应包含 `02125b9` 那 7 个优化提交与本次文档回填）。
 - **`--ff-only` 失败时不要用 `--force`、不要 `reset --hard`**：说明本地有提交历史分歧，
   按 §3 停下报告，由人工判断哪些本地产物要保留。
 - 同步完成后工作区必须是干净的（`git status -sb` 只显示分支行）。带脏工作区开跑，
