@@ -142,7 +142,7 @@ def _measure(workers: int, seconds: float, tasks: list[dict[str, Any]], state_di
             task["task_id"]: sum(item["task_id"] == task["task_id"] for item in completed)
             for task in tasks
         },
-        "shards_path": str(shard_dir.relative_to(ROOT)),
+        "shards_path": str(shard_dir.resolve().relative_to(ROOT)),
     }
 
 
