@@ -588,13 +588,17 @@ i7-12700F 单核约为此机一半，**若 GPU 红利不成立，台式机未必
   （`--device cuda`），报告每档更新耗时与峰值显存，据此定正式配置（见 MEMORY_BUDGET.md §7）。
 
 **2026-09-29 台式机实测结论（已合入，HEAD `02125b9`）**：CPU 上分层批是负优化（2000 局
-×51 步×2 epoch：逐条 773 s → 单 chunk 750 s → 分层批 16/128 均为 852 s），**默认值保持 1**。
-CUDA 上大 batch 的红利**确实存在但来源是 attention kernel 而非"矩阵更大"**：
-`--minibatch-chunks 16` + exact FlexAttention 使 2000 局更新 **404 s → 188 s（2.15×）**，
-峰值显存分配 2.07 GB/预留 5.88 GB（dense 为 2.49/6.44 GB），loss 与梯度范数与 dense 一致
-（policy 0.12451 vs 0.12455，grad norm 1.488 vs 1.489）。**正式 T5 用 `--device cuda`、
-sequence 16、chunks 16、lr 1e-4、attention `auto`**。证据：`artifacts/t5/perf/ppo_update_2000_{flex,dense}.json`、
-`attention_sweep.json`。
+×51 步×2 epoch：逐条 773 s → 单 chunk 750 s → 分层批 16/128 均为 852 s）——
+**这是 Mac CPU 的结论，不要外推**。CUDA 上大 batch 的红利**确实存在但来源是 attention kernel
+而非"矩阵更大"**：`--minibatch-chunks 16` + exact FlexAttention 使 2000 局更新
+**404 s → 188 s（2.15×）**，峰值显存分配 2.07 GB/预留 5.88 GB（dense 为 2.49/6.44 GB），
+loss 与梯度范数与 dense 一致（policy 0.12451 vs 0.12455，grad norm 1.488 vs 1.489）。
+证据：`artifacts/t5/perf/ppo_update_2000_{flex,dense}.json`、`attention_sweep.json`。
+
+> **注意（2026-09-29 晚核对代码）**：台式机提交 `771700d` 已把脚本默认值改成
+> `--minibatch-chunks 16`、`--learning-rate 1e-4`、`--attention-backend auto`。
+> 即**直接运行 `train_pvz_ppo_task_family.py` 得到的就是 CUDA 吞吐最优配置**。
+> 但该配置**只验证过吞吐，从未验证过学习信号**——见下方 §5.2。
 
 ### 5.1 交接状态（执行环境已搬到台式机，笔记本离线）
 
@@ -646,6 +650,43 @@ git status -sb                     # 看是否与 origin 有分歧、是否有�
 约 3.8 GB CPU RSS、约 2 GB CUDA 分配**同时**存在。进程池目前每次 2,000 局更新重建一次；报告明确
 **不提交持久池**（省下的启动开销不值这份内存）。在 16 GB WSL 上跑正式 T5 前，先按 `MEMORY_BUDGET.md` §4
 把 `.wslconfig` 上限调够，或接受 18 worker 的峰值需求。
+
+### 5.2 阶段 0 的三个阻塞点（2026-09-29 晚核对代码发现，**开工前必须解决**）
+
+§4 的 T5 细则要求"先过阶段 0 学习信号验证门"。核对 `python/train_pvz_ppo_task_family.py`
+后发现，**阶段 0 按现有代码无法按要求执行**，有三处缺口：
+
+**缺口 1：课程起点无代码路径。** §4 要求"先用 `train.json` 中 `wave_cap=1` 且 `1.0×` 的 5 个
+任务开训"，但 `_task_family()`（第 66–72 行）**硬性断言训练集恰好 20 个任务**，
+`TRAIN_PATH` 是模块常量，**没有任何 `--train-manifest` 或课程过滤参数**。
+→ 需要新增课程入口（过滤清单或 `--curriculum` 参数）。
+
+**缺口 2：阶段 0 的评估判据无处落地。** `_evaluate()`（第 188–234 行）**只评估 heldout 的
+cap3×1.0 子集**（10 个任务），`_curve_rises()` 也只看 `heldout_cap3_x1_pass_rate`。
+而 §4 阶段 0 判据写的是"评估集 pass rate 由训练前基线（< 5%）上升到 > 50%"——
+这个"评估集"若指 cap1 训练任务，**代码里没有独立评估路径**（只有 `_curve_row` 里
+训练过程的滚动 64 局值，不是独立评估）；若指 heldout cap3，则基线是 **0%**（T4 实测）而非 <5%。
+→ 需要裁定阶段 0 到底在哪个集合上判定，并补上对应的独立评估。
+
+**缺口 3：网络要求（§4 明写"阶段 0 之前完成"）未实现。** §4 要求两处观测编码改动：
+显式派生特征（每行僵尸威胁度/最近僵尸距离/该行射手数/该行植物总血量；全局阳光收入速率/
+经济与火力比/波次进度）与 lane 级聚合 token。代码中**只有 T4 时代的 `aux_lane_threat`
+辅助预测头**（`pvz_agent_model.py:448`），既不是 lane 聚合 token，也没有上述派生特征。
+→ 需要实现。
+
+**另外两个必须注意的行为（不是缺口，是设计约束）**：
+
+- **每次调用脚本都会消耗一个正式 run 名额**（`run_number = state["formal_runs"] + 1`，
+  `MAX_FORMAL_RUNS = 8`）。run > 1 必须给 `--motivation`，且**默认从上一 run 的
+  `runs/run_{N-1}/gameplay_model_v1_ppo.pt` 续训**。因此若先跑 run 1 再改网络结构，
+  run 2 会因 `model_architecture_version` 不匹配而直接报错 ——
+  **顺序必须是"先做完缺口 1–3，再开 run 1"**。
+- run 1 的随机初始化必须与 T4 冻结的 seed-0 `state_sha256` **逐位一致**，否则 `_baseline()`
+  与初始化检查都会报错。这条保证了基线的可比性，不要绕过。
+
+**已确认可用的部分**：硬停止条件已实现（每 5,000 局或 30 分钟评估一次；累计 20,000 局后
+pass rate < 20% 且最近 5,000 局改善 < 5pp → 自动停止并写 `stop_reason`）；
+`--max-episodes-per-run` 默认 20,000，阶段 0 需显式传 `10000`。
 
 ### 已排除的路线（有实测数据，勿重复尝试）
 
@@ -700,13 +741,18 @@ git status -sb                     # 看是否与 origin 有分歧、是否有�
   后者按实测**不引入持久池**（见 §5.1）。
 - **"更新占 95% → GPU 强项"的推理已被部分修正**：真实瓶颈是 batch=1 串行 + 每 epoch 重做 token 化，
   但 CUDA 大 batch 确有效益——**来源是 attention kernel**（exact Flex 2.15×），不是"矩阵更大"。
-- 当前待办：**T5 正式训练，在台式机上执行**（**至今无 `gates/T5.json`，T5 尚未开始**）。顺序为：
-  按 §5.1 确认 HEAD = `02125b9` → 清理 `artifacts/t5/training_state.json`（本机已删；残留会让下次 T5
-  被当成 run 2 并从协议 3 旧 checkpoint 续训）→ 用 §5.1 的实测配置（CPU/18 worker、CUDA/chunks 16/lr 1e-4）
-  → **阶段 0 验证门**（cap1/1.0 的 5 个任务，≤10,000 局，判据 pass rate <5% → >50%）→
-  通过后再进阶段 1 正式训练（20 任务，门禁 = heldout ∩ (cap3, ×1.0) ≥90%）→ **停止等待确认，不得开始 T6**。
-  注意：台式机那一轮的 smoke 显示"一次 2,000 局 Flex 更新后仍 0/20 胜出、终局 wave 分布不变"，
-  所以阶段 0 这道门是真正的裁判。
+- 当前待办：**T5 阶段 0 尚不能开工** —— 核对代码发现三个缺口（见 §5.2）：
+  ①课程起点（cap1 5 任务）无代码路径（训练集硬断言 20 个任务）；
+  ②阶段 0 的评估判据无处落地（`_evaluate` 只评估 heldout cap3×1.0，基线 0%）；
+  ③§4 明写"阶段 0 之前完成"的网络要求（派生特征 + lane 聚合 token）未实现。
+  **必须先补完 ①–③ 才能开 run 1**，否则 run 1 的名额会被一个改不了结构的配置占掉
+  （run > 1 默认从上一 run 续训，网络一变就 `model_architecture_version` 不匹配报错）。
+  补齐后的顺序：确认 HEAD → 清 `artifacts/t5/training_state.json` → `--device cuda`
+  `--max-episodes-per-run 10000` 跑阶段 0 → 判据 >50% → 再进阶段 1（20 任务，heldout
+  ∩(cap3,×1.0) ≥90%）→ **停止等待确认，不得开始 T6**。
+  另注意脚本默认已是 `chunks 16 / lr 1e-4`，该组合**只验证过吞吐、未验证过学习信号**。
+  台式机 smoke 显示"一次 2,000 局更新后仍 0/20 胜出"，样本太小不构成证据，
+  阶段 0 才是真正的裁判。
 - T6 及以后（分层网络 + 意图动作空间）需要设计判断，本次无人值守不推进。
 - **T2 的语义与实现规范已在本文档 2.1–2.3 定死**（`preplanted` 走 `Board::AddPlant`，
   不自动配底座、失败即报错）。执行时按文档实现，不要另行设计。
