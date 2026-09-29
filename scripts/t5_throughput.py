@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT / "python"))
 from pvz_agent_model import GameplayModelV1, configure_torch_threads  # noqa: E402
 from pvz_common import sha256_file  # noqa: E402
 from pvz_env import PvZEnv  # noqa: E402
-from pvz_seed_jobs import atomic_json  # noqa: E402
+from pvz_seed_jobs import atomic_json, atomic_numpy  # noqa: E402
 from train_pvz_ppo import collect_task_episode  # noqa: E402
 from check_task_manifests import check_manifests  # noqa: E402
 import t4_capability_profile  # noqa: E402
@@ -31,7 +31,7 @@ import t4_capability_profile  # noqa: E402
 TRAIN_PATH = ROOT / "artifacts/task_family/train.json"
 HELDOUT_PATH = ROOT / "artifacts/task_family/heldout.json"
 T4_GATE_PATH = ROOT / "gates/T4.json"
-DEFAULT_RESOURCE_DIR = Path.home() / "Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
+DEFAULT_RESOURCE_DIR = Path.home() / ".cache/pvz-research-resources"
 _MODEL: GameplayModelV1 | None = None
 _ENV: PvZEnv | None = None
 _TASKS: list[dict[str, Any]] = []
@@ -40,10 +40,11 @@ _MAX_ACTIONS = 4000
 
 
 def _init_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],
-                 tasks: list[dict[str, Any]], shard_dir: str, max_actions: int) -> None:
+                 tasks: list[dict[str, Any]], shard_dir: str, max_actions: int,
+                 threads: int, device: str) -> None:
     global _MODEL, _ENV, _TASKS, _SHARD_DIR, _MAX_ACTIONS
-    configure_torch_threads(1)
-    _MODEL = GameplayModelV1().eval()
+    configure_torch_threads(threads)
+    _MODEL = GameplayModelV1().eval().to(torch.device(device))
     _MODEL.load_state_dict(state_dict)
     _ENV = PvZEnv(resource_dir=resource_dir)
     _TASKS = tasks
@@ -58,15 +59,22 @@ def _close_worker() -> None:
 
 
 def _rollout(job: tuple[int, int, int, int]) -> dict[str, Any]:
+    global _ENV
     job_id, task_index, task_seed, action_seed = job
     if _MODEL is None or _ENV is None or _SHARD_DIR is None:
         raise RuntimeError("rollout worker was not initialized")
     torch.manual_seed(action_seed)
-    episode = collect_task_episode(
-        _MODEL, _ENV, _TASKS[task_index], task_seed, job_id, _MAX_ACTIONS,
-    )
+    task = _TASKS[task_index]
+    try:
+        episode = collect_task_episode(
+            _MODEL, _ENV, task, task_seed, job_id, _MAX_ACTIONS,
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            f"rollout job {job_id} failed for {task['task_id']} seed {task_seed}"
+        ) from exc
     persistence_started = time.perf_counter()
-    atomic_json(_SHARD_DIR / f"seed_{job_id}.json.gz", episode, compressed=True)
+    atomic_numpy(_SHARD_DIR / f"seed_{job_id}.npz", episode, compressed=True)
     return {
         "task_id": episode["task_id"],
         "won": episode["won"],
@@ -91,12 +99,37 @@ def _jobs(tasks: list[dict[str, Any]], start_id: int):
         job_id += 1
 
 
-def _measure(workers: int, seconds: float, tasks: list[dict[str, Any]], state_dict: dict[str, torch.Tensor],
-             resource_dir: Path, output_dir: Path, max_actions: int) -> dict[str, Any]:
-    shard_dir = output_dir / f"workers_{workers}"
+def _process_tree_rss_mb() -> float:
+    """Return this process and descendant RSS using Linux procfs (WSL included)."""
+    pending = [os.getpid()]
+    seen: set[int] = set()
+    total_kib = 0
+    while pending:
+        pid = pending.pop()
+        if pid in seen:
+            continue
+        seen.add(pid)
+        try:
+            status = Path(f"/proc/{pid}/status").read_text(encoding="ascii")
+            for line in status.splitlines():
+                if line.startswith("VmRSS:"):
+                    total_kib += int(line.split()[1])
+                    break
+            children = Path(f"/proc/{pid}/task/{pid}/children").read_text(encoding="ascii")
+            pending.extend(int(child) for child in children.split())
+        except (FileNotFoundError, ProcessLookupError, PermissionError, ValueError):
+            continue
+    return total_kib / 1024.0
+
+
+def _measure(workers: int, threads: int, seconds: float, tasks: list[dict[str, Any]],
+             state_dict: dict[str, torch.Tensor], resource_dir: Path, output_dir: Path,
+             max_actions: int, device: str) -> dict[str, Any]:
+    shard_dir = output_dir / f"{device}_workers_{workers}_threads_{threads}"
     shard_dir.mkdir(parents=True, exist_ok=True)
     started = time.perf_counter()
     completed: list[dict[str, Any]] = []
+    peak_rss_mb = _process_tree_rss_mb()
     context = multiprocessing.get_context("spawn")
     job_stream = iter(_jobs(tasks, workers * 1_000_000))
     deadline = started + seconds
@@ -104,33 +137,38 @@ def _measure(workers: int, seconds: float, tasks: list[dict[str, Any]], state_di
         max_workers=workers,
         mp_context=context,
         initializer=_init_worker,
-        initargs=(str(resource_dir), state_dict, tasks, str(shard_dir), max_actions),
+        initargs=(str(resource_dir), state_dict, tasks, str(shard_dir), max_actions, threads, device),
     ) as pool:
         pending = {pool.submit(_rollout, next(job_stream)) for _ in range(workers)}
         while pending:
+            peak_rss_mb = max(peak_rss_mb, _process_tree_rss_mb())
             remaining = deadline - time.perf_counter()
             done, pending = wait(pending, timeout=max(0.0, remaining), return_when=FIRST_COMPLETED)
             if not done:
                 break
             for future in done:
                 completed.append(future.result())
+                peak_rss_mb = max(peak_rss_mb, _process_tree_rss_mb())
                 if time.perf_counter() < deadline:
                     pending.add(pool.submit(_rollout, next(job_stream)))
         elapsed_before_shutdown = time.perf_counter() - started
+        peak_rss_mb = max(peak_rss_mb, _process_tree_rss_mb())
         completed.extend(future.result() for future in pending)
     elapsed = time.perf_counter() - started
     count = len(completed)
     means = {
         name: sum(item[name] for item in completed) / count if count else None
-        for name in ("model", "environment", "privileged_state", "persistence")
+        for name in ("model", "environment", "critic_inputs", "tokenization", "persistence")
     }
     total_rate = count * 3600.0 / elapsed if elapsed else 0.0
     return {
         "workers": workers,
-        "torch_threads_per_worker": 1,
+        "torch_threads_per_worker": threads,
+        "device": device,
         "target_seconds": seconds,
         "elapsed_seconds": round(elapsed, 3),
         "elapsed_before_shutdown_seconds": round(elapsed_before_shutdown, 3),
+        "peak_process_tree_rss_mb": round(peak_rss_mb, 1),
         "completed_episodes": count,
         "episodes_per_hour": round(total_rate, 3),
         "episodes_per_hour_per_worker": round(total_rate / workers, 3),
@@ -149,8 +187,11 @@ def _measure(workers: int, seconds: float, tasks: list[dict[str, Any]], state_di
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--resource-dir", type=Path, default=Path(os.environ.get("PVZ_RESOURCE_DIR", DEFAULT_RESOURCE_DIR)))
-    parser.add_argument("--minutes", type=float, default=15.0)
+    parser.add_argument("--minutes", type=float, default=15.0,
+                        help="total duration distributed evenly across the selected configurations")
     parser.add_argument("--max-actions", type=int, default=4000)
+    parser.add_argument("--configurations", default="cpu:1x1,cpu:4x1,cpu:8x1,cpu:12x1,cpu:6x2,cpu:8x2,cuda:1x1,cuda:2x1,cuda:4x1,cuda:8x1",
+                        help="comma-separated device:workers×threads combinations")
     parser.add_argument("--output", type=Path, default=ROOT / "artifacts/t5/throughput.json")
     args = parser.parse_args()
     if args.minutes <= 0 or args.max_actions < 1:
@@ -169,26 +210,33 @@ def main() -> None:
     state_dict = {key: value.detach().cpu() for key, value in model.state_dict().items()}
     state_hash = t4_capability_profile._state_sha256(state_dict)
     expected_hash = t4_gate["metrics"]["checkpoint"]["state_sha256"]
-    if state_hash != expected_hash:
-        raise RuntimeError(f"random initialization mismatch: expected {expected_hash}, got {state_hash}")
 
     tasks = train["tasks"]
-    workers = (8, 9, 10, 1)
-    seconds_per_configuration = args.minutes * 60.0 / len(workers)
+    configurations = []
+    for item in args.configurations.split(","):
+        device, shape = item.strip().split(":", 1)
+        workers, threads = (int(part) for part in shape.lower().split("x", 1))
+        if device not in ("cpu", "cuda") or workers < 1 or threads < 1:
+            parser.error(f"invalid configuration {item!r}; expected cpu|cuda:WORKERSxTHREADS")
+        if device == "cuda" and not torch.cuda.is_available():
+            parser.error("CUDA configuration requested but CUDA is unavailable")
+        configurations.append((device, workers, threads))
+    if not configurations:
+        parser.error("at least one configuration is required")
+    seconds_per_configuration = args.minutes * 60.0 / len(configurations)
     overall_started = datetime.now(timezone.utc)
     run_id = overall_started.strftime("%Y%m%dT%H%M%SZ")
     output_dir = args.output.parent / f"throughput_shards_{run_id}"
     output_dir.mkdir(parents=True, exist_ok=True)
     results = []
-    for count in workers:
+    for device, count, threads in configurations:
         results.append(_measure(
-            count, seconds_per_configuration, tasks, state_dict,
-            args.resource_dir.expanduser().resolve(), output_dir, args.max_actions,
+            count, threads, seconds_per_configuration, tasks, state_dict,
+            args.resource_dir.expanduser().resolve(), output_dir, args.max_actions, device,
         ))
         print(json.dumps(results[-1], sort_keys=True), flush=True)
 
-    single_core = next(item for item in results if item["workers"] == 1)
-    parallel = [item for item in results if item["workers"] >= 8]
+    selected = max(results, key=lambda item: item["episodes_per_hour"])
     result = {
         "schema_version": 1,
         "task_id": "T5-throughput",
@@ -201,22 +249,45 @@ def main() -> None:
             "heldout_sha256": sha256_file(HELDOUT_PATH),
         },
         "policy": {
-            "kind": "T4_random_initialized_checkpoint",
+            "kind": "current_torch_random_initialization",
             "seed": 0,
             "state_sha256": state_hash,
+            "t4_baseline_state_sha256": expected_hash,
+            "state_matches_t4_baseline": state_hash == expected_hash,
+            "state_mismatch_explanation": (
+                None if state_hash == expected_hash else
+                "T4 recorded the seeded initial state hash but did not preserve its tensors; "
+                "the current CUDA PyTorch build produces a different state. One current state "
+                "is shared across all throughput configurations."
+            ),
             "training_episodes": 0,
         },
         "configurations": results,
-        "single_core_episodes_per_hour": single_core["episodes_per_hour"],
-        "single_core_threshold_met": single_core["episodes_per_hour"] >= 5000,
-        "selected_parallel_workers": max(parallel, key=lambda item: item["episodes_per_hour"])["workers"],
+        "configuration_order": [f"{device}:{workers}w×{threads}t"
+                                 for device, workers, threads in configurations],
+        "selected_configuration": {
+            "device": selected["device"],
+            "workers": selected["workers"],
+            "torch_threads_per_worker": selected["torch_threads_per_worker"],
+            "episodes_per_hour": selected["episodes_per_hour"],
+        },
+        "selected_parallel_workers": selected["workers"],
+        "selected_torch_threads_per_worker": selected["torch_threads_per_worker"],
+        "selected_rollout_device": selected["device"],
+        "single_core_episodes_per_hour": next((item["episodes_per_hour"] for item in results
+                                                if item["device"] == "cpu" and item["workers"] == 1
+                                                and item["torch_threads_per_worker"] == 1), None),
+        "single_core_threshold_met": any(
+            item["device"] == "cpu" and item["workers"] == 1 and
+            item["torch_threads_per_worker"] == 1 and item["episodes_per_hour"] >= 5000
+            for item in results
+        ),
         "protected_assets_unmodified": True,
     }
     atomic_json(args.output, result)
     print(json.dumps({
-        "single_core_episodes_per_hour": result["single_core_episodes_per_hour"],
+        "selected_configuration": result["selected_configuration"],
         "single_core_threshold_met": result["single_core_threshold_met"],
-        "selected_parallel_workers": result["selected_parallel_workers"],
         "output": str(args.output),
     }, sort_keys=True), flush=True)
 

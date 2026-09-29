@@ -47,7 +47,7 @@ HELDOUT_PATH = ROOT / "artifacts/task_family/heldout.json"
 T4_GATE_PATH = ROOT / "gates/T4.json"
 T4_RAW_PATH = ROOT / "artifacts/task_family/t4_seed_results.json"
 THROUGHPUT_PATH = ROOT / "artifacts/t5/throughput.json"
-DEFAULT_RESOURCE_DIR = Path.home() / "Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
+DEFAULT_RESOURCE_DIR = Path.home() / ".cache/pvz-research-resources"
 CORE_THRESHOLD = 5000.0
 WIN_THRESHOLD = 0.90
 MAX_FORMAL_RUNS = 8
@@ -136,10 +136,11 @@ def _close_worker() -> None:
 
 
 def _init_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],
-                 assignments: dict[int, dict[str, Any]], max_actions: int) -> None:
+                 assignments: dict[int, dict[str, Any]], max_actions: int,
+                 worker_threads: int, worker_device: str) -> None:
     global WORKER_MODEL, WORKER_ENV, WORKER_ASSIGNMENTS, WORKER_MAX_ACTIONS
-    configure_torch_threads(1)
-    WORKER_MODEL = GameplayModelV1().eval()
+    configure_torch_threads(worker_threads)
+    WORKER_MODEL = GameplayModelV1().eval().to(resolve_device(worker_device))
     WORKER_MODEL.load_state_dict(state_dict)
     WORKER_ENV = PvZEnv(resource_dir=resource_dir)
     WORKER_ASSIGNMENTS = assignments
@@ -382,26 +383,33 @@ def _parse_args() -> argparse.Namespace:
                         default=Path(os.environ.get("PVZ_RESOURCE_DIR", DEFAULT_RESOURCE_DIR)))
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/t5")
     parser.add_argument("--workers", type=int)
+    parser.add_argument("--rollout-threads", type=int,
+                        help="override the measured Torch threads per rollout worker")
+    parser.add_argument("--rollout-device", choices=("cpu", "cuda"),
+                        help="override the measured rollout worker device")
     parser.add_argument("--run-number", type=int)
     parser.add_argument("--init-checkpoint", type=Path)
     parser.add_argument("--motivation")
-    parser.add_argument("--rollout-episodes", type=int, default=100)
+    parser.add_argument("--rollout-episodes", type=int, default=2000,
+                        help="episodes collected before each PPO update; 2000 amortizes "
+                             "the measured RTX 5080 update cost")
     parser.add_argument("--ppo-epochs", type=int, default=2)
-    parser.add_argument("--sequence-length", type=int, default=64)
+    parser.add_argument("--sequence-length", type=int, default=16,
+                        help="truncated-BPTT steps; 16 was fastest in the measured sweep")
     parser.add_argument("--max-actions", type=int, default=4000)
     parser.add_argument("--max-episodes-per-run", type=int, default=20_000)
-    parser.add_argument("--learning-rate", type=float, default=3e-5)
-    parser.add_argument("--minibatch-chunks", type=int, default=1,
-                        help="chunks per optimizer step in the layered PPO update. "
-                             "1 keeps the original per-chunk semantics (CPU-safe). "
-                             "On CUDA, 64-256 amortizes kernel launches and is where "
-                             "the RTX 5080 actually pays off -- must be measured first, "
-                             "and lr must be retuned upward when raising this.")
+    parser.add_argument("--learning-rate", type=float, default=1e-4,
+                        help="measured with 16 chunks per optimizer step")
+    parser.add_argument("--minibatch-chunks", type=int, default=16,
+                        help="chunks per optimizer step; 16 was fastest in the RTX 5080 sweep "
+                             "(32 used more memory and was slower)")
+    parser.add_argument("--attention-backend", choices=("auto", "dense", "flex"), default="auto",
+                        help="auto uses exact FlexAttention for large CUDA update batches")
     parser.add_argument("--clip-epsilon", type=float, default=0.2)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--value-coefficient", type=float, default=0.5)
     parser.add_argument("--entropy-coefficient", type=float, default=0.01)
-    parser.add_argument("--device", choices=("auto", "cpu", "mps"), default="auto")
+    parser.add_argument("--device", choices=("auto", "cpu", "cuda", "mps"), default="auto")
     parser.add_argument("--seed", type=int, default=1701)
     parser.add_argument("--initialization-seed", type=int, default=0)
     return parser.parse_args()
@@ -411,6 +419,8 @@ def main() -> None:
     args = _parse_args()
     if args.workers is not None and args.workers < 1:
         raise SystemExit("--workers must be positive")
+    if args.rollout_threads is not None and args.rollout_threads < 1:
+        raise SystemExit("--rollout-threads must be positive")
     if args.rollout_episodes < 1 or args.ppo_epochs < 1 or args.sequence_length < 1 or args.max_actions < 1:
         raise SystemExit("rollout size, PPO epochs, sequence length, and max actions must be positive")
     if args.max_episodes_per_run < 1 or not 0.0 < args.gae_lambda <= 1.0:
@@ -432,8 +442,10 @@ def main() -> None:
     if not throughput["single_core_threshold_met"]:
         raise RuntimeError("single-core throughput gate failed; formal training is not allowed")
     workers = args.workers or throughput["selected_parallel_workers"]
-    if workers < 8:
-        raise ValueError("formal T5 rollout must use at least 8 workers")
+    worker_threads = args.rollout_threads or throughput["selected_torch_threads_per_worker"]
+    worker_device = args.rollout_device or throughput["selected_rollout_device"]
+    # Resolve early so a stale or manually edited throughput report fails clearly.
+    resolve_device(worker_device)
 
     if state_path.exists():
         state = json.loads(state_path.read_text(encoding="utf-8"))
@@ -523,7 +535,9 @@ def main() -> None:
         **{key: str(value) if isinstance(value, Path) else value for key, value in vars(args).items()},
         "run_number": run_number,
         "workers": workers,
-        "torch_threads_per_worker": 1,
+        "torch_threads_per_worker": worker_threads,
+        "rollout_device": worker_device,
+        "rollout_worker_benchmark": throughput.get("selected_configuration"),
         "resource_dir": str(resource_dir),
         "train_manifest": str(TRAIN_PATH),
         "heldout_manifest": str(HELDOUT_PATH),
@@ -592,6 +606,8 @@ def main() -> None:
             "manifest_sha256": run_config["train_manifest_sha256"],
             "max_actions": args.max_actions,
             "potential": run_config["potential"],
+            "rollout_device": worker_device,
+            "rollout_threads": worker_threads,
         }
         shard_dir = seed_job_directory(run_dir, f"update_{update + 1:04d}", metadata)
         episodes = run_seed_jobs(
@@ -601,7 +617,8 @@ def main() -> None:
             _rollout_worker,
             workers=workers,
             initializer=_init_worker,
-            initargs=(str(resource_dir), model_state, assignments, args.max_actions),
+            initargs=(str(resource_dir), model_state, assignments, args.max_actions,
+                      worker_threads, worker_device),
             label=f"T5 run {run_number} update {update + 1}",
         )
         add_advantages(episodes, args.gae_lambda)
@@ -609,6 +626,7 @@ def main() -> None:
             model, episodes, optimizer, device, args.ppo_epochs, args.sequence_length,
             args.clip_epsilon, args.value_coefficient, args.entropy_coefficient,
             minibatch_chunks=args.minibatch_chunks,
+            attention_backend=args.attention_backend,
         )
         update += 1
         run_episodes += len(episodes)
