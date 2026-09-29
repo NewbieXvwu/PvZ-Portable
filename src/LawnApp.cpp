@@ -1718,7 +1718,8 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	firstAction = true;
 	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
 		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
-			if (mBoard->ToolHitTest(mBoard->GridToPixelX(col, row) + 40, mBoard->GridToPixelY(col, row) + 40) != nullptr)
+			if (mBoard->GetTopPlantAt(col, row, PlantPriority::TOPPLANT_ANY) != nullptr &&
+				mBoard->ToolHitTest(mBoard->GridToPixelX(col, row) + 40, mBoard->GridToPixelY(col, row) + 40) != nullptr)
 			{
 				if (!firstAction) out << ',';
 				firstAction = false;
