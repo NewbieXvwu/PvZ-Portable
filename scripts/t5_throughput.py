@@ -175,10 +175,11 @@ def main() -> None:
     tasks = train["tasks"]
     workers = (8, 9, 10, 1)
     seconds_per_configuration = args.minutes * 60.0 / len(workers)
-    output_dir = args.output.parent / "throughput_shards"
+    overall_started = datetime.now(timezone.utc)
+    run_id = overall_started.strftime("%Y%m%dT%H%M%SZ")
+    output_dir = args.output.parent / f"throughput_shards_{run_id}"
     output_dir.mkdir(parents=True, exist_ok=True)
     results = []
-    overall_started = datetime.now(timezone.utc).isoformat()
     for count in workers:
         results.append(_measure(
             count, seconds_per_configuration, tasks, state_dict,
@@ -191,7 +192,7 @@ def main() -> None:
     result = {
         "schema_version": 1,
         "task_id": "T5-throughput",
-        "started_at": overall_started,
+        "started_at": overall_started.isoformat(),
         "finished_at": datetime.now(timezone.utc).isoformat(),
         "duration_minutes_requested": args.minutes,
         "resource_dir": str(args.resource_dir.expanduser().resolve()),
