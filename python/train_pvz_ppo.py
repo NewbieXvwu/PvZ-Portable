@@ -166,8 +166,10 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         shaping_reward = discount * next_potential - current_potential
         transition["shaping_reward"] = shaping_reward
         transition["reward"] = shaping_reward
+        transition["terminal_outcome"] = 0.0
         if done:
-            transition["reward"] += 1.0 if observation["result"] == 1 else -1.0
+            transition["terminal_outcome"] = 1.0 if observation["result"] == 1 else -1.0
+            transition["reward"] += transition["terminal_outcome"]
             break
     if not observation["terminal"]:
         raise RuntimeError(f"PPO episode exceeded {max_actions} decisions on seed {environment_seed}")
@@ -225,6 +227,8 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
     advantages = torch.tensor([
         transition["advantage"] for episode in episodes for transition in episode["transitions"]
     ], dtype=torch.float32, device=device)
+    advantage_mean = float(advantages.mean().item())
+    advantage_std = float(advantages.std(unbiased=False).item())
     advantages = (advantages - advantages.mean()) / advantages.std(unbiased=False).clamp_min(1e-6)
     offset = 0
     for episode in episodes:
@@ -253,7 +257,9 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                 )
                 hidden = output["hidden"]
                 log_probs.append(log_prob)
-                values.append(output["value"].squeeze())
+                value = (model.privileged_value(output, transition["privileged_state"])
+                         if "privileged_state" in transition else output["value"])
+                values.append(value.squeeze())
                 entropies_for_chunk.append(entropy)
             new_log_prob = torch.stack(log_probs)
             old_log_prob = torch.tensor(
@@ -277,9 +283,13 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
             value_loss = F.mse_loss(torch.stack(values), returns)
             entropy = torch.stack(entropies_for_chunk).mean()
             loss = policy_loss + value_coefficient * value_loss - entropy_coefficient * entropy
+            if not torch.isfinite(loss):
+                raise FloatingPointError("PPO loss became non-finite")
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            gradient_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            if not torch.isfinite(gradient_norm):
+                raise FloatingPointError("PPO gradient norm became non-finite")
             optimizer.step()
             policy_losses.append(float(policy_loss.detach().item()))
             value_losses.append(float(value_loss.detach().item()))
@@ -289,6 +299,9 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         "policy_loss": sum(policy_losses) / len(policy_losses),
         "value_loss": sum(value_losses) / len(value_losses),
         "entropy": sum(entropies) / len(entropies),
+        "advantage_mean": advantage_mean,
+        "advantage_std": advantage_std,
+        "gradient_norm": float(gradient_norm.detach().item()),
     }
 
 
@@ -297,10 +310,14 @@ def episode_hash(episode: dict[str, Any]) -> str:
         key: transition[key]
         for key in (
             "observation", "previous_action", "elapsed_since_previous_observation",
-            "action_duration_ticks", "events", "action", "log_prob", "value", "reward",
-        )
+            "action_duration_ticks", "events", "privileged_state", "action", "log_prob",
+            "value", "potential", "shaping_reward", "terminal_outcome", "reward",
+        ) if key in transition
     } for transition in episode["transitions"]]
-    return canonical_digest({"seed": episode["seed"], "steps": steps, "result": episode["result"]})
+    return canonical_digest({
+        "seed": episode["seed"], "task_seed": episode.get("task_seed"),
+        "task_id": episode.get("task_id"), "steps": steps, "result": episode["result"],
+    })
 
 
 def main() -> None:
