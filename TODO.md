@@ -370,7 +370,16 @@ aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
 
 因此开工前**必须实测并报告 rollout / 更新的耗时拆分**（写进证据文件）。
 这一条修正了此前"T5 锁定 Mac"的决定：那个判断基于"rollout 占大头"的假设，
-而本机实测是更新占 95%，批量矩阵运算正是 RTX 5080 的强项——故 T5 改在台式机执行。
+而本机实测是更新占 95%。
+
+**但"更新占 95% → 批量矩阵运算 → RTX 5080 强项"这一步推理是错的，已推翻**——见 `MEMORY_BUDGET.md` §3.3/§6。
+更新慢的真实原因是 **batch=1 串行循环 + 每个 epoch 重新做 Python 侧 token 化**
+（`model.step` 里 `x.unsqueeze(0)`、hidden 写死 batch=1；`model.step` 每次都从 42 KiB 的
+observation dict 重建张量）。这种负载下 GPU 大部分时间在等 kernel launch 与 CPU→GPU 搬运。
+i7-12700F 单核约为此机一半，**若 GPU 红利不成立，台式机未必更快**——必须实测，不得再靠推理定机器。
+
+正确顺序是**先做 batch 化，再选机器**。当前台式机那轮跑完不打断（它验证的是学习信号，与吞吐无关），
+但下一轮开始前必须先完成 `MEMORY_BUDGET.md` §3.1–§3.3。
 
 无论实测结果如何，两条硬要求不变：
 
@@ -563,6 +572,21 @@ aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
 
 本机资源目录（仅在 Mac 上跑时用）：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN`。
 
+### 5.0 内存预算（WSL 16 GB 吃满的原因，必修）
+
+诊断与改动规格见 **`MEMORY_BUDGET.md`**。一句话版：
+
+- 实测一个 transition 占 **184.6 KiB**（observation 42.4 KiB + privileged_state 76.9 KiB + 杂项），
+  而 `observation` pickle 后只有 4.0 KiB —— **Python 对象表示带来 10.6× 膨胀**。
+- 按 TODO 要求的"每次更新 ≥2,000 局"，轨迹缓冲需要 **27.8 GiB**，加上 8 workers 的
+  固定开销（模拟器 222 MB×8 + Python/torch ×8 ≈ 3.6–4.4 GB）**必然撑爆 16 GB**。吃满是必然，不是意外。
+- 三处浪费，按性价比做：`privileged_state` 存 77 KiB 只用了 200 字节（−42%，数值等价、零风险）→
+  observation 改为 rollout 时 token 化一次存张量（−80%）→ 训练循环 batch=1 改 batch 化（这才是吞吐解药）。
+- **本轮不实现**（台式机正在跑，避免双方代码分歧），等那轮结束后按文档合并。
+  唯一例外是 `.wslconfig` 调内存上限，它不碰仓库代码。
+- 动手前**先确认是不是真吃满**：WSL2 的 page cache 计入 `vmmem` 且不主动归还，
+  看 WSL 内 `free -m` 减掉 `buff/cache`，别看 Windows 任务管理器。
+
 ### 5.1 交接状态（执行环境已搬到台式机，笔记本离线）
 
 **2026-09-29 交接**：笔记本上的全部 30 个提交已推送到 `origin/pvz-env`，
@@ -639,6 +663,11 @@ git status -sb                     # 看是否与 origin 有分歧、是否有�
   正常失败——已确认是脚本策略强度问题，**不是环境阻塞**。
 - **执行环境已搬到台式机**（2026-09-29）：笔记本已推送全部提交（`f07bd9e`）并离线，
   同步与证据回传全部走 `origin/pvz-env`，开工步骤见 §5.1。
+- **内存诊断已完成**（2026-09-29，`MEMORY_BUDGET.md`）：WSL 吃满 16 GB 的根因是轨迹缓冲以
+  Python 对象驻留（185 KiB/transition），2,000 局批需要 27.8 GiB。三项改动规格已写好，
+  **等台式机当前这轮结束后再合并实现**。
+- **"更新占 95% → GPU 强项 → 迁台式机"的推理已被推翻**（同上 §3.3/§6）：
+  真实原因是 batch=1 串行 + 每 epoch 重做 token 化。台式机是否更快**必须实测**。
 - 当前待办：**T5，在台式机执行**。顺序为：按 §5.1 拉取代码 → 实测 `workers × torch_threads` 组合 →
   报告 rollout/更新耗时拆分 → **阶段 0 验证门**（cap1，≤10,000 局，判据 >50%）→
   通过后再进阶段 1 正式训练 → **停止等待确认，不得开始 T6**。
