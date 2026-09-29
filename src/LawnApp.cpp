@@ -1508,7 +1508,8 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		<< ",\"sun\":" << mBoard->mSunMoney << ",\"wave\":" << mBoard->mCurrentWave
 		<< ",\"wave_count\":" << mBoard->mNumWaves
 		<< ",\"terminal\":" << (EnvironmentTerminal() ? "true" : "false")
-		<< ",\"result\":" << static_cast<int>(mBoardResult) << ",\"grid\":[";
+		<< ",\"result\":" << static_cast<int>(mBoardResult)
+		<< ",\"enemy_zombies_on_screen\":" << (mBoard->AreEnemyZombiesOnScreen() ? "true" : "false") << ",\"grid\":[";
 	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
 	{
 		if (row) out << ',';
@@ -1619,12 +1620,13 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	}
 	out << "],\"zombies\":[";
 	first = true;
-	for (const Zombie* zombie : mBoard->mZombies)
+	for (Zombie* zombie : mBoard->mZombies)
 	{
 		if (zombie->mDead) continue;
 		if (!first) out << ',';
 			first = false;
 			out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
+				<< ",\"on_board\":" << (zombie->IsOnBoard() ? "true" : "false")
 				<< ",\"x\":" << zombie->mPosX << ",\"y\":" << zombie->mPosY << ",\"body_health\":" << zombie->mBodyHealth
 				<< ",\"body_max_health\":" << zombie->mBodyMaxHealth << ",\"helm_health\":" << zombie->mHelmHealth
 				<< ",\"helm_max_health\":" << zombie->mHelmMaxHealth << ",\"shield_health\":" << zombie->mShieldHealth

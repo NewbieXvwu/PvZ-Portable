@@ -100,25 +100,51 @@ def choose(observation: dict) -> dict:
 
 def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000) -> dict:
     observation, _ = env.reset(deck=DECK, task=training_task(seed, level))
+    initial_off_board_zombies = sum(not zombie["on_board"] for zombie in observation["zombies"])
+    if initial_off_board_zombies == 0 or observation["enemy_zombies_on_screen"]:
+        raise AssertionError("preview zombies must be observed but excluded from enemy presence")
     actions = 0
+    mower_triggered = 0
     while not observation["terminal"] and actions < max_actions:
         action = choose(observation)
         observation, _, done, _, info = env.step(action)
         if not info.get("ok"):
             # wait whenever the chosen placement was rejected
             observation, _, done, _, info = env.step({"type": "wait", "ticks": 60})
+        mower_triggered += info["events"].get("mower_triggered", 0)
         actions += 1
         if done:
             break
+    result = int(observation["result"])
+    level_lost = bool(info.get("events", {}).get("level_lost"))
+    if result == 1:
+        terminal_reason = "won"
+    elif result == 2 and level_lost:
+        terminal_reason = "zombie_breach"
+    elif result == 2:
+        terminal_reason = "lost_other"
+    elif observation["terminal"]:
+        terminal_reason = "other_terminal"
+    else:
+        terminal_reason = "action_limit"
+    if result == 1 and observation["enemy_zombies_on_screen"]:
+        raise AssertionError("a winning terminal state must have no enemy zombies on screen")
     return {
         "seed": seed,
         "level": level,
-        "won": bool(observation.get("result") == 1),
+        "won": result == 1,
+        "result": result,
+        "terminal_reason": terminal_reason,
         "terminal": bool(observation["terminal"]),
         "wave": observation["wave"],
         "wave_count": observation["wave_count"],
         "tick": observation["tick"],
         "actions": actions,
+        "initial_off_board_zombies": initial_off_board_zombies,
+        "initial_enemy_zombies_on_screen": False,
+        "final_enemy_zombies_on_screen": bool(observation["enemy_zombies_on_screen"]),
+        "level_lost_event": level_lost,
+        "mower_triggered": mower_triggered,
         "plants": Counter(plant["type"] for plant in observation["plants"]),
     }
 
@@ -132,9 +158,14 @@ def main() -> None:
     env = PvZEnv(args.resource_dir)
     for seed in args.seeds:
         result = run(env, seed, args.level)
-        print(f"level {args.level} seed {seed}: won={result['won']} terminal={result['terminal']} "
+        print(f"level {args.level} seed {seed}: won={result['won']} result={result['result']} "
+              f"reason={result['terminal_reason']} level_lost={result['level_lost_event']} "
+              f"mowers={result['mower_triggered']} terminal={result['terminal']} "
               f"wave {result['wave']}/{result['wave_count']} "
-              f"tick={result['tick']} actions={result['actions']} board={dict(result['plants'])}")
+              f"tick={result['tick']} actions={result['actions']} "
+              f"previews={result['initial_off_board_zombies']} "
+              f"enemy_query={result['initial_enemy_zombies_on_screen']}"
+              f"->{result['final_enemy_zombies_on_screen']} board={dict(result['plants'])}")
     env.close()
 
 
