@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
 
-from pvz_env import PvZEnv, training_task  # noqa: E402
+from pvz_env import PvZEnv, TaskSpec, training_task  # noqa: E402
 
 DECK = (0, 1, 2, 3, 4, 5)
 LEVEL = 7
@@ -98,8 +98,11 @@ def choose(observation: dict) -> dict:
     return {"type": "wait", "ticks": 60}
 
 
-def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000) -> dict:
-    observation, _ = env.reset(deck=DECK, task=training_task(seed, level))
+def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000,
+        task: TaskSpec | None = None) -> dict:
+    observation, _ = env.reset(deck=DECK, task=task or training_task(seed, level))
+    initial_plants = observation["plants"]
+    initial_sun = observation["sun"]
     initial_off_board_zombies = sum(not zombie["on_board"] for zombie in observation["zombies"])
     if initial_off_board_zombies == 0 or observation["enemy_zombies_on_screen"]:
         raise AssertionError("preview zombies must be observed but excluded from enemy presence")
@@ -140,6 +143,8 @@ def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000) -> 
         "wave_count": observation["wave_count"],
         "tick": observation["tick"],
         "actions": actions,
+        "initial_plants": initial_plants,
+        "initial_sun": initial_sun,
         "initial_off_board_zombies": initial_off_board_zombies,
         "initial_enemy_zombies_on_screen": False,
         "final_enemy_zombies_on_screen": bool(observation["enemy_zombies_on_screen"]),

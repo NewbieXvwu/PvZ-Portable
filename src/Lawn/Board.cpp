@@ -611,6 +611,8 @@ void Board::PickZombieWaves()
 			mNumWaves = 40;
 	}
 
+	const int mWaveCap = mApp->mEnvironmentTaskSpec.waveCap;
+	if (mWaveCap > 0 && mNumWaves > mWaveCap) mNumWaves = mWaveCap;
 	ZombiePicker aZombiePicker;
 	ZombiePickerInit(&aZombiePicker);
 	ZombieType aIntroZombieType = GetIntroducedZombieType();
