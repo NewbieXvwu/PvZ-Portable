@@ -1,158 +1,416 @@
-# PvZEnv
+# PvZAgent — 执行任务书
 
-## 当前目标
+本文件是**唯一的任务来源**，覆盖并取代此前所有 TODO / 计划文档。
+设计依据见 `DESIGN.md`（必须通读后再动手）。失败复盘见 `FAILURE_ANALYSIS.md`。
+**先看 §1 铁律和 §2 门禁规则，再看 §4 任务列表。**
 
-构建可复现、可批量运行、可由 Python 控制的 Plants vs. Zombies 环境，并用高保真模拟器搜索生成教师数据，训练最终自主控制器。
+---
 
-当前训练基线使用 Adventure-II、`playthrough=2`。策略观测包含场上全部存活僵尸；未来出怪表、随机数状态和隐藏计时器只属于研究用完整状态。环境只返回客观状态、事件和胜负，奖励与搜索评价由训练端定义。
+## 0. 目标
 
-标准资源基线采用 PvZ GOTY English `1.2.0.1073`。游戏资源不进入仓库，Python 入口通过 `PvZEnv(resource_dir=...)` 指定资源目录。
+训练出一个能自主玩 Plants vs. Zombies 的 Agent。
 
-## 已完成
+**唯一的成功标准是打赢。** 本项目不存在"先跑通一个最小版本"这种中间产物——一个打不赢的系统和一个不存在的系统价值相同。最终产物必须在**冻结的、多关卡的 held-out 任务集**上达到 **≥ 60% 通过率**（见 T8）。
 
-- 无画面环境与可视模式共用 `AdvanceLogicTick()`，支持确定性 reset、plant、shovel 和固定 tick 等待。
-- 环境协议升级到 v2；Python 只接受 v2，reset 使用 `RESET_V2`，旧二进制会在握手阶段直接失败。
-- 结构化观测覆盖格子、植物、僵尸、阳光、投射物、卡片、波次、合法动作与客观事件。
-- 内存 snapshot/restore 保存棋盘、随机状态、计数器和动画相关状态；`verify_env_equivalence.py` 用于可视/无画面与恢复后的逐 tick 等价性验证。
-- 搜索路径支持轻量快照命令和 `BRANCH_SNAPSHOT_FAST`；批量分支同时返回完整快照状态哈希，用于 transposition 去重。
-- SearchTeacher 完全独立于学生网络。候选只来自合法动作、lane pressure、空间多样性、铲除与时间动作；学生策略和值头不会参与教师候选或叶子打分。
-- 搜索同时受 `horizon_ticks`、`max_decisions` 和整次决策共享的 `simulation_budget` 限制，并用 successive halving 把更多模拟分配给更有希望的根动作；`max_same_tick_actions` 也会阻止零 tick 动作无限展开。
-- 搜索结果按 `确定胜利 > 未终局 > 确定失败` 排序；BC、搜索与 PPO 使用统一的按游戏 tick 折扣终局价值语义。
-- 独立 `SearchValueModel` 只学习模拟器轨迹的真实折扣终局结果。冷启动、value refinement、最终策略教师数据使用互斥 seed；最终 SearchTeacher 使用冻结的独立 value 模型。
-- 训练期模型选择只使用冻结 development 256 seeds；final-test 1024 seeds 与训练、DAgger、value bootstrap/refinement、development 全部隔离，只用于最终验收。
-- BC、DAgger、PPO 训练入口和冻结 seed benchmark 已接入当前模型与搜索教师。
-- 训练采集与 benchmark 共用 spawn worker 和逐 seed 原子分片；任务 metadata 匹配时可跳过已完成 seed，汇总后统一重算指标。训练入口有 `--value-only`，避免 value checkpoint 后误跑普通搜索采集。
-- 搜索决策落盘时区分**筛选**与**深度**两段模拟预算（`screening_simulations` /
-  `depth_simulations` / `effective_depth_budget`），因为 `simulation_budget` 不是搜索深度：
-  每个根候选在任何一条线展开前都要先花 1 次模拟。
-- BC 除 argmax 行为克隆外，还用 `--soft-label-weight`（默认 0.5）蒸馏搜索教师在根候选集上的
-  完整分布；`0` 精确还原旧行为。
-- `python/pvz_search_audit.py` 在 development 种子上审计两件设计无法自证的事：
-  值模型在**反事实一步子节点**上的兄弟排序是否与更深搜索一致（`sibling_ranking`），
-  以及候选生成 + 筛选两级各自丢掉了多少合法动作（`candidate_recall`）。
-- 存档改为只使用显式字段保存状态，移除了旧版整块对象布局存档和裸指针恢复路径；稳定化消息文本尾部与运行时 `mGameID`，补齐棋盘计数器字段。
-- 两个全新进程的 30 个快照样本、240 个分支哈希逐字节一致；`verify_env_equivalence.py` 全量通过，SearchTeacher 在 development seeds 30000–30001 上等价。Linux g++ 构建通过，SDL-Mixer-X 的 C++ `mp3utils_test` 为 1/1，Python unittest 为 192/192。
-- 台式机已完成 SearchValue v2 正式管线：bootstrap seeds 20000–20031、refinement seeds 21000–21031，各 32 集；两段各训练 8 epoch。loss 历史分别从 0.152216 降至 0.009705、从 0.049708 降至 0.008806，完整历史已写入 checkpoint。
-- `artifacts/adventure2_level7/search_value_v2.pt` 已通过 CPU 重载与版本、feature、task signature 核验；protocol=3、search labels=3、feature=2、value semantics=`discounted_terminal_v1`。bootstrap/refinement、train 0–63、DAgger 10000–10063、development、final-test seed 集两两无交叉。
-- SearchValue v2 默认教师完成 development 256：0 胜，Wilson 95%=[0, 1.48%]，平均终局波次 3.570，75.82 动作/局，11.31 s/局，吞吐 1208 episodes/hour；筛选/深度模拟 374,511 / 2,405,303，平均 `effective_depth_budget` 236.67。
-- 搜索消融报告位于台式机 `artifacts/adventure2_level7/search_ablation_dev256_comparison.json`。候选上限 12 全量 256 仍 0 胜，配对终局波次 57 高于默认、51 低于默认，均值仅 +0.016；simulation budget 128 全量 256 仍 0 胜，吞吐 1963 episodes/hour，但平均终局波次降至 3.355。budget512、width4 仅完成 32-seed 筛选，均无胜利且无明确收益。#10 采用默认 width3 / candidates8 / budget256。
-- #10 完成：train 0–63 搜索监督轨迹 64 集，DAgger 10000–10063 轨迹 64 集；`search_trajectories.json.gz` 与 `dagger_search_trajectories.json.gz` 的 checkpoint SHA256 均匹配。最终 `gameplay_model_v1.pt` 可重新加载，train、DAgger、value bootstrap/refinement、development、final-test seed 两两互斥。
-- DAgger 重训 8 epoch loss 为 2.48755、2.42823、2.39204、2.35809、2.32229、2.28290、2.24175、2.20700。最终模型在 development 256 上 0 胜，平均终局波次 3.398、平均动作 55.86；checkpoint 与 `training_summary.json` 均已落盘于台式机 `artifacts/adventure2_level7/`。
-- #11 完成：最终 `gameplay_model_v1.pt` 在 final-test 40000–41023 上唯一一次评测，1024/1024 seed 均有结果，checkpoint SHA256 匹配。0 胜，Wilson 95%=[0, 0.374%]，平均 56.03 动作、每局累计耗时均值 0.487 s；终局波次分布为 2:98、3:551、4:254、5:78、6:31、7:11、9:1。结构化结果保存在台式机 `artifacts/final_test_adventure2_level7/final_test_gameplay_v1.json`。
-- #12 完成：SearchValue v2 跨关卡/卡组审计开关只允许 level、deck 与训练签名不同，资源哈希等字段仍须一致，报告同时记录训练与评估签名。使用 development seeds 30000–30015，在白天、夜晚、泳池、浓雾、屋顶各采 8 个状态；另测两个替代卡组。观测到的 terrain ID 依次为 0、1、2、3、4。训练语义单测 26/26 通过。
+环境基线与既有资产：
 
-  | 配置 | 值排序与深搜 pairwise / top-1 一致率 | 候选集覆盖一步估值 top-1 |
-  |---|---:|---:|
-  | 白天 L8，默认卡组 | 0.703 / 0.500 | 0.875 |
-  | 夜晚 L12，默认卡组 | 0.806 / 0.250 | 1.000 |
-  | 泳池 L26，默认卡组 | 0.782 / 0.625 | 0.875 |
-  | 浓雾 L31，默认卡组 | 0.860 / 0.500 | 1.000 |
-  | 屋顶 L41，含 FlowerPot 卡组 | 0.658 / 0.500 | 0.250 |
-  | 白天 L8，加入 Chomper | 0.703 / 0.500 | 0.875 |
-  | 泳池 L26，加入 LilyPad | 0.746 / 0.375 | 1.000 |
+- 资源：PvZ GOTY English `1.2.0.1073`，不入库，通过 `PvZEnv(resource_dir=...)` 指定。
+- 本机资源目录：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN`；Python 用 mise 3.14。
+- 冻结 seed 集（`artifacts/adventure2_level7/seeds/`）：train 0–63、dagger 10000–10063、
+  value_bootstrap 20000–20031、value_refinement 21000–21031、development 30000–30255、final_test 40000–41023。
+  两两互斥。
+- **实测吞吐**：243,893 game-ticks/s；40,000 tick 的完整胜局约 0.16 s；单核约 20,000 局/小时。
+  对照：`SearchTeacher.advice()` 一次决策约 150 ms——**搜索比环境推进慢约三个数量级**。
+  这条实测是本任务书全部架构决策的依据。
 
-  报告位于台式机 `artifacts/multiterrain_v1/`。屋顶候选覆盖在 8 状态样本中最低；该指标比较候选集与 SearchValue 一步估值的排序，不代表整局胜率。
+---
 
-## 当前验收条件
+## 1. 铁律（不可协商，违反即视为任务未完成）
 
-- Python 无需菜单交互即可重置普通关卡并完成完整自动对局。
-- 固定 seed 与固定动作序列可复现；snapshot 恢复后重放轨迹一致。
-- 搜索教师在固定 `horizon_ticks` 下比较分支，整次决策的模拟总量不超过 `simulation_budget`。
-- 搜索中相同 `(state_hash, elapsed_ticks, decision_count, same_tick_actions)` 状态只保留得分更高的路径。
-- 训练、DAgger、value bootstrap、value refinement、development 和 final-test seed 集各自唯一且两两互斥。
-- checkpoint 必须声明并匹配当前协议、模型架构、观测版本、任务版本、搜索标签版本和 value semantics。
-- final-test 1024 seeds 在最终验收前不得用于训练、调参或模型选择。
+1. **进度以能力为准，不以 loss 为准。** 任何"loss 下降了 / 准确率提升了"都不是进度证据。
+   进度只由 §2 定义的行为门禁判定。
+2. **门禁不过就是不过。** 禁止修改门禁定义、禁止放宽阈值、禁止更换评估 seed 集来让门禁通过。
+   门禁失败时按 §3 处理，不得继续下一个任务。
+3. **不得硬编码策略。** 判据：**这条规则如果错了，梯度能修正它吗？**
+   能修正 → 是归纳偏置，可以写进网络结构；不能修正 → 是硬编码，禁止。
+   特别禁止：针对特定关卡 / 特定 seed 的分支逻辑（`if level == 7` 之类）、
+   写死的种植顺序与时机、写死的列号偏好。
+4. **行为来源只有强化学习。** 规则脚本只允许做 T0 的环境可解性验证，**不得进入任何训练数据、
+   不得参与蒸馏、不得作为行为来源**。
+5. **禁止删除或跳过失败 seed。** 评估必须跑满全集；单个 seed 崩溃必须报出来并修好，
+   不得从结果里剔除。
+6. **禁止用 dev 集调参后又把 dev 成绩当作泛化成绩报告。** 模型选择只能用训练集与 dev 集，
+   泛化结论只能来自 held-out 集。
+7. **每个任务必须留下可复核的证据**（§2.3）。没有证据文件的任务视为未完成，
+   无论口头声称完成与否。
+8. **禁止写未经实测的结论。** 不得出现"应该可以工作"、"预计能够"这类表述。
+   每个断言必须附命令与实测输出。
 
-## 接下来
+---
 
-- 剖析搜索吞吐；多分支 rollout 已批量下沉到 C++，后续只针对实际 profile 中仍占主要成本的保存/恢复或状态序列化继续优化。
-  - **已完成（Python 侧）**：`search_value_features` 改为 numpy float64 累加器 + 视图，
-    真实观测上 122.8 µs → 23.2 µs（5.3×），逐位等价（见 `CODE_REVIEW.md` §5.2 与
-    `python/test_search_value_features.py`、`scripts/real_env_equivalence.py`）。
-    参考模拟器下 `advice()` 30.0 ms → 8.6 ms（3.49×）；真实模拟器下 186.5 ms → 164.6 ms（1.13–1.17×）。
-  - **下一步（C++ 侧）**：真实环境下 `advice()` 有 66% 花在等待 C++ 返回。已实测每分支固定开销
-    ~290 µs = `EnvironmentObservation` 90 µs + `LawnSaveGameToMemory` 101 µs +
-    `LawnLoadGameFromMemory` + 对整块 `board` 做 FNV-1a 的 `EnvironmentSnapshotHash`，
-    另有 1.7 µs/tick 的模拟成本。动 `BRANCH_SNAPSHOT_FAST` 前需先把
-    `verify_env_equivalence.py` 变成可自动化的回归。**该回归已就位**（mutation 验证见
-    `CODE_REVIEW.md` §5.6）。
-  - **已完成（C++ 侧，两轮）**：新协议命令 `BENCH_SNAPSHOT <reps>` 给出进程内分项剖面
-    （`scripts/branch_benchmark.py` 给的是含传输与 JSON 解析的端到端口径）。在 level 8 /
-    seed 30000 / tick 2192 的板面（4 植物 / 10 僵尸 / 19 动画，载荷 86,424 B）上：
+## 2. 门禁规则
 
-    | 成分 | 轮次前 | 轮次后 |
-    |---|---|---|
-    | `EnvironmentSnapshotHash` | 77.2 µs | **9.7 µs**（8.0×） |
-    | `LawnSaveGameToMemory` | 89.1 µs | 86.8 µs |
-    | `LawnLoadGameFromMemory` | 68.7 µs | 68.4 µs |
-    | `EnvironmentObservation` | 23.2 µs | 22.2 µs |
-    | **端到端单分支** | **343.8 µs** | **256.1 µs**（−27%） |
+### 2.1 什么算通过
 
-    * 轮次一：`SaveGame.cpp` 的 `WriteChunkV4` 直接写进 payload，去掉「字段 writer → chunk
-      writer → 临时 vector → AppendChunk」的三遍拷贝；48 个板面状态新旧写入器逐字节相同
-      （`identical: true` / `stable: true`）。
-    * 轮次二：`EnvironmentSnapshotHash` 从逐字节 FNV-1a 改成 **64 位字折叠 + MurmurHash3
-      fmix64 雪崩**。逐字节版的每个输入字节都是串行 xor/乘法链上的一环，86 KB 上花 77 µs。
-      **哈希值本身是不透明的转置键，改写不算兼容性破坏**；雪崩实测（3000 次真实载荷单比特翻转）
-      反而更好：均值 32.08 bits（旧 30.74）、最低 20 bits（旧 19）、碰撞 0。
-    * 等价性：`scripts/binary_search_equivalence.py` 用两个二进制在同一真实状态下跑
-      `SearchTeacher.advice`，比较动作、全部候选打分、蒸馏策略、margin、终局、模拟计数与
-      筛选/深度预算拆分 —— **3/3 种子逐位一致**，真实 `advice()` 159.8 → 142.7 ms（1.12–1.16×）。
-      该脚本刻意**不比较 `state_hash`**：它是转置键，改写哈希必然改变数字但不应改变任何去重决策，
-      比较它会在一次合法优化上误报。
-  - **指针修复后的实测**：同一 level 8 / seed 30000 / tick 2192 板面载荷为 86,976 B，较修复前 86,424 B 增加 552 B（0.64%）；save 84.1 µs、restore 70.2 µs、hash 9.7 µs、observation 21.3 µs，与此前测量处于同一量级。
-  - **剩下的成本（未动）**：`LawnSaveGameToMemory` 与 `LawnLoadGameFromMemory`
-    仍是 C++ 侧大头；另有约 73 µs/分支落在 Python 侧的 JSON 解析与管道传输上
-    （`OBS` 端到端 83 µs 而 C++ 内只 22 µs）。单个叶子之外还有一个结构性机会：
-    一批 32 个分支里真正被保留下来的快照远少于 32，为「先不存快照地评估、只重算保留下来的那几个」
-    加一条命令可以省掉被丢弃分支的 86.8 µs/个；这是协议与搜索的改动，不是纯 C++ 优化，
-    先量清楚存活率再决定。
-- **已完成（指针序列化修复）**：v4 的 Board 及子对象字段逐项序列化，不再保存对象内存布局或裸指针；旧版 raw-layout 加载器已删除（允许不兼容旧存档）。`mGameID` 写固定值，消息标签零填充未初始化尾字节，并补齐 `mTextReanimByteOffset`、`mTextReanimCount`、`mBoardUpdateCounter`、`mZombiesKilled`、`mSunMoneyProduced`。同一板面双进程快照逐字节一致；`verify_env_equivalence.py` 7 个关卡全部通过（包括 rewind stress、snapshot restore、`BRANCH_SNAPSHOT_FAST`），SearchTeacher 两颗开发种子所有候选分数、动作、策略分布、margin、终局及模拟预算拆分一致。Linux 项目构建通过；CTest 根目录没有登记项目测试，SDL-Mixer-X 子目录 `mp3utils_test` 1/1 通过。
-- 扩展到白天、夜晚、泳池、迷雾和屋顶等地形，检查状态候选覆盖和 SearchValueModel 在不同卡组上的泛化。
+一个任务通过，必须同时满足：
 
-## 已排除的路线（有实测数据，勿重复尝试）
+- 该任务列出的**每一个**量化指标都达标（不是"大部分达标"）；
+- 指标由**冻结评估集 + 独立评估脚本**产出，不是临时脚本、不是手算、不是抽样估计；
+- 证据文件 `gates/<task_id>.json` 已落盘且内容完整（§2.3）；
+- 受保护资产（§2.4）未被修改，并在证据文件中声明。
 
-- **降精度换速度**：真实模拟器 160 次决策的误差预算约 1e-5~1e-4（margin 中位 6.2e-4，
-  排除 10.6% 的精确并列后没有任何一次低于 1e-7）。但 fp16/bf16/稀疏首层/float32 累加器
-  **全部比全精度更慢**（0.09×~1.00×）。**在 Apple M5 Pro 上用真实负载形状重测过**：
-  fp16 全 half 0.24×、bf16 首层 0.33× —— Apple 的矩阵协处理器（AMX）是 **fp32** 单元，
-  M 系列没有比 fp32 吞吐更高的 fp16/bf16 路径。这是结构性的，不是配置问题。
-  见 `CODE_REVIEW.md` §6.2。换到非 Apple 硬件仍需重测这一条。
-- **调 CPU 线程数**（**结论已更正：这条只在 Apple Silicon 上成立，不是普适结论**）：
-  M5 Pro 上 threads=1/2/5/10/15 下 batch=1 恒为 15.1–15.3 µs、batch=256 恒为
-  272.7–275.2 µs，Accelerate/AMX 已在单线程吃满这条路径；`torch.get_num_threads()`
-  默认返回 5 是 P 核数，不是配置错误。**但在 x86 上完全相反**：i7-12700F 上
-  threads=4 比 threads=1 快 2.0×（leaf）/1.7×（64 步训练），一次完整训练
-  32.0 min → 21.3 min。因此这**不再是「已排除」**，而是改成了可配参数
-  `--threads`（默认 4，`--threads 1` 复现旧产物），数值扰动 4e-7~6e-7，
-  低于误差预算两个数量级。见 `CODE_REVIEW.md` §6.6。
-- **把值模型放到 MPS**：batch=1 的形状上 MPS 全面更慢 —— `SearchValueModel.predict`
-  68 µs → 451 µs，真实模拟器上单次 `advice()` 162 ms → 282 ms，整集 rollout 13.2 s → 22.6 s
-  （1.71×）。一次完整训练净亏约 28 分钟。**`resolve_device("auto")` 已改为不再考虑 MPS**；
-  显式 `--device mps` 仍可用。见 `CODE_REVIEW.md` §6.5。
-- **指望 `encoder batch=64` 的 MPS 收益（2.44×）**：这个形状在真实训练路径里**不存在**。
-  `pvz_imitation.train` 的 `for start in range(0, len(steps), 64)` 只是梯度累积窗口，
-  循环体里仍是逐条 `model.step()`（GRU 隐状态串行传递），张量维度恒为 1。
-  除非把 encoder 跨 episode 批量化（大改，且 GRU 仍串行），否则拿不到。
-- **叶子估值批量化**：每批只有约 4.3 行，被 `F.linear` 非连续转置权重在 M≥2 时的
-  ~44 µs 固定开销吃光（14.79 vs 15.07 µs/row）。见 `CODE_REVIEW.md` §5.4。
-- **对特征向量做稀疏化**：特征只有 1.1%–3.3% 非零，但 `Linear(4116,128)` 在 batch=1 只要
-  6.59 µs（权重命中 L2/L3），`torch.nonzero` + fancy indexing 的索引构造开销远超省下的乘加，
-  实测慢 5.6 倍。
+### 2.2 指标定义
 
-**要提速只能「少算」，不能「算粗」**：减少叶子估值次数、更激进的剪枝、
-把 C++ 往返批得更狠。真实环境下 Python 侧全部优化到零端到端也只能 2.9×。
+- **pass rate**：在指定任务与 seed 全集上 `won == True` 的比例。分母是全集，不是成功跑完的子集。
+- **Wilson 95% 区间**必须与 pass rate 一并报告，样本量 < 64 时结论不采信。
+- **完整分布**：必须记录终局波次/存活 tick 的直方图，不只报均值。均值会被少数长局拉高。
+- **泛化差距**：同一 checkpoint 在训练集任务与 held-out 任务上的 pass rate 之差。
+  这是**防硬编码的核心指标**——差距过大说明在背题。
 
-## 两台机器的推荐配置
+### 2.3 证据文件
 
-实测于 Apple M5 Pro 与 i7-12700F + RTX 5080（`scripts/thread_effect.py` 的决策矩阵，
-按「192 集 rollout + 32768 步训练」折算）：
+每个任务完成后写入 `gates/<task_id>.json`，至少包含：
 
-| 机器 | 推荐 | 实测最优 | 实测最差 |
-|---|---|---|---|
-| Apple M5 Pro | `--device cpu`（默认即是），不要用 MPS | 11.3 min（值模型 CPU + 学生网络 MPS 拆设备） | `--device mps` 64.7 min |
-| i7-12700F + RTX 5080 | `--device cuda --threads 4` | **15.4 min** | `--device cpu --threads 1` 32.0 min |
+```json
+{
+  "task_id": "T7",
+  "commit": "<git rev-parse HEAD>",
+  "worktree_clean": true,
+  "reproduce_command": "<一条可复现的完整命令>",
+  "gate_result": "pass | fail",
+  "metrics": { "...": "门禁要求的每个指标的实际值" },
+  "thresholds": { "...": "门禁要求的阈值" },
+  "raw_seed_results_path": "<完整 seed 级结果的路径>",
+  "protected_assets_unmodified": true,
+  "notes": ""
+}
+```
 
-`--device auto` 在两边都会选对（CUDA 优先，否则 CPU），所以台式机上真正需要显式加的
-只有 `--threads 4` —— 而它已经是默认值。**唯一需要显式指定的是「要与旧产物逐位对齐」时的
-`--threads 1`。**
+`worktree_clean` 必须为 `true`（先提交再评估）。`protected_assets_unmodified` 必须为 `true`。
+
+### 2.4 受保护资产（禁止修改，除非任务明确要求）
+
+- `artifacts/**/seeds/**` — 全部冻结 seed 集
+- `gates/**` — 已通过的门禁证据
+- 评估脚本的**判定逻辑**（可以优化性能，不得改变指标定义与阈值）
+- `DESIGN.md`、`FAILURE_ANALYSIS.md`、本文件
+
+若确有必要修改受保护资产，必须先在 `notes` 中说明理由并取得人工确认，**不得先改再报**。
+
+### 2.5 变异测试要求
+
+凡新写的自动化检查（尤其是 T1 的冒烟测试），必须证明它**真的会失败**：
+人为注入一个已知缺陷，测试必须报错。测不出来的检查等于没有检查，不算完成。
+
+---
+
+## 3. 门禁失败时的处理
+
+**立刻停止，不要继续下一个任务。**
+
+1. 把当前状态、实测数字、已尝试的方法写进 `gates/<task_id>.json`，`gate_result` 填 `fail`。
+2. 写一份诊断：定位到**具体的失效层**（环境 / 数据 / 算法 / 工程），给出实测证据，
+   不要写"可能是 X 的问题"这种无证据的猜测。
+3. 提出下一步的**具体**改动，并与现状对比说明为什么这个改动能突破当前瓶颈。
+4. 等人工确认后再继续。
+
+上一轮的教训写在这里：**教师 dev 0/256 之后没有停下，继续跑了 DAgger 和最终验收，
+把几小时算力投在已知 0 胜的基座上。** 同样的错误不允许再犯一次。
+
+允许重试，但连续 3 次未达标后必须停下来诊断，不得靠"再跑一遍希望这次行"推进。
+
+---
+
+## 4. 任务列表
+
+任务按顺序执行。**前一项门禁未通过，不得开始后一项。**
+
+---
+
+### T0 · 修复胜利判定（L0）
+
+**目标**：让"赢"在环境层变成可达的。
+
+**根因**（已定位，直接用）：`LawnApp::EnvironmentReset` → `StartLevelIntro()` → `CancelIntro()`
+→ `PlaceStreetZombies()` 放置开场装饰僵尸（`mFromWave == ZOMBIE_WAVE_CUTSCENE`）。
+`Zombie::IsOnBoard()` 对它们返回 false，但 `Board::AreEnemyZombiesOnScreen()`
+（`src/Lawn/Board.cpp:261`）**不检查 `IsOnBoard()`**，导致恒为 true，
+而唯一通关判定 `Zombie::TrySpawnLevelAward()` 要求 `!AreEnemyZombiesOnScreen()` → 永不成立。
+同文件 `CountZombiesOnScreen()`（约 275 行）才是带 `IsOnBoard()` 的正确版本。
+
+**做法**：优先给 `AreEnemyZombiesOnScreen()` 补 `IsOnBoard()` 条件，与 `CountZombiesOnScreen()` 对齐。
+备选：`EnvironmentReset` 在 `CancelIntro()` 后 `RemoveAllZombies()`。
+
+**T0 验证的是环境，不是脚本强度。** 规则脚本只是一个难度探针：它赢几个 seed 无所谓，
+**它是否会被"打不完的僵尸"卡住才有关系**。一个 40 行的手写脚本在 30 波完整关卡上输掉几个 seed
+是完全正常的，不构成环境缺陷。
+
+**门禁（全部满足）**：
+
+| 指标 | 阈值 |
+|---|---|
+| level 7 / seed 30000 | `won == True`，且终局 tick ≤ 120,000 |
+| level 7 / seed 30001、30002、30003 | **全部正常终局**（`won` 或 `lost` 均可），终局 tick ≤ 120,000 |
+| 每个失败 seed | 必须记录终局 tick 与终局原因，并确认是**正常游戏失败**（防线被突破），不是"有僵尸却打不完" |
+| level 1 / 8 / 20 各 1 个 seed | 能终局（胜负均可），终局 tick ≤ 120,000 |
+| 直接环境断言 | 获胜局终局时，场上不存在 off-board 僵尸参与胜负判定（提供观测证据，不靠脚本结果反推） |
+
+**明确禁止**：为了让脚本多赢几个 seed 而去调优脚本。原因有三——
+脚本是探针不是产品，调优它不产生任何后续价值；调优方向会滑向针对关卡的硬编码，违反铁律 3；
+后续 RL Agent 的能力与脚本强度无关。**花在这上面的算力全部是浪费。**
+
+若某个 seed 未能终局（tick 远超阈值仍未结束），那才是环境缺陷，必须修环境而不是改脚本。
+
+**交付**：C++ 改动 + 复现命令 + `gates/T0.json`
+
+---
+
+### T1 · 「能赢吗」冒烟测试进 CI
+
+**目标**：把 T0 的结论固化成一道永久闸门。这个测试比任何胜率指标都更早、更便宜地拦住同类问题。
+
+**门禁**：
+
+- 一条命令即可运行，失败时非零退出。
+- **变异测试**：临时回退 T0 的修复，测试**必须失败**；恢复后必须通过。
+  把两次运行的输出都贴进证据文件。测不出回归的检查不算完成。
+- 测试覆盖：至少 3 个关卡 × 2 个 seed，断言 `won == True` 且终局 tick 在合理范围内。
+
+**交付**：`gates/T1.json`（含变异测试的两次输出）
+
+---
+
+### T2 · env 增加 `wave_cap` 与 `preplanted`
+
+**目标**：给课程与能力拆解提供物理前提。**没有 `wave_cap`，后面所有任务都无法做。**
+
+**做法**：`TaskSpec` 增加 `wave_cap: int | None`（截断 `mNumWaves`，None = 不截断）与
+`preplanted: tuple[(seed_type, row, col), ...]`（开局预置植物）。`RESET_V2` 协议需相应扩展，
+`reset()` 要校验新参数。
+
+**门禁**：
+
+| 指标 | 阈值 |
+|---|---|
+| `wave_cap=3` 的 level 7，3 个 seed | 均可终局且可胜（用 T0 的规则脚本验证） |
+| `preplanted` 2 株向日葵 | 开局植物数与位置正确，`won` 不受影响 |
+| **回归**：不指定新参数时 | level 7 行为与 T2 之前**完全一致**（用 `scripts/binary_search_equivalence.py` 或等价检查证明） |
+| `zombie_count_multiplier` 现有约束 | 保持 [1.0, 10.0]，不得放宽下界 |
+
+**禁止**：不得为了省事把 `wave_cap` 实现成"到达波数后强行判负"——它必须是正常的通关判定。
+
+**交付**：`gates/T2.json`
+
+---
+
+### T3 · 任务族定义与冻结任务集
+
+**目标**：把"一个关卡"换成"一个任务族"。
+
+**做法**：任务由 `θ = (level, deck, zombie_count_multiplier, wave_cap, sun_start, preplanted)` 描述。
+定义并冻结：
+
+- **训练任务池**：可枚举、可变异生成。
+- **held-out 任务集**：**从未参与训练**，至少覆盖白天 / 夜晚 / 泳池 / 浓雾 / 屋顶五种地形，
+  每地形 ≥ 4 个任务，每任务 ≥ 16 seed。
+
+**门禁**：
+
+- 任务 manifest 落盘（JSON），含每个任务的完整参数与 seed 列表。
+- 训练池与 held-out 集**零重叠**，用脚本断言（不是肉眼检查）。
+- 现有冻结 seed 集（development / final_test）与 held-out 集的关系在 manifest 中明确声明。
+
+**交付**：manifest 文件 + 重叠性断言脚本 + `gates/T3.json`
+
+---
+
+### T4 · 能力剖面评估器
+
+**目标**：建立唯一的进度度量。这个评估器是后面所有门禁的执行者，必须先建好。
+
+**做法**：对给定 checkpoint 与任务集，产出：
+
+```
+per_task: { pass_rate, wilson_95, mean_terminal_wave,
+            mean_survival_ticks, peak_offense, economy_curve }
+aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
+```
+
+**门禁**：
+
+| 指标 | 阈值 |
+|---|---|
+| 随机策略在 `wave_cap=3` 任务上 | pass rate ≤ 10%（评估器必须能识别"什么都没学会"） |
+| T0 规则脚本在 `wave_cap=3` 任务上 | pass rate ≥ 80%（评估器必须能识别"会玩"） |
+| 同一 checkpoint 两次运行 | 结果一致（确定性） |
+| 单 seed 崩溃 | 必须报错退出，不得静默跳过 |
+
+**这两个对照是防"评估器写错了但看起来在跑"的关键。** 两个都测不出来，评估器不合格。
+
+**交付**：`gates/T4.json`（含随机策略与规则脚本两组对照数字）
+
+---
+
+### T5 · 并行 rollout 与 PPO 闭环
+
+**目标**：跑通"环境 + 策略 + 更新"的完整闭环，并证明它能学到东西。
+
+**做法**：
+
+- 并行环境：`multiprocessing` + `spawn` 启动（不得 fork）。每 worker 独立创建 env。
+- 可恢复：逐 seed / 小 shard 原子落盘（复用 `pvz_seed_jobs.atomic_write`）。
+- 算法：PPO + GAE。奖励 = 终局胜负 + **potential-based shaping**（`F = γΦ(s') − Φ(s)`，
+  Ng/Harada/Russell 1999）。**不得使用任意常数惩罚**——当前 `_transition_reward` 那种
+  0.05/株的写法会污染目标，必须替换而不是沿用。
+
+**门禁**：
+
+| 指标 | 阈值 |
+|---|---|
+| 单核吞吐 | ≥ 5,000 完整局/小时（实测，不是估算） |
+| `wave_cap=3` 任务，训练前 | pass rate < 10% |
+| `wave_cap=3` 任务，训练后 | pass rate **≥ 90%**（held-out 子集，≥ 16 seed） |
+| 学习曲线 | 必须给出 pass rate 随训练步数的序列，单调性可讨论但**必须上升** |
+
+**注意**：吞吐门禁和胜率门禁都要。吞吐不达标说明工程有问题，胜率不达标说明算法有问题，
+不要用其中一个掩盖另一个。
+
+**交付**：`gates/T5.json` + 学习曲线数据文件
+
+---
+
+### T6 · 分层网络与意图动作空间
+
+**目标**：解决 horizon 问题（900 tick 跨不过一波），并消除零 tick 退化。
+
+**做法**（详见 `DESIGN.md` §4）：
+
+- **Strategist（慢）**：每波或每 K 决策运行一次，输入全局 + lane 摘要 + 上一波结果，
+  输出目标向量 `g` 与每行资源权重，GRU 跨波记忆。
+- **Tactician（快）**：每决策运行，输入全 token + `g`，输出意图分布，GRU 短程记忆。
+- **意图空间**：`BUILD_ECONOMY` / `BUILD_OFFENSE(lane)` / `FORTIFY(lane)` /
+  `ANSWER_THREAT(lane)` / `SHOVEL(cell)` / `WAIT_UNTIL(event)`。
+  执行器把意图映射到合法具体动作——**执行器是确定性的，不含任何策略判断**。
+- **值头**：`P(win)` 分类 + `E[剩余波数 | 会输]` 回归，取代当前的绝对 MSE 回归。
+- **辅助头**：`lane_threat` / `next_spawn` / `wave_timer`，**用特权信息训练，推理时丢弃**。
+  当前 `GameplayModelV1.privileged_value` 把特权信息拿去当 critic 是错用，改掉。
+
+**门禁（消融对比必须做）**：
+
+| 指标 | 阈值 |
+|---|---|
+| `wave_cap=5` 任务，分层架构 vs 扁平架构（同等训练预算） | 分层 **≥** 扁平，且差异有 Wilson 区间支撑 |
+| 零 tick 退化 | 单位时间内的"种后即铲"次数较当前教师**下降 ≥ 80%**（当前基线：79% 阳光被自己铲掉） |
+| 推理成本 | 单决策前向 ≤ 10 ms（batch=1，CPU） |
+
+**注意**：T6 的门禁是"不比扁平差"，不是"必须大幅提升"。若分层架构更差，**如实报告**，
+这是重要发现，不要粉饰。
+
+**交付**：`gates/T6.json` + 消融对比数据
+
+---
+
+### T7 · 完整关卡
+
+**目标**：从短任务推进到完整关卡（30 波）。这是**第一个高能力门禁**。
+
+**做法**：`wave_cap` 全开，先用 level 7，再用 T3 定义的任务池做自适应课程
+（采样权重偏向 pass rate ∈ [0.2, 0.8] 的任务）。
+
+**门禁**：
+
+| 指标 | 阈值 |
+|---|---|
+| level 7，development 30000–30255（256 seed） | pass rate **≥ 60%** |
+| 平均终局波次 | ≥ 25 / 30 |
+| 学习曲线 | 必须显示从短任务到完整关卡的迁移过程 |
+| 泛化差距（level 7 vs 同地形 held-out 关卡） | ≤ 15 pp |
+
+**这是硬门禁。** 60% 是"真正会玩这一关"的下限，不是可以商量的数字。
+若长时间卡在 30–50%，问题几乎一定在**长程信用分配**或**课程设计**，回到 T5/T6 重新设计，
+不要靠加算力硬堆。
+
+**交付**：`gates/T7.json` + checkpoint + 完整 seed 级结果
+
+---
+
+### T8 · 多关卡泛化（最终门禁）
+
+**目标**：证明系统学的是"玩 PvZ"，不是"背下 level 7"。
+
+**做法**：在 T3 定义的完整任务池上训练（deck 随机化、multiplier 扰动、多种地形），
+在 **held-out 任务集**上验收。
+
+**门禁（全部满足，这是最高门禁）**：
+
+| 指标 | 阈值 |
+|---|---|
+| held-out 全任务平均 pass rate | **≥ 60%** |
+| 五种地形中每一种的 pass rate | **≥ 45%**（不允许靠刷擅长的地形拉高均值） |
+| 泛化差距（训练任务 vs held-out） | **≤ 12 pp** |
+| 单任务最低 pass rate（held-out 内） | ≥ 25%（不允许完全放弃某些任务） |
+| 卡组扰动（换 2 张卡）后 pass rate 下降 | ≤ 20 pp |
+
+**泛化差距 ≤ 12pp 这条是防硬编码的总闸。** 一个靠背题过 T7 的系统在这里必然失败。
+
+**交付**：`gates/T8.json` + checkpoint + 每任务每 seed 的完整结果
+
+至此才算"能自主玩 PvZ"。T8 之后才是可选的加固（更高 multiplier、更恶劣 card draw）。
+
+---
+
+## 5. 机器配置（实测，勿重复摸索）
+
+| 机器 | 推荐配置 | 实测最优 |
+|---|---|---|
+| Apple M5 Pro | `--device cpu`（`auto` 即为此） | 11.3 min（值模型 CPU + 学生网络 MPS 拆设备） |
+| i7-12700F + RTX 5080 | `--device cuda --threads 4` | **15.4 min** |
+
+`--device auto` 在两边都会选对。需要逐位对齐旧产物时才显式加 `--threads 1`。
+
+### 已排除的路线（有实测数据，勿重复尝试）
+
+- **降精度换速度**：fp16 / bf16 / 稀疏首层 / float32 累加器**全部比全精度更慢**
+  （0.09×–1.00×）。Apple 的 AMX 是 fp32 单元，M 系列没有更高吞吐的半精度路径。结构性，非配置问题。
+- **值模型放 MPS**：batch=1 形状上 MPS 全面更慢（`predict` 68 µs → 451 µs）。
+  `resolve_device("auto")` 已不再考虑 MPS。
+- **叶子估值批量化**：每批仅约 4.3 行，`F.linear` 非连续转置权重的 ~44 µs 固定开销吃光收益。
+- **特征向量稀疏化**：特征仅 1.1%–3.3% 非零，但 `Linear(4116,128)` 在 batch=1 只要 6.59 µs，
+  索引构造开销远超省下的乘加，实测慢 5.6×。
+- **调 CPU 线程数（Apple）**：M5 Pro 上 threads 1/2/5/10/15 无差异，Accelerate 已吃满。
+  **但 x86 上相反**：threads=4 比 1 快 2.0×。这条不是普适结论，按机器区分。
+- **继续优化 `advice()` 吞吐**：真实环境下 Python 侧全部优化到零端到端也只有 2.9×，
+  而搜索本身就该被移除（见 `DESIGN.md` §1）。**不要在这里花时间。**
+- **在 0 胜基座上继续扩大 BC / DAgger 规模**：已实测无效（64 集 → 6400 集只会更精确地复制失败）。
+
+---
+
+## 6. 保留与删除（改动边界）
+
+| 模块 | 处置 |
+|---|---|
+| `pvz_env.py` | **保留，扩展**（720 行仅 5 个魔数，全仓最干净） |
+| `GameplayModelV1` 的 token 化与关系注意力 | 保留，改进（加 lane 摘要与派生全局量） |
+| `SearchAdvice` 预算记账 / `_expand_paired` / `one_step_children` 防错位接口 | 保留（设计正确） |
+| `pvz_seed_jobs` / `atomic_write` / spawn 并行采集 | 保留 |
+| `diverse_plant_groups` | 删除重写（几何多样性，非语义） |
+| `discounted_terminal_value` / `train_search_value` | 删除重写（回归目标 vs 排序用途，错配） |
+| `_transition_reward` | 删除重写（任意常数惩罚，非势函数形式） |
+| successive halving 硬剪枝 | 删除重写（用噪声做不可逆剪枝） |
+| BC / DAgger 主链路 | 降级为可选，不再是行为来源 |
+| `scripts/scripted_baseline.py` | 保留，仅作 T0 环境可解性验证器 |
+
+现有 192 个 Python 测试中，`test_search_teacher.py`（49）与 `test_search_value_features.py`（15）
+的断言编码了旧设计，重写时必然全红——**这是预期的，不是 bug**。
+先定新设计再写新测试，**不得为了让旧测试通过而保留旧设计**。
+
+---
+
+## 7. 当前状态
+
+- 上一轮（教师蒸馏路线）已确认失败并停止：`FAILURE_ANALYSIS.md`。
+  教师 dev 0/256，学生 final-test 0/1024。**不要试图挽救这条路线。**
+- 新设计已定稿：`DESIGN.md`。
+- 待执行：**T0**（下一步就是这个）。
+- 遗留独立任务：裸指针序列化修复—**已完成**（v4 字段逐项序列化，双进程逐字节一致，
+  `verify_env_equivalence.py` 7 关卡全通过）。无需再做。
