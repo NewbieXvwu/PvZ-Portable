@@ -236,22 +236,23 @@ def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any]) -> dict[st
     5*8 + 32*4 = 168 bytes per token -- about 11 KiB for a typical 70-token
     board -- and pickles as two arrays instead of six tensors plus nested dicts.
     """
-    ids = np.stack([tensors[field].numpy() for field in TOKEN_ID_FIELDS], axis=1).astype(np.int64)
+    ids = np.stack([tensors[field].numpy() for field in TOKEN_ID_FIELDS], axis=1).astype(np.int8)
     packet_ids = sorted(metadata["packet_tokens"])
     return {
         "ids": ids,
-        "features": tensors["features"].numpy().astype(np.float32),
-        "cell_index": np.array([metadata["cell_tokens"][cell] for cell in range(54)], dtype=np.int64),
-        "packet_ids": np.array(packet_ids, dtype=np.int64),
-        "packet_index": np.array([metadata["packet_tokens"][packet] for packet in packet_ids], dtype=np.int64),
+        "features": tensors["features"].numpy().astype(np.float16),
+        "cell_index": np.array([metadata["cell_tokens"][cell] for cell in range(54)], dtype=np.uint16),
+        "packet_ids": np.array(packet_ids, dtype=np.uint8),
+        "packet_index": np.array([metadata["packet_tokens"][packet] for packet in packet_ids], dtype=np.uint16),
     }
 
 
 def unpack_tokens(packed: dict[str, Any], device: torch.device) -> tuple[dict[str, Tensor], dict[str, Any]]:
     """Inverse of :func:`pack_tokens`.  Cheap enough to call per training step."""
-    ids = torch.from_numpy(np.ascontiguousarray(packed["ids"])).to(device)
+    ids = torch.from_numpy(np.ascontiguousarray(packed["ids"])).to(device=device, dtype=torch.long)
     tensors = {field: ids[:, index].contiguous() for index, field in enumerate(TOKEN_ID_FIELDS)}
-    tensors["features"] = torch.from_numpy(np.ascontiguousarray(packed["features"])).to(device)
+    tensors["features"] = torch.from_numpy(np.ascontiguousarray(packed["features"])).to(
+        device=device, dtype=torch.float32)
     packet_ids = [int(value) for value in packed["packet_ids"]]
     packet_index = [int(value) for value in packed["packet_index"]]
     metadata = {
@@ -575,7 +576,7 @@ class GameplayModelV1(nn.Module):
         token_lengths = np.array([packed["ids"].shape[0] for packed in packed_list], dtype=np.int64)
         l_max = int(token_lengths.max())
         ids = np.zeros((count, l_max, len(TOKEN_ID_FIELDS)), dtype=np.int64)
-        features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float32)
+        features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float16)
         key_mask = np.zeros((count, l_max), dtype=bool)
         for index, packed in enumerate(packed_list):
             real = packed["ids"].shape[0]
@@ -599,7 +600,7 @@ class GameplayModelV1(nn.Module):
         x = (self.kind_embedding(kinds)
              + self.category_embedding(ids_t[:, :, 1])
              + self.variant_embedding(ids_t[:, :, 2])
-             + self.feature_projection(torch.from_numpy(features).to(device))
+             + self.feature_projection(torch.from_numpy(features).to(device=device, dtype=torch.float32))
              + self.row_embedding((rows + 1).clamp(0, 7))
              + self.col_embedding((cols + 1).clamp(0, 10)))
         mask = torch.from_numpy(key_mask).to(device)

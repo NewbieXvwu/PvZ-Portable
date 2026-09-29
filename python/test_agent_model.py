@@ -11,6 +11,7 @@ import io
 import math
 import unittest
 
+import numpy as np
 import torch
 
 from pvz_agent_model import (
@@ -23,11 +24,14 @@ from pvz_agent_model import (
     configure_torch_threads,
     factored_action_log_prob,
     hard_behavior_cloning_loss,
+    legal_summary,
     observation_tokens,
+    pack_tokens,
     predict_action,
     resolve_device,
     select_action,
     soft_behavior_cloning_loss,
+    unpack_tokens,
 )
 from pvz_imitation import LANE_COUNT, episode_targets, train
 
@@ -147,6 +151,33 @@ class ObservationTokenTests(unittest.TestCase):
         for name in ("categories", "variants"):
             self.assertGreaterEqual(int(tensors[name].min()), 0)
             self.assertLess(int(tensors[name].max()), 128)
+
+    def test_narrow_packed_tokens_preserve_ids_and_actions(self) -> None:
+        source = observation()
+        tensors, metadata = observation_tokens(source)
+        packed = pack_tokens(tensors, metadata)
+
+        self.assertEqual(packed["ids"].dtype, np.int8)
+        self.assertEqual(packed["features"].dtype, np.float16)
+        self.assertEqual(packed["cell_index"].dtype, np.uint16)
+        self.assertEqual(packed["packet_ids"].dtype, np.uint8)
+        restored_tensors, restored_metadata = unpack_tokens(packed, torch.device("cpu"))
+        for name in ("kinds", "categories", "variants", "rows", "cols"):
+            torch.testing.assert_close(restored_tensors[name], tensors[name], rtol=0, atol=0)
+        self.assertLessEqual(float((restored_tensors["features"] - tensors["features"]).abs().max()),
+                             5.0e-4)
+        self.assertEqual(restored_metadata["cell_tokens"], metadata["cell_tokens"])
+        self.assertEqual(restored_metadata["packet_tokens"], metadata["packet_tokens"])
+
+        model = GameplayModelV1().eval()
+        with torch.no_grad():
+            direct = model.step_tokens(tensors, metadata, source["wave"], None, None, 0, {})
+            restored = model.step_tokens(restored_tensors, restored_metadata, source["wave"],
+                                         None, None, 0, {})
+            legal = legal_summary(source["legal_actions"])
+            direct_action, _, _ = select_action(model, direct, legal)
+            restored_action, _, _ = select_action(model, restored, legal)
+        self.assertEqual(restored_action, direct_action)
 
 
 class GameplayModelTests(unittest.TestCase):

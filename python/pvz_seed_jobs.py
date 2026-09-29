@@ -11,6 +11,9 @@ from pathlib import Path
 import tempfile
 from typing import Any, Callable
 import zlib
+import zipfile
+
+import numpy as np
 
 
 def atomic_write(path: Path, writer: Callable[[Path], None]) -> None:
@@ -36,6 +39,63 @@ def atomic_json(path: Path, value: Any, *, compressed: bool = False) -> None:
     atomic_write(path, write)
 
 
+def _archive_encode(value: Any, arrays: dict[str, np.ndarray]) -> Any:
+    """Encode nested trajectory data as JSON metadata plus named numeric arrays."""
+    if isinstance(value, np.ndarray):
+        name = f"array_{len(arrays):04d}"
+        arrays[name] = np.ascontiguousarray(value)
+        return {"__pvz_array__": name}
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, dict):
+        return {str(key): _archive_encode(item, arrays) for key, item in value.items()}
+    if isinstance(value, tuple):
+        return {"__pvz_tuple__": [_archive_encode(item, arrays) for item in value]}
+    if isinstance(value, list):
+        return [_archive_encode(item, arrays) for item in value]
+    return value
+
+
+def _archive_decode(value: Any, archive: Any) -> Any:
+    if isinstance(value, list):
+        return [_archive_decode(item, archive) for item in value]
+    if isinstance(value, dict):
+        if set(value) == {"__pvz_array__"}:
+            return archive[value["__pvz_array__"]].copy()
+        if set(value) == {"__pvz_tuple__"}:
+            return tuple(_archive_decode(item, archive) for item in value["__pvz_tuple__"])
+        return {key: _archive_decode(item, archive) for key, item in value.items()}
+    return value
+
+
+def atomic_numpy(path: Path, value: Any, *, compressed: bool = False) -> None:
+    """Atomically persist nested Python data while preserving NumPy dtypes.
+
+    Shards use NPZ's numeric arrays and a small JSON manifest.  JSON-only shards
+    expanded compact observation arrays into Python numbers and could not preserve
+    ``ndarray`` values needed by the PPO forward path.
+    """
+    def write(temporary_path: Path) -> None:
+        arrays: dict[str, np.ndarray] = {}
+        encoded = _archive_encode(value, arrays)
+        manifest = json.dumps({"schema_version": 1, "value": encoded},
+                              separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+        arrays["__manifest__"] = np.frombuffer(manifest, dtype=np.uint8)
+        with temporary_path.open("wb") as stream:
+            saver = np.savez_compressed if compressed else np.savez
+            saver(stream, **arrays)
+
+    atomic_write(path, write)
+
+
+def read_numpy(path: Path) -> Any:
+    with np.load(path, allow_pickle=False) as archive:
+        manifest = json.loads(archive["__manifest__"].tobytes().decode("utf-8"))
+        if manifest.get("schema_version") != 1:
+            raise ValueError(f"unsupported NumPy shard schema in {path}")
+        return _archive_decode(manifest["value"], archive)
+
+
 def seed_job_directory(output_dir: Path, stage: str, metadata: dict[str, Any]) -> Path:
     identity = json.dumps(metadata, sort_keys=True, separators=(",", ":")).encode("utf-8")
     digest = hashlib.sha256(identity).hexdigest()
@@ -43,17 +103,16 @@ def seed_job_directory(output_dir: Path, stage: str, metadata: dict[str, Any]) -
 
 
 def _shard_path(directory: Path, seed: int) -> Path:
-    return directory / f"seed_{seed}.json.gz"
+    return directory / f"seed_{seed}.npz"
 
 
 def _read_shard(path: Path, seed: int, metadata: dict[str, Any]) -> dict[str, Any] | None:
     try:
-        with gzip.open(path, "rt", encoding="utf-8") as stream:
-            shard = json.load(stream)
+        shard = read_numpy(path)
         result = shard["result"]
         if shard.get("metadata") == metadata and isinstance(result, dict) and result.get("seed") == seed:
             return result
-    except (OSError, EOFError, ValueError, TypeError, KeyError, zlib.error):
+    except (OSError, EOFError, ValueError, TypeError, KeyError, zlib.error, zipfile.BadZipFile):
         pass
     path.unlink(missing_ok=True)
     return None
@@ -64,7 +123,7 @@ def _collect_and_save(job: tuple[int, Path, dict[str, Any], Callable[[int], dict
     result = worker(seed)
     if not isinstance(result, dict) or result.get("seed") != seed:
         raise ValueError(f"seed worker returned a malformed result for seed {seed}")
-    atomic_json(_shard_path(directory, seed), {"metadata": metadata, "result": result}, compressed=True)
+    atomic_numpy(_shard_path(directory, seed), {"metadata": metadata, "result": result}, compressed=True)
     return seed
 
 
