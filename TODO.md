@@ -206,16 +206,29 @@
 **C++ 侧**
 
 1. `EnvironmentTaskSpec` 增加 `waveCap`（`0` = 不限）与预置植物列表。
-2. `Board::InitLevel` 中 `mNumWaves` 赋值段（`src/Lawn/Board.cpp:581–617`）**之后**、
-   `PVZP_ASSERT(mNumWaves <= MAX_ZOMBIE_WAVES)`（617 行）**之前**插入：
+2. `wave_cap` 的实现**必须同时满足 (a) 和 (b)，缺一不可**——只做 (a) 是错的。
+
+   **(a) 截断总波数**：在 `Board::PickZombieWaves()`（`src/Lawn/Board.cpp:575`）中，
+   `mNumWaves` 赋值段（581–617）之后、`PVZP_ASSERT`（617 行）之前、波次生成循环（621 行起）之前：
 
    ```cpp
-   if (mWaveCap > 0 && mNumWaves > mWaveCap) mNumWaves = mWaveCap;
+   const int aFullWaves = mNumWaves;                                  // 先存完整波数
+   if (mWaveCap > 0 && mNumWaves > mWaveCap) mNumWaves = mWaveCap;    // 后截断
    ```
 
-   **必须在波次生成循环（621 行起）之前生效。** 这样 `aIsFinalWave`、旗帜标记、
-   `mCurrentWave == mNumWaves - 1` 的最后一波判定、以及通关判定全部自动正确，
-   **不需要改任何其他波次逻辑**。这是选这个插入点的唯一原因，别挪位置。
+   **(b) 波次组成必须用完整波数计算**（第一版实现漏掉的关键点）：
+   循环内所有依赖"总波数"的判定改用 `aFullWaves`，**不是** `mNumWaves`：
+
+   - `aIsFinalWave`（630 行）：`aWave == aFullWaves - 1`
+   - 新僵尸引入判定（706–711 行）的 `aWave == mNumWaves / 2`：`aWave == aFullWaves / 2`
+   - `IsFlagWave(aWave)`（528 行）内部 `GetNumWavesPerFlag()`（525 行）：按完整波数取
+
+   **为什么必须做 (b)**：只做 (a) 会让第 `wave_cap` 波变成最终旗帜波——带旗帜、
+   触发新僵尸引入的大波。实测后果：level 7 / seed 30000 在完整 30 波下能赢（tick 65,401），
+   在 `wave_cap=3` 下反而于 **tick 11,777 被打穿**。原因是发育时间从约 75,000 tick 砍到
+   约 7,500 tick，却要立刻面对终局大波——**短任务比长任务还难，课程设计直接失效。**
+
+   `wave_cap` 的正确语义是**"打满前 N 波就结束"**，不是**"把整关压缩成 N 波"**。
 
 3. 预置植物用 `Board::AddPlant(col, row, seedType, SeedType::SEED_NONE)`
    （已有接口，`Board.cpp:2079`），在 `EnvironmentReset` 完成后、返回观察前执行。
@@ -236,6 +249,7 @@
 
 | 指标 | 阈值 |
 |---|---|
+| **波次组成一致性**（验证 (b) 确实做对了） | `wave_cap=3` 的第 1/2/3 波僵尸组成，与 `wave_cap=None` 同一 seed 的前 3 波**逐波一致**；不一致即判失败，即使恰好能赢 |
 | level 7 `wave_cap=3`，3 个 seed | 第 3 波后**正常通关**（`won == True`），终局 tick 应 < 30,000 |
 | level 7 `wave_cap=1` | 第 1 波后终局 |
 | level 7 `wave_cap=None` | 仍为 30 波，与改动前一致 |
@@ -469,8 +483,11 @@ aggregate: { train_mean_pass, heldout_mean_pass, generalization_gap }
   （修复前 1,796,340 tick 永不终局），seed 30001 亦获胜。seed 30002 / 30003 分别在第 10、7 波
   正常失败——已确认是脚本策略强度问题，**不是环境阻塞**。
 - 当前待办：T0 补跑（level 1/8/20 + 记录失败局终局原因）后重跑门禁，然后 T1 → T4。
-- **T2 的语义与实现规范已在本文档 2.1–2.3 定死**（`wave_cap` 只截断不放大，插入点固定在
-  `mNumWaves` 赋值段之后、波次生成循环之前；`preplanted` 走 `Board::AddPlant`，不自动配底座、
-  失败即报错）。执行时按文档实现，不要另行设计。
+- **T2 的语义与实现规范已在本文档 2.1–2.3 定死**（`preplanted` 走 `Board::AddPlant`，
+  不自动配底座、失败即报错）。执行时按文档实现，不要另行设计。
+- **T2 第一版实现的缺陷已定位并修正**（规范已更新）：只截断 `mNumWaves` 而不改
+  `aIsFinalWave` / 新僵尸引入 / `IsFlagWave` 的判定基准，会让第 `wave_cap` 波变成终局大波，
+  导致 `wave_cap=3` 在 seed 30000 上 tick 11,777 被打穿（同一 seed 完整 30 波反而能赢）。
+  必须按 2.2(b) 用完整波数 `aFullWaves` 计算波次组成。
 - 遗留独立任务：裸指针序列化修复—**已完成**（v4 字段逐项序列化，双进程逐字节一致，
   `verify_env_equivalence.py` 7 关卡全通过）。无需再做。
