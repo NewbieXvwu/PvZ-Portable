@@ -1,8 +1,27 @@
 {
   "task_id": "T1",
+  "commit": "f65c6cfaa1cf375179c0473b8e6c26cc020352d6",
+  "worktree_clean": true,
   "gate_result": "pass",
   "local_gate_result": "pass",
   "command": "python -u scripts/t1_smoke.py --resource-dir $PVZ_RESOURCE_DIR",
+  "reproduce_command": "python -u scripts/t1_smoke.py --resource-dir /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN",
+  "metrics": {
+    "cases_passed": 6,
+    "all_won": true,
+    "maximum_terminal_tick": 65401,
+    "mutation_exit_code": 1,
+    "restored_exit_code": 0
+  },
+  "thresholds": {
+    "minimum_levels": 3,
+    "minimum_seeds_per_level": 2,
+    "all_cases_won": true,
+    "maximum_terminal_tick": 120000,
+    "mutation_must_fail": true,
+    "restored_test_must_pass": true
+  },
+  "raw_seed_results_path": "gates/T1.json#/coverage/results",
   "coverage": {
     "levels": [1, 2, 7],
     "seeds": [30000, 30001],
@@ -15,6 +34,27 @@
       {"level": 7, "seed": 30000, "won": true, "terminal": true, "tick": 65401},
       {"level": 7, "seed": 30001, "won": true, "terminal": true, "tick": 63086}
     ]
+  },
+  "tick_equality_investigation": {
+    "separate_rerun_commands": [
+      "python -u scripts/scripted_baseline.py --resource-dir /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN --level 1 --seeds 30000 30001",
+      "python -u scripts/scripted_baseline.py --resource-dir /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN --level 2 --seeds 30000 30001"
+    ],
+    "separate_rerun_results": {
+      "level_1": [
+        {"seed": 30000, "won": true, "terminal_reason": "won", "wave": "20/20", "tick": 34374, "actions": 600, "final_plants": {"1": 10, "0": 14}},
+        {"seed": 30001, "won": true, "terminal_reason": "won", "wave": "20/20", "tick": 35263, "actions": 621, "final_plants": {"1": 10, "0": 14}}
+      ],
+      "level_2": [
+        {"seed": 30000, "won": true, "terminal_reason": "won", "wave": "20/20", "tick": 34374, "actions": 600, "final_plants": {"1": 10, "0": 14}},
+        {"seed": 30001, "won": true, "terminal_reason": "won", "wave": "20/20", "tick": 35263, "actions": 621, "final_plants": {"1": 10, "0": 14}}
+      ]
+    },
+    "reset_comparison": [
+      {"seed": 30000, "same_initial_observation_except_level": true, "same_full_wave_table": true, "wave_table_sha256": "ae767fd4784bde753db6bd12cd305c9de4218c4acabbbb306b4113745c375427", "terrain": 0, "wave_count": 20, "zombie_roster": [0]},
+      {"seed": 30001, "same_initial_observation_except_level": true, "same_full_wave_table": true, "wave_table_sha256": "ae767fd4784bde753db6bd12cd305c9de4218c4acabbbb306b4113745c375427", "terrain": 0, "wave_count": 20, "zombie_roster": [0]}
+    ],
+    "explanation": "For each seed, level 1 and level 2 reset to identical observations after removing the level field, the same day terrain, 20-wave count, zombie roster, and complete hidden wave table. scripted_baseline.choose does not read the level field. With the same seed and deterministic reset state, the policy follows the same actions and reaches the same terminal tick."
   },
   "mutation_test": {
     "mutation": "Removed aZombie->IsOnBoard() from Board::AreEnemyZombiesOnScreen() and rebuilt.",
@@ -37,5 +77,7 @@
   "ci": {
     "status": "locally_substituted",
     "reason": "Per user instruction, local execution against the Downloads resource directory substitutes for GitHub Actions in this run."
-  }
+  },
+  "protected_assets_unmodified": true,
+  "notes": "The full six-case T1 smoke gate passed at the recorded commit with a clean worktree. gates/T1.json was supplemented as explicitly requested; all other protected assets remained unchanged."
 }
