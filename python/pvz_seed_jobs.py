@@ -96,6 +96,19 @@ def read_numpy(path: Path) -> Any:
         return _archive_decode(manifest["value"], archive)
 
 
+def read_episode(path: Path) -> dict[str, Any]:
+    """Read one rollout shard and return the episode inside it.
+
+    ``run_seed_jobs`` writes ``{"metadata": ..., "result": ...}`` so an interrupted
+    run can be resumed, but shards written before that wrapper existed hold the
+    episode directly.  Both shapes are accepted here rather than at each call site:
+    every reader used to open-code the check, and ``attention_benchmark`` had
+    silently stopped matching either one.
+    """
+    stored = read_numpy(path)
+    return stored["result"] if "result" in stored else stored
+
+
 def seed_job_directory(output_dir: Path, stage: str, metadata: dict[str, Any]) -> Path:
     identity = json.dumps(metadata, sort_keys=True, separators=(",", ":")).encode("utf-8")
     digest = hashlib.sha256(identity).hexdigest()

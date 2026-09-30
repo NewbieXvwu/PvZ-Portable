@@ -1,8 +1,8 @@
 # PvZAgent — 执行任务书
 
-本文件是当前任务与实验顺序的唯一来源。2026-09-30 的修订纳入网络架构评审、替换实验和训练顺序，取代旧文件中“先达到 T5 的 90% 胜率才能研究架构”“只准执行 T5 后等待确认”等安排。即使 `T5_OVERNIGHT_ORDER.md` 声明优先于 TODO，其与本次修订冲突的执行约束也由本文件取代。
+本文件是当前任务与实验顺序的唯一来源。2026-09-30 的修订纳入网络架构评审、替换实验和训练顺序，取代旧文件中“先达到 T5 的 90% 胜率才能研究架构”“只准执行 T5 后等待确认”等安排。旧的一次性工作令（`T5_OVERNIGHT_ORDER.md`、`T5_RERUN_ORDER.md`）已于 2026-09-30 删除，其剩余有效内容并入本文件与 [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md)；本文件是唯一执行任务书。
 
-设计依据见 [DESIGN.md](DESIGN.md)，既往失败见 [FAILURE_ANALYSIS.md](FAILURE_ANALYSIS.md)。两者保留设计脉络与历史证据，尚未落实的设计修正列在本文件中。用户已授权必要代码修改，无须维护旧模型或旧检查点的兼容性。本次更新只修改任务书，尚未启动下列训练实验。
+设计依据见 [DESIGN.md](DESIGN.md)，既往失败见其 §12（原 `FAILURE_ANALYSIS.md` 已并入）。两者保留设计脉络与历史证据，尚未落实的设计修正列在本文件中。用户已授权必要代码修改，无须维护旧模型或旧检查点的兼容性。本次更新只修改任务书，尚未启动下列训练实验。
 
 ## 0. 目标与执行顺序
 
@@ -238,7 +238,7 @@ T5 的短局高胜率与旧吞吐目标保留为参考指标，不再构成进�
 
 ## 7. 性能与内存：已完成记录和剩余工作
 
-相关分析保留在 [MEMORY_BUDGET.md](MEMORY_BUDGET.md)、[OPTIMIZATION_TASKS.md](OPTIMIZATION_TASKS.md)、[TRAINING_HOTSPOT_ANALYSIS.md](TRAINING_HOTSPOT_ANALYSIS.md) 与 [ATTENTION_TRANSFER_ANALYSIS.md](ATTENTION_TRANSFER_ANALYSIS.md)。性能结果绑定其实际模型、局长和硬件配置。
+相关分析保留在 [OPTIMIZATION_TASKS.md](OPTIMIZATION_TASKS.md)（性能与内存总账，附录 A 是内存预算、附录 B 是 2026-09-29 那轮的详细数据）与 [PROTOCOL_OBSERVABILITY_AUDIT.md](PROTOCOL_OBSERVABILITY_AUDIT.md)（观测字段预算与 B2–B6 待办）。**已否定的方向见 [PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) §11**，不要再重复调研。性能结果绑定其实际模型、局长和硬件配置。
 
 ### 7.1 已完成，保留已有实现
 
@@ -246,7 +246,7 @@ T5 的短局高胜率与旧吞吐目标保留为参考指标，不再构成进�
 |---|---|
 | 任务族阶段 0、初始化评估、派生行特征和阶段标准 | 已补代码与对应检查，尚无阶段 0 学习通过证据 |
 | 紧凑观测、采样载荷和序列批处理等内存优化 | 已有实现与基准，完整关卡及新架构仍需重新测峰值 |
-| CUDA 关系偏置融合 | 已默认开启，可用 `PVZ_RELATION_BIAS_FUSION=0` 关闭。旧配置稳态 1.14–1.31 倍，编译约 440 ms/进程 |
+| CUDA 关系偏置融合 | 已默认开启，可用 `PVZ_RELATION_BIAS_FUSION=0` 关闭。旧配置稳态 1.14–1.31 倍是 **CPU 口径**；CUDA 上实测 **177x**（一层反向 906 ms → 5.1 ms），编译约 440 ms/进程。见 [PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) §10.2 |
 | `episode_digest` 字节摘要 | 已实现，实测 27.9 s → 3.5 s/update，约 8.0 倍。旧 45 倍数字不可复现，已更正 |
 | 独立评估进程池 | 已实现，真实模拟器逐条结果一致，旧 128 局评估 28.8 s → 10.4 s |
 | 中间评估减少重复 reference 计算 | 已实现，轮末补齐完整参考评估 |
@@ -257,14 +257,21 @@ T5 的短局高胜率与旧吞吐目标保留为参考指标，不再构成进�
 | P2：跨决策增量载荷编码 | 已测量，8 局 459 个相邻决策对中变化率低，但按行增量压缩约 3.04 倍，单块 zlib 约 8.50 倍。当前不采用增量方案 |
 | 压缩分片必要性分析 | 已测量，写盘约 0.8 s/update、177.9 MiB/update，仍服务采样断点续跑与离线复算。当前保留，不新增开关 |
 
-旧吞吐配置 CPU 18 worker × 1 thread 曾约 44,000 局/小时，进程树 RSS 合计峰值约 19 GB。RTX 5080 上旧模型 2,000 局、2 epochs 的 Flex 更新中位耗时约 187.7 秒，更新时 CPU RSS 约 3.8 GB。RSS 合计会重复计入共享页，需要结合整机/WSL 实际内存判断。上述基准不能证明新模型或完整关卡能维持同样速度，一次更新的 0/20 → 0/20 结果只属于闭环冒烟证据。详见 [T5_PERFORMANCE_REPORT.md](T5_PERFORMANCE_REPORT.md)。
+旧吞吐配置 CPU 18 worker × 1 thread 曾约 44,000 局/小时，进程树 RSS 合计峰值约 19 GB。RTX 5080 上旧模型 2,000 局、2 epochs 的 Flex 更新中位耗时约 187.7 秒，更新时 CPU RSS 约 3.8 GB。RSS 合计会重复计入共享页，需要结合整机/WSL 实际内存判断。上述基准不能证明新模型或完整关卡能维持同样速度，一次更新的 0/20 → 0/20 结果只属于闭环冒烟证据。详见 [OPTIMIZATION_TASKS.md](OPTIMIZATION_TASKS.md) 附录 B。
+
+**2026-09-30 在生产机器（RTX 5080, sm_120, torch 2.14.0+cu132）上实测后已实施的一项**：`train_update` 的 `--attention-backend auto` 现在解析成 **dense**，不再在 CUDA 上选 FlexAttention。原因是上面"Flex 更新快 2.19×"的那条记录来自融合编译之前的代码；重测后 dense 是 8.25 ms、flex 是 22.40 ms，512 局口径下每优化步 81.7 ms 对 125.8 ms（**1.54x**），交替 A/B 复测 1.53–1.59x。代价是峰值显存 2174 → 2470 MB（+296 MB），`policy_loss` 8 位一致。`flex` 保留为显式选项以便重测。全过程见 [PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) §10.6。
+
+同一轮实测还推翻了"BF16 更慢"：记录里的 3.85x 是冷 fp32 比热 bf16（旧脚本没有预热，`torch.compile` 按 dtype 各编译一次）。真实收益只有 1.03–1.06x，等价性通过（506 条留出 transition，Δlogp 最大 0.0227，0 条超出 ±0.2 clip）但换不来东西，所以**正式训练仍保持 fp32**。见 §10.5。
 
 ### 7.2 仍未完善的性能任务
 
+- [ ] **在生产机器上确认 worker pool 的 5.5 s 启动截距**（[PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) §5.3）。本机两点拟合：180 局 10.24 s、720 局 24.46 s → 斜率 26.3 ms/局、截距 5.5 s。按生产默认 2,000 局/批算，这是 rollout 墙钟的 9.5%（记录机器上可能到 31%）。不需要 CUDA、不涉及模型语义，确认后是**当前最大的单项杠杆**；未确认前不要动手（复用 worker 每批要重新 `load_state_dict`，还要处理崩溃与长跑内存增长）。
+- [ ] **在生产机器上重做并行口径画像**（[PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) §5.2）。本机 18 worker 的争抢放大是 4.88x，记录机器是 2.03x——差得比代码改动本身还多。因此本轮的单核 3.7x **不要外推到生产的 18 worker**；只有 `--workers 1` 的口径可跨机器比较。
 - [ ] 在目标执行机上重新测实际端到端吞吐，包含新模型、辅助损失与预定评估，确认模拟器二进制对应当前协议。
 - [ ] 根据实际物理/WSL 可用内存选择采样进程数和更新批量，测完整局长、后期实体峰值与数据传输载荷。16 GB WSL 的配置通过实际内存测量确定。
 - [ ] 记录新架构的 GPU 峰值已分配/保留显存、CPU 峰值常驻内存及进程总内存，保证实验预算来自实测。
 - [ ] 完整训练恢复补齐后核验采样分片的实际复用和磁盘峰值。当前保留压缩分片，只有恢复流程变化或磁盘成为实测瓶颈时才重新选择。
+- [ ] **观测载荷瘦身（B2–B6 协议重设计）**：天花板已实测——整条循环最多值 **4.8%**（[PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) §5；单核口径 environment + tokenization 占每局 13.8%）。值得做但换不来数量级，优先级低于上面两项。其中 `grid` 与 `coins` 两个字段**无读者**（`scripts/token_input_audit.py` 已确认），是零风险纯删除；但删它们要改 C++ 侧观测组装并重编译 `build/pvz-portable`，会改 `OBSERVATION_VERSION`，不是纯 Python 改动。
 - [ ] 在学习可靠后按真实瓶颈决定进一步优化。循环训练窗口以记忆任务为依据，性能测试只提供成本信息。
 
 已有实测否定的低收益优化不作为当前任务：常驻/fork 池、磁盘重读带宽、优势计算微优化，以及旧配置下的 fp16/bf16 推理。只有新结构出现相关实测瓶颈时才重新评估。
@@ -275,6 +282,7 @@ T5 的短局高胜率与旧吞吐目标保留为参考指标，不再构成进�
 - 本机资源：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN`，Python 使用 mise 3.14。
 - 既有远端入口：`win_ssh.py`，WSL 仓库 `~/PvZ-Portable`，资源 `~/.cache/pvz-research-resources`，环境 `~/.venvs/ml`。沿用已安装 CUDA/PyTorch 环境，不为实验重装可用依赖。
 - 开始远端任务前记录实际代码版本与待运行配置，使用当前资源和二进制检查。旧文档中的固定提交号与吞吐命令只作历史记录。
+- **主要执行机是台式机（WSL2 / RTX 5080）**，本机（macOS）只做不需要真实模拟器的编辑与静态检查。交接步骤、连接命令、同步方式与测量纪律见 [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md)。远端跑完的结果必须把证据 JSON 取回本机归档到 `artifacts/t5/perf/`，未同步的远端结果不能记作已完成（§1.2）。
 
 ## 8. 公开研究依据与适用范围
 
@@ -298,6 +306,8 @@ T5 的短局高胜率与旧吞吐目标保留为参考指标，不再构成进�
 - [x] 第一轮性能优化，以及第二轮必要性审计中的 N1/N2/N3 和摘要测速纠正。
 - [x] 增量载荷编码测量与分片必要性分析，当前保留原编码和压缩分片。
 - [x] 阶段 0、初始化评估与派生行特征的代码补齐。
+- [x] 生产机器（RTX 5080）实测关系偏置与精度，并实施 `auto` → dense（[PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) §10）。
+- [ ] 生产机器上的两项性能待办：worker pool 5.5 s 启动截距确认、并行口径画像重做（§7.2）。
 - [ ] T5-A 的实验配置、完整恢复和新配置评估闭环。
 - [ ] T5-B/C 的输入动作核验、辅助损失、回报与记忆训练修正。
 - [ ] T5-D 的目标语义和两层训练机制定义。

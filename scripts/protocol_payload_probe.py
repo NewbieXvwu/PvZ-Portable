@@ -194,8 +194,9 @@ def main() -> None:
               f"  {_percentiles(privileged)}")
         if priv_lines:
             print(f"  PRIV line on the wire    {max(priv_lines):9.1f} B")
-        print("  reachable only via debug_replay=True (verify_env_equivalence) and three")
-        print("  benchmark scripts; the PPO trainer never sends PRIV.")
+        print("  reachable via scripts/t2_gate.py, PvZEnv's own debug_replay=True")
+        print("  state digest, and the legacy trajectory_storage_benchmark reader;")
+        print("  the PPO trainer never sends PRIV.")
 
     if args.field_budget:
         _field_budget(resource_dir, args.field_budget)

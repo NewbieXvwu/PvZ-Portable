@@ -6,7 +6,6 @@ import json
 from collections import deque
 from pathlib import Path
 import random
-import shutil
 import tempfile
 import unittest
 from unittest import mock
@@ -170,12 +169,11 @@ class Stage0EvaluationTests(unittest.TestCase):
             gate_path.write_text(json.dumps({"result": "pass"}))
             self.assertIsNone(task_family._check_stage0_gate(self.train_tasks, False, None, gate_path))
 
-    def test_changed_seed0_hash_requires_note_and_records_both_hashes(self) -> None:
-        with mock.patch.object(task_family, "MODEL_ARCHITECTURE_VERSION", 5):
-            with self.assertRaisesRegex(RuntimeError, "网络结构已变更，seed-0 初始化不再与 T4 基线一致"):
-                task_family._seed0_initialization_baseline("new-hash", "t4-hash", None)
-            record = task_family._seed0_initialization_baseline(
-                "new-hash", "t4-hash", "new lane-token architecture supersedes T4")
+    def test_seed0_baseline_requires_note_and_records_both_hashes(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "网络结构已变更，seed-0 初始化不再与 T4 基线一致"):
+            task_family._seed0_initialization_baseline("new-hash", "t4-hash", None)
+        record = task_family._seed0_initialization_baseline(
+            "new-hash", "t4-hash", "new lane-token architecture supersedes T4")
         self.assertEqual(record["actual"], "new-hash")
         self.assertEqual(record["t4"], "t4-hash")
         self.assertEqual(record["status"], "superseded")

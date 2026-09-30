@@ -205,14 +205,15 @@ critic_inputs['wave_timer'] == observation['wave_timer']:  120/120 decisions
 `blend_time`/`render_group`），`rand_state_hex` 是 RNG 状态。
 
 **训练路径一次都不发 `PRIV`。** `debug_replay` 默认 `False`
-（`pvz_env.py:178`），`privileged_state()` 只在 `debug_replay=True`
-（`verify_env_equivalence.py`）和三个基准脚本
-（`test_agent_model.py:264`、`trajectory_storage_benchmark.py:54`、
-`branch_benchmark.py:86`、`snapshot_hash_compare.py:69`）里被调用。
+（`pvz_env.py:178`），`privileged_state()` 现在只剩两个调用者：
+`PvZEnv._debug_state_sha256`（`debug_replay=True` 时的回放校验）和
+`scripts/protocol_payload_probe.py`（本审计的测量脚本）。它曾经还有三个基准
+脚本调用者（`branch_benchmark.py`、`snapshot_hash_compare.py`、
+`verify_env_equivalence.py`），都随 T4 搜索教师一起删掉了。
 
-代价实测 **0.229 ms/次**（含 57.9 KiB 序列化 + 传输 + 解码）。它是
-`verify_env_equivalence.py` 的**证据基础**，所以不能删——但它是"协议里
-存在一个巨大的、几乎无人使用的命令"的典型。
+代价实测 **0.229 ms/次**（含 57.9 KiB 序列化 + 传输 + 解码）。**结论反而更强了**：
+协议里存在一个巨大的、几乎无人使用的命令，而删掉它的风险已经比当初小得多
+——回放校验之外没有别的消费者，而回放校验本身只在 `debug_replay=True` 时生效。
 
 ---
 
@@ -243,9 +244,10 @@ critic_inputs['wave_timer'] == observation['wave_timer']:  120/120 decisions
    decision** 都往 `self.episode` 追加一条
    `{request, action, ticks_advanced, state}`，并在 `reset` 时写入
    `initial_state`。这是**唯一能离线回放/可视化的数据**。但
-   `collect_task_episode`（T5 训练路径）**不调 `save_replay`**——
-   只有旧的 `collect_episode`（`train_pvz_ppo.py:83`）、
-   `train_pvz_agent.py`、`benchmark_pvz_agent.py` 会存。
+   `collect_task_episode`（T5 训练路径）**不调 `save_replay`**。唯一会调它的
+   `collect_episode`（`train_pvz_ppo.py` 的旧单关入口）已随 T4 遗产删除，所以
+   **现在只剩 `test_env_protocol.py` 会调 `save_replay`**——生产路径上没有任何
+   一局被存下来。
 
    **每局都在累积完整回放，然后随 episode dict 一起被垃圾回收。**
 

@@ -1,4 +1,4 @@
-"""Tests for the structured GameplayModel-v1 network, its token stream, and the imitation loss.
+"""Tests for the structured GameplayModel-v1 network, its token stream, and its action losses.
 
 ``observation()`` below is a complete, schema-accurate observation: every key the model
 reads is present, so a missing-key regression fails here rather than on a cluster.
@@ -6,9 +6,6 @@ reads is present, so a missing-key regression fails here rather than on a cluste
 
 from __future__ import annotations
 
-import contextlib
-import io
-import math
 import unittest
 
 import numpy as np
@@ -37,7 +34,6 @@ from pvz_agent_model import (
     unpack_tokens,
 )
 from pvz_agent_model import _ratio
-from pvz_imitation import LANE_COUNT, episode_targets, train
 from train_pvz_ppo import collect_task_episode
 
 ROW_COUNT = 6
@@ -306,6 +302,59 @@ class GameplayModelTests(unittest.TestCase):
                 model, outputs, [{**transition, "action": action} for action in actions])
         self.assertTrue(torch.isfinite(log_probs).all())
         self.assertTrue(torch.isfinite(entropies).all())
+
+    def test_batched_replay_equals_select_action_per_transition(self) -> None:
+        """The batched replay must reproduce ``select_action`` number for number.
+
+        ``replay_log_probs`` exists only to fold ~30 small ops per transition into
+        one op per chunk; it is not allowed to change the result.  The two paths
+        build their masks in entirely different ways -- ``select_action`` walks a
+        Python set and writes one device element at a time, the batched version
+        builds one index tensor per chunk -- so a masking slip would surface as a
+        silently wrong PPO ratio rather than as a crash.
+
+        The chunk mixes a truncated packet list with full ones, so the padding
+        branch of the packet distribution is exercised, and covers all three
+        action types.
+        """
+        full = observation()
+        short = observation(packets=full["packets"][:3])
+        sources = [full, short, full, full]
+        summaries = [legal_summary(source["legal_actions"]) for source in sources]
+        tokens = [pack_tokens(*observation_tokens(source)) for source in sources]
+        plant = full["legal_actions"]["plants"][0]
+        shovel_col, shovel_row = full["legal_actions"]["shovels"][0]
+        actions = [
+            {"type": "plant", "packet": plant["packet"],
+             "row": plant["row"], "col": plant["col"]},
+            {"type": "plant", "packet": plant["packet"],
+             "row": plant["row"], "col": plant["col"]},
+            {"type": "shovel", "row": shovel_row, "col": shovel_col},
+            {"type": "wait", "ticks": 150},
+        ]
+        transitions = [
+            {"tokens": packed, "previous_action": None,
+             "elapsed_since_previous_observation": 0, "events": {},
+             "wave": source["wave"], "legal": summary, "action": action}
+            for packed, source, summary, action in zip(tokens, sources, summaries, actions)
+        ]
+        with torch.no_grad():
+            outputs, _ = self.model.forward_sequences([transitions], [None])
+            batch_log_probs, batch_entropies = replay_log_probs(
+                self.model, outputs, transitions)
+            expected = [
+                select_action(self.model, outputs[index], transition["legal"],
+                              action=transition["action"])
+                for index, transition in enumerate(transitions)
+            ]
+            # The chunk is only meaningful if the packet rows really are ragged.
+            self.assertEqual(outputs[0]["packet_logits"].shape[0], 6)
+            self.assertEqual(outputs[1]["packet_logits"].shape[0], 3)
+            for index, (_, expected_log_prob, expected_entropy) in enumerate(expected):
+                self.assertAlmostEqual(float(batch_log_probs[index]),
+                                       float(expected_log_prob), places=5)
+                self.assertAlmostEqual(float(batch_entropies[index]),
+                                       float(expected_entropy), places=5)
 
     def test_hidden_state_advances_with_the_recurrence(self) -> None:
         source = observation()
@@ -623,126 +672,6 @@ class SoftLabelDistillationTests(unittest.TestCase):
             soft_behavior_cloning_loss(self.model, output, self.source, [self.demonstrated], [0.5, 0.5])
         with self.assertRaisesRegex(ValueError, "no probability"):
             soft_behavior_cloning_loss(self.model, output, self.source, [self.demonstrated], [0.0])
-
-    def _episode(self, policy: list[float]) -> dict:
-        return {
-            "tick": 660,
-            "won": True,
-            "steps": [{
-                "observation": self.source,
-                "action": self.demonstrated,
-                "delta_ticks": 60,
-                "events": {},
-                "candidate_actions": [self.demonstrated, self.alternative],
-                "search_values": [0.0, 0.0],
-                "search_policy": policy,
-                "best_action": self.demonstrated,
-            }],
-        }
-
-    def _alternative_margin(self) -> float:
-        output = self._output()
-        return self._log_prob(output, self.alternative) - self._log_prob(output, self.demonstrated)
-
-    def test_the_soft_target_pulls_the_model_towards_the_search_distribution(self) -> None:
-        """The point of the term: a teacher preference for the runner-up must reach the student.
-
-        The demonstrated action is the plant while the search put 0.9 of its mass on the
-        wait, so a soft term that is actually wired in has to raise the wait's log
-        probability relative to the plant's.
-        """
-        episode = self._episode([0.1, 0.9])
-        before = self._alternative_margin()
-
-        with contextlib.redirect_stdout(io.StringIO()):
-            train(self.model, [episode], epochs=20, device=torch.device("cpu"), soft_label_weight=4.0)
-
-        self.assertGreater(self._alternative_margin(), before)
-
-    def test_zero_soft_weight_leaves_the_demonstration_alone(self) -> None:
-        """``--soft-label-weight 0`` has to restore argmax-only behaviour cloning exactly."""
-        episode = self._episode([0.1, 0.9])
-        before = self._alternative_margin()
-
-        with contextlib.redirect_stdout(io.StringIO()):
-            train(self.model, [episode], epochs=20, device=torch.device("cpu"), soft_label_weight=0.0)
-
-        self.assertLess(self._alternative_margin(), before)
-
-    def test_a_step_without_search_labels_still_trains(self) -> None:
-        """Trajectories collected before the labels existed must not break the run."""
-        episode = self._episode([0.1, 0.9])
-        episode["steps"][0].pop("candidate_actions")
-        episode["steps"][0].pop("search_policy")
-
-        with contextlib.redirect_stdout(io.StringIO()):
-            history, _ = train(self.model, [episode], epochs=1, device=torch.device("cpu"))
-
-        self.assertEqual(len(history), 1)
-        self.assertTrue(math.isfinite(history[0]))
-
-    def test_a_negative_soft_weight_is_rejected(self) -> None:
-        with self.assertRaisesRegex(ValueError, "non-negative"):
-            train(self.model, [self._episode([1.0, 0.0])], epochs=1, device=torch.device("cpu"),
-                  soft_label_weight=-0.5)
-
-
-class ImitationTargetTests(unittest.TestCase):
-    def test_lane_targets_mark_the_rows_occupied_by_zombies(self) -> None:
-        steps = [{"observation": observation(zombies=[_zombie(row=2), _zombie(row=4)]), "events": {}}]
-
-        lanes, next_wave = episode_targets(steps, 0, torch.device("cpu"))
-
-        self.assertEqual(tuple(lanes.shape), (1, LANE_COUNT))
-        self.assertEqual(lanes[0].tolist(), [0.0, 0.0, 1.0, 0.0, 1.0, 0.0])
-        self.assertEqual(float(next_wave), 0.0)
-
-    def test_out_of_range_zombie_rows_are_ignored(self) -> None:
-        """A row outside the six lanes must neither raise nor wrap into another lane."""
-        steps = [{"observation": observation(zombies=[_zombie(row=9), _zombie(row=-1), _zombie(row=3)]),
-                  "events": {}}]
-
-        lanes, _ = episode_targets(steps, 0, torch.device("cpu"))
-
-        self.assertEqual(lanes[0].tolist(), [0.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-
-    def test_next_wave_target_reads_the_following_step(self) -> None:
-        steps = [{"observation": observation(), "events": {}},
-                 {"observation": observation(tick=660), "events": {"waves_started": 1}}]
-
-        _, first = episode_targets(steps, 0, torch.device("cpu"))
-        _, last = episode_targets(steps, 1, torch.device("cpu"))
-
-        self.assertEqual(float(first), 1.0)
-        self.assertEqual(float(last), 0.0)
-
-
-class ImitationTrainTests(unittest.TestCase):
-    def test_one_epoch_reports_a_finite_loss_and_balances_plant_steps(self) -> None:
-        torch.manual_seed(0)
-        model = GameplayModelV1()
-        episode = {
-            "tick": 660,
-            "won": True,
-            "steps": [
-                {"observation": observation(), "action": {"type": "wait", "ticks": 60},
-                 "delta_ticks": 60, "events": {}},
-                {"observation": observation(tick=660),
-                 "action": {"type": "plant", "packet": 1, "row": 1, "col": 3},
-                 "delta_ticks": 0, "events": {}},
-            ],
-        }
-
-        # train() prints its per-epoch progress; keep the test output clean.
-        with contextlib.redirect_stdout(io.StringIO()):
-            history, plant_weight = train(model, [episode], epochs=1, device=torch.device("cpu"))
-
-        self.assertEqual(len(history), 1)
-        self.assertTrue(math.isfinite(history[0]))
-        self.assertGreaterEqual(history[0], 0.0)
-        # One plant step against one non-plant step balances the two classes exactly.
-        self.assertAlmostEqual(plant_weight, 1.0)
-
 
 class CriticInputCacheTests(unittest.TestCase):
     """The rollout asks for the wave roster once per wave, not once per decision.

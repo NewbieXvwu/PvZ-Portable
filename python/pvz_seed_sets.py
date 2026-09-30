@@ -1,13 +1,14 @@
-"""Frozen development/final-test seed set helpers."""
+"""Schema check for the frozen development/final-test seed set files.
+
+The files themselves are still read by ``check_task_manifests`` when it records the
+held-out manifest, which takes the fields it needs directly.  This module is the one
+place that validates their schema, and ``test_training_semantics`` pins that check.
+"""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-
-ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_DEV_SEEDS = ROOT / "artifacts" / "adventure2_level7" / "seeds" / "dev.json"
-DEFAULT_TEST_SEEDS = ROOT / "artifacts" / "adventure2_level7" / "seeds" / "test.json"
 
 
 def read_seed_set(path: Path, level: int = 7, expected_role: str | None = None) -> list[int]:

@@ -6,7 +6,6 @@ import argparse
 from contextlib import nullcontext
 from datetime import datetime, timezone
 import json
-import multiprocessing
 import os
 from pathlib import Path
 import random

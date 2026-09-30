@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
 from pvz_agent_model import GameplayModelV1, configure_torch_threads, resolve_device  # noqa: E402
-from pvz_seed_jobs import read_numpy  # noqa: E402
+from pvz_seed_jobs import read_episode  # noqa: E402
 from train_pvz_ppo import add_advantages, train_update  # noqa: E402
 
 
@@ -78,8 +78,7 @@ def _run(data_dir: Path, count: int, device: torch.device, sequence_length: int,
         raise ValueError(f"need {count} episode shards in {data_dir}, found {len(paths)}")
     episodes = []
     for path in paths:
-        stored = read_numpy(path)
-        episodes.append(stored["result"] if "result" in stored else stored)
+        episodes.append(read_episode(path))
     optimizer_steps = _optimizer_steps(episodes, sequence_length, minibatch_chunks, ppo_epochs)
     add_advantages(episodes, gae_lambda=0.95)
     torch.manual_seed(0)
@@ -175,9 +174,18 @@ def main() -> None:
     configurations = _configs(args.configurations)
     if args.save_state and len(configurations) != 1:
         parser.error("--save-state requires exactly one configuration")
-    warm_sequence, warm_chunks, warm_precision = configurations[0]
-    warmup = _run(args.data_dir, min(args.episodes, 4), device, warm_sequence,
-                  warm_chunks, warm_precision, 1, args.learning_rate, args.attention_backend)
+    # Every configuration gets its own warm-up, not just the first.  ``torch.compile``
+    # is entered lazily by the fused relation-bias assembly, and FlexAttention
+    # compiles per dtype, so a configuration that is timed without a warm-up of its
+    # own pays a compile the earlier one already paid.  Warming only
+    # ``configurations[0]`` therefore makes the *later* configurations look slow, and
+    # comparing two precisions through this script produced a 21.9x "regression" that
+    # was entirely compile time.
+    warmups = [
+        _run(args.data_dir, min(args.episodes, 4), device, sequence, chunks, precision,
+             1, args.learning_rate, args.attention_backend)
+        for sequence, chunks, precision in configurations
+    ]
     if device.type == "cuda":
         torch.cuda.empty_cache()
     results = [
@@ -194,8 +202,11 @@ def main() -> None:
         "ppo_epochs": args.ppo_epochs,
         "learning_rate": args.learning_rate,
         "attention_backend": args.attention_backend,
-        "warmup": {key: warmup.get(key) for key in (
-            "sequence_length", "minibatch_chunks", "precision", "elapsed_seconds", "status")},
+        "warmup": [
+            {key: row.get(key) for key in (
+                "sequence_length", "minibatch_chunks", "precision", "elapsed_seconds", "status")}
+            for row in warmups
+        ],
         "data_dir": str(args.data_dir.resolve()),
         "configurations": results,
     }

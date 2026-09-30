@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
 from pvz_agent_model import FEATURE_COUNT, GameplayModelV1, TOKEN_ID_FIELDS, configure_torch_threads  # noqa: E402
-from pvz_seed_jobs import read_numpy  # noqa: E402
+from pvz_seed_jobs import read_episode  # noqa: E402
 
 
 def _prepare(data_dir: Path, episodes: int, frames_per_episode: int,
@@ -28,7 +28,7 @@ def _prepare(data_dir: Path, episodes: int, frames_per_episode: int,
     if len(paths) < episodes:
         raise ValueError(f"need {episodes} episode shards, found {len(paths)}")
     transitions = [transition for path in paths
-                   for transition in read_numpy(path)["transitions"][:frames_per_episode]]
+                   for transition in read_episode(path)["transitions"][:frames_per_episode]]
     lengths = np.array([item["tokens"]["ids"].shape[0] for item in transitions], dtype=np.int64)
     count = len(transitions)
     max_tokens = int(lengths.max())

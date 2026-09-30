@@ -61,7 +61,6 @@ DEFAULT_RESOURCE_DIR = Path.home() / ".cache/pvz-research-resources"
 CORE_THRESHOLD = 5000.0
 WIN_THRESHOLD = 0.90
 MAX_FORMAL_RUNS = 8
-T4_MODEL_ARCHITECTURE_VERSION = 4
 HARD_STOP_EPISODES = 20_000
 HARD_STOP_PASS_RATE = 0.20
 HARD_STOP_IMPROVEMENT = 0.05
@@ -494,15 +493,20 @@ def _check_stage0_gate(curriculum_tasks: list[dict[str, Any]], ignore_gate: bool
 
 
 def _seed0_initialization_baseline(actual_hash: str, t4_hash: str,
-                                  note: str | None) -> dict[str, Any] | None:
-    if actual_hash == t4_hash:
-        return None
-    if MODEL_ARCHITECTURE_VERSION > T4_MODEL_ARCHITECTURE_VERSION:
-        if not note:
-            raise RuntimeError("网络结构已变更，seed-0 初始化不再与 T4 基线一致；"
-                               "请传入 --initialization-note 说明 T4 基线为何已被取代")
-        return {"status": "superseded", "actual": actual_hash, "t4": t4_hash, "note": note}
-    raise RuntimeError("seed-0 initialization does not match the T4 baseline checkpoint")
+                                  note: str | None) -> dict[str, Any]:
+    """Record that seed 0 no longer matches the frozen T4 baseline.
+
+    ``MODEL_ARCHITECTURE_VERSION`` has stood above the frozen T4 value (4) ever
+    since lane-token inputs landed, so the seeded state can never equal the T4 one
+    again.  The former "hashes match" branch and the "hashes differ but the
+    architecture version did not move" branch were therefore both unreachable, and
+    the latter would have raised on a state that cannot occur.  What remains is the
+    part that still does something: refuse to start without an explicit note.
+    """
+    if not note:
+        raise RuntimeError("网络结构已变更，seed-0 初始化不再与 T4 基线一致；"
+                           "请传入 --initialization-note 说明 T4 基线为何已被取代")
+    return {"status": "superseded", "actual": actual_hash, "t4": t4_hash, "note": note}
 
 
 def _check_update_device(device: torch.device,
@@ -703,7 +707,9 @@ def _parse_args() -> argparse.Namespace:
                         help="chunks per optimizer step; 16 was fastest in the RTX 5080 sweep "
                              "(32 used more memory and was slower)")
     parser.add_argument("--attention-backend", choices=("auto", "dense", "flex"), default="auto",
-                        help="auto uses exact FlexAttention for large CUDA update batches")
+                        help="auto uses the dense path, which is the faster of the two on "
+                             "CUDA (PPO_UPDATE_ANATOMY.md §10: 81.7 vs 125.8 ms per optimizer "
+                             "step at 512 episodes); flex opts into FlexAttention explicitly")
     parser.add_argument("--clip-epsilon", type=float, default=0.2)
     parser.add_argument("--gae-lambda", type=float, default=0.95)
     parser.add_argument("--value-coefficient", type=float, default=0.5)
@@ -741,7 +747,7 @@ def main() -> None:
     baseline = _baseline(train["tasks"], gate_tasks, reference_tasks)
     protected_paths = (
         T4_GATE_PATH, ROOT / "scripts/t4_capability_profile.py", ROOT / "TODO.md",
-        ROOT / "DESIGN.md", ROOT / "FAILURE_ANALYSIS.md", TRAIN_PATH, HELDOUT_PATH,
+        ROOT / "DESIGN.md", TRAIN_PATH, HELDOUT_PATH,
     )
     protected_before = {path: sha256_file(path) for path in protected_paths}
     throughput = json.loads(THROUGHPUT_PATH.read_text(encoding="utf-8"))

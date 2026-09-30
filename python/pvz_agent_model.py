@@ -34,6 +34,13 @@ MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_lay
 MODEL_ARCHITECTURE_VERSION = 5
 FEATURE_COUNT = 32
 
+# Fill value for the padded columns of the batched packet-logit table.  Those
+# columns are always overwritten by ``masked_fill`` before the distribution is
+# built, so this value is never read -- it exists only so the table is a plain
+# finite tensor rather than one carrying -inf, which keeps it representable if a
+# caller ever inspects it under fp16 autocast.
+PACKET_LOGIT_FLOOR = -1e9
+
 
 def env_flag(name: str, *, default: bool) -> bool:
     """Read a boolean environment flag, accepting the usual off spellings."""
@@ -47,12 +54,17 @@ def env_flag(name: str, *, default: bool) -> bool:
 # operators eagerly while doing microseconds of arithmetic, so fusing it is a measured
 # 1.41x on the encoder and 1.30x on a full rollout step, bit-identically.
 #
-# It matters for the *eager* attention path only: batch-of-1 rollout and evaluation
-# forwards.  The CUDA training update goes through ``FlexAttention(score_mod=...)``,
-# which computes the same bias inside its own kernel, so the update is unaffected.
+# It matters for the *eager* attention path, which is now both rollout (batch of 1)
+# and the training update: ``train_update`` resolves ``--attention-backend auto`` to
+# dense even on CUDA, because the fused assembly is 177x faster than the eager one
+# there (906 ms -> 5.1 ms for one layer's backward) and beats FlexAttention's
+# ``score_mod`` path 8.25 ms to 22.40 ms.  See ``PPO_UPDATE_ANATOMY.md`` §10.
+#
 # Each process pays a one-off compile cost, and the rollout pool pays it 18 times in
 # parallel.  Set ``PVZ_RELATION_BIAS_FUSION=0`` (or call
-# ``set_relation_bias_fusion(False)``) to go back to the eager chain.
+# ``set_relation_bias_fusion(False)``) to go back to the eager chain -- but do not
+# do that on CUDA: the eager chain's backward is a 14.2M-to-12-element reduction
+# per table, and it is 110x slower end to end.
 RELATION_BIAS_FUSION = env_flag("PVZ_RELATION_BIAS_FUSION", default=True)
 FLEX_ATTENTION_AVAILABLE = flex_attention is not None and hasattr(torch, "compile")
 _COMPILED_FLEX_ATTENTION = (
@@ -91,7 +103,9 @@ def resolve_device(requested: str = "auto") -> torch.device:
 
 
 # Four threads was the best measured setting on both machines tested (an Apple
-# M5 Pro and an i7-12700F); see ``scripts/thread_effect.py`` for the sweep.
+# M5 Pro and an i7-12700F), and raising the thread count did not change any output
+# bitwise.  The sweep that produced this lived in ``scripts/thread_effect.py``,
+# which was deleted with the frozen search teacher it also measured.
 DEFAULT_TORCH_THREADS = 4
 
 
@@ -434,14 +448,27 @@ def relation_bias_from_indices(kinds: Tensor, row_bucket: Tensor, col_bucket: Te
     """Assemble ``(batch, heads, count, count)`` relation bias from precomputed indices.
 
     Takes every table as an explicit argument so the whole chain can be fused by
-    ``torch.compile`` -- it dispatches 117 operators eagerly (measured), which
-    dominates its cost since the arithmetic is microseconds.
+    ``torch.compile``.
+
+    Every term is assembled in ``(batch, count, count, heads)`` order and the
+    heads dimension is moved last only once, at the end.  ``permute`` is a view,
+    so the cost is not the permutation itself but the strided read the following
+    addition has to perform: summing in ``(batch, count, count, heads)`` keeps all
+    four operands contiguous and pays one strided read instead of four.  Measured
+    on an Apple M5 Pro, one CPU thread, over four encoder layers: 1.263 ms ->
+    0.957 ms for a single decision (108 tokens) and 178.6 ms -> 131.0 ms for a
+    256-transition minibatch (80 tokens).  The addition order within each element
+    is unchanged, so the result is bit-identical.
+
+    ``kind_pair_bias`` is ``(heads, K, K)``, so the head dimension is moved last
+    first; that permutation touches ``heads * K * K`` elements, not
+    ``batch * count * count * heads``.
     """
-    relation = kind_pair_bias[:, kinds[:, :, None], kinds[:, None, :]]
-    relation = relation + row_bias_weight[row_bucket].permute(3, 0, 1, 2)
-    relation = relation + col_bias_weight[col_bucket].permute(3, 0, 1, 2)
-    relation = relation + same_bias_weight[same_cell].permute(3, 0, 1, 2)
-    return relation.permute(1, 0, 2, 3)
+    relation = kind_pair_bias.permute(1, 2, 0)[kinds[:, :, None], kinds[:, None, :]]
+    relation = relation + row_bias_weight[row_bucket]
+    relation = relation + col_bias_weight[col_bucket]
+    relation = relation + same_bias_weight[same_cell]
+    return relation.permute(0, 3, 1, 2)
 
 
 _FUSED_RELATION_BIAS = None
@@ -787,11 +814,6 @@ class GameplayModelV1(nn.Module):
             ])
         return torch.tensor(rows, dtype=torch.float32, device=device)
 
-    def forward_chunk(self, transitions: list[dict[str, Any]], hidden: Tensor | None = None
-                      ) -> tuple[list[dict[str, Any]], Tensor]:
-        outputs, hidden_out = self.forward_sequences([transitions], [hidden])
-        return outputs, hidden_out[:, 0:1, :]
-
     def forward_sequences(self, sequences: list[list[dict[str, Any]]],
                           hiddens: list[Tensor | None]) -> tuple[list[dict[str, Any]], Tensor]:
         """Run many independent sequences as one batched forward.
@@ -963,10 +985,6 @@ class GameplayModelV1(nn.Module):
         extra_features = self.privileged_features(extras)
         return self.privileged_critic(torch.cat((belief, extra_features), dim=-1))
 
-    def privileged_value(self, output: dict[str, Any], privileged_state: dict[str, Any] | None) -> Tensor:
-        return self.privileged_value_from_extra(
-            output, self.privileged_extra(privileged_state, output["wave_index"]))
-
 
 def select_action(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
                   action: dict[str, Any] | None = None, deterministic: bool = False) -> tuple[dict[str, Any], Tensor, Tensor]:
@@ -1064,6 +1082,17 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
     transition.  Only the sampling call sites differ (replay never samples);
     masking follows the same finite minimum convention, so probabilities match to
     GEMM tolerance (~1e-6).
+
+    Every mask and index table is built as a Python object first and moved to the
+    device in one copy.  Building them by writing into a device tensor row by row
+    -- which is what this function used to do -- costs one kernel launch per row:
+    measured on an Apple M5 Pro, the same arithmetic takes 2.9 ms on the CPU and
+    51.3 ms on MPS for 256 transitions, a 17.5x penalty with no compute behind it.
+    A row-at-a-time write is the whole difference.
+
+    The recorded packet index is deliberately kept as a Python ``int``: reading a
+    scalar out of a device tensor (``int(sel_pos[r])``) synchronises the device,
+    so doing it once per plant row serialised the update 150 times per minibatch.
     """
     device = outputs[0]["type_logits"].device
     total = len(outputs)
@@ -1074,23 +1103,31 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
     belief = torch.cat([output["belief"] for output in outputs], dim=0)
     cell_keys = torch.stack([output["cell_keys"] for output in outputs])
 
+    # ``packet_logits`` rows are padded to the widest row in the chunk.  The pad
+    # columns are masked out below by ``packet_mask``, so the fill value is only a
+    # placeholder; what matters is that the scatter puts each row's real logits in
+    # that row's leading columns.  The scatter is built from shapes and from one
+    # ``torch.cat``, never from ``float(tensor_element)``: reading a scalar off a
+    # device tensor synchronises it, and doing that per packet row cost 1,536
+    # synchronisations per call.
     p_max = max(1, max(output["packet_logits"].shape[0] for output in outputs))
-    packet_logits = torch.full((total, p_max), -1e9, device=device)
-    packet_ids_rows = []
-    for row, output in enumerate(outputs):
-        many = output["packet_logits"].shape[0]
-        if many:
-            packet_logits[row, :many] = output["packet_logits"]
-        packet_ids_rows.append(list(output["packet_ids"]))
+    packet_ids_rows = [list(output["packet_ids"]) for output in outputs]
+    counts = [output["packet_logits"].shape[0] for output in outputs]
+    packet_logits = torch.full((total, p_max), PACKET_LOGIT_FLOOR, device=device)
+    if any(counts):
+        packet_logits = packet_logits.index_put(
+            (torch.tensor([row for row, count in enumerate(counts) for _ in range(count)],
+                          dtype=torch.long, device=device),
+             torch.tensor([column for count in counts for column in range(count)],
+                          dtype=torch.long, device=device)),
+            torch.cat([output["packet_logits"] for output in outputs]))
 
     type_index = torch.tensor([action_types[tr["action"]["type"]] for tr in transitions],
                               dtype=torch.long, device=device)
-    type_mask = torch.zeros(total, 3, dtype=torch.bool, device=device)
-    for row, tr in enumerate(transitions):
-        legal = tr["legal"]
-        type_mask[row, 0] = len(legal["packets"]) > 0
-        type_mask[row, 1] = legal["shovel_mask"] != 0
-        type_mask[row, 2] = legal["wait"]
+    type_mask = torch.tensor(
+        [[bool(tr["legal"]["packets"]), bool(tr["legal"]["shovel_mask"] != 0), bool(tr["legal"]["wait"])]
+         for tr in transitions],
+        dtype=torch.bool, device=device)
     type_dist = torch.distributions.Categorical(
         logits=type_logits.masked_fill(~type_mask, torch.finfo(type_logits.dtype).min))
     log_prob = type_dist.log_prob(type_index)
@@ -1103,21 +1140,23 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
     add_ent = torch.zeros(total, device=device)
 
     if plant_rows:
-        sel_pos = torch.zeros(len(plant_rows), dtype=torch.long, device=device)
-        packet_mask = torch.zeros(len(plant_rows), p_max, dtype=torch.bool, device=device)
-        for r, i in enumerate(plant_rows):
-            allowed = set(transitions[i]["legal"]["packets"])
-            sel_pos[r] = packet_ids_rows[i].index(transitions[i]["action"]["packet"])
-            for j, pid in enumerate(packet_ids_rows[i]):
-                packet_mask[r, j] = pid in allowed
+        # Python ints, so the packet gather below never reads a scalar off the device.
+        selected_positions = [
+            packet_ids_rows[i].index(transitions[i]["action"]["packet"]) for i in plant_rows]
+        packet_mask = torch.tensor(
+            [[pid in set(transitions[i]["legal"]["packets"]) for pid in packet_ids_rows[i]]
+             + [False] * (p_max - len(packet_ids_rows[i]))
+             for i in plant_rows],
+            dtype=torch.bool, device=device)
         packet_dist = torch.distributions.Categorical(
             logits=packet_logits[plant_rows].masked_fill(
                 ~packet_mask, torch.finfo(packet_logits.dtype).min))
-        lp_packet = packet_dist.log_prob(sel_pos.to(device))
+        selected_tensor = torch.tensor(selected_positions, dtype=torch.long, device=device)
+        lp_packet = packet_dist.log_prob(selected_tensor)
         ent_packet = packet_dist.entropy()
 
-        sel_tokens = torch.stack([outputs[i]["packet_tokens"][int(sel_pos[r])]
-                                  for r, i in enumerate(plant_rows)])
+        sel_tokens = torch.stack([outputs[i]["packet_tokens"][position]
+                                  for i, position in zip(plant_rows, selected_positions)])
         query = model.plant_cell_query(torch.cat((belief[plant_rows], sel_tokens), dim=-1))
         cell_logits = (torch.einsum("nw,ntw->nt", query, cell_keys[plant_rows])
                        / math.sqrt(MODEL_CONFIG["width"]))

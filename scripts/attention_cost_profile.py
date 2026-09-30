@@ -41,6 +41,8 @@ from pvz_agent_model import (  # noqa: E402
     legal_summary,
     observation_tokens,
     pack_tokens,
+    relation_bias_from_indices,
+    relation_bias_indices,
     select_action,
 )
 
@@ -110,22 +112,25 @@ def observation(plants: int = 18, zombies: int = 12, projectiles: int = 6) -> di
     }
 
 
-def build_relation(att, kinds, rows, cols):
-    """Standalone copy of ``RelationAttention``'s bias construction (dense path)."""
-    kind_pair = att.kind_pair_bias[:, kinds[:, :, None], kinds[:, None, :]]
-    row_known = (rows[:, :, None] >= 0) & (rows[:, None, :] >= 0)
-    col_known = (cols[:, :, None] >= 0) & (cols[:, None, :] >= 0)
-    row_delta = (rows[:, :, None] - rows[:, None, :]).clamp(-5, 5) + 5
-    col_delta = (cols[:, :, None] - cols[:, None, :]).clamp(-8, 8) + 8
-    row_bucket = torch.where(row_known, row_delta, 11)
-    col_bucket = torch.where(col_known, col_delta, 17)
-    same_cell = (row_known & col_known & (rows[:, :, None] == rows[:, None, :])
-                 & (cols[:, :, None] == cols[:, None, :])).long()
-    relation = kind_pair
-    relation = relation + att.row_bias(row_bucket).permute(3, 0, 1, 2)
-    relation = relation + att.col_bias(col_bucket).permute(3, 0, 1, 2)
-    relation = relation + att.same_cell_bias(same_cell).permute(3, 0, 1, 2)
-    return relation.permute(1, 0, 2, 3)
+def build_indices(rows, cols):
+    """The layer-independent pair indices, as production computes them."""
+    return relation_bias_indices(rows, cols)
+
+
+def build_relation(att, kinds, rows, cols, indices=None):
+    """Production's relation-bias assembly, called through the real function.
+
+    This used to be a hand-written copy of ``RelationAttention``'s dense path.
+    A copy drifts: it kept reporting the pre-2026 four-``permute`` cost long
+    after production had collapsed them into one, so the profile silently
+    measured code that no longer ran.  It now calls production.
+    """
+    if indices is None:
+        indices = relation_bias_indices(rows, cols)
+    return relation_bias_from_indices(
+        kinds, indices.row_bucket, indices.col_bucket, indices.same_cell,
+        att.kind_pair_bias, att.row_bias.weight, att.col_bias.weight,
+        att.same_cell_bias.weight)
 
 
 def timeit(fn, repeats: int = 300) -> float:
@@ -216,12 +221,17 @@ def main() -> None:
         qkv = att.qkv(normed).view(1, L, 3, heads, head_width).permute(2, 0, 3, 1, 4)
         query, key, value = qkv.unbind(0)
         scores = torch.matmul(query, key.transpose(-2, -1)) * (head_width ** -0.5)
-        relation = build_relation(att, kinds, rows, cols)
+        # Production computes the pair indices once per forward and shares them
+        # across all four layers, so the assembly is measured with them given.
+        indices = relation_bias_indices(rows, cols)
+        relation = build_relation(att, kinds, rows, cols, indices)
         attended = torch.softmax(scores + relation, dim=-1)
         av = torch.matmul(attended, value).transpose(1, 2).contiguous().view(1, L, width)
 
         stages = {
-            "relation-bias build": timeit(lambda: build_relation(att, kinds, rows, cols)),
+            "pair indices (once/forward)": timeit(lambda: build_indices(rows, cols)),
+            "bias assembly (per layer)": timeit(
+                lambda: build_relation(att, kinds, rows, cols, indices)),
             "softmax": timeit(lambda: torch.softmax(scores + relation, dim=-1)),
             "QKV projection": timeit(lambda: att.qkv(normed)),
             "score matmul QK^T": timeit(
@@ -238,28 +248,38 @@ def main() -> None:
 
         macs_attention = heads * L * L * head_width * 2
         macs_ffn = L * width * ff * 2 * 3
+        bias_share = stages["bias assembly (per layer)"] / stage_total * 100
         print("--- attention is time-bound, not compute-bound ---")
         print(f"  attention MACs/layer {macs_attention:>12,}  ({macs_attention / (macs_attention + macs_ffn) * 100:.1f}% of layer MACs)")
         print(f"  FFN MACs/layer       {macs_ffn:>12,}")
-        print(f"  attention time share {stages['relation-bias build'] / stage_total * 100:.1f}%+ "
-              f"matmuls -> {sum(v for k, v in stages.items() if k != 'relation-bias build') / stage_total * 100:.1f}%")
+        print(f"  bias assembly is {bias_share:.1f}% of the layer's attention time while "
+              f"attention matmuls are {macs_attention / (macs_attention + macs_ffn) * 100:.1f}% of its MACs")
         print()
 
-        print("--- operator count of one relation-bias build ---")
+        print("--- operator count of one bias assembly (indices given) ---")
         from torch.profiler import ProfilerActivity, profile
 
-        build_relation(att, kinds, rows, cols)
+        build_relation(att, kinds, rows, cols, indices)
         with profile(activities=[ProfilerActivity.CPU]) as prof:
-            build_relation(att, kinds, rows, cols)
+            build_relation(att, kinds, rows, cols, indices)
         counts = {e.key: e.count for e in prof.key_averages() if e.count}
         print(f"  dispatched operators: {sum(counts.values())}")
         for key, count in sorted(counts.items(), key=lambda kv: -kv[1])[:10]:
             print(f"    {count:>4} x {key[:66]}")
         print()
 
-        print("--- eager vs torch.compile on the relation-bias build ---")
-        eager = build_relation(att, kinds, rows, cols)
-        t_eager = timeit(lambda: build_relation(att, kinds, rows, cols))
+        print("--- operator count of one pair-index build (per forward) ---")
+        with profile(activities=[ProfilerActivity.CPU]) as prof:
+            build_indices(rows, cols)
+        counts = {e.key: e.count for e in prof.key_averages() if e.count}
+        print(f"  dispatched operators: {sum(counts.values())}")
+        for key, count in sorted(counts.items(), key=lambda kv: -kv[1])[:10]:
+            print(f"    {count:>4} x {key[:66]}")
+        print()
+
+        print("--- eager vs torch.compile on the bias assembly ---")
+        eager = build_relation(att, kinds, rows, cols, indices)
+        t_eager = timeit(lambda: build_relation(att, kinds, rows, cols, indices))
         try:
             compiled = torch.compile(build_relation, dynamic=True)
             compiled(att, kinds, rows, cols)

@@ -1,15 +1,16 @@
-"""Train a recurrent PPO policy on Adventure-II from a DAgger checkpoint."""
+"""The PPO update and the task-family episode collector.
+
+This module is the library half of the T5 trainer: ``train_pvz_ppo_task_family``
+imports :func:`collect_task_episode` and :func:`train_update` from here.  It used to
+also carry its own single-level Adventure-II entry point, and a ``collect_episode``
+that fed it; both went away with the rest of the T4 search-teacher pipeline.
+"""
 
 from __future__ import annotations
 
-import argparse
 import hashlib
-import json
-import os
-from pathlib import Path
 import random
 import struct
-import sys
 import time
 from typing import Any
 
@@ -17,81 +18,11 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, MODEL_ARCHITECTURE_VERSION, MODEL_CONFIG,
-                             configure_torch_threads, legal_summary, observation_tokens,
-                             pack_tokens, replay_log_probs, resolve_device, select_action)
-from pvz_common import (
-    ENV_PROTOCOL_VERSION,
-    OBSERVATION_VERSION,
-    TASK_VERSION,
-    canonical_digest,
-    git_metadata,
-    sha256_file,
-)
-from pvz_env import PvZEnv, TaskSpec, training_task
-from pvz_seed_sets import DEFAULT_DEV_SEEDS, DEFAULT_TEST_SEEDS, read_seed_set
-from pvz_value import DISCOUNT_REFERENCE_TICKS, SEARCH_LABEL_VERSION, VALUE_GAMMA, VALUE_SEMANTICS
-
-LEVEL = 7
-DECK = (0, 1, 2, 3, 4, 5)
-ROOT = Path(__file__).resolve().parent.parent
-
-
-def collect_episode(model: GameplayModelV1, env: PvZEnv, seed: int,
-                    max_actions: int, replay_path: Path, level: int = LEVEL,
-                    deck: tuple[int, ...] = DECK, zombie_count_multiplier: float = 1.0) -> dict[str, Any]:
-    task = training_task(seed, level, zombie_count_multiplier)
-    observation, _ = env.reset(deck=deck, task=task)
-    hidden = None
-    previous_action = None
-    elapsed_since_previous_observation = 0
-    events: dict[str, Any] = {}
-    transitions = []
-    started = time.perf_counter()
-    for decision_index in range(max_actions):
-        with torch.no_grad():
-            output = model.step(observation, hidden, previous_action,
-                                elapsed_since_previous_observation, events)
-            action, log_prob, _ = select_action(model, output, observation)
-        transition = {
-            "decision_index": decision_index,
-            "observation": observation,
-            "previous_action": previous_action,
-            "elapsed_since_previous_observation": elapsed_since_previous_observation,
-            "events": events,
-            "action": action,
-            "log_prob": float(log_prob.item()),
-            "value": float(output["value"].item()),
-        }
-        transitions.append(transition)
-        observation, _, done, _, info = env.step(action)
-        if not info.get("ok"):
-            raise RuntimeError(f"model selected an illegal action on seed {seed}: {action}")
-        hidden = output["hidden"]
-        previous_action = action
-        transition["action_duration_ticks"] = info["ticks_advanced"]
-        elapsed_since_previous_observation = transition["action_duration_ticks"]
-        events = info["events"]
-        if done:
-            break
-    if not observation["terminal"]:
-        raise RuntimeError(f"PPO episode exceeded {max_actions} decisions on seed {seed}")
-    won = observation["result"] == 1
-    transitions[-1]["reward"] = 1.0 if won else -1.0
-    for transition in transitions[:-1]:
-        transition["reward"] = 0.0
-    env.save_replay(replay_path)
-    return {
-        "seed": seed,
-        "replay_id": replay_path.name,
-        "won": won,
-        "result": observation["result"],
-        "wave": observation["wave"],
-        "wave_count": observation["wave_count"],
-        "tick": observation["tick"],
-        "seconds": time.perf_counter() - started,
-        "transitions": transitions,
-    }
+from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, legal_summary,
+                             observation_tokens, pack_tokens, replay_log_probs, select_action)
+from pvz_common import canonical_digest
+from pvz_env import PvZEnv, TaskSpec
+from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 
 
 def _task_spec(task: dict[str, Any], seed: int) -> TaskSpec:
@@ -268,7 +199,20 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         raise ValueError(f"unsupported attention backend: {attention_backend}")
     if attention_backend == "flex" and (device.type != "cuda" or not FLEX_ATTENTION_AVAILABLE):
         raise ValueError("FlexAttention updates require CUDA and a supported PyTorch build")
-    use_flex = (device.type == "cuda" and attention_backend != "dense"
+    # ``auto`` resolves to the dense path, including on CUDA.  This used to pick
+    # FlexAttention whenever CUDA was available, on the strength of a recorded
+    # sweep that measured one attention layer at 71.69 ms dense against 18.92 ms
+    # flex.  Re-measured on the same RTX 5080 (PPO_UPDATE_ANATOMY.md §10): that
+    # dense number described the relation-bias assembly *before* it was compiled,
+    # and the current dense path is 8.25 ms against flex's 22.40 ms.  A 512-episode
+    # update agrees: 81.7 ms per optimizer step dense against 125.8 ms flex, 1.54x.
+    #
+    # The mechanism is in the backward pass, not the forward: FlexAttention has to
+    # reduce 14.2M score-element gradients into 12 / 72 / 108 / 600 table entries,
+    # and the dense path lets ``torch.compile`` do that in one kernel instead
+    # (906 ms eager against 5.1 ms compiled).  FlexAttention stays available as an
+    # explicit ``--attention-backend flex`` so the measurement can be redone.
+    use_flex = (device.type == "cuda" and attention_backend == "flex"
                 and FLEX_ATTENTION_AVAILABLE)
     for layer in model.encoder:
         layer.attention.use_flex_attention = use_flex
@@ -377,11 +321,10 @@ def _jsonable(value: Any) -> Any:
 def episode_hash(episode: dict[str, Any]) -> str:
     """Legacy JSON-path digest; see :func:`episode_digest` for the packed-bytes one.
 
-    Kept because ``artifacts/adventure2_level7/training_summary.json`` records the
-    digests this function produced, and re-deriving them must stay possible.
-    ``episode_digest`` is what the T5 trainer uses.  Measured on this machine it
-    costs 13.9 ms/episode against 1.75 ms/episode, an 8.0x saving (5.3x on a
-    shorter episode sample); an earlier note claiming 45x was never reproducible.
+    ``episode_digest`` is what the T5 trainer uses.  This one survives only as the
+    baseline that ``scripts/training_hotspot_profile.py`` measures it against:
+    13.9 ms/episode versus 1.75 ms/episode, an 8.0x saving (5.3x on a shorter
+    episode sample); an earlier note claiming 45x was never reproducible.
     """
     steps = [_jsonable({
         key: transition[key]
@@ -485,200 +428,3 @@ def episode_digest(episode: dict[str, Any], *, digest_size: int = 16) -> str:
     return hasher.hexdigest()
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--resource-dir", default=os.environ.get("PVZ_RESOURCE_DIR"))
-    parser.add_argument("--init-checkpoint", type=Path,
-                        default=ROOT / "artifacts" / "adventure2_level7" / "gameplay_model_v1.pt")
-    parser.add_argument("--dev-seeds", type=Path, default=DEFAULT_DEV_SEEDS)
-    parser.add_argument("--test-seeds", type=Path, default=DEFAULT_TEST_SEEDS)
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts" / "adventure2_level7")
-    parser.add_argument("--level", type=int, default=LEVEL)
-    parser.add_argument("--deck", type=lambda value: tuple(map(int, value.split(","))), default=DECK)
-    parser.add_argument("--zombie-count-multiplier", type=float, default=1.0)
-    parser.add_argument(
-        "--device", choices=("auto", "cuda", "mps", "cpu"), default="auto",
-        help="auto = cuda if available else cpu. MPS is never chosen automatically: every "
-             "model call here is a batch-of-1 forward pass, where MPS measured 1.71x slower "
-             "end to end. Pass --device mps explicitly to opt in.",
-    )
-    parser.add_argument(
-        "--threads", type=int, default=0,
-        help="CPU thread count for torch; 0 selects the measured default (4). This is a "
-             "reproducibility knob, not a correctness one: thread count perturbs the low "
-             "order bits (<=6e-7 relative) but the decision error budget is 1e-5..1e-4. "
-             "Pass --threads 1 only to reproduce artifacts from an older run.",
-    )
-    parser.add_argument("--updates", type=int, default=12)
-    parser.add_argument("--rollout-episodes", type=int, default=8)
-    parser.add_argument("--ppo-epochs", type=int, default=2)
-    parser.add_argument("--sequence-length", type=int, default=64)
-    parser.add_argument("--max-actions", type=int, default=1200)
-    parser.add_argument("--learning-rate", type=float, default=3e-5)
-    parser.add_argument("--clip-epsilon", type=float, default=0.2)
-    parser.add_argument("--gae-lambda", type=float, default=0.95)
-    parser.add_argument("--value-coefficient", type=float, default=0.5)
-    parser.add_argument("--entropy-coefficient", type=float, default=0.01)
-    parser.add_argument("--seed", type=int, default=1701)
-    parser.add_argument("--train-seed-start", type=int, default=1000)
-    parser.add_argument("--train-seed-end", type=int, default=10000)
-    args = parser.parse_args()
-    if not args.resource_dir:
-        parser.error("set --resource-dir or PVZ_RESOURCE_DIR")
-    if args.updates < 1 or args.rollout_episodes < 1 or args.ppo_epochs < 1 or args.sequence_length < 1:
-        parser.error("updates, rollout episodes, PPO epochs, and sequence length must be positive")
-    if not 0.0 < args.gae_lambda <= 1.0:
-        parser.error("--gae-lambda must be in (0, 1]")
-    if args.train_seed_start >= args.train_seed_end:
-        parser.error("training seed range must be nonempty")
-    if not 1.0 <= args.zombie_count_multiplier <= 10.0:
-        parser.error("--zombie-count-multiplier must be from 1 to 10")
-
-    development_seeds = set(read_seed_set(args.dev_seeds, args.level, "development"))
-    final_test_seeds = set(read_seed_set(args.test_seeds, args.level, "final_test"))
-    frozen_seeds = development_seeds | final_test_seeds
-    if development_seeds & final_test_seeds:
-        parser.error("development and final-test seed sets overlap")
-    if any(args.train_seed_start <= seed < args.train_seed_end for seed in frozen_seeds):
-        parser.error("training seed range overlaps a frozen development/final-test seed")
-
-    random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    configure_torch_threads(args.threads)
-    device = resolve_device(args.device)
-    initial_checkpoint_sha = sha256_file(args.init_checkpoint)
-    trajectory_dir = args.init_checkpoint.expanduser().resolve().parent
-    initial = torch.load(args.init_checkpoint, map_location=device, weights_only=False)
-    provenance = initial["provenance"]
-    if (initial["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
-            or initial.get("value_semantics") != VALUE_SEMANTICS
-            or provenance.get("protocol_version") != ENV_PROTOCOL_VERSION
-            or provenance.get("search_label_version") != SEARCH_LABEL_VERSION
-            or provenance["observation_version"] != OBSERVATION_VERSION
-            or provenance["task_version"] != TASK_VERSION):
-        raise ValueError("initial checkpoint does not match the current model/search semantics")
-    model = GameplayModelV1().to(device)
-    model.load_state_dict(initial["state_dict"])
-    model.eval()
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.learning_rate)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = args.output_dir / "gameplay_model_v1_ppo.pt"
-    summary_path = args.output_dir / "ppo_training_summary.json"
-    revision, dirty = git_metadata(ROOT)
-    resource_dir = Path(args.resource_dir).expanduser().resolve()
-    resource_hashes = {
-        "main.pak": sha256_file(resource_dir / "main.pak"),
-        "properties/partner.xml": sha256_file(resource_dir / "properties" / "partner.xml"),
-    }
-    trajectory_hashes: dict[str, str] = {}
-    history = []
-    config = {key: value for key, value in vars(args).items()}
-    config.update({
-        "resource_dir": str(resource_dir),
-        "init_checkpoint": str(args.init_checkpoint),
-        "dev_seeds": str(args.dev_seeds),
-        "test_seeds": str(args.test_seeds),
-        "output_dir": str(args.output_dir),
-        "discount_reference_ticks": DISCOUNT_REFERENCE_TICKS,
-        "value_gamma": VALUE_GAMMA,
-        "value_semantics": VALUE_SEMANTICS,
-        "resolved_device": str(device),
-    })
-    train_seeds = list(range(args.train_seed_start, args.train_seed_end))
-    with PvZEnv(resource_dir=resource_dir) as env:
-        for update in range(1, args.updates + 1):
-            seeds = random.sample(train_seeds, args.rollout_episodes)
-            episodes = [
-                collect_episode(
-                    model,
-                    env,
-                    seed,
-                    args.max_actions,
-                    args.output_dir / "replays" / f"ppo_update_{update}_seed_{seed}.jsonl.gz",
-                    args.level,
-                    args.deck,
-                    args.zombie_count_multiplier,
-                )
-                for seed in seeds
-            ]
-            add_advantages(episodes, args.gae_lambda)
-            losses = train_update(
-                model, episodes, optimizer, device, args.ppo_epochs,
-                args.sequence_length, args.clip_epsilon,
-                args.value_coefficient, args.entropy_coefficient,
-            )
-            hashes = {f"{update}:{episode['seed']}": episode_hash(episode) for episode in episodes}
-            trajectory_hashes.update(hashes)
-            row = {
-                "update": update,
-                "seeds": seeds,
-                "wins": sum(episode["won"] for episode in episodes),
-                "episodes": [{
-                    "seed": episode["seed"],
-                    "replay_id": episode["replay_id"],
-                    "won": episode["won"],
-                    "wave": episode["wave"],
-                    "actions": len(episode["transitions"]),
-                    "seconds": round(episode["seconds"], 3),
-                    "sha256": hashes[f"{update}:{episode['seed']}"],
-                } for episode in episodes],
-                "losses": losses,
-            }
-            history.append(row)
-            if not env.episode:
-                raise RuntimeError("environment did not record resource provenance")
-            provenance = {
-                "git_sha": revision,
-                "git_dirty": dirty,
-                "protocol_version": ENV_PROTOCOL_VERSION,
-                "command": {"argv": sys.argv, "arguments": config},
-                "trajectory_sha256": {
-                    "search": sha256_file(trajectory_dir / "search_trajectories.json.gz"),
-                    "dagger_search": sha256_file(trajectory_dir / "dagger_search_trajectories.json.gz"),
-                    "ppo_rollouts_by_seed": trajectory_hashes,
-                },
-                "resource_sha256": resource_hashes,
-                "frozen_development_seed_sha256": sha256_file(args.dev_seeds),
-                "frozen_final_test_seed_sha256": sha256_file(args.test_seeds),
-                "initial_checkpoint_sha256": initial_checkpoint_sha,
-                "random_seeds": {
-                    "python_torch": args.seed,
-                    "training_seed_range": [args.train_seed_start, args.train_seed_end - 1],
-                },
-                "model_config": MODEL_CONFIG,
-                "observation_version": OBSERVATION_VERSION,
-                "task_version": TASK_VERSION,
-                "search_label_version": SEARCH_LABEL_VERSION,
-                "value_semantics": VALUE_SEMANTICS,
-            }
-            torch.save({
-                "state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
-                "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
-                "value_semantics": VALUE_SEMANTICS,
-                "config": MODEL_CONFIG,
-                "level": args.level,
-                "deck": args.deck,
-                "profile": "Adventure-II, six slots, no store items",
-                "update": update,
-                "ppo_config": config,
-                "losses": losses,
-                "provenance": provenance,
-            }, checkpoint_path)
-            summary = {
-                "checkpoint": checkpoint_path.name,
-                "provenance": provenance,
-                "initial_checkpoint": str(args.init_checkpoint),
-                "updates": history,
-            }
-            summary_path.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-            print(
-                f"update={update}/{args.updates} wins={row['wins']}/{len(episodes)} "
-                f"policy_loss={losses['policy_loss']:.4f} value_loss={losses['value_loss']:.4f} "
-                f"entropy={losses['entropy']:.3f}",
-                flush=True,
-            )
-    print(f"checkpoint={checkpoint_path}", flush=True)
-
-
-if __name__ == "__main__":
-    main()

@@ -22,7 +22,6 @@ import torch
 from pvz_agent_model import (
     RELATION_BIAS_FUSION,
     GameplayModelV1,
-    RelationBiasIndices,
     configure_torch_threads,
     env_flag,
     fused_relation_bias,

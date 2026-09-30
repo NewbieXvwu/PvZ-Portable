@@ -209,7 +209,6 @@ def main() -> None:
     model = GameplayModelV1().eval()
     state_dict = {key: value.detach().cpu() for key, value in model.state_dict().items()}
     state_hash = t4_capability_profile._state_sha256(state_dict)
-    expected_hash = t4_gate["metrics"]["checkpoint"]["state_sha256"]
 
     tasks = train["tasks"]
     configurations = []
@@ -252,14 +251,6 @@ def main() -> None:
             "kind": "current_torch_random_initialization",
             "seed": 0,
             "state_sha256": state_hash,
-            "t4_baseline_state_sha256": expected_hash,
-            "state_matches_t4_baseline": state_hash == expected_hash,
-            "state_mismatch_explanation": (
-                None if state_hash == expected_hash else
-                "T4 recorded the seeded initial state hash but did not preserve its tensors; "
-                "the current CUDA PyTorch build produces a different state. One current state "
-                "is shared across all throughput configurations."
-            ),
             "training_episodes": 0,
         },
         "configurations": results,

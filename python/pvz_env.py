@@ -510,9 +510,6 @@ class PvZEnv:
             raise RuntimeError(f"environment returned invalid critic inputs: {response}")
         return response
 
-    def loadout_context(self) -> LoadoutContext:
-        return LoadoutContext.from_observation(self.observe())
-
     def snapshot(self) -> int:
         response = self._command("SNAPSHOT")
         if not response.get("ok") or "snapshot_id" not in response:
@@ -665,33 +662,6 @@ class PvZEnv:
         if self._state_record(observation) != record["final_state"]:
             raise RuntimeError("replay terminal state diverged")
         return observation
-
-    def replay_file(self, path: str | os.PathLike[str]) -> dict[str, Any]:
-        source = Path(path)
-        opener = gzip.open if source.name.endswith(".gz") else open
-        with opener(source, "rt", encoding="utf-8") as stream:
-            first = stream.readline()
-            if not first:
-                raise ValueError("empty replay file")
-            record = json.loads(first)
-            if record.get("format_version") != REPLAY_FORMAT_VERSION:
-                raise ValueError(f"unsupported replay version: {record.get('format_version')}")
-            if record.get("record_type") != "header":
-                raise ValueError("unsupported replay file format")
-            record["operations"] = []
-            footer_found = False
-            for line in stream:
-                item = json.loads(line)
-                if item["record_type"] == "footer" and not footer_found:
-                    record["final_state"] = item["final_state"]
-                    footer_found = True
-                elif item["record_type"] == "operation" and not footer_found:
-                    record["operations"].append(item)
-                else:
-                    raise ValueError(f"invalid replay record: {item['record_type']}")
-            if not footer_found:
-                raise ValueError("replay file has no footer")
-        return self.replay_record(record, source.parent)
 
     @staticmethod
     def _state_record(observation: dict[str, Any]) -> dict[str, Any]:

@@ -35,7 +35,7 @@ from pvz_agent_model import (  # noqa: E402
     configure_torch_threads, unpack_tokens,
 )
 from pvz_env import PvZEnv  # noqa: E402
-from train_pvz_ppo import _task_spec, collect_task_episode  # noqa: E402
+from train_pvz_ppo import collect_task_episode  # noqa: E402
 import train_pvz_ppo_task_family as trainer  # noqa: E402
 
 LOCAL_RESOURCES = Path("/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")

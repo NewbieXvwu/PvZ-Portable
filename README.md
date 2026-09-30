@@ -23,6 +23,23 @@ A **cross-platform** community-driven reimplementation of Plants vs. Zombies: Ga
 * Project icons and platform-specific logos are created by me (wszqkzqk) with the help of AI image generation tools and are not official assets of PopCap/EA.
 * To play the game using this project you **MUST** have access to the original game files by purchasing it on [EA's official website](https://www.ea.com/games/plants-vs-zombies/plants-vs-zombies) or [Steam](https://store.steampowered.com/app/3590/Plants_vs_Zombies_GOTY_Edition/).
 
+## PvZAgent: the RL training layer on top of this simulator
+
+This repository also hosts **PvZAgent**, which trains a policy to play adventure levels
+through the simulator's Python bindings.  Everything above is about the port itself; the
+training project has its own documents (all in the repository root):
+
+| Document | What it is |
+|---|---|
+| [TODO.md](TODO.md) | the single task list and experiment order — **start here** |
+| [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md) | how to run on the desktop machine (WSL2 + RTX 5080) |
+| [DESIGN.md](DESIGN.md) | design rationale; §12 records the failure that killed the previous approach |
+| [PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) | where time actually goes in a PPO update |
+| [OPTIMIZATION_TASKS.md](OPTIMIZATION_TASKS.md) | performance and memory ledger |
+| [PROTOCOL_OBSERVABILITY_AUDIT.md](PROTOCOL_OBSERVABILITY_AUDIT.md) | observation-field budget and pending protocol work |
+
+Code lives in `python/` and `scripts/`; experiment evidence lands in `artifacts/`.
+
 ## Features
 
 - [x] Render with SDL + OpenGL ES 2.0 (desktop OpenGL 2.1 fallback)

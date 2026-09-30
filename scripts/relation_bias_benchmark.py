@@ -29,7 +29,6 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_agent_model import (  # noqa: E402
-    MODEL_CONFIG,
     GameplayModelV1,
     configure_torch_threads,
     observation_tokens,

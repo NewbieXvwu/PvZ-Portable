@@ -1,11 +1,11 @@
-"""Shared temporal value semantics for search, imitation learning, and PPO."""
+"""Shared temporal value semantics for the PPO path.
+
+``VALUE_SEMANTICS`` is the version tag stamped into every checkpoint's provenance
+and checked on load, so its spelling is frozen even though the ``search`` and
+imitation callers it was named after are gone.
+"""
 
 DISCOUNT_REFERENCE_TICKS = 300
 VALUE_GAMMA = 0.99
 VALUE_SEMANTICS = "discounted_terminal_v1"
 SEARCH_LABEL_VERSION = 3
-
-
-def discounted_terminal_value(won: bool, remaining_ticks: int) -> float:
-    sign = 1.0 if won else -1.0
-    return sign * VALUE_GAMMA ** (max(0, int(remaining_ticks)) / DISCOUNT_REFERENCE_TICKS)

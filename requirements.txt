@@ -2,10 +2,9 @@
 #
 # Verified against torch 2.13.0 and numpy 2.5.1 on CPython 3.14.
 #
-# numpy is used directly and is *not* pulled in by torch: it backs the
-# float64 accumulator in ``pvz_search_value.search_value_features``, which is
-# ~5x faster than building a Python list of 4116 floats and handing it to
-# ``torch.tensor``.  See CODE_REVIEW.md ("Performance work") for the
-# bit-exactness argument that makes that substitution safe.
+# numpy is used directly and is *not* pulled in by torch: ``pvz_seed_jobs`` stores
+# episode shards as ``np.savez`` archives, and the GRU padding indices in
+# ``pvz_agent_model`` are built with ``np.arange``.  The old float64-accumulator use
+# in ``pvz_search_value`` went away with the T4 search teacher.
 torch>=2.0
 numpy>=1.24
