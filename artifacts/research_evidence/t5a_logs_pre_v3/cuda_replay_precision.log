@@ -1,0 +1,2 @@
+defaults {'max_log_prob_error': 0.00016546249389648438, 'mean_log_prob_error': 3.932925913205184e-05, 'count_above_5e_5': 376}
+disable_tf32 {'max_log_prob_error': 9.5367431640625e-07, 'mean_log_prob_error': 7.400782371854414e-08, 'count_above_5e_5': 0}

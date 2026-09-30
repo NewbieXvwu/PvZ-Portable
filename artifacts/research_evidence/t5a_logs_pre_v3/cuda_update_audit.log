@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/newbiexvwu/PvZ-Portable/scripts/research_replay_audit.py", line 81, in <module>
+    main()
+    ~~~~^^
+  File "/home/newbiexvwu/PvZ-Portable/scripts/research_replay_audit.py", line 34, in main
+    raise ValueError("not enough shards for the preregistered replay audit")
+ValueError: not enough shards for the preregistered replay audit
+pass 1167 {'0': {'policy_loss': 0.007120606477838009, 'value_loss': 0.4970940798521042, 'entropy': 1.858811378479004, 'advantage_mean': -0.6087095141410828, 'advantage_std': 0.35098475217819214, 'gradient_norm': 2.7016403675079346, 'approx_kl': -1.9301205078647854e-10, 'clip_fraction': 0.0, 'first_minibatch_log_prob_max_error': 9.5367431640625e-07, 'max_log_prob_change': 9.5367431640625e-07, 'optimizer_steps': 10, 'stopped_for_kl': False}, '16': {'policy_loss': 0.16968337171489284, 'value_loss': 0.580537114469778, 'entropy': 1.8237732506933666, 'advantage_mean': -0.6087095141410828, 'advantage_std': 0.35098475217819214, 'gradient_norm': 5.455522060394287, 'approx_kl': 2.7237872275114634e-10, 'clip_fraction': 0.0, 'first_minibatch_log_prob_max_error': 4.76837158203125e-07, 'max_log_prob_change': 9.5367431640625e-07, 'optimizer_steps': 42, 'stopped_for_kl': False}}

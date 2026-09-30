@@ -1,0 +1,59 @@
+test_a_response_with_the_wrong_branch_count_is_rejected (test_env_protocol.BranchSnapshotTests.test_a_response_with_the_wrong_branch_count_is_rejected)
+A truncated branch list must not be paired positionally with the actions. ... ok
+test_actions_are_encoded_as_colon_separated_tokens (test_env_protocol.BranchSnapshotTests.test_actions_are_encoded_as_colon_separated_tokens) ... ok
+test_an_empty_action_list_is_rejected_before_any_command (test_env_protocol.BranchSnapshotTests.test_an_empty_action_list_is_rejected_before_any_command) ... ok
+test_more_than_the_batch_limit_is_rejected_before_any_command (test_env_protocol.BranchSnapshotTests.test_more_than_the_batch_limit_is_rejected_before_any_command) ... ok
+test_snapshot_id_must_be_a_positive_integer (test_env_protocol.BranchSnapshotTests.test_snapshot_id_must_be_a_positive_integer) ... ok
+test_unsupported_actions_are_rejected_by_the_encoder (test_env_protocol.BranchSnapshotTests.test_unsupported_actions_are_rejected_by_the_encoder) ... ok
+test_a_missing_main_pak_is_reported_when_the_hashes_are_needed (test_env_protocol.ConstructionTests.test_a_missing_main_pak_is_reported_when_the_hashes_are_needed) ... ok
+test_close_is_idempotent_on_an_environment_that_never_started (test_env_protocol.ConstructionTests.test_close_is_idempotent_on_an_environment_that_never_started) ... ok
+test_construction_does_not_touch_the_resource_directory (test_env_protocol.ConstructionTests.test_construction_does_not_touch_the_resource_directory)
+Hashing main.pak eagerly raised a bare FileNotFoundError before _start() could ... ok
+test_resource_hashes_are_computed_lazily_and_cached (test_env_protocol.ConstructionTests.test_resource_hashes_are_computed_lazily_and_cached) ... ok
+test_an_unknown_key_is_passed_through_untouched (test_env_protocol.EventKeyCanonicalisationTests.test_an_unknown_key_is_passed_through_untouched) ... ok
+test_empty_and_non_dict_inputs_are_returned_unchanged (test_env_protocol.EventKeyCanonicalisationTests.test_empty_and_non_dict_inputs_are_returned_unchanged) ... ok
+test_read_message_canonicalises_the_events_it_decodes (test_env_protocol.EventKeyCanonicalisationTests.test_read_message_canonicalises_the_events_it_decodes)
+The hook is in ``_read_message``, which is where every response is decoded. ... ok
+test_the_helper_replaces_uninterned_keys_and_keeps_the_values (test_env_protocol.EventKeyCanonicalisationTests.test_the_helper_replaces_uninterned_keys_and_keeps_the_values) ... ok
+test_a_missing_manifest_reference_is_rejected (test_env_protocol.ExperimentManifestTests.test_a_missing_manifest_reference_is_rejected) ... ok
+test_a_tampered_working_tree_patch_is_detected (test_env_protocol.ExperimentManifestTests.test_a_tampered_working_tree_patch_is_detected) ... ok
+test_manifest_is_written_verified_and_tamper_evident (test_env_protocol.ExperimentManifestTests.test_manifest_is_written_verified_and_tamper_evident) ... ok
+test_coordinates_must_be_integers (test_env_protocol.LifecycleGuardTests.test_coordinates_must_be_integers) ... ok
+test_operations_before_reset_are_rejected (test_env_protocol.LifecycleGuardTests.test_operations_before_reset_are_rejected) ... ok
+test_replay_records_with_an_unknown_version_are_rejected (test_env_protocol.LifecycleGuardTests.test_replay_records_with_an_unknown_version_are_rejected) ... ok
+test_snapshot_ids_must_be_positive_integers (test_env_protocol.LifecycleGuardTests.test_snapshot_ids_must_be_positive_integers) ... ok
+test_sun_income_rate_uses_real_production_in_a_6000_tick_window (test_env_protocol.ObservationDerivedInputTests.test_sun_income_rate_uses_real_production_in_a_6000_tick_window) ... ok
+test_wave_timer_must_be_present_in_real_observation (test_env_protocol.ObservationDerivedInputTests.test_wave_timer_must_be_present_in_real_observation) ... ok
+test_an_imitater_card_is_accepted_when_the_profile_owns_one (test_env_protocol.ResetValidationTests.test_an_imitater_card_is_accepted_when_the_profile_owns_one)
+Deck validation must not reject a legal imitater just because it is exotic. ... ok
+test_deck_entries_are_validated (test_env_protocol.ResetValidationTests.test_deck_entries_are_validated) ... ok
+test_deck_must_fit_the_profile_slots (test_env_protocol.ResetValidationTests.test_deck_must_fit_the_profile_slots) ... ok
+test_forced_seeds_must_be_present_in_the_deck (test_env_protocol.ResetValidationTests.test_forced_seeds_must_be_present_in_the_deck) ... ok
+test_level_and_seed_must_be_in_range (test_env_protocol.ResetValidationTests.test_level_and_seed_must_be_in_range) ... ok
+test_profile_options_are_validated (test_env_protocol.ResetValidationTests.test_profile_options_are_validated) ... ok
+test_task_options_are_encoded_in_the_reset_protocol (test_env_protocol.ResetValidationTests.test_task_options_are_encoded_in_the_reset_protocol) ... ok
+test_task_options_are_validated (test_env_protocol.ResetValidationTests.test_task_options_are_validated) ... ok
+test_env_module_reexports_the_shared_protocol_versions (test_env_protocol.SharedConstantTests.test_env_module_reexports_the_shared_protocol_versions)
+pvz_env must not redefine the versions it validates against. ... ok
+test_loadout_context_reads_the_observation (test_env_protocol.SharedConstantTests.test_loadout_context_reads_the_observation) ... ok
+test_training_task_is_the_single_shared_task_factory (test_env_protocol.SharedConstantTests.test_training_task_is_the_single_shared_task_factory) ... ok
+test_a_dying_initializer_raises_instead_of_hanging (test_seed_jobs.SeedJobTests.test_a_dying_initializer_raises_instead_of_hanging)
+A worker that dies must not leave the parent waiting forever. ... dying cached=0 collect=3
+ok
+test_fresh_results_come_from_the_worker_not_the_shard (test_seed_jobs.SeedJobTests.test_fresh_results_come_from_the_worker_not_the_shard)
+The parent must not pay a shard round trip for data it just produced. ... test cached=0 collect=1
+test 1/1
+test cached=1 collect=0
+ok
+test_spawn_jobs_resume_and_recollect_corrupt_shards (test_seed_jobs.SeedJobTests.test_spawn_jobs_resume_and_recollect_corrupt_shards) ... test cached=0 collect=2
+test 2/2
+test cached=2 collect=0
+test cached=2 collect=0
+test cached=1 collect=1
+test 2/2
+ok
+
+----------------------------------------------------------------------
+Ran 37 tests in 3.648s
+
+OK
