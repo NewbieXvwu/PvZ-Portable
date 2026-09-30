@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "matrix": "reward_comparison_v2",
+  "required_initializations": [
+    0,
+    1,
+    2
+  ],
+  "common_decision_budget": 500000,
+  "evaluation_nodes": [
+    125000,
+    250000,
+    375000,
+    500000
+  ],
+  "order": [
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r0_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r0_seed0_v2",
+      "log": "logs/t5_research/reward_r0_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r1_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r1_seed0_v2",
+      "log": "logs/t5_research/reward_r1_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r2_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r2_seed0_v2",
+      "log": "logs/t5_research/reward_r2_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r3_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r3_seed0_v2",
+      "log": "logs/t5_research/reward_r3_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r0_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r0_seed1_v2",
+      "log": "logs/t5_research/reward_r0_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r1_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r1_seed1_v2",
+      "log": "logs/t5_research/reward_r1_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r2_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r2_seed1_v2",
+      "log": "logs/t5_research/reward_r2_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r3_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r3_seed1_v2",
+      "log": "logs/t5_research/reward_r3_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r0_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r0_seed2_v2",
+      "log": "logs/t5_research/reward_r0_seed2_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r1_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r1_seed2_v2",
+      "log": "logs/t5_research/reward_r1_seed2_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r2_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r2_seed2_v2",
+      "log": "logs/t5_research/reward_r2_seed2_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r3_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r3_seed2_v2",
+      "log": "logs/t5_research/reward_r3_seed2_v2.log"
+    }
+  ],
+  "gate": "gates/T5-A-research-v4.json",
+  "dynamic_task_gate": "gates/T2-dynamic-prefix-v4.json",
+  "protocol_change": "restored original full-level dynamic prefix; reset memory disposal; entirely fresh initializations; no v1 checkpoints"
+}
