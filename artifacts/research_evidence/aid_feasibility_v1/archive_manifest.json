@@ -1,0 +1,34 @@
+{
+  "files": {
+    "summary.json": {
+      "sha256": "b2f05c4ea5be39b4e7a05802671d883cda9528fda5265a5126b920b1922bc962",
+      "bytes": 31432
+    },
+    "task_manifest.json": {
+      "sha256": "52886642574ff478d3ca15f089cb93599acfb38401c405dd93d3af1a6b7fa954",
+      "bytes": 106261
+    },
+    "aid_feasibility_v1.log": {
+      "sha256": "37b31ad074556af612b0b110b69a5b5f5b2a085363689b4de2569f4e7a9d2740",
+      "bytes": 204090
+    },
+    "protocol.json": {
+      "sha256": "fb5f7b62a9949d503ed19131b4417a804a5ce2dc1095c638b70ae3cafdf9d933",
+      "bytes": 559
+    },
+    "results.json.gz": {
+      "sha256": "7b34efddc32a65a3f64cabaeeac730558ce14471ddec6e88c5251a1319bf7da3",
+      "bytes": 221997
+    },
+    "aid_feasibility_v1_resources.txt": {
+      "sha256": "281c6ba1c1fa1b45bc5bbd8e738378ae53ce338239862888be8a5537a62f741b",
+      "bytes": 980
+    },
+    "progress.json": {
+      "sha256": "2b3b9017295e8bf2e2965985f091e242997a6b4c58f295c01ae9c2a3853d475d",
+      "bytes": 111
+    }
+  },
+  "source": "artifacts/research/aid_feasibility_v1",
+  "all_per_job_json_retained_locally": true
+}

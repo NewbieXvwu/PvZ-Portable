@@ -1,0 +1,1464 @@
+{
+  "protocol": {
+    "manifest_sha256": "52886642574ff478d3ca15f089cb93599acfb38401c405dd93d3af1a6b7fa954",
+    "seeds_per_task": 4,
+    "simulator_sha256": "506467fc2fa763cffab8f42ae798c71d5e1f2d2017dddc9ebc1dbad13a7881b7",
+    "env_sha256": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "main_pak_sha256": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+    "partner_xml_sha256": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3",
+    "probe_sha256": "ac9677075988efa5cd173361fac400631d693408715cb578cbe2b53b2f319d3d"
+  },
+  "summaries": {
+    "aid_v1_day_cap1_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8741.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 5065.5
+      }
+    },
+    "aid_v1_day_cap1_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8388.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 3697.0
+      }
+    },
+    "aid_v1_day_cap1_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 1,
+        "win_rate": 0.25,
+        "wilson_95": [
+          0.04558726080970055,
+          0.6993581574175981
+        ],
+        "truncated": 0,
+        "mean_tick": 7098.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 3546.5
+      }
+    },
+    "aid_v1_day_cap1_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 3461.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 3217.25
+      }
+    },
+    "aid_v1_day_cap3_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7936.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 3,
+        "win_rate": 0.75,
+        "wilson_95": [
+          0.30064184258240184,
+          0.9544127391902995
+        ],
+        "truncated": 0,
+        "mean_tick": 10685.0
+      }
+    },
+    "aid_v1_day_cap3_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8265.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 7078.0
+      }
+    },
+    "aid_v1_day_cap3_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8560.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 5846.75
+      }
+    },
+    "aid_v1_day_cap3_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 6191.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 5388.75
+      }
+    },
+    "aid_v1_day_cap5_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7716.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 2,
+        "win_rate": 0.5,
+        "wilson_95": [
+          0.15003898915214947,
+          0.8499610108478506
+        ],
+        "truncated": 0,
+        "mean_tick": 15695.0
+      }
+    },
+    "aid_v1_day_cap5_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8667.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 10284.25
+      }
+    },
+    "aid_v1_day_cap5_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8356.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 8751.5
+      }
+    },
+    "aid_v1_day_cap5_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 9169.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 4,
+        "win_rate": 1.0,
+        "wilson_95": [
+          0.5101091635454027,
+          1.0
+        ],
+        "truncated": 0,
+        "mean_tick": 7265.5
+      }
+    },
+    "aid_v1_night_cap1_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6536.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7292.75
+      }
+    },
+    "aid_v1_night_cap1_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6361.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6716.25
+      }
+    },
+    "aid_v1_night_cap1_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6751.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7503.75
+      }
+    },
+    "aid_v1_night_cap1_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6544.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7360.5
+      }
+    },
+    "aid_v1_night_cap3_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7866.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9161.0
+      }
+    },
+    "aid_v1_night_cap3_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8696.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9833.0
+      }
+    },
+    "aid_v1_night_cap3_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7797.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9927.75
+      }
+    },
+    "aid_v1_night_cap3_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9592.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9410.5
+      }
+    },
+    "aid_v1_night_cap5_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8068.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10744.75
+      }
+    },
+    "aid_v1_night_cap5_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8193.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 11350.5
+      }
+    },
+    "aid_v1_night_cap5_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9374.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 11468.0
+      }
+    },
+    "aid_v1_night_cap5_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 12016.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10623.75
+      }
+    },
+    "aid_v1_pool_cap1_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6156.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6608.5
+      }
+    },
+    "aid_v1_pool_cap1_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6397.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8694.5
+      }
+    },
+    "aid_v1_pool_cap1_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6826.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8316.75
+      }
+    },
+    "aid_v1_pool_cap1_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7699.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 1,
+        "win_rate": 0.25,
+        "wilson_95": [
+          0.04558726080970055,
+          0.6993581574175981
+        ],
+        "truncated": 0,
+        "mean_tick": 8481.0
+      }
+    },
+    "aid_v1_pool_cap3_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8807.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8917.25
+      }
+    },
+    "aid_v1_pool_cap3_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8124.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 13387.0
+      }
+    },
+    "aid_v1_pool_cap3_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8490.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 14157.25
+      }
+    },
+    "aid_v1_pool_cap3_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10289.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 1,
+        "win_rate": 0.25,
+        "wilson_95": [
+          0.04558726080970055,
+          0.6993581574175981
+        ],
+        "truncated": 0,
+        "mean_tick": 12577.25
+      }
+    },
+    "aid_v1_pool_cap5_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7702.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9146.0
+      }
+    },
+    "aid_v1_pool_cap5_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8624.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 2,
+        "win_rate": 0.5,
+        "wilson_95": [
+          0.15003898915214947,
+          0.8499610108478506
+        ],
+        "truncated": 0,
+        "mean_tick": 14310.0
+      }
+    },
+    "aid_v1_pool_cap5_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8767.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 2,
+        "win_rate": 0.5,
+        "wilson_95": [
+          0.15003898915214947,
+          0.8499610108478506
+        ],
+        "truncated": 0,
+        "mean_tick": 15233.75
+      }
+    },
+    "aid_v1_pool_cap5_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 12597.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 3,
+        "win_rate": 0.75,
+        "wilson_95": [
+          0.30064184258240184,
+          0.9544127391902995
+        ],
+        "truncated": 0,
+        "mean_tick": 11977.75
+      }
+    },
+    "aid_v1_fog_cap1_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 5695.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6673.5
+      }
+    },
+    "aid_v1_fog_cap1_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6715.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7135.25
+      }
+    },
+    "aid_v1_fog_cap1_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 6758.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7625.5
+      }
+    },
+    "aid_v1_fog_cap1_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7333.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9226.5
+      }
+    },
+    "aid_v1_fog_cap3_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7756.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8953.75
+      }
+    },
+    "aid_v1_fog_cap3_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9143.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9931.5
+      }
+    },
+    "aid_v1_fog_cap3_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9210.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9860.5
+      }
+    },
+    "aid_v1_fog_cap3_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9381.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9732.75
+      }
+    },
+    "aid_v1_fog_cap5_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8297.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 11619.25
+      }
+    },
+    "aid_v1_fog_cap5_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8159.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 13132.75
+      }
+    },
+    "aid_v1_fog_cap5_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9065.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 12449.5
+      }
+    },
+    "aid_v1_fog_cap5_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 12654.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 12775.25
+      }
+    },
+    "aid_v1_roof_cap1_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7905.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7480.0
+      }
+    },
+    "aid_v1_roof_cap1_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7386.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9480.0
+      }
+    },
+    "aid_v1_roof_cap1_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7259.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8203.75
+      }
+    },
+    "aid_v1_roof_cap1_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 7410.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 8366.0
+      }
+    },
+    "aid_v1_roof_cap3_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9199.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10425.5
+      }
+    },
+    "aid_v1_roof_cap3_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9453.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 11638.75
+      }
+    },
+    "aid_v1_roof_cap3_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10349.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 11830.0
+      }
+    },
+    "aid_v1_roof_cap3_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10778.25
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10527.75
+      }
+    },
+    "aid_v1_roof_cap5_none": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9437.5
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10508.0
+      }
+    },
+    "aid_v1_roof_cap5_economy": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 10019.0
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 12744.5
+      }
+    },
+    "aid_v1_roof_cap5_partial_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 9763.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 14332.0
+      }
+    },
+    "aid_v1_roof_cap5_full_defence": {
+      "wait": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 12806.75
+      },
+      "scripted": {
+        "count": 4,
+        "won": 0,
+        "win_rate": 0.0,
+        "wilson_95": [
+          0.0,
+          0.4898908364545973
+        ],
+        "truncated": 0,
+        "mean_tick": 13757.25
+      }
+    }
+  },
+  "prospective_curriculum_candidates": [],
+  "screen": {
+    "minimum_seeds": 64,
+    "maximum_wait_win_rate": 0.95,
+    "minimum_scripted_win_rate": 0.5,
+    "minimum_gap": 0.25,
+    "interpretation": "prospective aid screen, not an RL learning pass or modification of original acceptance thresholds"
+  },
+  "scope": "feasibility, not a learned-policy evaluation or T5 learning gate",
+  "seconds": 48.064207011997496,
+  "episodes": 480
+}

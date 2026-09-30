@@ -1,0 +1,9 @@
+{
+  "manifest_sha256": "52886642574ff478d3ca15f089cb93599acfb38401c405dd93d3af1a6b7fa954",
+  "seeds_per_task": 4,
+  "simulator_sha256": "506467fc2fa763cffab8f42ae798c71d5e1f2d2017dddc9ebc1dbad13a7881b7",
+  "env_sha256": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+  "main_pak_sha256": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+  "partner_xml_sha256": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3",
+  "probe_sha256": "ac9677075988efa5cd173361fac400631d693408715cb578cbe2b53b2f319d3d"
+}

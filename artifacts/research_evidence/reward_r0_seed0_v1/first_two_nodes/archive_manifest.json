@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "source_directory": "artifacts/research/reward_r0_seed0_v1",
+  "experiment_id": "reward_r0_seed0_v1",
+  "counters": {
+    "episodes": 5624,
+    "decisions": 316915,
+    "ticks": 38532922
+  },
+  "status": "running",
+  "phase": "ready",
+  "archived_at_unix_ns": 1790784824997993314,
+  "state_sha256": "73452969c86e90467f22a77bdff8dee6517c5de3d2c7f78a8418ddca2c3f9d65",
+  "files": {
+    "evaluations/update_000000.json.gz": {
+      "sha256": "8eaba1834a35934f5943f64934df2e3e71923679bf9b2f5d5612168ba179ebe7",
+      "bytes": 81077
+    },
+    "evaluations/update_000012.json.gz": {
+      "sha256": "021893e649c8b52b95acde0b14604faf88d4827c533044dc7d1ff19a15c6614b",
+      "bytes": 101442
+    },
+    "evaluations/update_000025.json.gz": {
+      "sha256": "4f18db319c5536794fe64e9bd07e2b0f6e71b4a0590db2bba21d7a07a4bc0bc6",
+      "bytes": 107334
+    },
+    "experiment_config.json": {
+      "sha256": "817283be1ddc4706d7c2de38978c7786a5f2b1a4af4cf0e3c4c4d184a9f4f8e6",
+      "bytes": 1526
+    },
+    "learning_curve.json": {
+      "sha256": "6b24e173a3209dc212d3e99c24ca92131b3abf6602e93bdc8ab899023d43a4c7",
+      "bytes": 328824
+    },
+    "logs/reward_queue.log": {
+      "sha256": "8735a67c79d19fdc4824e575e30d0ffc531c91991cb15587a9204ea67306cad7",
+      "bytes": 202
+    },
+    "logs/reward_r0_seed0_v1.log": {
+      "sha256": "795c44da771ffbdefcab20141ffc26be11cf8cb4e0acd08b6ea6591d2c915739",
+      "bytes": 6714153
+    },
+    "provenance.json": {
+      "sha256": "e9770b11c8072bb6aaaeba658bbe909146f17d81ee1d39f0fa2b22881c908b35",
+      "bytes": 1854
+    },
+    "resume.json": {
+      "sha256": "aa0fec5a653f7d53189f0afa29bd293b4cb8efe0ecfcdcdbe837146ac1a57a58",
+      "bytes": 158
+    },
+    "runs/run_1/update_000000_evaluated_1790783119894299476.pt": {
+      "sha256": "9029842ca6e0dda56e224e510f3d551a869e72b965aa1b00f95657b30d37b02f",
+      "bytes": 14825147
+    },
+    "runs/run_1/update_000012_evaluated_1790783843980951012.pt": {
+      "sha256": "2ad035fae115b2fe8ac21bf99f7140372cbfd318a4ae2d202820997fccf1da2e",
+      "bytes": 44510571
+    },
+    "runs/run_1/update_000025_evaluated_1790784620022756883.pt": {
+      "sha256": "4725b29cf5218f1a047a07e29c761ad34b334b89da2db9a3b79ce510c0f212e1",
+      "bytes": 44649707
+    },
+    "runs/run_1/update_000031_trained_1790784808660511990.pt": {
+      "sha256": "5fc2c11066566ec7a734fa728150926f498b8032bf36a7554c826a77fa44b89b",
+      "bytes": 44702347
+    },
+    "training_state.json": {
+      "sha256": "73452969c86e90467f22a77bdff8dee6517c5de3d2c7f78a8418ddca2c3f9d65",
+      "bytes": 655387
+    }
+  },
+  "checkpoint_scope": "all evaluated nodes plus latest complete update; full optimizer/RNG state",
+  "rollout_shards": "all original shards retained in source directory; this export does not erase them",
+  "log_scope": "log byte snapshots copied during export; a live source log may continue",
+  "resume": "use this archive as --output-dir with original --experiment-config and unchanged fingerprints"
+}
