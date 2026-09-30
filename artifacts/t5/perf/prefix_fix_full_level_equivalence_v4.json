@@ -1,0 +1,1452 @@
+{
+  "scope": "every public response, legal mask, event, reward, terminal and truncation tuple",
+  "manifest_sha256": "1dca29fd0ad4d19f6ab7561e38de42d75e8f8e479fc89fcf4a0cfa42960aa12f",
+  "reference_sha256": "6fd6c657df97ebd249a968fb230cfd11efbce1fd194d24bfe27c6651d0a25ffc",
+  "candidate_sha256": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
+  "episodes": 160,
+  "response_comparisons": 18725,
+  "records": [
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7658,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9078,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8453,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7108,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 133,
+      "result": 2,
+      "tick": 16218,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 126,
+      "result": 2,
+      "tick": 15443,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 241,
+      "result": 1,
+      "tick": 32317,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none_full_control",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 236,
+      "result": 1,
+      "tick": 31533,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9195,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8277,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7958,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7543,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 218,
+      "result": 1,
+      "tick": 29444,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 218,
+      "result": 1,
+      "tick": 29515,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 217,
+      "result": 1,
+      "tick": 29431,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy_full_control",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 214,
+      "result": 1,
+      "tick": 29068,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 40,
+      "result": 2,
+      "tick": 11708,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8865,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 38,
+      "result": 2,
+      "tick": 11270,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9271,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 206,
+      "result": 1,
+      "tick": 28188,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 205,
+      "result": 1,
+      "tick": 27809,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 210,
+      "result": 1,
+      "tick": 28799,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence_full_control",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 204,
+      "result": 1,
+      "tick": 27797,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 80,
+      "result": 2,
+      "tick": 23900,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 79,
+      "result": 2,
+      "tick": 23691,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 85,
+      "result": 2,
+      "tick": 25404,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 79,
+      "result": 2,
+      "tick": 23671,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 199,
+      "result": 1,
+      "tick": 27410,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 183,
+      "result": 1,
+      "tick": 25156,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 192,
+      "result": 1,
+      "tick": 26290,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence_full_control",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 201,
+      "result": 1,
+      "tick": 27539,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9202,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7005,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7549,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8519,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 78,
+      "result": 2,
+      "tick": 8706,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 103,
+      "result": 2,
+      "tick": 11325,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 103,
+      "result": 2,
+      "tick": 11394,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none_full_control",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 103,
+      "result": 2,
+      "tick": 11331,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9899,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7525,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8242,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7328,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 233,
+      "result": 2,
+      "tick": 27940,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 237,
+      "result": 2,
+      "tick": 28518,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 101,
+      "result": 2,
+      "tick": 11169,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy_full_control",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 114,
+      "result": 2,
+      "tick": 12820,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8709,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8521,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9368,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 10836,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 227,
+      "result": 2,
+      "tick": 27034,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 222,
+      "result": 2,
+      "tick": 26836,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 227,
+      "result": 2,
+      "tick": 27570,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence_full_control",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 223,
+      "result": 2,
+      "tick": 26693,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 113,
+      "result": 2,
+      "tick": 33648,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 116,
+      "result": 2,
+      "tick": 34732,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 111,
+      "result": 2,
+      "tick": 33160,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 111,
+      "result": 2,
+      "tick": 33232,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 210,
+      "result": 2,
+      "tick": 25799,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 212,
+      "result": 2,
+      "tick": 25906,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 203,
+      "result": 2,
+      "tick": 24295,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence_full_control",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 213,
+      "result": 2,
+      "tick": 25813,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7333,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8144,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8969,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9145,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 83,
+      "result": 2,
+      "tick": 9525,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 86,
+      "result": 2,
+      "tick": 9641,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 79,
+      "result": 2,
+      "tick": 8890,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none_full_control",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 68,
+      "result": 2,
+      "tick": 7700,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8247,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7531,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7703,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8618,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 310,
+      "result": 2,
+      "tick": 38877,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 278,
+      "result": 1,
+      "tick": 35643,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 271,
+      "result": 1,
+      "tick": 35188,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy_full_control",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 312,
+      "result": 2,
+      "tick": 38934,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9220,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 11065,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8587,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8299,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 292,
+      "result": 2,
+      "tick": 36985,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 299,
+      "result": 2,
+      "tick": 37261,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 261,
+      "result": 1,
+      "tick": 33394,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence_full_control",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 247,
+      "result": 1,
+      "tick": 32007,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 48,
+      "result": 2,
+      "tick": 14123,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 42,
+      "result": 2,
+      "tick": 12412,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 46,
+      "result": 2,
+      "tick": 13756,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 41,
+      "result": 2,
+      "tick": 12176,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 263,
+      "result": 2,
+      "tick": 33416,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 277,
+      "result": 2,
+      "tick": 35203,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 250,
+      "result": 1,
+      "tick": 32562,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence_full_control",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 289,
+      "result": 2,
+      "tick": 36100,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8736,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7971,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8336,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8148,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 88,
+      "result": 2,
+      "tick": 10081,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 99,
+      "result": 2,
+      "tick": 11260,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 130,
+      "result": 2,
+      "tick": 14644,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none_full_control",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 112,
+      "result": 2,
+      "tick": 12623,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7294,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8157,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9025,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8402,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 199,
+      "result": 2,
+      "tick": 19963,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 469,
+      "result": 2,
+      "tick": 49155,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 131,
+      "result": 2,
+      "tick": 13496,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy_full_control",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 231,
+      "result": 2,
+      "tick": 22956,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8117,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 11049,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9804,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7420,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 327,
+      "result": 2,
+      "tick": 35172,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 224,
+      "result": 2,
+      "tick": 22396,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 120,
+      "result": 2,
+      "tick": 12221,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence_full_control",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 265,
+      "result": 2,
+      "tick": 28382,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 50,
+      "result": 2,
+      "tick": 14814,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 43,
+      "result": 2,
+      "tick": 12842,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 44,
+      "result": 2,
+      "tick": 13054,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 53,
+      "result": 2,
+      "tick": 15648,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 306,
+      "result": 2,
+      "tick": 33163,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 314,
+      "result": 2,
+      "tick": 33178,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 332,
+      "result": 2,
+      "tick": 35417,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence_full_control",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 426,
+      "result": 2,
+      "tick": 44336,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 10063,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9015,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8743,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9048,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 110,
+      "result": 2,
+      "tick": 12170,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 89,
+      "result": 2,
+      "tick": 10118,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 96,
+      "result": 2,
+      "tick": 10882,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none_full_control",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 110,
+      "result": 2,
+      "tick": 12631,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 35,
+      "result": 2,
+      "tick": 10384,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8923,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 10130,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 9976,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 113,
+      "result": 2,
+      "tick": 12348,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 115,
+      "result": 2,
+      "tick": 12702,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 115,
+      "result": 2,
+      "tick": 12616,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy_full_control",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 107,
+      "result": 2,
+      "tick": 11589,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 40,
+      "result": 2,
+      "tick": 11784,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 40,
+      "result": 2,
+      "tick": 11964,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 38,
+      "result": 2,
+      "tick": 11143,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9129,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 128,
+      "result": 2,
+      "tick": 14074,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 104,
+      "result": 2,
+      "tick": 11372,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 155,
+      "result": 2,
+      "tick": 17171,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence_full_control",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 144,
+      "result": 2,
+      "tick": 15934,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 58,
+      "result": 2,
+      "tick": 17198,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 38,
+      "result": 2,
+      "tick": 11129,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 48,
+      "result": 2,
+      "tick": 14299,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 45,
+      "result": 2,
+      "tick": 13424,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 164,
+      "result": 2,
+      "tick": 18095,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 137,
+      "result": 2,
+      "tick": 15129,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 138,
+      "result": 2,
+      "tick": 15274,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence_full_control",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 144,
+      "result": 2,
+      "tick": 16045,
+      "terminal": true
+    }
+  ],
+  "seconds": 133.12689627500004,
+  "gate_result": "pass"
+}

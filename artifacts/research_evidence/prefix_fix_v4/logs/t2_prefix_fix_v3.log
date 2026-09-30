@@ -1,0 +1,523 @@
+INFO: Product: io.github.wszqkzqk.pvz-portable
+INFO: BuildNum: 1048
+INFO: CommitDate: 2026-10-01
+INFO: RegEmu: Can't read '/tmp/pvz-env-24fntraa/registry.regemu': File does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: RegEmu: Key 'SOFTWARE\PopCap\PlantsVsZombies' does not exist
+INFO: session id: 1790788754
+INFO: RegEmu: Value 'CurUser' does not exist
+INFO: 'reanim/LoadBar_sprout.reanim'
+INFO: compile 0 ms:'compiled/reanim/LoadBar_sprout.reanim.compiled'
+INFO: 'reanim/LoadBar_Zombiehead.reanim'
+INFO: compile 0 ms:'compiled/reanim/LoadBar_Zombiehead.reanim.compiled'
+INFO: 'reanim/SodRoll.reanim'
+INFO: compile 0 ms:'compiled/reanim/SodRoll.reanim.compiled'
+INFO: 'reanim/FinalWave.reanim'
+INFO: compile 0 ms:'compiled/reanim/FinalWave.reanim.compiled'
+INFO: 'reanim/PeaShooterSingle.reanim'
+INFO: compile 3 ms:'compiled/reanim/PeaShooterSingle.reanim.compiled'
+INFO: 'reanim/Wallnut.reanim'
+INFO: compile 0 ms:'compiled/reanim/Wallnut.reanim.compiled'
+INFO: 'reanim/Lilypad.reanim'
+INFO: compile 0 ms:'compiled/reanim/Lilypad.reanim.compiled'
+INFO: 'reanim/SunFlower.reanim'
+INFO: compile 3 ms:'compiled/reanim/SunFlower.reanim.compiled'
+INFO: 'reanim/LawnMower.reanim'
+INFO: compile 2 ms:'compiled/reanim/LawnMower.reanim.compiled'
+INFO: 'reanim/StartReadySetPlant.reanim'
+INFO: compile 0 ms:'compiled/reanim/StartReadySetPlant.reanim.compiled'
+INFO: 'reanim/CherryBomb.reanim'
+INFO: compile 2 ms:'compiled/reanim/CherryBomb.reanim.compiled'
+INFO: 'reanim/Squash.reanim'
+INFO: compile 1 ms:'compiled/reanim/Squash.reanim.compiled'
+INFO: 'reanim/DoomShroom.reanim'
+INFO: compile 1 ms:'compiled/reanim/DoomShroom.reanim.compiled'
+INFO: 'reanim/SnowPea.reanim'
+INFO: compile 2 ms:'compiled/reanim/SnowPea.reanim.compiled'
+INFO: 'reanim/PeaShooter.reanim'
+INFO: compile 3 ms:'compiled/reanim/PeaShooter.reanim.compiled'
+INFO: 'reanim/SunShroom.reanim'
+INFO: compile 1 ms:'compiled/reanim/SunShroom.reanim.compiled'
+INFO: 'reanim/Tallnut.reanim'
+INFO: compile 0 ms:'compiled/reanim/Tallnut.reanim.compiled'
+INFO: 'reanim/Fumeshroom.reanim'
+INFO: compile 1 ms:'compiled/reanim/Fumeshroom.reanim.compiled'
+INFO: 'reanim/Puffshroom.reanim'
+INFO: compile 0 ms:'compiled/reanim/Puffshroom.reanim.compiled'
+INFO: 'reanim/Hypnoshroom.reanim'
+INFO: compile 0 ms:'compiled/reanim/Hypnoshroom.reanim.compiled'
+INFO: 'reanim/Chomper.reanim'
+INFO: compile 7 ms:'compiled/reanim/Chomper.reanim.compiled'
+INFO: 'reanim/Zombie.reanim'
+INFO: compile 28 ms:'compiled/reanim/Zombie.reanim.compiled'
+INFO: 'reanim/Sun.reanim'
+INFO: compile 0 ms:'compiled/reanim/Sun.reanim.compiled'
+INFO: 'reanim/PotatoMine.reanim'
+INFO: compile 2 ms:'compiled/reanim/PotatoMine.reanim.compiled'
+INFO: 'reanim/Caltrop.reanim'
+INFO: compile 1 ms:'compiled/reanim/Caltrop.reanim.compiled'
+INFO: 'reanim/SpikeRock.reanim'
+INFO: compile 1 ms:'compiled/reanim/SpikeRock.reanim.compiled'
+INFO: 'reanim/ThreePeater.reanim'
+INFO: compile 4 ms:'compiled/reanim/ThreePeater.reanim.compiled'
+INFO: 'reanim/Marigold.reanim'
+INFO: compile 1 ms:'compiled/reanim/Marigold.reanim.compiled'
+INFO: 'reanim/IceShroom.reanim'
+INFO: compile 0 ms:'compiled/reanim/IceShroom.reanim.compiled'
+INFO: 'reanim/Zombie_football.reanim'
+INFO: compile 6 ms:'compiled/reanim/Zombie_football.reanim.compiled'
+INFO: 'reanim/Zombie_paper.reanim'
+INFO: compile 11 ms:'compiled/reanim/Zombie_paper.reanim.compiled'
+INFO: 'reanim/Zombie_zamboni.reanim'
+INFO: compile 5 ms:'compiled/reanim/Zombie_zamboni.reanim.compiled'
+INFO: 'reanim/splash.reanim'
+INFO: compile 0 ms:'compiled/reanim/splash.reanim.compiled'
+INFO: 'reanim/Jalapeno.reanim'
+INFO: compile 1 ms:'compiled/reanim/Jalapeno.reanim.compiled'
+INFO: 'reanim/fire.reanim'
+INFO: compile 2 ms:'compiled/reanim/fire.reanim.compiled'
+INFO: 'reanim/Coin_silver.reanim'
+INFO: compile 0 ms:'compiled/reanim/Coin_silver.reanim.compiled'
+INFO: 'reanim/Zombie_charred.reanim'
+INFO: compile 1 ms:'compiled/reanim/Zombie_charred.reanim.compiled'
+INFO: 'reanim/Zombie_charred_imp.reanim'
+INFO: compile 1 ms:'compiled/reanim/Zombie_charred_imp.reanim.compiled'
+INFO: 'reanim/Zombie_charred_digger.reanim'
+INFO: compile 2 ms:'compiled/reanim/Zombie_charred_digger.reanim.compiled'
+INFO: 'reanim/Zombie_charred_zamboni.reanim'
+INFO: compile 3 ms:'compiled/reanim/Zombie_charred_zamboni.reanim.compiled'
+INFO: 'reanim/Zombie_charred_catapult.reanim'
+INFO: compile 2 ms:'compiled/reanim/Zombie_charred_catapult.reanim.compiled'
+INFO: 'reanim/Zombie_charred_gargantuar.reanim'
+INFO: compile 2 ms:'compiled/reanim/Zombie_charred_gargantuar.reanim.compiled'
+INFO: 'reanim/ScaredyShroom.reanim'
+INFO: compile 2 ms:'compiled/reanim/ScaredyShroom.reanim.compiled'
+INFO: 'reanim/Pumpkin.reanim'
+INFO: compile 0 ms:'compiled/reanim/Pumpkin.reanim.compiled'
+INFO: 'reanim/Plantern.reanim'
+INFO: compile 1 ms:'compiled/reanim/Plantern.reanim.compiled'
+INFO: 'reanim/Torchwood.reanim'
+INFO: compile 1 ms:'compiled/reanim/Torchwood.reanim.compiled'
+INFO: 'reanim/SplitPea.reanim'
+INFO: compile 2 ms:'compiled/reanim/SplitPea.reanim.compiled'
+INFO: 'reanim/SeaShroom.reanim'
+INFO: compile 1 ms:'compiled/reanim/SeaShroom.reanim.compiled'
+INFO: 'reanim/Blover.reanim'
+INFO: compile 1 ms:'compiled/reanim/Blover.reanim.compiled'
+INFO: 'reanim/Pot.reanim'
+INFO: compile 1 ms:'compiled/reanim/Pot.reanim.compiled'
+INFO: 'reanim/Cactus.reanim'
+INFO: compile 4 ms:'compiled/reanim/Cactus.reanim.compiled'
+INFO: 'reanim/Zombie_disco.reanim'
+INFO: compile 9 ms:'compiled/reanim/Zombie_disco.reanim.compiled'
+INFO: 'reanim/Tanglekelp.reanim'
+INFO: compile 3 ms:'compiled/reanim/Tanglekelp.reanim.compiled'
+INFO: 'reanim/Starfruit.reanim'
+INFO: compile 1 ms:'compiled/reanim/Starfruit.reanim.compiled'
+INFO: 'reanim/Zombie_polevaulter.reanim'
+INFO: compile 11 ms:'compiled/reanim/Zombie_polevaulter.reanim.compiled'
+INFO: 'reanim/Zombie_balloon.reanim'
+INFO: compile 9 ms:'compiled/reanim/Zombie_balloon.reanim.compiled'
+INFO: 'reanim/Zombie_gargantuar.reanim'
+INFO: compile 18 ms:'compiled/reanim/Zombie_gargantuar.reanim.compiled'
+INFO: 'reanim/Zombie_imp.reanim'
+INFO: compile 4 ms:'compiled/reanim/Zombie_imp.reanim.compiled'
+INFO: 'reanim/Zombie_digger.reanim'
+INFO: compile 13 ms:'compiled/reanim/Zombie_digger.reanim.compiled'
+INFO: 'reanim/Digger_rising_dirt.reanim'
+INFO: compile 0 ms:'compiled/reanim/Digger_rising_dirt.reanim.compiled'
+INFO: 'reanim/Zombie_dolphinrider.reanim'
+INFO: compile 17 ms:'compiled/reanim/Zombie_dolphinrider.reanim.compiled'
+INFO: 'reanim/Zombie_pogo.reanim'
+INFO: compile 8 ms:'compiled/reanim/Zombie_pogo.reanim.compiled'
+INFO: 'reanim/Zombie_backup.reanim'
+INFO: compile 5 ms:'compiled/reanim/Zombie_backup.reanim.compiled'
+INFO: 'reanim/Zombie_bobsled.reanim'
+INFO: compile 9 ms:'compiled/reanim/Zombie_bobsled.reanim.compiled'
+INFO: 'reanim/Zombie_jackbox.reanim'
+INFO: compile 5 ms:'compiled/reanim/Zombie_jackbox.reanim.compiled'
+INFO: 'reanim/Zombie_snorkle.reanim'
+INFO: compile 12 ms:'compiled/reanim/Zombie_snorkle.reanim.compiled'
+INFO: 'reanim/Zombie_bungi.reanim'
+INFO: compile 4 ms:'compiled/reanim/Zombie_bungi.reanim.compiled'
+INFO: 'reanim/Zombie_catapult.reanim'
+INFO: compile 8 ms:'compiled/reanim/Zombie_catapult.reanim.compiled'
+INFO: 'reanim/Zombie_ladder.reanim'
+INFO: compile 11 ms:'compiled/reanim/Zombie_ladder.reanim.compiled'
+INFO: 'reanim/Puff.reanim'
+INFO: compile 0 ms:'compiled/reanim/Puff.reanim.compiled'
+INFO: 'reanim/Z.reanim'
+INFO: compile 0 ms:'compiled/reanim/Z.reanim.compiled'
+INFO: 'reanim/Gravebuster.reanim'
+INFO: compile 1 ms:'compiled/reanim/Gravebuster.reanim.compiled'
+INFO: 'reanim/ZombiesWon.reanim'
+INFO: compile 2 ms:'compiled/reanim/ZombiesWon.reanim.compiled'
+INFO: 'reanim/Magnetshroom.reanim'
+INFO: compile 4 ms:'compiled/reanim/Magnetshroom.reanim.compiled'
+INFO: 'reanim/Zombie_boss.reanim'
+INFO: compile 71 ms:'compiled/reanim/Zombie_boss.reanim.compiled'
+INFO: 'reanim/Cabbagepult.reanim'
+INFO: compile 3 ms:'compiled/reanim/Cabbagepult.reanim.compiled'
+INFO: 'reanim/Cornpult.reanim'
+INFO: compile 4 ms:'compiled/reanim/Cornpult.reanim.compiled'
+INFO: 'reanim/Melonpult.reanim'
+INFO: compile 2 ms:'compiled/reanim/Melonpult.reanim.compiled'
+INFO: 'reanim/Coffeebean.reanim'
+INFO: compile 1 ms:'compiled/reanim/Coffeebean.reanim.compiled'
+INFO: 'reanim/Umbrellaleaf.reanim'
+INFO: compile 1 ms:'compiled/reanim/Umbrellaleaf.reanim.compiled'
+INFO: 'reanim/GatlingPea.reanim'
+INFO: compile 3 ms:'compiled/reanim/GatlingPea.reanim.compiled'
+INFO: 'reanim/Cattail.reanim'
+INFO: compile 2 ms:'compiled/reanim/Cattail.reanim.compiled'
+INFO: 'reanim/GloomShroom.reanim'
+INFO: compile 3 ms:'compiled/reanim/GloomShroom.reanim.compiled'
+INFO: 'reanim/Zombie_boss_iceball.reanim'
+INFO: compile 3 ms:'compiled/reanim/Zombie_boss_iceball.reanim.compiled'
+INFO: 'reanim/Zombie_boss_fireball.reanim'
+INFO: compile 2 ms:'compiled/reanim/Zombie_boss_fireball.reanim.compiled'
+INFO: 'reanim/CobCannon.reanim'
+INFO: compile 3 ms:'compiled/reanim/CobCannon.reanim.compiled'
+INFO: 'reanim/Garlic.reanim'
+INFO: compile 1 ms:'compiled/reanim/Garlic.reanim.compiled'
+INFO: 'reanim/GoldMagnet.reanim'
+INFO: compile 3 ms:'compiled/reanim/GoldMagnet.reanim.compiled'
+INFO: 'reanim/WinterMelon.reanim'
+INFO: compile 3 ms:'compiled/reanim/WinterMelon.reanim.compiled'
+INFO: 'reanim/TwinSunflower.reanim'
+INFO: compile 1 ms:'compiled/reanim/TwinSunflower.reanim.compiled'
+INFO: 'reanim/PoolCleaner.reanim'
+INFO: compile 2 ms:'compiled/reanim/PoolCleaner.reanim.compiled'
+INFO: 'reanim/RoofCleaner.reanim'
+INFO: compile 1 ms:'compiled/reanim/RoofCleaner.reanim.compiled'
+INFO: 'reanim/FirePea.reanim'
+INFO: compile 0 ms:'compiled/reanim/FirePea.reanim.compiled'
+INFO: 'reanim/Imitater.reanim'
+INFO: compile 2 ms:'compiled/reanim/Imitater.reanim.compiled'
+INFO: 'reanim/Zombie_yeti.reanim'
+INFO: compile 6 ms:'compiled/reanim/Zombie_yeti.reanim.compiled'
+INFO: 'reanim/Zombie_Boss_driver.reanim'
+INFO: compile 6 ms:'compiled/reanim/Zombie_Boss_driver.reanim.compiled'
+INFO: 'reanim/LawnMoweredZombie.reanim'
+INFO: compile 0 ms:'compiled/reanim/LawnMoweredZombie.reanim.compiled'
+INFO: 'reanim/CrazyDave.reanim'
+INFO: compile 30 ms:'compiled/reanim/CrazyDave.reanim.compiled'
+INFO: 'reanim/TextFadeOn.reanim'
+INFO: compile 0 ms:'compiled/reanim/TextFadeOn.reanim.compiled'
+INFO: 'reanim/Hammer.reanim'
+INFO: compile 0 ms:'compiled/reanim/Hammer.reanim.compiled'
+INFO: 'reanim/SlotMachine.reanim'
+INFO: compile 0 ms:'compiled/reanim/SlotMachine.reanim.compiled'
+INFO: 'reanim/Credits_Football.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_Football.reanim.compiled'
+INFO: 'reanim/Credits_Jackbox.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_Jackbox.reanim.compiled'
+INFO: 'reanim/SelectorScreen.reanim'
+INFO: compile 36 ms:'compiled/reanim/SelectorScreen.reanim.compiled'
+INFO: 'reanim/Portal_Circle.reanim'
+INFO: compile 0 ms:'compiled/reanim/Portal_Circle.reanim.compiled'
+INFO: 'reanim/Portal_Square.reanim'
+INFO: compile 0 ms:'compiled/reanim/Portal_Square.reanim.compiled'
+INFO: 'reanim/ZenGarden_sprout.reanim'
+INFO: compile 1 ms:'compiled/reanim/ZenGarden_sprout.reanim.compiled'
+INFO: 'reanim/ZenGarden_wateringcan.reanim'
+INFO: compile 2 ms:'compiled/reanim/ZenGarden_wateringcan.reanim.compiled'
+INFO: 'reanim/ZenGarden_fertilizer.reanim'
+INFO: compile 1 ms:'compiled/reanim/ZenGarden_fertilizer.reanim.compiled'
+INFO: 'reanim/ZenGarden_bugspray.reanim'
+INFO: compile 0 ms:'compiled/reanim/ZenGarden_bugspray.reanim.compiled'
+INFO: 'reanim/ZenGarden_phonograph.reanim'
+INFO: compile 0 ms:'compiled/reanim/ZenGarden_phonograph.reanim.compiled'
+INFO: 'reanim/Diamond.reanim'
+INFO: compile 0 ms:'compiled/reanim/Diamond.reanim.compiled'
+INFO: 'reanim/Zombie_hand.reanim'
+INFO: compile 3 ms:'compiled/reanim/Zombie_hand.reanim.compiled'
+INFO: 'reanim/Stinky.reanim'
+INFO: compile 2 ms:'compiled/reanim/Stinky.reanim.compiled'
+INFO: 'reanim/Rake.reanim'
+INFO: compile 0 ms:'compiled/reanim/Rake.reanim.compiled'
+INFO: 'reanim/Rain_circle.reanim'
+INFO: compile 0 ms:'compiled/reanim/Rain_circle.reanim.compiled'
+INFO: 'reanim/Rain_splash.reanim'
+INFO: compile 0 ms:'compiled/reanim/Rain_splash.reanim.compiled'
+INFO: 'reanim/Zombie_surprise.reanim'
+INFO: compile 0 ms:'compiled/reanim/Zombie_surprise.reanim.compiled'
+INFO: 'reanim/Coin_gold.reanim'
+INFO: compile 0 ms:'compiled/reanim/Coin_gold.reanim.compiled'
+INFO: 'reanim/TreeOfWisdom.reanim'
+INFO: compile 44 ms:'compiled/reanim/TreeOfWisdom.reanim.compiled'
+INFO: 'reanim/TreeOfWisdomClouds.reanim'
+INFO: compile 2 ms:'compiled/reanim/TreeOfWisdomClouds.reanim.compiled'
+INFO: 'reanim/TreeFood.reanim'
+INFO: compile 1 ms:'compiled/reanim/TreeFood.reanim.compiled'
+INFO: 'reanim/Credits_Main.reanim'
+INFO: compile 22 ms:'compiled/reanim/Credits_Main.reanim.compiled'
+INFO: 'reanim/Credits_Main2.reanim'
+INFO: compile 20 ms:'compiled/reanim/Credits_Main2.reanim.compiled'
+INFO: 'reanim/Credits_Main3.reanim'
+INFO: compile 21 ms:'compiled/reanim/Credits_Main3.reanim.compiled'
+INFO: 'reanim/Zombie_credits_dance.reanim'
+INFO: compile 27 ms:'compiled/reanim/Zombie_credits_dance.reanim.compiled'
+INFO: 'reanim/Credits_stage.reanim'
+INFO: compile 2 ms:'compiled/reanim/Credits_stage.reanim.compiled'
+INFO: 'reanim/Credits_BigBrain.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_BigBrain.reanim.compiled'
+INFO: 'reanim/Credits_Flower_petals.reanim'
+INFO: compile 1 ms:'compiled/reanim/Credits_Flower_petals.reanim.compiled'
+INFO: 'reanim/Credits_Infantry.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_Infantry.reanim.compiled'
+INFO: 'reanim/Credits_Throat.reanim'
+INFO: compile 4 ms:'compiled/reanim/Credits_Throat.reanim.compiled'
+INFO: 'reanim/Credits_CrazyDave.reanim'
+INFO: compile 1 ms:'compiled/reanim/Credits_CrazyDave.reanim.compiled'
+INFO: 'reanim/Credits_Bossdance.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_Bossdance.reanim.compiled'
+INFO: 'reanim/Zombie_Credits_Screendoor.reanim'
+INFO: compile 1 ms:'compiled/reanim/Zombie_Credits_Screendoor.reanim.compiled'
+INFO: 'reanim/Zombie_Credits_Conehead.reanim'
+INFO: compile 1 ms:'compiled/reanim/Zombie_Credits_Conehead.reanim.compiled'
+INFO: 'reanim/Credits_ZombieArmy1.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_ZombieArmy1.reanim.compiled'
+INFO: 'reanim/Credits_ZombieArmy2.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_ZombieArmy2.reanim.compiled'
+INFO: 'reanim/Credits_Tombstones.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_Tombstones.reanim.compiled'
+INFO: 'reanim/Credits_SolarPower.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_SolarPower.reanim.compiled'
+INFO: 'reanim/Credits_Anyhour.reanim'
+INFO: compile 1 ms:'compiled/reanim/Credits_Anyhour.reanim.compiled'
+INFO: 'reanim/Credits_WeAreTheUndead.reanim'
+INFO: compile 2 ms:'compiled/reanim/Credits_WeAreTheUndead.reanim.compiled'
+INFO: 'reanim/Credits_DiscoLights.reanim'
+INFO: compile 0 ms:'compiled/reanim/Credits_DiscoLights.reanim.compiled'
+INFO: 'reanim/Zombie_FlagPole.reanim'
+INFO: compile 0 ms:'compiled/reanim/Zombie_FlagPole.reanim.compiled'
+INFO: 'reanim/zombatar_zombie_head.reanim'
+INFO: compile 13 ms:'compiled/reanim/zombatar_zombie_head.reanim.compiled'
+INFO: loading 'resources' 137 ms
+INFO: loading 'stuff' 0 ms
+INFO: compile 0 ms:'compiled/particles/IceTrail.trail.compiled'
+INFO: loading 'trail' 0 ms
+INFO: compile 0 ms:'compiled/particles/MelonImpact.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/WinterMelonImpact.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/FumeCloud.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PopcornSplash.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Powie.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/JackExplode.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieHead.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieArm.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieTrafficCone.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombiePail.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieHelmet.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieFlag.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieDoor.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieNewspaper.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieHeadLight.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Pow.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombiePogo.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieNewspaperHead.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieBalloonHead.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/SodRoll.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/GraveStoneRise.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Planting.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PlantingPool.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieRise.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/GraveBuster.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/GraveBusterDie.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PoolSplash.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/IceSparkle.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/SeedPacket.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/TallNutBlock.xml.compiled'
+INFO: compile 1 ms:'compiled/particles/Doom.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/DiggerRise.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/DiggerTunnel.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/DancerRise.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PoolSparkly.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/WallnutEatSmall.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/WallnutEatLarge.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PeaSplat.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ButterSplat.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/CabbageSplat.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PuffSplat.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/StarSplat.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/IceTrap.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/SnowPeaSplat.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/SnowPeaPuff.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/SnowPeaTrail.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/LanternShine.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Award.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PotatoMine.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PotatoMineRise.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PuffShroomTrail.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PuffShroomMuzzle.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/SeedPacketFlash.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/WhackAZombieRise.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieLadder.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/UmbrellaReflect.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/SeedPacketPick.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/IceTrapZombie.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/IceTrapRelease.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZamboniSmoke.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/GloomCloud.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombiePogoHead.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZamboniTire.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZamboniExplosion.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZamboniExplosion2.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/CatapultExplosion.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/MowerCloud.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/BossIceBallTrail.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/BlastMark.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/CoinPickupArrow.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PresentPickup.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ImitaterMorph.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/MoweredZombieHead.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/MoweredZombieArm.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieHeadPool.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Zombie_boss_fireball.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/FireballDeath.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/IceballDeath.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Iceball_Trail.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Fireball_Trail.xml.compiled'
+INFO: compile 1 ms:'compiled/particles/BossExplosion.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ScreenFlash.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/TrophySparkle.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PortalCircle.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PortalSquare.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PottedPlantGlow.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PottedWaterPlantGlow.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/PottedZenGlow.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/MindControl.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/VaseShatter.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/VaseShatterLeaf.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/VaseShatterZombie.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/AwardPickupArrow.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Zombie_seaweed.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieMustache.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/ZombieFutureGlasses.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Pinata.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Dust_Squash.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Dust_Foot.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Daisy.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Credits_Strobe.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Credits_RaysWipe.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Credits_ZombieHeadWipe.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/Starburst.xml.compiled'
+INFO: compile 2 ms:'compiled/particles/Credits_fog.xml.compiled'
+INFO: compile 0 ms:'compiled/particles/UpsellArrow.xml.compiled'
+INFO: preloading: 1 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+INFO: preloading: 0 ms
+{
+  "task_id": "T2",
+  "gate_result": "pass",
+  "results": {
+    "wave_composition_consistency": {
+      "seed": 30000,
+      "full_wave_count": 30,
+      "wave_cap": 3,
+      "capped_waves": [
+        [
+          0
+        ],
+        [
+          0
+        ],
+        [
+          0
+        ]
+      ],
+      "matches_full_wave_prefix": true
+    },
+    "default_level_7_seed_30000": {
+      "won": true,
+      "terminal": true,
+      "wave": 30,
+      "wave_count": 30,
+      "tick": 65401
+    },
+    "wave_cap_50_does_not_expand": {
+      "won": true,
+      "terminal": true,
+      "wave": 30,
+      "wave_count": 30,
+      "tick": 65401
+    },
+    "wave_cap_3": [
+      {
+        "seed": 30000,
+        "won": true,
+        "terminal": true,
+        "wave": 3,
+        "wave_count": 3,
+        "tick": 9683
+      },
+      {
+        "seed": 30001,
+        "won": true,
+        "terminal": true,
+        "wave": 3,
+        "wave_count": 3,
+        "tick": 8875
+      },
+      {
+        "seed": 30002,
+        "won": true,
+        "terminal": true,
+        "wave": 3,
+        "wave_count": 3,
+        "tick": 9353
+      }
+    ],
+    "wave_cap_1": {
+      "won": true,
+      "terminal": true,
+      "wave": 1,
+      "wave_count": 1,
+      "tick": 3817
+    },
+    "preplanted_without_sunflower_card": {
+      "plants": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ]
+      ],
+      "sun_before": 50,
+      "sun_after_reset": 50,
+      "packet_types_unchanged": true
+    },
+    "preplanted_game": {
+      "won": true,
+      "terminal": true,
+      "wave": 30,
+      "wave_count": 30,
+      "tick": 58362
+    },
+    "pool_peashooter_without_lilypad": {
+      "reset_rejected": true,
+      "error": "PvZ-Portable rejected reset: {'protocol_version': 4, 'ok': False, 'observation': {'protocol_version': 4, 'observation_version': 3, 'task_version': 2, 'level': 21, 'playthrough': 2, 'zombie_count_multiplier': 1, 'terrain': 2, 'night': False, 'pool': True, 'fog': False, 'roof': False, 'tick': 0, 'sun': 50, 'wave': 0, 'wave_count': 20, 'wave_timer': 1800, 'terminal': False, 'result': 0, 'enemy_zombies_on_screen': False, 'grid': [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1], [3, 3, 3, 3, 3, 3, 3, 3, 3], [3, 3, 3, 3, 3, 3, 3, 3, 3], [1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]], 'player_profile': {'playthrough': 2, 'seed_slot_count': 6, 'owned_upgrade_plants': [], 'imitater_owned': False, 'first_aid_owned': False, 'pool_cleaner_owned': False, 'roof_cleaner_owned': False, 'rake_charges': 0, 'rake_charges_remaining': 0}, 'loadout_context': {'mode': 'fixed', 'scene': 2, 'seed_slot_count': 6, 'free_slots': 6, 'available_plants': [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39], 'forced_seeds': [], 'zombie_roster': [0, 2]}, 'cells': [{'row': 0, 'col': 0, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 1, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 2, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 3, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 4, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 5, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 6, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 7, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 0, 'col': 8, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 0, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 1, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 2, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 3, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 4, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 5, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 6, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 7, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 1, 'col': 8, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 0, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 1, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 2, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 3, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 4, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 5, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 6, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 7, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 2, 'col': 8, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 0, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 1, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 2, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 3, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 4, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 5, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 6, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 7, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 3, 'col': 8, 'terrain': 3, 'row_type': 2, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 0, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 1, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 2, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 3, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 4, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 5, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 6, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 7, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 4, 'col': 8, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 0, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 1, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 2, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 3, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 4, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 5, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 6, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 7, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}, {'row': 5, 'col': 8, 'terrain': 1, 'row_type': 1, 'plant_types': [], 'grid_item_types': []}], 'packets': [{'index': 0, 'type': 0, 'imitater_type': -1, 'active': True, 'cooldown': 0, 'refresh_time': 0, 'cost': 100}, {'index': 1, 'type': 1, 'imitater_type': -1, 'active': True, 'cooldown': 0, 'refresh_time': 0, 'cost': 50}, {'index': 2, 'type': 2, 'imitater_type': -1, 'active': False, 'cooldown': 0, 'refresh_time': 3500, 'cost': 150}, {'index': 3, 'type': 3, 'imitater_type': -1, 'active': False, 'cooldown': 0, 'refresh_time': 2000, 'cost': 50}, {'index': 4, 'type': 4, 'imitater_type': -1, 'active': False, 'cooldown': 0, 'refresh_time': 2000, 'cost': 25}, {'index': 5, 'type': 5, 'imitater_type': -1, 'active': True, 'cooldown': 0, 'refresh_time': 0, 'cost': 175}], 'plants': [], 'zombies': [{'type': 0, 'row': 2, 'on_board': False, 'x': 1063, 'y': 251, 'body_health': 270, 'body_max_health': 270, 'helm_health': 0, 'helm_max_health': 0, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.306408, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 0, 'row': 2, 'on_board': False, 'x': 1007, 'y': 284, 'body_health': 270, 'body_max_health': 270, 'helm_health': 0, 'helm_max_health': 0, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.316291, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 0, 'row': 2, 'on_board': False, 'x': 953, 'y': 251, 'body_health': 270, 'body_max_health': 270, 'helm_health': 0, 'helm_max_health': 0, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.2438, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 0, 'row': 0, 'on_board': False, 'x': 889, 'y': 107, 'body_health': 270, 'body_max_health': 270, 'helm_health': 0, 'helm_max_health': 0, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.32476, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 0, 'row': 4, 'on_board': False, 'x': 1055, 'y': 430, 'body_health': 270, 'body_max_health': 270, 'helm_health': 0, 'helm_max_health': 0, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.346254, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 0, 'row': 4, 'on_board': False, 'x': 1012, 'y': 460, 'body_health': 270, 'body_max_health': 270, 'helm_health': 0, 'helm_max_health': 0, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.309021, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 2, 'row': 3, 'on_board': False, 'x': 942, 'y': 351, 'body_health': 270, 'body_max_health': 270, 'helm_health': 370, 'helm_max_health': 370, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.307191, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 2, 'row': 0, 'on_board': False, 'x': 1009, 'y': 103, 'body_health': 270, 'body_max_health': 270, 'helm_health': 370, 'helm_max_health': 370, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.295924, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 2, 'row': 1, 'on_board': False, 'x': 1012, 'y': 203, 'body_health': 270, 'body_max_health': 270, 'helm_health': 370, 'helm_max_health': 370, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.290111, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}, {'type': 10, 'row': 0, 'on_board': False, 'x': 950, 'y': 72, 'body_health': 270, 'body_max_health': 270, 'helm_health': 0, 'helm_max_health': 0, 'shield_health': 0, 'shield_max_health': 0, 'phase': 0, 'phase_counter': 0, 'velocity_x': 0.27002, 'chilled': 0, 'buttered': 0, 'ice_trap': 0, 'has_head': True, 'has_arm': True, 'has_object': False, 'is_eating': False, 'target_col': -1, 'target_row': -1}], 'coins': [], 'projectiles': [], 'defenses': [{'type': 0, 'row': 0, 'state': 1, 'x': -160, 'y': 103}, {'type': 0, 'row': 1, 'state': 1, 'x': -160, 'y': 188}, {'type': 0, 'row': 2, 'state': 1, 'x': -160, 'y': 273}, {'type': 0, 'row': 3, 'state': 1, 'x': -160, 'y': 358}, {'type': 0, 'row': 4, 'state': 1, 'x': -160, 'y': 443}, {'type': 0, 'row': 5, 'state': 1, 'x': -160, 'y': 528}], 'grid_items': [], 'legal_actions': {'plants': [{'packet': 1, 'col': 0, 'row': 0}, {'packet': 1, 'col': 1, 'row': 0}, {'packet': 1, 'col': 2, 'row': 0}, {'packet': 1, 'col': 3, 'row': 0}, {'packet': 1, 'col': 4, 'row': 0}, {'packet': 1, 'col': 5, 'row': 0}, {'packet': 1, 'col': 6, 'row': 0}, {'packet': 1, 'col': 7, 'row': 0}, {'packet': 1, 'col': 8, 'row': 0}, {'packet': 1, 'col': 0, 'row': 1}, {'packet': 1, 'col': 1, 'row': 1}, {'packet': 1, 'col': 2, 'row': 1}, {'packet': 1, 'col': 3, 'row': 1}, {'packet': 1, 'col': 4, 'row': 1}, {'packet': 1, 'col': 5, 'row': 1}, {'packet': 1, 'col': 6, 'row': 1}, {'packet': 1, 'col': 7, 'row': 1}, {'packet': 1, 'col': 8, 'row': 1}, {'packet': 1, 'col': 0, 'row': 4}, {'packet': 1, 'col': 1, 'row': 4}, {'packet': 1, 'col': 2, 'row': 4}, {'packet': 1, 'col': 3, 'row': 4}, {'packet': 1, 'col': 4, 'row': 4}, {'packet': 1, 'col': 5, 'row': 4}, {'packet': 1, 'col': 6, 'row': 4}, {'packet': 1, 'col': 7, 'row': 4}, {'packet': 1, 'col': 8, 'row': 4}, {'packet': 1, 'col': 0, 'row': 5}, {'packet': 1, 'col': 1, 'row': 5}, {'packet': 1, 'col': 2, 'row': 5}, {'packet': 1, 'col': 3, 'row': 5}, {'packet': 1, 'col': 4, 'row': 5}, {'packet': 1, 'col': 5, 'row': 5}, {'packet': 1, 'col': 6, 'row': 5}, {'packet': 1, 'col': 7, 'row': 5}, {'packet': 1, 'col': 8, 'row': 5}], 'shovels': [], 'wait': True}}, 'events': {'zombies_killed': 4294967124, 'plants_eaten': 4294967272, 'sun_produced': 4294959846, 'sun_spent': 3150, 'mower_triggered': 4294967295, 'waves_started': -30, 'level_won': False, 'level_lost': False}}"
+    }
+  }
+}

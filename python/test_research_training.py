@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import json
 from pathlib import Path
 import random
 import tempfile
@@ -13,7 +14,8 @@ import torch
 
 from pvz_agent_model import (GameplayModelV1, MODEL_CONFIG, configure_torch_threads,
                              legal_summary, observation_tokens, pack_tokens, select_action)
-from pvz_research import capture_rng, restore_rng
+from pvz_research import ROOT, capture_rng, restore_rng, load_config
+from pvz_common import sha256_file
 from train_pvz_ppo import add_advantages, train_update
 from test_agent_model import observation
 
@@ -139,6 +141,24 @@ class RecurrentReplayTests(unittest.TestCase):
 
 
 class ExplicitConfigurationTests(unittest.TestCase):
+    def test_stale_pass_gate_rejects_changed_simulator_or_source(self):
+        config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
+        source = "python/pvz_research.py"
+        gate = {"gate_result": "pass", "simulator_sha256": sha256_file(ROOT / "build/pvz-portable"),
+                "required_fingerprints": {source: sha256_file(ROOT / source)}}
+        with tempfile.TemporaryDirectory() as temporary:
+            gate_path, config_path = Path(temporary) / "gate.json", Path(temporary) / "config.json"
+            config["prerequisites"] = [str(gate_path)]
+            config_path.write_text(json.dumps(config))
+            gate_path.write_text(json.dumps(gate))
+            load_config(config_path)
+            gate_path.write_text(json.dumps({**gate, "simulator_sha256": "0" * 64}))
+            with self.assertRaisesRegex(RuntimeError, "simulator is stale"):
+                load_config(config_path)
+            gate_path.write_text(json.dumps({**gate, "required_fingerprints": {source: "0" * 64}}))
+            with self.assertRaisesRegex(RuntimeError, "source is stale"):
+                load_config(config_path)
+
     def test_two_models_keep_independent_configs_and_critic_dimensions(self):
         model = GameplayModelV1(SMALL)
         other = GameplayModelV1({**SMALL, "width": 64, "critic_width": 48})

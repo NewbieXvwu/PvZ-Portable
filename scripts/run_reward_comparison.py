@@ -22,7 +22,10 @@ def main() -> None:
     queue = json.loads(args.queue.read_text())
     if len(queue["order"]) != 12 or queue["required_initializations"] != [0, 1, 2]:
         raise ValueError("expected the preregistered four-reward, three-initialization matrix")
-    status_path = ROOT / "artifacts/research/reward_comparison_v1_queue_state.json"
+    matrix = queue["matrix"]
+    if not matrix.replace("_", "").isalnum():
+        raise ValueError("matrix must be a simple identifier")
+    status_path = ROOT / "artifacts/research" / f"{matrix}_queue_state.json"
     for index, item in enumerate(queue["order"]):
         config_path = ROOT / item["config"]
         config = json.loads(config_path.read_text())

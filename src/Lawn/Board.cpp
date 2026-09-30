@@ -522,7 +522,9 @@ void Board::AddGraveStones(int theGridX, int theCount, MTRand& theLevelRNG)
 
 int Board::GetNumWavesPerFlag(int theNumWaves)
 {
-	if (theNumWaves < 0) theNumWaves = mNumWaves;
+	if (theNumWaves < 0)
+		theNumWaves = mApp->mEnvironmentMode && mApp->mEnvironmentTaskSpec.originalWaveCount > 0
+			? mApp->mEnvironmentTaskSpec.originalWaveCount : mNumWaves;
 	return (mApp->IsFirstTimeAdventureMode() && theNumWaves < 10) ? theNumWaves : 10;
 }
 
@@ -613,10 +615,7 @@ void Board::PickZombieWaves()
 	}
 
 	const int aFullWaves = mNumWaves;
-	const int aWaveCap = mApp->mEnvironmentTaskSpec.waveCap;
-	if (aWaveCap > 0 && mNumWaves > aWaveCap) mNumWaves = aWaveCap;
-	const int aWavesToGenerate = mNumWaves;
-	mNumWaves = aFullWaves;
+	if (mApp->mEnvironmentMode) mApp->mEnvironmentTaskSpec.originalWaveCount = aFullWaves;
 	ZombiePicker aZombiePicker;
 	ZombiePickerInit(&aZombiePicker);
 	ZombieType aIntroZombieType = GetIntroducedZombieType();
@@ -624,7 +623,10 @@ void Board::PickZombieWaves()
 	for (auto& aWave : mZombiesInWave)
 		std::fill(std::begin(aWave), std::end(aWave), ZombieType::ZOMBIE_INVALID);
 
-	for (int aWave = 0; aWave < aWavesToGenerate; aWave++)
+	// Generate the whole original table before applying the completion cap.
+	// Its RNG consumption also sets later initial counters (including sky sun);
+	// generating only the retained prefix changes the physical task before wave 1.
+	for (int aWave = 0; aWave < aFullWaves; aWave++)
 	{
 		ZombiePickerInitForWave(&aZombiePicker);
 		mZombiesInWave[aWave][0] = ZombieType::ZOMBIE_INVALID;
@@ -777,7 +779,6 @@ void Board::PickZombieWaves()
 		}
 
 	}
-	mNumWaves = aWavesToGenerate;
 }
 
 int Board::GetLevelRandSeed()
@@ -4953,7 +4954,9 @@ void Board::SpawnZombieWave()
 		}
 	}
 
-	if (mCurrentWave == mNumWaves - 1 && !mApp->IsContinuousChallenge())
+	const int aOriginalWaves = mApp->mEnvironmentMode && mApp->mEnvironmentTaskSpec.originalWaveCount > 0
+		? mApp->mEnvironmentTaskSpec.originalWaveCount : mNumWaves;
+	if (mCurrentWave == aOriginalWaves - 1 && !mApp->IsContinuousChallenge())
 	{
 		mRiseFromGraveCounter = 200;
 	}
@@ -5228,7 +5231,9 @@ void Board::UpdateSunSpawning()
 
 void Board::NextWaveComing()
 {
-	if (mCurrentWave + 1 == mNumWaves)
+	const int aOriginalWaves = mApp->mEnvironmentMode && mApp->mEnvironmentTaskSpec.originalWaveCount > 0
+		? mApp->mEnvironmentTaskSpec.originalWaveCount : mNumWaves;
+	if (mCurrentWave + 1 == aOriginalWaves)
 	{
 		if (!IsSurvivalStageWithRepick() && mApp->mGameMode != GameMode::GAMEMODE_CHALLENGE_LAST_STAND && !mApp->IsContinuousChallenge())
 		{

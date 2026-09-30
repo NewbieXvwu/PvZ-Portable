@@ -1,0 +1,16 @@
+{
+  "task_id": "T2-dynamic-prefix-v1",
+  "gate_result": "fail",
+  "scope": "real dynamic births in cap1 vs full level, identical original level/deck/seed, WAIT60, no preplants",
+  "evidence": "artifacts/t5/perf/wave_cap_paired_initial_probe_v1.json",
+  "observations": {
+    "day": {"seed": 60000, "tick": 2400, "full_on_board": 1, "cap1_on_board": 1},
+    "night": {"seed": 60256, "first_count_divergence_tick": 2040, "full_on_board": 1, "cap1_on_board": 5},
+    "pool": {"seed": 60512, "first_count_divergence_tick": 2040, "full_on_board": 1, "cap1_on_board": 3},
+    "fog": {"seed": 60768, "first_count_divergence_tick": 2040, "full_on_board": 1, "cap1_on_board": 3},
+    "roof": {"seed": 61024, "first_count_divergence_tick": 2040, "full_on_board": 1, "cap1_on_board": 5}
+  },
+  "cause": "SpawnZombieWave sets mRiseFromGraveCounter=200 from capped mNumWaves; generation-prefix gate misses grave/pool/sky ambush",
+  "execution_action": "reward_comparison_v1 stopped and preserved; no ignore-stage0-gate",
+  "old_T2_gate": "preserved as historical narrower wave-table evidence; not rewritten"
+}

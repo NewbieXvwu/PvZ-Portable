@@ -86,6 +86,9 @@ struct EnvironmentTaskSpec
 	double zombieCountMultiplier = 1.0;
 	std::vector<SeedType> forcedSeeds;
 	int waveCap = 0;
+	// Derived during wave generation; the environment cap changes completion,
+	// never the original final-wave/flag/ambush mechanics.
+	int originalWaveCount = 0;
 	std::vector<EnvironmentPreplanted> preplanted;
 };
 

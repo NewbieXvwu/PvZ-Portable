@@ -1,0 +1,27 @@
+{
+  "task_id": "T2-dynamic-prefix-v4",
+  "gate_result": "pass",
+  "checks": {
+    "artifacts/t5/perf/wave_cap_semantics_wait64_v4.json": true,
+    "artifacts/t5/perf/wave_cap_semantics_scripted64_v4.json": true,
+    "artifacts/t5/perf/wave_cap_semantics_aided64_v4.json": true,
+    "native_snapshot": true,
+    "all_aided_cap5_reached": true,
+    "full_level_regression": true,
+    "legacy_T2_full_level7_65401": true
+  },
+  "simulator_sha256": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
+  "paired_cases": 2880,
+  "dynamic_state_comparisons": 217150,
+  "snapshot_comparisons": 1728,
+  "evidence": [
+    "artifacts/t5/perf/wave_cap_semantics_wait64_v4.json",
+    "artifacts/t5/perf/wave_cap_semantics_scripted64_v4.json",
+    "artifacts/t5/perf/wave_cap_semantics_aided64_v4.json",
+    "artifacts/t5/perf/prefix_snapshot_v4.json",
+    "artifacts/t5/perf/prefix_fix_full_level_equivalence_v4.json",
+    "artifacts/t5/perf/t2_prefix_fix_v4.json"
+  ],
+  "historical_failure": "gates/T2-dynamic-prefix-v1.json",
+  "scope": "native physics prefix prior to full wave N+1; completion horizon intentionally differs; no RL learning claim"
+}

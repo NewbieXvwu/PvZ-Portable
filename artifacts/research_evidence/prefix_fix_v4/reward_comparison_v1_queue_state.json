@@ -1,0 +1,17 @@
+{
+  "candidate_index": 1,
+  "experiment_id": "reward_r1_seed0_v1",
+  "pid": 55994,
+  "status": "protocol_stopped",
+  "log": "/home/newbiexvwu/PvZ-Portable/logs/t5_research/reward_r1_seed0_v1.log",
+  "config": "/home/newbiexvwu/PvZ-Portable/experiments/t5/reward_comparison_v1/reward_r1_seed0_v1.json",
+  "reason": "dynamic capped prefix gate failed; all original data retained",
+  "stop_record": "artifacts/research/reward_comparison_v1_protocol_stop.json",
+  "confirmed_child_absent": true,
+  "confirmed_supervisor_absent": true,
+  "final_candidate_counters": {
+    "episodes": 5277,
+    "decisions": 267180,
+    "ticks": 35757342
+  }
+}

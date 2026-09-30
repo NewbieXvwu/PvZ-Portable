@@ -1,0 +1,74 @@
+[
+  {
+    "resets": 1,
+    "wait_ticks": 0,
+    "python_rss_bytes": 38670336,
+    "simulator_rss_bytes": 216969216
+  },
+  {
+    "resets": 8,
+    "wait_ticks": 0,
+    "python_rss_bytes": 38694912,
+    "simulator_rss_bytes": 217190400
+  },
+  {
+    "resets": 32,
+    "wait_ticks": 0,
+    "python_rss_bytes": 38699008,
+    "simulator_rss_bytes": 217190400
+  },
+  {
+    "resets": 64,
+    "wait_ticks": 0,
+    "python_rss_bytes": 38699008,
+    "simulator_rss_bytes": 217190400
+  },
+  {
+    "resets": 128,
+    "wait_ticks": 0,
+    "python_rss_bytes": 38699008,
+    "simulator_rss_bytes": 217190400
+  },
+  {
+    "resets": 256,
+    "wait_ticks": 0,
+    "python_rss_bytes": 38699008,
+    "simulator_rss_bytes": 217190400
+  },
+  {
+    "resets": 1,
+    "wait_ticks": 300,
+    "python_rss_bytes": 38903808,
+    "simulator_rss_bytes": 216903680
+  },
+  {
+    "resets": 8,
+    "wait_ticks": 300,
+    "python_rss_bytes": 38903808,
+    "simulator_rss_bytes": 217124864
+  },
+  {
+    "resets": 32,
+    "wait_ticks": 300,
+    "python_rss_bytes": 38903808,
+    "simulator_rss_bytes": 217124864
+  },
+  {
+    "resets": 64,
+    "wait_ticks": 300,
+    "python_rss_bytes": 38903808,
+    "simulator_rss_bytes": 217124864
+  },
+  {
+    "resets": 128,
+    "wait_ticks": 300,
+    "python_rss_bytes": 38903808,
+    "simulator_rss_bytes": 217124864
+  },
+  {
+    "resets": 256,
+    "wait_ticks": 300,
+    "python_rss_bytes": 38903808,
+    "simulator_rss_bytes": 217124864
+  }
+]

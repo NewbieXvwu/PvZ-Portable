@@ -1421,6 +1421,11 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 	mBoard->mTutorialTimer = -1;
 	mBoard->ClearAdvice(AdviceType::ADVICE_NONE);
 	StartPlaying();
+	// Keep the original wave count through initialization and street previews:
+	// those objects consume gameplay RNG even in headless mode. Only completion
+	// and the exposed task horizon are shortened after the original intro.
+	if (task.waveCap > 0)
+		mBoard->mNumWaves = std::min(mBoard->mNumWaves, task.waveCap);
 	mAppCounter = 0;
 	mAppRandSeed = static_cast<int>(seed);
 	mRandSeed = seed;

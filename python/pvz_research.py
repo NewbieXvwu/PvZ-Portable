@@ -167,6 +167,12 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
         gate = json.loads(_path(prerequisite).read_text())
         if gate.get("gate_result") != "pass":
             raise RuntimeError(f"research prerequisite failed: {prerequisite}")
+        if ("simulator_sha256" in gate
+                and gate["simulator_sha256"] != sha256_file(ROOT / "build/pvz-portable")):
+            raise RuntimeError(f"research prerequisite simulator is stale: {prerequisite}")
+        for relative, expected_hash in gate.get("required_fingerprints", {}).items():
+            if sha256_file(_path(relative)) != expected_hash:
+                raise RuntimeError(f"research prerequisite source is stale: {prerequisite}: {relative}")
     return config, train, eval_tasks
 
 
