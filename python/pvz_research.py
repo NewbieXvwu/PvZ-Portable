@@ -154,8 +154,11 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
     if nodes != sorted(set(nodes)) or any(node <= 0 for node in nodes):
         raise ValueError("evaluation nodes must be sorted distinct positive decision counts")
     runtime = config["runtime"]
-    if set(runtime) != {"workers", "worker_threads", "worker_device", "update_device", "max_actions"}:
+    if set(runtime) != {"workers", "worker_threads", "worker_device", "update_device", "max_actions",
+                        "cudnn_tf32", "matmul_precision"}:
         raise ValueError("all runtime settings must be explicit")
+    if runtime["cudnn_tf32"] is not False or runtime["matmul_precision"] != "highest":
+        raise ValueError("research replay requires explicit FP32 CPU/CUDA precision")
     if runtime["update_device"] != "cuda" or runtime["worker_device"] != "cpu":
         raise ValueError("this protocol requires CUDA updates and CPU sampling")
     if min(runtime["workers"], runtime["worker_threads"], runtime["max_actions"]) < 1:
@@ -251,6 +254,7 @@ def _trajectory_stats(episodes: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def run_experiment(args: Any) -> None:
+    invocation_started = time.monotonic()
     import train_pvz_ppo_task_family as family
     import t4_capability_profile as profile
     config, tasks, eval_tasks = load_config(args.experiment_config.resolve())
@@ -264,6 +268,10 @@ def run_experiment(args: Any) -> None:
     fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA unavailable; research updates must not silently use CPU")
+    # cuDNN's default TF32 RNN path differs from CPU collection by ~1.7e-4
+    # in log probability. FP32 restores the frozen-policy ~1e-6 agreement.
+    torch.backends.cudnn.allow_tf32 = config["runtime"]["cudnn_tf32"]
+    torch.set_float32_matmul_precision(config["runtime"]["matmul_precision"])
     configure_torch_threads(1)
     device = torch.device("cuda")
     resource_dir = args.resource_dir.expanduser().resolve()
@@ -325,12 +333,14 @@ def run_experiment(args: Any) -> None:
     monitor = ResourceMonitor()
     torch.cuda.reset_peak_memory_stats()
     monitor.thread.start()
-    previous_wall = time.monotonic()
+    previous_wall = invocation_started
 
     def save(phase: str) -> None:
         nonlocal previous_wall
         now = time.monotonic()
         state["wall_seconds"] += now - previous_wall
+        state["elapsed_since_first_start_seconds"] = (
+            datetime.now(timezone.utc) - datetime.fromisoformat(state["invocations"][0]["started_at"])).total_seconds()
         previous_wall = now
         resources = monitor.snapshot()
         for key, value in state.get("resources", {}).items():

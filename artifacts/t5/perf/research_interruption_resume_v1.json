@@ -1,0 +1,99 @@
+{
+  "intentional_exit_code": 137,
+  "interrupted_after_complete_update": 1,
+  "before_counters": {
+    "episodes": 200,
+    "decisions": 11355,
+    "ticks": 1311864
+  },
+  "current_counters": {
+    "episodes": 894,
+    "decisions": 50072,
+    "ticks": 5884748
+  },
+  "cached_shards": [
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_209.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_215.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_200.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_206.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_202.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_212.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_214.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_211.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_208.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_210.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_203.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_205.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_207.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_213.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_201.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    },
+    {
+      "path": "artifacts/research/t5a_smoke_r0_seed0_v1/runs/run_1/.seed_jobs/update_000002/553cb4efe70bc29327605befd779a165d135aacc19b7c8a2c9abb1f9026f2463/seed_204.npz",
+      "same_mtime": true,
+      "same_sha256": true
+    }
+  ],
+  "all_shards_preserved_and_reused": true,
+  "resume_log_line": "t5a_smoke_r0_seed0_v1 update 2 cached=16 collect=184",
+  "gate_result": "pass"
+}

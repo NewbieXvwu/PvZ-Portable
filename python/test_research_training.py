@@ -96,6 +96,16 @@ class RecurrentReplayTests(unittest.TestCase):
         losses = update(self.model, self.episodes, optimizer, sequence_length=0)
         self.assertLess(losses["max_log_prob_change"], 3e-6)
 
+    @unittest.skipUnless(torch.cuda.is_available(), "CUDA replay requires a GPU")
+    def test_fp32_cuda_replay_matches_cpu_collection(self):
+        self.model.cuda()
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=0)
+        with torch.backends.cudnn.flags(allow_tf32=False):
+            losses = train_update(self.model, self.episodes, optimizer, torch.device("cuda"),
+                                  1, 3, 0.2, 0.5, 0.01, minibatch_chunks=2,
+                                  attention_backend="dense")
+        self.assertLess(losses["max_log_prob_change"], 5e-5)
+
     def test_full_resume_produces_the_same_next_update(self):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-4)
         update(self.model, self.episodes, optimizer, sequence_length=0)
