@@ -21,6 +21,7 @@
 | 传的数据有必要吗 | **字段几乎都有必要**（未读字段只占 **1.0%**），**但形式极贵**：`legal_actions` 里 **78%** 是重复键名，`cells` 里 54 个空格子花掉 4,375 B，`loadout_context`/`player_profile`/`defenses` 每步重传**完全不变**的 669 B。观测 12,163 B 里约 **一半是表示开销**。 |
 | 便于调试的数据存了吗 | **训练器把最有用的两类数据算了就扔**：每局的 `profile_seconds`（耗时分解）从不聚合；每局的 `env.episode`（完整可回放操作序列）从不落盘。反而每 update 把 **70.3 KiB 的 episode digest** 写进 `training_state.json`（`training_state.json` 单次 102 KiB，**69% 是哈希**），而 checkpoint 里已经有一份。 |
 | 跑的时候能看见动态吗 | **不能。** 一个 update 约 3 分钟，其中 **184 s（92%）的 PPO 更新完全静默**，1,280 局的评估也完全静默。整个仓库没有 tensorboard / wandb / tqdm / rich / matplotlib，只有**每个 update 一行 `print`**，而且那行的 `wins=0/2000` 在早期恒为 0。 |
+| **模型实际吃到了什么** | **91.2% 的输入 token 与上一决策逐字节相同。** 每决策 79.7 个 token，其中 `cell` 占 **67.8%**，而 **97.7% 的 cell token 既没有植物也没有物品**。`cell`/`defense`/`zombie_roster`/`profile` **100% 不变**；只有 `global` 每步全变。详见 **§11**。 |
 
 ---
 
@@ -358,8 +359,12 @@ A1–A7 全是**纯增量的观测改造**，不动协议、不动数值、不�
 3. **"跑的时候只能死等"是真的**：一个 update 92% 的时间静默，
    `wins=0/2000` 零信息量，而**每任务滚动胜率这个唯一有信号量已经算好了
    但只进文件、不进终端**。
-4. **改的顺序应该是先 A 档再 B 档**：A 档让你**看得见**，然后才知道
-   B 档值不值得做。在看不见的情况下重设计协议，是在猜。
+4. **"模型吃到了什么"比协议层更值得担心**（§11）：**91.2% 的输入 token
+   每步逐字节不变**，`cell` 占序列 68% 且 100% 不变，97.7% 的 cell 是空的。
+   协议层的冗余是"拼写太贵"，token 层的冗余是"**每步重算整张静态棋盘**"。
+5. **改的顺序应该是先 A 档再 B 档，token 层架构改动单独排**：A 档让你
+   **看得见**，然后才知道后面值不值得做。在看不见的情况下重设计协议或架构，
+   是在猜。
 
 ---
 
@@ -371,6 +376,9 @@ PY=/Users/newbiexvwu/.local/share/mise/installs/python/3.14/bin/python3
 # 每次决策的往返账 + 观测字段预算 + PRIV 计价
 $PY scripts/protocol_payload_probe.py --decisions 120 --privileged --field-budget 200
 
+# 模型实际吃到的输入（token 构成 / padding / 常量比例 / FLOPs 分解）
+$PY scripts/token_input_audit.py --episodes 4
+
 # 每局耗时分解（单 worker 单线程基线）
 $PY scripts/t5_throughput.py --resource-dir ~/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN \
     --minutes 1 --output /tmp/throughput.json
@@ -378,3 +386,158 @@ $PY scripts/t5_throughput.py --resource-dir ~/Downloads/Plants_Vs_Zombies_V1.2.0
 # 全流程必要性审计（内存 / 编解码 / 分片）
 $PY scripts/pipeline_necessity_audit.py --episodes 4
 ```
+
+---
+
+## 11. 模型实际吃到了什么（token 层）
+
+§2–§7 讲的是**线缆**。这一节讲**输入张量**。两层结论**不一致**，这是重点：
+
+- `legal_actions` 占线缆的 **43.6%**，却产生 **0 个 token**——它被 `legal_summary`
+  压成 mask，从不进网络。
+- `cells` 占线缆的 **36.0%**，同时又是 **54 个 token**，占序列的 **67.8%**。
+
+测量工具：`scripts/token_input_audit.py`（真实 env + 真实 `GameplayModelV1`，
+4 局 197 个决策）。`artifacts/` 不纳入版本控制，用 §10 的命令重新生成即可。
+`observation_tokens` 是纯函数，结论与权重无关。
+
+### 11.1 每决策 79.7 个 token，`cell` 占三分之二
+
+| kind | token 数 | 序列占比 | 每 token 填入的 slot |
+|---|---:|---:|---:|
+| `cell` | 54.0 | **67.8%** | 8/32 (25%) |
+| `lane` | 6.0 | 7.5% | 4/32 (12%) |
+| `seed_packet` | 6.0 | 7.5% | 5/32 (16%) |
+| `defense` | 5.3 | 6.7% | 4/32 (12%) |
+| `zombie` | 3.1 | 3.9% | 20/32 (62%) |
+| `zombie_roster` | 1.6 | 2.1% | **1/32 (3%)** |
+| `grid_item` | 1.3 | 1.7% | 7/32 (22%) |
+| `global` | 1.0 | 1.3% | 18/32 (56%) |
+| `profile` | 1.0 | 1.3% | 8/32 (25%) |
+| `plant` | 0.3 | 0.3% | 16/32 (50%) |
+
+每决策 token 数 **75–86**（均值 79.7），每局 48 个决策。
+`plant` 平均只有 **0.3 个**——大部分决策时场上几乎没有植物。
+
+### 11.2 最重要的数字：91.2% 的 token 每步逐字节不变
+
+token 顺序是确定的（`global`, `profile`, 54×`cell`, 6×`lane`, ...），所以第 i 个
+token 在相邻决策间通常指同一实体。逐字节比较：
+
+| kind | 与上一决策相同 | 占比 |
+|---|---:|---:|
+| `cell` | 6966/6966 | **100.0%** |
+| `defense` | 707/707 | **100.0%** |
+| `zombie_roster` | 292/292 | **100.0%** |
+| `profile` | 129/129 | **100.0%** |
+| `grid_item` | 120/124 | 96.8% |
+| `lane` | 593/774 | 76.6% |
+| `seed_packet` | 445/774 | 57.5% |
+| `zombie` | 191/446 | 42.8% |
+| `plant` | 2/18 | 11.1% |
+| **`global`** | **0/129** | **0.0%** |
+| **合计** | **9445/10359** | **91.2%** |
+
+**只有 `global` token 每个决策都变。** 其余全是重复计算。
+而 `cell` 占了序列的 67.8% 且 **100% 不变**。
+
+再往下看一层：**97.7% 的 `cell` token（10,395/10,638）既没有植物也没有物品**，
+它们携带的全部信息就是 `(row, col, terrain, row_type)`——**在 `reset` 时就固定了**。
+
+**但必须诚实**：token *输入*不变 ≠ token *表示*不变。attention 是全局的，
+其他 token 变了，这个 token 的输出向量也会变；而 `cell_keys` 是选格子的打分依据
+（`cell_ids = list(range(54))`），**必须每步重新计算**。所以这不是"可以跳过"，
+而是"可以用不同方式表示"。
+
+### 11.3 feature 向量 76.0% 是填充——但这不是速度问题
+
+```
+feature slots projected (tokens x 32): 367,040
+of which never written (stay 0.0):     279,112 (76.0%)
+```
+
+`add()` 无条件分配 `[0.0] * 32`，而多数 kind 只填几个：
+`zombie_roster` 填 **1/32**、`defense` 和 `lane` 填 **4/32**、`seed_packet` 填 5/32。
+
+**但这几乎不影响速度**：实测 `feature_projection` 只占一次前向的 **0.9%**
+（见 11.4）。**填充是清晰度问题，不是性能问题。**
+
+### 11.4 FLOPs 分解：一次决策 1.234 GFLOP
+
+`FlopCounterMode`，75 token，batch 1：
+
+| 模块 | GFLOP | 占比 |
+|---|---:|---:|
+| （汇总桶） | 0.384 | 31.1% |
+| `RelationLayer`（残差汇总） | 0.371 | 30.1% |
+| `RelationLayer.attention` | 0.194 | 15.7% |
+| `RelationLayer.gate` | 0.088 | 7.2% |
+| `RelationLayer.value` | 0.088 | 7.2% |
+| `RelationLayer.down` | 0.088 | 7.2% |
+| **`feature_projection`** | **0.011** | **0.9%** |
+| `GRU` | 0.002 | 0.1% |
+| **合计** | **1.234** | |
+
+模型参数 **3,682,505**（14.05 MiB fp32），
+配置 `{"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}`。
+
+**前馈网络（gate/value/down = 21.6%）是最大的可归属项**，而它随 token 数**线性**增长；
+attention（15.7%）随 token 数**平方**增长。所以**减少 token 数**才是杠杆，
+而不是压缩 feature 向量。
+
+### 11.5 同一信息在多个通道里重复编码
+
+| 信息 | 通道 1 | 通道 2 |
+|---|---|---|
+| `cell.terrain` | `category` embedding | `feature[2]` |
+| `cell.row_type` | `variant` embedding | `feature[3]` |
+| `cell.row` / `col` | `row`/`col` embedding | `feature[0]`/`feature[1]` |
+| `plant.row` / `col` | `row`/`col` embedding | `feature[0]`/`feature[1]` |
+| `zombie.row` / `col` | `row`/`col` embedding | `feature[0]`/`feature[1]` |
+| `projectile.motion` | `variant` embedding | `feature[8]` |
+| `seed_packet.index` | `feature[0]` | `metadata["packet_tokens"]` |
+| `lane.*` | 独立 token | 由同批 `plant`/`zombie` token 聚合 |
+| `zombie_roster` | `category` | feature 向量字面量是 `(1.0, 0, 0, ...)` |
+
+最后一行值得单独说：**`zombie_roster` token 的 feature 向量是常数 `1.0`**，
+它的全部信息在 `category`（僵尸类型）里。它付了一个完整的 attention slot + FF。
+
+### 11.6 观测里有哪些字段根本不进 token
+
+| 字段 | 线缆占比 | 情况 |
+|---|---:|---|
+| `legal_actions` | **43.6%** | 不进 token；`legal_summary()` 压成 mask |
+| `level` | ~0% | **无 token**——模型不知道自己在打哪一关 |
+| `terrain`（背景） | ~0% | 无 token；只有 `cells[].terrain` 进编码器 |
+| `enemy_zombies_on_screen` | ~0% | 无 token；只有 `scripted_baseline.py` 读它 |
+| `coins` | ~0% | 无读取者 |
+| `grid` | 1.0% | 无读取者 |
+
+`level` 的缺失是**有意**的：场景类型通过 `global` 里的 `night`/`pool`/`fog`/`roof`
+和 `cells[].terrain` 已经表达，关卡编号本身对策略没有意义。
+
+### 11.7 存储
+
+```
+per token: 5 B ids (int8 x5) + 64 B float16 features = 69 B
+per episode: 266.5 KiB   (1385 B per decision)
+project 2000 episodes: 520.5 MiB
+```
+
+`legal_actions`（43.6% 的线缆）**完全不在**这 520.5 MiB 里。
+
+### 11.8 这一节的含义
+
+1. **"喂了它不关心的"是真的，而且比协议层严重**：91.2% 的 token 每步不变，
+   其中 `cell` 占 68% 且 100% 不变，97.7% 的 cell 是空的。
+2. **"喂了但形式冗余"也是真的**：76% 的 feature slot 是填充，
+   `terrain`/`row_type`/`row`/`col`/`motion` 各有两条通道。**但这几乎不花钱**
+   （`feature_projection` 占 0.9%）。
+3. **"它真正想知道的"基本都给了**：唯一有实质缺失的是 `level`
+   （而有意的）和未来波次（actor 不该有）。
+4. **真正的杠杆是 token 数，不是 token 宽度**：FF 占 21.6% 且线性于 token 数，
+   attention 占 15.7% 且平方于 token 数。把 54 个 cell token 换成
+   "位置编码 + 稀疏非空格子" 能把序列从 79 降到 ~25。
+5. **但这是一次架构改动，会改变模型语义**，需要重新验证学习能力——
+   不能和 §8 的 A 档混在一起做。
+
