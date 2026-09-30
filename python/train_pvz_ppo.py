@@ -130,10 +130,20 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
     environment_seconds = reset_seconds
     critic_inputs_seconds = 0.0
     tokenization_seconds = 0.0
+    # ``CRITIC_INPUTS`` returns the current wave's zombie roster, which is fixed for
+    # the whole wave (measured: 272 calls across a 5-wave level produced 4 distinct
+    # payloads, i.e. 1.5%).  The other field it returns, ``wave_timer``, is the same
+    # ``mZombieCountDown`` the public observation already carries -- verified equal on
+    # 120/120 decisions -- so it comes from ``observation`` instead of a second round
+    # trip.  One request per wave instead of one per decision.
+    wave_rosters: dict[int, list[int]] = {}
     for decision_index in range(max_actions):
         wave = observation["wave"]
         critic_started = time.perf_counter()
-        critic_inputs = env.critic_inputs(wave)
+        roster = wave_rosters.get(wave)
+        if roster is None:
+            roster = env.critic_inputs(wave)["wave_zombies"]
+            wave_rosters[wave] = roster
         critic_inputs_seconds += time.perf_counter() - critic_started
         tokenize_started = time.perf_counter()
         tensors, metadata = observation_tokens(observation)
@@ -146,7 +156,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
                                        elapsed_since_previous_observation, events)
             action, log_prob, _ = select_action(model, output, legal)
             critic_extra = model.privileged_extra_from_inputs(
-                critic_inputs["wave_timer"], critic_inputs["wave_zombies"])
+                observation["wave_timer"], roster)
             value = model.privileged_value_from_extra(output, critic_extra)
         model_seconds += time.perf_counter() - model_started
         current_potential = potential(observation)
@@ -230,7 +240,8 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                  device: torch.device, ppo_epochs: int, sequence_length: int,
                  clip_epsilon: float, value_coefficient: float, entropy_coefficient: float,
                  minibatch_chunks: int = 1,
-                 attention_backend: str = "auto") -> dict[str, float]:
+                 attention_backend: str = "auto",
+                 label: str | None = None) -> dict[str, float]:
     """Layered-batch PPO update.
 
     Semantics CHANGE vs the previous per-chunk loop: chunks at the same position
@@ -283,7 +294,12 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
 
     policy_losses, value_losses, entropies = [], [], []
     model.train()
-    for _ in range(ppo_epochs):
+    for epoch in range(ppo_epochs):
+        # A 2,000-episode update is minutes of GPU time with no output at all.  One
+        # line per epoch turns a silent block into a countable one; ``label`` is
+        # optional so library callers (and tests) stay quiet.
+        if label is not None:
+            print(f"{label} ppo epoch {epoch + 1}/{ppo_epochs}", flush=True)
         # hidden chains are recomputed every epoch: parameters may have moved
         hidden_by_key: dict[int, torch.Tensor | None] = {
             key: None for key in previous_key

@@ -36,7 +36,9 @@ from pvz_agent_model import (
     soft_behavior_cloning_loss,
     unpack_tokens,
 )
+from pvz_agent_model import _ratio
 from pvz_imitation import LANE_COUNT, episode_targets, train
+from train_pvz_ppo import collect_task_episode
 
 ROW_COUNT = 6
 COL_COUNT = 9
@@ -740,6 +742,77 @@ class ImitationTrainTests(unittest.TestCase):
         self.assertGreaterEqual(history[0], 0.0)
         # One plant step against one non-plant step balances the two classes exactly.
         self.assertAlmostEqual(plant_weight, 1.0)
+
+
+class CriticInputCacheTests(unittest.TestCase):
+    """The rollout asks for the wave roster once per wave, not once per decision.
+
+    ``CRITIC_INPUTS`` used to be one synchronous round trip per decision, even though
+    the roster it returns is fixed for the whole wave (measured: 272 calls over a
+    5-wave level produced 4 distinct payloads).  The other field it returns,
+    ``wave_timer``, is the same ``mZombieCountDown`` the observation already carries,
+    so the trainer must read it from the observation.
+    """
+
+    TASK = {"task_id": "scripted", "level": 1, "playthrough": 2,
+            "zombie_count_multiplier": 1.0, "wave_cap": 5, "preplanted": (),
+            "seeds": [1], "deck": None}
+
+    class _ScriptedEnv:
+        """Walks a fixed wave schedule; reports a deliberately wrong wave_timer."""
+
+        WRONG_WAVE_TIMER = 9999
+
+        def __init__(self, waves: list[int], terminal_at: int) -> None:
+            self.waves = waves
+            self.terminal_at = terminal_at
+            self.critic_calls: list[int] = []
+            self.index = 0
+
+        def _observe(self) -> dict:
+            return observation(wave=self.waves[min(self.index, len(self.waves) - 1)])
+
+        def reset(self, deck=None, task=None):  # noqa: ANN001, ANN201
+            self.index = 0
+            return self._observe(), {}
+
+        def step(self, action):  # noqa: ANN001, ANN201
+            self.index += 1
+            current = self._observe()
+            done = self.index >= self.terminal_at
+            if done:
+                current = dict(current, terminal=True, result=1)
+            return current, 0.0, done, False, {"ok": True, "ticks_advanced": 30, "events": {}}
+
+        def critic_inputs(self, wave_index: int) -> dict:
+            self.critic_calls.append(wave_index)
+            return {"ok": True, "wave_timer": self.WRONG_WAVE_TIMER, "wave_zombies": [0, 1]}
+
+    def test_one_request_per_wave_and_wave_timer_comes_from_the_observation(self) -> None:
+        waves = [3, 3, 3, 4, 4, 4, 5, 5]
+        # The episode ends on the step that returns terminal, so all eight waves
+        # entries become one decision each.
+        env = self._ScriptedEnv(waves, terminal_at=len(waves))
+        episode = collect_task_episode(GameplayModelV1().eval(), env, self.TASK, 1, 0, 64)
+
+        # Three distinct waves, eight decisions.
+        self.assertEqual(env.critic_calls, [3, 4, 5])
+        self.assertEqual(len(episode["transitions"]), len(waves))
+
+        # critic_extra[0] is _ratio(wave_timer, 6000).  The scripted env reports 9999
+        # so a value of 2400/6000 proves the trainer read the observation instead.
+        expected = _ratio(observation()["wave_timer"], 6000.0)
+        self.assertNotAlmostEqual(expected, _ratio(self._ScriptedEnv.WRONG_WAVE_TIMER, 6000.0))
+        for transition in episode["transitions"]:
+            self.assertAlmostEqual(transition["critic_extra"][0], expected)
+
+    def test_the_cached_roster_still_reaches_the_critic(self) -> None:
+        env = self._ScriptedEnv([3, 3, 3, 3], terminal_at=3)
+        episode = collect_task_episode(GameplayModelV1().eval(), env, self.TASK, 1, 0, 64)
+        # wave_zombies = [0, 1] -> values[1] and values[2] each gain 0.1.
+        for transition in episode["transitions"]:
+            self.assertAlmostEqual(transition["critic_extra"][1], 0.1)
+            self.assertAlmostEqual(transition["critic_extra"][2], 0.1)
 
 
 if __name__ == "__main__":

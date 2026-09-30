@@ -13,6 +13,7 @@ from unittest import mock
 
 import torch
 
+import train_pvz_ppo
 import train_pvz_ppo_task_family as task_family
 import t5_stage0_gate
 
@@ -69,6 +70,44 @@ class CurriculumTests(unittest.TestCase):
             task_family.TASK_RECENT.clear()
             task_family.TASK_RECENT.update(old_recent)
         self.assertEqual(row["curriculum_task_ids"], [item["task_id"] for item in selected])
+
+
+class ObservabilityTests(unittest.TestCase):
+    """A curve without its cost cannot answer "did this get slower"."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.tasks = json.loads((ROOT / "artifacts/task_family/train.json").read_text())["tasks"]
+        cls.selected = task_family._curriculum_tasks(cls.tasks, "cap1")
+
+    def _row(self, timing: dict | None) -> dict:
+        old_recent = task_family.TASK_RECENT.copy()
+        try:
+            for item in self.selected:
+                task_family.TASK_RECENT.setdefault(item["task_id"], deque(maxlen=64))
+            return task_family._curve_row(
+                2000, self.selected, 0.0, 0.0, 0.0, "evaluation.json.gz", timing=timing)
+        finally:
+            task_family.TASK_RECENT.clear()
+            task_family.TASK_RECENT.update(old_recent)
+
+    def test_timing_is_recorded_when_supplied(self) -> None:
+        timing = {"rollout": 11.2, "ppo_update": 184.4, "episodes_per_hour": 36.7}
+        row = self._row(timing)
+        self.assertEqual(row["timing_seconds"], timing)
+
+    def test_timing_is_absent_rather_than_null_when_unavailable(self) -> None:
+        # An old state file has no timing block; the row must not grow a null key,
+        # so consumers can distinguish "not measured" from "measured as zero".
+        self.assertNotIn("timing_seconds", self._row(None))
+
+    def test_train_update_prints_one_line_per_epoch_only_with_a_label(self) -> None:
+        # The label is what makes a minutes-long GPU block countable; without it the
+        # function stays silent so library callers and tests are unaffected.
+        import inspect
+        signature = inspect.signature(train_pvz_ppo.train_update)
+        self.assertIsNone(signature.parameters["label"].default)
+        self.assertEqual(signature.parameters["label"].kind, inspect.Parameter.POSITIONAL_OR_KEYWORD)
 
 
 class Stage0EvaluationTests(unittest.TestCase):

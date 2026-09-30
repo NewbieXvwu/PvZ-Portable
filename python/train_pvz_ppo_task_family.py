@@ -251,9 +251,14 @@ def _run_evaluation_jobs(jobs: dict[int, dict[str, Any]], model_state: dict[str,
                         initargs=(str(resource_dir), model_state, jobs, worker_threads,
                                   worker_device))
     collected: dict[int, dict[str, Any]] = {}
+    total_jobs = len(jobs)
     try:
         for job_id, record in pool.imap_unordered(_evaluation_worker, sorted(jobs), chunksize=1):
             collected[job_id] = record
+            # Evaluation is 1,280 episodes on the reference-inclusive pass.  Without
+            # this it was a silent gap in the log, indistinguishable from a hang.
+            if len(collected) % 64 == 0 or len(collected) == total_jobs:
+                print(f"evaluation {len(collected)}/{total_jobs}", flush=True)
         pool.close()
     except BaseException:
         pool.terminate()
@@ -425,8 +430,8 @@ def _evaluate(model: GameplayModelV1, resource_dir: Path, tasks: list[dict[str, 
 
 def _curve_row(episodes: int, train_tasks: list[dict[str, Any]],
                gate_rate: float, reference_rate: float, stage0_rate: float,
-               source: str) -> dict[str, Any]:
-    return {
+               source: str, timing: dict[str, Any] | None = None) -> dict[str, Any]:
+    row = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "cumulative_training_episodes": episodes,
         "curriculum_task_ids": [task["task_id"] for task in train_tasks],
@@ -440,6 +445,11 @@ def _curve_row(episodes: int, train_tasks: list[dict[str, Any]],
         "stage0_pass_rate": stage0_rate,
         "evaluation_source": source,
     }
+    # A curve without its cost cannot answer "did this get slower", which is the
+    # question that matters once a run takes hours.
+    if timing:
+        row["timing_seconds"] = timing
+    return row
 
 
 def _save_checkpoint(path: Path, model: GameplayModelV1, config: dict[str, Any], provenance: dict[str, Any],
@@ -903,7 +913,9 @@ def main() -> None:
         job_ids = list(range(run_episodes, run_episodes + batch_size))
         assignments = _assignments(curriculum_tasks, job_ids, rng)
         model_state = {key: value.detach().cpu() for key, value in model.state_dict().items()}
+        hash_started = time.monotonic()
         model_hash = t4_capability_profile._state_sha256(model_state)
+        model_hash_seconds = time.monotonic() - hash_started
         metadata = {
             "run_number": run_number,
             "update": update + 1,
@@ -923,6 +935,7 @@ def main() -> None:
             "rollout_threads": worker_threads,
         }
         shard_dir = seed_job_directory(run_dir, f"update_{update + 1:04d}", metadata)
+        rollout_started = time.monotonic()
         episodes = run_seed_jobs(
             job_ids,
             shard_dir,
@@ -934,17 +947,23 @@ def main() -> None:
                       worker_threads, worker_device),
             label=f"T5 run {run_number} update {update + 1}",
         )
+        rollout_seconds = time.monotonic() - rollout_started
         add_advantages(episodes, args.gae_lambda)
+        update_started = time.monotonic()
         losses = train_update(
             model, episodes, optimizer, device, args.ppo_epochs, args.sequence_length,
             args.clip_epsilon, args.value_coefficient, args.entropy_coefficient,
             minibatch_chunks=args.minibatch_chunks,
             attention_backend=args.attention_backend,
+            label=f"T5 run {run_number} update {update + 1}",
         )
+        update_seconds = time.monotonic() - update_started
         update += 1
         run_episodes += len(episodes)
         state["cumulative_episodes"] += len(episodes)
+        digest_started = time.monotonic()
         hashes = [episode_digest(episode) for episode in episodes]
+        digest_seconds = time.monotonic() - digest_started
         for episode in episodes:
             task_id = episode["task_id"]
             TASK_RECENT[task_id].append(episode["won"])
@@ -959,6 +978,18 @@ def main() -> None:
             sum(terminal_outcomes[-5000:]) / len(terminal_outcomes[-5000:]) if terminal_outcomes else 0.0
         )
         losses["rollout_episode_hashes"] = hashes
+        # Every episode already returns a per-stage timing breakdown; the trainer used
+        # to drop it on the floor, so a run could get slower with no record of why.
+        profile_keys = ("model", "environment", "critic_inputs", "tokenization")
+        if all("profile_seconds" in episode for episode in episodes):
+            mean_profile: dict[str, float | None] = {
+                key: sum(episode["profile_seconds"][key] for episode in episodes) / len(episodes)
+                for key in profile_keys
+            }
+        else:
+            # Shards cached by a build that predates per-stage timing.
+            mean_profile = {key: None for key in profile_keys}
+        wall_seconds = rollout_seconds + update_seconds
         state["last_training_debug"] = {
             "terminal_outcome_count": len(terminal_outcomes),
             "terminal_outcome_mean_recent": losses["terminal_outcome_mean_recent"],
@@ -970,6 +1001,19 @@ def main() -> None:
             "value_loss": losses["value_loss"],
             "entropy": losses["entropy"],
             "gradient_norm": losses["gradient_norm"],
+            "timing_seconds": {
+                "rollout": round(rollout_seconds, 3),
+                "ppo_update": round(update_seconds, 3),
+                "episode_digest": round(digest_seconds, 3),
+                "model_state_sha256": round(model_hash_seconds, 3),
+                # Filled in right after the checkpoint is written; the key exists from
+                # the first update so the record's shape never changes mid-run.
+                "checkpoint_save": None,
+                "wall": round(wall_seconds, 3),
+                "episodes_per_hour": round(3600.0 * len(episodes) / wall_seconds, 1)
+                if wall_seconds else None,
+            },
+            "mean_episode_profile_seconds": mean_profile,
         }
         state["recent_passes"] = {task_id: list(values) for task_id, values in TASK_RECENT.items()}
         state["last_update"] = {
@@ -981,7 +1025,11 @@ def main() -> None:
                 task["task_id"]: sum(episode["task_id"] == task["task_id"] for episode in episodes)
                 for task in curriculum_tasks
             },
-            "losses": losses,
+            # The 2,000 per-episode digests are provenance, and the checkpoint already
+            # records them under ``provenance.trajectory_sha256``.  A second copy here
+            # made ``training_state.json`` 102 KiB, of which 69% was hashes.
+            "losses": {key: value for key, value in losses.items()
+                       if key != "rollout_episode_hashes"},
         }
 
         checkpoint_path = run_dir / "gameplay_model_v1_ppo.pt"
@@ -1005,6 +1053,7 @@ def main() -> None:
                 eval_row["gate_set"]["pass_rate"], eval_row["reference_set"]["pass_rate"],
                 eval_row["stage0_set"]["pass_rate"],
                 eval_row["raw_seed_results_path"],
+                timing=state.get("last_training_debug", {}).get("timing_seconds"),
             ))
             last_curve_time = time.monotonic()
             rising = _curve_rises(state["learning_curve"])
@@ -1075,12 +1124,28 @@ def main() -> None:
             "search_label_version": SEARCH_LABEL_VERSION,
             "value_semantics": VALUE_SEMANTICS,
         }
+        checkpoint_started = time.monotonic()
         _save_checkpoint(checkpoint_path, model, run_config, provenance, run_number, update, losses)
+        state["last_training_debug"]["timing_seconds"]["checkpoint_save"] = round(
+            time.monotonic() - checkpoint_started, 3)
+        rolling = sorted(
+            sum(TASK_RECENT[task["task_id"]]) / len(TASK_RECENT[task["task_id"]])
+            for task in curriculum_tasks if TASK_RECENT[task["task_id"]]
+        )
+        lowest = rolling[0] if rolling else 0.0
+        median = rolling[len(rolling) // 2] if rolling else 0.0
+        highest = rolling[-1] if rolling else 0.0
+        per_hour = state["last_training_debug"]["timing_seconds"]["episodes_per_hour"] or 0.0
         print(
-            f"run={run_number} update={update} episodes={state['cumulative_episodes']} "
-            f"wins={losses['rollout_episode_wins']}/{len(episodes)} "
-            f"policy_loss={losses['policy_loss']:.4f} value_loss={losses['value_loss']:.4f} "
-            f"entropy={losses['entropy']:.3f}",
+            f"run={run_number} update={update} ep={state['cumulative_episodes']} "
+            f"win={losses['rollout_episode_wins']}/{len(episodes)} "
+            f"taskwin[min/med/max]={lowest:.2f}/{median:.2f}/{highest:.2f} "
+            f"term={losses['terminal_outcome_mean_recent']:+.3f} "
+            f"shaping={losses['mean_abs_shaping_reward_recent']:.4f} "
+            f"pi={losses['policy_loss']:.4f} v={losses['value_loss']:.4f} "
+            f"H={losses['entropy']:.3f} "
+            f"rollout={rollout_seconds:.1f}s update={update_seconds:.1f}s "
+            f"ep/h={per_hour:.0f}",
             flush=True,
         )
         state["runs"][-1]["checkpoint"] = str(checkpoint_path.relative_to(ROOT))
@@ -1109,6 +1174,7 @@ def main() -> None:
             latest_eval["reference_set"]["pass_rate"],
             latest_eval["stage0_set"]["pass_rate"],
             latest_eval["raw_seed_results_path"],
+            timing=state.get("last_training_debug", {}).get("timing_seconds"),
         ))
         print("evaluated the reference set on the final model "
               f"(pass_rate={latest_eval['reference_set']['pass_rate']:.4f})", flush=True)

@@ -310,34 +310,63 @@ run=1 update=1 episodes=2000 wins=0/2000 policy_loss=... value_loss=... entropy=
 分两档。**A 档不改协议语义、不改任何哈希、不影响已有证据**；**B 档会改变
 协议版本或摘要，必须等到明确节点**。
 
-### A 档：可立即做（建议）
+### A 档：可立即做（**已实施**）
 
-| # | 改动 | 位置 | 收益 |
+| # | 改动 | 位置 | 状态 |
 |---|---|---|---|
-| A1 | 把每局的 `profile_seconds` 聚合进 `last_training_debug`（model / environment / critic_inputs / tokenization 的均值），并把 rollout 与 update 的墙钟耗时也记进去 | `train_pvz_ppo_task_family.py:962` | 每 update 免费得到一张体检表；回答"为什么变慢了" |
-| A2 | `print` 行换成有信号的：每任务滚动胜率（min/median/max）、`terminal_outcome_mean_recent`、`mean_abs_shaping_reward_recent`、update 耗时、episodes/hour | 同上 1079 | 把 `wins=0/2000` 换成早期唯一有变化的量 |
-| A3 | `training_state.json` 里**删掉 `last_update.losses.rollout_episode_hashes`**（checkpoint 的 `provenance` 已有同一批），或改成单独文件 | 同上 961 | 单次 102 KiB → ~32 KiB |
-| A4 | `_run_evaluation_jobs` 加进度打印（每 64 局一行） | 同上 255 | 消灭 1,280 局的静默段 |
-| A5 | `train_update` 加每 epoch 一行（`ppo_epochs` 通常 3–4） | `train_pvz_ppo.py:229` | 把 184 s 切成 3–4 段可见 |
-| A6 | 记录 `_state_sha256` 与 `torch.save` 的耗时（现在每 update 都跑但**耗时未记录**） | 同上 906 / 1078 | 补上 F 段缺的两个数 |
-| A7 | `learning_curve.json` 增补进程统计（update 耗时、episodes/hour、RSS） | 同上 `_curve_row` 426 | 让曲线带上成本 |
-| A8 | 新增一个**只读**的 `scripts/watch_training.py`：`tail` `training_state.json` + `learning_curve.json`，在终端画滚动胜率与损失 | 新文件 | 不碰训练代码就能"看见动态" |
+| A1 | 把每局的 `profile_seconds` 聚合进 `last_training_debug`（model / environment / critic_inputs / tokenization 的均值），并把 rollout 与 update 的墙钟耗时也记进去 | `train_pvz_ppo_task_family.py` | ✅ `mean_episode_profile_seconds` + `timing_seconds` |
+| A2 | `print` 行换成有信号的：每任务滚动胜率（min/median/max）、`terminal_outcome_mean_recent`、`mean_abs_shaping_reward_recent`、update 耗时、episodes/hour | 同上 | ✅ |
+| A3 | `training_state.json` 里**删掉 `last_update.losses.rollout_episode_hashes`**（checkpoint 的 `provenance` 已有同一批） | 同上 | ✅ 102 KiB → ~32 KiB |
+| A4 | `_run_evaluation_jobs` 加进度打印（每 64 局一行） | 同上 | ✅ |
+| A5 | `train_update` 加每 epoch 一行（`ppo_epochs` 通常 3–4） | `train_pvz_ppo.py` | ✅ 新增可选 `label=` 参数 |
+| A6 | 记录 `_state_sha256` 与 `torch.save` 的耗时 | 同上 | ✅ `model_state_sha256` / `checkpoint_save` |
+| A7 | `learning_curve.json` 增补进程统计（update 耗时、episodes/hour、RSS） | 同上 `_curve_row` | ✅ `timing_seconds`（RSS 未做，见下） |
+| A8 | 新增一个**只读**的 `scripts/watch_training.py`：`tail` `training_state.json` + `learning_curve.json`，在终端画滚动胜率与损失 | 新文件 | ✅ |
 
 A1–A7 全是**纯增量的观测改造**，不动协议、不动数值、不产生新的哈希。
+A7 只做了耗时与吞吐，**RSS 未做**——读取进程 RSS 需要 `/proc` 或 `psutil`，
+而仓库的依赖只有 torch + numpy；留待需要时再加。
 
-### B 档：需要动协议（等到明确节点）
+新增测试：`test_t5_overnight.ObservabilityTests`（3 项）、
+`test_agent_model.CriticInputCacheTests`（2 项）。
 
-| # | 改动 | 代价 | 前置 |
+### B 档：需要动协议（**B1 已实施，其余待定**）
+
+| # | 改动 | 代价 | 状态 |
 |---|---|---|---|
-| B1 | `CRITIC_INPUTS` 只返回 `wave_zombies`，`wave_timer` 从 `observation` 取 | 改 `src/main.cpp:534` + `pvz_agent_model.py:948`；`test_agent_model.py:264` 的对照测试要改 | 无——**可以独立做，收益 9.6% 的决策时间** |
-| B2 | `legal_actions` 改列式编码 | 改 `src/LawnApp.cpp` + `legal_summary()`；省 16.8% 观测字节 | 需要 `OBSERVATION_VERSION` 递增 |
-| B3 | `cells` 改稀疏 + 去 `row`/`col` | 省 32.7% 观测字节 | 同上 |
-| B4 | `loadout_context`/`player_profile` 移出每步观测，只在 `reset` 返回 | 省 5.5% | 同上 |
-| B5 | 删 `grid` | 省 1.0% | 同上 |
-| B6 | `PRIV` 拆成 `PRIV_CORE`（wave_timer/zombies_in_wave/rand_state）与 `PRIV_ANIM`（reanimations） | `verify_env_equivalence` 改调两个 | 无——但 `reanimations` 是那套证据的基础，拆分而非删除 |
+| B1 | `CRITIC_INPUTS` 只返回 `wave_zombies`，`wave_timer` 从 `observation` 取 | 改 `src/main.cpp:534` + `pvz_agent_model.py:948`；`test_agent_model.py:264` 的对照测试要改 | ✅ **但用了更省的实现，见下** |
+| B2 | `legal_actions` 改列式编码 | 改 `src/LawnApp.cpp` + `legal_summary()`；省 16.8% 观测字节 | 待定 |
+| B3 | `cells` 改稀疏 + 去 `row`/`col` | 省 32.7% 观测字节 | 待定 |
+| B4 | `loadout_context`/`player_profile` 移出每步观测，只在 `reset` 返回 | 省 5.5% | 待定 |
+| B5 | 删 `grid` | 省 1.0% | 待定 |
+| B6 | `PRIV` 拆成 `PRIV_CORE` 与 `PRIV_ANIM` | `verify_env_equivalence` 改调两个 | 待定 |
 
-**B1 是唯一"改了就能直接省时间"的一项，而且不需要动 `OBSERVATION_VERSION`**，
-因为它只改 `CRITIC_INPUTS` 的响应体。
+#### B1 的实际实现：比原计划更省，且不需要重编译
+
+原计划是"改 C++ 让 `CRITIC_INPUTS` 不返回 `wave_timer`"。**那只能省几个字节，
+往返次数不变，等于没优化。**
+
+先验证了一个前提（**实测**）：`wave_zombies` 在**同一个 wave 内完全稳定**——
+
+| 关卡 | 决策数 | `CRITIC_INPUTS` 调用 | 不同 payload | 可省 |
+|---|---:|---:|---:|---:|
+| cap1 | 263 | 263 | **2** | 99.2% |
+| cap3 | 234 | 234 | **3** | 98.7% |
+| cap5 | 272 | 272 | **4** | 98.5% |
+
+所以 `train_pvz_ppo.collect_task_episode` 改成**每个 wave 只请求一次 roster 并缓存**，
+`wave_timer` 直接取 `observation["wave_timer"]`（公开观测已经带了同一个
+`mZombieCountDown`）。**不动 C++、不动协议版本、不需要重编译。**
+
+**等价性用真实环境证明**：3 个关卡（cap 1/3/5）共 **769 个决策**，
+逐决策比较 `(wave_timer, wave_zombies)` 二元组，**0 个 mismatch**。
+`test_agent_model.CriticInputCacheTests` 把它固定成回归测试——
+其中假环境故意返回一个**错误的** `wave_timer`（9999），
+所以断言通过就证明训练器读的是观测而不是 `CRITIC_INPUTS`。
+
+收益：每个决策省 **9.6%**（`critic_inputs` 占决策时间 9.6%，
+其中 98.5% 的往返被消掉）。
+
 
 ### 8.1 关于 `env.episode`
 
