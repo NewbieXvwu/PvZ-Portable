@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+import os
+from typing import Any, NamedTuple
 
 import numpy as np
 import torch
@@ -32,6 +33,13 @@ WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
 MODEL_ARCHITECTURE_VERSION = 5
 FEATURE_COUNT = 32
+# Opt-in fusion of the relation-bias assembly.  The chain dispatches 117
+# operators eagerly while doing microseconds of arithmetic, so fusing it is a
+# measured 1.4x on the encoder and 1.3x on a full rollout step, bit-identically.
+# It stays opt-in until a full training run has been validated with it, because
+# each rollout worker pays a one-off compile cost.  Enable with the environment
+# variable ``PVZ_RELATION_BIAS_FUSION=1`` or ``set_relation_bias_fusion(True)``.
+RELATION_BIAS_FUSION = os.environ.get("PVZ_RELATION_BIAS_FUSION", "") not in ("", "0", "false")
 FLEX_ATTENTION_AVAILABLE = flex_attention is not None and hasattr(torch, "compile")
 _COMPILED_FLEX_ATTENTION = (
     torch.compile(flex_attention, dynamic=True) if FLEX_ATTENTION_AVAILABLE else None
@@ -373,6 +381,96 @@ def _mask_cells(mask: int) -> set[int]:
     return {cell for cell in range(54) if (mask >> cell) & 1}
 
 
+class RelationBiasIndices(NamedTuple):
+    """Integer indices into the per-layer relation-bias tables.
+
+    These depend only on the discrete token layout (``kinds``/``rows``/``cols``),
+    never on the learned features or on any layer's parameters, so the encoder
+    computes them once and every layer reuses them.  This is the PvZ analogue of
+    cross-layer index sharing: the indices cost more operator dispatches than the
+    lookups they feed, and they are identical for all layers.
+    """
+
+    row_bucket: Tensor
+    col_bucket: Tensor
+    same_cell: Tensor
+
+
+def relation_bias_indices(rows: Tensor, cols: Tensor) -> RelationBiasIndices:
+    """Compute the layer-independent relation-bias indices.
+
+    ``rows``/``cols`` are ``(batch, count)``; the result is three
+    ``(batch, count, count)`` integer tensors.
+    """
+    row_known = (rows[:, :, None] >= 0) & (rows[:, None, :] >= 0)
+    col_known = (cols[:, :, None] >= 0) & (cols[:, None, :] >= 0)
+    row_delta = (rows[:, :, None] - rows[:, None, :]).clamp(-5, 5) + 5
+    col_delta = (cols[:, :, None] - cols[:, None, :]).clamp(-8, 8) + 8
+    row_bucket = torch.where(row_known, row_delta, 11)
+    col_bucket = torch.where(col_known, col_delta, 17)
+    same_cell = (row_known & col_known & (rows[:, :, None] == rows[:, None, :])
+                 & (cols[:, :, None] == cols[:, None, :])).long()
+    return RelationBiasIndices(row_bucket=row_bucket, col_bucket=col_bucket, same_cell=same_cell)
+
+
+def relation_bias_from_indices(kinds: Tensor, row_bucket: Tensor, col_bucket: Tensor,
+                               same_cell: Tensor, kind_pair_bias: Tensor,
+                               row_bias_weight: Tensor, col_bias_weight: Tensor,
+                               same_bias_weight: Tensor) -> Tensor:
+    """Assemble ``(batch, heads, count, count)`` relation bias from precomputed indices.
+
+    Takes every table as an explicit argument so the whole chain can be fused by
+    ``torch.compile`` -- it dispatches 117 operators eagerly (measured), which
+    dominates its cost since the arithmetic is microseconds.
+    """
+    relation = kind_pair_bias[:, kinds[:, :, None], kinds[:, None, :]]
+    relation = relation + row_bias_weight[row_bucket].permute(3, 0, 1, 2)
+    relation = relation + col_bias_weight[col_bucket].permute(3, 0, 1, 2)
+    relation = relation + same_bias_weight[same_cell].permute(3, 0, 1, 2)
+    return relation.permute(1, 0, 2, 3)
+
+
+_FUSED_RELATION_BIAS = None
+_FUSED_RELATION_BIAS_FAILED = False
+
+
+def fused_relation_bias() -> Any | None:
+    """Lazily compiled :func:`relation_bias_from_indices`, or ``None`` if unavailable.
+
+    ``dynamic=True`` keeps one compiled artefact across the token counts a board
+    produces (measured 74-116) instead of recompiling per shape.
+    """
+    global _FUSED_RELATION_BIAS, _FUSED_RELATION_BIAS_FAILED
+    if _FUSED_RELATION_BIAS_FAILED:
+        return None
+    if _FUSED_RELATION_BIAS is None:
+        try:
+            _FUSED_RELATION_BIAS = torch.compile(relation_bias_from_indices, dynamic=True)
+        except Exception:  # noqa: BLE001 - fall back to the eager path
+            _FUSED_RELATION_BIAS_FAILED = True
+            return None
+    return _FUSED_RELATION_BIAS
+
+
+def use_fused_relation_bias() -> bool:
+    """Whether the fused relation-bias path is enabled and available."""
+    return RELATION_BIAS_FUSION and fused_relation_bias() is not None
+
+
+def set_relation_bias_fusion(enabled: bool) -> bool:
+    """Enable or disable the fused relation-bias path.
+
+    Returns the value actually in effect (``False`` if compilation is
+    unavailable).  Both paths are bit-identical, so this only trades start-up
+    compile time against steady-state speed.
+    """
+    global RELATION_BIAS_FUSION
+    RELATION_BIAS_FUSION = bool(enabled)
+    if RELATION_BIAS_FUSION and fused_relation_bias() is None:
+        RELATION_BIAS_FUSION = False
+    return RELATION_BIAS_FUSION
+
+
 class RelationAttention(nn.Module):
     def __init__(self, width: int, heads: int) -> None:
         super().__init__()
@@ -388,7 +486,8 @@ class RelationAttention(nn.Module):
         self.same_cell_bias = nn.Embedding(2, heads)
 
     def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
-                key_mask: Tensor | None = None) -> Tensor:
+                key_mask: Tensor | None = None,
+                indices: RelationBiasIndices | None = None) -> Tensor:
         batch, count, width = x.shape
         if kinds.dim() == 1:
             # Single-step call: kinds/rows/cols are (count,).  Lift to (batch, count)
@@ -445,20 +544,19 @@ class RelationAttention(nn.Module):
             # Padded queries are never gathered.
             scores = scores.masked_fill(~key_mask[:, None, None, :], torch.finfo(scores.dtype).min)
         if self.relation_bias_enabled:
-            kind_pair = self.kind_pair_bias[:, kinds[:, :, None], kinds[:, None, :]]
-            row_known = (rows[:, :, None] >= 0) & (rows[:, None, :] >= 0)
-            col_known = (cols[:, :, None] >= 0) & (cols[:, None, :] >= 0)
-            row_delta = (rows[:, :, None] - rows[:, None, :]).clamp(-5, 5) + 5
-            col_delta = (cols[:, :, None] - cols[:, None, :]).clamp(-8, 8) + 8
-            row_bucket = torch.where(row_known, row_delta, 11)
-            col_bucket = torch.where(col_known, col_delta, 17)
-            same_cell = (row_known & col_known & (rows[:, :, None] == rows[:, None, :])
-                         & (cols[:, :, None] == cols[:, None, :])).long()
-            relation = kind_pair
-            relation = relation + self.row_bias(row_bucket).permute(3, 0, 1, 2)
-            relation = relation + self.col_bias(col_bucket).permute(3, 0, 1, 2)
-            relation = relation + self.same_cell_bias(same_cell).permute(3, 0, 1, 2)
-            scores = scores + relation.permute(1, 0, 2, 3)
+            if indices is None:
+                indices = relation_bias_indices(rows, cols)
+            if use_fused_relation_bias():
+                relation = fused_relation_bias()(
+                    kinds, indices.row_bucket, indices.col_bucket, indices.same_cell,
+                    self.kind_pair_bias, self.row_bias.weight,
+                    self.col_bias.weight, self.same_cell_bias.weight)
+            else:
+                relation = relation_bias_from_indices(
+                    kinds, indices.row_bucket, indices.col_bucket, indices.same_cell,
+                    self.kind_pair_bias, self.row_bias.weight,
+                    self.col_bias.weight, self.same_cell_bias.weight)
+            scores = scores + relation
         attended = torch.softmax(scores, dim=-1)
         value = torch.matmul(attended, value).transpose(1, 2).contiguous().view(batch, count, width)
         return self.projection(value)
@@ -475,8 +573,9 @@ class RelationLayer(nn.Module):
         self.down = nn.Linear(ff_width, width)
 
     def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
-                key_mask: Tensor | None = None) -> Tensor:
-        x = x + self.attention(self.attention_norm(x), kinds, rows, cols, key_mask)
+                key_mask: Tensor | None = None,
+                indices: RelationBiasIndices | None = None) -> Tensor:
+        x = x + self.attention(self.attention_norm(x), kinds, rows, cols, key_mask, indices)
         normalized = self.ff_norm(x)
         x = x + self.down(F.silu(self.gate(normalized)) * self.value(normalized))
         return x
@@ -583,8 +682,11 @@ class GameplayModelV1(nn.Module):
         x = x + self.feature_projection(tensors["features"].to(device))
         x = x + self.row_embedding((rows + 1).clamp(0, 7)) + self.col_embedding((cols + 1).clamp(0, 10))
         x = x.unsqueeze(0)
+        # The relation-bias indices depend only on the token layout, so compute
+        # them once for the whole encoder instead of once per layer.
+        indices = relation_bias_indices(rows.unsqueeze(0), cols.unsqueeze(0))
         for layer in self.encoder:
-            x = layer(x, kinds, rows, cols)
+            x = layer(x, kinds, rows, cols, indices=indices)
         x = self.encoder_norm(x)
 
         action_vector = self._previous_action(previous_action, device)
@@ -728,8 +830,9 @@ class GameplayModelV1(nn.Module):
              + self.row_embedding((rows + 1).clamp(0, 7))
              + self.col_embedding((cols + 1).clamp(0, 10)))
         mask = torch.from_numpy(key_mask).to(device)
+        indices = relation_bias_indices(rows, cols)
         for layer in self.encoder:
-            x = layer(x, kinds, rows, cols, mask)
+            x = layer(x, kinds, rows, cols, mask, indices)
         x = self.encoder_norm(x)
 
         action_vector = self._previous_action_batch(

@@ -72,11 +72,18 @@ def _zombie(index: int) -> dict:
 
 
 def observation(plants: int = 18, zombies: int = 12, projectiles: int = 6) -> dict:
-    """A schema-accurate observation with realistic mid-game entity counts."""
+    """A schema-accurate observation with realistic mid-game entity counts.
+
+    Includes the derived-feature inputs the environment supplies
+    (``wave_timer`` and ``sun_income_rate``), which ``derive_observation_features``
+    reads directly.
+    """
     return {
         "terminal": False, "result": 0, "tick": 3000, "wave": 8, "wave_count": 20,
         "sun": 425, "night": False, "pool": False, "fog": False, "roof": False,
         "zombie_count_multiplier": 1.0,
+        "wave_timer": 1800,
+        "sun_income_rate": 41.7,
         "player_profile": {
             "playthrough": 2, "seed_slot_count": 6, "owned_upgrade_plants": [],
             "imitater_owned": False, "first_aid_owned": False,
