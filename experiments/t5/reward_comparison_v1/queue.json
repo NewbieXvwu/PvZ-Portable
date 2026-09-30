@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "matrix": "reward_comparison_v1",
+  "required_initializations": [
+    0,
+    1,
+    2
+  ],
+  "common_decision_budget": 500000,
+  "evaluation_nodes": [
+    125000,
+    250000,
+    375000,
+    500000
+  ],
+  "order": [
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r0_seed0_v1.json",
+      "output_dir": "artifacts/research/reward_r0_seed0_v1",
+      "log": "logs/t5_research/reward_r0_seed0_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r1_seed0_v1.json",
+      "output_dir": "artifacts/research/reward_r1_seed0_v1",
+      "log": "logs/t5_research/reward_r1_seed0_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r2_seed0_v1.json",
+      "output_dir": "artifacts/research/reward_r2_seed0_v1",
+      "log": "logs/t5_research/reward_r2_seed0_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r3_seed0_v1.json",
+      "output_dir": "artifacts/research/reward_r3_seed0_v1",
+      "log": "logs/t5_research/reward_r3_seed0_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r0_seed1_v1.json",
+      "output_dir": "artifacts/research/reward_r0_seed1_v1",
+      "log": "logs/t5_research/reward_r0_seed1_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r1_seed1_v1.json",
+      "output_dir": "artifacts/research/reward_r1_seed1_v1",
+      "log": "logs/t5_research/reward_r1_seed1_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r2_seed1_v1.json",
+      "output_dir": "artifacts/research/reward_r2_seed1_v1",
+      "log": "logs/t5_research/reward_r2_seed1_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r3_seed1_v1.json",
+      "output_dir": "artifacts/research/reward_r3_seed1_v1",
+      "log": "logs/t5_research/reward_r3_seed1_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r0_seed2_v1.json",
+      "output_dir": "artifacts/research/reward_r0_seed2_v1",
+      "log": "logs/t5_research/reward_r0_seed2_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r1_seed2_v1.json",
+      "output_dir": "artifacts/research/reward_r1_seed2_v1",
+      "log": "logs/t5_research/reward_r1_seed2_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r2_seed2_v1.json",
+      "output_dir": "artifacts/research/reward_r2_seed2_v1",
+      "log": "logs/t5_research/reward_r2_seed2_v1.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v1/reward_r3_seed2_v1.json",
+      "output_dir": "artifacts/research/reward_r3_seed2_v1",
+      "log": "logs/t5_research/reward_r3_seed2_v1.log"
+    }
+  ],
+  "gate": "gates/T5-A-research.json"
+}

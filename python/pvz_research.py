@@ -347,7 +347,9 @@ def run_experiment(args: Any) -> None:
         for key, value in state.get("resources", {}).items():
             resources[key] = min(value, resources[key]) if key.startswith("min_") else max(value, resources[key])
         state["resources"] = resources
-        path = output / "runs/run_1" / f"update_{state['updates']:06d}_{phase}.pt"
+        # Keep every snapshot immutable, including multiple resumes at the same
+        # update. The pointer alone changes; crash evidence is never overwritten.
+        path = output / "runs/run_1" / f"update_{state['updates']:06d}_{phase}_{time.time_ns()}.pt"
         state["checkpoint"] = str(path.relative_to(output))
         checkpoint = {"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
                       "optimizer_state_dict": optimizer.state_dict(), "rng_state": capture_rng(rng),

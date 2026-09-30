@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "experiment_id": "reward_r3_seed0_v1",
+  "purpose": "paired_reward_comparison_v1",
+  "initialization_seed": 0,
+  "sampling_seed": 1701,
+  "model": {
+    "layers": 4,
+    "width": 192,
+    "heads": 6,
+    "ff_width": 768,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1
+  },
+  "reward": {
+    "name": "R3",
+    "gamma": 1.0,
+    "shaping_weight": 1
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 0.95,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "sampling": {
+    "manifest": "artifacts/task_family/train.json",
+    "task_ids": [
+      "train_day_1",
+      "train_night_1",
+      "train_pool_1",
+      "train_fog_1",
+      "train_roof_1"
+    ],
+    "method": "balanced",
+    "rollout_episodes": 200
+  },
+  "budget": {
+    "decisions": 500000,
+    "max_episodes": null
+  },
+  "evaluation": {
+    "manifest": "experiments/t5/reward_evaluation_v1.json",
+    "modes": [
+      "greedy",
+      "sampled"
+    ],
+    "decision_nodes": [
+      125000,
+      250000,
+      375000,
+      500000
+    ]
+  },
+  "runtime": {
+    "workers": 8,
+    "worker_threads": 1,
+    "worker_device": "cpu",
+    "update_device": "cuda",
+    "max_actions": 4000,
+    "cudnn_tf32": false,
+    "matmul_precision": "highest"
+  },
+  "prerequisites": [
+    "gates/T5-A-research.json"
+  ]
+}
