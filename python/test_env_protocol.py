@@ -390,5 +390,69 @@ class ExperimentManifestTests(unittest.TestCase):
             env._check_manifest({"path": "experiment_manifest.json", "sha256": "0" * 64}, None)
 
 
+class EventKeyCanonicalisationTests(unittest.TestCase):
+    """``events`` is JSON-decoded on every step, so its key strings must be shared.
+
+    Measured on a real episode those keys cost 21.0 KiB -- 61% of the ``events`` field
+    and 5.1% of the whole rollout payload, 41 MiB over a 2000-episode batch.  Each test
+    below builds its keys with ``_uninterned`` so that a vacuous assertion -- one that
+    would pass even if ``_canonical_events`` were deleted -- cannot slip through.
+    """
+
+    @staticmethod
+    def _uninterned(name: str) -> str:
+        """A string equal to *name* but a different object, the way JSON decoding makes it."""
+        return "".join([name, ""])
+
+    def test_the_helper_replaces_uninterned_keys_and_keeps_the_values(self) -> None:
+        incoming = {self._uninterned(name): index
+                    for index, name in enumerate(sorted(pvz_env.EVENT_KEYS))}
+        for key in incoming:
+            self.assertIsNot(key, pvz_env.EVENT_KEYS[key],
+                             "test setup: the key was already the shared object")
+
+        canonical = pvz_env._canonical_events(incoming)
+
+        self.assertEqual(canonical, incoming)
+        for key in canonical:
+            self.assertIs(key, pvz_env.EVENT_KEYS[key])
+
+    def test_an_unknown_key_is_passed_through_untouched(self) -> None:
+        marker = self._uninterned("a-key-this-module-has-never-heard-of")
+        canonical = pvz_env._canonical_events({self._uninterned("sun_spent"): 50, marker: 1})
+
+        self.assertEqual(canonical, {"sun_spent": 50, marker: 1})
+        known, unknown = list(canonical)
+        self.assertIs(known, pvz_env.EVENT_KEYS["sun_spent"])
+        self.assertIs(unknown, marker)
+
+    def test_empty_and_non_dict_inputs_are_returned_unchanged(self) -> None:
+        empty: dict[str, int] = {}
+        self.assertIs(pvz_env._canonical_events(empty), empty)
+        self.assertIsNone(pvz_env._canonical_events(None))
+        not_a_dict = ["not", "a", "dict"]
+        self.assertIs(pvz_env._canonical_events(not_a_dict), not_a_dict)
+
+    def test_read_message_canonicalises_the_events_it_decodes(self) -> None:
+        """The hook is in ``_read_message``, which is where every response is decoded."""
+        payload = json.dumps({
+            "protocol_version": ENV_PROTOCOL_VERSION,
+            "ok": True,
+            "events": {"sun_spent": 50, "level_won": False},
+        })
+        env = PvZEnv(resource_dir="/nonexistent")
+
+        class _FakeProcess:
+            stdout = [f"PVZENV {payload}\n"]
+
+        env._process = _FakeProcess()  # type: ignore[assignment]
+        response = env._read_message()
+
+        self.assertEqual(response["events"], {"sun_spent": 50, "level_won": False})
+        for key in response["events"]:
+            self.assertIs(key, pvz_env.EVENT_KEYS[key],
+                          f"key {key!r} survived decoding without canonicalisation")
+
+
 if __name__ == "__main__":
     unittest.main()

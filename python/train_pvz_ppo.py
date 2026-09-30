@@ -363,7 +363,9 @@ def episode_hash(episode: dict[str, Any]) -> str:
 
     Kept because ``artifacts/adventure2_level7/training_summary.json`` records the
     digests this function produced, and re-deriving them must stay possible.
-    ``episode_digest`` is ~45x faster and is what the T5 trainer uses.
+    ``episode_digest`` is what the T5 trainer uses.  Measured on this machine it
+    costs 13.9 ms/episode against 1.75 ms/episode, an 8.0x saving (5.3x on a
+    shorter episode sample); an earlier note claiming 45x was never reproducible.
     """
     steps = [_jsonable({
         key: transition[key]
@@ -444,9 +446,11 @@ def _digest_into(hasher: "hashlib._Hash", value: Any) -> None:
 def episode_digest(episode: dict[str, Any], *, digest_size: int = 16) -> str:
     """Hex blake2b digest of an episode's packed transition bytes.
 
-    Equivalent in purpose to :func:`episode_hash` but ~45x faster, because packed
+    Equivalent in purpose to :func:`episode_hash` but cheaper, because packed
     observation tokens stay as raw bytes instead of being rebuilt as Python objects
-    and JSON-encoded.  The digest values differ from ``episode_hash``, so
+    and JSON-encoded.  Measured 1.75 ms/episode against 13.9 ms/episode, an 8.0x
+    saving, so ~3.5 s instead of ~27.9 s for a 2000-episode rollout batch.
+    The digest values differ from ``episode_hash``, so
     ``trajectory_sha256`` recorded by one is not comparable with the other; the T5
     trainer records which function it used.
     """

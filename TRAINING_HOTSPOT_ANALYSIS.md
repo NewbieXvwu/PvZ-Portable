@@ -271,7 +271,12 @@ attended = _COMPILED_FLEX_ATTENTION(query, key, value, score_mod=relation_score)
 
 P0/P1 全部落地。本节记录实测值，并更正 §7 投影里两处不成立的假设。
 
-### 9.1 P0-1 `episode_digest`：已实现，45× 但换了函数名
+### 9.1 P0-1 `episode_digest`：已实现，换了函数名，但**收益是 8× 不是 45×**
+
+> **§10.5 更正**：本节原标题写的是 45×。第二次审计复测（`training_hotspot_profile.py`
+> 第 2 阶段，12 局）得到 13.93 ms/局 → 1.75 ms/局 = **8.0×**（更短的 8 局样本上是 5.3×）。
+> 45× 这个数字我无法复现，已从代码 docstring 与本文件删除。绝对收益仍然成立：
+> 2000 局从 27.9 s 降到 3.5 s。
 
 新增 `episode_digest()`（`python/train_pvz_ppo.py`），直接对带标签的字节流做
 blake2b-128：数组走 `tobytes()`，每个分支写类型标签，变长载荷写长度前缀。
@@ -372,6 +377,142 @@ rollout 可忽略。
 
 ---
 
+## 10. 第二次全流程必要性审计（2026-09-30，逐阶段实测）
+
+用户要求："对每一个流程都问自己：这个流程真的有任何必要吗？有没有更廉价的替代方案？
+有没有方法优化它？重点是提高性能并降低内存占用。"
+
+第一次审计（§1–§9）测的是**时间**，这次补上了**内存**，并把此前只是"看着可疑"的
+环节全部量化。测量工具：`scripts/pipeline_necessity_audit.py`（A–H 段，真实 env）、
+`scripts/pool_ipc_probe.py`（进程池与 IPC 通道，分节执行，各自带 `faulthandler` 超时保护）。
+
+### 10.1 每 update 的全阶段账（2000 局，本机 CPU 测量 + RTX 5080 已有实测）
+
+| 阶段 | 实测 | 必要性 | 更廉价的替代 | 裁定 |
+|---|---|---|---|---|
+| env 子进程往返（`step`） | 0.255 ms/决策 | 需要（崩溃隔离 + C++ 模拟器边界） | 无 | 保留 |
+| observation tokenize | 0.21 ms/决策 | 需要（就是模型输入） | 无 | 保留 |
+| 模型前向 batch=1 | 2.29 ms/决策 | 需要 | 融合已上（§4） | 保留 |
+| 进程池启动（spawn ×18） | 0.72 s + 每 worker 模型/env | 需要 | 常驻池省 ~0.5 s | **不改**（0.3%） |
+| worker→父进程：npz 分片 | 父进程**串行解码 12.4 s** | 传输需要，**格式不需要** | 管道传 pickle：**2.1 s** | **已改** |
+| `metadata` 每 job 重序列化 | 61.7 KiB × 2000 = 120.5 MiB，**0.77 s** | 需要但可上提 | 走 `initargs` | **不改**（0.4%） |
+| `add_advantages` | 0.17 µs/transition → **0.02 s** | 需要 | numpy 版**慢 0.4×** | 保留 |
+| `episode_digest` ×2000 | 1.75 ms/局 → **3.5 s** | 需要（溯源） | JSON 路径要 27.9 s | 已做（§9.1） |
+| `train_update`（GPU） | **184.4 s** | 需要，主导项 | 未触碰 | 保留 |
+| checkpoint + state.json | 6.1 ms + 0.2 ms | 需要 | 无 | 保留 |
+| 评估（每 5000 局） | 已并行 | 需要 | 已做（§9.2） | 保留 |
+| rollout 载荷常驻内存 | **810.6 MiB** | 需要 | 事件键共享 −46 MiB | **已改** |
+
+### 10.2 ⭐ 发现一：磁盘不是瓶颈，**npz 编解码**才是
+
+D 段测出压缩分片往返 = 写 14.18 s + 读 12.83 s（×2000 投影）。但管道对照实验
+（`pool_ipc_probe.py --section pipe/disk`，同为 87.5 KiB 载荷 × 2000）给出：
+
+```
+pipe: worker returns the bytes      1.425 s wall   (170.9 MiB)
+disk: worker writes an npz shard    1.520 s wall
+disk: parent re-reads every shard   0.030 s wall   (170.9 MiB)
+```
+
+**磁盘本身几乎免费**——父进程重读 170.9 MiB 只花 0.03 s（刚写过，在页缓存里）。
+D 段那 27 s 全在 `atomic_numpy` 的 Python 编解码。D2 段分解（每局）：
+
+| 步骤 | 每局 | 说明 |
+|---|---|---|
+| `_archive_encode`（遍历嵌套 dict → 数组） | 0.41 ms | |
+| `json.dumps` manifest | 0.25 ms | 51.6 KiB |
+| **zlib 压缩数组** | **4.06 ms** | **占编解码 77%** |
+| `json.loads` manifest | 0.20 ms | |
+| `_archive_decode`（重建嵌套 dict） | 0.36 ms | |
+| **合计** | **5.28 ms** | ×2000 = **10.6 s** |
+| 替代：`pickle` + `unpickle` | **0.43 ms** | ×2000 = **0.86 s** |
+
+而管道传真实 pickle 尺寸（303.5 KiB × 2000 = 592.8 MiB）只要 **1.199 s**（495 MiB/s）。
+
+所以最优解是：**worker 直接把结果回传**，分片照写（保断点续跑）。
+净效果：父进程那 12.4 s 串行解码换成 0.86 s 反序列化 + 1.2 s 传输 ≈ **省 10 s/update**。
+
+**为什么压缩反而更慢**：父进程立刻重读自己刚写的文件，数据在页缓存里，
+压缩省下的 I/O 抵不过 zlib 的 CPU。`savez_compressed` 读 12.83 s > 不压缩 11.52 s。
+
+### 10.3 ⭐ 发现二：`events` 的键字符串每步被 JSON 重建
+
+`events` 从模拟器子进程以 JSON 过来，每步的 8 个键都是**全新的字符串对象**：
+
+```
+key objects shared between two steps:   0/8
+keys present in sys.intern table:       0/8
+per episode: 13.5 KiB of dicts + 21.0 KiB of duplicated key strings
+```
+
+21.0 KiB/局 = `events` 字段的 **61%**、整个载荷的 **5.1%**，2000 局 **41 MiB**。
+实测 A/B（6 局，347 决策）：
+
+| | 载荷/局 | 不同键对象数 |
+|---|---|---|
+| 改动前 | 456.7 KiB | 2,728 |
+| 改动后 | 433.3 KiB | **8** |
+
+**逐位验证**：改动前后同一批 4 局，`episode_digest` 与 legacy `episode_hash` **全部相同**
+（`ca3409…` / `916a91…` 等 4 组）。`_digest_into` 对 dict 键走 `str(key)`，按值摘要，
+共享对象透明。
+
+### 10.4 ⭐ 发现三：`run_seed_jobs` 在 worker 死亡时**永久挂起**
+
+不是推测，是**实测**：`pool_ipc_probe.py` 第一次运行时 initializer 签名写错，
+18 个 worker 全部抛 `TypeError` 后死掉，父进程在 `imap_unordered` 上等了 **21 分钟**
+才被我手动杀掉。`multiprocessing.Pool` 会不断重启死掉的 worker，
+而 `imap_unordered` 不区分"慢"和"永远不会来"。
+
+这条恰好命中本轮失败模式：台式机 Agent 在"没有 GPU"的环境里干等 75 分钟。
+**空转和挂死都按墙钟时间烧掉止损预算。**
+
+修复：`run_seed_jobs(..., stall_timeout=900.0)` 用 `iterator.next(timeout=...)`，
+超时即 `pool.terminate()` 并抛 `RuntimeError("... stalled: no seed completed in N s
+after K of M ...")`。单局最多 4000 决策 × ~3 ms ≈ 12 s，900 s 是 50× 余量。
+
+变异验证：把 `raise` 改成 `break`，测试不再通过（它以**挂起**而非失败的形式暴露，
+因为 `pool.join()` 同样等不到 worker 退出——这也说明 `except BaseException:
+pool.terminate()` 那条路径是必需的，不是装饰）。
+
+### 10.5 被实测否掉的方向（诚实记录）
+
+| 猜想 | 实测 | 结论 |
+|---|---|---|
+| `add_advantages` 是热点 | 0.17 µs/transition，2000 局 0.02 s | **否**，numpy 改写还慢 0.4× |
+| 磁盘 IPC 是瓶颈 | 170.9 MiB 重读 0.03 s | **否**，瓶颈是编解码 |
+| 常驻池能省 36 s/update | spawn 0.72 s vs fork 0.47 s（torch 已导入时 fork 仅 0.013 s） | **否**，量级是 0.3% |
+| `events` 存了模型不读的键 | 存储键集 == 模型读取键集 | **否**，没有多余键 |
+| `tokens`（75% 内存）能降精度 | 已是 int8/float16/uint8/uint16 | **否**，`features` float16 (75,32) 占 91% |
+| `normalized_advantage` 存 0-dim tensor 很贵 | 0.238 µs vs Python float 0.020 µs | 量级 **0.03 s**，CUDA 上 ~0.8 s，**不值得改** |
+| `metadata` 每 job 重序列化 | 0.77 s/update | 可省但收益 0.4%，**不做** |
+| `episode_digest` 比 JSON 路径快 45× | 实测 13.93 → 1.75 ms/局 = **8.0×** | **原数字不可复现，已更正** |
+
+### 10.6 已落地的改动
+
+1. **`pvz_seed_jobs._collect_and_save` 回传结果**（`(seed, result)`），
+   `run_seed_jobs` 直接收进 `results`，不再重读分片。分片照写（断点续跑不变）。
+   测试 `test_fresh_results_come_from_the_worker_not_the_shard` 用 int 键证明走了直传路径
+   （`_archive_encode` 会把键 `str()` 化，所以缓存路径必然看到 `"7"`）。
+2. **`pvz_seed_jobs` 停滞看门狗**（`stall_timeout`，默认 900 s）。
+3. **`pvz_env._canonical_events`**：在 `_read_message` 这个唯一的 JSON 解码点把
+   `events` 的 8 个键换成共享对象；未知键原样透传。
+4. **更正 `episode_digest` 的 45× 说法为实测 8.0×**（`train_pvz_ppo.py` 两处 docstring）。
+
+### 10.7 全量回归
+
+`python -m unittest discover -s python -p "test_*.py"` → **250 项全绿**（原 244 + 新增 6）。
+变异测试：`_canonical_events` 改成透传 → 3 项失败；`_read_message` 去掉钩子 → 1 项失败；
+看门狗 `raise` 改 `break` → 测试不再通过。
+
+### 10.8 仍未做（需要用户裁定或额外测量）
+
+- **P2 跨决策增量编码**：相邻决策的 token 变化率仍未测，是 `tokens`（75% 内存）唯一的
+  压缩方向。不测不动。
+- **shard 写入是否必要**：现在写入只服务断点续跑，代价 ~0.8 s/update（并行）+ 178 MiB/update
+  磁盘。若认为"崩溃就重跑整个 update"可接受，可再省 0.8 s 并去掉磁盘依赖。
+
+---
 
 ## 8. 复现
 
@@ -380,6 +521,15 @@ cd /Users/newbiexvwu/PvZAgent
 
 # 全流程热点（需要重编译过的协议 4 二进制）
 python scripts/training_hotspot_profile.py --episodes 6 --update-episodes 8
+
+# 第二次必要性审计：内存分字段 + 编解码分解 + 事件键（真实 env）
+python scripts/pipeline_necessity_audit.py --episodes 6
+
+# 进程池与 IPC 通道（分节跑，每节自带 faulthandler 超时）
+for s in startup import fork metadata pipe disk; do
+    python scripts/pool_ipc_probe.py --section $s
+done
+python scripts/pool_ipc_probe.py --section pipe --payload-kib 87.5 303.5
 
 # 关系偏置优化
 python scripts/relation_bias_benchmark.py --repeats 200

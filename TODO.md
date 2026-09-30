@@ -737,7 +737,7 @@ test_shared_helpers / test_t5_overnight` 共 **99 项全通过**。
 
 | 项 | 内容 | 验证 |
 |---|---|---|
-| P0-1 | `episode_digest`：字节摘要取代 JSON 物化 | `test_episode_digest.py` 13 项；2 个变异被捕获；45× |
+| P0-1 | `episode_digest`：字节摘要取代 JSON 物化 | `test_episode_digest.py` 13 项；2 个变异被捕获；实测 **8.0×**（27.9 s → 3.5 s/update；原先写的 45× 不可复现，已更正） |
 | P0-2 | `_evaluate` 改 spawn 进程池 | 真实模拟器**逐条逐位相同**；128 局 28.8 s → 10.4 s |
 | P1-1 | 中间评估跳过 `reference_set`，每轮末必补 | `test_t5_overnight.EvaluationTests` |
 | P1-2 | 关系偏置融合默认开启（`PVZ_RELATION_BIAS_FUSION=0` 可关） | 稳态 1.14–1.31×；编译成本 440 ms/进程 |
@@ -750,6 +750,32 @@ test_shared_helpers / test_t5_overnight` 共 **99 项全通过**。
 **同时新增 M5 硬阻断**（见 `T5_OVERNIGHT_ORDER.md` §M5）：`resolve_device("auto")` 在
 CUDA 掉线时会静默回退 CPU，导致"进程活着但一个更新都落不下盘"。
 首次阶段 0 就这样空转 75 分钟。现在非 CUDA 更新会直接 `raise`。
+
+### 5.6 第二次全流程必要性审计（2026-09-30，逐阶段实测）
+
+见 **`TRAINING_HOTSPOT_ANALYSIS.md` §10**。用户裁定："对每一个流程都问自己：
+这个流程真的有任何必要吗？有没有更廉价的替代方案？有没有方法优化它？
+重点是提高性能并降低内存占用。"
+
+已实施：
+
+| 项 | 内容 | 验证 |
+|---|---|---|
+| N1 | `_collect_and_save` 回传结果，父进程不再重读 2000 个分片（分片照写，断点续跑不变） | `test_fresh_results_come_from_the_worker_not_the_shard`（用 int 键证明走直传路径） |
+| N2 | `run_seed_jobs(..., stall_timeout=900)`：worker 死亡不再永久挂起 | `test_a_dying_initializer_raises_instead_of_hanging`；变异（`raise`→`break`）不再通过 |
+| N3 | `pvz_env._canonical_events`：`events` 的 8 个键改为共享对象 | 4 项测试 + 2 个变异被捕获；改动前后 4 局 `episode_digest`/`episode_hash` **逐位相同** |
+| N4 | 更正 `episode_digest` 的 45× 为实测 **8.0×** | 见 §10.5 |
+
+收益：每 update 省约 10 s（父进程串行解码 12.4 s → 直传 2.1 s）；
+rollout 载荷 810.6 MiB → 约 765 MiB（事件键 −23.4 KiB/局）。
+
+**被实测否掉、不要再试**：`add_advantages`（0.02 s，numpy 版还慢 0.4×）、
+磁盘 IPC 带宽（170.9 MiB 重读 0.03 s）、常驻/`fork` 进程池（省 0.3%）、
+`tokens` 降精度（已是 int8/float16）、`events` 多余键（没有多余键）、
+`normalized_advantage` 的 0-dim tensor（0.03 s）。
+
+**仍未做**：P2 跨决策增量编码（相邻决策 token 变化率未测）；
+分片写入是否必要（现仅服务断点续跑，代价 ~0.8 s/update + 178 MiB/update 磁盘）。
 
 ### 已排除的路线（有实测数据，勿重复尝试）
 

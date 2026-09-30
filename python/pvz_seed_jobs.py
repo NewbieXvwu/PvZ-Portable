@@ -118,13 +118,30 @@ def _read_shard(path: Path, seed: int, metadata: dict[str, Any]) -> dict[str, An
     return None
 
 
-def _collect_and_save(job: tuple[int, Path, dict[str, Any], Callable[[int], dict[str, Any]]]) -> int:
+def _collect_and_save(job: tuple[int, Path, dict[str, Any], Callable[[int], dict[str, Any]]]
+                      ) -> tuple[int, dict[str, Any]]:
+    """Collect one seed, persist its shard, and hand the result straight back.
+
+    Returning the result matters: the parent used to read every shard back off
+    disk, which cost 12.4 s of serial npz decoding per 2000-episode update, while
+    pushing the same objects through the pool pipe costs ~1.2 s.  The shard is
+    still written, because it is what makes an interrupted run resumable.
+    """
     seed, directory, metadata, worker = job
     result = worker(seed)
     if not isinstance(result, dict) or result.get("seed") != seed:
         raise ValueError(f"seed worker returned a malformed result for seed {seed}")
     atomic_numpy(_shard_path(directory, seed), {"metadata": metadata, "result": result}, compressed=True)
-    return seed
+    return seed, result
+
+
+# A worker that dies (a failing initializer, a missing asset, an OOM) does not make
+# ``imap_unordered`` raise: the pool respawns it, it dies again, and the parent waits
+# forever.  This was observed, not theorised -- a bad initializer signature hung the
+# probe for 21 minutes while the workers printed tracebacks.  The watchdog converts
+# that silent hang into an error, which matters because the stop-loss budget is spent
+# by wall-clock time whether or not anything is happening.
+STALL_TIMEOUT_SECONDS = 900.0
 
 
 def run_seed_jobs(
@@ -137,7 +154,16 @@ def run_seed_jobs(
     initializer: Callable[..., None],
     initargs: tuple[Any, ...],
     label: str,
+    stall_timeout: float | None = STALL_TIMEOUT_SECONDS,
 ) -> list[dict[str, Any]]:
+    """Collect every seed, reusing cached shards, and return them in ``seeds`` order.
+
+    ``stall_timeout`` bounds the wait for *one* seed to finish; pass ``None`` to wait
+    forever.  The default is generous by construction: the largest ``max_actions`` in
+    this repository is 4000 and a PPO rollout decision costs ~2.3-3 ms, so a legitimate
+    episode is ~12 s -- 75x under the limit.  Raise it if you drive this with a policy
+    whose per-decision cost is orders of magnitude higher.
+    """
     metadata = json.loads(json.dumps(metadata, sort_keys=True, separators=(",", ":")))
     if workers < 1:
         raise ValueError("workers must be positive")
@@ -157,15 +183,26 @@ def run_seed_jobs(
     if missing:
         context = multiprocessing.get_context("spawn")
         pool = context.Pool(min(workers, len(missing)), initializer=initializer, initargs=initargs)
+        completed = 0
         try:
-            for completed, _ in enumerate(
-                pool.imap_unordered(
-                    _collect_and_save,
-                    ((seed, directory, metadata, worker) for seed in missing),
-                    chunksize=1,
-                ),
-                start=1,
-            ):
+            iterator = pool.imap_unordered(
+                _collect_and_save,
+                ((seed, directory, metadata, worker) for seed in missing),
+                chunksize=1,
+            )
+            while True:
+                try:
+                    seed, result = iterator.next(timeout=stall_timeout)
+                except StopIteration:
+                    break
+                except multiprocessing.TimeoutError:
+                    raise RuntimeError(
+                        f"{label} stalled: no seed completed in {stall_timeout:.0f} s "
+                        f"after {completed} of {len(missing)}. A worker almost certainly "
+                        f"died in its initializer; check the tracebacks above the hang."
+                    ) from None
+                results[seed] = result
+                completed += 1
                 if completed % 16 == 0 or completed == len(missing):
                     print(f"{label} {len(seeds) - len(missing) + completed}/{len(seeds)}", flush=True)
             pool.close()
@@ -177,7 +214,9 @@ def run_seed_jobs(
 
     ordered = []
     for seed in seeds:
-        result = results.get(seed) or _read_shard(_shard_path(directory, seed), seed, metadata)
+        result = results.get(seed)
+        if result is None:
+            result = _read_shard(_shard_path(directory, seed), seed, metadata)
         if result is None:
             raise RuntimeError(f"seed {seed} completed without a readable result shard")
         ordered.append(result)
