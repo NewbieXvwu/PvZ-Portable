@@ -47,6 +47,9 @@ HELDOUT_PATH = ROOT / "artifacts/task_family/heldout.json"
 T4_GATE_PATH = ROOT / "gates/T4.json"
 T4_RAW_PATH = ROOT / "artifacts/task_family/t4_seed_results.json"
 THROUGHPUT_PATH = ROOT / "artifacts/t5/throughput.json"
+# The PPO-update hyperparameters (2000-episode rollout, chunks=16, seq=16) were tuned
+# against this measurement, which is the only recorded evidence for the update device.
+UPDATE_BENCHMARK_PATH = ROOT / "artifacts/t5/perf/ppo_update_2000_flex_saved.json"
 DEFAULT_RESOURCE_DIR = Path.home() / ".cache/pvz-research-resources"
 CORE_THRESHOLD = 5000.0
 WIN_THRESHOLD = 0.90
@@ -367,6 +370,60 @@ def _seed0_initialization_baseline(actual_hash: str, t4_hash: str,
     raise RuntimeError("seed-0 initialization does not match the T4 baseline checkpoint")
 
 
+def _check_update_device(device: torch.device,
+                         benchmark_path: Path = UPDATE_BENCHMARK_PATH,
+                         allow_cpu_update: bool = False,
+                         motivation: str | None = None) -> dict[str, Any]:
+    """Refuse a formal run whose PPO update silently degraded to the CPU.
+
+    ``resolve_device("auto")`` falls back to the CPU without complaint when CUDA
+    stops being visible.  That happens on the WSL box after long uptime (the GPU
+    drops off the bus until WSL is restarted), and the failure is invisible in the
+    training log: rollout still runs on its 18 CPU workers, the state file is only
+    rewritten after an update, so the run looks alive while the first update never
+    lands.  A real occurrence burned 75+ minutes of a stage 0 that should have
+    produced its first update in ~6 minutes.
+
+    The update hyperparameters are tuned against the measurement recorded in
+    ``UPDATE_BENCHMARK_PATH`` (an RTX 5080, ~184 s per 2,000-episode update).  On
+    the CPU the same update measures ~1,073 s, so running there is a *different*
+    experiment rather than a slower version of this one, and needs
+    ``--allow-cpu-update`` plus ``--motivation``.
+    """
+    record: dict[str, Any] = {
+        "resolved_device": str(device),
+        "benchmark": str(benchmark_path),
+        "benchmark_device": None,
+        "benchmark_device_name": None,
+        "override": None,
+    }
+    if benchmark_path.is_file():
+        measured = json.loads(benchmark_path.read_text(encoding="utf-8"))
+        record["benchmark_device"] = measured.get("device")
+        record["benchmark_device_name"] = measured.get("device_name")
+    if device.type == "cuda":
+        record["device_name"] = torch.cuda.get_device_name(device)
+        return record
+    if record["benchmark_device"] != "cuda":
+        # No CUDA-specific evidence was ever recorded, so a CPU update is the honest
+        # default rather than a silent degradation.
+        return record
+    if allow_cpu_update:
+        if not motivation:
+            raise ValueError("--allow-cpu-update requires --motivation")
+        record["override"] = {"used": True, "reason": motivation}
+        return record
+    raise RuntimeError(
+        "CUDA is unavailable, but the T5 update hyperparameters were measured on "
+        f"{record['benchmark_device_name'] or 'CUDA'} (see {record['benchmark']}). "
+        "resolve_device('auto') would silently fall back to the CPU, where one "
+        "2,000-episode update costs ~1,073 s instead of ~184 s -- a stage 0 that "
+        "should finish in ~1 h would instead run for many hours. Fix the GPU "
+        "(restart WSL / re-check `nvidia-smi`) and rerun, or pass "
+        "--allow-cpu-update --motivation to run the CPU update on purpose."
+    )
+
+
 def _stage0_has_no_signal(pass_rate: float, tasks: list[dict[str, Any]]) -> bool:
     return pass_rate == 0.0 and all(
         len(TASK_RECENT[task["task_id"]]) == RECENT_WINDOW
@@ -517,6 +574,9 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--value-coefficient", type=float, default=0.5)
     parser.add_argument("--entropy-coefficient", type=float, default=0.01)
     parser.add_argument("--device", choices=("auto", "cpu", "cuda", "mps"), default="auto")
+    parser.add_argument("--allow-cpu-update", action="store_true",
+                        help="permit a PPO update on the CPU when the measured update "
+                             "device was CUDA; requires --motivation")
     parser.add_argument("--seed", type=int, default=1701)
     parser.add_argument("--initialization-seed", type=int, default=0)
     return parser.parse_args()
@@ -611,6 +671,12 @@ def main() -> None:
         init_checkpoint = previous_run_dir / "gameplay_model_v1_ppo.pt"
     configure_torch_threads(1)
     device = resolve_device(args.device)
+    update_device_check = _check_update_device(
+        device, allow_cpu_update=args.allow_cpu_update, motivation=args.motivation)
+    if update_device_check["resolved_device"] != "cuda":
+        print(f"WARNING: PPO update will run on {update_device_check['resolved_device']}; "
+              f"measured benchmark device was {update_device_check['benchmark_device']}",
+              file=sys.stderr)
     initialization_baseline = None
     if init_checkpoint:
         initial = torch.load(init_checkpoint, map_location="cpu", weights_only=False)
@@ -652,6 +718,8 @@ def main() -> None:
         "workers": workers,
         "torch_threads_per_worker": worker_threads,
         "rollout_device": worker_device,
+        "update_device": str(device),
+        "update_device_check": update_device_check,
         "rollout_worker_benchmark": throughput.get("selected_configuration"),
         "resource_dir": str(resource_dir),
         "train_manifest": str(TRAIN_PATH),

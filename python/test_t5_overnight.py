@@ -11,6 +11,8 @@ import tempfile
 import unittest
 from unittest import mock
 
+import torch
+
 import train_pvz_ppo_task_family as task_family
 import t5_stage0_gate
 
@@ -187,6 +189,67 @@ class Stage0EvaluationTests(unittest.TestCase):
         self.assertEqual(record["actual"], "new-hash")
         self.assertEqual(record["t4"], "t4-hash")
         self.assertEqual(record["status"], "superseded")
+
+
+class UpdateDeviceGuardTests(unittest.TestCase):
+    """M5: a formal run must not silently PPO-update on the CPU.
+
+    ``resolve_device("auto")`` returns the CPU without complaint when CUDA drops off
+    the bus (the known WSL long-uptime failure).  The first update then never lands
+    while the run still looks alive, which is exactly what burned a stage 0 for 75+
+    minutes.
+    """
+
+    def _benchmark(self, temporary: str, device: str) -> Path:
+        path = Path(temporary) / "ppo_update_2000_flex_saved.json"
+        path.write_text(json.dumps({"device": device, "device_name": "NVIDIA GeForce RTX 5080"}))
+        return path
+
+    def test_cpu_update_is_blocked_when_the_benchmark_was_cuda(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = self._benchmark(temporary, "cuda")
+            with self.assertRaisesRegex(RuntimeError, "CUDA is unavailable"):
+                task_family._check_update_device(torch.device("cpu"), path)
+
+    def test_cpu_override_requires_motivation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = self._benchmark(temporary, "cuda")
+            with self.assertRaisesRegex(ValueError, "requires --motivation"):
+                task_family._check_update_device(
+                    torch.device("cpu"), path, allow_cpu_update=True)
+            record = task_family._check_update_device(
+                torch.device("cpu"), path, allow_cpu_update=True,
+                motivation="CPU-only box; rerunning the tuned hyperparameters there")
+        self.assertEqual(record["override"],
+                         {"used": True,
+                          "reason": "CPU-only box; rerunning the tuned hyperparameters there"})
+        self.assertEqual(record["benchmark_device"], "cuda")
+
+    def test_cpu_benchmark_and_missing_benchmark_do_not_block(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            cpu_path = self._benchmark(temporary, "cpu")
+            record = task_family._check_update_device(torch.device("cpu"), cpu_path)
+            self.assertIsNone(record["override"])
+            missing = Path(temporary) / "absent.json"
+            record = task_family._check_update_device(torch.device("cpu"), missing)
+            self.assertIsNone(record["benchmark_device"])
+            self.assertIsNone(record["override"])
+
+    def test_cuda_device_always_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = self._benchmark(temporary, "cuda")
+            with mock.patch.object(torch.cuda, "get_device_name",
+                                   return_value="NVIDIA GeForce RTX 5080"):
+                record = task_family._check_update_device(torch.device("cuda"), path)
+        self.assertEqual(record["resolved_device"], "cuda")
+        self.assertEqual(record["device_name"], "NVIDIA GeForce RTX 5080")
+        self.assertIsNone(record["override"])
+
+    def test_repo_benchmark_records_cuda(self) -> None:
+        """The guard is only meaningful while the recorded evidence is CUDA."""
+        measured = json.loads(
+            (ROOT / "artifacts/t5/perf/ppo_update_2000_flex_saved.json").read_text())
+        self.assertEqual(measured["device"], "cuda")
 
 
 if __name__ == "__main__":

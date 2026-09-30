@@ -77,6 +77,43 @@
 严格按 §3 → §4 → §5 顺序。每个缺口完成即 commit + push。
 **不得**在缺口未完成时先开跑训练（会浪费正式 run 名额，见 §3.4）。
 
+### M5 · 更新设备硬检查（2026-09-30 追加，起因见下）
+
+**事故**：首次阶段 0 跑到 75 分钟仍没有落下第一个 optimizer 更新、`cumulative_episodes`
+始终为 0，而按 §8 的预算第一个更新应在约 6 分钟内完成。根因是 WSL 长开机后 GPU 掉线
+（已知 bug），而 `resolve_device("auto")` 在 `torch.cuda.is_available() == False` 时
+**静默回退到 CPU**（`python/pvz_agent_model.py:70-73`），训练因此没有崩、只是退化：
+rollout 照旧在 18 个 CPU worker 上跑，状态文件只在更新落盘后才重写，所以进程看起来还活着。
+
+实测代价（本次测得）：同一批 2,000 局、`chunks=16`、`seq=16` 的更新
+在 RTX 5080 上 **184.4 s**，在 CPU 上 **1,072.6 s**（10,889.8 µs/transition），**慢 5.8 倍**。
+按 §8 的 5 次更新算，阶段 0 会从约 1 h 变成数小时，且大概率在中途撞上 3 小时止损线，
+既拿不到学习信号、也白烧一整晚。
+
+**规格**：新增 `_check_update_device()`（`python/train_pvz_ppo_task_family.py`）并在 `main()`
+解析出 `device` 之后立刻调用：
+
+- 若 `device.type == "cuda"` → 通过，把 `device_name` 写进 `run_config`；
+- 若 `device.type != "cuda"` **且** `artifacts/t5/perf/ppo_update_2000_flex_saved.json`
+  记录的 `device == "cuda"`（即超参是对着 GPU 调出来的）→ **`raise RuntimeError`，直接退出**；
+- 唯一逃生口：显式传 `--allow-cpu-update` **且** 同时传 `--motivation`，
+  此时把 `override` 写进 `run_config`；只给 `--allow-cpu-update` 不给 `--motivation`
+  → `raise ValueError`。
+
+判定记录写入 `run_config["update_device"]` 与 `run_config["update_device_check"]`。
+**这条检查必须在任何昂贵工作之前触发**（当前位于 `_baseline()` 之后、资源哈希与 rollout 之前）。
+
+**变异测试**（已执行）：
+- 破坏 1：把 `if record["benchmark_device"] != "cuda":` 改成恒真 → 
+  `test_cpu_update_is_blocked_when_the_benchmark_was_cuda` 与
+  `test_cpu_override_requires_motivation` 变红；
+- 破坏 2：把 `if not motivation:` 改成恒假 → `test_cpu_override_requires_motivation` 变红；
+- 恢复后 16 项测试全绿（`python/test_t5_overnight.py`）。
+
+**顺带教训**：执行者当时**已经把根因写进日志**（"当前环境已明确缺少 GPU 设备，无法恢复
+原 RTX 训练通路"），却选择"沿预注册流程观察到状态写出或三小时止损线"。这是把
+"按流程办事"凌驾于"报告异常"之上。**凡遇到与预算不符的静默，先报告，再等。**
+
 ---
 
 ## 3. 三个缺口的实现规格
