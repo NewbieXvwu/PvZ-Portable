@@ -1432,6 +1432,10 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 			return false;
 		mBoard->AddPlant(plant.col, plant.row, plant.type, SeedType::SEED_NONE);
 	}
+	// The environment command loop advances Board directly, without the GUI
+	// event pump that normally drains deferred widget deletion. A completed
+	// RESET is outside widget callbacks, so release previous boards/choosers now.
+	ProcessSafeDeleteList();
 	return true;
 }
 
