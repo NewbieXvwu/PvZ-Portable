@@ -656,6 +656,10 @@ git status -sb                     # 看是否与 origin 有分歧、是否有�
 > **彻夜执行请直接读 `T5_OVERNIGHT_ORDER.md`** —— 它是给执行 Agent 的指令，
 > 含可执行的硬阻断机制（退出码 + 代码级 `raise`）、三个缺口的实现规格与验收条件、
 > 判据预注册模板、失败处理流程。本节只是缺口的背景说明。
+>
+> **2026-09-30 更新：三个缺口已由台式机补齐并推送**（`3113d1b` 课程过滤、
+> `0193d36` 阶段 0 评估 + 硬门禁、`754dbbd` 派生 lane 特征、`de294e2` 判据预注册）。
+> 核验结论见 §5.3。**阶段 0 尚未产出结果**（`gates/T5.json` 仍不存在）。
 
 §4 的 T5 细则要求"先过阶段 0 学习信号验证门"。核对 `python/train_pvz_ppo_task_family.py`
 后发现，**阶段 0 按现有代码无法按要求执行**，有三处缺口：
@@ -691,6 +695,41 @@ cap3×1.0 子集**（10 个任务），`_curve_rises()` 也只看 `heldout_cap3_
 **已确认可用的部分**：硬停止条件已实现（每 5,000 局或 30 分钟评估一次；累计 20,000 局后
 pass rate < 20% 且最近 5,000 局改善 < 5pp → 自动停止并写 `stop_reason`）；
 `--max-episodes-per-run` 默认 20,000，阶段 0 需显式传 `10000`。
+
+### 5.3 台式机补齐缺口的核验结论（2026-09-30）
+
+三个缺口 + 判据预注册全部落实，且**硬阻断机制按规格写进了代码**（不只是文档）：
+
+| 工作令条款 | 落实位置 | 核验 |
+|---|---|---|
+| 缺口 1 课程过滤（过滤器而非换清单） | `3113d1b`，`_curriculum_tasks()` | ✅ `TRAIN_PATH` 未动，`_baseline()` 的 sha256 校验仍通过 |
+| 缺口 2 阶段 0 独立评估 | `0193d36`，新增 `stage0_set` 字段 | ✅ 与 `gate_set` 并列，未改后者语义 |
+| 缺口 3 派生特征 + lane token | `754dbbd`，模型 + env + `LawnApp.cpp` | ✅ `MODEL_ARCHITECTURE_VERSION` 4→5，`OBSERVATION_VERSION` 2→3 |
+| **M1** 早期零信号硬停止 | `_stage0_has_no_signal()` + `stop_reason="stage0_no_signal"` | ✅ 含 `stage0_diagnosis` 诊断负载 |
+| **M2** 阶段 0 门禁代码级阻断 | `_check_stage0_gate()` | ✅ 缺 `stage0_gate.json` 或非 pass 直接 `raise`；逃生口需 `--motivation` |
+| **M3** 变异测试 | `python/test_t5_overnight.py`（195 行） | ✅ 有独立测试文件 |
+| **M4** 不许跳步 | 判据预注册先于开跑（`de294e2`，16:43:45Z） | ✅ |
+| **R7** seed-0 初始化校验 | `_seed0_initialization_baseline()` | ✅ 不给 note 就 `raise`；给了则记录 `{status: superseded, actual, t4, note}` |
+| 额外 | `protected_paths` 校验含 `TODO.md`/`DESIGN.md` | ✅ 超出要求 |
+
+**本机独立验证发现并修掉一处缺陷**（提交 `6095c24`）：台式机升了 `OBSERVATION_VERSION`
+（正确——env 确实新增了 `sun_income_rate`），但漏改钉住该常量的
+`test_shared_helpers.test_version_constants_are_the_documented_values`，导致测试失败。
+修正后 `test_agent_model / test_training_semantics / test_seed_jobs /
+test_shared_helpers / test_t5_overnight` 共 **99 项全通过**。
+
+**仍未验证**：`test_env_protocol` 未跑（本机 PvZ 二进制仍是协议 3，需 `cmake --build build`）；
+**阶段 0 没有任何结果产出**，`gates/T5.json` 与 `artifacts/t5/stage0_gate.json` 均不存在。
+
+### 5.4 注意力机制移植性分析（2026-09-30，独立方向）
+
+见 **`ATTENTION_TRANSFER_ANALYSIS.md`**。结论：LLM 侧的稀疏/压缩注意力
+（CSA2 / QSA / MSA / SGA / IndexShare / KDA / Gated DeltaNet-2）**针对的是 PvZ 模型
+根本不存在的问题** —— 上下文 L 仅 74–116 token、无 KV Cache、注意力只占单层算力 4.2%。
+
+但核查发现了真正的瓶颈：**relation-bias 构造占 attention 时间 67.1%、每决策总耗时约 35%，
+一次派发 117 个算子**。已实测 `torch.compile` 融合 **1.83–1.86×，`torch.equal` 逐位相同**。
+复现脚本：`scripts/attention_cost_profile.py`。**这些优化不得在阶段 0 通过前进主分支。**
 
 ### 已排除的路线（有实测数据，勿重复尝试）
 
