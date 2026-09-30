@@ -36,6 +36,7 @@ from pvz_env import PvZEnv, TaskSpec  # noqa: E402
 from train_pvz_ppo import (  # noqa: E402
     add_advantages,
     collect_task_episode,
+    episode_digest,
     episode_hash,
     train_update,
 )
@@ -126,7 +127,12 @@ def main() -> None:
         hash_start = time.perf_counter()
         for episode in episodes:
             episode_hash(episode)
-        hash_seconds_per_episode = (time.perf_counter() - hash_start) / len(episodes)
+        legacy_seconds_per_episode = (time.perf_counter() - hash_start) / len(episodes)
+
+        digest_start = time.perf_counter()
+        for episode in episodes:
+            episode_digest(episode)
+        digest_seconds_per_episode = (time.perf_counter() - digest_start) / len(episodes)
 
         checkpoint_path = Path("/tmp/pvz_hotspot_checkpoint.pt")
         save_start = time.perf_counter()
@@ -137,12 +143,15 @@ def main() -> None:
 
         _row("state_dict copy (3.68M params)", state_seconds)
         _row("_state_sha256", hash_seconds, note=f"-> {digest[:12]}")
-        _row("episode_hash (per episode)", hash_seconds_per_episode,
-             note=f"x{ROLLOUT_EPISODES} = {hash_seconds_per_episode * ROLLOUT_EPISODES:.1f} s")
+        _row("episode_hash JSON path (per episode)", legacy_seconds_per_episode,
+             note=f"x{ROLLOUT_EPISODES} = {legacy_seconds_per_episode * ROLLOUT_EPISODES:.1f} s")
+        _row("episode_digest bytes (per episode)", digest_seconds_per_episode,
+             note=f"x{ROLLOUT_EPISODES} = {digest_seconds_per_episode * ROLLOUT_EPISODES:.1f} s"
+                  f"  ({legacy_seconds_per_episode / digest_seconds_per_episode:.1f}x faster)")
         _row("torch.save checkpoint", save_seconds,
              note=f"{checkpoint_bytes / 1024 / 1024:.1f} MiB")
         fixed = (state_seconds + hash_seconds + save_seconds
-                 + hash_seconds_per_episode * ROLLOUT_EPISODES)
+                 + digest_seconds_per_episode * ROLLOUT_EPISODES)
         print(f"  {'fixed overhead per update':38s} {fixed:10.2f} s")
         print()
 

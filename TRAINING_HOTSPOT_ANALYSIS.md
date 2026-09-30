@@ -135,7 +135,7 @@
 `run_seed_jobs` + spawn worker 基础设施（rollout 就在用）。
 
 - 现状：960 局 × 137.4 ms = **175.9 s**，单线程
-- 改成复用 18 worker：**约 10 s**
+- 改成复用 18 worker：**约 10 s**（实测见 §9.2：固定开销约 8.8 s，不能忽略）
 - 一轮 4 次评估：**703 s → 约 40 s**
 
 **这是安全改动**：每局由 `(task, seed)` 完全决定，并行不改变任何结果。
@@ -197,11 +197,12 @@ MPS/CUDA 在 batch=1 上反而更慢（项目已实测记录在案：
 原因：117 个算子里，剩下的查表 + permute + add 才是大头，索引只占小部分。
 **融合（1.41×）才是主力，IndexShare 类比的价值被高估了。**
 
-### 4.4 为什么默认关闭
+### 4.4 默认开关（已在 §9.3 更新为默认开启）
 
-每个 rollout worker 都要付一次性编译成本（实测 flex 的编译 warmup 约 6 s）。
-18 个 worker × 6 s 是并行的，摊到数千局可忽略，**但必须先验证**。
-建议在台式机上先跑 `--workers 1` 对比开启/关闭的端到端吞吐，再决定是否默认开。
+原先默认关闭，理由是每个 rollout worker 都要付一次性编译成本。
+**实测该成本是 440 ms/进程**（不是 6 s，那是 FlexAttention 的 warmup），
+18 worker 并行付 → 约 0.5 s 墙钟，可忽略，因此**已改为默认开启**。
+详见 §9.3。
 
 ---
 
@@ -234,15 +235,15 @@ attended = _COMPILED_FLEX_ATTENTION(query, key, value, score_mod=relation_score)
 
 ## 6. 建议的实施顺序（按性价比）
 
-| 优先级 | 改动 | 预计收益 | 风险 |
-|---|---|---|---|
-| **P0** | `episode_hash` 改为字节摘要 | 每轮省 ~286 s（占全轮约 6%） | 低；会改 `trajectory_sha256` 取值，**必须在 T5 开跑前做** |
-| **P0** | 评估改用 18 worker 并行 | 每轮省 ~663 s（占约 13%） | 低；每局由 (task, seed) 决定，结果不变 |
-| **P1** | 中间评估跳过 `reference_set` | 评估再省 33% | 低；参考集不设阈值 |
-| **P1** | 关系偏置融合默认开启 | rollout 1.30×、更新 1.42× | 中；需先验证编译开销 |
-| **P2** | 跨决策增量编码 | 未测 | 高；需先测相邻决策的 token 变化率 |
+| 优先级 | 改动 | 预计收益 | 风险 | 状态 |
+|---|---|---|---|---|
+| **P0** | `episode_hash` 改为字节摘要 | 每轮省 ~286 s | 低 | ✅ 已做（`episode_digest`，见 §9.1） |
+| **P0** | 评估改用 18 worker 并行 | 每轮省 ~663 s | 低 | ✅ 已做并验证逐位相同（§9.2） |
+| **P1** | 中间评估跳过 `reference_set` | 评估再省 25% | 低 | ✅ 已做（§9.5） |
+| **P1** | 关系偏置融合默认开启 | rollout 1.1–1.3× | 中 | ✅ 已做；**更新路径无效**（§9.3） |
+| **P2** | 跨决策增量编码 | 未测 | 高 | 未做，需先测相邻决策的 token 变化率 |
 
-**P0 两条加起来可省约 19% 的全轮时间，且都不改变任何训练语义或判据。**
+**更正后：P0+P1 合计约省 32% 的全轮时间**（原估 46%，其中更新那 38% 拿不到收益）。
 
 ---
 
@@ -260,8 +261,117 @@ attended = _COMPILED_FLEX_ATTENTION(query, key, value, score_mod=relation_score)
 
 > 这些是**投影**，不是实测。台式机的单核速度、评估单局耗时、以及融合在
 > CUDA 上的实际收益都需要在台式机上复测。标注为投影的部分不要当结论引用。
+>
+> ⚠️ **本节表格中的"PPO 更新 1.46×"与"rollout 1.30×"已在 §9.3 被更正，请以 §9 为准。**
+> 该表保留在此是为了留下当时的推断记录。
 
 ---
+
+## 9. 实施结果与两处更正（2026-09-30）
+
+P0/P1 全部落地。本节记录实测值，并更正 §7 投影里两处不成立的假设。
+
+### 9.1 P0-1 `episode_digest`：已实现，45× 但换了函数名
+
+新增 `episode_digest()`（`python/train_pvz_ppo.py`），直接对带标签的字节流做
+blake2b-128：数组走 `tobytes()`，每个分支写类型标签，变长载荷写长度前缀。
+
+**没有改 `episode_hash`**：`artifacts/adventure2_level7/training_summary.json` 记录了它
+产出的摘要，改掉会让那份已封存证据无法复算。`episode_hash` 保留为 legacy 路径，
+T5 训练器改用 `episode_digest`，并在 provenance 里记录
+`trajectory_digest_algorithm`，读者不必从摘要长度猜用的是哪个算法。
+
+测试 `python/test_episode_digest.py`（13 项）：确定性 + 键序无关、**逐个字段**变异都必须
+改变摘要、缺失字段 ≠ 存在字段、dtype/shape 参与摘要、结构不同必不同摘要、
+**字节流逐字节钉死**（`test_encoding_is_self_describing`）、固定合成 episode 的摘要钉值。
+
+变异测试（M3 要求）：
+- 去掉 list 长度前缀 → 2 项变红；
+- 去掉字典键排序 → 2 项变红。
+
+> **诚实记录**：第一次做"去掉长度前缀"变异时测试**没有变红**。原因是我的碰撞测试用了
+> `{"kills": 1, "spawns": 23}` 这种载荷，而 int 已经带 NUL 终止符、字符串已带长度，
+> 容器长度前缀对它是冗余的 —— 这是个**等价变异体**。我因此补了
+> `test_encoding_is_self_describing` 直接钉字节流，变异才被捕获。
+
+### 9.2 P0-2 评估并行化：已实现，**逐条逐位相同**（实测）
+
+`_evaluate` 改为复用 spawn 进程池（`_run_evaluation_jobs`），作业表是
+`(task, seed)` 的扁平列表，`job_id` 唯一；`_evaluation_jobs()` 是纯函数，
+布局可以不开池就断言。
+
+`scripts/evaluation_parallel_equivalence.py` 在**真实模拟器**上对比新旧实现，
+逐条比对记录（不是只比汇总）：
+
+| 样本 | 串行 | 1 worker | 18 workers | 记录相同 |
+|---|---|---|---|---|
+| 20 局 | 9.66 s | 9.62 s | 4.84 s | ✅ |
+| 128 局 | 28.83 s | 26.16 s | 10.37 s | ✅ |
+
+gate-only 路径与串行 gate 子集也逐条相同。
+
+> **注意池的固定开销**：128 局 / 18 worker 里，理论计算时间只有约 1.6 s，
+> 实测 10.37 s —— 约 **8.8 s 是进程池启动 + torch 导入 + `model_state` 分发**
+> （3.68M 参数 × 18 个进程 ≈ 252 MiB IPC）。全量 1,280 局时固定开销被摊薄，
+> 但**每次评估都要付一次**，一轮 5 次评估约 44 s。仍远优于 703 s 串行。
+
+### 9.3 P1-2 关系偏置融合默认开启 —— 但**收益只落在 rollout 和评估上**
+
+开关已改为默认开启（`env_flag("PVZ_RELATION_BIAS_FUSION", default=True)`，
+`PVZ_RELATION_BIAS_FUSION=0` 可关）。
+
+**更正 §7 的一处错误**：我原先写"PPO 更新 ~1,880 s → ~1,290 s（融合 1.46×）"。
+**这条不成立。** 融合只作用于 **eager 注意力路径**：
+
+```python
+# pvz_agent_model.py:501
+if (self.use_flex_attention and _COMPILED_FLEX_ATTENTION is not None
+        and query.device.type == "cuda" and batch >= 32):
+    ...  # relation_score 在 FlexAttention kernel 内部算，根本不走融合路径
+```
+
+而台式机的 PPO 更新是 `use_flex = (device.type == "cuda" and backend != "dense")`
+→ **走 FlexAttention，不受融合影响**。受益的是 batch=1 的路径：rollout 与评估。
+
+融合实测（`scripts/relation_bias_benchmark.py`，L=108）：
+
+| | 每步耗时 | 相对 eager |
+|---|---|---|
+| eager | 3.083 ms | 1.00× |
+| fused | 2.352 ms | **1.31×** |
+
+**与 token 数强相关**：L=108（benchmark）→ 1.31×；L=75（`test_agent_model.observation()`）
+→ 1.14×。真实棋盘 L=74–116，所以诚实区间是 **1.1–1.3×**，不是单点值。
+
+**一次性编译成本实测 440 ms/进程**（不是文档先前写的"约 6 s"，那是 FlexAttention 的
+warmup，两回事）。18 个 rollout worker 并行编译 → 约 0.5 s 墙钟，相对 161 s 的
+rollout 可忽略。
+
+### 9.4 更正后的全轮预算（仍为投影）
+
+| 阶段 | 现状 | 优化后 | 依据 |
+|---|---|---|---|
+| PPO 更新 | ~1,880 s | **~1,880 s（不变）** | FlexAttention 路径，融合无效 |
+| rollout | ~1,615 s | ~1,320 s | 融合 1.14–1.31× |
+| 评估 | ~1,103 s | **~25 s/次 × 5 ≈ 125 s** | 18 worker + 固定开销 8.8 s |
+| 固定开销 | ~300 s | ~15 s | 字节摘要 |
+| **合计** | **~4,900 s** | **~3,340 s** | **约 −32%** |
+
+比 §7 原先的 −46% 保守，因为 PPO 更新那 38% 拿不到收益。
+
+### 9.5 P1-1 中间评估跳过 `reference_set`：已实现
+
+`_evaluate(include_reference=...)`：中间评估只跑门禁集 + stage-0 集，
+`reference_set` 写成 `{"skipped": True, "reason": ...}`；
+**每轮的最后一次评估必定带上参考集**（`run_episodes >= max_episodes_per_run` 时），
+若因早停（门禁通过 / 阶段 0 零信号 / 硬停止）而没有，则**循环结束后补一次完整评估**，
+保证 `gates/T5.json` 永远不缺数据。
+
+> 说明：并行化之后这条优化的绝对收益从 175.9 s 降到约 2.7 s。保留它更多是因为
+> 语义更干净（不设阈值的诊断量只算一次），而不是为了省时间。
+
+---
+
 
 ## 8. 复现
 
@@ -277,8 +387,11 @@ python scripts/relation_bias_benchmark.py --repeats 200
 # 单决策拆解
 python scripts/attention_cost_profile.py
 
+# 评估并行化：与串行实现逐条比对（真实模拟器）
+python scripts/evaluation_parallel_equivalence.py --tasks 3 --stage0-tasks 2 --seeds 4
+
 # 等价性
-cd python && python -m unittest test_relation_bias_optimization
+cd python && python -m unittest test_relation_bias_optimization test_episode_digest test_t5_overnight
 ```
 
 **前置**：本机 PvZ 二进制需为协议 4（`cmake --build build -j6`）。

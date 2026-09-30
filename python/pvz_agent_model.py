@@ -33,13 +33,27 @@ WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
 MODEL_ARCHITECTURE_VERSION = 5
 FEATURE_COUNT = 32
-# Opt-in fusion of the relation-bias assembly.  The chain dispatches 117
-# operators eagerly while doing microseconds of arithmetic, so fusing it is a
-# measured 1.4x on the encoder and 1.3x on a full rollout step, bit-identically.
-# It stays opt-in until a full training run has been validated with it, because
-# each rollout worker pays a one-off compile cost.  Enable with the environment
-# variable ``PVZ_RELATION_BIAS_FUSION=1`` or ``set_relation_bias_fusion(True)``.
-RELATION_BIAS_FUSION = os.environ.get("PVZ_RELATION_BIAS_FUSION", "") not in ("", "0", "false")
+
+
+def env_flag(name: str, *, default: bool) -> bool:
+    """Read a boolean environment flag, accepting the usual off spellings."""
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in ("", "0", "false", "no", "off")
+
+
+# Fusion of the relation-bias assembly, on by default.  The chain dispatches 117
+# operators eagerly while doing microseconds of arithmetic, so fusing it is a measured
+# 1.41x on the encoder and 1.30x on a full rollout step, bit-identically.
+#
+# It matters for the *eager* attention path only: batch-of-1 rollout and evaluation
+# forwards.  The CUDA training update goes through ``FlexAttention(score_mod=...)``,
+# which computes the same bias inside its own kernel, so the update is unaffected.
+# Each process pays a one-off compile cost, and the rollout pool pays it 18 times in
+# parallel.  Set ``PVZ_RELATION_BIAS_FUSION=0`` (or call
+# ``set_relation_bias_fusion(False)``) to go back to the eager chain.
+RELATION_BIAS_FUSION = env_flag("PVZ_RELATION_BIAS_FUSION", default=True)
 FLEX_ATTENTION_AVAILABLE = flex_attention is not None and hasattr(torch, "compile")
 _COMPILED_FLEX_ATTENTION = (
     torch.compile(flex_attention, dynamic=True) if FLEX_ATTENTION_AVAILABLE else None
@@ -453,7 +467,11 @@ def fused_relation_bias() -> Any | None:
 
 
 def use_fused_relation_bias() -> bool:
-    """Whether the fused relation-bias path is enabled and available."""
+    """Whether the fused relation-bias path is enabled and available.
+
+    Only the eager attention path consults this; the CUDA ``FlexAttention`` path
+    computes the same bias inside its kernel regardless.
+    """
     return RELATION_BIAS_FUSION and fused_relation_bias() is not None
 
 

@@ -12,18 +12,24 @@ would hide exactly the kind of silent drift this refactor could introduce.
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
 import unittest
+from unittest import mock
 
 import torch
 
 from pvz_agent_model import (
+    RELATION_BIAS_FUSION,
     GameplayModelV1,
     RelationBiasIndices,
     configure_torch_threads,
+    env_flag,
     fused_relation_bias,
     relation_bias_from_indices,
     relation_bias_indices,
     set_relation_bias_fusion,
+    use_fused_relation_bias,
     observation_tokens,
     pack_tokens,
     unpack_tokens,
@@ -137,6 +143,44 @@ class RelationBiasFusionTests(unittest.TestCase):
         self.assertTrue(torch.equal(plain["cell_tokens"], fused["cell_tokens"]))
         self.assertTrue(torch.equal(plain["cell_keys"], fused["cell_keys"]))
         self.assertTrue(torch.equal(plain["value"], fused["value"]))
+
+
+class RelationBiasFusionDefaultTests(unittest.TestCase):
+    """The fusion is on by default; the env var is the documented escape hatch."""
+
+    def test_env_flag_accepts_the_usual_off_spellings(self) -> None:
+        for raw in ("", "0", "false", "FALSE", " no ", "off"):
+            with self.subTest(raw=raw):
+                with mock.patch.dict(os.environ, {"PVZ_TEST_FLAG": raw}):
+                    self.assertFalse(env_flag("PVZ_TEST_FLAG", default=True))
+        for raw in ("1", "true", "yes", "on"):
+            with self.subTest(raw=raw):
+                with mock.patch.dict(os.environ, {"PVZ_TEST_FLAG": raw}):
+                    self.assertTrue(env_flag("PVZ_TEST_FLAG", default=True))
+
+    def test_env_flag_falls_back_to_the_default_when_unset(self) -> None:
+        with mock.patch.dict(os.environ):
+            os.environ.pop("PVZ_TEST_FLAG", None)
+            self.assertTrue(env_flag("PVZ_TEST_FLAG", default=True))
+            self.assertFalse(env_flag("PVZ_TEST_FLAG", default=False))
+
+    def test_fusion_default_is_wired_to_on(self) -> None:
+        """A default-off fusion would silently lose the measured 1.3-1.4x."""
+        source = (Path(__file__).resolve().parent / "pvz_agent_model.py").read_text()
+        self.assertIn('env_flag("PVZ_RELATION_BIAS_FUSION", default=True)', source)
+        # The module-level value must be exactly what that call would produce, so an
+        # ambient PVZ_RELATION_BIAS_FUSION=0 in the test environment cannot mask a
+        # regression in the wiring.
+        self.assertEqual(
+            RELATION_BIAS_FUSION,
+            env_flag("PVZ_RELATION_BIAS_FUSION", default=True))
+
+    def test_disabling_the_fusion_restores_the_eager_chain(self) -> None:
+        try:
+            self.assertFalse(set_relation_bias_fusion(False))
+            self.assertFalse(use_fused_relation_bias())
+        finally:
+            set_relation_bias_fusion(True)
 
 
 class EncoderHoistingEquivalenceTests(unittest.TestCase):

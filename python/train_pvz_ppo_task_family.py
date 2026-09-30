@@ -6,6 +6,7 @@ import argparse
 from collections import Counter, deque
 from datetime import datetime, timezone
 import json
+import multiprocessing
 from multiprocessing.util import Finalize
 import os
 from pathlib import Path
@@ -38,7 +39,13 @@ from pvz_common import (  # noqa: E402
 from pvz_env import PvZEnv  # noqa: E402
 from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory  # noqa: E402
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_SEMANTICS  # noqa: E402
-from train_pvz_ppo import add_advantages, collect_task_episode, episode_hash, train_update  # noqa: E402
+from train_pvz_ppo import (  # noqa: E402
+    EPISODE_DIGEST_ALGORITHM,
+    add_advantages,
+    collect_task_episode,
+    episode_digest,
+    train_update,
+)
 import check_task_manifests  # noqa: E402
 import t4_capability_profile  # noqa: E402
 
@@ -65,6 +72,9 @@ WORKER_MODEL: GameplayModelV1 | None = None
 WORKER_ENV: PvZEnv | None = None
 WORKER_ASSIGNMENTS: dict[int, dict[str, Any]] = {}
 WORKER_MAX_ACTIONS = 4000
+# Evaluation jobs are ``job_id -> {"task", "seed", "bucket"}``.  They are kept apart
+# from the rollout assignments so the two pool initializers cannot be confused.
+WORKER_EVAL_JOBS: dict[int, dict[str, Any]] = {}
 
 
 def _task_family() -> tuple[dict[str, Any], dict[str, Any]]:
@@ -200,6 +210,62 @@ def _rollout_worker(job_id: int) -> dict[str, Any]:
     )
 
 
+def _init_evaluation_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],
+                            jobs: dict[int, dict[str, Any]], worker_threads: int,
+                            worker_device: str) -> None:
+    global WORKER_MODEL, WORKER_ENV, WORKER_EVAL_JOBS
+    configure_torch_threads(worker_threads)
+    WORKER_MODEL = GameplayModelV1().eval().to(resolve_device(worker_device))
+    WORKER_MODEL.load_state_dict(state_dict)
+    WORKER_ENV = PvZEnv(resource_dir=resource_dir)
+    WORKER_EVAL_JOBS = jobs
+    Finalize(None, _close_worker, exitpriority=10)
+
+
+def _evaluation_worker(job_id: int) -> tuple[int, dict[str, Any]]:
+    if WORKER_MODEL is None or WORKER_ENV is None:
+        raise RuntimeError("evaluation worker was not initialized")
+    job = WORKER_EVAL_JOBS[job_id]
+    record = t4_capability_profile.run_episode(
+        WORKER_ENV, job["task"], job["seed"], "checkpoint", WORKER_MODEL)
+    return job_id, record
+
+
+def _run_evaluation_jobs(jobs: dict[int, dict[str, Any]], model_state: dict[str, torch.Tensor],
+                         resource_dir: Path, workers: int, worker_threads: int,
+                         worker_device: str) -> list[dict[str, Any]]:
+    """Run every ``(task, seed)`` evaluation episode across *workers* processes.
+
+    Evaluation used to be a single-threaded loop over 1,280 episodes while rollout
+    spread 2,000 over 18 workers, so evaluation was the largest serial section of a
+    run.      Each episode is fully determined by its ``(task, seed)`` pair and the model
+    weights, so spreading them over processes cannot change any result.
+
+    Returns one record per job in ascending job-id order; :func:`_evaluate` relies on
+    that ordering to regroup records back onto their tasks.
+    """
+    if not jobs:
+        return []
+    context = multiprocessing.get_context("spawn")
+    pool = context.Pool(min(workers, len(jobs)), initializer=_init_evaluation_worker,
+                        initargs=(str(resource_dir), model_state, jobs, worker_threads,
+                                  worker_device))
+    collected: dict[int, dict[str, Any]] = {}
+    try:
+        for job_id, record in pool.imap_unordered(_evaluation_worker, sorted(jobs), chunksize=1):
+            collected[job_id] = record
+        pool.close()
+    except BaseException:
+        pool.terminate()
+        raise
+    finally:
+        pool.join()
+    missing = sorted(set(jobs) - set(collected))
+    if missing:
+        raise RuntimeError(f"evaluation jobs {missing[:8]} produced no result")
+    return [collected[job_id] for job_id in sorted(jobs)]
+
+
 def _sampling_weights(tasks: list[dict[str, Any]]) -> list[float]:
     return [
         2.0 - (sum(TASK_RECENT[task["task_id"]]) / len(TASK_RECENT[task["task_id"]])
@@ -222,38 +288,106 @@ def _assignments(tasks: list[dict[str, Any]], job_ids: list[int], rng: random.Ra
     return assignments
 
 
+def _evaluation_jobs(tasks: list[dict[str, Any]], gate_tasks: list[dict[str, Any]],
+                     stage0_tasks: list[dict[str, Any]], include_reference: bool
+                     ) -> tuple[list[dict[str, Any]], dict[int, dict[str, Any]],
+                                list[tuple[str, str]]]:
+    """Lay out every evaluation episode as a flat, ordered job table.
+
+    Returns the reference tasks actually used, ``job_id -> {"task", "seed"}`` and the
+    matching ``(bucket, task_id)`` labels.  Keeping this pure means the layout can be
+    asserted without spawning a pool.
+    """
+    gate_ids = {task["task_id"] for task in gate_tasks}
+    reference_tasks = tasks if include_reference else [
+        task for task in tasks if task["task_id"] in gate_ids
+    ]
+    jobs: dict[int, dict[str, Any]] = {}
+    layout: list[tuple[str, str]] = []
+    for bucket, bucket_tasks in (("reference", reference_tasks), ("stage0", stage0_tasks)):
+        for task in bucket_tasks:
+            for seed in task["seeds"]:
+                jobs[len(jobs)] = {"task": task, "seed": seed}
+                layout.append((bucket, task["task_id"]))
+    return reference_tasks, jobs, layout
+
+
 def _evaluate(model: GameplayModelV1, resource_dir: Path, tasks: list[dict[str, Any]],
               gate_tasks: list[dict[str, Any]], stage0_tasks: list[dict[str, Any]],
-              episodes: int, output_dir: Path) -> dict[str, Any]:
+              episodes: int, output_dir: Path, *,
+              workers: int, worker_threads: int, worker_device: str,
+              include_reference: bool = True,
+              runner: Any = None) -> dict[str, Any]:
+    """Evaluate the frozen held-out and stage-0 sets across *workers* processes.
+
+    ``include_reference`` controls the ``cap3 x != 1.0`` reference set.  It gates
+    nothing (it is reported, never thresholded), so intermediate evaluations skip it
+    and only the run's final evaluation pays for those episodes.
+
+    ``runner`` is injectable so tests can exercise the layout and regrouping without
+    spawning processes; it defaults to :func:`_run_evaluation_jobs`.
+    """
     eval_model = GameplayModelV1().eval()
     eval_model.load_state_dict({key: value.detach().cpu() for key, value in model.state_dict().items()})
-    records: dict[str, list[dict[str, Any]]] = {}
-    stage0_records: dict[str, list[dict[str, Any]]] = {}
-    configure_torch_threads(1)
-    with PvZEnv(resource_dir=resource_dir) as env:
-        for task in tasks:
-            records[task["task_id"]] = [
-                t4_capability_profile.run_episode(env, task, seed, "checkpoint", eval_model)
-                for seed in task["seeds"]
-            ]
-        for task in stage0_tasks:
-            stage0_records[task["task_id"]] = [
-                t4_capability_profile.run_episode(env, task, seed, "checkpoint", eval_model)
-                for seed in task["seeds"]
-            ]
+    model_state = {key: value.detach().cpu() for key, value in eval_model.state_dict().items()}
     gate_ids = {task["task_id"] for task in gate_tasks}
+    reference_tasks, jobs, layout = _evaluation_jobs(
+        tasks, gate_tasks, stage0_tasks, include_reference)
+    run_jobs = runner or _run_evaluation_jobs
+    results = run_jobs(jobs, model_state, resource_dir, workers, worker_threads, worker_device)
+    if len(results) != len(jobs):
+        raise RuntimeError(
+            f"evaluation returned {len(results)} records for {len(jobs)} jobs; "
+            "the runner must return one record per job in ascending job-id order")
+    records: dict[str, list[dict[str, Any]]] = {task["task_id"]: [] for task in reference_tasks}
+    stage0_records: dict[str, list[dict[str, Any]]] = {task["task_id"]: [] for task in stage0_tasks}
+    for index, record in enumerate(results):
+        bucket, task_id = layout[index]
+        (records if bucket == "reference" else stage0_records)[task_id].append(record)
+
     gate_records = [record for task_id, rows in records.items() if task_id in gate_ids for record in rows]
     reference_records = [record for rows in records.values() for record in rows]
     gate_summary = t4_capability_profile.summarize_episodes(gate_records)
-    reference_summary = t4_capability_profile.summarize_episodes(reference_records)
     stage0_records_flat = [record for rows in stage0_records.values() for record in rows]
     stage0_summary = t4_capability_profile.summarize_episodes(stage0_records_flat)
-    raw_path = output_dir / "evaluations" / f"heldout_{episodes:07d}.json.gz"
+    suffix = "" if include_reference else "_gate_only"
+    raw_path = output_dir / "evaluations" / f"heldout_{episodes:07d}{suffix}.json.gz"
+    # An output dir outside the repo is legitimate, so fall back to the absolute path
+    # rather than raising on relative_to.
+    try:
+        raw_reference = str(raw_path.relative_to(ROOT))
+    except ValueError:
+        raw_reference = str(raw_path)
     atomic_json(raw_path, {
         "cumulative_episodes": episodes,
+        "reference_set_included": include_reference,
         "seed_results": records,
         "stage0_seed_results": stage0_records,
     }, compressed=True)
+    if include_reference:
+        reference_summary = t4_capability_profile.summarize_episodes(reference_records)
+        reference_set: dict[str, Any] = {
+            "skipped": False,
+            "task_count": len(reference_tasks),
+            "sample_count": reference_summary["sample_count"],
+            "passes": round(reference_summary["pass_rate"] * reference_summary["sample_count"]),
+            "pass_rate": reference_summary["pass_rate"],
+            "per_task": {
+                task_id: t4_capability_profile.summarize_episodes(rows)
+                for task_id, rows in records.items()
+            },
+        }
+    else:
+        reference_set = {
+            "skipped": True,
+            "reason": "intermediate evaluation: the reference set gates nothing, so it "
+                      "is evaluated once per run on the final model",
+            "task_count": 0,
+            "sample_count": 0,
+            "passes": 0,
+            "pass_rate": None,
+            "per_task": {},
+        }
     return {
         "cumulative_episodes": episodes,
         "gate_set": {
@@ -270,16 +404,7 @@ def _evaluate(model: GameplayModelV1, resource_dir: Path, tasks: list[dict[str, 
                 for task_id, rows in records.items() if task_id in gate_ids
             },
         },
-        "reference_set": {
-            "task_count": len(tasks),
-            "sample_count": reference_summary["sample_count"],
-            "passes": round(reference_summary["pass_rate"] * reference_summary["sample_count"]),
-            "pass_rate": reference_summary["pass_rate"],
-            "per_task": {
-                task_id: t4_capability_profile.summarize_episodes(rows)
-                for task_id, rows in records.items()
-            },
-        },
+        "reference_set": reference_set,
         "stage0_set": {
             "task_count": len(stage0_tasks),
             "sample_count": stage0_summary["sample_count"],
@@ -294,7 +419,7 @@ def _evaluate(model: GameplayModelV1, resource_dir: Path, tasks: list[dict[str, 
                 for task_id, rows in stage0_records.items()
             },
         },
-        "raw_seed_results_path": str(raw_path.relative_to(ROOT)),
+        "raw_seed_results_path": raw_reference,
     }
 
 
@@ -819,7 +944,7 @@ def main() -> None:
         update += 1
         run_episodes += len(episodes)
         state["cumulative_episodes"] += len(episodes)
-        hashes = [episode_hash(episode) for episode in episodes]
+        hashes = [episode_digest(episode) for episode in episodes]
         for episode in episodes:
             task_id = episode["task_id"]
             TASK_RECENT[task_id].append(episode["won"])
@@ -867,6 +992,11 @@ def main() -> None:
                 model, resource_dir, reference_tasks, gate_tasks,
                 stage0_tasks,
                 state["cumulative_episodes"], output_dir,
+                workers=workers, worker_threads=worker_threads,
+                worker_device=worker_device,
+                # The run's last scheduled evaluation is the authoritative record, so
+                # only it pays for the reference set.
+                include_reference=run_episodes >= args.max_episodes_per_run,
             )
             latest_eval = eval_row
             state["evaluations"].append(eval_row)
@@ -930,6 +1060,7 @@ def main() -> None:
             "protocol_version": ENV_PROTOCOL_VERSION,
             "command": {"argv": sys.argv, "arguments": run_config},
             "trajectory_sha256": {"ppo_rollouts_by_update": {str(update): hashes}},
+            "trajectory_digest_algorithm": EPISODE_DIGEST_ALGORITHM,
             "resource_sha256": resource_hashes,
             "initial_checkpoint_sha256": initial_sha,
             "initialization_baseline": initialization_baseline,
@@ -960,6 +1091,27 @@ def main() -> None:
         _save_state(state_path, state, curve_path)
         if run_episodes >= args.max_episodes_per_run and not stop:
             break
+
+    # A run can stop early (gate pass, zero stage-0 signal, hard stop), and then the
+    # last evaluation never carried the reference set.  Evaluate it now so every run
+    # ends with a complete record and ``gates/T5.json`` never reports a gap.
+    if latest_eval["reference_set"].get("skipped"):
+        latest_eval = _evaluate(
+            model, resource_dir, reference_tasks, gate_tasks, stage0_tasks,
+            state["cumulative_episodes"], output_dir,
+            workers=workers, worker_threads=worker_threads,
+            worker_device=worker_device, include_reference=True,
+        )
+        state["evaluations"].append(latest_eval)
+        state["learning_curve"].append(_curve_row(
+            state["cumulative_episodes"], curriculum_tasks,
+            latest_eval["gate_set"]["pass_rate"],
+            latest_eval["reference_set"]["pass_rate"],
+            latest_eval["stage0_set"]["pass_rate"],
+            latest_eval["raw_seed_results_path"],
+        ))
+        print("evaluated the reference set on the final model "
+              f"(pass_rate={latest_eval['reference_set']['pass_rate']:.4f})", flush=True)
 
     if state.get("stop_reason"):
         state["runs"][-1]["status"] = state["stop_reason"]

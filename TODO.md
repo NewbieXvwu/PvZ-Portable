@@ -731,6 +731,26 @@ test_shared_helpers / test_t5_overnight` 共 **99 项全通过**。
 一次派发 117 个算子**。已实测 `torch.compile` 融合 **1.83–1.86×，`torch.equal` 逐位相同**。
 复现脚本：`scripts/attention_cost_profile.py`。**这些优化不得在阶段 0 通过前进主分支。**
 
+### 5.5 全流程热点优化已落地（2026-09-30，用户裁定"立刻全做并合回 env 再重跑"）
+
+见 **`TRAINING_HOTSPOT_ANALYSIS.md` §9**（含两处对 §7 投影的更正）。已实施：
+
+| 项 | 内容 | 验证 |
+|---|---|---|
+| P0-1 | `episode_digest`：字节摘要取代 JSON 物化 | `test_episode_digest.py` 13 项；2 个变异被捕获；45× |
+| P0-2 | `_evaluate` 改 spawn 进程池 | 真实模拟器**逐条逐位相同**；128 局 28.8 s → 10.4 s |
+| P1-1 | 中间评估跳过 `reference_set`，每轮末必补 | `test_t5_overnight.EvaluationTests` |
+| P1-2 | 关系偏置融合默认开启（`PVZ_RELATION_BIAS_FUSION=0` 可关） | 稳态 1.14–1.31×；编译成本 440 ms/进程 |
+
+**§5.4 末尾"这些优化不得在阶段 0 通过前进主分支"这条约束已被用户明确解除** ——
+裁定是"优化立刻全做，合并回 env 分支再重跑"。理由：这些改动不改变任何训练语义或判据
+（逐位相同已证），且 `episode_digest` 会改变 `trajectory_sha256` 的取值，
+**必须在 T5 产出任何结果之前定死**，否则证据不可比。
+
+**同时新增 M5 硬阻断**（见 `T5_OVERNIGHT_ORDER.md` §M5）：`resolve_device("auto")` 在
+CUDA 掉线时会静默回退 CPU，导致"进程活着但一个更新都落不下盘"。
+首次阶段 0 就这样空转 75 分钟。现在非 CUDA 更新会直接 `raise`。
+
 ### 已排除的路线（有实测数据，勿重复尝试）
 
 - **降精度换速度**：fp16 / bf16 / 稀疏首层 / float32 累加器**全部比全精度更慢**
