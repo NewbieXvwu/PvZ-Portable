@@ -1,0 +1,139 @@
+{
+  "recorded_at": "2026-09-30T12:50:07.883851+00:00",
+  "code_head": "b09d2b2b8c90cccf74f56db71aeb5171ef5a9b58",
+  "source_worktree_clean_at_resume": true,
+  "repair_verification": {
+    "time": "2026-09-30T12:20:44.235624+00:00",
+    "head": "b09d2b2b8c90cccf74f56db71aeb5171ef5a9b58",
+    "worktree_status": "",
+    "trainer_protected_paths": "    protected_paths = (\n        T4_GATE_PATH, ROOT / \"scripts/t4_capability_profile.py\", ROOT / \"TODO.md\",\n        ROOT / \"DESIGN.md\", TRAIN_PATH, HELDOUT_PATH,\n    )\n    protected_before = {path: sha256_file(path) for path in protected_paths}\n    throughput = json.loads(THROUGHPUT_PATH.read_text(encoding=\"utf-8\"))\n    if not throughput[\"single_core_threshold_met\"]:\n",
+    "failure_analysis_file_present": false,
+    "resolution": "tracked trainer no longer references missing FAILURE_ANALYSIS.md; protected paths match HEAD"
+  },
+  "initial_pre_repair_smoke": {
+    "exit_code": 1,
+    "wall_seconds": 2.37,
+    "failure": "FileNotFoundError: /home/newbiexvwu/PvZ-Portable/FAILURE_ANALYSIS.md",
+    "preserved_log": "logs/smoke.log"
+  },
+  "B0_smoke_retry": {
+    "exit_code": 0,
+    "wall_seconds": 385.22,
+    "training_episodes": 1000,
+    "checkpoint_exists": true,
+    "learning_curve_entries": 2,
+    "evaluation_complete": true,
+    "whole_run_episodes_per_hour": 9345.309173978505,
+    "rollout_plus_update_episodes_per_hour": 22277.3,
+    "projected_episodes_in_6_hours_at_whole_smoke_rate": 56072,
+    "projected_episodes_in_6_5_hours_at_update_rate": 133664,
+    "heldout_cap3_x1": {
+      "passes": 33,
+      "sample_count": 640,
+      "pass_rate": 0.051562,
+      "wilson_95": [
+        0.036948156109616465,
+        0.07152801898575671
+      ]
+    },
+    "stage0_cap1": {
+      "passes": 24,
+      "sample_count": 320,
+      "pass_rate": 0.075,
+      "wilson_95": [
+        0.05091491480619657,
+        0.1091679202004167
+      ]
+    },
+    "nonfatal_regemu_warning_count": 72
+  },
+  "B1": {
+    "maximum_segments": 6,
+    "segments_started": 1,
+    "segments_finished": 1,
+    "planned_segment_episodes": 8000,
+    "actual_training_episodes": 5000,
+    "wall_seconds": 660.58,
+    "run_status": "stage0_no_signal",
+    "stop_reason": "stage0_no_signal",
+    "updates": [
+      {
+        "update": 1,
+        "cumulative_episodes": 2000,
+        "policy_loss": 0.1283,
+        "value_loss": 0.0201,
+        "rollout_seconds": 121.9,
+        "ppo_update_seconds": 91.1,
+        "episodes_per_hour": 33810
+      },
+      {
+        "update": 2,
+        "cumulative_episodes": 4000,
+        "policy_loss": -0.0308,
+        "value_loss": 0.0023,
+        "rollout_seconds": 124.8,
+        "ppo_update_seconds": 87.9,
+        "episodes_per_hour": 33853
+      },
+      {
+        "update": 3,
+        "cumulative_episodes": 5000,
+        "policy_loss": -0.0011,
+        "value_loss": 0.0017,
+        "rollout_seconds": 69.0,
+        "ppo_update_seconds": 46.5,
+        "episodes_per_hour": 31158
+      }
+    ],
+    "latest_losses": {
+      "policy_loss": -0.0010747092712790618,
+      "value_loss": 0.0017061113408658457,
+      "rollout_episode_wins": 0
+    },
+    "heldout_cap3_x1": {
+      "passes": 0,
+      "sample_count": 640,
+      "pass_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.005966467005294152
+      ]
+    },
+    "stage0_cap1": {
+      "passes": 0,
+      "sample_count": 320,
+      "pass_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.011862158831309737
+      ]
+    },
+    "reference_cap3_all_multipliers": {
+      "passes": 0,
+      "sample_count": 960,
+      "pass_rate": 0.0
+    },
+    "learning_curve": "artifacts/t5/curves/night_seed0.json",
+    "learning_curve_rises": false,
+    "checkpoint": "artifacts/t5/night_seed0/runs/run_1/gameplay_model_v1_ppo.pt",
+    "training_state": "artifacts/t5/night_seed0/training_state.json",
+    "trainer_gate_result": "fail",
+    "nonfatal_regemu_warning_count": 60
+  },
+  "memory_observations": {
+    "sample_count": 12,
+    "minimum_available_gib": 5.72,
+    "swap_used_max_gib": 0.0,
+    "night_run_parent_peak_rss_gib": 5.26
+  },
+  "continuation_decision": "Stopped after the trainer recorded stage0_no_signal. No further segments or stage-gate overrides were run.",
+  "learning_conclusion": "The single seed-0 candidate had zero cap1 training wins in 5000 episodes and zero heldout/stage0 wins at its final evaluation. This run shows no learning signal under this configuration by 5000 episodes; it cannot establish that RL in this environment never learns.",
+  "preserved_evidence": {
+    "all_logs": "logs/",
+    "benchmark_shards": "artifacts/t5/night_measurement_shards",
+    "benchmark_shard_count": 4900,
+    "smoke_and_night_checkpoints": "artifacts/t5/night_smoke/runs and artifacts/t5/night_seed0/runs"
+  },
+  "task_set_or_threshold_changes": false,
+  "stage0_gate_override": false
+}

@@ -1,0 +1,101 @@
+[
+  {
+    "timestamp": "2026-09-30T12:34:58.358023+00:00",
+    "cumulative_training_episodes": 0,
+    "train_task_pass_rates_recent_64": {
+      "train_day_1": 0.0,
+      "train_day_2": 0.0,
+      "train_day_3": 0.0,
+      "train_day_4": 0.0,
+      "train_night_1": 0.0,
+      "train_night_2": 0.0,
+      "train_night_3": 0.0,
+      "train_night_4": 0.0,
+      "train_pool_1": 0.0,
+      "train_pool_2": 0.0,
+      "train_pool_3": 0.0,
+      "train_pool_4": 0.0,
+      "train_fog_1": 0.0,
+      "train_fog_2": 0.0,
+      "train_fog_3": 0.0,
+      "train_fog_4": 0.0,
+      "train_roof_1": 0.0,
+      "train_roof_2": 0.0,
+      "train_roof_3": 0.0,
+      "train_roof_4": 0.0
+    },
+    "heldout_cap3_x1_pass_rate": 0.0,
+    "heldout_cap3_all_reference_pass_rate": 0.0,
+    "stage0_pass_rate": 0.0,
+    "curriculum_task_ids": [
+      "train_day_1",
+      "train_night_1",
+      "train_pool_1",
+      "train_fog_1",
+      "train_roof_1"
+    ],
+    "evaluation_source": "gates/T4.json; no baseline retest"
+  },
+  {
+    "timestamp": "2026-09-30T12:44:57.102722+00:00",
+    "cumulative_training_episodes": 5000,
+    "curriculum_task_ids": [
+      "train_day_1",
+      "train_night_1",
+      "train_pool_1",
+      "train_fog_1",
+      "train_roof_1"
+    ],
+    "train_task_pass_rates_recent_64": {
+      "train_day_1": 0.0,
+      "train_night_1": 0.0,
+      "train_pool_1": 0.0,
+      "train_fog_1": 0.0,
+      "train_roof_1": 0.0
+    },
+    "heldout_cap3_x1_pass_rate": 0.0,
+    "heldout_cap3_all_reference_pass_rate": null,
+    "stage0_pass_rate": 0.0,
+    "evaluation_source": "artifacts/t5/night_seed0/evaluations/heldout_0005000_gate_only.json.gz",
+    "timing_seconds": {
+      "rollout": 69.044,
+      "ppo_update": 46.495,
+      "episode_digest": 2.617,
+      "model_state_sha256": 0.008,
+      "checkpoint_save": 0.083,
+      "wall": 115.539,
+      "episodes_per_hour": 31158.3
+    }
+  },
+  {
+    "timestamp": "2026-09-30T12:45:51.439600+00:00",
+    "cumulative_training_episodes": 5000,
+    "curriculum_task_ids": [
+      "train_day_1",
+      "train_night_1",
+      "train_pool_1",
+      "train_fog_1",
+      "train_roof_1"
+    ],
+    "train_task_pass_rates_recent_64": {
+      "train_day_1": 0.0,
+      "train_night_1": 0.0,
+      "train_pool_1": 0.0,
+      "train_fog_1": 0.0,
+      "train_roof_1": 0.0
+    },
+    "heldout_cap3_x1_pass_rate": 0.0,
+    "heldout_cap3_all_reference_pass_rate": 0.0,
+    "stage0_pass_rate": 0.0,
+    "evaluation_source": "artifacts/t5/night_seed0/evaluations/heldout_0005000.json.gz",
+    "timing_seconds": {
+      "rollout": 69.044,
+      "ppo_update": 46.495,
+      "episode_digest": 2.617,
+      "model_state_sha256": 0.008,
+      "checkpoint_save": 0.083,
+      "wall": 115.539,
+      "episodes_per_hour": 31158.3
+    }
+  }
+]

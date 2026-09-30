@@ -1,0 +1,1433 @@
+{
+  "task_id": "T5",
+  "commit": "b09d2b2b8c90cccf74f56db71aeb5171ef5a9b58",
+  "worktree_clean": true,
+  "reproduce_command": "python scripts/t5_throughput.py --resource-dir /home/newbiexvwu/.cache/pvz-research-resources --minutes 15 --output artifacts/t5/throughput.json && python python/train_pvz_ppo_task_family.py --resource-dir /home/newbiexvwu/.cache/pvz-research-resources --output-dir artifacts/t5/night_seed0 --curriculum cap1 --rollout-episodes 2000 --max-episodes-per-run 8000 --initialization-seed 0 --initialization-note 'T5-E \u9884\u6f14\uff1a\u7f51\u7edc\u7ed3\u6784\u5df2\u53d8\u66f4\uff0c\u4e0d\u590d\u7528 T4 seed-0 \u57fa\u7ebf' --motivation '\u5206\u6bb5\u5ef6\u957f\u540c\u4e00\u5019\u9009\uff0c\u6bb5\u95f4\u7528\u4e0a\u4e00 run \u7684\u68c0\u67e5\u70b9\u7eed\u63a5' --workers 12",
+  "gate_result": "fail",
+  "metrics": {
+    "single_core_episodes_per_hour": 6273.833,
+    "throughput_configurations": [
+      {
+        "workers": 1,
+        "torch_threads_per_worker": 1,
+        "device": "cpu",
+        "target_seconds": 30.0,
+        "elapsed_seconds": 30.986,
+        "elapsed_before_shutdown_seconds": 30.0,
+        "peak_process_tree_rss_mb": 1847.4,
+        "completed_episodes": 54,
+        "episodes_per_hour": 6273.833,
+        "episodes_per_hour_per_worker": 6273.833,
+        "mean_episode_seconds": 0.512767,
+        "mean_profile_seconds": {
+          "model": 0.437275,
+          "environment": 0.052892,
+          "critic_inputs": 0.003842,
+          "tokenization": 0.017876,
+          "persistence": 0.012992
+        },
+        "wins": 0,
+        "completed_task_counts": {
+          "train_day_1": 3,
+          "train_day_2": 5,
+          "train_day_3": 3,
+          "train_day_4": 3,
+          "train_night_1": 5,
+          "train_night_2": 2,
+          "train_night_3": 3,
+          "train_night_4": 1,
+          "train_pool_1": 3,
+          "train_pool_2": 5,
+          "train_pool_3": 2,
+          "train_pool_4": 1,
+          "train_fog_1": 3,
+          "train_fog_2": 2,
+          "train_fog_3": 2,
+          "train_fog_4": 2,
+          "train_roof_1": 2,
+          "train_roof_2": 1,
+          "train_roof_3": 5,
+          "train_roof_4": 1
+        },
+        "shards_path": "artifacts/t5/perf/throughput_shards_20260929T135526Z/cpu_workers_1_threads_1"
+      },
+      {
+        "workers": 12,
+        "torch_threads_per_worker": 1,
+        "device": "cpu",
+        "target_seconds": null,
+        "elapsed_seconds": 177.311,
+        "elapsed_before_shutdown_seconds": 177.311,
+        "peak_process_tree_rss_mb": 15126.2,
+        "completed_episodes": 2000,
+        "episodes_per_hour": 40606.6,
+        "episodes_per_hour_per_worker": 3383.883333333333,
+        "mean_episode_seconds": 0.771,
+        "mean_profile_seconds": {
+          "model": 0.67442,
+          "environment": 0.0614,
+          "critic_inputs": 0.00617,
+          "tokenization": 0.02768
+        },
+        "wins": null,
+        "completed_task_counts": null,
+        "shards_path": null,
+        "measurement_kind": "exact_run_seed_jobs_batch",
+        "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000_mid.json"
+      },
+      {
+        "workers": 14,
+        "torch_threads_per_worker": 1,
+        "device": "cpu",
+        "target_seconds": null,
+        "elapsed_seconds": 170.775,
+        "elapsed_before_shutdown_seconds": 170.775,
+        "peak_process_tree_rss_mb": 18116.3,
+        "completed_episodes": 2000,
+        "episodes_per_hour": 42160.8,
+        "episodes_per_hour_per_worker": 3011.4857142857145,
+        "mean_episode_seconds": 0.8654,
+        "mean_profile_seconds": {
+          "model": 0.75802,
+          "environment": 0.06833,
+          "critic_inputs": 0.00716,
+          "tokenization": 0.03037
+        },
+        "wins": null,
+        "completed_task_counts": null,
+        "shards_path": null,
+        "measurement_kind": "exact_run_seed_jobs_batch",
+        "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000_mid.json"
+      },
+      {
+        "workers": 16,
+        "torch_threads_per_worker": 1,
+        "device": "cpu",
+        "target_seconds": null,
+        "elapsed_seconds": 163.545,
+        "elapsed_before_shutdown_seconds": 163.545,
+        "peak_process_tree_rss_mb": 19230.3,
+        "completed_episodes": 2000,
+        "episodes_per_hour": 44024.6,
+        "episodes_per_hour_per_worker": 2751.5375,
+        "mean_episode_seconds": 0.93,
+        "mean_profile_seconds": {
+          "model": 0.81852,
+          "environment": 0.07137,
+          "critic_inputs": 0.0067,
+          "tokenization": 0.03189
+        },
+        "wins": null,
+        "completed_task_counts": null,
+        "shards_path": null,
+        "measurement_kind": "exact_run_seed_jobs_batch",
+        "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000_mid.json"
+      },
+      {
+        "workers": 18,
+        "torch_threads_per_worker": 1,
+        "device": "cpu",
+        "target_seconds": null,
+        "elapsed_seconds": 161.559,
+        "elapsed_before_shutdown_seconds": 161.559,
+        "peak_process_tree_rss_mb": 19168.4,
+        "completed_episodes": 2000,
+        "episodes_per_hour": 44565.9,
+        "episodes_per_hour_per_worker": 2475.883333333333,
+        "mean_episode_seconds": 0.999,
+        "mean_profile_seconds": {
+          "model": 0.88831,
+          "environment": 0.07148,
+          "critic_inputs": 0.00429,
+          "tokenization": 0.03329
+        },
+        "wins": null,
+        "completed_task_counts": null,
+        "shards_path": null,
+        "measurement_kind": "exact_run_seed_jobs_batch",
+        "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000.json"
+      },
+      {
+        "workers": 20,
+        "torch_threads_per_worker": 1,
+        "device": "cpu",
+        "target_seconds": null,
+        "elapsed_seconds": 174.667,
+        "elapsed_before_shutdown_seconds": 174.667,
+        "peak_process_tree_rss_mb": 19715.0,
+        "completed_episodes": 2000,
+        "episodes_per_hour": 41221.3,
+        "episodes_per_hour_per_worker": 2061.065,
+        "mean_episode_seconds": 1.1161,
+        "mean_profile_seconds": {
+          "model": 0.98754,
+          "environment": 0.08641,
+          "critic_inputs": 0.00383,
+          "tokenization": 0.03646
+        },
+        "wins": null,
+        "completed_task_counts": null,
+        "shards_path": null,
+        "measurement_kind": "exact_run_seed_jobs_batch",
+        "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000.json"
+      }
+    ],
+    "selected_parallel_workers": 18,
+    "pretraining_cap3_x1_pass_rate_from_T4": {
+      "sample_count": 640,
+      "passes": 0,
+      "pass_rate": 0.0,
+      "terminal_wave_histogram": {
+        "1": 1,
+        "2": 246,
+        "3": 393
+      },
+      "per_task": {
+        "heldout_day_1": 0.0,
+        "heldout_day_4": 0.0,
+        "heldout_night_1": 0.0,
+        "heldout_night_4": 0.0,
+        "heldout_pool_1": 0.0,
+        "heldout_pool_4": 0.0,
+        "heldout_fog_1": 0.0,
+        "heldout_fog_4": 0.0,
+        "heldout_roof_1": 0.0,
+        "heldout_roof_4": 0.0
+      }
+    },
+    "posttraining_cap3_x1": {
+      "task_count": 10,
+      "sample_count": 640,
+      "passes": 0,
+      "pass_rate": 0.0,
+      "terminal_wave_histogram": {
+        "2": 265,
+        "3": 375
+      },
+      "failure_terminal_wave_histogram": {
+        "2": 265,
+        "3": 375
+      },
+      "per_task": {
+        "heldout_day_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.672,
+          "mean_survival_ticks": 8048.656,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 21,
+            "3": 43
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 168.359,
+              "mean_sun_produced": 118.359,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 253.516,
+              "mean_sun_produced": 236.328,
+              "mean_sun_spent": 32.812
+            },
+            {
+              "tick": 9000,
+              "sample_count": 11,
+              "mean_sun": 161.364,
+              "mean_sun_produced": 352.273,
+              "mean_sun_spent": 238.636
+            }
+          ]
+        },
+        "heldout_day_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.547,
+          "mean_survival_ticks": 5959.453,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 29,
+            "3": 35
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 24,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_night_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.766,
+          "mean_survival_ticks": 8369.125,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 15,
+            "3": 49
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 22,
+              "mean_sun": 19.318,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 30.682
+            }
+          ]
+        },
+        "heldout_night_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.469,
+          "mean_survival_ticks": 5798.969,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 34,
+            "3": 30
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 20,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_pool_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.688,
+          "mean_survival_ticks": 8004.453,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 20,
+            "3": 44
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 168.75,
+              "mean_sun_produced": 118.75,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 178.516,
+              "mean_sun_produced": 236.328,
+              "mean_sun_spent": 107.812
+            },
+            {
+              "tick": 9000,
+              "sample_count": 12,
+              "mean_sun": 35.417,
+              "mean_sun_produced": 339.583,
+              "mean_sun_spent": 354.167
+            }
+          ]
+        },
+        "heldout_pool_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.531,
+          "mean_survival_ticks": 6023.734,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 30,
+            "3": 34
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 27,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_fog_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.781,
+          "mean_survival_ticks": 8289.484,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 14,
+            "3": 50
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 49.609,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0.391
+            },
+            {
+              "tick": 9000,
+              "sample_count": 20,
+              "mean_sun": 17.5,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 32.5
+            }
+          ]
+        },
+        "heldout_fog_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.547,
+          "mean_survival_ticks": 6046.438,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 29,
+            "3": 35
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 28,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_roof_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.094,
+          "mean_survival_ticks": 4608.266,
+          "peak_offense": 0,
+          "terminal_wave_histogram": {
+            "2": 58,
+            "3": 6
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "0-4999": 48,
+            "5000-9999": 16
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 5,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_roof_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.766,
+          "mean_survival_ticks": 8108.516,
+          "peak_offense": 0,
+          "terminal_wave_histogram": {
+            "2": 15,
+            "3": 49
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 169.531,
+              "mean_sun_produced": 119.531,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 291.016,
+              "mean_sun_produced": 241.016,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 13,
+              "mean_sun": 375,
+              "mean_sun_produced": 350,
+              "mean_sun_spent": 25
+            }
+          ]
+        }
+      }
+    },
+    "heldout_cap3_all_reference": {
+      "skipped": false,
+      "task_count": 15,
+      "sample_count": 960,
+      "passes": 0,
+      "pass_rate": 0.0,
+      "per_task": {
+        "heldout_day_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.672,
+          "mean_survival_ticks": 8048.656,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 21,
+            "3": 43
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 168.359,
+              "mean_sun_produced": 118.359,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 253.516,
+              "mean_sun_produced": 236.328,
+              "mean_sun_spent": 32.812
+            },
+            {
+              "tick": 9000,
+              "sample_count": 11,
+              "mean_sun": 161.364,
+              "mean_sun_produced": 352.273,
+              "mean_sun_spent": 238.636
+            }
+          ]
+        },
+        "heldout_day_2": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.641,
+          "mean_survival_ticks": 7749.328,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 23,
+            "3": 41
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 167.578,
+              "mean_sun_produced": 117.578,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 231.25,
+              "mean_sun_produced": 235.938,
+              "mean_sun_spent": 54.688
+            },
+            {
+              "tick": 9000,
+              "sample_count": 4,
+              "mean_sun": 106.25,
+              "mean_sun_produced": 331.25,
+              "mean_sun_spent": 275
+            }
+          ]
+        },
+        "heldout_day_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.547,
+          "mean_survival_ticks": 5959.453,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 29,
+            "3": 35
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 24,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_night_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.766,
+          "mean_survival_ticks": 8369.125,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 15,
+            "3": 49
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 22,
+              "mean_sun": 19.318,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 30.682
+            }
+          ]
+        },
+        "heldout_night_2": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.594,
+          "mean_survival_ticks": 7705.047,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 26,
+            "3": 38
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 2,
+              "mean_sun": 12.5,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 37.5
+            }
+          ]
+        },
+        "heldout_night_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.469,
+          "mean_survival_ticks": 5798.969,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 34,
+            "3": 30
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 20,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_pool_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.688,
+          "mean_survival_ticks": 8004.453,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 20,
+            "3": 44
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 168.75,
+              "mean_sun_produced": 118.75,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 178.516,
+              "mean_sun_produced": 236.328,
+              "mean_sun_spent": 107.812
+            },
+            {
+              "tick": 9000,
+              "sample_count": 12,
+              "mean_sun": 35.417,
+              "mean_sun_produced": 339.583,
+              "mean_sun_spent": 354.167
+            }
+          ]
+        },
+        "heldout_pool_2": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.547,
+          "mean_survival_ticks": 7656.484,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 29,
+            "3": 35
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 165.625,
+              "mean_sun_produced": 115.625,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 164.062,
+              "mean_sun_produced": 234.375,
+              "mean_sun_spent": 120.312
+            },
+            {
+              "tick": 9000,
+              "sample_count": 1,
+              "mean_sun": 25,
+              "mean_sun_produced": 350,
+              "mean_sun_spent": 375
+            }
+          ]
+        },
+        "heldout_pool_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.531,
+          "mean_survival_ticks": 6023.734,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 30,
+            "3": 34
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 27,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_fog_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.781,
+          "mean_survival_ticks": 8289.484,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 14,
+            "3": 50
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 49.609,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0.391
+            },
+            {
+              "tick": 9000,
+              "sample_count": 20,
+              "mean_sun": 17.5,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 32.5
+            }
+          ]
+        },
+        "heldout_fog_2": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.484,
+          "mean_survival_ticks": 7580.016,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 33,
+            "3": 31
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 4,
+              "mean_sun": 0,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 50
+            }
+          ]
+        },
+        "heldout_fog_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.547,
+          "mean_survival_ticks": 6046.438,
+          "peak_offense": 1,
+          "terminal_wave_histogram": {
+            "2": 29,
+            "3": 35
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 28,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_roof_1": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.094,
+          "mean_survival_ticks": 4608.266,
+          "peak_offense": 0,
+          "terminal_wave_histogram": {
+            "2": 58,
+            "3": 6
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "0-4999": 48,
+            "5000-9999": 16
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 5,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            }
+          ]
+        },
+        "heldout_roof_2": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.688,
+          "mean_survival_ticks": 7784.156,
+          "peak_offense": 0,
+          "terminal_wave_histogram": {
+            "2": 20,
+            "3": 44
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 168.75,
+              "mean_sun_produced": 118.75,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 285.156,
+              "mean_sun_produced": 235.547,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 3,
+              "mean_sun": 358.333,
+              "mean_sun_produced": 350,
+              "mean_sun_spent": 41.667
+            }
+          ]
+        },
+        "heldout_roof_4": {
+          "sample_count": 64,
+          "pass_rate": 0.0,
+          "wilson_95": [
+            0.0,
+            0.056624
+          ],
+          "mean_terminal_wave": 2.766,
+          "mean_survival_ticks": 8108.516,
+          "peak_offense": 0,
+          "terminal_wave_histogram": {
+            "2": 15,
+            "3": 49
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "5000-9999": 64
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 64,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 64,
+              "mean_sun": 169.531,
+              "mean_sun_produced": 119.531,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 64,
+              "mean_sun": 291.016,
+              "mean_sun_produced": 241.016,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 13,
+              "mean_sun": 375,
+              "mean_sun_produced": 350,
+              "mean_sun_spent": 25
+            }
+          ]
+        }
+      }
+    },
+    "cumulative_training_episodes": 5000,
+    "formal_runs": 1,
+    "checkpoint": "artifacts/t5/night_seed0/runs/run_1/gameplay_model_v1_ppo.pt",
+    "learning_curve_path": "artifacts/t5/learning_curve.json",
+    "throughput_experiment_path": "artifacts/t5/throughput.json",
+    "learning_curve_rises": false,
+    "stop_reason": "stage0_no_signal"
+  },
+  "thresholds": {
+    "single_core_episodes_per_hour_min": 5000.0,
+    "pretraining_cap3_x1_pass_rate_max_exclusive": 0.1,
+    "posttraining_cap3_x1_pass_rate_min": 0.9,
+    "posttraining_minimum_seed_count": 16,
+    "learning_curve_must_rise": true,
+    "maximum_formal_runs": 8,
+    "hard_stop": {
+      "cumulative_episodes_min": 20000,
+      "pass_rate_below": 0.2,
+      "recent_5000_episode_improvement_below": 0.05
+    }
+  },
+  "raw_seed_results_path": "artifacts/t5/night_seed0/evaluations/heldout_0005000.json.gz",
+  "protected_assets_unmodified": true,
+  "notes": "\u541e\u5410\u5b9e\u9a8c\u5148\u4e8e\u6b63\u5f0f\u8bad\u7ec3\u5b8c\u6210\u3002\u95e8\u7981\u8bc4\u4f30\u901a\u8fc7\u51bb\u7ed3 T4 run_episode / summarize_episodes\uff0c\u7b5b\u9009 heldout wave_cap=3\u3001\u500d\u7387 1.0 \u7684\u5168\u90e8\u4efb\u52a1\uff1b1.5 \u500d\u4efb\u52a1\u53ea\u4f5c\u53c2\u8003\u3002",
+  "diagnostic": {
+    "failure_layer": "algorithm",
+    "priority_check": 1,
+    "observed": {
+      "heldout_pass_rate": 0.0,
+      "previous_eval_episodes": 0,
+      "previous_eval_pass_rate": 0.0,
+      "recent_5000_episode_improvement": 0.0,
+      "failed_seed_terminal_wave_histogram": {
+        "2": 265,
+        "3": 375
+      },
+      "T0_script_failed_seed_terminal_wave_histogram": {
+        "3": 7
+      },
+      "reward_and_optimizer_diagnostics": {
+        "terminal_outcome_count": 5000,
+        "terminal_outcome_mean_recent": -1.0,
+        "mean_abs_shaping_reward_recent": 0.08789395854357919,
+        "potential_range": [
+          0.0,
+          1.0
+        ],
+        "gae_advantage_mean": 0.007157561834901571,
+        "gae_advantage_std": 0.06469157338142395,
+        "policy_loss": -0.0010747092712790618,
+        "value_loss": 0.0017061113408658457,
+        "entropy": 1.8730980271939188,
+        "gradient_norm": 0.14272882044315338,
+        "timing_seconds": {
+          "rollout": 69.044,
+          "ppo_update": 46.495,
+          "episode_digest": 2.617,
+          "model_state_sha256": 0.008,
+          "checkpoint_save": 0.083,
+          "wall": 115.539,
+          "episodes_per_hour": 31158.3
+        },
+        "mean_episode_profile_seconds": {
+          "model": 0.6484360674981008,
+          "environment": 0.060714935096930274,
+          "critic_inputs": 0.0002622794060253,
+          "tokenization": 0.028396009381965997
+        }
+      },
+      "single_core_throughput_profile": {
+        "model": 0.98754,
+        "environment": 0.08641,
+        "critic_inputs": 0.00383,
+        "tokenization": 0.03646
+      }
+    },
+    "proposed_next_change": "\u5f53\u524d\u52bf\u51fd\u6570\u4e09\u9879\u7b49\u6743\u4e14\u8303\u56f4\u4e3a [0,1]\uff0c\u7ec8\u5c40\u5956\u52b1\u4ecd\u4e3a \u00b11\uff1b\u5148\u4fdd\u7559\u4e8b\u5b9e\u6570\u636e\uff0c\u4e0b\u4e00\u6b21\u8fd0\u884c\u628a\u5b66\u4e60\u7387\u4ece 0.0001 \u8c03\u5230 1e-5\uff0c\u6bd4\u8f83\u7ec8\u5c40\u56de\u62a5\u8fdb\u5165 GAE \u540e\u7684\u5b66\u4e60\u66f2\u7ebf\u3002"
+  }
+}

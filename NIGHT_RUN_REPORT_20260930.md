@@ -1,6 +1,6 @@
 # 台式机测量与 cap1 seed-0 执行报告（2026-09-30）
 
-A1、A2 已完成并保留原始数字。B0 冒烟在 2.37 秒内因缺失文档退出，按用户要求停止，B1 未启动。没有训练或评估结果，因此本次不能回答“RL 在这个环境里能不能学到东西”。
+A1、A2 已完成并保留原始数字。首次 B0 因工作区代码状态中的缺失文件引用在 2.37 秒后退出；用户修复后，以干净 HEAD 重跑 B0 并完成评估，然后启动 B1。B1 的 seed-0 候选在 5,000 局触发训练器内置 `stage0_no_signal`，按停止条件结束。当前观察未显示该 seed/config 在这 5,000 局内学到胜利信号，不能据此推断所有 RL 配置都不可学。后面的“首次中断现场”保留故障原文；“续跑及最终结果”是本报告当前的最终状态。
 
 ## 代码与环境
 
@@ -54,6 +54,10 @@ RSS 合计会重复计入共享页；7 次整机内存观测中最低 MemAvailab
 
 证据：[parallel_profile.json](artifacts/t5/perf/parallel_profile.json)、[parallel_profile_analysis.json](artifacts/t5/perf/parallel_profile_analysis.json)。原有 `artifacts/t5/throughput.json` 未改动，未变更其门槛或放行字段。
 
+## 首次 B0 中断时的状态（修复前；历史现场）
+
+> 本节只记录首次失败状态；成功重跑和 B1 的最终结果见文末“续跑及最终结果”。
+
 ## B：冒烟与逐段结果
 
 B0 使用用户要求的 `cap1`、初始化 seed 0、rollout 200、最多 1,000 局、指定 initialization-note 和本轮选择的 12 worker；外层设置 30 分钟 timeout，实际 2.37 s 即以退出码 1 结束。未使用门禁忽略参数。
@@ -106,3 +110,26 @@ FileNotFoundError: [Errno 2] No such file or directory: '/home/newbiexvwu/PvZ-Po
 - 本机日志：`logs/env.txt`、`logs/git_pull.log`、`logs/perf.log`、`logs/perf_wallclock.txt`、`logs/smoke.log`、`logs/smoke_wallclock.txt`、`logs/smoke_exit_code.txt`、`logs/smoke_validation.json`、`logs/progress.log`、`logs/memory_samples.jsonl`、代码 diff/指纹/完整性记录和 git 收尾日志。
 - 按交接文档与既有 .gitignore，原始 `.log` 和分片保留执行机，不强制入库；环境和失败原文已另存可推送证据。没有可复制到 curves 的训练曲线，未创建虚假的曲线文件。
 - 交付提交 SHA 保存在本机 `logs/delivery_head.txt`，最终 push 结果见 `logs/git_push.log`；本报告的代码 HEAD 是产生测量的版本。
+
+
+## 续跑及最终结果（2026-09-30）
+
+用户修复问题后，当前工作区处于干净的 `b09d2b2`；训练入口的 `protected_paths` 与 HEAD 一致，不再引用缺失的 `FAILURE_ANALYSIS.md`。原先 2.37 秒失败的 traceback 保留在 `logs/smoke.log`，没有删除。
+
+B0 第二次运行使用原定参数和 12 worker，进程退出码 0，墙钟 **385.22 秒**，完成 **1,000 个训练局**。检查点 `artifacts/t5/night_smoke/runs/run_1/gameplay_model_v1_ppo.pt` 存在，曲线含起点和训练后评估，1,280 条评估任务完成。训练后 held-out cap3 ×1.0 为 **33/640 = 5.16%**（95% Wilson **3.69%–7.15%**）；stage0 cap1 为 **24/320 = 7.50%**（95% Wilson **5.09%–10.92%**）。全冒烟吞吐为 **9,345 训练局/小时**；最后一次 rollout + PPO update 的口径为 **22,277 局/小时**。前者含启动和最终评估，按六小时粗略外推约 **56,100 局**；后者不含评估，仅表示训练更新速度。训练 rollout 本身最近一批为 0/200 胜；该入口未重测新架构的未训练策略，曲线零点沿用 T4 门禁资料，故冒烟率上升不能单独证明策略学习。
+
+B1 分段情况如下。第 1 段计划 8,000 局，实际在 **5,000 局、660.58 秒** 后由现有训练器的停止条件终止。共完成 3 次更新：
+
+| 段 / 更新 | 实际训练局数 | policy_loss | value_loss | rollout / update 墙钟 |
+|---|---:|---:|---:|---:|
+| 第 1 段 / 1 | 2,000 | 0.1283 | 0.0201 | 121.9 / 91.1 s |
+| 第 1 段 / 2 | 2,000 | −0.0308 | 0.0023 | 124.8 / 87.9 s |
+| 第 1 段 / 3 | 1,000 | −0.0011 | 0.0017 | 69.0 / 46.5 s |
+
+训练 rollout 胜数为 **0/5,000**。5,000 局最终评估：held-out cap3 ×1.0 为 **0/640**，95% Wilson 区间 **0%–0.60%**；stage0 cap1 为 **0/320**，区间 **0%–1.19%**；参考 cap3 任务为 **0/960**。学习曲线在 0 和 5,000 局的 held-out pass rate 均为 0；曲线上升为 **否**。当前训练器状态是 `stage0_no_signal`，自动生成的 `gates/T5.json` 为 `fail`。
+
+该停止条件明确阻止在同样的零胜信号下继续加样本；因此第 2–6 段没有启动，也没有忽略门禁。结论限于一个初始化种子、一种结构和 cap1 课程：**这轮没有显示 RL 学到胜利策略的证据；它尚不能回答 RL 在此环境中普遍能否学会。** 没有删种子、修改任务集或改变阈值。
+
+内存观测共 12 次，可用内存最低约 5.72 GiB，swap 使用 0；单个训练主进程 RSS 峰值约 5.26 GiB。没有 OOM、worker 死亡或采样停滞。冒烟与长跑日志分别出现 72 条和 60 条 `INFO: RegEmu: Couldn't open '/tmp/pvz-env-…/registry.regemu' for writing`。评估任务仍全部返回、两次训练命令均以 0 退出；保留该 warning 原文，不推测其成因。
+
+[续跑证据摘要](artifacts/t5/perf/continuation_after_repair.json) 包含 B0/B1 原始胜数、Wilson 区间、loss、内存和停止原因。最终曲线已复制到 [night_seed0 曲线](artifacts/t5/curves/night_seed0.json)；[训练状态](artifacts/t5/night_seed0/training_state.json)、[检查点](artifacts/t5/night_seed0/runs/run_1/gameplay_model_v1_ppo.pt)、全部分片及 `logs/` 留在执行机。`gates/T5.json` 是训练器自动生成的失败结果，和性能证据及曲线一起推送。
