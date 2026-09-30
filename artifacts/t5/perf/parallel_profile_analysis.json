@@ -1,0 +1,101 @@
+{
+  "time": "2026-09-30T11:59:43.948768+00:00",
+  "source": "artifacts/t5/perf/parallel_profile.json",
+  "contention_ratio_definition": "single_worker_episodes_per_hour * workers / measured_episodes_per_hour",
+  "configurations": [
+    {
+      "device": "cpu",
+      "workers": 1,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 257.666,
+      "episodes_per_hour": 6985.8,
+      "mean_episode_seconds": 0.4927,
+      "mean_profile_seconds": {
+        "model": 0.43456,
+        "environment": 0.03752,
+        "critic_inputs": 0.00021,
+        "tokenization": 0.01959
+      },
+      "peak_process_tree_rss_mb": 2860.8,
+      "contention_amplification": 1.0,
+      "rss_gib": 2.79375
+    },
+    {
+      "device": "cpu",
+      "workers": 8,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 48.657,
+      "episodes_per_hour": 36993.7,
+      "mean_episode_seconds": 0.6969,
+      "mean_profile_seconds": {
+        "model": 0.60766,
+        "environment": 0.0622,
+        "critic_inputs": 0.0003,
+        "tokenization": 0.0256
+      },
+      "peak_process_tree_rss_mb": 10982.6,
+      "contention_amplification": 1.5107004706206735,
+      "rss_gib": 10.7251953125
+    },
+    {
+      "device": "cpu",
+      "workers": 12,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 41.12,
+      "episodes_per_hour": 43774.2,
+      "mean_episode_seconds": 0.8584,
+      "mean_profile_seconds": {
+        "model": 0.74109,
+        "environment": 0.08465,
+        "critic_inputs": 0.00038,
+        "tokenization": 0.03098
+      },
+      "peak_process_tree_rss_mb": 15503.6,
+      "contention_amplification": 1.9150458489247093,
+      "rss_gib": 15.140234375
+    },
+    {
+      "device": "cpu",
+      "workers": 18,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 37.726,
+      "episodes_per_hour": 47713.0,
+      "mean_episode_seconds": 1.1262,
+      "mean_profile_seconds": {
+        "model": 0.97244,
+        "environment": 0.11322,
+        "critic_inputs": 0.00037,
+        "tokenization": 0.03855
+      },
+      "peak_process_tree_rss_mb": 22488.5,
+      "contention_amplification": 2.635432691300065,
+      "rss_gib": 21.96142578125
+    }
+  ],
+  "selected_workers_for_smoke_and_night": 12,
+  "selected_configuration": {
+    "device": "cpu",
+    "workers": 12,
+    "torch_threads_per_worker": 1,
+    "episodes": 500,
+    "elapsed_seconds": 41.12,
+    "episodes_per_hour": 43774.2,
+    "mean_episode_seconds": 0.8584,
+    "mean_profile_seconds": {
+      "model": 0.74109,
+      "environment": 0.08465,
+      "critic_inputs": 0.00038,
+      "tokenization": 0.03098
+    },
+    "peak_process_tree_rss_mb": 15503.6,
+    "contention_amplification": 1.9150458489247093,
+    "rss_gib": 15.140234375
+  },
+  "reason": "12 workers retain 91.74% of the fastest measured 18-worker throughput while reducing sampled process-tree RSS by 6.82 GiB; the initial WSL MemAvailable was about 21 GiB, and the 2000-episode 18-worker batch peaked at 24.42 GiB aggregate RSS. Reserve room for trainer CUDA context and larger rollout batches.",
+  "memory_note": "RSS sums include shared pages repeatedly; compare with observed MemAvailable and swap samples. The 500-episode profile does not prove the 2000-episode training batch peak.",
+  "cross_machine_comparison": "Only workers=1 is comparable; no comparisons with historical multiworker records."
+}

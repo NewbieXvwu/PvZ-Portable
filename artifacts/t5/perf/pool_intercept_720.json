@@ -1,0 +1,39 @@
+{
+  "started_at": "2026-09-30T11:49:02.369205+00:00",
+  "episodes_per_batch": 720,
+  "max_actions": 4000,
+  "configurations": [
+    {
+      "device": "cpu",
+      "workers": 18,
+      "torch_threads_per_worker": 1,
+      "episodes": 720,
+      "elapsed_seconds": 51.609,
+      "episodes_per_hour": 50223.7,
+      "mean_episode_seconds": 1.0986,
+      "mean_profile_seconds": {
+        "model": 0.95865,
+        "environment": 0.09945,
+        "critic_inputs": 0.00033,
+        "tokenization": 0.03848
+      },
+      "peak_process_tree_rss_mb": 22562.9
+    }
+  ],
+  "selected_configuration": {
+    "device": "cpu",
+    "workers": 18,
+    "torch_threads_per_worker": 1,
+    "episodes": 720,
+    "elapsed_seconds": 51.609,
+    "episodes_per_hour": 50223.7,
+    "mean_episode_seconds": 1.0986,
+    "mean_profile_seconds": {
+      "model": 0.95865,
+      "environment": 0.09945,
+      "critic_inputs": 0.00033,
+      "tokenization": 0.03848
+    },
+    "peak_process_tree_rss_mb": 22562.9
+  }
+}

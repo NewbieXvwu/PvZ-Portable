@@ -1,0 +1,39 @@
+{
+  "started_at": "2026-09-30T11:48:35.348226+00:00",
+  "episodes_per_batch": 180,
+  "max_actions": 4000,
+  "configurations": [
+    {
+      "device": "cpu",
+      "workers": 18,
+      "torch_threads_per_worker": 1,
+      "episodes": 180,
+      "elapsed_seconds": 23.87,
+      "episodes_per_hour": 27147.1,
+      "mean_episode_seconds": 1.6601,
+      "mean_profile_seconds": {
+        "model": 1.3905,
+        "environment": 0.23045,
+        "critic_inputs": 0.00035,
+        "tokenization": 0.03725
+      },
+      "peak_process_tree_rss_mb": 21803.1
+    }
+  ],
+  "selected_configuration": {
+    "device": "cpu",
+    "workers": 18,
+    "torch_threads_per_worker": 1,
+    "episodes": 180,
+    "elapsed_seconds": 23.87,
+    "episodes_per_hour": 27147.1,
+    "mean_episode_seconds": 1.6601,
+    "mean_profile_seconds": {
+      "model": 1.3905,
+      "environment": 0.23045,
+      "critic_inputs": 0.00035,
+      "tokenization": 0.03725
+    },
+    "peak_process_tree_rss_mb": 21803.1
+  }
+}

@@ -1,0 +1,87 @@
+{
+  "started_at": "2026-09-30T11:52:05.492851+00:00",
+  "episodes_per_batch": 500,
+  "max_actions": 4000,
+  "configurations": [
+    {
+      "device": "cpu",
+      "workers": 1,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 257.666,
+      "episodes_per_hour": 6985.8,
+      "mean_episode_seconds": 0.4927,
+      "mean_profile_seconds": {
+        "model": 0.43456,
+        "environment": 0.03752,
+        "critic_inputs": 0.00021,
+        "tokenization": 0.01959
+      },
+      "peak_process_tree_rss_mb": 2860.8
+    },
+    {
+      "device": "cpu",
+      "workers": 8,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 48.657,
+      "episodes_per_hour": 36993.7,
+      "mean_episode_seconds": 0.6969,
+      "mean_profile_seconds": {
+        "model": 0.60766,
+        "environment": 0.0622,
+        "critic_inputs": 0.0003,
+        "tokenization": 0.0256
+      },
+      "peak_process_tree_rss_mb": 10982.6
+    },
+    {
+      "device": "cpu",
+      "workers": 12,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 41.12,
+      "episodes_per_hour": 43774.2,
+      "mean_episode_seconds": 0.8584,
+      "mean_profile_seconds": {
+        "model": 0.74109,
+        "environment": 0.08465,
+        "critic_inputs": 0.00038,
+        "tokenization": 0.03098
+      },
+      "peak_process_tree_rss_mb": 15503.6
+    },
+    {
+      "device": "cpu",
+      "workers": 18,
+      "torch_threads_per_worker": 1,
+      "episodes": 500,
+      "elapsed_seconds": 37.726,
+      "episodes_per_hour": 47713.0,
+      "mean_episode_seconds": 1.1262,
+      "mean_profile_seconds": {
+        "model": 0.97244,
+        "environment": 0.11322,
+        "critic_inputs": 0.00037,
+        "tokenization": 0.03855
+      },
+      "peak_process_tree_rss_mb": 22488.5
+    }
+  ],
+  "selected_configuration": {
+    "device": "cpu",
+    "workers": 18,
+    "torch_threads_per_worker": 1,
+    "episodes": 500,
+    "elapsed_seconds": 37.726,
+    "episodes_per_hour": 47713.0,
+    "mean_episode_seconds": 1.1262,
+    "mean_profile_seconds": {
+      "model": 0.97244,
+      "environment": 0.11322,
+      "critic_inputs": 0.00037,
+      "tokenization": 0.03855
+    },
+    "peak_process_tree_rss_mb": 22488.5
+  }
+}

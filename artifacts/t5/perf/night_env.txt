@@ -1,0 +1,50 @@
+time_utc=2026-09-30T11:47:19.199182+00:00
+head=542ad5a289fda8b65d9415055512e8b4c18520c7
+branch=pvz-env
+python_executable=/home/newbiexvwu/.venvs/ml/bin/python
+python_version=3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]
+platform=Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.43
+torch_version=2.14.0+cu132
+cuda_version=13.2
+cuda_available=True
+torch_num_threads=10
+{"gpu_index": 0, "name": "NVIDIA GeForce RTX 5080", "total_memory_bytes": 17066033152, "capability": [12, 0]}
+
+$ free -g
+               total        used        free      shared  buff/cache   available
+Mem:              23           1          20           0           2          21
+Swap:              8           0           8
+exit_code=0
+
+$ nproc
+20
+exit_code=0
+
+$ df -h .
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd       1007G   26G  930G   3% /
+exit_code=0
+
+$ nvidia-smi
+Wed Sep 30 19:47:19 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 615.78.02              KMD Version: 617.14        CUDA UMD Version: 13.4     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 5080        On  |   00000000:01:00.0 Off |                  N/A |
+|  0%   52C    P0             52W /  400W |    1021MiB /  16303MiB |      1%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A              27      G   /Xwayland                             N/A      |
++-----------------------------------------------------------------------------------------+
+exit_code=0
+resource_dir=/home/newbiexvwu/.cache/pvz-research-resources

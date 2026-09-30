@@ -1,0 +1,63 @@
+{
+  "finished_at": "2026-09-30T12:01:12.410129+00:00",
+  "code_head": "542ad5a289fda8b65d9415055512e8b4c18520c7",
+  "preexisting_code_changes": [
+    "python/train_pvz_ppo_task_family.py",
+    "scripts/reachability_audit.py"
+  ],
+  "code_changes_during_execution": [],
+  "completed_steps": [
+    "0 git pull --ff-only",
+    "1 environment",
+    "A1 three-point measurements and fit",
+    "A2 profile and worker selection"
+  ],
+  "blocked_step": "B0 smoke",
+  "stop_reason": "Smoke failed before rollout: missing FAILURE_ANALYSIS.md referenced by preexisting trainer change",
+  "smoke_exit_code": 1,
+  "smoke_wall_seconds": 2.37,
+  "smoke_checks": {
+    "checkpoint_exists": false,
+    "learning_curve_nonempty": false,
+    "evaluation_completed": false,
+    "training_state_exists": false
+  },
+  "completed_training_episodes": 0,
+  "long_run_started": false,
+  "learning_curve_rises": null,
+  "rl_learning_question_answer": "Cannot assess: smoke failed before any interaction/update/evaluation",
+  "wilson_interval": null,
+  "wilson_interval_reason": "No evaluated seeds; sample size is zero",
+  "pool_fit": {
+    "slope_ms_per_episode": 56.39856554249962,
+    "intercept_seconds": 12.59671997558371,
+    "fitted_2000_episode_wall_seconds": 125.39385106058295,
+    "intercept_percent_of_fitted_2000_batch": 10.04572382859325,
+    "intercept_percent_of_measured_2000_batch": 10.007960764603677,
+    "residual_seconds": [
+      1.1215382267663578,
+      -1.5946871661834336,
+      0.47314893941705805
+    ],
+    "r_squared": 0.9992764325768768
+  },
+  "parallel_profile_source": "artifacts/t5/perf/parallel_profile.json",
+  "selected_workers": 12,
+  "observed_memory_samples": {
+    "sample_count": 7,
+    "minimum_memavailable_kib": 4937456,
+    "maximum_swap_used_kib": 0
+  },
+  "retained_benchmark_shards": {
+    "path": "artifacts/t5/night_measurement_shards",
+    "count": 4900,
+    "total_bytes": 624334250
+  },
+  "logs_preserved_locally": "logs/",
+  "failure_scene_preserved": true,
+  "stage0_gate_override": false,
+  "thresholds_modified": false,
+  "task_manifests_modified": false,
+  "original_smoke_error": "2026-09-30T19:59:43+08:00 B0 START workers=12 rollout_episodes=200 max_episodes=1000\nTraceback (most recent call last):\n  File \"/home/newbiexvwu/PvZ-Portable/python/train_pvz_ppo_task_family.py\", line 1225, in <module>\n    main()\n    ~~~~^^\n  File \"/home/newbiexvwu/PvZ-Portable/python/train_pvz_ppo_task_family.py\", line 752, in main\n    protected_before = {path: sha256_file(path) for path in protected_paths}\n                              ~~~~~~~~~~~^^^^^^\n  File \"/home/newbiexvwu/PvZ-Portable/python/pvz_common.py\", line 39, in sha256_file\n    with path.open(\"rb\") as file:\n         ~~~~~~~~~^^^^^^\n  File \"/usr/lib/python3.14/pathlib/__init__.py\", line 772, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/home/newbiexvwu/PvZ-Portable/FAILURE_ANALYSIS.md'\n2026-09-30T19:59:46+08:00 B0 END exit_code=1\n",
+  "documentation_note": "README.md in the pulled HEAD has no trailing document navigation table; TODO sections 7.2 and 9 and the entire DESKTOP_HANDOFF section 9 were read."
+}
