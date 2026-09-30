@@ -598,6 +598,10 @@ python scripts/pipeline_necessity_audit.py --episodes 6
 # P2 跨决策增量编码到底值不值（真实 env）
 python scripts/token_delta_probe.py --episodes 8
 
+# 协议往返账 + 观测字段预算 + PRIV 计价（真实 env）
+# 结论见 PROTOCOL_OBSERVABILITY_AUDIT.md
+python scripts/protocol_payload_probe.py --decisions 120 --privileged --field-budget 200
+
 # 进程池与 IPC 通道（分节跑，每节自带 faulthandler 超时）
 for s in startup import fork metadata pipe disk; do
     python scripts/pool_ipc_probe.py --section $s
