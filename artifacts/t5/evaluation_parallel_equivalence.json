@@ -1,0 +1,28 @@
+{
+  "task_id": "T5-evaluation-parallel-equivalence",
+  "episodes": 20,
+  "serial_seconds": 9.658,
+  "configurations": {
+    "1": {
+      "workers": 1,
+      "elapsed_seconds": 9.615,
+      "records_identical_to_serial": true,
+      "gate_set": 0.0,
+      "stage0_set": 0.0,
+      "reference_set": 0.0
+    },
+    "8": {
+      "workers": 8,
+      "elapsed_seconds": 4.845,
+      "records_identical_to_serial": true,
+      "gate_set": 0.0,
+      "stage0_set": 0.0,
+      "reference_set": 0.0
+    }
+  },
+  "gate_only": {
+    "records_identical_to_serial_subset": true,
+    "reference_set_skipped": true
+  },
+  "conclusion": "parallel evaluation is bit-identical to the single-process loop"
+}
