@@ -33,6 +33,8 @@ training project has its own documents (all in the repository root):
 |---|---|
 | [TODO.md](TODO.md) | the single task list and experiment order — **start here** |
 | [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md) | how to run on the desktop machine (WSL2 + RTX 5080) |
+| [TRAINING_DESIGN_PROPOSAL.md](TRAINING_DESIGN_PROPOSAL.md) | implementation review and proposed training comparisons |
+| [RESEARCH_EXECUTION.md](RESEARCH_EXECUTION.md) | active T5–T7 acceptance criteria and experiment protocol |
 | [DESIGN.md](DESIGN.md) | design rationale; §12 records the failure that killed the previous approach |
 | [PPO_UPDATE_ANATOMY.md](PPO_UPDATE_ANATOMY.md) | where time actually goes in a PPO update |
 | [OPTIMIZATION_TASKS.md](OPTIMIZATION_TASKS.md) | performance and memory ledger |

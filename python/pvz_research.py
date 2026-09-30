@@ -1,0 +1,470 @@
+"""Explicit T5–T7 experiments using the existing collector, PPO and evaluator.
+
+An immutable config identifies one candidate and initialization. Resume restores
+the last COMPLETE update, including AdamW and RNG; incomplete rollout shards can
+only be reused by their collection-policy/assignment identity.
+"""
+from __future__ import annotations
+
+from collections import Counter, deque
+from datetime import datetime, timezone
+import fcntl
+import json
+import math
+import os
+from pathlib import Path
+import random
+import signal
+import threading
+import time
+from typing import Any
+
+import numpy as np
+import torch
+
+from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, configure_torch_threads
+from pvz_common import (ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION,
+                        canonical_digest, git_metadata, sha256_file)
+from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory
+from train_pvz_ppo import add_advantages, episode_digest, train_update
+
+ROOT = Path(__file__).resolve().parent.parent
+RESEARCH_VERSION = 1
+
+
+def capture_rng(assignments: random.Random) -> dict[str, Any]:
+    return {"python": random.getstate(), "numpy": np.random.get_state(),
+            "torch_cpu": torch.get_rng_state(),
+            "torch_cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
+            "assignments": assignments.getstate()}
+
+
+def restore_rng(saved: dict[str, Any], assignments: random.Random) -> None:
+    random.setstate(saved["python"])
+    np.random.set_state(saved["numpy"])
+    torch.set_rng_state(saved["torch_cpu"].cpu())
+    if saved["torch_cuda"]:
+        torch.cuda.set_rng_state_all([value.cpu() for value in saved["torch_cuda"]])
+    assignments.setstate(saved["assignments"])
+
+
+class ResourceMonitor:
+    def __init__(self) -> None:
+        self.stop = threading.Event()
+        self.peak_tree_rss_bytes = 0
+        self.min_available_bytes = _system_memory()[0]
+        self.peak_swap_used_bytes = 0
+        self.thread = threading.Thread(target=self._watch, daemon=True)
+
+    def _watch(self) -> None:
+        while not self.stop.is_set():
+            processes = {}
+            for directory in Path("/proc").iterdir():
+                if not directory.name.isdigit():
+                    continue
+                try:
+                    fields = dict(line.split(":", 1) for line in (directory / "status").read_text().splitlines())
+                    processes[int(directory.name)] = (int(fields["PPid"]),
+                                                     int(fields.get("VmRSS", "0 kB").split()[0]) * 1024)
+                except (OSError, ValueError, KeyError):
+                    pass
+            tree = {os.getpid()}
+            while True:
+                children = {pid for pid, (parent, _) in processes.items() if parent in tree}
+                if children <= tree:
+                    break
+                tree.update(children)
+            rss = sum(processes.get(pid, (0, 0))[1] for pid in tree)
+            self.peak_tree_rss_bytes = max(self.peak_tree_rss_bytes, rss)
+            available, swap_used = _system_memory()
+            self.min_available_bytes = min(self.min_available_bytes, available)
+            self.peak_swap_used_bytes = max(self.peak_swap_used_bytes, swap_used)
+            self.stop.wait(1)
+
+    def snapshot(self) -> dict[str, int]:
+        return {"peak_process_tree_rss_bytes": self.peak_tree_rss_bytes,
+                "min_system_available_bytes": self.min_available_bytes,
+                "peak_system_swap_used_bytes": self.peak_swap_used_bytes,
+                "cuda_peak_allocated_bytes": torch.cuda.max_memory_allocated(),
+                "cuda_peak_reserved_bytes": torch.cuda.max_memory_reserved()}
+
+
+def _system_memory() -> tuple[int, int]:
+    fields = {line.split(":")[0]: int(line.split()[1]) * 1024
+              for line in Path("/proc/meminfo").read_text().splitlines()}
+    return fields["MemAvailable"], fields["SwapTotal"] - fields["SwapFree"]
+
+
+def _path(value: str) -> Path:
+    path = Path(value).expanduser()
+    return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
+
+
+def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]]]:
+    config = json.loads(path.read_text())
+    expected = {"schema_version", "experiment_id", "purpose", "initialization_seed",
+                "sampling_seed", "model", "reward", "ppo", "sampling", "budget",
+                "evaluation", "runtime", "prerequisites"}
+    if set(config) != expected or config["schema_version"] != RESEARCH_VERSION:
+        raise ValueError("research config fields/schema do not match version 1")
+    reward = config["reward"]
+    if set(reward) != {"name", "gamma", "shaping_weight"}:
+        raise ValueError("reward must explicitly define name, gamma and shaping_weight")
+    if not 0 < reward["gamma"] <= 1 or reward["shaping_weight"] not in (0, 1):
+        raise ValueError("invalid reward settings")
+    expected_ppo = {"learning_rate", "ppo_epochs", "sequence_length", "minibatch_chunks",
+                    "clip_epsilon", "gae_lambda", "value_coefficient", "entropy_coefficient",
+                    "attention_backend", "target_kl"}
+    if set(config["ppo"]) != expected_ppo:
+        raise ValueError("all PPO settings must be explicit")
+    ppo = config["ppo"]
+    if (ppo["learning_rate"] <= 0 or ppo["ppo_epochs"] < 1 or ppo["sequence_length"] < 0
+            or ppo["minibatch_chunks"] < 1 or not 0 < ppo["gae_lambda"] <= 1
+            or not 0 < ppo["clip_epsilon"] < 1 or ppo["value_coefficient"] < 0
+            or ppo["entropy_coefficient"] < 0 or ppo["target_kl"] <= 0):
+        raise ValueError("invalid PPO settings")
+    sampling = config["sampling"]
+    if set(sampling) != {"manifest", "task_ids", "method", "rollout_episodes"}:
+        raise ValueError("all sampling settings must be explicit")
+    if sampling["method"] not in ("balanced", "legacy_recent") or sampling["rollout_episodes"] < 1:
+        raise ValueError("unsupported sampling method or rollout size")
+    train = json.loads(_path(sampling["manifest"]).read_text())["tasks"]
+    selected = set(sampling["task_ids"])
+    if selected:
+        if selected - {task["task_id"] for task in train}:
+            raise ValueError("unknown selected training task")
+        train = [task for task in train if task["task_id"] in selected]
+    evaluation = config["evaluation"]
+    if set(evaluation) != {"manifest", "modes", "decision_nodes"}:
+        raise ValueError("all evaluation settings must be explicit")
+    if not evaluation["modes"] or set(evaluation["modes"]) - {"greedy", "sampled"}:
+        raise ValueError("evaluation modes must be greedy and/or sampled")
+    eval_tasks = json.loads(_path(evaluation["manifest"]).read_text())["tasks"]
+    for tasks in (train, eval_tasks):
+        if not tasks or len(tasks) != len({task["task_id"] for task in tasks}):
+            raise ValueError("empty or duplicate task list")
+        for task in tasks:
+            if not task["seeds"] or len(task["seeds"]) != len(set(task["seeds"])):
+                raise ValueError("empty or duplicate environment seeds")
+    if set(config["budget"]) != {"decisions", "max_episodes"} or config["budget"]["decisions"] < 1:
+        raise ValueError("budget must specify positive decisions and optional max_episodes")
+    if config["budget"]["max_episodes"] is not None and config["budget"]["max_episodes"] < 1:
+        raise ValueError("max_episodes must be null or positive")
+    nodes = evaluation["decision_nodes"]
+    if nodes != sorted(set(nodes)) or any(node <= 0 for node in nodes):
+        raise ValueError("evaluation nodes must be sorted distinct positive decision counts")
+    runtime = config["runtime"]
+    if set(runtime) != {"workers", "worker_threads", "worker_device", "update_device", "max_actions"}:
+        raise ValueError("all runtime settings must be explicit")
+    if runtime["update_device"] != "cuda" or runtime["worker_device"] != "cpu":
+        raise ValueError("this protocol requires CUDA updates and CPU sampling")
+    if min(runtime["workers"], runtime["worker_threads"], runtime["max_actions"]) < 1:
+        raise ValueError("runtime counts must be positive")
+    for prerequisite in config["prerequisites"]:
+        gate = json.loads(_path(prerequisite).read_text())
+        if gate.get("gate_result") != "pass":
+            raise RuntimeError(f"research prerequisite failed: {prerequisite}")
+    return config, train, eval_tasks
+
+
+def evaluate(model: GameplayModelV1, tasks: list[dict[str, Any]], config: dict[str, Any],
+             resource_dir: Path, output: Path, state: dict[str, Any]) -> dict[str, Any]:
+    import train_pvz_ppo_task_family as family
+    import t4_capability_profile as profile
+    jobs = {}
+    labels = []
+    for mode in config["evaluation"]["modes"]:
+        for task in tasks:
+            for seed in task["seeds"]:
+                labels.append((mode, task["task_id"]))
+                jobs[len(jobs)] = {"task": task, "seed": seed, "deterministic": mode == "greedy",
+                                   "max_actions": config["runtime"]["max_actions"],
+                                   "allow_truncation": True, "action_seed": seed + 170_000}
+    weights = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+    runtime = config["runtime"]
+    started = time.monotonic()
+    records = family._run_evaluation_jobs(jobs, weights, resource_dir, runtime["workers"],
+                                         runtime["worker_threads"], "cpu", model.config)
+    grouped = {mode: {task["task_id"]: [] for task in tasks}
+               for mode in config["evaluation"]["modes"]}
+    for label, record in zip(labels, records, strict=True):
+        mode, task_id = label
+        grouped[mode][task_id].append(record)
+    summary = {}
+    for mode, per_task in grouped.items():
+        flat = [record for rows in per_task.values() for record in rows]
+        summary[mode] = {"overall": profile.summarize_episodes(flat),
+                         "per_task": {key: profile.summarize_episodes(rows)
+                                      for key, rows in per_task.items()},
+                         "truncated": sum(row["truncated"] for row in flat)}
+    path = output / "evaluations" / f"update_{state['updates']:06d}.json.gz"
+    atomic_json(path, {"counters": state["counters"], "model_config": model.config,
+                       "experiment_id": config["experiment_id"], "seed_results": grouped}, compressed=True)
+    return {"counters": dict(state["counters"]), "updates": state["updates"], "summary": summary,
+            "raw_seed_results_path": str(path.relative_to(output)),
+            "seconds": time.monotonic() - started}
+
+
+def _assign(tasks: list[dict[str, Any]], job_ids: list[int], rng: random.Random,
+            recent: dict[str, list[bool]], method: str) -> dict[int, dict[str, Any]]:
+    weights = [1.0 if method == "balanced" else
+               2.0 - (sum(recent[task["task_id"]]) / len(recent[task["task_id"]])
+                      if recent[task["task_id"]] else 0.0) for task in tasks]
+    result = {}
+    for job_id in job_ids:
+        task = rng.choices(tasks, weights=weights, k=1)[0]
+        result[job_id] = {"task": task, "task_seed": rng.choice(task["seeds"]),
+                          "action_seed": rng.randrange(1, 2**31)}
+    return result
+
+
+def _trajectory_stats(episodes: list[dict[str, Any]]) -> dict[str, Any]:
+    counts: Counter[str] = Counter()
+    immediate, zero_ticks, shaping_abs = 0, 0, []
+    returns, values = [], []
+    for episode in episodes:
+        previous_plant = None
+        mc = float(episode.get("bootstrap_value", 0.0))
+        for step in reversed(episode["transitions"]):
+            mc = step["reward"] + step["discount"] * mc
+            returns.append(mc)
+            values.append(step["value"])
+        for step in episode["transitions"]:
+            action = step["action"]
+            cell = (action.get("row"), action.get("col"))
+            immediate += action["type"] == "shovel" and cell == previous_plant
+            previous_plant = cell if action["type"] == "plant" else None
+            counts[action["type"]] += 1
+            zero_ticks += step["action_duration_ticks"] == 0
+            shaping_abs.append(abs(step["shaping_reward"]))
+    var = float(np.var(returns))
+    return {"action_counts": dict(counts), "zero_tick_actions": zero_ticks,
+            "immediate_plant_shovels": immediate,
+            "immediate_shovel_fraction_of_plants": immediate / max(1, counts["plant"]),
+            "mean_abs_shaping_reward": float(np.mean(shaping_abs)),
+            "mc_value_mse_before_update": float(np.mean((np.array(returns) - values) ** 2)),
+            "mc_value_explained_variance_before_update":
+                1 - float(np.var(np.array(returns) - values)) / var if var > 1e-12 else None,
+            "won": sum(episode["won"] for episode in episodes),
+            "truncated": sum(episode["truncated"] for episode in episodes),
+            "task_counts": dict(Counter(episode["task_id"] for episode in episodes))}
+
+
+def run_experiment(args: Any) -> None:
+    import train_pvz_ppo_task_family as family
+    import t4_capability_profile as profile
+    config, tasks, eval_tasks = load_config(args.experiment_config.resolve())
+    if args.init_checkpoint or args.ignore_stage0_gate:
+        raise ValueError("research uses independent initialization or complete --resume; no legacy overrides")
+    if any(value is not None for value in (args.workers, args.rollout_threads, args.rollout_device)):
+        raise ValueError("research runtime settings come from the frozen experiment config")
+    output = args.output_dir.resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    lock = (output / ".execution.lock").open("a")
+    fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA unavailable; research updates must not silently use CPU")
+    configure_torch_threads(1)
+    device = torch.device("cuda")
+    resource_dir = args.resource_dir.expanduser().resolve()
+    source_paths = [ROOT / "python" / name for name in (
+        "pvz_agent_model.py", "pvz_research.py", "train_pvz_ppo.py", "train_pvz_ppo_task_family.py",
+        "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py")]
+    source_paths.append(ROOT / "scripts/t4_capability_profile.py")
+    fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
+    fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),
+                         "main.pak": sha256_file(resource_dir / "main.pak"),
+                         "properties/partner.xml": sha256_file(resource_dir / "properties/partner.xml"),
+                         "train_manifest": sha256_file(_path(config["sampling"]["manifest"])),
+                         "evaluation_manifest": sha256_file(_path(config["evaluation"]["manifest"]))})
+    identity = canonical_digest({"config": config, "fingerprints": fingerprints})
+    seed = config["initialization_seed"]
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    model = GameplayModelV1(config["model"]).to(device).eval()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=config["ppo"]["learning_rate"])
+    rng = random.Random(config["sampling_seed"])
+    revision, dirty = git_metadata(ROOT)
+    pointer = output / "resume.json"
+    if args.resume:
+        saved_pointer = json.loads(pointer.read_text())
+        checkpoint_path = output / saved_pointer["checkpoint"]
+        if sha256_file(checkpoint_path) != saved_pointer["sha256"]:
+            raise ValueError("resume checkpoint fingerprint mismatch")
+        checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        if checkpoint["experiment_identity"] != identity:
+            raise ValueError("resume config, source, simulator, resources or manifests changed")
+        model.load_state_dict(checkpoint["state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        state = checkpoint["training_state"]
+        restore_rng(checkpoint["rng_state"], rng)
+        state["invocations"].append({"kind": "complete_resume", "started_at": _now(), "commit": revision})
+    else:
+        if pointer.exists() or (output / "training_state.json").exists():
+            raise RuntimeError("experiment directory already has state; use --resume for this candidate")
+        state = {"schema_version": RESEARCH_VERSION, "experiment_id": config["experiment_id"],
+                 "experiment_identity": identity, "updates": 0,
+                 "counters": {"episodes": 0, "decisions": 0, "ticks": 0}, "wall_seconds": 0.0,
+                 "phase": "initial_evaluation", "evaluation_cursor": 0,
+                 "recent_passes": {task["task_id"]: [] for task in tasks},
+                 "learning_curve": [], "update_history": [],
+                 "invocations": [{"kind": "random_initialization", "seed": seed,
+                                  "started_at": _now(), "commit": revision}],
+                 "initial_state_sha256": profile._state_sha256(model.state_dict()),
+                 "status": "running"}
+        atomic_json(output / "experiment_config.json", config)
+        atomic_json(output / "provenance.json", {"commit": revision, "worktree_dirty": dirty,
+                    "fingerprints": fingerprints, "model_config": model.config,
+                    "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
+                    "torch": torch.__version__, "cuda": torch.version.cuda,
+                    "gpu": torch.cuda.get_device_name(), "experiment_identity": identity})
+    stop_requested = threading.Event()
+    old_handlers = {sig: signal.signal(sig, lambda *_: stop_requested.set())
+                    for sig in (signal.SIGTERM, signal.SIGINT)}
+    monitor = ResourceMonitor()
+    torch.cuda.reset_peak_memory_stats()
+    monitor.thread.start()
+    previous_wall = time.monotonic()
+
+    def save(phase: str) -> None:
+        nonlocal previous_wall
+        now = time.monotonic()
+        state["wall_seconds"] += now - previous_wall
+        previous_wall = now
+        resources = monitor.snapshot()
+        for key, value in state.get("resources", {}).items():
+            resources[key] = min(value, resources[key]) if key.startswith("min_") else max(value, resources[key])
+        state["resources"] = resources
+        path = output / "runs/run_1" / f"update_{state['updates']:06d}_{phase}.pt"
+        state["checkpoint"] = str(path.relative_to(output))
+        checkpoint = {"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
+                      "optimizer_state_dict": optimizer.state_dict(), "rng_state": capture_rng(rng),
+                      "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
+                      "config": model.config, "experiment_config": config,
+                      "experiment_identity": identity, "training_state": state,
+                      "value_semantics": "research_explicit_return_v1", "research_version": RESEARCH_VERSION,
+                      "provenance": {"protocol_version": ENV_PROTOCOL_VERSION,
+                                     "observation_version": OBSERVATION_VERSION, "task_version": TASK_VERSION,
+                                     "commit": revision, "fingerprints": fingerprints}}
+        atomic_write(path, lambda temporary: torch.save(checkpoint, temporary))
+        atomic_json(pointer, {"checkpoint": str(path.relative_to(output)), "sha256": sha256_file(path)})
+        atomic_json(output / "training_state.json", state)
+        atomic_json(output / "learning_curve.json", state["learning_curve"])
+
+    def do_evaluation() -> None:
+        record = evaluate(model, eval_tasks, config, resource_dir, output, state)
+        state["learning_curve"].append(record)
+        state["phase"] = "ready"
+        save("evaluated")
+        print(f"{config['experiment_id']} evaluation update={state['updates']} "
+              + " ".join(f"{mode}={rows['overall']['pass_rate']:.4f}"
+                         for mode, rows in record["summary"].items()), flush=True)
+
+    try:
+        if not args.resume:
+            save("initial")
+        if state["phase"] in ("initial_evaluation", "pending_evaluation"):
+            do_evaluation()
+        invocation_updates = 0
+        nodes = config["evaluation"]["decision_nodes"]
+        while state["counters"]["decisions"] < config["budget"]["decisions"]:
+            counters = state["counters"]
+            episode_limit = config["budget"]["max_episodes"]
+            if episode_limit is not None and counters["episodes"] >= episode_limit:
+                break
+            if stop_requested.is_set() or (args.stop_after_updates is not None
+                                           and invocation_updates >= args.stop_after_updates):
+                break
+            batch_size = config["sampling"]["rollout_episodes"]
+            if episode_limit is not None:
+                batch_size = min(batch_size, episode_limit - counters["episodes"])
+            next_node = min([node for node in nodes if node > counters["decisions"]]
+                            + [config["budget"]["decisions"]])
+            if counters["episodes"]:
+                mean_decisions = counters["decisions"] / counters["episodes"]
+                batch_size = min(batch_size, max(1, math.ceil((next_node - counters["decisions"]) / mean_decisions)))
+            job_ids = list(range(counters["episodes"], counters["episodes"] + batch_size))
+            assignments = _assign(tasks, job_ids, rng, state["recent_passes"], config["sampling"]["method"])
+            weights = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
+            metadata = {"research_version": RESEARCH_VERSION, "experiment_identity": identity,
+                        "update": state["updates"] + 1,
+                        "model_state_sha256": profile._state_sha256(weights),
+                        "assignments": assignments, "lossless_tokens": True}
+            shard_dir = seed_job_directory(output / "runs/run_1", f"update_{state['updates'] + 1:06d}", metadata)
+            runtime = config["runtime"]
+            label = f"{config['experiment_id']} update {state['updates'] + 1}"
+            started = time.monotonic()
+            episodes = run_seed_jobs(job_ids, shard_dir, metadata, family._rollout_worker,
+                                     workers=runtime["workers"], initializer=family._init_worker,
+                                     initargs=(str(resource_dir), weights, assignments, runtime["max_actions"],
+                                               runtime["worker_threads"], "cpu", model.config,
+                                               config["reward"], True), label=label)
+            rollout_seconds = time.monotonic() - started
+            stats = _trajectory_stats(episodes)
+            add_advantages(episodes, config["ppo"]["gae_lambda"], config["reward"]["gamma"])
+            started = time.monotonic()
+            ppo = config["ppo"]
+            losses = train_update(model, episodes, optimizer, device, ppo["ppo_epochs"],
+                                  ppo["sequence_length"], ppo["clip_epsilon"], ppo["value_coefficient"],
+                                  ppo["entropy_coefficient"], ppo["minibatch_chunks"],
+                                  ppo["attention_backend"], label, ppo["target_kl"])
+            update_seconds = time.monotonic() - started
+            counters["episodes"] += len(episodes)
+            counters["decisions"] += sum(len(episode["transitions"]) for episode in episodes)
+            counters["ticks"] += sum(step["action_duration_ticks"] for episode in episodes
+                                     for step in episode["transitions"])
+            state["updates"] += 1
+            invocation_updates += 1
+            for episode in episodes:
+                recent = state["recent_passes"][episode["task_id"]]
+                recent.append(episode["won"])
+                del recent[:-64]
+            state["update_history"].append({"update": state["updates"], "counters": dict(counters),
+                        "losses": losses, "trajectory_stats": stats,
+                        "rollout_seconds": rollout_seconds, "ppo_seconds": update_seconds,
+                        "episode_digests": [episode_digest(episode) for episode in episodes],
+                        "shard_directory": str(shard_dir.relative_to(output))})
+            due = state["evaluation_cursor"] < len(nodes) and counters["decisions"] >= nodes[state["evaluation_cursor"]]
+            if due:
+                while state["evaluation_cursor"] < len(nodes) and counters["decisions"] >= nodes[state["evaluation_cursor"]]:
+                    state["evaluation_cursor"] += 1
+            state["phase"] = "pending_evaluation" if due else "ready"
+            save("trained")
+            print(f"{label} episodes={counters['episodes']} decisions={counters['decisions']} "
+                  f"ticks={counters['ticks']} wall={state['wall_seconds']:.1f}s "
+                  f"policy_loss={losses['policy_loss']:.6f} value_loss={losses['value_loss']:.6f} "
+                  f"wins={stats['won']}/{len(episodes)} KL={losses['approx_kl']:.5f}", flush=True)
+            if due:
+                do_evaluation()
+        counters = state["counters"]
+        budget_done = (counters["decisions"] >= config["budget"]["decisions"] or
+                       (config["budget"]["max_episodes"] is not None
+                        and counters["episodes"] >= config["budget"]["max_episodes"]))
+        if budget_done:
+            if state["learning_curve"][-1]["updates"] != state["updates"]:
+                state["phase"] = "pending_evaluation"
+                save("trained")
+                do_evaluation()
+            state["status"] = "budget_complete"
+        else:
+            state["status"] = "update_boundary_stop"
+        save("boundary")
+    except BaseException as error:
+        # Do not checkpoint partly updated weights. The authoritative pointer still
+        # names a complete update and all completed shards remain untouched.
+        atomic_json(output / f"failure_{time.time_ns()}.json",
+                    {"at": _now(), "type": type(error).__name__, "error": str(error),
+                     "last_complete_checkpoint": json.loads(pointer.read_text()) if pointer.exists() else None,
+                     "resources": monitor.snapshot()})
+        raise
+    finally:
+        monitor.stop.set()
+        monitor.thread.join(timeout=2)
+        for sig, handler in old_handlers.items():
+            signal.signal(sig, handler)
+        lock.close()
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()

@@ -48,7 +48,14 @@ def potential(observation: dict[str, Any]) -> float:
 
 
 def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, Any],
-                         environment_seed: int, job_id: int, max_actions: int) -> dict[str, Any]:
+                         environment_seed: int, job_id: int, max_actions: int,
+                         reward_config: dict[str, Any] | None = None,
+                         *, allow_truncation: bool = False) -> dict[str, Any]:
+    reward_config = reward_config or {}
+    gamma = float(reward_config.get("gamma", VALUE_GAMMA))
+    shaping_weight = float(reward_config.get("shaping_weight", 1.0))
+    if not 0 < gamma <= 1 or shaping_weight < 0:
+        raise ValueError("invalid reward discount or shaping weight")
     started = time.perf_counter()
     observation, _ = env.reset(deck=task["deck"], task=_task_spec(task, environment_seed))
     reset_seconds = time.perf_counter() - started
@@ -78,7 +85,9 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         critic_inputs_seconds += time.perf_counter() - critic_started
         tokenize_started = time.perf_counter()
         tensors, metadata = observation_tokens(observation)
-        packed = pack_tokens(tensors, metadata)
+        # Research replay must use the same input as collection. The historical
+        # fp16 shard encoding remains available to old benchmark callers.
+        packed = pack_tokens(tensors, metadata, lossless=True)
         legal = legal_summary(observation["legal_actions"])
         tokenization_seconds += time.perf_counter() - tokenize_started
         model_started = time.perf_counter()
@@ -117,9 +126,10 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         elapsed_since_previous_observation = transition["action_duration_ticks"]
         events = info["events"]
         duration_ratio = transition["action_duration_ticks"] / DISCOUNT_REFERENCE_TICKS
-        discount = VALUE_GAMMA ** duration_ratio
+        discount = gamma ** duration_ratio
         next_potential = potential(observation)
-        shaping_reward = discount * next_potential - current_potential
+        shaping_reward = shaping_weight * (discount * next_potential - current_potential)
+        transition["discount"] = discount
         transition["shaping_reward"] = shaping_reward
         transition["reward"] = shaping_reward
         transition["terminal_outcome"] = 0.0
@@ -127,8 +137,19 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
             transition["terminal_outcome"] = 1.0 if observation["result"] == 1 else -1.0
             transition["reward"] += transition["terminal_outcome"]
             break
-    if not observation["terminal"]:
+    truncated = not observation["terminal"]
+    if truncated and not allow_truncation:
         raise RuntimeError(f"PPO episode exceeded {max_actions} decisions on seed {environment_seed}")
+    bootstrap_value = 0.0
+    if truncated:
+        with torch.no_grad():
+            output = model.step(observation, hidden, previous_action,
+                                elapsed_since_previous_observation, events)
+            roster = wave_rosters.get(observation["wave"])
+            if roster is None:
+                roster = env.critic_inputs(observation["wave"])["wave_zombies"]
+            bootstrap_value = float(model.privileged_value_from_extra(
+                output, model.privileged_extra_from_inputs(observation["wave_timer"], roster)).item())
     elapsed = time.perf_counter() - started
     return {
         "seed": job_id,
@@ -136,6 +157,9 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         "task_id": task["task_id"],
         "won": observation["result"] == 1,
         "result": observation["result"],
+        "terminated": not truncated,
+        "truncated": truncated,
+        "bootstrap_value": bootstrap_value,
         "wave": observation["wave"],
         "wave_count": observation["wave_count"],
         "tick": observation["tick"],
@@ -150,16 +174,18 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
     }
 
 
-def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float) -> None:
+def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float,
+                   gamma: float = VALUE_GAMMA) -> None:
     for episode in episodes:
         transitions = episode["transitions"]
         advantage = 0.0
         for index in range(len(transitions) - 1, -1, -1):
             transition = transitions[index]
             duration_ratio = transition["action_duration_ticks"] / DISCOUNT_REFERENCE_TICKS
-            discount = VALUE_GAMMA ** duration_ratio
+            discount = gamma ** duration_ratio
             trace_discount = discount * (gae_lambda ** duration_ratio)
-            next_value = transitions[index + 1]["value"] if index + 1 < len(transitions) else 0.0
+            next_value = (transitions[index + 1]["value"] if index + 1 < len(transitions)
+                          else episode.get("bootstrap_value", 0.0))
             delta = transition["reward"] + discount * next_value - transition["value"]
             advantage = delta + trace_discount * advantage
             transition["advantage"] = advantage
@@ -172,17 +198,16 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                  clip_epsilon: float, value_coefficient: float, entropy_coefficient: float,
                  minibatch_chunks: int = 1,
                  attention_backend: str = "auto",
-                 label: str | None = None) -> dict[str, float]:
-    """Layered-batch PPO update.
+                 label: str | None = None,
+                 target_kl: float | None = None) -> dict[str, float]:
+    """PPO over complete episodes (sequence_length=0) or truncated sequences.
 
-    Semantics CHANGE vs the previous per-chunk loop: chunks at the same position
-    across episodes form a layer, a layer runs as ONE batched forward (hidden
-    flows along layers, replacing per-chunk prefix rebuilds), and the optimizer
-    steps once per minibatch of chunks instead of once per chunk.  Effective
-    batch grows by ~minibatch_chunks, so the learning rate must be retuned
-    (default raised accordingly); the stage-0 learning-signal gate is the
-    arbiter of whether the new configuration actually learns.
+    Every truncated minibatch rebuilds its prefix without gradients using the
+    CURRENT parameters. Hidden states are never carried across optimizer steps.
+    Complete episodes provide the short-task reference with full memory gradients.
     """
+    if sequence_length < 0 or minibatch_chunks < 1 or ppo_epochs < 1:
+        raise ValueError("invalid PPO sequence length, minibatch size or epoch count")
     advantages = torch.tensor([
         transition["advantage"] for episode in episodes for transition in episode["transitions"]
     ], dtype=torch.float32, device=device)
@@ -217,26 +242,20 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
     for layer in model.encoder:
         layer.attention.use_flex_attention = use_flex
 
-    # cut chunks and group them by position across episodes; each chunk knows
-    # the key of its predecessor (same episode, previous position) so hidden
-    # can flow layer by layer instead of rebuilding prefixes per chunk
-    layers: list[list[tuple[int, dict[str, Any], int, int]]] = []
-    previous_key: dict[int, int | None] = {}
-    key_counter = 0
+    layers: list[list[tuple[dict[str, Any], int, int]]] = []
     for episode in episodes:
         transitions = episode["transitions"]
-        prev_key = None
-        for position, start in enumerate(range(0, len(transitions), sequence_length)):
-            end = min(start + sequence_length, len(transitions))
+        span = sequence_length or len(transitions)
+        for position, start in enumerate(range(0, len(transitions), span)):
+            end = min(start + span, len(transitions))
             while len(layers) <= position:
                 layers.append([])
-            key_counter += 1
-            key = key_counter
-            previous_key[key] = prev_key
-            layers[position].append((key, episode, start, end))
-            prev_key = key
+            layers[position].append((episode, start, end))
 
     policy_losses, value_losses, entropies = [], [], []
+    kls, clips, replay_errors = [], [], []
+    stop_for_kl = False
+    last_progress = time.monotonic()
     model.train()
     for epoch in range(ppo_epochs):
         # A 2,000-episode update is minutes of GPU time with no output at all.  One
@@ -244,17 +263,23 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         # optional so library callers (and tests) stay quiet.
         if label is not None:
             print(f"{label} ppo epoch {epoch + 1}/{ppo_epochs}", flush=True)
-        # hidden chains are recomputed every epoch: parameters may have moved
-        hidden_by_key: dict[int, torch.Tensor | None] = {
-            key: None for key in previous_key
-        }
         for layer in layers:
             random.shuffle(layer)
             for batch_start in range(0, len(layer), minibatch_chunks):
                 batch = layer[batch_start:batch_start + minibatch_chunks]
-                sequences = [episode["transitions"][start:end] for _, episode, start, end in batch]
-                hiddens = [hidden_by_key[key] for key, _, _, _ in batch]
-                outputs, hidden_out = model.forward_sequences(sequences, hiddens)
+                sequences = [episode["transitions"][start:end] for episode, start, end in batch]
+                hiddens = []
+                with torch.no_grad():
+                    for episode, start, _ in batch:
+                        hidden = None
+                        # Limit prefix activation memory independently of its length.
+                        for prefix_start in range(0, start, sequence_length or 256):
+                            prefix_end = min(start, prefix_start + (sequence_length or 256))
+                            _, hidden_out = model.forward_sequences(
+                                [episode["transitions"][prefix_start:prefix_end]], [hidden])
+                            hidden = hidden_out[:, 0, :]
+                        hiddens.append(hidden)
+                outputs, _ = model.forward_sequences(sequences, hiddens)
                 flat_transitions = [transition for sequence in sequences for transition in sequence]
                 log_probs, entropies_for_chunk = replay_log_probs(model, outputs, flat_transitions)
                 belief = torch.cat([output["belief"] for output in outputs], dim=0)
@@ -270,7 +295,15 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                 advantage = torch.stack([
                     transition["normalized_advantage"] for transition in flat_transitions
                 ])
-                ratio = torch.exp(new_log_prob - old_log_prob)
+                log_ratio = new_log_prob - old_log_prob
+                ratio = torch.exp(log_ratio)
+                approximate_kl = float(((ratio - 1) - log_ratio).mean().detach().item())
+                kls.append(approximate_kl)
+                clips.append(float(((ratio - 1).abs() > clip_epsilon).float().mean().item()))
+                replay_errors.append(float(log_ratio.abs().max().detach().item()))
+                if target_kl is not None and approximate_kl > target_kl:
+                    stop_for_kl = True
+                    break
                 policy_loss = -torch.minimum(
                     ratio * advantage,
                     ratio.clamp(1 - clip_epsilon, 1 + clip_epsilon) * advantage,
@@ -294,9 +327,17 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                 policy_losses.append(float(policy_loss.detach().item()))
                 value_losses.append(float(value_loss.detach().item()))
                 entropies.append(float(entropy.detach().item()))
-                for b, (key, _, _, _) in enumerate(batch):
-                    hidden_by_key[key] = hidden_out[:, b, :].detach()
+                if label is not None and time.monotonic() - last_progress >= 60:
+                    print(f"{label} optimizer_steps={len(policy_losses)} "
+                          f"policy_loss={policy_losses[-1]:.6f} value_loss={value_losses[-1]:.6f}", flush=True)
+                    last_progress = time.monotonic()
+            if stop_for_kl:
+                break
+        if stop_for_kl:
+            break
     model.eval()
+    if not policy_losses:
+        raise RuntimeError("PPO performed no optimization; inspect replay consistency and KL")
     return {
         "policy_loss": sum(policy_losses) / len(policy_losses),
         "value_loss": sum(value_losses) / len(value_losses),
@@ -304,6 +345,12 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         "advantage_mean": advantage_mean,
         "advantage_std": advantage_std,
         "gradient_norm": float(gradient_norm.detach().item()),
+        "approx_kl": sum(kls) / len(kls),
+        "clip_fraction": sum(clips) / len(clips),
+        "first_minibatch_log_prob_max_error": replay_errors[0],
+        "max_log_prob_change": max(replay_errors),
+        "optimizer_steps": len(policy_losses),
+        "stopped_for_kl": stop_for_kl,
     }
 
 
@@ -426,5 +473,3 @@ def episode_digest(episode: dict[str, Any], *, digest_size: int = 16) -> str:
                 _digest_into(hasher, key)
                 _digest_into(hasher, transition[key])
     return hasher.hexdigest()
-
-

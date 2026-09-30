@@ -220,6 +220,11 @@ $PY scripts/precision_equivalence.py --data-dir $SHARDS --attention-backend dens
 
 ## 9. 无人值守工作的硬约束
 
+2026-09-30 持续 T5–T7 目标已授权必要代码修改。新的显式配置研究入口与恢复协议见
+[RESEARCH_EXECUTION.md](RESEARCH_EXECUTION.md)；下面的旧 `--init-checkpoint`、八次 run
+及 stage0 细节仍描述 legacy 入口。新入口使用 `--experiment-config` 和完整 `--resume`，
+正式实验需先取得新闭环通过证据。冒烟、日志、内存、失败现场、冻结标准及 git 同步纪律继续适用。
+
 通宵跑之前先读这一节。**无人值守的失败模式不是"跑得慢"，是"跑了一夜什么也没留下"。**
 
 1. **先冒烟再放大。** 用 30 分钟以内的小预算（`--rollout-episodes 200

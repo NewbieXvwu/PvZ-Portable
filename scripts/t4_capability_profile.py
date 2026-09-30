@@ -23,6 +23,7 @@ from pvz_agent_model import (  # noqa: E402
     MODEL_ARCHITECTURE_VERSION,
     configure_torch_threads,
     predict_action,
+    select_action,
 )
 from pvz_common import ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION, sha256_file  # noqa: E402
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
@@ -50,14 +51,16 @@ def _state_sha256(state: dict[str, torch.Tensor]) -> str:
 def load_checkpoint(path: Path) -> tuple[GameplayModelV1, dict[str, Any]]:
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     provenance = checkpoint["provenance"]
+    research = checkpoint.get("research_version") == 1
     if (checkpoint["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
-            or checkpoint.get("value_semantics") != VALUE_SEMANTICS
-            or provenance.get("search_label_version") != SEARCH_LABEL_VERSION
+            or (not research and checkpoint.get("value_semantics") != VALUE_SEMANTICS)
+            or (research and checkpoint.get("value_semantics") != "research_explicit_return_v1")
+            or (not research and provenance.get("search_label_version") != SEARCH_LABEL_VERSION)
             or provenance.get("protocol_version") != ENV_PROTOCOL_VERSION
             or provenance["observation_version"] != OBSERVATION_VERSION
             or provenance["task_version"] != TASK_VERSION):
         raise ValueError("checkpoint does not match the current model/environment semantics")
-    model = GameplayModelV1()
+    model = GameplayModelV1(checkpoint["config"])
     model.load_state_dict(checkpoint["state_dict"])
     model.eval()
     return model, {"kind": "checkpoint_file", "path": str(path), "sha256": sha256_file(path),
@@ -84,7 +87,9 @@ def _task_spec(task: dict[str, Any], seed: int) -> TaskSpec:
 
 
 def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
-                model: GameplayModelV1 | None = None) -> dict[str, Any]:
+                model: GameplayModelV1 | None = None, *, deterministic: bool = True,
+                max_actions: int = MAX_ACTIONS,
+                allow_truncation: bool = False) -> dict[str, Any]:
     observation, _ = env.reset(deck=task["deck"], task=_task_spec(task, seed))
     if observation["sun"] != task["sun_start"]:
         raise RuntimeError(f"{task['task_id']} seed {seed}: observed sun does not match sun_start")
@@ -99,7 +104,11 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
     curve = [{"tick": 0, "sun": observation["sun"], "sun_produced": 0, "sun_spent": 0}]
     next_curve_tick = CURVE_INTERVAL
 
-    while not observation["terminal"] and actions < MAX_ACTIONS:
+    previous_planted_cell = None
+    immediate_shovels = 0
+    action_counts: Counter[str] = Counter()
+    zero_tick_actions = 0
+    while not observation["terminal"] and actions < max_actions:
         if strategy == "random":
             action = random_action(observation, rng)
         elif strategy == "scripted":
@@ -108,9 +117,9 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
             if model is None:
                 raise RuntimeError("checkpoint strategy has no model")
             with torch.inference_mode():
-                action, hidden, _ = predict_action(
-                    model, observation, hidden, previous_action, delta_ticks, events,
-                )
+                output = model.step(observation, hidden, previous_action, delta_ticks, events)
+                action, _, _ = select_action(model, output, observation, deterministic=deterministic)
+                hidden = output["hidden"]
         else:
             raise ValueError(f"unsupported strategy: {strategy}")
 
@@ -122,6 +131,11 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
         totals["sun_spent"] += events.get("sun_spent", 0)
         previous_action = action
         delta_ticks = info["ticks_advanced"]
+        action_counts[action["type"]] += 1
+        zero_tick_actions += delta_ticks == 0
+        cell = (action.get("row"), action.get("col"))
+        immediate_shovels += action["type"] == "shovel" and cell == previous_planted_cell
+        previous_planted_cell = cell if action["type"] == "plant" else None
         actions += 1
         peak_offense = max(peak_offense, sum(plant["type"] in OFFENSE_TYPES
                                              for plant in observation["plants"]))
@@ -132,12 +146,18 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
         if done:
             break
 
-    if not observation["terminal"]:
-        raise RuntimeError(f"{task['task_id']} seed {seed}: exceeded {MAX_ACTIONS} actions without terminal result")
+    truncated = not observation["terminal"]
+    if truncated and not allow_truncation:
+        raise RuntimeError(f"{task['task_id']} seed {seed}: exceeded {max_actions} actions without terminal result")
     return {
         "seed": seed,
         "won": observation["result"] == 1,
         "result": observation["result"],
+        "terminated": not truncated,
+        "truncated": truncated,
+        "action_counts": dict(action_counts),
+        "zero_tick_actions": zero_tick_actions,
+        "immediate_plant_shovels": immediate_shovels,
         "terminal_wave": observation["wave"],
         "wave_count": observation["wave_count"],
         "terminal_tick": observation["tick"],

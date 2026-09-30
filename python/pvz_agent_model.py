@@ -342,7 +342,8 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
 TOKEN_ID_FIELDS = ("kinds", "categories", "variants", "rows", "cols")
 
 
-def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any]) -> dict[str, Any]:
+def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any], *,
+                lossless: bool = False) -> dict[str, Any]:
     """Flatten a tokenization into contiguous numpy arrays for storage.
 
     A raw observation costs ~42 KiB as Python objects (measured: 4.0 KiB pickled,
@@ -354,7 +355,7 @@ def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any]) -> dict[st
     packet_ids = sorted(metadata["packet_tokens"])
     return {
         "ids": ids,
-        "features": tensors["features"].numpy().astype(np.float16),
+        "features": tensors["features"].numpy().astype(np.float32 if lossless else np.float16),
         "cell_index": np.array([metadata["cell_tokens"][cell] for cell in range(54)], dtype=np.uint16),
         "packet_ids": np.array(packet_ids, dtype=np.uint8),
         "packet_index": np.array([metadata["packet_tokens"][packet] for packet in packet_ids], dtype=np.uint16),
@@ -626,9 +627,17 @@ class RelationLayer(nn.Module):
         return x
 
 class GameplayModelV1(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__()
-        width = MODEL_CONFIG["width"]
+        self.config = {**MODEL_CONFIG, **(config or {})}
+        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers"}
+        if set(self.config) - allowed:
+            raise ValueError(f"unknown model settings: {sorted(set(self.config) - allowed)}")
+        if any(type(value) is not int or value < 1 for value in self.config.values()):
+            raise ValueError("model dimensions must be positive integers")
+        if self.config["width"] % self.config["heads"]:
+            raise ValueError("encoder width must be divisible by attention heads")
+        width = self.config["width"]
         # Preserve the seed-0 initialization stream for every pre-existing weight.
         # The new lane-kind row is initialized with a private generator, so adding
         # this vocabulary entry does not shift all later parameters' RNG draws.
@@ -642,8 +651,8 @@ class GameplayModelV1(nn.Module):
         self.row_embedding = nn.Embedding(8, width)
         self.col_embedding = nn.Embedding(11, width)
         self.encoder = nn.ModuleList([
-            RelationLayer(width, MODEL_CONFIG["heads"], MODEL_CONFIG["ff_width"])
-            for _ in range(MODEL_CONFIG["layers"])
+            RelationLayer(width, self.config["heads"], self.config["ff_width"])
+            for _ in range(self.config["layers"])
         ])
         self.encoder_norm = nn.LayerNorm(width)
 
@@ -654,8 +663,8 @@ class GameplayModelV1(nn.Module):
         self.previous_action_projection = nn.Sequential(nn.Linear(256, 64), nn.SiLU())
         self.delta_embedding = nn.Embedding(32, 32)
         self.event_projection = nn.Sequential(nn.Linear(8, 32), nn.SiLU())
-        self.belief = nn.GRU(width + 128, MODEL_CONFIG["gru_width"], MODEL_CONFIG["gru_layers"], batch_first=True)
-        hidden = MODEL_CONFIG["gru_width"]
+        self.belief = nn.GRU(width + 128, self.config["gru_width"], self.config["gru_layers"], batch_first=True)
+        hidden = self.config["gru_width"]
         self.action_type = nn.Linear(hidden, 3)
         self.packet_query = nn.Linear(hidden, width)
         self.packet_key = nn.Linear(width, width)
@@ -668,7 +677,13 @@ class GameplayModelV1(nn.Module):
         self.aux_lane_threat = nn.Linear(hidden, 6)
         self.aux_outcome = nn.Linear(hidden, 2)
         self.privileged_features = nn.Sequential(nn.Linear(16, 64), nn.SiLU())
-        self.privileged_critic = nn.Sequential(nn.Linear(hidden + 64, hidden), nn.Tanh(), nn.Linear(hidden, 1))
+        critic_width = self.config.get("critic_width", hidden)
+        critic_layers = self.config.get("critic_layers", 1)
+        critic: list[nn.Module] = [nn.Linear(hidden + 64, critic_width), nn.Tanh()]
+        for _ in range(critic_layers - 1):
+            critic.extend((nn.Linear(critic_width, critic_width), nn.Tanh()))
+        critic.append(nn.Linear(critic_width, 1))
+        self.privileged_critic = nn.Sequential(*critic)
 
     def _previous_action(self, action: dict[str, Any] | None, device: torch.device) -> Tensor:
         if action is None:
@@ -740,16 +755,16 @@ class GameplayModelV1(nn.Module):
         event_vector = self.event_projection(self._event_features(events, device))
         recurrent_input = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1).unsqueeze(1)
         if hidden is None:
-            hidden = torch.zeros(MODEL_CONFIG["gru_layers"], 1, MODEL_CONFIG["gru_width"], device=device)
+            hidden = torch.zeros(self.config["gru_layers"], 1, self.config["gru_width"], device=device)
         belief, hidden = self.belief(recurrent_input, hidden)
         belief = belief[:, 0, :]
 
         packet_ids = sorted(metadata["packet_tokens"])
         cell_ids = list(range(54))
         packet_tokens = (torch.stack([x[0, metadata["packet_tokens"][i]] for i in packet_ids])
-                         if packet_ids else x.new_zeros((0, MODEL_CONFIG["width"])))
+                         if packet_ids else x.new_zeros((0, self.config["width"])))
         cell_tokens = torch.stack([x[0, metadata["cell_tokens"][i]] for i in cell_ids])
-        packet_logits = (self.packet_key(packet_tokens) * self.packet_query(belief)).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
+        packet_logits = (self.packet_key(packet_tokens) * self.packet_query(belief)).sum(-1) / math.sqrt(self.config["width"])
         return {
             "hidden": hidden,
             "belief": belief,
@@ -842,7 +857,7 @@ class GameplayModelV1(nn.Module):
         token_lengths = np.array([packed["ids"].shape[0] for packed in packed_list], dtype=np.int64)
         l_max = int(token_lengths.max())
         ids = np.zeros((count, l_max, len(TOKEN_ID_FIELDS)), dtype=np.int64)
-        features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float16)
+        features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float32)
         key_mask = np.zeros((count, l_max), dtype=bool)
         for index, packed in enumerate(packed_list):
             real = packed["ids"].shape[0]
@@ -896,7 +911,7 @@ class GameplayModelV1(nn.Module):
         seq_lengths = torch.from_numpy(lengths_seq).to(device)
         packed_input = nn.utils.rnn.pack_padded_sequence(
             recurrent, seq_lengths.cpu(), batch_first=True, enforce_sorted=False)
-        hidden_in = torch.zeros(MODEL_CONFIG["gru_layers"], batch, MODEL_CONFIG["gru_width"], device=device)
+        hidden_in = torch.zeros(self.config["gru_layers"], batch, self.config["gru_width"], device=device)
         for b, start_hidden in enumerate(hiddens):
             if start_hidden is not None:
                 hidden_in[:, b, :] = start_hidden
@@ -918,7 +933,7 @@ class GameplayModelV1(nn.Module):
         cell_keys = self.cell_key(cell_tokens)
         packet_tokens = x[arange[:, None], packet_index_t]
         packet_keys = self.packet_key(packet_tokens)
-        packet_logits = (packet_keys * packet_query_all[:, None, :]).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
+        packet_logits = (packet_keys * packet_query_all[:, None, :]).sum(-1) / math.sqrt(self.config["width"])
 
         outputs = []
         for index, transition in enumerate(flat):
@@ -944,11 +959,11 @@ class GameplayModelV1(nn.Module):
     def plant_cell_scores(self, output: dict[str, Any], packet: int) -> Tensor:
         packet_index = output["packet_ids"].index(packet)
         query = self.plant_cell_query(torch.cat((output["belief"], output["packet_tokens"][packet_index].unsqueeze(0)), dim=-1))
-        return (output["cell_keys"] * query).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
+        return (output["cell_keys"] * query).sum(-1) / math.sqrt(self.config["width"])
 
     def shovel_cell_scores(self, output: dict[str, Any]) -> Tensor:
         query = self.shovel_cell_query(output["belief"])
-        return (output["cell_keys"] * query).sum(-1) / math.sqrt(MODEL_CONFIG["width"])
+        return (output["cell_keys"] * query).sum(-1) / math.sqrt(self.config["width"])
 
     def privileged_extra(self, privileged_state: dict[str, Any] | None, wave_index: int) -> list[float]:
         """Reduce a privileged state to the 16 floats the critic actually reads.
@@ -1159,7 +1174,7 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
                                   for i, position in zip(plant_rows, selected_positions)])
         query = model.plant_cell_query(torch.cat((belief[plant_rows], sel_tokens), dim=-1))
         cell_logits = (torch.einsum("nw,ntw->nt", query, cell_keys[plant_rows])
-                       / math.sqrt(MODEL_CONFIG["width"]))
+                       / math.sqrt(model.config["width"]))
         bits = torch.tensor([dict(zip(transitions[i]["legal"]["packets"],
                                       transitions[i]["legal"]["plant_mask"]))[
                                   transitions[i]["action"]["packet"]] for i in plant_rows],
@@ -1179,7 +1194,7 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
     if shovel_rows:
         query = model.shovel_cell_query(belief[shovel_rows])
         cell_logits = (torch.einsum("nw,ntw->nt", query, cell_keys[shovel_rows])
-                       / math.sqrt(MODEL_CONFIG["width"]))
+                       / math.sqrt(model.config["width"]))
         bits = torch.tensor([transitions[i]["legal"]["shovel_mask"] for i in shovel_rows],
                             dtype=torch.long, device=device)
         cell_mask = ((bits[:, None] >> torch.arange(54, device=device)[None, :]) & 1) == 1

@@ -71,6 +71,8 @@ WORKER_MODEL: GameplayModelV1 | None = None
 WORKER_ENV: PvZEnv | None = None
 WORKER_ASSIGNMENTS: dict[int, dict[str, Any]] = {}
 WORKER_MAX_ACTIONS = 4000
+WORKER_REWARD_CONFIG: dict[str, Any] | None = None
+WORKER_ALLOW_TRUNCATION = False
 # Evaluation jobs are ``job_id -> {"task", "seed", "bucket"}``.  They are kept apart
 # from the rollout assignments so the two pool initializers cannot be confused.
 WORKER_EVAL_JOBS: dict[int, dict[str, Any]] = {}
@@ -183,14 +185,20 @@ def _close_worker() -> None:
 
 def _init_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],
                  assignments: dict[int, dict[str, Any]], max_actions: int,
-                 worker_threads: int, worker_device: str) -> None:
+                 worker_threads: int, worker_device: str,
+                 model_config: dict[str, Any] | None = None,
+                 reward_config: dict[str, Any] | None = None,
+                 allow_truncation: bool = False) -> None:
     global WORKER_MODEL, WORKER_ENV, WORKER_ASSIGNMENTS, WORKER_MAX_ACTIONS
+    global WORKER_REWARD_CONFIG, WORKER_ALLOW_TRUNCATION
     configure_torch_threads(worker_threads)
-    WORKER_MODEL = GameplayModelV1().eval().to(resolve_device(worker_device))
+    WORKER_MODEL = GameplayModelV1(model_config).eval().to(resolve_device(worker_device))
     WORKER_MODEL.load_state_dict(state_dict)
     WORKER_ENV = PvZEnv(resource_dir=resource_dir)
     WORKER_ASSIGNMENTS = assignments
     WORKER_MAX_ACTIONS = max_actions
+    WORKER_REWARD_CONFIG = reward_config
+    WORKER_ALLOW_TRUNCATION = allow_truncation
     Finalize(None, _close_worker, exitpriority=10)
 
 
@@ -206,15 +214,18 @@ def _rollout_worker(job_id: int) -> dict[str, Any]:
         assignment["task_seed"],
         job_id,
         WORKER_MAX_ACTIONS,
+        WORKER_REWARD_CONFIG,
+        allow_truncation=WORKER_ALLOW_TRUNCATION,
     )
 
 
 def _init_evaluation_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],
                             jobs: dict[int, dict[str, Any]], worker_threads: int,
-                            worker_device: str) -> None:
+                            worker_device: str,
+                            model_config: dict[str, Any] | None = None) -> None:
     global WORKER_MODEL, WORKER_ENV, WORKER_EVAL_JOBS
     configure_torch_threads(worker_threads)
-    WORKER_MODEL = GameplayModelV1().eval().to(resolve_device(worker_device))
+    WORKER_MODEL = GameplayModelV1(model_config).eval().to(resolve_device(worker_device))
     WORKER_MODEL.load_state_dict(state_dict)
     WORKER_ENV = PvZEnv(resource_dir=resource_dir)
     WORKER_EVAL_JOBS = jobs
@@ -225,14 +236,19 @@ def _evaluation_worker(job_id: int) -> tuple[int, dict[str, Any]]:
     if WORKER_MODEL is None or WORKER_ENV is None:
         raise RuntimeError("evaluation worker was not initialized")
     job = WORKER_EVAL_JOBS[job_id]
+    torch.manual_seed(job.get("action_seed", job["seed"] + 170_000))
     record = t4_capability_profile.run_episode(
-        WORKER_ENV, job["task"], job["seed"], "checkpoint", WORKER_MODEL)
+        WORKER_ENV, job["task"], job["seed"], "checkpoint", WORKER_MODEL,
+        deterministic=job.get("deterministic", True),
+        max_actions=job.get("max_actions", 4000),
+        allow_truncation=job.get("allow_truncation", False))
     return job_id, record
 
 
 def _run_evaluation_jobs(jobs: dict[int, dict[str, Any]], model_state: dict[str, torch.Tensor],
                          resource_dir: Path, workers: int, worker_threads: int,
-                         worker_device: str) -> list[dict[str, Any]]:
+                         worker_device: str,
+                         model_config: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Run every ``(task, seed)`` evaluation episode across *workers* processes.
 
     Evaluation used to be a single-threaded loop over 1,280 episodes while rollout
@@ -248,11 +264,18 @@ def _run_evaluation_jobs(jobs: dict[int, dict[str, Any]], model_state: dict[str,
     context = multiprocessing.get_context("spawn")
     pool = context.Pool(min(workers, len(jobs)), initializer=_init_evaluation_worker,
                         initargs=(str(resource_dir), model_state, jobs, worker_threads,
-                                  worker_device))
+                                  worker_device, model_config))
     collected: dict[int, dict[str, Any]] = {}
     total_jobs = len(jobs)
     try:
-        for job_id, record in pool.imap_unordered(_evaluation_worker, sorted(jobs), chunksize=1):
+        iterator = pool.imap_unordered(_evaluation_worker, sorted(jobs), chunksize=1)
+        while True:
+            try:
+                job_id, record = iterator.next(timeout=900)
+            except StopIteration:
+                break
+            except multiprocessing.TimeoutError:
+                raise RuntimeError("evaluation stalled: no job completed in 900 seconds") from None
             collected[job_id] = record
             # Evaluation is 1,280 episodes on the reference-inclusive pass.  Without
             # this it was a silent gap in the log, indistinguishable from a hang.
@@ -676,6 +699,12 @@ def _gate_document(state: dict[str, Any], throughput: dict[str, Any], baseline: 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--experiment-config", type=Path,
+                        help="explicit, frozen T5–T7 research configuration")
+    parser.add_argument("--resume", action="store_true",
+                        help="restore the same research candidate including optimizer and RNG")
+    parser.add_argument("--stop-after-updates", type=int,
+                        help="end this research invocation at a completed update boundary")
     parser.add_argument("--resource-dir", type=Path,
                         default=Path(os.environ.get("PVZ_RESOURCE_DIR", DEFAULT_RESOURCE_DIR)))
     parser.add_argument("--output-dir", type=Path, default=ROOT / "artifacts/t5")
@@ -725,6 +754,10 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
+    if args.experiment_config is not None:
+        from pvz_research import run_experiment
+        run_experiment(args)
+        return
     if args.workers is not None and args.workers < 1:
         raise SystemExit("--workers must be positive")
     if args.rollout_threads is not None and args.rollout_threads < 1:

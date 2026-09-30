@@ -9,6 +9,7 @@ import multiprocessing
 import os
 from pathlib import Path
 import tempfile
+import time
 from typing import Any, Callable
 import zlib
 import zipfile
@@ -127,7 +128,10 @@ def _read_shard(path: Path, seed: int, metadata: dict[str, Any]) -> dict[str, An
             return result
     except (OSError, EOFError, ValueError, TypeError, KeyError, zlib.error, zipfile.BadZipFile):
         pass
-    path.unlink(missing_ok=True)
+    # Preserve corrupted or mismatched evidence before recollecting this job.
+    # A crash must not erase the shard that explains the interruption.
+    if path.exists():
+        path.rename(path.with_name(f"{path.stem}.invalid_{time.time_ns()}{path.suffix}"))
     return None
 
 
@@ -192,6 +196,8 @@ def run_seed_jobs(
             missing.append(seed)
         else:
             results[seed] = result
+
+    print(f"{label} cached={len(results)} collect={len(missing)}", flush=True)
 
     if missing:
         context = multiprocessing.get_context("spawn")
