@@ -215,7 +215,9 @@ class PvZEnv:
             self._sun_history_snapshots.clear()
         if self._sun_history_start_tick is None:
             self._sun_history_start_tick = tick
-        if events is not None:
+        # A reset observation begins a new episode; events from the old board
+        # cannot be part of its income history (also guards older binaries).
+        if events is not None and not reset_history:
             produced = int(events.get("sun_produced", 0))
             if produced > 0:
                 self._sun_production_history.append((tick, produced))

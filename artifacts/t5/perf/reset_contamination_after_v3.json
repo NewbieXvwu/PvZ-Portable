@@ -1,0 +1,6088 @@
+{
+  "gate_result": "pass",
+  "sample_count": 320,
+  "terrain_count": 5,
+  "scope": "all original cap1 seeds; warmed previous episode vs clean reset; first150ticks",
+  "records": [
+    {
+      "task_id": "train_day_1",
+      "seed": 60000,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60001,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60002,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60003,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60004,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60005,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60006,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60007,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60008,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60009,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60010,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60011,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60012,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60013,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60014,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60015,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60016,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60017,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60018,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60019,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60020,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60021,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60022,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60023,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60024,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60025,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60026,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60027,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60028,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60029,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60030,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60031,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60032,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60033,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60034,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60035,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60036,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60037,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60038,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60039,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60040,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60041,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60042,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60043,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60044,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60045,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60046,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60047,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60048,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60049,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60050,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60051,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60052,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60053,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60054,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60055,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60056,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60057,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60058,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60059,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60060,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60061,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60062,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_day_1",
+      "seed": 60063,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60256,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60257,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60258,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60259,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60260,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60261,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60262,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60263,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60264,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60265,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60266,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60267,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60268,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60269,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60270,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60271,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60272,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60273,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60274,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60275,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60276,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60277,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60278,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60279,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60280,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60281,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60282,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60283,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60284,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60285,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60286,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60287,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60288,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60289,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60290,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60291,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60292,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60293,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60294,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60295,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60296,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60297,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60298,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60299,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60300,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60301,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60302,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60303,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60304,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60305,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60306,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60307,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60308,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60309,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60310,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60311,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60312,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60313,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60314,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60315,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60316,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60317,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60318,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_night_1",
+      "seed": 60319,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60512,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60513,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60514,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60515,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60516,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60517,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60518,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60519,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60520,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60521,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60522,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60523,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60524,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60525,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60526,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60527,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60528,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60529,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60530,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60531,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60532,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60533,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60534,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60535,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60536,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60537,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60538,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60539,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60540,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60541,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60542,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60543,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60544,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60545,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60546,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60547,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60548,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60549,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60550,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60551,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60552,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60553,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60554,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60555,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60556,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60557,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60558,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60559,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60560,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60561,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60562,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60563,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60564,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60565,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60566,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60567,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60568,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60569,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60570,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60571,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60572,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60573,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60574,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_pool_1",
+      "seed": 60575,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60768,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60769,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60770,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60771,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60772,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60773,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60774,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60775,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60776,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60777,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60778,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60779,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60780,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60781,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60782,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60783,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60784,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60785,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60786,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60787,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60788,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60789,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60790,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60791,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60792,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60793,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60794,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60795,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60796,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60797,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60798,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60799,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60800,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60801,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60802,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60803,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60804,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60805,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60806,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60807,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60808,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60809,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60810,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60811,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60812,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60813,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60814,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60815,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60816,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60817,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60818,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60819,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60820,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60821,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60822,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60823,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60824,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60825,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60826,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60827,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60828,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60829,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60830,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_fog_1",
+      "seed": 60831,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61024,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61025,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61026,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61027,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61028,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61029,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61030,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61031,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61032,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61033,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61034,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61035,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61036,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61037,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61038,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61039,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61040,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61041,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61042,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61043,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61044,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61045,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61046,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61047,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61048,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61049,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61050,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61051,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61052,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61053,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61054,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61055,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61056,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61057,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61058,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61059,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61060,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61061,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61062,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61063,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61064,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61065,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61066,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61067,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61068,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61069,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61070,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61071,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61072,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61073,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61074,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61075,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61076,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61077,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61078,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61079,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61080,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61081,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61082,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61083,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61084,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61085,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61086,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    },
+    {
+      "task_id": "train_roof_1",
+      "seed": 61087,
+      "previous_sun_produced": 225,
+      "reset_events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "warmed_income_rate": 0.0,
+      "clean_income_rate": 0.0,
+      "identical_policy_inputs": true,
+      "zero_reset_events": true
+    }
+  ]
+}

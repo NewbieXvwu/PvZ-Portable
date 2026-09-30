@@ -342,8 +342,7 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
 TOKEN_ID_FIELDS = ("kinds", "categories", "variants", "rows", "cols")
 
 
-def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any], *,
-                lossless: bool = False) -> dict[str, Any]:
+def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any]) -> dict[str, Any]:
     """Flatten a tokenization into contiguous numpy arrays for storage.
 
     A raw observation costs ~42 KiB as Python objects (measured: 4.0 KiB pickled,
@@ -355,7 +354,7 @@ def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any], *,
     packet_ids = sorted(metadata["packet_tokens"])
     return {
         "ids": ids,
-        "features": tensors["features"].numpy().astype(np.float32 if lossless else np.float16),
+        "features": tensors["features"].numpy().astype(np.float16),
         "cell_index": np.array([metadata["cell_tokens"][cell] for cell in range(54)], dtype=np.uint16),
         "packet_ids": np.array(packet_ids, dtype=np.uint8),
         "packet_index": np.array([metadata["packet_tokens"][packet] for packet in packet_ids], dtype=np.uint16),
@@ -857,7 +856,7 @@ class GameplayModelV1(nn.Module):
         token_lengths = np.array([packed["ids"].shape[0] for packed in packed_list], dtype=np.int64)
         l_max = int(token_lengths.max())
         ids = np.zeros((count, l_max, len(TOKEN_ID_FIELDS)), dtype=np.int64)
-        features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float32)
+        features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float16)
         key_mask = np.zeros((count, l_max), dtype=bool)
         for index, packed in enumerate(packed_list):
             real = packed["ids"].shape[0]

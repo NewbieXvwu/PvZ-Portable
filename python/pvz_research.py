@@ -308,6 +308,7 @@ def run_experiment(args: Any) -> None:
         state = checkpoint["training_state"]
         restore_rng(checkpoint["rng_state"], rng)
         state["invocations"].append({"kind": "complete_resume", "started_at": _now(), "commit": revision})
+        state["status"] = "running"
     else:
         if pointer.exists() or (output / "training_state.json").exists():
             raise RuntimeError("experiment directory already has state; use --resume for this candidate")
@@ -372,8 +373,7 @@ def run_experiment(args: Any) -> None:
                          for mode, rows in record["summary"].items()), flush=True)
 
     try:
-        if not args.resume:
-            save("initial")
+        save("resumed" if args.resume else "initial")
         if state["phase"] in ("initial_evaluation", "pending_evaluation"):
             do_evaluation()
         invocation_updates = 0
@@ -400,7 +400,7 @@ def run_experiment(args: Any) -> None:
             metadata = {"research_version": RESEARCH_VERSION, "experiment_identity": identity,
                         "update": state["updates"] + 1,
                         "model_state_sha256": profile._state_sha256(weights),
-                        "assignments": assignments, "lossless_tokens": True}
+                        "assignments": assignments, "feature_storage_dtype": "float16"}
             shard_dir = seed_job_directory(output / "runs/run_1", f"update_{state['updates'] + 1:06d}", metadata)
             runtime = config["runtime"]
             label = f"{config['experiment_id']} update {state['updates'] + 1}"

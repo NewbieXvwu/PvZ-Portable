@@ -34,7 +34,7 @@ def episodes_for(model: GameplayModelV1) -> list[dict]:
                 output = model.step_tokens(tokens, metadata, obs["wave"], hidden, previous, delta, {})
                 action, log_prob, _ = select_action(model, output, legal)
                 value = model.privileged_value_from_extra(output, [0.0] * 16)
-            transitions.append({"tokens": pack_tokens(tokens, metadata, lossless=True),
+            transitions.append({"tokens": pack_tokens(tokens, metadata),
                 "wave": obs["wave"], "previous_action": previous,
                 "elapsed_since_previous_observation": delta, "events": {},
                 "legal": legal, "action": action, "log_prob": log_prob.item(),

@@ -1,0 +1,13 @@
+{
+  "episodes": 200,
+  "differences": [
+    {
+      "job_id": 183,
+      "a_tick": 7887,
+      "b_tick": 7875,
+      "task_id": "train_day_1",
+      "seed": 60008,
+      "same_actions": false
+    }
+  ]
+}

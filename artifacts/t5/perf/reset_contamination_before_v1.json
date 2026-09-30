@@ -1,0 +1,48 @@
+{
+  "records": [
+    {
+      "phase": "warm_previous_episode",
+      "tick": 6000,
+      "events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 225,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 1,
+        "level_won": false,
+        "level_lost": false
+      }
+    },
+    {
+      "phase": "reset_target",
+      "tick": 0,
+      "events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 4294967071,
+        "sun_spent": 225,
+        "mower_triggered": 0,
+        "waves_started": -1,
+        "level_won": false,
+        "level_lost": false
+      },
+      "sun_income_rate": 0.0
+    },
+    {
+      "phase": "first_wait",
+      "tick": 150,
+      "events": {
+        "zombies_killed": 0,
+        "plants_eaten": 0,
+        "sun_produced": 0,
+        "sun_spent": 0,
+        "mower_triggered": 0,
+        "waves_started": 0,
+        "level_won": false,
+        "level_lost": false
+      },
+      "sun_income_rate": 28633113806.666668
+    }
+  ]
+}

@@ -353,6 +353,9 @@ static void RunEnvironment(LawnApp* app)
 			{
 				snapshots.clear();
 				nextSnapshotId = 1;
+				// RESET starts a new counter history. Subtracting the previous
+				// board's uint32 counters wraps into billions of fake events.
+				before = ReadCounters(app);
 			}
 		}
 		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT")

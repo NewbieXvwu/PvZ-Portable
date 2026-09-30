@@ -42,6 +42,16 @@ def _resource_dir() -> Iterator[Path]:
 
 
 class ConstructionTests(unittest.TestCase):
+    def test_reset_events_cannot_leak_into_next_episode_income(self) -> None:
+        env = PvZEnv(resource_dir="/nonexistent")
+        initial = {"tick": 0, "wave_timer": 3000}
+        env._annotate_observation(initial, {"sun_produced": 2**32 - 25}, reset_history=True)
+        next_observation = {"tick": 150, "wave_timer": 2850}
+        env._annotate_observation(next_observation, {"sun_produced": 0})
+        self.assertEqual(next_observation["sun_income_rate"], 0.0)
+        env._annotate_observation({"tick": 300, "wave_timer": 2700}, {"sun_produced": 25})
+        self.assertEqual(sum(amount for _, amount in env._sun_production_history), 25)
+
     def test_construction_does_not_touch_the_resource_directory(self) -> None:
         """Hashing main.pak eagerly raised a bare FileNotFoundError before _start() could
         report the friendly "main.pak not found" message."""

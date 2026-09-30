@@ -85,9 +85,9 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         critic_inputs_seconds += time.perf_counter() - critic_started
         tokenize_started = time.perf_counter()
         tensors, metadata = observation_tokens(observation)
-        # Research replay must use the same input as collection. The historical
-        # fp16 shard encoding remains available to old benchmark callers.
-        packed = pack_tokens(tensors, metadata, lossless=True)
+        # observation_tokens already rounds both inference and replay inputs to
+        # fp16-representable values; compact storage adds no further quantization.
+        packed = pack_tokens(tensors, metadata)
         legal = legal_summary(observation["legal_actions"])
         tokenization_seconds += time.perf_counter() - tokenize_started
         model_started = time.perf_counter()
