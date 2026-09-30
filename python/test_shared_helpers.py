@@ -63,7 +63,9 @@ class SharedDigestTests(unittest.TestCase):
     def test_version_constants_are_the_documented_values(self) -> None:
         self.assertEqual(ENV_PROTOCOL_VERSION, 4)
         self.assertEqual(REPLAY_FORMAT_VERSION, 5)
-        self.assertEqual(OBSERVATION_VERSION, 2)
+        # Bumped 2 -> 3 with the derived lane features: the environment now emits
+        # ``sun_income_rate``, so the observation schema is not the old one.
+        self.assertEqual(OBSERVATION_VERSION, 3)
         self.assertEqual(TASK_VERSION, 2)
         self.assertEqual(TRAINING_SEED, 17)
         self.assertEqual(VALUE_RANGE, (-1.0, 1.0))
