@@ -1,0 +1,53 @@
+{
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 5080",
+  "torch_version": "2.14.0+cu132",
+  "episodes": 16,
+  "ppo_epochs": 1,
+  "learning_rate": 0.0001,
+  "data_dir": "/home/newbiexvwu/PvZ-Portable/artifacts/t5/perf/throughput_shards_20260929T123406Z/cpu_workers_20_threads_1",
+  "configurations": [
+    {
+      "sequence_length": 16,
+      "minibatch_chunks": 16,
+      "precision": "fp32",
+      "status": "ok",
+      "episodes": 16,
+      "transitions": 963,
+      "elapsed_seconds": 14.371,
+      "transitions_per_second": 67.0,
+      "episode_shard_bytes": 1650829,
+      "episode_object_bytes": 8331763,
+      "learning_rate": 0.0001,
+      "rss_before_update_mb": 894.5,
+      "rss_after_update_mb": 2492.5,
+      "peak_cuda_allocated_mb": 2275.0,
+      "peak_cuda_reserved_mb": 2712.0,
+      "policy_loss": 0.33348888754844663,
+      "value_loss": 0.2840495973825455,
+      "entropy": 1.7982908964157105,
+      "gradient_norm": 2.6454405784606934
+    },
+    {
+      "sequence_length": 16,
+      "minibatch_chunks": 16,
+      "precision": "bf16",
+      "status": "ok",
+      "episodes": 16,
+      "transitions": 963,
+      "elapsed_seconds": 3.73,
+      "transitions_per_second": 258.2,
+      "episode_shard_bytes": 1650829,
+      "episode_object_bytes": 8331763,
+      "learning_rate": 0.0001,
+      "rss_before_update_mb": 2494.1,
+      "rss_after_update_mb": 3071.2,
+      "peak_cuda_allocated_mb": 1602.0,
+      "peak_cuda_reserved_mb": 1968.0,
+      "policy_loss": 0.3372710168361664,
+      "value_loss": 0.4424995586276054,
+      "entropy": 1.7999223470687866,
+      "gradient_norm": 3.226506471633911
+    }
+  ]
+}

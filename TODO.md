@@ -282,7 +282,8 @@ T5 的短局高胜率与旧吞吐目标保留为参考指标，不再构成进�
 - 本机资源：`/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN`，Python 使用 mise 3.14。
 - 既有远端入口：`win_ssh.py`，WSL 仓库 `~/PvZ-Portable`，资源 `~/.cache/pvz-research-resources`，环境 `~/.venvs/ml`。沿用已安装 CUDA/PyTorch 环境，不为实验重装可用依赖。
 - 开始远端任务前记录实际代码版本与待运行配置，使用当前资源和二进制检查。旧文档中的固定提交号与吞吐命令只作历史记录。
-- **主要执行机是台式机（WSL2 / RTX 5080）**，本机（macOS）只做不需要真实模拟器的编辑与静态检查。交接步骤、连接命令、同步方式与测量纪律见 [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md)。远端跑完的结果必须把证据 JSON 取回本机归档到 `artifacts/t5/perf/`，未同步的远端结果不能记作已完成（§1.2）。
+- **主要执行机是台式机（WSL2 / RTX 5080）**，本机（macOS）只做不需要真实模拟器的编辑与静态检查。交接步骤、连接命令与测量纪律见 [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md)。
+- **两台机器之间全程走 git**（分支 `pvz-env`，origin = `NewbieXvwu/PvZ-Portable`）：本机提交推送，台式机 `git pull --ff-only` 后执行；跑完把证据提交推送回来。**不要用 tar / scp / `/mnt/c` 手工拷贝**——那样会丢掉"这段结果对应哪个代码版本"。未推送的远端结果不能记作已完成（§1.2）。
 
 ## 8. 公开研究依据与适用范围
 

@@ -1,0 +1,71 @@
+{
+  "started_at": "2026-09-29T12:38:38.870906+00:00",
+  "episodes_per_batch": 100,
+  "max_actions": 4000,
+  "configurations": [
+    {
+      "device": "cpu",
+      "workers": 12,
+      "torch_threads_per_worker": 1,
+      "episodes": 100,
+      "elapsed_seconds": 11.509,
+      "episodes_per_hour": 31280.2,
+      "mean_episode_seconds": 0.9036,
+      "mean_profile_seconds": {
+        "model": 0.66712,
+        "environment": 0.20281,
+        "critic_inputs": 0.00586,
+        "tokenization": 0.02655
+      },
+      "peak_process_tree_rss_mb": 10139.8
+    },
+    {
+      "device": "cpu",
+      "workers": 18,
+      "torch_threads_per_worker": 1,
+      "episodes": 100,
+      "elapsed_seconds": 11.183,
+      "episodes_per_hour": 32191.1,
+      "mean_episode_seconds": 1.2214,
+      "mean_profile_seconds": {
+        "model": 0.85533,
+        "environment": 0.32873,
+        "critic_inputs": 0.00419,
+        "tokenization": 0.03169
+      },
+      "peak_process_tree_rss_mb": 14896.7
+    },
+    {
+      "device": "cpu",
+      "workers": 20,
+      "torch_threads_per_worker": 1,
+      "episodes": 100,
+      "elapsed_seconds": 11.72,
+      "episodes_per_hour": 30715.7,
+      "mean_episode_seconds": 1.3508,
+      "mean_profile_seconds": {
+        "model": 0.92289,
+        "environment": 0.38883,
+        "critic_inputs": 0.00365,
+        "tokenization": 0.03384
+      },
+      "peak_process_tree_rss_mb": 16460.6
+    }
+  ],
+  "selected_configuration": {
+    "device": "cpu",
+    "workers": 18,
+    "torch_threads_per_worker": 1,
+    "episodes": 100,
+    "elapsed_seconds": 11.183,
+    "episodes_per_hour": 32191.1,
+    "mean_episode_seconds": 1.2214,
+    "mean_profile_seconds": {
+      "model": 0.85533,
+      "environment": 0.32873,
+      "critic_inputs": 0.00419,
+      "tokenization": 0.03169
+    },
+    "peak_process_tree_rss_mb": 14896.7
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "source": "artifacts/t5/throughput_shards_20260929T074107Z/workers_6_threads_2/seed_6000005.json.gz",
+  "source_episode_id": 6000005,
+  "repetitions": 5,
+  "transitions": 60,
+  "in_memory_compact_bytes": 475718,
+  "formats": [
+    {
+      "format": "json.gz",
+      "roundtrip_median_seconds": 0.1224335220000512,
+      "file_bytes": 19343,
+      "decoded_json_object_bytes_before_array_restore": 5572237,
+      "restored_object_bytes": 956321,
+      "transitions": 60
+    },
+    {
+      "format": "npz.deflate",
+      "roundtrip_median_seconds": 0.025119259999996757,
+      "file_bytes": 101763,
+      "decoded_json_object_bytes_before_array_restore": null,
+      "restored_object_bytes": 495809,
+      "transitions": 60
+    },
+    {
+      "format": "npz.store",
+      "roundtrip_median_seconds": 0.01974161099997218,
+      "file_bytes": 444979,
+      "decoded_json_object_bytes_before_array_restore": null,
+      "restored_object_bytes": 495809,
+      "transitions": 60
+    }
+  ]
+}

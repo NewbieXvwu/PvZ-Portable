@@ -1,0 +1,242 @@
+{
+  "schema_version": 1,
+  "task_id": "T5-throughput",
+  "started_at": "2026-09-29T13:55:26.845404+00:00",
+  "finished_at": "2026-09-29T13:55:57.831840+00:00",
+  "duration_minutes_requested": 0.5,
+  "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "manifests": {
+    "train_sha256": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
+    "heldout_sha256": "e7b26373faf8085934366d29aa2b484adb866f0335fa805d1efdb920cd4273f2"
+  },
+  "policy": {
+    "kind": "current_torch_random_initialization",
+    "seed": 0,
+    "state_sha256": "ecfe8a25d731771599300b2fe27ca0505c62c4fd9263f31eaf04fcd3e3a75051",
+    "t4_baseline_state_sha256": "10d387f0f9a144e7d900ea34328838fc706c90079ff5ab154f502cd6d5b62662",
+    "state_matches_t4_baseline": false,
+    "state_mismatch_explanation": "T4 recorded the seeded initial state hash but did not preserve its tensors; the current CUDA PyTorch build produces a different state. One current state is shared across all throughput configurations.",
+    "training_episodes": 0
+  },
+  "configurations": [
+    {
+      "workers": 1,
+      "torch_threads_per_worker": 1,
+      "device": "cpu",
+      "target_seconds": 30.0,
+      "elapsed_seconds": 30.986,
+      "elapsed_before_shutdown_seconds": 30.0,
+      "peak_process_tree_rss_mb": 1847.4,
+      "completed_episodes": 54,
+      "episodes_per_hour": 6273.833,
+      "episodes_per_hour_per_worker": 6273.833,
+      "mean_episode_seconds": 0.512767,
+      "mean_profile_seconds": {
+        "model": 0.437275,
+        "environment": 0.052892,
+        "critic_inputs": 0.003842,
+        "tokenization": 0.017876,
+        "persistence": 0.012992
+      },
+      "wins": 0,
+      "completed_task_counts": {
+        "train_day_1": 3,
+        "train_day_2": 5,
+        "train_day_3": 3,
+        "train_day_4": 3,
+        "train_night_1": 5,
+        "train_night_2": 2,
+        "train_night_3": 3,
+        "train_night_4": 1,
+        "train_pool_1": 3,
+        "train_pool_2": 5,
+        "train_pool_3": 2,
+        "train_pool_4": 1,
+        "train_fog_1": 3,
+        "train_fog_2": 2,
+        "train_fog_3": 2,
+        "train_fog_4": 2,
+        "train_roof_1": 2,
+        "train_roof_2": 1,
+        "train_roof_3": 5,
+        "train_roof_4": 1
+      },
+      "shards_path": "artifacts/t5/perf/throughput_shards_20260929T135526Z/cpu_workers_1_threads_1"
+    },
+    {
+      "workers": 12,
+      "torch_threads_per_worker": 1,
+      "device": "cpu",
+      "target_seconds": null,
+      "elapsed_seconds": 177.311,
+      "elapsed_before_shutdown_seconds": 177.311,
+      "peak_process_tree_rss_mb": 15126.2,
+      "completed_episodes": 2000,
+      "episodes_per_hour": 40606.6,
+      "episodes_per_hour_per_worker": 3383.883333333333,
+      "mean_episode_seconds": 0.771,
+      "mean_profile_seconds": {
+        "model": 0.67442,
+        "environment": 0.0614,
+        "critic_inputs": 0.00617,
+        "tokenization": 0.02768
+      },
+      "wins": null,
+      "completed_task_counts": null,
+      "shards_path": null,
+      "measurement_kind": "exact_run_seed_jobs_batch",
+      "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000_mid.json"
+    },
+    {
+      "workers": 14,
+      "torch_threads_per_worker": 1,
+      "device": "cpu",
+      "target_seconds": null,
+      "elapsed_seconds": 170.775,
+      "elapsed_before_shutdown_seconds": 170.775,
+      "peak_process_tree_rss_mb": 18116.3,
+      "completed_episodes": 2000,
+      "episodes_per_hour": 42160.8,
+      "episodes_per_hour_per_worker": 3011.4857142857145,
+      "mean_episode_seconds": 0.8654,
+      "mean_profile_seconds": {
+        "model": 0.75802,
+        "environment": 0.06833,
+        "critic_inputs": 0.00716,
+        "tokenization": 0.03037
+      },
+      "wins": null,
+      "completed_task_counts": null,
+      "shards_path": null,
+      "measurement_kind": "exact_run_seed_jobs_batch",
+      "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000_mid.json"
+    },
+    {
+      "workers": 16,
+      "torch_threads_per_worker": 1,
+      "device": "cpu",
+      "target_seconds": null,
+      "elapsed_seconds": 163.545,
+      "elapsed_before_shutdown_seconds": 163.545,
+      "peak_process_tree_rss_mb": 19230.3,
+      "completed_episodes": 2000,
+      "episodes_per_hour": 44024.6,
+      "episodes_per_hour_per_worker": 2751.5375,
+      "mean_episode_seconds": 0.93,
+      "mean_profile_seconds": {
+        "model": 0.81852,
+        "environment": 0.07137,
+        "critic_inputs": 0.0067,
+        "tokenization": 0.03189
+      },
+      "wins": null,
+      "completed_task_counts": null,
+      "shards_path": null,
+      "measurement_kind": "exact_run_seed_jobs_batch",
+      "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000_mid.json"
+    },
+    {
+      "workers": 18,
+      "torch_threads_per_worker": 1,
+      "device": "cpu",
+      "target_seconds": null,
+      "elapsed_seconds": 161.559,
+      "elapsed_before_shutdown_seconds": 161.559,
+      "peak_process_tree_rss_mb": 19168.4,
+      "completed_episodes": 2000,
+      "episodes_per_hour": 44565.9,
+      "episodes_per_hour_per_worker": 2475.883333333333,
+      "mean_episode_seconds": 0.999,
+      "mean_profile_seconds": {
+        "model": 0.88831,
+        "environment": 0.07148,
+        "critic_inputs": 0.00429,
+        "tokenization": 0.03329
+      },
+      "wins": null,
+      "completed_task_counts": null,
+      "shards_path": null,
+      "measurement_kind": "exact_run_seed_jobs_batch",
+      "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000.json"
+    },
+    {
+      "workers": 20,
+      "torch_threads_per_worker": 1,
+      "device": "cpu",
+      "target_seconds": null,
+      "elapsed_seconds": 174.667,
+      "elapsed_before_shutdown_seconds": 174.667,
+      "peak_process_tree_rss_mb": 19715.0,
+      "completed_episodes": 2000,
+      "episodes_per_hour": 41221.3,
+      "episodes_per_hour_per_worker": 2061.065,
+      "mean_episode_seconds": 1.1161,
+      "mean_profile_seconds": {
+        "model": 0.98754,
+        "environment": 0.08641,
+        "critic_inputs": 0.00383,
+        "tokenization": 0.03646
+      },
+      "wins": null,
+      "completed_task_counts": null,
+      "shards_path": null,
+      "measurement_kind": "exact_run_seed_jobs_batch",
+      "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000.json"
+    }
+  ],
+  "configuration_order": [
+    "cpu:1w\u00d71t",
+    "cpu:12w\u00d71t, exact 2000-episode training batch",
+    "cpu:14w\u00d71t, exact 2000-episode training batch",
+    "cpu:16w\u00d71t, exact 2000-episode training batch",
+    "cpu:18w\u00d71t, exact 2000-episode training batch",
+    "cpu:20w\u00d71t, exact 2000-episode training batch"
+  ],
+  "selected_configuration": {
+    "device": "cpu",
+    "workers": 18,
+    "torch_threads_per_worker": 1,
+    "episodes_per_hour": 44565.9,
+    "measurement_kind": "exact_run_seed_jobs_batch",
+    "episodes": 2000,
+    "elapsed_seconds": 161.559,
+    "peak_process_tree_rss_mb": 19168.4,
+    "evidence_path": "artifacts/t5/perf/worker_batch_sweep_2000.json",
+    "selection_basis": "fastest measured exact 2,000-episode run_seed_jobs batch"
+  },
+  "selected_parallel_workers": 18,
+  "selected_torch_threads_per_worker": 1,
+  "selected_rollout_device": "cpu",
+  "single_core_episodes_per_hour": 6273.833,
+  "single_core_threshold_met": true,
+  "protected_assets_unmodified": true,
+  "worker_selection_evidence": {
+    "selected_measurement": "exact 2,000-episode run_seed_jobs batch",
+    "runs": [
+      "artifacts/t5/perf/worker_batch_sweep_2000_mid.json",
+      "artifacts/t5/perf/worker_batch_sweep_2000.json"
+    ],
+    "comparison": {
+      "cpu:12x1": {
+        "episodes_per_hour": 40606.6,
+        "peak_process_tree_rss_mb": 15126.2
+      },
+      "cpu:14x1": {
+        "episodes_per_hour": 42160.8,
+        "peak_process_tree_rss_mb": 18116.3
+      },
+      "cpu:16x1": {
+        "episodes_per_hour": 44024.6,
+        "peak_process_tree_rss_mb": 19230.3
+      },
+      "cpu:18x1": {
+        "episodes_per_hour": 44565.9,
+        "peak_process_tree_rss_mb": 19168.4
+      },
+      "cpu:20x1": {
+        "episodes_per_hour": 41221.3,
+        "peak_process_tree_rss_mb": 19715.0
+      }
+    }
+  }
+}

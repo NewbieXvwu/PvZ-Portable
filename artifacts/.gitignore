@@ -1,8 +1,33 @@
+# 默认全忽略：artifacts 是运行产物，不该进版本库。
 *
 !.gitignore
+
+# 冻结的任务清单与种子集（体积 KB 级，且是可复现性的前提）。
 !adventure2_level7/
 adventure2_level7/*
 !adventure2_level7/seeds/
 adventure2_level7/seeds/*
 !adventure2_level7/seeds/dev.json
 !adventure2_level7/seeds/test.json
+
+# 训练入口会直接读取的配置与门禁结果 —— 不入库的话另一台机器拉完就跑不起来。
+!t5/
+t5/*
+!t5/throughput.json
+!t5/stage0_gate.json
+!t5/evaluation_parallel_equivalence.json
+!t5/evaluation_parallel_equivalence_128.json
+
+# 基准证据（KB 级：全部 json + txt 合计约 148 KB）。执行机产生并提交，另一台机器只拉取。
+# 同名文件冲突时以执行机为准——它是产生者。
+# `.log` 不入库：滚动日志有 MB 级，通宵跑会更大，留在执行机上，报告里写摘要。
+!t5/perf/
+t5/perf/*
+!t5/perf/*.json
+!t5/perf/*.txt
+
+# 学习曲线。检查点（.pt）和分片（runs/ 下的 .npz）始终不入库：太大，
+# 而且两边都会写，pull 必然冲突。
+!t5/curves/
+t5/curves/*
+!t5/curves/*.json

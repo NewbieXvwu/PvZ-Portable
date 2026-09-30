@@ -1,0 +1,72 @@
+{
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 5080",
+  "torch_version": "2.14.0+cu132",
+  "data_dir": "/home/newbiexvwu/PvZ-Portable/artifacts/t5/runs/run_2/.seed_jobs/update_0001/fcd5098ca3d43a7574e5f4dedb77b158d4ccc5caf666d2a74ae67d817df002d2",
+  "attention_backend": "dense",
+  "episodes": 16,
+  "transitions": 879,
+  "optimizer": {
+    "sequence_length": 16,
+    "minibatch_chunks": 16,
+    "ppo_epochs": 1,
+    "learning_rate": 0.0001
+  },
+  "runs": {
+    "fp32": {
+      "seconds": 0.4189069619999941,
+      "losses": {
+        "policy_loss": 0.3732275187969208,
+        "value_loss": 0.3798032686114311,
+        "entropy": 1.8731325387954711,
+        "advantage_mean": -0.6335082650184631,
+        "advantage_std": 0.34658414125442505,
+        "gradient_norm": 3.1016132831573486
+      }
+    },
+    "bf16": {
+      "seconds": 0.4038504800000169,
+      "losses": {
+        "policy_loss": 0.37452547550201415,
+        "value_loss": 0.5639676243066788,
+        "entropy": 1.8733733654022218,
+        "advantage_mean": -0.6335082650184631,
+        "advantage_std": 0.34658414125442505,
+        "gradient_norm": 3.711061716079712
+      }
+    }
+  },
+  "speedup": 1.0372823179508828,
+  "state_drift_fp32_vs_subject": {
+    "parameters": 128,
+    "bitwise_identical": 8,
+    "worst_parameter": "belief.weight_hh_l0",
+    "worst_relative_difference": 0.8698384165763855,
+    "worst_absolute_difference": 0.0008869729936122894,
+    "median_relative_difference": 0.10667096823453903,
+    "worst_relative_in_bf16_roundoffs": 222.6786346435547
+  },
+  "state_drift_initial_vs_fp32": {
+    "parameters": 128,
+    "bitwise_identical": 8,
+    "worst_parameter": "encoder.0.attention_norm.bias",
+    "worst_relative_difference": 0.5021511316299438,
+    "worst_absolute_difference": 0.0005021511460654438,
+    "median_relative_difference": 0.4841288775205612,
+    "worst_relative_in_bf16_roundoffs": 128.55068969726562
+  },
+  "held_out_policy": {
+    "transitions": 506,
+    "max_abs_logprob_delta": 0.02274179458618164,
+    "mean_abs_logprob_delta": 0.010524418205022812,
+    "p99_abs_logprob_delta": 0.022509759292006493,
+    "max_abs_entropy_delta": 0.001134037971496582,
+    "ratio_min": 0.9775148034095764,
+    "ratio_max": 1.018207311630249,
+    "clip_epsilon": 0.2,
+    "decisions_with_ratio_outside_clip": 0,
+    "forward_noise_floor_max_abs_logprob_delta": 0.003566265106201172,
+    "forward_noise_floor_mean_abs_logprob_delta": 0.0005471686599776149
+  },
+  "bf16_unit_roundoff": 0.00390625
+}

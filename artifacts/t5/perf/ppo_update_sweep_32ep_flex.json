@@ -1,0 +1,42 @@
+{
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 5080",
+  "torch_version": "2.14.0+cu132",
+  "episodes": 32,
+  "ppo_epochs": 1,
+  "learning_rate": 0.0001,
+  "attention_backend": "flex",
+  "warmup": {
+    "sequence_length": 16,
+    "minibatch_chunks": 16,
+    "precision": "fp32",
+    "elapsed_seconds": 16.346,
+    "status": "ok"
+  },
+  "data_dir": "/home/newbiexvwu/PvZ-Portable/artifacts/t5/perf/throughput_shards_20260929T123406Z/cpu_workers_20_threads_1",
+  "configurations": [
+    {
+      "sequence_length": 16,
+      "minibatch_chunks": 16,
+      "precision": "fp32",
+      "attention_backend": "flex",
+      "status": "ok",
+      "episodes": 32,
+      "transitions": 1967,
+      "optimizer_steps": 9,
+      "elapsed_seconds": 1.536,
+      "transitions_per_second": 1280.5,
+      "episode_shard_bytes": 3372604,
+      "episode_object_bytes": 17017264,
+      "learning_rate": 0.0001,
+      "rss_before_update_mb": 2627.6,
+      "rss_after_update_mb": 2638.7,
+      "peak_cuda_allocated_mb": 1941.0,
+      "peak_cuda_reserved_mb": 3328.0,
+      "policy_loss": 0.1768033934964074,
+      "value_loss": 0.10340294076336755,
+      "entropy": 1.8172699610392253,
+      "gradient_norm": 1.0869935750961304
+    }
+  ]
+}

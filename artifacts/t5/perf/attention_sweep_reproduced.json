@@ -1,0 +1,67 @@
+{
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 5080",
+  "shape": {
+    "frames": 256,
+    "tokens": 96,
+    "width": 192
+  },
+  "relation_bias": "learned kind, row delta, column delta and same-cell terms",
+  "local_window": 16,
+  "results": [
+    {
+      "name": "dense_relation",
+      "median_forward_backward_seconds": 0.008111022500003173,
+      "repeats": 2,
+      "max_abs_output_error": 0.0,
+      "rms_output_error": 0.0,
+      "peak_cuda_allocated_mb": 511.1,
+      "peak_cuda_reserved_mb": 574.0
+    },
+    {
+      "name": "sdpa_relation",
+      "median_forward_backward_seconds": 0.09214930200000992,
+      "repeats": 2,
+      "max_abs_output_error": 2.384185791015625e-06,
+      "rms_output_error": 2.7560250259739405e-07,
+      "peak_cuda_allocated_mb": 515.5,
+      "peak_cuda_reserved_mb": 608.0
+    },
+    {
+      "name": "sdpa_without_relation",
+      "median_forward_backward_seconds": 0.0034690024999974867,
+      "repeats": 2,
+      "max_abs_output_error": 1.1252312660217285,
+      "rms_output_error": 0.18684378266334534,
+      "peak_cuda_allocated_mb": 326.4,
+      "peak_cuda_reserved_mb": 608.0
+    },
+    {
+      "name": "flex_relation",
+      "median_forward_backward_seconds": 0.021555391000006807,
+      "repeats": 2,
+      "max_abs_output_error": 1.1920928955078125e-06,
+      "rms_output_error": 1.7264294172036898e-07,
+      "peak_cuda_allocated_mb": 349.7,
+      "peak_cuda_reserved_mb": 502.0
+    },
+    {
+      "name": "flex_local_relation",
+      "median_forward_backward_seconds": 0.010039171000016722,
+      "repeats": 2,
+      "max_abs_output_error": 2.7146854400634766,
+      "rms_output_error": 0.4476853609085083,
+      "peak_cuda_allocated_mb": 360.9,
+      "peak_cuda_reserved_mb": 502.0
+    },
+    {
+      "name": "linear_without_relation",
+      "median_forward_backward_seconds": 0.003307319000015241,
+      "repeats": 2,
+      "max_abs_output_error": 1.7414432764053345,
+      "rms_output_error": 0.2937317490577698,
+      "peak_cuda_allocated_mb": 464.3,
+      "peak_cuda_reserved_mb": 612.0
+    }
+  ]
+}

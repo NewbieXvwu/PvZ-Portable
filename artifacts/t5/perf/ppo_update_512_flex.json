@@ -1,0 +1,74 @@
+{
+  "device": "cuda",
+  "device_name": "NVIDIA GeForce RTX 5080",
+  "torch_version": "2.14.0+cu132",
+  "episodes": 512,
+  "ppo_epochs": 1,
+  "learning_rate": 3e-05,
+  "attention_backend": "flex",
+  "warmup": [
+    {
+      "sequence_length": 16,
+      "minibatch_chunks": 16,
+      "precision": "fp32",
+      "elapsed_seconds": 22.178,
+      "status": "ok"
+    },
+    {
+      "sequence_length": 16,
+      "minibatch_chunks": 16,
+      "precision": "bf16",
+      "elapsed_seconds": 11.52,
+      "status": "ok"
+    }
+  ],
+  "data_dir": "/home/newbiexvwu/PvZ-Portable/artifacts/t5/runs/run_2/.seed_jobs/update_0001/fcd5098ca3d43a7574e5f4dedb77b158d4ccc5caf666d2a74ae67d817df002d2",
+  "configurations": [
+    {
+      "sequence_length": 16,
+      "minibatch_chunks": 16,
+      "precision": "fp32",
+      "attention_backend": "flex",
+      "status": "ok",
+      "episodes": 512,
+      "transitions": 28822,
+      "optimizer_steps": 129,
+      "elapsed_seconds": 16.23,
+      "transitions_per_second": 1775.8,
+      "episode_shard_bytes": 62548049,
+      "episode_object_bytes": 257091395,
+      "learning_rate": 3e-05,
+      "rss_before_update_mb": 3574.5,
+      "rss_after_update_mb": 3598.1,
+      "peak_cuda_allocated_mb": 2174.1,
+      "peak_cuda_reserved_mb": 4936.0,
+      "policy_loss": 0.13703600435640462,
+      "value_loss": 0.08425462995330955,
+      "entropy": 1.8442275487175284,
+      "gradient_norm": 1.0504285097122192
+    },
+    {
+      "sequence_length": 16,
+      "minibatch_chunks": 16,
+      "precision": "bf16",
+      "attention_backend": "flex",
+      "status": "ok",
+      "episodes": 512,
+      "transitions": 28822,
+      "optimizer_steps": 129,
+      "elapsed_seconds": 15.294,
+      "transitions_per_second": 1884.5,
+      "episode_shard_bytes": 62548049,
+      "episode_object_bytes": 257091395,
+      "learning_rate": 3e-05,
+      "rss_before_update_mb": 3598.3,
+      "rss_after_update_mb": 3612.0,
+      "peak_cuda_allocated_mb": 1323.2,
+      "peak_cuda_reserved_mb": 2150.0,
+      "policy_loss": 0.13675358640246613,
+      "value_loss": 0.09486473100476486,
+      "entropy": 1.8402141757713733,
+      "gradient_norm": 1.254512071609497
+    }
+  ]
+}

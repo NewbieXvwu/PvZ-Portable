@@ -49,36 +49,71 @@ python3 scripts/win_ssh.py ps  'Get-ChildItem C:\'      # 直接跑 PowerShell
 
 ---
 
-## 2. 同步代码（本机 → 台式机）
+## 2. 同步：全程走 git，不用 tar / scp
 
-代码只同步 `python` 和 `scripts` 两个目录；`artifacts` 不入库也不同步。
-
-```bash
-# 本机
-cd /Users/newbiexvwu/PvZAgent
-tar czf /tmp/pvz-sync.tgz --exclude='__pycache__' python scripts
-scp -P 22222 /tmp/pvz-sync.tgz newbiexvwu@127.0.0.1:pvz-sync.tgz
-
-# 台式机 WSL（落盘位置是 C:\Users\NewbieXvwu\）
-tar czf ~/pvz-prebuilt-backup.tgz python scripts          # 先备份
-tar xzf /mnt/c/Users/NewbieXvwu/pvz-sync.tgz -C ~/PvZ-Portable
-```
-
-### 取回证据（台式机 → 本机）
-
-远端是 Windows，`scp` 的远端路径不能用 `~`。先在 WSL 里拷到 `/mnt/c`，再用 Windows 路径 scp：
+两边都是同一个仓库（`origin` = `NewbieXvwu/PvZ-Portable`），分支 `pvz-env`。
+**不要再打 tar 包、不要再往 `/mnt/c` 拷文件**：手工拷贝会丢掉"这段结果对应哪个代码版本"
+这件事，而它恰恰是证据的一部分。
 
 ```bash
-# 台式机 WSL
-mkdir -p /mnt/c/Users/NewbieXvwu/pvzperf
-cp artifacts/t5/perf/*.json /mnt/c/Users/NewbieXvwu/pvzperf/
+# 台式机：开工前
+cd ~/PvZ-Portable
+git status                        # 先看有没有本地未提交改动
+git pull --ff-only origin pvz-env
 
-# 本机
-scp -P 22222 "newbiexvwu@127.0.0.1:C:/Users/NewbieXvwu/pvzperf/*.json" artifacts/t5/perf/
+# 台式机：跑完后，把证据提交推送
+git add artifacts/t5/perf artifacts/t5/curves artifacts/t5/throughput.json
+git status                        # 确认没有把分片/检查点带进来
+git commit -m "..."
+git push origin pvz-env
+
+# 本机：取回
+git pull --ff-only origin pvz-env
 ```
 
-**未同步回本机的远端结果不能记作已完成**（TODO §1.2）。证据 JSON 统一放
-`artifacts/t5/perf/`（该目录已被 git 忽略规则排除在快照外，但文件本身入库）。
+### 什么入库、什么不入库（`artifacts/.gitignore`）
+
+| 内容 | 入库？ | 理由 |
+|---|---|---|
+| `artifacts/t5/throughput.json` | ✅ | **训练入口直接读它**，不入库另一台机器拉完就跑不起来 |
+| `artifacts/t5/stage0_gate.json`、`evaluation_parallel_equivalence*.json` | ✅ | 门禁与等价性证据，KB 级 |
+| `artifacts/t5/perf/*.json` / `*.txt` | ✅ | 基准证据，KB 级（全部合计约 148 KB） |
+| `artifacts/t5/perf/*.log` | ❌ | 滚动日志 MB 级，通宵跑会更大。留在台式机，报告里写摘要 |
+| `artifacts/t5/curves/*.json` | ✅ | 学习曲线 |
+| `runs/` 下的分片 `.npz`、`*.pt` 检查点 | ❌ | 太大（分片 272 MB/批），而且两边都会写，pull 必然冲突 |
+| `training_state.json`、`learning_curve.json`（在 output-dir 里） | ❌ | 同上，运行产物 |
+
+**学习曲线要复制一份到 `artifacts/t5/curves/` 才会被提交**（output-dir 里的那份不入库）。
+检查点留在台式机上，需要时单独取。
+
+### 第一次拉取会失败一次（这是预期的）
+
+`artifacts/t5/throughput.json` 和 `artifacts/t5/perf/*.json` 原本是被 `.gitignore` 忽略的，
+2026-09-30 改成入库。台式机上如果已经有同名文件（未跟踪），`git pull` 会拒绝：
+
+```
+error: The following untracked working tree files would be overwritten by merge:
+    artifacts/t5/throughput.json
+    artifacts/t5/perf/xxx.json
+```
+
+**本机那些 json 是从台式机拷回来的副本，台式机才是产生者**，所以以台式机为准：
+
+```bash
+mkdir -p ~/evidence-backup
+cp -r artifacts/t5/perf artifacts/t5/throughput.json ~/evidence-backup/   # 先备份
+# 按上面报错里列出的路径逐个删掉，然后重拉；不要 git clean -f 一锅端
+git pull --ff-only origin pvz-env
+# 拉完后比对：不一致时用备份里的（台式机实测）覆盖回去，并提交
+diff ~/evidence-backup/throughput.json artifacts/t5/throughput.json
+```
+
+### 冲突怎么办
+
+证据由**执行机（台式机）产生并提交**，本机只拉取。同名文件冲突时以执行机为准——它是
+产生者。`git pull` 报冲突不要用 `--force`，先看 `git diff` 确认丢的是哪一边。
+
+**未同步回本机的远端结果不能记作已完成**（TODO §1.2）。
 
 ---
 
@@ -174,9 +209,11 @@ $PY scripts/precision_equivalence.py --data-dir $SHARDS --attention-backend dens
 
 ## 8. 提交纪律
 
-* 开始远端任务前记录实际代码版本（git HEAD）与待运行配置。
+* 开始远端任务前记录实际代码版本（`git rev-parse --short HEAD`）与待运行配置。
 * 在台式机上提交时，commit message 说清改了什么、实测数字是什么、证据落在哪个文件。
-* 证据 JSON 必须同步回本机（§2），否则不算完成。
+* 证据走 git 提交推送（§2），**不要用 tar / scp / `/mnt/c` 拷**。没推送的远端结果不算完成。
+* 提交前 `git status` 看一眼：分片（`.npz`）和检查点（`.pt`）不该出现在暂存区，
+  出现了说明 `.gitignore` 被绕过，先查清楚。
 * 旧文档里的固定提交号和吞吐命令只作历史记录，不要拿来对当前代码下结论。
 
 ---
@@ -207,3 +244,8 @@ $PY scripts/precision_equivalence.py --data-dir $SHARDS --attention-backend dens
    全部保留，把错误信息原样写进报告。"跑挂了但不知道为什么"比"没跑"更糟。
 8. **不许为了跑通而放宽标准。** 不许改任务集、不许删失败种子、不许事后降低达标阈值、
    不许为了让门禁过而改评估器。预算不够就报告预算不够。
+9. **收尾要把曲线复制出来并推送。** output-dir 里的 `learning_curve.json` 和
+   `training_state.json` **不入库**（两边都会写，pull 必冲突），所以收尾时必须
+   `cp <output-dir>/learning_curve.json artifacts/t5/curves/<实验名>.json`，
+   连同 `artifacts/t5/perf/` 的证据一起 `git add && commit && push`（§2）。
+   忘了这一步 = 一夜白跑——本机 pull 下来什么也看不到。
