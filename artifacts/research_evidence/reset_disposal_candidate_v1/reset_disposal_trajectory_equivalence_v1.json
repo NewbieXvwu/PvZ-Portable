@@ -1,0 +1,4332 @@
+{
+  "scope": "every public response, legal mask, event, reward, terminal and truncation tuple",
+  "manifest_sha256": "52886642574ff478d3ca15f089cb93599acfb38401c405dd93d3af1a6b7fa954",
+  "reference_sha256": "506467fc2fa763cffab8f42ae798c71d5e1f2d2017dddc9ebc1dbad13a7881b7",
+  "candidate_sha256": "6fd6c657df97ebd249a968fb230cfd11efbce1fd194d24bfe27c6651d0a25ffc",
+  "episodes": 480,
+  "response_comparisons": 28318,
+  "records": [
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91000,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8319,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91001,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8837,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91002,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9771,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91003,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8038,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91000,
+      "strategy": "scripted",
+      "decisions": 39,
+      "result": 1,
+      "tick": 4920,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91001,
+      "strategy": "scripted",
+      "decisions": 37,
+      "result": 1,
+      "tick": 4506,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91002,
+      "strategy": "scripted",
+      "decisions": 40,
+      "result": 1,
+      "tick": 4877,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_none",
+      "seed": 91003,
+      "strategy": "scripted",
+      "decisions": 48,
+      "result": 1,
+      "tick": 5959,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91000,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8847,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91001,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7615,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91002,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7506,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91003,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9584,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91000,
+      "strategy": "scripted",
+      "decisions": 29,
+      "result": 1,
+      "tick": 3384,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91001,
+      "strategy": "scripted",
+      "decisions": 37,
+      "result": 1,
+      "tick": 4271,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91002,
+      "strategy": "scripted",
+      "decisions": 34,
+      "result": 1,
+      "tick": 3886,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_economy",
+      "seed": 91003,
+      "strategy": "scripted",
+      "decisions": 27,
+      "result": 1,
+      "tick": 3247,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91000,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8044,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91001,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7913,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91002,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8892,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91003,
+      "strategy": "wait",
+      "decisions": 12,
+      "result": 1,
+      "tick": 3544,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91000,
+      "strategy": "scripted",
+      "decisions": 27,
+      "result": 1,
+      "tick": 3149,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91001,
+      "strategy": "scripted",
+      "decisions": 26,
+      "result": 1,
+      "tick": 2986,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91002,
+      "strategy": "scripted",
+      "decisions": 32,
+      "result": 1,
+      "tick": 3685,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_partial_defence",
+      "seed": 91003,
+      "strategy": "scripted",
+      "decisions": 38,
+      "result": 1,
+      "tick": 4366,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91000,
+      "strategy": "wait",
+      "decisions": 12,
+      "result": 1,
+      "tick": 3360,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91001,
+      "strategy": "wait",
+      "decisions": 12,
+      "result": 1,
+      "tick": 3592,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91002,
+      "strategy": "wait",
+      "decisions": 12,
+      "result": 1,
+      "tick": 3454,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91003,
+      "strategy": "wait",
+      "decisions": 12,
+      "result": 1,
+      "tick": 3438,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91000,
+      "strategy": "scripted",
+      "decisions": 22,
+      "result": 1,
+      "tick": 2596,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91001,
+      "strategy": "scripted",
+      "decisions": 29,
+      "result": 1,
+      "tick": 3431,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91002,
+      "strategy": "scripted",
+      "decisions": 30,
+      "result": 1,
+      "tick": 3506,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap1_full_defence",
+      "seed": 91003,
+      "strategy": "scripted",
+      "decisions": 29,
+      "result": 1,
+      "tick": 3336,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91064,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7164,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91065,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7977,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91066,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7424,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91067,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9180,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91064,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 1,
+      "tick": 9208,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91065,
+      "strategy": "scripted",
+      "decisions": 83,
+      "result": 1,
+      "tick": 10123,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91066,
+      "strategy": "scripted",
+      "decisions": 81,
+      "result": 1,
+      "tick": 9817,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_none",
+      "seed": 91067,
+      "strategy": "scripted",
+      "decisions": 111,
+      "result": 2,
+      "tick": 13592,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91064,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7942,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91065,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8168,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91066,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7326,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91067,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9626,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91064,
+      "strategy": "scripted",
+      "decisions": 57,
+      "result": 1,
+      "tick": 6864,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91065,
+      "strategy": "scripted",
+      "decisions": 60,
+      "result": 1,
+      "tick": 7331,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91066,
+      "strategy": "scripted",
+      "decisions": 58,
+      "result": 1,
+      "tick": 6929,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_economy",
+      "seed": 91067,
+      "strategy": "scripted",
+      "decisions": 59,
+      "result": 1,
+      "tick": 7188,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91064,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8646,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91065,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8307,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91066,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9537,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91067,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7751,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91064,
+      "strategy": "scripted",
+      "decisions": 48,
+      "result": 1,
+      "tick": 5598,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91065,
+      "strategy": "scripted",
+      "decisions": 51,
+      "result": 1,
+      "tick": 6114,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91066,
+      "strategy": "scripted",
+      "decisions": 49,
+      "result": 1,
+      "tick": 5802,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_partial_defence",
+      "seed": 91067,
+      "strategy": "scripted",
+      "decisions": 50,
+      "result": 1,
+      "tick": 5873,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91064,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 1,
+      "tick": 6280,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91065,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 1,
+      "tick": 6109,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91066,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 1,
+      "tick": 6122,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91067,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 1,
+      "tick": 6256,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91064,
+      "strategy": "scripted",
+      "decisions": 47,
+      "result": 1,
+      "tick": 5573,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91065,
+      "strategy": "scripted",
+      "decisions": 42,
+      "result": 1,
+      "tick": 5038,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91066,
+      "strategy": "scripted",
+      "decisions": 47,
+      "result": 1,
+      "tick": 5616,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap3_full_defence",
+      "seed": 91067,
+      "strategy": "scripted",
+      "decisions": 45,
+      "result": 1,
+      "tick": 5328,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7658,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7648,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8453,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7108,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 137,
+      "result": 2,
+      "tick": 16687,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 116,
+      "result": 1,
+      "tick": 14340,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 150,
+      "result": 2,
+      "tick": 18418,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_none",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 108,
+      "result": 1,
+      "tick": 13335,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9195,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8443,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7970,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9063,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 84,
+      "result": 1,
+      "tick": 10314,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 83,
+      "result": 1,
+      "tick": 10061,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 85,
+      "result": 1,
+      "tick": 10439,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_economy",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 84,
+      "result": 1,
+      "tick": 10323,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7661,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7369,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9423,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8974,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 1,
+      "tick": 9238,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 76,
+      "result": 1,
+      "tick": 9340,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 69,
+      "result": 1,
+      "tick": 8301,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_partial_defence",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 67,
+      "result": 1,
+      "tick": 8127,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91128,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 1,
+      "tick": 9111,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91129,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 1,
+      "tick": 9312,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91130,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 1,
+      "tick": 9314,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91131,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 1,
+      "tick": 8942,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91128,
+      "strategy": "scripted",
+      "decisions": 64,
+      "result": 1,
+      "tick": 7769,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91129,
+      "strategy": "scripted",
+      "decisions": 59,
+      "result": 1,
+      "tick": 7093,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91130,
+      "strategy": "scripted",
+      "decisions": 58,
+      "result": 1,
+      "tick": 7004,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_day_cap5_full_defence",
+      "seed": 91131,
+      "strategy": "scripted",
+      "decisions": 59,
+      "result": 1,
+      "tick": 7196,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91192,
+      "strategy": "wait",
+      "decisions": 20,
+      "result": 2,
+      "tick": 5993,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91193,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6510,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91194,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6777,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91195,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6867,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91192,
+      "strategy": "scripted",
+      "decisions": 66,
+      "result": 2,
+      "tick": 7230,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91193,
+      "strategy": "scripted",
+      "decisions": 61,
+      "result": 2,
+      "tick": 6856,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91194,
+      "strategy": "scripted",
+      "decisions": 67,
+      "result": 2,
+      "tick": 7497,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_none",
+      "seed": 91195,
+      "strategy": "scripted",
+      "decisions": 68,
+      "result": 2,
+      "tick": 7588,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91192,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6229,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91193,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6116,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91194,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6642,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91195,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6460,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91192,
+      "strategy": "scripted",
+      "decisions": 63,
+      "result": 2,
+      "tick": 6591,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91193,
+      "strategy": "scripted",
+      "decisions": 63,
+      "result": 2,
+      "tick": 6608,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91194,
+      "strategy": "scripted",
+      "decisions": 63,
+      "result": 2,
+      "tick": 6889,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_economy",
+      "seed": 91195,
+      "strategy": "scripted",
+      "decisions": 63,
+      "result": 2,
+      "tick": 6777,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91192,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6676,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91193,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6675,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91194,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 6914,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91195,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6741,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91192,
+      "strategy": "scripted",
+      "decisions": 69,
+      "result": 2,
+      "tick": 7345,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91193,
+      "strategy": "scripted",
+      "decisions": 70,
+      "result": 2,
+      "tick": 7453,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91194,
+      "strategy": "scripted",
+      "decisions": 70,
+      "result": 2,
+      "tick": 7394,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_partial_defence",
+      "seed": 91195,
+      "strategy": "scripted",
+      "decisions": 73,
+      "result": 2,
+      "tick": 7823,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91192,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6421,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91193,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6224,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91194,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7072,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91195,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6460,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91192,
+      "strategy": "scripted",
+      "decisions": 66,
+      "result": 2,
+      "tick": 6995,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91193,
+      "strategy": "scripted",
+      "decisions": 74,
+      "result": 2,
+      "tick": 8018,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91194,
+      "strategy": "scripted",
+      "decisions": 69,
+      "result": 2,
+      "tick": 7307,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap1_full_defence",
+      "seed": 91195,
+      "strategy": "scripted",
+      "decisions": 66,
+      "result": 2,
+      "tick": 7122,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91256,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8075,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91257,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6850,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91258,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8488,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91259,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8052,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91256,
+      "strategy": "scripted",
+      "decisions": 86,
+      "result": 2,
+      "tick": 9641,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91257,
+      "strategy": "scripted",
+      "decisions": 90,
+      "result": 2,
+      "tick": 9997,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91258,
+      "strategy": "scripted",
+      "decisions": 78,
+      "result": 2,
+      "tick": 8622,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_none",
+      "seed": 91259,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 2,
+      "tick": 8384,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91256,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9170,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91257,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7440,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91258,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9595,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91259,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8580,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91256,
+      "strategy": "scripted",
+      "decisions": 81,
+      "result": 2,
+      "tick": 8954,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91257,
+      "strategy": "scripted",
+      "decisions": 85,
+      "result": 2,
+      "tick": 9383,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91258,
+      "strategy": "scripted",
+      "decisions": 105,
+      "result": 2,
+      "tick": 11518,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_economy",
+      "seed": 91259,
+      "strategy": "scripted",
+      "decisions": 88,
+      "result": 2,
+      "tick": 9477,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91256,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7499,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91257,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7501,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91258,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8749,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91259,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7440,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91256,
+      "strategy": "scripted",
+      "decisions": 93,
+      "result": 2,
+      "tick": 10188,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91257,
+      "strategy": "scripted",
+      "decisions": 89,
+      "result": 2,
+      "tick": 9608,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91258,
+      "strategy": "scripted",
+      "decisions": 88,
+      "result": 2,
+      "tick": 9500,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_partial_defence",
+      "seed": 91259,
+      "strategy": "scripted",
+      "decisions": 95,
+      "result": 2,
+      "tick": 10415,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91256,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8965,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91257,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9649,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91258,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9529,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91259,
+      "strategy": "wait",
+      "decisions": 35,
+      "result": 2,
+      "tick": 10226,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91256,
+      "strategy": "scripted",
+      "decisions": 87,
+      "result": 2,
+      "tick": 9609,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91257,
+      "strategy": "scripted",
+      "decisions": 89,
+      "result": 2,
+      "tick": 9947,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91258,
+      "strategy": "scripted",
+      "decisions": 81,
+      "result": 2,
+      "tick": 8859,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap3_full_defence",
+      "seed": 91259,
+      "strategy": "scripted",
+      "decisions": 85,
+      "result": 2,
+      "tick": 9227,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9202,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7005,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7549,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8519,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 86,
+      "result": 2,
+      "tick": 9454,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 110,
+      "result": 2,
+      "tick": 11984,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 101,
+      "result": 2,
+      "tick": 11197,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_none",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 93,
+      "result": 2,
+      "tick": 10344,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9678,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7525,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8242,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7328,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 99,
+      "result": 2,
+      "tick": 10824,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 108,
+      "result": 2,
+      "tick": 11860,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 101,
+      "result": 2,
+      "tick": 11132,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_economy",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 106,
+      "result": 2,
+      "tick": 11586,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8709,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8521,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9368,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 10901,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 100,
+      "result": 2,
+      "tick": 11539,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 98,
+      "result": 2,
+      "tick": 10798,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 101,
+      "result": 2,
+      "tick": 11514,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_partial_defence",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 106,
+      "result": 2,
+      "tick": 12021,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91320,
+      "strategy": "wait",
+      "decisions": 40,
+      "result": 2,
+      "tick": 11971,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91321,
+      "strategy": "wait",
+      "decisions": 40,
+      "result": 2,
+      "tick": 11746,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91322,
+      "strategy": "wait",
+      "decisions": 41,
+      "result": 2,
+      "tick": 12285,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91323,
+      "strategy": "wait",
+      "decisions": 41,
+      "result": 2,
+      "tick": 12065,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91320,
+      "strategy": "scripted",
+      "decisions": 92,
+      "result": 2,
+      "tick": 10205,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91321,
+      "strategy": "scripted",
+      "decisions": 102,
+      "result": 2,
+      "tick": 11473,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91322,
+      "strategy": "scripted",
+      "decisions": 93,
+      "result": 2,
+      "tick": 10345,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_night_cap5_full_defence",
+      "seed": 91323,
+      "strategy": "scripted",
+      "decisions": 93,
+      "result": 2,
+      "tick": 10472,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91384,
+      "strategy": "wait",
+      "decisions": 19,
+      "result": 2,
+      "tick": 5460,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91385,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6565,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91386,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6171,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91387,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6429,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91384,
+      "strategy": "scripted",
+      "decisions": 63,
+      "result": 2,
+      "tick": 7237,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91385,
+      "strategy": "scripted",
+      "decisions": 51,
+      "result": 2,
+      "tick": 5738,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91386,
+      "strategy": "scripted",
+      "decisions": 55,
+      "result": 2,
+      "tick": 6235,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_none",
+      "seed": 91387,
+      "strategy": "scripted",
+      "decisions": 63,
+      "result": 2,
+      "tick": 7224,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91384,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 6976,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91385,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6053,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91386,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6634,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91387,
+      "strategy": "wait",
+      "decisions": 20,
+      "result": 2,
+      "tick": 5925,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91384,
+      "strategy": "scripted",
+      "decisions": 71,
+      "result": 2,
+      "tick": 7576,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91385,
+      "strategy": "scripted",
+      "decisions": 95,
+      "result": 2,
+      "tick": 10131,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91386,
+      "strategy": "scripted",
+      "decisions": 80,
+      "result": 2,
+      "tick": 8497,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_economy",
+      "seed": 91387,
+      "strategy": "scripted",
+      "decisions": 81,
+      "result": 2,
+      "tick": 8574,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91384,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6199,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91385,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7101,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91386,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6343,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91387,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7662,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91384,
+      "strategy": "scripted",
+      "decisions": 78,
+      "result": 2,
+      "tick": 8271,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91385,
+      "strategy": "scripted",
+      "decisions": 87,
+      "result": 2,
+      "tick": 9236,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91386,
+      "strategy": "scripted",
+      "decisions": 77,
+      "result": 2,
+      "tick": 8117,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_partial_defence",
+      "seed": 91387,
+      "strategy": "scripted",
+      "decisions": 72,
+      "result": 2,
+      "tick": 7643,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91384,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6673,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91385,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8100,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91386,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8199,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91387,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7827,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91384,
+      "strategy": "scripted",
+      "decisions": 73,
+      "result": 2,
+      "tick": 7662,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91385,
+      "strategy": "scripted",
+      "decisions": 104,
+      "result": 2,
+      "tick": 10990,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91386,
+      "strategy": "scripted",
+      "decisions": 34,
+      "result": 1,
+      "tick": 3466,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap1_full_defence",
+      "seed": 91387,
+      "strategy": "scripted",
+      "decisions": 112,
+      "result": 2,
+      "tick": 11806,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91448,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8559,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91449,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8866,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91450,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9762,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91451,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8042,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91448,
+      "strategy": "scripted",
+      "decisions": 85,
+      "result": 2,
+      "tick": 9617,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91449,
+      "strategy": "scripted",
+      "decisions": 78,
+      "result": 2,
+      "tick": 8891,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91450,
+      "strategy": "scripted",
+      "decisions": 71,
+      "result": 2,
+      "tick": 8158,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_none",
+      "seed": 91451,
+      "strategy": "scripted",
+      "decisions": 79,
+      "result": 2,
+      "tick": 9003,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91448,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7781,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91449,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7685,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91450,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8896,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91451,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8135,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91448,
+      "strategy": "scripted",
+      "decisions": 127,
+      "result": 2,
+      "tick": 13531,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91449,
+      "strategy": "scripted",
+      "decisions": 120,
+      "result": 2,
+      "tick": 12906,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91450,
+      "strategy": "scripted",
+      "decisions": 122,
+      "result": 2,
+      "tick": 13107,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_economy",
+      "seed": 91451,
+      "strategy": "scripted",
+      "decisions": 131,
+      "result": 2,
+      "tick": 14004,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91448,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 10112,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91449,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8991,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91450,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7582,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91451,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7275,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91448,
+      "strategy": "scripted",
+      "decisions": 146,
+      "result": 2,
+      "tick": 15525,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91449,
+      "strategy": "scripted",
+      "decisions": 130,
+      "result": 2,
+      "tick": 13830,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91450,
+      "strategy": "scripted",
+      "decisions": 154,
+      "result": 2,
+      "tick": 16367,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_partial_defence",
+      "seed": 91451,
+      "strategy": "scripted",
+      "decisions": 102,
+      "result": 2,
+      "tick": 10907,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91448,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8911,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91449,
+      "strategy": "wait",
+      "decisions": 35,
+      "result": 2,
+      "tick": 10452,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91450,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 10820,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91451,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 10975,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91448,
+      "strategy": "scripted",
+      "decisions": 69,
+      "result": 1,
+      "tick": 7436,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91449,
+      "strategy": "scripted",
+      "decisions": 112,
+      "result": 2,
+      "tick": 11946,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91450,
+      "strategy": "scripted",
+      "decisions": 192,
+      "result": 2,
+      "tick": 20479,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap3_full_defence",
+      "seed": 91451,
+      "strategy": "scripted",
+      "decisions": 97,
+      "result": 2,
+      "tick": 10448,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7333,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7177,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7154,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9145,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 83,
+      "result": 2,
+      "tick": 9339,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 72,
+      "result": 2,
+      "tick": 8246,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 77,
+      "result": 2,
+      "tick": 8704,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_none",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 90,
+      "result": 2,
+      "tick": 10295,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 10035,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8134,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7524,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8803,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 151,
+      "result": 2,
+      "tick": 16547,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 103,
+      "result": 1,
+      "tick": 11485,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 153,
+      "result": 2,
+      "tick": 16834,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_economy",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 109,
+      "result": 1,
+      "tick": 12374,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9330,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8981,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8502,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8256,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 159,
+      "result": 2,
+      "tick": 17105,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 181,
+      "result": 2,
+      "tick": 19527,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 114,
+      "result": 1,
+      "tick": 12651,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_partial_defence",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 105,
+      "result": 1,
+      "tick": 11652,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91512,
+      "strategy": "wait",
+      "decisions": 44,
+      "result": 2,
+      "tick": 12946,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91513,
+      "strategy": "wait",
+      "decisions": 41,
+      "result": 2,
+      "tick": 12208,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91514,
+      "strategy": "wait",
+      "decisions": 42,
+      "result": 2,
+      "tick": 12518,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91515,
+      "strategy": "wait",
+      "decisions": 43,
+      "result": 2,
+      "tick": 12716,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91512,
+      "strategy": "scripted",
+      "decisions": 94,
+      "result": 1,
+      "tick": 10259,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91513,
+      "strategy": "scripted",
+      "decisions": 86,
+      "result": 1,
+      "tick": 9306,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91514,
+      "strategy": "scripted",
+      "decisions": 85,
+      "result": 1,
+      "tick": 9339,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_pool_cap5_full_defence",
+      "seed": 91515,
+      "strategy": "scripted",
+      "decisions": 176,
+      "result": 2,
+      "tick": 19007,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91576,
+      "strategy": "wait",
+      "decisions": 19,
+      "result": 2,
+      "tick": 5470,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91577,
+      "strategy": "wait",
+      "decisions": 18,
+      "result": 2,
+      "tick": 5285,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91578,
+      "strategy": "wait",
+      "decisions": 19,
+      "result": 2,
+      "tick": 5665,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91579,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6363,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91576,
+      "strategy": "scripted",
+      "decisions": 57,
+      "result": 2,
+      "tick": 6865,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91577,
+      "strategy": "scripted",
+      "decisions": 55,
+      "result": 2,
+      "tick": 6521,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91578,
+      "strategy": "scripted",
+      "decisions": 54,
+      "result": 2,
+      "tick": 6423,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_none",
+      "seed": 91579,
+      "strategy": "scripted",
+      "decisions": 57,
+      "result": 2,
+      "tick": 6885,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91576,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 6916,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91577,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6216,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91578,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7418,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91579,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6313,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91576,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 2,
+      "tick": 7685,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91577,
+      "strategy": "scripted",
+      "decisions": 70,
+      "result": 2,
+      "tick": 7147,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91578,
+      "strategy": "scripted",
+      "decisions": 67,
+      "result": 2,
+      "tick": 6619,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_economy",
+      "seed": 91579,
+      "strategy": "scripted",
+      "decisions": 67,
+      "result": 2,
+      "tick": 7090,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91576,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 6926,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91577,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7283,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91578,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6660,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91579,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6164,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91576,
+      "strategy": "scripted",
+      "decisions": 73,
+      "result": 2,
+      "tick": 7376,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91577,
+      "strategy": "scripted",
+      "decisions": 84,
+      "result": 2,
+      "tick": 8440,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91578,
+      "strategy": "scripted",
+      "decisions": 71,
+      "result": 2,
+      "tick": 7136,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_partial_defence",
+      "seed": 91579,
+      "strategy": "scripted",
+      "decisions": 73,
+      "result": 2,
+      "tick": 7550,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91576,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6864,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91577,
+      "strategy": "wait",
+      "decisions": 22,
+      "result": 2,
+      "tick": 6580,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91578,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8052,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91579,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7838,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91576,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 2,
+      "tick": 7795,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91577,
+      "strategy": "scripted",
+      "decisions": 105,
+      "result": 2,
+      "tick": 10782,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91578,
+      "strategy": "scripted",
+      "decisions": 102,
+      "result": 2,
+      "tick": 10228,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap1_full_defence",
+      "seed": 91579,
+      "strategy": "scripted",
+      "decisions": 79,
+      "result": 2,
+      "tick": 8101,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91640,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 6994,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91641,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8466,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91642,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7534,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91643,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8033,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91640,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 2,
+      "tick": 8945,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91641,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 2,
+      "tick": 8792,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91642,
+      "strategy": "scripted",
+      "decisions": 79,
+      "result": 2,
+      "tick": 9230,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_none",
+      "seed": 91643,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 2,
+      "tick": 8848,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91640,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9495,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91641,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9732,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91642,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9020,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91643,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8326,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91640,
+      "strategy": "scripted",
+      "decisions": 96,
+      "result": 2,
+      "tick": 9695,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91641,
+      "strategy": "scripted",
+      "decisions": 110,
+      "result": 2,
+      "tick": 10888,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91642,
+      "strategy": "scripted",
+      "decisions": 102,
+      "result": 2,
+      "tick": 10229,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_economy",
+      "seed": 91643,
+      "strategy": "scripted",
+      "decisions": 89,
+      "result": 2,
+      "tick": 8914,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91640,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9332,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91641,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8369,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91642,
+      "strategy": "wait",
+      "decisions": 36,
+      "result": 2,
+      "tick": 10642,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91643,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8500,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91640,
+      "strategy": "scripted",
+      "decisions": 121,
+      "result": 2,
+      "tick": 12291,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91641,
+      "strategy": "scripted",
+      "decisions": 98,
+      "result": 2,
+      "tick": 9775,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91642,
+      "strategy": "scripted",
+      "decisions": 89,
+      "result": 2,
+      "tick": 8958,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_partial_defence",
+      "seed": 91643,
+      "strategy": "scripted",
+      "decisions": 82,
+      "result": 2,
+      "tick": 8418,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91640,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9793,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91641,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8656,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91642,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9537,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91643,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9538,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91640,
+      "strategy": "scripted",
+      "decisions": 109,
+      "result": 2,
+      "tick": 10849,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91641,
+      "strategy": "scripted",
+      "decisions": 91,
+      "result": 2,
+      "tick": 9053,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91642,
+      "strategy": "scripted",
+      "decisions": 97,
+      "result": 2,
+      "tick": 9875,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap3_full_defence",
+      "seed": 91643,
+      "strategy": "scripted",
+      "decisions": 91,
+      "result": 2,
+      "tick": 9154,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8736,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7971,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8336,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8148,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 86,
+      "result": 2,
+      "tick": 9935,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 96,
+      "result": 2,
+      "tick": 11109,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 114,
+      "result": 2,
+      "tick": 13406,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_none",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 104,
+      "result": 2,
+      "tick": 12027,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7294,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8157,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8783,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8402,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 128,
+      "result": 2,
+      "tick": 13021,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 138,
+      "result": 2,
+      "tick": 13942,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 138,
+      "result": 2,
+      "tick": 13751,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_economy",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 116,
+      "result": 2,
+      "tick": 11817,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 28,
+      "result": 2,
+      "tick": 8117,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 10823,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 9939,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7383,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 128,
+      "result": 2,
+      "tick": 13093,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 124,
+      "result": 2,
+      "tick": 12585,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 114,
+      "result": 2,
+      "tick": 11524,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_partial_defence",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 122,
+      "result": 2,
+      "tick": 12596,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91704,
+      "strategy": "wait",
+      "decisions": 42,
+      "result": 2,
+      "tick": 12459,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91705,
+      "strategy": "wait",
+      "decisions": 44,
+      "result": 2,
+      "tick": 12944,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91706,
+      "strategy": "wait",
+      "decisions": 42,
+      "result": 2,
+      "tick": 12303,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91707,
+      "strategy": "wait",
+      "decisions": 44,
+      "result": 2,
+      "tick": 12911,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91704,
+      "strategy": "scripted",
+      "decisions": 128,
+      "result": 2,
+      "tick": 12806,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91705,
+      "strategy": "scripted",
+      "decisions": 110,
+      "result": 2,
+      "tick": 11200,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91706,
+      "strategy": "scripted",
+      "decisions": 121,
+      "result": 2,
+      "tick": 12545,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_fog_cap5_full_defence",
+      "seed": 91707,
+      "strategy": "scripted",
+      "decisions": 141,
+      "result": 2,
+      "tick": 14550,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91768,
+      "strategy": "wait",
+      "decisions": 29,
+      "result": 2,
+      "tick": 8591,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91769,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7868,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91770,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7330,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91771,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7834,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91768,
+      "strategy": "scripted",
+      "decisions": 64,
+      "result": 2,
+      "tick": 7270,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91769,
+      "strategy": "scripted",
+      "decisions": 57,
+      "result": 2,
+      "tick": 6543,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91770,
+      "strategy": "scripted",
+      "decisions": 66,
+      "result": 2,
+      "tick": 7565,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_none",
+      "seed": 91771,
+      "strategy": "scripted",
+      "decisions": 75,
+      "result": 2,
+      "tick": 8542,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91768,
+      "strategy": "wait",
+      "decisions": 21,
+      "result": 2,
+      "tick": 6233,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91769,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8870,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91770,
+      "strategy": "wait",
+      "decisions": 25,
+      "result": 2,
+      "tick": 7284,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91771,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7157,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91768,
+      "strategy": "scripted",
+      "decisions": 79,
+      "result": 2,
+      "tick": 8508,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91769,
+      "strategy": "scripted",
+      "decisions": 99,
+      "result": 2,
+      "tick": 10702,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91770,
+      "strategy": "scripted",
+      "decisions": 78,
+      "result": 2,
+      "tick": 8444,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_economy",
+      "seed": 91771,
+      "strategy": "scripted",
+      "decisions": 94,
+      "result": 2,
+      "tick": 10266,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91768,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6643,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91769,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 7961,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91770,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7788,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91771,
+      "strategy": "wait",
+      "decisions": 23,
+      "result": 2,
+      "tick": 6647,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91768,
+      "strategy": "scripted",
+      "decisions": 65,
+      "result": 2,
+      "tick": 7022,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91769,
+      "strategy": "scripted",
+      "decisions": 82,
+      "result": 2,
+      "tick": 8724,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91770,
+      "strategy": "scripted",
+      "decisions": 71,
+      "result": 2,
+      "tick": 7670,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_partial_defence",
+      "seed": 91771,
+      "strategy": "scripted",
+      "decisions": 86,
+      "result": 2,
+      "tick": 9399,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91768,
+      "strategy": "wait",
+      "decisions": 26,
+      "result": 2,
+      "tick": 7632,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91769,
+      "strategy": "wait",
+      "decisions": 27,
+      "result": 2,
+      "tick": 8011,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91770,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 6952,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91771,
+      "strategy": "wait",
+      "decisions": 24,
+      "result": 2,
+      "tick": 7047,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91768,
+      "strategy": "scripted",
+      "decisions": 70,
+      "result": 2,
+      "tick": 7570,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91769,
+      "strategy": "scripted",
+      "decisions": 76,
+      "result": 2,
+      "tick": 8179,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91770,
+      "strategy": "scripted",
+      "decisions": 87,
+      "result": 2,
+      "tick": 9449,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap1_full_defence",
+      "seed": 91771,
+      "strategy": "scripted",
+      "decisions": 78,
+      "result": 2,
+      "tick": 8266,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91832,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9133,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91833,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9237,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91834,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9491,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91835,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8937,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91832,
+      "strategy": "scripted",
+      "decisions": 96,
+      "result": 2,
+      "tick": 10889,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91833,
+      "strategy": "scripted",
+      "decisions": 92,
+      "result": 2,
+      "tick": 10321,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91834,
+      "strategy": "scripted",
+      "decisions": 80,
+      "result": 2,
+      "tick": 9001,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_none",
+      "seed": 91835,
+      "strategy": "scripted",
+      "decisions": 101,
+      "result": 2,
+      "tick": 11491,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91832,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 10121,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91833,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8921,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91834,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9082,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91835,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9690,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91832,
+      "strategy": "scripted",
+      "decisions": 97,
+      "result": 2,
+      "tick": 10541,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91833,
+      "strategy": "scripted",
+      "decisions": 101,
+      "result": 2,
+      "tick": 11060,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91834,
+      "strategy": "scripted",
+      "decisions": 125,
+      "result": 2,
+      "tick": 13689,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_economy",
+      "seed": 91835,
+      "strategy": "scripted",
+      "decisions": 104,
+      "result": 2,
+      "tick": 11265,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91832,
+      "strategy": "wait",
+      "decisions": 36,
+      "result": 2,
+      "tick": 10642,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91833,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9733,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91834,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 10894,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91835,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 10127,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91832,
+      "strategy": "scripted",
+      "decisions": 111,
+      "result": 2,
+      "tick": 12173,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91833,
+      "strategy": "scripted",
+      "decisions": 100,
+      "result": 2,
+      "tick": 10939,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91834,
+      "strategy": "scripted",
+      "decisions": 123,
+      "result": 2,
+      "tick": 13524,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_partial_defence",
+      "seed": 91835,
+      "strategy": "scripted",
+      "decisions": 98,
+      "result": 2,
+      "tick": 10684,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91832,
+      "strategy": "wait",
+      "decisions": 40,
+      "result": 2,
+      "tick": 11739,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91833,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9482,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91834,
+      "strategy": "wait",
+      "decisions": 38,
+      "result": 2,
+      "tick": 11118,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91835,
+      "strategy": "wait",
+      "decisions": 36,
+      "result": 2,
+      "tick": 10774,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91832,
+      "strategy": "scripted",
+      "decisions": 88,
+      "result": 2,
+      "tick": 9542,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91833,
+      "strategy": "scripted",
+      "decisions": 102,
+      "result": 2,
+      "tick": 10994,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91834,
+      "strategy": "scripted",
+      "decisions": 90,
+      "result": 2,
+      "tick": 9870,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap3_full_defence",
+      "seed": 91835,
+      "strategy": "scripted",
+      "decisions": 108,
+      "result": 2,
+      "tick": 11705,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 34,
+      "result": 2,
+      "tick": 10038,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9148,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9536,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9028,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 90,
+      "result": 2,
+      "tick": 10158,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 89,
+      "result": 2,
+      "tick": 10237,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 99,
+      "result": 2,
+      "tick": 11144,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_none",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 93,
+      "result": 2,
+      "tick": 10493,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9698,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 37,
+      "result": 2,
+      "tick": 10821,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9837,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 33,
+      "result": 2,
+      "tick": 9720,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 143,
+      "result": 2,
+      "tick": 15821,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 105,
+      "result": 2,
+      "tick": 11599,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 103,
+      "result": 2,
+      "tick": 11386,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_economy",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 112,
+      "result": 2,
+      "tick": 12172,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 32,
+      "result": 2,
+      "tick": 9540,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 30,
+      "result": 2,
+      "tick": 8829,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 39,
+      "result": 2,
+      "tick": 11539,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 31,
+      "result": 2,
+      "tick": 9147,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 159,
+      "result": 2,
+      "tick": 17580,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 127,
+      "result": 2,
+      "tick": 14065,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 119,
+      "result": 2,
+      "tick": 13189,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_partial_defence",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 113,
+      "result": 2,
+      "tick": 12494,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91896,
+      "strategy": "wait",
+      "decisions": 41,
+      "result": 2,
+      "tick": 12228,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91897,
+      "strategy": "wait",
+      "decisions": 36,
+      "result": 2,
+      "tick": 10726,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91898,
+      "strategy": "wait",
+      "decisions": 47,
+      "result": 2,
+      "tick": 14069,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91899,
+      "strategy": "wait",
+      "decisions": 48,
+      "result": 2,
+      "tick": 14204,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91896,
+      "strategy": "scripted",
+      "decisions": 119,
+      "result": 2,
+      "tick": 13197,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91897,
+      "strategy": "scripted",
+      "decisions": 115,
+      "result": 2,
+      "tick": 12490,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91898,
+      "strategy": "scripted",
+      "decisions": 128,
+      "result": 2,
+      "tick": 14187,
+      "terminal": true
+    },
+    {
+      "task_id": "aid_v1_roof_cap5_full_defence",
+      "seed": 91899,
+      "strategy": "scripted",
+      "decisions": 138,
+      "result": 2,
+      "tick": 15155,
+      "terminal": true
+    }
+  ],
+  "seconds": 96.76176164200297,
+  "gate_result": "pass"
+}

@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "source_directory": "artifacts/research/reward_r0_seed0_v1",
+  "experiment_id": "reward_r0_seed0_v1",
+  "counters": {
+    "episodes": 8711,
+    "decisions": 500027,
+    "ticks": 59764601
+  },
+  "status": "budget_complete",
+  "phase": "ready",
+  "archived_at_unix_ns": 1790786338110185424,
+  "state_sha256": "c6c5785efed44c9cc461a3f0a5c64d8b9b5a680de71fc5a32cc6bd7f37e55121",
+  "files": {
+    "evaluations/update_000000.json.gz": {
+      "sha256": "8eaba1834a35934f5943f64934df2e3e71923679bf9b2f5d5612168ba179ebe7",
+      "bytes": 81077
+    },
+    "evaluations/update_000012.json.gz": {
+      "sha256": "021893e649c8b52b95acde0b14604faf88d4827c533044dc7d1ff19a15c6614b",
+      "bytes": 101442
+    },
+    "evaluations/update_000025.json.gz": {
+      "sha256": "4f18db319c5536794fe64e9bd07e2b0f6e71b4a0590db2bba21d7a07a4bc0bc6",
+      "bytes": 107334
+    },
+    "evaluations/update_000036.json.gz": {
+      "sha256": "6b51b9c1cffc2febed9f688e551f1fc6c0d73cb33d20dfc98c802dc338378920",
+      "bytes": 105327
+    },
+    "evaluations/update_000048.json.gz": {
+      "sha256": "7fd3b5c98297c91d8661d439f30af4e521ea1a9a6777b2015f1f78b56e968388",
+      "bytes": 88753
+    },
+    "experiment_config.json": {
+      "sha256": "817283be1ddc4706d7c2de38978c7786a5f2b1a4af4cf0e3c4c4d184a9f4f8e6",
+      "bytes": 1526
+    },
+    "learning_curve.json": {
+      "sha256": "010274df92c38f41bfa3b699184d74cbf2973114d9c3f97cc4d8736a25e9abc2",
+      "bytes": 566997
+    },
+    "logs/reward_queue.log": {
+      "sha256": "355432180e81b3d6afc5e385e1a6705bf96a2ce114a37278ab5c56522aac3c88",
+      "bytes": 244
+    },
+    "logs/reward_r0_seed0_v1.log": {
+      "sha256": "fd6f29b741319c6bf07051da6ffb9c3146db5446cd72d20248e5783c2bc44105",
+      "bytes": 10285036
+    },
+    "provenance.json": {
+      "sha256": "e9770b11c8072bb6aaaeba658bbe909146f17d81ee1d39f0fa2b22881c908b35",
+      "bytes": 1854
+    },
+    "resume.json": {
+      "sha256": "9be98aa275be79afb2f1c7c0fa0d65eac0bcdd36f3f6fa91fb5959e8ae338481",
+      "bytes": 159
+    },
+    "runs/run_1/update_000000_evaluated_1790783119894299476.pt": {
+      "sha256": "9029842ca6e0dda56e224e510f3d551a869e72b965aa1b00f95657b30d37b02f",
+      "bytes": 14825147
+    },
+    "runs/run_1/update_000012_evaluated_1790783843980951012.pt": {
+      "sha256": "2ad035fae115b2fe8ac21bf99f7140372cbfd318a4ae2d202820997fccf1da2e",
+      "bytes": 44510571
+    },
+    "runs/run_1/update_000025_evaluated_1790784620022756883.pt": {
+      "sha256": "4725b29cf5218f1a047a07e29c761ad34b334b89da2db9a3b79ce510c0f212e1",
+      "bytes": 44649707
+    },
+    "runs/run_1/update_000036_evaluated_1790785557488558747.pt": {
+      "sha256": "1d299cc61e3000d2822a4a427311641e31cb2197ce0f7c34149db7e415c2869b",
+      "bytes": 44786731
+    },
+    "runs/run_1/update_000048_boundary_1790786174135798774.pt": {
+      "sha256": "7916e256981472749ac3917682cd4f0ee8d6c67e72150a28dcbdc31162bc5ffb",
+      "bytes": 44911803
+    },
+    "runs/run_1/update_000048_evaluated_1790786174008514312.pt": {
+      "sha256": "d41292dcbd3cce5862ad42d579091adfe21d1271c4e28737280c1d374882d5b1",
+      "bytes": 44912555
+    },
+    "training_state.json": {
+      "sha256": "c6c5785efed44c9cc461a3f0a5c64d8b9b5a680de71fc5a32cc6bd7f37e55121",
+      "bytes": 1073732
+    }
+  },
+  "checkpoint_scope": "all evaluated nodes plus latest complete update; full optimizer/RNG state",
+  "rollout_shards": "all original shards retained in source directory; this export does not erase them",
+  "log_scope": "log byte snapshots copied during export; a live source log may continue",
+  "resume": "use this archive as --output-dir with original --experiment-config and unchanged fingerprints"
+}

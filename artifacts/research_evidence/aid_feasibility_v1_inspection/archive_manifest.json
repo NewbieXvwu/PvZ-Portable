@@ -30,5 +30,6 @@
     }
   },
   "source": "artifacts/research/aid_feasibility_v1_inspection",
-  "all_per_job_json_retained_locally": true
+  "all_per_job_json_retained_locally": true,
+  "related_resource_timing_note": "aid_feasibility_v1_resources.txt is the full7680-episode job timing, not the480-episode inspection; inspection active cost is in summary.json"
 }

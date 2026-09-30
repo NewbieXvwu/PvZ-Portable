@@ -32,7 +32,8 @@ def distribution(values: list[float] | np.ndarray) -> dict:
             "max": float(x.max()), "positive_fraction": float((x > 0).mean())}
 
 
-def episode_signals(episode: dict, gamma: float, lam: float, shaping_weight: float) -> dict:
+def episode_signals(episode: dict, gamma: float, lam: float, shaping_weight: float,
+                    deck: list[int] | None = None) -> dict:
     steps = episode["transitions"]
     if not steps:
         raise ValueError("empty completed trajectory")
@@ -72,14 +73,20 @@ def episode_signals(episode: dict, gamma: float, lam: float, shaping_weight: flo
         immediate += (a["type"] == "plant" and b["type"] == "shovel" and
                       (a["row"], a["col"]) == (b["row"], b["col"]))
     counts = Counter(s["action"]["type"] for s in steps)
+    plant_cards = [(str(deck[s["action"]["packet"]]) if deck else str(s["action"]["packet"]))
+                   if s["action"]["type"] == "plant" else "none" for s in steps]
     return {"advantages": adv, "deltas": delta, "mc": mc, "values": values,
             "kinds": [s["action"]["type"] for s in steps], "durations": durations,
+            "plant_cards": plant_cards,
             "shaping": shaping,
             "row": {"task_id": episode["task_id"], "job_id": episode["seed"],
                     "environment_seed": episode["task_seed"], "won": episode["won"],
                     "terminated": episode["terminated"], "truncated": episode["truncated"],
                     "wave": episode["wave"], "wave_count": episode["wave_count"],
                     "tick": episode["tick"], "actions": len(steps), "action_counts": dict(counts),
+                    "plant_card_counts": dict(Counter(card for card in plant_cards if card != "none")),
+                    "wait_choice_counts": dict(Counter(str(s["action"]["ticks"]) for s in steps
+                                                       if s["action"]["type"] == "wait")),
                     "zero_tick_actions": int((durations == 0).sum()),
                     "immediate_plant_shovels": int(immediate), "first_mc_return": float(mc[0]),
                     "discounted_terminal_return": float(np.dot(prefix, terminal)),
@@ -99,6 +106,7 @@ def summarize(signals: list[dict], normalized: list[np.ndarray]) -> dict:
     advantages = concatenate("advantages")
     norm = np.concatenate(normalized)
     kinds = np.array([kind for x in signals for kind in x["kinds"]])
+    plant_cards = np.array([card for x in signals for card in x["plant_cards"]])
     action_counts = Counter(kinds.tolist())
     plants = action_counts["plant"]
     immediate = sum(r["immediate_plant_shovels"] for r in rows)
@@ -126,7 +134,11 @@ def summarize(signals: list[dict], normalized: list[np.ndarray]) -> dict:
             "by_action": {kind: {"count": int((kinds == kind).sum()),
                                   "raw_advantage": distribution(advantages[kinds == kind]),
                                   "normalized_advantage": distribution(norm[kinds == kind])}
-                          for kind in sorted(action_counts)}}
+                          for kind in sorted(action_counts)},
+            "by_plant_card": {card: {"count": int((plant_cards == card).sum()),
+                                     "normalized_advantage": distribution(norm[plant_cards == card])}
+                              for card in sorted(set(plant_cards) - {"none"})},
+            "wait_choice_counts": dict(sum((Counter(r["wait_choice_counts"]) for r in rows), Counter()))}
 
 
 def main() -> None:
@@ -139,6 +151,8 @@ def main() -> None:
     state = json.loads(state_bytes)
     config = json.loads((args.experiment_dir / "experiment_config.json").read_text())
     provenance = json.loads((args.experiment_dir / "provenance.json").read_text())
+    task_decks = {task["task_id"]: task["deck"] for task in
+                  json.loads((ROOT / config["sampling"]["manifest"]).read_text())["tasks"]}
     all_signals, all_normalized, updates, raw = [], [], [], []
     by_task, by_task_normalized = defaultdict(list), defaultdict(list)
     for update in state["update_history"]:
@@ -155,7 +169,7 @@ def main() -> None:
             episode = stored["result"]
             signals.append(episode_signals(episode, config["reward"]["gamma"],
                                            config["ppo"]["gae_lambda"],
-                                           config["reward"]["shaping_weight"]))
+                                           config["reward"]["shaping_weight"], task_decks[episode["task_id"]]))
         expected = sum(update["trajectory_stats"]["task_counts"].values())
         if len(signals) != expected:
             raise ValueError(f"update {update['update']}: expected {expected} shards, got {len(signals)}")
@@ -185,6 +199,7 @@ def main() -> None:
                               "normalization": "per completed update, population std; float64 offline recomputation",
                               "mc_semantics": "duration-discounted rewards plus stored truncation bootstrap",
                               "trace_weight_semantics": "terminal TD error coefficient in first GAE, not a memory gradient",
+                              "plant_card_semantics": "actual seed_type from the frozen task deck, not packet position",
                               "summary": summarize(all_signals, all_normalized), "updates": updates,
                               "per_task": {k: summarize(v, by_task_normalized[k]) for k, v in by_task.items()},
                               "raw_episode_results": str(raw_path),

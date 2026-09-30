@@ -1,0 +1,94 @@
+{
+  "scope": "paired repeated same-task RESETs; with/without one300tick advance",
+  "episodes_per_process": 256,
+  "records": [
+    {
+      "resets": 1,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38723584,
+      "simulator_rss_bytes": 216924160,
+      "reference_simulator_rss_bytes": 216821760
+    },
+    {
+      "resets": 8,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38735872,
+      "simulator_rss_bytes": 217145344,
+      "reference_simulator_rss_bytes": 224399360
+    },
+    {
+      "resets": 32,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38752256,
+      "simulator_rss_bytes": 217145344,
+      "reference_simulator_rss_bytes": 253808640
+    },
+    {
+      "resets": 64,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38756352,
+      "simulator_rss_bytes": 217145344,
+      "reference_simulator_rss_bytes": 293015552
+    },
+    {
+      "resets": 128,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38756352,
+      "simulator_rss_bytes": 217145344,
+      "reference_simulator_rss_bytes": 371433472
+    },
+    {
+      "resets": 256,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38756352,
+      "simulator_rss_bytes": 217145344,
+      "reference_simulator_rss_bytes": 528269312
+    },
+    {
+      "resets": 1,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38969344,
+      "simulator_rss_bytes": 217096192,
+      "reference_simulator_rss_bytes": 217059328
+    },
+    {
+      "resets": 8,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38973440,
+      "simulator_rss_bytes": 217317376,
+      "reference_simulator_rss_bytes": 224686080
+    },
+    {
+      "resets": 32,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38973440,
+      "simulator_rss_bytes": 217317376,
+      "reference_simulator_rss_bytes": 254095360
+    },
+    {
+      "resets": 64,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38973440,
+      "simulator_rss_bytes": 217317376,
+      "reference_simulator_rss_bytes": 293302272
+    },
+    {
+      "resets": 128,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38973440,
+      "simulator_rss_bytes": 217317376,
+      "reference_simulator_rss_bytes": 371720192
+    },
+    {
+      "resets": 256,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38973440,
+      "simulator_rss_bytes": 217317376,
+      "reference_simulator_rss_bytes": 528556032
+    }
+  ],
+  "simulator_sha256": "6fd6c657df97ebd249a968fb230cfd11efbce1fd194d24bfe27c6651d0a25ffc",
+  "reference_sha256": "506467fc2fa763cffab8f42ae798c71d5e1f2d2017dddc9ebc1dbad13a7881b7",
+  "exact_public_response_comparisons": 768,
+  "seconds": 5.517707060997054
+}

@@ -1,0 +1,82 @@
+{
+  "scope": "paired repeated same-task RESETs; with/without one300tick advance",
+  "episodes_per_process": 256,
+  "records": [
+    {
+      "resets": 1,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38621184,
+      "simulator_rss_bytes": 216911872
+    },
+    {
+      "resets": 8,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38645760,
+      "simulator_rss_bytes": 224489472
+    },
+    {
+      "resets": 32,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38645760,
+      "simulator_rss_bytes": 253898752
+    },
+    {
+      "resets": 64,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38645760,
+      "simulator_rss_bytes": 293105664
+    },
+    {
+      "resets": 128,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38649856,
+      "simulator_rss_bytes": 371523584
+    },
+    {
+      "resets": 256,
+      "wait_ticks": 0,
+      "python_rss_bytes": 38649856,
+      "simulator_rss_bytes": 528359424
+    },
+    {
+      "resets": 1,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38854656,
+      "simulator_rss_bytes": 217264128
+    },
+    {
+      "resets": 8,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38854656,
+      "simulator_rss_bytes": 224890880
+    },
+    {
+      "resets": 32,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38854656,
+      "simulator_rss_bytes": 254300160
+    },
+    {
+      "resets": 64,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38854656,
+      "simulator_rss_bytes": 293507072
+    },
+    {
+      "resets": 128,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38854656,
+      "simulator_rss_bytes": 371924992
+    },
+    {
+      "resets": 256,
+      "wait_ticks": 300,
+      "python_rss_bytes": 38854656,
+      "simulator_rss_bytes": 528760832
+    }
+  ],
+  "simulator_sha256": "506467fc2fa763cffab8f42ae798c71d5e1f2d2017dddc9ebc1dbad13a7881b7",
+  "reference_sha256": null,
+  "exact_public_response_comparisons": 0,
+  "seconds": 3.1016081449997728
+}

@@ -1,0 +1,68 @@
+{
+  "candidate_commit": "9b4e08c",
+  "candidate_base_commit": "0463785",
+  "scope": "isolated candidate, not the live reward-study binary",
+  "source_sha256": "1ba27bbfc6dc8140642e58ff07ee9865e588a7207dff10b3bc1d21a74411dc46",
+  "candidate_binary_sha256": "6fd6c657df97ebd249a968fb230cfd11efbce1fd194d24bfe27c6651d0a25ffc",
+  "live_binary_sha256": "506467fc2fa763cffab8f42ae798c71d5e1f2d2017dddc9ebc1dbad13a7881b7",
+  "build_note": "built from0463785 plus exactly the recorded patch, before committing9b4e08c",
+  "merge_after_reward_matrix_complete": true,
+  "files": {
+    "reset_disposal_memory_equivalence_v1.json": {
+      "sha256": "bae412892d94367e1f8bfadc0ef92efeb7011b398e41a8b0c219115d79e6288b",
+      "bytes": 2573
+    },
+    "reset_disposal_configure.log": {
+      "sha256": "33943651e0d2a4ad41ac9e554e5d9619fe95acd1d6c96b29ec93a9e6d7882f21",
+      "bytes": 4441
+    },
+    "reset_disposal_protocol_tests.log": {
+      "sha256": "8f2788e8993418b2e995c1c2ed4f7df02858762fea5b2f95176923f0179edd82",
+      "bytes": 134
+    },
+    "reset_memory_audit_current_v1.log": {
+      "sha256": "18a126d3f16168ae0abf4fb7740dd994759b57af490a9ddc8f0835f3bebc6f81",
+      "bytes": 60005
+    },
+    "reset_disposal_build.log": {
+      "sha256": "ef0aa386bf45ba7bf17d2f83b5106f264419c9717605e63f42a104b7447803e4",
+      "bytes": 12453
+    },
+    "reset_disposal_memory_equivalence_v1.log": {
+      "sha256": "f719d63f2126a4ebc458609ea31b67c76e23e98800ddffd75d471d426dca84b5",
+      "bytes": 116104
+    },
+    "reset_disposal_T2.log": {
+      "sha256": "e91964aec36b2acd96130620e5c1fcada92211910337214805fb1e4b42f521ba",
+      "bytes": 37624
+    },
+    "reset_memory_audit_v1.log": {
+      "sha256": "ae68ea4d8409b0616ca9124ab0bd333cc2371024f7332431c1aa3929512434a9",
+      "bytes": 58365
+    },
+    "T2_results.json": {
+      "sha256": "7836a12f86ad1e574310071f4c6c2fb76fb8c057975ddad73135a131fa4ccc35",
+      "bytes": 14634
+    },
+    "reset_memory_audit_current_v1.json": {
+      "sha256": "f94732ac9cf4c81417f4fee61f86eddd7acccafc6b2be6cc1d4fcfab432153ff",
+      "bytes": 1910
+    },
+    "reset_disposal_candidate_v1.patch": {
+      "sha256": "d6023c4f2545bcf7923f51a1d12866e291c887078949cf82404784482965553e",
+      "bytes": 601
+    },
+    "reset_memory_audit_v1.json": {
+      "sha256": "27ad50f8560c338082244aed7e95a31104f26952356a367fc53adafabbb7853f",
+      "bytes": 1837
+    },
+    "reset_disposal_trajectory_equivalence_v1.json": {
+      "sha256": "5153dade8ee1a3b9eb3c0f40a8e454d399dc1ed1db57cda3054073634dd0c142",
+      "bytes": 93975
+    },
+    "reset_disposal_trajectory_equivalence_v1.log": {
+      "sha256": "123a2d3a5284bd9f38d3507d5de4b531ad83b390148399b05b91524a324da723",
+      "bytes": 70387
+    }
+  }
+}
