@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "purpose": "multicap_dynamic_prefix_no_learning",
+  "pool_protocol": "/home/newbiexvwu/PvZ-Portable/experiments/t5/multicap_course_v1/inspection.json",
+  "cases": {
+    "seeds_per_task": 64,
+    "expected_episodes": 3840,
+    "strategies": [
+      "wait",
+      "scripted"
+    ]
+  },
+  "workers": 2,
+  "worker_threads": 1,
+  "episode_timeout_seconds": 180,
+  "total_timeout_seconds": 7200,
+  "minimum_available_ram_bytes": 8589934592,
+  "max_actions": 4000,
+  "max_ticks": 150000,
+  "required_fingerprints": {
+    "scripts/research_multicap_prefix_audit.py": "b8315ca32cdbe3627bc62987c191cee8f0da434b6b6dcf24eaab87ef413c1a06",
+    "python/test_multicap_prefix_audit.py": "6dc46129b1a5bbc35672edf84fd9ed7369d66f200a56da228c6107578ce94bf8",
+    "experiments/t5/multicap_course_v1/inspection.json": "4f8f37a9af40788731743e24eb0d93feba85ede6a1939de4403dcd7ea14730cb",
+    "artifacts/t5/perf/multicap_course_v1_inspection.json": "f497fa39246a8a394943bc9964ee0af36136efe37183c9e77b568bb14aa52f9d",
+    "artifacts/research/multicap_course_v1_inspection/report.json": "b15e99e7e26719af6c717057f8e1e64877a6ed3d47fc01dc18c69013a1642cf7",
+    "scripts/research_wave_cap_semantics.py": "2e6d03942367662446efa6ddd303f8f12ab749686f7d48a118625e0e93110d5f"
+  },
+  "comparison_semantics": {
+    "physical_fields": [
+      "plants",
+      "projectiles",
+      "sun",
+      "coins",
+      "grid_items",
+      "defenses",
+      "packets",
+      "on_board_zombies"
+    ],
+    "wave_table": "actual PRIV capped table equals full[:cap]; privileged diagnostic only, never actor/course input",
+    "controls": "Identical action from full public observation; wait300 or unchanged scripted controller. Check every decision boundary. No adaptive control/seed deletion.",
+    "intended_boundaries": [
+      "full enters wave cap+1",
+      "real capped win, with intentionally different terminal state"
+    ],
+    "normal_loss": "same battle state/tick and actual terminal result required; loss is retained as a valid prefix case",
+    "bounded_stops": [
+      "4000 actions",
+      "150000 tick"
+    ],
+    "no_claim": "Boundary checks do not prove equality at every internal tick, solvability, RL learning or full-game success."
+  },
+  "coexecution": "After full pool diagnostic ends, two single-thread prefix workers (four native processes) alongside corrected reevaluation; no GPU model/optimizer.",
+  "limitations": [
+    "No actor training/weights or validation sampling; fixed controls are never PPO data.",
+    "Original manifests/failures kept unchanged; all 30 task seed blocks retained.",
+    "Any genuine physics/table/normal-loss difference stops the new gate; no override.",
+    "Inspection is a subset, not a full64-seed gate.",
+    "This audit concerns task-prefix semantics, not a course learning/frontier/target-feature benefit."
+  ],
+  "release_rule": "Draft only; release full prefix only after complete passing120-pair prefix inspection and completed full pool diagnostic; add immutable report hashes without changing cases/controls/fields/stops."
+}
