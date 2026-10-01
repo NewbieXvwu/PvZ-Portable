@@ -15,12 +15,21 @@ SHA 校验和私有仓库，从任何机器一行拉取，不依赖临时 SSH �
     export PVZ_HF_REPO=<你的用户名>/pvz-agent-artifacts
 
     python3 scripts/hf_sync.py ls                       # 看远端有哪些 run
-    python3 scripts/hf_sync.py push reward_r0_seed0_v2  # 上传（只传最新检查点 + 结论层）
+    python3 scripts/hf_sync.py push reward_r0_seed0_v2  # 上传检查点集 + 结论层
     python3 scripts/hf_sync.py pull reward_r0_seed0_v2  # 下载到本地
     python3 scripts/hf_sync.py pull-all                 # 下载全部
 
     # 想看会上传什么，先空跑：
     python3 scripts/hf_sync.py push reward_r0_seed0_v2 --dry-run
+
+上传范围（每个 run 约 286 MB）：
+  * 检查点 —— `evaluated` / `initial` / `boundary` / `resumed` 全部，
+    加最新一个 `trained`，**再加 `resume.json` 指向的那个文件**。
+    实测 `reward_r*_v2` 的 `resume.json` 指向 `boundary`，所以"只传最新
+    `evaluated`"是接不上的。历史 `trained` 中间快照不带。
+  * 结论层 —— `learning_curve.json` / `training_state.json` /
+    `experiment_config.json` / `provenance.json` / `resume.json` /
+    `evaluations/*.json.gz`。
 """
 from __future__ import annotations
 
@@ -28,6 +37,7 @@ import argparse
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -45,8 +55,18 @@ EVIDENCE_GLOBS = [
     "evaluations/*.json.gz",
 ]
 
-# 检查点：只同步最新一个（续跑用）。历史中间快照没有任何引用链指向。
-CHECKPOINT_GLOB = "runs/run_1/*.pt"
+# 检查点命名：`update_<序号>_<阶段>_<纳秒时间戳>.pt`。字典序即时间序。
+CHECKPOINT_RE = re.compile(r"^update_\d+_(?P<phase>[a-z]+)_\d+\.pt$")
+
+# 已知阶段：`initial` 起点 / `evaluated` 分析脚本取模型的节点 / `boundary` 冻结边界 /
+# `resumed` 续跑锚点 —— 这几个**全部**带走。
+# `trained` 每个 update 都存一份，只带最新的一个。其余是纯历史，没有任何引用链指向
+# （2026-10-01 审计：单个 run 曾堆 70+ 个 trained，3.1 GB）。
+#
+# 注意这里是**白名单式的黑名单**：只有确认冗余的 `trained` 会被丢掉，
+# 阶段名认不出来的一律保留。宁可多传，不要悄悄丢证据。
+CHECKPOINT_KNOWN_PHASES = ("initial", "evaluated", "boundary", "resumed")
+CHECKPOINT_TRAINED_KEEP = 1
 
 
 def _require_hf():
@@ -66,32 +86,75 @@ def _repo_id(explicit: str | None) -> str:
     return repo
 
 
-def _latest_checkpoint(run_dir: Path) -> Path | None:
-    """最新的一个检查点。
+def _phase(path: Path) -> str | None:
+    match = CHECKPOINT_RE.match(path.name)
+    return match.group("phase") if match else None
 
-    优先取 `evaluated`（评估节点，分析脚本按它取模型），否则退回最新的任意检查点。
-    两者都按文件名排序 —— 文件名里带 update 序号与纳秒时间戳，字典序即时间序。
+
+def _resume_target(run_dir: Path) -> str | None:
+    """`resume.json` 的 `checkpoint` 字段 —— 定义"要接着训练必须加载哪个文件"。
+
+    这是唯一权威的续跑判据（见 REPO_BLOAT_AUDIT_20261001.md）。2026-10-01 实测
+    `reward_r*_v2` 四个 run 的它都指向 `boundary`，而不是最新的 `evaluated` ——
+    早先只传最新 `evaluated` 的版本，下载回来是**接不上的**。
     """
-    run_1 = run_dir / "runs" / "run_1"
-    if not run_1.is_dir():
+    try:
+        payload = json.loads((run_dir / "resume.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
         return None
-    evaluated = sorted(run_1.glob("update_*_evaluated_*.pt"))
-    if evaluated:
-        return evaluated[-1]
-    everything = sorted(run_1.glob("*.pt"))
-    return everything[-1] if everything else None
+    target = payload.get("checkpoint")
+    return target if isinstance(target, str) else None
 
 
-def _collect(run_dir: Path) -> tuple[list[Path], list[Path]]:
-    """返回 (检查点文件, 结论层文件)。"""
+def _resolve_checkpoint(run_dir: Path, target: str) -> Path | None:
+    """把 `resume.json` 里的 `checkpoint` 值解析成真实路径。
+
+    实测值是相对 run 目录的（`runs/run_1/update_...pt`）。也容忍只写文件名、
+    或写成相对仓库根的路径 —— 解析不出来时返回 None，由调用方给警告，
+    **不要假装成功**。
+    """
+    for candidate in (run_dir / target,
+                      run_dir / "runs" / "run_1" / target,
+                      ROOT / target):
+        if candidate.is_file():
+            return candidate.resolve()
+    return None
+
+
+def _collect(run_dir: Path) -> tuple[list[Path], list[Path], list[str]]:
+    """返回 (检查点, 结论层, 警告)。
+
+    检查点范围 = 除历史 `trained` 快照外的全部（见 CHECKPOINT_KNOWN_PHASES 的说明），
+    **再强制并入 `resume.json` 指向的那个文件**。最后一步是硬要求：漏掉它，
+    这个通道就白建了 —— 实测 `reward_r*_v2` 的 `resume.json` 都指向 `boundary`，
+    而早先"只传最新 evaluated"的版本下载回来是接不上的。
+    """
+    warnings: list[str] = []
     checkpoints: list[Path] = []
-    latest = _latest_checkpoint(run_dir)
-    if latest is not None:
-        checkpoints.append(latest)
+    run_1 = run_dir / "runs" / "run_1"
+    if run_1.is_dir():
+        by_phase: dict[str, list[Path]] = {}
+        for path in sorted(run_1.glob("*.pt")):
+            by_phase.setdefault(_phase(path) or "unrecognised", []).append(path)
+        for phase, paths in sorted(by_phase.items()):
+            if phase == "trained":
+                checkpoints.extend(paths[-CHECKPOINT_TRAINED_KEEP:])
+            else:
+                checkpoints.extend(paths)
+
+    target = _resume_target(run_dir)
+    if target:
+        resolved = _resolve_checkpoint(run_dir, target)
+        if resolved is None:
+            warnings.append(f"⚠️ resume.json 指向 {target}，但该文件不存在 —— 这份归档接不上")
+        elif resolved not in {path.resolve() for path in checkpoints}:
+            checkpoints.append(resolved)
+            warnings.append(f"resume.json 指向 {target}，已并入上传集")
+
     evidence: list[Path] = []
     for pattern in EVIDENCE_GLOBS:
         evidence.extend(sorted(run_dir.glob(pattern)))
-    return checkpoints, evidence
+    return checkpoints, evidence, warnings
 
 
 def _human(n: int) -> str:
@@ -112,15 +175,23 @@ def cmd_ls(args) -> int:
         print(f"无法列出 {repo}: {exc}")
         return 1
     runs: dict[str, int] = {}
+    root_files: list[str] = []
     for name in files:
-        head = name.split("/", 1)[0]
-        runs[head] = runs.get(head, 0) + 1
-    if not runs:
+        if "/" in name:
+            head = name.split("/", 1)[0]
+            runs[head] = runs.get(head, 0) + 1
+        else:
+            # 仓库根下的文件（.gitattributes 等）不是 run，别混进 run 列表里。
+            root_files.append(name)
+    if not runs and not root_files:
         print(f"{repo} 是空的。")
         return 0
-    print(f"{repo} 上有 {len(runs)} 个 run：")
-    for run, count in sorted(runs.items()):
-        print(f"  {run:<32} {count} 个文件")
+    if runs:
+        print(f"{repo} 上有 {len(runs)} 个 run：")
+        for run, count in sorted(runs.items()):
+            print(f"  {run:<32} {count} 个文件")
+    if root_files:
+        print(f"  仓库根文件：{', '.join(sorted(root_files))}")
     return 0
 
 
@@ -132,16 +203,19 @@ def cmd_push(args) -> int:
     if not run_dir.is_dir():
         sys.exit(f"找不到 run 目录：{run_dir}")
 
-    checkpoints, evidence = _collect(run_dir)
+    checkpoints, evidence, warnings = _collect(run_dir)
     if not checkpoints and not evidence:
         sys.exit(f"{args.run} 里没有可同步的文件。")
 
+    total = sum(p.stat().st_size for p in checkpoints)
     print(f"上传 {args.run} → {repo}")
-    print(f"  检查点 {len(checkpoints)} 个：")
+    print(f"  检查点 {len(checkpoints)} 个（合计 {_human(total)}）：")
     for path in checkpoints:
         print(f"    {path.relative_to(run_dir)}  {_human(path.stat().st_size)}")
     print(f"  结论层 {len(evidence)} 个（合计 "
           f"{_human(sum(p.stat().st_size for p in evidence))}）")
+    for warning in warnings:
+        print(f"  {warning}")
 
     if args.dry_run:
         print("\n空跑结束，未上传。")
@@ -149,11 +223,14 @@ def cmd_push(args) -> int:
 
     api.create_repo(repo_id=repo, repo_type="model", private=True, exist_ok=True)
 
+    resume_target = _resume_target(run_dir)
     manifest = {
         "run": args.run,
-        "checkpoint": str(checkpoints[-1].relative_to(run_dir)) if checkpoints else None,
+        "resume_checkpoint": resume_target,
+        "checkpoints": sorted(str(p.relative_to(run_dir)) for p in checkpoints),
         "evidence_files": sorted(str(p.relative_to(run_dir)) for p in evidence),
-        "note": "只包含最新检查点与结论层；历史中间检查点按 2026-10-01 审计结论不保留。",
+        "note": ("含全部 evaluated/initial/boundary/resumed 与最新一个 trained，"
+                 "外加 resume.json 指向的检查点；历史 trained 中间快照按 2026-10-01 审计结论不保留。"),
     }
     staging = run_dir / ".hf_staging"
     if staging.exists():

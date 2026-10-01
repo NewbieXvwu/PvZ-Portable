@@ -165,10 +165,19 @@ python3 scripts/hf_sync.py pull <run>            # 在任意机器下载
 python3 scripts/hf_sync.py pull-all              # 全部拉下来
 ```
 
-脚本只同步两样东西：**最新的一个检查点**（续跑用；优先 `evaluated` 节点）和
-**结论层**（`learning_curve.json` / `training_state.json` / `experiment_config.json` /
-`provenance.json` / `resume.json` / `evaluations/*.json.gz`）。
-历史中间快照没有引用链指向它们，不上传。
+脚本同步两样东西：
+
+* **检查点**（每个 run 约 286 MB）—— `evaluated` / `initial` / `boundary` / `resumed`
+  全部，加**最新一个** `trained`，**再加 `resume.json` 指向的那个文件**。
+  最后一项是硬要求：实测四个 `reward_r*_v2` 的 `resume.json` 都指向 `boundary`
+  而不是最新的 `evaluated`，所以「只传最新 `evaluated`」的版本下载回来**接不上**。
+  历史 `trained` 中间快照没有引用链指向，不传。
+* **结论层**（KB 级）—— `learning_curve.json` / `training_state.json` /
+  `experiment_config.json` / `provenance.json` / `resume.json` /
+  `evaluations/*.json.gz`。
+
+`push` 会打印每个检查点的体积和 `resume.json` 的解析结果；如果 `resume.json`
+指向的文件不存在，它会明确警告「这份归档接不上」，不会假装成功。
 
 仓库会在第一次 `push` 时**自动创建为私有**（`private=True`），不需要手动建。
 
