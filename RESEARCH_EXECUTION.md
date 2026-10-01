@@ -347,3 +347,11 @@ Squash/Cattail夹具证明接口可传递关系，不能代替训练/评估中�
 一致，但包括terminal_tick的outcome及全部返回字段不一致；实际CPU墙钟18.52秒、与矩阵
 共执行。前述“均输局”的人工说明错误已更正，原始逐局文件没有改动或替换。原因未定位，
 下一步需捕获第一处分离的公开观测、动作分布和采样RNG；不能宣称并行严格确定性通过。
+
+第一处分离捕获在experiments/t5/reward_v2_baseline_trace_seed1_v1.json单独冻结：原参考
+检查点/task/环境及行动seed，CPU单线程，原fusion开与明确的fusion关反事实分别workers1/8
+各8局，共32局。锁定helper、模型/评估器/环境/分片代码及原生SHA。instrumentation调用原
+model.step与select_action，不改权重、不额外抽样；保存全部公开观测、packed token/hidden/
+output SHA、logits、实际动作及推理/抽样前后Torch RNG，比较最早不同的字段。若本次未再现
+也照常报告，不能隐藏。raw树留artifacts/research/baseline_trace_seed1_v1待HF整树交付，
+KB结果入库。关闭fusion只用于明确的诊断对照，不修改正在运行的矩阵或放行学习门禁。
