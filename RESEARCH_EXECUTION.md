@@ -457,3 +457,17 @@ artifacts/research/reward_v2_packet_cost_reevaluation_v1，结论索引位于per
 raw与Wilson区间在每节点完成后落盘。10条证据完整性检查通过，只证明拒绝违规输入，
 不构成复评/学习通过。训练原实际墙钟与本次复评墙钟分开报告，无等墙钟插值。
 全部修正复评通过后才能解除cap3暂定标记；HF大文件交付仍待配置。
+
+### 学习候选合并空卡槽修复：原生门禁前预注册（2026-10-01）
+
+新的research/learning-packet-cost-v1工作树从learning-v1/27d84ad通过git cherry-pick
+8b15b7a，仅src/LawnApp.cpp空槽cost五行改动；新提交189d8f1已push，Python flags7/课程/
+完整恢复源均不变。在独立build目录以Release/Ninja、原bug开关、单进程编译完成，
+不覆盖旧learning/observation/主线二进制。二进制与日志索引为perf/
+learning_packet_cost_native_build_v1.json；编译完成不等于原生或学习门禁通过。
+
+experiments/t5/learning_packet_cost_native_equivalence_v1.json保留原1728任务/种子/
+控制组合，2个轻量原生worker比较旧f9（已有zombie.id getter）和合并后的新binary，
+只规范旧空槽cost0，其余完整公开字段包括id及step info必须完全相同。该协议不使用
+之前无id的32模型轨迹，因此显式trace_count0；不是放宽或重写旧32轨迹门禁，旧943/9e
+完整证据原样保留。合并后的参考网络实际中断仍需另做，不将此构建作为正式学习放行。

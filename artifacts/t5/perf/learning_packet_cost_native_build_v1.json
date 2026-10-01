@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "built_not_native_gate_pass",
+  "source_branch": "research/learning-packet-cost-v1",
+  "source_commit": "189d8f1abdebd6566c1656469958c98cd3642277",
+  "native_path": "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/build/pvz-portable",
+  "native_sha256": "371a75d7e4c35b03267e9932510f44abaf2ee8f087870acd8277f27306767a3c",
+  "native_bytes": 5087176,
+  "previous_native_sha256": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
+  "cpp_sha256": "dbe518e8e329276aa7867da9e5f8fe3c036d0689352a2ce300d4ee4adf76720c",
+  "cpp_change": "Exactly cherry-pick of8b15b7a guard onto27d84ad; Python model/course/training sources unchanged",
+  "configuration": "Release Ninja; PVZ_DEBUG=OFF; DO_FIX_BUGS=OFF; parallel1",
+  "logs": [
+    "logs/t5_research/learning_packet_cost_cmake_v1.log",
+    "logs/t5_research/learning_packet_cost_native_build_v1.log"
+  ],
+  "preregistered_native_protocol": "experiments/t5/learning_packet_cost_native_equivalence_v1.json",
+  "protocol_sha256": "eaa18bd3d4cc13b70c002b0b498796d54b3e0e6a06a2ce87bf3fbf3168bb2b06",
+  "pending": "1728 paired native jobs with full IDs, then separately preregister reference network actual interruption; no formal learning or mainline replacement"
+}
