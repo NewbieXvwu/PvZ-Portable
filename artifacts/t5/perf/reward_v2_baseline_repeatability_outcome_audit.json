@@ -1,0 +1,30 @@
+{
+  "source": "artifacts/t5/perf/reward_v2_baseline_repeatability_results.json",
+  "source_sha256": "13b617662cf4d05cb4946b00871a8150fa9d4336381141af357cf79b106a1be4",
+  "explicit_outcome_keys": [
+    "won",
+    "result",
+    "terminated",
+    "truncated",
+    "terminal_wave",
+    "wave_count",
+    "terminal_tick"
+  ],
+  "all_outcomes_exact": true,
+  "per_workers": {
+    "1": {
+      "count": 8,
+      "unique_action_profiles": [
+        "{\"action_counts\": {\"plant\": 28, \"shovel\": 26, \"wait\": 45}, \"actions\": 99, \"immediate_plant_shovels\": 9, \"zero_tick_actions\": 54}"
+      ]
+    },
+    "8": {
+      "count": 8,
+      "unique_action_profiles": [
+        "{\"action_counts\": {\"plant\": 28, \"shovel\": 26, \"wait\": 45}, \"actions\": 99, \"immediate_plant_shovels\": 9, \"zero_tick_actions\": 54}",
+        "{\"action_counts\": {\"plant\": 28, \"shovel\": 22, \"wait\": 48}, \"actions\": 98, \"immediate_plant_shovels\": 5, \"zero_tick_actions\": 50}"
+      ]
+    }
+  },
+  "note": "Original helper used absent ticks instead of terminal_tick; this supplement checks actual terminal_tick from all unchanged raw rows. Trajectory-level repeatability is false; cause not localized."
+}

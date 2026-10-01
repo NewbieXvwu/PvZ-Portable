@@ -223,3 +223,35 @@ artifacts/research/ 和 research_evidence/ 提交到 git；已有被忽略的 73
 只读核验还发现 R3/初始化0的基线与 R0 的 4480 个原始记录中有 1 个行动计数不同：
 heldout_day_4 / sampled / seed50199。全部胜负、终局及截断标签相同；四组初始权重完全一致。
 该差异完整保留，不宣称所有四组逐行动基线完全相同，后续以原始逐局胜负作配对。
+
+
+异常基线只读重复探针完成16局（workers1/8各8局），串行八次全部99动作、并行出现99/98两种
+行动计数，全部胜负、正常终局、波数及实际 terminal_tick=8828 一致。原 helper 的 outcome_keys
+用了不存在的 ticks；补充审计读取全部原始行的 terminal_tick 明确复核，未覆盖旧报告。
+两份结论和全部16行见 artifacts/t5/perf/reward_v2_baseline_repeatability*.json。
+这不是所有任务的并行等价证明；后续候选正式门禁需进一步定位并扩展验证。
+
+
+### 合并候选真实中断恢复 v1：开跑前冻结
+
+隔离工作树 research/learning-v1 集成观测 flags7、正确原生剩余冷却和课程 schema2，
+同时保留 AGENTS.md 的八个 trained 策略。原20训练任务逐字节迁入 experiments/task_family
+作为可入库配置，其 SHA256 不变；当前奖励 v2 原 manifest 路径、内容和源代码不变。
+合并候选相关88项检查通过，课程追加的组单任务退化/门禁用途限制两项检查也通过（课程共15）。
+原始合并冲突/缺路径/旧测试接口/计时器fixture调用失败日志全部保留，成功重跑不覆盖失败文件。
+
+工程探针配置在候选分支 experiments/t5/learning_joint_interrupt_v1/，只允许两个预注册ID。
+两个试验除 experiment_id 不同外完全相同：初始化0，采样seed1701，R0，32宽/2编码器层、
+16宽/2GRU、critic24，flags7，确定性CUDA及workspace4096:8，CPU2worker，20局每批，
+5000决策/最多80局，每次调用超时600秒。使用原20任务、无任务援助修改，显式
+learning_progress、terrain_wave_cap覆盖、窗口8/最低窗口2/均匀保底.25，均为工程状态压力测试值，
+不作为已验证的最佳学习课程。每原任务固定前2环境种子做greedy/sample工程评估，初始化、
+5000决策和最终点均保留完整原始记录；不反馈验证选择任务。
+
+连续完成对照后，另一目录在update1原子保存、update2已有至少4分片且少于实际分配数时，
+仅SIGKILL该工程进程组，再完整--resume。必须逐位比较所有参数、AdamW、全部随机状态、计数、
+loss、逐局摘要和原始评估，增加整个curriculum_state及每更新curriculum_sampling比较。
+中断分片SHA256和mtime必须不变，明确记录实际分配数和cached/collect。零差异才算该小模型
+工程范围通过；失败不放宽、不删除，参考192及后续正式课程需另做完整恢复及成本验证。
+并行执行原奖励矩阵，费用标注为共执行；不称等墙钟架构对比。大文件保留本机待HF上传，
+代码/配置/门禁和KB结论走git，无强制添加、无分片进git。
