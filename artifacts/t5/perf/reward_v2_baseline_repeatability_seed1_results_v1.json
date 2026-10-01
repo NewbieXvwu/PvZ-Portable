@@ -1,0 +1,573 @@
+{
+  "schema_version": 2,
+  "status": "complete",
+  "scope": "Readonly diagnosis of the original init1 heldout_night_4 sampled seed50462 trajectory mismatch, not new learning or replacement evaluation",
+  "protocol_sha256": "59fc2744c186ee6f5e686c6e78dedf311b66aa2e032c93204429399f15d8d0ab",
+  "checkpoint_sha256": "fa4a4d8b66f576011c562592765e6f6021ddd4572f709951bedfcc0b287acbc3",
+  "records": {
+    "1": [
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      }
+    ],
+    "8": [
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 56,
+          "plant": 24,
+          "shovel": 16
+        },
+        "zero_tick_actions": 40,
+        "immediate_plant_shovels": 9,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 8950,
+        "peak_offense": 2,
+        "actions": 96,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 6000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 56,
+          "plant": 24,
+          "shovel": 16
+        },
+        "zero_tick_actions": 40,
+        "immediate_plant_shovels": 9,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 8950,
+        "peak_offense": 2,
+        "actions": 96,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 6000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 32,
+          "plant": 14,
+          "shovel": 9
+        },
+        "zero_tick_actions": 23,
+        "immediate_plant_shovels": 5,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 4720,
+        "peak_offense": 1,
+        "actions": 55,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      },
+      {
+        "seed": 50462,
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 56,
+          "plant": 24,
+          "shovel": 16
+        },
+        "zero_tick_actions": 40,
+        "immediate_plant_shovels": 9,
+        "terminal_wave": 3,
+        "wave_count": 3,
+        "terminal_tick": 8950,
+        "peak_offense": 2,
+        "actions": 96,
+        "economy_curve": [
+          {
+            "tick": 0,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 3000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          },
+          {
+            "tick": 6000,
+            "sun": 50,
+            "sun_produced": 0,
+            "sun_spent": 0
+          }
+        ]
+      }
+    ]
+  },
+  "all_returned_fields_exact": false,
+  "all_outcome_fields_exact": false,
+  "outcome_keys": [
+    "won",
+    "result",
+    "terminated",
+    "truncated",
+    "terminal_wave",
+    "wave_count",
+    "terminal_tick"
+  ],
+  "all_win_terminal_labels_exact": true,
+  "seconds": 18.52206957999806,
+  "interpretation": "Finite repeatability diagnostic; does not retroactively replace original rows."
+}
