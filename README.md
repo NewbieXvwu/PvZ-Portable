@@ -31,6 +31,7 @@ training project has its own documents (all in the repository root):
 
 | Document | What it is |
 |---|---|
+| [AGENTS.md](AGENTS.md) | hard rules for AI agents: size budget, delivery channels — **read before committing** |
 | [TODO.md](TODO.md) | the single task list and experiment order — **start here** |
 | [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md) | how to run on the desktop machine (WSL2 + RTX 5080) |
 | [TRAINING_DESIGN_PROPOSAL.md](TRAINING_DESIGN_PROPOSAL.md) | implementation review and proposed training comparisons |
@@ -43,7 +44,9 @@ training project has its own documents (all in the repository root):
 | [T5_TOKEN_AUDIT_20261001.md](T5_TOKEN_AUDIT_20261001.md) | measured short-task token sizes and field encoding gaps |
 | [T5_OBSERVATION_UPDATE_20261001.md](T5_OBSERVATION_UPDATE_20261001.md) | isolated input repairs, native/replay checks, and unresolved late PPO regression |
 | [OBSERVATION_INTERRUPTION_FAILURE_20261001.md](OBSERVATION_INTERRUPTION_FAILURE_20261001.md) | preserved strict resume failure and pre-interruption CUDA drift localization |
-| [CHECKPOINT_GIT_DELIVERY.md](CHECKPOINT_GIT_DELIVERY.md) | lossless git delivery and verification of full recovery checkpoints |
+
+Checkpoints and evaluation shards are **not** stored in git — they go to Hugging Face Hub
+(`scripts/hf_sync.py`, see [AGENTS.md](AGENTS.md)).
 
 Code lives in `python/` and `scripts/`; experiment evidence lands in `artifacts/`.
 

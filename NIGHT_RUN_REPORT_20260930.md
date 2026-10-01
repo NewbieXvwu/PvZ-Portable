@@ -132,4 +132,8 @@ B1 分段情况如下。第 1 段计划 8,000 局，实际在 **5,000 局、660.
 
 内存观测共 12 次，可用内存最低约 5.72 GiB，swap 使用 0；单个训练主进程 RSS 峰值约 5.26 GiB。没有 OOM、worker 死亡或采样停滞。冒烟与长跑日志分别出现 72 条和 60 条 `INFO: RegEmu: Couldn't open '/tmp/pvz-env-…/registry.regemu' for writing`。评估任务仍全部返回、两次训练命令均以 0 退出；保留该 warning 原文，不推测其成因。
 
-[续跑证据摘要](artifacts/t5/perf/continuation_after_repair.json) 包含 B0/B1 原始胜数、Wilson 区间、loss、内存和停止原因。最终曲线已复制到 [night_seed0 曲线](artifacts/t5/curves/night_seed0.json)；[训练状态](artifacts/t5/night_seed0/training_state.json)、[检查点](artifacts/t5/night_seed0/runs/run_1/gameplay_model_v1_ppo.pt)、全部分片及 `logs/` 留在执行机。`gates/T5.json` 是训练器自动生成的失败结果，和性能证据及曲线一起推送。
+[续跑证据摘要](artifacts/t5/perf/continuation_after_repair.json) 包含 B0/B1 原始胜数、Wilson 区间、loss、内存和停止原因。最终曲线已复制到 [night_seed0 曲线](artifacts/t5/curves/night_seed0.json)。
+训练状态 `artifacts/t5/night_seed0/training_state.json`、全部分片及 `logs/` 留在执行机（本机没有）。
+检查点 `artifacts/t5/night_seed0/runs/run_1/gameplay_model_v1_ppo.pt`（14 MB）**当时被提交进了 git** ——
+这是 2026-10-01 审计认定的违规项，后续检查点一律不进 git（见 [AGENTS.md](AGENTS.md) §2）。
+`gates/T5.json` 是训练器自动生成的失败结果，和性能证据及曲线一起推送。

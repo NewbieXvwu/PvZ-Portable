@@ -15,7 +15,7 @@ Agent）看的，目标是**读完就能跑，不需要回问本机**。
 | 项 | 值 |
 |---|---|
 | SSH | `ssh -p 22222 newbiexvwu@127.0.0.1`（临时虚拟局域网，端口/地址可能变） |
-| 登录 shell | Windows PowerShell 5.1 → `wsl -d Ubuntu -e bash` |
+| 登录 shell | **`cmd.exe`**（不是 PowerShell）→ 需要时再 `wsl -d Ubuntu -e bash` |
 | WSL 内核 | 6.18.33.2-microsoft-standard-WSL2，x86_64 |
 | GPU | RTX 5080，16303 MiB；驱动 617.14；`cap (12, 0)` = sm_120；`bf16_supported True` |
 | Python 环境 | **`/home/newbiexvwu/.venvs/ml`**（python 3.14.4、torch 2.14.0+cu132、numpy 2.5.2） |
@@ -26,7 +26,7 @@ Agent）看的，目标是**读完就能跑，不需要回问本机**。
 **torch 只在那个 venv 里。** 直接 `python3` 会找不到 torch，必须用
 `/home/newbiexvwu/.venvs/ml/bin/python`，或先 `source /home/newbiexvwu/.venvs/ml/bin/activate`。
 
-仓库里 `scripts/win_ssh.py` 封装了整条链路（payload 走 base64，绕开三层引号重解析）：
+仓库里 `scripts/win_ssh.py` 封装了整条链路（脚本经 **stdin** 送进去，绕开 cmd.exe 的二次解析）：
 
 ```bash
 export PVZ_DESKTOP_HOST=newbiexvwu@127.0.0.1
@@ -36,11 +36,26 @@ python3 scripts/win_ssh.py wsl --file probe.sh          # 长脚本写文件再�
 python3 scripts/win_ssh.py ps  'Get-ChildItem C:\'      # 直接跑 PowerShell
 ```
 
+### 为什么是 stdin，不是 `-EncodedCommand`
+
+**登录 shell 是 `cmd.exe`，不是 PowerShell。** 早期版本用
+`powershell -EncodedCommand <base64>`，cmd 会重新解析这个参数字符串，base64 尾部的 `=`
+填充和 `+/` 字符活不下来 —— 表现是**静默失败**：退出码 1，零输出，看起来像脚本自己出错。
+现在改成 `powershell -NoProfile -Command -` / `bash -s`，脚本内容走 stdin，
+argv 里只剩纯 ASCII 选项。改这段之前先读这一节。
+
 ### PowerShell 5.1 的三个坑
 
 1. `$()` 会被 PowerShell 当变量展开 —— bash 脚本里的 `$(...)` 必须走 `--file`。
 2. 控制台代码页是 GBK，非 ASCII 输出会变乱码（`win_ssh.py` 已强制 UTF-8）。
 3. `&&` 不是语句分隔符；管道给 `wsl.exe` 会前置 UTF-8 BOM（`win_ssh.py` 已绕开）。
+
+### 远端脚本的两个坑
+
+1. **`set -euo pipefail` 会让整段脚本提前死。** 一个不匹配的 `grep`（退出码 1）就会
+   终止后面所有命令，看起来像"远端什么都不干"。不确定的 `grep` 后面加 `|| true`。
+2. **`~` 会在本机被展开。** `--venv ~/.venvs/ml` 这类路径必须加引号
+   （`--venv '~/.venvs/ml'`），否则传过去的是本机 home 路径，WSL 里找不到。
 
 ### 偶发故障
 
@@ -49,11 +64,23 @@ python3 scripts/win_ssh.py ps  'Get-ChildItem C:\'      # 直接跑 PowerShell
 
 ---
 
-## 2. 同步：全程走 git，不用 tar / scp
+## 2. 同步：代码与结论走 git，大文件走 Hugging Face Hub
 
 两边都是同一个仓库（`origin` = `NewbieXvwu/PvZ-Portable`），分支 `pvz-env`。
 **不要再打 tar 包、不要再往 `/mnt/c` 拷文件**：手工拷贝会丢掉"这段结果对应哪个代码版本"
 这件事，而它恰恰是证据的一部分。
+
+但 **git 不是唯一的通道**。2026-10-01 的审计发现，把检查点提交进 git 会把仓库撑到 GB 级
+（实测 `artifacts/` 被推了 2.0 GB，而规则认可的只有 9.4 MB）。分工如下：
+
+| 通道 | 传什么 | 怎么传 |
+|---|---|---|
+| **git** | 代码、实验配置、门禁、结论层（KB 级 json）、文档 | 下面的 §2.1 |
+| **HF Hub** | 检查点 `.pt`、评估分片 `.npz`、已归档证据 | §2.2 |
+
+**不许用 `git add -f` 绕过 `artifacts/.gitignore`。** 细则见 [AGENTS.md](AGENTS.md) §1。
+
+### 2.1 走 git 的部分
 
 ```bash
 # 台式机：开工前
@@ -114,6 +141,91 @@ diff ~/evidence-backup/throughput.json artifacts/t5/throughput.json
 产生者。`git pull` 报冲突不要用 `--force`，先看 `git diff` 确认丢的是哪一边。
 
 **未同步回本机的远端结果不能记作已完成**（TODO §1.2）。
+
+### 2.2 走 Hugging Face Hub 的部分
+
+检查点 43 MB 一个，一个 run 几十个。**它们永远不进 git。** 走 HF Hub：
+支持断点续传、SHA 校验、私有仓库，任何机器一行拉下来，不依赖临时 SSH 隧道。
+
+一次性配置（两台机器各做一次）：
+
+```bash
+pip install 'huggingface_hub>=0.23'          # 台式机用 ~/.venvs/ml/bin/pip
+export HF_TOKEN=hf_xxx                        # 见 §2.4 取 token
+export PVZ_HF_REPO=<你的用户名>/pvz-agent-artifacts
+```
+
+日常用法：
+
+```bash
+python3 scripts/hf_sync.py ls                    # 远端有哪些 run
+python3 scripts/hf_sync.py push <run>            # 上传最新检查点 + 结论层
+python3 scripts/hf_sync.py push <run> --dry-run  # 先看会上传什么，不实际传
+python3 scripts/hf_sync.py pull <run>            # 在任意机器下载
+python3 scripts/hf_sync.py pull-all              # 全部拉下来
+```
+
+脚本只同步两样东西：**最新的一个检查点**（续跑用；优先 `evaluated` 节点）和
+**结论层**（`learning_curve.json` / `training_state.json` / `experiment_config.json` /
+`provenance.json` / `resume.json` / `evaluations/*.json.gz`）。
+历史中间快照没有引用链指向它们，不上传。
+
+仓库会在第一次 `push` 时**自动创建为私有**（`private=True`），不需要手动建。
+
+### 2.3 恢复已归档的证据
+
+`scripts/archive_research_evidence.py` 把一份实验快照按原相对路径导出到
+`artifacts/research_evidence/<实验>/<快照>/`，训练本身不受影响（不移动、不删除源证据）。
+单文件 **≥ 100 MB**（`--single-file-limit-bytes`，默认 `100_000_000`）会切成
+64 MiB 的 `.gitparts/` 分片，清单记录每片与整文件的字节数 / SHA256。
+
+> 实测检查点只有 44 MB，**这个闸门从来没有触发过**。它是兜底，不是常规通道 ——
+> 别把它当成"检查点可以进 git"的许可证。
+
+**分片不要提交进 git**（这正是 2026-10-01 被删掉的 `CHECKPOINT_GIT_DELIVERY.md` 写错的地方）。
+归档留在本地，或按 §2.2 走 HF。
+
+```bash
+# 导出快照
+/home/newbiexvwu/.venvs/ml/bin/python scripts/archive_research_evidence.py \
+  --experiment-dir artifacts/research/<candidate> \
+  --archive-dir artifacts/research_evidence/<candidate>/<new-snapshot> \
+  --log logs/t5_research/<candidate>.log
+
+# 从快照恢复到新目录（含分片的情况）
+/home/newbiexvwu/.venvs/ml/bin/python scripts/research_checkpoint_chunks.py restore-archive \
+  --archive-dir artifacts/research_evidence/<candidate>/<snapshot> \
+  --destination-dir artifacts/research/<candidate-restored-new-directory>
+```
+
+恢复会核对全部归档文件、片序、片 SHA 及整文件 SHA，并核对 `resume.json` 指针；
+失败留下新目录和 `partial`，**不覆盖已有证据**。
+验证记录：`artifacts/t5/perf/checkpoint_chunk_audit_v1.json`（真实 44.5 MB 检查点经
+4 MiB 强制分片后完整复原，SHA 与原件一致）。
+
+### 2.4 取 Hugging Face token
+
+1. 注册 / 登录 <https://huggingface.co>。
+2. 打开 <https://huggingface.co/settings/tokens> → **New token**。
+3. 类型选 **Write**（要能建私有仓库和上传），名字随便填，例如 `pvz-agent-sync`。
+4. 复制 `hf_...` —— **只显示这一次**，关掉就再也看不到，只能重建。
+5. 两台机器各设一次环境变量：
+
+```bash
+# 本机 macOS：追加到 ~/.zshrc
+echo 'export HF_TOKEN=hf_你的token' >> ~/.zshrc
+echo 'export PVZ_HF_REPO=<你的用户名>/pvz-agent-artifacts' >> ~/.zshrc
+source ~/.zshrc
+
+# 台式机 WSL：追加到 ~/.bashrc
+echo 'export HF_TOKEN=hf_你的token' >> ~/.bashrc
+echo 'export PVZ_HF_REPO=<你的用户名>/pvz-agent-artifacts' >> ~/.bashrc
+source ~/.bashrc
+```
+
+自检：`python3 scripts/hf_sync.py ls` —— 能打印出（空的）仓库名就说明 token 通了。
+
+> token 等于账号写权限。**不要提交进 git**，不要贴进任何会入库的文件。
 
 ---
 

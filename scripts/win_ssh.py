@@ -39,9 +39,23 @@ PORT = ""
 DISTRO = DEFAULT_DISTRO
 
 
-def _ssh(argv: list[str]) -> int:
+def _ssh(argv: list[str], stdin: str | None = None) -> int:
+    """Run *argv* on the remote host, optionally feeding *stdin* to it.
+
+    The payload is delivered over **stdin**, never as command-line arguments.
+    The remote login shell is ``cmd.exe``, not PowerShell: cmd re-parses the
+    argument string, and ``powershell -EncodedCommand <base64>`` silently fails
+    (exit 1, no output) through it -- the trailing ``=`` padding and ``+/``
+    characters do not survive.  Piping the script in sidesteps cmd, PowerShell
+    and ``wsl.exe`` quoting entirely, and also avoids the UTF-8 BOM that
+    ``wsl.exe`` prepends to anything arriving on a pipe *from PowerShell*.
+    """
     port_opts = ["-p", PORT] if PORT else []
-    return subprocess.run(["ssh", *port_opts, *SSH_OPTS, HOST, *argv], check=False).returncode
+    return subprocess.run(
+        ["ssh", *port_opts, *SSH_OPTS, HOST, *argv],
+        input=stdin.encode("utf-8") if stdin is not None else None,
+        check=False,
+    ).returncode
 
 
 def run_ps(script: str) -> int:
@@ -54,29 +68,36 @@ def run_ps(script: str) -> int:
         "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; "
         "$OutputEncoding=[System.Text.Encoding]::UTF8; "
     ) + script
-    payload = base64.b64encode(script.encode("utf-16-le")).decode("ascii")
-    return _ssh(["powershell", "-NoProfile", "-OutputFormat", "Text", "-EncodedCommand", payload])
+    return _ssh(["powershell", "-NoProfile", "-Command", "-"], script)
+
+
+def _venv_source(venv: str) -> str:
+    # ``~`` inside quotes is not expanded by bash, so go through $HOME.
+    venv_path = venv.replace("~", '"$HOME"') if venv.startswith("~") else f'"{venv}"'
+    return f"source {venv_path}/bin/activate"
 
 
 def run_wsl(script: str, interpreter: str | None, venv: str | None) -> int:
     """Pipe *script* into ``bash`` inside WSL, optionally via a venv interpreter."""
-    preamble = ["set -euo pipefail"]
-    if venv:
-        # ``~`` inside quotes is not expanded by bash, so go through $HOME.
-        venv_path = venv.replace("~", '"$HOME"') if venv.startswith("~") else f'"{venv}"'
-        preamble.append(f'source {venv_path}/bin/activate')
     if interpreter:
-        # Feed the script to the interpreter on stdin so its own quoting is untouched.
-        preamble.append(f'exec {interpreter} -')
+        # Activate in the outer shell, then hand the decoded script to the
+        # interpreter on its stdin so the script's own quoting stays untouched.
+        outer = ["set -euo pipefail"]
+        if venv:
+            outer.append(_venv_source(venv))
+        payload = base64.b64encode(script.encode("utf-8")).decode("ascii")
+        outer.append(f"echo {payload} | base64 -d | {interpreter} -")
+        bootstrap = "\n".join(outer) + "\n"
+    else:
+        inner = ["set -euo pipefail"]
+        if venv:
+            inner.append(_venv_source(venv))
+        inner.append(script)
+        payload = base64.b64encode("\n".join(inner).encode("utf-8")).decode("ascii")
+        # base64 is alphanumeric plus ``+/=``, so it survives every layer.
+        bootstrap = f"echo {payload} | base64 -d | bash\n"
 
-    wrapper = "\n".join(preamble) + "\n" + script
-    payload = base64.b64encode(wrapper.encode("utf-8")).decode("ascii")
-    # Piping a PowerShell string into ``wsl.exe`` prepends a UTF-8 BOM, and
-    # ``base64 -d`` rejects that with "invalid input".  Passing the payload as an
-    # argument to ``echo`` *inside* the WSL bash avoids the pipe altogether: base64
-    # is alphanumeric plus ``+/=``, so it survives every quoting layer untouched.
-    ps = f"wsl -d {DISTRO} -e bash -c 'echo {payload} | base64 -d | bash'"
-    return run_ps(ps)
+    return _ssh(["wsl", "-d", DISTRO, "-e", "bash", "-s"], bootstrap)
 
 
 def main() -> int:

@@ -31,6 +31,55 @@ from train_pvz_ppo import add_advantages, episode_digest, train_update
 ROOT = Path(__file__).resolve().parent.parent
 RESEARCH_VERSION = 1
 
+# How many `trained` snapshots to keep per run.
+#
+# Every update writes a full ~43 MB checkpoint, so a 500k-decision run used to
+# accumulate 70+ of them (3.1 GB) with nothing ever deleting the older ones.
+# Only a few are actually read:
+#   * resuming needs the newest one;
+#   * `scripts/research_late_policy_probe.py` reads the last 8
+#     (`state["update_history"][-8:]`) to measure parameter change across
+#     updates, so at least that many must survive.
+#
+# `evaluated`, `initial` and `boundary` snapshots are milestones referenced by
+# the archive and comparison scripts; they are never pruned. Set this to 0 to
+# keep only the checkpoint the pointer currently references.
+TRAINED_CHECKPOINT_KEEP = max(0, int(os.environ.get("PVZ_TRAINED_CHECKPOINT_KEEP", "8")))
+
+
+def prune_trained_checkpoints(run_dir: Path, keep: int, protected: set[Path]) -> list[str]:
+    """Delete older `trained` snapshots, keeping the newest *keep*.
+
+    Only the `trained` phase is touched -- `evaluated`, `initial` and `boundary`
+    snapshots are milestones and stay. Anything in *protected* survives even if
+    it is older than the newest *keep*.
+
+    Filenames embed the update number and a nanosecond timestamp
+    (``update_000042_trained_1790818381980869592.pt``), so plain lexicographic
+    order is chronological order.
+
+    Returns the names of the files that were removed. Unlink failures are
+    swallowed: losing a checkpoint to a transient filesystem error must never
+    take down a training run.
+    """
+    if keep < 0:
+        return []
+    snapshots = sorted(run_dir.glob("update_*_trained_*.pt"))
+    if len(snapshots) <= keep:
+        return []
+    survivors = {path.resolve() for path in snapshots[len(snapshots) - keep:]} if keep else set()
+    survivors |= {path.resolve() for path in protected}
+    removed: list[str] = []
+    for path in snapshots:
+        if path.resolve() in survivors:
+            continue
+        try:
+            path.unlink()
+        except OSError:
+            continue
+        removed.append(path.name)
+    return removed
+
 
 def capture_rng(assignments: random.Random) -> dict[str, Any]:
     return {"python": random.getstate(), "numpy": np.random.get_state(),
@@ -353,8 +402,10 @@ def run_experiment(args: Any) -> None:
         for key, value in state.get("resources", {}).items():
             resources[key] = min(value, resources[key]) if key.startswith("min_") else max(value, resources[key])
         state["resources"] = resources
-        # Keep every snapshot immutable, including multiple resumes at the same
-        # update. The pointer alone changes; crash evidence is never overwritten.
+        # Every save gets a fresh immutable filename, so a resume at the same
+        # update cannot overwrite earlier crash evidence. Older `trained`
+        # snapshots are pruned right after the pointer moves -- see
+        # TRAINED_CHECKPOINT_KEEP for what survives and why.
         path = output / "runs/run_1" / f"update_{state['updates']:06d}_{phase}_{time.time_ns()}.pt"
         state["checkpoint"] = str(path.relative_to(output))
         checkpoint = {"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
@@ -368,6 +419,20 @@ def run_experiment(args: Any) -> None:
                                      "commit": revision, "fingerprints": fingerprints}}
         atomic_write(path, lambda temporary: torch.save(checkpoint, temporary))
         atomic_json(pointer, {"checkpoint": str(path.relative_to(output)), "sha256": sha256_file(path)})
+        if phase == "trained":
+            protected = {path}
+            for recorded in [state.get("checkpoint")] + [
+                    run.get("checkpoint") for run in state.get("runs", [])]:
+                if isinstance(recorded, str):
+                    protected.add(output / recorded)
+            removed = prune_trained_checkpoints(path.parent, TRAINED_CHECKPOINT_KEEP, protected)
+            if removed:
+                pruning = state.setdefault("checkpoint_pruning", {
+                    "keep": TRAINED_CHECKPOINT_KEEP, "removed_total": 0, "last_removed": []})
+                pruning["removed_total"] += len(removed)
+                pruning["last_removed"] = removed
+                print(f"{config['experiment_id']} pruned {len(removed)} old trained checkpoint(s), "
+                      f"keeping the newest {TRAINED_CHECKPOINT_KEEP}", flush=True)
         atomic_json(output / "training_state.json", state)
         atomic_json(output / "learning_curve.json", state["learning_curve"])
 

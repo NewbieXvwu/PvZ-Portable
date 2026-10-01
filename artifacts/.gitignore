@@ -10,6 +10,15 @@ adventure2_level7/seeds/*
 !adventure2_level7/seeds/dev.json
 !adventure2_level7/seeds/test.json
 
+# 五地形种子。2026-10-01 审计发现这里漏了白名单：代码会读这 5 个文件
+# （train_pvz_task_family.py 里逐个引用），但新增的种子会被 `*` 静默忽略，
+# 导致另一台机器拿不到新地形 —— 属于同步缺口，不是体积问题。
+!multiterrain/
+multiterrain/*
+!multiterrain/seeds/
+multiterrain/seeds/*
+!multiterrain/seeds/*.json
+
 # 训练入口会直接读取的配置与门禁结果 —— 不入库的话另一台机器拉完就跑不起来。
 !t5/
 t5/*
@@ -31,3 +40,15 @@ t5/perf/*
 !t5/curves/
 t5/curves/*
 !t5/curves/*.json
+
+# 归档与活跃训练产物：一律不入库。上面的 `*` 已经兜住了，这里显式写出来是为了
+# 让后来的人（和 Agent）不必推断，也防止将来有人把 `*` 改成别的写法时漏掉。
+#
+# 2026-10-01 审计：这两个目录曾被 `git add -f` 强制提交 ——
+# `research_evidence/` 有 719 个文件、约 2.0 GB 进了库，而本文件认可的交付集
+# 只有 9.4 MB。`git check-ignore --no-index` 逐文件验证过：765 个已跟踪文件里
+# 659 个（86%）本来就会被这份规则拦下。
+#
+# 检查点与分片现在走 Hugging Face Hub（见仓库根 AGENTS.md 与 scripts/hf_sync.py）。
+research_evidence/
+research/
