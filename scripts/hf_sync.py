@@ -28,6 +28,7 @@ import argparse
 import importlib.util
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -156,7 +157,10 @@ def cmd_push(args) -> int:
     }
     staging = run_dir / ".hf_staging"
     if staging.exists():
-        sys.exit(f"{staging} 已存在，先清理再重试。")
+        # 上次崩在收尾会留下它。目录是脚本自己的临时产物，直接清掉重来，
+        # 否则会卡在一个需要人工介入的状态里。
+        print(f"清理上次残留的暂存目录 {staging}")
+        shutil.rmtree(staging, ignore_errors=True)
     staging.mkdir()
     try:
         for path in checkpoints:
@@ -178,13 +182,11 @@ def cmd_push(args) -> int:
             commit_message=f"sync {args.run}: 最新检查点 + 结论层",
         )
     finally:
-        for link in staging.rglob("*"):
-            if link.is_symlink():
-                link.unlink()
-        for directory in sorted(staging.rglob("*"), reverse=True):
-            if directory.is_dir():
-                directory.rmdir()
-        staging.rmdir()
+        # 暂存目录里既有指向源文件的符号链接，也有脚本自己写的 MANIFEST.json。
+        # 早期实现只解链接、再逐个 rmdir，会漏掉那个普通文件并抛 ENOTEMPTY
+        # （2026-10-01 在台式机上实测，上传本身成功、只有收尾崩了）。
+        # shutil.rmtree 对符号链接只删链接本身、不跟进目标，源文件安全。
+        shutil.rmtree(staging, ignore_errors=True)
 
     print(f"\n完成。下载：python3 scripts/hf_sync.py pull {args.run}")
     return 0
