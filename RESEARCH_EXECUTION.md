@@ -615,3 +615,15 @@ packed数组的SHA均核对。实际1995个观测、1局达到事前定义后段
 保留，三波混合仍暂定，尚未冻结B或通过T5-E。最后一组全轨迹/末段探针及完整
 初始化2基线配对已核验；KB见snapshot17及对应报告。完整公开输入20局工程检查
 v2通过，全2048局测量已启动；非RL能力与GPU峰值验收。参考恢复仍等待前序复评。
+
+
+完整12组额外诊断证据冻结于research/reward_v2_diagnostic_delivery_12runs_v2：115文件/
+32425324字节，全部来源SHA与12闭合状态SHA核验，HF push-evidence空跑通过。
+最后R3/init2 run空跑含15检查点/最后8trained/6005原分片/2训练日志，resume完整；
+未配置HF仓库/token，未上传或下载验证。准备v1因R2诊断日志文件名误配而停止，
+部分文件及失败报告保留；v2先核对真实*_complete_diagnostics_v1.log再组包。
+曲线交付实际审计发现前三个seed0原曲线仍在research但未在允许Git的curves目录，
+此前称全曲线已交付不够准确；现补齐R0/R1/R2 seed0。全12交付含10条原字节、
+2条既有compact曲线；后两条来源SHA及全部节点/标签/Wilson/真实墙钟/原逐局SHA
+另与最终汇总严格核对。不能把compact格式声称字节相同。没有覆盖原证据。
+额外诊断与默认run模型/NPZ交付为两部分；早期缺失trained引用继续如实记录。

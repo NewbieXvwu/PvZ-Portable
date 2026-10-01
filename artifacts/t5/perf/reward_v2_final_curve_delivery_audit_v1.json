@@ -1,0 +1,128 @@
+{
+  "scope": "all12 original frozen reward final curves delivery audit",
+  "status": "pass",
+  "curves": [
+    {
+      "run": "reward_r0_seed0_v2",
+      "source": "artifacts/research/reward_r0_seed0_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r0_seed0_v2.json",
+      "source_sha256": "ea19d79a3fe26437b206230686b6c8e21bc84d5637cacb96e96ccb2818fa32da",
+      "git_sha256": "ea19d79a3fe26437b206230686b6c8e21bc84d5637cacb96e96ccb2818fa32da",
+      "delivery_format": "original bytes",
+      "source_bytes": 627793,
+      "git_bytes": 627793
+    },
+    {
+      "run": "reward_r1_seed0_v2",
+      "source": "artifacts/research/reward_r1_seed0_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r1_seed0_v2.json",
+      "source_sha256": "3a1e40a465c44f8b7c3125c4ddec8297dbb1e95a74b90393474b7133d1530d46",
+      "git_sha256": "3a1e40a465c44f8b7c3125c4ddec8297dbb1e95a74b90393474b7133d1530d46",
+      "delivery_format": "original bytes",
+      "source_bytes": 571680,
+      "git_bytes": 571680
+    },
+    {
+      "run": "reward_r2_seed0_v2",
+      "source": "artifacts/research/reward_r2_seed0_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r2_seed0_v2.json",
+      "source_sha256": "24c0f1b8ebfd733f4002a0c7ca27f58d8114e39438dfcdc48b141392f9d832da",
+      "git_sha256": "24c0f1b8ebfd733f4002a0c7ca27f58d8114e39438dfcdc48b141392f9d832da",
+      "delivery_format": "original bytes",
+      "source_bytes": 497843,
+      "git_bytes": 497843
+    },
+    {
+      "run": "reward_r3_seed0_v2",
+      "source": "artifacts/research/reward_r3_seed0_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r3_seed0_v2.json",
+      "source_sha256": "98194f2882bf9ccb49c772160a72dd46818525629a97d3423d99c8a395d0d454",
+      "git_sha256": "96367f39e3a395ee761da8aabcb1097cbce05236e599164467ab26f16d614725",
+      "delivery_format": "previous compact cohorts, source and all reported nodes/labels/Wilson/wall/raw SHA verified",
+      "source_bytes": 585570,
+      "git_bytes": 11691
+    },
+    {
+      "run": "reward_r0_seed1_v2",
+      "source": "artifacts/research/reward_r0_seed1_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r0_seed1_v2.json",
+      "source_sha256": "75cc8a02fe31bc34bbcd30fd8b35ce39ed7913466871d2f8024bb09a981e5465",
+      "git_sha256": "afcdb6824499d29efa38f1c21b5aa7b4f577e2d344bab4948b4e00c23d31c167",
+      "delivery_format": "previous compact cohorts, source and all reported nodes/labels/Wilson/wall/raw SHA verified",
+      "source_bytes": 607318,
+      "git_bytes": 11663
+    },
+    {
+      "run": "reward_r1_seed1_v2",
+      "source": "artifacts/research/reward_r1_seed1_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r1_seed1_v2.json",
+      "source_sha256": "a51ffca46004d0645051a9396b4443ad833c470a85c9b03514754210f3483c3b",
+      "git_sha256": "a51ffca46004d0645051a9396b4443ad833c470a85c9b03514754210f3483c3b",
+      "delivery_format": "original bytes",
+      "source_bytes": 568521,
+      "git_bytes": 568521
+    },
+    {
+      "run": "reward_r2_seed1_v2",
+      "source": "artifacts/research/reward_r2_seed1_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r2_seed1_v2.json",
+      "source_sha256": "b8cff2e061581d239ceebaa87d6f48c8edced3d12aaafec52bec51b037b0255f",
+      "git_sha256": "b8cff2e061581d239ceebaa87d6f48c8edced3d12aaafec52bec51b037b0255f",
+      "delivery_format": "original bytes",
+      "source_bytes": 586560,
+      "git_bytes": 586560
+    },
+    {
+      "run": "reward_r3_seed1_v2",
+      "source": "artifacts/research/reward_r3_seed1_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r3_seed1_v2.json",
+      "source_sha256": "9b4cbdff2bf8c117a8b05c1abb861cef6f02c90445d0574d1e5fd6dbd7410373",
+      "git_sha256": "9b4cbdff2bf8c117a8b05c1abb861cef6f02c90445d0574d1e5fd6dbd7410373",
+      "delivery_format": "original bytes",
+      "source_bytes": 608042,
+      "git_bytes": 608042
+    },
+    {
+      "run": "reward_r0_seed2_v2",
+      "source": "artifacts/research/reward_r0_seed2_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r0_seed2_v2.json",
+      "source_sha256": "10dfc6dd7895ba439105595f4087952db0419b349488986f3ea199e2fe978476",
+      "git_sha256": "10dfc6dd7895ba439105595f4087952db0419b349488986f3ea199e2fe978476",
+      "delivery_format": "original bytes",
+      "source_bytes": 555494,
+      "git_bytes": 555494
+    },
+    {
+      "run": "reward_r1_seed2_v2",
+      "source": "artifacts/research/reward_r1_seed2_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r1_seed2_v2.json",
+      "source_sha256": "a13fd3d19e8337a0f83e6186a8325d5f8a565d20f108d7b4ff7871c266679bbf",
+      "git_sha256": "a13fd3d19e8337a0f83e6186a8325d5f8a565d20f108d7b4ff7871c266679bbf",
+      "delivery_format": "original bytes",
+      "source_bytes": 549732,
+      "git_bytes": 549732
+    },
+    {
+      "run": "reward_r2_seed2_v2",
+      "source": "artifacts/research/reward_r2_seed2_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r2_seed2_v2.json",
+      "source_sha256": "8363ffeff66c9e363b5f02671fa7875a31b2de15e7aa54c09e5da1de1b9e7495",
+      "git_sha256": "8363ffeff66c9e363b5f02671fa7875a31b2de15e7aa54c09e5da1de1b9e7495",
+      "delivery_format": "original bytes",
+      "source_bytes": 498386,
+      "git_bytes": 498386
+    },
+    {
+      "run": "reward_r3_seed2_v2",
+      "source": "artifacts/research/reward_r3_seed2_v2/learning_curve.json",
+      "curve": "artifacts/t5/curves/reward_r3_seed2_v2.json",
+      "source_sha256": "ec1a5b6755a048ef88da5ff706440726b42fb9b63e42895b8af0edff8eebb83b",
+      "git_sha256": "ec1a5b6755a048ef88da5ff706440726b42fb9b63e42895b8af0edff8eebb83b",
+      "delivery_format": "original bytes",
+      "source_bytes": 508283,
+      "git_bytes": 508283
+    }
+  ],
+  "delivery_gap_resolved": "First three seed0 source curves remained local research but absent from allowed tracked curves after prior storage cleanup; copied and SHA-verified now. Two previous compact curves remain compact with source SHA and all recorded cohort/node/raw/wall fields verified. No existing curves overwritten.",
+  "cap3_validity": "original mixed cap3 provisional; corrected60 reevaluation underway"
+}
