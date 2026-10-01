@@ -54,4 +54,4 @@
 
 矩阵完成后依据多数初始化曲线验证多波学习及预算B，再完成课程、宽度/记忆/价值/双时间尺度对照和完整关卡验收。T5-E、T6、T7均未通过，目标保持active。
 
-主要证据：gates/T5-A-research-v4.json；artifacts/research_evidence/t5a_smoke_v4；artifacts/research_evidence/aid_feasibility_v2；artifacts/research_evidence/runtime_access_change_20261001。
+主要证据：gates/T5-A-research-v4.json；artifacts/research_evidence/t5a_smoke_v4（⚠️ 已于 2026-10-01 退役删除，恢复见 `artifacts/CLEANUP_MANIFEST_20261001T053523Z_retired_runs.txt`）；artifacts/research_evidence/aid_feasibility_v2；artifacts/research_evidence/runtime_access_change_20261001。

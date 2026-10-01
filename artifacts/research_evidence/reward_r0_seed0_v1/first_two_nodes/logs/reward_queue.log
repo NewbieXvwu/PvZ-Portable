@@ -1,2 +1,0 @@
-running 1/12 reward_r0_seed0_v1 pid=35457
-heartbeat elapsed=1800.0s counters={'episodes': 4424, 'decisions': 250009, 'ticks': 30067747} policy_loss=-0.00292204083030434 value_loss=0.0026618067640811205

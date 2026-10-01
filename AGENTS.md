@@ -143,3 +143,17 @@ git ls-files -z artifacts logs | git check-ignore -z --stdin --no-index
 ```
 
 `--no-index` 必须加，否则 git 会跳过已跟踪文件、永远返回空。
+
+**两个坑（都踩过）：**
+
+1. **不要用 `-v` 做这个检查。** `git check-ignore -v` 会把**否定规则**（`!...`）也算作命中并
+   打印出来、退出码 0，于是白名单里的文件会被误报成违规。要 `-v` 就必须看行首是不是 `!`。
+   上面的写法不带 `-v`，只列出真正会被忽略的路径。
+2. **要判断"某个文件到底能不能提交"，别问 `check-ignore`，直接问 git：**
+   ```bash
+   git add -n <path>     # 能加就打印 add '...'，被忽略会报 pathspec 错
+   ```
+   这是唯一不会骗人的判据。
+
+**另：`git rm` 会同时删工作区文件。** 删归档目录前先确认文件都被 git 跟踪
+（`git ls-files --error-unmatch <path>`），否则删掉就真没了。

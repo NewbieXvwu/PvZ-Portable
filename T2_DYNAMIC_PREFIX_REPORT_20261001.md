@@ -10,7 +10,9 @@
 
 旧12候选奖励矩阵已停止；R0完整500027决策保留，R1在完整更新边界保存5277局、
 267180决策、35757342 tick、31更新、1614.32秒。旧曲线、评估、分片、全部检查点不删除。
-R1完整状态交付快照位于 `artifacts/research_evidence/reward_r1_seed0_v1/protocol_stop`。
+R1完整状态交付快照位于 `artifacts/research_evidence/reward_r1_seed0_v1/protocol_stop`
+（⚠️ 该快照已于 2026-10-01 退役删除；本节的计数与结论仍然有效，恢复见
+`artifacts/CLEANUP_MANIFEST_20261001T053523Z_retired_runs.txt`）。
 旧门禁失败记录 `gates/T2-dynamic-prefix-v1.json` 保留，不强行续接。
 
 ## 修复及未通过的中间测试

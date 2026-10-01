@@ -108,8 +108,14 @@ GPU已分配峰值2.18GiB、保留峰值7.93GiB。背景探针/隔离编译与�
 配置、指纹、曲线、优化器/RNG恢复状态和日志快照。14个文件的SHA256已核对。
 归档保留原相对路径，`resume.json`指向归档内真实检查点；原目录全部日志、分片和检查点保留。
 
+> ⚠️ **该目录已于 2026-10-01 退役删除**（连同整条 `reward_r0_seed0_v1`，见
+> [AGENTS.md](AGENTS.md) §1 体积规则）。上面的结论数字与 SHA 核对记录仍然有效；
+> 需要原件时按 `artifacts/CLEANUP_MANIFEST_20261001T053523Z_retired_runs.txt`
+> 里的 blob SHA 从 git 历史恢复。
+
 最终完整预算快照另存`budget_complete/`，包含全部五个评估节点、最后完整恢复状态与日志。
-最终轨迹诊断及按卡片/等待时长的分布见`reward_r0_seed0_v1_diagnostics_final.json`。
+最终轨迹诊断及按卡片/等待时长的分布见`reward_r0_seed0_v1_diagnostics_final.json`
+（该诊断保留在 `artifacts/research_evidence/trajectory_diagnostics/`）。
 R0/R1的同seed0未训练逐局评估完全相同，证明这两组起点与配对评估一致；汇总器继续
 核对各候选的核心指纹和初始化参数指纹。后续更多初始化尚不提前判定。
 

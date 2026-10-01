@@ -52,3 +52,7 @@ t5/curves/*
 # 检查点与分片现在走 Hugging Face Hub（见仓库根 AGENTS.md 与 scripts/hf_sync.py）。
 research_evidence/
 research/
+
+# 清理清单：删了什么、每个文件的 blob SHA 是什么。删除动作的审计凭证，KB 级，
+# 必须入库 —— 否则「文件去哪了、能不能恢复」就没有答案。
+!CLEANUP_MANIFEST_*.txt
