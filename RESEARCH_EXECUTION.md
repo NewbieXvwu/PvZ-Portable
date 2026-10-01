@@ -180,3 +180,25 @@ R1/初始化0末段greedy五波从199/640降到1/640，sampled同期从257/640�
 v2小模型实际恢复严格通过，模型/AdamW/RNG/计数/全部loss及逐局评估零差异。
 完整v1失败及v2通过均保留。此门禁只涵盖小模型，不提前给参考架构/课程状态/学习达标
 记通过。R2/初始化0完成500085决策，6272局仅1训练胜，五波各节点均0；阴性证据保留。
+
+
+## 2026-10-01 存储规则更新后的续跑核验
+
+以当前 AGENTS.md 和 artifacts/.gitignore 为交付准则。停止把检查点、分片、滚动日志、
+artifacts/research/ 和 research_evidence/ 提交到 git；已有被忽略的 736 个路径仅从索引移除，
+本地逐文件 SHA256 保持一致，历史 Git 对象保留。索引移除清单见
+`artifacts/t5/perf/git_ignored_index_removal_20261001.json`。HF 当前未配置凭据/仓库，
+大文件交付暂未完成；不把本地保留写成已上传。
+
+当前实际完成 5/12：R0/R1/R2/R3 初始化 0，R0 初始化 1。旧 supervisor 和训练 PID 均已退出，
+状态文件仍写 running，不能据此认为任务在运行。没有重跑已完成候选。
+新检查点保留代码改变了 pvz_research.py 的源指纹，旧门禁拒绝下一候选：
+`research prerequisite source is stale: gates/T5-A-research-v4.json: python/pvz_research.py`。
+原始拒绝见 `artifacts/t5/perf/reward_v2_retention_source_gate_rejection.json`。
+先核验存储改动、真实 CPU/CUDA 回放，再单独冻结存储修订门禁及剩余七组续跑协议；
+原始配置、门禁和旧结果不覆盖，任务/种子/奖励/PPO/初始化/决策预算/评估节点不改变。
+
+已有 R0/R1/R2/R3 初始化 0 的工作目录现仅各有一个 trained 快照；R0 初始化 1 有八个。
+这是接手时的实测状态；不能声称前四组仍完整保留最后八个中间模型。
+已有 R0/R1 的末段八更新诊断结果保留；缺失的中间模型不伪造、不把单快照当八更新探针。
+新续跑使用默认八个 trained，全部 evaluated/initial/boundary 及续跑指针持续保留。

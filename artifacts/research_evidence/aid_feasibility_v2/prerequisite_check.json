@@ -1,6 +1,0 @@
-{
-  "gate": "gates/T2-dynamic-prefix-v4.json",
-  "gate_sha256": "289dba2358397fdcd89ee12506b300572d8cc6c2c3a5e6a3b3b994d564defd38",
-  "simulator_sha256": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
-  "gate_result": "pass"
-}

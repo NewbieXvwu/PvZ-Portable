@@ -1,4 +1,0 @@
-phase=continuous
-phase=interrupt_at_update2_partial_collection
-phase=resume cached_partial_shards=4
-{"gate_result": "pass", "final_counters": {"episodes": 72, "decisions": 5067, "ticks": 589838}, "final_updates": 4, "seconds": 269.49810675700064}

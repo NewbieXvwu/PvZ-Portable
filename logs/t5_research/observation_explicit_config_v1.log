@@ -1,9 +1,0 @@
-test_formal_config_cannot_silently_omit_input_flags (test_observation_context.PublicContextTests.test_formal_config_cannot_silently_omit_input_flags) ... ok
-test_stale_pass_gate_rejects_changed_simulator_or_source (test_research_training.ExplicitConfigurationTests.test_stale_pass_gate_rejects_changed_simulator_or_source) ... ok
-test_two_models_keep_independent_configs_and_critic_dimensions (test_research_training.ExplicitConfigurationTests.test_two_models_keep_independent_configs_and_critic_dimensions) ... ok
-test_undiscounted_return_and_truncation_bootstrap (test_research_training.ExplicitConfigurationTests.test_undiscounted_return_and_truncation_bootstrap) ... ok
-
-----------------------------------------------------------------------
-Ran 4 tests in 0.021s
-
-OK

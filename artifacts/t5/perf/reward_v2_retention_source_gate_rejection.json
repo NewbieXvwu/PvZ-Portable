@@ -1,0 +1,7 @@
+{
+  "gate_result": "fail",
+  "config": "experiments/t5/reward_comparison_v2/reward_r1_seed1_v2.json",
+  "error_type": "RuntimeError",
+  "error": "research prerequisite source is stale: gates/T5-A-research-v4.json: python/pvz_research.py",
+  "action": "Stopped before launch; no override; remaining seven candidates require storage-revision audit and new preregistered gate."
+}
