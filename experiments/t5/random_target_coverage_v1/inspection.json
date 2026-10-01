@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "purpose": "random_legal_target_coverage_only_no_learning",
+  "pool_protocol": "/home/newbiexvwu/PvZ-Portable/experiments/t5/multicap_course_v1/full.json",
+  "target_plant_types": [
+    17,
+    19,
+    43
+  ],
+  "task_ids": [
+    "train_pool_2",
+    "train_pool_4",
+    "train_multicap_v1_pool_cap1_variant"
+  ],
+  "seed_count": 2,
+  "expected_episodes": 6,
+  "action_seed_offset": 290000,
+  "workers": 1,
+  "worker_threads": 1,
+  "episode_timeout_seconds": 180,
+  "total_timeout_seconds": 600,
+  "minimum_available_ram_bytes": 8589934592,
+  "required_fingerprints": {
+    "scripts/research_random_target_coverage.py": "e19987b01e4aaae3f9b7b23f0eadff57263dd0154f8aeeb0e854a68d060040cc",
+    "python/test_random_target_coverage.py": "0f1d6d483ac5537e6d90c1f7b24a445b794d88f06962ec9b4075bff9472ec8fe",
+    "experiments/t5/multicap_course_v1/full.json": "345f337d012cbfabb7c9d50d77a41ec316c8c06d83276c8e31e152cf61bd65f3",
+    "scripts/research_multicap_pool_audit.py": "35b44782ffb57fb1bcceff76ebd77d1b723f8d79737ae2f5a2ad4148a1288e19"
+  },
+  "controller": "Uniform over currently legal wait/plant/shovel types; uniform packet-cell or shovel coordinate within selected type. Wait duration uniformly60/150/300. Local Python RNG=environment_seed+290000, reset for each job. No tactical condition, no learned policy.",
+  "coexecution": "One CPU worker while full multicap diagnostic (2 workers) and corrected reevaluation (8 workers) run; reference256 waits for all60. No GPU model or optimizer.",
+  "limitations": [
+    "Source pool unchanged; all its tasks containing17/19/43 are selected mechanically, never by outcome. All64 seeds retained for full measurement.",
+    "The current selected decks cover Tanglekelp19 in pool cap1/3/5; no Squash17/Cattail43 coverage.",
+    "Native random control trajectories are never PPO training data. Activation proves observability, not learned exploitation/benefit or untrained neural baseline.",
+    "Wait/scripted zero activation does not prove neural or random policies have zero activation. This control tests that narrower question.",
+    "No activation threshold/win-rate gate is invented; publish exact coverage including all failures/truncations. Formal learning ablation still needs genuine coverage and a separate frozen protocol."
+  ]
+}
