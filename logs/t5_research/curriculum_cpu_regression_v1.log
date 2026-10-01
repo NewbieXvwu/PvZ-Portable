@@ -1,0 +1,20 @@
+test_explicit_config_requires_course_parameters_without_changing_legacy_schema (test_curriculum.CurriculumTests.test_explicit_config_requires_course_parameters_without_changing_legacy_schema) ... ok
+test_invalid_windows_and_zero_coverage_are_rejected (test_curriculum.CurriculumTests.test_invalid_windows_and_zero_coverage_are_rejected) ... ok
+test_old_training_gate_rejects_this_changed_core (test_curriculum.CurriculumTests.test_old_training_gate_rejects_this_changed_core) ... ok
+test_probability_query_does_not_mutate_resume_state (test_curriculum.CurriculumTests.test_probability_query_does_not_mutate_resume_state) ... ok
+test_serialized_history_and_assignment_rng_restore_the_exact_next_batch (test_curriculum.CurriculumTests.test_serialized_history_and_assignment_rng_restore_the_exact_next_batch) ... ok
+test_terrain_coverage_survives_unequal_task_counts_and_progress (test_curriculum.CurriculumTests.test_terrain_coverage_survives_unequal_task_counts_and_progress) ... ok
+test_truncation_is_reported_without_inventing_a_failure (test_curriculum.CurriculumTests.test_truncation_is_reported_without_inventing_a_failure) ... ok
+test_unknown_tasks_and_changed_pool_cannot_contaminate_course (test_curriculum.CurriculumTests.test_unknown_tasks_and_changed_pool_cannot_contaminate_course) ... ok
+test_zero_successes_do_not_overweight_unlearnable_tasks (test_curriculum.CurriculumTests.test_zero_successes_do_not_overweight_unlearnable_tasks) ... ok
+test_real_optimizer_path_preserves_likelihood_across_all_chunk_boundaries (test_research_training.RecurrentReplayTests.test_real_optimizer_path_preserves_likelihood_across_all_chunk_boundaries) ... ok
+test_prefix_hidden_is_recomputed_after_parameter_updates (test_research_training.RecurrentReplayTests.test_prefix_hidden_is_recomputed_after_parameter_updates) ... ok
+test_full_episode_reference_matches_collection (test_research_training.RecurrentReplayTests.test_full_episode_reference_matches_collection) ... ok
+test_full_resume_produces_the_same_next_update (test_research_training.RecurrentReplayTests.test_full_resume_produces_the_same_next_update) ... ok
+test_two_models_keep_independent_configs_and_critic_dimensions (test_research_training.ExplicitConfigurationTests.test_two_models_keep_independent_configs_and_critic_dimensions) ... ok
+test_undiscounted_return_and_truncation_bootstrap (test_research_training.ExplicitConfigurationTests.test_undiscounted_return_and_truncation_bootstrap) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 7.645s
+
+OK

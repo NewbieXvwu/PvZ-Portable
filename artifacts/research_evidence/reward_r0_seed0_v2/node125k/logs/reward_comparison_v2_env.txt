@@ -1,0 +1,11 @@
+python /home/newbiexvwu/.venvs/ml/bin/python
+torch 2.14.0+cu132 cuda_runtime 13.2 cuda_available True
+gpu NVIDIA GeForce RTX 5080 vram_GiB 15.89398193359375
+['free', '-g']
+               total        used        free      shared  buff/cache   available
+Mem:              23           1          17           0           3          21
+Swap:              8           0           8
+['nproc']
+20
+['git', 'rev-parse', 'HEAD']
+5d56640f1bb4b6803bb1c03306d88723b0db37f4
