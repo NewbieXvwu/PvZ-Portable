@@ -1,0 +1,3 @@
+Wait for R2/init0 startup and at least 9000 MiB free GPU memory; independent replay only.
+Dispatch reward_r2_seed0_v2 GPU free MiB 12824 wait seconds 0.051101234999805456
+Replay exit code 0

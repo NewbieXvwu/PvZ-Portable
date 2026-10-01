@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "source_base_commit": "1ba674e5b7f72cc7e62ada19beaa248d67ac4c0c",
+  "candidate_commit": "0e2fa4a910c654c6efdbe3e545f688a618651404",
+  "patch_sha256": "3a86dd3a5caeab10db808f94dae1e3077d54cae478021a9c12bf46b6b38ab5b2",
+  "scope": "isolated same-pool sampler; original reward core untouched; no learning claim",
+  "state_schema": 2,
+  "coverage": "explicit terrain or terrain_wave_cap; episode assignment probability, not equal decisions/ticks/wall",
+  "cpu_checks": 13,
+  "actual_process_interrupt": "pending",
+  "formal_three_initialization_comparison": "pending"
+}
