@@ -16,7 +16,11 @@ from pvz_common import sha256_file
 TASKS = [dict(task_id=name, terrain=terrain, seeds=list(range(10)))
          for terrain, names in (("day", ("fail", "progress", "mastered")), ("roof", ("roof",)))
          for name in names]
-SETTINGS = dict(window_episodes=16, minimum_window_episodes=8, uniform_fraction=.25)
+SETTINGS = dict(window_episodes=16, minimum_window_episodes=8, uniform_fraction=.25, coverage="terrain")
+LENGTH_TASKS = [dict(task_id=f"{terrain}_{cap}_{index}", terrain=terrain, wave_cap=cap, seeds=list(range(10)))
+                for terrain in ("day", "roof") for cap in (1, 3, 5)
+                for index in range(2 if (terrain, cap) == ("day", 1) else 1)]
+LENGTH_SETTINGS = {**SETTINGS, "coverage": "terrain_wave_cap"}
 
 
 def outcomes(key, values):
@@ -90,6 +94,58 @@ class CurriculumTests(unittest.TestCase):
         original = copy.deepcopy(state)
         probabilities(TASKS, state, SETTINGS, "learning_progress")
         self.assertEqual(state, original)
+
+    def test_short_task_progress_cannot_take_mass_from_long_tasks(self):
+        state = initial_state(LENGTH_TASKS)
+        observe(state, outcomes("day_1_0", [False] * 16 + [True] * 16), LENGTH_SETTINGS)
+        weights, details = probabilities(LENGTH_TASKS, state, LENGTH_SETTINGS, "learning_progress")
+        for terrain in ("day", "roof"):
+            for cap in (1, 3, 5):
+                mass = sum(w for t, w in zip(LENGTH_TASKS, weights) if (t["terrain"], t["wave_cap"]) == (terrain, cap))
+                self.assertAlmostEqual(mass, 1 / 6)
+                self.assertAlmostEqual(details["coverage_probabilities"][terrain][f"cap{cap}"], 1 / 6)
+        self.assertGreater(weights[0], weights[1])
+        self.assertGreaterEqual(weights[1], .25 / 6 / 2)
+
+    def test_unequal_length_group_counts_still_keep_equal_terrain_mass(self):
+        tasks = [t for t in LENGTH_TASKS if t["terrain"] == "day" or t["wave_cap"] == 5]
+        weights, _ = probabilities(tasks, initial_state(tasks), LENGTH_SETTINGS, "terrain_balanced")
+        self.assertAlmostEqual(sum(w for t, w in zip(tasks, weights) if t["terrain"] == "day"), .5)
+        self.assertAlmostEqual(sum(w for t, w in zip(tasks, weights) if t["terrain"] == "roof"), .5)
+
+    def test_wave_cap_coverage_rejects_missing_invalid_and_changed_metadata(self):
+        with self.assertRaisesRegex(ValueError, "unique task IDs"):
+            probabilities(LENGTH_TASKS + LENGTH_TASKS[:1], initial_state(LENGTH_TASKS),
+                          LENGTH_SETTINGS, "terrain_balanced")
+        with self.assertRaisesRegex(ValueError, "explicit wave_cap"):
+            probabilities(TASKS, initial_state(TASKS), LENGTH_SETTINGS, "terrain_balanced")
+        for value in (True, 0, 51, "5"):
+            tasks = copy.deepcopy(LENGTH_TASKS)
+            tasks[0]["wave_cap"] = value
+            with self.assertRaisesRegex(ValueError, "explicit wave_cap"):
+                probabilities(tasks, initial_state(tasks), LENGTH_SETTINGS, "learning_progress")
+        state = initial_state(LENGTH_TASKS)
+        tasks = copy.deepcopy(LENGTH_TASKS)
+        tasks[0]["wave_cap"] = 3
+        with self.assertRaisesRegex(ValueError, "metadata changed"):
+            validate_state(state, tasks, LENGTH_SETTINGS)
+
+    def test_length_group_history_and_rng_resume_exactly(self):
+        state = initial_state(LENGTH_TASKS)
+        observe(state, outcomes("day_1_0", [False] * 16 + [True] * 16), LENGTH_SETTINGS)
+        rng = random.Random(88)
+        rng.random()
+        saved = rng.getstate()
+        weights, details = probabilities(LENGTH_TASKS, state, LENGTH_SETTINGS, "learning_progress")
+        expected = _assign(LENGTH_TASKS, list(range(80)), rng, {}, "learning_progress", weights)
+        restored = json.loads(json.dumps(state))
+        next_rng = random.Random()
+        next_rng.setstate(saved)
+        next_weights, next_details = probabilities(LENGTH_TASKS, restored, LENGTH_SETTINGS, "learning_progress")
+        actual = _assign(LENGTH_TASKS, list(range(80)), next_rng, {}, "learning_progress", next_weights)
+        self.assertEqual(actual, expected)
+        self.assertEqual(next_details, details)
+        self.assertEqual(next_rng.getstate(), rng.getstate())
 
     def test_explicit_config_requires_course_parameters_without_changing_legacy_schema(self):
         config = json.loads((ROOT / "experiments/t5/reward_comparison_v2/reward_r0_seed0_v2.json").read_text())
