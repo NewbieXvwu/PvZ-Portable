@@ -1,0 +1,29 @@
+{
+  "status": "failed",
+  "scope": "guarded reward reevaluation stopped by preregistered non-conveyor row gate",
+  "protocol_sha256": "53f78be928a86ec1886565140ec0ff2320bbba7774c5389e4164978944a52cd2",
+  "completed_nodes": 2,
+  "required_nodes": 60,
+  "failure_path": "artifacts/research/reward_v2_packet_cost_reevaluation_v1/failure_1790863459769354908.json",
+  "failure_sha256": "d9d43cdab5a5a9df023aaaeb540f23766d8f9690beb9e693bfa09cc087d9178b",
+  "error": "Traceback (most recent call last):\n  File \"/home/newbiexvwu/PvZ-Portable/scripts/research_packet_cost_reevaluation.py\", line 369, in main\n    raise ValueError(\"non-conveyor rows changed; stop before capability acceptance\")\nValueError: non-conveyor rows changed; stop before capability acceptance\n",
+  "changed_rows_path": "artifacts/research/reward_v2_packet_cost_reevaluation_v1/reward_r0_seed0_v2/node_1/changed_rows.json.gz",
+  "changed_rows_sha256": "53ea3d066e773d44184c58a14e94d21d84d8ef5c9e3c7d20e6c7baf358831441",
+  "unexpected_row": {
+    "mode": "greedy",
+    "task_id": "validation_v1_roof_cap1_x1",
+    "seed": 80304,
+    "old_won": true,
+    "old_actions": 27,
+    "old_tick": 3671,
+    "new_won": false,
+    "new_actions": 46,
+    "new_tick": 7109
+  },
+  "all_original_states_sha_unchanged": true,
+  "all_original_rows_preserved": true,
+  "dependent_reference_probe": "stopped before any workers/arms started",
+  "new_readonly_diagnostic_protocol": "experiments/t5/reward_v2_roof_anomaly_trace_v1.json",
+  "new_protocol_sha256": "103464ec6b413c6c5cc3b91c8a4bbb8449aafe97bc95c624f249d7cca3a20772",
+  "diagnostic_started": false
+}

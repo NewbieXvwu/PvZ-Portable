@@ -1,0 +1,12 @@
+{
+  "scope": "full256 reference interruption scheduler stopped on predecessor failure; actual GPU arms not started",
+  "status": "stopped_before_start",
+  "gate_result": "fail",
+  "error": "preceding execution stopped; reference probe not started",
+  "failure_path": "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/artifacts/research/learning_reference256_interrupt_v1/failure_1790863488934745718.json",
+  "failure_sha256": "9f937ac908a99ffab34fa257e7c234129086b40533fd4aa41b02e41c74f06d6a",
+  "protocol_sha256": "d86720888f057525385a58321e7cf2a1d3feb1b78434134601fb44921a4233ab",
+  "workers_started": false,
+  "arms_started": false,
+  "resume_or_learning_accepted": false
+}

@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "status": "failed",
+  "protocol_sha256": "53f78be928a86ec1886565140ec0ff2320bbba7774c5389e4164978944a52cd2",
+  "inventory_sha256": "898f93c8db568f1dc93be05950d60d1585d989a3c00982829f1aa2fad4a389c5",
+  "completed_nodes": 2,
+  "required_nodes": 60,
+  "executable": "/home/newbiexvwu/PvZ-Portable-packet-cost/build/pvz-portable",
+  "simulator_sha256": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2",
+  "expected_jobs_per_node": 4480,
+  "results": [
+    {
+      "experiment_id": "reward_r0_seed0_v2",
+      "node_index": 0,
+      "initialization_seed": 0,
+      "reward": "R0",
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "updates": 0,
+      "checkpoint_sha256": "b70babf874848f4c12d15d2ac68a9ef0911271387808a760c196158d82a17998",
+      "model_state_sha256": "0de883f98d3122b563ec1413ac52af7be304b03edc81686bcc5f3dff7b08ce0f",
+      "original_training_wall_seconds": 362.971504499,
+      "reevaluation_seconds": 400.7180726939987,
+      "resources": {
+        "peak_process_tree_rss_bytes": 10617552896,
+        "min_system_available_bytes": 13081489408,
+        "peak_system_swap_used_bytes": 287465472
+      },
+      "raw_path": "artifacts/research/reward_v2_packet_cost_reevaluation_v1/reward_r0_seed0_v2/node_0/evaluations.json.gz",
+      "raw_sha256": "11cc3b52d65f58928da08d6f2c8c42b88c851bc010d8a4bafa8deadeb7a69bc3",
+      "changes": {
+        "changed_rows": 0,
+        "conveyor_changed_rows": 0,
+        "unexpected_changed_rows": 0,
+        "win_label_changes": 0
+      },
+      "jobs": 4480,
+      "shard_directory": "artifacts/research/reward_v2_packet_cost_reevaluation_v1/reward_r0_seed0_v2/node_0/.seed_jobs/9164fe164306b2a7eb5dd36ce83ef4067ae2fa4b732c4015824b33c3dd951fff",
+      "validation": {
+        "greedy": {
+          "cap1": {
+            "won": 0,
+            "count": 320,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862158831309737
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 0,
+            "count": 960,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.003985571263342763
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6104166666666666
+          },
+          "cap5": {
+            "won": 0,
+            "count": 640,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.005966467005294152
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6015625
+          }
+        },
+        "sampled": {
+          "cap1": {
+            "won": 14,
+            "count": 320,
+            "win_rate": 0.04375,
+            "wilson_95": [
+              0.026237113352296296,
+              0.07208710658127383
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 1,
+            "count": 960,
+            "win_rate": 0.0010416666666666667,
+            "wilson_95": [
+              0.00018390341651149198,
+              0.005876697906699307
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6864583333333334
+          },
+          "cap5": {
+            "won": 0,
+            "count": 640,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.005966467005294152
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6390625
+          }
+        }
+      }
+    },
+    {
+      "experiment_id": "reward_r0_seed0_v2",
+      "node_index": 1,
+      "initialization_seed": 0,
+      "reward": "R0",
+      "counters": {
+        "episodes": 1849,
+        "decisions": 125019,
+        "ticks": 15166485
+      },
+      "updates": 11,
+      "checkpoint_sha256": "68c0f71b57bd569b987465643b971604d766048241f739e0036545a89fa249ac",
+      "model_state_sha256": "65f06d9eb5bde61e4d7d3465e56c904a2682717c0b27b9adbc415c4de3b144fa",
+      "original_training_wall_seconds": 1067.971152613,
+      "reevaluation_seconds": 387.6234307019986,
+      "resources": {
+        "peak_process_tree_rss_bytes": 10546622464,
+        "min_system_available_bytes": 13962928128,
+        "peak_system_swap_used_bytes": 287059968
+      },
+      "raw_path": "artifacts/research/reward_v2_packet_cost_reevaluation_v1/reward_r0_seed0_v2/node_1/evaluations.json.gz",
+      "raw_sha256": "bba3e3ef91c2f7d86b86372a548ba7531644c86cdc409aaf33263627d67b6631",
+      "changes": {
+        "changed_rows": 8,
+        "conveyor_changed_rows": 7,
+        "unexpected_changed_rows": 1,
+        "win_label_changes": 2
+      },
+      "jobs": 4480,
+      "shard_directory": "artifacts/research/reward_v2_packet_cost_reevaluation_v1/reward_r0_seed0_v2/node_1/.seed_jobs/d76f92984cf2f07c65003a741cf77d26d20340a67004659716c38e7a2d11f934",
+      "validation": {
+        "greedy": {
+          "cap1": {
+            "won": 94,
+            "count": 320,
+            "win_rate": 0.29375,
+            "wilson_95": [
+              0.24652846884618526,
+              0.34586467167172996
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 114,
+            "count": 960,
+            "win_rate": 0.11875,
+            "wilson_95": [
+              0.09979041989983993,
+              0.14074857818845893
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.9458333333333333
+          },
+          "cap5": {
+            "won": 16,
+            "count": 640,
+            "win_rate": 0.025,
+            "wilson_95": [
+              0.015445988990466947,
+              0.04022215466456249
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.4046875
+          }
+        },
+        "sampled": {
+          "cap1": {
+            "won": 93,
+            "count": 320,
+            "win_rate": 0.290625,
+            "wilson_95": [
+              0.24359403406815777,
+              0.34262324494245316
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 105,
+            "count": 960,
+            "win_rate": 0.109375,
+            "wilson_95": [
+              0.09116657276652104,
+              0.13069715478296548
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.8739583333333334
+          },
+          "cap5": {
+            "won": 4,
+            "count": 640,
+            "win_rate": 0.00625,
+            "wilson_95": [
+              0.0024331082996141024,
+              0.015958777868113873
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.1015625
+          }
+        }
+      }
+    }
+  ],
+  "raw_report": "artifacts/research/reward_v2_packet_cost_reevaluation_v1/state.json",
+  "raw_report_sha256": "3a0c97823210630e6874719a861a83ea360353feb16b5713d24b1685992d91d4",
+  "delivery": "Raw shards, evaluations and logs local pending HF; no learning gate declared",
+  "timing": "Reevaluation wall is separate from original training wall; no equal-wall interpolation"
+}
