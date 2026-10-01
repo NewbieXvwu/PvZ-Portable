@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "purpose": "engineering only, independent two-seed subset; no capability claim",
+  "tasks": [
+    {
+      "task_id": "train_day_1",
+      "terrain": "day",
+      "level": 1,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 1,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        60000,
+        60001
+      ]
+    },
+    {
+      "task_id": "train_night_1",
+      "terrain": "night",
+      "level": 11,
+      "deck": [
+        8,
+        9,
+        10,
+        12,
+        14,
+        15
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 1,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        60256,
+        60257
+      ]
+    },
+    {
+      "task_id": "train_pool_1",
+      "terrain": "pool",
+      "level": 21,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        16
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 1,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        60512,
+        60513
+      ]
+    },
+    {
+      "task_id": "train_fog_1",
+      "terrain": "fog",
+      "level": 32,
+      "deck": [
+        8,
+        9,
+        10,
+        14,
+        15,
+        16
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 1,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        60768,
+        60769
+      ]
+    },
+    {
+      "task_id": "train_roof_1",
+      "terrain": "roof",
+      "level": 42,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        33
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 1,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        61024,
+        61025
+      ]
+    }
+  ]
+}

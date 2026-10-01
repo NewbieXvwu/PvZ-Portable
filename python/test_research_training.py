@@ -144,6 +144,7 @@ class ExplicitConfigurationTests(unittest.TestCase):
     def test_stale_pass_gate_rejects_changed_simulator_or_source(self):
         config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
         config["model"]["input_flags"] = 0
+        config["runtime"].update(deterministic_algorithms=False, cublas_workspace_config=None)
         source = "python/pvz_research.py"
         gate = {"gate_result": "pass", "simulator_sha256": sha256_file(ROOT / "build/pvz-portable"),
                 "required_fingerprints": {source: sha256_file(ROOT / source)}}
@@ -159,6 +160,28 @@ class ExplicitConfigurationTests(unittest.TestCase):
             gate_path.write_text(json.dumps({**gate, "required_fingerprints": {source: "0" * 64}}))
             with self.assertRaisesRegex(RuntimeError, "source is stale"):
                 load_config(config_path)
+
+    def test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced(self):
+        config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
+        config["model"]["input_flags"] = 0
+        config["prerequisites"] = []
+        config["runtime"].update(deterministic_algorithms=True, cublas_workspace_config=":4096:8")
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "config.json"
+            path.write_text(json.dumps(config))
+            loaded, _, _ = load_config(path)
+            self.assertTrue(loaded["runtime"]["deterministic_algorithms"])
+            for mutate, expected in (
+                (lambda runtime: runtime.pop("deterministic_algorithms"), "all runtime settings"),
+                (lambda runtime: runtime.update(deterministic_algorithms=1), "explicit boolean"),
+                (lambda runtime: runtime.update(cublas_workspace_config=None), "verified"),
+                (lambda runtime: runtime.update(cublas_workspace_config=":0:0"), "unsupported"),
+            ):
+                invalid = copy.deepcopy(config)
+                mutate(invalid["runtime"])
+                path.write_text(json.dumps(invalid))
+                with self.assertRaisesRegex(ValueError, expected):
+                    load_config(path)
 
     def test_two_models_keep_independent_configs_and_critic_dimensions(self):
         model = GameplayModelV1(SMALL)

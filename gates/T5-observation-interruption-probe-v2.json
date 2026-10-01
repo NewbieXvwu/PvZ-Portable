@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "gate_result": "pass",
+  "scope": "PREREQUISITE ONLY for the two frozen deterministic small-model actual interruption v2 probes; previous strict v1 failure retained; no learning pass",
+  "allowed_experiment_ids": [
+    "observation_interrupt_v2_continuous",
+    "observation_interrupt_v2_interrupted"
+  ],
+  "simulator_sha256": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
+  "required_fingerprints": {
+    "python/pvz_agent_model.py": "35f87fc4386b62134ad8fb16e4756735cd22fc4727b321c6f34ea155340e4985",
+    "python/pvz_research.py": "d4de2310671f480d3f4d8d34601103736c392f818706f9b5cfd168bfd3b129be",
+    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
+    "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
+    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "python/pvz_observation_features.py": "5b99ef9cb10320417446436ef04826fc5eae16a32d02c20ec06562747c3da9bf",
+    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
+    "src/LawnApp.cpp": "7f076a78c568f85dda10c177131dc664d754eddfeedc4cd3a6e5e48a67f0ac3b",
+    "scripts/research_observation_interrupt_audit.py": "d602ae7365b60286504655126fdee3d5d0aeb24aa3cfc69d3532c6a55f4941fc",
+    "artifacts/task_family/train.json": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
+    "experiments/t5/observation_interrupt_v2/interrupted.json": "b4f117c0aaa6ab08f7f4ddc05557737942a05cdd5a51a8fd440ad4a96625495f",
+    "experiments/t5/observation_interrupt_v2/evaluation.json": "0073fafeefc5f0b196e9aafd2fd57f1ee0cf10aa28697488f01ce51629e2503c",
+    "experiments/t5/observation_interrupt_v2/continuous.json": "68853125db620f532b2fe664bbb59de25cd4165383c795eab3d2e9de4f015fe3",
+    "scripts/research_cuda_update_determinism.py": "2f93aeac2ef7c3f863f8486aa2f97d9975def573af42ec8eb4bc8c498e442d21"
+  },
+  "evidence": {
+    "observation_native_audit_v1.json": {
+      "sha256": "d137d0f5943ee76f6976297b11fe6fa3c09d75b60ed8a347e5ee374c1f3dab76",
+      "result": "pass"
+    },
+    "observation_native_targets_v1.json": {
+      "sha256": "4779880360e4d1ec423be7a87d6e5da3036fe7def1109acff9400f21459bc307",
+      "result": "pass"
+    },
+    "observation_actual_replay_v1/cpu_report.json": {
+      "sha256": "537f56f5c4f6632c68e5ed4e69e3dc19605fea2e9a00ee1cb2142615d6d8a0ae",
+      "result": "pass"
+    },
+    "observation_actual_replay_v1/cuda_report.json": {
+      "sha256": "c0c24b28d344823e621be48a9d33f579f16810becde7d3cc816855fc930ab5c3",
+      "result": "pass"
+    },
+    "observation_legacy_parity_v1.json": {
+      "sha256": "0e21af42c6c25e04571bd488aa5b1b88772aff3362a0cfc822d050434f20e172",
+      "result": null
+    },
+    "observation_cuda_determinism_v1/report.json": {
+      "sha256": "85a69d48ab7c8f8925b687d66ef4054f025090239a8d062ebdedae906df57ac9",
+      "result": "diagnostic_only",
+      "same_data_false_not_equal": true,
+      "same_data_true_bit_equal": true,
+      "strict_v1_fail_retained": true
+    }
+  },
+  "pending": [
+    "actual SIGKILL and full state equivalence",
+    "actual reference-architecture interruption/cost",
+    "formal 3-initialization input learning comparison"
+  ],
+  "unchanged_thresholds": true,
+  "runtime": {
+    "deterministic_algorithms": true,
+    "cublas_workspace_config": ":4096:8"
+  }
+}

@@ -159,8 +159,15 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
         raise ValueError("evaluation nodes must be sorted distinct positive decision counts")
     runtime = config["runtime"]
     if set(runtime) != {"workers", "worker_threads", "worker_device", "update_device", "max_actions",
-                        "cudnn_tf32", "matmul_precision"}:
+                        "cudnn_tf32", "matmul_precision", "deterministic_algorithms",
+                        "cublas_workspace_config"}:
         raise ValueError("all runtime settings must be explicit")
+    if type(runtime["deterministic_algorithms"]) is not bool:
+        raise ValueError("deterministic_algorithms must be an explicit boolean")
+    if runtime["cublas_workspace_config"] not in (None, ":4096:8"):
+        raise ValueError("unsupported explicit CUBLAS workspace configuration")
+    if runtime["deterministic_algorithms"] and runtime["cublas_workspace_config"] != ":4096:8":
+        raise ValueError("deterministic CUDA updates require the verified :4096:8 workspace")
     if runtime["cudnn_tf32"] is not False or runtime["matmul_precision"] != "highest":
         raise ValueError("research replay requires explicit FP32 CPU/CUDA precision")
     if runtime["update_device"] != "cuda" or runtime["worker_device"] != "cpu":
@@ -276,6 +283,13 @@ def run_experiment(args: Any) -> None:
     output.mkdir(parents=True, exist_ok=True)
     lock = (output / ".execution.lock").open("a")
     fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    workspace = config["runtime"]["cublas_workspace_config"]
+    existing_workspace = os.environ.get("CUBLAS_WORKSPACE_CONFIG")
+    if existing_workspace is not None and existing_workspace != workspace:
+        raise RuntimeError("CUBLAS_WORKSPACE_CONFIG environment differs from frozen runtime config")
+    if workspace is not None:
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = workspace
+    torch.use_deterministic_algorithms(config["runtime"]["deterministic_algorithms"], warn_only=False)
     if not torch.cuda.is_available():
         raise RuntimeError("CUDA unavailable; research updates must not silently use CPU")
     # cuDNN's default TF32 RNN path differs from CPU collection by ~1.7e-4
@@ -337,7 +351,9 @@ def run_experiment(args: Any) -> None:
                     "fingerprints": fingerprints, "model_config": model.config,
                     "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
                     "torch": torch.__version__, "cuda": torch.version.cuda,
-                    "gpu": torch.cuda.get_device_name(), "experiment_identity": identity})
+                    "gpu": torch.cuda.get_device_name(), "experiment_identity": identity,
+                    "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
+                    "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG")})
     stop_requested = threading.Event()
     old_handlers = {sig: signal.signal(sig, lambda *_: stop_requested.set())
                     for sig in (signal.SIGTERM, signal.SIGINT)}
