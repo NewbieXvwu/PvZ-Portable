@@ -28,6 +28,9 @@ def main():
     protocol = json.loads(args.protocol.read_text())
     configure_torch_threads(protocol["worker_threads"])
     checkpoint_path = ROOT / protocol["reference_checkpoint"]
+    checkpoint_sha = hashlib.sha256(checkpoint_path.read_bytes()).hexdigest()
+    if protocol.get("reference_checkpoint_sha256", checkpoint_sha) != checkpoint_sha:
+        raise ValueError("reference checkpoint hash mismatch")
     checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
     config = checkpoint["experiment_config"]
     manifest = json.loads((ROOT / config["evaluation"]["manifest"]).read_text())
@@ -47,15 +50,21 @@ def main():
         atomic_json(args.output, {"status": "partial", "records": rows})
     all_rows = [row for group in rows.values() for row in group]
     same = all(row == all_rows[0] for row in all_rows)
-    outcome_keys = ("won", "result", "truncated", "terminal_wave", "ticks")
-    same_outcomes = all(all(row.get(k) == all_rows[0].get(k) for k in outcome_keys)
+    label_keys = ("won", "result", "terminated", "truncated", "terminal_wave", "wave_count")
+    outcome_keys = (*label_keys, "terminal_tick")
+    if any(any(key not in row for key in outcome_keys) for row in all_rows):
+        raise ValueError("returned record lacks required outcome fields")
+    same_outcomes = all(all(row[k] == all_rows[0][k] for k in outcome_keys)
                         for row in all_rows)
     atomic_json(args.output, {
-        "status": "complete", "scope": protocol["scope"],
+        "schema_version": 2, "status": "complete", "scope": protocol["scope"],
         "protocol_sha256": hashlib.sha256(args.protocol.read_bytes()).hexdigest(),
-        "checkpoint_sha256": hashlib.sha256(checkpoint_path.read_bytes()).hexdigest(),
+        "checkpoint_sha256": checkpoint_sha,
         "records": rows, "all_returned_fields_exact": same,
         "all_outcome_fields_exact": same_outcomes,
+        "outcome_keys": outcome_keys,
+        "all_win_terminal_labels_exact": all(all(row[k] == all_rows[0][k] for k in label_keys)
+                                             for row in all_rows),
         "seconds": time.monotonic() - started,
         "interpretation": "Finite repeatability diagnostic; does not retroactively replace original rows."})
     print("completed", len(all_rows), "exact", same, "outcomes_exact", same_outcomes, flush=True)

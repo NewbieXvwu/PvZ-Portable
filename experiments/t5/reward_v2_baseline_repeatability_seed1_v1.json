@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scope": "Readonly diagnosis of the original init1 heldout_night_4 sampled seed50462 trajectory mismatch, not new learning or replacement evaluation",
+  "reference_checkpoint": "artifacts/research/reward_r0_seed1_v2/runs/run_1/update_000000_evaluated_1790830217027470448.pt",
+  "reference_checkpoint_sha256": "fa4a4d8b66f576011c562592765e6f6021ddd4572f709951bedfcc0b287acbc3",
+  "task_id": "heldout_night_4",
+  "environment_seed": 50462,
+  "action_seed": 220462,
+  "modes": [
+    "sampled"
+  ],
+  "workers": [
+    1,
+    8
+  ],
+  "worker_threads": 1,
+  "repeats_per_configuration": 8,
+  "max_actions": 4000,
+  "outcome_keys": [
+    "won",
+    "result",
+    "terminated",
+    "truncated",
+    "terminal_wave",
+    "wave_count",
+    "terminal_tick"
+  ],
+  "original_rows": "artifacts/t5/perf/reward_v2_paired_baseline_seed1_r0_r1.json",
+  "coexecution": "CPU repeatability probe overlaps frozen reward matrix; not dedicated cost comparison",
+  "helper": "scripts/research_baseline_repeatability.py",
+  "helper_sha256": "846b67f97cc6d5a0544b0fc9f0b235da109495f8b04a3ff9562f11faab72e598"
+}

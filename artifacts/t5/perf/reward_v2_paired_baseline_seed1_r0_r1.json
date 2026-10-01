@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "scope": "all 4480 original baseline rows; no filtering or replacement",
+  "initial_state_sha256": "911b4994b8134f84fffa957de91048536db051026d54c0d3427f5a8b99717378",
+  "raw_files": [
+    {
+      "path": "artifacts/research/reward_r0_seed1_v2/evaluations/update_000000.json.gz",
+      "sha256": "ac58d64df74579b0bc25aaf77e95b424e63c7517297f432984ca9cae7c57117f"
+    },
+    {
+      "path": "artifacts/research/reward_r1_seed1_v2/evaluations/update_000000.json.gz",
+      "sha256": "a8a8bfe810d02c63d7797e3af20f1c3d434faac36ab6eabf2c585931b4d17dc0"
+    }
+  ],
+  "rows": 4480,
+  "full_row_differences": 1,
+  "win_terminal_label_keys": [
+    "won",
+    "result",
+    "terminated",
+    "truncated",
+    "terminal_wave",
+    "wave_count"
+  ],
+  "win_terminal_label_differences": 0,
+  "terminal_tick_differences": 1,
+  "all_difference_rows": [
+    {
+      "mode": "sampled",
+      "task_id": "heldout_night_4",
+      "environment_seed": 50462,
+      "fields": {
+        "action_counts": [
+          {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          {
+            "wait": 32,
+            "plant": 14,
+            "shovel": 9
+          }
+        ],
+        "peak_offense": [
+          2,
+          1
+        ],
+        "terminal_tick": [
+          8950,
+          4720
+        ],
+        "immediate_plant_shovels": [
+          9,
+          5
+        ],
+        "zero_tick_actions": [
+          40,
+          23
+        ],
+        "actions": [
+          96,
+          55
+        ],
+        "economy_curve": [
+          [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ],
+          [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        ]
+      }
+    }
+  ],
+  "interpretation": "Win labels agree; one trajectory and terminal_tick differ. Cause unlocalized; exact repeatability is not established."
+}
