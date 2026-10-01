@@ -1,0 +1,12 @@
+{
+  "torch": "2.14.0+cu132",
+  "cuda_runtime": "13.2",
+  "cuda_available": true,
+  "tiny_compute_sum": 16.0,
+  "device": "NVIDIA GeForce RTX 5080",
+  "free_total_bytes": [
+    15612248064,
+    17066033152
+  ],
+  "probe": "pass"
+}

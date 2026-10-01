@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-01T09:29:57.041408+00:00",
+  "gate_result": "incident_recorded",
+  "candidate": "reward_r3_seed1_v2",
+  "error_verbatim": "CUDA-capable device(s) is/are busy or unavailable; Returning 999 (CUDA_ERROR_UNKNOWN) from cuDevicePrimaryCtxRetain",
+  "queue_returncode": 1,
+  "kernel_observation": "page allocation failure order 4 at 2026-10-01 17:06:53 local; dxg context errors at 17:06:54; no OOM-kill entry found; causal link not established",
+  "restart_policy": "same frozen storage1 queue and scientific/runtime configuration; complete resume; no source/runtime/native/device fallback changes",
+  "cuda_recheck": {
+    "torch": "2.14.0+cu132",
+    "cuda_runtime": "13.2",
+    "cuda_available": true,
+    "tiny_compute_sum": 16.0,
+    "device": "NVIDIA GeForce RTX 5080",
+    "free_total_bytes": [
+      15612248064,
+      17066033152
+    ],
+    "probe": "pass"
+  },
+  "counters": {
+    "episodes": 3727,
+    "decisions": 250052,
+    "ticks": 30563240
+  },
+  "updates": 21,
+  "phase": "ready",
+  "checkpoint": {
+    "path": "artifacts/research/reward_r3_seed1_v2/runs/run_1/update_000021_evaluated_1790845607902979997.pt",
+    "sha256": "17bc9468e419e19163d1fcf806f822dd5052fe49cf0d92f03aae1a03409e8149",
+    "bytes": 44623211,
+    "mtime_ns": 1790845607979414672
+  },
+  "last_update_losses": {
+    "policy_loss": 0.057924382388591766,
+    "value_loss": 0.08526652492582798,
+    "entropy": 1.9887604713439941,
+    "advantage_mean": -0.2596580982208252,
+    "advantage_std": 0.19556120038032532,
+    "gradient_norm": 1.212304711341858,
+    "approx_kl": 0.00015281362243903251,
+    "clip_fraction": 0.0,
+    "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+    "max_log_prob_change": 0.08500313758850098,
+    "optimizer_steps": 4,
+    "stopped_for_kl": false
+  },
+  "partial_directory": "artifacts/research/reward_r3_seed1_v2/runs/run_1/.seed_jobs/update_000022",
+  "raw_report": "artifacts/research/reward_r3_seed1_cuda_incident_v1/report.json",
+  "raw_report_sha256": "04f5c1530ff20032db9e8cf044fb2c506af866a42d15a68f18be46e554ab3540",
+  "partial_file_count": 0,
+  "partial_npz_count": 0,
+  "gates_exact": true
+}

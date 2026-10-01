@@ -417,3 +417,22 @@ forward及新增diagnostic之间没有随机状态消费，32个raw SHA逐一核
 确定性或新模型学习通过。有限门禁为gates/T2-empty-packet-observation-v1.json，锁定
 原生配对与实际基线证据；当前主线二进制/模型/科研字段未改。下一步冻结并完整重评
 原35任务各64种子双模式和每个规定检查点，再解决观测/课程候选参考架构的门禁。
+
+### R3初始化1 CUDA退出与原配置恢复（2026-10-01）
+
+第8组在3727局/250052决策/30563240tick、update21评估完成后退出，监督器退出码1。
+CPU采样worker的torch.compile初始化CUDA流时原样报错：
+`CUDA-capable device(s) is/are busy or unavailable`，
+`Returning 999 (CUDA_ERROR_UNKNOWN) from cuDevicePrimaryCtxRetain`。
+系统同段日志有17:06:53页分配失败（order4）及17:06:54 dxg通道错误，没有OOM-kill
+记录；不把时间关联写成已证实的因果，也不据此宣称RL实现失效。
+
+故障原日志、系统日志、state/curve/provenance/config/resume快照及最后检查点SHA保留于
+artifacts/research/reward_r3_seed1_cuda_incident_v1；update22目录当时没有已写分片。
+KB索引为artifacts/t5/perf/reward_r3_seed1_cuda_incident_v1.json。实际CUDA小计算与同步
+复查通过后，于09:30:09 UTC恢复同一个storage1队列；前7组完成结果跳过不覆盖。
+恢复入口严格校验原模型/优化器/RNG/配置/资源/任务/原生身份，记录complete_resume，
+随后已经完成update22/23。没有改worker数、fusion、设备、PPO、奖励或种子；原
+runtime未开启deterministic_algorithms，不能把这次恢复称为严格位级重现证明。
+新监督器日志为logs/t5_research/reward_comparison_v2_storage1_cuda_restart_v1.log，
+候选原日志继续追加；本轮暂不叠加高内存探针。恢复成本、故障和原失败快照继续交付。
