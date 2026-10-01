@@ -1,0 +1,42 @@
+{
+  "scope": "first2 fresh v2 nodes verified; previous failed125k full4480 payload reproduced exactly, classification correction only",
+  "status": "reevaluating",
+  "completed_nodes_at_snapshot": 2,
+  "required_nodes": 60,
+  "reevaluation_pid": 340709,
+  "reference_waiter_pid": 341617,
+  "first_nodes": [
+    {
+      "experiment_id": "reward_r0_seed0_v2",
+      "node_index": 0,
+      "changes": {
+        "changed_rows": 0,
+        "conveyor_changed_rows": 0,
+        "unexpected_changed_rows": 0,
+        "win_label_changes": 0
+      },
+      "raw_path": "artifacts/research/reward_v2_packet_cost_reevaluation_v2/reward_r0_seed0_v2/node_0/evaluations.json.gz",
+      "raw_sha256": "b748b051f861e7f31340d6b162e16c55b6cc82d6030cf776d93daf313b8d7b77"
+    },
+    {
+      "experiment_id": "reward_r0_seed0_v2",
+      "node_index": 1,
+      "changes": {
+        "changed_rows": 8,
+        "conveyor_changed_rows": 8,
+        "unexpected_changed_rows": 0,
+        "win_label_changes": 2
+      },
+      "raw_path": "artifacts/research/reward_v2_packet_cost_reevaluation_v2/reward_r0_seed0_v2/node_1/evaluations.json.gz",
+      "raw_sha256": "eb2b0fd2259961a715a33d56deb303d8990b0ba293c67b6ad636fef08bf79559"
+    }
+  ],
+  "old_failed125k_payload_exact_equal": true,
+  "old_failure_preserved": true,
+  "reference_workers_started": false,
+  "reference_waiting_states": {
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_comparison_v2_storage1_queue_state.json": "matrix_budget_complete",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_packet_cost_reevaluation_v2/state.json": "reevaluating"
+  },
+  "hf_uploaded": false
+}
