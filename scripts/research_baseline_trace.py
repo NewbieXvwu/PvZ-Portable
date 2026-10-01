@@ -56,7 +56,8 @@ def initialize(resource_dir: str, weights: dict, jobs: dict, threads: int,
         hidden_before = tensor_sha(hidden)
         output = original_step(observation, hidden, previous_action, delta_ticks, events)
         after = tensor_sha(torch.get_rng_state())
-        packed = agent.pack_tokens(observation)
+        tensors, metadata = agent.observation_tokens(observation)
+        packed = agent.pack_tokens(tensors, metadata)
         record = {"decision": len(TRACE), "observation": copy.deepcopy(observation),
                   "observation_sha256": json_sha(observation),
                   "packed_tokens_sha256": {k: hashlib.sha256(v.tobytes()).hexdigest()

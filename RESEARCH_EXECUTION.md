@@ -355,3 +355,9 @@ model.step与select_action，不改权重、不额外抽样；保存全部公开
 output SHA、logits、实际动作及推理/抽样前后Torch RNG，比较最早不同的字段。若本次未再现
 也照常报告，不能隐藏。raw树留artifacts/research/baseline_trace_seed1_v1待HF整树交付，
 KB结果入库。关闭fusion只用于明确的诊断对照，不修改正在运行的矩阵或放行学习门禁。
+
+第一处分离v1在首个instrumented forward后因打包调用少metadata参数退出：
+`TypeError: pack_tokens() missing 1 required positional argument: 'metadata'`。
+零完整trace job，失败目录/原协议/日志及报告全部保留。v2只修正instrumentation为
+observation_tokens→pack_tokens(tensors,metadata)，重新锁定helper SHA，32局与全部
+科研字段保持相同；用全新baseline_trace_seed1_v2目录，不覆盖失败v1或原矩阵。
