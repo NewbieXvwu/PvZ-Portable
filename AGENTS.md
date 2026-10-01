@@ -50,10 +50,18 @@
 export HF_TOKEN=hf_xxx
 export PVZ_HF_REPO=<用户名>/pvz-agent-artifacts
 
-python3 scripts/hf_sync.py push <run>   # 上传最新检查点 + 结论层
-python3 scripts/hf_sync.py pull <run>   # 在任意机器下载
-python3 scripts/hf_sync.py ls           # 看远端有什么
+python3 scripts/hf_sync.py push <run>          # 上传检查点集 + 结论层
+python3 scripts/hf_sync.py push <run> --dry-run # 先看会上传什么
+python3 scripts/hf_sync.py pull <run>          # 在任意机器下载
+python3 scripts/hf_sync.py ls                  # 看远端有什么
 ```
+
+**上传范围（每个 run 约 286 MB）**：`evaluated` / `initial` / `boundary` / `resumed`
+全部，加最新一个 `trained`，**再加 `resume.json` 指向的那个文件**，以及结论层。
+
+`resume.json` 那一项是硬要求，不是可选项。实测四个 `reward_r*_v2` 的 `resume.json`
+都指向 `boundary` 检查点、而不是最新的 `evaluated`；只传最新 `evaluated` 的版本
+下载回来是**接不上**的（2026-10-01 实测）。改动 `_collect()` 时别把这条去掉。
 
 **不要**用 tar / scp / 临时 SSH 隧道做常规同步，也不要用 Git LFS
 （GitHub 免费额度 1 GB 存储 / 1 GB 月流量，装不下 43 MB × N 的检查点）。

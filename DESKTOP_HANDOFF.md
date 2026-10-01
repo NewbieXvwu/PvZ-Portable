@@ -244,8 +244,12 @@ source ~/.bashrc
 
 * **台式机**：`~/PvZ-Portable/artifacts/t5/runs/run_2/.seed_jobs/update_0001/fcd5098ca3d43a7574e5f4dedb77b158d4ccc5caf666d2a74ae67d817df002d2/`
   （2000 个 `seed_*.npz`，`seed_0.npz` 41 transitions、tokens `(78,5)`）
-* **本机没有这些分片**：`artifacts/t5/runs` 在 `artifacts/.gitignore` 里被排除。
-  `artifacts/t5/throughput_shards_*` 全部为空目录，不要用它们跑基准。
+* **本机没有这些分片**：`artifacts/t5/runs` 与 `artifacts/t5/throughput_shards_*`
+  都在 `artifacts/.gitignore` 里被排除，本机（2026-10-01 清理后）连目录都不存在。
+  台式机上它们**有内容**（`throughput_shards_20260929T074802Z` 有 2011 个文件、
+  `night_measurement_shards` 4900 个），但都是 2026-09-29 那批吞吐基准的旧输入，
+  与 §4 里指向的 `artifacts/t5/runs/run_2/.seed_jobs/...` 不是同一批 ——
+  **跑基准只用 §4 给的那个路径**。
 * 分片有两种格式：新的是 `{"metadata":..., "result":...}`（`run_seed_jobs` 写的），
   旧的分片直接存 episode。**一律用 `pvz_seed_jobs.read_episode()` 读**，不要在调用点自己
   开码判断——`attention_benchmark` 就是这么悄悄失效的。
