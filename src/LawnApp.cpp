@@ -1619,11 +1619,15 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	{
 		if (i) out << ',';
 			const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+			// Conveyor removal leaves an empty slot (SEED_NONE == -1).
+			// GetCost would index gPlantDefs[-1]; an absent card has no cost.
+			const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 :
+				Plant::GetCost(packet.mPacketType, packet.mImitaterType);
 			out << "{\"index\":" << i << ",\"type\":" << static_cast<int>(packet.mPacketType)
 				<< ",\"imitater_type\":" << static_cast<int>(packet.mImitaterType)
 				<< ",\"active\":" << (packet.mActive ? "true" : "false")
 				<< ",\"cooldown\":" << packet.mRefreshCounter << ",\"refresh_time\":" << packet.mRefreshTime
-				<< ",\"cost\":" << Plant::GetCost(packet.mPacketType, packet.mImitaterType) << '}';
+				<< ",\"cost\":" << cost << '}';
 	}
 	out << "],\"plants\":[";
 	bool first = true;
