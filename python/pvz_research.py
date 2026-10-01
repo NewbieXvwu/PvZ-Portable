@@ -25,6 +25,7 @@ import torch
 from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, configure_torch_threads
 from pvz_common import (ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION,
                         canonical_digest, git_metadata, sha256_file)
+import pvz_curriculum as course
 from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory
 from train_pvz_ppo import add_advantages, episode_digest, train_update
 
@@ -124,10 +125,15 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
             or ppo["entropy_coefficient"] < 0 or ppo["target_kl"] <= 0):
         raise ValueError("invalid PPO settings")
     sampling = config["sampling"]
-    if set(sampling) != {"manifest", "task_ids", "method", "rollout_episodes"}:
+    sampling_fields = {"manifest", "task_ids", "method", "rollout_episodes"}
+    if sampling.get("method") in course.COURSE_METHODS:
+        sampling_fields.add("curriculum")
+    if set(sampling) != sampling_fields:
         raise ValueError("all sampling settings must be explicit")
-    if sampling["method"] not in ("balanced", "legacy_recent") or sampling["rollout_episodes"] < 1:
+    if sampling["method"] not in {"balanced", "legacy_recent", *course.COURSE_METHODS} or sampling["rollout_episodes"] < 1:
         raise ValueError("unsupported sampling method or rollout size")
+    if sampling["method"] in course.COURSE_METHODS:
+        course.validate_settings(sampling["curriculum"])
     train = json.loads(_path(sampling["manifest"]).read_text())["tasks"]
     selected = set(sampling["task_ids"])
     if selected:
@@ -146,6 +152,8 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
         for task in tasks:
             if not task["seeds"] or len(task["seeds"]) != len(set(task["seeds"])):
                 raise ValueError("empty or duplicate environment seeds")
+    if sampling["method"] in course.COURSE_METHODS:
+        course.initial_state(train)
     if set(config["budget"]) != {"decisions", "max_episodes"} or config["budget"]["decisions"] < 1:
         raise ValueError("budget must specify positive decisions and optional max_episodes")
     if config["budget"]["max_episodes"] is not None and config["budget"]["max_episodes"] < 1:
@@ -215,10 +223,14 @@ def evaluate(model: GameplayModelV1, tasks: list[dict[str, Any]], config: dict[s
 
 
 def _assign(tasks: list[dict[str, Any]], job_ids: list[int], rng: random.Random,
-            recent: dict[str, list[bool]], method: str) -> dict[int, dict[str, Any]]:
-    weights = [1.0 if method == "balanced" else
-               2.0 - (sum(recent[task["task_id"]]) / len(recent[task["task_id"]])
-                      if recent[task["task_id"]] else 0.0) for task in tasks]
+            recent: dict[str, list[bool]], method: str,
+            weights: list[float] | None = None) -> dict[int, dict[str, Any]]:
+    if weights is None:
+        if method in course.COURSE_METHODS:
+            raise ValueError("curriculum weights require the complete saved course state")
+        weights = [1.0 if method == "balanced" else
+                   2.0 - (sum(recent[task["task_id"]]) / len(recent[task["task_id"]])
+                          if recent[task["task_id"]] else 0.0) for task in tasks]
     result = {}
     for job_id in job_ids:
         task = rng.choices(tasks, weights=weights, k=1)[0]
@@ -283,7 +295,7 @@ def run_experiment(args: Any) -> None:
     resource_dir = args.resource_dir.expanduser().resolve()
     source_paths = [ROOT / "python" / name for name in (
         "pvz_agent_model.py", "pvz_research.py", "train_pvz_ppo.py", "train_pvz_ppo_task_family.py",
-        "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py")]
+        "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py", "pvz_curriculum.py")]
     source_paths.append(ROOT / "scripts/t4_capability_profile.py")
     fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
     fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),
@@ -334,6 +346,10 @@ def run_experiment(args: Any) -> None:
                     "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
                     "torch": torch.__version__, "cuda": torch.version.cuda,
                     "gpu": torch.cuda.get_device_name(), "experiment_identity": identity})
+    if config["sampling"]["method"] in course.COURSE_METHODS:
+        if not args.resume:
+            state["curriculum_state"] = course.initial_state(tasks)
+        course.validate_state(state["curriculum_state"], tasks, config["sampling"]["curriculum"])
     stop_requested = threading.Event()
     old_handlers = {sig: signal.signal(sig, lambda *_: stop_requested.set())
                     for sig in (signal.SIGTERM, signal.SIGINT)}
@@ -403,7 +419,12 @@ def run_experiment(args: Any) -> None:
                 mean_decisions = counters["decisions"] / counters["episodes"]
                 batch_size = min(batch_size, max(1, math.ceil((next_node - counters["decisions"]) / mean_decisions)))
             job_ids = list(range(counters["episodes"], counters["episodes"] + batch_size))
-            assignments = _assign(tasks, job_ids, rng, state["recent_passes"], config["sampling"]["method"])
+            sampling = config["sampling"]
+            sampling_weights, course_snapshot = None, None
+            if sampling["method"] in course.COURSE_METHODS:
+                sampling_weights, course_snapshot = course.probabilities(
+                    tasks, state["curriculum_state"], sampling["curriculum"], sampling["method"])
+            assignments = _assign(tasks, job_ids, rng, state["recent_passes"], sampling["method"], sampling_weights)
             weights = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
             metadata = {"research_version": RESEARCH_VERSION, "experiment_identity": identity,
                         "update": state["updates"] + 1,
@@ -438,11 +459,15 @@ def run_experiment(args: Any) -> None:
                 recent = state["recent_passes"][episode["task_id"]]
                 recent.append(episode["won"])
                 del recent[:-64]
+            if sampling["method"] in course.COURSE_METHODS:
+                course.observe(state["curriculum_state"], episodes, sampling["curriculum"])
             state["update_history"].append({"update": state["updates"], "counters": dict(counters),
                         "losses": losses, "trajectory_stats": stats,
                         "rollout_seconds": rollout_seconds, "ppo_seconds": update_seconds,
                         "episode_digests": [episode_digest(episode) for episode in episodes],
                         "shard_directory": str(shard_dir.relative_to(output))})
+            if course_snapshot is not None:
+                state["update_history"][-1]["curriculum_sampling"] = course_snapshot
             due = state["evaluation_cursor"] < len(nodes) and counters["decisions"] >= nodes[state["evaluation_cursor"]]
             if due:
                 while state["evaluation_cursor"] < len(nodes) and counters["decisions"] >= nodes[state["evaluation_cursor"]]:
