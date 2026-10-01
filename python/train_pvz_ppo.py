@@ -84,7 +84,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
             wave_rosters[wave] = roster
         critic_inputs_seconds += time.perf_counter() - critic_started
         tokenize_started = time.perf_counter()
-        tensors, metadata = observation_tokens(observation)
+        tensors, metadata = observation_tokens(observation, model.config.get("input_flags", 0))
         # observation_tokens already rounds both inference and replay inputs to
         # fp16-representable values; compact storage adds no further quantization.
         packed = pack_tokens(tensors, metadata)

@@ -10,6 +10,8 @@ import numpy as np
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
+from pvz_observation_features import (INPUT_ON_BOARD, INPUT_ROW_CONTEXT, INPUT_TARGET_RELATIONS,
+                                      require_public_fields, row_context, packet_refresh)
 try:
     from torch.nn.attention.flex_attention import flex_attention
 except ImportError:  # pragma: no cover - depends on the installed PyTorch build
@@ -28,10 +30,11 @@ TOKEN_KINDS = {
     "seed_packet": 8,
     "zombie_roster": 9,
     "lane": 10,
+    "lane_enemy": 11,
 }
 WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
-MODEL_ARCHITECTURE_VERSION = 5
+MODEL_ARCHITECTURE_VERSION = 7
 FEATURE_COUNT = 32
 
 # Fill value for the padded columns of the batched packet-logit table.  Those
@@ -154,7 +157,7 @@ SHOOTER_PLANT_TYPES = frozenset({
 })
 
 
-def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
+def derive_observation_features(observation: dict[str, Any], input_flags: int = 0) -> dict[str, Any]:
     """Compute trainable row summaries and global economy/wave features from an observation."""
     row_threat = [0.0] * 6
     row_nearest = [1.0] * 6
@@ -165,6 +168,8 @@ def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
     shooter_count = 0
 
     for zombie in observation["zombies"]:
+        if input_flags & INPUT_ON_BOARD and not zombie["on_board"]:
+            continue
         row = int(zombie["row"])
         if not 0 <= row < 6:
             continue
@@ -194,10 +199,15 @@ def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
          _ratio(row_shooters[row], 5.0), _ratio(row_plant_health[row], 3000.0))
         for row in range(6)
     ]
+    composition = []
+    if input_flags & INPUT_ROW_CONTEXT:
+        additions, composition = row_context(observation, ECONOMIC_PLANT_TYPES, SHOOTER_PLANT_TYPES)
+        lane_features = [base + extra for base, extra in zip(lane_features, additions, strict=True)]
     wave_count = max(1, int(observation["wave_count"]))
     wave_progress = max(0.0, min(1.0, float(observation["wave"]) / wave_count))
     return {
         "lane_features": lane_features,
+        "lane_enemy_composition": composition,
         "sun_income_rate": float(observation["sun_income_rate"]),
         "economic_fire_ratio": economic_count / max(1, shooter_count),
         "wave_progress": wave_progress,
@@ -205,7 +215,8 @@ def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], dict[str, Any]]:
+def observation_tokens(observation: dict[str, Any], input_flags: int = 0) -> tuple[dict[str, Tensor], dict[str, Any]]:
+    require_public_fields(observation, input_flags)
     kinds: list[int] = []
     categories: list[int] = []
     variants: list[int] = []
@@ -215,7 +226,8 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
     packet_tokens: dict[int, int] = {}
     cell_tokens: dict[int, int] = {}
     lane_tokens: dict[int, int] = {}
-    derived = derive_observation_features(observation)
+    derived = derive_observation_features(observation, input_flags)
+    pending_targets, zombie_indices = {}, {}
 
     def add(kind: str, category: int = -1, variant: int = -1, values: tuple[float, ...] = (),
             row: int = -1, col: int = -1) -> int:
@@ -238,7 +250,9 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
         _ratio(observation["tick"], 60000), _ratio(observation["wave_count"], 30),
         _ratio(observation["zombie_count_multiplier"], 10),
         float(observation["night"]), float(observation["pool"]), float(observation["fog"]), float(observation["roof"]),
-        _ratio(len(plants), 40), _ratio(len(zombies), 40), _ratio(len(projectiles), 50),
+        _ratio(len(plants), 40),
+        _ratio(sum(z["on_board"] for z in zombies) if input_flags & INPUT_ON_BOARD else len(zombies), 40),
+        _ratio(len(projectiles), 50),
         float(observation["terminal"]), _ratio(observation["result"], 2),
         _ratio(derived["sun_income_rate"], 50.0),
         _ratio(derived["economic_fire_ratio"], 1.0),
@@ -263,10 +277,12 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
 
     for row, values in enumerate(derived["lane_features"]):
         lane_tokens[row] = add("lane", row=row, values=values)
+    for group in derived["lane_enemy_composition"]:
+        add("lane_enemy", category=group["type"], row=group["row"], values=group["values"])
 
     for plant in plants:
         row, col = plant["row"], plant["col"]
-        add("plant", plant["type"], plant["imitater_type"], (
+        index = add("plant", plant["type"], plant["imitater_type"], (
             _ratio(row, 5), _ratio(col, 8), _ratio(plant["health"], max(plant["max_health"], 1)),
             _ratio(plant["health"], 3000), _ratio(plant["max_health"], 3000), _ratio(plant["state"], 100),
             _ratio(plant["state_countdown"], 1200), _ratio(plant["launch_counter"], 1200),
@@ -274,11 +290,14 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
             _ratio(plant["wake_up_counter"], 1200), float(plant["asleep"]), float(plant["squished"]),
             _ratio(plant["bungee_state"], 3), float(plant["target_zombie_id"] > 0),
         ), row=row, col=col)
+        if input_flags & INPUT_TARGET_RELATIONS:
+            pending_targets[index] = plant["target_zombie_id"]
+            features[index][14] = float(plant["target_zombie_id"] not in (0, -1))
 
     for zombie in zombies:
         row = zombie["row"]
         col = max(0, min(8, int((zombie["x"] - 40) / 80)))
-        add("zombie", zombie["type"], values=(
+        index = add("zombie", zombie["type"], values=(
             _ratio(row, 5), _ratio(col, 8), _ratio(zombie["x"], 900), _ratio(zombie["y"], 700),
             _ratio(zombie["body_health"], max(zombie["body_max_health"], 1)), _ratio(zombie["body_health"], 2000),
             _ratio(zombie["helm_health"], max(zombie["helm_max_health"], 1)),
@@ -288,17 +307,23 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
             _ratio(zombie["buttered"], 1200), _ratio(zombie["ice_trap"], 1200),
             float(zombie["has_head"]), float(zombie["has_arm"]), float(zombie["has_object"]),
             float(zombie["is_eating"]), _ratio(zombie["target_col"], 8), _ratio(zombie["target_row"], 5),
+            float(zombie["on_board"]) if input_flags & INPUT_ON_BOARD else 0.0,
         ), row=row, col=col)
+        if input_flags & INPUT_TARGET_RELATIONS:
+            zombie_indices[zombie["id"]] = index
 
     for projectile in projectiles:
         row = projectile["row"]
         col = max(0, min(8, int((projectile["x"] - 40) / 80)))
-        add("projectile", projectile["type"], projectile["motion"], (
+        index = add("projectile", projectile["type"], projectile["motion"], (
             _ratio(row, 5), _ratio(col, 8), _ratio(projectile["x"], 900), _ratio(projectile["y"], 700),
             _ratio(projectile["z"], 500), _ratio(projectile["vx"], 20), _ratio(projectile["vy"], 20),
             _ratio(projectile["vz"], 20), _ratio(projectile["motion"], 8), _ratio(projectile["damage"], 500),
             _ratio(projectile["age"], 1200), float(projectile["target_zombie_id"] > 0),
         ), row=row, col=col)
+        if input_flags & INPUT_TARGET_RELATIONS:
+            pending_targets[index] = projectile["target_zombie_id"]
+            features[index][11] = float(projectile["target_zombie_id"] not in (0, -1))
 
     for defense in observation["defenses"]:
         row = defense["row"]
@@ -320,10 +345,26 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
             _ratio(packet["index"], 10), _ratio(packet["cost"], 500), _ratio(packet["cooldown"], 3000),
             _ratio(packet["refresh_time"], 3000), float(packet["active"]),
         ))
+        if input_flags & INPUT_ROW_CONTEXT:
+            status = packet_refresh(packet)
+            index = packet_tokens[packet["index"]]
+            features[index][2:4] = [status["remaining"] / (status["remaining"] + 3000),
+                                    status["total"] / (status["total"] + 3000)]
+            features[index][5:10] = [status["progress"], float(status["scheduled"]),
+                                     float(packet["cost"] <= observation["sun"]),
+                                     float(any(action["packet"] == packet["index"]
+                                               for action in observation["legal_actions"].get("plants", ()))),
+                                     float(status["unavailable_without_timer"])]
 
     for zombie_type in observation["loadout_context"]["zombie_roster"]:
         add("zombie_roster", zombie_type, values=(1.0,))
 
+    targets = [-1] * len(kinds)
+    if input_flags & INPUT_TARGET_RELATIONS:
+        for index, identity in pending_targets.items():
+            targets[index] = zombie_indices.get(identity, -1)
+            slot = 15 if kinds[index] == TOKEN_KINDS["plant"] else 12
+            features[index][slot] = float(targets[index] >= 0)
     tensors = {
         "kinds": torch.tensor(kinds, dtype=torch.long),
         "categories": torch.tensor(categories, dtype=torch.long),
@@ -335,6 +376,8 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], 
         "rows": torch.tensor(rows, dtype=torch.long),
         "cols": torch.tensor(cols, dtype=torch.long),
     }
+    if input_flags & INPUT_TARGET_RELATIONS:
+        tensors["target_indices"] = torch.tensor(targets, dtype=torch.long)
     return tensors, {"packet_tokens": packet_tokens, "cell_tokens": cell_tokens,
                      "lane_tokens": lane_tokens}
 
@@ -352,13 +395,16 @@ def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any]) -> dict[st
     """
     ids = np.stack([tensors[field].numpy() for field in TOKEN_ID_FIELDS], axis=1).astype(np.int8)
     packet_ids = sorted(metadata["packet_tokens"])
-    return {
+    packed = {
         "ids": ids,
         "features": tensors["features"].numpy().astype(np.float16),
         "cell_index": np.array([metadata["cell_tokens"][cell] for cell in range(54)], dtype=np.uint16),
         "packet_ids": np.array(packet_ids, dtype=np.uint8),
         "packet_index": np.array([metadata["packet_tokens"][packet] for packet in packet_ids], dtype=np.uint16),
     }
+    if "target_indices" in tensors:
+        packed["target_indices"] = tensors["target_indices"].numpy().astype(np.int32)
+    return packed
 
 
 def unpack_tokens(packed: dict[str, Any], device: torch.device) -> tuple[dict[str, Tensor], dict[str, Any]]:
@@ -367,6 +413,8 @@ def unpack_tokens(packed: dict[str, Any], device: torch.device) -> tuple[dict[st
     tensors = {field: ids[:, index].contiguous() for index, field in enumerate(TOKEN_ID_FIELDS)}
     tensors["features"] = torch.from_numpy(np.ascontiguousarray(packed["features"])).to(
         device=device, dtype=torch.float32)
+    if "target_indices" in packed:
+        tensors["target_indices"] = torch.from_numpy(packed["target_indices"]).to(device=device, dtype=torch.long)
     packet_ids = [int(value) for value in packed["packet_ids"]]
     packet_index = [int(value) for value in packed["packet_index"]]
     metadata = {
@@ -529,10 +577,12 @@ class RelationAttention(nn.Module):
         self.row_bias = nn.Embedding(12, heads)
         self.col_bias = nn.Embedding(18, heads)
         self.same_cell_bias = nn.Embedding(2, heads)
+        self.target_bias = nn.Parameter(torch.zeros(heads))
 
     def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
                 key_mask: Tensor | None = None,
-                indices: RelationBiasIndices | None = None) -> Tensor:
+                indices: RelationBiasIndices | None = None,
+                target_indices: Tensor | None = None) -> Tensor:
         batch, count, width = x.shape
         if kinds.dim() == 1:
             # Single-step call: kinds/rows/cols are (count,).  Lift to (batch, count)
@@ -541,6 +591,8 @@ class RelationAttention(nn.Module):
             kinds = kinds.unsqueeze(0)
             rows = rows.unsqueeze(0)
             cols = cols.unsqueeze(0)
+        if target_indices is not None and target_indices.dim() == 1:
+            target_indices = target_indices.unsqueeze(0)
         qkv = self.qkv(x).view(batch, count, 3, self.heads, self.head_width).permute(2, 0, 3, 1, 4)
         query, key, value = qkv.unbind(0)
         if (self.use_flex_attention and _COMPILED_FLEX_ATTENTION is not None
@@ -549,6 +601,7 @@ class RelationAttention(nn.Module):
             row_bias = self.row_bias.weight
             col_bias = self.col_bias.weight
             same_bias = self.same_cell_bias.weight
+            target_bias = self.target_bias
 
             def relation_score(score: Tensor, batch_index: Tensor, head: Tensor,
                                query_index: Tensor, key_index: Tensor) -> Tensor:
@@ -570,6 +623,8 @@ class RelationAttention(nn.Module):
                             + row_bias[row_bucket, head]
                             + col_bias[col_bucket, head]
                             + same_bias[same_cell, head])
+                if target_indices is not None:
+                    relation = relation + target_bias[head] * (target_indices[batch_index, query_index] == key_index)
                 score = score + relation
                 if key_mask is not None:
                     score = score.masked_fill(
@@ -602,6 +657,9 @@ class RelationAttention(nn.Module):
                     self.kind_pair_bias, self.row_bias.weight,
                     self.col_bias.weight, self.same_cell_bias.weight)
             scores = scores + relation
+            if target_indices is not None:
+                linked = target_indices[:, :, None] == torch.arange(count, device=x.device)[None, None, :]
+                scores = scores + self.target_bias[None, :, None, None] * linked[:, None, :, :]
         attended = torch.softmax(scores, dim=-1)
         value = torch.matmul(attended, value).transpose(1, 2).contiguous().view(batch, count, width)
         return self.projection(value)
@@ -619,8 +677,9 @@ class RelationLayer(nn.Module):
 
     def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
                 key_mask: Tensor | None = None,
-                indices: RelationBiasIndices | None = None) -> Tensor:
-        x = x + self.attention(self.attention_norm(x), kinds, rows, cols, key_mask, indices)
+                indices: RelationBiasIndices | None = None,
+                target_indices: Tensor | None = None) -> Tensor:
+        x = x + self.attention(self.attention_norm(x), kinds, rows, cols, key_mask, indices, target_indices)
         normalized = self.ff_norm(x)
         x = x + self.down(F.silu(self.gate(normalized)) * self.value(normalized))
         return x
@@ -629,11 +688,16 @@ class GameplayModelV1(nn.Module):
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         super().__init__()
         self.config = {**MODEL_CONFIG, **(config or {})}
-        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers"}
+        self.config.setdefault("input_flags", 0)
+        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags"}
         if set(self.config) - allowed:
             raise ValueError(f"unknown model settings: {sorted(set(self.config) - allowed)}")
-        if any(type(value) is not int or value < 1 for value in self.config.values()):
+        if any(type(value) is not int or value < 1 for key, value in self.config.items() if key != "input_flags"):
             raise ValueError("model dimensions must be positive integers")
+        if type(self.config["input_flags"]) is not int or not 0 <= self.config["input_flags"] <= 7:
+            raise ValueError("input_flags must be from 0 to 7")
+        if self.config["input_flags"] & INPUT_TARGET_RELATIONS and self.config["layers"] < 2:
+            raise ValueError("target relations require at least two encoder layers to reach the actor")
         if self.config["width"] % self.config["heads"]:
             raise ValueError("encoder width must be divisible by attention heads")
         width = self.config["width"]
@@ -644,6 +708,9 @@ class GameplayModelV1(nn.Module):
         lane_generator = torch.Generator(device="cpu").manual_seed(50_210)
         lane_embedding = torch.empty(1, width).normal_(generator=lane_generator)
         self.kind_embedding.weight = nn.Parameter(torch.cat((self.kind_embedding.weight.detach(), lane_embedding)))
+        context_generator = torch.Generator(device="cpu").manual_seed(50_211)
+        context_embedding = torch.empty(1, width).normal_(generator=context_generator)
+        self.kind_embedding.weight = nn.Parameter(torch.cat((self.kind_embedding.weight.detach(), context_embedding)))
         self.category_embedding = nn.Embedding(128, width)
         self.variant_embedding = nn.Embedding(128, width)
         self.feature_projection = nn.Sequential(nn.Linear(FEATURE_COUNT, width), nn.SiLU(), nn.Linear(width, width))
@@ -719,7 +786,7 @@ class GameplayModelV1(nn.Module):
     def step(self, observation: dict[str, Any], hidden: Tensor | None = None,
              previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
              events: dict[str, Any] | None = None) -> dict[str, Any]:
-        tensors, metadata = observation_tokens(observation)
+        tensors, metadata = observation_tokens(observation, self.config["input_flags"])
         return self.step_tokens(tensors, metadata, observation["wave"], hidden,
                                 previous_action, delta_ticks, events)
 
@@ -744,8 +811,11 @@ class GameplayModelV1(nn.Module):
         # The relation-bias indices depend only on the token layout, so compute
         # them once for the whole encoder instead of once per layer.
         indices = relation_bias_indices(rows.unsqueeze(0), cols.unsqueeze(0))
+        targets = None
+        if self.config["input_flags"] & INPUT_TARGET_RELATIONS:
+            targets = tensors["target_indices"].to(device)
         for layer in self.encoder:
-            x = layer(x, kinds, rows, cols, indices=indices)
+            x = layer(x, kinds, rows, cols, indices=indices, target_indices=targets)
         x = self.encoder_norm(x)
 
         action_vector = self._previous_action(previous_action, device)
@@ -858,11 +928,14 @@ class GameplayModelV1(nn.Module):
         ids = np.zeros((count, l_max, len(TOKEN_ID_FIELDS)), dtype=np.int64)
         features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float16)
         key_mask = np.zeros((count, l_max), dtype=bool)
+        targets = np.full((count, l_max), -1, dtype=np.int32) if self.config["input_flags"] & INPUT_TARGET_RELATIONS else None
         for index, packed in enumerate(packed_list):
             real = packed["ids"].shape[0]
             ids[index, :real] = packed["ids"]
             features[index, :real] = packed["features"]
             key_mask[index, :real] = True
+            if targets is not None:
+                targets[index, :real] = packed["target_indices"]
         p_max = max(max(1, packed["packet_ids"].shape[0]) for packed in packed_list)
         packet_index = np.zeros((count, p_max), dtype=np.int64)
         packet_counts = []
@@ -885,8 +958,9 @@ class GameplayModelV1(nn.Module):
              + self.col_embedding((cols + 1).clamp(0, 10)))
         mask = torch.from_numpy(key_mask).to(device)
         indices = relation_bias_indices(rows, cols)
+        targets_t = torch.from_numpy(targets).to(device=device, dtype=torch.long) if targets is not None else None
         for layer in self.encoder:
-            x = layer(x, kinds, rows, cols, mask, indices)
+            x = layer(x, kinds, rows, cols, mask, indices, targets_t)
         x = self.encoder_norm(x)
 
         action_vector = self._previous_action_batch(
