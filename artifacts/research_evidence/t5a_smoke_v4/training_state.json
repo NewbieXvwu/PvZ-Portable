@@ -1,0 +1,4065 @@
+{
+  "schema_version": 1,
+  "experiment_id": "t5a_smoke_r0_seed0_v4",
+  "experiment_identity": "5c22e47fcf5161886abc30799a9a46efc1f64273c0f2eca1218b8bebf08e5efd",
+  "updates": 6,
+  "counters": {
+    "episodes": 1000,
+    "decisions": 70266,
+    "ticks": 8217818
+  },
+  "wall_seconds": 408.93604602900086,
+  "phase": "ready",
+  "evaluation_cursor": 2,
+  "recent_passes": {
+    "train_day_1": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "train_night_1": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "train_pool_1": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "train_fog_1": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "train_roof_1": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "learning_curve": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "updates": 0,
+      "summary": {
+        "greedy": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8135.988,
+            "peak_offense": 0.4,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 320
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 23.594,
+                "mean_sun_produced": 69.922,
+                "mean_sun_spent": 96.328
+              },
+              {
+                "tick": 6000,
+                "sample_count": 320,
+                "mean_sun": 28.906,
+                "mean_sun_produced": 140.547,
+                "mean_sun_spent": 161.562
+              },
+              {
+                "tick": 9000,
+                "sample_count": 65,
+                "mean_sun": 38.846,
+                "mean_sun_produced": 181.154,
+                "mean_sun_spent": 192.308
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8184.125,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 35.938,
+                  "mean_sun_produced": 116.797,
+                  "mean_sun_spent": 130.859
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 21.875,
+                  "mean_sun_produced": 234.375,
+                  "mean_sun_spent": 262.5
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 10,
+                  "mean_sun": 20,
+                  "mean_sun_produced": 352.5,
+                  "mean_sun_spent": 382.5
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8233.547,
+              "peak_offense": 1,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 16,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8110.688,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 15.234,
+                  "mean_sun_produced": 116.016,
+                  "mean_sun_spent": 150.781
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 14.062,
+                  "mean_sun_produced": 234.766,
+                  "mean_sun_spent": 270.312
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 10,
+                  "mean_sun": 30,
+                  "mean_sun_produced": 342.5,
+                  "mean_sun_spent": 362.5
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8074.875,
+              "peak_offense": 1,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 15,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8076.703,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 66.797,
+                  "mean_sun_produced": 116.797,
+                  "mean_sun_spent": 100
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 108.594,
+                  "mean_sun_produced": 233.594,
+                  "mean_sun_spent": 175
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 14,
+                  "mean_sun": 144.643,
+                  "mean_sun_produced": 344.643,
+                  "mean_sun_spent": 250
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8213.853,
+            "peak_offense": 0.466,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2,
+              "5000-9999": 318
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 17.422,
+                "mean_sun_produced": 80,
+                "mean_sun_spent": 112.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 320,
+                "mean_sun": 17.422,
+                "mean_sun_produced": 150.625,
+                "mean_sun_spent": 183.203
+              },
+              {
+                "tick": 9000,
+                "sample_count": 72,
+                "mean_sun": 14.722,
+                "mean_sun_produced": 187.292,
+                "mean_sun_spent": 222.569
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8242.375,
+              "peak_offense": 0.016,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 29.297,
+                  "mean_sun_produced": 125.391,
+                  "mean_sun_spent": 146.094
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 25,
+                  "mean_sun_produced": 241.797,
+                  "mean_sun_spent": 266.797
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 12,
+                  "mean_sun": 27.083,
+                  "mean_sun_produced": 358.333,
+                  "mean_sun_spent": 381.25
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8392.781,
+              "peak_offense": 1.156,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "10000-14999": 1,
+                "5000-9999": 63
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 2.344,
+                  "mean_sun_produced": 2.344,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 2.344,
+                  "mean_sun_produced": 2.344,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 20,
+                  "mean_sun": 3,
+                  "mean_sun_produced": 3,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8099.625,
+              "peak_offense": 0.016,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 23.047,
+                  "mean_sun_produced": 122.266,
+                  "mean_sun_spent": 149.219
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 19.531,
+                  "mean_sun_produced": 241.016,
+                  "mean_sun_spent": 271.484
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 14,
+                  "mean_sun": 17.857,
+                  "mean_sun_produced": 348.214,
+                  "mean_sun_spent": 380.357
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8176.125,
+              "peak_offense": 1.125,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 1.172,
+                  "mean_sun_produced": 1.172,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 1.172,
+                  "mean_sun_produced": 1.172,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 15,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8158.359,
+              "peak_offense": 0.016,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "10000-14999": 1,
+                "5000-9999": 63
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 31.25,
+                  "mean_sun_produced": 148.828,
+                  "mean_sun_spent": 167.188
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 39.062,
+                  "mean_sun_produced": 266.797,
+                  "mean_sun_spent": 277.734
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 11,
+                  "mean_sun": 38.636,
+                  "mean_sun_produced": 386.364,
+                  "mean_sun_spent": 397.727
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        }
+      },
+      "raw_seed_results_path": "evaluations/update_000000.json.gz",
+      "seconds": 53.234948321001866
+    },
+    {
+      "counters": {
+        "episodes": 364,
+        "decisions": 25243,
+        "ticks": 2974577
+      },
+      "updates": 2,
+      "summary": {
+        "greedy": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8128.056,
+            "peak_offense": 0.4,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 320
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 12.422,
+                "mean_sun_produced": 69.609,
+                "mean_sun_spent": 107.188
+              },
+              {
+                "tick": 6000,
+                "sample_count": 320,
+                "mean_sun": 14.453,
+                "mean_sun_produced": 141.641,
+                "mean_sun_spent": 177.188
+              },
+              {
+                "tick": 9000,
+                "sample_count": 68,
+                "mean_sun": 13.235,
+                "mean_sun_produced": 205.882,
+                "mean_sun_spent": 242.647
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8184.125,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 35.938,
+                  "mean_sun_produced": 116.797,
+                  "mean_sun_spent": 130.859
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 21.875,
+                  "mean_sun_produced": 234.375,
+                  "mean_sun_spent": 262.5
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 10,
+                  "mean_sun": 27.5,
+                  "mean_sun_produced": 357.5,
+                  "mean_sun_spent": 380
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8233.547,
+              "peak_offense": 1,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 16,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8110.828,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 14.453,
+                  "mean_sun_produced": 116.016,
+                  "mean_sun_spent": 151.562
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 10.547,
+                  "mean_sun_produced": 233.203,
+                  "mean_sun_spent": 272.656
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 16,
+                  "mean_sun": 14.062,
+                  "mean_sun_produced": 348.438,
+                  "mean_sun_spent": 384.375
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8018.062,
+              "peak_offense": 1,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 12,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8093.719,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 11.719,
+                  "mean_sun_produced": 115.234,
+                  "mean_sun_spent": 153.516
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 39.844,
+                  "mean_sun_produced": 240.625,
+                  "mean_sun_spent": 250.781
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 14,
+                  "mean_sun": 28.571,
+                  "mean_sun_produced": 346.429,
+                  "mean_sun_spent": 367.857
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8152.822,
+            "peak_offense": 0.469,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 320
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 16.219,
+                "mean_sun_produced": 79.812,
+                "mean_sun_spent": 113.594
+              },
+              {
+                "tick": 6000,
+                "sample_count": 320,
+                "mean_sun": 16.453,
+                "mean_sun_produced": 150.984,
+                "mean_sun_spent": 184.531
+              },
+              {
+                "tick": 9000,
+                "sample_count": 71,
+                "mean_sun": 13.803,
+                "mean_sun_produced": 174.366,
+                "mean_sun_spent": 210.563
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8163.734,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 30.469,
+                  "mean_sun_produced": 126.172,
+                  "mean_sun_spent": 145.703
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 25.781,
+                  "mean_sun_produced": 241.797,
+                  "mean_sun_spent": 266.016
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 11,
+                  "mean_sun": 22.727,
+                  "mean_sun_produced": 361.364,
+                  "mean_sun_spent": 388.636
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8362.266,
+              "peak_offense": 1.141,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 2.344,
+                  "mean_sun_produced": 2.344,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 2.344,
+                  "mean_sun_produced": 2.344,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 19,
+                  "mean_sun": 1.579,
+                  "mean_sun_produced": 1.579,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 7927.672,
+              "peak_offense": 0.016,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 21.094,
+                  "mean_sun_produced": 123.438,
+                  "mean_sun_spent": 152.344
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 16.797,
+                  "mean_sun_produced": 242.969,
+                  "mean_sun_spent": 276.172
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 11,
+                  "mean_sun": 18.182,
+                  "mean_sun_produced": 350,
+                  "mean_sun_spent": 381.818
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8233.25,
+              "peak_offense": 1.141,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0.234,
+                  "mean_sun_produced": 0.234,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0.234,
+                  "mean_sun_produced": 0.234,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 18,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8077.188,
+              "peak_offense": 0.047,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 26.953,
+                  "mean_sun_produced": 146.875,
+                  "mean_sun_spent": 169.922
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 37.109,
+                  "mean_sun_produced": 267.578,
+                  "mean_sun_spent": 280.469
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 12,
+                  "mean_sun": 41.667,
+                  "mean_sun_produced": 377.083,
+                  "mean_sun_spent": 385.417
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        }
+      },
+      "raw_seed_results_path": "evaluations/update_000002.json.gz",
+      "seconds": 53.725714142998186
+    },
+    {
+      "counters": {
+        "episodes": 710,
+        "decisions": 50031,
+        "ticks": 5837456
+      },
+      "updates": 4,
+      "summary": {
+        "greedy": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.26875,
+            "wilson_95": [
+              0.223133,
+              0.319853
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8044.234,
+            "peak_offense": 3.587,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "0-4999": 31,
+              "10000-14999": 38,
+              "5000-9999": 251
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 23.75,
+                "mean_sun_produced": 111.953,
+                "mean_sun_spent": 138.125
+              },
+              {
+                "tick": 6000,
+                "sample_count": 265,
+                "mean_sun": 29,
+                "mean_sun_produced": 270.981,
+                "mean_sun_spent": 291.887
+              },
+              {
+                "tick": 9000,
+                "sample_count": 100,
+                "mean_sun": 35.1,
+                "mean_sun_produced": 441.85,
+                "mean_sun_spent": 456.5
+              },
+              {
+                "tick": 12000,
+                "sample_count": 5,
+                "mean_sun": 45,
+                "mean_sun_produced": 910,
+                "mean_sun_spent": 915
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.359375,
+              "wilson_95": [
+                0.252884,
+                0.481791
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8405.844,
+              "peak_offense": 1.641,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "10000-14999": 9,
+                "5000-9999": 55
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 186.719,
+                  "mean_sun_spent": 199.219
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 60,
+                  "mean_sun": 35.417,
+                  "mean_sun_produced": 436.25,
+                  "mean_sun_spent": 450.417
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 14,
+                  "mean_sun": 48.214,
+                  "mean_sun_produced": 725,
+                  "mean_sun_spent": 725
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 2,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 1037.5,
+                  "mean_sun_spent": 1050
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.234375,
+              "wilson_95": [
+                0.147499,
+                0.351333
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 7870.359,
+              "peak_offense": 8.5,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "0-4999": 10,
+                "10000-14999": 9,
+                "5000-9999": 45
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 22.656,
+                  "mean_sun_produced": 48.047,
+                  "mean_sun_spent": 75.391
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 53,
+                  "mean_sun": 34.811,
+                  "mean_sun_produced": 138.113,
+                  "mean_sun_spent": 153.302
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 20,
+                  "mean_sun": 41.5,
+                  "mean_sun_produced": 249,
+                  "mean_sun_spent": 257.5
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.15625,
+              "wilson_95": [
+                0.087148,
+                0.264281
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 7890.281,
+              "peak_offense": 0.016,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "0-4999": 1,
+                "10000-14999": 3,
+                "5000-9999": 60
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 20.312,
+                  "mean_sun_produced": 158.203,
+                  "mean_sun_spent": 187.5
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 54,
+                  "mean_sun": 27.315,
+                  "mean_sun_produced": 337.963,
+                  "mean_sun_spent": 360.648
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 10,
+                  "mean_sun": 25,
+                  "mean_sun_produced": 532.5,
+                  "mean_sun_spent": 557.5
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 2,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 900,
+                  "mean_sun_spent": 887.5
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.40625,
+              "wilson_95": [
+                0.294569,
+                0.528548
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 7114.969,
+              "peak_offense": 7.75,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "0-4999": 15,
+                "10000-14999": 2,
+                "5000-9999": 47
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 18.75,
+                  "mean_sun_produced": 18.75,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 43,
+                  "mean_sun": 20.698,
+                  "mean_sun_produced": 61.395,
+                  "mean_sun_spent": 90.698
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 13,
+                  "mean_sun": 15.769,
+                  "mean_sun_produced": 111.923,
+                  "mean_sun_spent": 146.154
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.1875,
+              "wilson_95": [
+                0.110646,
+                0.299744
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8939.719,
+              "peak_offense": 0.031,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "0-4999": 5,
+                "10000-14999": 15,
+                "5000-9999": 44
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 19.531,
+                  "mean_sun_produced": 148.047,
+                  "mean_sun_spent": 178.516
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 55,
+                  "mean_sun": 24.545,
+                  "mean_sun_produced": 316.818,
+                  "mean_sun_spent": 342.273
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 43,
+                  "mean_sun": 36.047,
+                  "mean_sun_produced": 518.023,
+                  "mean_sun_spent": 531.977
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 1,
+                  "mean_sun": 25,
+                  "mean_sun_produced": 675,
+                  "mean_sun_spent": 700
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8201.881,
+            "peak_offense": 0.556,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "5000-9999": 319
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 17,
+                "mean_sun_produced": 84.266,
+                "mean_sun_spent": 117.266
+              },
+              {
+                "tick": 6000,
+                "sample_count": 320,
+                "mean_sun": 17.359,
+                "mean_sun_produced": 160.094,
+                "mean_sun_spent": 192.734
+              },
+              {
+                "tick": 9000,
+                "sample_count": 59,
+                "mean_sun": 15.593,
+                "mean_sun_produced": 216.017,
+                "mean_sun_spent": 250.424
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 25,
+                "mean_sun_produced": 500,
+                "mean_sun_spent": 525
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8163.984,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "10000-14999": 1,
+                "5000-9999": 63
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 27.344,
+                  "mean_sun_produced": 128.516,
+                  "mean_sun_spent": 151.172
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 28.516,
+                  "mean_sun_produced": 249.609,
+                  "mean_sun_spent": 271.094
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 8,
+                  "mean_sun": 25,
+                  "mean_sun_produced": 371.875,
+                  "mean_sun_spent": 396.875
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 1,
+                  "mean_sun": 25,
+                  "mean_sun_produced": 500,
+                  "mean_sun_spent": 525
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8273.125,
+              "peak_offense": 1.328,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 4.609,
+                  "mean_sun_produced": 6.562,
+                  "mean_sun_spent": 51.953
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 4.844,
+                  "mean_sun_produced": 6.797,
+                  "mean_sun_spent": 51.953
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 14,
+                  "mean_sun": 6.429,
+                  "mean_sun_produced": 6.429,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8128.625,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 22.266,
+                  "mean_sun_produced": 125,
+                  "mean_sun_spent": 152.734
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 19.922,
+                  "mean_sun_produced": 244.531,
+                  "mean_sun_spent": 274.609
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 13,
+                  "mean_sun": 21.154,
+                  "mean_sun_produced": 353.846,
+                  "mean_sun_spent": 382.692
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8042.172,
+              "peak_offense": 1.438,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 3.047,
+                  "mean_sun_produced": 3.047,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 2.656,
+                  "mean_sun_produced": 3.047,
+                  "mean_sun_spent": 50.391
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 12,
+                  "mean_sun": 2.5,
+                  "mean_sun_produced": 2.5,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8401.5,
+              "peak_offense": 0.016,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 27.734,
+                  "mean_sun_produced": 158.203,
+                  "mean_sun_spent": 180.469
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 30.859,
+                  "mean_sun_produced": 296.484,
+                  "mean_sun_spent": 315.625
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 12,
+                  "mean_sun": 27.083,
+                  "mean_sun_produced": 420.833,
+                  "mean_sun_spent": 443.75
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        }
+      },
+      "raw_seed_results_path": "evaluations/update_000004.json.gz",
+      "seconds": 50.54648548199839
+    },
+    {
+      "counters": {
+        "episodes": 1000,
+        "decisions": 70266,
+        "ticks": 8217818
+      },
+      "updates": 6,
+      "summary": {
+        "greedy": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8132.784,
+            "peak_offense": 0.4,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 320
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 12.109,
+                "mean_sun_produced": 69.609,
+                "mean_sun_spent": 107.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 320,
+                "mean_sun": 13.438,
+                "mean_sun_produced": 140.391,
+                "mean_sun_spent": 176.953
+              },
+              {
+                "tick": 9000,
+                "sample_count": 67,
+                "mean_sun": 16.418,
+                "mean_sun_produced": 176.119,
+                "mean_sun_spent": 209.701
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8184.125,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 35.938,
+                  "mean_sun_produced": 116.797,
+                  "mean_sun_spent": 130.859
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 21.875,
+                  "mean_sun_produced": 234.375,
+                  "mean_sun_spent": 262.5
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 10,
+                  "mean_sun": 20,
+                  "mean_sun_produced": 352.5,
+                  "mean_sun_spent": 382.5
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8200.516,
+              "peak_offense": 1,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 18,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8110.688,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 12.891,
+                  "mean_sun_produced": 116.016,
+                  "mean_sun_spent": 153.125
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 12.109,
+                  "mean_sun_produced": 233.594,
+                  "mean_sun_spent": 271.484
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 10,
+                  "mean_sun": 27.5,
+                  "mean_sun_produced": 345,
+                  "mean_sun_spent": 367.5
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8074.875,
+              "peak_offense": 1,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 15,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8093.719,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 11.719,
+                  "mean_sun_produced": 115.234,
+                  "mean_sun_spent": 153.516
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 33.203,
+                  "mean_sun_produced": 233.984,
+                  "mean_sun_spent": 250.781
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 14,
+                  "mean_sun": 44.643,
+                  "mean_sun_produced": 344.643,
+                  "mean_sun_spent": 350
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 320,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862
+            ],
+            "mean_terminal_wave": 1,
+            "mean_survival_ticks": 8117.863,
+            "peak_offense": 0.481,
+            "terminal_wave_histogram": {
+              "1": 320
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 320
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 320,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 320,
+                "mean_sun": 16.188,
+                "mean_sun_produced": 80.328,
+                "mean_sun_spent": 114.141
+              },
+              {
+                "tick": 6000,
+                "sample_count": 320,
+                "mean_sun": 17.438,
+                "mean_sun_produced": 151.031,
+                "mean_sun_spent": 183.594
+              },
+              {
+                "tick": 9000,
+                "sample_count": 53,
+                "mean_sun": 11.792,
+                "mean_sun_produced": 206.132,
+                "mean_sun_spent": 244.34
+              }
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8182.359,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 27.344,
+                  "mean_sun_produced": 127.344,
+                  "mean_sun_spent": 150
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 25.391,
+                  "mean_sun_produced": 243.75,
+                  "mean_sun_spent": 268.359
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 9,
+                  "mean_sun": 19.444,
+                  "mean_sun_produced": 366.667,
+                  "mean_sun_spent": 397.222
+                }
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8321.672,
+              "peak_offense": 1.203,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 2.656,
+                  "mean_sun_produced": 3.047,
+                  "mean_sun_spent": 50.391
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 2.656,
+                  "mean_sun_produced": 3.047,
+                  "mean_sun_spent": 50.391
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 16,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8007.859,
+              "peak_offense": 0.016,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 21.094,
+                  "mean_sun_produced": 123.047,
+                  "mean_sun_spent": 151.953
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 18.75,
+                  "mean_sun_produced": 240.234,
+                  "mean_sun_spent": 271.484
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 12,
+                  "mean_sun": 12.5,
+                  "mean_sun_produced": 347.917,
+                  "mean_sun_spent": 385.417
+                }
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 7908.062,
+              "peak_offense": 1.094,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 0.938,
+                  "mean_sun_produced": 0.938,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 0.938,
+                  "mean_sun_produced": 0.938,
+                  "mean_sun_spent": 50
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 7,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 50
+                }
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 64,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.056624
+              ],
+              "mean_terminal_wave": 1,
+              "mean_survival_ticks": 8169.359,
+              "peak_offense": 0.094,
+              "terminal_wave_histogram": {
+                "1": 64
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "5000-9999": 64
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 64,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 64,
+                  "mean_sun": 28.906,
+                  "mean_sun_produced": 147.266,
+                  "mean_sun_spent": 168.359
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 64,
+                  "mean_sun": 39.453,
+                  "mean_sun_produced": 267.188,
+                  "mean_sun_spent": 277.734
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 9,
+                  "mean_sun": 33.333,
+                  "mean_sun_produced": 383.333,
+                  "mean_sun_spent": 400
+                }
+              ]
+            }
+          },
+          "truncated": 0
+        }
+      },
+      "raw_seed_results_path": "evaluations/update_000006.json.gz",
+      "seconds": 51.29917001600188
+    }
+  ],
+  "update_history": [
+    {
+      "update": 1,
+      "counters": {
+        "episodes": 200,
+        "decisions": 13739,
+        "ticks": 1621399
+      },
+      "losses": {
+        "policy_loss": 0.0030318986577913165,
+        "value_loss": 0.061587437000125644,
+        "entropy": 1.827992839217186,
+        "advantage_mean": -0.5495834946632385,
+        "advantage_std": 0.36144396662712097,
+        "gradient_norm": 0.31627896428108215,
+        "approx_kl": 0.006842497332095676,
+        "clip_fraction": 0.08739176477538421,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5231385231018066,
+        "optimizer_steps": 200,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 1995,
+          "shovel": 2816,
+          "wait": 8928
+        },
+        "zero_tick_actions": 4812,
+        "immediate_plant_shovels": 941,
+        "immediate_shovel_fraction_of_plants": 0.4716791979949875,
+        "mean_abs_shaping_reward": 0.08871687287723459,
+        "mc_value_mse_before_update": 1.0727897314763057,
+        "mc_value_explained_variance_before_update": 0.05473952483856104,
+        "won": 0,
+        "truncated": 0,
+        "task_counts": {
+          "train_pool_1": 36,
+          "train_day_1": 45,
+          "train_roof_1": 43,
+          "train_fog_1": 35,
+          "train_night_1": 41
+        }
+      },
+      "rollout_seconds": 25.12744492800266,
+      "ppo_seconds": 15.530342516998644,
+      "episode_digests": [
+        "ea296c5e9e3bf8cc3a465c81c31f9924",
+        "fa45ded765907d717ad0c597a8691015",
+        "aefaa3a33416e478e98a39656bf776ba",
+        "f25ed19a2d80fd7a6ab961857f91fd68",
+        "536f7fd0949cac8877428b7a9408f173",
+        "a1d0a35ac6117fa2830ec218f80ea2df",
+        "e952e846b8f27d43f323ba5c34b7e913",
+        "cf39f58d2f576a6ad746d4d917b849c0",
+        "bf9f7ca1affbc86251dd7d94c34df197",
+        "d930adf5971160cc063b499c2b86720d",
+        "47dcb2341a51f65ca525dfa2c13fdeeb",
+        "8c6cf7559fc26d9d797e418b7c9d22ce",
+        "eb1f03bc0ea8aa80fbf65decc291355b",
+        "c8217d875aa386d0d0aaf606a5ccba1d",
+        "8a95210fd198375db0080c15ac100457",
+        "1b7a4bc99b97e771904a80102c2ed9f1",
+        "58da37339f5021a07745d6fe8f545306",
+        "bb5b3c6e72191f308dac873a4e23f457",
+        "20325f9079dc762ed15ee442431d8759",
+        "be8ab85ccc59b79f700546bc69666b7b",
+        "0a0e353b64ed173a494dbde6ff7c6a3d",
+        "8448b730bf2b7afe6fb3e79e1d495ce2",
+        "35bf37278cad49e29f107199007739d3",
+        "9a5e8d3a007a51b2d9ccbec7f7d476b3",
+        "9e94aae6b0d261c9c68761ae2b81855d",
+        "665e1aaa1612ce4b220b2f75598c7e29",
+        "4040a7492ed980f39be76833f0c93aab",
+        "f1eaa1fad331af8fe9212c1ba8856a23",
+        "9710c8d87223d2bc4fc1c8296a4f8637",
+        "8dfc0ed5298884231b501f86da3f1b29",
+        "867c55f86ad428a7d8265c6519a97881",
+        "5eeda347b7c3996e1e315a9e313d800c",
+        "cd3e7968353de8d26a2e6d56aa490f21",
+        "0ce68fab4b2ec1c7c283612d3a1b06a1",
+        "23468b655e5c570802228978b60de74f",
+        "6e97790352df4b72cfd08c9230f86c2e",
+        "ec1bbc282ef32b9adce60a80f2619ac1",
+        "4915b6633e61bfb5d79251660c0fe152",
+        "f0698df4ea6498f69a3dae4f0d00322b",
+        "4bfdaad779ee6d73aab7303b2601834a",
+        "0d6bb30cdf5abe2e56eb4d10657277f4",
+        "8a447a5eb0a8c8a65d656bd6bade7443",
+        "1f066ed89f3f57453b8afd20efa47349",
+        "b7975f62fae4cb7c518b35512aceed6f",
+        "8896b9a559e0b69b3ad54acb493c488e",
+        "eccf16a79f7f2574eff3a83115256b83",
+        "b8fe334189abecd04561048b87d73aec",
+        "e903bc08b0963f4443f8be700854c0c3",
+        "5c31d1e0e84ab9c82a5a614e25df3093",
+        "47cb80bc3563f75c3cecd40237f1e969",
+        "c7ea0a8dfd36c7bd705d4a0cf4bf819b",
+        "3748855550fc3f24f605149df69852ff",
+        "ab7b017afb279bf4c2e86e2df2ddac30",
+        "f01949d3be4603a7009ec351e260ed5b",
+        "d80d9eb919d85e4813936fbb7911ccda",
+        "8a1738aa393eff2aab65cc97d2b70cf0",
+        "61a60ee6de96a3581ec59c3eda807aaf",
+        "292ac456ff41ecfebdbdb647a6e64cf7",
+        "cab3be8c8d295627c5be4b365450596a",
+        "56b1d207464144a8cd13d43b60be6c8f",
+        "2ffe35811723161f8af11fca7a16ad8b",
+        "642379020e74bdb3b1c60106fbcec9b8",
+        "c10a147cccef0da0c76a24fc7db01769",
+        "b9f8ffea1fd7b36e0ef2a5f2fe17dea6",
+        "dc1c830e6bbae2a9e5b6908d754af3f9",
+        "9db7d559bc20bad64ce5c1f446c6bae9",
+        "70ac36b080d6f17543a4c6f87d6d5682",
+        "dc6098a0e9d3f6a1635367a56f46f7b3",
+        "c3d4c6289418043b359c4a5e8ba9f010",
+        "4bcb84299592357f4f19f67bb952114d",
+        "30fbb2e95647b51899ce32dc24dccd80",
+        "75dfc5eecc1c215e8e8aef22ba0b359e",
+        "119e7eb14277f5a08091243d299fb002",
+        "3101416aec4a32879bec05027e851eb4",
+        "290c2e23e158ebc77e1c3f9d5d606a10",
+        "d6d55e482aace13e6887ed7662e25e9f",
+        "8e1b7a5acc80ab6110f9c3b412d86c29",
+        "e3f607ecdfaf161807ac6380c2604eb9",
+        "58cee3e01cf7ccf80b6d627baafde85f",
+        "d5888ddb84df64074edce2e368c00f93",
+        "ec1e77d66199ba21b312f1f5c0911c64",
+        "a5bb4e5771eaefd955ec71df384f6240",
+        "1ae1f46cd32cc6219341d356eff2702e",
+        "27dcd719d42777ea88d567a89d28d2e4",
+        "e4f5a86b751501d876a4290c19d8a4cc",
+        "065b681617767d2a76e47edca949f38e",
+        "fda8550227ed23509e934ca48848b566",
+        "e9bfff3eb51650301f0b4b86c2aae71f",
+        "7b3a412ba8fbd517faed29e1858f3e45",
+        "4bc0f39c932109123c0a4adc5fe0a18f",
+        "12e86c8aa0607389552f7b821591e2cf",
+        "73dad664ee52729df79c5e5297871378",
+        "1a9735dcbf4350a7f16d7c8a0c984849",
+        "24b6ad0ac69d790becd95c38c661c15c",
+        "b62fe7f47bcfb9a9dca9cd1174dbb85e",
+        "8e41a03d2be2f0c48666a8252195e43b",
+        "33a0a9076131852674387f3d9c14861b",
+        "dd9342ab3b0b3c0e4efdfc9bc518e1d3",
+        "e60e0b57bfa09128d15b0ed8d90a2159",
+        "2ca922f4ab897f4589590bca3417ea0a",
+        "93a89466669315199cee7bff424b954e",
+        "6bc8579161814682cc23d44665d7448f",
+        "bf017cfd60e510290cc7a4f54cc0151a",
+        "7e2850bd33a1eb9b6b03bc0a45c4aa68",
+        "2c43d1d713e9d95ab5616d14679e6cc1",
+        "0d0b69b3d1dfdafa5aa0fbfeb6d8a5a4",
+        "931fc51940a6f82ec0caff2b7e223c46",
+        "03369e90c4dba2836c3d671443c739de",
+        "15426c3208fd9eefe8b0df402dea68f0",
+        "cf340e1975e80ab72daf952ba713bf79",
+        "8e5616e1f49968d0ae8868ab803a888c",
+        "52bd488a84875c6d69fb0fc8ab28723f",
+        "6a822c5bdab9073bc91c7d2bb10d42bb",
+        "c30297ca3bf9dede15fb24fca791be09",
+        "4054ebe6aae5e25a0f4703470774c88d",
+        "d18b782ae97a17d970894579d2b95d04",
+        "d98a880ba25cf08852dc2b2cae974606",
+        "42548ab446b5c52eee20d0b69bc0e390",
+        "073901fc373dda0a0c3131bbc4305ba3",
+        "a877e0165c6e17f62af2c81d20004e94",
+        "15df42b7e05193f4fca094935ea76d4b",
+        "d94093803deeb99fb96a86bf501dbaa3",
+        "cb205eac3dfec485643219f746a6072b",
+        "03ee411f316bc8449b7bb916fbc5b6fc",
+        "369a8604650682b9de55313f8898556c",
+        "f649811b6b6abd074e32a7e752ba9212",
+        "9cacd3559b51bdcddaa5de2104c0f170",
+        "92146fae1e42e4aec7d613e6fb8fa069",
+        "02add0539d9116b38cb219ab9dd43677",
+        "16afad21117120614a67bde870f19e00",
+        "dc3db1c035e5a9b99ca1a1aae085a00a",
+        "f42c9c863528110cdda1096f9dc7b905",
+        "ebfb96b74888a10970f08e2aaf3f32f0",
+        "843c3ad304e63e0176b218e0fe8c6fc7",
+        "2f2e9aaeabd4725e7bd6cb1fa9d15cb4",
+        "8ee10d04081c1cec0384e9a5dfcc6905",
+        "8c6268e93851b2794f0c5f179cc26d92",
+        "15cb047a4186c930520703cfe1caa8f1",
+        "85199bf9ed8420e0d52b9f60fda5c22b",
+        "6959d4e192bab583de0795982c05f424",
+        "e4b35b7d67d477edc4095ce1c274fe06",
+        "d300e139359154b8ea443987a3ce2ea5",
+        "8bf83e3dc7e03a8619920e5994a2e095",
+        "aa05953616bb61c90a8d63a0ed5ab66f",
+        "bec38f453901f15fc5ca802840f9e851",
+        "194858938ddda002a428e09a86a6f0dc",
+        "7e2c369bed3a709a2f974d92dbdec33f",
+        "35d51ba176b13b07aac541e38c79939c",
+        "55466663c8b92b2bdf65fd401566bfcf",
+        "195d7a12e2799b6ef4dc4903c6920752",
+        "0072b662132a9952af47348ee92a2497",
+        "d8b07c5f66c69d4e05e3955c697ef5b8",
+        "b855de55cbeeb99f6d00de090b0c8721",
+        "eed3e346c61584b64a7448f137dab2f2",
+        "076272218ef9635f12ef08c32e63e70e",
+        "55ee98ff4134f80449765ab61df59886",
+        "a9d654b8e02096a8da485cd9a440ebd4",
+        "aa8012a4746df7610f06a767a76a0d30",
+        "720f1bcbc0512e9b7ba2c50e588d8860",
+        "da66c61b997f4967f55493d6263a9977",
+        "94e837c6c4cc76a00eacf142758fb410",
+        "34359906401144258213ea6f2c2bbe77",
+        "0a948a976f40d1453b5a1a9602581627",
+        "ad4be0dc82767f5ee897c1e5bdeea2e0",
+        "54840cd4190a1a9043dc2db7e6bbff9d",
+        "f07cdf1115cbaabc3310e965892d01a5",
+        "cef59458a5b0ddefc326575e360395cb",
+        "8ffcd1a7eb94bdc6686742fa46619350",
+        "3176405fa60ded75cd0000a74ba95bd8",
+        "eadfd7735fea416ef68bef0b55f2cda4",
+        "d64f08b36b9cdbb14f4576b4c56a55ba",
+        "72e9a0885b7d61b864c47c8cb03f648e",
+        "b3680ac9bccd301be1c61f7e0c7a4ba5",
+        "f5af60a3515cb63c16fcdd87acf9e6ad",
+        "fb7ac8f1c51484a0f0a163f41999ccc7",
+        "3da6dbebda6774a0569ef35fac6df17e",
+        "467d8247d1be912fa609b5fddb59fb54",
+        "3a69ccb89c0fc388293014dd1437088d",
+        "db3467ed8da4ba0450c7b9ea7d5fd6e3",
+        "13c6fef095ebf277435ff7c6ded8e8a9",
+        "6a3e7d7f7792370ae1cc85579bef6776",
+        "28d92a28e056c2ae6f4cc34a69410f27",
+        "f6b98618a8132c103b3be03b4cb6acd7",
+        "7e1eebe653dfe9dda354cec2f547d2d4",
+        "13452a036dda7d52359db5837f3a52d5",
+        "a5ca803e0a4c8a1f76bd2ad31b98f1ce",
+        "1f3bc42be4dc4a28852675a870682b7d",
+        "02c3f18c81f8409e3d3772b96470e70d",
+        "a2df7950add0e59b2a982a7aa6171a3d",
+        "92affe2b336da42a3635dd4ba8807c39",
+        "8a9e977683e45b3bb0568473f53af650",
+        "af02bf61c6916d8565865fbea0990240",
+        "927f13c3d0c7e63ddc162b29d3ea076c",
+        "61eb1cdd5fe4cdfb6d72ca5b46ad1513",
+        "9e565964f5836ef5b050fef0ebfebe7a",
+        "762ccecc910db9113d8714cd97ec930e",
+        "d6a992992a52817e3480c2f29adda39b",
+        "8b91b7c8f55b35bd24a333abf9d275db",
+        "683fb12b86c13d13af0b1ba14b1f8e5f",
+        "6821aeff3dd8ce0e85f15a8c41ecb7fa"
+      ],
+      "shard_directory": "runs/run_1/.seed_jobs/update_000001/45b9f939f70f327a0035ac916bc5232dc6e92df2a123a566b6576549646d4711"
+    },
+    {
+      "update": 2,
+      "counters": {
+        "episodes": 364,
+        "decisions": 25243,
+        "ticks": 2974577
+      },
+      "losses": {
+        "policy_loss": -0.002486778961965905,
+        "value_loss": 0.01839879066569776,
+        "entropy": 1.8251500369572058,
+        "advantage_mean": -0.2859991192817688,
+        "advantage_std": 0.1473310887813568,
+        "gradient_norm": 0.41784489154815674,
+        "approx_kl": 0.008384941363348724,
+        "clip_fraction": 0.11594396323908301,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5819766521453857,
+        "optimizer_steps": 164,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "shovel": 2302,
+          "plant": 1708,
+          "wait": 7494
+        },
+        "zero_tick_actions": 4011,
+        "immediate_plant_shovels": 778,
+        "immediate_shovel_fraction_of_plants": 0.45550351288056207,
+        "mean_abs_shaping_reward": 0.08882480332910356,
+        "mc_value_mse_before_update": 0.24945052291333772,
+        "mc_value_explained_variance_before_update": 0.22609379658721518,
+        "won": 0,
+        "truncated": 0,
+        "task_counts": {
+          "train_roof_1": 32,
+          "train_pool_1": 31,
+          "train_night_1": 36,
+          "train_fog_1": 31,
+          "train_day_1": 34
+        }
+      },
+      "rollout_seconds": 20.762046826002916,
+      "ppo_seconds": 10.331076909998956,
+      "episode_digests": [
+        "697e7358248619cd0e02318b07a315d2",
+        "af53c8e1bde57cd4b96bc3b3fd0ebfc6",
+        "06eca360ad8be333bd78c3d078d2ec2c",
+        "e04083e71c836a8c58a8aa4f67d606b8",
+        "575b2654809a113e0ef0ec8d2209f6af",
+        "a51c8721c070bd0ca73b248b7fdd49d1",
+        "aab6bcb21ba7252064e655d6e737d210",
+        "7d854cd39cce40c17d9142573433d4d0",
+        "11709f7a1575379004ebdea5b67587ed",
+        "4a6a06bb887dffca14aa1dadd34d01f9",
+        "c821036a5e175e452a68c31112aa6e19",
+        "22e40e81c5295f90698a567616a4a4bb",
+        "8e52f55602f09c833f4eedde873adf06",
+        "bdde484fe1721d3d9c0442aa056c8943",
+        "60ec8ba686ebeb802fc17f98c6008816",
+        "9e9b5b84f659226d04d621b72da196ff",
+        "9ea5fefa9834bf248aa43e5fba4f658f",
+        "3bb550ff4c79a21341f75478c04d0697",
+        "f1ffccd31bc52e553237f03438d2e3e4",
+        "b607a0be4575fb4ef56c918957846557",
+        "0030ac0f5cc03d632a4d16049bd6dff5",
+        "c07c24f66aeee1854e63a08c8c81840b",
+        "27c2f3710cb60c27f7a64184d2d9d30d",
+        "7e6d10b025597b54c14e06e6419074aa",
+        "26495cbdec220ac5ecc3f06e4f958b4f",
+        "fa7b67fbb70d5d4c878c342c291d9da5",
+        "78ade118c7ff8cf53161c3ad3fd6de9b",
+        "892dea2de80514a81daec293fac01995",
+        "7d8077c1a9421d9e7af5be1de47e15a3",
+        "e854a92bc81f5f15575524a06d431be1",
+        "3cafd2cb2d7248cef65da70a8c9e401e",
+        "0e4f65d8f06a76ebc87beb2fcafb13c7",
+        "c456a68efd7d1eaa903c3d7364650723",
+        "e0742d245640c6b67690e605f2595750",
+        "3cf2a0821783986c4c4e98f7fb3e3552",
+        "59ed6b3d9ccbdb5eff2d5f4172a447d0",
+        "718d24292af6bf6500164754d4979cb2",
+        "3c48cfa0c3a07d358e1834477dcb6387",
+        "d3cfe643d767bdeab0fe52653326e008",
+        "ecb301687b7e2050d7bb05d536883b56",
+        "e4a839e1d2152b03a5e26a39641e7afb",
+        "9c124f55ebab03a08db57bcfe5115e37",
+        "96d92378f34577091459cd3e3cf94628",
+        "be53c7050feac8909da7ec056da87161",
+        "bfd19310c066e72ddfa1cb5870b14a0a",
+        "ca8de44a11d91d693338c1cc6fc4a1fb",
+        "00bc7ab72d01fd1440781458f743ce84",
+        "3c35adae09ecd9d22805cedfe23f9d98",
+        "cd2768b782fb91067e5d057cc8c82734",
+        "ba1defb0b8b74df27f2b45dba6c2d2cf",
+        "cc5de0ac4626add4772ae6968eab50ca",
+        "1793945a2afe5bda270c728bd0fb82e9",
+        "3484ac0d42e230be5ad6f27a620cad6e",
+        "eeca76e7fba7d749e489855c444c9167",
+        "37f2389d194e23eaa28a43e5aa05bb56",
+        "5fd0e10acd0a45a83255a47b00274a00",
+        "1dfe34aba948fb7044cae56fd214bfec",
+        "36f35c11a8f2ab5d28b1701b9522791e",
+        "0e8ec7e01fe7a03aa0cfe62f6fb81d59",
+        "145b1411d727c905ea376048507195c9",
+        "5e50ba040bd1b71507911befdb390b0d",
+        "9e13228cde691de6a97360c18e6853b4",
+        "2841bd3d25a63216e47778c8f921a020",
+        "e08ae162dabc79629d0c50aef8032124",
+        "36652d2bb3cc7ef3cd6ab4c605537a04",
+        "6249c7e374ef0be018583a69cdc6580a",
+        "0bbfdbd15ba2f5babcbb5b55da20f50b",
+        "78ff8dc0b644d6abb8b15c26c19a0e60",
+        "ae3aad729adfb265743e3cf27d5aace4",
+        "090326285def7c988dd16f0eb85266ce",
+        "bfc608637b77e9a7ddfd26edbc9c4eb6",
+        "5ef7f7874894f83634331e3da80b5408",
+        "c9f4e5aba660fff486139f570fd03047",
+        "592b67a755b455afc623fa5db174fcf2",
+        "a1a1f976e5ac9fd40a27a35b4a2d9325",
+        "15de94c3c5584e62f8b1503467a14539",
+        "77580592eefe884741b7c867fc3b93be",
+        "1858664b45a84e2d4602e7b6f31bfcce",
+        "89913f73e08a5d37337fc882356f9b6d",
+        "29fc4d3d0d7ac40e36af3d6a7b349981",
+        "24d950f22aa9772a08f48e96ef99e067",
+        "6a1b8cd9c6e1ed4590ccfe352378973e",
+        "7b029f834afa823df6bbeacd9bc27d18",
+        "996aaeb99594febfe5b5b15980438c42",
+        "ddad43834db7d1deefa1c4899ef57088",
+        "a5a3ded7e041f96cb9e0fa2057174105",
+        "bd1eb8b398c76d7ed75b72fa611b5e6d",
+        "3f68b9a65311557f65d861bb7e6cffdc",
+        "2aa1b240d76e96cafa1c6c0ddb4436c1",
+        "88fea06db1fec9eb4b7d9e29d0945829",
+        "a272ccdfb5f78fe57b1f255127ef6b44",
+        "257c09ecc21efae556e8fa67e06706c4",
+        "e56b0d84fa741f966caf2d8a0e520895",
+        "4c07f28d673d8aa6b0ddc7f6e398f7c1",
+        "201993eac3665896c73a4dd96fd16490",
+        "520e9f9df55aaab7afed5cac2b572932",
+        "f51a9dcad5248e33fd586610dc10557e",
+        "2e75081a8dc1ee24df73c9a194622028",
+        "81d0a8b4b68ac322cc92626a2d0d4ac9",
+        "ee44f192f69a49470ad4f248ab36d5bc",
+        "534cec01d96ad1c505b00399880682ad",
+        "8d5898f2e2d4b437c02f1ede3a06f196",
+        "8538abba3689bb4d31d44e5112be7f04",
+        "accf188012f2192bb57becbeac00f37d",
+        "c539c504b14cd4fbb6d4119b750f6da8",
+        "16a59eb60fa6b1ea38dc1af0504dec0e",
+        "5dabde8bb2fed9ff0d475ec0096b22f7",
+        "49f5bf5cea700c9afaf2dd5a9e85f84e",
+        "0365ac1f776917fda7a5afedae1a7a39",
+        "7534846edd3a79e4c223da71039880d4",
+        "1cdc1059a06c18e4ae2637e183fbf3e0",
+        "073aad6ff00f99a09da15e4397278065",
+        "0dd3a9794e92f926cae37cf72a42f272",
+        "30921a4e1ecdead8868f05643946c3a9",
+        "d89214f2020ae3761ad3f7aa0b948c28",
+        "276d0bd7bc44650ef7feb87d26efc8e9",
+        "e12882d5a87e7e3f19ccdaae919f570c",
+        "5757be202abc06a0c8da74d0c9c3e11c",
+        "5a334358d74b3515b92b246be0245244",
+        "e5ac6322b264ddaa33dc0bae00cb1c28",
+        "d2cee97ff9d2e8415b225a9a267ed179",
+        "ae42de1f2c72eba63bc5d9b0a024dca8",
+        "7c08b53d861bda592340f882a169f741",
+        "fb912b7f9ef911dee893a1d959c9d4ae",
+        "7791ea540f0a1da454a39f9f539852cc",
+        "6da108b9056dc3e38eb8484eccd9e91d",
+        "4a318219013fa2671e4c0acb6f4be29d",
+        "efd88a9568cf2f4b24c1acd2151e1f43",
+        "94278c9ec27700f02f94421cd296d395",
+        "c672dbf932d82d2070e077b1313b664a",
+        "c0481b7014869c51a30e66e7ea689999",
+        "43bd65842032e037f1468ebb25ad7200",
+        "5c40e41cd75515195889353bfa682e28",
+        "ec27a49b0539fab89deefcebd1a5435c",
+        "8c2e035b91a2ecc2d3f85ac95a967eb6",
+        "c33803427f217a12210edcf5de5b14f9",
+        "c519d404287d4a62ac8c8b9bb37af09d",
+        "90f8bd4660d61e349e8c37d1fceea25c",
+        "a6623a4ffb9236a3cf1334603801874d",
+        "f21ffffa03bb36720d23e15e4991f34f",
+        "764784bd0b83a1443ad6500201bf19dc",
+        "751a8def222095ff716b0517525e7704",
+        "fdaf04553dcefde83df49db6030d6a9f",
+        "e321910159a6a0106d0f3b4d5bf2a8e5",
+        "b18fc483acae3bdce5010b15ce5a2755",
+        "e17b44be113a76f873455481c29a8c33",
+        "e5ca13ce839cd59d25de8e36a9eb5436",
+        "08e82defe41cc85c4d0de92fc1a8c424",
+        "2748fd1dd32f84365de837d0421be64e",
+        "6ba40dbb8f1af06b35f2bb7f460b041b",
+        "487502960fd91da94132b183965993b9",
+        "a95289bde9588cc43bf807a58d37f72d",
+        "c679d86cff441309bbd8be363d246f8a",
+        "d73e72ddbd67221ea8f478984724dc7f",
+        "62f3cd819816d89aa0da6699f1e5ed2d",
+        "c4e98d78f9825f783854d6308c788c1d",
+        "c39d3cebe249b645081af0c0ed12975f",
+        "c5b33659c74b3a1ded838310d94b4ce3",
+        "fb32327cf292223df60fb28b5d3b5f9d",
+        "421286aa17b1913ba1308851e108af0f",
+        "b913e5d33c9359ccdbfcde0f9ba71cb6",
+        "6bba2c62db74fb8fbc8c62b88c8f79b3",
+        "fcb422335b255d1fedd7bf029f7b299d",
+        "5fa7bf28159b83e12fc04f0cd4b21e3a"
+      ],
+      "shard_directory": "runs/run_1/.seed_jobs/update_000002/ca800fe8bc97b6154a186d4d436ecc049e5bdad24124aad91af81f77b1118508"
+    },
+    {
+      "update": 3,
+      "counters": {
+        "episodes": 564,
+        "decisions": 39761,
+        "ticks": 4625868
+      },
+      "losses": {
+        "policy_loss": -0.0017763838573591783,
+        "value_loss": 0.01528166919015348,
+        "entropy": 1.8201928681135178,
+        "advantage_mean": -0.10658585280179977,
+        "advantage_std": 0.15102078020572662,
+        "gradient_norm": 0.31031402945518494,
+        "approx_kl": 0.008505622474094827,
+        "clip_fraction": 0.11296875947155058,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5922675132751465,
+        "optimizer_steps": 200,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 2097,
+          "shovel": 2902,
+          "wait": 9519
+        },
+        "zero_tick_actions": 5001,
+        "immediate_plant_shovels": 918,
+        "immediate_shovel_fraction_of_plants": 0.43776824034334766,
+        "mean_abs_shaping_reward": 0.0868035284931982,
+        "mc_value_mse_before_update": 0.05704530193935088,
+        "mc_value_explained_variance_before_update": 0.434213497907897,
+        "won": 1,
+        "truncated": 0,
+        "task_counts": {
+          "train_fog_1": 38,
+          "train_day_1": 41,
+          "train_pool_1": 39,
+          "train_roof_1": 43,
+          "train_night_1": 39
+        }
+      },
+      "rollout_seconds": 24.194760856000357,
+      "ppo_seconds": 13.64309171000059,
+      "episode_digests": [
+        "547f5900dec25518a40ed170c83983cf",
+        "ea2042bf6e1d87b97f2b0eb3e0d2fd36",
+        "a47d0496749b1a3d0f83b7ed55f9554a",
+        "72f6d0502a82a833b84d4296aa3624bf",
+        "52b7e867e0ecd84ee977f1b65a4908fb",
+        "6c7058ece0f0a2a48bfc267b6d55408d",
+        "1d4ca462b49183da7060df9dffd885cf",
+        "21b8d1ca50529f0792acfac643814a6c",
+        "a96a3555be78d90f0892abc6ec84043f",
+        "c1982c225d04fe8ae9584e96598c6da4",
+        "c99b49eda507b1d7c30b68767c427974",
+        "866563ae21408cd9e32a5992b4729d1b",
+        "4c63d4efda70259fc7bfb1a7991ef0ea",
+        "ce6eaca0e131fe830e1c9dde2f4b5ac6",
+        "3fced5287e0b296863e3009dbd9ba833",
+        "53b37bf44436793d3a8b4cf11959ab0b",
+        "afef24ee7ddf06e4e2f99ca93da8c95d",
+        "a46ee80f45e27b1d4144ceb738ee1039",
+        "3a6f4472cbab90d71274278c2c0b6f5f",
+        "dd517b24d7eae125cba5c484924b601d",
+        "83c2d0386c9fd00a0d973982060b0e35",
+        "cdce20c6a268af182ec20f463b3d18a1",
+        "0a3430fed9bb21ff6cc1a400c7f7676a",
+        "e10baf12f5ea93c5f4b80fe0af917dd2",
+        "1fcf5ee4e9005b029826b7a83a4dcced",
+        "aa2cc00fc1aec10f967d13594ef1f629",
+        "322230fd1c5401bd83eb2137f47d85fe",
+        "fa0400ef205bce64541e19df6ea50c77",
+        "dcc9ea31c85744db13065dc75a13605e",
+        "f8d7b6d41abebc0bd2c353ed16e22d33",
+        "3855b6c4f481c855eac6b31389393a90",
+        "d579c822e6fcb98e0b299182f7ef66c9",
+        "10176eaaa7da1a95ebbfdebcfa2344eb",
+        "f184343793614d12a25b3016f4e5dcef",
+        "b9bcf0844255807cf12e6fe172cde2bb",
+        "0ac1bdd90eb5220fb055823dcb3b3c29",
+        "8ee1ff244d1a2a2274520e63360f67d5",
+        "4e2c4443c25f57047459ea4715ba3e02",
+        "7f53dfb2391218339949d7e78612e53c",
+        "7d86f165a41583f08ec5a08fd98045c5",
+        "13659b2de0e80e4f0aecdba4de69d4d0",
+        "d532995dc6a2196b0cebc5cd263ab85c",
+        "bb7face340abc2f3db542a3f59caee1d",
+        "b54a1c655b2562e42ca1da33e9711b4f",
+        "3fa39789c9644f72daa9d68ed39e60cd",
+        "e13974a71461507142bb7886bb791f93",
+        "d9e6b743e191996e83022cd746dca9aa",
+        "e2f6d28a286f40277b0e5d1a3b8e2839",
+        "ace0378a698f961000624706c9e569fe",
+        "86defe31e5b9de7a21f84ec38c0a3742",
+        "aa03a9175aee79a16f4e11a27f42a0d8",
+        "af4e520503fb0a801ea0f2208fddd95e",
+        "5b8d9b4b94bdb34025f86cdb81500593",
+        "a8e327b065387ed1718fa7e190f7be2e",
+        "88593921798778f8096ee1e24856c1bf",
+        "8d32965d0eecfa196e425903fd233d2a",
+        "2a3281bd4a00f869eb93ebcad61a94d7",
+        "9ae52aa045cda3d90af559b780fa8eb8",
+        "d835820f42859afa234b48b5692a68fb",
+        "1423177e2008d4c078450ff0a7423334",
+        "6774ed6911bd40a1003e5631759655e1",
+        "b8a5bf0a47123c13d311d460680138fb",
+        "d871f15ca42cd353332fdaaea7affb98",
+        "c08861e541d2ec0084a22539295172c3",
+        "c8445f04a0071ec12fbd1b309f5c0d06",
+        "c03e75eb6ffa5b4e4297ac45407963f5",
+        "a44d7906ceaffcc44582f68562324199",
+        "9bfc071cae9f07bf110a1304547634dc",
+        "04635d12697aeecd21978d9a7db31922",
+        "4099f474185969fa59468039f32fd32a",
+        "140a9e43d76b1aae875c6bb522b6c565",
+        "63200b3e9971a3923953ffcfcb93ee02",
+        "d29bb0541c9f968f05979f5d8a3081b9",
+        "e3ace439a5af9e6a7d334f8a533791eb",
+        "d22cd99ce0daab61147f38f92b6e76e8",
+        "e7661116b308ee250c06b07a14f72607",
+        "4235a45479ce4e8126d2f3b88850c9a5",
+        "58218c6feaa2e71d4f26d9509001301e",
+        "4fe2be3b991bc183f517651e57f481f4",
+        "a5c458abcf5ed54e43d7580dcd46b7fd",
+        "cf4c5d8e49bb0e57ee95eb40c3f8702f",
+        "60592c8b41e9e29364091093cb3674c6",
+        "2a11ad8e665a734b896b5cbd97ae25a0",
+        "b93a50951ae5c362c2d7230d6a9f5f9b",
+        "6bdf75feeebe8f9c9857d245b324d09f",
+        "6f4d58cafe7ffd6bed55df76e2bee7cd",
+        "500a5dd6e53461fe6126284476b26e47",
+        "064ef6e5a902710348c6a28116e621ef",
+        "dfd41b58266a38eb3d46bfd9b6335978",
+        "41f3ac74337a4bab7b78a4263516ebe2",
+        "bcb30405922335d9f3a59e531b56f397",
+        "d6decc8c5c7621a19705dfb9e3befdcb",
+        "c91f8e967f43995a11d994bcf8a4a0d3",
+        "b7a41d7cc44315c6ed2e2bbcacab697e",
+        "6d067f465721b663d029e57f071479d2",
+        "f057087e86a2cc72827f43bf38b02e7c",
+        "1779da108abd4671aea98893d7078f1d",
+        "2ece5bd3f8884c7593152c815141212a",
+        "d3dbc7a2474c28bb1643e46ebb43d124",
+        "5609d98f694b0954cbc0451566fe981b",
+        "4a306a7f2d56376960f60c733c412901",
+        "72dbd6f87ba975f687303ae72aa1312e",
+        "33d335e14068412c9d25b85e8f7ab483",
+        "535c1d446f096e7a1259d9bc7d5f9720",
+        "b3810ccaf01d0a3a9f384bbcc3b36fdf",
+        "ef9afed017e6fbf8449ec592a40a99da",
+        "4623220f066733ee8e85892ca52e51c4",
+        "fdb29479611b3044ca771aaf8d757060",
+        "23d276e0fb1e42174436ce60390415b8",
+        "d81429697c7169e1867cc35503f262bf",
+        "8852e64f4fe4e80a66dd9b04d98f2bb9",
+        "41c3c4582622a98b822e7d004423523d",
+        "3714ac436d8d1226f70e05dcd1963498",
+        "419e05f2003da7b0869e81d18cf5e5ec",
+        "85c85771018bb5794d8d697b4efabb5a",
+        "edeaf504018e9a656776295c19b2c055",
+        "e1c22bcadfca5aa45cd60b5dde1f92f5",
+        "18beed01463dd4d13ffbd0bec2db6e8b",
+        "aa9a67efdae8e52d6bb2ee1499da9bf9",
+        "7a9b0ca5e2b0d7b6d42bab223cf2d43a",
+        "b1275e6e42dcc855854d28184d0615cf",
+        "7e13716fc9cbdd54b784f09d024d1e03",
+        "bd29c93c1e868d1b94dfddc612798194",
+        "c2b34a5c4f6f0727122eff7da5e8d907",
+        "d0fa801584857eb8b1133294d96ee1c9",
+        "c453a9559baedc8458e7ba89874ba275",
+        "f18771983f66bfd8e60bae15a8484147",
+        "49eac7f048d2cfb5bd3719fe334ba80f",
+        "238bf0c6e1ec4c7c36d8aa93f6366d93",
+        "2fdbf29bdc8492eb3a2b1d39843fe4bb",
+        "34f5e3c44e0d9f0cf21ecaa091e19036",
+        "4e57cdc8309daf5b31dfe5e42a8eb9fd",
+        "b62bd4dd757a3d8e68013d4462c76b13",
+        "7d1c0a56d000e586e8bda260ca04a840",
+        "eb555cb204a3cf7bf0cea25e8252d36d",
+        "b2bac13d6d309ad4e7c452e2d38c943b",
+        "ada8835e7c97f8997322642a9add1176",
+        "4dff782487cbb17984f0c6238c364910",
+        "0c72d7e32d57f5a16362473533408275",
+        "9d0314bbef6bc1eea55d3b956b72e7d5",
+        "c84749e6f593427317181809f7c55019",
+        "534ab324b49fc1fbb51d001d7acf117e",
+        "e533856b06f6459f492924f94c1a0079",
+        "ed26bb4ea2341b56f107a3555527ad0a",
+        "cc1b3f75073de12161d1da259a67dbb1",
+        "1952e514d5c9267d347f415cd63d859b",
+        "2fc8f4efc443e85561256133cd66c524",
+        "8b8254f28877a0fc9852f906fc3572d9",
+        "47310dc72c9491329c9ffd5d898aeb00",
+        "eea10220a8e1f4a51c35b2db9c999c44",
+        "82297a85ed9ed0173b45dd2173f54dfe",
+        "04e469829440186ca3acaadb99ed7d39",
+        "ca0b74a7acb504b408a1cd1fae7315bf",
+        "c1e5ce0c41f6c61ea48d42f3ac1727d6",
+        "7395b066ed251f83e29a3e34635cc934",
+        "7856cfe01f1af5bd03ccb194ee213d61",
+        "1b63ddbae64a1b787e3d4b7ad758af97",
+        "a3bc4167232ea8309797f3b9e4b64bf2",
+        "8a6a11f75380b40c7d196a58289749ea",
+        "8ca898eb0faa4d8c10cedc2d2caa2902",
+        "c20856850b0fca5d040c0275e4e49b9b",
+        "4702401cdcfde2bdaf22ce25e2cb33cb",
+        "bd5a08631d5e3a98e0a1936465c24ef2",
+        "040decb75e78a657c9b5ebf76d10d8a8",
+        "7da09fddf0ad9882a41c301510536b81",
+        "7a5e44b5f5c0209d8c50a77db9bc42f1",
+        "c670e35f4fc2be210e570f594e0ab0b1",
+        "aeea6d834de92355c7c84602bcd1816b",
+        "5b44b0765b759618bd3db436ce8b4174",
+        "94d31ce9036b0a8ecbe073d2b657af04",
+        "a02d6dfe1cd5edc1e6cd6cbefc25f397",
+        "59977f2306bb0fe877d5413382e312dd",
+        "e10b9067bed6cfe5d614dd2c4c1ebf2f",
+        "ea6c3c65aa9d19d73eb5613993146b0e",
+        "cd4db4a43d701bc6592003bb54237c81",
+        "a937b9393163389485a822f9c742d904",
+        "652cd92bc0e4256adf52e34f13391a26",
+        "4f40f57433f07f20abb61558e7996a5a",
+        "ae688ddbb9403306ccc854e52f29de63",
+        "2da7c61014995d95e9f7b3c222377363",
+        "4634e4ab6a27ed0c33d0656943a74604",
+        "18822244902a6b7d7a784e78fb618e10",
+        "156f7d5b2485c2ee241974309d6c9084",
+        "f8bca081d854edc643f9e7a0beaad936",
+        "f2fbe07da67306497b7defe4489d312c",
+        "1252ba68d94adda5c8c2a1b1a250006c",
+        "f09e62dc63a32f5f73a130d6a8c9834e",
+        "78f2fc0b9db5c6c78b6b8936594edf3d",
+        "65ce13c59fb0cbdc59001cb0f25bebc4",
+        "49effe9f994372fee7740fb9c5cdbdbb",
+        "7add975f15add95c60a5fc13113c27c3",
+        "0b3db44db84b6812e06f847a3171a996",
+        "cc76c17545b8c9f1d244d5d0ddbb0810",
+        "24d7b78c30e207665ba971d59fdd46c6",
+        "a6dae0976deeb3ea85dd6b62fab2b00b",
+        "c9613610a0adbb7885ddcc996a2d76f3",
+        "ac028aa533e074f48f0b42228213d262",
+        "6409b44b2bc1246e7f5cf0d7cf794da3",
+        "6967238e5715d3870fd8f620cf6ce52c",
+        "a88d7f0955578fad5ea006796d2110a4"
+      ],
+      "shard_directory": "runs/run_1/.seed_jobs/update_000003/6cd0244d645b3dfffe12d11897d485995c0d54d0de64b0e7f31171b491cda690"
+    },
+    {
+      "update": 4,
+      "counters": {
+        "episodes": 710,
+        "decisions": 50031,
+        "ticks": 5837456
+      },
+      "losses": {
+        "policy_loss": 0.010101769239903262,
+        "value_loss": 0.0030184632732552057,
+        "entropy": 1.7986611201338571,
+        "advantage_mean": -0.023017598316073418,
+        "advantage_std": 0.06767502427101135,
+        "gradient_norm": 0.6903085112571716,
+        "approx_kl": 0.007514978791258967,
+        "clip_fraction": 0.09332203926288918,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.6148109436035156,
+        "optimizer_steps": 146,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 1558,
+          "wait": 6752,
+          "shovel": 1960
+        },
+        "zero_tick_actions": 3518,
+        "immediate_plant_shovels": 636,
+        "immediate_shovel_fraction_of_plants": 0.40821566110397944,
+        "mean_abs_shaping_reward": 0.09038263488780393,
+        "mc_value_mse_before_update": 0.006526683732853395,
+        "mc_value_explained_variance_before_update": 0.8947611470941452,
+        "won": 0,
+        "truncated": 0,
+        "task_counts": {
+          "train_night_1": 30,
+          "train_fog_1": 35,
+          "train_roof_1": 22,
+          "train_day_1": 27,
+          "train_pool_1": 32
+        }
+      },
+      "rollout_seconds": 20.153493850000814,
+      "ppo_seconds": 9.27563310899859,
+      "episode_digests": [
+        "2d38fa6cf4b0526c85c6bfe3d8da696d",
+        "e637b451fe688f6fbca0f3368463ad34",
+        "cbe60f7764d85a6f2e748578238ae512",
+        "75e06adcc03c96f0123bd74c5643f7f7",
+        "e5f9170e8682ab72dadd741cfbe932a8",
+        "9e2e527a750a06fd27d487be3ca49bf3",
+        "29e243c6323cae98d4d1846e48e7457f",
+        "754755f706c1d9a16362912f94fe52e6",
+        "76727aa153adf9a8ac835dd117461bca",
+        "2e7877b5ce54814843939098f6ed70c9",
+        "233986a9d4c029d99864fac3f881b554",
+        "4e2001fd2ba09e8468cd941a844b1d79",
+        "81ddabeaef9e3237f3f6a43eb1ee7ff5",
+        "89f9c40c303693abd0f2b24e6fbc2275",
+        "0e64ac0b4454687e783a30807281e5e6",
+        "ea0001241eb4b491b0dbaf510ec3d50b",
+        "658d21a1f55a6012916e6278e58bea59",
+        "6cfbc02ac0052a8ab8724ac1ce9a93a5",
+        "f0acab714196d38790dbc3682fa620da",
+        "622a18d29311fcfb9255c7e23217d8ca",
+        "2620424bc38884f3eec95f41be0d2d04",
+        "6ee89dd1ff82a4095a50d64718d923c8",
+        "c7daffbf2f8d3ee0a6ce835eee0f5908",
+        "a9397b722640fe9df09c821cdfe83c8a",
+        "57c01e215bc9e7e141a3bfac880f9512",
+        "c58007433aff801457c6dfa7806f673f",
+        "4becd81b720ea1aee3ee5566dae237d6",
+        "788a3766bea3be2b35cc2a04a04fc466",
+        "80e4825640c261e4dacdf239342efa79",
+        "6d0b12e8c7bf7e756cb339adec88ee28",
+        "1946653169a878749b3bc97cd3c36dcd",
+        "db3c2df36b64b9412e24a195e93c4cf8",
+        "9fe163d1a465fcbd203f23fa0a7bcc7e",
+        "ebfdb8cfab169e27708d96c1e35a6739",
+        "f9b5d3a778ca507bfa5f76c6123b6738",
+        "0f7d2d16f3b88a4691081b3bdb249f38",
+        "fb5dcf2b009aebf61f4571d31f320522",
+        "af4bdf054c15a03199fa21dad97989da",
+        "3d3022c84dfaa77a309940a7152e4e1e",
+        "fe005cd111f6ec33883b83fed9c64a87",
+        "e48c8b1460db360b1d2c467ff7ff8d1a",
+        "81ee96e3c307b18a48f751b872e5914c",
+        "0c87ac9e2e9374409e65acdfbc27fedb",
+        "612dd627c460f00e5e4da10a1a33be4e",
+        "d936a6258d936594e15957e493bee682",
+        "bac2f825063007b195b73c7bdc68d1c4",
+        "ca4a4b152993c0d37ff7c0f6132e8bf1",
+        "69e636a79b56327ed0ba6ca462e210e4",
+        "f0c448296d0151866c20cc61e17edc85",
+        "db57c0dc9c257ff8bce5de11d5d84e3c",
+        "a47145d7b099cda89c683dcd5053e7f2",
+        "4dfaf403cebb2c60c80c6d6fe848174c",
+        "64d359ebecf200a9c88c3999d6391c12",
+        "c7227da2b268acb1874a2ae8f0d81638",
+        "0ab945132f232c5555a7bdc40b5331cf",
+        "9fed8bb9dac13edea9099ce019cbf4e4",
+        "0863b178f2edfca7aa2a3da89b2eb535",
+        "c63cfefed6b8e15cef6b42bef93d8be0",
+        "a6a751f869948e5212da39fc7057e6e0",
+        "10337997f4dc8bfed86dc1300b57b112",
+        "9667d6f436702c15c6d7216d60485eca",
+        "59749124c5d245c9876d1d53355836f6",
+        "37daf8713d943c9b74152b65317bd4a7",
+        "5d9cf7ca709cf15189ba463da223231c",
+        "caab07a19098b9f47e563250fa6f3cb4",
+        "973e7fc7aa72da5f69d6b4b1bea7841f",
+        "06787fe6003018d42b592fe6f158613a",
+        "5e35dbca469d264f00f853f2941bf2e5",
+        "aba1aa6faf78caac7deb663713bf9dc4",
+        "8c47b7a3bac49c429f3f4f9fb2888244",
+        "8e625a46d320dd15f0067db3d3f6a375",
+        "872f84f730feb2115ec24841a243f862",
+        "36134afb3aaf83a82f624abdca558522",
+        "5bb8d0b2f5194ba07a567998cc556593",
+        "ae7f9440c53d66e6691384d2444c255f",
+        "cbf1b9b3ad8a4ac0b532e4be27502bb5",
+        "cf7fb8496f5f93b264a8430f2d6a243e",
+        "91afa2fce6351c7caa8b30cfc60a606f",
+        "6608368330012e9801e5eeeb471601a5",
+        "4e051655261d825a874de0e991f88e8a",
+        "0a9135073a57c000a72804494ce0f6be",
+        "9bcfe5e8352ef7910afa1fa4a6808843",
+        "5516b9be83ef3fed668c36e1400ba4ce",
+        "9e4959c4024a522b97c835376c10411f",
+        "ed5e0d10eb70b0bae15c311a1fb9b7bd",
+        "2548713f842f303afc76c1b1f850755a",
+        "beafd53e3a64db6a4561ada8c640c2b5",
+        "0a4a85e377ed3a35b853c2b2918a5da8",
+        "8b7be5466aaad4c5399267dbe6546417",
+        "e3508ba153a3fa573cb6a9f69e0c57ad",
+        "60377e4024856eced7d63cd9fe4ec20e",
+        "ab2e34240813d27086ae1efe1e2cbf7f",
+        "7e8df9057ce7268d9569cfbe26322981",
+        "50a7a396a09bd14d1ef38029f1998f82",
+        "43979963cdd9559a5285592f5f7b6367",
+        "4ccd113bfca1a01b992c1478b53dcc25",
+        "a761f2c091dc8dc71b0789d577adaf57",
+        "53ab80dd79ef12ec4cab526d8701deb9",
+        "68d287b97d5dc0a732ca00f2b49e89f0",
+        "ea5e5fa71b2bdc832d9a4920415b2187",
+        "b6bb793d2477b3e57fa102050023abf6",
+        "3fc55d2e89268b451aac121ef961c33a",
+        "f017a42c36231df3b5bffd51b2ccd396",
+        "8a1895a6044259c619a5f8b6ab3a0c52",
+        "6919e71b31dfe8df00d68a33b0e509d9",
+        "95b60e003a80dbf02ac20a319ad3c4d9",
+        "e968ddfd77af19e0f0a6cf2a023dafce",
+        "c96e507b577632ad2ef2e3ae89fe6b07",
+        "dfeb4adb9d78f2f7d7bf4ffdb1729f99",
+        "f962e428f93c0cb10b06cc57edb3aff8",
+        "6b81d6362aa33cca063e258e0a57942b",
+        "57b1045186c9aaa351d01478bf3397ba",
+        "147eb4b394e6289e0d3a275492b8762c",
+        "d19b4899beff14299602da4ab3b2ba0f",
+        "94f2b8301254c112dc4dd38496b95adf",
+        "f5d0edb49a99feca004c4e02b7e47106",
+        "0fec6263a69e6fc35185dfb6eef922ad",
+        "d8e67714d4cb6f2212c4555300118e0a",
+        "a469ac419679e2789fe2d9eaf7801d36",
+        "3def01ae41ae71b256ad2e828ed24759",
+        "1d45518a568514d1fd68748d71a53f17",
+        "46ed8f6c2a6caa4ddd6efabf2d404e88",
+        "4449729176fda4aded741d1ca2800eab",
+        "1966f86530b881b03aed669bba731620",
+        "fee66f67a89b0d4c3358c3e182a377ff",
+        "ff4163b6993221578f948fae40da3d24",
+        "97d881b75faf28fc5110b10ead029684",
+        "5c4db2b088f3f981a36743054415e91d",
+        "12a13cca4c8fd39dda5f1601b431bd07",
+        "8d8085a506ee394f7e0003a8bac55ca1",
+        "1458e15d8f590c69c099f7580180359c",
+        "bbf205f720725ec9c280f992dfeb7bd2",
+        "2e16aecd8baf5070e0223bdfb0cb6993",
+        "11adf76bc32bb5203423ae02ff8e1481",
+        "893136de83a707e97377aa1b0bfc6dc1",
+        "689de2471ef15c72aa644b5bf56626b3",
+        "acd6757e7cc44c32bf0285398023d010",
+        "8c1712877700ebdff8e1585a435e614a",
+        "fe3a1213c789994a6f505b661e464499",
+        "1c17f94507607cbafd06ce34c58bcffe",
+        "913635a2f664f2cacfeddf7f0546f337",
+        "8fb81c377d10b34c3c0bc8474f21f797",
+        "adc03a38de8e8fe537f9fc06bf3546eb",
+        "3d305c274de0e5f792808ba300d3d1e7",
+        "014be0bd0ba49af486b42b541303fd44",
+        "5bf7c02aff746c298d5a54d6c0225b7a"
+      ],
+      "shard_directory": "runs/run_1/.seed_jobs/update_000004/f41bf6612b422f9564d53020b05244684afae6123bd547e9f375ecd07d8136ed"
+    },
+    {
+      "update": 5,
+      "counters": {
+        "episodes": 910,
+        "decisions": 63938,
+        "ticks": 7479101
+      },
+      "losses": {
+        "policy_loss": 0.01466155354777584,
+        "value_loss": 0.008321086434007157,
+        "entropy": 1.9187113988399505,
+        "advantage_mean": -0.003490774892270565,
+        "advantage_std": 0.09923247992992401,
+        "gradient_norm": 0.3629460334777832,
+        "approx_kl": 0.004118590110537052,
+        "clip_fraction": 0.03529781872406602,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.5254602432250977,
+        "optimizer_steps": 200,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 2126,
+          "shovel": 2887,
+          "wait": 8894
+        },
+        "zero_tick_actions": 5014,
+        "immediate_plant_shovels": 667,
+        "immediate_shovel_fraction_of_plants": 0.31373471307619943,
+        "mean_abs_shaping_reward": 0.07847572701499704,
+        "mc_value_mse_before_update": 0.019403009576068022,
+        "mc_value_explained_variance_before_update": 0.7250056337448149,
+        "won": 1,
+        "truncated": 0,
+        "task_counts": {
+          "train_pool_1": 40,
+          "train_roof_1": 43,
+          "train_night_1": 32,
+          "train_day_1": 38,
+          "train_fog_1": 47
+        }
+      },
+      "rollout_seconds": 23.764766211999813,
+      "ppo_seconds": 13.226207387000613,
+      "episode_digests": [
+        "ca0f85309ddb4ee3c69c898c5795e19c",
+        "3c4ff5f3787595e5b4a425ea242e7b55",
+        "1a627df8e01897ff5f5cd70123f456bd",
+        "99ed4fd0b29f22030a810e4239b6c5fa",
+        "e654649c1d628e5e294b2cfcc2490cbc",
+        "aad072ded1b558bcd6b11b64d24a88b3",
+        "ba19864aee60014cdc8f4f16584e4d99",
+        "a1774dd7626aa94e9260445b3a08c855",
+        "0186aad49d063fc9569b4cf996e643e7",
+        "7757e609a07b7631428dd479db79e131",
+        "044457320361ec814f6f94c9a5415128",
+        "c7810e4fdfe7509d45eb69698a0ac9a3",
+        "ebbaf51e31d983f36bcb1d450875ce33",
+        "2681ca5b67c278069067b5f3f7d68957",
+        "8a38ab48896494c95687e150e2126283",
+        "cbadd3e13e403977255f55d7e36adb2a",
+        "363fa9ec948f22fe41a1649ad5905795",
+        "62ec3314a8e63f79bb3a948475b5c351",
+        "c5fa6b519b640e79e247164d9aa547c9",
+        "fbaefc9037618c72c5be77f71ae9c762",
+        "d8cc0814e4bf2c77265ddc797e893ba3",
+        "ac05aabdb6156e1060ddbe4ec909028c",
+        "9cf0caf6a8b43103476b156c515860f7",
+        "b0da57eaf49b53eaa9735858772d1392",
+        "4809f93f2ec43a3a2350a9178b8c039e",
+        "c90f681fa05a445c74a385163c38e8a3",
+        "d0bd9af3e13535dd207f9f37e3370b53",
+        "153d7e7bb1690ad9901d3f1e3bc5fa72",
+        "1e28680c913ce78a7fd16e0d5f6b3362",
+        "a9a57b98ae21c88d09e965edbefd6c83",
+        "a9afb67933b628336d481e08ddf554dd",
+        "db7e9c9d467d5b82d7df56d9ce63604a",
+        "01ff12e5785cfb23bbc4367f84eb8bdb",
+        "9f90ec14f2dfcb9f10cbafe0ffc9c417",
+        "93e2def6116e6cd205886dba7b727a5e",
+        "4a8114c0f0f67d102b0f51e651c159f3",
+        "025dc40aa8149f85437bf596381d82a0",
+        "a435eb1eb9ad0bb7dbafe2e8a9eb3805",
+        "383294cf70232b35a57b5bdadbad4232",
+        "34fcc337a0b955357365355213d23cba",
+        "9d415ed099ea8c4031486115e9b0f968",
+        "e48b807020b04876f90081059874809b",
+        "341818cca969972a4ad3f279a0bdbed4",
+        "0f896bc5bd946354462ec29fb3723dc4",
+        "5cab2ef43157760ba544afee5f3f9323",
+        "b3e962908d8fe069618fc1483505b37d",
+        "0f25039330776b6f5247c9a267b99b16",
+        "46f047501f1dfb2a16dad56851318a45",
+        "5acd3616093276ff2de6dc3b24a905fa",
+        "ef32d62a326692df58366dabe3279eaf",
+        "0de130e995b8fb7e69aa364373f8aa31",
+        "dc3b79f76e8413c8fb8257ca81378081",
+        "d04e489cd3c9ca109b9ccb942ce14b62",
+        "4f06441c84ef47ad5df443f9bf48c002",
+        "2fdb9bccddefdbddc8fdc0b8ef768c98",
+        "26e0b57598db5deb36d3aea83ca12b3a",
+        "b16157efa806d6095d1bb3760735de4a",
+        "97e0e047509d848d83c90f620478b934",
+        "2f85ab473db5054bfdb5e5eada3c09c2",
+        "c5ca778041a391b7cf7c16629725d8e1",
+        "8265684114803c240bf8f715dec13e30",
+        "e3fa49ecb496d57758f400e99316593e",
+        "2f3f95224db82248feca766519b99512",
+        "c9791fe09763762da97bf9ff9a3920ee",
+        "82158a530e613514e5d9b17814364d84",
+        "6f4249cdf1ffcd50e70a4ae1a146377c",
+        "3cc63429d41b9f218a3279e69bd0bf72",
+        "8df311dd6ac709f2196809dc475aeeb6",
+        "744ccbefa2a205afb89a1b86a3467e71",
+        "9e791e3e8cd91440e49b72a40b273227",
+        "09338ab4d6d399c59fa9166da4d72609",
+        "f5e7c4b24b6aa46e5af114893846dec7",
+        "1af455d8bb929bff77eedd927a2328c6",
+        "4cb234942d14e271ba956373e4fe016a",
+        "f4ad8c6ae899053a78985f0af90ac565",
+        "53f97b6d3f441869447974df7069c6f9",
+        "0d780ecfddbff97b36321d5a54cbba23",
+        "8d68c9f5e3a26eb5fb443756ba721863",
+        "5ef58864d488ae5ffe0dd1df49231789",
+        "29c070a150b121d515be28b3d60d17fa",
+        "ca55c69de37d58a6fb77dbe907477d5b",
+        "96d5cd595dd1c3b1a532748c19f9cabe",
+        "23d3f9369f4c7ce6b23503e2b7ce37b4",
+        "f10a515f040769352d1d377b65ade921",
+        "41cb5c06c1609e4f95576e7be1fe7732",
+        "75a4ed4d679ea00302baebaa27111030",
+        "aa8f88058b7e10cc0a4bc25ec7fc31d3",
+        "ac73beeac666f88504229a3b3efd03d6",
+        "341b574282063cbffb6dd3e233531706",
+        "c0dbf8f8350572e55ab516d0c442882a",
+        "f1280354d53064ee78f3a605d9e1e0f8",
+        "c42f5c86f271eb1c05e6e0390546678e",
+        "20aaa89622a2ca0b12183f6a0bd4f85c",
+        "1816a4d86d1b173ac045f6ac63d96fad",
+        "be36269e61fa617e82215cfec0cb0535",
+        "0df4464d06970a760b334d7bc17e4695",
+        "76f077877a2d1c9f35a38a53dcad886e",
+        "0744ecf5d5600db0f1f68a3fa5701ded",
+        "1ae4b8ee856d7ffb1ec001d075bf2093",
+        "6d6d5ba532b95cd861124ac4ee51fa52",
+        "ba6e7fc891fe2ea1695a5d5cf4eb6942",
+        "3863724e75680b96fc6952cd1ab40a97",
+        "ea1c79779808a67cadd60f378e1ec1f4",
+        "28a76fc4c5780c15df39191c5d78ae08",
+        "eb93bbd1fb2ea97911f6514e670c34e2",
+        "0406dd7764aad8b148de475780daa4e3",
+        "26bda6034d96cb863b5c685a7ef6762d",
+        "154767589f65367c092e4839dc44234c",
+        "ea8e5a4c553da61f9b13e79d2d776861",
+        "e90f68dde950411531b848c8dc56f945",
+        "f6c28eb93b5b4a24a6bcf7bec8864f73",
+        "acd640f29f0b490f97a1dda9eea35069",
+        "0f9096cc60f765897e64df0e906dca61",
+        "cb30e8c0111aa724b42ef306e4275d1f",
+        "9237fe686914aa03f1235f0440eebffb",
+        "14b2c5dbc681104b80cd057ae90b51ab",
+        "5bdab5400c57569f9bd91f592064a1ef",
+        "dc1cb776213906a2fe43811e86268b08",
+        "4b820e6717467463a3eb219826210965",
+        "7b9053b5dbd25cdb593d57812033b63f",
+        "cb51a754df052d3c36d71f8d6c80515c",
+        "744489abfd7a94bde856a47a1ffd8a4f",
+        "4bc763d39470140d6f82a1b7e5f6e162",
+        "a7f7ad975e5ebc133400952103c67ed4",
+        "1c7df769887b545422da16a6ddd42cd8",
+        "f11c9c8ba41401614d8c2530f2a00f87",
+        "0676e277eca2226e5a947952a565f9db",
+        "28ae76dbfe76b686896fbe9673309d31",
+        "8d45924d2b4a3c1bf21368d1c5c58cf1",
+        "278fdab6f5571dac3830c168b10ade62",
+        "5f03c47341f7787e92bd23ad59ce3fc1",
+        "3074cb91087f347b4cebf645bfa6bc6a",
+        "30f45ae9b29e8c400d7cd0cbf08a5951",
+        "6e5f2de5f01a9fef8ab1b332dbfdb76d",
+        "5beb127b4c0967073f2c01abba50e2f2",
+        "40b65aee07c0c2a757e93e285331f854",
+        "5d4b5b05544ba910763eeb2902aa6856",
+        "48c565deee5664cf68040a7b3b28cd3f",
+        "b4d8a990e0b84c69996b4b042b541878",
+        "2cdcf950208d31718da9a42f43d1ddc8",
+        "d692c8227716ae167675d5c40fbde21e",
+        "2dc939a89e1e542daa4864b4f4d359d1",
+        "2ae8bca1677e470dca8bda57c21517e4",
+        "b5326acc277209080dcd07ec412bc169",
+        "80f57897507dcc9976dfe8d01f04d89e",
+        "bf427b4f016500d8df465aba798f6397",
+        "1699316bc86be370d6e259c1b0d4b8bb",
+        "33cde3d89dfe3f14eb3e113a68cb63d7",
+        "3b7333895442acda9f764fa3954ed676",
+        "9307ec3590731b6e689a63e7f7d2f85b",
+        "34dd74a2ccb1a80875d970f567a16eaa",
+        "b7e0611ac792eb72f4ed9d9036b64595",
+        "829a2cc3d7d2eb06e9456aa9d69fb781",
+        "f453857010d3d6e3bb89750f4a0a560f",
+        "d3c5e37cfdd89dbb15825ee405ad6d4c",
+        "25d9a001cd93d6cf0960d2eb69e18494",
+        "87c6bf42b3f018cd052d71ea15f180bb",
+        "e8d58fdbd29c70b0aa2439e6a63cf851",
+        "ffb710806b6dec88c835ed73b572ea28",
+        "13f50a73736e02accaf8bdb053232901",
+        "31b45ce60b67b34d7867e9ca95337ce7",
+        "2173ea8dd6c95a870dc378e73f00f109",
+        "f53df2a95239236c015407a8d0bcc96f",
+        "cf366df61be69983dead44130565ac8f",
+        "72fbc62a54ab9659e7a2b6daf8f498ff",
+        "985ef8b899cb306dc3aae96f7ad78bac",
+        "bdb3e7dbea3e683560693170a5f06725",
+        "6e206b75944b2c49410e03ff62f9b09e",
+        "4658a7aac1096d0a5c4a205e5ff92550",
+        "d0ee00f3a3cb34258a5330b33b05c362",
+        "c02b81ba2db764811416bb104926f29e",
+        "9accf8d522443754d1e1812db6536f09",
+        "2a28d198286dc8ece55116d1c947569b",
+        "2418035000a8555487edd76e1116b913",
+        "7860197f239b713ac5f4a0f7422ac6b3",
+        "3f735dc0239d133ea3cc9af0e6ba3ccd",
+        "81f8aa2c647c6e019d94c808d1ac92d6",
+        "fa897b11dfaca316b187e85e59f85a45",
+        "c3c590f70fa67d4ce51b8077147a5613",
+        "8ddddc5c99fef54b055146abe28dd0e1",
+        "5980bd9e5d8f28be3e3c0b2a88d79920",
+        "61256cc806fb48b7afe09a62767e7c17",
+        "cad4ce9c70d2adadee79630f4a3cd094",
+        "d0d92f60938672eba7cf30016ee75db1",
+        "89ac6e6a5b69883b5f21aa3b43b55225",
+        "d76663ef6eb52e745a903f215a2e40e2",
+        "64ff20558f5b7228692ea16dc2962240",
+        "cff44fbaef6eec755f27c0f9b9127741",
+        "3ea309662ba65e89b63117f65758e85e",
+        "8a97b90bd40bd5e65e6fb16f3a8fd009",
+        "3be1103620713a56af5b4b8e1a951736",
+        "1a7d879cea57f40c625d91db0a34aea9",
+        "e827cf2a6235a68cff293f8dd0da7b6d",
+        "98c9c3279cfeadc8331b680e87c90052",
+        "8454d5c4f6e8242a3e3047923678ff05",
+        "82601d81e96989047aa0de4ca8447841",
+        "4a6f95794fc8e3684494fa7d6f0b0dbf",
+        "050df8ca2bd8a559ffbfecb55404a0b9",
+        "342b069197f9369705ed9e798448e5b2",
+        "1f4e8f394f2e35b69e7e13a8ad293085"
+      ],
+      "shard_directory": "runs/run_1/.seed_jobs/update_000005/b05c703afec13dd67bcb82637fff5288ccd8f8e6d68b8118e5eeb4eb279af31e"
+    },
+    {
+      "update": 6,
+      "counters": {
+        "episodes": 1000,
+        "decisions": 70266,
+        "ticks": 8217818
+      },
+      "losses": {
+        "policy_loss": 0.016316436639236702,
+        "value_loss": 0.0012883801873411155,
+        "entropy": 1.887726158565945,
+        "advantage_mean": -0.009720221161842346,
+        "advantage_std": 0.03509270399808884,
+        "gradient_norm": 0.2869197428226471,
+        "approx_kl": 0.006792080076243857,
+        "clip_fraction": 0.08444264439555506,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5898752212524414,
+        "optimizer_steps": 90,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "wait": 4102,
+          "plant": 949,
+          "shovel": 1277
+        },
+        "zero_tick_actions": 2227,
+        "immediate_plant_shovels": 338,
+        "immediate_shovel_fraction_of_plants": 0.3561643835616438,
+        "mean_abs_shaping_reward": 0.08373526230458704,
+        "mc_value_mse_before_update": 0.001866422538264114,
+        "mc_value_explained_variance_before_update": 0.9712568943921536,
+        "won": 0,
+        "truncated": 0,
+        "task_counts": {
+          "train_pool_1": 16,
+          "train_night_1": 26,
+          "train_fog_1": 15,
+          "train_day_1": 15,
+          "train_roof_1": 18
+        }
+      },
+      "rollout_seconds": 14.040544704999775,
+      "ppo_seconds": 5.471598412001185,
+      "episode_digests": [
+        "76539a73b4394221b3b91688fe09da0a",
+        "5d5ece66c3914a4f7e8dd138fc28dc61",
+        "79060339f32c61e114e8c24f87f5c6a6",
+        "661e6a9e22944e0bba30d004b1f3ad13",
+        "72a4286bb95d95aba367f7da06100a92",
+        "1ce77ff3289c0b36242338551dd52eb3",
+        "a44a8196acd9829a2fae24d5970d2a65",
+        "b6c798438ea06ca5cf4ef070621f6f7d",
+        "dfb4755e63f609ec71a415aa2ea5ab2b",
+        "f0680470669ad77f7d90a52993cb7f1e",
+        "2961a24c7a3bf941b70804b851e0d0e0",
+        "1b6fc8b835047e68db59e5cd7fc7c23b",
+        "fbfcc3febbc5c1c529c351b7864e9bca",
+        "9a41c21cc8000eaf1e1eb31937daf4e7",
+        "c5e09f84ca52dd8dca5226b286845872",
+        "f46801821a9824e9aba3e95733848ba0",
+        "7405ae8c7a7377cecca2fdd68a652e22",
+        "1921e8ee5747c86fc8df759a794b4c29",
+        "c385d1f3feb75e9f48e4a8976f87fd52",
+        "f3012a32b24d99eb4e1d6ae46485974a",
+        "6c05100c5f49ad73e4a0249345c2e409",
+        "d76d910a595b1596fee20ce8ad8bc6c3",
+        "be96c1b18074823fa75c82153fdfbe3f",
+        "b3ca426db38caa0bfcffe134c39003c4",
+        "a8668a859d73ee6350ce42e40cb5370b",
+        "c086c0b4d3038e3769d1fdb7db329a8b",
+        "3b1fcfc94992296f774bb8fd8157b9c2",
+        "e299157662c05182ff2699e60bbb9445",
+        "c6741046755008ad808c1f4a63823da8",
+        "c60823613ec9657f958e34ed293995f7",
+        "1be27891a69c08cf69a1d849e41c65a6",
+        "f5b8631b8e76a253475aa4e58c5e6ee2",
+        "143de3203c39f008b7429aea90aba55c",
+        "ba554c9bf2e752dc8ca21f9680f49902",
+        "38e22e0bdeb41788596e92a22e84132b",
+        "573515d77af818cfef04e71af66d89fa",
+        "bb8eaa25c6f54731470f45eeba30f097",
+        "41d122108dd1d01a99ab6b063c663ff4",
+        "8d817a6d1c014b231562b8243cd793c5",
+        "fe6007c976066bc6769dcdbebc15cdb4",
+        "9db8bb15b93920c31de8e7aca39d5505",
+        "b5be973feca87e879ca378da6d7e7e00",
+        "d4cf3eb06bca2925cdb280a1069c2737",
+        "f9a6daf70d746c8ebc6da4fbbbf00c9c",
+        "b49a4d1daf5cefaf00e669567992d766",
+        "08cfdc69b869cb820737a5fe1cab671a",
+        "e29fc1a87369ee05d75851513c401aa4",
+        "08bb5945b3ce9a07a63f00dac683ab03",
+        "00250638e2591e752b650a6645fc8067",
+        "fac33ad00c8506f98abd0b1e31c3d3dc",
+        "06a1561be3b6e1813081fdf0213efd36",
+        "c632d9651baa4a8fb5adeeb11a366e3d",
+        "6bd10728f1a01b883e44dd71239fe276",
+        "184e19d36a3fcd5d435bec02974ac6aa",
+        "0263630ce5c57ec6254e02102b68a2be",
+        "19d3b4787b8cc1a50f40ba4b99657a8d",
+        "fe86f4876908b6bdf395aaf76bd17aba",
+        "4f2ced154b34134e21de7078a0b00af5",
+        "c91d77b6850c06607bdd707f603428f8",
+        "a5acb324a88e148b05b14ad867ec2e40",
+        "b6c2d8223758a20eb3a1aba091322cd7",
+        "e3aebb3a5c9b8b0a5c85302f6472c438",
+        "d7606edcd346429003700b058824ddf6",
+        "f1a7788ecc20639108afc597c05ea74a",
+        "5fda67e73e885ce376c45a8e290bfd93",
+        "5b8dcdf30cefbd309aeedaa5f1df1aa0",
+        "41772edda20bd0a2e198bcc458a5cbdc",
+        "2afaa5dda16955c8fc31119d27622182",
+        "82e36be0989c7dc1e6a5b9b2b92f03cd",
+        "94cd565bd53f29bedc9b97470402ed53",
+        "0b47329b991f7237f03702b23255aee8",
+        "fb058656a94ca948bf51f3bb51d49d10",
+        "dd58ff01fec06473ab87c93a53e8e480",
+        "8ebe51423091934b82232246902ba15d",
+        "ffdf4521437a0fe2b227e3b1a9722192",
+        "65031c418f04e5282c4aea219ef6d245",
+        "6a2a9c9d2e573fa51857b27e27fe25c6",
+        "d02cef50e9d3a595f897ffaaa8cfcb96",
+        "c16fe4a5f929285f8726eb87c209ea5d",
+        "b7802e624013b39fbe08c25d0dc59830",
+        "150e3f724cf679732b0936585f3bb680",
+        "e36f0f9ad3dc84411b1fc3af20dfb910",
+        "80178e2c67dec2089a30c3148670d308",
+        "bf51f39a727b239dc5d8b261cff5adf5",
+        "bb901d0821df6399dc04f18d3c83d1e4",
+        "8f7b25dfa7656f0b730a30f4704882c2",
+        "b881fbfb72908a6e9476941b392d6125",
+        "5b8fe5145e90d04346204d7a7aac7624",
+        "406f39e2d3a4383c696f06602cf99db6",
+        "a0aa4e5622c31a5839045df8e0af5ed8"
+      ],
+      "shard_directory": "runs/run_1/.seed_jobs/update_000006/58edc9c3e0302742c0ee3e15a7cf1e66e8410710eb8b9ca20320c371732af17a"
+    }
+  ],
+  "invocations": [
+    {
+      "kind": "random_initialization",
+      "seed": 0,
+      "started_at": "2026-09-30T17:33:55.188528+00:00",
+      "commit": "70fbaaa3f48cf4e1b4b651d9282f75c5b8559b16"
+    }
+  ],
+  "initial_state_sha256": "0de883f98d3122b563ec1413ac52af7be304b03edc81686bcc5f3dff7b08ce0f",
+  "status": "budget_complete",
+  "elapsed_since_first_start_seconds": 408.677397,
+  "resources": {
+    "peak_process_tree_rss_bytes": 22421032960,
+    "min_system_available_bytes": 13130588160,
+    "peak_system_swap_used_bytes": 50204672,
+    "cuda_peak_allocated_bytes": 2199980544,
+    "cuda_peak_reserved_bytes": 5809111040
+  },
+  "checkpoint": "runs/run_1/update_000006_boundary_1790790043866134701.pt"
+}

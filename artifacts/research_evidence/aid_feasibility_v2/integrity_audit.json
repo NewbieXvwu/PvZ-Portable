@@ -1,0 +1,9 @@
+{
+  "all60tasks64seeds2controls_exact": true,
+  "all_raw_true_win_labels_valid": true,
+  "all_failures_retained": true,
+  "terminated": 7680,
+  "truncated": 0,
+  "won": 3750,
+  "archive_inventories_all_valid": true
+}

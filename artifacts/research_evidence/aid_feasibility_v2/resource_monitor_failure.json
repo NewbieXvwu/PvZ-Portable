@@ -1,0 +1,7 @@
+{
+  "scope": "all7680 native probe episodes completed; only external memory sampler failed",
+  "error": "AttributeError: str object has no attribute parent; atomic_json was called with str instead of Path",
+  "probe_wall_seconds": 517.9050697539969,
+  "measured_peak_rss": null,
+  "action": "preserve log and all outcomes; do not claim an unmeasured process-tree memory peak"
+}

@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "episodes": 7680,
+  "source_directory": "artifacts/research/aid_feasibility_v2",
+  "raw_individual_files_retained": 7680,
+  "files": {
+    "summary.json": {
+      "sha256": "e9acc8a875018890a0947e1da3d1d9cf6318e5f57fa6e13ec0b0781498c77956",
+      "bytes": 32588
+    },
+    "prerequisite_check.json": {
+      "sha256": "65ff99db4136518042a1ae55932661d97ad1b6169ca4291c27b45287ce0552c3",
+      "bytes": 248
+    },
+    "protocol.json": {
+      "sha256": "2b03fa0c3d99e6b152136de4b12ee15bd3a513aa1aa3a4f5527d320b99e3398e",
+      "bytes": 559
+    },
+    "results.json.gz": {
+      "sha256": "08b4e691f6c82f256a2a14dc16295f5004aa32ced003cb7a0b5e6f8c77b40919",
+      "bytes": 208265
+    },
+    "resource_monitor_failure.json": {
+      "sha256": "4287ff991d3eaa3a644b1606673b1050c5e4205c5546a651672ba47484131d57",
+      "bytes": 378
+    },
+    "manifest.json": {
+      "sha256": "7f468977d0419d42e9756e83cb297fca589d988b7ec1bd5025fb7e3fb403f60b",
+      "bytes": 106445
+    },
+    "progress.json": {
+      "sha256": "a0aa245a0de0f507d7538e0d5908303289e769507053c9a409579a1f259a41a0",
+      "bytes": 111
+    },
+    "logs/aid_feasibility_v2.log": {
+      "sha256": "4b928f3de9de86510852e54771a60937dba8c8f481fb81cac36e63942db39b43",
+      "bytes": 204568
+    }
+  },
+  "scope": "all successful and failed raw outcomes plus frozen manifest and logs; independent rule probe, not PPO data"
+}
