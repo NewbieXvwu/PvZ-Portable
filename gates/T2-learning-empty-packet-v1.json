@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "task_id": "T2-learning-empty-packet-v1",
+  "result": "pass",
+  "gate_result": "pass",
+  "scope": "Environment observation cost guard on combined observation/course candidate only; all public fields including zombie IDs and actual step info under same actions; not learning or reference resume pass",
+  "source_branch": "research/learning-packet-cost-v1",
+  "source_commit": "189d8f1abdebd6566c1656469958c98cd3642277",
+  "simulator_sha256": "371a75d7e4c35b03267e9932510f44abaf2ee8f087870acd8277f27306767a3c",
+  "required_fingerprints": {
+    "src/LawnApp.cpp": "dbe518e8e329276aa7867da9e5f8fe3c036d0689352a2ce300d4ee4adf76720c",
+    "artifacts/t5/perf/learning_packet_cost_native_equivalence_v1.json": "e01a22af252fc09ead12f4f46439851bec1ca18cb1fe22e205f7f35a693e04a9"
+  },
+  "native_evidence": {
+    "path": "artifacts/t5/perf/learning_packet_cost_native_equivalence_v1.json",
+    "sha256": "e01a22af252fc09ead12f4f46439851bec1ca18cb1fe22e205f7f35a693e04a9",
+    "full_report": {
+      "path": "artifacts/research/learning_packet_cost_native_equivalence_v1/report.json",
+      "sha256": "4a2bf79d9b94f13f18403c1114cf215d0a67ede0d7f1f202dd0e247ba25f9a37"
+    },
+    "paired_jobs": 1728,
+    "observations": 138315,
+    "empty_states": 26014,
+    "failures": 0,
+    "recorded_model_traces": 0
+  },
+  "permitted_difference": "Only old packet.type=-1 cost normalized0; all other public fields and step info exact",
+  "interpretation": "Explicit0 model traces in this distinct old-ID/new-ID pair protocol; previous943/9e 32-trace gate remains unchanged",
+  "seconds": 2080.463528969005,
+  "next_required": "256-wide six-layer reference actual interruption, full model/optimizer/RNG/course/evaluation equality; formal learning requires separate gate",
+  "delivery": "KB gate/proof on git; complete raw/log tree local pending HF"
+}

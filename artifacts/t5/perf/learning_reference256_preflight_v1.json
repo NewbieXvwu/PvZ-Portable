@@ -1,0 +1,19 @@
+{
+  "model": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "parameter_count": 7866721,
+  "cpu_constructor_initial_state_sha256": "3886745337e6f2d28fa289bcf3e6b8c616dfd8c2e4d9b153bca4a732dce0eb4a",
+  "note": "Preflight CPU construction only; actual CUDA control/interruption still pending",
+  "protocol_sha256": "d86720888f057525385a58321e7cf2a1d3feb1b78434134601fb44921a4233ab",
+  "tests": 4,
+  "test_log_main": "logs/t5_research/reference_interrupt_protocol_v1.log"
+}

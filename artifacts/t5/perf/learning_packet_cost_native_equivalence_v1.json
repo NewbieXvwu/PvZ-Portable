@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "eaa18bd3d4cc13b70c002b0b498796d54b3e0e6a06a2ce87bf3fbf3168bb2b06",
+  "native_hashes": {
+    "old_binary": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
+    "new_binary": "371a75d7e4c35b03267e9932510f44abaf2ee8f087870acd8277f27306767a3c"
+  },
+  "paired_jobs": 1728,
+  "paired_observations": 138315,
+  "paired_empty_states": 26014,
+  "paired_failures": 0,
+  "recorded_traces": 0,
+  "recorded_failures": 0,
+  "recorded_replays": [],
+  "seconds": 2080.463528969005,
+  "coexecution": "Two lightweight native workers overlap frozen reward matrix; no neural networks or CUDA updates; not dedicated costs",
+  "intentional_exception": "Only SEED_NONE cost is defined as0; all other public fields and action responses exact under identical actions.",
+  "scope": "Native semantics and readonly replay; not learning success, not yet fixed-policy repeatability.",
+  "result": "pass",
+  "full_report": {
+    "path": "artifacts/research/learning_packet_cost_native_equivalence_v1/report.json",
+    "sha256": "4a2bf79d9b94f13f18403c1114cf215d0a67ede0d7f1f202dd0e247ba25f9a37"
+  },
+  "failure_jobs": []
+}

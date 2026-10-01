@@ -8,6 +8,7 @@ It cannot grant a learning pass or replace the running reward matrix.
 from __future__ import annotations
 
 import argparse
+import fcntl
 import gzip
 import json
 import os
@@ -61,9 +62,9 @@ def gpu_free_mib():
     return int(result.stdout.splitlines()[0].strip())
 
 
-def launch(config, output, resource, log_path, resume=False):
-    if gpu_free_mib() < 1024:
-        raise RuntimeError("probe requires at least 1024 MiB currently free VRAM; no main candidate is interrupted")
+def launch(config, output, resource, log_path, resume=False, minimum_free_mib=1024):
+    if gpu_free_mib() < minimum_free_mib:
+        raise RuntimeError(f"probe requires at least {minimum_free_mib} MiB free VRAM; no other candidate is interrupted")
     command = [sys.executable, str(ROOT / "python/train_pvz_ppo_task_family.py"),
                "--resource-dir", str(resource), "--experiment-config", str(config),
                "--output-dir", str(output)]
@@ -103,12 +104,50 @@ def checkpoint(output):
     return pointer, torch.load(path, map_location="cpu", weights_only=False)
 
 
+def read_protocol(path, configs, loaded):
+    protocol = json.loads(path.read_text())
+    if sha256_file(Path(__file__)) != protocol["helper_sha256"]:
+        raise ValueError("interruption helper changed after preregistration")
+    for name, expected in protocol["required_fingerprints"].items():
+        if sha256_file(ROOT / name) != expected:
+            raise ValueError(f"preregistered interruption source/config changed: {name}")
+    if [str(p.relative_to(ROOT)) for p in configs] != protocol["configs"]:
+        raise ValueError("configs differ from the preregistered pair")
+    if any(c["model"] != protocol["model"] for c in loaded):
+        raise ValueError("actual model differs from preregistered reference")
+    return protocol
+
+
+def wait_for_idle(protocol, output, enabled):
+    started, last_print = time.monotonic(), 0.
+    while True:
+        states = {name: json.loads(Path(name).read_text()).get("status")
+                  if Path(name).exists() else "missing" for name in protocol["idle_states"]}
+        if all(states[name] == expected for name, expected in protocol["idle_states"].items()):
+            return time.monotonic() - started
+        failed = any(status == "failed" for status in states.values())
+        for name, status in states.items():
+            if status == "process_finished" and json.loads(Path(name).read_text()).get("returncode", 0) != 0:
+                failed = True
+        if failed:
+            raise RuntimeError("preceding execution stopped; reference probe not started")
+        if not enabled:
+            raise RuntimeError("reference probe requires preceding matrix and reevaluation to finish")
+        if time.monotonic() - last_print >= 1800:
+            atomic_json(output / "waiting.json", {"states": states, "workers_started": False})
+            print(f"waiting for reference-probe idle prerequisites: {states}", flush=True)
+            last_print = time.monotonic()
+        time.sleep(30)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--continuous-config", type=Path, required=True)
     parser.add_argument("--interrupted-config", type=Path, required=True)
     parser.add_argument("--resource-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--protocol", type=Path)
+    parser.add_argument("--wait-for-idle", action="store_true")
     args = parser.parse_args()
     if Path(sys.executable).resolve() != Path("/home/newbiexvwu/.venvs/ml/bin/python").resolve():
         raise RuntimeError("use the project ML virtualenv")
@@ -117,25 +156,50 @@ def main():
     common = [{k: v for k, v in config.items() if k != "experiment_id"} for config in loaded]
     if common[0] != common[1] or loaded[0]["experiment_id"] == loaded[1]["experiment_id"]:
         raise ValueError("paired engineering configs must differ only in independent output identity")
+    protocol = read_protocol(args.protocol, configs, loaded) if args.protocol else None
+    if args.wait_for_idle and protocol is None:
+        raise ValueError("waiting requires an explicit preregistered protocol")
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=False)
+    execution_lock = (output / ".execution.lock").open("a")
+    fcntl.flock(execution_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     continuous, interrupted = output / "continuous", output / "interrupted"
-    timeout = 600
+    timeout = protocol["invocation_timeout_seconds"] if protocol else 600
+    minimum_free_mib = protocol["minimum_free_vram_mib"] if protocol else 1024
     started = time.monotonic()
     process = None
-    report = {"schema_version": 1, "scope": "actual new-input small-model SIGKILL/full-resume engineering probe; no learning pass",
+    report = {"schema_version": 1, "scope": "actual explicitly configured SIGKILL/full-resume engineering probe; no learning pass",
               "configs": [{"path": str(path), "sha256": sha256_file(path)} for path in configs],
               "model_config": loaded[0]["model"], "invocation_timeout_seconds": timeout,
               "exact_equality_required": True, "coexecution": "original reward matrix remains running; elapsed time is not dedicated-machine performance"}
     try:
+        if protocol:
+            report["protocol_sha256"] = sha256_file(args.protocol)
+            report["waiting_seconds"] = wait_for_idle(protocol, output, args.wait_for_idle)
+            read_protocol(args.protocol, configs, loaded)
+            started = time.monotonic()
+            available = int(next(line.split()[1] for line in Path("/proc/meminfo").read_text().splitlines()
+                                 if line.startswith("MemAvailable:"))) * 1024
+            if available < protocol["minimum_available_ram_bytes"]:
+                raise RuntimeError("reference probe RAM precondition unmet; no other candidate is stopped")
+            report["coexecution"] = "preceding frozen reward matrix and corrected reevaluation completed before reference probe"
+
+        def remaining_timeout():
+            remaining = (protocol["total_timeout_seconds"] - (time.monotonic() - started)) if protocol else timeout
+            if remaining <= 0:
+                raise RuntimeError("reference probe exceeded total preregistered timeout")
+            return min(timeout, remaining)
+
         print("phase=continuous", flush=True)
-        process, command = launch(configs[0], continuous, args.resource_dir.resolve(), output / "continuous.log")
+        process, command = launch(configs[0], continuous, args.resource_dir.resolve(), output / "continuous.log",
+                                  minimum_free_mib=minimum_free_mib)
         report["continuous_command"] = command
-        wait_success(process, timeout)
+        wait_success(process, remaining_timeout())
         print("phase=interrupt_at_update2_partial_collection", flush=True)
-        process, command = launch(configs[1], interrupted, args.resource_dir.resolve(), output / "interrupted.log")
+        process, command = launch(configs[1], interrupted, args.resource_dir.resolve(), output / "interrupted.log",
+                                  minimum_free_mib=minimum_free_mib)
         report["interrupted_command"] = command
-        deadline = time.monotonic() + timeout
+        deadline = time.monotonic() + remaining_timeout()
         while True:
             if process.poll() is not None:
                 raise RuntimeError("interrupted arm exited before the frozen partial-collection trigger")
@@ -168,9 +232,10 @@ def main():
                 break
             time.sleep(0.1)
         print(f"phase=resume cached_partial_shards={len(retained)}", flush=True)
-        process, command = launch(configs[1], interrupted, args.resource_dir.resolve(), output / "resumed.log", resume=True)
+        process, command = launch(configs[1], interrupted, args.resource_dir.resolve(), output / "resumed.log", resume=True,
+                                  minimum_free_mib=minimum_free_mib)
         report["resume_command"] = command
-        wait_success(process, timeout)
+        wait_success(process, remaining_timeout())
         differences = []
         left_pointer, left = checkpoint(continuous)
         right_pointer, right = checkpoint(interrupted)
@@ -206,6 +271,7 @@ def main():
             differences.append({"path": "partial_shard_reuse", "kind": "preservation_or_log"})
         if left["training_state"]["status"] != "budget_complete" or right["training_state"]["status"] != "budget_complete":
             differences.append({"path": "final_status", "kind": "budget_incomplete"})
+        remaining_timeout()
         report.update({"gate_result": "pass" if not differences else "fail", "differences": differences,
                        "final_counters": left["training_state"]["counters"], "final_updates": left["training_state"]["updates"],
                        "evaluated_nodes": len(left["training_state"]["learning_curve"]),
