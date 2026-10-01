@@ -1,0 +1,1902 @@
+{
+  "schema_version": 1,
+  "experiment_id": "reward_r2_seed1_v2",
+  "scope": "every episode in every completed update of the state snapshot",
+  "state_sha256": "1a01b4c7fd95e48866b279c6ad6f99f6157580f781b6bd7de8aebed52bb88053",
+  "source_provenance": {
+    "commit": "df0cbde9210da9f34c1c146255f2a4c88c973b22",
+    "worktree_dirty": true,
+    "fingerprints": {
+      "python/pvz_agent_model.py": "f6c8983f01ad6d8dc9a55422e35167987219b4663798087cc0eaa2914b9f2a3b",
+      "python/pvz_research.py": "744273f793c891a1e787c60f56c53b8f7ace8f4f89c69fdfbce59f808c56659b",
+      "python/train_pvz_ppo.py": "0678b08f3a54529b5c5020db8dc8967639ac1713915cfcaad2c5e14bec1168d9",
+      "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
+      "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+      "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+      "python/pvz_common.py": "671087c27689e0133f5f5acc6904543bad634506eaed60c436881270549a6c2c",
+      "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+      "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
+      "simulator": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
+      "main.pak": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+      "properties/partner.xml": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3",
+      "train_manifest": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
+      "evaluation_manifest": "51469f8ae3c2eeabef89325ec660c6046187e77d2c2237e9aed8de1534fd1db9"
+    },
+    "model_config": {
+      "layers": 4,
+      "width": 192,
+      "heads": 6,
+      "ff_width": 768,
+      "gru_layers": 2,
+      "gru_width": 256,
+      "critic_width": 256,
+      "critic_layers": 1
+    },
+    "parameter_count": 3682505,
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "experiment_identity": "b2964bc37fec80eb694cea12856356671cf02ee6d32fc5d9e98486ec905c64ab"
+  },
+  "config": {
+    "schema_version": 1,
+    "experiment_id": "reward_r2_seed1_v2",
+    "purpose": "paired_reward_comparison_v2_after_dynamic_prefix_repair",
+    "initialization_seed": 1,
+    "sampling_seed": 1701,
+    "model": {
+      "layers": 4,
+      "width": 192,
+      "heads": 6,
+      "ff_width": 768,
+      "gru_layers": 2,
+      "gru_width": 256,
+      "critic_width": 256,
+      "critic_layers": 1
+    },
+    "reward": {
+      "name": "R2",
+      "gamma": 1.0,
+      "shaping_weight": 0
+    },
+    "ppo": {
+      "learning_rate": 0.0001,
+      "ppo_epochs": 2,
+      "sequence_length": 128,
+      "minibatch_chunks": 2,
+      "clip_epsilon": 0.2,
+      "gae_lambda": 0.95,
+      "value_coefficient": 0.5,
+      "entropy_coefficient": 0.01,
+      "attention_backend": "dense",
+      "target_kl": 0.03
+    },
+    "sampling": {
+      "manifest": "artifacts/task_family/train.json",
+      "task_ids": [
+        "train_day_1",
+        "train_night_1",
+        "train_pool_1",
+        "train_fog_1",
+        "train_roof_1"
+      ],
+      "method": "balanced",
+      "rollout_episodes": 200
+    },
+    "budget": {
+      "decisions": 500000,
+      "max_episodes": null
+    },
+    "evaluation": {
+      "manifest": "experiments/t5/reward_evaluation_v1.json",
+      "modes": [
+        "greedy",
+        "sampled"
+      ],
+      "decision_nodes": [
+        125000,
+        250000,
+        375000,
+        500000
+      ]
+    },
+    "runtime": {
+      "workers": 8,
+      "worker_threads": 1,
+      "worker_device": "cpu",
+      "update_device": "cuda",
+      "max_actions": 4000,
+      "cudnn_tf32": false,
+      "matmul_precision": "highest"
+    },
+    "prerequisites": [
+      "gates/T5-A-research-v4-retention.json",
+      "gates/T2-dynamic-prefix-v4.json"
+    ]
+  },
+  "counters": {
+    "episodes": 8656,
+    "decisions": 500011,
+    "ticks": 67346371
+  },
+  "snapshot_phase": "ready",
+  "normalization": "per completed update, population std; float64 offline recomputation",
+  "mc_semantics": "duration-discounted rewards plus stored truncation bootstrap",
+  "trace_weight_semantics": "terminal TD error coefficient in first GAE, not a memory gradient",
+  "plant_card_semantics": "actual seed_type from the frozen task deck, not packet position",
+  "summary": {
+    "episodes": 8656,
+    "decisions": 500011,
+    "won": 3537,
+    "truncated": 0,
+    "action_counts": {
+      "plant": 91581,
+      "shovel": 54155,
+      "wait": 354275
+    },
+    "zero_tick_fraction": 0.29152158652509647,
+    "immediate_plant_shovels": 7278,
+    "immediate_shovel_fraction_of_plants": 0.07947063255478756,
+    "mc_value_mse": 0.3662451149576804,
+    "mc_value_explained_variance": 0.5660586635972172,
+    "mc_return": {
+      "count": 500011,
+      "mean": -0.40018519592568963,
+      "std": 0.9164342905860287,
+      "min": -1.0,
+      "p05": -1.0,
+      "median": -1.0,
+      "p95": 1.0,
+      "max": 1.0,
+      "positive_fraction": 0.29990740203715516
+    },
+    "raw_advantage": {
+      "count": 500011,
+      "mean": -0.021027622761382293,
+      "std": 0.3795810732955973,
+      "min": -2.1171714067459106,
+      "p05": -0.5387659952970065,
+      "median": -0.036546303299404274,
+      "p95": 0.7685812978837844,
+      "max": 2.1651443243026733,
+      "positive_fraction": 0.27404597098863825
+    },
+    "normalized_advantage": {
+      "count": 500011,
+      "mean": -9.663168616627797e-18,
+      "std": 0.9999999999999999,
+      "min": -12.106862617193064,
+      "p05": -1.0164297628285448,
+      "median": -0.14990806637974236,
+      "p95": 1.5770787345811896,
+      "max": 19.522811999347333,
+      "positive_fraction": 0.34241246692572763
+    },
+    "td_error": {
+      "count": 500011,
+      "mean": -1.0092310226026001e-05,
+      "std": 0.08882202764783541,
+      "min": -2.1171714067459106,
+      "p05": -0.0391574501991272,
+      "median": -0.0010387897491455078,
+      "p95": 0.030632510781288147,
+      "max": 2.1651443243026733,
+      "positive_fraction": 0.45167406317061026
+    },
+    "absolute_shaping_reward": {
+      "count": 500011,
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "p05": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.0,
+      "positive_fraction": 0.0
+    },
+    "discounted_terminal_return": {
+      "count": 8656,
+      "mean": -0.1827634011090573,
+      "std": 0.9831569250201363,
+      "min": -1.0,
+      "p05": -1.0,
+      "median": -1.0,
+      "p95": 1.0,
+      "max": 1.0,
+      "positive_fraction": 0.40861829944547134
+    },
+    "discounted_shaping_return": {
+      "count": 8656,
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "p05": 0.0,
+      "median": 0.0,
+      "p95": 0.0,
+      "max": 0.0,
+      "positive_fraction": 0.0
+    },
+    "first_to_terminal_td_trace_weight": {
+      "count": 8656,
+      "mean": 0.28607947864750244,
+      "std": 0.09604992211453325,
+      "min": 0.023771184649247372,
+      "p05": 0.14534749753137022,
+      "median": 0.26760649873635095,
+      "p95": 0.46329123015975304,
+      "max": 0.6400226829342627,
+      "positive_fraction": 1.0
+    },
+    "max_abs_shaping_telescoping_error": 0.0,
+    "by_action": {
+      "plant": {
+        "count": 91581,
+        "raw_advantage": {
+          "count": 91581,
+          "mean": -0.004889502949216372,
+          "std": 0.40345745127664756,
+          "min": -1.9983970690393753,
+          "p05": -0.5552266445825845,
+          "median": -0.03585645379643387,
+          "p95": 0.8489098872726778,
+          "max": 2.1560261249542236,
+          "positive_fraction": 0.307345410074142
+        },
+        "normalized_advantage": {
+          "count": 91581,
+          "mean": 0.019412429138855776,
+          "std": 1.0297324704175597,
+          "min": -12.092778631883386,
+          "p05": -1.1138976031310655,
+          "median": -0.1455254194747923,
+          "p95": 1.7728294098637996,
+          "max": 19.039336743828056,
+          "positive_fraction": 0.37025147137506687
+        }
+      },
+      "shovel": {
+        "count": 54155,
+        "raw_advantage": {
+          "count": 54155,
+          "mean": -0.04153448161538759,
+          "std": 0.34322975075227774,
+          "min": -1.870412237940044,
+          "p05": -0.4348963974816793,
+          "median": -0.051703290670770195,
+          "p95": 0.6692846520849032,
+          "max": 2.146767497062683,
+          "positive_fraction": 0.15704921059920599
+        },
+        "normalized_advantage": {
+          "count": 54155,
+          "mean": -0.014934823339081242,
+          "std": 1.0167987202938789,
+          "min": -7.943883031102165,
+          "p05": -0.8012185063006406,
+          "median": -0.21050995704480932,
+          "p95": 1.4384960599587753,
+          "max": 14.95535837782849,
+          "positive_fraction": 0.22489151509555905
+        }
+      },
+      "wait": {
+        "count": 354275,
+        "raw_advantage": {
+          "count": 354275,
+          "mean": -0.022064659552799442,
+          "std": 0.3783286501866949,
+          "min": -2.1171714067459106,
+          "p05": -0.5542829193358253,
+          "median": -0.03379198227336066,
+          "p95": 0.7510661200249816,
+          "max": 2.1651443243026733,
+          "positive_fraction": 0.28332227789146847
+        },
+        "normalized_advantage": {
+          "count": 354275,
+          "mean": -0.002735203768365286,
+          "std": 0.9894856012636102,
+          "min": -12.106862617193064,
+          "p05": -1.035105207315764,
+          "median": -0.13780300503695136,
+          "p95": 1.5329046265431714,
+          "max": 19.522811999347333,
+          "positive_fraction": 0.35318043892456424
+        }
+      }
+    },
+    "by_plant_card": {
+      "0": {
+        "count": 2504,
+        "normalized_advantage": {
+          "count": 2504,
+          "mean": 0.1319273536167808,
+          "std": 1.2026913718857986,
+          "min": -11.501313478797424,
+          "p05": -1.1890757719837475,
+          "median": 0.0327587203139421,
+          "p95": 2.387706089363954,
+          "max": 9.967327862119289,
+          "positive_fraction": 0.5287539936102237
+        }
+      },
+      "1": {
+        "count": 20793,
+        "normalized_advantage": {
+          "count": 20793,
+          "mean": -0.0377558816249784,
+          "std": 0.9913629952251385,
+          "min": -9.374741253149297,
+          "p05": -1.1234766604077908,
+          "median": -0.20730338395859124,
+          "p95": 1.6319928703152227,
+          "max": 11.333431945496853,
+          "positive_fraction": 0.33362189198287884
+        }
+      },
+      "10": {
+        "count": 13,
+        "normalized_advantage": {
+          "count": 13,
+          "mean": -0.6163498518772941,
+          "std": 0.637783292354196,
+          "min": -2.2650151314843683,
+          "p05": -1.7165314688806788,
+          "median": -0.46398254506378367,
+          "p95": -0.03200238199349766,
+          "max": 0.028700934992470364,
+          "positive_fraction": 0.07692307692307693
+        }
+      },
+      "12": {
+        "count": 13,
+        "normalized_advantage": {
+          "count": 13,
+          "mean": -0.3894783545008772,
+          "std": 0.986462032279344,
+          "min": -2.7811657348204815,
+          "p05": -1.7708465303501182,
+          "median": -0.3853923162902244,
+          "p95": 0.8781262533563917,
+          "max": 2.0446709272591206,
+          "positive_fraction": 0.15384615384615385
+        }
+      },
+      "14": {
+        "count": 15,
+        "normalized_advantage": {
+          "count": 15,
+          "mean": -0.18344182824030042,
+          "std": 0.8800668137226959,
+          "min": -0.8458894285964557,
+          "p05": -0.7606996121825922,
+          "median": -0.28788320318240923,
+          "p95": 1.1067280181356662,
+          "max": 2.92958279113493,
+          "positive_fraction": 0.13333333333333333
+        }
+      },
+      "16": {
+        "count": 11407,
+        "normalized_advantage": {
+          "count": 11407,
+          "mean": -0.06693379818284259,
+          "std": 0.9004661610083751,
+          "min": -9.521807979460732,
+          "p05": -1.1980029346729797,
+          "median": -0.16244874966804052,
+          "p95": 1.3820914662986283,
+          "max": 11.145754690972787,
+          "positive_fraction": 0.33549574822477424
+        }
+      },
+      "2": {
+        "count": 193,
+        "normalized_advantage": {
+          "count": 193,
+          "mean": 0.8352454935975381,
+          "std": 1.9477564659145428,
+          "min": -5.282923270722547,
+          "p05": -0.7212110404146914,
+          "median": -0.01739754516438441,
+          "p95": 4.820285342209415,
+          "max": 7.040048755562325,
+          "positive_fraction": 0.47668393782383417
+        }
+      },
+      "3": {
+        "count": 7172,
+        "normalized_advantage": {
+          "count": 7172,
+          "mean": -0.010398853227122203,
+          "std": 1.0844628024495502,
+          "min": -12.092778631883386,
+          "p05": -0.999247628534012,
+          "median": -0.17241792826068825,
+          "p95": 1.7940176108578838,
+          "max": 19.039336743828056,
+          "positive_fraction": 0.3390964863357501
+        }
+      },
+      "33": {
+        "count": 9962,
+        "normalized_advantage": {
+          "count": 9962,
+          "mean": 0.07372223684569125,
+          "std": 1.184851661841928,
+          "min": -6.982004983075417,
+          "p05": -0.9487170055495779,
+          "median": -0.20626910746027788,
+          "p95": 1.9411769722841907,
+          "max": 17.205094856574465,
+          "positive_fraction": 0.37321822927123066
+        }
+      },
+      "4": {
+        "count": 10233,
+        "normalized_advantage": {
+          "count": 10233,
+          "mean": 0.056045876772236145,
+          "std": 1.1051950571883447,
+          "min": -8.056330712556584,
+          "p05": -0.9778801480778463,
+          "median": -0.17192033925692995,
+          "p95": 2.2182245282739923,
+          "max": 13.844530885250844,
+          "positive_fraction": 0.3319652105931789
+        }
+      },
+      "5": {
+        "count": 18,
+        "normalized_advantage": {
+          "count": 18,
+          "mean": 0.15718681356482136,
+          "std": 0.9370637273039835,
+          "min": -1.8946903449664967,
+          "p05": -0.6942362313858317,
+          "median": 0.07703667221724943,
+          "p95": 1.6490593771248023,
+          "max": 3.158171176630705,
+          "positive_fraction": 0.6666666666666666
+        }
+      },
+      "8": {
+        "count": 21089,
+        "normalized_advantage": {
+          "count": 21089,
+          "mean": 0.06269195387192857,
+          "std": 0.9811337239683313,
+          "min": -6.496858975420695,
+          "p05": -1.093262553776454,
+          "median": -0.0939836006451093,
+          "p95": 1.7592793105977091,
+          "max": 11.030315417170915,
+          "positive_fraction": 0.3907724406088482
+        }
+      },
+      "9": {
+        "count": 8169,
+        "normalized_advantage": {
+          "count": 8169,
+          "mean": 0.03578928790302022,
+          "std": 0.9511865755572628,
+          "min": -6.532283023871257,
+          "p05": -1.355754620899206,
+          "median": -0.02574676754515311,
+          "p95": 1.6212975872661366,
+          "max": 8.342824818616306,
+          "positive_fraction": 0.4802301383278247
+        }
+      }
+    },
+    "wait_choice_counts": {
+      "60": 72056,
+      "300": 144808,
+      "150": 137411
+    }
+  },
+  "raw_episode_results": "artifacts/research/reward_r2_seed1_v2/complete_diagnostics.episodes.json.gz",
+  "seconds": 36.479870793999,
+  "full_diagnostics": {
+    "local_path": "artifacts/research/reward_r2_seed1_v2/complete_diagnostics.json",
+    "sha256": "a30a743cae66bb1782fc94ab57a7f44d2323f09baa428ad6dfbf920cec961fa3"
+  },
+  "updates": [
+    {
+      "update": 1,
+      "counters": {
+        "episodes": 200,
+        "decisions": 14133,
+        "ticks": 1629794
+      },
+      "manifest_sha256": "581ba184933454b4f19234244f267291741b7b1eb5353cf991cc88ab9292c7c5",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14133,
+        "won": 1,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1951,
+          "shovel": 2741,
+          "wait": 9441
+        },
+        "immediate_plant_shovels": 727,
+        "immediate_shovel_fraction_of_plants": 0.3726294208098411,
+        "mc_value_mse": 1.112006757860446,
+        "mc_value_explained_variance": -0.03430290602464425
+      }
+    },
+    {
+      "update": 2,
+      "counters": {
+        "episodes": 400,
+        "decisions": 28627,
+        "ticks": 3281131
+      },
+      "manifest_sha256": "3d7bbc4d9de05a21dffc50b39bdf534ffe02ec20a5975fc4bf6515aad68ac5f6",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14494,
+        "won": 2,
+        "truncated": 0,
+        "action_counts": {
+          "shovel": 2598,
+          "plant": 1952,
+          "wait": 9944
+        },
+        "immediate_plant_shovels": 628,
+        "immediate_shovel_fraction_of_plants": 0.32172131147540983,
+        "mc_value_mse": 0.3190283221078273,
+        "mc_value_explained_variance": -0.874107025628809
+      }
+    },
+    {
+      "update": 3,
+      "counters": {
+        "episodes": 600,
+        "decisions": 42940,
+        "ticks": 4938623
+      },
+      "manifest_sha256": "bcafbb5b89201d3e78a1e46de97501066f15074b9ea591fe4fd4d23e74b26dc2",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14313,
+        "won": 1,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1952,
+          "shovel": 2554,
+          "wait": 9807
+        },
+        "immediate_plant_shovels": 508,
+        "immediate_shovel_fraction_of_plants": 0.26024590163934425,
+        "mc_value_mse": 0.08371363225998263,
+        "mc_value_explained_variance": -0.6582611228032165
+      }
+    },
+    {
+      "update": 4,
+      "counters": {
+        "episodes": 800,
+        "decisions": 56949,
+        "ticks": 6574531
+      },
+      "manifest_sha256": "aabf8e7735fdeb8fd022920ebca9dc57a3a56010850bbf499608116c72611ba3",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14009,
+        "won": 5,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 9720,
+          "plant": 1971,
+          "shovel": 2318
+        },
+        "immediate_plant_shovels": 450,
+        "immediate_shovel_fraction_of_plants": 0.228310502283105,
+        "mc_value_mse": 0.06706556204973338,
+        "mc_value_explained_variance": -0.017344619159366692
+      }
+    },
+    {
+      "update": 5,
+      "counters": {
+        "episodes": 1000,
+        "decisions": 71642,
+        "ticks": 8271125
+      },
+      "manifest_sha256": "aac0c0e49491c44bf8c89aa87c8dd61b10d1924e5d5a8fbc449d165da6103346",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14693,
+        "won": 4,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2043,
+          "wait": 10285,
+          "shovel": 2365
+        },
+        "immediate_plant_shovels": 398,
+        "immediate_shovel_fraction_of_plants": 0.19481155163974548,
+        "mc_value_mse": 0.05903586176251792,
+        "mc_value_explained_variance": 0.030093618496619623
+      }
+    },
+    {
+      "update": 6,
+      "counters": {
+        "episodes": 1200,
+        "decisions": 86283,
+        "ticks": 9928405
+      },
+      "manifest_sha256": "cbb544a06f8e28551fbb7db5c4132654c3da12db518a16816e3a3da28308f9fb",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14641,
+        "won": 5,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2089,
+          "shovel": 2338,
+          "wait": 10214
+        },
+        "immediate_plant_shovels": 436,
+        "immediate_shovel_fraction_of_plants": 0.2087123025370991,
+        "mc_value_mse": 0.07013109718769643,
+        "mc_value_explained_variance": 0.03010893770447931
+      }
+    },
+    {
+      "update": 7,
+      "counters": {
+        "episodes": 1400,
+        "decisions": 100785,
+        "ticks": 11557342
+      },
+      "manifest_sha256": "f874ba75758087623d75e737004d527fb7abec5ed202c3a28d6bac07fade3082",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14502,
+        "won": 10,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 10113,
+          "plant": 2111,
+          "shovel": 2278
+        },
+        "immediate_plant_shovels": 356,
+        "immediate_shovel_fraction_of_plants": 0.16864045476077688,
+        "mc_value_mse": 0.1339581215823346,
+        "mc_value_explained_variance": 0.02763853783251935
+      }
+    },
+    {
+      "update": 8,
+      "counters": {
+        "episodes": 1600,
+        "decisions": 115402,
+        "ticks": 13227399
+      },
+      "manifest_sha256": "9f5b1157e4e4f241359b09e5604ee7ffb54c0aaa104aec8e062586da50399bab",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14617,
+        "won": 6,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2126,
+          "shovel": 2167,
+          "wait": 10324
+        },
+        "immediate_plant_shovels": 299,
+        "immediate_shovel_fraction_of_plants": 0.14063969896519285,
+        "mc_value_mse": 0.09794844088283218,
+        "mc_value_explained_variance": 0.029298657444891574
+      }
+    },
+    {
+      "update": 9,
+      "counters": {
+        "episodes": 1734,
+        "decisions": 125340,
+        "ticks": 14334511
+      },
+      "manifest_sha256": "1fb548ad94c2885c896f848201993be819fa3a6717a5d7e0069237dbe4cf1b7d",
+      "summary": {
+        "episodes": 134,
+        "decisions": 9938,
+        "won": 9,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1401,
+          "shovel": 1519,
+          "wait": 7018
+        },
+        "immediate_plant_shovels": 236,
+        "immediate_shovel_fraction_of_plants": 0.1684511063526053,
+        "mc_value_mse": 0.1991987248590405,
+        "mc_value_explained_variance": 0.018943492271091045
+      }
+    },
+    {
+      "update": 10,
+      "counters": {
+        "episodes": 1934,
+        "decisions": 139794,
+        "ticks": 15967578
+      },
+      "manifest_sha256": "3c5410319b8df4ddcb20f7797b9e336e303d9056e73171d10fa66148307b6b06",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14454,
+        "won": 8,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 10004,
+          "plant": 2043,
+          "shovel": 2407
+        },
+        "immediate_plant_shovels": 379,
+        "immediate_shovel_fraction_of_plants": 0.18551150269211944,
+        "mc_value_mse": 0.10870897940557327,
+        "mc_value_explained_variance": 0.011607690508152357
+      }
+    },
+    {
+      "update": 11,
+      "counters": {
+        "episodes": 2134,
+        "decisions": 154205,
+        "ticks": 17629436
+      },
+      "manifest_sha256": "46b7d1e9b6f5f5ff61a616e024430591a5450d13057e8c100801f19246a0b6bc",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14411,
+        "won": 9,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2108,
+          "shovel": 2517,
+          "wait": 9786
+        },
+        "immediate_plant_shovels": 345,
+        "immediate_shovel_fraction_of_plants": 0.16366223908918406,
+        "mc_value_mse": 0.1214097107893705,
+        "mc_value_explained_variance": 0.013966652712997907
+      }
+    },
+    {
+      "update": 12,
+      "counters": {
+        "episodes": 2334,
+        "decisions": 168566,
+        "ticks": 19286391
+      },
+      "manifest_sha256": "29cad9dee0ca4db002e0c1ba172461f0ba00798620e51fbf98376a28f70b804b",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14361,
+        "won": 5,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2095,
+          "wait": 9851,
+          "shovel": 2415
+        },
+        "immediate_plant_shovels": 367,
+        "immediate_shovel_fraction_of_plants": 0.17517899761336517,
+        "mc_value_mse": 0.07900257473457381,
+        "mc_value_explained_variance": 0.0028903829622629607
+      }
+    },
+    {
+      "update": 13,
+      "counters": {
+        "episodes": 2534,
+        "decisions": 182798,
+        "ticks": 20970321
+      },
+      "manifest_sha256": "bd9a0292b2ec418b5f1d538a3df4fd6f9923a548a552abefaafd1eb60b3926b5",
+      "summary": {
+        "episodes": 200,
+        "decisions": 14232,
+        "won": 15,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2093,
+          "wait": 9987,
+          "shovel": 2152
+        },
+        "immediate_plant_shovels": 260,
+        "immediate_shovel_fraction_of_plants": 0.12422360248447205,
+        "mc_value_mse": 0.21817346126538387,
+        "mc_value_explained_variance": 0.022427613297821725
+      }
+    },
+    {
+      "update": 14,
+      "counters": {
+        "episodes": 2734,
+        "decisions": 196109,
+        "ticks": 22610784
+      },
+      "manifest_sha256": "9d4f491d55e998a7ac06e3b2741a25f84add0eb2a1ca309bfb20b98e997085ec",
+      "summary": {
+        "episodes": 200,
+        "decisions": 13311,
+        "won": 19,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 9108,
+          "plant": 2078,
+          "shovel": 2125
+        },
+        "immediate_plant_shovels": 280,
+        "immediate_shovel_fraction_of_plants": 0.1347449470644851,
+        "mc_value_mse": 0.28233970014134335,
+        "mc_value_explained_variance": 0.022665693222387984
+      }
+    },
+    {
+      "update": 15,
+      "counters": {
+        "episodes": 2934,
+        "decisions": 209451,
+        "ticks": 24280785
+      },
+      "manifest_sha256": "4078016881a8710910a13f9c03c25b0f5920560510bf8088e4124d5bf7a2e46b",
+      "summary": {
+        "episodes": 200,
+        "decisions": 13342,
+        "won": 21,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2136,
+          "wait": 9288,
+          "shovel": 1918
+        },
+        "immediate_plant_shovels": 193,
+        "immediate_shovel_fraction_of_plants": 0.09035580524344569,
+        "mc_value_mse": 0.2777045067017996,
+        "mc_value_explained_variance": 0.014011792152584746
+      }
+    },
+    {
+      "update": 16,
+      "counters": {
+        "episodes": 3134,
+        "decisions": 222196,
+        "ticks": 25901547
+      },
+      "manifest_sha256": "d034acd2f330c468e998fde1135f5276b60051e1a1fa95e4a3f8d843cbb7ad54",
+      "summary": {
+        "episodes": 200,
+        "decisions": 12745,
+        "won": 30,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2161,
+          "wait": 8703,
+          "shovel": 1881
+        },
+        "immediate_plant_shovels": 174,
+        "immediate_shovel_fraction_of_plants": 0.08051827857473393,
+        "mc_value_mse": 0.39784837743815743,
+        "mc_value_explained_variance": 0.019623962754997226
+      }
+    },
+    {
+      "update": 17,
+      "counters": {
+        "episodes": 3334,
+        "decisions": 235042,
+        "ticks": 27554240
+      },
+      "manifest_sha256": "765f8502472bc638967efc5617f1fd585e3cc78b482fef6052a58f3eae9ff636",
+      "summary": {
+        "episodes": 200,
+        "decisions": 12846,
+        "won": 25,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 8651,
+          "plant": 2231,
+          "shovel": 1964
+        },
+        "immediate_plant_shovels": 188,
+        "immediate_shovel_fraction_of_plants": 0.0842671447781264,
+        "mc_value_mse": 0.31645230789500084,
+        "mc_value_explained_variance": 0.016353774709327973
+      }
+    },
+    {
+      "update": 18,
+      "counters": {
+        "episodes": 3534,
+        "decisions": 247862,
+        "ticks": 29236136
+      },
+      "manifest_sha256": "f1d49f5e7d19e4dcd08128570dfcdd67e200e33e484e6d7b70fd36f264761aac",
+      "summary": {
+        "episodes": 200,
+        "decisions": 12820,
+        "won": 30,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2296,
+          "wait": 8788,
+          "shovel": 1736
+        },
+        "immediate_plant_shovels": 132,
+        "immediate_shovel_fraction_of_plants": 0.05749128919860627,
+        "mc_value_mse": 0.40912886198160375,
+        "mc_value_explained_variance": 0.039536911186876855
+      }
+    },
+    {
+      "update": 19,
+      "counters": {
+        "episodes": 3565,
+        "decisions": 249724,
+        "ticks": 29492815
+      },
+      "manifest_sha256": "4256e73ab99ba18f22cda515fdbc939cb7259ffa52954b3ebf26a72c2034005d",
+      "summary": {
+        "episodes": 31,
+        "decisions": 1862,
+        "won": 6,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 368,
+          "wait": 1283,
+          "shovel": 211
+        },
+        "immediate_plant_shovels": 14,
+        "immediate_shovel_fraction_of_plants": 0.03804347826086957,
+        "mc_value_mse": 0.5530857359632487,
+        "mc_value_explained_variance": 0.02418161930465368
+      }
+    },
+    {
+      "update": 20,
+      "counters": {
+        "episodes": 3569,
+        "decisions": 249968,
+        "ticks": 29526649
+      },
+      "manifest_sha256": "987656e0e0ecb7f059dcdc1b7cf78f72b29719d505c138597a386eb96b76d91a",
+      "summary": {
+        "episodes": 4,
+        "decisions": 244,
+        "won": 1,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 165,
+          "plant": 50,
+          "shovel": 29
+        },
+        "immediate_plant_shovels": 1,
+        "immediate_shovel_fraction_of_plants": 0.02,
+        "mc_value_mse": 0.7568923997143776,
+        "mc_value_explained_variance": 0.03643164759165418
+      }
+    },
+    {
+      "update": 21,
+      "counters": {
+        "episodes": 3570,
+        "decisions": 250033,
+        "ticks": 29535534
+      },
+      "manifest_sha256": "41586201b23d5c7b415221393a3b71de914831723b19d0196ab45f943774e328",
+      "summary": {
+        "episodes": 1,
+        "decisions": 65,
+        "won": 0,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 11,
+          "shovel": 7,
+          "wait": 47
+        },
+        "immediate_plant_shovels": 2,
+        "immediate_shovel_fraction_of_plants": 0.18181818181818182,
+        "mc_value_mse": 0.07135735921401702,
+        "mc_value_explained_variance": null
+      }
+    },
+    {
+      "update": 22,
+      "counters": {
+        "episodes": 3770,
+        "decisions": 261848,
+        "ticks": 31158938
+      },
+      "manifest_sha256": "16c1daca3bb7343eaee6142d3354ab0166e53d9f69a08a5d46a04072c84e3f3d",
+      "summary": {
+        "episodes": 200,
+        "decisions": 11815,
+        "won": 49,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2321,
+          "wait": 8138,
+          "shovel": 1356
+        },
+        "immediate_plant_shovels": 97,
+        "immediate_shovel_fraction_of_plants": 0.04179233089185696,
+        "mc_value_mse": 0.6017153013526867,
+        "mc_value_explained_variance": 0.039343170298648866
+      }
+    },
+    {
+      "update": 23,
+      "counters": {
+        "episodes": 3970,
+        "decisions": 273315,
+        "ticks": 32725930
+      },
+      "manifest_sha256": "031563277a95e95c6906fa87fc0a23389281f5db55eed9620152d576aaf82b39",
+      "summary": {
+        "episodes": 200,
+        "decisions": 11467,
+        "won": 63,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2275,
+          "shovel": 1137,
+          "wait": 8055
+        },
+        "immediate_plant_shovels": 89,
+        "immediate_shovel_fraction_of_plants": 0.03912087912087912,
+        "mc_value_mse": 0.7295614778055931,
+        "mc_value_explained_variance": 0.055981792355004334
+      }
+    },
+    {
+      "update": 24,
+      "counters": {
+        "episodes": 4170,
+        "decisions": 285242,
+        "ticks": 34386943
+      },
+      "manifest_sha256": "912b49afdc626ba316514bd25a7028138af4c07ce4eec3fb30f7a8f02d7a0cdf",
+      "summary": {
+        "episodes": 200,
+        "decisions": 11927,
+        "won": 54,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2447,
+          "wait": 8495,
+          "shovel": 985
+        },
+        "immediate_plant_shovels": 52,
+        "immediate_shovel_fraction_of_plants": 0.02125051082958725,
+        "mc_value_mse": 0.5626469177337161,
+        "mc_value_explained_variance": 0.10965931062084111
+      }
+    },
+    {
+      "update": 25,
+      "counters": {
+        "episodes": 4370,
+        "decisions": 295885,
+        "ticks": 35960860
+      },
+      "manifest_sha256": "a9d6c8aa579cb8cf6b26d7a2f2b4373d11c4e77102c006371ed67dcf3a07e6a2",
+      "summary": {
+        "episodes": 200,
+        "decisions": 10643,
+        "won": 73,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2328,
+          "wait": 7581,
+          "shovel": 734
+        },
+        "immediate_plant_shovels": 35,
+        "immediate_shovel_fraction_of_plants": 0.015034364261168385,
+        "mc_value_mse": 0.7123921421532432,
+        "mc_value_explained_variance": 0.09350173008187301
+      }
+    },
+    {
+      "update": 26,
+      "counters": {
+        "episodes": 4570,
+        "decisions": 306597,
+        "ticks": 37567011
+      },
+      "manifest_sha256": "375c0d001d97e08d69400e3859c02d1fb96291463f4f8ac5accc386b3531d589",
+      "summary": {
+        "episodes": 200,
+        "decisions": 10712,
+        "won": 76,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 7632,
+          "plant": 2459,
+          "shovel": 621
+        },
+        "immediate_plant_shovels": 25,
+        "immediate_shovel_fraction_of_plants": 0.010166734444896299,
+        "mc_value_mse": 0.7385802613994276,
+        "mc_value_explained_variance": 0.12525493766657259
+      }
+    },
+    {
+      "update": 27,
+      "counters": {
+        "episodes": 4770,
+        "decisions": 317011,
+        "ticks": 39160044
+      },
+      "manifest_sha256": "0998918f56807ff061a626f0b5afdd0e0961d588157d4d2f2396365d5a9b94b2",
+      "summary": {
+        "episodes": 200,
+        "decisions": 10414,
+        "won": 78,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2412,
+          "wait": 7478,
+          "shovel": 524
+        },
+        "immediate_plant_shovels": 30,
+        "immediate_shovel_fraction_of_plants": 0.012437810945273632,
+        "mc_value_mse": 0.7340548757305274,
+        "mc_value_explained_variance": 0.13947233637619705
+      }
+    },
+    {
+      "update": 28,
+      "counters": {
+        "episodes": 4970,
+        "decisions": 327462,
+        "ticks": 40763530
+      },
+      "manifest_sha256": "3d3806fedbdf1f04eabe834396aec86eba404f8a7bff153b7f7aeab43208118d",
+      "summary": {
+        "episodes": 200,
+        "decisions": 10451,
+        "won": 76,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2474,
+          "wait": 7459,
+          "shovel": 518
+        },
+        "immediate_plant_shovels": 27,
+        "immediate_shovel_fraction_of_plants": 0.010913500404203719,
+        "mc_value_mse": 0.6750491006019789,
+        "mc_value_explained_variance": 0.17115189657114438
+      }
+    },
+    {
+      "update": 29,
+      "counters": {
+        "episodes": 5170,
+        "decisions": 337283,
+        "ticks": 42308565
+      },
+      "manifest_sha256": "8a83af720cfacff4c554c33396d26da6be1d21d3b493f63fda3010ff3721de80",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9821,
+        "won": 90,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 6891,
+          "plant": 2334,
+          "shovel": 596
+        },
+        "immediate_plant_shovels": 31,
+        "immediate_shovel_fraction_of_plants": 0.013281919451585262,
+        "mc_value_mse": 0.7379563489264305,
+        "mc_value_explained_variance": 0.2667609632138388
+      }
+    },
+    {
+      "update": 30,
+      "counters": {
+        "episodes": 5370,
+        "decisions": 347763,
+        "ticks": 43894960
+      },
+      "manifest_sha256": "666541d06438e4e30ba9c57f0e4442a3d281189162c9fb8d08526b7a6e7dfd6f",
+      "summary": {
+        "episodes": 200,
+        "decisions": 10480,
+        "won": 70,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2236,
+          "wait": 7220,
+          "shovel": 1024
+        },
+        "immediate_plant_shovels": 61,
+        "immediate_shovel_fraction_of_plants": 0.02728085867620751,
+        "mc_value_mse": 0.6427346982571385,
+        "mc_value_explained_variance": 0.2127436666900635
+      }
+    },
+    {
+      "update": 31,
+      "counters": {
+        "episodes": 5570,
+        "decisions": 358090,
+        "ticks": 45469859
+      },
+      "manifest_sha256": "deceeca0d1ac4fbfd3c11c56fee5a74a97c315645be1835eff97dfdeddc5c72b",
+      "summary": {
+        "episodes": 200,
+        "decisions": 10327,
+        "won": 89,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2334,
+          "wait": 7131,
+          "shovel": 862
+        },
+        "immediate_plant_shovels": 55,
+        "immediate_shovel_fraction_of_plants": 0.02356469580119966,
+        "mc_value_mse": 0.6414745152261586,
+        "mc_value_explained_variance": 0.35186850124879954
+      }
+    },
+    {
+      "update": 32,
+      "counters": {
+        "episodes": 5770,
+        "decisions": 368020,
+        "ticks": 46997863
+      },
+      "manifest_sha256": "57e01e116bb6caf58d5308727f64ec9c3216d69accca381e5139b198088b8f00",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9930,
+        "won": 105,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2173,
+          "wait": 7006,
+          "shovel": 751
+        },
+        "immediate_plant_shovels": 50,
+        "immediate_shovel_fraction_of_plants": 0.02300966405890474,
+        "mc_value_mse": 0.5646868550873029,
+        "mc_value_explained_variance": 0.41124502999728485
+      }
+    },
+    {
+      "update": 33,
+      "counters": {
+        "episodes": 5880,
+        "decisions": 373471,
+        "ticks": 47834829
+      },
+      "manifest_sha256": "cdef7be255fb9c2e94e81986ec6aa4744940ce2caeaa87d358c14ee14371384b",
+      "summary": {
+        "episodes": 110,
+        "decisions": 5451,
+        "won": 60,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1212,
+          "wait": 3801,
+          "shovel": 438
+        },
+        "immediate_plant_shovels": 17,
+        "immediate_shovel_fraction_of_plants": 0.014026402640264026,
+        "mc_value_mse": 0.5933936478042454,
+        "mc_value_explained_variance": 0.41359998313355784
+      }
+    },
+    {
+      "update": 34,
+      "counters": {
+        "episodes": 5905,
+        "decisions": 374618,
+        "ticks": 48010719
+      },
+      "manifest_sha256": "732f737728354c123300a26a25ec5d28d9a632ec4d097d2839e0b90248d1c7cc",
+      "summary": {
+        "episodes": 25,
+        "decisions": 1147,
+        "won": 15,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 267,
+          "wait": 792,
+          "shovel": 88
+        },
+        "immediate_plant_shovels": 5,
+        "immediate_shovel_fraction_of_plants": 0.018726591760299626,
+        "mc_value_mse": 0.6513979305393203,
+        "mc_value_explained_variance": 0.3823010818341782
+      }
+    },
+    {
+      "update": 35,
+      "counters": {
+        "episodes": 5912,
+        "decisions": 374944,
+        "ticks": 48061721
+      },
+      "manifest_sha256": "b4fbcd2863e5e4296d3f31d216ced36e5d403e7d829e373eea7c804a902b6e46",
+      "summary": {
+        "episodes": 7,
+        "decisions": 326,
+        "won": 4,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 74,
+          "shovel": 20,
+          "wait": 232
+        },
+        "immediate_plant_shovels": 3,
+        "immediate_shovel_fraction_of_plants": 0.04054054054054054,
+        "mc_value_mse": 0.6565501751440057,
+        "mc_value_explained_variance": 0.36848736249772684
+      }
+    },
+    {
+      "update": 36,
+      "counters": {
+        "episodes": 5913,
+        "decisions": 374970,
+        "ticks": 48065953
+      },
+      "manifest_sha256": "5acc805ee173b9e92d77253d9822a33af71f044a10334befcca873f1e60a37b6",
+      "summary": {
+        "episodes": 1,
+        "decisions": 26,
+        "won": 1,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 7,
+          "wait": 19
+        },
+        "immediate_plant_shovels": 0,
+        "immediate_shovel_fraction_of_plants": 0.0,
+        "mc_value_mse": 0.03433915762606381,
+        "mc_value_explained_variance": null
+      }
+    },
+    {
+      "update": 37,
+      "counters": {
+        "episodes": 5914,
+        "decisions": 374999,
+        "ticks": 48070669
+      },
+      "manifest_sha256": "5b252f007fcda66057c54c60bdb0656cfcd677aba7128cf5676e7222ec014f9e",
+      "summary": {
+        "episodes": 1,
+        "decisions": 29,
+        "won": 1,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 8,
+          "wait": 20,
+          "shovel": 1
+        },
+        "immediate_plant_shovels": 0,
+        "immediate_shovel_fraction_of_plants": 0.0,
+        "mc_value_mse": 0.049518880737879606,
+        "mc_value_explained_variance": null
+      }
+    },
+    {
+      "update": 38,
+      "counters": {
+        "episodes": 5915,
+        "decisions": 375070,
+        "ticks": 48080714
+      },
+      "manifest_sha256": "f91234381fde7df13aee5bbda29686755edca7da6e76d16f45a8bbd4591bf731",
+      "summary": {
+        "episodes": 1,
+        "decisions": 71,
+        "won": 0,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 16,
+          "wait": 45,
+          "shovel": 10
+        },
+        "immediate_plant_shovels": 0,
+        "immediate_shovel_fraction_of_plants": 0.0,
+        "mc_value_mse": 0.3621451386962342,
+        "mc_value_explained_variance": null
+      }
+    },
+    {
+      "update": 39,
+      "counters": {
+        "episodes": 6115,
+        "decisions": 384655,
+        "ticks": 49534678
+      },
+      "manifest_sha256": "d251806aa367e0c540d31e0e5cbdd663bd4c74c6a0876e48a6a6f502a0d8656c",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9585,
+        "won": 140,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 6761,
+          "plant": 2191,
+          "shovel": 633
+        },
+        "immediate_plant_shovels": 41,
+        "immediate_shovel_fraction_of_plants": 0.018712916476494753,
+        "mc_value_mse": 0.5207715999154725,
+        "mc_value_explained_variance": 0.4663262715886515
+      }
+    },
+    {
+      "update": 40,
+      "counters": {
+        "episodes": 6315,
+        "decisions": 394481,
+        "ticks": 50994474
+      },
+      "manifest_sha256": "160b7e0a7361a483c315aff9267ed15457bd168541efb69b908f3b7ab96ad998",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9826,
+        "won": 148,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2284,
+          "wait": 7096,
+          "shovel": 446
+        },
+        "immediate_plant_shovels": 33,
+        "immediate_shovel_fraction_of_plants": 0.014448336252189142,
+        "mc_value_mse": 0.5541158656343577,
+        "mc_value_explained_variance": 0.39601840603876326
+      }
+    },
+    {
+      "update": 41,
+      "counters": {
+        "episodes": 6515,
+        "decisions": 404669,
+        "ticks": 52534420
+      },
+      "manifest_sha256": "2db97722cec4c837db3b3b0a054d50d277d6132757cb56495ddd4b59eed1db3a",
+      "summary": {
+        "episodes": 200,
+        "decisions": 10188,
+        "won": 155,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2404,
+          "wait": 7431,
+          "shovel": 353
+        },
+        "immediate_plant_shovels": 29,
+        "immediate_shovel_fraction_of_plants": 0.012063227953410981,
+        "mc_value_mse": 0.5038917485997537,
+        "mc_value_explained_variance": 0.4239654428375276
+      }
+    },
+    {
+      "update": 42,
+      "counters": {
+        "episodes": 6715,
+        "decisions": 414291,
+        "ticks": 54015283
+      },
+      "manifest_sha256": "9917a6cbb349ed82b0c39d0df6157e340ca76c24e3fe5ba842a6f643865de2f7",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9622,
+        "won": 161,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 7061,
+          "plant": 2244,
+          "shovel": 317
+        },
+        "immediate_plant_shovels": 25,
+        "immediate_shovel_fraction_of_plants": 0.011140819964349376,
+        "mc_value_mse": 0.4892632163699242,
+        "mc_value_explained_variance": 0.43541719053253247
+      }
+    },
+    {
+      "update": 43,
+      "counters": {
+        "episodes": 6915,
+        "decisions": 423367,
+        "ticks": 55450988
+      },
+      "manifest_sha256": "4ad493e06a36df64ec556acb146ebeae67c873b9b156904633b8c312ec3b41fb",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9076,
+        "won": 185,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2186,
+          "wait": 6613,
+          "shovel": 277
+        },
+        "immediate_plant_shovels": 15,
+        "immediate_shovel_fraction_of_plants": 0.006861848124428179,
+        "mc_value_mse": 0.3158943770254101,
+        "mc_value_explained_variance": 0.2762808647043523
+      }
+    },
+    {
+      "update": 44,
+      "counters": {
+        "episodes": 7115,
+        "decisions": 433026,
+        "ticks": 56935980
+      },
+      "manifest_sha256": "2a98ac6b598bd05ebb33a590a0cebc48ead0427d8fd4a7bddc9f118835897463",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9659,
+        "won": 173,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 2229,
+          "wait": 7123,
+          "shovel": 307
+        },
+        "immediate_plant_shovels": 24,
+        "immediate_shovel_fraction_of_plants": 0.010767160161507403,
+        "mc_value_mse": 0.4393034736207208,
+        "mc_value_explained_variance": 0.36362521891044597
+      }
+    },
+    {
+      "update": 45,
+      "counters": {
+        "episodes": 7315,
+        "decisions": 442751,
+        "ticks": 58467939
+      },
+      "manifest_sha256": "619ddd5b14d6f1b9fbe951a837c8ca9b016afafb762ee5259af133f25c3c44ca",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9725,
+        "won": 174,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 7253,
+          "plant": 2200,
+          "shovel": 272
+        },
+        "immediate_plant_shovels": 20,
+        "immediate_shovel_fraction_of_plants": 0.00909090909090909,
+        "mc_value_mse": 0.37065424892474397,
+        "mc_value_explained_variance": 0.4680268417498764
+      }
+    },
+    {
+      "update": 46,
+      "counters": {
+        "episodes": 7515,
+        "decisions": 451673,
+        "ticks": 59911060
+      },
+      "manifest_sha256": "3b48203cb5b0f3641d21c022e8388eff2046e48ef5de462e5eec044f6d13303c",
+      "summary": {
+        "episodes": 200,
+        "decisions": 8922,
+        "won": 181,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1888,
+          "wait": 6799,
+          "shovel": 235
+        },
+        "immediate_plant_shovels": 27,
+        "immediate_shovel_fraction_of_plants": 0.014300847457627119,
+        "mc_value_mse": 0.2919182136729192,
+        "mc_value_explained_variance": 0.42338075548274723
+      }
+    },
+    {
+      "update": 47,
+      "counters": {
+        "episodes": 7715,
+        "decisions": 460045,
+        "ticks": 61252271
+      },
+      "manifest_sha256": "0dae6f003f4e9e1faaa08f8f531f29294b8378b9b9b89289a5902bd520c5e786",
+      "summary": {
+        "episodes": 200,
+        "decisions": 8372,
+        "won": 194,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1721,
+          "wait": 6482,
+          "shovel": 169
+        },
+        "immediate_plant_shovels": 10,
+        "immediate_shovel_fraction_of_plants": 0.005810575246949448,
+        "mc_value_mse": 0.11937859074550253,
+        "mc_value_explained_variance": 0.30424215759503426
+      }
+    },
+    {
+      "update": 48,
+      "counters": {
+        "episodes": 7915,
+        "decisions": 468180,
+        "ticks": 62583984
+      },
+      "manifest_sha256": "e8742e65ce999403461ff29658fbf0f4b809a37ee82a5e22bd52bc6680d201c1",
+      "summary": {
+        "episodes": 200,
+        "decisions": 8135,
+        "won": 193,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1643,
+          "wait": 6285,
+          "shovel": 207
+        },
+        "immediate_plant_shovels": 14,
+        "immediate_shovel_fraction_of_plants": 0.00852099817407182,
+        "mc_value_mse": 0.12993355650351643,
+        "mc_value_explained_variance": 0.47076414783827236
+      }
+    },
+    {
+      "update": 49,
+      "counters": {
+        "episodes": 8115,
+        "decisions": 475956,
+        "ticks": 63847895
+      },
+      "manifest_sha256": "7b8913fb49515d98cf10d8dae39473c38a6e392fa47c89b04c277e13d0bbd7c1",
+      "summary": {
+        "episodes": 200,
+        "decisions": 7776,
+        "won": 193,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1523,
+          "wait": 6055,
+          "shovel": 198
+        },
+        "immediate_plant_shovels": 19,
+        "immediate_shovel_fraction_of_plants": 0.01247537754432042,
+        "mc_value_mse": 0.1456270030265006,
+        "mc_value_explained_variance": 0.1942922538416847
+      }
+    },
+    {
+      "update": 50,
+      "counters": {
+        "episodes": 8315,
+        "decisions": 484118,
+        "ticks": 65117878
+      },
+      "manifest_sha256": "f6ce1ac053668d83f24cd5f84d021c5d1bcd99ed9f01fc8c34b0cd82469c3a30",
+      "summary": {
+        "episodes": 200,
+        "decisions": 8162,
+        "won": 197,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 1508,
+          "wait": 6394,
+          "shovel": 260
+        },
+        "immediate_plant_shovels": 21,
+        "immediate_shovel_fraction_of_plants": 0.013925729442970823,
+        "mc_value_mse": 0.05928355014313069,
+        "mc_value_explained_variance": 0.2517722533628943
+      }
+    },
+    {
+      "update": 51,
+      "counters": {
+        "episodes": 8515,
+        "decisions": 493293,
+        "ticks": 66416654
+      },
+      "manifest_sha256": "8c0c43cc4d6bb11e624b173ae22a6b6fbc30a6e23c16f59c9ae3371dfac21729",
+      "summary": {
+        "episodes": 200,
+        "decisions": 9175,
+        "won": 190,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 7145,
+          "plant": 1692,
+          "shovel": 338
+        },
+        "immediate_plant_shovels": 29,
+        "immediate_shovel_fraction_of_plants": 0.017139479905437353,
+        "mc_value_mse": 0.1966453227823645,
+        "mc_value_explained_variance": 0.21395169544527926
+      }
+    },
+    {
+      "update": 52,
+      "counters": {
+        "episodes": 8631,
+        "decisions": 498803,
+        "ticks": 67177922
+      },
+      "manifest_sha256": "da7d23b4458f7a640a7a534d62077f4854faa3bb01d1ef09eab897e7360682a9",
+      "summary": {
+        "episodes": 116,
+        "decisions": 5510,
+        "won": 112,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 4300,
+          "shovel": 208,
+          "plant": 1002
+        },
+        "immediate_plant_shovels": 19,
+        "immediate_shovel_fraction_of_plants": 0.018962075848303395,
+        "mc_value_mse": 0.16021181552523103,
+        "mc_value_explained_variance": -0.10788972967221278
+      }
+    },
+    {
+      "update": 53,
+      "counters": {
+        "episodes": 8652,
+        "decisions": 499835,
+        "ticks": 67323064
+      },
+      "manifest_sha256": "f836682acd31c5b45ef051782cf23324c8ee97e5dc04298a9ac00656f2e42faa",
+      "summary": {
+        "episodes": 21,
+        "decisions": 1032,
+        "won": 21,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 818,
+          "plant": 192,
+          "shovel": 22
+        },
+        "immediate_plant_shovels": 1,
+        "immediate_shovel_fraction_of_plants": 0.005208333333333333,
+        "mc_value_mse": 0.0020610246758476385,
+        "mc_value_explained_variance": null
+      }
+    },
+    {
+      "update": 54,
+      "counters": {
+        "episodes": 8655,
+        "decisions": 499967,
+        "ticks": 67341070
+      },
+      "manifest_sha256": "6ee6f5dfe06d19b7a7a6361b2ccbc46be6896e135fc37d49291bb23fad170246",
+      "summary": {
+        "episodes": 3,
+        "decisions": 132,
+        "won": 3,
+        "truncated": 0,
+        "action_counts": {
+          "wait": 103,
+          "plant": 24,
+          "shovel": 5
+        },
+        "immediate_plant_shovels": 1,
+        "immediate_shovel_fraction_of_plants": 0.041666666666666664,
+        "mc_value_mse": 0.0006405649845115329,
+        "mc_value_explained_variance": null
+      }
+    },
+    {
+      "update": 55,
+      "counters": {
+        "episodes": 8656,
+        "decisions": 500011,
+        "ticks": 67346371
+      },
+      "manifest_sha256": "56781b0ec72cb6cd9edf5fa274f535d79fd0c68dc08eabe58d7cca1a1557620f",
+      "summary": {
+        "episodes": 1,
+        "decisions": 44,
+        "won": 1,
+        "truncated": 0,
+        "action_counts": {
+          "plant": 7,
+          "shovel": 3,
+          "wait": 34
+        },
+        "immediate_plant_shovels": 0,
+        "immediate_shovel_fraction_of_plants": 0.0,
+        "mc_value_mse": 0.0001551977271872961,
+        "mc_value_explained_variance": null
+      }
+    }
+  ],
+  "per_task": {
+    "train_pool_1": {
+      "episodes": 1725,
+      "decisions": 104759,
+      "won": 571,
+      "truncated": 0,
+      "action_counts": {
+        "plant": 20671,
+        "shovel": 9703,
+        "wait": 74385
+      },
+      "immediate_plant_shovels": 1928,
+      "immediate_shovel_fraction_of_plants": 0.09327076580716946,
+      "mc_value_mse": 0.3371119969683016,
+      "mc_value_explained_variance": 0.5595790470267631
+    },
+    "train_day_1": {
+      "episodes": 1728,
+      "decisions": 95912,
+      "won": 538,
+      "truncated": 0,
+      "action_counts": {
+        "wait": 72114,
+        "plant": 15649,
+        "shovel": 8149
+      },
+      "immediate_plant_shovels": 1705,
+      "immediate_shovel_fraction_of_plants": 0.10895264873154833,
+      "mc_value_mse": 0.30639518756042683,
+      "mc_value_explained_variance": 0.5756595772717962
+    },
+    "train_roof_1": {
+      "episodes": 1737,
+      "decisions": 125000,
+      "won": 720,
+      "truncated": 0,
+      "action_counts": {
+        "shovel": 20578,
+        "plant": 23940,
+        "wait": 80482
+      },
+      "immediate_plant_shovels": 468,
+      "immediate_shovel_fraction_of_plants": 0.019548872180451128,
+      "mc_value_mse": 0.4503927643581923,
+      "mc_value_explained_variance": 0.4807840200474288
+    },
+    "train_fog_1": {
+      "episodes": 1722,
+      "decisions": 84696,
+      "won": 879,
+      "truncated": 0,
+      "action_counts": {
+        "plant": 14725,
+        "shovel": 7591,
+        "wait": 62380
+      },
+      "immediate_plant_shovels": 1545,
+      "immediate_shovel_fraction_of_plants": 0.10492359932088285,
+      "mc_value_mse": 0.33625055132533155,
+      "mc_value_explained_variance": 0.637608559790807
+    },
+    "train_night_1": {
+      "episodes": 1744,
+      "decisions": 89644,
+      "won": 829,
+      "truncated": 0,
+      "action_counts": {
+        "plant": 16596,
+        "shovel": 8134,
+        "wait": 64914
+      },
+      "immediate_plant_shovels": 1632,
+      "immediate_shovel_fraction_of_plants": 0.09833694866232827,
+      "mc_value_mse": 0.3753282206905368,
+      "mc_value_explained_variance": 0.5879420389074876
+    }
+  }
+}
