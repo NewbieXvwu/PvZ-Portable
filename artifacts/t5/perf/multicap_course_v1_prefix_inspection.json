@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "complete_inspection",
+  "gate_result": "pass",
+  "scope": "multicap_dynamic_prefix_no_learning",
+  "protocol_sha256": "7c613bfc60abf622337dddad777d4e4e707ebaa89df5a913fa95eae3b24adaf8",
+  "pool_protocol_sha256": "4f8f37a9af40788731743e24eb0d93feba85ede6a1939de4403dcd7ea14730cb",
+  "coexecution": "One single-thread prefix worker with two native processes per case, alongside two-worker full pool diagnostic and eight-worker corrected reevaluation. Reference256 still waits for all60; no GPU model or optimizer.",
+  "limitations": [
+    "No actor training/weights or validation sampling; fixed controls are never PPO data.",
+    "Original manifests/failures kept unchanged; all 30 task seed blocks retained.",
+    "Any genuine physics/table/normal-loss difference stops the new gate; no override.",
+    "Inspection is a subset, not a full64-seed gate.",
+    "This audit concerns task-prefix semantics, not a course learning/frontier/target-feature benefit."
+  ],
+  "cases": 120,
+  "physical_comparisons": 5304,
+  "records_sha256": "7b25510a6aa132f6413053a23cdd2cd01ba7a5e484f7846efd0476de2e7cecef",
+  "seconds": 302.52998386600666,
+  "resources": {
+    "peak_process_tree_rss_bytes": 2013368320,
+    "min_system_available_bytes": 12355727360,
+    "peak_system_swap_used_bytes": 227749888
+  },
+  "report_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/multicap_course_v1_prefix_inspection/report.json",
+  "report_sha256": "5d141003c173e16d3f8d6a90663cabc5d1ea28b6f2c70ca21dcb1785df110d38",
+  "records_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/multicap_course_v1_prefix_inspection/records.json.gz",
+  "raw_files_sha_verified": 120,
+  "job_record_files_verified": 120,
+  "raw_decision_rows": 5367,
+  "stop_reason_counts": {
+    "next_full_wave": 63,
+    "normal_terminal": 57
+  },
+  "full_64_seed_gate_passed": false,
+  "formal_learning_started": false,
+  "hf_upload_complete": false,
+  "raw_table_storage": "Actual PRIV tables were compared in the frozen execution; per-case pass labels retained. Table contents themselves are not stored in these raw traces.",
+  "hf_dry_run_scope": "inspection tree only; actual upload unavailable without token/repo",
+  "hf_dry_run_pass": true,
+  "hf_dry_run_files": 244,
+  "hf_dry_run_log": "logs/t5_research/multicap_course_v1_prefix_inspection_hf_dry_run.log"
+}

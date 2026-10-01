@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "scope": "HF dry-run supplement only; frozen inspection conclusion remains unchanged",
+  "source_inspection_report": "/home/newbiexvwu/PvZ-Portable/artifacts/research/multicap_course_v1_inspection/report.json",
+  "source_inspection_report_sha256": "b15e99e7e26719af6c717057f8e1e64877a6ed3d47fc01dc18c69013a1642cf7",
+  "hf_dry_run_pass": true,
+  "hf_dry_run_files": 484,
+  "hf_dry_run_log": "logs/t5_research/multicap_course_v1_inspection_hf_dry_run.log",
+  "hf_dry_run_log_sha256": "037a0d3e84bd2f243a2e20efe2160872db258e787a4a9e9fd2cf83696e3162c0",
+  "hf_upload_complete": false
+}
