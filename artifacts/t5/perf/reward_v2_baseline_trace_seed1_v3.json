@@ -1,0 +1,1623 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "4c3b7313702c0cfc7f3e20cb4482c53a5f8c24864a39334f6d3377b928a18a1d",
+  "checkpoint_sha256": "fa4a4d8b66f576011c562592765e6f6021ddd4572f709951bedfcc0b287acbc3",
+  "helper_sha256": "34ae31c9d84265d187a05147637ecd4d856b3ae4558211403dfb4d170e445ccd",
+  "executable": "/home/newbiexvwu/PvZ-Portable-packet-cost/build/pvz-portable",
+  "model_state_sha256": "911b4994b8134f84fffa957de91048536db051026d54c0d3427f5a8b99717378",
+  "records": {
+    "fusion1_workers1": [
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_000.json.gz",
+        "trace_sha256": "090f20f122757d0edee939c8623d9570e4b7ff6ff9c7d24ec4584ba461661dea",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_001.json.gz",
+        "trace_sha256": "c76133187d68137eb2425e8e4fa73a7c615fdf4b7895f1887dc8a794fec148cb",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_002.json.gz",
+        "trace_sha256": "dd69925f24cc98c5e9d517f6019a14b8376bcc604a0a154fd8e0d457cdc86403",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_003.json.gz",
+        "trace_sha256": "987a0820108c12c8e86a8da3da5c4517593b02b38e7281888e192d5f408a48ec",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_004.json.gz",
+        "trace_sha256": "f08154ebde1f13a1016e7a16639044d1ceed2ef58373986b348ffbaa310d19c6",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_005.json.gz",
+        "trace_sha256": "17bc63e7e5f9c044c6f2f0ffd4b9fffc9a7fc303894297b567e5dce3f1b642a0",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_006.json.gz",
+        "trace_sha256": "6e38f0683d1c03cb130c08559c8f3d68b2edd0c6d5b654ae96c41c634e258e56",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers1/job_007.json.gz",
+        "trace_sha256": "a7a0954fd6278c676627f706dd39c54f4590c8d64ab27ab4734d545bf5f3e8f4",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      }
+    ],
+    "fusion1_workers8": [
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_000.json.gz",
+        "trace_sha256": "588db327934f83a893b861a46da50110c3db52ff2efe0461bf47d033b62450c5",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_001.json.gz",
+        "trace_sha256": "eb6fd3ececb343f1331acca0be715da780ad376cd5616d6be0d53923ac85ec2e",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_002.json.gz",
+        "trace_sha256": "af0f5ce602048db5f25b523e91be3978923647de06f6962b808d586ed973d7ae",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_003.json.gz",
+        "trace_sha256": "29126af22c46da071cd6c7fdb9fe43bfd3a6355f6534ae693e2409b9105e232e",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_004.json.gz",
+        "trace_sha256": "9369e219713adf4b1f1c736be50f799fca7bdb86ee15b7816c56ae45749c35b4",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_005.json.gz",
+        "trace_sha256": "b0f89b692d97b42a5f064e92f1358b03d5b2a44552deddbe329ac77cf3fb4547",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_006.json.gz",
+        "trace_sha256": "f3969d53291a8396ab502a11b4e788595bae12e629b2e10f5b84c9ad1b51d99c",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion1_workers8/job_007.json.gz",
+        "trace_sha256": "ea79b3b4c1296df214bccbf3cbafc95b7a71c3a441d68749811840671a551651",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      }
+    ],
+    "fusion0_workers1": [
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_000.json.gz",
+        "trace_sha256": "2b5e6e7c9a791b9fce5b960a428efc4c308b3ef76e58a92662f7080356d454aa",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_001.json.gz",
+        "trace_sha256": "a3002683a07fc85909a5ed8d1a3931dcf226544df6c4b51b85ba0ff6e3ee3c9a",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_002.json.gz",
+        "trace_sha256": "9411ff0dad5c12e732bdac72bdfd266a62e21ad47b90ccb75f40eed58fd2c43b",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_003.json.gz",
+        "trace_sha256": "d4999a4f940bc70a08d46768fb30494b7f6383d0fa17b2103bb69820c6bf6cc2",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_004.json.gz",
+        "trace_sha256": "f7c3156bdb1619b1b7f21535f5aeba44bad1e40659d095ab665af704d2e26350",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_005.json.gz",
+        "trace_sha256": "746cbc9df7032d44be3a626550b5ce04adeeb60438931cc01e4a75be4ce1843d",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_006.json.gz",
+        "trace_sha256": "ef45fcfda32e662848fb0e50fc8b21b7a8ddbe31207b457fa8465f66146d68bc",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers1/job_007.json.gz",
+        "trace_sha256": "63191326bdd5a410cf700563362611be28823f3d3dd6a36402032acec7fbc3ca",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      }
+    ],
+    "fusion0_workers8": [
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_000.json.gz",
+        "trace_sha256": "a208cca412173fb668109f82721ca857175bce4f76a21c951a4e5cb8f4140104",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_001.json.gz",
+        "trace_sha256": "8ec482bfb86c49ba8fb418a5cb27ef2f723af836e57905a6c7df5b39224d6b94",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_002.json.gz",
+        "trace_sha256": "ce3f958c503777dd5893ba136e43ee400f72959caf363e5fa72d9295c1db3f92",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_003.json.gz",
+        "trace_sha256": "857f767b2070e498603a8c9e63118ef972b30f67eed1f68c86428410c97333e1",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_004.json.gz",
+        "trace_sha256": "b83ebadb5e7f82a48280e2fab40059c895a7a802cf95fad09b5c35a16d88060f",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_005.json.gz",
+        "trace_sha256": "e90713b1006d81a4559fe7d36fce2eb0f5eca75a3aefd68e8d418526f2475e5d",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_006.json.gz",
+        "trace_sha256": "5f90026c80cbad2383203989c061a34eae266c02f42fcf3f7c53978a2713aded",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      },
+      {
+        "outcome": {
+          "seed": 50462,
+          "won": true,
+          "result": 1,
+          "terminated": true,
+          "truncated": false,
+          "action_counts": {
+            "wait": 56,
+            "plant": 24,
+            "shovel": 16
+          },
+          "zero_tick_actions": 40,
+          "immediate_plant_shovels": 9,
+          "terminal_wave": 3,
+          "wave_count": 3,
+          "terminal_tick": 8950,
+          "peak_offense": 2,
+          "actions": 96,
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sun": 50,
+              "sun_produced": 0,
+              "sun_spent": 0
+            }
+          ]
+        },
+        "trace_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v3/fusion0_workers8/job_007.json.gz",
+        "trace_sha256": "4553faf5f9ccd251b751f9c511b4613938c809578ced88020bc77572f97c7451",
+        "model_forward_rng_changes": 0,
+        "sampling_gap_rng_changes": 0
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "configuration": "fusion1_workers1",
+      "job": 0,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers1",
+      "job": 1,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers1",
+      "job": 2,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers1",
+      "job": 3,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers1",
+      "job": 4,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers1",
+      "job": 5,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers1",
+      "job": 6,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers1",
+      "job": 7,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 0,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 1,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 2,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 3,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 4,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 5,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 6,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion1_workers8",
+      "job": 7,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 0,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 1,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 2,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 3,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 4,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 5,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 6,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers1",
+      "job": 7,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 0,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 1,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 2,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 3,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 4,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 5,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 6,
+      "first_difference_from_reference": null
+    },
+    {
+      "configuration": "fusion0_workers8",
+      "job": 7,
+      "first_difference_from_reference": null
+    }
+  ],
+  "seconds": 49.10489732399947,
+  "interpretation": "Instrumentation and fusion counterfactual on one diagnosed job; no formal learning/gate pass or replacement of original rows.",
+  "coexecution": "CPU repeatability probe overlaps frozen reward matrix; not dedicated cost comparison"
+}

@@ -409,3 +409,11 @@ action seed及32重复，显式选择已核验9e963b0b修复原生，锁定nativ
 result=pass。其余模型/原稿动作选择与fusion开/关控制均不变；helper在新诊断worker中
 只覆盖PvZEnv构造路径，主线训练及其二进制不动。逐公开状态/模型输出/RNG/动作均需
 相同才能称这个有限异常案例修复，结果另存v3，不覆盖v1失败或v2异常。
+
+修复后v3完成32局/49.10秒：fusion开/关×workers1/8全部96动作、tick8950、正常获胜；
+全部公开观测、packed tokens、hidden/output、动作、logprob/entropy及RNG字段零差异，
+forward及新增diagnostic之间没有随机状态消费，32个raw SHA逐一核验。由原type=-1
+随机费用分离到显式cost0后严格重现，支持该案例原因定位及修复；不泛化为全部种子
+确定性或新模型学习通过。有限门禁为gates/T2-empty-packet-observation-v1.json，锁定
+原生配对与实际基线证据；当前主线二进制/模型/科研字段未改。下一步冻结并完整重评
+原35任务各64种子双模式和每个规定检查点，再解决观测/课程候选参考架构的门禁。

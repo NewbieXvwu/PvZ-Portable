@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "result": "pass",
+  "scope": "Empty-slot observation cost correction only; native identical-action tests and one diagnosed untrained sampled baseline repeated32times. Not a general learning or full reference resume pass.",
+  "source_branch": "research/packet-cost-v1",
+  "source_commit": "8b15b7a77a6160da30356167fc34f8918d4a5e3a",
+  "simulator_sha256": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2",
+  "native_equivalence": {
+    "path": "artifacts/t5/perf/packet_cost_native_equivalence_v1.json",
+    "sha256": "cc8faa272480de31c7e52629133b2622fac8b1e26ee7e83935f45fcd4922cd5a",
+    "paired_jobs": 1728,
+    "observations": 138315,
+    "empty_states": 26014,
+    "failures": 0,
+    "recorded_traces": 32,
+    "recorded_failures": 0
+  },
+  "baseline_repeatability": {
+    "path": "artifacts/t5/perf/reward_v2_baseline_trace_seed1_v3.json",
+    "sha256": "3c31bcd52370688f2d07bc8d573d91df765169adc58d0f4eca4aee9e6ec98fbf",
+    "environment_seed": 50462,
+    "task_id": "heldout_night_4",
+    "reference_checkpoint_sha256": "fa4a4d8b66f576011c562592765e6f6021ddd4572f709951bedfcc0b287acbc3",
+    "configurations": [
+      "fusion1_workers1",
+      "fusion1_workers8",
+      "fusion0_workers1",
+      "fusion0_workers8"
+    ],
+    "episodes": 32,
+    "all_observations_model_outputs_actions_rng_exact": true,
+    "all_outcomes_exact": true,
+    "outcome": {
+      "seed": 50462,
+      "won": true,
+      "result": 1,
+      "terminated": true,
+      "truncated": false,
+      "action_counts": {
+        "wait": 56,
+        "plant": 24,
+        "shovel": 16
+      },
+      "zero_tick_actions": 40,
+      "immediate_plant_shovels": 9,
+      "terminal_wave": 3,
+      "wave_count": 3,
+      "terminal_tick": 8950,
+      "peak_offense": 2,
+      "actions": 96,
+      "economy_curve": [
+        {
+          "tick": 0,
+          "sun": 50,
+          "sun_produced": 0,
+          "sun_spent": 0
+        },
+        {
+          "tick": 3000,
+          "sun": 50,
+          "sun_produced": 0,
+          "sun_spent": 0
+        },
+        {
+          "tick": 6000,
+          "sun": 50,
+          "sun_produced": 0,
+          "sun_spent": 0
+        }
+      ]
+    },
+    "seconds": 49.10489732399947
+  },
+  "matrix_change": "none; legacy binary943131 and all original evaluation rows preserved",
+  "future_requirements": [
+    "Complete frozen35task64seed greedy/sample reevaluation before cap3 acceptance",
+    "New observation/curriculum candidate and reference architecture require their own gate and actual interruption evidence"
+  ],
+  "delivery": "KB code/config/gates on git; full local raw traces/logs pending HF, not delivered yet"
+}
