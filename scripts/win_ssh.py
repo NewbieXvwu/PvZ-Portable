@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Run a command on a remote Windows desktop over SSH without quoting hell.
 
-The chain is ``ssh -> PowerShell 5.1 -> wsl -> bash`` and every layer re-parses
-quotes.  Instead of escaping, the payload is base64-encoded and handed to
-PowerShell's ``-EncodedCommand`` (UTF-16LE) or piped into ``wsl ... bash``.
+The chain is ``ssh -> cmd.exe -> wsl -> bash`` and every layer re-parses quotes.
+The payload is therefore delivered over **stdin**, never as command-line
+arguments: cmd re-parses the argument string, and ``powershell -EncodedCommand
+<base64>`` silently fails through it (exit 1, no output) because the trailing
+``=`` padding and ``+/`` characters do not survive.  See ``_ssh`` for the full
+account -- this bit the repository once already.
 
 The target host is deliberately **not** hard-coded -- this repository is public
 and a LAN address plus username is nobody else's business.  Supply it through
@@ -17,11 +20,19 @@ and a LAN address plus username is nobody else's business.  Supply it through
     python3 win_ssh.py wsl --file probe.py --venv ~/ml
 
 If the desktop's sshd does not listen on 22 -- a forwarded or tunnelled port is the
-common case -- pass ``--port`` or set ``PVZ_DESKTOP_PORT``.  The login shell on the
-Windows side is PowerShell, so the two non-ASCII details below matter: PowerShell 5.1
-writes console output in the OEM code page (GBK on a Chinese install), which arrives
-as mojibake unless the encoding is forced to UTF-8, and ``&&`` is not a statement
-separator before PowerShell 7.
+common case -- pass ``--port`` or set ``PVZ_DESKTOP_PORT``.  Two non-ASCII details
+matter: the Windows console code page is GBK on a Chinese install (mojibake on the
+way back unless UTF-8 is forced), and ``&&`` is not a statement separator before
+PowerShell 7.
+
+Two more traps worth knowing before writing a remote script:
+
+* The WSL wrapper runs under ``set -euo pipefail``, so **any** command that exits
+  non-zero aborts the whole script.  A ``grep`` with no match will do it -- append
+  ``|| true`` when a miss is expected.
+* ``~`` is expanded by the *local* shell if it reaches a quoted argument, so
+  ``--venv ~/.venvs/ml`` must be quoted (``--venv '~/.venvs/ml'``); ``_venv_source``
+  rewrites it through ``$HOME`` on the far side.
 """
 from __future__ import annotations
 
