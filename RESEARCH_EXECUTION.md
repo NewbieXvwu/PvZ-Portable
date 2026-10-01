@@ -436,3 +436,24 @@ KB索引为artifacts/t5/perf/reward_r3_seed1_cuda_incident_v1.json。实际CUDA�
 runtime未开启deterministic_algorithms，不能把这次恢复称为严格位级重现证明。
 新监督器日志为logs/t5_research/reward_comparison_v2_storage1_cuda_restart_v1.log，
 候选原日志继续追加；本轮暂不叠加高内存探针。恢复成本、故障和原失败快照继续交付。
+
+### 完整奖励矩阵修正复评：开跑前冻结（2026-10-01）
+
+协议experiments/t5/reward_v2_packet_cost_reevaluation_v1.json及helper锁定原矩阵12候选、
+实际未训练与125k/250k/375k/500k全部60节点；每节点35任务×64原种子×greedy/sample，
+总268800局，不删传送带任务、不选优胜节点。已生成检查点在开跑前逐个锁定SHA；未来
+节点沿原阈值确定，全部预算结束后、第一局复评前另冻结60节点及原raw/state完整索引。
+不在奖励训练运行时开始Torch/worker，监督器报告完成并取得所有原run的共享锁才启动。
+
+仅将评估worker的PvZEnv构造指向通过门禁的9e963b0b…原生；Python网络、公开特征、
+原权重、任务、种子、action_seed=环境seed+170000、掩码、max_actions4000、8CPU worker
+及单线程、fusion和CUDA可见性沿原配置。先前有限32轨迹复现不能外推为此项已经完成。
+原学习曲线、训练状态、全部旧评估保持原样，新输出独立位于
+artifacts/research/reward_v2_packet_cost_reevaluation_v1，结论索引位于perf同名JSON。
+
+每行保留paired前后字段与差异：只允许level10/20/30/40四个传送带任务变化，任何普通
+任务完整原始记录变化都停止复评并保留现场，不能仅看胜负相同就放行。缺节点/种子、
+来源漂移、门禁失败或奖励监督器失败同样中止。每局NPZ支持相同协议显式恢复，完整
+raw与Wilson区间在每节点完成后落盘。10条证据完整性检查通过，只证明拒绝违规输入，
+不构成复评/学习通过。训练原实际墙钟与本次复评墙钟分开报告，无等墙钟插值。
+全部修正复评通过后才能解除cap3暂定标记；HF大文件交付仍待配置。

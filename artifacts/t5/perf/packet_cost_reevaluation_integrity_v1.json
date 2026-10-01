@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "result": "pass",
+  "scope": "Evidence-integrity unit checks only, not full reevaluation or learning pass",
+  "tests": 10,
+  "helper_sha256": "48acffc0d03572c2a27f728314d52c21fc5c06438ec55fba30e886e727ef9c66",
+  "test_source_sha256": "27a23a075fe2dd047fd80ce29100e9da78a4307a2ec47a41e9231354a26e4f27",
+  "log": "logs/t5_research/packet_cost_reevaluation_integrity_v1.log",
+  "log_sha256": "4a31b3bf10ca8bae11882c144a3a39a94b53c438443c220a8aebce7d2a3928ef",
+  "protocol": "experiments/t5/reward_v2_packet_cost_reevaluation_v1.json",
+  "protocol_sha256": "53f78be928a86ec1886565140ec0ff2320bbba7774c5389e4164978944a52cd2",
+  "known_existing_nodes": 38,
+  "future_node_selection": "original thresholds, all12 candidates, all60 nodes",
+  "negative_controls": "Reject failed-seed deletion/substitution/duplication, missing mode/task/node/baseline, incoherent wins and changes in complete normal records"
+}
