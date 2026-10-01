@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "a48d5af30ee71c87b8fd6fad4b6230a618606a15a010269aff3830e52754d4f7",
+  "native_hashes": {
+    "old_binary": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
+    "new_binary": "371a75d7e4c35b03267e9932510f44abaf2ee8f087870acd8277f27306767a3c"
+  },
+  "paired_jobs": 576,
+  "paired_observations": 40112,
+  "paired_empty_states": 16167,
+  "paired_failures": 0,
+  "recorded_traces": 0,
+  "recorded_failures": 0,
+  "recorded_replays": [],
+  "seconds": 560.4909757779969,
+  "coexecution": "CPU-only native audit, original matrix complete; concurrent independent roof supplement, not dedicated cost comparison",
+  "intentional_exception": "Only SEED_NONE cost is defined as0; all other public fields and action responses exact under identical actions.",
+  "scope": "Native semantics and readonly replay; not learning success, not yet fixed-policy repeatability.",
+  "result": "pass",
+  "full_report": {
+    "path": "artifacts/research/learning_packet_cost_roof_native_equivalence_v1/report.json",
+    "sha256": "7b19ac2270f897431fbfda25cab3f8e77a853d5849877350b0e5c5511296c84c"
+  },
+  "failure_jobs": []
+}

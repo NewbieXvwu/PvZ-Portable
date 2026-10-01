@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "result": "pass",
+  "gate_result": "pass",
+  "scope": "Finite empty-slot native proof with source-correct Adventure45 conveyor classification; not learning or reference interruption acceptance",
+  "simulator_sha256": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2",
+  "adventure_conveyor_levels": [
+    5,
+    10,
+    20,
+    25,
+    30,
+    40,
+    45,
+    50
+  ],
+  "conveyor_task_ids": [
+    "heldout_day_4",
+    "heldout_night_4",
+    "heldout_pool_4",
+    "heldout_fog_4",
+    "heldout_roof_1",
+    "validation_v1_roof_cap1_x1",
+    "validation_v1_roof_cap5_x1"
+  ],
+  "previous_native_gate": {
+    "path": "gates/T2-empty-packet-observation-v1.json",
+    "sha256": "f94f0dcef93282cca650b12d0547871cfc73f71ac9d8bb5f71be7118892ffd29",
+    "prior_evidence_preserved": true
+  },
+  "roof_native_equivalence": {
+    "path": "artifacts/t5/perf/packet_cost_roof_native_equivalence_v1.json",
+    "sha256": "45cf46374401c7447f90285ca4e0031d36c40399ec70d77b3ec40ecac281c955",
+    "paired_jobs": 576,
+    "observations": 40112,
+    "empty_states": 16167,
+    "failures": 0,
+    "recorded_traces": 32,
+    "recorded_failures": 0,
+    "seconds": 317.06347207100043
+  },
+  "roof_policy_repeatability": {
+    "path": "artifacts/t5/perf/packet_cost_roof_scope_audit_v1.json",
+    "sha256": "b3ee8e3dba7c2b9c0f444aa0b4cd9eb740cf51a16f2ed5264b172eab69399633",
+    "guarded32_all_observation_output_action_rng_exact": true,
+    "scope": "Actual65f0 legacy model on9e, not new flags7 model; combined gate is native-only"
+  },
+  "required_fingerprints": {
+    "/home/newbiexvwu/PvZ-Portable/artifacts/t5/perf/packet_cost_roof_native_equivalence_v1.json": "45cf46374401c7447f90285ca4e0031d36c40399ec70d77b3ec40ecac281c955",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/t5/perf/packet_cost_roof_scope_audit_v1.json": "b3ee8e3dba7c2b9c0f444aa0b4cd9eb740cf51a16f2ed5264b172eab69399633",
+    "/home/newbiexvwu/PvZ-Portable/gates/T2-empty-packet-observation-v1.json": "f94f0dcef93282cca650b12d0547871cfc73f71ac9d8bb5f71be7118892ffd29",
+    "/home/newbiexvwu/PvZ-Portable/src/LawnApp.cpp": "835225af3e5d2a7f754974cc67f67c5b44ea367dc407dd6fdf98e534c8b9589e",
+    "/home/newbiexvwu/PvZ-Portable/src/Lawn/Board.cpp": "e9980717b3411bc748df0543d5f3be0008688ef538b3537b33b978f468d09564",
+    "/home/newbiexvwu/PvZ-Portable/src/Lawn/SeedPacket.cpp": "f14dcacbb6476a0dd8ff66b859aa30c83a2cd718c9e358021d6c16b0814ee2a5",
+    "/home/newbiexvwu/PvZ-Portable/src/Lawn/Plant.cpp": "79e814604e0c8e7eb686fcd8e3c64bbaa07c4d25b9de1e2c7de7acdcfa7924c9",
+    "/home/newbiexvwu/PvZ-Portable-packet-cost/build/pvz-portable": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2"
+  },
+  "old_reevaluation_v1": "failed, preserved; no resumption or relabeling as passed",
+  "science": "all35 tasks, all original seeds/nodes/checkpoints/rewards/modes/budgets unchanged"
+}

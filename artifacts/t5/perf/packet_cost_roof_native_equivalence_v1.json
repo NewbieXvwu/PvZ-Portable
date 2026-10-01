@@ -1,0 +1,570 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "fe008770bd8bc1fbe81a3b31c1b30060749c99b4f2a626c00e48464524812d18",
+  "native_hashes": {
+    "old_binary": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
+    "new_binary": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2"
+  },
+  "paired_jobs": 576,
+  "paired_observations": 40112,
+  "paired_empty_states": 16167,
+  "paired_failures": 0,
+  "recorded_traces": 32,
+  "recorded_failures": 0,
+  "recorded_replays": [
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_000.json.gz",
+      "source_sha256": "3a2191f6d2c1f3d99064698b863fe021ba204c65982291f0721e60294f1b937f",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_000.json.gz",
+      "raw_sha256": "769ddc86e5ed3dae26bcbf2f7aa705ab1a3277d0394e9487bfe50fc2653a7acd"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_001.json.gz",
+      "source_sha256": "80fa1c7a0f1525245ec20af2f149611082aa4cbb456cd3b1fc4516b0b693817e",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_001.json.gz",
+      "raw_sha256": "ed4fef4c4cc62da352b48d7b4faf76b94b424c252c1c90013dd1bbc6892f93d4"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_002.json.gz",
+      "source_sha256": "3806cda6b2ea74e056bf085f195e8363298518104f697e52541e8f2445e72d34",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_002.json.gz",
+      "raw_sha256": "25faa423e86dbd92edb7ddc9eabbb7fa8d8b81c160adf5f5c71d62b0a50d8675"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_003.json.gz",
+      "source_sha256": "6e230f3752e0da270bba6885701ea5ee8b7eee369ac6aa1839c2d0f52e3268f3",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_003.json.gz",
+      "raw_sha256": "a2c6b2b5fa397e4e5009a4f0c346fc21d5c9e943c4ba7b1c042e83668529ce8a"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_004.json.gz",
+      "source_sha256": "ae7e2ccd9e78f4765e7f52c888e774401c73146830775b0ed633f34730add08f",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_004.json.gz",
+      "raw_sha256": "1f6425c32874add79796bdafb1d542828d638997516e2d7a881fc8beed7bceef"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_005.json.gz",
+      "source_sha256": "2703bebe849cb2bc90718810f7aa3b3b08bfd532916f9ece22e180b512318595",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_005.json.gz",
+      "raw_sha256": "389db8f1ef639cf97eb89dfbb41c24e6479ff87cb0a92d6f2af91ec228d46be5"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_006.json.gz",
+      "source_sha256": "03d45738be32cdc0aa88bb62776594394e3f484a5e90fa78602dcaebe2bc81c5",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_006.json.gz",
+      "raw_sha256": "6bbbd55224b6597597e8ddb1367732fa127b71d03b7a6071ffdb868fec402987"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers1/job_007.json.gz",
+      "source_sha256": "b4e433d32260bcd78d4a7ab4bbd005bb861f55815ab1ed0cc80ee6d5f7188efe",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_007.json.gz",
+      "raw_sha256": "5c0937a1c7ca0364c892f799660b9525bb95dbba1d73c0d43041a2c7a6a66bc6"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_000.json.gz",
+      "source_sha256": "98f98ba71dcb526e8a9876fa40fcea7ff825dfeeb938731813cae7197fe884f2",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_008.json.gz",
+      "raw_sha256": "29c49213ac4a3f00918b8d5e5bf292a30f60bafdae066249b225b8527b59b7de"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_001.json.gz",
+      "source_sha256": "520283db4d24d729328501ba521a38f748c9b33cc912055da506982d9037f4ac",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_009.json.gz",
+      "raw_sha256": "02fcb5ee9d58baf0ce35077f878942e34a56031fe1e21a07447849405552af75"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_002.json.gz",
+      "source_sha256": "d858139f9be8455d32097278fb9681cfb65ac99bfb70006f3ad0d453dcf78599",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_010.json.gz",
+      "raw_sha256": "65baaded712673cab86256a1ef9e32fe25861e9e60f3f56adef348bf1df7aa2f"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_003.json.gz",
+      "source_sha256": "d56b33f0843999ee12ba16d266d5aa59764d19307df5c7facfe328ff5adcafb1",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_011.json.gz",
+      "raw_sha256": "69e72d0b2ce3f79575713210dd77edeb710b8e4394ef9c11a564d996c0981bca"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_004.json.gz",
+      "source_sha256": "4fea9ea956a44506961aeb09fd85c041e610c2e904fb78cbcda3fa2f85927aa6",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_012.json.gz",
+      "raw_sha256": "437b65be8e6f8820a275d34079e6b42cbb30b941b35cd07ab575246ff4f56e9d"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_005.json.gz",
+      "source_sha256": "f32be72a886dc2eb6f400ccb51e33427bf6e9a7fde85cf5b3524992bb9e2ec59",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_013.json.gz",
+      "raw_sha256": "5c8ee90805b47690f1ae514f942bb859c8e487f9347ff96cf7e96d28cd9531a5"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_006.json.gz",
+      "source_sha256": "f5414ad55b3f1a176f88196ea9df2c9db5bc9325da078942abc305686bf687c4",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_014.json.gz",
+      "raw_sha256": "7d9a9e0f27b032c949852bfdec5e3e482e49fc205a534a2580dc3ee06b044f00"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion0_workers8/job_007.json.gz",
+      "source_sha256": "def3bda3dfbbba95f93ffa35ee5817dc527cc30bffa17f6cbe9acc29381d5e43",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_015.json.gz",
+      "raw_sha256": "f43645de80ad6b056c814a618fcabf3003c6037667b6f50f58ef01a16004c6f8"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_000.json.gz",
+      "source_sha256": "787cb486f2ca537e02f1ad5af880bc019a6f46ec55adab1c9884d827d02fa43c",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_016.json.gz",
+      "raw_sha256": "6cf447719b743eb266b854c4649e50ac9b05f3d566d0346960c6356a19a052bf"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_001.json.gz",
+      "source_sha256": "2e29e8f2acd5dcc3699caabfe6f278b4d17205129be788f75089963caf04fe79",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_017.json.gz",
+      "raw_sha256": "168ba20b6acea9d89991d6f4867d9ec4cf0dec97fea603ac7915e2a9d2a06719"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_002.json.gz",
+      "source_sha256": "5bcdac407824d9d7a60754c251ae423758f3686b2e5a8e3101b73a8195c3085c",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_018.json.gz",
+      "raw_sha256": "f4f83f664b64fa040e32da69081888b4882815b250d5becde2931d5c1f1bd57e"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_003.json.gz",
+      "source_sha256": "259d017525ea0c30e211a5d34c0a7212db6c0042e7fc8dd041c5cfe2e32d5ca2",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_019.json.gz",
+      "raw_sha256": "db4fd5b7289f95e6118750092c4048642684eb4bf18ba84e7a9b59f435812d86"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_004.json.gz",
+      "source_sha256": "55e614730aa54b5962f5a58a4196e3fa12241e65a10e89cbc10393497a68fb93",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_020.json.gz",
+      "raw_sha256": "f2f51775d7a811ea0d9ec85bfaa9a01ccfc9f1991aacf7c87b8e196b1bca3f60"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_005.json.gz",
+      "source_sha256": "a38765b71c8cecb6eaba3d86a0bd1bf404b41baf67b42e2824651be1fe818b33",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_021.json.gz",
+      "raw_sha256": "e362cd7ba0517c859d1952f044c9deae39973160ab5d5664f90a3798e14ddced"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_006.json.gz",
+      "source_sha256": "0b7d98781fd91281e8ede3191d853ac3c1be6127cac4877ceb1a53accc1df7e2",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_022.json.gz",
+      "raw_sha256": "0ff24b5bccd48e838bca42d2763647ff6f66bde30fc8b5f2a540679cbadcddf7"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers1/job_007.json.gz",
+      "source_sha256": "52a05b5a9602f439db6be6cbe5cba441fe6cd6b5d0c0ffb6874036ab79f1fcf1",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_023.json.gz",
+      "raw_sha256": "389d6e75ca1de653bdf71c98e4e6f5b265ff4d9cebdafa74941b125b51bd885f"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_000.json.gz",
+      "source_sha256": "bdf1def594088e87dd21630c070b740f209e9596ac8eedeb040c67ac7159652d",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_024.json.gz",
+      "raw_sha256": "c427ef4220eae84f6ee43b9312336d4c009c8a31ba48708f18c18f78391ff932"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_001.json.gz",
+      "source_sha256": "dad4093a74bc0c04472d73d1716c30ca07de88c5e62149cc916d6483d37bb011",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_025.json.gz",
+      "raw_sha256": "3bcc55cb35b42efa05829406c8d74c2fff024a0881ad60d1b0ca121fefca1732"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_002.json.gz",
+      "source_sha256": "7666b4c00afc862562271db2226d9ca03a12e76934e521a031f5a7e0cdcc1b44",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_026.json.gz",
+      "raw_sha256": "f64e6c4883027fac20ab6f5c3241094a3dc92655e2643b850b735b11262c9712"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_003.json.gz",
+      "source_sha256": "a6b2070b5d5e167572915bc75e16cd7ce3e1f1c4204cd70b60de37f6a9779c3e",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_027.json.gz",
+      "raw_sha256": "e734bcbb3874a5c1ba6878cc878725b3271efa5ee457d79490c8e3600e293f9f"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_004.json.gz",
+      "source_sha256": "dbccd81412bb032caacc5f6308c3154fb6428cf318c99ff3cd074a4ef7630aef",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_028.json.gz",
+      "raw_sha256": "1a30f7a13749e43f5528854c5f3083936e6de9cdef29a9b927688c4a7eb054e5"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_005.json.gz",
+      "source_sha256": "2e515f7d008162f8f915e34ed649ed8bf6a62fd4ddb180b257fba1583ea02124",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_029.json.gz",
+      "raw_sha256": "c05e2cc37df563a6fbbf868ef097fb4af5dbfb7a73e97720cdefaf56a8ecd535"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_006.json.gz",
+      "source_sha256": "179d0e291bfd23b1f315b0dfd386dec0df2822e488566bff2a568df4a194a4fa",
+      "decisions": 27,
+      "empty_states": 25,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 3671,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_030.json.gz",
+      "raw_sha256": "2568ad369d3aa4ca9e0081316c2cf9b802b12d81169c8c2a9e250b271189f33c"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_roof_original_trace_replay_v1/fusion1_workers8/job_007.json.gz",
+      "source_sha256": "97a4bd4d61c46998776191c6e31870828cea41f900a872e9ffacb62b80909175",
+      "decisions": 46,
+      "empty_states": 44,
+      "failure": null,
+      "outcome": {
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "terminal_tick": 7109,
+        "terminal_wave": 1,
+        "wave_count": 1
+      },
+      "raw_path": "artifacts/research/packet_cost_roof_native_equivalence_v1/recorded_031.json.gz",
+      "raw_sha256": "53d0c0cad2d889a7e241bab94ced9f82576de4390c9fbd59b807950ca027e90b"
+    }
+  ],
+  "seconds": 317.06347207100043,
+  "coexecution": "CPU-only native audit, original matrix complete; concurrent independent roof supplement, not dedicated cost comparison",
+  "intentional_exception": "Only SEED_NONE cost is defined as0; all other public fields and action responses exact under identical actions.",
+  "scope": "Native semantics and readonly replay; not learning success, not yet fixed-policy repeatability.",
+  "result": "pass",
+  "full_report": {
+    "path": "artifacts/research/packet_cost_roof_native_equivalence_v1/report.json",
+    "sha256": "f3772f09d06ba8808a708676b1eae73a9fdb62c960d500e7c73c1582f97bbfd6"
+  },
+  "failure_jobs": []
+}
