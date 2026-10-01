@@ -1372,6 +1372,6 @@
       "projectile_links": 0
     }
   ],
-  "seconds": 2.2462142549993587,
+  "seconds": 1.5549579770013224,
   "limitation": "engineering rollout coverage; absence of sampled links is not proof the task cannot exercise them"
 }
