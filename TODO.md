@@ -335,3 +335,12 @@ sampled 2/320，不构成T5-E学习通过。
 见 [T2_DYNAMIC_PREFIX_REPORT_20261001.md](T2_DYNAMIC_PREFIX_REPORT_20261001.md) 与
 `gates/T2-dynamic-prefix-v4.json`。新smoke v4先验证闭环，v2奖励矩阵独立重跑相同原预算、
 任务、种子和门槛。T5-E、T6、T7仍未通过。
+
+**2026-10-01 输入与持续学习更新**：恢复任务后的R0/初始化0完成500004决策，
+多个预定节点出现真实三波/五波提升；末段五波greedy由304/640退到95/640。
+四奖励×三初始化完成1/12，R1/初始化0继续运行，不能据单种子宣布T5-E或稳定性通过。
+on_board、公开目标ID关系、行级敌人构成与卡片冷却在隔离提交`924d27f`实现；
+480局原生等价、8个真实目标夹具及20局实际CPU回放通过，当前矩阵没有应用候选。
+见 [T5_OBSERVATION_UPDATE_20261001.md](T5_OBSERVATION_UPDATE_20261001.md) 和
+[T5_REWARD_V2_PROGRESS_20261001.md](T5_REWARD_V2_PROGRESS_20261001.md)。
+实际分片CUDA回放、候选中断恢复/新门禁、三初始化输入/课程学习对照及所有T6/T7验收仍待完成。

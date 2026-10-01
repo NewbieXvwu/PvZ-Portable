@@ -1,0 +1,29 @@
+test_cell_tokens_are_indexed_by_row_major_position (test_agent_model.ObservationTokenTests.test_cell_tokens_are_indexed_by_row_major_position)
+``select_action`` builds cell ids as ``row * 9 + col``; the tokens must agree. ... ok
+test_derived_features_change_with_observation_state (test_agent_model.ObservationTokenTests.test_derived_features_change_with_observation_state) ... ok
+test_entity_types_are_clamped_into_the_embedding_range (test_agent_model.ObservationTokenTests.test_entity_types_are_clamped_into_the_embedding_range) ... ok
+test_lane_tokens_are_six_row_aggregates_and_enter_attention (test_agent_model.ObservationTokenTests.test_lane_tokens_are_six_row_aggregates_and_enter_attention) ... ok
+test_lane_vocabulary_bumps_the_architecture_version (test_agent_model.ObservationTokenTests.test_lane_vocabulary_bumps_the_architecture_version) ... FAIL
+test_narrow_packed_tokens_preserve_ids_and_actions (test_agent_model.ObservationTokenTests.test_narrow_packed_tokens_preserve_ids_and_actions) ... ok
+test_packet_tokens_are_indexed_by_packet_slot (test_agent_model.ObservationTokenTests.test_packet_tokens_are_indexed_by_packet_slot) ... ok
+test_token_stream_covers_every_entity (test_agent_model.ObservationTokenTests.test_token_stream_covers_every_entity) ... ok
+test_real_optimizer_path_preserves_likelihood_across_all_chunk_boundaries (test_research_training.RecurrentReplayTests.test_real_optimizer_path_preserves_likelihood_across_all_chunk_boundaries) ... ok
+test_prefix_hidden_is_recomputed_after_parameter_updates (test_research_training.RecurrentReplayTests.test_prefix_hidden_is_recomputed_after_parameter_updates) ... ok
+test_full_episode_reference_matches_collection (test_research_training.RecurrentReplayTests.test_full_episode_reference_matches_collection) ... ok
+test_full_resume_produces_the_same_next_update (test_research_training.RecurrentReplayTests.test_full_resume_produces_the_same_next_update) ... ok
+test_two_models_keep_independent_configs_and_critic_dimensions (test_research_training.ExplicitConfigurationTests.test_two_models_keep_independent_configs_and_critic_dimensions) ... ok
+test_undiscounted_return_and_truncation_bootstrap (test_research_training.ExplicitConfigurationTests.test_undiscounted_return_and_truncation_bootstrap) ... ok
+
+======================================================================
+FAIL: test_lane_vocabulary_bumps_the_architecture_version (test_agent_model.ObservationTokenTests.test_lane_vocabulary_bumps_the_architecture_version)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/newbiexvwu/PvZ-Portable-observation/python/test_agent_model.py", line 131, in test_lane_vocabulary_bumps_the_architecture_version
+    self.assertEqual(MODEL_ARCHITECTURE_VERSION, 5)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 6 != 5
+
+----------------------------------------------------------------------
+Ran 14 tests in 9.733s
+
+FAILED (failures=1)

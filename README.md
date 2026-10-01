@@ -41,6 +41,7 @@ training project has its own documents (all in the repository root):
 | [PROTOCOL_OBSERVABILITY_AUDIT.md](PROTOCOL_OBSERVABILITY_AUDIT.md) | observation-field budget and pending protocol work |
 | [T5_REWARD_V2_PROGRESS_20261001.md](T5_REWARD_V2_PROGRESS_20261001.md) | partial reward results after restoring dynamic task semantics |
 | [T5_TOKEN_AUDIT_20261001.md](T5_TOKEN_AUDIT_20261001.md) | measured short-task token sizes and field encoding gaps |
+| [T5_OBSERVATION_UPDATE_20261001.md](T5_OBSERVATION_UPDATE_20261001.md) | isolated input repairs, native/replay checks, and unresolved late PPO regression |
 | [CHECKPOINT_GIT_DELIVERY.md](CHECKPOINT_GIT_DELIVERY.md) | lossless git delivery and verification of full recovery checkpoints |
 
 Code lives in `python/` and `scripts/`; experiment evidence lands in `artifacts/`.

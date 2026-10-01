@@ -1,0 +1,15 @@
+{
+  "task_id": "aid_v1_roof_cap5_full_defence",
+  "episodes": 480,
+  "counts": {
+    "response_comparisons": 22565,
+    "observations": 23021,
+    "zombie_records": 251852,
+    "on_board_records": 26784,
+    "encoded_observations": 238,
+    "max_tokens": 143,
+    "snapshot_replays": 456,
+    "snapshot_branches": 456
+  },
+  "seconds": 104.83099572800074
+}

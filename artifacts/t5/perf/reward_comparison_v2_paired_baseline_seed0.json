@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "initialization_seed": 0,
+  "scope": "R0/R1 untrained full raw seed_results; identity and all behavior fields, not only win counts",
+  "total_task_seed_mode_results": 4480,
+  "all_seed_results_exact_equal": true,
+  "sources": [
+    {
+      "experiment_id": "reward_r0_seed0_v2",
+      "initial_state_sha256": "0de883f98d3122b563ec1413ac52af7be304b03edc81686bcc5f3dff7b08ce0f",
+      "raw_path": "artifacts/research/reward_r0_seed0_v2/evaluations/update_000000.json.gz",
+      "raw_sha256": "09730b7fc24dbbf200294876dd91d522ce34dc2d2a333a68dbc5e682e3c33ec3"
+    },
+    {
+      "experiment_id": "reward_r1_seed0_v2",
+      "initial_state_sha256": "0de883f98d3122b563ec1413ac52af7be304b03edc81686bcc5f3dff7b08ce0f",
+      "raw_path": "artifacts/research/reward_r1_seed0_v2/evaluations/update_000000.json.gz",
+      "raw_sha256": "d5ad3ecf1610609df1641f4bd0a404cebb1cbcbbafd3a91a746677ac539bb18c"
+    }
+  ]
+}

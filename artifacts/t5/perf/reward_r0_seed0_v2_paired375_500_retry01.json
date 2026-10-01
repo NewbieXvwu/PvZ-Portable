@@ -1,0 +1,3766 @@
+{
+  "schema_version": 1,
+  "experiment_id": "reward_r0_seed0_v2",
+  "scope": "all paired seeds at two completed preregistered nodes; descriptive, not causal",
+  "manifest": "experiments/t5/reward_evaluation_v1.json",
+  "manifest_sha256": "51469f8ae3c2eeabef89325ec660c6046187e77d2c2237e9aed8de1534fd1db9",
+  "state_sha256": "84bdead5e9b5d9f87818270b707b5935bb61e23b1d182a55f0f70f874c192ffa",
+  "before": {
+    "counters": {
+      "episodes": 6683,
+      "decisions": 375034,
+      "ticks": 53013798
+    },
+    "raw_sha256": "51afbdc98c351c8b1bdcc13d1e39f2fb5e539e57791471dbfca1f4abf5fdef50"
+  },
+  "after": {
+    "counters": {
+      "episodes": 11151,
+      "decisions": 500004,
+      "ticks": 80170116
+    },
+    "raw_sha256": "335ea5e48b0649db59ecbfddfba013cb42e86fa1398ef9af6abaf5d2c0f5cd77"
+  },
+  "seed_pairs": 4480,
+  "summary": {
+    "greedy": {
+      "per_task": {
+        "train_day_1": {
+          "before": {
+            "won": 52,
+            "count": 64,
+            "win_rate": 0.8125,
+            "wilson_95": [
+              0.7002563943589847,
+              0.8893535682705119
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 12,
+          "retained_wins": 52,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 1.640625,
+            "mean_actions": 22.6875,
+            "action_counts": {
+              "wait": 1199,
+              "plant": 253
+            },
+            "wait_fraction": 0.8257575757575758,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 16.75,
+            "action_counts": {
+              "wait": 1005,
+              "plant": 67
+            },
+            "wait_fraction": 0.9375,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_night_1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 64,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 4.640625,
+            "mean_actions": 21.34375,
+            "action_counts": {
+              "wait": 1052,
+              "plant": 314
+            },
+            "wait_fraction": 0.7701317715959004,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 16.859375,
+            "action_counts": {
+              "wait": 1013,
+              "plant": 66
+            },
+            "wait_fraction": 0.9388322520852641,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_pool_1": {
+          "before": {
+            "won": 56,
+            "count": 64,
+            "win_rate": 0.875,
+            "wilson_95": [
+              0.7722543817887005,
+              0.9352775733666955
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 8,
+          "retained_wins": 56,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 1.203125,
+            "mean_actions": 21.921875,
+            "action_counts": {
+              "wait": 1122,
+              "plant": 281
+            },
+            "wait_fraction": 0.7997148966500356,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 16.640625,
+            "action_counts": {
+              "wait": 998,
+              "plant": 67
+            },
+            "wait_fraction": 0.9370892018779343,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_fog_1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 64,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 4.453125,
+            "mean_actions": 20.0625,
+            "action_counts": {
+              "wait": 992,
+              "plant": 292
+            },
+            "wait_fraction": 0.7725856697819314,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 16.8125,
+            "action_counts": {
+              "wait": 1008,
+              "plant": 68
+            },
+            "wait_fraction": 0.9368029739776952,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_roof_1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 64,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 2.21875,
+            "mean_actions": 27.078125,
+            "action_counts": {
+              "wait": 1528,
+              "plant": 205
+            },
+            "wait_fraction": 0.8817080207732256,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 25.265625,
+            "action_counts": {
+              "wait": 1552,
+              "plant": 65
+            },
+            "wait_fraction": 0.9598021026592455,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_day_1": {
+          "before": {
+            "won": 58,
+            "count": 64,
+            "win_rate": 0.90625,
+            "wilson_95": [
+              0.810171204003544,
+              0.9563217474148016
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 5,
+          "retained_wins": 58,
+          "retained_failures": 1,
+          "before_behavior": {
+            "mean_peak_offense": 2.875,
+            "mean_actions": 55.921875,
+            "action_counts": {
+              "wait": 2725,
+              "plant": 854
+            },
+            "wait_fraction": 0.761385861972618,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.609375,
+            "mean_actions": 35.140625,
+            "action_counts": {
+              "wait": 2066,
+              "plant": 183
+            },
+            "wait_fraction": 0.9186305024455313,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_day_2": {
+          "before": {
+            "won": 9,
+            "count": 64,
+            "win_rate": 0.140625,
+            "wilson_95": [
+              0.0757857255603086,
+              0.24616281741577023
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 8,
+            "count": 64,
+            "win_rate": 0.125,
+            "wilson_95": [
+              0.06472242663330453,
+              0.22774561821129946
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.984375
+          },
+          "lost_previous_wins": 6,
+          "gained_new_wins": 5,
+          "retained_wins": 3,
+          "retained_failures": 50,
+          "before_behavior": {
+            "mean_peak_offense": 2.15625,
+            "mean_actions": 58.15625,
+            "action_counts": {
+              "wait": 2795,
+              "plant": 927
+            },
+            "wait_fraction": 0.7509403546480387,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.09375,
+            "mean_actions": 43.8125,
+            "action_counts": {
+              "wait": 2388,
+              "plant": 416
+            },
+            "wait_fraction": 0.8516405135520685,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_day_3": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.46875
+          },
+          "after": {
+            "won": 1,
+            "count": 64,
+            "win_rate": 0.015625,
+            "wilson_95": [
+              0.002763541923337505,
+              0.08334101600094265
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.25
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 1,
+          "retained_wins": 0,
+          "retained_failures": 63,
+          "before_behavior": {
+            "mean_peak_offense": 1.53125,
+            "mean_actions": 59.9375,
+            "action_counts": {
+              "wait": 2772,
+              "plant": 1064
+            },
+            "wait_fraction": 0.7226277372262774,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.0,
+            "mean_actions": 46.625,
+            "action_counts": {
+              "wait": 2462,
+              "plant": 522
+            },
+            "wait_fraction": 0.8250670241286864,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_day_4": {
+          "before": {
+            "won": 33,
+            "count": 64,
+            "win_rate": 0.515625,
+            "wilson_95": [
+              0.39581601478580125,
+              0.6336644833456737
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.984375
+          },
+          "after": {
+            "won": 12,
+            "count": 64,
+            "win_rate": 0.1875,
+            "wilson_95": [
+              0.11064643172948806,
+              0.29974360564101526
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.890625
+          },
+          "lost_previous_wins": 29,
+          "gained_new_wins": 8,
+          "retained_wins": 4,
+          "retained_failures": 23,
+          "before_behavior": {
+            "mean_peak_offense": 5.84375,
+            "mean_actions": 53.09375,
+            "action_counts": {
+              "wait": 2252,
+              "plant": 1146
+            },
+            "wait_fraction": 0.6627427898763979,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.453125,
+            "mean_actions": 39.046875,
+            "action_counts": {
+              "wait": 1918,
+              "plant": 581
+            },
+            "wait_fraction": 0.7675070028011205,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_night_1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 1,
+          "gained_new_wins": 0,
+          "retained_wins": 63,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 9.96875,
+            "mean_actions": 40.296875,
+            "action_counts": {
+              "wait": 1935,
+              "plant": 644
+            },
+            "wait_fraction": 0.7502908103916247,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.734375,
+            "mean_actions": 37.375,
+            "action_counts": {
+              "wait": 2206,
+              "plant": 186
+            },
+            "wait_fraction": 0.9222408026755853,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_night_2": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 37,
+            "count": 64,
+            "win_rate": 0.578125,
+            "wilson_95": [
+              0.456100315400829,
+              0.6913021752565451
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 27,
+          "gained_new_wins": 0,
+          "retained_wins": 37,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 9.875,
+            "mean_actions": 50.90625,
+            "action_counts": {
+              "wait": 2338,
+              "plant": 920
+            },
+            "wait_fraction": 0.7176181706568447,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.96875,
+            "mean_actions": 46.03125,
+            "action_counts": {
+              "wait": 2505,
+              "plant": 441
+            },
+            "wait_fraction": 0.8503054989816701,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_night_3": {
+          "before": {
+            "won": 53,
+            "count": 64,
+            "win_rate": 0.828125,
+            "wilson_95": [
+              0.7178678837734179,
+              0.9012225769875536
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 5.0
+          },
+          "after": {
+            "won": 7,
+            "count": 64,
+            "win_rate": 0.109375,
+            "wilson_95": [
+              0.05400113344416797,
+              0.20898641326896122
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.59375
+          },
+          "lost_previous_wins": 46,
+          "gained_new_wins": 0,
+          "retained_wins": 7,
+          "retained_failures": 11,
+          "before_behavior": {
+            "mean_peak_offense": 14.921875,
+            "mean_actions": 71.28125,
+            "action_counts": {
+              "wait": 3392,
+              "plant": 1170
+            },
+            "wait_fraction": 0.7435335379219641,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.90625,
+            "mean_actions": 60.359375,
+            "action_counts": {
+              "wait": 3269,
+              "plant": 594
+            },
+            "wait_fraction": 0.8462334972819052,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_night_4": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 46,
+            "count": 64,
+            "win_rate": 0.71875,
+            "wilson_95": [
+              0.5986606971779259,
+              0.8140662766627217
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.984375
+          },
+          "lost_previous_wins": 18,
+          "gained_new_wins": 0,
+          "retained_wins": 46,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 7.5,
+            "mean_actions": 47.9375,
+            "action_counts": {
+              "wait": 1978,
+              "plant": 1090
+            },
+            "wait_fraction": 0.6447196870925684,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.390625,
+            "mean_actions": 50.28125,
+            "action_counts": {
+              "wait": 2408,
+              "plant": 810
+            },
+            "wait_fraction": 0.7482908638906153,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_pool_1": {
+          "before": {
+            "won": 50,
+            "count": 64,
+            "win_rate": 0.78125,
+            "wilson_95": [
+              0.6656721604337418,
+              0.8649768059328052
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 59,
+            "count": 64,
+            "win_rate": 0.921875,
+            "wilson_95": [
+              0.8298046264583709,
+              0.9661688230914496
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 2,
+          "gained_new_wins": 11,
+          "retained_wins": 48,
+          "retained_failures": 3,
+          "before_behavior": {
+            "mean_peak_offense": 1.796875,
+            "mean_actions": 55.953125,
+            "action_counts": {
+              "wait": 2753,
+              "plant": 828
+            },
+            "wait_fraction": 0.7687796704831052,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.625,
+            "mean_actions": 36.3125,
+            "action_counts": {
+              "wait": 2125,
+              "plant": 199
+            },
+            "wait_fraction": 0.9143717728055077,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_pool_2": {
+          "before": {
+            "won": 1,
+            "count": 64,
+            "win_rate": 0.015625,
+            "wilson_95": [
+              0.002763541923337505,
+              0.08334101600094265
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 26,
+            "count": 64,
+            "win_rate": 0.40625,
+            "wilson_95": [
+              0.2945690924971961,
+              0.5285479187139549
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 25,
+          "retained_wins": 1,
+          "retained_failures": 38,
+          "before_behavior": {
+            "mean_peak_offense": 1.09375,
+            "mean_actions": 53.890625,
+            "action_counts": {
+              "wait": 2568,
+              "plant": 881
+            },
+            "wait_fraction": 0.7445636416352566,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.078125,
+            "mean_actions": 42.421875,
+            "action_counts": {
+              "wait": 2337,
+              "plant": 378
+            },
+            "wait_fraction": 0.8607734806629834,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_pool_3": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.1875
+          },
+          "after": {
+            "won": 4,
+            "count": 64,
+            "win_rate": 0.0625,
+            "wilson_95": [
+              0.024571201396618017,
+              0.14997485092208662
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.296875
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 4,
+          "retained_wins": 0,
+          "retained_failures": 60,
+          "before_behavior": {
+            "mean_peak_offense": 1.046875,
+            "mean_actions": 51.71875,
+            "action_counts": {
+              "wait": 2434,
+              "plant": 876
+            },
+            "wait_fraction": 0.7353474320241692,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.28125,
+            "mean_actions": 46.640625,
+            "action_counts": {
+              "wait": 2534,
+              "plant": 451
+            },
+            "wait_fraction": 0.8489112227805695,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_pool_4": {
+          "before": {
+            "won": 24,
+            "count": 64,
+            "win_rate": 0.375,
+            "wilson_95": [
+              0.2666598017882464,
+              0.497496213159955
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.984375
+          },
+          "after": {
+            "won": 14,
+            "count": 64,
+            "win_rate": 0.21875,
+            "wilson_95": [
+              0.13502319406719474,
+              0.3343278395662582
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.875
+          },
+          "lost_previous_wins": 14,
+          "gained_new_wins": 4,
+          "retained_wins": 10,
+          "retained_failures": 36,
+          "before_behavior": {
+            "mean_peak_offense": 3.515625,
+            "mean_actions": 46.828125,
+            "action_counts": {
+              "wait": 1890,
+              "plant": 1107
+            },
+            "wait_fraction": 0.6306306306306306,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.1875,
+            "mean_actions": 35.96875,
+            "action_counts": {
+              "wait": 1729,
+              "plant": 573
+            },
+            "wait_fraction": 0.7510860121633363,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_fog_1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 1,
+          "gained_new_wins": 0,
+          "retained_wins": 63,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 9.90625,
+            "mean_actions": 38.890625,
+            "action_counts": {
+              "wait": 1846,
+              "plant": 643
+            },
+            "wait_fraction": 0.7416633186018481,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.796875,
+            "mean_actions": 35.890625,
+            "action_counts": {
+              "wait": 2096,
+              "plant": 201
+            },
+            "wait_fraction": 0.912494558119286,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_fog_2": {
+          "before": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 50,
+            "count": 64,
+            "win_rate": 0.78125,
+            "wilson_95": [
+              0.6656721604337418,
+              0.8649768059328052
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 13,
+          "gained_new_wins": 0,
+          "retained_wins": 50,
+          "retained_failures": 1,
+          "before_behavior": {
+            "mean_peak_offense": 9.8125,
+            "mean_actions": 46.09375,
+            "action_counts": {
+              "wait": 2166,
+              "plant": 784
+            },
+            "wait_fraction": 0.7342372881355932,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.1875,
+            "mean_actions": 43.296875,
+            "action_counts": {
+              "wait": 2416,
+              "plant": 355
+            },
+            "wait_fraction": 0.871887405268856,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_fog_3": {
+          "before": {
+            "won": 58,
+            "count": 64,
+            "win_rate": 0.90625,
+            "wilson_95": [
+              0.810171204003544,
+              0.9563217474148016
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 5.0
+          },
+          "after": {
+            "won": 4,
+            "count": 64,
+            "win_rate": 0.0625,
+            "wilson_95": [
+              0.024571201396618017,
+              0.14997485092208662
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.703125
+          },
+          "lost_previous_wins": 54,
+          "gained_new_wins": 0,
+          "retained_wins": 4,
+          "retained_failures": 6,
+          "before_behavior": {
+            "mean_peak_offense": 14.046875,
+            "mean_actions": 65.59375,
+            "action_counts": {
+              "wait": 3109,
+              "plant": 1089
+            },
+            "wait_fraction": 0.7405907575035732,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.390625,
+            "mean_actions": 59.53125,
+            "action_counts": {
+              "wait": 3264,
+              "plant": 546
+            },
+            "wait_fraction": 0.8566929133858268,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_fog_4": {
+          "before": {
+            "won": 35,
+            "count": 64,
+            "win_rate": 0.546875,
+            "wilson_95": [
+              0.4257359722005412,
+              0.6627055221938833
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 16,
+            "count": 64,
+            "win_rate": 0.25,
+            "wilson_95": [
+              0.16014926530970577,
+              0.36816276458669694
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 26,
+          "gained_new_wins": 7,
+          "retained_wins": 9,
+          "retained_failures": 22,
+          "before_behavior": {
+            "mean_peak_offense": 10.125,
+            "mean_actions": 58.5,
+            "action_counts": {
+              "wait": 2189,
+              "plant": 1555
+            },
+            "wait_fraction": 0.5846688034188035,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 6.140625,
+            "mean_actions": 49.859375,
+            "action_counts": {
+              "wait": 2304,
+              "plant": 887
+            },
+            "wait_fraction": 0.7220307113757443,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_roof_1": {
+          "before": {
+            "won": 41,
+            "count": 64,
+            "win_rate": 0.640625,
+            "wilson_95": [
+              0.518208506097791,
+              0.7471159770854825
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.859375
+          },
+          "after": {
+            "won": 33,
+            "count": 64,
+            "win_rate": 0.515625,
+            "wilson_95": [
+              0.39581601478580125,
+              0.6336644833456737
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.859375
+          },
+          "lost_previous_wins": 14,
+          "gained_new_wins": 6,
+          "retained_wins": 27,
+          "retained_failures": 17,
+          "before_behavior": {
+            "mean_peak_offense": 1.5,
+            "mean_actions": 41.640625,
+            "action_counts": {
+              "wait": 1823,
+              "plant": 842
+            },
+            "wait_fraction": 0.6840525328330206,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.453125,
+            "mean_actions": 39.0,
+            "action_counts": {
+              "wait": 1845,
+              "plant": 651
+            },
+            "wait_fraction": 0.7391826923076923,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_roof_2": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 0,
+          "retained_failures": 64,
+          "before_behavior": {
+            "mean_peak_offense": 1.984375,
+            "mean_actions": 51.203125,
+            "action_counts": {
+              "wait": 2537,
+              "plant": 740
+            },
+            "wait_fraction": 0.774183704607873,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.734375,
+            "mean_actions": 43.390625,
+            "action_counts": {
+              "wait": 2296,
+              "plant": 481
+            },
+            "wait_fraction": 0.8267915016204537,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_roof_3": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.765625
+          },
+          "after": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.671875
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 0,
+          "retained_failures": 64,
+          "before_behavior": {
+            "mean_peak_offense": 2.03125,
+            "mean_actions": 48.34375,
+            "action_counts": {
+              "wait": 2419,
+              "plant": 675
+            },
+            "wait_fraction": 0.781835811247576,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.625,
+            "mean_actions": 43.53125,
+            "action_counts": {
+              "wait": 2307,
+              "plant": 479
+            },
+            "wait_fraction": 0.8280689160086145,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_roof_4": {
+          "before": {
+            "won": 46,
+            "count": 64,
+            "win_rate": 0.71875,
+            "wilson_95": [
+              0.5986606971779259,
+              0.8140662766627217
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 47,
+            "count": 64,
+            "win_rate": 0.734375,
+            "wilson_95": [
+              0.6151712627143486,
+              0.8270362092577739
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 14,
+          "gained_new_wins": 15,
+          "retained_wins": 32,
+          "retained_failures": 3,
+          "before_behavior": {
+            "mean_peak_offense": 2.875,
+            "mean_actions": 67.078125,
+            "action_counts": {
+              "wait": 3344,
+              "plant": 949
+            },
+            "wait_fraction": 0.7789424644770556,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.546875,
+            "mean_actions": 47.59375,
+            "action_counts": {
+              "wait": 2763,
+              "plant": 283
+            },
+            "wait_fraction": 0.907091267235719,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_day_cap1_x1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 64,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 1.25,
+            "mean_actions": 18.171875,
+            "action_counts": {
+              "wait": 982,
+              "plant": 181
+            },
+            "wait_fraction": 0.8443680137575237,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 16.875,
+            "action_counts": {
+              "wait": 1011,
+              "plant": 69
+            },
+            "wait_fraction": 0.9361111111111111,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_night_cap1_x1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 64,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 4.5,
+            "mean_actions": 20.234375,
+            "action_counts": {
+              "wait": 1007,
+              "plant": 288
+            },
+            "wait_fraction": 0.7776061776061776,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 17.921875,
+            "action_counts": {
+              "wait": 1079,
+              "plant": 68
+            },
+            "wait_fraction": 0.9407149084568439,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_pool_cap1_x1": {
+          "before": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 1,
+          "retained_wins": 63,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 1.0625,
+            "mean_actions": 18.21875,
+            "action_counts": {
+              "wait": 969,
+              "plant": 197
+            },
+            "wait_fraction": 0.8310463121783876,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 16.8125,
+            "action_counts": {
+              "wait": 1005,
+              "plant": 71
+            },
+            "wait_fraction": 0.9340148698884758,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_fog_cap1_x1": {
+          "before": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 64,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 4.4375,
+            "mean_actions": 19.515625,
+            "action_counts": {
+              "wait": 965,
+              "plant": 284
+            },
+            "wait_fraction": 0.7726180944755805,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0,
+            "mean_actions": 17.3125,
+            "action_counts": {
+              "wait": 1036,
+              "plant": 72
+            },
+            "wait_fraction": 0.9350180505415162,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_roof_cap1_x1": {
+          "before": {
+            "won": 46,
+            "count": 64,
+            "win_rate": 0.71875,
+            "wilson_95": [
+              0.5986606971779259,
+              0.8140662766627217
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 36,
+            "count": 64,
+            "win_rate": 0.5625,
+            "wilson_95": [
+              0.4408620895699301,
+              0.6770599029559693
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 14,
+          "gained_new_wins": 4,
+          "retained_wins": 32,
+          "retained_failures": 14,
+          "before_behavior": {
+            "mean_peak_offense": 1.21875,
+            "mean_actions": 29.28125,
+            "action_counts": {
+              "wait": 1380,
+              "plant": 494
+            },
+            "wait_fraction": 0.736392742796158,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.28125,
+            "mean_actions": 24.6875,
+            "action_counts": {
+              "wait": 1182,
+              "plant": 398
+            },
+            "wait_fraction": 0.7481012658227848,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_day_cap5_x1": {
+          "before": {
+            "won": 31,
+            "count": 64,
+            "win_rate": 0.484375,
+            "wilson_95": [
+              0.3663355166543264,
+              0.6041839852141988
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 5.0
+          },
+          "after": {
+            "won": 11,
+            "count": 64,
+            "win_rate": 0.171875,
+            "wilson_95": [
+              0.09877742301244645,
+              0.282132116226582
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.921875
+          },
+          "lost_previous_wins": 27,
+          "gained_new_wins": 7,
+          "retained_wins": 4,
+          "retained_failures": 26,
+          "before_behavior": {
+            "mean_peak_offense": 3.421875,
+            "mean_actions": 88.515625,
+            "action_counts": {
+              "wait": 4119,
+              "plant": 1546
+            },
+            "wait_fraction": 0.7270962047661077,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.25,
+            "mean_actions": 57.984375,
+            "action_counts": {
+              "wait": 3285,
+              "plant": 426
+            },
+            "wait_fraction": 0.8852061438965239,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_night_cap5_x1": {
+          "before": {
+            "won": 61,
+            "count": 64,
+            "win_rate": 0.953125,
+            "wilson_95": [
+              0.8710034625990631,
+              0.983930983213707
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 5.0
+          },
+          "after": {
+            "won": 18,
+            "count": 64,
+            "win_rate": 0.28125,
+            "wilson_95": [
+              0.18593372333727837,
+              0.40133930282207403
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.984375
+          },
+          "lost_previous_wins": 43,
+          "gained_new_wins": 0,
+          "retained_wins": 18,
+          "retained_failures": 3,
+          "before_behavior": {
+            "mean_peak_offense": 15.5,
+            "mean_actions": 66.1875,
+            "action_counts": {
+              "wait": 3158,
+              "plant": 1078
+            },
+            "wait_fraction": 0.7455146364494807,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.546875,
+            "mean_actions": 63.359375,
+            "action_counts": {
+              "wait": 3590,
+              "plant": 465
+            },
+            "wait_fraction": 0.8853267570900123,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_pool_cap5_x1": {
+          "before": {
+            "won": 9,
+            "count": 64,
+            "win_rate": 0.140625,
+            "wilson_95": [
+              0.0757857255603086,
+              0.24616281741577023
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.875
+          },
+          "after": {
+            "won": 16,
+            "count": 64,
+            "win_rate": 0.25,
+            "wilson_95": [
+              0.16014926530970577,
+              0.36816276458669694
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.890625
+          },
+          "lost_previous_wins": 7,
+          "gained_new_wins": 14,
+          "retained_wins": 2,
+          "retained_failures": 41,
+          "before_behavior": {
+            "mean_peak_offense": 1.578125,
+            "mean_actions": 71.484375,
+            "action_counts": {
+              "wait": 3415,
+              "plant": 1160
+            },
+            "wait_fraction": 0.746448087431694,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.90625,
+            "mean_actions": 57.765625,
+            "action_counts": {
+              "wait": 3315,
+              "plant": 382
+            },
+            "wait_fraction": 0.8966729780903435,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_fog_cap5_x1": {
+          "before": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 5.0
+          },
+          "after": {
+            "won": 15,
+            "count": 64,
+            "win_rate": 0.234375,
+            "wilson_95": [
+              0.1474989559392414,
+              0.35133257582568644
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.875
+          },
+          "lost_previous_wins": 48,
+          "gained_new_wins": 0,
+          "retained_wins": 15,
+          "retained_failures": 1,
+          "before_behavior": {
+            "mean_peak_offense": 14.453125,
+            "mean_actions": 60.015625,
+            "action_counts": {
+              "wait": 2848,
+              "plant": 993
+            },
+            "wait_fraction": 0.7414735745899506,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.34375,
+            "mean_actions": 59.96875,
+            "action_counts": {
+              "wait": 3393,
+              "plant": 445
+            },
+            "wait_fraction": 0.8840541948931735,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_roof_cap5_x1": {
+          "before": {
+            "won": 29,
+            "count": 64,
+            "win_rate": 0.453125,
+            "wilson_95": [
+              0.3372944778061167,
+              0.5742640277994588
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.046875
+          },
+          "after": {
+            "won": 19,
+            "count": 64,
+            "win_rate": 0.296875,
+            "wilson_95": [
+              0.19905151325539794,
+              0.41770201103542925
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.984375
+          },
+          "lost_previous_wins": 19,
+          "gained_new_wins": 9,
+          "retained_wins": 10,
+          "retained_failures": 26,
+          "before_behavior": {
+            "mean_peak_offense": 1.703125,
+            "mean_actions": 57.703125,
+            "action_counts": {
+              "wait": 2412,
+              "plant": 1281
+            },
+            "wait_fraction": 0.6531275385865151,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.5,
+            "mean_actions": 51.328125,
+            "action_counts": {
+              "wait": 2384,
+              "plant": 901
+            },
+            "wait_fraction": 0.7257229832572298,
+            "immediate_plant_shovels": 0
+          }
+        }
+      },
+      "validation_by_cap": {
+        "3": {
+          "before": {
+            "won": 616,
+            "count": 960,
+            "win_rate": 0.6416666666666667,
+            "wilson_95": [
+              0.6108246034020702,
+              0.6713794847399827
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.988541666666667
+          },
+          "after": {
+            "won": 537,
+            "count": 960,
+            "win_rate": 0.559375,
+            "wilson_95": [
+              0.527795125853037,
+              0.590481587559441
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.972916666666667
+          },
+          "lost_previous_wins": 165,
+          "gained_new_wins": 86,
+          "retained_wins": 451,
+          "retained_failures": 258,
+          "before_behavior": {
+            "mean_peak_offense": 5.388541666666667,
+            "mean_actions": 51.092708333333334,
+            "action_counts": {
+              "wait": 35139,
+              "plant": 13910
+            },
+            "wait_fraction": 0.7164060429366552,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.2666666666666666,
+            "mean_actions": 41.69479166666667,
+            "action_counts": {
+              "wait": 33402,
+              "plant": 6625
+            },
+            "wait_fraction": 0.8344867214630125,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "5": {
+          "before": {
+            "won": 304,
+            "count": 640,
+            "win_rate": 0.475,
+            "wilson_95": [
+              0.4365757257554406,
+              0.5137225975948239
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.634375
+          },
+          "after": {
+            "won": 95,
+            "count": 640,
+            "win_rate": 0.1484375,
+            "wilson_95": [
+              0.12299268201146298,
+              0.17807749010163443
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.5171875
+          },
+          "lost_previous_wins": 244,
+          "gained_new_wins": 35,
+          "retained_wins": 60,
+          "retained_failures": 301,
+          "before_behavior": {
+            "mean_peak_offense": 7.0234375,
+            "mean_actions": 64.078125,
+            "action_counts": {
+              "wait": 30078,
+              "plant": 10932
+            },
+            "wait_fraction": 0.7334308705193855,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.075,
+            "mean_actions": 54.709375,
+            "action_counts": {
+              "wait": 29803,
+              "plant": 5211
+            },
+            "wait_fraction": 0.8511738161878106,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "1": {
+          "before": {
+            "won": 301,
+            "count": 320,
+            "win_rate": 0.940625,
+            "wilson_95": [
+              0.9091338878775519,
+              0.9616625846523565
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 292,
+            "count": 320,
+            "win_rate": 0.9125,
+            "wilson_95": [
+              0.8764449906627175,
+              0.938768728301452
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 14,
+          "gained_new_wins": 5,
+          "retained_wins": 287,
+          "retained_failures": 14,
+          "before_behavior": {
+            "mean_peak_offense": 2.49375,
+            "mean_actions": 21.084375,
+            "action_counts": {
+              "wait": 5303,
+              "plant": 1444
+            },
+            "wait_fraction": 0.7859789536090114,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.05625,
+            "mean_actions": 18.721875,
+            "action_counts": {
+              "wait": 5313,
+              "plant": 678
+            },
+            "wait_fraction": 0.8868302453680521,
+            "immediate_plant_shovels": 0
+          }
+        }
+      }
+    },
+    "sampled": {
+      "per_task": {
+        "train_day_1": {
+          "before": {
+            "won": 51,
+            "count": 64,
+            "win_rate": 0.796875,
+            "wilson_95": [
+              0.6828636426898583,
+              0.8772658218081634
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 13,
+          "retained_wins": 51,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 1.484375,
+            "mean_actions": 38.140625,
+            "action_counts": {
+              "wait": 1841,
+              "plant": 562,
+              "shovel": 38
+            },
+            "wait_fraction": 0.7541990987300287,
+            "immediate_plant_shovels": 3
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.03125,
+            "mean_actions": 20.6875,
+            "action_counts": {
+              "wait": 1190,
+              "plant": 132,
+              "shovel": 2
+            },
+            "wait_fraction": 0.8987915407854985,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_night_1": {
+          "before": {
+            "won": 62,
+            "count": 64,
+            "win_rate": 0.96875,
+            "wilson_95": [
+              0.8930270822904169,
+              0.9913878616538281
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 2,
+          "retained_wins": 62,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 4.5625,
+            "mean_actions": 28.796875,
+            "action_counts": {
+              "wait": 1309,
+              "plant": 526,
+              "shovel": 8
+            },
+            "wait_fraction": 0.7102550189907759,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.71875,
+            "mean_actions": 22.3125,
+            "action_counts": {
+              "wait": 1274,
+              "plant": 152,
+              "shovel": 2
+            },
+            "wait_fraction": 0.8921568627450981,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_pool_1": {
+          "before": {
+            "won": 50,
+            "count": 64,
+            "win_rate": 0.78125,
+            "wilson_95": [
+              0.6656721604337418,
+              0.8649768059328052
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 1,
+          "gained_new_wins": 14,
+          "retained_wins": 49,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 0.625,
+            "mean_actions": 43.8125,
+            "action_counts": {
+              "plant": 758,
+              "wait": 2010,
+              "shovel": 36
+            },
+            "wait_fraction": 0.7168330955777461,
+            "immediate_plant_shovels": 2
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0625,
+            "mean_actions": 20.75,
+            "action_counts": {
+              "wait": 1195,
+              "plant": 132,
+              "shovel": 1
+            },
+            "wait_fraction": 0.8998493975903614,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_fog_1": {
+          "before": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 1,
+          "retained_wins": 63,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 4.265625,
+            "mean_actions": 26.5625,
+            "action_counts": {
+              "plant": 437,
+              "wait": 1254,
+              "shovel": 9
+            },
+            "wait_fraction": 0.7376470588235294,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.40625,
+            "mean_actions": 22.625,
+            "action_counts": {
+              "wait": 1295,
+              "plant": 147,
+              "shovel": 6
+            },
+            "wait_fraction": 0.8943370165745856,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "train_roof_1": {
+          "before": {
+            "won": 49,
+            "count": 64,
+            "win_rate": 0.765625,
+            "wilson_95": [
+              0.6486674241743136,
+              0.8525010440607586
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 15,
+          "retained_wins": 49,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 0.953125,
+            "mean_actions": 52.625,
+            "action_counts": {
+              "wait": 2392,
+              "plant": 881,
+              "shovel": 95
+            },
+            "wait_fraction": 0.7102137767220903,
+            "immediate_plant_shovels": 1
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.234375,
+            "mean_actions": 31.28125,
+            "action_counts": {
+              "wait": 1827,
+              "plant": 165,
+              "shovel": 10
+            },
+            "wait_fraction": 0.9125874125874126,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_day_1": {
+          "before": {
+            "won": 27,
+            "count": 64,
+            "win_rate": 0.421875,
+            "wilson_95": [
+              0.30869782474345486,
+              0.5438996845991709
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 62,
+            "count": 64,
+            "win_rate": 0.96875,
+            "wilson_95": [
+              0.8930270822904169,
+              0.9913878616538281
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 35,
+          "retained_wins": 27,
+          "retained_failures": 2,
+          "before_behavior": {
+            "mean_peak_offense": 1.5625,
+            "mean_actions": 73.78125,
+            "action_counts": {
+              "wait": 3304,
+              "plant": 1271,
+              "shovel": 147
+            },
+            "wait_fraction": 0.699703515459551,
+            "immediate_plant_shovels": 6
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.5625,
+            "mean_actions": 42.265625,
+            "action_counts": {
+              "wait": 2390,
+              "plant": 305,
+              "shovel": 10
+            },
+            "wait_fraction": 0.8835489833641405,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_day_2": {
+          "before": {
+            "won": 4,
+            "count": 64,
+            "win_rate": 0.0625,
+            "wilson_95": [
+              0.024571201396618017,
+              0.14997485092208662
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.953125
+          },
+          "after": {
+            "won": 15,
+            "count": 64,
+            "win_rate": 0.234375,
+            "wilson_95": [
+              0.1474989559392414,
+              0.35133257582568644
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 2,
+          "gained_new_wins": 13,
+          "retained_wins": 2,
+          "retained_failures": 47,
+          "before_behavior": {
+            "mean_peak_offense": 1.703125,
+            "mean_actions": 54.109375,
+            "action_counts": {
+              "plant": 746,
+              "wait": 2615,
+              "shovel": 102
+            },
+            "wait_fraction": 0.7551256136298008,
+            "immediate_plant_shovels": 8
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.640625,
+            "mean_actions": 54.015625,
+            "action_counts": {
+              "wait": 2843,
+              "plant": 549,
+              "shovel": 65
+            },
+            "wait_fraction": 0.822389354932022,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "heldout_day_3": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.5625
+          },
+          "after": {
+            "won": 3,
+            "count": 64,
+            "win_rate": 0.046875,
+            "wilson_95": [
+              0.016069016786292974,
+              0.12899653740093686
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.125
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 3,
+          "retained_wins": 0,
+          "retained_failures": 61,
+          "before_behavior": {
+            "mean_peak_offense": 0.78125,
+            "mean_actions": 59.859375,
+            "action_counts": {
+              "wait": 2700,
+              "plant": 981,
+              "shovel": 150
+            },
+            "wait_fraction": 0.7047768206734534,
+            "immediate_plant_shovels": 3
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.53125,
+            "mean_actions": 58.640625,
+            "action_counts": {
+              "wait": 2962,
+              "plant": 698,
+              "shovel": 93
+            },
+            "wait_fraction": 0.7892352784439115,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "heldout_day_4": {
+          "before": {
+            "won": 50,
+            "count": 64,
+            "win_rate": 0.78125,
+            "wilson_95": [
+              0.6656721604337418,
+              0.8649768059328052
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 11,
+            "count": 64,
+            "win_rate": 0.171875,
+            "wilson_95": [
+              0.09877742301244645,
+              0.282132116226582
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.953125
+          },
+          "lost_previous_wins": 42,
+          "gained_new_wins": 3,
+          "retained_wins": 8,
+          "retained_failures": 11,
+          "before_behavior": {
+            "mean_peak_offense": 9.109375,
+            "mean_actions": 54.015625,
+            "action_counts": {
+              "plant": 1410,
+              "wait": 2029,
+              "shovel": 18
+            },
+            "wait_fraction": 0.5869250795487417,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.953125,
+            "mean_actions": 43.796875,
+            "action_counts": {
+              "plant": 659,
+              "wait": 2133,
+              "shovel": 11
+            },
+            "wait_fraction": 0.7609703888690689,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_night_1": {
+          "before": {
+            "won": 58,
+            "count": 64,
+            "win_rate": 0.90625,
+            "wilson_95": [
+              0.810171204003544,
+              0.9563217474148016
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 62,
+            "count": 64,
+            "win_rate": 0.96875,
+            "wilson_95": [
+              0.8930270822904169,
+              0.9913878616538281
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 2,
+          "gained_new_wins": 6,
+          "retained_wins": 56,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 9.484375,
+            "mean_actions": 46.78125,
+            "action_counts": {
+              "plant": 701,
+              "wait": 2271,
+              "shovel": 22
+            },
+            "wait_fraction": 0.7585170340681363,
+            "immediate_plant_shovels": 1
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.125,
+            "mean_actions": 45.296875,
+            "action_counts": {
+              "wait": 2574,
+              "plant": 319,
+              "shovel": 6
+            },
+            "wait_fraction": 0.8878923766816144,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_night_2": {
+          "before": {
+            "won": 24,
+            "count": 64,
+            "win_rate": 0.375,
+            "wilson_95": [
+              0.2666598017882464,
+              0.497496213159955
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.96875
+          },
+          "after": {
+            "won": 30,
+            "count": 64,
+            "win_rate": 0.46875,
+            "wilson_95": [
+              0.35175987425176036,
+              0.5892791294852899
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 14,
+          "gained_new_wins": 20,
+          "retained_wins": 10,
+          "retained_failures": 20,
+          "before_behavior": {
+            "mean_peak_offense": 7.953125,
+            "mean_actions": 57.625,
+            "action_counts": {
+              "plant": 1021,
+              "wait": 2612,
+              "shovel": 55
+            },
+            "wait_fraction": 0.7082429501084598,
+            "immediate_plant_shovels": 1
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.296875,
+            "mean_actions": 54.796875,
+            "action_counts": {
+              "wait": 2865,
+              "plant": 598,
+              "shovel": 44
+            },
+            "wait_fraction": 0.8169375534644996,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "heldout_night_3": {
+          "before": {
+            "won": 20,
+            "count": 64,
+            "win_rate": 0.3125,
+            "wilson_95": [
+              0.21231066539482046,
+              0.4339233570274815
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.375
+          },
+          "after": {
+            "won": 10,
+            "count": 64,
+            "win_rate": 0.15625,
+            "wilson_95": [
+              0.08714842338206585,
+              0.2642806177254878
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.5625
+          },
+          "lost_previous_wins": 16,
+          "gained_new_wins": 6,
+          "retained_wins": 4,
+          "retained_failures": 38,
+          "before_behavior": {
+            "mean_peak_offense": 11.0625,
+            "mean_actions": 63.65625,
+            "action_counts": {
+              "plant": 912,
+              "wait": 3123,
+              "shovel": 39
+            },
+            "wait_fraction": 0.7665684830633285,
+            "immediate_plant_shovels": 1
+          },
+          "after_behavior": {
+            "mean_peak_offense": 6.296875,
+            "mean_actions": 66.15625,
+            "action_counts": {
+              "plant": 616,
+              "wait": 3576,
+              "shovel": 42
+            },
+            "wait_fraction": 0.8445914029286726,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_night_4": {
+          "before": {
+            "won": 57,
+            "count": 64,
+            "win_rate": 0.890625,
+            "wilson_95": [
+              0.7910135867310387,
+              0.945998866555832
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 46,
+            "count": 64,
+            "win_rate": 0.71875,
+            "wilson_95": [
+              0.5986606971779259,
+              0.8140662766627217
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 16,
+          "gained_new_wins": 5,
+          "retained_wins": 41,
+          "retained_failures": 2,
+          "before_behavior": {
+            "mean_peak_offense": 8.6875,
+            "mean_actions": 61.609375,
+            "action_counts": {
+              "plant": 1605,
+              "wait": 2304,
+              "shovel": 34
+            },
+            "wait_fraction": 0.5843266548313467,
+            "immediate_plant_shovels": 3
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.03125,
+            "mean_actions": 58.28125,
+            "action_counts": {
+              "wait": 2726,
+              "plant": 983,
+              "shovel": 21
+            },
+            "wait_fraction": 0.7308310991957104,
+            "immediate_plant_shovels": 2
+          }
+        },
+        "heldout_pool_1": {
+          "before": {
+            "won": 21,
+            "count": 64,
+            "win_rate": 0.328125,
+            "wilson_95": [
+              0.22570557904469185,
+              0.45000894150908505
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.984375
+          },
+          "after": {
+            "won": 55,
+            "count": 64,
+            "win_rate": 0.859375,
+            "wilson_95": [
+              0.7538371825842297,
+              0.9242142744396914
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 34,
+          "retained_wins": 21,
+          "retained_failures": 9,
+          "before_behavior": {
+            "mean_peak_offense": 0.75,
+            "mean_actions": 75.71875,
+            "action_counts": {
+              "plant": 1282,
+              "wait": 3387,
+              "shovel": 177
+            },
+            "wait_fraction": 0.6989269500619067,
+            "immediate_plant_shovels": 7
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.640625,
+            "mean_actions": 44.890625,
+            "action_counts": {
+              "wait": 2527,
+              "plant": 331,
+              "shovel": 15
+            },
+            "wait_fraction": 0.8795683954054995,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_pool_2": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.828125
+          },
+          "after": {
+            "won": 25,
+            "count": 64,
+            "win_rate": 0.390625,
+            "wilson_95": [
+              0.2805556918824008,
+              0.5130808211972754
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 25,
+          "retained_wins": 0,
+          "retained_failures": 39,
+          "before_behavior": {
+            "mean_peak_offense": 0.46875,
+            "mean_actions": 55.484375,
+            "action_counts": {
+              "wait": 2515,
+              "plant": 900,
+              "shovel": 136
+            },
+            "wait_fraction": 0.7082511968459588,
+            "immediate_plant_shovels": 8
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.546875,
+            "mean_actions": 55.46875,
+            "action_counts": {
+              "wait": 2874,
+              "plant": 596,
+              "shovel": 80
+            },
+            "wait_fraction": 0.8095774647887324,
+            "immediate_plant_shovels": 3
+          }
+        },
+        "heldout_pool_3": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.484375
+          },
+          "after": {
+            "won": 5,
+            "count": 64,
+            "win_rate": 0.078125,
+            "wilson_95": [
+              0.03383117690855046,
+              0.17019537354162906
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.234375
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 5,
+          "retained_wins": 0,
+          "retained_failures": 59,
+          "before_behavior": {
+            "mean_peak_offense": 0.421875,
+            "mean_actions": 59.234375,
+            "action_counts": {
+              "plant": 991,
+              "wait": 2649,
+              "shovel": 151
+            },
+            "wait_fraction": 0.6987602215774202,
+            "immediate_plant_shovels": 6
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.78125,
+            "mean_actions": 59.640625,
+            "action_counts": {
+              "wait": 3123,
+              "plant": 638,
+              "shovel": 56
+            },
+            "wait_fraction": 0.8181818181818182,
+            "immediate_plant_shovels": 2
+          }
+        },
+        "heldout_pool_4": {
+          "before": {
+            "won": 41,
+            "count": 64,
+            "win_rate": 0.640625,
+            "wilson_95": [
+              0.518208506097791,
+              0.7471159770854825
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 18,
+            "count": 64,
+            "win_rate": 0.28125,
+            "wilson_95": [
+              0.18593372333727837,
+              0.40133930282207403
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.921875
+          },
+          "lost_previous_wins": 33,
+          "gained_new_wins": 10,
+          "retained_wins": 8,
+          "retained_failures": 13,
+          "before_behavior": {
+            "mean_peak_offense": 4.3125,
+            "mean_actions": 57.625,
+            "action_counts": {
+              "wait": 2163,
+              "plant": 1482,
+              "shovel": 43
+            },
+            "wait_fraction": 0.5864967462039046,
+            "immediate_plant_shovels": 1
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.59375,
+            "mean_actions": 49.390625,
+            "action_counts": {
+              "wait": 2333,
+              "plant": 786,
+              "shovel": 42
+            },
+            "wait_fraction": 0.7380575767162291,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_fog_1": {
+          "before": {
+            "won": 61,
+            "count": 64,
+            "win_rate": 0.953125,
+            "wilson_95": [
+              0.8710034625990631,
+              0.983930983213707
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 1,
+          "gained_new_wins": 3,
+          "retained_wins": 60,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 8.09375,
+            "mean_actions": 44.875,
+            "action_counts": {
+              "plant": 621,
+              "wait": 2229,
+              "shovel": 22
+            },
+            "wait_fraction": 0.7761142061281338,
+            "immediate_plant_shovels": 2
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.5625,
+            "mean_actions": 42.8125,
+            "action_counts": {
+              "wait": 2439,
+              "plant": 296,
+              "shovel": 5
+            },
+            "wait_fraction": 0.8901459854014598,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "heldout_fog_2": {
+          "before": {
+            "won": 45,
+            "count": 64,
+            "win_rate": 0.703125,
+            "wilson_95": [
+              0.5822979889645707,
+              0.8009484867446022
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 32,
+            "count": 64,
+            "win_rate": 0.5,
+            "wilson_95": [
+              0.3810209474394701,
+              0.6189790525605299
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 24,
+          "gained_new_wins": 11,
+          "retained_wins": 21,
+          "retained_failures": 8,
+          "before_behavior": {
+            "mean_peak_offense": 7.78125,
+            "mean_actions": 52.4375,
+            "action_counts": {
+              "wait": 2554,
+              "plant": 753,
+              "shovel": 49
+            },
+            "wait_fraction": 0.7610250297973778,
+            "immediate_plant_shovels": 4
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.5,
+            "mean_actions": 50.78125,
+            "action_counts": {
+              "wait": 2729,
+              "plant": 492,
+              "shovel": 29
+            },
+            "wait_fraction": 0.8396923076923077,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_fog_3": {
+          "before": {
+            "won": 25,
+            "count": 64,
+            "win_rate": 0.390625,
+            "wilson_95": [
+              0.2805556918824008,
+              0.5130808211972754
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.671875
+          },
+          "after": {
+            "won": 11,
+            "count": 64,
+            "win_rate": 0.171875,
+            "wilson_95": [
+              0.09877742301244645,
+              0.282132116226582
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.578125
+          },
+          "lost_previous_wins": 19,
+          "gained_new_wins": 5,
+          "retained_wins": 6,
+          "retained_failures": 34,
+          "before_behavior": {
+            "mean_peak_offense": 10.3125,
+            "mean_actions": 68.46875,
+            "action_counts": {
+              "plant": 912,
+              "wait": 3416,
+              "shovel": 54
+            },
+            "wait_fraction": 0.7795527156549521,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.6875,
+            "mean_actions": 68.34375,
+            "action_counts": {
+              "wait": 3733,
+              "plant": 613,
+              "shovel": 28
+            },
+            "wait_fraction": 0.8534522176497485,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "heldout_fog_4": {
+          "before": {
+            "won": 45,
+            "count": 64,
+            "win_rate": 0.703125,
+            "wilson_95": [
+              0.5822979889645707,
+              0.8009484867446022
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 17,
+            "count": 64,
+            "win_rate": 0.265625,
+            "wilson_95": [
+              0.17296379074222612,
+              0.38482873728565137
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 33,
+          "gained_new_wins": 5,
+          "retained_wins": 12,
+          "retained_failures": 14,
+          "before_behavior": {
+            "mean_peak_offense": 10.921875,
+            "mean_actions": 60.109375,
+            "action_counts": {
+              "plant": 1584,
+              "wait": 2242,
+              "shovel": 21
+            },
+            "wait_fraction": 0.5827917858071224,
+            "immediate_plant_shovels": 1
+          },
+          "after_behavior": {
+            "mean_peak_offense": 6.96875,
+            "mean_actions": 57.40625,
+            "action_counts": {
+              "wait": 2568,
+              "plant": 1073,
+              "shovel": 33
+            },
+            "wait_fraction": 0.6989657049537289,
+            "immediate_plant_shovels": 2
+          }
+        },
+        "heldout_roof_1": {
+          "before": {
+            "won": 42,
+            "count": 64,
+            "win_rate": 0.65625,
+            "wilson_95": [
+              0.5340364020991819,
+              0.7607685792155665
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.921875
+          },
+          "after": {
+            "won": 26,
+            "count": 64,
+            "win_rate": 0.40625,
+            "wilson_95": [
+              0.2945690924971961,
+              0.5285479187139549
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.859375
+          },
+          "lost_previous_wins": 26,
+          "gained_new_wins": 10,
+          "retained_wins": 16,
+          "retained_failures": 12,
+          "before_behavior": {
+            "mean_peak_offense": 1.984375,
+            "mean_actions": 60.703125,
+            "action_counts": {
+              "plant": 1532,
+              "wait": 2290,
+              "shovel": 63
+            },
+            "wait_fraction": 0.5894465894465895,
+            "immediate_plant_shovels": 2
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.609375,
+            "mean_actions": 45.546875,
+            "action_counts": {
+              "shovel": 41,
+              "wait": 2134,
+              "plant": 740
+            },
+            "wait_fraction": 0.7320754716981132,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "heldout_roof_2": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 3,
+            "count": 64,
+            "win_rate": 0.046875,
+            "wilson_95": [
+              0.016069016786292974,
+              0.12899653740093686
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 3,
+          "retained_wins": 0,
+          "retained_failures": 61,
+          "before_behavior": {
+            "mean_peak_offense": 0.78125,
+            "mean_actions": 67.3125,
+            "action_counts": {
+              "plant": 1116,
+              "shovel": 175,
+              "wait": 3017
+            },
+            "wait_fraction": 0.7003249767873724,
+            "immediate_plant_shovels": 1
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.875,
+            "mean_actions": 62.421875,
+            "action_counts": {
+              "wait": 3163,
+              "plant": 662,
+              "shovel": 170
+            },
+            "wait_fraction": 0.7917396745932416,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "heldout_roof_3": {
+          "before": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.5625
+          },
+          "after": {
+            "won": 0,
+            "count": 64,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.05662405979280534
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.828125
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 0,
+          "retained_wins": 0,
+          "retained_failures": 64,
+          "before_behavior": {
+            "mean_peak_offense": 1.03125,
+            "mean_actions": 63.171875,
+            "action_counts": {
+              "wait": 2876,
+              "plant": 1030,
+              "shovel": 137
+            },
+            "wait_fraction": 0.711352955725946,
+            "immediate_plant_shovels": 3
+          },
+          "after_behavior": {
+            "mean_peak_offense": 2.734375,
+            "mean_actions": 58.046875,
+            "action_counts": {
+              "wait": 2919,
+              "plant": 628,
+              "shovel": 168
+            },
+            "wait_fraction": 0.7857335127860027,
+            "immediate_plant_shovels": 2
+          }
+        },
+        "heldout_roof_4": {
+          "before": {
+            "won": 19,
+            "count": 64,
+            "win_rate": 0.296875,
+            "wilson_95": [
+              0.19905151325539794,
+              0.41770201103542925
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "after": {
+            "won": 52,
+            "count": 64,
+            "win_rate": 0.8125,
+            "wilson_95": [
+              0.7002563943589847,
+              0.8893535682705119
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.0
+          },
+          "lost_previous_wins": 7,
+          "gained_new_wins": 40,
+          "retained_wins": 12,
+          "retained_failures": 5,
+          "before_behavior": {
+            "mean_peak_offense": 1.75,
+            "mean_actions": 82.53125,
+            "action_counts": {
+              "wait": 3698,
+              "plant": 1383,
+              "shovel": 201
+            },
+            "wait_fraction": 0.7001135933358577,
+            "immediate_plant_shovels": 2
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.0625,
+            "mean_actions": 58.34375,
+            "action_counts": {
+              "wait": 3269,
+              "plant": 398,
+              "shovel": 67
+            },
+            "wait_fraction": 0.8754686663095875,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_day_cap1_x1": {
+          "before": {
+            "won": 41,
+            "count": 64,
+            "win_rate": 0.640625,
+            "wilson_95": [
+              0.518208506097791,
+              0.7471159770854825
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 23,
+          "retained_wins": 41,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 1.03125,
+            "mean_actions": 49.0625,
+            "action_counts": {
+              "wait": 2245,
+              "plant": 827,
+              "shovel": 68
+            },
+            "wait_fraction": 0.714968152866242,
+            "immediate_plant_shovels": 4
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.078125,
+            "mean_actions": 21.21875,
+            "action_counts": {
+              "wait": 1220,
+              "plant": 134,
+              "shovel": 4
+            },
+            "wait_fraction": 0.898379970544919,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_night_cap1_x1": {
+          "before": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 1,
+          "retained_wins": 63,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 5.484375,
+            "mean_actions": 25.453125,
+            "action_counts": {
+              "wait": 1199,
+              "plant": 416,
+              "shovel": 14
+            },
+            "wait_fraction": 0.7360343769183548,
+            "immediate_plant_shovels": 3
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.921875,
+            "mean_actions": 23.59375,
+            "action_counts": {
+              "wait": 1355,
+              "plant": 151,
+              "shovel": 4
+            },
+            "wait_fraction": 0.8973509933774835,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_pool_cap1_x1": {
+          "before": {
+            "won": 49,
+            "count": 64,
+            "win_rate": 0.765625,
+            "wilson_95": [
+              0.6486674241743136,
+              0.8525010440607586
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 62,
+            "count": 64,
+            "win_rate": 0.96875,
+            "wilson_95": [
+              0.8930270822904169,
+              0.9913878616538281
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 1,
+          "gained_new_wins": 14,
+          "retained_wins": 48,
+          "retained_failures": 1,
+          "before_behavior": {
+            "mean_peak_offense": 0.515625,
+            "mean_actions": 45.34375,
+            "action_counts": {
+              "plant": 820,
+              "wait": 2041,
+              "shovel": 41
+            },
+            "wait_fraction": 0.7033080634045485,
+            "immediate_plant_shovels": 6
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.0625,
+            "mean_actions": 21.515625,
+            "action_counts": {
+              "plant": 147,
+              "wait": 1224,
+              "shovel": 6
+            },
+            "wait_fraction": 0.8888888888888888,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "validation_v1_fog_cap1_x1": {
+          "before": {
+            "won": 63,
+            "count": 64,
+            "win_rate": 0.984375,
+            "wilson_95": [
+              0.9166589839990573,
+              0.9972364580766624
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 64,
+            "count": 64,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.9433759402071946,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 0,
+          "gained_new_wins": 1,
+          "retained_wins": 63,
+          "retained_failures": 0,
+          "before_behavior": {
+            "mean_peak_offense": 4.859375,
+            "mean_actions": 24.234375,
+            "action_counts": {
+              "wait": 1150,
+              "plant": 388,
+              "shovel": 13
+            },
+            "wait_fraction": 0.7414571244358479,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.640625,
+            "mean_actions": 21.78125,
+            "action_counts": {
+              "wait": 1245,
+              "plant": 147,
+              "shovel": 2
+            },
+            "wait_fraction": 0.8931133428981348,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_roof_cap1_x1": {
+          "before": {
+            "won": 52,
+            "count": 64,
+            "win_rate": 0.8125,
+            "wilson_95": [
+              0.7002563943589847,
+              0.8893535682705119
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 39,
+            "count": 64,
+            "win_rate": 0.609375,
+            "wilson_95": [
+              0.4869191788027247,
+              0.7194443081175993
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 21,
+          "gained_new_wins": 8,
+          "retained_wins": 31,
+          "retained_failures": 4,
+          "before_behavior": {
+            "mean_peak_offense": 1.953125,
+            "mean_actions": 34.609375,
+            "action_counts": {
+              "plant": 888,
+              "wait": 1298,
+              "shovel": 29
+            },
+            "wait_fraction": 0.5860045146726862,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.375,
+            "mean_actions": 29.71875,
+            "action_counts": {
+              "wait": 1421,
+              "plant": 453,
+              "shovel": 28
+            },
+            "wait_fraction": 0.7471083070452156,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_day_cap5_x1": {
+          "before": {
+            "won": 5,
+            "count": 64,
+            "win_rate": 0.078125,
+            "wilson_95": [
+              0.03383117690855046,
+              0.17019537354162906
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.5
+          },
+          "after": {
+            "won": 15,
+            "count": 64,
+            "win_rate": 0.234375,
+            "wilson_95": [
+              0.1474989559392414,
+              0.35133257582568644
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 5.0
+          },
+          "lost_previous_wins": 2,
+          "gained_new_wins": 12,
+          "retained_wins": 3,
+          "retained_failures": 47,
+          "before_behavior": {
+            "mean_peak_offense": 1.8125,
+            "mean_actions": 85.671875,
+            "action_counts": {
+              "wait": 3820,
+              "plant": 1516,
+              "shovel": 147
+            },
+            "wait_fraction": 0.6966988874703629,
+            "immediate_plant_shovels": 4
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.140625,
+            "mean_actions": 74.890625,
+            "action_counts": {
+              "wait": 4066,
+              "plant": 676,
+              "shovel": 51
+            },
+            "wait_fraction": 0.8483204673482162,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_night_cap5_x1": {
+          "before": {
+            "won": 35,
+            "count": 64,
+            "win_rate": 0.546875,
+            "wilson_95": [
+              0.4257359722005412,
+              0.6627055221938833
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.78125
+          },
+          "after": {
+            "won": 21,
+            "count": 64,
+            "win_rate": 0.328125,
+            "wilson_95": [
+              0.22570557904469185,
+              0.45000894150908505
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.984375
+          },
+          "lost_previous_wins": 18,
+          "gained_new_wins": 4,
+          "retained_wins": 17,
+          "retained_failures": 25,
+          "before_behavior": {
+            "mean_peak_offense": 12.15625,
+            "mean_actions": 68.40625,
+            "action_counts": {
+              "plant": 948,
+              "wait": 3381,
+              "shovel": 49
+            },
+            "wait_fraction": 0.7722704431247145,
+            "immediate_plant_shovels": 3
+          },
+          "after_behavior": {
+            "mean_peak_offense": 6.75,
+            "mean_actions": 72.9375,
+            "action_counts": {
+              "plant": 588,
+              "wait": 4054,
+              "shovel": 26
+            },
+            "wait_fraction": 0.8684661525278492,
+            "immediate_plant_shovels": 0
+          }
+        },
+        "validation_v1_pool_cap5_x1": {
+          "before": {
+            "won": 3,
+            "count": 64,
+            "win_rate": 0.046875,
+            "wilson_95": [
+              0.016069016786292974,
+              0.12899653740093686
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.390625
+          },
+          "after": {
+            "won": 19,
+            "count": 64,
+            "win_rate": 0.296875,
+            "wilson_95": [
+              0.19905151325539794,
+              0.41770201103542925
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.890625
+          },
+          "lost_previous_wins": 2,
+          "gained_new_wins": 18,
+          "retained_wins": 1,
+          "retained_failures": 43,
+          "before_behavior": {
+            "mean_peak_offense": 0.828125,
+            "mean_actions": 78.296875,
+            "action_counts": {
+              "wait": 3518,
+              "plant": 1361,
+              "shovel": 132
+            },
+            "wait_fraction": 0.7020554779485133,
+            "immediate_plant_shovels": 8
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.71875,
+            "mean_actions": 70.703125,
+            "action_counts": {
+              "wait": 3864,
+              "plant": 612,
+              "shovel": 49
+            },
+            "wait_fraction": 0.8539226519337016,
+            "immediate_plant_shovels": 2
+          }
+        },
+        "validation_v1_fog_cap5_x1": {
+          "before": {
+            "won": 55,
+            "count": 64,
+            "win_rate": 0.859375,
+            "wilson_95": [
+              0.7538371825842297,
+              0.9242142744396914
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 5.0
+          },
+          "after": {
+            "won": 20,
+            "count": 64,
+            "win_rate": 0.3125,
+            "wilson_95": [
+              0.21231066539482046,
+              0.4339233570274815
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.96875
+          },
+          "lost_previous_wins": 35,
+          "gained_new_wins": 0,
+          "retained_wins": 20,
+          "retained_failures": 9,
+          "before_behavior": {
+            "mean_peak_offense": 11.53125,
+            "mean_actions": 67.65625,
+            "action_counts": {
+              "plant": 901,
+              "wait": 3399,
+              "shovel": 30
+            },
+            "wait_fraction": 0.7849884526558891,
+            "immediate_plant_shovels": 3
+          },
+          "after_behavior": {
+            "mean_peak_offense": 5.703125,
+            "mean_actions": 72.359375,
+            "action_counts": {
+              "wait": 4055,
+              "plant": 556,
+              "shovel": 20
+            },
+            "wait_fraction": 0.8756208162383934,
+            "immediate_plant_shovels": 1
+          }
+        },
+        "validation_v1_roof_cap5_x1": {
+          "before": {
+            "won": 45,
+            "count": 64,
+            "win_rate": 0.703125,
+            "wilson_95": [
+              0.5822979889645707,
+              0.8009484867446022
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.71875
+          },
+          "after": {
+            "won": 21,
+            "count": 64,
+            "win_rate": 0.328125,
+            "wilson_95": [
+              0.22570557904469185,
+              0.45000894150908505
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.9375
+          },
+          "lost_previous_wins": 29,
+          "gained_new_wins": 5,
+          "retained_wins": 16,
+          "retained_failures": 14,
+          "before_behavior": {
+            "mean_peak_offense": 1.953125,
+            "mean_actions": 87.15625,
+            "action_counts": {
+              "wait": 3302,
+              "plant": 2200,
+              "shovel": 76
+            },
+            "wait_fraction": 0.5919684474722122,
+            "immediate_plant_shovels": 0
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.546875,
+            "mean_actions": 62.03125,
+            "action_counts": {
+              "wait": 2830,
+              "plant": 1098,
+              "shovel": 42
+            },
+            "wait_fraction": 0.7128463476070529,
+            "immediate_plant_shovels": 2
+          }
+        }
+      },
+      "validation_by_cap": {
+        "3": {
+          "before": {
+            "won": 494,
+            "count": 960,
+            "win_rate": 0.5145833333333333,
+            "wilson_95": [
+              0.48297289563432644,
+              0.5460775252038259
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.9770833333333333
+          },
+          "after": {
+            "won": 517,
+            "count": 960,
+            "win_rate": 0.5385416666666667,
+            "wilson_95": [
+              0.5069159096114275,
+              0.5698602026036899
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.982291666666667
+          },
+          "lost_previous_wins": 200,
+          "gained_new_wins": 223,
+          "retained_wins": 294,
+          "retained_failures": 243,
+          "before_behavior": {
+            "mean_peak_offense": 5.022916666666666,
+            "mean_actions": 60.31458333333333,
+            "action_counts": {
+              "wait": 39230,
+              "plant": 17407,
+              "shovel": 1265
+            },
+            "wait_fraction": 0.6775240924320404,
+            "immediate_plant_shovels": 47
+          },
+          "after_behavior": {
+            "mean_peak_offense": 3.597916666666667,
+            "mean_actions": 51.034375,
+            "action_counts": {
+              "wait": 39567,
+              "plant": 8787,
+              "shovel": 639
+            },
+            "wait_fraction": 0.8076051680852366,
+            "immediate_plant_shovels": 12
+          }
+        },
+        "5": {
+          "before": {
+            "won": 188,
+            "count": 640,
+            "win_rate": 0.29375,
+            "wilson_95": [
+              0.25977656167721164,
+              0.3301846059624721
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.3046875
+          },
+          "after": {
+            "won": 125,
+            "count": 640,
+            "win_rate": 0.1953125,
+            "wilson_95": [
+              0.16645423275552862,
+              0.22780658307582247
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.5109375
+          },
+          "lost_previous_wins": 121,
+          "gained_new_wins": 58,
+          "retained_wins": 67,
+          "retained_failures": 394,
+          "before_behavior": {
+            "mean_peak_offense": 5.1890625,
+            "mean_actions": 70.1578125,
+            "action_counts": {
+              "wait": 32184,
+              "plant": 11752,
+              "shovel": 965
+            },
+            "wait_fraction": 0.7167769092002405,
+            "immediate_plant_shovels": 31
+          },
+          "after_behavior": {
+            "mean_peak_offense": 4.1890625,
+            "mean_actions": 66.375,
+            "action_counts": {
+              "wait": 35182,
+              "plant": 6723,
+              "shovel": 575
+            },
+            "wait_fraction": 0.8282015065913371,
+            "immediate_plant_shovels": 10
+          }
+        },
+        "1": {
+          "before": {
+            "won": 268,
+            "count": 320,
+            "win_rate": 0.8375,
+            "wilson_95": [
+              0.7931183896967703,
+              0.8738746530920957
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "after": {
+            "won": 293,
+            "count": 320,
+            "win_rate": 0.915625,
+            "wilson_95": [
+              0.8800234967697741,
+              0.9413660837016998
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "lost_previous_wins": 22,
+          "gained_new_wins": 47,
+          "retained_wins": 246,
+          "retained_failures": 5,
+          "before_behavior": {
+            "mean_peak_offense": 2.76875,
+            "mean_actions": 35.740625,
+            "action_counts": {
+              "wait": 7933,
+              "plant": 3339,
+              "shovel": 165
+            },
+            "wait_fraction": 0.6936259508612398,
+            "immediate_plant_shovels": 13
+          },
+          "after_behavior": {
+            "mean_peak_offense": 1.415625,
+            "mean_actions": 23.565625,
+            "action_counts": {
+              "wait": 6465,
+              "plant": 1032,
+              "shovel": 44
+            },
+            "wait_fraction": 0.8573133536666224,
+            "immediate_plant_shovels": 1
+          }
+        }
+      }
+    }
+  },
+  "raw_pairs": "artifacts/t5/perf/reward_r0_seed0_v2_paired375_500_retry01.pairs.json.gz",
+  "raw_pairs_sha256": "e3e626723498207b4af47c29dc85256bec5820259b247985e8e36560a20e150b",
+  "seconds": 0.5205421520004165
+}

@@ -1,0 +1,212 @@
+{
+  "model_config": {
+    "layers": 4,
+    "width": 192,
+    "heads": 6,
+    "ff_width": 768,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "initialization_seed": 0,
+  "sampling_seed_rule": "torch.manual_seed(environment_seed+170000)",
+  "scope": "first four environment seeds of each unchanged cap1 task; independent engineering collection, no learning",
+  "fingerprints": {
+    "python/pvz_agent_model.py": "35f87fc4386b62134ad8fb16e4756735cd22fc4727b321c6f34ea155340e4985",
+    "python/pvz_observation_features.py": "5b99ef9cb10320417446436ef04826fc5eae16a32d02c20ec06562747c3da9bf",
+    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
+    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "build/pvz-portable": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
+    "artifacts/task_family/train.json": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
+    "main.pak": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+    "properties/partner.xml": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3"
+  },
+  "checkpoint_sha256": "5aa6eccd23f215a5bc9ff538ca6aa496329db56bc03983d781a1d3b18d280107",
+  "episodes": [
+    {
+      "path": "seed_0.npz",
+      "sha256": "2f7ef62b42a57439f326c1ac496758f0517bacfd8decf87f246d2cc2b3b82af9",
+      "job_id": 0,
+      "task_id": "train_day_1",
+      "environment_seed": 60000,
+      "decisions": 65,
+      "won": false
+    },
+    {
+      "path": "seed_1.npz",
+      "sha256": "89df4d9d71e5553f5963545fe534bd4b45575ae38486716991365cfa08b8c6dd",
+      "job_id": 1,
+      "task_id": "train_day_1",
+      "environment_seed": 60001,
+      "decisions": 68,
+      "won": false
+    },
+    {
+      "path": "seed_2.npz",
+      "sha256": "74a143440d330d91d47a8fe55d9b43cc88b37d3f25ffa998c958ec1a1ff7bd8c",
+      "job_id": 2,
+      "task_id": "train_day_1",
+      "environment_seed": 60002,
+      "decisions": 60,
+      "won": false
+    },
+    {
+      "path": "seed_3.npz",
+      "sha256": "7dfa1f52c0d35d6e7696328b70c5bc2db3b37e1ea6e9ef93bcdfc206c1736262",
+      "job_id": 3,
+      "task_id": "train_day_1",
+      "environment_seed": 60003,
+      "decisions": 60,
+      "won": false
+    },
+    {
+      "path": "seed_4.npz",
+      "sha256": "e28e89d23e94a65dd6990c69e8f283917f528d6271b9b5cc5f7d6f901836b41e",
+      "job_id": 4,
+      "task_id": "train_night_1",
+      "environment_seed": 60256,
+      "decisions": 77,
+      "won": false
+    },
+    {
+      "path": "seed_5.npz",
+      "sha256": "e5338bc60092bc413346d26a7df2b6f6f4d69bcdb2ecee3b86eec11bc3bb0aab",
+      "job_id": 5,
+      "task_id": "train_night_1",
+      "environment_seed": 60257,
+      "decisions": 60,
+      "won": false
+    },
+    {
+      "path": "seed_6.npz",
+      "sha256": "87ffe48e251a0fb8efd4ec36b9941199c9fc3227b5e288e1c22e09ff0c70f5f0",
+      "job_id": 6,
+      "task_id": "train_night_1",
+      "environment_seed": 60258,
+      "decisions": 64,
+      "won": false
+    },
+    {
+      "path": "seed_7.npz",
+      "sha256": "245c1574d3850f6cd1720a978a792625c2117c13ed0cc5988f61509ae47d19c2",
+      "job_id": 7,
+      "task_id": "train_night_1",
+      "environment_seed": 60259,
+      "decisions": 65,
+      "won": false
+    },
+    {
+      "path": "seed_8.npz",
+      "sha256": "4b636ba544da43d4c0d4db8c84e19c9a326120b5e871731178fa6f2a61a7eb6b",
+      "job_id": 8,
+      "task_id": "train_pool_1",
+      "environment_seed": 60512,
+      "decisions": 60,
+      "won": false
+    },
+    {
+      "path": "seed_9.npz",
+      "sha256": "b839bb2e36c79138c9767c755bf2ea7ee639425549db5e03a0490427e76bac23",
+      "job_id": 9,
+      "task_id": "train_pool_1",
+      "environment_seed": 60513,
+      "decisions": 70,
+      "won": false
+    },
+    {
+      "path": "seed_10.npz",
+      "sha256": "9d14b49b17ea94c549919ad11c707817a9198e4574a53325f1f59a3d87cd08c7",
+      "job_id": 10,
+      "task_id": "train_pool_1",
+      "environment_seed": 60514,
+      "decisions": 62,
+      "won": false
+    },
+    {
+      "path": "seed_11.npz",
+      "sha256": "4512f3074121a8eb4c83ef6e21d1db97c3c12fe08fd6a307447a4627cb944155",
+      "job_id": 11,
+      "task_id": "train_pool_1",
+      "environment_seed": 60515,
+      "decisions": 64,
+      "won": false
+    },
+    {
+      "path": "seed_12.npz",
+      "sha256": "c90c7f2b7c39a68ba5618abc02aed90a4669ed520a00547dd5c3ef91928b854c",
+      "job_id": 12,
+      "task_id": "train_fog_1",
+      "environment_seed": 60768,
+      "decisions": 50,
+      "won": false
+    },
+    {
+      "path": "seed_13.npz",
+      "sha256": "60a78eff40272ad96ef3430cab294eb5445a07023d75c87fe3c71eef4c5e8e76",
+      "job_id": 13,
+      "task_id": "train_fog_1",
+      "environment_seed": 60769,
+      "decisions": 53,
+      "won": false
+    },
+    {
+      "path": "seed_14.npz",
+      "sha256": "945b12f5922c776f9f897ce3dc9b094335fcecb2eeca309e7541e7e68ebcf71e",
+      "job_id": 14,
+      "task_id": "train_fog_1",
+      "environment_seed": 60770,
+      "decisions": 60,
+      "won": false
+    },
+    {
+      "path": "seed_15.npz",
+      "sha256": "2cd9563a43470c2cdb23b39bbd34ec9069f58f831b0d6788e802454ec13cc6ed",
+      "job_id": 15,
+      "task_id": "train_fog_1",
+      "environment_seed": 60771,
+      "decisions": 70,
+      "won": false
+    },
+    {
+      "path": "seed_16.npz",
+      "sha256": "6376c88be6ea2ee8a1ee5881f74cd6fbbe3eb4215ee79b5620d1160488cb54a4",
+      "job_id": 16,
+      "task_id": "train_roof_1",
+      "environment_seed": 61024,
+      "decisions": 81,
+      "won": false
+    },
+    {
+      "path": "seed_17.npz",
+      "sha256": "1d71a97f64268b48692aa550abb538b77c74b07679dab017c7949c2eca66b99c",
+      "job_id": 17,
+      "task_id": "train_roof_1",
+      "environment_seed": 61025,
+      "decisions": 91,
+      "won": false
+    },
+    {
+      "path": "seed_18.npz",
+      "sha256": "65681aaa4a3c43ac152fb1f33a550391f94531e75a411911ea123821ea597548",
+      "job_id": 18,
+      "task_id": "train_roof_1",
+      "environment_seed": 61026,
+      "decisions": 71,
+      "won": false
+    },
+    {
+      "path": "seed_19.npz",
+      "sha256": "12e7503366c53f1a979d686d9b3ff0a0ed24fd2861c35d49c506d511640cc325",
+      "job_id": 19,
+      "task_id": "train_roof_1",
+      "environment_seed": 61027,
+      "decisions": 107,
+      "won": false
+    }
+  ]
+}

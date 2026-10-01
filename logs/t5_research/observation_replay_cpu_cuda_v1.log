@@ -1,0 +1,7 @@
+test_real_ppo_replay_matches_collection_with_new_inputs_and_chunk_boundaries (test_observation_context.PublicContextTests.test_real_ppo_replay_matches_collection_with_new_inputs_and_chunk_boundaries) ... ok
+test_fp32_cuda_replay_matches_cpu_collection_with_new_target_inputs (test_observation_context.PublicContextTests.test_fp32_cuda_replay_matches_cpu_collection_with_new_target_inputs) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 9.655s
+
+OK
