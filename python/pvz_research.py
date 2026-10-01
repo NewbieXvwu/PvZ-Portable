@@ -107,6 +107,10 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
                 "evaluation", "runtime", "prerequisites"}
     if set(config) != expected or config["schema_version"] != RESEARCH_VERSION:
         raise ValueError("research config fields/schema do not match version 1")
+    model_fields = {"layers", "width", "heads", "ff_width", "gru_layers", "gru_width",
+                    "critic_width", "critic_layers", "input_flags"}
+    if set(config["model"]) != model_fields:
+        raise ValueError("all model dimensions and input_flags must be explicit")
     reward = config["reward"]
     if set(reward) != {"name", "gamma", "shaping_weight"}:
         raise ValueError("reward must explicitly define name, gamma and shaping_weight")
@@ -283,7 +287,7 @@ def run_experiment(args: Any) -> None:
     resource_dir = args.resource_dir.expanduser().resolve()
     source_paths = [ROOT / "python" / name for name in (
         "pvz_agent_model.py", "pvz_research.py", "train_pvz_ppo.py", "train_pvz_ppo_task_family.py",
-        "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py")]
+        "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py", "pvz_observation_features.py")]
     source_paths.append(ROOT / "scripts/t4_capability_profile.py")
     fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
     fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),

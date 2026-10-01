@@ -127,10 +127,11 @@ class ObservationTokenTests(unittest.TestCase):
         self.assertEqual(tuple(tensors["features"].shape), (expected, FEATURE_COUNT))
         self.assertEqual(tensors["features"].dtype, torch.float32)
 
-    def test_lane_vocabulary_bumps_the_architecture_version(self) -> None:
-        self.assertEqual(MODEL_ARCHITECTURE_VERSION, 5)
+    def test_lane_context_vocabulary_bumps_the_architecture_version(self) -> None:
+        self.assertEqual(MODEL_ARCHITECTURE_VERSION, 6)
         self.assertEqual(TOKEN_KINDS["lane"], 10)
-        self.assertEqual(len(TOKEN_KINDS), 11)
+        self.assertEqual(TOKEN_KINDS["lane_enemy"], 11)
+        self.assertEqual(len(TOKEN_KINDS), 12)
 
     def test_cell_tokens_are_indexed_by_row_major_position(self) -> None:
         """``select_action`` builds cell ids as ``row * 9 + col``; the tokens must agree."""

@@ -143,6 +143,7 @@ class RecurrentReplayTests(unittest.TestCase):
 class ExplicitConfigurationTests(unittest.TestCase):
     def test_stale_pass_gate_rejects_changed_simulator_or_source(self):
         config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
+        config["model"]["input_flags"] = 0
         source = "python/pvz_research.py"
         gate = {"gate_result": "pass", "simulator_sha256": sha256_file(ROOT / "build/pvz-portable"),
                 "required_fingerprints": {source: sha256_file(ROOT / source)}}

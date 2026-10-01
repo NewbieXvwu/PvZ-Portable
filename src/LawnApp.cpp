@@ -1650,6 +1650,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		if (!first) out << ',';
 			first = false;
 			out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
+				<< ",\"id\":" << static_cast<int>(mBoard->ZombieGetID(zombie))
 				<< ",\"on_board\":" << (zombie->IsOnBoard() ? "true" : "false")
 				<< ",\"x\":" << zombie->mPosX << ",\"y\":" << zombie->mPosY << ",\"body_health\":" << zombie->mBodyHealth
 				<< ",\"body_max_health\":" << zombie->mBodyMaxHealth << ",\"helm_health\":" << zombie->mHelmHealth
