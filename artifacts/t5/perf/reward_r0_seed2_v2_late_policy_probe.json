@@ -1,0 +1,485 @@
+{
+  "schema_version": 1,
+  "scope": "off-policy fixed-public-history distribution diagnostic, not deployment win rate or causal attribution",
+  "experiment_id": "reward_r0_seed2_v2",
+  "checkpoints": [
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000040_evaluated_1790851169516433980.pt",
+      "sha256": "8e7c4fe89e3ab671d1c254c3ce8079721ac4ad665666c1fe2f459a8889264d56",
+      "counters": {
+        "episodes": 6316,
+        "decisions": 375030,
+        "ticks": 50936501
+      }
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000056_evaluated_1790851842042549512.pt",
+      "sha256": "b40d544f889c5024d9771ad45cfb7a4b047ddbe752b345836816c5dc03efb361",
+      "counters": {
+        "episodes": 9121,
+        "decisions": 500016,
+        "ticks": 72433360
+      }
+    }
+  ],
+  "shards": [
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6316.npz",
+      "sha256": "d233a898f68b7c540f503c7b9bcf2641bdeef25637b6fd5d10abe8d19e4ddc3a",
+      "job": 6316,
+      "terrain": "fog",
+      "task_id": "train_fog_1",
+      "decisions": 48
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6317.npz",
+      "sha256": "34202577d9f4ef8aa51720b566dddb2cf6f02d084bc8b9a1dc30d996ae7a0715",
+      "job": 6317,
+      "terrain": "day",
+      "task_id": "train_day_1",
+      "decisions": 49
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6318.npz",
+      "sha256": "6d634cb9e3e5335d8034cc86ce0674709847e36dfc4f45abe01af9d3deebf500",
+      "job": 6318,
+      "terrain": "night",
+      "task_id": "train_night_1",
+      "decisions": 40
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6319.npz",
+      "sha256": "ae24c84f341d79c0eb478d10985f41b7635384a21db3e9fbe13ffd800b1030f6",
+      "job": 6319,
+      "terrain": "roof",
+      "task_id": "train_roof_1",
+      "decisions": 38
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6320.npz",
+      "sha256": "03b8cbe7114b261032b8c029a5e84f7926213e3bc553d5066973205153125a1a",
+      "job": 6320,
+      "terrain": "night",
+      "task_id": "train_night_1",
+      "decisions": 42
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6321.npz",
+      "sha256": "1af06615cf4da9d95848b7f01c125709ff3f2ecb3843e6b034f3bbee2d5ac4f9",
+      "job": 6321,
+      "terrain": "fog",
+      "task_id": "train_fog_1",
+      "decisions": 27
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6322.npz",
+      "sha256": "70fe1f366d92558e56444a6d45ca1518e99190e096c2d1735dfeeb787e84384a",
+      "job": 6322,
+      "terrain": "pool",
+      "task_id": "train_pool_1",
+      "decisions": 46
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6323.npz",
+      "sha256": "4982341a7a95be7ad44f77061fb42715fc2e338ca56b8bd1c39801f3f74fe615",
+      "job": 6323,
+      "terrain": "pool",
+      "task_id": "train_pool_1",
+      "decisions": 38
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6324.npz",
+      "sha256": "1a946d2480c048741498a7dcceb83750047820d3d55750920e3c79bbb0f5923b",
+      "job": 6324,
+      "terrain": "roof",
+      "task_id": "train_roof_1",
+      "decisions": 51
+    },
+    {
+      "path": "artifacts/research/reward_r0_seed2_v2/runs/run_1/.seed_jobs/update_000041/1557c1971676d993fcfda3495ad84731f90f8cb61ec9ec9258970944fce1b9cd/seed_6333.npz",
+      "sha256": "362609b0230fc705af83257234ed52b54f2f0bd6b8d25a71cd93e147d0a75cc5",
+      "job": 6333,
+      "terrain": "day",
+      "task_id": "train_day_1",
+      "decisions": 50
+    }
+  ],
+  "old_policy_collection_replay_max_error": 9.5367431640625e-07,
+  "overall": {
+    "decisions": 429,
+    "legal_plant_decisions": 287,
+    "mean_old_wait_probability": 0.7467144964944511,
+    "mean_new_wait_probability": 0.7199824476019764,
+    "mean_type_kl_before_after": 0.02445364181109159,
+    "mean_type_js": 0.006044581890916767,
+    "greedy_action_changes": 40,
+    "greedy_type_changes": 30,
+    "greedy_type_transitions": {
+      "plant->plant": 14,
+      "wait->wait": 385,
+      "wait->plant": 30
+    },
+    "old_type_probability_margin_below": {
+      "0.01": 0,
+      "0.05": 4,
+      "0.1": 5,
+      "0.25": 43
+    }
+  },
+  "per_terrain": {
+    "day": {
+      "decisions": 99,
+      "legal_plant_decisions": 62,
+      "mean_old_wait_probability": 0.7882380112253055,
+      "mean_new_wait_probability": 0.7777271448361753,
+      "mean_type_kl_before_after": 0.004828417457339138,
+      "mean_type_js": 0.001212329045761226,
+      "greedy_action_changes": 2,
+      "greedy_type_changes": 0,
+      "greedy_type_transitions": {
+        "plant->plant": 2,
+        "wait->wait": 97
+      },
+      "old_type_probability_margin_below": {
+        "0.01": 0,
+        "0.05": 1,
+        "0.1": 1,
+        "0.25": 3
+      }
+    },
+    "fog": {
+      "decisions": 75,
+      "legal_plant_decisions": 45,
+      "mean_old_wait_probability": 0.7587208799521128,
+      "mean_new_wait_probability": 0.6624040575822194,
+      "mean_type_kl_before_after": 0.047714539657657346,
+      "mean_type_js": 0.012610484524824035,
+      "greedy_action_changes": 19,
+      "greedy_type_changes": 18,
+      "greedy_type_transitions": {
+        "plant->plant": 4,
+        "wait->wait": 53,
+        "wait->plant": 18
+      },
+      "old_type_probability_margin_below": {
+        "0.01": 0,
+        "0.05": 1,
+        "0.1": 1,
+        "0.25": 5
+      }
+    },
+    "night": {
+      "decisions": 82,
+      "legal_plant_decisions": 57,
+      "mean_old_wait_probability": 0.7177787813835028,
+      "mean_new_wait_probability": 0.6521194468184215,
+      "mean_type_kl_before_after": 0.026976683871286763,
+      "mean_type_js": 0.007288887638956445,
+      "greedy_action_changes": 12,
+      "greedy_type_changes": 10,
+      "greedy_type_transitions": {
+        "plant->plant": 3,
+        "wait->wait": 69,
+        "wait->plant": 10
+      },
+      "old_type_probability_margin_below": {
+        "0.01": 0,
+        "0.05": 0,
+        "0.1": 0,
+        "0.25": 17
+      }
+    },
+    "pool": {
+      "decisions": 84,
+      "legal_plant_decisions": 69,
+      "mean_old_wait_probability": 0.7155720275782403,
+      "mean_new_wait_probability": 0.7059792422112965,
+      "mean_type_kl_before_after": 0.010421747754056318,
+      "mean_type_js": 0.0025976186280743043,
+      "greedy_action_changes": 6,
+      "greedy_type_changes": 1,
+      "greedy_type_transitions": {
+        "plant->plant": 5,
+        "wait->plant": 1,
+        "wait->wait": 78
+      },
+      "old_type_probability_margin_below": {
+        "0.01": 0,
+        "0.05": 2,
+        "0.1": 3,
+        "0.25": 16
+      }
+    },
+    "roof": {
+      "decisions": 89,
+      "legal_plant_decisions": 54,
+      "mean_old_wait_probability": 0.7464604438020942,
+      "mean_new_wait_probability": 0.7800126671791077,
+      "mean_type_kl_before_after": 0.0376010521974289,
+      "mean_type_js": 0.007993595114139987,
+      "greedy_action_changes": 1,
+      "greedy_type_changes": 1,
+      "greedy_type_transitions": {
+        "wait->wait": 88,
+        "wait->plant": 1
+      },
+      "old_type_probability_margin_below": {
+        "0.01": 0,
+        "0.05": 0,
+        "0.1": 0,
+        "0.25": 2
+      }
+    }
+  },
+  "legal_plant_states": {
+    "decisions": 287,
+    "legal_plant_decisions": 287,
+    "mean_old_wait_probability": 0.6522899095085856,
+    "mean_new_wait_probability": 0.6146460235741911,
+    "mean_type_kl_before_after": 0.025052204439319176,
+    "mean_type_js": 0.0062585945209412824,
+    "greedy_action_changes": 40,
+    "greedy_type_changes": 30,
+    "greedy_type_transitions": {
+      "plant->plant": 14,
+      "wait->wait": 243,
+      "wait->plant": 30
+    },
+    "old_type_probability_margin_below": {
+      "0.01": 0,
+      "0.05": 4,
+      "0.1": 5,
+      "0.25": 43
+    }
+  },
+  "last_seven_updates": [
+    {
+      "update": 50,
+      "checkpoint": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000050_trained_1790851436389783811.pt",
+      "sha256": "095ffa3157bad0a55d8ed57870080d00b6fcf5d437da9351b7934ce9b735802d",
+      "batch_episodes": 200,
+      "losses": {
+        "policy_loss": -0.005473508600859189,
+        "value_loss": 0.25351722879552996,
+        "entropy": 1.9967896969287426,
+        "advantage_mean": -0.12810896337032318,
+        "advantage_std": 0.49311724305152893,
+        "gradient_norm": 1.5660942792892456,
+        "approx_kl": 0.007167675879611199,
+        "clip_fraction": 0.06889913960670431,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 1.403451919555664,
+        "optimizer_steps": 77,
+        "stopped_for_kl": true
+      },
+      "parameter_change": {
+        "l2_change": 1.4592928514704446,
+        "relative_l2_change": 0.005628481817142817
+      },
+      "action_type_change": {
+        "l2_change": 0.014260081103408522,
+        "relative_l2_change": 0.013802366475057282
+      },
+      "wait_duration_change": {
+        "l2_change": 0.013290480756248654,
+        "relative_l2_change": 0.014789945146210398
+      }
+    },
+    {
+      "update": 51,
+      "checkpoint": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000051_trained_1790851466071648194.pt",
+      "sha256": "3948a85543f5c67c6bd9eec8ab7a05215d9fcf9dd8091e4b46efaf392e2f7abe",
+      "batch_episodes": 200,
+      "losses": {
+        "policy_loss": -0.06599051480944683,
+        "value_loss": 0.19297489903142884,
+        "entropy": 2.0690692451265122,
+        "advantage_mean": -0.06497050076723099,
+        "advantage_std": 0.4278910756111145,
+        "gradient_norm": 1.08513605594635,
+        "approx_kl": 0.009976446696144505,
+        "clip_fraction": 0.11341780613212543,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 2.626223564147949,
+        "optimizer_steps": 180,
+        "stopped_for_kl": true
+      },
+      "parameter_change": {
+        "l2_change": 2.0100892312623113,
+        "relative_l2_change": 0.007753366321567279
+      },
+      "action_type_change": {
+        "l2_change": 0.023019535553632932,
+        "relative_l2_change": 0.02221881524714272
+      },
+      "wait_duration_change": {
+        "l2_change": 0.03311076276328435,
+        "relative_l2_change": 0.03681060111006254
+      }
+    },
+    {
+      "update": 52,
+      "checkpoint": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000052_trained_1790851487439943307.pt",
+      "sha256": "efe3a81b7d7145973ba1cb4bf7bd00e56f086ae4bbe0f5c529fa5f762e8dd979",
+      "batch_episodes": 200,
+      "losses": {
+        "policy_loss": -0.0642641414066448,
+        "value_loss": 0.23707548063248396,
+        "entropy": 1.9501087209757637,
+        "advantage_mean": 0.07667180895805359,
+        "advantage_std": 0.48947590589523315,
+        "gradient_norm": 0.7955451607704163,
+        "approx_kl": 0.010002013314715907,
+        "clip_fraction": 0.10084321844790663,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 1.4070849418640137,
+        "optimizer_steps": 34,
+        "stopped_for_kl": true
+      },
+      "parameter_change": {
+        "l2_change": 0.918420632207228,
+        "relative_l2_change": 0.0035429286932633502
+      },
+      "action_type_change": {
+        "l2_change": 0.007737441184181332,
+        "relative_l2_change": 0.007476293431732886
+      },
+      "wait_duration_change": {
+        "l2_change": 0.011026120187145228,
+        "relative_l2_change": 0.012288948775233562
+      }
+    },
+    {
+      "update": 53,
+      "checkpoint": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000053_trained_1790851516938962152.pt",
+      "sha256": "8d518e22d5a8aa289a4ee9b0341c29e2628b4ce8b92941ba7ff4b24447712c7e",
+      "batch_episodes": 200,
+      "losses": {
+        "policy_loss": -0.07808905442827381,
+        "value_loss": 0.21178481173701585,
+        "entropy": 1.9742445224523544,
+        "advantage_mean": -0.058766793459653854,
+        "advantage_std": 0.4413449466228485,
+        "gradient_norm": 1.3044475317001343,
+        "approx_kl": 0.011336644406210114,
+        "clip_fraction": 0.11265009343158454,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 2.0654373168945312,
+        "optimizer_steps": 200,
+        "stopped_for_kl": false
+      },
+      "parameter_change": {
+        "l2_change": 2.3429838486750016,
+        "relative_l2_change": 0.009038445787634328
+      },
+      "action_type_change": {
+        "l2_change": 0.02191435595972314,
+        "relative_l2_change": 0.021182802190755207
+      },
+      "wait_duration_change": {
+        "l2_change": 0.026473603958726808,
+        "relative_l2_change": 0.029412679589323018
+      }
+    },
+    {
+      "update": 54,
+      "checkpoint": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000054_trained_1790851539634838776.pt",
+      "sha256": "f112734a4c391631435ba6278f626b23063352ab308fcce0806a6f8505c0d89e",
+      "batch_episodes": 165,
+      "losses": {
+        "policy_loss": -0.09828073971095633,
+        "value_loss": 0.22744299171370316,
+        "entropy": 1.931795244334174,
+        "advantage_mean": 0.1368851512670517,
+        "advantage_std": 0.4696555733680725,
+        "gradient_norm": 1.166685700416565,
+        "approx_kl": 0.009779507889933182,
+        "clip_fraction": 0.10859913263106491,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 1.8650808334350586,
+        "optimizer_steps": 122,
+        "stopped_for_kl": true
+      },
+      "parameter_change": {
+        "l2_change": 1.9060833445878858,
+        "relative_l2_change": 0.007354127391221524
+      },
+      "action_type_change": {
+        "l2_change": 0.01769305535508773,
+        "relative_l2_change": 0.01714178916039207
+      },
+      "wait_duration_change": {
+        "l2_change": 0.03443785218314499,
+        "relative_l2_change": 0.03828729632156981
+      }
+    },
+    {
+      "update": 55,
+      "checkpoint": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000055_trained_1790851549367802450.pt",
+      "sha256": "72c775ab6763c9a81bc803ed49deb1b1c102f3eca19597697b6843cdaf4e8aab",
+      "batch_episodes": 34,
+      "losses": {
+        "policy_loss": -0.0905683021992445,
+        "value_loss": 0.15849565353025408,
+        "entropy": 1.9109200169058407,
+        "advantage_mean": -0.017109300941228867,
+        "advantage_std": 0.411722332239151,
+        "gradient_norm": 0.3423335552215576,
+        "approx_kl": 0.008370267452530248,
+        "clip_fraction": 0.10000008897965446,
+        "first_minibatch_log_prob_max_error": 1.430511474609375e-06,
+        "max_log_prob_change": 1.0971956253051758,
+        "optimizer_steps": 34,
+        "stopped_for_kl": false
+      },
+      "parameter_change": {
+        "l2_change": 1.1302167852977778,
+        "relative_l2_change": 0.004360917600549061
+      },
+      "action_type_change": {
+        "l2_change": 0.014207623492993234,
+        "relative_l2_change": 0.013783386876404203
+      },
+      "wait_duration_change": {
+        "l2_change": 0.011977544551613315,
+        "relative_l2_change": 0.013314572669495286
+      }
+    },
+    {
+      "update": 56,
+      "checkpoint": "artifacts/research/reward_r0_seed2_v2/runs/run_1/update_000056_trained_1790851555666371893.pt",
+      "sha256": "1a1c0c756020d81a3501ae32e8f14be39d95c5e18a0f37fe81e7f44183ea639f",
+      "batch_episodes": 6,
+      "losses": {
+        "policy_loss": -0.09622360020875931,
+        "value_loss": 0.19830678651730219,
+        "entropy": 1.910043716430664,
+        "advantage_mean": 0.0020723796915262938,
+        "advantage_std": 0.4451918303966522,
+        "gradient_norm": 1.2203936576843262,
+        "approx_kl": 0.0011449635598442809,
+        "clip_fraction": 0.007028388635565837,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.6099257469177246,
+        "optimizer_steps": 6,
+        "stopped_for_kl": false
+      },
+      "parameter_change": {
+        "l2_change": 0.3017668938863001,
+        "relative_l2_change": 0.0011643855737043859
+      },
+      "action_type_change": {
+        "l2_change": 0.003492822935510673,
+        "relative_l2_change": 0.0033775021962947987
+      },
+      "wait_duration_change": {
+        "l2_change": 0.005648105084765815,
+        "relative_l2_change": 0.006294277293364249
+      }
+    }
+  ],
+  "raw_rows": "artifacts/t5/perf/reward_r0_seed2_v2_late_policy_probe.rows.json.gz",
+  "raw_sha256": "f3fac19359da9eb15d5538f16da56384827e03fbfdfb87a806497c703ec0c4bd",
+  "seconds": 10.830285821997677,
+  "coexecution": "CPU diagnostic overlaps the original reward matrix"
+}

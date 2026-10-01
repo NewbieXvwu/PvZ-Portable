@@ -1,0 +1,38 @@
+{
+  "scope": "closed init2 runs, local HF selected-file dry-run only; no upload/download",
+  "hf_credentials_configured": false,
+  "entries": [
+    {
+      "run": "reward_r0_seed2_v2",
+      "state_sha256": "873cdf332baafbf8b6aba6160dd4daa1cd5523e63e0b1300edd46aa52a299571",
+      "checkpoint_count": 15,
+      "checkpoint_bytes": 612353637,
+      "trained_count": 8,
+      "conclusion_count": 10,
+      "rollout_count": 9121,
+      "rollout_bytes": 986192417,
+      "log_count": 3,
+      "resume_checkpoint": "runs/run_1/update_000056_boundary_1790851842137451140.pt",
+      "resume_sha256": "796cc0d7964bdb837ece3eeba971b81e8d3f6cb86d284ede048bc81d4dd463b2",
+      "warnings": [],
+      "limitation": "default run push does not select diagnostic JSON/gzip outside EVIDENCE_GLOBS; supplemental diagnostic evidence delivery remains required",
+      "dry_run_log": "logs/t5_research/reward_r0_seed2_v2_hf_dry_run_v1.log"
+    },
+    {
+      "run": "reward_r1_seed2_v2",
+      "state_sha256": "d82c4329e3c8c1f6878a1f36ee5699217961f5a710f1af2ab768451122610ba8",
+      "checkpoint_count": 15,
+      "checkpoint_bytes": 612108069,
+      "trained_count": 8,
+      "conclusion_count": 10,
+      "rollout_count": 8641,
+      "rollout_bytes": 973790785,
+      "log_count": 3,
+      "resume_checkpoint": "runs/run_1/update_000052_boundary_1790855050173844737.pt",
+      "resume_sha256": "9544013730cb3ee1a2c20405ab82d675f88fcb3bb257b837a4d42ad9027b88ad",
+      "warnings": [],
+      "limitation": "default run push does not select diagnostic JSON/gzip outside EVIDENCE_GLOBS; supplemental diagnostic evidence delivery remains required",
+      "dry_run_log": "logs/t5_research/reward_r1_seed2_v2_hf_dry_run_v1.log"
+    }
+  ]
+}
