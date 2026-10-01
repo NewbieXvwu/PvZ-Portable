@@ -265,3 +265,12 @@ loss、逐局摘要和原始评估，增加整个curriculum_state及每更新cur
 逐文件完整性目录及成本在 artifacts/t5/perf/learning_joint_interrupt_v1_inventory.json，原始现场
 保持在隔离工作树。源码/配置预注册已push到research/learning-v1，待当前奖励矩阵完成再合入
 pvz-env并补参考架构门禁。HF未配置，大文件尚未上传，不把本地保存记成完整交付。
+
+
+### 初始化1末段诊断扩展：开跑前冻结
+
+按 experiments/t5/late_probe_seed1_v1.json 把已冻结的375k→500k固定公开历史诊断扩展至
+R0/R1初始化1，保持每地形首2个原job、10局、不按胜负/动作筛选、3e-6旧策略回放守卫、
+全部分布与最后7更新参数变化指标。仅在完整预算/末次评估完成后读取；不改变矩阵训练、
+评价模式、检查点选择或温度。这个跨初始化证据用于区分分支argmax变化和分布整体退化，
+仍不单凭固定历史推断部署胜率变化的因果机制。R0初始化1已有八个trained，R1仍在运行。

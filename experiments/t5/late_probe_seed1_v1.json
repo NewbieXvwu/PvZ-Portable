@@ -1,0 +1,18 @@
+{
+  "scope": "extend previously frozen fixed-history diagnostic to init1; descriptive, not causal, no training changes",
+  "experiments": [
+    "reward_r0_seed1_v2",
+    "reward_r1_seed1_v2"
+  ],
+  "required_status": "budget_complete with final raw evaluation",
+  "nodes": [
+    375000,
+    500000
+  ],
+  "selection": "first two original job IDs per each of five terrains from first completed rollout after375k; no win/action filtering",
+  "episodes": 10,
+  "maximum_collection_replay_logprob_error": 3e-06,
+  "same_helper": "scripts/research_late_policy_probe.py",
+  "metrics": "full frozen type probabilities, wait distribution, KL/JS, greedy branch choices, actual last7 update parameter changes; outputs unchanged from init0 protocol",
+  "cost": "CPU diagnostic overlaps live reward matrix; not dedicated wall comparison"
+}
