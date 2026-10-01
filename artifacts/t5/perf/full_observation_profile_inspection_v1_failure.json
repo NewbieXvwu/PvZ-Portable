@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "5be1602d6f84851a09d2d01c992034e3f9b35ae536e1a7f86b2bcdc4d496eb25",
+  "status": "failed",
+  "scope": "full_level_public_input_cost_only_no_learning",
+  "source_commit": "e82fefb1314200f4bcec5acdf70bdbae18c1f1ca",
+  "coexecution": "CPU-only public observation encoding and native non-learning controls; overlap frozen reward matrix, not dedicated wall or GPU training benchmark",
+  "limitations": [
+    "Native rule/preplant controls are profiling scenarios, not learned-policy results or training data",
+    "Late coverage means actual wave>=ceil(.75*original wave_count), every failure/truncation retained",
+    "No actor inference or GPU update measured; token count and N^2 are not GPU allocation measurements",
+    "Fresh native process per episode; tree RSS includes parent/CPU encoding workers/assets, shared pages may be counted more than once",
+    "Public JSON bytes are compact Python serialization of the observation, not native wire bytes or total PPO transition size",
+    "Fortified roof economy uses native initial flowerpots at columns0..2, explicitly adds pots beneath shooters at column6; initial plants verified in read-only reset",
+    "Existing training/evaluation tasks and full-level acceptance thresholds unchanged"
+  ],
+  "episodes": 5,
+  "seconds": 7.612288008996984,
+  "resources": {
+    "peak_process_tree_rss_bytes": 2647015424,
+    "min_system_available_bytes": 17844539392,
+    "peak_system_swap_used_bytes": 268980224
+  },
+  "failure_stage": "level17 fortified preplant reset collided with a grave at row1/col5; both wait/scripted rejected",
+  "reported_completed_before_exception": 5,
+  "actual_completed_job_files": 7,
+  "full_2048_launched": false,
+  "failures": [
+    {
+      "context": {
+        "job": 6,
+        "task_id": "full_profile_night17_fortified",
+        "terrain": "night",
+        "aid": "fortified",
+        "level": 17,
+        "seed": 120000,
+        "strategy": "wait"
+      },
+      "failure_path": "artifacts/research/full_observation_profile_inspection_v1/episodes/job_000006.failure.json",
+      "failure_sha256": "3887ab3f49a7a0a388cd5ffab86f3c539aabaf038c2fca19366336bc30e595e9",
+      "error": "ValueError: PvZ-Portable rejected reset",
+      "placed_plants": [
+        [
+          9,
+          0,
+          0
+        ],
+        [
+          9,
+          1,
+          0
+        ],
+        [
+          9,
+          2,
+          0
+        ],
+        [
+          9,
+          3,
+          0
+        ],
+        [
+          9,
+          4,
+          0
+        ],
+        [
+          10,
+          0,
+          5
+        ]
+      ],
+      "grave_cells": [
+        [
+          4,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          1,
+          8
+        ]
+      ]
+    },
+    {
+      "context": {
+        "job": 7,
+        "task_id": "full_profile_night17_fortified",
+        "terrain": "night",
+        "aid": "fortified",
+        "level": 17,
+        "seed": 120000,
+        "strategy": "scripted"
+      },
+      "failure_path": "artifacts/research/full_observation_profile_inspection_v1/episodes/job_000007.failure.json",
+      "failure_sha256": "02133994b62373ca6b8266faecb3ecde4ad2d865456a78762102322a36526acd",
+      "error": "ValueError: PvZ-Portable rejected reset",
+      "placed_plants": [
+        [
+          9,
+          0,
+          0
+        ],
+        [
+          9,
+          1,
+          0
+        ],
+        [
+          9,
+          2,
+          0
+        ],
+        [
+          9,
+          3,
+          0
+        ],
+        [
+          9,
+          4,
+          0
+        ],
+        [
+          10,
+          0,
+          5
+        ]
+      ],
+      "grave_cells": [
+        [
+          4,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          0,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          1,
+          8
+        ]
+      ]
+    }
+  ],
+  "full_report": {
+    "path": "artifacts/research/full_observation_profile_inspection_v1/report.json",
+    "sha256": "783b95711a434768bb77a5d516620845bac6f5e4b68d3b1d70f68f12bf0abc14"
+  },
+  "scene_policy": "retain whole v1 evidence/logs, no cleanup, no seed removed or gate bypass"
+}
