@@ -1,0 +1,54 @@
+{
+  "scope": "offline HF evidence transfer regression and real local dry-run; no Hub upload or remote delivery yet",
+  "tests_passed": 18,
+  "logs": {
+    "logs/t5_research/hf_sync_full_evidence_regression_v1.log": {
+      "sha256": "c03263853745cefd2cf790e60709d693726b34a85c6d1543bc7a83977edcb2e5",
+      "tail": [
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 17 tests in 0.027s",
+        "",
+        "OK"
+      ]
+    },
+    "logs/t5_research/hf_joint_actual_tree_dryrun_v1.log": {
+      "sha256": "8a1c27b6becf263891f5ed2bfe220542b4df394ff3e1c10df37f4a6ccec7a158",
+      "tail": [
+        "提示：未设置 HF_TOKEN，将依赖已登录的凭据。",
+        "证据 /home/newbiexvwu/PvZ-Portable-learning/artifacts/research/learning_joint_interrupt_v1 → (未配置) / engineering/learning_joint_interrupt_v1: 184 files, 36.7 MB",
+        "引用链核验通过；空跑结束，未上传。"
+      ]
+    },
+    "logs/t5_research/hf_r2_archive_actual_dryrun_v1.log": {
+      "sha256": "a1af3c0021caa09b497d11809f7ea60e25e1b0d7dda321ffefc97063c57b4e1b",
+      "tail": [
+        "提示：未设置 HF_TOKEN，将依赖已登录的凭据。",
+        "证据 /home/newbiexvwu/PvZ-Portable/artifacts/research_evidence/reward_r2_seed0_v2/budget_complete → (未配置) / archives/reward_r2_seed0_v2/budget_complete: 20 files, 236.2 MB",
+        "引用链核验通过；空跑结束，未上传。"
+      ]
+    },
+    "logs/t5_research/hf_sync_full_evidence_regression_v2.log": {
+      "sha256": "c28175ba1c286d83fe5e5246bed4072dbfa08c2e1b4baa64e599162c40247cae",
+      "tail": [
+        "",
+        "----------------------------------------------------------------------",
+        "Ran 18 tests in 0.035s",
+        "",
+        "OK"
+      ]
+    }
+  },
+  "features": [
+    "original resume-point checkpoint selection unchanged",
+    "optional raw rollout NPZ and last8 trained uploads",
+    "explicit external logs frozen by copy",
+    "whole immutable evidence-tree upload with archive chain verification",
+    "SHA256/size manifest and offline download verification",
+    "shared run locks refuse active uploads without signaling training",
+    "missing/bad-hash resume checkpoints and broken archives rejected before upload"
+  ],
+  "HF_configured": false,
+  "delivery_status": "pending credentials and real upload/download verification",
+  "source_sha256": "f95268cf37192156ee3d0582bae8c9aeb367500fa720f058829689065a0882a0"
+}

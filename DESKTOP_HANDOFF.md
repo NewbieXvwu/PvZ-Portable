@@ -181,6 +181,35 @@ python3 scripts/hf_sync.py pull-all              # 全部拉下来
 
 仓库会在第一次 `push` 时**自动创建为私有**（`private=True`），不需要手动建。
 
+### HF完整证据传输补充（2026-10-01）
+
+本机 Python 固定 `/home/newbiexvwu/.venvs/ml/bin/python`。默认上传范围继续包含
+resume.json指向的模型；原始NPZ、末段诊断窗口和日志需要显式包含：
+
+```bash
+/home/newbiexvwu/.venvs/ml/bin/python scripts/hf_sync.py push reward_r0_seed1_v2 \
+  --include-rollouts --include-trained-window \
+  --log logs/t5_research/reward_r0_seed1_v2.log --dry-run
+```
+
+去掉dry-run才上传，源run有正在持有的执行锁时会拒绝，不中断训练。先把完成的run上传，
+当前活跃run等结束再传。原始工作目录的裁剪仍由既有8快照策略处理；HF默认仍只传最新
+trained，include-trained-window额外携带现存最后8个供诊断，不执行任何删除。
+
+整棵归档或真实中断现场（包括全部失败、日志、分片及中间状态）使用：
+
+```bash
+/home/newbiexvwu/.venvs/ml/bin/python scripts/hf_sync.py push-evidence \
+  artifacts/research_evidence/reward_r2_seed0_v2/budget_complete \
+  --name archives/reward_r2_seed0_v2/budget_complete --dry-run
+```
+
+已存在archive_manifest.json时逐文件核验引用链；缺失或损坏的resume指针会拒绝。
+实际上传生成包含每文件SHA256/体积的MANIFEST.json（schema2），可用原pull/pull-all下载，
+再对下载目录执行`hf_sync.py verify <下载的run或归档目录>`。这验证传输完整性，不替代
+模型的真实恢复/学习门禁。18项离线回归及两个实际现场dry-run通过，见
+artifacts/t5/perf/hf_full_evidence_offline_audit_v1.json。当前未配置HF凭据，未发生实际上传。
+
 ### 2.3 恢复已归档的证据
 
 `scripts/archive_research_evidence.py` 把一份实验快照按原相对路径导出到

@@ -34,12 +34,16 @@ SHA 校验和私有仓库，从任何机器一行拉取，不依赖临时 SSH �
 from __future__ import annotations
 
 import argparse
+import contextlib
+import fcntl
+import hashlib
 import importlib.util
 import json
 import os
 import re
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -67,6 +71,130 @@ CHECKPOINT_RE = re.compile(r"^update_\d+_(?P<phase>[a-z]+)_\d+\.pt$")
 # 阶段名认不出来的一律保留。宁可多传，不要悄悄丢证据。
 CHECKPOINT_KNOWN_PHASES = ("initial", "evaluated", "boundary", "resumed")
 CHECKPOINT_TRAINED_KEEP = 1
+TRAINED_PROBE_WINDOW = 8
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def _validate_resume(run_dir: Path) -> None:
+    pointer = run_dir / "resume.json"
+    if not pointer.exists():
+        return
+    payload = json.loads(pointer.read_text())
+    target = _resume_target(run_dir)
+    resolved = _resolve_checkpoint(run_dir, target) if target else None
+    if resolved is None or not resolved.is_relative_to(run_dir.resolve()):
+        raise ValueError(f"{pointer}: resume target missing or outside this snapshot")
+    if payload.get("sha256") != _sha256(resolved):
+        raise ValueError(f"{pointer}: resume checkpoint SHA256 mismatch or missing")
+
+
+@contextlib.contextmanager
+def _source_locks(source: Path):
+    """Read-lock existing run locks; an active writer is never interrupted."""
+    with contextlib.ExitStack() as stack:
+        for path in sorted(source.rglob(".execution.lock")):
+            if ".hf_staging" in path.parts:
+                continue
+            stream = stack.enter_context(path.open("rb"))
+            try:
+                fcntl.flock(stream, fcntl.LOCK_SH | fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise RuntimeError(f"active run cannot be snapshotted: {path.parent}") from None
+        yield
+
+
+def _validate_archive(source: Path) -> None:
+    manifest = source / "archive_manifest.json"
+    if not manifest.exists():
+        return
+    files = json.loads(manifest.read_text())["files"]
+    if not isinstance(files, dict):
+        raise ValueError("unsupported archive inventory schema")
+    for name, expected in files.items():
+        path = source / name
+        if (not path.resolve().is_relative_to(source.resolve()) or not path.is_file()
+                or path.stat().st_size != expected["bytes"] or _sha256(path) != expected["sha256"]):
+            raise ValueError(f"archive reference chain broken: {name}")
+
+
+def _upload_snapshot(api, repo: str, source: Path, key: str,
+                     files: dict[str, Path], manifest: dict) -> None:
+    """Copy mutable metadata/logs; link immutable checkpoints and rollout shards."""
+    if "MANIFEST.json" in files:
+        raise ValueError("source MANIFEST.json would collide with the HF delivery manifest")
+    with tempfile.TemporaryDirectory(prefix="pvz-hf-snapshot-") as directory:
+        staging = Path(directory)
+        records = {}
+        for name, path in sorted(files.items()):
+            if Path(name).is_absolute() or ".." in Path(name).parts:
+                raise ValueError("invalid snapshot relative path")
+            target = staging / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if path.suffix in (".pt", ".npz"):
+                target.symlink_to(path.resolve())
+            else:
+                shutil.copy2(path, target)
+            records[name] = {"bytes": target.stat().st_size, "sha256": _sha256(target)}
+        manifest.update(schema_version=2, files=records)
+        (staging / "MANIFEST.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
+        api.create_repo(repo_id=repo, repo_type="model", private=True, exist_ok=True)
+        api.upload_folder(repo_id=repo, repo_type="model", folder_path=str(staging),
+                          path_in_repo=key, commit_message=f"sync {key}: hashed evidence snapshot")
+        # A lock-free binary edited during upload must not be reported as verified.
+        for name, path in files.items():
+            if path.suffix in (".pt", ".npz") and _sha256(path) != records[name]["sha256"]:
+                raise ValueError(f"source binary changed during upload: {name}")
+
+
+def cmd_push_evidence(args) -> int:
+    source = args.source.resolve()
+    if not source.is_dir() or not any((source / name).is_file() for name in
+                                      ("archive_manifest.json", "report.json", "training_state.json")):
+        raise ValueError("push-evidence requires a completed research/engineering evidence tree")
+    repo = args.repo or os.environ.get("PVZ_HF_REPO")
+    if not repo and not args.dry_run:
+        repo = _repo_id(None)
+    with _source_locks(source):
+        _validate_archive(source)
+        for pointer in source.rglob("resume.json"):
+            _validate_resume(pointer.parent)
+        files = {str(p.relative_to(source)): p for p in source.rglob("*")
+                 if p.is_file() and ".hf_staging" not in p.relative_to(source).parts}
+        if any(not p.resolve().is_relative_to(source) for p in files.values()):
+            raise ValueError("evidence tree contains a file link outside the selected source")
+        total = sum(p.stat().st_size for p in files.values())
+        print(f"证据 {source} → {repo or '(未配置)'} / {args.name}: {len(files)} files, {_human(total)}")
+        if args.dry_run:
+            print("引用链核验通过；空跑结束，未上传。")
+            return 0
+        HfApi, _ = _require_hf()
+        _upload_snapshot(HfApi(token=os.environ.get("HF_TOKEN")), repo, source, args.name, files,
+                         {"source_directory": str(source), "kind": "complete_evidence_tree"})
+    return 0
+
+
+def cmd_verify(args) -> int:
+    source = args.source.resolve()
+    manifest = json.loads((source / "MANIFEST.json").read_text())
+    if manifest.get("schema_version") != 2:
+        raise ValueError("verification requires the hashed schema-2 HF manifest")
+    for name, expected in manifest["files"].items():
+        path = source / name
+        if (not path.resolve().is_relative_to(source) or not path.is_file()
+                or path.stat().st_size != expected["bytes"] or _sha256(path) != expected["sha256"]):
+            raise ValueError(f"HF snapshot integrity failure: {name}")
+    for pointer in source.rglob("resume.json"):
+        _validate_resume(pointer.parent)
+    _validate_archive(source)
+    print(f"SHA256、体积及续跑指针核验通过: {len(manifest['files'])} files")
+    return 0
 
 
 def _require_hf():
@@ -196,19 +324,36 @@ def cmd_ls(args) -> int:
 
 
 def cmd_push(args) -> int:
-    HfApi, _ = _require_hf()
-    api = HfApi(token=os.environ.get("HF_TOKEN"))
-    repo = _repo_id(args.repo)
     run_dir = (RESEARCH_DIR / args.run).resolve()
+    with _source_locks(run_dir):
+        return _cmd_push_locked(args, run_dir)
+
+
+def _cmd_push_locked(args, run_dir: Path) -> int:
+    api = None
+    if not args.dry_run:
+        HfApi, _ = _require_hf()
+        api = HfApi(token=os.environ.get("HF_TOKEN"))
+    repo = args.repo or os.environ.get("PVZ_HF_REPO")
+    if not repo and not args.dry_run:
+        repo = _repo_id(None)
     if not run_dir.is_dir():
         sys.exit(f"找不到 run 目录：{run_dir}")
 
     checkpoints, evidence, warnings = _collect(run_dir)
+    _validate_resume(run_dir)
+    if args.include_trained_window:
+        checkpoints = sorted(set(checkpoints) | set(sorted(
+            (run_dir / "runs/run_1").glob("update_*_trained_*.pt"))[-TRAINED_PROBE_WINDOW:]))
+    rollouts = sorted(run_dir.glob("runs/run_1/.seed_jobs/**/*.npz")) if args.include_rollouts else []
+    for path in args.log:
+        if not path.is_file():
+            raise FileNotFoundError(f"selected log missing: {path}")
     if not checkpoints and not evidence:
         sys.exit(f"{args.run} 里没有可同步的文件。")
 
     total = sum(p.stat().st_size for p in checkpoints)
-    print(f"上传 {args.run} → {repo}")
+    print(f"上传 {args.run} → {repo or '(未配置)'}")
     print(f"  检查点 {len(checkpoints)} 个（合计 {_human(total)}）：")
     for path in checkpoints:
         print(f"    {path.relative_to(run_dir)}  {_human(path.stat().st_size)}")
@@ -216,12 +361,11 @@ def cmd_push(args) -> int:
           f"{_human(sum(p.stat().st_size for p in evidence))}）")
     for warning in warnings:
         print(f"  {warning}")
+    print(f"  原始分片 {len(rollouts)} 个，外部日志 {len(args.log)} 个")
 
     if args.dry_run:
         print("\n空跑结束，未上传。")
         return 0
-
-    api.create_repo(repo_id=repo, repo_type="model", private=True, exist_ok=True)
 
     resume_target = _resume_target(run_dir)
     manifest = {
@@ -229,41 +373,26 @@ def cmd_push(args) -> int:
         "resume_checkpoint": resume_target,
         "checkpoints": sorted(str(p.relative_to(run_dir)) for p in checkpoints),
         "evidence_files": sorted(str(p.relative_to(run_dir)) for p in evidence),
+        "rollout_files": sorted(str(p.relative_to(run_dir)) for p in rollouts),
+        "trained_window_included": args.include_trained_window,
         "note": ("含全部 evaluated/initial/boundary/resumed 与最新一个 trained，"
                  "外加 resume.json 指向的检查点；历史 trained 中间快照按 2026-10-01 审计结论不保留。"),
     }
-    staging = run_dir / ".hf_staging"
-    if staging.exists():
+    stale_staging = run_dir / ".hf_staging"
+    if stale_staging.is_symlink():
+        raise ValueError("old HF staging directory is a symlink; source not modified")
+    if stale_staging.exists():
         # 上次崩在收尾会留下它。目录是脚本自己的临时产物，直接清掉重来，
         # 否则会卡在一个需要人工介入的状态里。
-        print(f"清理上次残留的暂存目录 {staging}")
-        shutil.rmtree(staging, ignore_errors=True)
-    staging.mkdir()
-    try:
-        for path in checkpoints:
-            target = staging / path.relative_to(run_dir)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.symlink_to(path)
-        for path in evidence:
-            target = staging / path.relative_to(run_dir)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.symlink_to(path)
-        (staging / "MANIFEST.json").write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-        api.upload_folder(
-            repo_id=repo,
-            repo_type="model",
-            folder_path=str(staging),
-            path_in_repo=args.run,
-            commit_message=f"sync {args.run}: 最新检查点 + 结论层",
-        )
-    finally:
-        # 暂存目录里既有指向源文件的符号链接，也有脚本自己写的 MANIFEST.json。
-        # 早期实现只解链接、再逐个 rmdir，会漏掉那个普通文件并抛 ENOTEMPTY
-        # （2026-10-01 在台式机上实测，上传本身成功、只有收尾崩了）。
-        # shutil.rmtree 对符号链接只删链接本身、不跟进目标，源文件安全。
-        shutil.rmtree(staging, ignore_errors=True)
+        print(f"清理上次残留的暂存目录 {stale_staging}")
+        shutil.rmtree(stale_staging)
+    files = {str(p.relative_to(run_dir)): p for p in checkpoints + evidence + rollouts}
+    for path in args.log:
+        name = f"logs/{path.name}"
+        if name in files:
+            raise ValueError("duplicate external log name")
+        files[name] = path.resolve()
+    _upload_snapshot(api, repo, run_dir, args.run, files, manifest)
 
     print(f"\n完成。下载：python3 scripts/hf_sync.py pull {args.run}")
     return 0
@@ -307,7 +436,20 @@ def main() -> int:
     push = sub.add_parser("push", help="上传一个 run 的最新检查点与结论层")
     push.add_argument("run")
     push.add_argument("--dry-run", action="store_true", help="只显示会上传什么")
+    push.add_argument("--include-rollouts", action="store_true", help="额外上传原始NPZ分片及失败分片")
+    push.add_argument("--include-trained-window", action="store_true", help="额外上传最后8个trained，供末段诊断")
+    push.add_argument("--log", type=Path, action="append", default=[], help="额外上传指定日志，可重复")
     push.set_defaults(func=cmd_push)
+
+    evidence = sub.add_parser("push-evidence", help="上传整棵已有归档或中断试验现场，核验引用链")
+    evidence.add_argument("source", type=Path)
+    evidence.add_argument("--name", required=True, help="HF仓库内的证据目录名")
+    evidence.add_argument("--dry-run", action="store_true")
+    evidence.set_defaults(func=cmd_push_evidence)
+
+    verify = sub.add_parser("verify", help="离线核验下载的schema-2 HF快照及续跑指针")
+    verify.add_argument("source", type=Path)
+    verify.set_defaults(func=cmd_verify)
 
     pull = sub.add_parser("pull", help="下载一个 run")
     pull.add_argument("run")
@@ -319,7 +461,8 @@ def main() -> int:
     pull_all.set_defaults(func=cmd_pull_all)
 
     args = parser.parse_args()
-    if not os.environ.get("HF_TOKEN") and args.command != "ls":
+    if (not os.environ.get("HF_TOKEN") and args.command in ("push", "push-evidence", "pull", "pull-all")
+            and not getattr(args, "dry_run", False)):
         print("提示：未设置 HF_TOKEN，将依赖已登录的凭据。", file=sys.stderr)
     return args.func(args)
 
