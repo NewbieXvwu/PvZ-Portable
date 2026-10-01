@@ -1,0 +1,41 @@
+{
+  "status": "preregistered_not_started",
+  "scope": "Same full256 actual interruption proof, fresh output after v1 stopped before GPU arms; wait for full60 source-correct v2 reevaluation",
+  "protocol_path": "experiments/t5/learning_reference256_interrupt_v2.json",
+  "protocol_sha256": "8d58d2a9e9c91da81e35cd407b44e7928d18cb5e347ab1f69d4f574f5bf83aac",
+  "candidate_source_commit": "3ffba3a7c0312c8d6f9b64cd7bab90d3d3621142",
+  "configs_unchanged": true,
+  "required_source_and_evidence_fingerprints": 27,
+  "idle_states": {
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_comparison_v2_storage1_queue_state.json": "matrix_budget_complete",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_packet_cost_reevaluation_v2/state.json": "complete"
+  },
+  "workers_started": false,
+  "gpu_arms_started": false,
+  "old_reference_stop_preserved": true,
+  "model": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "resource_preconditions": {
+    "minimum_free_vram_mib": 14000,
+    "minimum_available_ram_bytes": 12884901888
+  },
+  "timeouts": {
+    "invocation_seconds": 600,
+    "total_seconds": 1800,
+    "waiting_excluded": true
+  },
+  "budget": {
+    "decisions": 5000,
+    "max_episodes": 80
+  },
+  "engineering_only_not_learning": true
+}
