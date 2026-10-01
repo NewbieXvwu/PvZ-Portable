@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "status": "preflight_pass",
+  "actual_native_episodes": 0,
+  "formal_learning_started": false,
+  "tests_passed": 8,
+  "test_log": "logs/t5_research/multicap_pool_audit_preflight_v3.log",
+  "protocol_preflight_log": "logs/t5_research/multicap_pool_audit_protocol_preflight_v2.log",
+  "manifest_tasks": 30,
+  "original_tasks_unchanged": 20,
+  "new_tasks": 10,
+  "seeds_per_task": 64,
+  "new_seed_range": [
+    130000,
+    130639
+  ],
+  "coverage_groups": 15,
+  "tasks_per_group": 2,
+  "inspection_episodes": 120,
+  "full_draft_episodes": 3840,
+  "source_fingerprints": {
+    "scripts/research_multicap_pool_audit.py": "35b44782ffb57fb1bcceff76ebd77d1b723f8d79737ae2f5a2ad4148a1288e19",
+    "python/test_multicap_pool_audit.py": "d38301bc4285124be89bb3fea251bad77909b422105a07e3c3edb865f8f31091",
+    "experiments/t5/multicap_course_v1/train.json": "15aa6e7c9ca54f9880999401d931d003f77a7e0a71d98488bd87a833d1fc3325",
+    "experiments/t5/multicap_course_v1/inspection.json": "4f8f37a9af40788731743e24eb0d93feba85ede6a1939de4403dcd7ea14730cb",
+    "experiments/t5/multicap_course_v1/full_draft.json": "896a2ba459fe73e1cf306fc982006d3420fd0f8914b0a576bc369743f73378ac"
+  },
+  "mechanics_only": {
+    "balanced_probability": 0.03333333333333333,
+    "positive_progress_example_probability_min": 0.008333333333333333,
+    "positive_progress_example_probability_max": 0.058333333333333334,
+    "group_mass": 0.06666666666666667,
+    "serialized_state_weights_exact": true,
+    "learned_progress": false
+  },
+  "preflight_correction": "Initial disjoint check also rejected deliberately overlapping original training_probe rows; corrected before preregistration, requiring exact original task identity and still rejecting any validation/heldout overlap. No native episodes were started under that preflight.",
+  "delivery": {
+    "git": "code/protocol/KB/docs",
+    "hf": "raw observations/jobs/logs; no upload yet"
+  },
+  "limitations": [
+    "No learned course benefit/B/architecture acceptance",
+    "Original full reward and heldout manifests preserved",
+    "Native opening checks still pending; dynamic prefix equivalence of this new pool not yet certified",
+    "Target activation must be measured; zero activation cannot support flags3/7 learning ablation"
+  ]
+}
