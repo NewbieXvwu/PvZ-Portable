@@ -1,0 +1,149 @@
+{
+  "scope": "all10 closed reward-v2 run diagnostic supplemental delivery, no filtered episodes, no checkpoints included",
+  "source_commit": "05cf13c85ebc531884b1c0a00b33e353bfff56da",
+  "local_directory": "artifacts/research/reward_v2_diagnostic_delivery_10runs_v1",
+  "report_sha256": "255e805940a5e68f92fd1b4374c6513ac9feb98bfc1c37ea242d233184407610",
+  "files": 95,
+  "bytes": 28599044,
+  "uploaded": false,
+  "runs": [
+    {
+      "run": "reward_r0_seed0_v2",
+      "state_sha256": "84bdead5e9b5d9f87818270b707b5935bb61e23b1d182a55f0f70f874c192ffa",
+      "counters": {
+        "episodes": 11151,
+        "decisions": 500004,
+        "ticks": 80170116
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [
+        "artifacts/research/reward_r0_seed0_v2/runs/run_1/update_000067_trained_1790818740962140970.pt",
+        "artifacts/research/reward_r0_seed0_v2/runs/run_1/update_000068_trained_1790818750449643810.pt",
+        "artifacts/research/reward_r0_seed0_v2/runs/run_1/update_000069_trained_1790818759006133737.pt",
+        "artifacts/research/reward_r0_seed0_v2/runs/run_1/update_000070_trained_1790818766236422948.pt",
+        "artifacts/research/reward_r0_seed0_v2/runs/run_1/update_000071_trained_1790818772100183413.pt",
+        "artifacts/research/reward_r0_seed0_v2/runs/run_1/update_000072_trained_1790818777124304064.pt"
+      ],
+      "late_probe_included": true
+    },
+    {
+      "run": "reward_r1_seed0_v2",
+      "state_sha256": "b1702f9c0927f7d5a4f3b238ff69472946f02f38b42406cf15bace4ef38890ad",
+      "counters": {
+        "episodes": 10034,
+        "decisions": 500039,
+        "ticks": 69232084
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [
+        "artifacts/research/reward_r1_seed0_v2/runs/run_1/update_000055_trained_1790822010768816529.pt",
+        "artifacts/research/reward_r1_seed0_v2/runs/run_1/update_000056_trained_1790822028999971590.pt",
+        "artifacts/research/reward_r1_seed0_v2/runs/run_1/update_000057_trained_1790822048359632540.pt",
+        "artifacts/research/reward_r1_seed0_v2/runs/run_1/update_000058_trained_1790822060613728787.pt",
+        "artifacts/research/reward_r1_seed0_v2/runs/run_1/update_000059_trained_1790822067987786782.pt",
+        "artifacts/research/reward_r1_seed0_v2/runs/run_1/update_000060_trained_1790822073162574239.pt"
+      ],
+      "late_probe_included": true
+    },
+    {
+      "run": "reward_r2_seed0_v2",
+      "state_sha256": "65c3c860fe9c6483ccfcc375d6710e17f45e3fddd075675f9cadbe5fb55c7a99",
+      "counters": {
+        "episodes": 6272,
+        "decisions": 500085,
+        "ticks": 51311863
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": false
+    },
+    {
+      "run": "reward_r3_seed0_v2",
+      "state_sha256": "2e92fa9c3f8040a3499d980b84ecaac17738c9a62b5f148056dd0448d80d2ee6",
+      "counters": {
+        "episodes": 8613,
+        "decisions": 500036,
+        "ticks": 67722272
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": false
+    },
+    {
+      "run": "reward_r0_seed1_v2",
+      "state_sha256": "ac535914502f09ded587926c88b83c94bddc451ead135b8df8b63c89391b9fe4",
+      "counters": {
+        "episodes": 8546,
+        "decisions": 500013,
+        "ticks": 66917059
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": true
+    },
+    {
+      "run": "reward_r1_seed1_v2",
+      "state_sha256": "084d457729fc630ce829ddac89caa9ab1f7272d4efff0cb30f27c28cd83b1919",
+      "counters": {
+        "episodes": 9719,
+        "decisions": 500029,
+        "ticks": 74053486
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": true
+    },
+    {
+      "run": "reward_r2_seed1_v2",
+      "state_sha256": "1a01b4c7fd95e48866b279c6ad6f99f6157580f781b6bd7de8aebed52bb88053",
+      "counters": {
+        "episodes": 8656,
+        "decisions": 500011,
+        "ticks": 67346371
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": true
+    },
+    {
+      "run": "reward_r3_seed1_v2",
+      "state_sha256": "b0b8e7cc99680c37396fb15e65be70b18c93a4fdb28961215cba5559c85b9075",
+      "counters": {
+        "episodes": 8080,
+        "decisions": 500014,
+        "ticks": 64288520
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": true
+    },
+    {
+      "run": "reward_r0_seed2_v2",
+      "state_sha256": "873cdf332baafbf8b6aba6160dd4daa1cd5523e63e0b1300edd46aa52a299571",
+      "counters": {
+        "episodes": 9121,
+        "decisions": 500016,
+        "ticks": 72433360
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": true
+    },
+    {
+      "run": "reward_r1_seed2_v2",
+      "state_sha256": "d82c4329e3c8c1f6878a1f36ee5699217961f5a710f1af2ab768451122610ba8",
+      "counters": {
+        "episodes": 8641,
+        "decisions": 500024,
+        "ticks": 69321563
+      },
+      "raw_diagnostics_included": true,
+      "missing_original_checkpoints": [],
+      "late_probe_included": true
+    }
+  ],
+  "limitations": [
+    "R2/R3 init2 not closed at bundle creation; later version must include them",
+    "Earlier external pruning removed intermediate trained snapshots for init0; missing referenced paths retained explicitly, not reconstructed"
+  ]
+}
