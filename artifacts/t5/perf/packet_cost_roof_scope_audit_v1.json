@@ -1,0 +1,148 @@
+{
+  "scope": "source and actual trace evidence correct native conveyor classification, not failed gate override",
+  "status": "diagnosed_native_scope_omission",
+  "affected_levels": [
+    10,
+    20,
+    30,
+    40,
+    45
+  ],
+  "affected_task_ids": [
+    "heldout_day_4",
+    "heldout_night_4",
+    "heldout_pool_4",
+    "heldout_fog_4",
+    "heldout_roof_1",
+    "validation_v1_roof_cap1_x1",
+    "validation_v1_roof_cap5_x1"
+  ],
+  "additional_level45_tasks": [
+    "heldout_roof_1",
+    "validation_v1_roof_cap1_x1",
+    "validation_v1_roof_cap5_x1"
+  ],
+  "mixed_validation_cohorts_provisional": [
+    "cap1",
+    "cap3",
+    "cap5"
+  ],
+  "native_sources": {
+    "src/LawnApp.cpp": "835225af3e5d2a7f754974cc67f67c5b44ea367dc407dd6fdf98e534c8b9589e",
+    "src/Lawn/Board.cpp": "e9980717b3411bc748df0543d5f3be0008688ef538b3537b33b978f468d09564",
+    "src/Lawn/SeedPacket.cpp": "f14dcacbb6476a0dd8ff66b859aa30c83a2cd718c9e358021d6c16b0814ee2a5",
+    "src/Lawn/Plant.cpp": "79e814604e0c8e7eb686fcd8e3c64bbaa07c4d25b9de1e2c7de7acdcfa7924c9"
+  },
+  "actual_trace_path": "artifacts/t5/perf/reward_v2_roof_anomaly_trace_v1.json",
+  "actual_trace_sha256": "45c32968df3d36e78606f6d7a08ebf92fdab07a14875012d7ca3ccf4c0e1dab2",
+  "trace_seconds": 57.714376461997745,
+  "model_sha256": "65f06d9eb5bde61e4d7d3465e56c904a2682717c0b27b9adbc415c4de3b144fa",
+  "guarded32_all_observation_output_action_rng_exact": true,
+  "first_observation_difference": {
+    "decision": 2,
+    "tick": 300,
+    "field": "packets[5].cost",
+    "type": -1,
+    "original": 1120486208,
+    "guarded": 0
+  },
+  "first_action_difference": {
+    "decision": 24,
+    "tick": 3600,
+    "original": {
+      "type": "plant",
+      "packet": 1,
+      "col": 2,
+      "row": 0
+    },
+    "guarded": {
+      "type": "plant",
+      "packet": 1,
+      "col": 2,
+      "row": 4
+    }
+  },
+  "original64_config_outcomes": {
+    "original_fusion1_workers1": [
+      {
+        "won": true,
+        "actions": 27,
+        "tick": 3671,
+        "count": 8
+      }
+    ],
+    "original_fusion1_workers8": [
+      {
+        "won": false,
+        "actions": 46,
+        "tick": 7109,
+        "count": 3
+      },
+      {
+        "won": true,
+        "actions": 27,
+        "tick": 3671,
+        "count": 5
+      }
+    ],
+    "original_fusion0_workers1": [
+      {
+        "won": false,
+        "actions": 46,
+        "tick": 7109,
+        "count": 8
+      }
+    ],
+    "original_fusion0_workers8": [
+      {
+        "won": true,
+        "actions": 27,
+        "tick": 3671,
+        "count": 5
+      },
+      {
+        "won": false,
+        "actions": 46,
+        "tick": 7109,
+        "count": 3
+      }
+    ],
+    "guarded_fusion1_workers1": [
+      {
+        "won": false,
+        "actions": 46,
+        "tick": 7109,
+        "count": 8
+      }
+    ],
+    "guarded_fusion1_workers8": [
+      {
+        "won": false,
+        "actions": 46,
+        "tick": 7109,
+        "count": 8
+      }
+    ],
+    "guarded_fusion0_workers1": [
+      {
+        "won": false,
+        "actions": 46,
+        "tick": 7109,
+        "count": 8
+      }
+    ],
+    "guarded_fusion0_workers8": [
+      {
+        "won": false,
+        "actions": 46,
+        "tick": 7109,
+        "count": 8
+      }
+    ]
+  },
+  "native_supplements_pending": true,
+  "old_reevaluation_status": "failed",
+  "all_original_state_hashes_unchanged": true,
+  "old_training_tasks_unchanged": true,
+  "no_learning_acceptance": true
+}
