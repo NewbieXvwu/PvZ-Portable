@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "result": "local_reference_chain_pass",
+  "scope": "HF dry-run only; no actual upload",
+  "incident": "artifacts/research/reward_r3_seed1_cuda_incident_v1",
+  "files": 14,
+  "checkpoint_included": "runs/run_1/update_000021_evaluated_1790845607902979997.pt",
+  "checkpoint_sha256": "17bc9468e419e19163d1fcf806f822dd5052fe49cf0d92f03aae1a03409e8149",
+  "method": "Local hardlink of immutable checkpoint; original incident report/hash unchanged, no deletion or git binary staging",
+  "original_report_sha256": "04f5c1530ff20032db9e8cf044fb2c506af866a42d15a68f18be46e554ab3540",
+  "log": "logs/t5_research/reward_r3_seed1_cuda_incident_hf_dryrun_v1.log",
+  "log_sha256": "07ee5a12725a64b67fcb20bf0954753c887293fd39b49bdfab4dc6b7f553598c",
+  "historical_rollouts": "All old/new shards remain in closed original reward_r3_seed1_v2; require separate include-rollouts upload",
+  "delivery_pending": "HF repo/auth not configured; do not count as uploaded"
+}
