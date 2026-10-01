@@ -1,0 +1,134 @@
+{
+  "schema_version": 2,
+  "source_directory": "artifacts/research_evidence/reward_r0_seed0_v2/node125k",
+  "experiment_id": "reward_r0_seed0_v2",
+  "counters": {
+    "episodes": 1849,
+    "decisions": 125019,
+    "ticks": 15166485
+  },
+  "status": "running",
+  "phase": "ready",
+  "archived_at_unix_ns": 1790817505470289104,
+  "state_sha256": "b4930008ee162e25ef79624cd2e3daeae7cd0a2c82e05f66f8eff4b0767b4124",
+  "files": {
+    "evaluations/update_000000.json.gz": {
+      "sha256": "09730b7fc24dbbf200294876dd91d522ce34dc2d2a333a68dbc5e682e3c33ec3",
+      "bytes": 83285
+    },
+    "evaluations/update_000011.json.gz": {
+      "sha256": "8f6ac2ed2f14728b3ab0a0735984e5611e857a739ba66dc4ad64afa21026f2fb",
+      "bytes": 104275
+    },
+    "experiment_config.json": {
+      "sha256": "b9ab33f1e44fd4767373bcb91cc21b0cedd5719236b9011e639b57998714b3fa",
+      "bytes": 1596
+    },
+    "learning_curve.json": {
+      "sha256": "63c73566628cf664b376ef91b612ccc91eaf0dee1f9c6f95b77b45cda642440e",
+      "bytes": 223604
+    },
+    "logs/reward_comparison_v2_env.txt": {
+      "sha256": "31ea0688b1436733ca3aa9a8c758aca5e2e78f8b7e2d7210dcf54908f6f26f7d",
+      "bytes": 462
+    },
+    "provenance.json": {
+      "sha256": "f2476c5ea25f682b0ccaea59b917602c76168f7fe005c3acfcc5236dbc01dd33",
+      "bytes": 1854
+    },
+    "resume.json": {
+      "sha256": "d6354ce15058067bf8a276543b352acdab36db8393c423def2def02c8fa97e6b",
+      "bytes": 160
+    },
+    "runs/run_1/update_000000_evaluated_1790816162279200928.pt.gitparts/manifest.json": {
+      "sha256": "f5804cc3758b16c5a36781f822bf0107e7661170ea2ad017a22419de1aa36023",
+      "bytes": 1072
+    },
+    "runs/run_1/update_000000_evaluated_1790816162279200928.pt.gitparts/part_000000.bin": {
+      "sha256": "4c411feb1046dfeb492d6966120ad36494b2113507a5e954135b106ad5cd5a32",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000000_evaluated_1790816162279200928.pt.gitparts/part_000001.bin": {
+      "sha256": "9346d670d1c92d47d781124e7e8936651144b1ad6fa7ffcf630ca423495ca355",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000000_evaluated_1790816162279200928.pt.gitparts/part_000002.bin": {
+      "sha256": "db0c2070f1fc8516cdcce3f3d45795bb5a974a7d8960263f4c9e87b5161ae7b0",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000000_evaluated_1790816162279200928.pt.gitparts/part_000003.bin": {
+      "sha256": "6e9bbed382bf49a649bb507d7d5f77d5ffdc40e3fe2bfed256e9778508a6b05f",
+      "bytes": 2243259
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/manifest.json": {
+      "sha256": "97d149ba08a0a57a9ad3d9f386016f9709da4f3557247982afe4f87d247b1f11",
+      "bytes": 2143
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000000.bin": {
+      "sha256": "379dbabafd03f2774d1558855106cedf5fdc46d91524721fce2e095a29521e37",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000001.bin": {
+      "sha256": "f01a39e2f442d2588412c593e5839e615c1e9b28803edfc79845ad903bd92aa7",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000002.bin": {
+      "sha256": "356fa487c50c0b9c0381308b15e7cc3839e7e30d1913f382f03a66ba9b7fefc3",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000003.bin": {
+      "sha256": "96bc628c8166fe70ee876a59853b47a7426dbdc810d02e5f95cfc34d9db09690",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000004.bin": {
+      "sha256": "19b32aae293267c4dea1f8960c5134f753d0e5d9080ca62f9da1a754ff3c4fb3",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000005.bin": {
+      "sha256": "2b63378810bdedb769a1e38ed0c274ddac481d2347d78b499235365d5ba64771",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000006.bin": {
+      "sha256": "acdf9563f4201986c120ee300358c3516bf6cd0cb53cf819917cd0878e55b9f4",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000007.bin": {
+      "sha256": "a72459fb88909e764b7a2f595466986785fcc6503a0a008cfd68946f9f22c06c",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000008.bin": {
+      "sha256": "9b529cff11af94a0e6547c9455c87812a0d3f4a681090fd61fcaf45bc344918a",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000009.bin": {
+      "sha256": "5ffe32d604de4f959bfa165fb8f0bf40f6e154325a706b852546cb8b496efc52",
+      "bytes": 4194304
+    },
+    "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts/part_000010.bin": {
+      "sha256": "768243b9011a8cfe0584674d44e7a10bff5ced196cc9721ad78a48912c7a150e",
+      "bytes": 2559019
+    },
+    "training_state.json": {
+      "sha256": "b4930008ee162e25ef79624cd2e3daeae7cd0a2c82e05f66f8eff4b0767b4124",
+      "bytes": 343706
+    }
+  },
+  "checkpoint_scope": "all evaluated nodes plus latest complete update; full optimizer/RNG state",
+  "rollout_shards": "all original shards retained in source directory; this export does not erase them",
+  "log_scope": "log byte snapshots copied during export; a live source log may continue",
+  "large_file_bundles": [
+    {
+      "original_path": "runs/run_1/update_000000_evaluated_1790816162279200928.pt",
+      "bundle_path": "runs/run_1/update_000000_evaluated_1790816162279200928.pt.gitparts",
+      "bytes": 14826171,
+      "sha256": "b70babf874848f4c12d15d2ac68a9ef0911271387808a760c196158d82a17998"
+    },
+    {
+      "original_path": "runs/run_1/update_000011_evaluated_1790816867278872855.pt",
+      "bundle_path": "runs/run_1/update_000011_evaluated_1790816867278872855.pt.gitparts",
+      "bytes": 44502059,
+      "sha256": "68c0f71b57bd569b987465643b971604d766048241f739e0036545a89fa249ac"
+    }
+  ],
+  "resume": "first run research_checkpoint_chunks.py restore-archive into a fresh directory, then resume with original config/fingerprints"
+}

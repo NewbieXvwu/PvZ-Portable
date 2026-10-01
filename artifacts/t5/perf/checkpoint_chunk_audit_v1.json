@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "actual_checkpoint_roundtrips": [
+    {
+      "path": "runs/run_1/update_000000_evaluated_1790816162279200928.pt",
+      "bytes": 14826171,
+      "sha256": "b70babf874848f4c12d15d2ac68a9ef0911271387808a760c196158d82a17998",
+      "repeat_restore": "existing_verified"
+    },
+    {
+      "path": "runs/run_1/update_000011_evaluated_1790816867278872855.pt",
+      "bytes": 44502059,
+      "sha256": "68c0f71b57bd569b987465643b971604d766048241f739e0036545a89fa249ac",
+      "repeat_restore": "existing_verified"
+    }
+  ],
+  "large_byte_fixture": {
+    "bytes": 101000123,
+    "sha256": "b88d46aee1bbc6bcc3255eb79f99add29759849b63f7477a3434af3b04e2d1a9",
+    "part_count": 2,
+    "scope": "synthetic opaque bytes above 100MB; not a trained model"
+  },
+  "negative_cases": [
+    {
+      "case": "wrong_hash",
+      "exception": "ValueError",
+      "message": "part hash/size mismatch: artifacts/research/checkpoint_chunk_audit_v1/wrong_hash/part_000000.bin; partial retained at artifacts/research/checkpoint_chunk_audit_v1/wrong_hash.pt.partial_1790817706923878979",
+      "partial_retained": "artifacts/research/checkpoint_chunk_audit_v1/wrong_hash.pt.partial_1790817706923878979",
+      "partial_bytes": 0
+    },
+    {
+      "case": "missing_part",
+      "exception": "FileNotFoundError",
+      "message": "[Errno 2] No such file or directory: 'artifacts/research/checkpoint_chunk_audit_v1/missing_part/part_000000.bin'",
+      "partial_retained": "artifacts/research/checkpoint_chunk_audit_v1/missing_part.pt.partial_1790817706927714418",
+      "partial_bytes": 0
+    },
+    {
+      "case": "reordered_parts",
+      "exception": "ValueError",
+      "message": "unexpected/missing/reordered part 0; partial retained at artifacts/research/checkpoint_chunk_audit_v1/reordered_parts.pt.partial_1790817706928065545",
+      "partial_retained": "artifacts/research/checkpoint_chunk_audit_v1/reordered_parts.pt.partial_1790817706928065545",
+      "partial_bytes": 0
+    },
+    {
+      "case": "existing_mismatch",
+      "exception": "ValueError",
+      "message": "destination exists with different bytes; refusing to overwrite",
+      "existing_retained": true
+    }
+  ],
+  "original_unchanged": true,
+  "wall_seconds": 0.7186226929998156,
+  "cost_scope": "bounded CPU/disk diagnostic concurrent with reward matrix; no GPU computation",
+  "source_archive": "artifacts/research/checkpoint_chunk_export_v1",
+  "restored_archive": "artifacts/research/checkpoint_chunk_restored_v1",
+  "first_attempt": "import-path error before any fixture creation; original failure log retained"
+}

@@ -1,0 +1,11 @@
+{
+  "scope": "verification metadata only; this directory is not a resumable training archive",
+  "source_checkpoint_archive": "artifacts/research_evidence/reward_r0_seed0_v2/node125k",
+  "export_arguments": {
+    "part_bytes": 4194304,
+    "single_file_limit_bytes": 10000000
+  },
+  "export_manifest_sha256": "521c348eada5df8718d6f18d68b0c18e08283caabad9eafcce0c250b32c5dae9",
+  "actual_recovery_state": "whole checkpoint bytes were restored exactly; inputs, restored copies and failure fixtures remain in local artifacts/research",
+  "large_fixture": "101000123 deterministic opaque bytes; not a trained model"
+}
