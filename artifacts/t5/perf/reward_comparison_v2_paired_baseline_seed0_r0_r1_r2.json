@@ -1,0 +1,19 @@
+{
+  "scope": "three reward arms, one initialization; not three independent initialization seeds",
+  "all_4480_raw_baseline_rows_equal": true,
+  "initial_state_sha256": "0de883f98d3122b563ec1413ac52af7be304b03edc81686bcc5f3dff7b08ce0f",
+  "arms": [
+    {
+      "reward": "r0",
+      "initial_raw_sha256": "09730b7fc24dbbf200294876dd91d522ce34dc2d2a333a68dbc5e682e3c33ec3"
+    },
+    {
+      "reward": "r1",
+      "initial_raw_sha256": "d5ad3ecf1610609df1641f4bd0a404cebb1cbcbbafd3a91a746677ac539bb18c"
+    },
+    {
+      "reward": "r2",
+      "initial_raw_sha256": "e46f0296285ef83ae249720c3bdc1e06bd4a984d0dc87c257cdd2e483b3776d8"
+    }
+  ]
+}

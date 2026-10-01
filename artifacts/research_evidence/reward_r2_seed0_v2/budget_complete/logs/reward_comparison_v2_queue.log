@@ -1,0 +1,8 @@
+running 1/12 reward_r0_seed0_v2 pid=1197
+heartbeat elapsed=1800.0s counters={'episodes': 4189, 'decisions': 250061, 'ticks': 34025510} policy_loss=-0.0027778964310600784 value_loss=0.00911676324903965
+running 2/12 reward_r1_seed0_v2 pid=28106
+heartbeat elapsed=1800.0s counters={'episodes': 3970, 'decisions': 250015, 'ticks': 32488266} policy_loss=-0.0031516377853364475 value_loss=0.6942174732685089
+running 3/12 reward_r2_seed0_v2 pid=52889
+heartbeat elapsed=1800.0s counters={'episodes': 3263, 'decisions': 250990, 'ticks': 26711540} policy_loss=-0.0037830233735197303 value_loss=5.885412588213512e-05
+heartbeat elapsed=3600.1s counters={'episodes': 6272, 'decisions': 500085, 'ticks': 51311863} policy_loss=-0.0015938295982778072 value_loss=0.0010527423485958327
+running 4/12 reward_r3_seed0_v2 pid=70552

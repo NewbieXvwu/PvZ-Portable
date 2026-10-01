@@ -1,0 +1,36 @@
+From 325e08fa548724ad72954abb92457b563b55ae9d Mon Sep 17 00:00:00 2001
+From: NewbieXvwu <newbiexvwu@gmail.com>
+Date: Thu, 1 Oct 2026 12:46:21 +0800
+Subject: [PATCH] =?UTF-8?q?=E6=98=8E=E7=A1=AE=E5=B0=8F=E6=A8=A1=E5=9E=8B?=
+ =?UTF-8?q?=E6=81=A2=E5=A4=8D=E9=80=9A=E8=BF=87=E8=8C=83=E5=9B=B4=E5=8F=8A?=
+ =?UTF-8?q?=E5=8E=9F=E5=A4=B1=E8=B4=A5=E4=BF=9D=E7=95=99=EF=BC=8C=E5=8F=82?=
+ =?UTF-8?q?=E8=80=83=E4=B8=8E=E8=AF=BE=E7=A8=8B=E5=B0=9A=E5=BE=85=E9=AA=8C?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ OBSERVATION_CANDIDATE.md | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/OBSERVATION_CANDIDATE.md b/OBSERVATION_CANDIDATE.md
+index f6dd608..d1f5025 100644
+--- a/OBSERVATION_CANDIDATE.md
++++ b/OBSERVATION_CANDIDATE.md
+@@ -76,7 +76,12 @@ clip_fraction=0且参数不变，耗时9.43秒。cpu_report.json与cuda_report.j
+ 
+ ## 正式训练仍待完成
+ 
+-实际中断恢复、新源/二进制工程门禁尚须确认。之后才能冻结并启动
++实际中断恢复v1严格比较失败，完整现场保留；定位到中断前首个CUDA更新即有数值分离。
++同数据关闭/开启确定性算法的诊断支持运行条件这一机制。c250b0b已显式冻结该开关和
++CUBLAS workspace；新v2在32宽两层小模型上实际SIGKILL、分片复用及全部参数/AdamW/
++RNG/计数/loss/逐局评估严格通过，269.50秒。原v1失败不会改判。
++通过门禁为gates/T5-observation-small-resume-v2.json；它只涵盖小模型恢复机制。
++参考架构实际恢复/成本、新课程状态实际恢复和正式学习门禁继续待补，之后才能冻结并启动
+ 三初始化的0/1/3/7输入消融，与原表征在相同任务/奖励/预算/评估节点比较。预算B尚未确定，
+ 此时不填写虚假的最终训练预算。容量与计算成本另测，不能将合成输出变化或单元测试算作学习。
+ 当前矩阵完成前不合并本分支，也不替换正在运行的检查点结构。
+-- 
+2.53.0
+

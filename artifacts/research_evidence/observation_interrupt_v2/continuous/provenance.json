@@ -1,0 +1,39 @@
+{
+  "commit": "c250b0b0eaa5135d2c5507fcf64d1cf315ed71cc",
+  "worktree_dirty": false,
+  "fingerprints": {
+    "python/pvz_agent_model.py": "35f87fc4386b62134ad8fb16e4756735cd22fc4727b321c6f34ea155340e4985",
+    "python/pvz_research.py": "d4de2310671f480d3f4d8d34601103736c392f818706f9b5cfd168bfd3b129be",
+    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
+    "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
+    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "python/pvz_observation_features.py": "5b99ef9cb10320417446436ef04826fc5eae16a32d02c20ec06562747c3da9bf",
+    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
+    "simulator": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
+    "main.pak": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+    "properties/partner.xml": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3",
+    "train_manifest": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
+    "evaluation_manifest": "0073fafeefc5f0b196e9aafd2fd57f1ee0cf10aa28697488f01ce51629e2503c"
+  },
+  "model_config": {
+    "layers": 2,
+    "width": 32,
+    "heads": 4,
+    "ff_width": 64,
+    "gru_layers": 2,
+    "gru_width": 16,
+    "critic_width": 24,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "parameter_count": 74857,
+  "torch": "2.14.0+cu132",
+  "cuda": "13.2",
+  "gpu": "NVIDIA GeForce RTX 5080",
+  "experiment_identity": "a17563bc346da9a1711ad2009139560668c0219386f97fd4a451a9ea3f37db84",
+  "deterministic_algorithms": true,
+  "cublas_workspace_config": ":4096:8"
+}

@@ -1,0 +1,43 @@
+{
+  "exit_code": -9,
+  "last_complete_updates": 1,
+  "counters": {
+    "episodes": 20,
+    "decisions": 1452,
+    "ticks": 165313
+  },
+  "resume_pointer": {
+    "checkpoint": "runs/run_1/update_000001_trained_1790826881445957922.pt",
+    "sha256": "504602cad8feb596e19ebfc201ea133681dafe132ff144b6977faa4d87c6da7b"
+  },
+  "completed_partial_shards": [
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/b315dc05c2188ba87b2bd6b78be64ab39e89f59a1997e7cfcbb6a4baadcfe4ac/seed_20.npz",
+      "sha256": "535e357cc417eaebac4aa2210c861e46975cb7207c61f863591a9b3173b92099",
+      "mtime_ns": 1790826886705284526
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/b315dc05c2188ba87b2bd6b78be64ab39e89f59a1997e7cfcbb6a4baadcfe4ac/seed_21.npz",
+      "sha256": "90d626deb71131dfb79022a44bc7490457cd1d3a8bd03ab87e5d8b8f7c82641f",
+      "mtime_ns": 1790826886753284521
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/b315dc05c2188ba87b2bd6b78be64ab39e89f59a1997e7cfcbb6a4baadcfe4ac/seed_22.npz",
+      "sha256": "8b08a6ccc26079ea75b579ef7b3b9435edba2ad284e06aaaff0ad0584a8c18c6",
+      "mtime_ns": 1790826887129284486
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/b315dc05c2188ba87b2bd6b78be64ab39e89f59a1997e7cfcbb6a4baadcfe4ac/seed_23.npz",
+      "sha256": "4c469fa16c626156767c04bbe36cbef849a6694f6a01392c07b74b09003b2ed0",
+      "mtime_ns": 1790826887077284491
+    }
+  ],
+  "optimizer_states": 86,
+  "rng_components": [
+    "assignments",
+    "numpy",
+    "python",
+    "torch_cpu",
+    "torch_cuda"
+  ]
+}
