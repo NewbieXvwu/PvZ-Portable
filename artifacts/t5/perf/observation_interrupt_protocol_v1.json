@@ -1,0 +1,7 @@
+{
+  "source_commit": "38ac0e1",
+  "scope": "preregistered engineering-only small-model real SIGKILL/full-resume comparison",
+  "patch_sha256": "42e3a81c932cd5f979c6cc4f1f6c49d99f366eb2614b172ce3483a9bb72da8b0",
+  "formal_matrix_unchanged": true,
+  "started": false
+}
