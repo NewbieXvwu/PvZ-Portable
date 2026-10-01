@@ -1,0 +1,635 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "scope": "engineering_inspection_only_no_learning",
+  "protocol_path": "experiments/t5/full_observation_profile_v1/inspection_v2.json",
+  "protocol_sha256": "173b963dbc42478e25e460afd22852fc70a5dc04834b658f8298c1e1c405c20c",
+  "source_commit": "1ecf95fe470b6708fd30679487f02fc2ece70417",
+  "report_path": "artifacts/research/full_observation_profile_inspection_v2/report.json",
+  "report_sha256": "845bc5f3e9d9ce549de793bf9f284fd2562ed02c027d378af030ea21b44354da",
+  "records_sha256": "81b7c94005b62672024bb41dbf1b4a4499e4563c6a4628787c06c25f1e6efb16",
+  "verified_episode_files": 20,
+  "verified_observation_rows": 1995,
+  "episodes_reaching_late_waves": 1,
+  "seconds": 20.853647374999127,
+  "resources": {
+    "peak_process_tree_rss_bytes": 2773192704,
+    "min_system_available_bytes": 11208568832,
+    "peak_system_swap_used_bytes": 287866880
+  },
+  "summaries": {
+    "full_profile_day7_fortified/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 278,
+        "min": 95,
+        "median": 120.5,
+        "p95": 135.14999999999998,
+        "max": 145,
+        "dense_token_pairs": 4028067
+      },
+      "late_tokens": {
+        "count": 39,
+        "min": 115,
+        "median": 123.0,
+        "p95": 131.0,
+        "max": 132,
+        "dense_token_pairs": 595844
+      },
+      "episodes_reaching_late_waves": 1,
+      "packed_array_bytes_total": 2468045,
+      "public_observation_json_bytes_total": 5825423,
+      "tokenize_pack_seconds": 0.22319370100012748
+    },
+    "full_profile_day7_fortified/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 51,
+        "min": 95,
+        "median": 100.0,
+        "p95": 105.0,
+        "max": 107,
+        "dense_token_pairs": 515523
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 380551,
+      "public_observation_json_bytes_total": 948714,
+      "tokenize_pack_seconds": 0.03632508597365813
+    },
+    "full_profile_day7_none/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 137,
+        "min": 85,
+        "median": 100.0,
+        "p95": 116.0,
+        "max": 120,
+        "dense_token_pairs": 1422013
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 1031305,
+      "public_observation_json_bytes_total": 2113706,
+      "tokenize_pack_seconds": 0.09329456600971753
+    },
+    "full_profile_day7_none/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 27,
+        "min": 85,
+        "median": 87.0,
+        "p95": 88.0,
+        "max": 88,
+        "dense_token_pairs": 204224
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 174806,
+      "public_observation_json_bytes_total": 423237,
+      "tokenize_pack_seconds": 0.017563200985023286
+    },
+    "full_profile_fog37_fortified/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 165,
+        "min": 106,
+        "median": 132.0,
+        "p95": 153.0,
+        "max": 155,
+        "dense_token_pairs": 2807744
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 1585618,
+      "public_observation_json_bytes_total": 3505261,
+      "tokenize_pack_seconds": 0.13215361195034347
+    },
+    "full_profile_fog37_fortified/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 46,
+        "min": 106,
+        "median": 108.0,
+        "p95": 111.0,
+        "max": 112,
+        "dense_token_pairs": 543809
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 370869,
+      "public_observation_json_bytes_total": 878368,
+      "tokenize_pack_seconds": 0.032434092987386975
+    },
+    "full_profile_fog37_none/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 116,
+        "min": 90,
+        "median": 105.0,
+        "p95": 120.25,
+        "max": 122,
+        "dense_token_pairs": 1306816
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 910326,
+      "public_observation_json_bytes_total": 1675846,
+      "tokenize_pack_seconds": 0.07954050404805457
+    },
+    "full_profile_fog37_none/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 25,
+        "min": 90,
+        "median": 92.0,
+        "p95": 93.0,
+        "max": 93,
+        "dense_token_pairs": 211266
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 170904,
+      "public_observation_json_bytes_total": 333767,
+      "tokenize_pack_seconds": 0.014542057011567522
+    },
+    "full_profile_night17_fortified/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 257,
+        "min": 107,
+        "median": 128.0,
+        "p95": 139.0,
+        "max": 147,
+        "dense_token_pairs": 4201317
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 2426417,
+      "public_observation_json_bytes_total": 4983694,
+      "tokenize_pack_seconds": 0.20303890696231974
+    },
+    "full_profile_night17_fortified/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 54,
+        "min": 107,
+        "median": 109.0,
+        "p95": 114.04999999999998,
+        "max": 116,
+        "dense_token_pairs": 652975
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 440205,
+      "public_observation_json_bytes_total": 950038,
+      "tokenize_pack_seconds": 0.03618986700894311
+    },
+    "full_profile_night17_none/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 77,
+        "min": 97,
+        "median": 108.0,
+        "p95": 115.0,
+        "max": 116,
+        "dense_token_pairs": 907742
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 619106,
+      "public_observation_json_bytes_total": 1064925,
+      "tokenize_pack_seconds": 0.05009908301872201
+    },
+    "full_profile_night17_none/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 27,
+        "min": 97,
+        "median": 99.0,
+        "p95": 103.0,
+        "max": 103,
+        "dense_token_pairs": 268299
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 199845,
+      "public_observation_json_bytes_total": 353202,
+      "tokenize_pack_seconds": 0.016465343003801536
+    },
+    "full_profile_pool27_fortified/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 213,
+        "min": 106,
+        "median": 136.0,
+        "p95": 150.39999999999998,
+        "max": 155,
+        "dense_token_pairs": 3846598
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 2107630,
+      "public_observation_json_bytes_total": 4811351,
+      "tokenize_pack_seconds": 0.16791936800291296
+    },
+    "full_profile_pool27_fortified/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 54,
+        "min": 106,
+        "median": 111.0,
+        "p95": 115.35,
+        "max": 119,
+        "dense_token_pairs": 664960
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 444074,
+      "public_observation_json_bytes_total": 1031598,
+      "tokenize_pack_seconds": 0.03783709304116201
+    },
+    "full_profile_pool27_none/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 85,
+        "min": 90,
+        "median": 103.0,
+        "p95": 114.0,
+        "max": 115,
+        "dense_token_pairs": 901381
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 647927,
+      "public_observation_json_bytes_total": 1197683,
+      "tokenize_pack_seconds": 0.055598106009711046
+    },
+    "full_profile_pool27_none/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 28,
+        "min": 90,
+        "median": 92.0,
+        "p95": 95.0,
+        "max": 95,
+        "dense_token_pairs": 238156
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 192014,
+      "public_observation_json_bytes_total": 419345,
+      "tokenize_pack_seconds": 0.018589132982015144
+    },
+    "full_profile_roof47_fortified/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 171,
+        "min": 114,
+        "median": 131.0,
+        "p95": 139.0,
+        "max": 142,
+        "dense_token_pairs": 2933748
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 1654556,
+      "public_observation_json_bytes_total": 3751638,
+      "tokenize_pack_seconds": 0.13209124703280395
+    },
+    "full_profile_roof47_fortified/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 56,
+        "min": 111,
+        "median": 117.5,
+        "p95": 122.0,
+        "max": 123,
+        "dense_token_pairs": 769790
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 486228,
+      "public_observation_json_bytes_total": 1122840,
+      "tokenize_pack_seconds": 0.042231030005495995
+    },
+    "full_profile_roof47_none/scripted": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 97,
+        "min": 99,
+        "median": 109.0,
+        "p95": 117.19999999999999,
+        "max": 119,
+        "dense_token_pairs": 1158811
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 785365,
+      "public_observation_json_bytes_total": 1609090,
+      "tokenize_pack_seconds": 0.06423304000054486
+    },
+    "full_profile_roof47_none/wait": {
+      "episodes": 1,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.7934506856227626
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 31,
+        "min": 99,
+        "median": 101.0,
+        "p95": 103.0,
+        "max": 103,
+        "dense_token_pairs": 317903
+      },
+      "late_tokens": {
+        "count": 0,
+        "min": null,
+        "median": null,
+        "p95": null,
+        "max": null,
+        "dense_token_pairs": 0
+      },
+      "episodes_reaching_late_waves": 0,
+      "packed_array_bytes_total": 233053,
+      "public_observation_json_bytes_total": 512039,
+      "tokenize_pack_seconds": 0.020424841000931337
+    }
+  },
+  "released_protocol": "experiments/t5/full_observation_profile_v1/full_v2.json",
+  "released_protocol_sha256": "4bf6dc798860b67206d4fa1820b829e60fb4e484a421b0241dfcbcd4bbb115f3",
+  "old_v1_failure_preserved": true,
+  "full_runs_started_at_inspection": false,
+  "limitations": [
+    "Native rule/preplant controls are profiling scenarios, not learned-policy results or training data",
+    "Late coverage means actual wave>=ceil(.75*original wave_count), every failure/truncation retained",
+    "No actor inference or GPU update measured; token count and N^2 are not GPU allocation measurements",
+    "Fresh native process per episode; tree RSS includes parent/CPU encoding workers/assets, shared pages may be counted more than once",
+    "Public JSON bytes are compact Python serialization of the observation, not native wire bytes or total PPO transition size",
+    "Fortified roof economy uses native initial flowerpots at columns0..2, explicitly adds pots beneath shooters at column6; initial plants verified in read-only reset",
+    "Existing training/evaluation tasks and full-level acceptance thresholds unchanged"
+  ]
+}
