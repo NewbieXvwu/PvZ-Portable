@@ -1,0 +1,20 @@
+{
+  "scope": "read-only sampled baseline repeatability; no training or matrix modification",
+  "experiment_id": "reward_r3_seed0_v2",
+  "reference_checkpoint": "artifacts/research/reward_r0_seed0_v2/runs/run_1/update_000000_initial_1790815799733013295.pt",
+  "task_id": "heldout_day_4",
+  "environment_seed": 50199,
+  "action_seed": 220199,
+  "workers": [
+    1,
+    8
+  ],
+  "repeats_per_configuration": 8,
+  "worker_threads": 1,
+  "modes": [
+    "sampled"
+  ],
+  "max_actions": 4000,
+  "comparison": "all returned fields and all outcome labels; preserve every original and repeated row",
+  "trigger": "one of 4480 original baseline rows differs in action counts only"
+}

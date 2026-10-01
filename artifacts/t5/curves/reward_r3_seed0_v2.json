@@ -1,0 +1,428 @@
+{
+  "schema_version": 1,
+  "experiment_id": "reward_r3_seed0_v2",
+  "source_learning_curve_sha256": "98194f2882bf9ccb49c772160a72dd46818525629a97d3423d99c8a395d0d454",
+  "curve_kind": "compact validation cohorts; full raw and curve retained locally, HF delivery pending",
+  "evaluations": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "update": 0,
+      "evaluation_seconds": 397.87473119599963,
+      "active_wall_seconds": 398.32564164500036,
+      "raw_path": "artifacts/research/reward_r3_seed0_v2/evaluations/update_000000.json.gz",
+      "raw_sha256": "0c0f8d32561f938c4364372228b4b9c46528450027ab2cfa1a87cee06f4c90e1",
+      "validation": {
+        "greedy": {
+          "cap1": {
+            "won": 0,
+            "count": 320,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.011862158831309737
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 0,
+            "count": 960,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.003985571263342763
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6104166666666666
+          },
+          "cap5": {
+            "won": 0,
+            "count": 640,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.005966467005294152
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6015625
+          }
+        },
+        "sampled": {
+          "cap1": {
+            "won": 14,
+            "count": 320,
+            "win_rate": 0.04375,
+            "wilson_95": [
+              0.026237113352296296,
+              0.07208710658127383
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 1,
+            "count": 960,
+            "win_rate": 0.0010416666666666667,
+            "wilson_95": [
+              0.00018390341651149198,
+              0.005876697906699307
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6864583333333334
+          },
+          "cap5": {
+            "won": 0,
+            "count": 640,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.005966467005294152
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.6390625
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 1726,
+        "decisions": 125047,
+        "ticks": 14161608
+      },
+      "update": 11,
+      "evaluation_seconds": 410.3783689160009,
+      "active_wall_seconds": 1177.2874366719989,
+      "raw_path": "artifacts/research/reward_r3_seed0_v2/evaluations/update_000011.json.gz",
+      "raw_sha256": "760d6fc3d2451f40239493d193f250a23b9ddc25e469dbf0b25afd7c1f22f0e2",
+      "validation": {
+        "greedy": {
+          "cap1": {
+            "won": 94,
+            "count": 320,
+            "win_rate": 0.29375,
+            "wilson_95": [
+              0.24652846884618526,
+              0.34586467167172996
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 117,
+            "count": 960,
+            "win_rate": 0.121875,
+            "wilson_95": [
+              0.1026742452478563,
+              0.14408984302004663
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.8739583333333334
+          },
+          "cap5": {
+            "won": 17,
+            "count": 640,
+            "win_rate": 0.0265625,
+            "wilson_95": [
+              0.016649362847245976,
+              0.04212513559839191
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.3078125
+          }
+        },
+        "sampled": {
+          "cap1": {
+            "won": 57,
+            "count": 320,
+            "win_rate": 0.178125,
+            "wilson_95": [
+              0.14009631069253792,
+              0.22378995405511776
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 80,
+            "count": 960,
+            "win_rate": 0.08333333333333333,
+            "wilson_95": [
+              0.06746654855555682,
+              0.1025214274972288
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.83125
+          },
+          "cap5": {
+            "won": 3,
+            "count": 640,
+            "win_rate": 0.0046875,
+            "wilson_95": [
+              0.0015954265837335186,
+              0.013690104793385999
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.909375
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 3670,
+        "decisions": 250021,
+        "ticks": 29879891
+      },
+      "update": 23,
+      "evaluation_seconds": 304.2649283560004,
+      "active_wall_seconds": 1849.9263406110003,
+      "raw_path": "artifacts/research/reward_r3_seed0_v2/evaluations/update_000023.json.gz",
+      "raw_sha256": "245ee960f9a2995d6e2cca5e3fcdce042e3b252bdb10e211089c7af0c5254394",
+      "validation": {
+        "greedy": {
+          "cap1": {
+            "won": 33,
+            "count": 320,
+            "win_rate": 0.103125,
+            "wilson_95": [
+              0.07437689529149552,
+              0.14128869328085658
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 0,
+            "count": 960,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.003985571263342763
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.690625
+          },
+          "cap5": {
+            "won": 0,
+            "count": 640,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.005966467005294152
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.7703125
+          }
+        },
+        "sampled": {
+          "cap1": {
+            "won": 121,
+            "count": 320,
+            "win_rate": 0.378125,
+            "wilson_95": [
+              0.3267366680477938,
+              0.43240473316733796
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 183,
+            "count": 960,
+            "win_rate": 0.190625,
+            "wilson_95": [
+              0.1670297730314675,
+              0.2166862991877258
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.921875
+          },
+          "cap5": {
+            "won": 15,
+            "count": 640,
+            "win_rate": 0.0234375,
+            "wilson_95": [
+              0.014253987759239677,
+              0.03830780110518131
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.378125
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 5996,
+        "decisions": 375000,
+        "ticks": 48048073
+      },
+      "update": 38,
+      "evaluation_seconds": 302.2927278949992,
+      "active_wall_seconds": 2554.7042329220003,
+      "raw_path": "artifacts/research/reward_r3_seed0_v2/evaluations/update_000038.json.gz",
+      "raw_sha256": "2c6632fd3e772a370468c21f4d07cf26be92baf83bc5f6b5483219a807af8fe7",
+      "validation": {
+        "greedy": {
+          "cap1": {
+            "won": 79,
+            "count": 320,
+            "win_rate": 0.246875,
+            "wilson_95": [
+              0.2028189224358128,
+              0.29693629547253775
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 96,
+            "count": 960,
+            "win_rate": 0.1,
+            "wilson_95": [
+              0.08258783541700816,
+              0.12060062159366604
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.796875
+          },
+          "cap5": {
+            "won": 41,
+            "count": 640,
+            "win_rate": 0.0640625,
+            "wilson_95": [
+              0.04757147631687756,
+              0.08575553710336328
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.3
+          }
+        },
+        "sampled": {
+          "cap1": {
+            "won": 141,
+            "count": 320,
+            "win_rate": 0.440625,
+            "wilson_95": [
+              0.3872532856407732,
+              0.4954053457204448
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 221,
+            "count": 960,
+            "win_rate": 0.23020833333333332,
+            "wilson_95": [
+              0.20468569213124105,
+              0.2578815223629376
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.9322916666666665
+          },
+          "cap5": {
+            "won": 51,
+            "count": 640,
+            "win_rate": 0.0796875,
+            "wilson_95": [
+              0.061127434185829055,
+              0.10326312714049632
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.6125
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 8613,
+        "decisions": 500036,
+        "ticks": 67722272
+      },
+      "update": 56,
+      "evaluation_seconds": 336.4924568079987,
+      "active_wall_seconds": 3279.511206699999,
+      "raw_path": "artifacts/research/reward_r3_seed0_v2/evaluations/update_000056.json.gz",
+      "raw_sha256": "40ec4888a129e78f8843f925ff476708cc8a13ce07bd83f3a73188a83b6e47bb",
+      "validation": {
+        "greedy": {
+          "cap1": {
+            "won": 185,
+            "count": 320,
+            "win_rate": 0.578125,
+            "wilson_95": [
+              0.5234023799026981,
+              0.6309941577799096
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 357,
+            "count": 960,
+            "win_rate": 0.371875,
+            "wilson_95": [
+              0.34186964927868085,
+              0.40290165335755074
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.8333333333333335
+          },
+          "cap5": {
+            "won": 249,
+            "count": 640,
+            "win_rate": 0.3890625,
+            "wilson_95": [
+              0.35205976912054004,
+              0.4273890407462595
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 3.8703125
+          }
+        },
+        "sampled": {
+          "cap1": {
+            "won": 243,
+            "count": 320,
+            "win_rate": 0.759375,
+            "wilson_95": [
+              0.7096401909383652,
+              0.802956314167893
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 1.0
+          },
+          "cap3": {
+            "won": 454,
+            "count": 960,
+            "win_rate": 0.47291666666666665,
+            "wilson_95": [
+              0.44150507522719645,
+              0.5045441432162345
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 2.971875
+          },
+          "cap5": {
+            "won": 202,
+            "count": 640,
+            "win_rate": 0.315625,
+            "wilson_95": [
+              0.28080846978285684,
+              0.35264166492534527
+            ],
+            "truncated": 0,
+            "mean_terminal_wave": 4.1734375
+          }
+        }
+      }
+    }
+  ]
+}

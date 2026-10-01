@@ -14,6 +14,49 @@ sys.path.insert(0, str(ROOT / "python"))
 from pvz_seed_jobs import atomic_json
 
 
+def storage_revision(queue: dict) -> dict | None:
+    """Validate the preregistered storage-only continuation, without hiding drift."""
+    revision = queue.get("storage_revision")
+    if revision is None:
+        return None
+    audit_bytes = (ROOT / revision["audit"]).read_bytes()
+    original_bytes = (ROOT / revision["original_queue"]).read_bytes()
+    if (hashlib.sha256(audit_bytes).hexdigest() != revision["audit_sha256"]
+            or hashlib.sha256(original_bytes).hexdigest() != revision["original_queue_sha256"]):
+        raise ValueError("storage audit or original queue changed after preregistration")
+    audit, original = json.loads(audit_bytes), json.loads(original_bytes)
+    if (audit.get("gate_result") != "pass" or not audit["remaining_executable_ast_exact"]
+            or audit["trained_keep"] < 8):
+        raise ValueError("storage continuation requires a passed executable-equivalence audit")
+    if len(queue["order"]) != len(original["order"]):
+        raise ValueError("storage continuation changed candidate count")
+    affected = set(revision["candidates"])
+    found = set()
+    for old_entry, entry in zip(original["order"], queue["order"]):
+        old = json.loads((ROOT / old_entry["config"]).read_text())
+        current = json.loads((ROOT / entry["config"]).read_text())
+        expected = json.loads(json.dumps(old))
+        if old["experiment_id"] in affected:
+            found.add(old["experiment_id"])
+            expected["prerequisites"] = [revision["new_gate"] if p == revision["old_gate"] else p
+                                         for p in expected["prerequisites"]]
+        if current != expected or any(entry[k] != old_entry[k] for k in ("output_dir", "log")):
+            raise ValueError("storage continuation changed a frozen candidate beyond its prerequisite")
+    if found != affected:
+        raise ValueError("unknown candidate in storage continuation")
+    return audit
+
+
+def comparable_fingerprints(fingerprints: dict, audit: dict | None) -> dict:
+    result = dict(fingerprints)
+    if audit is not None:
+        key = "python/pvz_research.py"
+        if result[key] not in (audit["old_source_sha256"], audit["new_source_sha256"]):
+            raise ValueError("unapproved research source in storage continuation")
+        result[key] = audit["old_source_sha256"]
+    return result
+
+
 def wilson(won: int, count: int) -> list[float]:
     z = 1.959963984540054
     p, denominator = won / count, 1 + z * z / count
@@ -72,12 +115,16 @@ def main() -> None:
     args = parser.parse_args()
     queue_bytes = args.queue.read_bytes()
     queue = json.loads(queue_bytes)
+    storage_audit = storage_revision(queue)
     candidates = []
     common_config_digest, common_fingerprints, paired_initial_states = None, None, {}
     for entry in queue["order"]:
         config = json.loads((ROOT / entry["config"]).read_text())
         common_config = {key: value for key, value in config.items()
                          if key not in ("experiment_id", "initialization_seed", "reward")}
+        if storage_audit is not None:
+            # All configuration fields were checked against their original above.
+            common_config.pop("prerequisites")
         common_digest = hashlib.sha256(json.dumps(common_config, sort_keys=True).encode()).hexdigest()
         if common_config_digest is not None and common_digest != common_config_digest:
             raise ValueError("reward arms differ in a non-reward, non-initialization configuration")
@@ -93,9 +140,12 @@ def main() -> None:
         state_bytes = state_path.read_bytes()
         state = json.loads(state_bytes)
         provenance = json.loads((directory / "provenance.json").read_text())
-        if common_fingerprints is not None and provenance["fingerprints"] != common_fingerprints:
+        if json.loads((directory / "experiment_config.json").read_text()) != config:
+            raise ValueError("saved experiment config differs from the preregistered candidate")
+        comparison_fingerprints = comparable_fingerprints(provenance["fingerprints"], storage_audit)
+        if common_fingerprints is not None and comparison_fingerprints != common_fingerprints:
             raise ValueError("training core, resources, simulator or tasks changed between reward candidates")
-        common_fingerprints = provenance["fingerprints"]
+        common_fingerprints = comparison_fingerprints
         seed = config["initialization_seed"]
         initial_state = state["initial_state_sha256"]
         if seed in paired_initial_states and initial_state != paired_initial_states[seed]:
@@ -145,6 +195,7 @@ def main() -> None:
                              "queue_sha256": hashlib.sha256(queue_bytes).hexdigest(),
                              "completed_candidates": completed, "total_candidates": len(candidates),
                              "all_candidates_complete": all_complete,
+                             "storage_revision": queue.get("storage_revision"),
                              "capability_gate": "not decided by this descriptive summary",
                              "timing": "actual cumulative active wall including startup/evaluation/checkpoint overhead",
                              "intervals": "Wilson 95%; aggregated cohorts pool task seeds and are descriptive, not initialization uncertainty",

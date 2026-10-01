@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "matrix": "reward_comparison_v2_storage1",
+  "required_initializations": [
+    0,
+    1,
+    2
+  ],
+  "common_decision_budget": 500000,
+  "evaluation_nodes": [
+    125000,
+    250000,
+    375000,
+    500000
+  ],
+  "order": [
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r0_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r0_seed0_v2",
+      "log": "logs/t5_research/reward_r0_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r1_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r1_seed0_v2",
+      "log": "logs/t5_research/reward_r1_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r2_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r2_seed0_v2",
+      "log": "logs/t5_research/reward_r2_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r3_seed0_v2.json",
+      "output_dir": "artifacts/research/reward_r3_seed0_v2",
+      "log": "logs/t5_research/reward_r3_seed0_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2/reward_r0_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r0_seed1_v2",
+      "log": "logs/t5_research/reward_r0_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2_storage1/reward_r1_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r1_seed1_v2",
+      "log": "logs/t5_research/reward_r1_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2_storage1/reward_r2_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r2_seed1_v2",
+      "log": "logs/t5_research/reward_r2_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2_storage1/reward_r3_seed1_v2.json",
+      "output_dir": "artifacts/research/reward_r3_seed1_v2",
+      "log": "logs/t5_research/reward_r3_seed1_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2_storage1/reward_r0_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r0_seed2_v2",
+      "log": "logs/t5_research/reward_r0_seed2_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2_storage1/reward_r1_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r1_seed2_v2",
+      "log": "logs/t5_research/reward_r1_seed2_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2_storage1/reward_r2_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r2_seed2_v2",
+      "log": "logs/t5_research/reward_r2_seed2_v2.log"
+    },
+    {
+      "config": "experiments/t5/reward_comparison_v2_storage1/reward_r3_seed2_v2.json",
+      "output_dir": "artifacts/research/reward_r3_seed2_v2",
+      "log": "logs/t5_research/reward_r3_seed2_v2.log"
+    }
+  ],
+  "gate": "gates/T5-A-research-v4.json",
+  "dynamic_task_gate": "gates/T2-dynamic-prefix-v4.json",
+  "protocol_change": "Storage-only continuation after supervisor exit: preserve five completed candidates, same remaining experiment IDs and all scientific settings; new storage-source gate. No model/algorithm/task/seed/budget/node changes.",
+  "storage_revision": {
+    "audit": "artifacts/t5/perf/reward_v2_retention_compatibility_audit.json",
+    "audit_sha256": "6c6331155e2ea907ded9c1c3c08a8e95475e885beaf47924568e0ccdef397a29",
+    "original_queue": "experiments/t5/reward_comparison_v2/queue.json",
+    "original_queue_sha256": "32e7da1e4e11eaa788edebc0b288f31506cbfba6ac28739930d55fe34ecd319d",
+    "old_gate": "gates/T5-A-research-v4.json",
+    "new_gate": "gates/T5-A-research-v4-retention.json",
+    "candidates": [
+      "reward_r1_seed1_v2",
+      "reward_r2_seed1_v2",
+      "reward_r3_seed1_v2",
+      "reward_r0_seed2_v2",
+      "reward_r1_seed2_v2",
+      "reward_r2_seed2_v2",
+      "reward_r3_seed2_v2"
+    ]
+  }
+}

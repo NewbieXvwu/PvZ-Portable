@@ -1,0 +1,38 @@
+{
+  "different_rows": 1,
+  "comparison": "R0 vs R3 seed0 original seed_results",
+  "first_differences": [
+    {
+      "mode": "sampled",
+      "task": "heldout_day_4",
+      "seed": 50199,
+      "differences": {
+        "action_counts": [
+          {
+            "wait": 45,
+            "plant": 28,
+            "shovel": 26
+          },
+          {
+            "wait": 48,
+            "plant": 28,
+            "shovel": 22
+          }
+        ],
+        "actions": [
+          99,
+          98
+        ],
+        "zero_tick_actions": [
+          54,
+          50
+        ],
+        "immediate_plant_shovels": [
+          9,
+          5
+        ]
+      }
+    }
+  ],
+  "status": "investigation; no original records modified"
+}
