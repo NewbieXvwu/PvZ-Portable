@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "scope": "Readonly fixed-adapter repeatability on the original init1 anomalous evaluation job; not new learning or replacement",
+  "reference_checkpoint": "artifacts/research/reward_r0_seed1_v2/runs/run_1/update_000000_evaluated_1790830217027470448.pt",
+  "reference_checkpoint_sha256": "fa4a4d8b66f576011c562592765e6f6021ddd4572f709951bedfcc0b287acbc3",
+  "task_id": "heldout_night_4",
+  "environment_seed": 50462,
+  "action_seed": 220462,
+  "modes": [
+    "sampled"
+  ],
+  "workers": [
+    1,
+    8
+  ],
+  "worker_threads": 1,
+  "repeats_per_configuration": 8,
+  "max_actions": 4000,
+  "outcome_keys": [
+    "won",
+    "result",
+    "terminated",
+    "truncated",
+    "terminal_wave",
+    "wave_count",
+    "terminal_tick"
+  ],
+  "original_rows": "artifacts/t5/perf/reward_v2_paired_baseline_seed1_r0_r1.json",
+  "coexecution": "CPU repeatability probe overlaps frozen reward matrix; not dedicated cost comparison",
+  "helper": "scripts/research_baseline_trace.py",
+  "helper_sha256": "34ae31c9d84265d187a05147637ecd4d856b3ae4558211403dfb4d170e445ccd",
+  "relation_bias_fusion": [
+    true,
+    false
+  ],
+  "required_fingerprints": {
+    "python/pvz_agent_model.py": "f6c8983f01ad6d8dc9a55422e35167987219b4663798087cc0eaa2914b9f2a3b",
+    "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
+    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
+    "build/pvz-portable": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
+    "artifacts/t5/perf/packet_cost_native_equivalence_v1.json": "cc8faa272480de31c7e52629133b2622fac8b1e26ee7e83935f45fcd4922cd5a",
+    "/home/newbiexvwu/PvZ-Portable-packet-cost/build/pvz-portable": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2"
+  },
+  "records": "all 32 jobs, full public observations, packed-token hashes, hidden/output hashes, logits, actions and pre/post RNG; no new random draws",
+  "interpretation": "Require all32 corrected-native repeated trajectories and model/RNG trace fields to agree. Original v1 failure and v2 raw trajectories retained; this finite gate does not prove all task seeds repeatable.",
+  "protocol_revision": "v3 explicit SEED_NONE guard binary after native equivalence pass; original legacy weights, seeds, jobs and32 repeats retained",
+  "executable": "/home/newbiexvwu/PvZ-Portable-packet-cost/build/pvz-portable",
+  "required_gates": [
+    "artifacts/t5/perf/packet_cost_native_equivalence_v1.json"
+  ]
+}

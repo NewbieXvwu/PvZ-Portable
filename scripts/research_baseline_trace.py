@@ -42,9 +42,15 @@ def json_sha(value: object) -> str:
 
 
 def initialize(resource_dir: str, weights: dict, jobs: dict, threads: int,
-               config: dict, destination: str, fusion: bool) -> None:
+               config: dict, destination: str, fusion: bool, executable: str) -> None:
     global DESTINATION
-    family._init_evaluation_worker(resource_dir, weights, jobs, threads, "cpu", config)
+    # Override only this fresh diagnostic worker's environment construction.
+    original_env_type = family.PvZEnv
+    try:
+        family.PvZEnv = lambda resource_dir: original_env_type(resource_dir, executable=executable)
+        family._init_evaluation_worker(resource_dir, weights, jobs, threads, "cpu", config)
+    finally:
+        family.PvZEnv = original_env_type
     agent.set_relation_bias_fusion(fusion)
     DESTINATION = Path(destination)
     model = family.WORKER_MODEL
@@ -136,6 +142,9 @@ def main() -> None:
     for relative, expected in protocol["required_fingerprints"].items():
         if hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() != expected:
             raise ValueError(f"diagnostic source differs from preregistration: {relative}")
+    for gate_path in protocol.get("required_gates", []):
+        if json.loads((ROOT / gate_path).read_text())["result"] != "pass":
+            raise ValueError(f"diagnostic prerequisite failed: {gate_path}")
     checkpoint_path = ROOT / protocol["reference_checkpoint"]
     if hashlib.sha256(checkpoint_path.read_bytes()).hexdigest() != protocol["reference_checkpoint_sha256"]:
         raise ValueError("reference checkpoint hash mismatch")
@@ -163,7 +172,8 @@ def main() -> None:
             pool = context.Pool(min(workers, len(jobs)), initializer=initialize,
                                 initargs=(str(args.resource_dir), checkpoint["state_dict"], jobs,
                                           protocol["worker_threads"], checkpoint["config"],
-                                          str(destination), fusion))
+                                          str(destination), fusion,
+                                          str(protocol.get("executable", ROOT / "build/pvz-portable"))))
             collected = {}
             try:
                 iterator = pool.imap_unordered(run_job, sorted(jobs), chunksize=1)
@@ -189,6 +199,7 @@ def main() -> None:
     summary = {"schema_version": 1, "protocol_sha256": hashlib.sha256(args.protocol.read_bytes()).hexdigest(),
                "checkpoint_sha256": protocol["reference_checkpoint_sha256"],
                "helper_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+               "executable": str(protocol.get("executable", ROOT / "build/pvz-portable")),
                "model_state_sha256": profile._state_sha256(checkpoint["state_dict"]),
                "records": records, "comparisons": comparisons, "seconds": time.monotonic() - started,
                "interpretation": "Instrumentation and fusion counterfactual on one diagnosed job; no formal learning/gate pass or replacement of original rows.",

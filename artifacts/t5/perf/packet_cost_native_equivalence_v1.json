@@ -1,0 +1,570 @@
+{
+  "schema_version": 1,
+  "protocol_sha256": "e54e02648eda947b828400f633c4fbe46bda0be1c2daee7e8fa61a83a8f58f7e",
+  "native_hashes": {
+    "old_binary": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
+    "new_binary": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2"
+  },
+  "paired_jobs": 1728,
+  "paired_observations": 138315,
+  "paired_empty_states": 26014,
+  "paired_failures": 0,
+  "recorded_traces": 32,
+  "recorded_failures": 0,
+  "recorded_replays": [
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_000.json.gz",
+      "source_sha256": "354bab50068e856ad081d5507240573d9996e0000befac596c891d2945f555d1",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_000.json.gz",
+      "raw_sha256": "7e1066723fd201c9b411e2b48a6b2a66244bb1ff91d6303314e271293e8568d6"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_001.json.gz",
+      "source_sha256": "4f1e09af547df42b89e300d2c71b33241a78c00f03078d549cb536de549fe3d3",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_001.json.gz",
+      "raw_sha256": "b5c8b3175374f16cb2f2708169993fc521f6cbc51b173c5188a6d4b8374a825c"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_002.json.gz",
+      "source_sha256": "9fd1a072b8f4364c4fa167b4fc433443d93463013c5d0252643064966b83c8c1",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_002.json.gz",
+      "raw_sha256": "95c6ff85ad70227069fa616c12b7f16a41d50c0d26fe4e24dd34ee8be0487152"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_003.json.gz",
+      "source_sha256": "5b3eeda40b48b4e7265931b8c92c8560864863cc918a25c142cdb27db8b105be",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_003.json.gz",
+      "raw_sha256": "81fa213bc759388e82460ebf331ea5485a2e324768fc685e17fe5efa4c86049f"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_004.json.gz",
+      "source_sha256": "9aeb41f3658575b7102b499811446f816d0469803e0e68a6311bd42bf40b4a69",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_004.json.gz",
+      "raw_sha256": "867e0900c673c77822191beb1f39d23087190d38810a38d20475a1633d89ca9f"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_005.json.gz",
+      "source_sha256": "ee23365dcc27845650460da92b60d95782f2c5eb63b68c6fbe2446a403e3898d",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_005.json.gz",
+      "raw_sha256": "14da5603f191e41fccc039137f3fac0fa24508992ee741ec92939d647b305d1c"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_006.json.gz",
+      "source_sha256": "9568ff95246aef7201ff6c0fb079a19d40092218ab3de81ee32f10ed51128714",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_006.json.gz",
+      "raw_sha256": "f71ec04dad134d8f6782d96e0cc624c934a3397dc0d36a6a98f89ddf2152ef2b"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers1/job_007.json.gz",
+      "source_sha256": "4f6d8d9f5de387724093199ce02d27ee289eb307930bdea8aa0fe7d2b0fa5a07",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_007.json.gz",
+      "raw_sha256": "95e3986f022fb8110dc9a74723d0ebf19e9594fe456b348ffbb6f6bd24b4693a"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_000.json.gz",
+      "source_sha256": "65dd6251e6548a61d25e8c7b7d01fc0955516d0ce30636d4a230b09b06ecbc4f",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_008.json.gz",
+      "raw_sha256": "c0235f117665e41d17dae6f353e4626c9dfd90cfbbb588dc2b80543028899ee0"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_001.json.gz",
+      "source_sha256": "02751fa06c7da5ac75fa974335b515f739f79f02f47de456332c92676fc48635",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_009.json.gz",
+      "raw_sha256": "40a597ff96c2b3afabbfe2dde6210538456b5d29513a7fd6a64f11c8d91900da"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_002.json.gz",
+      "source_sha256": "605df65cf68c7197c970aaf8f8d11f652de6aa002968c1b026f2f10dd71f7a0e",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_010.json.gz",
+      "raw_sha256": "8b887145e9403ce7856dc5052fd4371c4d4f36a45966b19bfba5c8405e94b3bb"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_003.json.gz",
+      "source_sha256": "356a5b3203cfd37ad568f188bf32661dc558107b5dd6ee5f8233c32bf4f89875",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_011.json.gz",
+      "raw_sha256": "9320b1ced86fbdc74a766c795643f6840ed929c3834163a1ef47c6d4b432ab90"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_004.json.gz",
+      "source_sha256": "c58f7bd651915584eb27c72abc7c05a01609d630babafa9e71478d0d1818dde0",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_012.json.gz",
+      "raw_sha256": "ce2d51f8f8901e3603bd14d715bf0a9ffcbf6e71365e10753dfc16bffe004e43"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_005.json.gz",
+      "source_sha256": "0ce8993d189b2c4c037ceff8c7228be732f880fa8780313ff9113cecdcacc4c2",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_013.json.gz",
+      "raw_sha256": "86ecad723af1b973cc7afd5649fba8788c3a2d06d83d40c23512304595a8a51f"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_006.json.gz",
+      "source_sha256": "5add4df4d9bf8a3c0a0bc46bf13c1288c62ccf6595a24f88996b63d947ce4073",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_014.json.gz",
+      "raw_sha256": "c55b22b972c18dd0c0afb38ea9100b274f9165bfb2601645e5ab96308020bf49"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion0_workers8/job_007.json.gz",
+      "source_sha256": "5d8e408e68cd7a0e72c5a466113a256c5d3b3bd2998f5e7e081cc491f66fed22",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_015.json.gz",
+      "raw_sha256": "4e3b8a2d49224f70495687b7ef050d617678e5bc6c9726581f6d0efce093d1c3"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_000.json.gz",
+      "source_sha256": "1efc85835133d7b6c8aefdc4a67d782e4ce860d34ce5855bc441f484c5a84a34",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_016.json.gz",
+      "raw_sha256": "c5af1502138f300d577401e6e4c7e00a9287f2640eddee7811c5d07ce04b9ece"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_001.json.gz",
+      "source_sha256": "b03c71675393f117b7708292b07606dfde92ddb32a38cab41d3f868eb1572e08",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_017.json.gz",
+      "raw_sha256": "093f5502c50fcd4bad1c517a72a49e310aac5a346d663779a12a82f4f3ae5266"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_002.json.gz",
+      "source_sha256": "17c73fdd70a6a4e53dabdabc91c140f726d3b723adf354c0a0e45ff48e78f39d",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_018.json.gz",
+      "raw_sha256": "b115cbac4318b7beac5df38e9155f9637442c2cca3c5659fcee770c93d9c9c79"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_003.json.gz",
+      "source_sha256": "9b440bd1f45c4ab970d2bf59765d4225e3b0c32efaeed7094f305eb421741c81",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_019.json.gz",
+      "raw_sha256": "c70cdb8009a90f3b83f0b31f63b959218f519f1b6ee11541c0f688b62e94128e"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_004.json.gz",
+      "source_sha256": "b41ec91f716bb379fd9bf5e30bb0465bf28e491b1beeb6d20726d4f129a150fc",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_020.json.gz",
+      "raw_sha256": "63bab4e4e354d046e939af77e25716907188002cad3709848ddbefb7b001d279"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_005.json.gz",
+      "source_sha256": "1961089f1ca0c3baf91ddf74b91544f17dc03eefd4a9355ec7fd70e34289e2f2",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_021.json.gz",
+      "raw_sha256": "35179dc91b3eefd46f32921ebbbbae6ede27e635952d4ab975d06203cbbd0842"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_006.json.gz",
+      "source_sha256": "5c31b67aa442d6cda2bc309a56a9294c023ebf6bb3a7214af66eadc35a05201a",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_022.json.gz",
+      "raw_sha256": "2961e8c31665b70389b5388eedea5a9851727594e017e58e9ca56d7aee82d530"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers1/job_007.json.gz",
+      "source_sha256": "802f6d7037ee9b88fbbeb77ed206d6827505b82f26566f4a7d3fd6e03864c921",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_023.json.gz",
+      "raw_sha256": "3c7d19c29c714f687703004d44f3484339c2547a64bcc341fb4e61f7917d213b"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_000.json.gz",
+      "source_sha256": "efdabe5d88d5cf2a55c9a649f92c011a2212fdcc278c5421afae61cf7f2bcc9d",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_024.json.gz",
+      "raw_sha256": "f78466ea7931f871d1172258164d381951240368c99b0a64c2bf6bef8602001e"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_001.json.gz",
+      "source_sha256": "2d94ff7d36dc07d976754cb01a8c543569c298dd873a315437760f29788929e1",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_025.json.gz",
+      "raw_sha256": "1c9c2a7e94a74f67af4e25b77d77573671da9330cc1c1e6e5c1d323301e777e2"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_002.json.gz",
+      "source_sha256": "599e391e36dab6abcb3de2501ee456118b91c26c4691c50755be7d0a295a3384",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_026.json.gz",
+      "raw_sha256": "ddc6209cb8635a76827fd946098951e9aa374264e881dac0a9f9e2f890124d93"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_003.json.gz",
+      "source_sha256": "38cf82decdad50d78ce682df4fe80b30d6da9704bd7dbefae402ee1712379ef9",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_027.json.gz",
+      "raw_sha256": "767cbc0c9323caf30decef488a9b31fcac8a0c0810ad41af0a378bd4e84f4168"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_004.json.gz",
+      "source_sha256": "92923b81c2a2bf8c376796277388185df06faf56cb5880a874f8a4e2c21d1b70",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_028.json.gz",
+      "raw_sha256": "1af122f1af1196b4ab73d58f9d41f344c7ae540cd76260fff26723a87d313df3"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_005.json.gz",
+      "source_sha256": "6b514d65763376896b286b6b44e8cadc04331f6faa9a06b33a79bfd06b5e2ce9",
+      "decisions": 55,
+      "empty_states": 49,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 4720,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_029.json.gz",
+      "raw_sha256": "59e73d7ce7ef16874d372999fee1df17aca60f9533775f2bb5468d5b8a1545f6"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_006.json.gz",
+      "source_sha256": "778cdb7b4987c0253d456f6f543bd656755ff49eea5cf5d4ae4b3c552759a9af",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_030.json.gz",
+      "raw_sha256": "2159afb01977442e386614a6d4302b34f752dda103c8bfc0b963ca53fcc20fb7"
+    },
+    {
+      "source": "/home/newbiexvwu/PvZ-Portable/artifacts/research/baseline_trace_seed1_v2/fusion1_workers8/job_007.json.gz",
+      "source_sha256": "5fc692c997700b19fa46c6968e8a47019eb61eef347bc6aa54ea3ea288cbd81d",
+      "decisions": 96,
+      "empty_states": 90,
+      "failure": null,
+      "outcome": {
+        "won": true,
+        "result": 1,
+        "terminated": true,
+        "terminal_tick": 8950,
+        "terminal_wave": 3,
+        "wave_count": 3
+      },
+      "raw_path": "artifacts/research/packet_cost_native_equivalence_v1/recorded_031.json.gz",
+      "raw_sha256": "ab75ce54eba06dccaa48a1634fe6b9a1854815a449fa5bf408d6c21e15975db5"
+    }
+  ],
+  "seconds": 1133.9550539120028,
+  "coexecution": "Native CPU engineering audit overlaps frozen reward matrix; not dedicated cost or learning comparison",
+  "intentional_exception": "Only SEED_NONE cost is defined as0; all other public fields and action responses exact under identical actions.",
+  "scope": "Native semantics and readonly replay; not learning success, not yet fixed-policy repeatability.",
+  "result": "pass",
+  "full_report": {
+    "path": "artifacts/research/packet_cost_native_equivalence_v1/report.json",
+    "sha256": "71ad012f873c6df84bc59dbbe2860e2fc0446b9d2c81331b7f13ac309daf8b66"
+  },
+  "failure_jobs": []
+}

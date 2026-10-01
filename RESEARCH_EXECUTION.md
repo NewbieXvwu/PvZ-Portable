@@ -398,3 +398,14 @@ R2纯终局、无折扣、无Phi的五波greedy250k111胜→375k84胜→500k0胜
 实验开始前把相同首批每地形2原job、10局、3e-6概率守卫、375k→500k固定历史及最后7
 更新诊断延伸到R2初始化1，配置见experiments/t5/late_probe_seed1_r2_v1.json。此项只读、
 不改原矩阵/温度/节点/检查点选择，也不据固定历史先作因果判断。
+
+空槽费用native等价门禁完成pass：1728对/138315观测/26014空槽观测，全部字段/响应
+除预先规定空槽cost0外零差异；32原诊断轨迹全部原动作/终局重放一致。共执行真实
+墙钟1133.96秒。记录packet_cost_native_equivalence_v1.json及其完整逐步树，不是学习
+或所有策略确定性通过。旧原生及原评估未覆盖，大文件仍未HF交付。
+
+随后冻结reward_v2_baseline_trace_seed1_v3.json：同一旧初始化检查点、原task/environment/
+action seed及32重复，显式选择已核验9e963b0b修复原生，锁定native门禁结果SHA并要求
+result=pass。其余模型/原稿动作选择与fusion开/关控制均不变；helper在新诊断worker中
+只覆盖PvZEnv构造路径，主线训练及其二进制不动。逐公开状态/模型输出/RNG/动作均需
+相同才能称这个有限异常案例修复，结果另存v3，不覆盖v1失败或v2异常。
