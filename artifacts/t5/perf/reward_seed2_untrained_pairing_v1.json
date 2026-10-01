@@ -1,0 +1,94 @@
+{
+  "scope": "readonly init2 untrained original-adapter pairing; old conveyor cap3 provisional",
+  "initial_weight_sha256": "d9b3065455e69b97451a2f1a7c9f2dbbf22b218fb9ec10ee8bccb4fdd2f3fa3d",
+  "reference": "reward_r0_seed2_v2",
+  "rows_per_candidate": 4480,
+  "comparisons": [
+    {
+      "candidate": "reward_r1_seed2_v2",
+      "raw_path": "artifacts/research/reward_r1_seed2_v2/evaluations/update_000000.json.gz",
+      "raw_sha256": "43b97ec1dbc135b388a26baa5bbf041cad6a2dae4c548f81f4554638935f1d73",
+      "full_row_differences": [
+        {
+          "mode": "sampled",
+          "task_id": "heldout_pool_4",
+          "seed": 50733,
+          "before": {
+            "seed": 50733,
+            "won": false,
+            "result": 2,
+            "terminated": true,
+            "truncated": false,
+            "action_counts": {
+              "wait": 32,
+              "plant": 18,
+              "shovel": 18
+            },
+            "zero_tick_actions": 36,
+            "immediate_plant_shovels": 6,
+            "terminal_wave": 2,
+            "wave_count": 3,
+            "terminal_tick": 5363,
+            "peak_offense": 1,
+            "actions": 68,
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sun": 50,
+                "sun_produced": 0,
+                "sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sun": 50,
+                "sun_produced": 0,
+                "sun_spent": 0
+              }
+            ]
+          },
+          "after": {
+            "seed": 50733,
+            "won": false,
+            "result": 2,
+            "terminated": true,
+            "truncated": false,
+            "action_counts": {
+              "wait": 34,
+              "plant": 17,
+              "shovel": 17
+            },
+            "zero_tick_actions": 34,
+            "immediate_plant_shovels": 8,
+            "terminal_wave": 2,
+            "wave_count": 3,
+            "terminal_tick": 5363,
+            "peak_offense": 1,
+            "actions": 68,
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sun": 50,
+                "sun_produced": 0,
+                "sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sun": 50,
+                "sun_produced": 0,
+                "sun_spent": 0
+              }
+            ]
+          }
+        }
+      ],
+      "win_or_truncation_differences": 0
+    },
+    {
+      "candidate": "reward_r2_seed2_v2",
+      "raw_path": "artifacts/research/reward_r2_seed2_v2/evaluations/update_000000.json.gz",
+      "raw_sha256": "ce31e36e7c3ced2cdddfef004b4b82a2c12cbecfa003c180b1d409d2492e7f60",
+      "full_row_differences": [],
+      "win_or_truncation_differences": 0
+    }
+  ]
+}

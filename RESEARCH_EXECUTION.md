@@ -501,3 +501,27 @@ CUDA故障快照已补入其resume.json要求的旧不可变检查点（本地ha
 只适用于371a75d7…合并候选，不授予参考恢复或学习成功。下一工程探针采用TODO指定
 256宽/6层参考（8头、FF1024），不以此前32宽小模型代替；预算、GPU/RAM资源前提、
 实际SIGKILL及全字段比较在新协议开始前冻结。旧源/失败现场/32轨迹证据保留。
+
+
+### 完整256参考实际中断协议已推送并等待（2026-10-01）
+
+候选research/learning-packet-cost-v1提交3ffba3a已推送。协议冻结256宽/6层、8头、
+FF1024、两层GRU256及flags7，序列窗口128、完整20任务与学习进展课程状态；
+CPU实际构造7,866,721参数，初始状态SHA38867453…，只证明预检，不是实际恢复通过。
+helper的4项拒绝漂移/前序失败测试通过，全部22个来源/配置指纹验证。
+
+独立continuous/interrupted输出，5000决策、最多80局、20局/批，原20工程任务的
+2种子×两模式/零与末节点评估；工程种子数量不替代学习验收每任务64种子。
+每调用600秒、全过程含最终比较1800秒；至少14,000MiB空闲显存与12GiB可用RAM。
+实际SIGKILL仅自己的进程组，update1完成、update2缓存至少4但未齐分片时中断。
+续跑必须逐项严格相等：模型/AdamW/全部RNG/计数/loss/轨迹/逐局评估/课程状态与概率，
+缓存分片SHA及mtime不变。失败保留现场并停止，不缩网络、硬闯门禁或放宽标准。
+
+调度器PID291127/session88603已核验存活，waiting.json明确workers_started=false；
+只有原矩阵matrix_budget_complete且全部60节点修正复评complete才开始GPU工作。
+等待时间单独记录，不将运行中的矩阵当参考恢复证明。原小模型与失败证据保持独立。
+主线仅收预检KB，核心未合入；完整协议与源在已推送候选分支：
+[protocol.json](https://github.com/NewbieXvwu/PvZ-Portable/blob/research/learning-packet-cost-v1/experiments/t5/learning_reference256_interrupt_v1/protocol.json)。
+
+奖励矩阵10/12，R0/R1初始化2分别500016/500024决策闭合。曲线及全轨迹诊断/
+实际各节点墙钟/Wilson保留；三波原指标暂定，T5-E/预算B/架构/完整关卡仍未验收。
