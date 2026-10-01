@@ -1,0 +1,29 @@
+test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced (test_research_training.ExplicitConfigurationTests.test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced) ... ERROR
+test_stale_pass_gate_rejects_changed_simulator_or_source (test_research_training.ExplicitConfigurationTests.test_stale_pass_gate_rejects_changed_simulator_or_source) ... ok
+test_two_models_keep_independent_configs_and_critic_dimensions (test_research_training.ExplicitConfigurationTests.test_two_models_keep_independent_configs_and_critic_dimensions) ... ok
+test_undiscounted_return_and_truncation_bootstrap (test_research_training.ExplicitConfigurationTests.test_undiscounted_return_and_truncation_bootstrap) ... ok
+test_fp32_cuda_replay_matches_cpu_collection (test_research_training.RecurrentReplayTests.test_fp32_cuda_replay_matches_cpu_collection) ... ok
+test_full_episode_reference_matches_collection (test_research_training.RecurrentReplayTests.test_full_episode_reference_matches_collection) ... ok
+test_full_resume_produces_the_same_next_update (test_research_training.RecurrentReplayTests.test_full_resume_produces_the_same_next_update) ... ok
+test_prefix_hidden_is_recomputed_after_parameter_updates (test_research_training.RecurrentReplayTests.test_prefix_hidden_is_recomputed_after_parameter_updates) ... ok
+test_real_optimizer_path_preserves_likelihood_across_all_chunk_boundaries (test_research_training.RecurrentReplayTests.test_real_optimizer_path_preserves_likelihood_across_all_chunk_boundaries) ... ok
+
+======================================================================
+ERROR: test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced (test_research_training.ExplicitConfigurationTests.test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/newbiexvwu/PvZ-Portable-observation/python/test_research_training.py", line 165, in test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced
+    config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0.json").read_text())
+                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 788, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/newbiexvwu/PvZ-Portable-observation/experiments/t5/t5a_smoke_r0_seed0.json'
+
+----------------------------------------------------------------------
+Ran 9 tests in 7.764s
+
+FAILED (errors=1)

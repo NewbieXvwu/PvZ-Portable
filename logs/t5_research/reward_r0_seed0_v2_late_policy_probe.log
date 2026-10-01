@@ -1,0 +1,11 @@
+probed job=6683 terrain=day decisions=28
+probed job=6684 terrain=day decisions=26
+probed job=6685 terrain=night decisions=22
+probed job=6686 terrain=fog decisions=33
+probed job=6687 terrain=fog decisions=27
+probed job=6688 terrain=roof decisions=38
+probed job=6690 terrain=roof decisions=60
+probed job=6693 terrain=pool decisions=36
+probed job=6694 terrain=pool decisions=55
+probed job=6699 terrain=night decisions=36
+diagnostic complete {'decisions': 361, 'legal_plant_decisions': 207, 'mean_old_wait_probability': 0.7247471428809074, 'mean_new_wait_probability': 0.9501576226338786, 'mean_type_kl_before_after': 0.4188477469271518, 'mean_type_js': 0.06957831472874983, 'greedy_action_changes': 49, 'greedy_type_changes': 46, 'greedy_type_transitions': {'wait->wait': 308, 'plant->plant': 7, 'plant->wait': 46}, 'old_type_probability_margin_below': {'0.01': 23, '0.05': 104, '0.1': 155, '0.25': 196}}

@@ -1,0 +1,1872 @@
+{
+  "schema_version": 1,
+  "scope": "same-data first-update reproducibility diagnostic, not learning or a resumed-configuration pass",
+  "initial_checkpoint": {
+    "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/update_000000_initial_1790824755771502312.pt",
+    "sha256": "d93c8dbe6069213d7528d0c90732aacc96f300a9ba33feb2f91010f6d0e6d933"
+  },
+  "shards": [
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_0.npz",
+      "sha256": "3f157e1eccc76b9365d6adf087620707995e23cdca20afc8bbaf5b83024736bb"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_1.npz",
+      "sha256": "67cb760b053d5bde549c364e1ef3714b421181067d0c0cdfa6fe5bc545266cea"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_2.npz",
+      "sha256": "8d7f69b957910cecf692ba61e75edcd01c57b786eb2632daaf701938aca4311c"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_3.npz",
+      "sha256": "032d97b33a853c02e831999aa2f820b5f29eeb67e709953e94554dfcfdbbd4cd"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_4.npz",
+      "sha256": "3b1c8ee4e5fd4a8bf6ed6f357cab55a8b61c23f30a7cca3e81e01a1e417a51a6"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_5.npz",
+      "sha256": "e5bc30a5e7008e897bed499e5bef0f5587740957107d0b3de2ac6cbeaae4095b"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_6.npz",
+      "sha256": "26564fe2271bea2c7f0fa506846f9b6c8394ff570a5dc8330cc44745237e6377"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_7.npz",
+      "sha256": "1ffaf9524aeab70279393e4d35d282c9250cfb8e99b3e51feede486281e09e19"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_8.npz",
+      "sha256": "7e1a89a17f32b99515224e5f949dae63591d658d4af9dd44540a9b78d9d2892d"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_9.npz",
+      "sha256": "de19aac4ef6b1b001099de49f5943b9cf91061947f9005fe3cbce6cdc69fd0f5"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_10.npz",
+      "sha256": "6f47daa7c6b26767976cfe6793cd990d8daf5d206ffcf1305f1fbbb42ce8b470"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_11.npz",
+      "sha256": "35953669cd3d12c65aeaeaa85160b6d0e6a042776a47f7c8dabfc627a7d7c1f2"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_12.npz",
+      "sha256": "a0f14c8042bbde0773ad14fc515d74f182f76f7caf21d1cff17b65921f61b096"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_13.npz",
+      "sha256": "11fa7e5c66f049d2ad5b4087b059454112d3f6bfd21e647bf9f524dcd49d6736"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_14.npz",
+      "sha256": "74048b20fc91273fc623f2490f19cf53e2b9b2a3feab5a0704eaf486984d5dbd"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_15.npz",
+      "sha256": "32d1408fad0266a04fc27222c76e80fc5b7253f5ab6bf20c49269845f23cd59a"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_16.npz",
+      "sha256": "f7de9ec8d770302e1c2013af877f48558b38cdfc79ca956e759f1c3973012074"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_17.npz",
+      "sha256": "c36551e8cd80c20aec183962aa58f328029c4ef38597bb572bf604346bb40dc5"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_18.npz",
+      "sha256": "3de6adcc237af8b4e27eeb7ed48444fbc910b4a41215e0886ad39352a601651e"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-observation/artifacts/research/observation_interrupt_audit_v1/continuous/runs/run_1/.seed_jobs/update_000001/12ea87dea3635ff202cc5c49e2cb624de1f244562d126a2767e17c563cd1ec0d/seed_19.npz",
+      "sha256": "5143109fba98b91e6f15601271e42de59d3c2009a7f55053162311af069e6101"
+    }
+  ],
+  "episodes": 20,
+  "decisions": 1452,
+  "model_config": {
+    "layers": 2,
+    "width": 32,
+    "heads": 4,
+    "ff_width": 64,
+    "gru_layers": 2,
+    "gru_width": 16,
+    "critic_width": 24,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 16,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 0.95,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "torch": "2.14.0+cu132",
+  "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+  "strict_bit_equality_required": true,
+  "formal_matrix_unchanged": true,
+  "trials": [
+    {
+      "deterministic_algorithms": false,
+      "repeat": 0,
+      "checkpoint": "deterministic_0_repeat_0.pt",
+      "sha256": "4a752ab4f1be53b4afeceeba72ac162016b2abe766f10cb0f87aa89eb8eb9643",
+      "losses": {
+        "policy_loss": 0.12407197922468186,
+        "value_loss": 0.6051050768233835,
+        "entropy": 2.0779486155509947,
+        "advantage_mean": -0.7575337290763855,
+        "advantage_std": 0.47270235419273376,
+        "gradient_norm": 2.8687000274658203,
+        "approx_kl": 0.005566102447919548,
+        "clip_fraction": 0.06029294822365046,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.3435516357421875,
+        "optimizer_steps": 100,
+        "stopped_for_kl": false
+      },
+      "optimizer_step_parameter_sha256": [
+        "da6b8fa9ade4a419dfffa6021f12e41cc9ccf099ec0c011b8ba3164aed519fa2",
+        "3d1b09e4f443859883db52c7946556ec5b40a36c0c4d489a23c0ebbb4c052a5c",
+        "0600165e5237703ad5765e611f0fdedeb0b8c057c89becfa89946a27da27f2c7",
+        "b6356d8f8d567f8e19f9c5f3e543388f58af98f231a4ac7b7aca687f4d0478fc",
+        "37ed3203249d6bc39f19c52a52dafc0623a9f3ee9bc7cda74f4dd4a7ae7eb5ef",
+        "989dbec7836d2b25d8d186acb314e3736dde247904fd59f6d79f2ea3d6b2c2f3",
+        "a07e3e7a03d6ea5824d298304a7b5162ce1a3b108bcea9a139bf57fc84c8080c",
+        "4974c5c7cd127c8e0d3a440c3988c14b283c5a0c63d5c91457fc899864574b81",
+        "5c8e211278c50977c007758e127bdae626416dbddf8cbb5ba7d05d1a7f06196d",
+        "1a8e1d99bafb8f376df5712e7bd9c130323d162fc3900a911313bd30ed3cf173",
+        "d6c18543b75bd12d81eb6190dcd5f2bb7ca303fa7cfea4cad4f00dec62d35250",
+        "83e433f36a33b0174841494a73386346ff60513450ef1a494f2e5010ef26a75e",
+        "2bd6fa5dc58725fcdbb214d252ea0668352574867b427f265c7c8132a0b51566",
+        "8c8385759a29fcfb1ac89f6be66d8c27cb0bde2890e3afd53c1dc8e835588e3a",
+        "9fee4e5883dc8dc2c9021295d7c97bc099464db47b06f6ec3a67a618a31dc512",
+        "7c19bdf95bd565687960f63990637d4623c38e5e5b30c261ac6c4e8beddc51a6",
+        "d3e70478ac043bb2e260a6f761e4596871138a0a682df74c6562c9729f7874bf",
+        "3707affc8712d4564861e2f658034a271153087aff52afc6f113e3c37d6ab984",
+        "b1d6a473747df7690dbb5772e7dcc9669cebae24b8835adceb3a7db9f99f3a1b",
+        "478d1bd0059654be7de5ca5aaef0767f4c27a324507d9f0db054494dba6dba31",
+        "133f61964484de3983ee9227aa7dd21ad514debba75d067a558831cec2605cd4",
+        "dd7fa8ab34dcc3338a1c26f8ac49b3f9c987cc798e581f282968b82510182972",
+        "f306981f5c1fde756d47daad1021a8eeb18a379331fe5b3e2d2635e33ee4dc04",
+        "44fcc5c86fef70fcab57506b36408185996bf9f047bc85e2efb5b069fe385fcc",
+        "b87ca5e2939fb72ca97a4e8f285541a61a076bd21d10de3ac2f8641d1a3fcf07",
+        "7a17c96a305bc052aa8d4a9bc3be532716edbbddca93ba0bb0f89001a16105e5",
+        "cd60a3420fbc805b866ed574606a210b6d81d5088e53a0f202029efa5c327dc4",
+        "4486275287f8b3242426b86c0b675aa38cc7fe1497a6e922b1e71474e8bff9d2",
+        "a1a4ae84b9dc120e7c6c2372f7f69d34d6d9a3297241f4b6c39f15c1e6cfedf7",
+        "88b1f2b0b29073954b0f014b0f70f56c6b32bb91de06cf2848441bb58dafe6ff",
+        "f6f5d6713bbf8058655f1dd750645c3c8171d1ba796b52d775b8e82dc0cf7988",
+        "7898bf0929869c696143187af4a7bd50ff1862bbb112a7733af874e6641eb8fd",
+        "abb6906a5cda0dd0d16e6fd48282dfc83a2c1461ef6d11df3cd1f28dd56948d2",
+        "266a525537c7216bb0327407202c8be60a806e88cfb0482e88a076c22af26d4b",
+        "7a8d8d5f213dc3a93188075623767ae0134a772ee03faa977b92011cb05289a7",
+        "f7c26c9d26032d8fb31ab6a847b7930768fce2493e4778434f59ce4c741666aa",
+        "a3ef41eb855fa90c85e6b4b1e15acc9e41c40b41e2fd64de1353ffa972ed919e",
+        "f230be930b745a683bb61bdd93e099bb60deeff3e1e25630d1f2bce2bef86a16",
+        "16e02653069dc73ef33076c6aa44970f2648ecf672666ef3f7e6a8df09fba00c",
+        "fd009aa476c40bb4dde92e16b382e425f75fd4f27f0faeac3228e22ada84ffc9",
+        "81cee15394722c2a0f9090808c545ff740b8fa4ad9e58c00db415d86f07e759c",
+        "cf1313be88d9ad97f5ca5023b80025f2a3e1a45d891b78e770d3cb19780eb8db",
+        "191b2c845a7a9309c71c05707221731b864aa7923dbf88cf90baad2fecb167c3",
+        "c85a1abd3c4cfab0ce44ad178efcc1fe0f8dc388a69eee48d157a2cc23d30615",
+        "1999ff6e4fbca774e286c5c40aeb6e273094f2de0fbfafcf90ee564f1db67084",
+        "02b2dc34a7727e57a4c7a5d496dbc3b2ec3b1b30514410ee6e5d7212aea803a3",
+        "2c05a79b3bd1f1380bf0e5255e5af4fd842be901162ccb17e20c660e555b108f",
+        "a040b5cdf143963ea6b161094a0f520561b269ddde9cbd20e846e7e5d420dffa",
+        "d99d9ec23382506fa27a1f6f7d9135cd675c5cd0b406beea9e81c0b1575855a4",
+        "82fc19cbb8655f2609855f8cb4b06a27d3332ba0e4464413ab652f1aec741058",
+        "c5042b87ca8159ec8a643f0675394b521d99ac57e0233f2ad3756c8705888d51",
+        "7db5de30558d892b7ec2a9e36eb8719d1b62188344812c1ef4a9c884230f97e6",
+        "2aee4f89bef439e6e9b9c7b4954b9826d59e74a2c6ee777df17f3b4dbab1fe1b",
+        "b0e8de54ce618ea6db1aa99bc844c4aa628f964729722d7f69062dd2c61e5641",
+        "d7f56f935647f399ecad5c62f5f917987ead6de7f626a3f13088448f21102b1c",
+        "a29bfda6f948eaa2155844e4847736b834f7f6558ad796b9a5fc4480fb98958e",
+        "2bc0feb6a75755fc0a0efdf3739fe674a9cc0b51c8baff325eaf3d9111e41a57",
+        "16863747529528fd933c4afc99936bb96f508c0c78a55c473722d298d7b9fbd0",
+        "c3df35ae8289fc9dc8322333d5eebecc6c33356dad7931b0f42fc84a70a47c8a",
+        "a4d4b3f1dcfbaf1241bdc6e582212a93f0de426a7d9a53716810967163a9e499",
+        "2fcb8df6e4d52f5e5cfd0cbb5f7a78071ce1ac3bf5f016f8c0377eac5ce610d6",
+        "80c77435e6b7dbbe3ecb66b573ce0399c7464a9c86d0cd5354b66250688b8d2e",
+        "be03bd4e1d4a4e9f3c01321397efacf977702c12eb612d9b9a17650fa5d07ceb",
+        "4ad50c2c7f20813d5376534c6fddba48de4e6ac41dbafe96c11f7927bfc9e873",
+        "551f8e6407309660f9e6446fd21ed6861cb01c86b77973d467d9fe56beffaf52",
+        "fe7bc275cd8140878f3cb3d34c2b50feadc8d2f06ab92833da084eaf25c90f04",
+        "78b9116a284cc4471a26364f76b7c8aa6c7da0e601d2aac21f816ccce48a2e7e",
+        "943ad47a16813c9dd2607ad4bae61fbeaa0536dc000f370f6bb94451a797b4ec",
+        "7c3ad9f6b5f48954d65fa6c10cc1920b5b77a35758a0ad13cf316550917541c6",
+        "76c682e3ef2af5ee140e2372bb8cc5b813eb395f9b6ce7d8845a4c1dc48d0a06",
+        "72b1e6d58ca02be98c3d9191472f708df24c1995dc06dd8da569b2aad52a601d",
+        "873dcd4cbb4fc0d57a3820f453fc37f2e1e6198d460d7460156dc8cff90e1e20",
+        "3a0485be210e93adf50cda25b63d2a96f98d754a6b70ee88b8c8cda2ecc5357c",
+        "85bd397452044973836112901c7388a47289f344def28ae1b9b32b4817594413",
+        "d75025e73e85d145b2af345972b24a5cc09af7ddd4632ee795371b5946b0fe3d",
+        "fcc4899dc4f9e49f038903b2794650d9ff6f75fd6d0b3879ef616aa96130e98f",
+        "56880b9902932289d90b63d6daed3872a6bd89a1039dbec5d52b81673bfe1a77",
+        "aee521bf69030150dc3542dee879b4e47d7dd05d7aa8087501cbdb793d941176",
+        "b44ab57bfec4e3587f50fd092e6a9278453a3e0f4894bdce5f476602f4cd8675",
+        "2bdf0d6afd1c2ff6130224f70b6cce1605d2c88e901d0dd1f618a3d0873fd35d",
+        "27458cf9b8fd924d1e798c6c030403e0fedd19ee6c4369dd5148c014662f181e",
+        "6d9b31198049672b05e42f2bd5b448b094e9e26e692837ca7fd28bed826d4379",
+        "ee6563a27c8d71f4c2ef0dedcd8e7deae13abeafe575b331b2e0f09f94000066",
+        "a7c4789fc9daf28124d4a4fb3bcf1d5b30e5602387062258cf5fdb6217d999ce",
+        "109aa6afb8a8c87a96348b96a6b7187b4db2dd1b550919b494439ccefe47c4b0",
+        "a01924f129c961344efcce606bd4c1859887dd9bb69c46de464082b5c7e462c5",
+        "befd957a73716755e287113aa00262dc7169f01636f7361f0f4826ae5082f6b0",
+        "071911c6ba545933f01bf5173d2c0bcc5b31bfe59d06b9f348bb0016707e3805",
+        "fe5cb861e67cbb5b270cb06a55c3b2d74b7be906449a1605e2d1c865bce7f621",
+        "c5be31f4dd2873ab0bfaefe2919bf9a1b31b0dbda99be7f431c9db15e120eda0",
+        "6a7458de051383bab72bd4fb0c5c7f194ae03c87edb3f385baa6faebbb1f191c",
+        "11feef0d500496006b516fd3d1b3ca195cf44ad11275d34d149dfe446c26866f",
+        "fd7fb9162c47c2eb9f37d5675065bef1f48ab80caf717ecccc1474692c986d01",
+        "243cd2f80ee2c53517cb5c8cc5c01a8b6e0d3c1fa0f921a25eb5dd3c67810b91",
+        "74937e131ad81711023f401fdfee6a1362b7d347c9d56c141e1414e7e301fb78",
+        "3a596064bd2e554544f6229256a9469d6513b1f73f9bcbe63a1d498528adc834",
+        "1d00d6b85c99d943dbda3e1c214d5f9b13f6454e3d03c96003d58f19e457cd1d",
+        "2d20156c1c7eda776dbfd9be50050671708d785ad653eacdbb18aa523dae7218",
+        "22284bd73313d84ca16acc151f86f2a7fb1480f6268def0cdc6d3c064b1c3a82",
+        "67ae57a9ffd42a9b382ccb96a17d784b5432cb17bade93dcd251cdbabe3ae913"
+      ],
+      "seconds": 12.09575732599842
+    },
+    {
+      "deterministic_algorithms": false,
+      "repeat": 1,
+      "checkpoint": "deterministic_0_repeat_1.pt",
+      "sha256": "71e4837b277807aded7aaa35cc1fff0b282442648a683977886ff3dc749e8db0",
+      "losses": {
+        "policy_loss": 0.12407197706401348,
+        "value_loss": 0.605105075314641,
+        "entropy": 2.077948616743088,
+        "advantage_mean": -0.7575337290763855,
+        "advantage_std": 0.47270235419273376,
+        "gradient_norm": 2.8687000274658203,
+        "approx_kl": 0.0055661033350043,
+        "clip_fraction": 0.06029294822365046,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.3435516357421875,
+        "optimizer_steps": 100,
+        "stopped_for_kl": false
+      },
+      "optimizer_step_parameter_sha256": [
+        "6422c4405f788e9cc581348e4239d450229b3e1f7c40cf1cd7b2eabe9b192dc8",
+        "c6346b3d8dd0ffdfebbb80d9d5f1c94e0ddb29642b39913e0cbf9baa76b6ee79",
+        "060739c73b8e4920d36ce5422fce3026bb5a73fa6a945bdceadccc57c4d5e64b",
+        "c16a246bf0cc3fe507eb443b2e28d5bcb9aef99dd5eeed0afbb0c87d48e8e06b",
+        "a0ae0dbee83d9b098d29b1d92a612830a228d890c85e7fe494b0bea803ffd148",
+        "fbc4834b9124b2a9ce22ceb67cf39586a4aef5f9d7c0ce97bdec521f7c6929eb",
+        "88c73c088a5e6dc29333f4c4c075c53fc97a07368ba94cc8bfac17b7e2892cde",
+        "bcb437c5e8c91f1cb997a26b503608b146368f4a7acbe58d0b7e630f52490d25",
+        "f7bdb9cd95a42717f29bc9b5b938fd29d9625f9914ab1d075aeb50399e18b1b3",
+        "0b448a6fa34547c65298f36ac3c51681ebc3988d2f9c975d1bc02870579b6c0d",
+        "004c38fcba07fefde7b054645aa24338aed417090abb1cae57ec6a69881a46fd",
+        "d42c07d05f6bc2d0a25c1c722fffa1bd6195a4a5f7efb7f0d4c3a2a365c25f7a",
+        "8fe8521173af284f3cf15041ee190c34cc723e398d3d786f72a21b4cf5cfc13e",
+        "c04b28b087895fc294c280a7190bfb0f570bf1af143bf3bb7888c0bcd5a515ed",
+        "2de3e6f9fbc7d4c0670bd8c6983f55b904ff2a5e9168d0dac9649589ceba87e9",
+        "3512796e72ac48995774d4f56703c2d90f90a591afeee29d5394eba162424bd0",
+        "ac7981b5737579386241a43cf4211b0ad72ddc3efd7347ae28a5853ba377a416",
+        "af60811c9de938be3631ee3ece840cd0bd3a20b390292539f193bf6d9cee4d0a",
+        "7938a7d226d9d9b9956ef0222db8ca6588c16c74fc3be253332b02de73f268fb",
+        "25a76d120cd9c021348662ee615fec4bb08d4f3d1afe33be1f558d26ca409957",
+        "e62262dbaa77c30e6522e9109b9675f3e7f92f65a3a794227da2f2140959dffa",
+        "901bf40f1345dc9924bd19428e54abb4f9e9ff90242d7e3d24ace78aac7a5648",
+        "6f24eef27d2f09fcde01481ebe7a4d4dc264394530d27ebb0b5a3f9904c4f3da",
+        "c08928cae4282101d7c14f6dd252efd7651bbc2f799c77dadc696e30b39b46b0",
+        "1e8ef2d5d634613380651e25b0221dfcaa7c2b10062b25b25c939081aa1f28a6",
+        "f7e439b9ca92ec93163b458f6497ee62ee2798d114502a4322c3e9eccc6a7c72",
+        "735a5badff758828800228d1ed3fdcb53df9312708ae7ea3c7c19c38a12df324",
+        "1c61259989ec4d417060bca95be33a6e49bcddce31d09e2338b49c7abcc7a9b5",
+        "1d4b51f37a9ac61cb7e43d4584df1d336c97186149f3eb5db22c739e6bf6b1b1",
+        "d907712c9d848f46e61e0544174e11c29e86ad743c176593612aaa8a754e3aa7",
+        "667477c989a2eb1bd60a4e5da8f8703f1c8c7c793283cc9e665ad695dc18c7c5",
+        "e461d4d73b40885791f42b06f8d8bc39cee37ed697295292c1784a2cfea3cddd",
+        "dc05f95b7b1d005fad4107f07c8cad858c1524210a5f9de8ac62343a2f5704d0",
+        "32c2422ea2b4c9ef54fe6a5c46e77696619c746ca156d29540c5eaadaff9574e",
+        "35be47a861af1cbcfff7b61116c8a4157b0143f2c0052da9b1d95df73cb02716",
+        "ffefd828d3101c8233dd0076b98334b53260b550d1aef04df745df1e3c9a668e",
+        "57d0533d98e6289ad38377f55410d68e963212b4786de7b108c80d3b2b4826e7",
+        "ff2fc1ddc2058827da6ccc83c3a5ebae14f21b0ff3f4b39ff1c094fb747af3bf",
+        "14fd0214270fb4b6b7a7d10328ef39ea1d48a9fd83c04698644e7ec2ea005085",
+        "2cb78717f87ce6103bdfff14622d1f1fd8eaf09dcd0fbf0a4416de146ca22233",
+        "087a7ee973e00aa308a916f79b34184076775f6eda65f3b7a18d09c5301c4a97",
+        "aac9b932f20404f7d41bfdba28e5afd7d6d035a1d3818edae6d12ec5343cebd9",
+        "8e3d42ee97d25c5c2c6f123b79048c1f92d9631cd7325c65f0ba851866a878d3",
+        "7df4de120b59954c37899b999cc2a1cb44f9476a293689bae88ec48b3555f2c5",
+        "39aafec189deaf02142c30695e14517161756f907ad659f5cecea8cd9f27d05b",
+        "562cd13c66558f72a5cfaca0b0784dfe3e212323b557c1bcdd8e3e5b4be399a6",
+        "692087d50f062025185f85dd60588d8f037234a2a71ac12cf0dbef7137c41043",
+        "5329a8336420e87f7aa1d1b5fdff029ffc7f6d1f5b085af15660e035de2d4f31",
+        "f1fa007aa31b4e9037cea46fb98a12ca41e3253738d5b46c9726cd131837bed8",
+        "67eb642b3761c2e4daecfff18c359533909081ffebe80dee1268705364f1bb54",
+        "06b7db32a0189350f952c253c098495d2d0347135a136cad883b65299a98a782",
+        "8b40b5fbf3982a6cfd6cbf4a2855a89f7170d30ec64d367b39c582b5b5560f87",
+        "2eac2d9ca8aa3e44f678bc4f1b034e985b9600c0c4c2dcd9bb1a9c4824269896",
+        "0daa4db91e40539d9ae1c967fea117e251f94895d01db2bbe030b592f514b216",
+        "ceb7ceeb52f9141fedbb42efdcaba648620dc554d9c11fdee864e666e9e6a58b",
+        "2c171c69b907bac92ade0ac754f38447e6ec7dcd49ececb4bb7a894ab0bfc3c7",
+        "d9e1faa5353658735da9155bde08d751d905e9c77c2c28be830829c547acaabf",
+        "5d07e366090cf10f49ca3218debbc92721ebcd380af9eab1e7a17836ab576d4d",
+        "8f40c299a656e044d34262a87e48862c361ed164c5664b4546936759af2ec521",
+        "790e84eea8d499100faaaf119b99071d6587ab34dbf63b55c96cb02ec2fecd01",
+        "3627de5eda5a31ba0d9f1f50182f19a3a263249a246bdeaee3f926580c4d6d48",
+        "0b45df559730ba7bb5989e9019a8c11d277c20d0fcdf26249c5d425382f39fd2",
+        "98c7d08c16c4ef41e36c30ecef8e5899d726735ca7f13c729f7c65806acee725",
+        "387cf867060f1ea14dcbb55661d103881e6c9b7e6ef052c2288ddda03f2bfb02",
+        "0738d59b8d5b3aa0ec2cfb1c284e907cbad2ec87f28cdf510146abf58ae4e228",
+        "6208fa11d6a518e5ba1a8107313a98804091e33e13ef0e592b3b41cf9422d9dc",
+        "4478edafd6adc5f24fa93dc40f27a74e98094e87351b524e600157d9ac825d25",
+        "f3ac3d772a90da5427aff2daafe6381eed49369df8b1085ff7beb22189f6bac1",
+        "68cf10a2f0c47fa0fa7c1ababb03b71a5bfbc64f6dda8d6229cd0a886504e334",
+        "7ebb057b8a6d81c4a46a0817f1cd3d91afabb87fa2c4a6131fcead1819966053",
+        "d4b7089a87416fc6e17aa6aafc617964a4749aca7ccc63d97b044a8cd3f67809",
+        "9168cea4260e9dade258d880ab3b3fe63a371ea9d31e506679a6f4565485abd7",
+        "1818de25129dadcb05e60a3cf34e35ab320f01657da1573d27434217196dbb09",
+        "6ef671ae1021f46392c58caa8e0b21b695093f4b129c419f22291fdc98407246",
+        "0cb4f372879bf9605b21007bd0f93e9090440a007e54a3c8a2f2d2202013b14d",
+        "b05a4e0fe55b5be2c74971162ce144b16beeeb51d6eda88089012aad3894b34a",
+        "10a66abec8617ef8b3e0373743a53a6219808abce1ee50ed70ac1ca61407ceed",
+        "abc2244a89559fba2ddb62479a6827383614e448bb4d2ae74fc9a2f7b0bd4b68",
+        "0bcebc0fe7b94d7dd1a1c05f96d54182126869fff245f04716bf4b019a637841",
+        "a65a771faa3d850d5031479b591c95f4a490cd5015ee3eb62947bcba3a49b5c8",
+        "0049dd6aa63bdf1ae25bad160b174ad0a0d82d54b2d56ebbb31359b1bec7ba82",
+        "706f3037ae037e26da54a4b92691c1ed95b1b0b2e0aca8afdddcdab66fdcd50d",
+        "dc9e74662d3518ddd3b7b62c2a28ca6bd3c42eb6a4d0955b312fc699cfd6bdf2",
+        "74e7345f94064bf5bd0a34b2f81b42dab4e13c4695233e26fd867866d3709648",
+        "11e27c4d6bd8b0284d7a9cf7db44c2ae708acb01a51e1ab784b799ca35057189",
+        "7609ea9613bd65b408be312af4ca1aa64788db299cc1f176edfd5e2feff05ab1",
+        "d11a98fd93a93b29b446a339e0b94bad3ad3392f6dd3494dc4804e3e890de753",
+        "b18f7ba160b93b426565b62bac105533d61e53b513febf24ec70cb85d4e32cee",
+        "b6700de6c96adf14296d9143b72caa296ff3dd247816e1cb8799a1644d3b59cb",
+        "d0a17dbe75e7381cffc21c1dbbdd869a7314a99a8b151bc83a65d484dad9b02f",
+        "1a0a9202f38b7312f1b2e7f29514509a71772508ef1267e263b1d4168596f1e1",
+        "1e5401aceeeb202976d5ad4c143ffd2effe8d4ffe7e46a1469fc038e40bb764b",
+        "b748c68d1679aef520bf58f18ec960a30bf592de9115a5bc7356c9d4df0763e0",
+        "b91f9340ecd8627ad0ef75d0bdf5ddc99b6ebca3502742f72bb9c8311a3f3ab0",
+        "2f3290c5987fc4fb5cba6c13aaac9479b8e79918cdd34c04f3411b2553a05837",
+        "f9f2947eb0bfd0c40ed0bf94095b6096687ac6fdc8a467b595c3ac394a95a26d",
+        "b4a7d0433bc1f687ae7a5b7300f47ca5944d67643e18ccdf3e1f2664c0f23265",
+        "4ecb41fef3f6255faa155c6325ea7ade0d32fbc200ce263c8baac0587f9933ed",
+        "85919ca38854263a4abe11b876d998956ce398c58f740cbbfbf060015222fcf1",
+        "984ea5c3de576531fcf55841dbef978a0bbdcfcf64d83c5a714a095e264bb442"
+      ],
+      "seconds": 6.951238126001044
+    },
+    {
+      "deterministic_algorithms": true,
+      "repeat": 0,
+      "checkpoint": "deterministic_1_repeat_0.pt",
+      "sha256": "5040046b690debd50dd16d91d6e9e85bdf7446cfdb71a77313deaa1b544312fd",
+      "losses": {
+        "policy_loss": 0.12407197708263994,
+        "value_loss": 0.6051050729118288,
+        "entropy": 2.0779486179351805,
+        "advantage_mean": -0.7575337290763855,
+        "advantage_std": 0.47270235419273376,
+        "gradient_norm": 2.868699789047241,
+        "approx_kl": 0.005566102990414947,
+        "clip_fraction": 0.06029294822365046,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.3435516357421875,
+        "optimizer_steps": 100,
+        "stopped_for_kl": false
+      },
+      "optimizer_step_parameter_sha256": [
+        "84e080898b4ff932a0a249a0d04246210e854159281b1d046224448777912d83",
+        "9a2ea2bbf2313fe35e8fec1e210c680c567ed2d81100ffb5193b9c9e7368170b",
+        "e83982a1240aa0023bb4cdd6ca74f5fff546a16c5d93b5ad5e75dc5e5be56cdd",
+        "9025d548f2921a81a1fca5ca459f33834567225b6313317a063f1c35cc372dd2",
+        "dd61914d2193a246c3453e10e9ed4dec92cf46245f47e71caf30dc422685208e",
+        "ce9ce62867d6f450a808b9d045fe270ed0d8d0df716700aa658ee5e1aa7f2b7f",
+        "c723f1152a4d9028eb787b83422656605c3b7e06d530e07f06bc843155c711d6",
+        "e1de1c31181c4f551bdb6461ce7fc43a144f32b84b261fd57592414f8bd1a30f",
+        "bc3ae2ad508abb1661601260c258e3be133463a9296fd7fee51a7a6528ab188d",
+        "4c36a504ad3c3c18a43348b1c7c2ca3ce20daaeb4cc4aa91934e32c4f4a828d5",
+        "b2e0e55a5cc842e50086a97a763e2597be84e5009fea24740b7d927e3c5e7ec3",
+        "d2bfbc6efd4cb6dc1c4a1bb07997d113d6d9268d7f79fa1a8e7c68ac74ef3758",
+        "31a5bb8df50168aa5ba29d97b88bd2ca24437b9561a9bce09ecc31559945c254",
+        "6b26266c94c514d920f50276ad4c7a858724d07763d8ff48f5e4c692e3597182",
+        "7b1dad4537e05eae423eeceb3b11ade0929294097efc10ca066a8665ac1215dd",
+        "cbfec722d6920fad55efc30d859adcbdbe60504319fbbca8401237acdfd97cae",
+        "4d432e888844f9d620dd254ebf97ebe2cb766d38fba54ac9e727a57b59b98642",
+        "7fa6d6b954f8d44bece0c8805a3c6dc324553526bafa4ff3e51532a2ae02aa5f",
+        "c6091a7385917bb2feb1f5642da80af235c563e5a513d59ec073ba94c4ec1dc2",
+        "b792618ba02005ac87675bb54c15f589cc602f9da32752f298850aef21efe7c4",
+        "6cb9cd5d13e4e67ae4ba2e071b06390bf832f4d4e506c9a5989d5ef330a28320",
+        "1a38a2250e9ba2c57a568ee8b84af55acb3e7e14ff36bcd7d144edd03e19ee99",
+        "9aa0764c7a08ee9b92319706b3ad88db6e1ac004711257f82bdffc32969eccb3",
+        "b0b4dd518912c7e3ef15a6b115f2ebae40067b51d020a36813e01eea6d7a917e",
+        "36e39f2c1d0f1f7eefad1638703630291293fe0d50611d761a02d2c872259cbd",
+        "e04aa823a765fc99341e1746f02414b4b8d170839a40184f6401e138a73d1c3e",
+        "0574f808c4a7859d39e3454130a5405c73b80fd866b989e15599ed922f6763fc",
+        "7620562e2692beefcc1a5043f509f1ae26b11f95219a91e2ec238dc39ae1fd52",
+        "e69db3fcf23c9ef8e74e7fb6542b10fcf7cd35a12ae512dc38baeb869330a981",
+        "10b36daab1e17eb34cb618752b13d3bdb3a595409197352f3ae53baf2e8bfa21",
+        "2eb8b5be05689ccdbe87c9c52a52ae62dc601d29c772cf6fab9e03e549784e5c",
+        "5b2db90c513589049ecdb4a71c1cfc3f65a05735c8ee02cda7c4a2fa0dee1ce4",
+        "ffbba496e1d6b9dc9b35230f087339f7bb590a991b90170bd7ff4d3501a71976",
+        "d4b9f27fdd70411f2ee7a0e9a8e235bc401ba39c7aa4433457e5444c5dbcf18e",
+        "a621b7f512813b7c8b95250c95f89b0dbb2a261f17c0820ca60c3699c9588207",
+        "9afa4e392fb6362baa7b30a3ff4d4dd90971977869f54216b35cf05c60af4f86",
+        "d3981305ac8f765175e98b2d83fe110e43e557e49f64b749eaf8ade78d297b7b",
+        "af90fb158d7bd4bee46761153d509d88e3e793f566883cf58ab1d28479bb503c",
+        "14338b27b0826ff3652c1af60df98bc9081acfc73ac8eca25536754cf8a433ad",
+        "3e3b7ec9cbdaac04c60b99081522dc70b45f81c8ab40653476f47e52fd9a5134",
+        "0af01db2db0ecc4a7f51ef249c4989f7827b46a12ddb16b6c35c58c95657f40b",
+        "eaba55c58d3866c24f5a801b50010cd4b371e93128678b05de53e97e1d131a2c",
+        "af43f2dfe74ce517bea0232ae3a8b8bb9a4b246b42d1ece3e36c1f0c56b396b5",
+        "af3177fe8d9516cb4d72206f7d374b2474dd392d1416ea26718729d86950de36",
+        "599b9a615b79e3a50d38e2002980a0b21de6f8709ad1e00936a172d5daa637e3",
+        "725172c07bd70b1a1dae7ba39ea30b785154a75c83cf092f7dc36b9ec1a8b581",
+        "79fdca5607db698e4bd4c3d2ccb1e24a30821cdbb3ac1bb4e996639c7db1d13b",
+        "2ddf24e1e42d776fd17dd73d16f72e8a6d4e09cf659649f475671cf8146b62af",
+        "9654fc79920057b818800cd2727e716d45539b34f5bfe70ffc45c5050c44cb25",
+        "e251d909661a6d7ad312819eb33018010c524b703304c200d4c7eef5d7cd1906",
+        "b31d791404ddd1cbdfc125f8933da01a03a900447e768d0423dbe88336fa699f",
+        "d39c9c3ade97e73a16564c8912adfec5cf808e39967541147ebf25cac0a67592",
+        "a331e5c7ea9f8dfe6382cac7e3fab9de431cd08f970785797cc7fdf804307d35",
+        "058947e5259517795f42696cedcb11cd14643c9daefade7a92b186b04cd3f062",
+        "26b17884dd7259d00729b48bca5d15a28f7db74263e56ef457c7ba61d82343aa",
+        "509088f45f8a8153456fd4dc54c753fbc7bb0ca8f525c72644717d4f6a7fe350",
+        "436c17c45bf0200e934e954a3b099698e794a9ae1be3663b787d763d7a94e584",
+        "2dd3aba1cee459d57d3f03bc6f471de707426080ccc05a27ec0f7fe084e5748a",
+        "1cf84954fab281e9558f0c70c72ff0507afc9c540378ac6ad6aeb0fbca90a866",
+        "29355a2b5a58f24156084020ff24b596c4ee70ed6af0cb98dd9fbf8e2b4e20ad",
+        "4379f1479963b2259ce84b80a43e90134ab279c669ce31f47d06b2a70d5c4cbb",
+        "ca146b5903a806c47925b56c92030a6fcb4fd180daef0f9e6533e0dda036999f",
+        "84206ee2bcffbece046ab09a311e2bb45727f4de3cbd71d177712f2a50eb5c57",
+        "43748d88649d2778dbbffb8d4feae5bad56ba30b8fb9c9e2ddce9924353531a1",
+        "4d9b2b74f418ef191293dcd0312dd7ccc78659e4398dc2cee5bbf21fbf13850a",
+        "bf3fbd512aad103faca0cbd31c96470ab237d69ad2677e3d6550f6ccd6424d94",
+        "125c8aa64ad388c232100e9b6ea54cb8a06298230b77d0bfea2da111f647e28d",
+        "b025cbe533f1070f977d32cb5d9e5af30dbcf2aa6ca0a59eb7294a1b3f476db0",
+        "9ea2a45918969c707151f730495ec3abf655cd11abc60eb1cbcf11776baebf33",
+        "ae931b87923220c696f337b7d66636cc3e6eed05f29d16ffa1c9e362830e819f",
+        "0c7a5745bdae6eefd7ab9480b16cc3bd131f7ad85f3e4e01294c86931d16a6fe",
+        "75f31ba616ec7a33c19b00bf7f5ccb4f10c05b05452b8c2709d51208f89a6392",
+        "f500cf5af94b9818d83590e23751dcf90a7167957f388af6904eb9e2efb2faad",
+        "5bb7c110cbe12cdd989b7d300e1737000c0f25dc9fc336756473a76253e972e9",
+        "0b137fd80b62067edee62f5254023b457dd4b079574bea9dfee7614f10facb87",
+        "952b02ae6a10e9999231789801fe1fb02f92450b00f36a8130aa5ac24003a727",
+        "17f420417ddc2a58fbc818ac5d9c81cffd2d29953c54432b39e8afce0afb1837",
+        "97474c62bbe5c9661f39cdad4145933a3f2e0912fc681cd9299c09ab056dbf8e",
+        "8204939e04ae7c0a6175ca5acdd7be4e517e36f3ec79c33d8baf80ec7d73c905",
+        "33bcfd2cc61c2116d8b892ecce009aa9a5081d0d30f3767aca3915b1c46c5b37",
+        "2bf92d6126ed8883e7008108d699fcabdac94d78bc3f2eeaf7f14205ce3fc207",
+        "1398d6331b1940255a14e9f55e299904806022490f774febb9132c0ddb0e9d30",
+        "10ed6ae4bb29870e63b038c6f7422ed07ae3efa9ebae62a91dac5df8b883c170",
+        "12bcd68550167e8e4c1096d0fde02d5683a6477b6b4171053bb3284874109f9a",
+        "64121476856f91affbf526266aa673163bd3255670274d7bc1a21356b37f0552",
+        "b03cb507b6f451743b52e2c9cdc6633a3bc75fec9eea7c70edeab1a7d0e0ec0b",
+        "eee0c0694983ff30f3b12323432dd4668a66b09eace269b8e093dec778367cef",
+        "1ebc6a4e78942b8e36a512d21d6803a488a3e606e6bac492d7617c57a76a56af",
+        "0d322bfd8820ed8867db34a5e6f47937d1de461f415d601d6614c726f3e3b3f7",
+        "172d7613ecdf17e8552700fd5b65aa2403bb0eca540d48fd409047ff54d09e6d",
+        "af09602f58b9ec1a12f59169c6cd24c86033d47f1471351938294d0fa2d9dd65",
+        "1b21a0b4ce83f14f2080b2bb35ccb04bf0df1a7930f5c504175d6669dc430245",
+        "7c6169846144faaac95de17307079eca73293ea6477e1f6abd334154c2b0f9a9",
+        "3a37e51d5ee7826e1eada43b9d59fb4755ad8a48179355aa2791790225f2be74",
+        "1aa2e30c9505cca58b09383a5d9eb4f13c97be7058320cfa5c754b1b438bac4b",
+        "09a9dcf1f52257ccc06c17110fb317dfebdedd7278e19231f07efc7a8b29be95",
+        "ac810e32dedd536f5bb1cfa13219090bc4bcc6bd8ce32fbb5ef5ec5969e47570",
+        "57119b4cd6584a9410651f3f61776b9925b7e1725da6f4180a9270fce7f5fd05",
+        "21f6be3ff651f91c5ee65f6b29dd3699be291520fa04579e00cb8be28bbdf7d0",
+        "d1b51011ef8853759a88ea9638eacdc4129f8cf49e8c272c08a38c40ba9e1936"
+      ],
+      "seconds": 22.055767969000954
+    },
+    {
+      "deterministic_algorithms": true,
+      "repeat": 1,
+      "checkpoint": "deterministic_1_repeat_1.pt",
+      "sha256": "2695e951e78726566452e83aa72b4ccf16191a2c0a03d5242b83e54eedc3c9cc",
+      "losses": {
+        "policy_loss": 0.12407197708263994,
+        "value_loss": 0.6051050729118288,
+        "entropy": 2.0779486179351805,
+        "advantage_mean": -0.7575337290763855,
+        "advantage_std": 0.47270235419273376,
+        "gradient_norm": 2.868699789047241,
+        "approx_kl": 0.005566102990414947,
+        "clip_fraction": 0.06029294822365046,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.3435516357421875,
+        "optimizer_steps": 100,
+        "stopped_for_kl": false
+      },
+      "optimizer_step_parameter_sha256": [
+        "84e080898b4ff932a0a249a0d04246210e854159281b1d046224448777912d83",
+        "9a2ea2bbf2313fe35e8fec1e210c680c567ed2d81100ffb5193b9c9e7368170b",
+        "e83982a1240aa0023bb4cdd6ca74f5fff546a16c5d93b5ad5e75dc5e5be56cdd",
+        "9025d548f2921a81a1fca5ca459f33834567225b6313317a063f1c35cc372dd2",
+        "dd61914d2193a246c3453e10e9ed4dec92cf46245f47e71caf30dc422685208e",
+        "ce9ce62867d6f450a808b9d045fe270ed0d8d0df716700aa658ee5e1aa7f2b7f",
+        "c723f1152a4d9028eb787b83422656605c3b7e06d530e07f06bc843155c711d6",
+        "e1de1c31181c4f551bdb6461ce7fc43a144f32b84b261fd57592414f8bd1a30f",
+        "bc3ae2ad508abb1661601260c258e3be133463a9296fd7fee51a7a6528ab188d",
+        "4c36a504ad3c3c18a43348b1c7c2ca3ce20daaeb4cc4aa91934e32c4f4a828d5",
+        "b2e0e55a5cc842e50086a97a763e2597be84e5009fea24740b7d927e3c5e7ec3",
+        "d2bfbc6efd4cb6dc1c4a1bb07997d113d6d9268d7f79fa1a8e7c68ac74ef3758",
+        "31a5bb8df50168aa5ba29d97b88bd2ca24437b9561a9bce09ecc31559945c254",
+        "6b26266c94c514d920f50276ad4c7a858724d07763d8ff48f5e4c692e3597182",
+        "7b1dad4537e05eae423eeceb3b11ade0929294097efc10ca066a8665ac1215dd",
+        "cbfec722d6920fad55efc30d859adcbdbe60504319fbbca8401237acdfd97cae",
+        "4d432e888844f9d620dd254ebf97ebe2cb766d38fba54ac9e727a57b59b98642",
+        "7fa6d6b954f8d44bece0c8805a3c6dc324553526bafa4ff3e51532a2ae02aa5f",
+        "c6091a7385917bb2feb1f5642da80af235c563e5a513d59ec073ba94c4ec1dc2",
+        "b792618ba02005ac87675bb54c15f589cc602f9da32752f298850aef21efe7c4",
+        "6cb9cd5d13e4e67ae4ba2e071b06390bf832f4d4e506c9a5989d5ef330a28320",
+        "1a38a2250e9ba2c57a568ee8b84af55acb3e7e14ff36bcd7d144edd03e19ee99",
+        "9aa0764c7a08ee9b92319706b3ad88db6e1ac004711257f82bdffc32969eccb3",
+        "b0b4dd518912c7e3ef15a6b115f2ebae40067b51d020a36813e01eea6d7a917e",
+        "36e39f2c1d0f1f7eefad1638703630291293fe0d50611d761a02d2c872259cbd",
+        "e04aa823a765fc99341e1746f02414b4b8d170839a40184f6401e138a73d1c3e",
+        "0574f808c4a7859d39e3454130a5405c73b80fd866b989e15599ed922f6763fc",
+        "7620562e2692beefcc1a5043f509f1ae26b11f95219a91e2ec238dc39ae1fd52",
+        "e69db3fcf23c9ef8e74e7fb6542b10fcf7cd35a12ae512dc38baeb869330a981",
+        "10b36daab1e17eb34cb618752b13d3bdb3a595409197352f3ae53baf2e8bfa21",
+        "2eb8b5be05689ccdbe87c9c52a52ae62dc601d29c772cf6fab9e03e549784e5c",
+        "5b2db90c513589049ecdb4a71c1cfc3f65a05735c8ee02cda7c4a2fa0dee1ce4",
+        "ffbba496e1d6b9dc9b35230f087339f7bb590a991b90170bd7ff4d3501a71976",
+        "d4b9f27fdd70411f2ee7a0e9a8e235bc401ba39c7aa4433457e5444c5dbcf18e",
+        "a621b7f512813b7c8b95250c95f89b0dbb2a261f17c0820ca60c3699c9588207",
+        "9afa4e392fb6362baa7b30a3ff4d4dd90971977869f54216b35cf05c60af4f86",
+        "d3981305ac8f765175e98b2d83fe110e43e557e49f64b749eaf8ade78d297b7b",
+        "af90fb158d7bd4bee46761153d509d88e3e793f566883cf58ab1d28479bb503c",
+        "14338b27b0826ff3652c1af60df98bc9081acfc73ac8eca25536754cf8a433ad",
+        "3e3b7ec9cbdaac04c60b99081522dc70b45f81c8ab40653476f47e52fd9a5134",
+        "0af01db2db0ecc4a7f51ef249c4989f7827b46a12ddb16b6c35c58c95657f40b",
+        "eaba55c58d3866c24f5a801b50010cd4b371e93128678b05de53e97e1d131a2c",
+        "af43f2dfe74ce517bea0232ae3a8b8bb9a4b246b42d1ece3e36c1f0c56b396b5",
+        "af3177fe8d9516cb4d72206f7d374b2474dd392d1416ea26718729d86950de36",
+        "599b9a615b79e3a50d38e2002980a0b21de6f8709ad1e00936a172d5daa637e3",
+        "725172c07bd70b1a1dae7ba39ea30b785154a75c83cf092f7dc36b9ec1a8b581",
+        "79fdca5607db698e4bd4c3d2ccb1e24a30821cdbb3ac1bb4e996639c7db1d13b",
+        "2ddf24e1e42d776fd17dd73d16f72e8a6d4e09cf659649f475671cf8146b62af",
+        "9654fc79920057b818800cd2727e716d45539b34f5bfe70ffc45c5050c44cb25",
+        "e251d909661a6d7ad312819eb33018010c524b703304c200d4c7eef5d7cd1906",
+        "b31d791404ddd1cbdfc125f8933da01a03a900447e768d0423dbe88336fa699f",
+        "d39c9c3ade97e73a16564c8912adfec5cf808e39967541147ebf25cac0a67592",
+        "a331e5c7ea9f8dfe6382cac7e3fab9de431cd08f970785797cc7fdf804307d35",
+        "058947e5259517795f42696cedcb11cd14643c9daefade7a92b186b04cd3f062",
+        "26b17884dd7259d00729b48bca5d15a28f7db74263e56ef457c7ba61d82343aa",
+        "509088f45f8a8153456fd4dc54c753fbc7bb0ca8f525c72644717d4f6a7fe350",
+        "436c17c45bf0200e934e954a3b099698e794a9ae1be3663b787d763d7a94e584",
+        "2dd3aba1cee459d57d3f03bc6f471de707426080ccc05a27ec0f7fe084e5748a",
+        "1cf84954fab281e9558f0c70c72ff0507afc9c540378ac6ad6aeb0fbca90a866",
+        "29355a2b5a58f24156084020ff24b596c4ee70ed6af0cb98dd9fbf8e2b4e20ad",
+        "4379f1479963b2259ce84b80a43e90134ab279c669ce31f47d06b2a70d5c4cbb",
+        "ca146b5903a806c47925b56c92030a6fcb4fd180daef0f9e6533e0dda036999f",
+        "84206ee2bcffbece046ab09a311e2bb45727f4de3cbd71d177712f2a50eb5c57",
+        "43748d88649d2778dbbffb8d4feae5bad56ba30b8fb9c9e2ddce9924353531a1",
+        "4d9b2b74f418ef191293dcd0312dd7ccc78659e4398dc2cee5bbf21fbf13850a",
+        "bf3fbd512aad103faca0cbd31c96470ab237d69ad2677e3d6550f6ccd6424d94",
+        "125c8aa64ad388c232100e9b6ea54cb8a06298230b77d0bfea2da111f647e28d",
+        "b025cbe533f1070f977d32cb5d9e5af30dbcf2aa6ca0a59eb7294a1b3f476db0",
+        "9ea2a45918969c707151f730495ec3abf655cd11abc60eb1cbcf11776baebf33",
+        "ae931b87923220c696f337b7d66636cc3e6eed05f29d16ffa1c9e362830e819f",
+        "0c7a5745bdae6eefd7ab9480b16cc3bd131f7ad85f3e4e01294c86931d16a6fe",
+        "75f31ba616ec7a33c19b00bf7f5ccb4f10c05b05452b8c2709d51208f89a6392",
+        "f500cf5af94b9818d83590e23751dcf90a7167957f388af6904eb9e2efb2faad",
+        "5bb7c110cbe12cdd989b7d300e1737000c0f25dc9fc336756473a76253e972e9",
+        "0b137fd80b62067edee62f5254023b457dd4b079574bea9dfee7614f10facb87",
+        "952b02ae6a10e9999231789801fe1fb02f92450b00f36a8130aa5ac24003a727",
+        "17f420417ddc2a58fbc818ac5d9c81cffd2d29953c54432b39e8afce0afb1837",
+        "97474c62bbe5c9661f39cdad4145933a3f2e0912fc681cd9299c09ab056dbf8e",
+        "8204939e04ae7c0a6175ca5acdd7be4e517e36f3ec79c33d8baf80ec7d73c905",
+        "33bcfd2cc61c2116d8b892ecce009aa9a5081d0d30f3767aca3915b1c46c5b37",
+        "2bf92d6126ed8883e7008108d699fcabdac94d78bc3f2eeaf7f14205ce3fc207",
+        "1398d6331b1940255a14e9f55e299904806022490f774febb9132c0ddb0e9d30",
+        "10ed6ae4bb29870e63b038c6f7422ed07ae3efa9ebae62a91dac5df8b883c170",
+        "12bcd68550167e8e4c1096d0fde02d5683a6477b6b4171053bb3284874109f9a",
+        "64121476856f91affbf526266aa673163bd3255670274d7bc1a21356b37f0552",
+        "b03cb507b6f451743b52e2c9cdc6633a3bc75fec9eea7c70edeab1a7d0e0ec0b",
+        "eee0c0694983ff30f3b12323432dd4668a66b09eace269b8e093dec778367cef",
+        "1ebc6a4e78942b8e36a512d21d6803a488a3e606e6bac492d7617c57a76a56af",
+        "0d322bfd8820ed8867db34a5e6f47937d1de461f415d601d6614c726f3e3b3f7",
+        "172d7613ecdf17e8552700fd5b65aa2403bb0eca540d48fd409047ff54d09e6d",
+        "af09602f58b9ec1a12f59169c6cd24c86033d47f1471351938294d0fa2d9dd65",
+        "1b21a0b4ce83f14f2080b2bb35ccb04bf0df1a7930f5c504175d6669dc430245",
+        "7c6169846144faaac95de17307079eca73293ea6477e1f6abd334154c2b0f9a9",
+        "3a37e51d5ee7826e1eada43b9d59fb4755ad8a48179355aa2791790225f2be74",
+        "1aa2e30c9505cca58b09383a5d9eb4f13c97be7058320cfa5c754b1b438bac4b",
+        "09a9dcf1f52257ccc06c17110fb317dfebdedd7278e19231f07efc7a8b29be95",
+        "ac810e32dedd536f5bb1cfa13219090bc4bcc6bd8ce32fbb5ef5ec5969e47570",
+        "57119b4cd6584a9410651f3f61776b9925b7e1725da6f4180a9270fce7f5fd05",
+        "21f6be3ff651f91c5ee65f6b29dd3699be291520fa04579e00cb8be28bbdf7d0",
+        "d1b51011ef8853759a88ea9638eacdc4129f8cf49e8c272c08a38c40ba9e1936"
+      ],
+      "seconds": 19.314947966000545
+    }
+  ],
+  "comparisons": [
+    {
+      "deterministic_algorithms": false,
+      "bit_equal": false,
+      "first_different_optimizer_step": 1,
+      "differences": [
+        {
+          "path": "state_dict.encoder.0.value.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.1.attention.projection.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.privileged_critic.0.bias",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "state_dict.feature_projection.2.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.belief.weight_hh_l0",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder.1.attention.row_bias.weight",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.encoder.0.attention.row_bias.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "state_dict.previous_packet_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.1920928955078125e-07
+        },
+        {
+          "path": "state_dict.col_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "state_dict.shovel_cell_query.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.action_type.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.feature_projection.0.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.previous_wait_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder.1.value.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.privileged_critic.0.weight",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.encoder.1.attention.same_cell_bias.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.1205673217773438e-05
+        },
+        {
+          "path": "state_dict.packet_key.bias",
+          "kind": "tensor",
+          "max_abs_error": 2.2693537175655365e-05
+        },
+        {
+          "path": "state_dict.cell_key.bias",
+          "kind": "tensor",
+          "max_abs_error": 0.00019665062427520752
+        },
+        {
+          "path": "state_dict.encoder.0.attention.same_cell_bias.weight",
+          "kind": "tensor",
+          "max_abs_error": 3.5762786865234375e-07
+        },
+        {
+          "path": "state_dict.encoder_norm.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "state_dict.encoder.0.gate.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.privileged_features.0.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.1.down.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.0.attention.qkv.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.2351741790771484e-08
+        },
+        {
+          "path": "state_dict.feature_projection.0.bias",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.encoder.0.attention.projection.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder.0.ff_norm.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.3969838619232178e-09
+        },
+        {
+          "path": "state_dict.privileged_features.0.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.1.down.bias",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.packet_query.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.0.attention.qkv.bias",
+          "kind": "tensor",
+          "max_abs_error": 7.145106792449951e-06
+        },
+        {
+          "path": "state_dict.encoder.1.ff_norm.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.862645149230957e-09
+        },
+        {
+          "path": "state_dict.encoder.1.attention.qkv.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder.0.attention_norm.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.3969838619232178e-09
+        },
+        {
+          "path": "state_dict.belief.bias_hh_l0",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.belief.weight_ih_l0",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder.1.attention.qkv.bias",
+          "kind": "tensor",
+          "max_abs_error": 5.632638931274414e-06
+        },
+        {
+          "path": "state_dict.belief.weight_ih_l1",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.belief.bias_ih_l0",
+          "kind": "tensor",
+          "max_abs_error": 1.862645149230957e-09
+        },
+        {
+          "path": "state_dict.plant_cell_query.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.packet_key.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.event_projection.0.bias",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.previous_cell_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.384185791015625e-07
+        },
+        {
+          "path": "state_dict.encoder.1.value.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder_norm.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.3969838619232178e-09
+        },
+        {
+          "path": "state_dict.encoder.0.down.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.kind_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "state_dict.encoder.1.attention.projection.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.previous_action_projection.0.bias",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "state_dict.cell_key.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.0.gate.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.0.attention.projection.bias",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "state_dict.encoder.1.gate.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.plant_cell_query.bias",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.action_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "state_dict.event_projection.0.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.belief.weight_hh_l1",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.0.attention.col_bias.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "state_dict.category_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.1920928955078125e-07
+        },
+        {
+          "path": "state_dict.wait_duration.weight",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.feature_projection.2.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.belief.bias_ih_l1",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.encoder.1.attention.kind_pair_bias",
+          "kind": "tensor",
+          "max_abs_error": 5.122274160385132e-09
+        },
+        {
+          "path": "state_dict.privileged_critic.2.weight",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.packet_query.bias",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.row_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "state_dict.delta_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 1.1920928955078125e-07
+        },
+        {
+          "path": "state_dict.encoder.0.down.bias",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "state_dict.encoder.0.attention.kind_pair_bias",
+          "kind": "tensor",
+          "max_abs_error": 8.614733815193176e-09
+        },
+        {
+          "path": "state_dict.encoder.1.gate.bias",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "state_dict.belief.bias_hh_l1",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "state_dict.shovel_cell_query.bias",
+          "kind": "tensor",
+          "max_abs_error": 1.4901161193847656e-08
+        },
+        {
+          "path": "state_dict.previous_action_projection.0.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.2351741790771484e-08
+        },
+        {
+          "path": "state_dict.encoder.1.attention.col_bias.weight",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder.0.value.bias",
+          "kind": "tensor",
+          "max_abs_error": 2.9802322387695312e-08
+        },
+        {
+          "path": "state_dict.encoder.1.attention_norm.bias",
+          "kind": "tensor",
+          "max_abs_error": 2.7939677238464355e-09
+        },
+        {
+          "path": "state_dict.variant_embedding.weight",
+          "kind": "tensor",
+          "max_abs_error": 5.960464477539063e-08
+        },
+        {
+          "path": "optimizer_state_dict.state.0.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.837179297581315e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.0.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 5.684341886080802e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.1.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.4551915228366852e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.1.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.842170943040401e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.2.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.1827872842550278e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.2.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 7.105427357601002e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.3.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.0186340659856796e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.3.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.881784197001252e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.4.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 8.731149137020111e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.4.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 7.105427357601002e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.5.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.820766091346741e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.5.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.220446049250313e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.6.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.3283064365386963e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.6.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.526512829121202e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.7.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.0372681319713593e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.7.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 5.684341886080802e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.8.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.8.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 5.684341886080802e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.9.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 6.275513442233205e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.9.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.881784197001252e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.10.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 8.731149137020111e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.10.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.0658141036401503e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.11.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.418811734765768e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.11.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.7763568394002505e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.13.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.13.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.842170943040401e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.14.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.1641532182693481e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.14.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.1316282072803006e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.15.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.4551915228366852e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.15.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.263256414560601e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.16.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.16.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 5.684341886080802e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.17.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.6193447411060333e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.17.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.884981308350689e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.18.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.8189894035458565e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.18.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.7763568394002505e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.19.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 3.9452174860343803e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.19.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.760353553682876e-17
+        },
+        {
+          "path": "optimizer_state_dict.state.20.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 7.275957614183426e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.20.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.440892098500626e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.21.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.820766091346741e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.21.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.440892098500626e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.22.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.22.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.7763568394002505e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.23.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.0368239600211382e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.23.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.220446049250313e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.24.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.0372681319713593e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.24.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.7763568394002505e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.25.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 8.731149137020111e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.25.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.552713678800501e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.26.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 3.4924596548080444e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.26.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.7053025658242404e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.27.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.8189894035458565e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.27.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.526512829121202e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.28.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.729372449219227e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.28.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.552713678800501e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.29.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 8.731149137020111e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.29.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.4210854715202004e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.30.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 6.548361852765083e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.30.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.881784197001252e-16
+        },
+        {
+          "path": "optimizer_state_dict.state.32.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.8917489796876907e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.32.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 5.684341886080802e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.33.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 8.731149137020111e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.33.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.1316282072803006e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.34.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.34.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.1368683772161603e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.35.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.1641532182693481e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.35.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.526512829121202e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.36.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.001776687800884e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.36.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.881784197001252e-16
+        },
+        {
+          "path": "optimizer_state_dict.state.37.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.18367562815547e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.37.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 7.771561172376096e-16
+        },
+        {
+          "path": "optimizer_state_dict.state.38.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.3575984780800354e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.38.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.1094237467877974e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.39.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 6.548361852765083e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.39.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 7.105427357601002e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.40.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.820766091346741e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.40.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.6645352591003757e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.41.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.41.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.1316282072803006e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.42.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.820766091346741e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.42.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.552713678800501e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.43.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.1641532182693481e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.43.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.1316282072803006e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.44.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.3655745685100555e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.44.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 7.105427357601002e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.45.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.45.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.552713678800501e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.46.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.2732925824820995e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.46.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 9.947598300641403e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.47.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 6.984919309616089e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.47.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 6.821210263296962e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.48.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.820766091346741e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.48.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.547473508864641e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.49.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.092726157978177e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.49.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.552713678800501e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.50.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 6.912159733474255e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.50.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.552713678800501e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.51.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.001776687800884e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.51.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.552713678800501e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.52.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.001776687800884e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.52.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.3322676295501878e-15
+        },
+        {
+          "path": "optimizer_state_dict.state.53.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.820766091346741e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.53.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 9.094947017729282e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.54.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.7462298274040222e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.54.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 8.526512829121202e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.55.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.3283064365386963e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.55.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.842170943040401e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.56.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.4569682106375694e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.56.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.163336342344337e-17
+        },
+        {
+          "path": "optimizer_state_dict.state.57.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.4551915228366852e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.57.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.1368683772161603e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.58.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.3969838619232178e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.58.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 3.637978807091713e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.59.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 3.4924596548080444e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.59.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.2737367544323206e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.60.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 6.984919309616089e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.60.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 6.821210263296962e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.61.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.3283064365386963e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.61.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.2737367544323206e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.62.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.6566128730773926e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.62.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 7.275957614183426e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.63.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.1641532182693481e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.63.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 6.821210263296962e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.64.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.7939677238464355e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.64.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 9.094947017729282e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.65.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.3969838619232178e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.65.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.8189894035458565e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.66.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.66.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.4551915228366852e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.67.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 5.587935447692871e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.67.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.9103830456733704e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.68.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.6921043172478676e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.68.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 9.947598300641403e-14
+        },
+        {
+          "path": "optimizer_state_dict.state.69.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 3.5652192309498787e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.69.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.7053025658242404e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.70.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.0745362639427185e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.70.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.547473508864641e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.71.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.0146582879455579e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.71.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.9956967884654446e-21
+        },
+        {
+          "path": "optimizer_state_dict.state.72.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.862645149230957e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.72.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.5916157281026244e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.73.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 2.837969581559463e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.73.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 5.2439192480981616e-20
+        },
+        {
+          "path": "optimizer_state_dict.state.74.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 1.3969838619232178e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.74.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.8189894035458565e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.75.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 9.313225746154785e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.75.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 6.821210263296962e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.76.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 6.984919309616089e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.76.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.1368683772161603e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.77.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 9.313225746154785e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.77.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.547473508864641e-13
+        },
+        {
+          "path": "optimizer_state_dict.state.78.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.78.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.0913936421275139e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.79.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 3.725290298461914e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.79.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.9103830456733704e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.88.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 4.656612873077393e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.88.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.8189894035458565e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.89.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 9.313225746154785e-10
+        },
+        {
+          "path": "optimizer_state_dict.state.89.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 5.4569682106375694e-12
+        },
+        {
+          "path": "optimizer_state_dict.state.90.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.90.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 4.3655745685100555e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.91.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.91.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 2.9103830456733704e-11
+        },
+        {
+          "path": "optimizer_state_dict.state.92.exp_avg",
+          "kind": "tensor",
+          "max_abs_error": 7.450580596923828e-09
+        },
+        {
+          "path": "optimizer_state_dict.state.92.exp_avg_sq",
+          "kind": "tensor",
+          "max_abs_error": 1.1641532182693481e-10
+        },
+        {
+          "path": "losses.policy_loss",
+          "kind": "scalar",
+          "left": "0.12407197922468186",
+          "right": "0.12407197706401348"
+        },
+        {
+          "path": "losses.entropy",
+          "kind": "scalar",
+          "left": "2.0779486155509947",
+          "right": "2.077948616743088"
+        },
+        {
+          "path": "losses.value_loss",
+          "kind": "scalar",
+          "left": "0.6051050768233835",
+          "right": "0.605105075314641"
+        },
+        {
+          "path": "losses.approx_kl",
+          "kind": "scalar",
+          "left": "0.005566102447919548",
+          "right": "0.0055661033350043"
+        }
+      ],
+      "max_parameter_abs_error": 0.00019665062427520752
+    },
+    {
+      "deterministic_algorithms": true,
+      "bit_equal": true,
+      "first_different_optimizer_step": null,
+      "differences": [],
+      "max_parameter_abs_error": 0
+    }
+  ],
+  "gate_result": "diagnostic_only",
+  "seconds": 60.92750806000004,
+  "supports_deterministic_runtime_hypothesis": true
+}

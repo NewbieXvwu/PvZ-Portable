@@ -1,0 +1,9 @@
+{
+  "source_commit": "c250b0b0eaa5135d2c5507fcf64d1cf315ed71cc",
+  "base_commit": "f3c5a3d",
+  "patch_sha256": "5e4c460c1c4fc51e95a00701c644ea46ff90624c8239f04dab7d1e33d4d7af0f",
+  "git_apply_check": true,
+  "scope": "isolated observation candidate plus explicit deterministic runtime and actual interrupt v2 preregistration",
+  "formal_matrix_unchanged": true,
+  "actual_interrupt_v2_started": false
+}

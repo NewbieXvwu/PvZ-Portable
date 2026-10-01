@@ -1,0 +1,9 @@
+test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced (test_research_training.ExplicitConfigurationTests.test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced) ... ok
+test_stale_pass_gate_rejects_changed_simulator_or_source (test_research_training.ExplicitConfigurationTests.test_stale_pass_gate_rejects_changed_simulator_or_source) ... ok
+test_two_models_keep_independent_configs_and_critic_dimensions (test_research_training.ExplicitConfigurationTests.test_two_models_keep_independent_configs_and_critic_dimensions) ... ok
+test_undiscounted_return_and_truncation_bootstrap (test_research_training.ExplicitConfigurationTests.test_undiscounted_return_and_truncation_bootstrap) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.031s
+
+OK

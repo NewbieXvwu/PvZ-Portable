@@ -1,0 +1,14 @@
+deterministic_algorithms=False repeat=0
+determinism-False-0 ppo epoch 1/2
+determinism-False-0 ppo epoch 2/2
+deterministic_algorithms=False repeat=1
+determinism-False-1 ppo epoch 1/2
+determinism-False-1 ppo epoch 2/2
+{"deterministic_algorithms": false, "bit_equal": false, "first_different_optimizer_step": 1, "max_parameter_abs_error": 0.00019665062427520752}
+deterministic_algorithms=True repeat=0
+determinism-True-0 ppo epoch 1/2
+determinism-True-0 ppo epoch 2/2
+deterministic_algorithms=True repeat=1
+determinism-True-1 ppo epoch 1/2
+determinism-True-1 ppo epoch 2/2
+{"deterministic_algorithms": true, "bit_equal": true, "first_different_optimizer_step": null, "max_parameter_abs_error": 0}

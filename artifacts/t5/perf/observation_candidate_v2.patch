@@ -1,0 +1,2424 @@
+diff --git a/CUDA_UPDATE_DETERMINISM_PROTOCOL.md b/CUDA_UPDATE_DETERMINISM_PROTOCOL.md
+new file mode 100644
+index 0000000..932d634
+--- /dev/null
++++ b/CUDA_UPDATE_DETERMINISM_PROTOCOL.md
+@@ -0,0 +1,21 @@
++# 相同实际数据的CUDA更新确定性诊断（运行前冻结）
++
++`observation_interrupt_audit_v1`严格比较失败，首次差异发生在SIGKILL之前的更新1，
++相同起点、RNG、动作结果与计数未分离。原fail不改为pass。
++这里独立诊断同输入的CUDA数值复现，不是新增奖励/能力候选，也不续跑失败探针。
++
++固定读取连续臂实际初始化完整检查点与update 1全部20个原始NPZ，共1452决策。
++每次从同一模型、空AdamW、完整Python/NumPy/Torch CPU/CUDA/分配RNG状态开始；
++相同32宽两层模型/input_flags=7、R0、原lr=1e-4和全部PPO字段、FP32/dense。
++CUBLAS_WORKSPACE_CONFIG保持:4096:8不变，只比较torch.use_deterministic_algorithms
++关闭/开启两组，每组两次同数据完整更新。开启时warn_only=False，未知非确定操作
++报错即保留失败，不隐藏警告或降低要求。每个优化器步骤保存全部参数的摘要，
++最终保存完整参数/AdamW/RNG；比较必须逐项严格相等。
++
++全量保存四次结果，无胜负选择、无温度修改、无正式矩阵修改。只有关闭组分离而
++开启组严格相同时才支持这一运行条件假设；不能据此锁定某个具体算子或证明完整
++中断恢复已通过。若支持，另注册新版本实际中断协议并重跑，保留v1。
++启动时至少1024MiB当前空闲VRAM；与正式矩阵并行，墙钟不作独占机器速度。
++
++依据为PyTorch官方确定性API说明，而非恢复流程已经错误的断言：
++https://docs.pytorch.org/docs/main/generated/torch.use_deterministic_algorithms.html
+diff --git a/OBSERVATION_CANDIDATE.md b/OBSERVATION_CANDIDATE.md
+new file mode 100644
+index 0000000..f6dd608
+--- /dev/null
++++ b/OBSERVATION_CANDIDATE.md
+@@ -0,0 +1,82 @@
++# 公开观测候选 v1：隔离实现与验证范围
++
++本分支从 `f3c5a3d` 独立建立。运行中的四奖励×三初始化矩阵没有应用这些修改。
++这个候选修复输入表达，尚不代表稳定学习或能力验收通过。
++
++## 显式开关
++
++`model.input_flags` 是位掩码。正式配置加载器强制显式填写全部模型维度及此字段；
++直接构造模型时缺省为0仅用于旧模型的兼容核对，不允许正式实验省略。
++预定输入消融按0、1、3、7依次增加信息，同一阶段保持模型、奖励和课程相同。
++新的模型结构版本为6，观测记录版本为4；旧版本门禁不能用于正式新实验。
++
++| 位 | 实现 |
++|---|---|
++| 1 | 僵尸 token 读取 `on_board`；全局数量和原逐行威胁只统计已进入棋盘者。街道预览实体仍保留，没有实体截断。 |
++| 2 | 每行增加敌人/护甲/状态、经济植物、合法格比例、经济/射手/支撑卡片的数量、冷却、可支付与原生合法状态；另按行与真实敌人类别生成构成 token。 |
++| 4 | 原生 JSON 增加公开僵尸 `id`，植物及投射物的 `target_zombie_id` 解析成当前观测 token 的有向关系；无法解析的引用单独标识。 |
++
++原始 ID 仅用于当前实体关联，不作为数值特征。重命名全部 ID 不改变输入，改变引用对象
++会改变关系。ID 不带入隐藏波表、未来时间或特权 critic 输入。存在目标与当前能解析目标
++是两个状态，已死亡/不再公开的目标不伪造实体。保存索引用 int32，避免超过127时溢出。
++关系偏置初始为0，已有 actor 梯度检查；关系能否被训练利用仍待学习实验。
++
++卡片冷却和敌人类别原本已经在全局实体输入中，行级新增是归纳偏置，不是首次恢复全部
++此类信息。聚合不替模型选卡、选行或选格；全部合法落点仍保留。冷却新增使用
++`c/(c+3000)` 的固定有界尺度，类别健康等聚合保留连续值。没有修改旧字段的截断尺度。
++
++## 已完成检查
++
++- 8项新CPU检查：on_board、行构成/冷却、引用改向、ID重命名、非法/悬空引用、索引超过127、
++  actor梯度及输出变化、实体置换、真实PPO回放与跨块边界。
++- 与现有检查合并后22项CPU检查通过；第一次旧测试仍要求结构版本5/11类而失败，保留日志，
++  后将版本断言更新为实际的6/12类。回放误差门槛没有降低。
++- 已训练375034节点的旧模型与新模型关闭新增输入时，三组输入的全部token完全一致；
++  belief、动作各分支与value的最大输出误差均为0。
++- 在独立工作树构建Release原生二进制。主工作树的二进制及核心文件保持原来的指纹。
++- 新输入的小模型FP32 CUDA与CPU回放检查通过；另4项配置/奖励检查通过，
++  包括拒绝省略input_flags、旧源/二进制门禁拒绝、独立模型配置与截断bootstrap。
++
++## 开跑前的原生接口验证协议
++
++`scripts/research_observation_native_audit.py` 使用已冻结的 `aid_feasibility_v2.json` 全部60任务、
++wait/scripted两种策略与每任务最前4个种子，共480完整终局。两二进制执行相同动作；只移除
++新增 `zombies[].id` 后，原来的全部公开响应、事件、合法动作与终局必须严格相同。
++每次响应核对唯一非空ID及on_board，固定每97响应核对一次真实编码与全部合法落点。
++每局首次到3000tick后检查SNAPSHOT/RESTORE及一条批量WAIT分支，含新增ID也必须完全相同。
++悬空目标计数全部保留，不将其自动判为接口故障；原生真实目标解析覆盖另行报告。
++遇到不一致停止该候选验证、保留失败响应。此检查只证明本范围接口等价，不替代全动态门禁。
++
++若上述牌组没有真实非空目标引用，另用接口夹具验证：日间三波五行预种倭瓜、泳池三波
++预种睡莲与猫尾草，每种最前4个固定种子95000–95003，WAIT30，最多30000tick。
++必须看到实际植物/投射物目标被编码为关系，核对旧响应及目标活跃时快照重放。
++夹具与当前训练/评估清单独立，只用于接口检查；不替换任何训练任务或失败种子。
++
++实际采样回放协议：原来五个一波任务各最前4环境种子，共20局，模型为原192宽/4层、
++2×256GRU、256宽critic并显式input_flags=7；初始化0，动作随机种子为环境种子+170000。
++保存全部NPZ分片与初始权重，在真实PPO优化器路径用lr=0、两epoch、sequence_length=0/128、
++minibatch_chunks=2核对CPU采样概率；最大变化须小于3e-6，clip_fraction=0且参数完全不变。
++CUDA另读相同分片与权重，不重采样，核对源/二进制/资源哈希与同一数值门槛。
++这是工程回放检查，没有更新策略，不计入正式学习预算或奖励比较。
++
++## 原生及实际采样检查结果
++
++原生审计480局、22565次旧响应比较通过；23021次新观测中251852条僵尸记录，
++26784条on_board。456次快照重放及456条批量分支完全一致；固定抽查238次编码，
++最大143token，全部合法格保留。耗时104.89秒CPU，与正式训练并行，不当作独占机器性能。
++这组原牌组没有非空目标引用；另外8个倭瓜/猫尾草接口夹具全部看到真实目标，
++对应关系及活跃目标快照重放通过，耗时3.24秒。未将接口夹具当作训练胜局。
++
++实际新输入采样20局、1358决策，全部正常终局。CPU两种回放跨度的最大log-prob变化
++均为9.536743e-7，clip_fraction=0、原参数完全不变；保留全部NPZ与初始权重。
++采样和CPU回放共141.80秒，与原矩阵并行，不能当作独占机器吞吐或学习收益。
++源/二进制/资源哈希与逐局清单在collection_manifest.json，数值在cpu_report.json。
++同一1358决策的FP32 CUDA回放也通过：两跨度最大log-prob变化均9.536743e-7，
++clip_fraction=0且参数不变，耗时9.43秒。cpu_report.json与cuda_report.json保留原值。
++
++## 正式训练仍待完成
++
++实际中断恢复、新源/二进制工程门禁尚须确认。之后才能冻结并启动
++三初始化的0/1/3/7输入消融，与原表征在相同任务/奖励/预算/评估节点比较。预算B尚未确定，
++此时不填写虚假的最终训练预算。容量与计算成本另测，不能将合成输出变化或单元测试算作学习。
++当前矩阵完成前不合并本分支，也不替换正在运行的检查点结构。
+diff --git a/OBSERVATION_INTERRUPTION_PROTOCOL.md b/OBSERVATION_INTERRUPTION_PROTOCOL.md
+new file mode 100644
+index 0000000..7be2025
+--- /dev/null
++++ b/OBSERVATION_INTERRUPTION_PROTOCOL.md
+@@ -0,0 +1,50 @@
++# 新观测实际中断恢复探针 v1（运行前冻结）
++
++本协议是隔离工程检查，继续遵循主仓库正常合并的远端文档`9d01caf`：
++rollout按原策略随机采样，不额外改temperature；评估同时保留greedy与sampled。
++它不修改正在运行的四奖励×三初始化矩阵，不作奖励/模型选择或能力达标依据。
++
++## 范围与先决条件
++
++新源与原生二进制由`gates/T5-observation-interruption-probe-v1.json`锁定。
++已完成480局原生接口等价、8个真实目标夹具、旧配置关闭输入的输出等价，以及同一20局/
++1358决策的192宽实际CPU/CUDA回放。门禁只许可本文件的两个工程探针，
++不声明中断恢复已经通过，也不许可正式学习放大；未使用旧源门禁或绕过选项。
++
++为避免与正式矩阵争抢显存，此次使用明确的小模型：32宽、两层编码器、4头、
++64宽前馈、两层16宽GRU、24宽单层critic、input_flags=7。目标关系经两层编码器
++才能影响全局actor，本次及原192宽四层检查满足这一条件；未验证单层编码器的关系利用。
++小模型检查恢复机制，不能外推参考架构中断后的峰值内存或长期学习能力。
++
++## 冻结配置
++
++两个配置位于`experiments/t5/observation_interrupt_v1/`，只在experiment_id上不同。
++共同初始化0、分配种子1701、R0、lr=1e-4、两epoch、16步重算前缀、两个小批片段、
++clip=.2、lambda=.95、value=.5、entropy=.01、target KL=.03、dense FP32。
++使用原五地形cap1任务、原牌组/倍率/50阳光、均衡采样；每批20局。
++两个CPU worker、每worker一线程，CUDA更新，cuDNN TF32关闭，最高矩阵精度，
++共同CUBLAS_WORKSPACE_CONFIG=:4096:8。
++
++停止预算为5000决策或80局，完整局允许自然超出决策预算；末节点5000，另保留实际
++初始化与最终预算边界评估。工程评估仅取各任务原来最前两个种子，共10环境局，
++greedy/sample各一次，共20局/节点。此独立工程子集不替换原35任务×64种子验证清单。
++
++## 中断与判定
++
++先运行连续控制。第二个独立候选在更新1的完整检查点之后、更新2采集中至少4个且
++少于20个完整NPZ出现时，对该探针自己的进程组发SIGKILL。不得停止正式矩阵。
++保留死亡退出码、更新1完整AdamW/RNG检查点、resume指针、全部NPZ、mtime和SHA256；
++同配置用完整--resume恢复。每次进程最多600秒，超时也保留现场并记失败。
++
++要求连续与恢复后模型张量、AdamW状态、Python/NumPy/Torch CPU/CUDA/分配随机状态
++全部逐项严格相同；更新计数、决策/tick/局数、最近任务历史、所有更新loss/轨迹统计/
++逐局digest、各节点摘要及完整逐局评估严格相同。部分NPZ的SHA256和mtime均须不变，
++恢复日志须显示update 2 cached复用。不同experiment_id、路径、调用记录和实际耗时
++属于预先列明的元数据差异，不进入等价判定。任何实质差异均记录失败，不降低容差。
++
++启动探针时至少留有1024MiB空闲显存。记录自身资源及全部墙钟；因与原矩阵并行，
++这些时间不能当作独占机器性能或后续等墙钟能力对照。实际中断前未保存的活动耗时
++可能不在training_state累计中，因此同时报告审计器总墙钟。
++
++成功只补充新观测恢复工程证据。后续仍需新配置完整门禁、参考架构成本与实际恢复、
++矩阵完成后的三初始化输入消融、课程对照、预算B以及T6/T7能力验收。
+diff --git a/OBSERVATION_INTERRUPTION_PROTOCOL_V2.md b/OBSERVATION_INTERRUPTION_PROTOCOL_V2.md
+new file mode 100644
+index 0000000..589f0ae
+--- /dev/null
++++ b/OBSERVATION_INTERRUPTION_PROTOCOL_V2.md
+@@ -0,0 +1,29 @@
++# 新观测确定性实际中断恢复 v2（运行前冻结）
++
++v1严格比较为fail，完整现场保留。两次相同实际数据的首个CUDA更新在关闭确定性算法时
++从优化器步骤1分离，开启后模型、AdamW、RNG和loss严格相同，零差异。它支持GPU运算
++确定性这一运行条件假设，不锁定具体算子，也没有把v1或完整恢复改判通过。
++
++v2在隔离源中把runtime.deterministic_algorithms与runtime.cublas_workspace_config
++设为必填字段。True时要求已实测的:4096:8，启动前设置；环境已有冲突值即退出。
++torch.use_deterministic_algorithms(..., warn_only=False)在CUDA模型构造前调用，
++实际启用值也写provenance；完整实验配置继续进入检查点及恢复identity。
++旧配置缺字段被拒绝，旧v1源门禁不能复用到新实现。此改动不进入当前奖励矩阵。
++
++采用v1同一模型、PPO、任务、种子、5000决策或80局预算、20局批量、双模式工程评估、
++4个部分NPZ触发和600秒超时。新ID、输出目录与源门禁均为v2，不覆写v1。
++配置位于experiments/t5/observation_interrupt_v2，门禁仅许可这两个工程探针，
++还未证明实际恢复通过或正式学习可放大。
++
++继续严格要求模型、AdamW、Python/NumPy/Torch CPU/CUDA/分配RNG、计数、近期历史、
++更新loss/统计/全部逐局digest、节点摘要及原始逐局评估全部相等，4个部分NPZ的
++SHA256和mtime全部不变。路径/身份/实际耗时等原先列明的元数据差异仍排除；
++数值容差未放宽。失败保留现场并停止该探针，不停止冻结的主奖励矩阵。
++
++范围仍是32宽两层小模型/input_flags=7的实际恢复机制。参考192宽实际恢复、后续课程
++状态的真实中断、完整工程门禁及三初始化学习证据须独立补齐；不以小模型结果外推容量
++或长期能力。与主矩阵并行，不把该墙钟当作独占机器性能。遵循最新远端推理策略文档，
++不引入temperature sweep，不改reward rollout或冻结评估节点。
++
++9项旧/新训练检查的首次运行有8项通过，新增配置检查因测试路径缺少_v3后缀失败；
++原日志保留。修正fixture路径后4项配置检查通过，未改数值或能力门槛。
+diff --git a/experiments/t5/observation_interrupt_v1/continuous.json b/experiments/t5/observation_interrupt_v1/continuous.json
+new file mode 100644
+index 0000000..852f841
+--- /dev/null
++++ b/experiments/t5/observation_interrupt_v1/continuous.json
+@@ -0,0 +1,73 @@
++{
++  "schema_version": 1,
++  "experiment_id": "observation_interrupt_v1_continuous",
++  "purpose": "new_input_full_resume_engineering_probe_v1",
++  "initialization_seed": 0,
++  "sampling_seed": 1701,
++  "model": {
++    "layers": 2,
++    "width": 32,
++    "heads": 4,
++    "ff_width": 64,
++    "gru_layers": 2,
++    "gru_width": 16,
++    "critic_width": 24,
++    "critic_layers": 1,
++    "input_flags": 7
++  },
++  "reward": {
++    "name": "R0",
++    "gamma": 0.99,
++    "shaping_weight": 1
++  },
++  "ppo": {
++    "learning_rate": 0.0001,
++    "ppo_epochs": 2,
++    "sequence_length": 16,
++    "minibatch_chunks": 2,
++    "clip_epsilon": 0.2,
++    "gae_lambda": 0.95,
++    "value_coefficient": 0.5,
++    "entropy_coefficient": 0.01,
++    "attention_backend": "dense",
++    "target_kl": 0.03
++  },
++  "sampling": {
++    "manifest": "artifacts/task_family/train.json",
++    "task_ids": [
++      "train_day_1",
++      "train_night_1",
++      "train_pool_1",
++      "train_fog_1",
++      "train_roof_1"
++    ],
++    "method": "balanced",
++    "rollout_episodes": 20
++  },
++  "budget": {
++    "decisions": 5000,
++    "max_episodes": 80
++  },
++  "evaluation": {
++    "manifest": "experiments/t5/observation_interrupt_v1/evaluation.json",
++    "modes": [
++      "greedy",
++      "sampled"
++    ],
++    "decision_nodes": [
++      5000
++    ]
++  },
++  "runtime": {
++    "workers": 2,
++    "worker_threads": 1,
++    "worker_device": "cpu",
++    "update_device": "cuda",
++    "max_actions": 4000,
++    "cudnn_tf32": false,
++    "matmul_precision": "highest"
++  },
++  "prerequisites": [
++    "gates/T5-observation-interruption-probe-v1.json"
++  ]
++}
+diff --git a/experiments/t5/observation_interrupt_v1/evaluation.json b/experiments/t5/observation_interrupt_v1/evaluation.json
+new file mode 100644
+index 0000000..0ea733d
+--- /dev/null
++++ b/experiments/t5/observation_interrupt_v1/evaluation.json
+@@ -0,0 +1,116 @@
++{
++  "schema_version": 1,
++  "purpose": "engineering only, independent two-seed subset; no capability claim",
++  "tasks": [
++    {
++      "task_id": "train_day_1",
++      "terrain": "day",
++      "level": 1,
++      "deck": [
++        0,
++        1,
++        2,
++        3,
++        4,
++        5
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60000,
++        60001
++      ]
++    },
++    {
++      "task_id": "train_night_1",
++      "terrain": "night",
++      "level": 11,
++      "deck": [
++        8,
++        9,
++        10,
++        12,
++        14,
++        15
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60256,
++        60257
++      ]
++    },
++    {
++      "task_id": "train_pool_1",
++      "terrain": "pool",
++      "level": 21,
++      "deck": [
++        0,
++        1,
++        2,
++        3,
++        4,
++        16
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60512,
++        60513
++      ]
++    },
++    {
++      "task_id": "train_fog_1",
++      "terrain": "fog",
++      "level": 32,
++      "deck": [
++        8,
++        9,
++        10,
++        14,
++        15,
++        16
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60768,
++        60769
++      ]
++    },
++    {
++      "task_id": "train_roof_1",
++      "terrain": "roof",
++      "level": 42,
++      "deck": [
++        0,
++        1,
++        2,
++        3,
++        4,
++        33
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        61024,
++        61025
++      ]
++    }
++  ]
++}
+diff --git a/experiments/t5/observation_interrupt_v1/interrupted.json b/experiments/t5/observation_interrupt_v1/interrupted.json
+new file mode 100644
+index 0000000..1a62b9f
+--- /dev/null
++++ b/experiments/t5/observation_interrupt_v1/interrupted.json
+@@ -0,0 +1,73 @@
++{
++  "schema_version": 1,
++  "experiment_id": "observation_interrupt_v1_interrupted",
++  "purpose": "new_input_full_resume_engineering_probe_v1",
++  "initialization_seed": 0,
++  "sampling_seed": 1701,
++  "model": {
++    "layers": 2,
++    "width": 32,
++    "heads": 4,
++    "ff_width": 64,
++    "gru_layers": 2,
++    "gru_width": 16,
++    "critic_width": 24,
++    "critic_layers": 1,
++    "input_flags": 7
++  },
++  "reward": {
++    "name": "R0",
++    "gamma": 0.99,
++    "shaping_weight": 1
++  },
++  "ppo": {
++    "learning_rate": 0.0001,
++    "ppo_epochs": 2,
++    "sequence_length": 16,
++    "minibatch_chunks": 2,
++    "clip_epsilon": 0.2,
++    "gae_lambda": 0.95,
++    "value_coefficient": 0.5,
++    "entropy_coefficient": 0.01,
++    "attention_backend": "dense",
++    "target_kl": 0.03
++  },
++  "sampling": {
++    "manifest": "artifacts/task_family/train.json",
++    "task_ids": [
++      "train_day_1",
++      "train_night_1",
++      "train_pool_1",
++      "train_fog_1",
++      "train_roof_1"
++    ],
++    "method": "balanced",
++    "rollout_episodes": 20
++  },
++  "budget": {
++    "decisions": 5000,
++    "max_episodes": 80
++  },
++  "evaluation": {
++    "manifest": "experiments/t5/observation_interrupt_v1/evaluation.json",
++    "modes": [
++      "greedy",
++      "sampled"
++    ],
++    "decision_nodes": [
++      5000
++    ]
++  },
++  "runtime": {
++    "workers": 2,
++    "worker_threads": 1,
++    "worker_device": "cpu",
++    "update_device": "cuda",
++    "max_actions": 4000,
++    "cudnn_tf32": false,
++    "matmul_precision": "highest"
++  },
++  "prerequisites": [
++    "gates/T5-observation-interruption-probe-v1.json"
++  ]
++}
+diff --git a/experiments/t5/observation_interrupt_v2/continuous.json b/experiments/t5/observation_interrupt_v2/continuous.json
+new file mode 100644
+index 0000000..20669e2
+--- /dev/null
++++ b/experiments/t5/observation_interrupt_v2/continuous.json
+@@ -0,0 +1,75 @@
++{
++  "schema_version": 1,
++  "experiment_id": "observation_interrupt_v2_continuous",
++  "purpose": "new_input_deterministic_full_resume_engineering_probe_v2",
++  "initialization_seed": 0,
++  "sampling_seed": 1701,
++  "model": {
++    "layers": 2,
++    "width": 32,
++    "heads": 4,
++    "ff_width": 64,
++    "gru_layers": 2,
++    "gru_width": 16,
++    "critic_width": 24,
++    "critic_layers": 1,
++    "input_flags": 7
++  },
++  "reward": {
++    "name": "R0",
++    "gamma": 0.99,
++    "shaping_weight": 1
++  },
++  "ppo": {
++    "learning_rate": 0.0001,
++    "ppo_epochs": 2,
++    "sequence_length": 16,
++    "minibatch_chunks": 2,
++    "clip_epsilon": 0.2,
++    "gae_lambda": 0.95,
++    "value_coefficient": 0.5,
++    "entropy_coefficient": 0.01,
++    "attention_backend": "dense",
++    "target_kl": 0.03
++  },
++  "sampling": {
++    "manifest": "artifacts/task_family/train.json",
++    "task_ids": [
++      "train_day_1",
++      "train_night_1",
++      "train_pool_1",
++      "train_fog_1",
++      "train_roof_1"
++    ],
++    "method": "balanced",
++    "rollout_episodes": 20
++  },
++  "budget": {
++    "decisions": 5000,
++    "max_episodes": 80
++  },
++  "evaluation": {
++    "manifest": "experiments/t5/observation_interrupt_v2/evaluation.json",
++    "modes": [
++      "greedy",
++      "sampled"
++    ],
++    "decision_nodes": [
++      5000
++    ]
++  },
++  "runtime": {
++    "workers": 2,
++    "worker_threads": 1,
++    "worker_device": "cpu",
++    "update_device": "cuda",
++    "max_actions": 4000,
++    "cudnn_tf32": false,
++    "matmul_precision": "highest",
++    "deterministic_algorithms": true,
++    "cublas_workspace_config": ":4096:8"
++  },
++  "prerequisites": [
++    "gates/T5-observation-interruption-probe-v2.json"
++  ]
++}
+diff --git a/experiments/t5/observation_interrupt_v2/evaluation.json b/experiments/t5/observation_interrupt_v2/evaluation.json
+new file mode 100644
+index 0000000..0ea733d
+--- /dev/null
++++ b/experiments/t5/observation_interrupt_v2/evaluation.json
+@@ -0,0 +1,116 @@
++{
++  "schema_version": 1,
++  "purpose": "engineering only, independent two-seed subset; no capability claim",
++  "tasks": [
++    {
++      "task_id": "train_day_1",
++      "terrain": "day",
++      "level": 1,
++      "deck": [
++        0,
++        1,
++        2,
++        3,
++        4,
++        5
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60000,
++        60001
++      ]
++    },
++    {
++      "task_id": "train_night_1",
++      "terrain": "night",
++      "level": 11,
++      "deck": [
++        8,
++        9,
++        10,
++        12,
++        14,
++        15
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60256,
++        60257
++      ]
++    },
++    {
++      "task_id": "train_pool_1",
++      "terrain": "pool",
++      "level": 21,
++      "deck": [
++        0,
++        1,
++        2,
++        3,
++        4,
++        16
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60512,
++        60513
++      ]
++    },
++    {
++      "task_id": "train_fog_1",
++      "terrain": "fog",
++      "level": 32,
++      "deck": [
++        8,
++        9,
++        10,
++        14,
++        15,
++        16
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        60768,
++        60769
++      ]
++    },
++    {
++      "task_id": "train_roof_1",
++      "terrain": "roof",
++      "level": 42,
++      "deck": [
++        0,
++        1,
++        2,
++        3,
++        4,
++        33
++      ],
++      "zombie_count_multiplier": 1.0,
++      "wave_cap": 1,
++      "sun_start": 50,
++      "preplanted": [],
++      "playthrough": 2,
++      "seeds": [
++        61024,
++        61025
++      ]
++    }
++  ]
++}
+diff --git a/experiments/t5/observation_interrupt_v2/interrupted.json b/experiments/t5/observation_interrupt_v2/interrupted.json
+new file mode 100644
+index 0000000..70fe10b
+--- /dev/null
++++ b/experiments/t5/observation_interrupt_v2/interrupted.json
+@@ -0,0 +1,75 @@
++{
++  "schema_version": 1,
++  "experiment_id": "observation_interrupt_v2_interrupted",
++  "purpose": "new_input_deterministic_full_resume_engineering_probe_v2",
++  "initialization_seed": 0,
++  "sampling_seed": 1701,
++  "model": {
++    "layers": 2,
++    "width": 32,
++    "heads": 4,
++    "ff_width": 64,
++    "gru_layers": 2,
++    "gru_width": 16,
++    "critic_width": 24,
++    "critic_layers": 1,
++    "input_flags": 7
++  },
++  "reward": {
++    "name": "R0",
++    "gamma": 0.99,
++    "shaping_weight": 1
++  },
++  "ppo": {
++    "learning_rate": 0.0001,
++    "ppo_epochs": 2,
++    "sequence_length": 16,
++    "minibatch_chunks": 2,
++    "clip_epsilon": 0.2,
++    "gae_lambda": 0.95,
++    "value_coefficient": 0.5,
++    "entropy_coefficient": 0.01,
++    "attention_backend": "dense",
++    "target_kl": 0.03
++  },
++  "sampling": {
++    "manifest": "artifacts/task_family/train.json",
++    "task_ids": [
++      "train_day_1",
++      "train_night_1",
++      "train_pool_1",
++      "train_fog_1",
++      "train_roof_1"
++    ],
++    "method": "balanced",
++    "rollout_episodes": 20
++  },
++  "budget": {
++    "decisions": 5000,
++    "max_episodes": 80
++  },
++  "evaluation": {
++    "manifest": "experiments/t5/observation_interrupt_v2/evaluation.json",
++    "modes": [
++      "greedy",
++      "sampled"
++    ],
++    "decision_nodes": [
++      5000
++    ]
++  },
++  "runtime": {
++    "workers": 2,
++    "worker_threads": 1,
++    "worker_device": "cpu",
++    "update_device": "cuda",
++    "max_actions": 4000,
++    "cudnn_tf32": false,
++    "matmul_precision": "highest",
++    "deterministic_algorithms": true,
++    "cublas_workspace_config": ":4096:8"
++  },
++  "prerequisites": [
++    "gates/T5-observation-interruption-probe-v2.json"
++  ]
++}
+diff --git a/gates/T5-observation-interruption-probe-v1.json b/gates/T5-observation-interruption-probe-v1.json
+new file mode 100644
+index 0000000..996e952
+--- /dev/null
++++ b/gates/T5-observation-interruption-probe-v1.json
+@@ -0,0 +1,56 @@
++{
++  "schema_version": 1,
++  "gate_result": "pass",
++  "scope": "PREREQUISITE ONLY for the two frozen small-model actual interruption probes; not a formal learning or completed-resume gate",
++  "allowed_experiment_ids": [
++    "observation_interrupt_v1_continuous",
++    "observation_interrupt_v1_interrupted"
++  ],
++  "simulator_sha256": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
++  "required_fingerprints": {
++    "python/pvz_agent_model.py": "35f87fc4386b62134ad8fb16e4756735cd22fc4727b321c6f34ea155340e4985",
++    "python/pvz_research.py": "33473d2d9d5437cb3ce8d5b8b5b3cd943a7b9dd9fda6387d68b78755119b04af",
++    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
++    "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
++    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
++    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
++    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
++    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
++    "python/pvz_observation_features.py": "5b99ef9cb10320417446436ef04826fc5eae16a32d02c20ec06562747c3da9bf",
++    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
++    "src/LawnApp.cpp": "7f076a78c568f85dda10c177131dc664d754eddfeedc4cd3a6e5e48a67f0ac3b",
++    "scripts/research_observation_interrupt_audit.py": "d602ae7365b60286504655126fdee3d5d0aeb24aa3cfc69d3532c6a55f4941fc",
++    "artifacts/task_family/train.json": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
++    "experiments/t5/observation_interrupt_v1/interrupted.json": "8b461f23a5e56be99b7b90f3b815a78a539fba5bbd86cbe6b696f1068cce671d",
++    "experiments/t5/observation_interrupt_v1/evaluation.json": "0073fafeefc5f0b196e9aafd2fd57f1ee0cf10aa28697488f01ce51629e2503c",
++    "experiments/t5/observation_interrupt_v1/continuous.json": "fb6cdeec843d500850aa45279e8a8f47326a9db882c87156c1a3ea290ffa5d19"
++  },
++  "evidence": {
++    "observation_native_audit_v1.json": {
++      "sha256": "d137d0f5943ee76f6976297b11fe6fa3c09d75b60ed8a347e5ee374c1f3dab76",
++      "result": "pass"
++    },
++    "observation_native_targets_v1.json": {
++      "sha256": "4779880360e4d1ec423be7a87d6e5da3036fe7def1109acff9400f21459bc307",
++      "result": "pass"
++    },
++    "observation_actual_replay_v1/cpu_report.json": {
++      "sha256": "537f56f5c4f6632c68e5ed4e69e3dc19605fea2e9a00ee1cb2142615d6d8a0ae",
++      "result": "pass"
++    },
++    "observation_actual_replay_v1/cuda_report.json": {
++      "sha256": "c0c24b28d344823e621be48a9d33f579f16810becde7d3cc816855fc930ab5c3",
++      "result": "pass"
++    },
++    "observation_legacy_parity_v1.json": {
++      "sha256": "0e21af42c6c25e04571bd488aa5b1b88772aff3362a0cfc822d050434f20e172",
++      "result": null
++    }
++  },
++  "pending": [
++    "actual SIGKILL and full state equivalence",
++    "actual reference-architecture interruption/cost",
++    "formal 3-initialization input learning comparison"
++  ],
++  "unchanged_thresholds": true
++}
+diff --git a/gates/T5-observation-interruption-probe-v2.json b/gates/T5-observation-interruption-probe-v2.json
+new file mode 100644
+index 0000000..c0007a2
+--- /dev/null
++++ b/gates/T5-observation-interruption-probe-v2.json
+@@ -0,0 +1,68 @@
++{
++  "schema_version": 1,
++  "gate_result": "pass",
++  "scope": "PREREQUISITE ONLY for the two frozen deterministic small-model actual interruption v2 probes; previous strict v1 failure retained; no learning pass",
++  "allowed_experiment_ids": [
++    "observation_interrupt_v2_continuous",
++    "observation_interrupt_v2_interrupted"
++  ],
++  "simulator_sha256": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
++  "required_fingerprints": {
++    "python/pvz_agent_model.py": "35f87fc4386b62134ad8fb16e4756735cd22fc4727b321c6f34ea155340e4985",
++    "python/pvz_research.py": "d4de2310671f480d3f4d8d34601103736c392f818706f9b5cfd168bfd3b129be",
++    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
++    "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
++    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
++    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
++    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
++    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
++    "python/pvz_observation_features.py": "5b99ef9cb10320417446436ef04826fc5eae16a32d02c20ec06562747c3da9bf",
++    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
++    "src/LawnApp.cpp": "7f076a78c568f85dda10c177131dc664d754eddfeedc4cd3a6e5e48a67f0ac3b",
++    "scripts/research_observation_interrupt_audit.py": "d602ae7365b60286504655126fdee3d5d0aeb24aa3cfc69d3532c6a55f4941fc",
++    "artifacts/task_family/train.json": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
++    "experiments/t5/observation_interrupt_v2/interrupted.json": "b4f117c0aaa6ab08f7f4ddc05557737942a05cdd5a51a8fd440ad4a96625495f",
++    "experiments/t5/observation_interrupt_v2/evaluation.json": "0073fafeefc5f0b196e9aafd2fd57f1ee0cf10aa28697488f01ce51629e2503c",
++    "experiments/t5/observation_interrupt_v2/continuous.json": "68853125db620f532b2fe664bbb59de25cd4165383c795eab3d2e9de4f015fe3",
++    "scripts/research_cuda_update_determinism.py": "2f93aeac2ef7c3f863f8486aa2f97d9975def573af42ec8eb4bc8c498e442d21"
++  },
++  "evidence": {
++    "observation_native_audit_v1.json": {
++      "sha256": "d137d0f5943ee76f6976297b11fe6fa3c09d75b60ed8a347e5ee374c1f3dab76",
++      "result": "pass"
++    },
++    "observation_native_targets_v1.json": {
++      "sha256": "4779880360e4d1ec423be7a87d6e5da3036fe7def1109acff9400f21459bc307",
++      "result": "pass"
++    },
++    "observation_actual_replay_v1/cpu_report.json": {
++      "sha256": "537f56f5c4f6632c68e5ed4e69e3dc19605fea2e9a00ee1cb2142615d6d8a0ae",
++      "result": "pass"
++    },
++    "observation_actual_replay_v1/cuda_report.json": {
++      "sha256": "c0c24b28d344823e621be48a9d33f579f16810becde7d3cc816855fc930ab5c3",
++      "result": "pass"
++    },
++    "observation_legacy_parity_v1.json": {
++      "sha256": "0e21af42c6c25e04571bd488aa5b1b88772aff3362a0cfc822d050434f20e172",
++      "result": null
++    },
++    "observation_cuda_determinism_v1/report.json": {
++      "sha256": "85a69d48ab7c8f8925b687d66ef4054f025090239a8d062ebdedae906df57ac9",
++      "result": "diagnostic_only",
++      "same_data_false_not_equal": true,
++      "same_data_true_bit_equal": true,
++      "strict_v1_fail_retained": true
++    }
++  },
++  "pending": [
++    "actual SIGKILL and full state equivalence",
++    "actual reference-architecture interruption/cost",
++    "formal 3-initialization input learning comparison"
++  ],
++  "unchanged_thresholds": true,
++  "runtime": {
++    "deterministic_algorithms": true,
++    "cublas_workspace_config": ":4096:8"
++  }
++}
+diff --git a/python/pvz_agent_model.py b/python/pvz_agent_model.py
+index f2c9fa7..5addea2 100644
+--- a/python/pvz_agent_model.py
++++ b/python/pvz_agent_model.py
+@@ -10,6 +10,8 @@ import numpy as np
+ import torch
+ from torch import Tensor, nn
+ from torch.nn import functional as F
++from pvz_observation_features import (INPUT_ON_BOARD, INPUT_ROW_CONTEXT, INPUT_TARGET_RELATIONS,
++                                      require_public_fields, row_context)
+ try:
+     from torch.nn.attention.flex_attention import flex_attention
+ except ImportError:  # pragma: no cover - depends on the installed PyTorch build
+@@ -28,10 +30,11 @@ TOKEN_KINDS = {
+     "seed_packet": 8,
+     "zombie_roster": 9,
+     "lane": 10,
++    "lane_enemy": 11,
+ }
+ WAIT_TICKS = (60, 150, 300)
+ MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
+-MODEL_ARCHITECTURE_VERSION = 5
++MODEL_ARCHITECTURE_VERSION = 6
+ FEATURE_COUNT = 32
+ 
+ # Fill value for the padded columns of the batched packet-logit table.  Those
+@@ -154,7 +157,7 @@ SHOOTER_PLANT_TYPES = frozenset({
+ })
+ 
+ 
+-def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
++def derive_observation_features(observation: dict[str, Any], input_flags: int = 0) -> dict[str, Any]:
+     """Compute trainable row summaries and global economy/wave features from an observation."""
+     row_threat = [0.0] * 6
+     row_nearest = [1.0] * 6
+@@ -165,6 +168,8 @@ def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
+     shooter_count = 0
+ 
+     for zombie in observation["zombies"]:
++        if input_flags & INPUT_ON_BOARD and not zombie["on_board"]:
++            continue
+         row = int(zombie["row"])
+         if not 0 <= row < 6:
+             continue
+@@ -194,10 +199,15 @@ def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
+          _ratio(row_shooters[row], 5.0), _ratio(row_plant_health[row], 3000.0))
+         for row in range(6)
+     ]
++    composition = []
++    if input_flags & INPUT_ROW_CONTEXT:
++        additions, composition = row_context(observation, ECONOMIC_PLANT_TYPES, SHOOTER_PLANT_TYPES)
++        lane_features = [base + extra for base, extra in zip(lane_features, additions, strict=True)]
+     wave_count = max(1, int(observation["wave_count"]))
+     wave_progress = max(0.0, min(1.0, float(observation["wave"]) / wave_count))
+     return {
+         "lane_features": lane_features,
++        "lane_enemy_composition": composition,
+         "sun_income_rate": float(observation["sun_income_rate"]),
+         "economic_fire_ratio": economic_count / max(1, shooter_count),
+         "wave_progress": wave_progress,
+@@ -205,7 +215,8 @@ def derive_observation_features(observation: dict[str, Any]) -> dict[str, Any]:
+     }
+ 
+ 
+-def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor], dict[str, Any]]:
++def observation_tokens(observation: dict[str, Any], input_flags: int = 0) -> tuple[dict[str, Tensor], dict[str, Any]]:
++    require_public_fields(observation, input_flags)
+     kinds: list[int] = []
+     categories: list[int] = []
+     variants: list[int] = []
+@@ -215,7 +226,8 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor],
+     packet_tokens: dict[int, int] = {}
+     cell_tokens: dict[int, int] = {}
+     lane_tokens: dict[int, int] = {}
+-    derived = derive_observation_features(observation)
++    derived = derive_observation_features(observation, input_flags)
++    pending_targets, zombie_indices = {}, {}
+ 
+     def add(kind: str, category: int = -1, variant: int = -1, values: tuple[float, ...] = (),
+             row: int = -1, col: int = -1) -> int:
+@@ -238,7 +250,9 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor],
+         _ratio(observation["tick"], 60000), _ratio(observation["wave_count"], 30),
+         _ratio(observation["zombie_count_multiplier"], 10),
+         float(observation["night"]), float(observation["pool"]), float(observation["fog"]), float(observation["roof"]),
+-        _ratio(len(plants), 40), _ratio(len(zombies), 40), _ratio(len(projectiles), 50),
++        _ratio(len(plants), 40),
++        _ratio(sum(z["on_board"] for z in zombies) if input_flags & INPUT_ON_BOARD else len(zombies), 40),
++        _ratio(len(projectiles), 50),
+         float(observation["terminal"]), _ratio(observation["result"], 2),
+         _ratio(derived["sun_income_rate"], 50.0),
+         _ratio(derived["economic_fire_ratio"], 1.0),
+@@ -263,10 +277,12 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor],
+ 
+     for row, values in enumerate(derived["lane_features"]):
+         lane_tokens[row] = add("lane", row=row, values=values)
++    for group in derived["lane_enemy_composition"]:
++        add("lane_enemy", category=group["type"], row=group["row"], values=group["values"])
+ 
+     for plant in plants:
+         row, col = plant["row"], plant["col"]
+-        add("plant", plant["type"], plant["imitater_type"], (
++        index = add("plant", plant["type"], plant["imitater_type"], (
+             _ratio(row, 5), _ratio(col, 8), _ratio(plant["health"], max(plant["max_health"], 1)),
+             _ratio(plant["health"], 3000), _ratio(plant["max_health"], 3000), _ratio(plant["state"], 100),
+             _ratio(plant["state_countdown"], 1200), _ratio(plant["launch_counter"], 1200),
+@@ -274,11 +290,14 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor],
+             _ratio(plant["wake_up_counter"], 1200), float(plant["asleep"]), float(plant["squished"]),
+             _ratio(plant["bungee_state"], 3), float(plant["target_zombie_id"] > 0),
+         ), row=row, col=col)
++        if input_flags & INPUT_TARGET_RELATIONS:
++            pending_targets[index] = plant["target_zombie_id"]
++            features[index][14] = float(plant["target_zombie_id"] not in (0, -1))
+ 
+     for zombie in zombies:
+         row = zombie["row"]
+         col = max(0, min(8, int((zombie["x"] - 40) / 80)))
+-        add("zombie", zombie["type"], values=(
++        index = add("zombie", zombie["type"], values=(
+             _ratio(row, 5), _ratio(col, 8), _ratio(zombie["x"], 900), _ratio(zombie["y"], 700),
+             _ratio(zombie["body_health"], max(zombie["body_max_health"], 1)), _ratio(zombie["body_health"], 2000),
+             _ratio(zombie["helm_health"], max(zombie["helm_max_health"], 1)),
+@@ -288,17 +307,23 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor],
+             _ratio(zombie["buttered"], 1200), _ratio(zombie["ice_trap"], 1200),
+             float(zombie["has_head"]), float(zombie["has_arm"]), float(zombie["has_object"]),
+             float(zombie["is_eating"]), _ratio(zombie["target_col"], 8), _ratio(zombie["target_row"], 5),
++            float(zombie["on_board"]) if input_flags & INPUT_ON_BOARD else 0.0,
+         ), row=row, col=col)
++        if input_flags & INPUT_TARGET_RELATIONS:
++            zombie_indices[zombie["id"]] = index
+ 
+     for projectile in projectiles:
+         row = projectile["row"]
+         col = max(0, min(8, int((projectile["x"] - 40) / 80)))
+-        add("projectile", projectile["type"], projectile["motion"], (
++        index = add("projectile", projectile["type"], projectile["motion"], (
+             _ratio(row, 5), _ratio(col, 8), _ratio(projectile["x"], 900), _ratio(projectile["y"], 700),
+             _ratio(projectile["z"], 500), _ratio(projectile["vx"], 20), _ratio(projectile["vy"], 20),
+             _ratio(projectile["vz"], 20), _ratio(projectile["motion"], 8), _ratio(projectile["damage"], 500),
+             _ratio(projectile["age"], 1200), float(projectile["target_zombie_id"] > 0),
+         ), row=row, col=col)
++        if input_flags & INPUT_TARGET_RELATIONS:
++            pending_targets[index] = projectile["target_zombie_id"]
++            features[index][11] = float(projectile["target_zombie_id"] not in (0, -1))
+ 
+     for defense in observation["defenses"]:
+         row = defense["row"]
+@@ -324,6 +349,12 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor],
+     for zombie_type in observation["loadout_context"]["zombie_roster"]:
+         add("zombie_roster", zombie_type, values=(1.0,))
+ 
++    targets = [-1] * len(kinds)
++    if input_flags & INPUT_TARGET_RELATIONS:
++        for index, identity in pending_targets.items():
++            targets[index] = zombie_indices.get(identity, -1)
++            slot = 15 if kinds[index] == TOKEN_KINDS["plant"] else 12
++            features[index][slot] = float(targets[index] >= 0)
+     tensors = {
+         "kinds": torch.tensor(kinds, dtype=torch.long),
+         "categories": torch.tensor(categories, dtype=torch.long),
+@@ -335,6 +366,8 @@ def observation_tokens(observation: dict[str, Any]) -> tuple[dict[str, Tensor],
+         "rows": torch.tensor(rows, dtype=torch.long),
+         "cols": torch.tensor(cols, dtype=torch.long),
+     }
++    if input_flags & INPUT_TARGET_RELATIONS:
++        tensors["target_indices"] = torch.tensor(targets, dtype=torch.long)
+     return tensors, {"packet_tokens": packet_tokens, "cell_tokens": cell_tokens,
+                      "lane_tokens": lane_tokens}
+ 
+@@ -352,13 +385,16 @@ def pack_tokens(tensors: dict[str, Tensor], metadata: dict[str, Any]) -> dict[st
+     """
+     ids = np.stack([tensors[field].numpy() for field in TOKEN_ID_FIELDS], axis=1).astype(np.int8)
+     packet_ids = sorted(metadata["packet_tokens"])
+-    return {
++    packed = {
+         "ids": ids,
+         "features": tensors["features"].numpy().astype(np.float16),
+         "cell_index": np.array([metadata["cell_tokens"][cell] for cell in range(54)], dtype=np.uint16),
+         "packet_ids": np.array(packet_ids, dtype=np.uint8),
+         "packet_index": np.array([metadata["packet_tokens"][packet] for packet in packet_ids], dtype=np.uint16),
+     }
++    if "target_indices" in tensors:
++        packed["target_indices"] = tensors["target_indices"].numpy().astype(np.int32)
++    return packed
+ 
+ 
+ def unpack_tokens(packed: dict[str, Any], device: torch.device) -> tuple[dict[str, Tensor], dict[str, Any]]:
+@@ -367,6 +403,8 @@ def unpack_tokens(packed: dict[str, Any], device: torch.device) -> tuple[dict[st
+     tensors = {field: ids[:, index].contiguous() for index, field in enumerate(TOKEN_ID_FIELDS)}
+     tensors["features"] = torch.from_numpy(np.ascontiguousarray(packed["features"])).to(
+         device=device, dtype=torch.float32)
++    if "target_indices" in packed:
++        tensors["target_indices"] = torch.from_numpy(packed["target_indices"]).to(device=device, dtype=torch.long)
+     packet_ids = [int(value) for value in packed["packet_ids"]]
+     packet_index = [int(value) for value in packed["packet_index"]]
+     metadata = {
+@@ -529,10 +567,12 @@ class RelationAttention(nn.Module):
+         self.row_bias = nn.Embedding(12, heads)
+         self.col_bias = nn.Embedding(18, heads)
+         self.same_cell_bias = nn.Embedding(2, heads)
++        self.target_bias = nn.Parameter(torch.zeros(heads))
+ 
+     def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
+                 key_mask: Tensor | None = None,
+-                indices: RelationBiasIndices | None = None) -> Tensor:
++                indices: RelationBiasIndices | None = None,
++                target_indices: Tensor | None = None) -> Tensor:
+         batch, count, width = x.shape
+         if kinds.dim() == 1:
+             # Single-step call: kinds/rows/cols are (count,).  Lift to (batch, count)
+@@ -541,6 +581,8 @@ class RelationAttention(nn.Module):
+             kinds = kinds.unsqueeze(0)
+             rows = rows.unsqueeze(0)
+             cols = cols.unsqueeze(0)
++        if target_indices is not None and target_indices.dim() == 1:
++            target_indices = target_indices.unsqueeze(0)
+         qkv = self.qkv(x).view(batch, count, 3, self.heads, self.head_width).permute(2, 0, 3, 1, 4)
+         query, key, value = qkv.unbind(0)
+         if (self.use_flex_attention and _COMPILED_FLEX_ATTENTION is not None
+@@ -549,6 +591,7 @@ class RelationAttention(nn.Module):
+             row_bias = self.row_bias.weight
+             col_bias = self.col_bias.weight
+             same_bias = self.same_cell_bias.weight
++            target_bias = self.target_bias
+ 
+             def relation_score(score: Tensor, batch_index: Tensor, head: Tensor,
+                                query_index: Tensor, key_index: Tensor) -> Tensor:
+@@ -570,6 +613,8 @@ class RelationAttention(nn.Module):
+                             + row_bias[row_bucket, head]
+                             + col_bias[col_bucket, head]
+                             + same_bias[same_cell, head])
++                if target_indices is not None:
++                    relation = relation + target_bias[head] * (target_indices[batch_index, query_index] == key_index)
+                 score = score + relation
+                 if key_mask is not None:
+                     score = score.masked_fill(
+@@ -602,6 +647,9 @@ class RelationAttention(nn.Module):
+                     self.kind_pair_bias, self.row_bias.weight,
+                     self.col_bias.weight, self.same_cell_bias.weight)
+             scores = scores + relation
++            if target_indices is not None:
++                linked = target_indices[:, :, None] == torch.arange(count, device=x.device)[None, None, :]
++                scores = scores + self.target_bias[None, :, None, None] * linked[:, None, :, :]
+         attended = torch.softmax(scores, dim=-1)
+         value = torch.matmul(attended, value).transpose(1, 2).contiguous().view(batch, count, width)
+         return self.projection(value)
+@@ -619,8 +667,9 @@ class RelationLayer(nn.Module):
+ 
+     def forward(self, x: Tensor, kinds: Tensor, rows: Tensor, cols: Tensor,
+                 key_mask: Tensor | None = None,
+-                indices: RelationBiasIndices | None = None) -> Tensor:
+-        x = x + self.attention(self.attention_norm(x), kinds, rows, cols, key_mask, indices)
++                indices: RelationBiasIndices | None = None,
++                target_indices: Tensor | None = None) -> Tensor:
++        x = x + self.attention(self.attention_norm(x), kinds, rows, cols, key_mask, indices, target_indices)
+         normalized = self.ff_norm(x)
+         x = x + self.down(F.silu(self.gate(normalized)) * self.value(normalized))
+         return x
+@@ -629,11 +678,14 @@ class GameplayModelV1(nn.Module):
+     def __init__(self, config: dict[str, Any] | None = None) -> None:
+         super().__init__()
+         self.config = {**MODEL_CONFIG, **(config or {})}
+-        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers"}
++        self.config.setdefault("input_flags", 0)
++        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags"}
+         if set(self.config) - allowed:
+             raise ValueError(f"unknown model settings: {sorted(set(self.config) - allowed)}")
+-        if any(type(value) is not int or value < 1 for value in self.config.values()):
++        if any(type(value) is not int or value < 1 for key, value in self.config.items() if key != "input_flags"):
+             raise ValueError("model dimensions must be positive integers")
++        if type(self.config["input_flags"]) is not int or not 0 <= self.config["input_flags"] <= 7:
++            raise ValueError("input_flags must be from 0 to 7")
+         if self.config["width"] % self.config["heads"]:
+             raise ValueError("encoder width must be divisible by attention heads")
+         width = self.config["width"]
+@@ -644,6 +696,9 @@ class GameplayModelV1(nn.Module):
+         lane_generator = torch.Generator(device="cpu").manual_seed(50_210)
+         lane_embedding = torch.empty(1, width).normal_(generator=lane_generator)
+         self.kind_embedding.weight = nn.Parameter(torch.cat((self.kind_embedding.weight.detach(), lane_embedding)))
++        context_generator = torch.Generator(device="cpu").manual_seed(50_211)
++        context_embedding = torch.empty(1, width).normal_(generator=context_generator)
++        self.kind_embedding.weight = nn.Parameter(torch.cat((self.kind_embedding.weight.detach(), context_embedding)))
+         self.category_embedding = nn.Embedding(128, width)
+         self.variant_embedding = nn.Embedding(128, width)
+         self.feature_projection = nn.Sequential(nn.Linear(FEATURE_COUNT, width), nn.SiLU(), nn.Linear(width, width))
+@@ -719,7 +774,7 @@ class GameplayModelV1(nn.Module):
+     def step(self, observation: dict[str, Any], hidden: Tensor | None = None,
+              previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
+              events: dict[str, Any] | None = None) -> dict[str, Any]:
+-        tensors, metadata = observation_tokens(observation)
++        tensors, metadata = observation_tokens(observation, self.config["input_flags"])
+         return self.step_tokens(tensors, metadata, observation["wave"], hidden,
+                                 previous_action, delta_ticks, events)
+ 
+@@ -744,8 +799,11 @@ class GameplayModelV1(nn.Module):
+         # The relation-bias indices depend only on the token layout, so compute
+         # them once for the whole encoder instead of once per layer.
+         indices = relation_bias_indices(rows.unsqueeze(0), cols.unsqueeze(0))
++        targets = None
++        if self.config["input_flags"] & INPUT_TARGET_RELATIONS:
++            targets = tensors["target_indices"].to(device)
+         for layer in self.encoder:
+-            x = layer(x, kinds, rows, cols, indices=indices)
++            x = layer(x, kinds, rows, cols, indices=indices, target_indices=targets)
+         x = self.encoder_norm(x)
+ 
+         action_vector = self._previous_action(previous_action, device)
+@@ -858,11 +916,14 @@ class GameplayModelV1(nn.Module):
+         ids = np.zeros((count, l_max, len(TOKEN_ID_FIELDS)), dtype=np.int64)
+         features = np.zeros((count, l_max, FEATURE_COUNT), dtype=np.float16)
+         key_mask = np.zeros((count, l_max), dtype=bool)
++        targets = np.full((count, l_max), -1, dtype=np.int32) if self.config["input_flags"] & INPUT_TARGET_RELATIONS else None
+         for index, packed in enumerate(packed_list):
+             real = packed["ids"].shape[0]
+             ids[index, :real] = packed["ids"]
+             features[index, :real] = packed["features"]
+             key_mask[index, :real] = True
++            if targets is not None:
++                targets[index, :real] = packed["target_indices"]
+         p_max = max(max(1, packed["packet_ids"].shape[0]) for packed in packed_list)
+         packet_index = np.zeros((count, p_max), dtype=np.int64)
+         packet_counts = []
+@@ -885,8 +946,9 @@ class GameplayModelV1(nn.Module):
+              + self.col_embedding((cols + 1).clamp(0, 10)))
+         mask = torch.from_numpy(key_mask).to(device)
+         indices = relation_bias_indices(rows, cols)
++        targets_t = torch.from_numpy(targets).to(device=device, dtype=torch.long) if targets is not None else None
+         for layer in self.encoder:
+-            x = layer(x, kinds, rows, cols, mask, indices)
++            x = layer(x, kinds, rows, cols, mask, indices, targets_t)
+         x = self.encoder_norm(x)
+ 
+         action_vector = self._previous_action_batch(
+diff --git a/python/pvz_common.py b/python/pvz_common.py
+index 920b048..392bc1a 100644
+--- a/python/pvz_common.py
++++ b/python/pvz_common.py
+@@ -19,7 +19,7 @@ from typing import Any
+ 
+ ENV_PROTOCOL_VERSION = 4
+ REPLAY_FORMAT_VERSION = 5
+-OBSERVATION_VERSION = 3
++OBSERVATION_VERSION = 4
+ TASK_VERSION = 2
+ 
+ # Seeds the training entry points must pass to ``random.seed`` / ``torch.manual_seed``.
+diff --git a/python/pvz_observation_features.py b/python/pvz_observation_features.py
+new file mode 100644
+index 0000000..3e9ac70
+--- /dev/null
++++ b/python/pvz_observation_features.py
+@@ -0,0 +1,71 @@
++"""Public-only row context; it describes choices and never selects an action."""
++from __future__ import annotations
++
++from collections import defaultdict
++
++
++INPUT_ON_BOARD = 1
++INPUT_ROW_CONTEXT = 2
++INPUT_TARGET_RELATIONS = 4
++
++
++def require_public_fields(observation: dict, flags: int) -> None:
++    if type(flags) is not int or not 0 <= flags <= 7:
++        raise ValueError("input_flags must be an explicit integer bitmask from 0 to 7")
++    if flags & (INPUT_ON_BOARD | INPUT_ROW_CONTEXT):
++        if any(type(z.get("on_board")) is not bool for z in observation["zombies"]):
++            raise ValueError("new input requires explicit public zombie.on_board")
++    if flags & INPUT_TARGET_RELATIONS:
++        ids = [z.get("id") for z in observation["zombies"]]
++        if (any(type(key) is not int or key in (0, -1) for key in ids)
++                or len(ids) != len(set(ids))):
++            raise ValueError("target relations require unique non-null public zombie IDs")
++
++
++def effective_plant_type(entity: dict) -> int:
++    kind = int(entity["type"])
++    return int(entity["imitater_type"]) if kind == 48 and int(entity.get("imitater_type", -1)) >= 0 else kind
++
++
++def row_context(observation: dict, economic: set | frozenset, shooters: set | frozenset) -> tuple[list[tuple], list[dict]]:
++    enemies = [z for z in observation["zombies"] if z["on_board"] and 0 <= z["row"] < 6]
++    legal_by_row = [set() for _ in range(6)]
++    cells_by_row = [set() for _ in range(6)]
++    for action in observation["legal_actions"].get("plants", ()):
++        row = action["row"]
++        if 0 <= row < 6:
++            legal_by_row[row].add(action["packet"])
++            cells_by_row[row].add(action["col"])
++    roles = (economic, shooters, frozenset({16, 33}))
++    additions = []
++    for row in range(6):
++        zombies = [z for z in enemies if z["row"] == row]
++        plants = [p for p in observation["plants"] if p["row"] == row]
++        values = [len(zombies) / 10, sum(z["helm_health"] > 0 for z in zombies) / 10,
++                  sum(z["shield_health"] > 0 for z in zombies) / 10,
++                  sum(z["is_eating"] for z in zombies) / 10,
++                  sum(z["chilled"] > 0 or z["ice_trap"] > 0 for z in zombies) / 10,
++                  sum(effective_plant_type(p) in economic for p in plants) / 10,
++                  len(cells_by_row[row]) / 9]
++        for role in roles:
++            packets = [p for p in observation["packets"] if effective_plant_type(p) in role]
++            cooldowns = [max(0, p["cooldown"]) for p in packets]
++            low, high = (min(cooldowns), max(cooldowns)) if cooldowns else (0, 0)
++            values.extend((len(packets) / 10, low / (low + 3000), high / (high + 3000),
++                           sum(p["active"] and p["cooldown"] == 0 and p["cost"] <= observation["sun"]
++                               for p in packets) / 10,
++                           sum(p["index"] in legal_by_row[row] for p in packets) / 10))
++        additions.append(tuple(values))
++    grouped = defaultdict(list)
++    for zombie in enemies:
++        grouped[zombie["row"], zombie["type"]].append(zombie)
++    composition = []
++    for (row, kind), zombies in sorted(grouped.items()):
++        composition.append({"row": row, "type": kind,
++                            "values": (len(zombies) / 10,
++                                       sum(z["body_health"] for z in zombies) / 6000,
++                                       sum(z["helm_health"] for z in zombies) / 6000,
++                                       sum(z["shield_health"] for z in zombies) / 6000,
++                                       min(z["x"] for z in zombies) / 900,
++                                       sum(z["velocity_x"] for z in zombies) / len(zombies) / 5)})
++    return additions, composition
+diff --git a/python/pvz_research.py b/python/pvz_research.py
+index e58c696..454a5d1 100644
+--- a/python/pvz_research.py
++++ b/python/pvz_research.py
+@@ -107,6 +107,10 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
+                 "evaluation", "runtime", "prerequisites"}
+     if set(config) != expected or config["schema_version"] != RESEARCH_VERSION:
+         raise ValueError("research config fields/schema do not match version 1")
++    model_fields = {"layers", "width", "heads", "ff_width", "gru_layers", "gru_width",
++                    "critic_width", "critic_layers", "input_flags"}
++    if set(config["model"]) != model_fields:
++        raise ValueError("all model dimensions and input_flags must be explicit")
+     reward = config["reward"]
+     if set(reward) != {"name", "gamma", "shaping_weight"}:
+         raise ValueError("reward must explicitly define name, gamma and shaping_weight")
+@@ -155,8 +159,15 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
+         raise ValueError("evaluation nodes must be sorted distinct positive decision counts")
+     runtime = config["runtime"]
+     if set(runtime) != {"workers", "worker_threads", "worker_device", "update_device", "max_actions",
+-                        "cudnn_tf32", "matmul_precision"}:
++                        "cudnn_tf32", "matmul_precision", "deterministic_algorithms",
++                        "cublas_workspace_config"}:
+         raise ValueError("all runtime settings must be explicit")
++    if type(runtime["deterministic_algorithms"]) is not bool:
++        raise ValueError("deterministic_algorithms must be an explicit boolean")
++    if runtime["cublas_workspace_config"] not in (None, ":4096:8"):
++        raise ValueError("unsupported explicit CUBLAS workspace configuration")
++    if runtime["deterministic_algorithms"] and runtime["cublas_workspace_config"] != ":4096:8":
++        raise ValueError("deterministic CUDA updates require the verified :4096:8 workspace")
+     if runtime["cudnn_tf32"] is not False or runtime["matmul_precision"] != "highest":
+         raise ValueError("research replay requires explicit FP32 CPU/CUDA precision")
+     if runtime["update_device"] != "cuda" or runtime["worker_device"] != "cpu":
+@@ -272,6 +283,13 @@ def run_experiment(args: Any) -> None:
+     output.mkdir(parents=True, exist_ok=True)
+     lock = (output / ".execution.lock").open("a")
+     fcntl.flock(lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
++    workspace = config["runtime"]["cublas_workspace_config"]
++    existing_workspace = os.environ.get("CUBLAS_WORKSPACE_CONFIG")
++    if existing_workspace is not None and existing_workspace != workspace:
++        raise RuntimeError("CUBLAS_WORKSPACE_CONFIG environment differs from frozen runtime config")
++    if workspace is not None:
++        os.environ["CUBLAS_WORKSPACE_CONFIG"] = workspace
++    torch.use_deterministic_algorithms(config["runtime"]["deterministic_algorithms"], warn_only=False)
+     if not torch.cuda.is_available():
+         raise RuntimeError("CUDA unavailable; research updates must not silently use CPU")
+     # cuDNN's default TF32 RNN path differs from CPU collection by ~1.7e-4
+@@ -283,7 +301,7 @@ def run_experiment(args: Any) -> None:
+     resource_dir = args.resource_dir.expanduser().resolve()
+     source_paths = [ROOT / "python" / name for name in (
+         "pvz_agent_model.py", "pvz_research.py", "train_pvz_ppo.py", "train_pvz_ppo_task_family.py",
+-        "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py")]
++        "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py", "pvz_observation_features.py")]
+     source_paths.append(ROOT / "scripts/t4_capability_profile.py")
+     fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
+     fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),
+@@ -333,7 +351,9 @@ def run_experiment(args: Any) -> None:
+                     "fingerprints": fingerprints, "model_config": model.config,
+                     "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
+                     "torch": torch.__version__, "cuda": torch.version.cuda,
+-                    "gpu": torch.cuda.get_device_name(), "experiment_identity": identity})
++                    "gpu": torch.cuda.get_device_name(), "experiment_identity": identity,
++                    "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
++                    "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG")})
+     stop_requested = threading.Event()
+     old_handlers = {sig: signal.signal(sig, lambda *_: stop_requested.set())
+                     for sig in (signal.SIGTERM, signal.SIGINT)}
+diff --git a/python/test_agent_model.py b/python/test_agent_model.py
+index b86f255..d5cea81 100644
+--- a/python/test_agent_model.py
++++ b/python/test_agent_model.py
+@@ -127,10 +127,11 @@ class ObservationTokenTests(unittest.TestCase):
+         self.assertEqual(tuple(tensors["features"].shape), (expected, FEATURE_COUNT))
+         self.assertEqual(tensors["features"].dtype, torch.float32)
+ 
+-    def test_lane_vocabulary_bumps_the_architecture_version(self) -> None:
+-        self.assertEqual(MODEL_ARCHITECTURE_VERSION, 5)
++    def test_lane_context_vocabulary_bumps_the_architecture_version(self) -> None:
++        self.assertEqual(MODEL_ARCHITECTURE_VERSION, 6)
+         self.assertEqual(TOKEN_KINDS["lane"], 10)
+-        self.assertEqual(len(TOKEN_KINDS), 11)
++        self.assertEqual(TOKEN_KINDS["lane_enemy"], 11)
++        self.assertEqual(len(TOKEN_KINDS), 12)
+ 
+     def test_cell_tokens_are_indexed_by_row_major_position(self) -> None:
+         """``select_action`` builds cell ids as ``row * 9 + col``; the tokens must agree."""
+diff --git a/python/test_observation_context.py b/python/test_observation_context.py
+new file mode 100644
+index 0000000..24c633b
+--- /dev/null
++++ b/python/test_observation_context.py
+@@ -0,0 +1,200 @@
++"""Encoding, identity invariance and real PPO replay for the isolated input candidate."""
++from __future__ import annotations
++
++import copy
++import json
++from pathlib import Path
++import tempfile
++import unittest
++
++import numpy as np
++import torch
++
++from pvz_agent_model import (GameplayModelV1, TOKEN_KINDS, configure_torch_threads,
++                             legal_summary, observation_tokens, pack_tokens, select_action, unpack_tokens)
++from test_agent_model import observation, _zombie
++from train_pvz_ppo import add_advantages, train_update
++from pvz_research import load_config
++
++SMALL = {"layers": 2, "width": 32, "heads": 4, "ff_width": 64,
++         "gru_layers": 2, "gru_width": 16, "critic_width": 24, "critic_layers": 1,
++         "input_flags": 7}
++
++
++def source() -> dict:
++    obs = observation(zombies=[_zombie(id=101, on_board=True),
++                               _zombie(id=202, on_board=True, x=310, row=2)])
++    obs["plants"][0]["target_zombie_id"] = 101
++    obs["projectiles"][0]["target_zombie_id"] = 202
++    return obs
++
++
++def replay_fixture() -> tuple[GameplayModelV1, list[dict]]:
++    torch.manual_seed(7)
++    model = GameplayModelV1(SMALL).eval()
++    episodes = []
++    for length in (9, 6):
++        transitions, hidden, previous = [], None, None
++        for index in range(length):
++            obs = source()
++            obs["tick"] += index * 73
++            if index % 2:
++                obs["zombies"].reverse()
++            tensors, metadata = observation_tokens(obs, 7)
++            legal = legal_summary(obs["legal_actions"])
++            duration = (0, 60, 150, 300)[index % 4]
++            with torch.no_grad():
++                output = model.step_tokens(tensors, metadata, obs["wave"], hidden, previous, duration, {})
++                action, log_prob, _ = select_action(model, output, legal)
++                value = model.privileged_value_from_extra(output, [0.0] * 16)
++            transitions.append({"tokens": pack_tokens(tensors, metadata), "wave": obs["wave"],
++                                "previous_action": previous, "elapsed_since_previous_observation": duration,
++                                "events": {}, "critic_extra": [0.0] * 16, "legal": legal,
++                                "action": action, "log_prob": log_prob.item(), "value": value.item(),
++                                "action_duration_ticks": duration,
++                                "reward": -1.0 if index == length - 1 else 0.0})
++            hidden, previous = output["hidden"], action
++        episodes.append({"transitions": transitions})
++    add_advantages(episodes, .95)
++    return model, episodes
++
++
++class PublicContextTests(unittest.TestCase):
++    @classmethod
++    def setUpClass(cls):
++        configure_torch_threads(1)
++
++    def test_on_board_changes_explicit_input_and_excludes_preview_from_summary(self):
++        obs = source()
++        before, _ = observation_tokens(obs, 1)
++        obs["zombies"][0]["on_board"] = False
++        after, metadata = observation_tokens(obs, 1)
++        zombie = torch.where(before["kinds"] == TOKEN_KINDS["zombie"])[0][0]
++        self.assertEqual(float(before["features"][zombie, 20]), 1)
++        self.assertEqual(float(after["features"][zombie, 20]), 0)
++        self.assertLess(float(after["features"][0, 10]), float(before["features"][0, 10]))
++        self.assertLess(float(after["features"][metadata["lane_tokens"][2], 0]),
++                        float(before["features"][metadata["lane_tokens"][2], 0]))
++
++    def test_row_context_has_exact_enemy_type_groups_and_card_cooldown(self):
++        obs = source()
++        tensors, metadata = observation_tokens(obs, 3)
++        enemies = torch.where(tensors["kinds"] == TOKEN_KINDS["lane_enemy"])[0]
++        self.assertEqual(len(enemies), 1)
++        self.assertEqual(int(tensors["categories"][enemies[0]]), 1)
++        changed = copy.deepcopy(obs)
++        changed["zombies"][1]["type"] = 2
++        other, _ = observation_tokens(changed, 3)
++        self.assertEqual(int((other["kinds"] == TOKEN_KINDS["lane_enemy"]).sum()), 2)
++        changed = copy.deepcopy(obs)
++        changed["packets"][1]["cooldown"] = 1200
++        other, _ = observation_tokens(changed, 3)
++        lane = metadata["lane_tokens"][2]
++        self.assertGreater(int(torch.count_nonzero(tensors["features"][lane] != other["features"][lane])), 0)
++
++    def test_target_identity_is_a_resolved_edge_not_an_integer_feature(self):
++        obs = source()
++        before, _ = observation_tokens(obs, 7)
++        changed = copy.deepcopy(obs)
++        changed["plants"][0]["target_zombie_id"] = 202
++        after, _ = observation_tokens(changed, 7)
++        plant = int(torch.where(before["kinds"] == TOKEN_KINDS["plant"])[0][0])
++        self.assertNotEqual(int(before["target_indices"][plant]), int(after["target_indices"][plant]))
++        # Arbitrary identity renaming cannot add numerical information.
++        renamed = copy.deepcopy(obs)
++        for z in renamed["zombies"]:
++            z["id"] += 123456
++        for kind in ("plants", "projectiles"):
++            renamed[kind][0]["target_zombie_id"] += 123456
++        renaming, _ = observation_tokens(renamed, 7)
++        for key in before:
++            torch.testing.assert_close(before[key], renaming[key], rtol=0, atol=0)
++
++    def test_missing_duplicate_and_unresolved_ids_are_explicit(self):
++        obs = source()
++        obs["zombies"][1]["id"] = 101
++        with self.assertRaisesRegex(ValueError, "unique"):
++            observation_tokens(obs, 7)
++        with self.assertRaisesRegex(ValueError, "zombie.on_board"):
++            observation_tokens(observation(), 1)
++        obs = source()
++        obs["plants"][0]["target_zombie_id"] = 303
++        tensors, _ = observation_tokens(obs, 7)
++        plant = int(torch.where(tensors["kinds"] == TOKEN_KINDS["plant"])[0][0])
++        self.assertEqual(int(tensors["target_indices"][plant]), -1)
++        self.assertEqual(float(tensors["features"][plant, 14]), 1)
++        self.assertEqual(float(tensors["features"][plant, 15]), 0)
++
++    def test_formal_config_cannot_silently_omit_input_flags(self):
++        root = Path(__file__).resolve().parent.parent
++        config = json.loads((root / "experiments/t5/reward_comparison_v2/reward_r0_seed0_v2.json").read_text())
++        with tempfile.TemporaryDirectory() as temporary:
++            path = Path(temporary) / "config.json"
++            path.write_text(json.dumps(config))
++            with self.assertRaisesRegex(ValueError, "input_flags must be explicit"):
++                load_config(path)
++
++    def test_identity_index_above_127_survives_packed_storage(self):
++        obs = source()
++        obs["zombies"] += [_zombie(id=1000 + i, on_board=True) for i in range(100)]
++        obs["plants"][0]["target_zombie_id"] = 1099
++        tensors, metadata = observation_tokens(obs, 7)
++        plant = int(torch.where(tensors["kinds"] == TOKEN_KINDS["plant"])[0][0])
++        self.assertGreater(int(tensors["target_indices"][plant]), 127)
++        packed = pack_tokens(tensors, metadata)
++        self.assertEqual(packed["target_indices"].dtype, np.int32)
++        restored, _ = unpack_tokens(packed, torch.device("cpu"))
++        torch.testing.assert_close(restored["target_indices"], tensors["target_indices"], rtol=0, atol=0)
++
++    def test_target_relations_receive_actor_gradient_and_change_behavior(self):
++        torch.manual_seed(3)
++        model = GameplayModelV1(SMALL).eval()
++        output = model.step(source())
++        output["type_logits"].sum().backward()
++        self.assertGreater(float(model.encoder[0].attention.target_bias.grad.abs().sum()), 0)
++        changed = source()
++        changed["plants"][0]["target_zombie_id"] = 202
++        with torch.no_grad():
++            for layer in model.encoder:
++                layer.attention.target_bias.fill_(1.0)
++            first, second = model.step(source()), model.step(changed)
++        self.assertGreater(float((first["type_logits"] - second["type_logits"]).abs().max()), 1e-7)
++
++    def test_entity_permutation_preserves_policy_with_corresponding_edges(self):
++        torch.manual_seed(5)
++        model = GameplayModelV1(SMALL).eval()
++        with torch.no_grad():
++            for layer in model.encoder:
++                layer.attention.target_bias.fill_(0.7)
++            first = model.step(source())
++            reordered = source()
++            reordered["zombies"].reverse()
++            second = model.step(reordered)
++        for key in ("belief", "type_logits", "packet_logits", "cell_keys", "wait_logits"):
++            torch.testing.assert_close(first[key], second[key], rtol=1e-5, atol=2e-6)
++
++    def test_real_ppo_replay_matches_collection_with_new_inputs_and_chunk_boundaries(self):
++        model, episodes = replay_fixture()
++        for sequence_length in (0, 3):
++            optimizer = torch.optim.AdamW(model.parameters(), lr=0)
++            losses = train_update(model, copy.deepcopy(episodes), optimizer, torch.device("cpu"),
++                                  2, sequence_length, .2, .5, .01, minibatch_chunks=2, attention_backend="dense")
++            self.assertLess(losses["max_log_prob_change"], 3e-6)
++            self.assertEqual(losses["clip_fraction"], 0)
++
++    @unittest.skipUnless(torch.cuda.is_available(), "requires CUDA")
++    def test_fp32_cuda_replay_matches_cpu_collection_with_new_target_inputs(self):
++        torch.backends.cudnn.allow_tf32 = False
++        torch.set_float32_matmul_precision("highest")
++        model, episodes = replay_fixture()
++        model.to("cuda")
++        for sequence_length in (0, 3):
++            optimizer = torch.optim.AdamW(model.parameters(), lr=0)
++            losses = train_update(model, copy.deepcopy(episodes), optimizer, torch.device("cuda"),
++                                  2, sequence_length, .2, .5, .01, minibatch_chunks=2, attention_backend="dense")
++            self.assertLess(losses["max_log_prob_change"], 3e-6)
++            self.assertEqual(losses["clip_fraction"], 0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/python/test_research_training.py b/python/test_research_training.py
+index 30e3bd6..e83ba8f 100644
+--- a/python/test_research_training.py
++++ b/python/test_research_training.py
+@@ -143,6 +143,8 @@ class RecurrentReplayTests(unittest.TestCase):
+ class ExplicitConfigurationTests(unittest.TestCase):
+     def test_stale_pass_gate_rejects_changed_simulator_or_source(self):
+         config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
++        config["model"]["input_flags"] = 0
++        config["runtime"].update(deterministic_algorithms=False, cublas_workspace_config=None)
+         source = "python/pvz_research.py"
+         gate = {"gate_result": "pass", "simulator_sha256": sha256_file(ROOT / "build/pvz-portable"),
+                 "required_fingerprints": {source: sha256_file(ROOT / source)}}
+@@ -159,6 +161,28 @@ class ExplicitConfigurationTests(unittest.TestCase):
+             with self.assertRaisesRegex(RuntimeError, "source is stale"):
+                 load_config(config_path)
+ 
++    def test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced(self):
++        config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
++        config["model"]["input_flags"] = 0
++        config["prerequisites"] = []
++        config["runtime"].update(deterministic_algorithms=True, cublas_workspace_config=":4096:8")
++        with tempfile.TemporaryDirectory() as temporary:
++            path = Path(temporary) / "config.json"
++            path.write_text(json.dumps(config))
++            loaded, _, _ = load_config(path)
++            self.assertTrue(loaded["runtime"]["deterministic_algorithms"])
++            for mutate, expected in (
++                (lambda runtime: runtime.pop("deterministic_algorithms"), "all runtime settings"),
++                (lambda runtime: runtime.update(deterministic_algorithms=1), "explicit boolean"),
++                (lambda runtime: runtime.update(cublas_workspace_config=None), "verified"),
++                (lambda runtime: runtime.update(cublas_workspace_config=":0:0"), "unsupported"),
++            ):
++                invalid = copy.deepcopy(config)
++                mutate(invalid["runtime"])
++                path.write_text(json.dumps(invalid))
++                with self.assertRaisesRegex(ValueError, expected):
++                    load_config(path)
++
+     def test_two_models_keep_independent_configs_and_critic_dimensions(self):
+         model = GameplayModelV1(SMALL)
+         other = GameplayModelV1({**SMALL, "width": 64, "critic_width": 48})
+diff --git a/python/train_pvz_ppo.py b/python/train_pvz_ppo.py
+index 31fc92d..7bceff5 100644
+--- a/python/train_pvz_ppo.py
++++ b/python/train_pvz_ppo.py
+@@ -84,7 +84,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
+             wave_rosters[wave] = roster
+         critic_inputs_seconds += time.perf_counter() - critic_started
+         tokenize_started = time.perf_counter()
+-        tensors, metadata = observation_tokens(observation)
++        tensors, metadata = observation_tokens(observation, model.config.get("input_flags", 0))
+         # observation_tokens already rounds both inference and replay inputs to
+         # fp16-representable values; compact storage adds no further quantization.
+         packed = pack_tokens(tensors, metadata)
+diff --git a/scripts/research_cuda_update_determinism.py b/scripts/research_cuda_update_determinism.py
+new file mode 100644
+index 0000000..f6767a1
+--- /dev/null
++++ b/scripts/research_cuda_update_determinism.py
+@@ -0,0 +1,130 @@
++#!/usr/bin/env python3
++"""Repeat one actual PPO update from identical weights, AdamW/RNG and shards."""
++from __future__ import annotations
++
++import argparse
++import copy
++import hashlib
++import json
++import os
++from pathlib import Path
++import random
++import subprocess
++import sys
++import time
++import traceback
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
++
++import torch
++from pvz_agent_model import GameplayModelV1, configure_torch_threads
++from pvz_common import sha256_file
++from pvz_research import capture_rng, restore_rng
++from pvz_seed_jobs import atomic_json, read_episode
++from train_pvz_ppo import add_advantages, train_update
++from research_observation_interrupt_audit import compare
++
++
++def parameter_digest(model):
++    digest = hashlib.sha256()
++    for name, value in sorted(model.state_dict().items()):
++        digest.update(name.encode() + b"\0")
++        digest.update(value.detach().cpu().contiguous().numpy().tobytes())
++    return digest.hexdigest()
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--source-dir", type=Path, required=True)
++    parser.add_argument("--output-dir", type=Path, required=True)
++    args = parser.parse_args()
++    source, output = args.source_dir.resolve(), args.output_dir.resolve()
++    if os.environ.get("CUBLAS_WORKSPACE_CONFIG") != ":4096:8":
++        raise RuntimeError("freeze the same CUBLAS_WORKSPACE_CONFIG=:4096:8 as failed probe")
++    free = int(subprocess.check_output(["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"], text=True).splitlines()[0])
++    if free < 1024:
++        raise RuntimeError("insufficient currently free GPU memory for isolated engineering diagnostic")
++    initial_path = sorted((source / "runs/run_1").glob("update_000000_initial_*.pt"))[0]
++    checkpoint = torch.load(initial_path, map_location="cpu", weights_only=False)
++    config = checkpoint["experiment_config"]
++    shard_paths = sorted((source / "runs/run_1/.seed_jobs/update_000001").glob("*/seed_*.npz"), key=lambda p: int(p.stem.split("_")[1]))
++    if len(shard_paths) != 20:
++        raise ValueError("require all 20 original first-update shards")
++    original = [read_episode(path) for path in shard_paths]
++    output.mkdir(parents=True, exist_ok=False)
++    configure_torch_threads(1)
++    torch.backends.cudnn.allow_tf32 = False
++    torch.set_float32_matmul_precision("highest")
++    started = time.monotonic()
++    report = {"schema_version": 1, "scope": "same-data first-update reproducibility diagnostic, not learning or a resumed-configuration pass",
++              "initial_checkpoint": {"path": str(initial_path), "sha256": sha256_file(initial_path)},
++              "shards": [{"path": str(path), "sha256": sha256_file(path)} for path in shard_paths],
++              "episodes": len(original), "decisions": sum(len(e["transitions"]) for e in original),
++              "model_config": checkpoint["config"], "ppo": config["ppo"], "torch": torch.__version__,
++              "CUBLAS_WORKSPACE_CONFIG": os.environ["CUBLAS_WORKSPACE_CONFIG"],
++              "strict_bit_equality_required": True, "formal_matrix_unchanged": True, "trials": [], "comparisons": []}
++    try:
++        for deterministic in (False, True):
++            pair = []
++            for repeat in (0, 1):
++                print(f"deterministic_algorithms={deterministic} repeat={repeat}", flush=True)
++                torch.use_deterministic_algorithms(deterministic, warn_only=False)
++                model = GameplayModelV1(checkpoint["config"]).to("cuda").eval()
++                model.load_state_dict(checkpoint["state_dict"])
++                optimizer = torch.optim.AdamW(model.parameters(), lr=config["ppo"]["learning_rate"])
++                optimizer.load_state_dict(copy.deepcopy(checkpoint["optimizer_state_dict"]))
++                assignments = random.Random()
++                restore_rng(checkpoint["rng_state"], assignments)
++                episodes = copy.deepcopy(original)
++                add_advantages(episodes, config["ppo"]["gae_lambda"], config["reward"]["gamma"])
++                trace = []
++                original_step = optimizer.step
++
++                def traced_step(*positional, **keyword):
++                    value = original_step(*positional, **keyword)
++                    trace.append(parameter_digest(model))
++                    return value
++
++                optimizer.step = traced_step
++                ppo = config["ppo"]
++                trial_started = time.monotonic()
++                losses = train_update(model, episodes, optimizer, torch.device("cuda"), ppo["ppo_epochs"],
++                    ppo["sequence_length"], ppo["clip_epsilon"], ppo["value_coefficient"],
++                    ppo["entropy_coefficient"], ppo["minibatch_chunks"], ppo["attention_backend"],
++                    f"determinism-{deterministic}-{repeat}", ppo["target_kl"])
++                saved = {"state_dict": {k: v.detach().cpu().clone() for k, v in model.state_dict().items()},
++                         "optimizer_state_dict": copy.deepcopy(optimizer.state_dict()),
++                         "rng_state": capture_rng(assignments), "losses": losses, "optimizer_step_parameter_sha256": trace}
++                for values in saved["optimizer_state_dict"]["state"].values():
++                    for key, value in values.items():
++                        if isinstance(value, torch.Tensor):
++                            values[key] = value.cpu().clone()
++                path = output / f"deterministic_{int(deterministic)}_repeat_{repeat}.pt"
++                torch.save(saved, path)
++                pair.append(saved)
++                report["trials"].append({"deterministic_algorithms": deterministic, "repeat": repeat,
++                    "checkpoint": path.name, "sha256": sha256_file(path), "losses": losses,
++                    "optimizer_step_parameter_sha256": trace, "seconds": time.monotonic() - trial_started})
++                del model, optimizer, episodes
++            differences = []
++            for key in ("state_dict", "optimizer_state_dict", "rng_state", "losses"):
++                compare(pair[0][key], pair[1][key], key, differences)
++            first_step = next((i + 1 for i, (a, b) in enumerate(zip(pair[0]["optimizer_step_parameter_sha256"], pair[1]["optimizer_step_parameter_sha256"], strict=True)) if a != b), None)
++            comparison = {"deterministic_algorithms": deterministic, "bit_equal": not differences,
++                "first_different_optimizer_step": first_step, "differences": differences,
++                "max_parameter_abs_error": max((d.get("max_abs_error", 0) for d in differences if d["path"].startswith("state_dict")), default=0)}
++            report["comparisons"].append(comparison)
++            print(json.dumps({k: comparison[k] for k in ("deterministic_algorithms", "bit_equal", "first_different_optimizer_step", "max_parameter_abs_error")}), flush=True)
++            del pair
++        report.update({"gate_result": "diagnostic_only", "seconds": time.monotonic() - started,
++                       "supports_deterministic_runtime_hypothesis": report["comparisons"][1]["bit_equal"] and not report["comparisons"][0]["bit_equal"]})
++        atomic_json(output / "report.json", report)
++    except BaseException as error:
++        report.update({"gate_result": "fail", "error": str(error), "traceback": traceback.format_exc(), "seconds": time.monotonic() - started})
++        atomic_json(output / f"failure_{time.time_ns()}.json", report)
++        raise
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/research_native_target_probe.py b/scripts/research_native_target_probe.py
+new file mode 100644
+index 0000000..b0a6dc2
+--- /dev/null
++++ b/scripts/research_native_target_probe.py
+@@ -0,0 +1,93 @@
++"""Exercise real plant/projectile target IDs using isolated interface-only tasks."""
++from __future__ import annotations
++
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import sys
++import time
++
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT / "python"))
++from pvz_agent_model import configure_torch_threads, observation_tokens, TOKEN_KINDS
++from pvz_env import PvZEnv, TaskSpec, PlayerProfileContext
++from pvz_seed_jobs import atomic_json
++from research_observation_native_audit import without_added_ids
++
++
++def main() -> None:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--resource-dir", type=Path, required=True)
++    parser.add_argument("--reference-executable", type=Path, required=True)
++    parser.add_argument("--candidate-executable", type=Path, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++    if args.output.exists():
++        raise ValueError("keep existing evidence and choose a fresh path")
++    configure_torch_threads(1)
++    started, records = time.monotonic(), []
++    with PvZEnv(args.resource_dir, executable=args.reference_executable.resolve()) as reference, \
++         PvZEnv(args.resource_dir, executable=args.candidate_executable.resolve()) as candidate:
++        for label in ("squash_plant", "cattail_projectile"):
++            for seed in range(95000, 95004):
++                if label == "squash_plant":
++                    spec = TaskSpec(level=1, seed=seed, wave_cap=3,
++                                    preplanted=tuple((17, row, 6) for row in range(5)))
++                    deck = (0, 1, 2, 3, 4, 17)
++                    kind, token_kind = "plants", TOKEN_KINDS["plant"]
++                else:
++                    spec = TaskSpec(level=21, seed=seed, wave_cap=3,
++                                    profile=PlayerProfileContext(owned_upgrade_plants=(43,)),
++                                    preplanted=((16, 2, 1), (43, 2, 1)))
++                    deck = (0, 1, 2, 4, 16, 43)
++                    kind, token_kind = "projectiles", TOKEN_KINDS["projectile"]
++                expected, actual = reference.reset(deck=deck, task=spec), candidate.reset(deck=deck, task=spec)
++                if without_added_ids(actual) != without_added_ids(expected):
++                    raise AssertionError("target probe reset changed original native response")
++                observations, found = 0, False
++                while not actual[0]["terminal"] and actual[0]["tick"] < 30000:
++                    action = {"type": "wait", "ticks": 30}
++                    expected, actual = reference.step(action), candidate.step(action)
++                    observations += 1
++                    obs = actual[0]
++                    if without_added_ids(actual) != without_added_ids(expected):
++                        atomic_json(args.output.with_suffix(".failure.json"), {
++                            "label": label, "seed": seed, "expected": expected, "actual": actual})
++                        raise AssertionError("target probe step changed original native response")
++                    ids = {z["id"] for z in obs["zombies"]}
++                    entities = [e for e in obs[kind] if e["target_zombie_id"] in ids]
++                    if not entities:
++                        continue
++                    tokens, _ = observation_tokens(obs, 7)
++                    source_tokens = (tokens["kinds"] == token_kind).nonzero().flatten()
++                    if sum(int(tokens["target_indices"][i]) >= 0 for i in source_tokens) != len(entities):
++                        raise AssertionError("native resolved target disappeared during token encoding")
++                    parent = candidate.snapshot()
++                    first = candidate.step({"type": "wait", "ticks": 20})
++                    candidate.restore(parent)
++                    replay = candidate.step({"type": "wait", "ticks": 20})
++                    if first != replay:
++                        raise AssertionError("real target IDs changed across snapshot replay")
++                    candidate.release_snapshot(parent)
++                    records.append({"label": label, "seed": seed, "observations": observations,
++                                    "tick": obs["tick"], "resolved_sources": len(entities),
++                                    "first_target_observation": obs, "snapshot_replay_exact": True})
++                    found = True
++                    break
++                if not found:
++                    atomic_json(args.output.with_suffix(".failure.json"), {
++                        "label": label, "seed": seed, "observations": observations, "last_response": actual})
++                    raise AssertionError("fixed target fixture did not expose its intended native target")
++                print(label, seed, "resolved", len(entities), "tick", obs["tick"], flush=True)
++    atomic_json(args.output, {"schema_version": 1, "gate_result": "pass", "scope":
++                             "eight interface-only fixtures outside frozen training/evaluation tasks; actual plant/projectile targets and snapshot replay; no learning",
++                             "seed_range": [95000, 95003], "wait_ticks": 30, "maximum_ticks": 30000,
++                             "reference_sha256": hashlib.sha256(args.reference_executable.read_bytes()).hexdigest(),
++                             "candidate_sha256": hashlib.sha256(args.candidate_executable.read_bytes()).hexdigest(),
++                             "records": records, "seconds": time.monotonic() - started})
++    print("pass", len(records), "real target fixtures", flush=True)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/research_observation_interrupt_audit.py b/scripts/research_observation_interrupt_audit.py
+new file mode 100644
+index 0000000..44806ee
+--- /dev/null
++++ b/scripts/research_observation_interrupt_audit.py
+@@ -0,0 +1,223 @@
++#!/usr/bin/env python3
++"""Compare a real uninterrupted candidate with SIGKILL and full resumption.
++
++This is an engineering probe with separately frozen configs. All subprocess
++output, interrupted shards and checkpoints remain in the fresh evidence tree.
++It cannot grant a learning pass or replace the running reward matrix.
++"""
++from __future__ import annotations
++
++import argparse
++import gzip
++import json
++import os
++from pathlib import Path
++import signal
++import subprocess
++import sys
++import time
++import traceback
++
++ROOT = Path(__file__).resolve().parents[1]
++sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
++
++import numpy as np
++import torch
++
++from pvz_common import sha256_file
++from pvz_research import load_config
++from pvz_seed_jobs import atomic_json
++
++
++def compare(left, right, label, differences):
++    """Require exact tensors, RNG, losses and raw outcomes, not just weights."""
++    if isinstance(left, torch.Tensor) and isinstance(right, torch.Tensor):
++        same = left.shape == right.shape and left.dtype == right.dtype and torch.equal(left, right)
++        if not same:
++            detail = {"path": label, "kind": "tensor"}
++            if left.shape == right.shape and left.is_floating_point() and right.is_floating_point():
++                detail["max_abs_error"] = float((left - right).abs().max()) if left.numel() else 0.0
++            differences.append(detail)
++    elif isinstance(left, np.ndarray) and isinstance(right, np.ndarray):
++        if left.shape != right.shape or left.dtype != right.dtype or not np.array_equal(left, right):
++            differences.append({"path": label, "kind": "array"})
++    elif isinstance(left, dict) and isinstance(right, dict):
++        if set(left) != set(right):
++            differences.append({"path": label, "kind": "keys"})
++        for key in left.keys() & right.keys():
++            compare(left[key], right[key], f"{label}.{key}", differences)
++    elif isinstance(left, (tuple, list)) and isinstance(right, type(left)):
++        if len(left) != len(right):
++            differences.append({"path": label, "kind": "length"})
++        for index, (a, b) in enumerate(zip(left, right)):
++            compare(a, b, f"{label}[{index}]", differences)
++    elif type(left) is not type(right) or left != right:
++        differences.append({"path": label, "kind": "scalar", "left": str(left)[:160], "right": str(right)[:160]})
++
++
++def gpu_free_mib():
++    result = subprocess.run(["nvidia-smi", "--query-gpu=memory.free", "--format=csv,noheader,nounits"],
++                            check=True, capture_output=True, text=True)
++    return int(result.stdout.splitlines()[0].strip())
++
++
++def launch(config, output, resource, log_path, resume=False):
++    if gpu_free_mib() < 1024:
++        raise RuntimeError("probe requires at least 1024 MiB currently free VRAM; no main candidate is interrupted")
++    command = [sys.executable, str(ROOT / "python/train_pvz_ppo_task_family.py"),
++               "--resource-dir", str(resource), "--experiment-config", str(config),
++               "--output-dir", str(output)]
++    if resume:
++        command.append("--resume")
++    environment = os.environ.copy()
++    environment["PYTHONPATH"] = os.pathsep.join([str(ROOT / "python"), str(ROOT / "scripts")])
++    environment["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
++    environment["PYTHONUNBUFFERED"] = "1"
++    with log_path.open("xb") as stream:
++        process = subprocess.Popen(command, cwd=ROOT, env=environment, stdout=stream,
++                                   stderr=subprocess.STDOUT, start_new_session=True)
++    return process, command
++
++
++def kill_group(process):
++    if process.poll() is None:
++        os.killpg(process.pid, signal.SIGKILL)
++    return process.wait(timeout=30)
++
++
++def wait_success(process, timeout):
++    try:
++        code = process.wait(timeout=timeout)
++    except subprocess.TimeoutExpired:
++        kill_group(process)
++        raise RuntimeError("engineering probe exceeded frozen invocation timeout; evidence retained")
++    if code != 0:
++        raise RuntimeError(f"engineering subprocess failed with exit code {code}")
++
++
++def checkpoint(output):
++    pointer = json.loads((output / "resume.json").read_text())
++    path = output / pointer["checkpoint"]
++    if sha256_file(path) != pointer["sha256"]:
++        raise ValueError("resume pointer hash mismatch")
++    return pointer, torch.load(path, map_location="cpu", weights_only=False)
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--continuous-config", type=Path, required=True)
++    parser.add_argument("--interrupted-config", type=Path, required=True)
++    parser.add_argument("--resource-dir", type=Path, required=True)
++    parser.add_argument("--output-dir", type=Path, required=True)
++    args = parser.parse_args()
++    if Path(sys.executable).resolve() != Path("/home/newbiexvwu/.venvs/ml/bin/python").resolve():
++        raise RuntimeError("use the project ML virtualenv")
++    configs = [args.continuous_config.resolve(), args.interrupted_config.resolve()]
++    loaded = [load_config(path)[0] for path in configs]
++    common = [{k: v for k, v in config.items() if k != "experiment_id"} for config in loaded]
++    if common[0] != common[1] or loaded[0]["experiment_id"] == loaded[1]["experiment_id"]:
++        raise ValueError("paired engineering configs must differ only in independent output identity")
++    output = args.output_dir.resolve()
++    output.mkdir(parents=True, exist_ok=False)
++    continuous, interrupted = output / "continuous", output / "interrupted"
++    timeout = 600
++    started = time.monotonic()
++    process = None
++    report = {"schema_version": 1, "scope": "actual new-input small-model SIGKILL/full-resume engineering probe; no learning pass",
++              "configs": [{"path": str(path), "sha256": sha256_file(path)} for path in configs],
++              "model_config": loaded[0]["model"], "invocation_timeout_seconds": timeout,
++              "exact_equality_required": True, "coexecution": "original reward matrix remains running; elapsed time is not dedicated-machine performance"}
++    try:
++        print("phase=continuous", flush=True)
++        process, command = launch(configs[0], continuous, args.resource_dir.resolve(), output / "continuous.log")
++        report["continuous_command"] = command
++        wait_success(process, timeout)
++        print("phase=interrupt_at_update2_partial_collection", flush=True)
++        process, command = launch(configs[1], interrupted, args.resource_dir.resolve(), output / "interrupted.log")
++        report["interrupted_command"] = command
++        deadline = time.monotonic() + timeout
++        while True:
++            if process.poll() is not None:
++                raise RuntimeError("interrupted arm exited before the frozen partial-collection trigger")
++            if time.monotonic() >= deadline:
++                raise RuntimeError("partial-collection trigger timed out")
++            state_path = interrupted / "training_state.json"
++            state = json.loads(state_path.read_text()) if state_path.exists() else {}
++            shards = sorted((interrupted / "runs/run_1/.seed_jobs/update_000002").glob("*/seed_*.npz"))
++            if state.get("updates") == 1 and len(shards) >= 4:
++                prior_pointer = json.loads((interrupted / "resume.json").read_text())
++                code = kill_group(process)
++                pointer, saved = checkpoint(interrupted)
++                if code != -signal.SIGKILL or pointer != prior_pointer or saved["training_state"]["updates"] != 1:
++                    raise RuntimeError("SIGKILL did not retain exactly the update-1 checkpoint")
++                shards = sorted((interrupted / "runs/run_1/.seed_jobs/update_000002").glob("*/seed_*.npz"))
++                retained = [{"path": str(path.relative_to(interrupted)), "sha256": sha256_file(path),
++                             "mtime_ns": path.stat().st_mtime_ns} for path in shards]
++                if len(retained) < 4 or len(retained) >= loaded[1]["sampling"]["rollout_episodes"]:
++                    raise RuntimeError("SIGKILL must occur during an incomplete second collection")
++                report["intentional_interruption"] = {"exit_code": code, "last_complete_updates": 1,
++                    "counters": saved["training_state"]["counters"], "resume_pointer": pointer,
++                    "completed_partial_shards": retained,
++                    "optimizer_states": len(saved["optimizer_state_dict"]["state"]),
++                    "rng_components": sorted(saved["rng_state"])}
++                atomic_json(output / "intentional_interruption.json", report["intentional_interruption"])
++                break
++            time.sleep(0.1)
++        print(f"phase=resume cached_partial_shards={len(retained)}", flush=True)
++        process, command = launch(configs[1], interrupted, args.resource_dir.resolve(), output / "resumed.log", resume=True)
++        report["resume_command"] = command
++        wait_success(process, timeout)
++        differences = []
++        left_pointer, left = checkpoint(continuous)
++        right_pointer, right = checkpoint(interrupted)
++        for key in ("state_dict", "optimizer_state_dict", "rng_state"):
++            compare(left[key], right[key], key, differences)
++        state_keys = ("updates", "counters", "phase", "status", "evaluation_cursor", "recent_passes", "initial_state_sha256")
++        for key in state_keys:
++            compare(left["training_state"][key], right["training_state"][key], f"training_state.{key}", differences)
++        for index, (a, b) in enumerate(zip(left["training_state"]["update_history"], right["training_state"]["update_history"], strict=True)):
++            for key in ("update", "counters", "losses", "trajectory_stats", "episode_digests"):
++                compare(a[key], b[key], f"update_history[{index}].{key}", differences)
++        for index, (a, b) in enumerate(zip(left["training_state"]["learning_curve"], right["training_state"]["learning_curve"], strict=True)):
++            for key in ("updates", "counters", "summary"):
++                compare(a[key], b[key], f"learning_curve[{index}].{key}", differences)
++            with gzip.open(continuous / a["raw_seed_results_path"], "rt") as stream:
++                a_raw = json.load(stream)
++            with gzip.open(interrupted / b["raw_seed_results_path"], "rt") as stream:
++                b_raw = json.load(stream)
++            compare(a_raw["seed_results"], b_raw["seed_results"], f"raw_evaluation[{index}]", differences)
++        preservation = []
++        for shard in retained:
++            path = interrupted / shard["path"]
++            preservation.append({"path": shard["path"], "same_sha256": sha256_file(path) == shard["sha256"],
++                                 "same_mtime_ns": path.stat().st_mtime_ns == shard["mtime_ns"]})
++        resume_lines = [line for line in (output / "resumed.log").read_text().splitlines()
++                        if "update 2 cached=" in line]
++        if not resume_lines or not all(row["same_sha256"] and row["same_mtime_ns"] for row in preservation):
++            differences.append({"path": "partial_shard_reuse", "kind": "preservation_or_log"})
++        if left["training_state"]["status"] != "budget_complete" or right["training_state"]["status"] != "budget_complete":
++            differences.append({"path": "final_status", "kind": "budget_incomplete"})
++        report.update({"gate_result": "pass" if not differences else "fail", "differences": differences,
++                       "final_counters": left["training_state"]["counters"], "final_updates": left["training_state"]["updates"],
++                       "evaluated_nodes": len(left["training_state"]["learning_curve"]),
++                       "partial_shard_preservation": preservation, "resume_log_lines": resume_lines,
++                       "final_resume_pointers": [left_pointer, right_pointer],
++                       "resources": [left["training_state"].get("resources"), right["training_state"].get("resources")],
++                       "continuous_wall_seconds": left["training_state"]["wall_seconds"],
++                       "interrupted_recorded_wall_seconds": right["training_state"]["wall_seconds"],
++                       "seconds": time.monotonic() - started})
++        atomic_json(output / "report.json", report)
++        print(json.dumps({k: report[k] for k in ("gate_result", "final_counters", "final_updates", "seconds")}), flush=True)
++        if differences:
++            raise RuntimeError(f"exact interruption/resume comparison failed in {len(differences)} places")
++    except BaseException as error:
++        if process is not None and process.poll() is None:
++            kill_group(process)
++        report.update({"gate_result": "fail", "error_type": type(error).__name__, "error": str(error),
++                       "traceback": traceback.format_exc(), "seconds": time.monotonic() - started})
++        atomic_json(output / f"failure_{time.time_ns()}.json", report)
++        raise
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/research_observation_native_audit.py b/scripts/research_observation_native_audit.py
+new file mode 100644
+index 0000000..d752e54
+--- /dev/null
++++ b/scripts/research_observation_native_audit.py
+@@ -0,0 +1,142 @@
++"""Audit the added public zombie ID against the unchanged native simulator."""
++from __future__ import annotations
++
++import argparse
++from collections import Counter
++import hashlib
++import json
++from pathlib import Path
++import sys
++import time
++
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT / "python"))
++from pvz_agent_model import configure_torch_threads, observation_tokens
++from pvz_env import PvZEnv, TaskSpec
++from pvz_observation_features import require_public_fields
++from pvz_seed_jobs import atomic_json
++from research_aid_feasibility import choose
++
++
++def without_added_ids(value):
++    if isinstance(value, dict):
++        return {key: ([{k: without_added_ids(v) for k, v in z.items() if k != "id"} for z in item]
++                      if key == "zombies" else without_added_ids(item)) for key, item in value.items()}
++    if isinstance(value, (tuple, list)):
++        return [without_added_ids(item) for item in value]
++    return value
++
++
++def digest(path: Path) -> str:
++    return hashlib.sha256(path.read_bytes()).hexdigest()
++
++
++def main() -> None:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--resource-dir", type=Path, required=True)
++    parser.add_argument("--reference-executable", type=Path, required=True)
++    parser.add_argument("--candidate-executable", type=Path, required=True)
++    parser.add_argument("--manifest", type=Path, required=True)
++    parser.add_argument("--seeds-per-task", type=int, required=True)
++    parser.add_argument("--output", type=Path, required=True)
++    args = parser.parse_args()
++    if not 1 <= args.seeds_per_task <= 64 or args.output.exists():
++        raise ValueError("require seeds 1..64 and a fresh evidence path")
++    configure_torch_threads(1)
++    manifest = json.loads(args.manifest.read_text())
++    started, records, counts = time.monotonic(), [], Counter()
++
++    def check_observation(obs: dict) -> None:
++        require_public_fields(obs, 7)
++        counts["observations"] += 1
++        ids = {z["id"] for z in obs["zombies"]}
++        counts["zombie_records"] += len(ids)
++        counts["on_board_records"] += sum(z["on_board"] for z in obs["zombies"])
++        for kind in ("plants", "projectiles"):
++            for entity in obs[kind]:
++                target = entity["target_zombie_id"]
++                if target not in (0, -1):
++                    counts[kind + "_resolved_targets" if target in ids else kind + "_unresolved_targets"] += 1
++        if counts["observations"] % 97 == 1:
++            tokens, metadata = observation_tokens(obs, 7)
++            counts["encoded_observations"] += 1
++            counts["max_tokens"] = max(counts["max_tokens"], len(tokens["kinds"]))
++            for action in obs["legal_actions"]["plants"]:
++                if action["row"] * 9 + action["col"] not in metadata["cell_tokens"]:
++                    raise AssertionError("new input dropped a legal action cell")
++
++    def compare(expected, actual, context: dict) -> None:
++        counts["response_comparisons"] += 1
++        if without_added_ids(actual) != without_added_ids(expected):
++            atomic_json(args.output.with_suffix(".failure.json"), {
++                "context": context, "expected": expected, "actual": actual})
++            raise AssertionError("added public identity changed an existing native response")
++
++    with PvZEnv(args.resource_dir, executable=args.reference_executable.resolve()) as reference, \
++         PvZEnv(args.resource_dir, executable=args.candidate_executable.resolve()) as candidate:
++        for task in manifest["tasks"]:
++            for strategy in manifest["strategies"]:
++                for seed in task["seeds"][:args.seeds_per_task]:
++                    context = {"task_id": task["task_id"], "strategy": strategy, "seed": seed}
++                    spec = TaskSpec(level=task["level"], seed=seed, playthrough=task["playthrough"],
++                                    zombie_count_multiplier=task["zombie_count_multiplier"], wave_cap=task["wave_cap"],
++                                    preplanted=tuple(tuple(p) for p in task["preplanted"]))
++                    expected = reference.reset(deck=task["deck"], task=spec)
++                    actual = candidate.reset(deck=task["deck"], task=spec)
++                    compare(expected, actual, {**context, "operation": "RESET"})
++                    obs, _ = actual
++                    check_observation(obs)
++                    snapshotted = False
++                    for index in range(manifest["max_actions"]):
++                        if not snapshotted and obs["tick"] >= 3000 and not obs["terminal"]:
++                            parent = candidate.snapshot()
++                            action = {"type": "wait", "ticks": 120}
++                            first = candidate.step(action)
++                            candidate.restore(parent)
++                            replay = candidate.step(action)
++                            if first != replay:
++                                atomic_json(args.output.with_suffix(".failure.json"), {
++                                    "context": {**context, "operation": "snapshot replay"},
++                                    "first": first, "replay": replay})
++                                raise AssertionError("public IDs or responses changed across snapshot replay")
++                            check_observation(first[0])
++                            counts["snapshot_replays"] += 1
++                            candidate.restore(parent)
++                            branch = candidate.branch_snapshot(parent, [action])[0]
++                            if branch["observation"] != first[0] or branch["events"] != first[4]["events"]:
++                                atomic_json(args.output.with_suffix(".failure.json"), {
++                                    "context": {**context, "operation": "snapshot branch"},
++                                    "first": first, "branch": branch})
++                                raise AssertionError("public IDs or responses differ in batched snapshot branch")
++                            counts["snapshot_branches"] += 1
++                            candidate.restore(parent)
++                            if branch.get("snapshot_id", 0):
++                                candidate.release_snapshot(branch["snapshot_id"])
++                            candidate.release_snapshot(parent)
++                            snapshotted = True
++                        action = {"type": "wait", "ticks": 300} if strategy == "wait" else choose(obs)
++                        expected, actual = reference.step(action), candidate.step(action)
++                        compare(expected, actual, {**context, "operation": "STEP", "decision": index, "action": action})
++                        obs = actual[0]
++                        check_observation(obs)
++                        if obs["terminal"]:
++                            break
++                    if not obs["terminal"]:
++                        raise AssertionError("native audit reached action limit without a true terminal")
++                    records.append({**context, "actions": index + 1, "result": obs["result"], "tick": obs["tick"]})
++            atomic_json(args.output.with_suffix(".progress.json"), {
++                "task_id": task["task_id"], "episodes": len(records), "counts": dict(counts),
++                "seconds": time.monotonic() - started})
++            print(task["task_id"], "episodes", len(records), flush=True)
++    atomic_json(args.output, {"schema_version": 1, "gate_result": "pass", "scope":
++                             "native public-ID addition only; old responses exact after removing only zombie.id; CPU audit, no learning pass",
++                             "manifest_sha256": digest(args.manifest), "seeds_per_task": args.seeds_per_task,
++                             "reference_sha256": digest(args.reference_executable),
++                             "candidate_sha256": digest(args.candidate_executable),
++                             "episodes": len(records), "counts": dict(counts), "records": records,
++                             "seconds": time.monotonic() - started})
++    print("pass", len(records), "episodes", dict(counts), flush=True)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/scripts/research_observation_replay_audit.py b/scripts/research_observation_replay_audit.py
+new file mode 100644
+index 0000000..a490f68
+--- /dev/null
++++ b/scripts/research_observation_replay_audit.py
+@@ -0,0 +1,120 @@
++"""Keep actual new-input rollouts and replay them without changing model parameters."""
++from __future__ import annotations
++
++import argparse
++import copy
++import hashlib
++import json
++from pathlib import Path
++import sys
++import time
++
++import torch
++
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT / "python"))
++from pvz_agent_model import GameplayModelV1, configure_torch_threads
++from pvz_env import PvZEnv
++from pvz_seed_jobs import atomic_json, atomic_numpy, read_numpy
++from train_pvz_ppo import collect_task_episode, add_advantages, train_update
++
++MODEL = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768,
++         "gru_layers": 2, "gru_width": 256, "critic_width": 256, "critic_layers": 1, "input_flags": 7}
++SOURCES = ("python/pvz_agent_model.py", "python/pvz_observation_features.py", "python/train_pvz_ppo.py",
++           "python/pvz_env.py", "python/pvz_common.py", "python/pvz_seed_jobs.py", "python/pvz_value.py",
++           "build/pvz-portable", "artifacts/task_family/train.json")
++
++
++def digest(path: Path) -> str:
++    return hashlib.sha256(path.read_bytes()).hexdigest()
++
++
++def main() -> None:
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--resource-dir", type=Path, required=True)
++    parser.add_argument("--output-dir", type=Path, required=True)
++    parser.add_argument("--stage", choices=("collect-cpu", "replay-cuda"), required=True)
++    args = parser.parse_args()
++    started = time.monotonic()
++    configure_torch_threads(1)
++    fingerprints = {source: digest(ROOT / source) for source in SOURCES}
++    fingerprints.update({name: digest(args.resource_dir / name) for name in ("main.pak", "properties/partner.xml")})
++    report_path = args.output_dir / ("cpu_report.json" if args.stage == "collect-cpu" else "cuda_report.json")
++    if report_path.exists():
++        raise ValueError("keep existing report and select a new evidence directory")
++    device = torch.device("cpu" if args.stage == "collect-cpu" else "cuda")
++    if args.stage == "collect-cpu":
++        if args.output_dir.exists():
++            raise ValueError("collection requires a fresh directory")
++        args.output_dir.mkdir(parents=True)
++        tasks = [t for t in json.loads((ROOT / "artifacts/task_family/train.json").read_text())["tasks"]
++                 if t["wave_cap"] == 1 and t["zombie_count_multiplier"] == 1]
++        if len(tasks) != 5 or len({t["terrain"] for t in tasks}) != 5:
++            raise ValueError("require the five original cap1 tasks without substitution")
++        torch.manual_seed(0)
++        model = GameplayModelV1(MODEL).eval()
++        checkpoint = args.output_dir / "initial_model.pt"
++        torch.save({"config": model.config, "state_dict": model.state_dict()}, checkpoint)
++        inventory, episodes = [], []
++        with PvZEnv(args.resource_dir) as env:
++            for task in tasks:
++                for seed in task["seeds"][:4]:
++                    job_id = len(episodes)
++                    torch.manual_seed(seed + 170000)
++                    episode = collect_task_episode(model, env, task, seed, job_id, 4000,
++                                                   {"gamma": .99, "shaping_weight": 1}, allow_truncation=False)
++                    path = args.output_dir / f"seed_{job_id}.npz"
++                    atomic_numpy(path, episode, compressed=True)
++                    inventory.append({"path": path.name, "sha256": digest(path), "job_id": job_id,
++                                      "task_id": task["task_id"], "environment_seed": seed,
++                                      "decisions": len(episode["transitions"]), "won": episode["won"]})
++                    episodes.append(episode)
++                    print("collected", task["task_id"], seed, len(episode["transitions"]), flush=True)
++        atomic_json(args.output_dir / "collection_manifest.json", {
++            "model_config": model.config, "initialization_seed": 0,
++            "sampling_seed_rule": "torch.manual_seed(environment_seed+170000)",
++            "scope": "first four environment seeds of each unchanged cap1 task; independent engineering collection, no learning",
++            "fingerprints": fingerprints, "checkpoint_sha256": digest(checkpoint), "episodes": inventory})
++    else:
++        cpu = json.loads((args.output_dir / "cpu_report.json").read_text())
++        manifest = json.loads((args.output_dir / "collection_manifest.json").read_text())
++        if cpu["gate_result"] != "pass" or fingerprints != manifest["fingerprints"]:
++            raise ValueError("CPU replay not passed or recorded source/resource/binary changed")
++        checkpoint = args.output_dir / "initial_model.pt"
++        if digest(checkpoint) != manifest["checkpoint_sha256"]:
++            raise ValueError("initial checkpoint changed")
++        saved = torch.load(checkpoint, map_location="cpu", weights_only=False)
++        model = GameplayModelV1(saved["config"]).eval()
++        model.load_state_dict(saved["state_dict"])
++        inventory, episodes = manifest["episodes"], []
++        for item in inventory:
++            path = args.output_dir / item["path"]
++            if digest(path) != item["sha256"]:
++                raise ValueError("stored rollout changed")
++            episodes.append(read_numpy(path))
++        torch.backends.cudnn.allow_tf32 = False
++        torch.set_float32_matmul_precision("highest")
++    original = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
++    model.to(device)
++    add_advantages(episodes, .95)
++    metrics = []
++    for sequence_length in (0, 128):
++        optimizer = torch.optim.AdamW(model.parameters(), lr=0)
++        losses = train_update(model, copy.deepcopy(episodes), optimizer, device, 2, sequence_length,
++                              .2, .5, .01, minibatch_chunks=2, attention_backend="dense")
++        metrics.append({"sequence_length": sequence_length, "losses": losses})
++        print("replay", str(device), sequence_length, losses, flush=True)
++        if losses["max_log_prob_change"] >= 3e-6 or losses["clip_fraction"] != 0:
++            atomic_json(report_path.with_suffix(".failure.json"), {"metrics": metrics, "fingerprints": fingerprints})
++            raise AssertionError("actual new-input likelihood replay exceeds the unchanged tolerance")
++    if any(not torch.equal(value, model.state_dict()[key].cpu()) for key, value in original.items()):
++        raise AssertionError("lr=0 engineering replay changed model parameters")
++    atomic_json(report_path, {"schema_version": 1, "gate_result": "pass", "device": str(device),
++                             "scope": "actual new-input cap1 rollouts, real PPO optimizer at lr=0; no learning or capability pass",
++                             "model_config": model.config, "fingerprints": fingerprints, "metrics": metrics,
++                             "episodes": len(episodes), "decisions": sum(len(e["transitions"]) for e in episodes),
++                             "model_state_unchanged": True, "seconds": time.monotonic() - started})
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/src/LawnApp.cpp b/src/LawnApp.cpp
+index 9c80319..26b4d3a 100644
+--- a/src/LawnApp.cpp
++++ b/src/LawnApp.cpp
+@@ -1650,6 +1650,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
+ 		if (!first) out << ',';
+ 			first = false;
+ 			out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
++				<< ",\"id\":" << static_cast<int>(mBoard->ZombieGetID(zombie))
+ 				<< ",\"on_board\":" << (zombie->IsOnBoard() ? "true" : "false")
+ 				<< ",\"x\":" << zombie->mPosX << ",\"y\":" << zombie->mPosY << ",\"body_health\":" << zombie->mBodyHealth
+ 				<< ",\"body_max_health\":" << zombie->mBodyMaxHealth << ",\"helm_health\":" << zombie->mHelmHealth
