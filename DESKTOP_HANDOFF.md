@@ -100,6 +100,19 @@ git pull --ff-only origin pvz-env
 
 ### 什么入库、什么不入库（`artifacts/.gitignore`）
 
+冻结任务清单的可入库副本现放 `experiments/task_family/train.json` 与 `heldout.json`，与历史
+`artifacts/task_family/` 内容逐字节相同。旧矩阵配置仍引用原路径，当前执行机文件不改。
+新机器只拉 git 时，若旧路径缺失，可建立指向副本的本地符号链接再核对清单 SHA；不要
+强制添加被忽略的目录，不覆盖机器上已有清单，也不要修改旧配置来掩盖指纹不一致。
+
+```bash
+mkdir -p artifacts/task_family
+test -e artifacts/task_family/train.json || ln -s ../../experiments/task_family/train.json artifacts/task_family/train.json
+test -e artifacts/task_family/heldout.json || ln -s ../../experiments/task_family/heldout.json artifacts/task_family/heldout.json
+```
+
+历史目录路径补齐只解决文件可取得问题，旧观测语义、门禁或恢复失败仍按原报告处理。
+
 | 内容 | 入库？ | 理由 |
 |---|---|---|
 | `artifacts/t5/throughput.json` | ✅ | **训练入口直接读它**，不入库另一台机器拉完就跑不起来 |
