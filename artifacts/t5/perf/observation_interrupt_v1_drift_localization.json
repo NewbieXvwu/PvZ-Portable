@@ -1,0 +1,49 @@
+{
+  "scope": "read-only localization of failed strict paired engineering probe; no pass threshold changed",
+  "first_drift_precedes_actual_interrupt": true,
+  "checkpoint_checks": [
+    {
+      "update": 0,
+      "tensor_differences": {},
+      "max_state_parameter_error": 0,
+      "max_optimizer_error": 0,
+      "all_initial_weights_equal": true,
+      "rng_equal": true
+    },
+    {
+      "update": 1,
+      "tensor_differences": {
+        "state_dict": 75,
+        "optimizer_state_dict": 166
+      },
+      "max_state_parameter_error": 0.00022582709789276123,
+      "max_optimizer_error": 1.4901161193847656e-08,
+      "all_initial_weights_equal": false,
+      "rng_equal": true
+    },
+    {
+      "update": 2,
+      "tensor_differences": {
+        "state_dict": 80,
+        "optimizer_state_dict": 166
+      },
+      "max_state_parameter_error": 0.0002953559160232544,
+      "max_optimizer_error": 1.4901161193847656e-08,
+      "all_initial_weights_equal": false,
+      "rng_equal": true
+    },
+    {
+      "update": 4,
+      "tensor_differences": {
+        "state_dict": 83,
+        "optimizer_state_dict": 167
+      },
+      "max_state_parameter_error": 0.00029674917459487915,
+      "max_optimizer_error": 2.0489096641540527e-08,
+      "all_initial_weights_equal": false,
+      "rng_equal": true
+    }
+  ],
+  "gate_result": "fail_preserved",
+  "parent_report_sha256": "0ab54d6a8bf4acdb323f49d518c8b59e5e11d7a24799dc71dc63e5b6ee7fc974"
+}

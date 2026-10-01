@@ -42,6 +42,7 @@ training project has its own documents (all in the repository root):
 | [T5_REWARD_V2_PROGRESS_20261001.md](T5_REWARD_V2_PROGRESS_20261001.md) | partial reward results after restoring dynamic task semantics |
 | [T5_TOKEN_AUDIT_20261001.md](T5_TOKEN_AUDIT_20261001.md) | measured short-task token sizes and field encoding gaps |
 | [T5_OBSERVATION_UPDATE_20261001.md](T5_OBSERVATION_UPDATE_20261001.md) | isolated input repairs, native/replay checks, and unresolved late PPO regression |
+| [OBSERVATION_INTERRUPTION_FAILURE_20261001.md](OBSERVATION_INTERRUPTION_FAILURE_20261001.md) | preserved strict resume failure and pre-interruption CUDA drift localization |
 | [CHECKPOINT_GIT_DELIVERY.md](CHECKPOINT_GIT_DELIVERY.md) | lossless git delivery and verification of full recovery checkpoints |
 
 Code lives in `python/` and `scripts/`; experiment evidence lands in `artifacts/`.
