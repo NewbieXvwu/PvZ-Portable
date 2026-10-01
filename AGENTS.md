@@ -88,20 +88,38 @@ python3 scripts/hf_sync.py ls                  # 看远端有什么
 | `boundary` | 1 | ✅ 冻结边界 |
 | `initial` | 1 | ✅ 起点 |
 
-手工清理用 `scripts/cleanup_research_artifacts.sh`（先空跑确认，`DRY_RUN=0` 才执行）。
+手工清理用 `scripts/prune_research_checkpoints.py`（先空跑看计划，加 `--apply` 才执行），
+或台式机上的薄入口 `scripts/cleanup_research_artifacts.sh`（先空跑，`DRY_RUN=0` 才执行）。
+
+**不要在别处重写裁剪逻辑。** 这个脚本曾经自己实现了一份：只保留 1 个 `trained`（策略是 8），
+而且不保护 `resume.json` 指向的文件。实测四个 `reward_r*_v2` 的 `resume.json` 都指向
+`boundary` 而不是最新 `trained` —— 那份实现放到今天再跑一次，就足以删掉续跑需要的检查点。
+现在它只做转交。`prune_research_checkpoints.py` 里有一条硬约束：`resume.json` 指向的文件
+一旦落进删除列表就直接中止。
+
+**整条退役一条实验线没有常驻脚本**，是一次性操作：删前按 §4 确认结论层已归档到
+`artifacts/research_evidence/`。2026-10-01 那次退役 9 条线（第一版奖励对比 + 4 个冒烟 run
++ 3 个分片机制验证残留）的记录在 `artifacts/CLEANUP_MANIFEST_20261001T053523Z_retired_runs.txt`。
+
 **归档目录不能零散删单个检查点**，见 §4。
 
 ---
 
 ## 4. 删除前必须确认引用链
 
-归档目录里的 `archive_manifest.json` 记录了**每个文件的 SHA256 与字节数**，
-`resume.json` 还指向具体的检查点。
+归档目录（`artifacts/research_evidence/<name>/`）里的 `archive_manifest.json` 记录了
+**每个文件的 SHA256 与字节数**，`resume.json` 还指向具体的检查点。
 
 - **不能零散 `rm` 掉单个检查点** —— 会让完整性校验链断掉。
 - 只能**整目录处置**，或重新生成 `archive_manifest.json`。
 - 整条删除一条实验线前，先确认它的结论层（`learning_curve.json`、`evaluations/*.json.gz`、
   `provenance.json`）已经存在于 `artifacts/research_evidence/` 且已入库。
+
+注意两个目录的分工，别把这条规则套错地方：`archive_manifest.json` **只在
+`artifacts/research_evidence/` 里**。工作目录 `artifacts/research/<run>/` 下没有这个文件
+（那里只有 `experiment_config.json` / `learning_curve.json` / `provenance.json` /
+`resume.json` / `training_state.json`），所以 §3 的裁剪工具在工作目录里删中间 `trained`
+不会打断任何清单——但**依然只能通过那个工具删**，理由见 §3。
 
 ---
 
