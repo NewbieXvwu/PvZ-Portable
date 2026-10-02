@@ -19,7 +19,7 @@ from typing import Any
 
 ENV_PROTOCOL_VERSION = 4
 REPLAY_FORMAT_VERSION = 5
-OBSERVATION_VERSION = 3
+OBSERVATION_VERSION = 4
 TASK_VERSION = 2
 
 # Seeds the training entry points must pass to ``random.seed`` / ``torch.manual_seed``.

@@ -1,0 +1,42 @@
+{
+  "task_id": "T5-learning-reference256-interruption-preflight-v1",
+  "gate_result": "pass",
+  "scope": "Permission only for explicit full256sixlayer reference actual SIGKILL comparison; not completed reference resume, course efficacy or learning gate",
+  "allowed_experiment_ids": [
+    "learning_reference256_continuous_v1",
+    "learning_reference256_interrupted_v1"
+  ],
+  "simulator_sha256": "371a75d7e4c35b03267e9932510f44abaf2ee8f087870acd8277f27306767a3c",
+  "required_fingerprints": {
+    "python/pvz_agent_model.py": "726add4209185db025353d1fd516211a47195915dbbee3e6a55328c09c9d2783",
+    "python/pvz_research.py": "144c47842c34eb562ed189bd3a21652db385bc2ff9329c38a83b093b1961c64b",
+    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
+    "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
+    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "python/pvz_observation_features.py": "828c73ad13e3d497e360a08a2deae16a69bd670120388a109d8c79c334b5f522",
+    "python/pvz_curriculum.py": "cf8f4233acea3077ca2fa99f49563d2aad084ad2e5fe2b8322597de4d17adbfc",
+    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
+    "scripts/research_observation_interrupt_audit.py": "506699c17443c7e584f350a509ddc345a09aac5dbc4a21775172f9f3f4b78fce",
+    "src/LawnApp.cpp": "dbe518e8e329276aa7867da9e5f8fe3c036d0689352a2ce300d4ee4adf76720c",
+    "gates/T2-learning-empty-packet-v1.json": "9ed0179b4ac1b00a91ab25f08a0ec096727100f38b1c2768ef75df8cd96bdfe5",
+    "artifacts/t5/perf/learning_packet_cost_native_equivalence_v1.json": "e01a22af252fc09ead12f4f46439851bec1ca18cb1fe22e205f7f35a693e04a9",
+    "python/test_reference_interrupt_protocol.py": "ce59008eb17603ba2ac5901c7d9da1c94213c22e37f47724eaec53fa1ce1b3e8",
+    "experiments/task_family/train.json": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
+    "experiments/t5/learning_reference256_interrupt_v1/evaluation.json": "1ef1dbe269462cbab3b59d325f8e63bec0aec00e49c471b08be5353f1fb2077f"
+  },
+  "checks": {
+    "unchanged_combined_core_previous88_tests": true,
+    "native_cost_guard_1728_pairs_zero_unexpected_difference": true,
+    "new_driver_protocol_negative_tests4": true,
+    "previous_small_actual_strict_interrupt_evidence_preserved": true
+  },
+  "limitations": [
+    "Full reference actual interruption not executed yet",
+    "No new formal learning IDs or old gate override",
+    "Full reference must match exactly, no small-width fallback",
+    "Three-initialization learning/width/memory/critic/full-level thresholds unchanged"
+  ]
+}

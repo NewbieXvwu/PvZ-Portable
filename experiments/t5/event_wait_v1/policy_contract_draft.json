@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "isolated engineering draft; no formal native or learning release",
+  "interface_base_commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+  "legacy_model_architecture_version": 7,
+  "explicit_wait_model_architecture_version": 8,
+  "model_configuration": "optional explicit wait_mode=fixed|events; omission retains legacy config identity and weights",
+  "paired_capacity": "both explicit modes instantiate the same condition head and 20-to-64 previous-result projection",
+  "initialization": "append new weights under restored CPU RNG state, private seed 50212; preserve every legacy parameter and caller RNG stream; verify paired equality for seeds 0,1,2",
+  "policy": {
+    "wait_durations": [60, 150, 300],
+    "conditions": ["timeout", "wave_changed", "packet_became_ready", "sun_increased", "left_zone_occupied", "plant_count_decreased"],
+    "factorization": "p(type) * p(maximum|belief) * p(condition|belief) on event wait rows; fixed rows omit the condition factor; plant/shovel unchanged",
+    "entropy": "existing chosen-branch entropy plus condition categorical entropy only for event wait rows",
+    "control_compute": "fixed control has the same condition logits and context projection, but condition sampling/loss is unused"
+  },
+  "previous_wait_context": {
+    "layout": ["condition:7, index0=none", "primary reason:6, index0=none", "all triggered reasons:5", "initial_condition_satisfied:1", "actual_ticks/300:1"],
+    "destination": "add to existing 64-dimensional previous-action vector before the unchanged GRU",
+    "reset": "previous action/result absent and actual elapsed ticks zero; entire extra context exactly zero",
+    "time": "actual public board tick delta, including zero; not requested maximum or number of logic calls",
+    "result_checks": "explicit fields, version, condition, request, actual ticks and simultaneous precedence; validate final transitions too"
+  },
+  "trajectory": {
+    "fields": ["previous_wait_result", "wait_result"],
+    "storage": "new explicit models require both fields, with null for non-event actions; NPZ JSON metadata preserves every field",
+    "digest": "include optional result fields in both digest paths; absent fields retain legacy digest bytes",
+    "discount": "unchanged gamma^(actual_ticks/300); GAE lambda uses the same actual duration",
+    "evaluation": "environment selected from saved config; retain raw waits and separate requested/actual time, zero duration and all reasons"
+  },
+  "synthetic_cpu_contracts": {
+    "initialization_seeds": [0, 1, 2],
+    "fixture": "two synthetic recurrent episodes, 11 and 8 decisions, mixed plant/shovel/wait; six event conditions; unequal actual waits",
+    "single_batched_tolerance": 0.00005,
+    "optimizer": "actual small CPU AdamW train_update with current recurrence and 3-decision chunks; not a CPU fallback for CUDA experiments",
+    "restore": "synthetic full state/AdamW/all RNG next-update equality; no process SIGKILL or native claim",
+    "delivery": "raw synthetic checkpoints/shards remain in ignored artifacts/research; only KB report enters git"
+  },
+  "formal_order": "after common input/reward/course baseline and measured B, before T6: publish frozen protocols and source, pass native/replay/actual recovery gates, run fixed-vs-events with three paired initializations and actual equal decision/equal wall measurements",
+  "pending": ["source push", "native public-physics/RNG event and no-event audit", "reset/snapshot/restore/record replay", "real CPU collection and CUDA probability/value/update gates", "actual SIGKILL full recovery with cached shards", "measured resource and wall costs", "three-initialization learning comparison"],
+  "learning_benefit_verified": false,
+  "mainline_merged": false
+}

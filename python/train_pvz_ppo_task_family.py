@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_agent_model import (  # noqa: E402
     GameplayModelV1,
     MODEL_ARCHITECTURE_VERSION,
+    model_architecture_version,
     MODEL_CONFIG,
     configure_torch_threads,
     resolve_device,
@@ -37,6 +38,7 @@ from pvz_common import (  # noqa: E402
     sha256_file,
 )
 from pvz_env import PvZEnv  # noqa: E402
+from pvz_event_env import policy_env  # noqa: E402
 from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory  # noqa: E402
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_SEMANTICS  # noqa: E402
 from train_pvz_ppo import (  # noqa: E402
@@ -194,7 +196,7 @@ def _init_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],
     configure_torch_threads(worker_threads)
     WORKER_MODEL = GameplayModelV1(model_config).eval().to(resolve_device(worker_device))
     WORKER_MODEL.load_state_dict(state_dict)
-    WORKER_ENV = PvZEnv(resource_dir=resource_dir)
+    WORKER_ENV = policy_env(WORKER_MODEL.config, resource_dir=resource_dir)
     WORKER_ASSIGNMENTS = assignments
     WORKER_MAX_ACTIONS = max_actions
     WORKER_REWARD_CONFIG = reward_config
@@ -227,7 +229,7 @@ def _init_evaluation_worker(resource_dir: str, state_dict: dict[str, torch.Tenso
     configure_torch_threads(worker_threads)
     WORKER_MODEL = GameplayModelV1(model_config).eval().to(resolve_device(worker_device))
     WORKER_MODEL.load_state_dict(state_dict)
-    WORKER_ENV = PvZEnv(resource_dir=resource_dir)
+    WORKER_ENV = policy_env(WORKER_MODEL.config, resource_dir=resource_dir)
     WORKER_EVAL_JOBS = jobs
     Finalize(None, _close_worker, exitpriority=10)
 
@@ -478,9 +480,9 @@ def _save_checkpoint(path: Path, model: GameplayModelV1, config: dict[str, Any],
                      run_number: int, update: int, losses: dict[str, float]) -> None:
     checkpoint = {
         "state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
-        "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
+        "model_architecture_version": model_architecture_version(model.config),
         "value_semantics": VALUE_SEMANTICS,
-        "config": MODEL_CONFIG,
+        "config": model.config,
         "level": None,
         "deck": None,
         "profile": "T5 frozen 20-task family",

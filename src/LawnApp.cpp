@@ -1420,7 +1420,26 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 	mBoard->mTutorialState = TutorialState::TUTORIAL_OFF;
 	mBoard->mTutorialTimer = -1;
 	mBoard->ClearAdvice(AdviceType::ADVICE_NONE);
+#ifdef PVZ_ENV_INTRO_REFERENCE_V1
+	// Audit-only build: execute the ordinary two remaining cutscene updates
+	// after CancelIntro. Bypass only its first-draw guard, without advancing
+	// gameplay or changing the task/profile. Never used for policy rollouts.
+	int savedBoardUpdateCounter = mBoard->mBoardUpdateCounter;
+	mBoard->mBoardUpdateCounter = 2;
+	mBoard->mCutScene->Update();
+	mBoard->mCutScene->Update();
+	mBoard->mBoardUpdateCounter = savedBoardUpdateCounter;
+	if (mGameScene != GameScenes::SCENE_PLAYING)
+		return false;
+#else
+	// CancelIntro leaves the ordinary intro twenty cutscene units before
+	// completion. Finalize its existing animation before skipping to play:
+	// otherwise READY mowers retain their constructor position off the lawn.
+	// Also remove street-preview zombies as CutScene::Update normally does.
+	mBoard->mCutScene->AnimateBoard();
+	mBoard->RemoveCutsceneZombies();
 	StartPlaying();
+#endif
 	// Keep the original wave count through initialization and street previews:
 	// those objects consume gameplay RNG even in headless mode. Only completion
 	// and the exposed task horizon are shortened after the original intro.
@@ -1495,6 +1514,50 @@ void LawnApp::EnvironmentWait(int ticks)
 		}
 		AdvanceLogicTick();
 	}
+}
+
+EnvironmentWaitEvents::PublicState LawnApp::EnvironmentPublicWaitState()
+{
+	using namespace EnvironmentWaitEvents;
+	PublicState result;
+	result.terminal = EnvironmentTerminal();
+	if (!mBoard) return result;
+	result.tick = mBoard->mMainCounter;
+	result.wave = mBoard->mCurrentWave;
+	result.sun = mBoard->mSunMoney;
+	for (const Plant* plant : mBoard->mPlants)
+		result.plantCount += !plant->mDead;
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		if (packet.mActive && packet.mPacketType != SeedType::SEED_NONE)
+			result.readyPackets.emplace(i, static_cast<int>(packet.mPacketType), static_cast<int>(packet.mImitaterType));
+	}
+	for (const LawnMower* mower : mBoard->mLawnMowers)
+		if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY)
+			result.readyDefenses.emplace(mower->mRow, static_cast<int>(mower->mMowerType));
+	std::set<int> identities;
+	for (Zombie* zombie : mBoard->mZombies)
+	{
+		if (zombie->mDead) continue;
+		const int identity = static_cast<int>(mBoard->ZombieGetID(zombie));
+		if (identity == 0 || identity == -1 || !identities.insert(identity).second || !std::isfinite(zombie->mPosX))
+			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
+		// Exactly the existing public observation: no hidden hostility/queue flag.
+		// Only positions near the boundary need decimal rendering to decide the side.
+		const double x = std::abs(zombie->mPosX - LeftZoneMaxX) < 1.0 ?
+			RenderedPublicCoordinate(zombie->mPosX) : static_cast<double>(zombie->mPosX);
+		if (zombie->IsOnBoard() && x <= LeftZoneMaxX)
+			result.leftZoneZombies.insert(identity);
+	}
+	return result;
+}
+
+EnvironmentWaitEvents::Result LawnApp::EnvironmentWaitUntil(int ticks, int condition)
+{
+	return EnvironmentWaitEvents::Run(ticks, condition,
+		[this] { return EnvironmentPublicWaitState(); },
+		[this] { EnvironmentWait(1); });
 }
 
 void LawnApp::AdvanceLogicTick()
@@ -1619,11 +1682,15 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	{
 		if (i) out << ',';
 			const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+			// Conveyor removal leaves an empty slot (SEED_NONE == -1).
+			// GetCost would index gPlantDefs[-1]; an absent card has no cost.
+			const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 :
+				Plant::GetCost(packet.mPacketType, packet.mImitaterType);
 			out << "{\"index\":" << i << ",\"type\":" << static_cast<int>(packet.mPacketType)
 				<< ",\"imitater_type\":" << static_cast<int>(packet.mImitaterType)
 				<< ",\"active\":" << (packet.mActive ? "true" : "false")
 				<< ",\"cooldown\":" << packet.mRefreshCounter << ",\"refresh_time\":" << packet.mRefreshTime
-				<< ",\"cost\":" << Plant::GetCost(packet.mPacketType, packet.mImitaterType) << '}';
+				<< ",\"cost\":" << cost << '}';
 	}
 	out << "],\"plants\":[";
 	bool first = true;
@@ -1650,6 +1717,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		if (!first) out << ',';
 			first = false;
 			out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
+				<< ",\"id\":" << static_cast<int>(mBoard->ZombieGetID(zombie))
 				<< ",\"on_board\":" << (zombie->IsOnBoard() ? "true" : "false")
 				<< ",\"x\":" << zombie->mPosX << ",\"y\":" << zombie->mPosY << ",\"body_health\":" << zombie->mBodyHealth
 				<< ",\"body_max_health\":" << zombie->mBodyMaxHealth << ",\"helm_health\":" << zombie->mHelmHealth

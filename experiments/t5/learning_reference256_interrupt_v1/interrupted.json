@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "experiment_id": "learning_reference256_interrupted_v1",
+  "purpose": "full256sixlayer_input7_course_state_actual_interruption_engineering_only",
+  "initialization_seed": 0,
+  "sampling_seed": 1701,
+  "model": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 0.95,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "sampling": {
+    "manifest": "experiments/task_family/train.json",
+    "task_ids": [],
+    "method": "learning_progress",
+    "rollout_episodes": 20,
+    "curriculum": {
+      "window_episodes": 8,
+      "minimum_window_episodes": 2,
+      "uniform_fraction": 0.25,
+      "coverage": "terrain_wave_cap"
+    }
+  },
+  "budget": {
+    "decisions": 5000,
+    "max_episodes": 80
+  },
+  "evaluation": {
+    "manifest": "experiments/t5/learning_reference256_interrupt_v1/evaluation.json",
+    "modes": [
+      "greedy",
+      "sampled"
+    ],
+    "decision_nodes": [
+      5000
+    ]
+  },
+  "runtime": {
+    "workers": 2,
+    "worker_threads": 1,
+    "worker_device": "cpu",
+    "update_device": "cuda",
+    "max_actions": 4000,
+    "cudnn_tf32": false,
+    "matmul_precision": "highest",
+    "deterministic_algorithms": true,
+    "cublas_workspace_config": ":4096:8"
+  },
+  "prerequisites": [
+    "gates/T2-learning-empty-packet-v1.json",
+    "gates/T5-learning-reference256-interruption-preflight-v1.json"
+  ]
+}

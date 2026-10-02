@@ -81,6 +81,8 @@ def branch_action_token(action: dict[str, Any]) -> str:
     """
     if not isinstance(action, dict):
         raise TypeError("action must be a dictionary")
+    if 'until' in action:
+        raise ValueError('event waits require the native macro path; branch batching cannot drop until')
     kind = action.get("type")
     if kind == "plant":
         return f"P:{int(action['packet'])}:{int(action['col'])}:{int(action['row'])}"
@@ -456,6 +458,8 @@ class PvZEnv:
             raise RuntimeError("call reset() before step()")
         if not isinstance(action, dict):
             raise TypeError("action must be a dictionary")
+        if 'until' in action:
+            raise ValueError('event waits require EventWaitEnv and the versioned native capability')
         kind = action.get("type")
         if kind == "plant":
             packet, col, row = self._coordinates(action, ("packet", "col", "row"))
@@ -648,6 +652,8 @@ class PvZEnv:
                         f"replay tick count diverged at operation {index}: "
                         f"{info['ticks_advanced']} != {operation['ticks_advanced']}"
                     )
+                if operation.get('wait_result') != info.get('wait_result'):
+                    raise RuntimeError(f"replay wait interruption diverged at operation {index}")
             elif kind == "snapshot":
                 snapshot_ids[operation["id"]] = self.snapshot()
                 observation = self.observe()

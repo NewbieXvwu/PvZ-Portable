@@ -23,6 +23,7 @@
 #define __LAWNAPP_H__
 
 #include "ConstEnums.h"
+#include "EnvironmentWaitEvents.h"
 #include "SexyAppFramework/SexyApp.h"
 #include "PvzpLib/PvzpFoley.h"
 #include <memory>
@@ -246,6 +247,8 @@ public:
 	bool							EnvironmentPlant(int packet, int col, int row);
 	bool							EnvironmentShovel(int col, int row);
 	void							EnvironmentWait(int ticks);
+	EnvironmentWaitEvents::PublicState EnvironmentPublicWaitState();
+	EnvironmentWaitEvents::Result EnvironmentWaitUntil(int ticks, int condition);
 	bool							EnvironmentTerminal() const;
 	std::string					EnvironmentObservation(bool privileged = false);
 	void							Start() override;

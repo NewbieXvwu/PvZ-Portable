@@ -300,7 +300,8 @@ static void RunEnvironment(LawnApp* app)
 	std::string line;
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
-	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion << '}' << std::endl;
+	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
+		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << '}' << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		std::istringstream input(line);
@@ -311,6 +312,8 @@ static void RunEnvironment(LawnApp* app)
 		bool privileged = false;
 		bool hasSnapshotId = false;
 		bool minimalResponse = false;
+		bool hasWaitResult = false;
+		EnvironmentWaitEvents::Result waitResult;
 		int snapshotId = 0;
 		if (command == "RESET_V2")
 		{
@@ -361,6 +364,17 @@ static void RunEnvironment(LawnApp* app)
 		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT")
 		{
 			ok = ExecuteEnvironmentAction(app, command, input);
+		}
+		else if (command == "WAIT_EVENT_V1")
+		{
+			int ticks = -1, condition = -1;
+			std::string extra;
+			input >> ticks >> condition;
+			if (!input.fail() && !(input >> extra) && ticks >= 0 && ticks <= 1000000 && condition >= 0 && condition < 6)
+			{
+				waitResult = app->EnvironmentWaitUntil(ticks, condition);
+				hasWaitResult = ok = true;
+			}
 		}
 		else if (command == "BENCH_SNAPSHOT")
 		{
@@ -568,6 +582,23 @@ static void RunEnvironment(LawnApp* app)
 		}
 
 		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);
+		if (hasWaitResult)
+		{
+			std::cout << ",\"wait_result\":{\"version\":" << EnvironmentWaitEvents::Version
+				<< ",\"condition\":\"" << EnvironmentWaitEvents::Conditions[waitResult.condition] << "\""
+				<< ",\"requested_ticks\":" << waitResult.requestedTicks
+				<< ",\"actual_ticks\":" << waitResult.actualTicks
+				<< ",\"logic_steps\":" << waitResult.logicSteps
+				<< ",\"stalled_clock_steps\":" << waitResult.stalledClockSteps
+				<< ",\"initial_condition_satisfied\":" << (waitResult.initialConditionSatisfied ? "true" : "false")
+				<< ",\"reason\":\"" << waitResult.reason << "\",\"triggered\":[";
+			for (size_t i = 0; i < waitResult.triggered.size(); ++i)
+			{
+				if (i) std::cout << ',';
+				std::cout << '"' << waitResult.triggered[i] << '"';
+			}
+			std::cout << "]}";
+		}
 		if (hasSnapshotId)
 			std::cout << ",\"snapshot_id\":" << snapshotId;
 		if (app->mBoard)

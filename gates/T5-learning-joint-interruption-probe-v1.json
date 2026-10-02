@@ -1,0 +1,42 @@
+{
+  "task_id": "T5-learning-joint-interruption-probe-v1",
+  "gate_result": "pass",
+  "scope": "preflight permission ONLY for two small-model actual interrupt arms; not completed resume or formal learning gate",
+  "allowed_experiment_ids": [
+    "learning_joint_continuous_v1",
+    "learning_joint_interrupted_v1"
+  ],
+  "source_commit": "27ab6264c0e88363d5b0d906a76985582c507f44",
+  "simulator_sha256": "f9dc088e05ebc6de2773705775615b5880b4f940ab1427faa1af3e18ef101b99",
+  "required_fingerprints": {
+    "python/pvz_agent_model.py": "726add4209185db025353d1fd516211a47195915dbbee3e6a55328c09c9d2783",
+    "python/pvz_research.py": "144c47842c34eb562ed189bd3a21652db385bc2ff9329c38a83b093b1961c64b",
+    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
+    "python/train_pvz_ppo_task_family.py": "76546c99f4a1f95727d1988f213c60f39b8e4d1615a6b7be93e27cde2bcd9e4e",
+    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "python/pvz_observation_features.py": "828c73ad13e3d497e360a08a2deae16a69bd670120388a109d8c79c334b5f522",
+    "python/pvz_curriculum.py": "cf8f4233acea3077ca2fa99f49563d2aad084ad2e5fe2b8322597de4d17adbfc",
+    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
+    "scripts/research_observation_interrupt_audit.py": "89670f82e7e10adc581e232efdbb4690aad184659d443490afb60737c016384d",
+    "src/LawnApp.cpp": "7f076a78c568f85dda10c177131dc664d754eddfeedc4cd3a6e5e48a67f0ac3b"
+  },
+  "checks": {
+    "combined_relevant_regressions_88_passed": true,
+    "course_scope_and_singleton_tests_15_passed": true,
+    "actual_native_packet_boundary_passed": true,
+    "existing_native_same_physics_new_id_getter_evidence_preserved": true
+  },
+  "evidence_local_main": {
+    "regression_log": "logs/t5_research/learning_combined_final_regressions_v1.log",
+    "course_scope_log": "logs/t5_research/learning_combined_curriculum_regression_v5.log",
+    "native_timer": "artifacts/t5/perf/learning_native_packet_refresh_v3.json"
+  },
+  "limitations": [
+    "32-wide/16-GRU engineering scope only; reference192 actual interrupt remains pending",
+    "No course or reward preference, no three-initialization learning gate",
+    "Main frozen reward matrix is not modified"
+  ]
+}
