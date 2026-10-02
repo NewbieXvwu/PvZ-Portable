@@ -1,0 +1,649 @@
+{
+  "schema_version": 1,
+  "source_revision": "039b183c56c9d38cc291418edae340d73981c842",
+  "experiment_id": "mainline_events_v1_seed0",
+  "status": "update_boundary_stop",
+  "counters": {
+    "episodes": 242,
+    "decisions": 27172,
+    "ticks": 2743225
+  },
+  "updates": 14,
+  "wall_seconds": 2898.217977993998,
+  "reason_for_boundary_stop": "Preserve the complete unmasked candidate after useful training and adopt measured progress-mask correction. No failure cleanup, no thresholds changed, no claim that 500k budget or T5 is complete.",
+  "source_for_resume": "artifacts/worktrees/mainline_events_v1_preserved at6b4b5de; same unchanged binary currently linked to main build. Full --resume uses original absolute output and resource directory.",
+  "evaluation_nodes": [
+    {
+      "updates": 0,
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "seconds": 493.45767823000097,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.4,
+          "wilson_95": [
+            0.263483,
+            0.554041
+          ],
+          "truncated": 14,
+          "wait_summary": {
+            "wait_actions": 56791,
+            "condition_counts": {
+              "left_zone_occupied": 55164,
+              "plant_count_decreased": 1035,
+              "sun_increased": 577,
+              "wave_changed": 15
+            },
+            "primary_reason_counts": {
+              "max_ticks": 1376,
+              "zombie_entered_left_zone": 128,
+              "defense_lost": 75,
+              "condition": 55186,
+              "terminal": 26
+            },
+            "all_trigger_counts": {
+              "max_ticks": 1376,
+              "zombie_entered_left_zone": 128,
+              "defense_lost": 90,
+              "condition": 55187,
+              "terminal": 26
+            },
+            "requested_logic_ticks": 16977300,
+            "actual_ticks": 404714,
+            "zero_actual_tick_waits": 55120,
+            "logic_steps": 404724,
+            "stalled_clock_steps": 10,
+            "initial_condition_satisfied": 55120
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.7,
+          "wilson_95": [
+            0.5457,
+            0.819252
+          ],
+          "truncated": 0,
+          "wait_summary": {
+            "wait_actions": 3213,
+            "condition_counts": {
+              "plant_count_decreased": 573,
+              "sun_increased": 566,
+              "timeout": 495,
+              "left_zone_occupied": 556,
+              "packet_became_ready": 490,
+              "wave_changed": 533
+            },
+            "primary_reason_counts": {
+              "max_ticks": 2504,
+              "condition": 416,
+              "zombie_entered_left_zone": 150,
+              "defense_lost": 103,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 2508,
+              "condition": 430,
+              "zombie_entered_left_zone": 150,
+              "defense_lost": 123,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 568380,
+            "actual_ticks": 470860,
+            "zero_actual_tick_waits": 228,
+            "logic_steps": 470872,
+            "stalled_clock_steps": 12,
+            "initial_condition_satisfied": 228
+          }
+        }
+      }
+    },
+    {
+      "updates": 2,
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 205506
+      },
+      "seconds": 815.4051458940012,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.25,
+          "wilson_95": [
+            0.141871,
+            0.40194
+          ],
+          "truncated": 25,
+          "wait_summary": {
+            "wait_actions": 100910,
+            "condition_counts": {
+              "left_zone_occupied": 98581,
+              "plant_count_decreased": 2256,
+              "wave_changed": 73
+            },
+            "primary_reason_counts": {
+              "max_ticks": 2212,
+              "zombie_entered_left_zone": 98,
+              "defense_lost": 52,
+              "terminal": 15,
+              "condition": 98533
+            },
+            "all_trigger_counts": {
+              "max_ticks": 2213,
+              "zombie_entered_left_zone": 98,
+              "defense_lost": 59,
+              "terminal": 15,
+              "condition": 98533
+            },
+            "requested_logic_ticks": 15136500,
+            "actual_ticks": 344048,
+            "zero_actual_tick_waits": 98530,
+            "logic_steps": 344053,
+            "stalled_clock_steps": 5,
+            "initial_condition_satisfied": 98530
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.625,
+          "wilson_95": [
+            0.470324,
+            0.75777
+          ],
+          "truncated": 0,
+          "wait_summary": {
+            "wait_actions": 3468,
+            "condition_counts": {
+              "plant_count_decreased": 626,
+              "sun_increased": 575,
+              "timeout": 521,
+              "left_zone_occupied": 630,
+              "wave_changed": 601,
+              "packet_became_ready": 515
+            },
+            "primary_reason_counts": {
+              "max_ticks": 2703,
+              "condition": 465,
+              "zombie_entered_left_zone": 156,
+              "defense_lost": 104,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 2707,
+              "condition": 486,
+              "zombie_entered_left_zone": 156,
+              "defense_lost": 123,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 578430,
+            "actual_ticks": 474534,
+            "zero_actual_tick_waits": 257,
+            "logic_steps": 474549,
+            "stalled_clock_steps": 15,
+            "initial_condition_satisfied": 257
+          }
+        }
+      }
+    },
+    {
+      "updates": 13,
+      "counters": {
+        "episodes": 222,
+        "decisions": 25000,
+        "ticks": 2522508
+      },
+      "seconds": 386.68829197299783,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 10,
+          "wait_summary": {
+            "wait_actions": 42807,
+            "condition_counts": {
+              "plant_count_decreased": 12,
+              "sun_increased": 3000,
+              "left_zone_occupied": 39795
+            },
+            "primary_reason_counts": {
+              "max_ticks": 3331,
+              "condition": 39175,
+              "zombie_entered_left_zone": 155,
+              "defense_lost": 116,
+              "terminal": 30
+            },
+            "all_trigger_counts": {
+              "max_ticks": 3335,
+              "condition": 39185,
+              "zombie_entered_left_zone": 155,
+              "defense_lost": 132,
+              "terminal": 30
+            },
+            "requested_logic_ticks": 2839050,
+            "actual_ticks": 460813,
+            "zero_actual_tick_waits": 38933,
+            "logic_steps": 460816,
+            "stalled_clock_steps": 3,
+            "initial_condition_satisfied": 38933
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.7,
+          "wilson_95": [
+            0.5457,
+            0.819252
+          ],
+          "truncated": 0,
+          "wait_summary": {
+            "wait_actions": 3902,
+            "condition_counts": {
+              "plant_count_decreased": 563,
+              "sun_increased": 848,
+              "timeout": 592,
+              "left_zone_occupied": 699,
+              "wave_changed": 606,
+              "packet_became_ready": 594
+            },
+            "primary_reason_counts": {
+              "max_ticks": 3132,
+              "condition": 519,
+              "zombie_entered_left_zone": 131,
+              "defense_lost": 80,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 3138,
+              "condition": 528,
+              "zombie_entered_left_zone": 131,
+              "defense_lost": 98,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 594900,
+            "actual_ticks": 499792,
+            "zero_actual_tick_waits": 263,
+            "logic_steps": 499804,
+            "stalled_clock_steps": 12,
+            "initial_condition_satisfied": 263
+          }
+        }
+      }
+    }
+  ],
+  "update_rows": [
+    {
+      "update": 1,
+      "counters": {
+        "episodes": 20,
+        "decisions": 1854,
+        "ticks": 191490
+      },
+      "losses": {
+        "policy_loss": 0.007320373505353928,
+        "value_loss": 0.1798697780817747,
+        "entropy": 2.9806790232658384,
+        "advantage_mean": -0.09144189953804016,
+        "advantage_std": 0.3881201148033142,
+        "gradient_norm": 0.6832295060157776,
+        "approx_kl": 0.011027058852239622,
+        "clip_fraction": 0.1611334715038538,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.7107968330383301,
+        "optimizer_steps": 20,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 19.769551306999347,
+      "ppo_seconds": 72.43550771500122,
+      "won": 3,
+      "truncated": 12
+    },
+    {
+      "update": 2,
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 205506
+      },
+      "losses": {
+        "policy_loss": -0.0013532703551017988,
+        "value_loss": 0.03080364316701889,
+        "entropy": 3.0390859842300415,
+        "advantage_mean": 0.10347100347280502,
+        "advantage_std": 0.15560901165008545,
+        "gradient_norm": 0.5728920102119446,
+        "approx_kl": 0.00012859702190026745,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.06462717056274414,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 6.789790153001377,
+      "ppo_seconds": 8.429011521000575,
+      "won": 0,
+      "truncated": 2
+    },
+    {
+      "update": 3,
+      "counters": {
+        "episodes": 42,
+        "decisions": 4390,
+        "ticks": 448939
+      },
+      "losses": {
+        "policy_loss": -0.08739993845423062,
+        "value_loss": 0.19253580315659444,
+        "entropy": 2.9792680025100706,
+        "advantage_mean": 0.07463079690933228,
+        "advantage_std": 0.38369113206863403,
+        "gradient_norm": 2.515394926071167,
+        "approx_kl": 0.013070837663447795,
+        "clip_fraction": 0.16893175579607486,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 1.1920371055603027,
+        "optimizer_steps": 30,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 23.144543802000044,
+      "ppo_seconds": 86.92747597199923,
+      "won": 16,
+      "truncated": 0
+    },
+    {
+      "update": 4,
+      "counters": {
+        "episodes": 62,
+        "decisions": 6829,
+        "ticks": 684299
+      },
+      "losses": {
+        "policy_loss": -0.11558023733752114,
+        "value_loss": 0.14134164367403304,
+        "entropy": 3.0475767510277882,
+        "advantage_mean": -0.023714732378721237,
+        "advantage_std": 0.3853406608104706,
+        "gradient_norm": 1.3899142742156982,
+        "approx_kl": 0.00731545922520244,
+        "clip_fraction": 0.09716469359894593,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.6133136749267578,
+        "optimizer_steps": 14,
+        "stopped_for_kl": true
+      },
+      "rollout_seconds": 24.85580548100006,
+      "ppo_seconds": 43.00213998599975,
+      "won": 16,
+      "truncated": 0
+    },
+    {
+      "update": 5,
+      "counters": {
+        "episodes": 82,
+        "decisions": 9224,
+        "ticks": 933609
+      },
+      "losses": {
+        "policy_loss": -0.10764736104756593,
+        "value_loss": 0.16029480919241906,
+        "entropy": 3.046672972043355,
+        "advantage_mean": -0.06281661242246628,
+        "advantage_std": 0.38623473048210144,
+        "gradient_norm": 2.156508207321167,
+        "approx_kl": 0.007682844905298374,
+        "clip_fraction": 0.11299479715526103,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5798516273498535,
+        "optimizer_steps": 30,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 23.651054437999846,
+      "ppo_seconds": 93.36772404700059,
+      "won": 16,
+      "truncated": 0
+    },
+    {
+      "update": 6,
+      "counters": {
+        "episodes": 102,
+        "decisions": 11691,
+        "ticks": 1189058
+      },
+      "losses": {
+        "policy_loss": 0.023275885730981827,
+        "value_loss": 0.1222668267476062,
+        "entropy": 3.065844972928365,
+        "advantage_mean": -0.03953876346349716,
+        "advantage_std": 0.3090776205062866,
+        "gradient_norm": 0.5635016560554504,
+        "approx_kl": 0.00902075449412223,
+        "clip_fraction": 0.13671665610745548,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.6766109466552734,
+        "optimizer_steps": 30,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 24.729326267999568,
+      "ppo_seconds": 89.59133410600043,
+      "won": 18,
+      "truncated": 0
+    },
+    {
+      "update": 7,
+      "counters": {
+        "episodes": 122,
+        "decisions": 14016,
+        "ticks": 1428829
+      },
+      "losses": {
+        "policy_loss": 0.07816638787958904,
+        "value_loss": 0.19625929649919271,
+        "entropy": 3.1091867004122054,
+        "advantage_mean": -0.16962817311286926,
+        "advantage_std": 0.3937934935092926,
+        "gradient_norm": 1.8293263912200928,
+        "approx_kl": 0.010278961386575247,
+        "clip_fraction": 0.1624199459495555,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.6893296241760254,
+        "optimizer_steps": 28,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 22.851227118999304,
+      "ppo_seconds": 80.7925369730001,
+      "won": 14,
+      "truncated": 0
+    },
+    {
+      "update": 8,
+      "counters": {
+        "episodes": 142,
+        "decisions": 16194,
+        "ticks": 1649979
+      },
+      "losses": {
+        "policy_loss": -0.049215624907187054,
+        "value_loss": 0.197921823444111,
+        "entropy": 3.12605619430542,
+        "advantage_mean": -0.019423171877861023,
+        "advantage_std": 0.3125830888748169,
+        "gradient_norm": 7.69505500793457,
+        "approx_kl": 0.00464775554719381,
+        "clip_fraction": 0.043132918700575826,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.764603853225708,
+        "optimizer_steps": 14,
+        "stopped_for_kl": true
+      },
+      "rollout_seconds": 23.172249813000235,
+      "ppo_seconds": 41.72000949100038,
+      "won": 13,
+      "truncated": 0
+    },
+    {
+      "update": 9,
+      "counters": {
+        "episodes": 162,
+        "decisions": 18462,
+        "ticks": 1876071
+      },
+      "losses": {
+        "policy_loss": 0.06968432990834117,
+        "value_loss": 0.1600275631644763,
+        "entropy": 3.1757762283086777,
+        "advantage_mean": -0.1612413078546524,
+        "advantage_std": 0.3018105924129486,
+        "gradient_norm": 0.5644446611404419,
+        "approx_kl": 0.007682089437045814,
+        "clip_fraction": 0.09531187375678736,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.8314914703369141,
+        "optimizer_steps": 16,
+        "stopped_for_kl": true
+      },
+      "rollout_seconds": 25.357970428000044,
+      "ppo_seconds": 48.328323533,
+      "won": 15,
+      "truncated": 0
+    },
+    {
+      "update": 10,
+      "counters": {
+        "episodes": 182,
+        "decisions": 20662,
+        "ticks": 2095277
+      },
+      "losses": {
+        "policy_loss": 0.15754317205685836,
+        "value_loss": 0.19774994461868817,
+        "entropy": 3.0727261029756985,
+        "advantage_mean": -0.1365162432193756,
+        "advantage_std": 0.3180428445339203,
+        "gradient_norm": 0.7940118908882141,
+        "approx_kl": 0.009794848212130511,
+        "clip_fraction": 0.15064966614143208,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.7628931999206543,
+        "optimizer_steps": 26,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 22.609746117999748,
+      "ppo_seconds": 79.8768135700011,
+      "won": 17,
+      "truncated": 0
+    },
+    {
+      "update": 11,
+      "counters": {
+        "episodes": 202,
+        "decisions": 23062,
+        "ticks": 2330863
+      },
+      "losses": {
+        "policy_loss": -0.2547583194596141,
+        "value_loss": 0.01892728444740728,
+        "entropy": 3.145058967449047,
+        "advantage_mean": -0.02646142803132534,
+        "advantage_std": 0.11719714850187302,
+        "gradient_norm": 1.7252777814865112,
+        "approx_kl": 0.01271908932955869,
+        "clip_fraction": 0.16704641482127564,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.9251618385314941,
+        "optimizer_steps": 27,
+        "stopped_for_kl": true
+      },
+      "rollout_seconds": 24.166193885999746,
+      "ppo_seconds": 95.67812524800138,
+      "won": 17,
+      "truncated": 0
+    },
+    {
+      "update": 12,
+      "counters": {
+        "episodes": 219,
+        "decisions": 24763,
+        "ticks": 2499709
+      },
+      "losses": {
+        "policy_loss": -0.009337319889002375,
+        "value_loss": 0.017233795719221234,
+        "entropy": 3.213576356569926,
+        "advantage_mean": -0.07558739185333252,
+        "advantage_std": 0.1132117360830307,
+        "gradient_norm": 0.5655001997947693,
+        "approx_kl": 0.010540529370902933,
+        "clip_fraction": 0.16132771648052666,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.772641658782959,
+        "optimizer_steps": 18,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 18.46481528000004,
+      "ppo_seconds": 64.42469161899862,
+      "won": 8,
+      "truncated": 8
+    },
+    {
+      "update": 13,
+      "counters": {
+        "episodes": 222,
+        "decisions": 25000,
+        "ticks": 2522508
+      },
+      "losses": {
+        "policy_loss": -0.044768014922738075,
+        "value_loss": 0.013453020248562098,
+        "entropy": 3.2648195028305054,
+        "advantage_mean": 0.035589080303907394,
+        "advantage_std": 0.11291508376598358,
+        "gradient_norm": 1.8492363691329956,
+        "approx_kl": 0.0013991343730594963,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.181898832321167,
+        "optimizer_steps": 4,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 6.990147298998636,
+      "ppo_seconds": 7.566436883000279,
+      "won": 0,
+      "truncated": 3
+    },
+    {
+      "update": 14,
+      "counters": {
+        "episodes": 242,
+        "decisions": 27172,
+        "ticks": 2743225
+      },
+      "losses": {
+        "policy_loss": 0.005603935636047806,
+        "value_loss": 0.06629704091964024,
+        "entropy": 3.3075667193957736,
+        "advantage_mean": -0.07138435542583466,
+        "advantage_std": 0.24096550047397614,
+        "gradient_norm": 0.7618349194526672,
+        "approx_kl": 0.012853401324329232,
+        "clip_fraction": 0.19536183707948243,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.9735479354858398,
+        "optimizer_steps": 28,
+        "stopped_for_kl": false
+      },
+      "rollout_seconds": 23.4071494230011,
+      "ppo_seconds": 93.80417884800045,
+      "won": 14,
+      "truncated": 0
+    }
+  ],
+  "resources": {
+    "peak_process_tree_rss_bytes": 15298396160,
+    "min_system_available_bytes": 17325981696,
+    "peak_system_swap_used_bytes": 0,
+    "cuda_peak_allocated_bytes": 4841427456,
+    "cuda_peak_reserved_bytes": 16873684992
+  }
+}

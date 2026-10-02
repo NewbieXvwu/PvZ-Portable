@@ -1,0 +1,995 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "source_commit": "aabf4a29d54585b7c8c84b6e83a40cbb2b0750d4",
+  "model_config": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7,
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
+  },
+  "parameter_count": 7869607,
+  "initial_checkpoint": "artifacts/research/mainline_events_v1_seed0/runs/run_1/update_000000_initial_1790928047062964265.pt",
+  "intervention": "Same already evaluated initial neural weights with the new explicit policy mask; reference is archived, not rerun. Preliminary first-seed diagnostic, not final superiority or learning evidence.",
+  "greedy_summary": {
+    "sample_count": 20,
+    "pass_rate": 0.65,
+    "wilson_95": [
+      0.432854,
+      0.818808
+    ],
+    "mean_terminal_wave": 3.2,
+    "mean_survival_ticks": 11449.35,
+    "peak_offense": 0.95,
+    "terminal_wave_histogram": {
+      "2": 4,
+      "3": 12,
+      "5": 4
+    },
+    "terminal_tick_histogram_5000_tick_bins": {
+      "0-4999": 1,
+      "10000-14999": 11,
+      "15000-19999": 3,
+      "5000-9999": 5
+    },
+    "economy_curve": [
+      {
+        "tick": 0,
+        "sample_count": 20,
+        "mean_sun": 50,
+        "mean_sun_produced": 0,
+        "mean_sun_spent": 0
+      },
+      {
+        "tick": 3000,
+        "sample_count": 20,
+        "mean_sun": 25,
+        "mean_sun_produced": 55,
+        "mean_sun_spent": 80
+      },
+      {
+        "tick": 6000,
+        "sample_count": 19,
+        "mean_sun": 19.737,
+        "mean_sun_produced": 114.474,
+        "mean_sun_spent": 144.737
+      },
+      {
+        "tick": 9000,
+        "sample_count": 14,
+        "mean_sun": 10.714,
+        "mean_sun_produced": 150,
+        "mean_sun_spent": 189.286
+      },
+      {
+        "tick": 12000,
+        "sample_count": 10,
+        "mean_sun": 5,
+        "mean_sun_produced": 225,
+        "mean_sun_spent": 270
+      },
+      {
+        "tick": 15000,
+        "sample_count": 3,
+        "mean_sun": 8.333,
+        "mean_sun_produced": 358.333,
+        "mean_sun_spent": 400
+      },
+      {
+        "tick": 18000,
+        "sample_count": 1,
+        "mean_sun": 25,
+        "mean_sun_produced": 650,
+        "mean_sun_spent": 675
+      }
+    ],
+    "wait_summary": {
+      "wait_actions": 937,
+      "condition_counts": {
+        "left_zone_occupied": 22,
+        "plant_count_decreased": 581,
+        "sun_increased": 323,
+        "wave_changed": 11
+      },
+      "primary_reason_counts": {
+        "max_ticks": 752,
+        "zombie_entered_left_zone": 77,
+        "defense_lost": 53,
+        "condition": 35,
+        "terminal": 20
+      },
+      "all_trigger_counts": {
+        "max_ticks": 752,
+        "zombie_entered_left_zone": 77,
+        "defense_lost": 64,
+        "condition": 36,
+        "terminal": 20
+      },
+      "requested_logic_ticks": 251850,
+      "actual_ticks": 228987,
+      "zero_actual_tick_waits": 0,
+      "logic_steps": 228994,
+      "stalled_clock_steps": 7,
+      "initial_condition_satisfied": 0
+    }
+  },
+  "archived_unmasked_summary": {
+    "sample_count": 20,
+    "pass_rate": 0.45,
+    "wilson_95": [
+      0.258198,
+      0.657915
+    ],
+    "mean_terminal_wave": 2.85,
+    "mean_survival_ticks": 10291.95,
+    "peak_offense": 0.95,
+    "terminal_wave_histogram": {
+      "2": 7,
+      "3": 11,
+      "5": 2
+    },
+    "terminal_tick_histogram_5000_tick_bins": {
+      "0-4999": 2,
+      "10000-14999": 9,
+      "15000-19999": 2,
+      "5000-9999": 7
+    },
+    "economy_curve": [
+      {
+        "tick": 0,
+        "sample_count": 20,
+        "mean_sun": 50,
+        "mean_sun_produced": 0,
+        "mean_sun_spent": 0
+      },
+      {
+        "tick": 3000,
+        "sample_count": 20,
+        "mean_sun": 25,
+        "mean_sun_produced": 55,
+        "mean_sun_spent": 80
+      },
+      {
+        "tick": 6000,
+        "sample_count": 17,
+        "mean_sun": 16.176,
+        "mean_sun_produced": 127.941,
+        "mean_sun_spent": 161.765
+      },
+      {
+        "tick": 9000,
+        "sample_count": 11,
+        "mean_sun": 9.091,
+        "mean_sun_produced": 190.909,
+        "mean_sun_spent": 231.818
+      },
+      {
+        "tick": 12000,
+        "sample_count": 8,
+        "mean_sun": 6.25,
+        "mean_sun_produced": 281.25,
+        "mean_sun_spent": 325
+      },
+      {
+        "tick": 15000,
+        "sample_count": 2,
+        "mean_sun": 12.5,
+        "mean_sun_produced": 537.5,
+        "mean_sun_spent": 575
+      },
+      {
+        "tick": 18000,
+        "sample_count": 1,
+        "mean_sun": 25,
+        "mean_sun_produced": 650,
+        "mean_sun_spent": 675
+      }
+    ],
+    "wait_summary": {
+      "wait_actions": 20550,
+      "condition_counts": {
+        "left_zone_occupied": 19730,
+        "plant_count_decreased": 523,
+        "sun_increased": 287,
+        "wave_changed": 10
+      },
+      "primary_reason_counts": {
+        "max_ticks": 689,
+        "zombie_entered_left_zone": 64,
+        "defense_lost": 39,
+        "condition": 19743,
+        "terminal": 15
+      },
+      "all_trigger_counts": {
+        "max_ticks": 689,
+        "zombie_entered_left_zone": 64,
+        "defense_lost": 48,
+        "condition": 19744,
+        "terminal": 15
+      },
+      "requested_logic_ticks": 6136350,
+      "actual_ticks": 205839,
+      "zero_actual_tick_waits": 19708,
+      "logic_steps": 205845,
+      "stalled_clock_steps": 6,
+      "initial_condition_satisfied": 19708
+    }
+  },
+  "sampled_stats": {
+    "action_counts": {
+      "plant": 10,
+      "wait": 44,
+      "shovel": 10
+    },
+    "zero_tick_actions": 20,
+    "immediate_plant_shovels": 3,
+    "immediate_shovel_fraction_of_plants": 0.3,
+    "mean_abs_shaping_reward": 0.11099917122266689,
+    "mc_value_mse_before_update": 0.041188111796228506,
+    "mc_value_explained_variance_before_update": 0.005045962967577422,
+    "won": 0,
+    "truncated": 2,
+    "task_counts": {
+      "train_day_1": 1,
+      "train_day_2": 1
+    },
+    "wait_summary": {
+      "wait_actions": 44,
+      "condition_counts": {
+        "sun_increased": 6,
+        "wave_changed": 7,
+        "packet_became_ready": 6,
+        "left_zone_occupied": 12,
+        "timeout": 5,
+        "plant_count_decreased": 8
+      },
+      "primary_reason_counts": {
+        "max_ticks": 40,
+        "condition": 4
+      },
+      "all_trigger_counts": {
+        "max_ticks": 40,
+        "condition": 4
+      },
+      "requested_logic_ticks": 8370,
+      "actual_ticks": 8031,
+      "zero_actual_tick_waits": 0,
+      "logic_steps": 8031,
+      "stalled_clock_steps": 0,
+      "initial_condition_satisfied": 0
+    }
+  },
+  "actual_cpu_ppo": {
+    "policy_loss": -0.0013369321823120117,
+    "value_loss": 0.058047814294695854,
+    "entropy": 3.1112483739852905,
+    "advantage_mean": -0.020970936864614487,
+    "advantage_std": 0.19643095135688782,
+    "gradient_norm": 1.3969273567199707,
+    "approx_kl": 0.009859593585133553,
+    "clip_fraction": 0.140625,
+    "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+    "max_log_prob_change": 0.4150576591491699,
+    "optimizer_steps": 2,
+    "stopped_for_kl": false
+  },
+  "actual_cpu_ppo_seconds": 5.552240626999264,
+  "condition_weight_change_l1": 0.19199082255363464,
+  "seconds": 36.335783107999305,
+  "greedy_rows": [
+    {
+      "task_id": "heldout_day_1",
+      "seed": 50000,
+      "seconds": 3.2504021049971925,
+      "masked": {
+        "seed": 50000,
+        "won": true,
+        "truncated": false,
+        "actions": 98,
+        "terminal_wave": 3,
+        "terminal_tick": 12490,
+        "zero_tick_actions": 36,
+        "immediate_plant_shovels": 18,
+        "action_counts": {
+          "plant": 18,
+          "shovel": 18,
+          "wait": 62
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50000,
+        "won": true,
+        "truncated": false,
+        "actions": 98,
+        "terminal_wave": 3,
+        "terminal_tick": 12490,
+        "zero_tick_actions": 36,
+        "immediate_plant_shovels": 18,
+        "action_counts": {
+          "plant": 18,
+          "shovel": 18,
+          "wait": 62
+        }
+      }
+    },
+    {
+      "task_id": "heldout_day_2",
+      "seed": 50064,
+      "seconds": 1.5657864560016606,
+      "masked": {
+        "seed": 50064,
+        "won": true,
+        "truncated": false,
+        "actions": 108,
+        "terminal_wave": 3,
+        "terminal_tick": 11918,
+        "zero_tick_actions": 24,
+        "immediate_plant_shovels": 12,
+        "action_counts": {
+          "plant": 12,
+          "shovel": 12,
+          "wait": 84
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50064,
+        "won": true,
+        "truncated": false,
+        "actions": 108,
+        "terminal_wave": 3,
+        "terminal_tick": 11918,
+        "zero_tick_actions": 24,
+        "immediate_plant_shovels": 12,
+        "action_counts": {
+          "plant": 12,
+          "shovel": 12,
+          "wait": 84
+        }
+      }
+    },
+    {
+      "task_id": "heldout_day_3",
+      "seed": 50128,
+      "seconds": 1.8092205449975154,
+      "masked": {
+        "seed": 50128,
+        "won": false,
+        "truncated": false,
+        "actions": 124,
+        "terminal_wave": 5,
+        "terminal_tick": 19330,
+        "zero_tick_actions": 54,
+        "immediate_plant_shovels": 27,
+        "action_counts": {
+          "plant": 27,
+          "shovel": 27,
+          "wait": 70
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50128,
+        "won": false,
+        "truncated": false,
+        "actions": 124,
+        "terminal_wave": 5,
+        "terminal_tick": 19330,
+        "zero_tick_actions": 54,
+        "immediate_plant_shovels": 27,
+        "action_counts": {
+          "plant": 27,
+          "shovel": 27,
+          "wait": 70
+        }
+      }
+    },
+    {
+      "task_id": "heldout_day_4",
+      "seed": 50192,
+      "seconds": 1.6227758070017444,
+      "masked": {
+        "seed": 50192,
+        "won": true,
+        "truncated": false,
+        "actions": 109,
+        "terminal_wave": 3,
+        "terminal_tick": 11259,
+        "zero_tick_actions": 68,
+        "immediate_plant_shovels": 28,
+        "action_counts": {
+          "plant": 34,
+          "shovel": 34,
+          "wait": 41
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50192,
+        "won": true,
+        "truncated": false,
+        "actions": 109,
+        "terminal_wave": 3,
+        "terminal_tick": 11259,
+        "zero_tick_actions": 68,
+        "immediate_plant_shovels": 28,
+        "action_counts": {
+          "plant": 34,
+          "shovel": 34,
+          "wait": 41
+        }
+      }
+    },
+    {
+      "task_id": "heldout_night_1",
+      "seed": 50256,
+      "seconds": 1.3029643500012753,
+      "masked": {
+        "seed": 50256,
+        "won": true,
+        "truncated": false,
+        "actions": 81,
+        "terminal_wave": 3,
+        "terminal_tick": 13507,
+        "zero_tick_actions": 34,
+        "immediate_plant_shovels": 14,
+        "action_counts": {
+          "plant": 17,
+          "shovel": 17,
+          "wait": 47
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50256,
+        "won": true,
+        "truncated": false,
+        "actions": 81,
+        "terminal_wave": 3,
+        "terminal_tick": 13507,
+        "zero_tick_actions": 34,
+        "immediate_plant_shovels": 14,
+        "action_counts": {
+          "plant": 17,
+          "shovel": 17,
+          "wait": 47
+        }
+      }
+    },
+    {
+      "task_id": "heldout_night_2",
+      "seed": 50320,
+      "seconds": 1.3443826520015136,
+      "masked": {
+        "seed": 50320,
+        "won": true,
+        "truncated": false,
+        "actions": 83,
+        "terminal_wave": 3,
+        "terminal_tick": 13301,
+        "zero_tick_actions": 34,
+        "immediate_plant_shovels": 15,
+        "action_counts": {
+          "plant": 17,
+          "shovel": 17,
+          "wait": 49
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50320,
+        "won": true,
+        "truncated": false,
+        "actions": 83,
+        "terminal_wave": 3,
+        "terminal_tick": 13301,
+        "zero_tick_actions": 34,
+        "immediate_plant_shovels": 15,
+        "action_counts": {
+          "plant": 17,
+          "shovel": 17,
+          "wait": 49
+        }
+      }
+    },
+    {
+      "task_id": "heldout_night_3",
+      "seed": 50384,
+      "seconds": 1.4611049029990681,
+      "masked": {
+        "seed": 50384,
+        "won": true,
+        "truncated": false,
+        "actions": 89,
+        "terminal_wave": 5,
+        "terminal_tick": 13966,
+        "zero_tick_actions": 36,
+        "immediate_plant_shovels": 15,
+        "action_counts": {
+          "plant": 18,
+          "shovel": 18,
+          "wait": 53
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50384,
+        "won": false,
+        "truncated": true,
+        "actions": 4000,
+        "terminal_wave": 3,
+        "terminal_tick": 8820,
+        "zero_tick_actions": 3968,
+        "immediate_plant_shovels": 10,
+        "action_counts": {
+          "plant": 13,
+          "shovel": 13,
+          "wait": 3974
+        }
+      }
+    },
+    {
+      "task_id": "heldout_night_4",
+      "seed": 50448,
+      "seconds": 1.385021190999396,
+      "masked": {
+        "seed": 50448,
+        "won": true,
+        "truncated": false,
+        "actions": 82,
+        "terminal_wave": 3,
+        "terminal_tick": 8208,
+        "zero_tick_actions": 48,
+        "immediate_plant_shovels": 17,
+        "action_counts": {
+          "plant": 26,
+          "shovel": 22,
+          "wait": 34
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50448,
+        "won": false,
+        "truncated": true,
+        "actions": 4000,
+        "terminal_wave": 2,
+        "terminal_tick": 5154,
+        "zero_tick_actions": 3981,
+        "immediate_plant_shovels": 10,
+        "action_counts": {
+          "plant": 19,
+          "shovel": 15,
+          "wait": 3966
+        }
+      }
+    },
+    {
+      "task_id": "heldout_pool_1",
+      "seed": 50512,
+      "seconds": 1.3701376120006898,
+      "masked": {
+        "seed": 50512,
+        "won": true,
+        "truncated": false,
+        "actions": 91,
+        "terminal_wave": 3,
+        "terminal_tick": 13095,
+        "zero_tick_actions": 40,
+        "immediate_plant_shovels": 19,
+        "action_counts": {
+          "plant": 20,
+          "wait": 51,
+          "shovel": 20
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50512,
+        "won": true,
+        "truncated": false,
+        "actions": 91,
+        "terminal_wave": 3,
+        "terminal_tick": 13095,
+        "zero_tick_actions": 40,
+        "immediate_plant_shovels": 19,
+        "action_counts": {
+          "plant": 20,
+          "wait": 51,
+          "shovel": 20
+        }
+      }
+    },
+    {
+      "task_id": "heldout_pool_2",
+      "seed": 50576,
+      "seconds": 1.2917562650000036,
+      "masked": {
+        "seed": 50576,
+        "won": true,
+        "truncated": false,
+        "actions": 87,
+        "terminal_wave": 3,
+        "terminal_tick": 12656,
+        "zero_tick_actions": 36,
+        "immediate_plant_shovels": 17,
+        "action_counts": {
+          "plant": 18,
+          "wait": 51,
+          "shovel": 18
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50576,
+        "won": true,
+        "truncated": false,
+        "actions": 87,
+        "terminal_wave": 3,
+        "terminal_tick": 12656,
+        "zero_tick_actions": 36,
+        "immediate_plant_shovels": 17,
+        "action_counts": {
+          "plant": 18,
+          "wait": 51,
+          "shovel": 18
+        }
+      }
+    },
+    {
+      "task_id": "heldout_pool_3",
+      "seed": 50640,
+      "seconds": 1.802302003998193,
+      "masked": {
+        "seed": 50640,
+        "won": false,
+        "truncated": false,
+        "actions": 116,
+        "terminal_wave": 5,
+        "terminal_tick": 15592,
+        "zero_tick_actions": 46,
+        "immediate_plant_shovels": 22,
+        "action_counts": {
+          "plant": 23,
+          "wait": 70,
+          "shovel": 23
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50640,
+        "won": false,
+        "truncated": false,
+        "actions": 116,
+        "terminal_wave": 5,
+        "terminal_tick": 15592,
+        "zero_tick_actions": 46,
+        "immediate_plant_shovels": 22,
+        "action_counts": {
+          "plant": 23,
+          "wait": 70,
+          "shovel": 23
+        }
+      }
+    },
+    {
+      "task_id": "heldout_pool_4",
+      "seed": 50704,
+      "seconds": 1.3153409400001692,
+      "masked": {
+        "seed": 50704,
+        "won": true,
+        "truncated": false,
+        "actions": 85,
+        "terminal_wave": 3,
+        "terminal_tick": 8530,
+        "zero_tick_actions": 54,
+        "immediate_plant_shovels": 21,
+        "action_counts": {
+          "plant": 27,
+          "shovel": 27,
+          "wait": 31
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50704,
+        "won": false,
+        "truncated": true,
+        "actions": 4000,
+        "terminal_wave": 2,
+        "terminal_tick": 4402,
+        "zero_tick_actions": 3985,
+        "immediate_plant_shovels": 11,
+        "action_counts": {
+          "plant": 17,
+          "shovel": 17,
+          "wait": 3966
+        }
+      }
+    },
+    {
+      "task_id": "heldout_fog_1",
+      "seed": 50768,
+      "seconds": 1.4672197679974488,
+      "masked": {
+        "seed": 50768,
+        "won": true,
+        "truncated": false,
+        "actions": 99,
+        "terminal_wave": 3,
+        "terminal_tick": 13073,
+        "zero_tick_actions": 36,
+        "immediate_plant_shovels": 15,
+        "action_counts": {
+          "plant": 18,
+          "shovel": 18,
+          "wait": 63
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50768,
+        "won": true,
+        "truncated": false,
+        "actions": 99,
+        "terminal_wave": 3,
+        "terminal_tick": 13073,
+        "zero_tick_actions": 36,
+        "immediate_plant_shovels": 15,
+        "action_counts": {
+          "plant": 18,
+          "shovel": 18,
+          "wait": 63
+        }
+      }
+    },
+    {
+      "task_id": "heldout_fog_2",
+      "seed": 50832,
+      "seconds": 1.0189237220001814,
+      "masked": {
+        "seed": 50832,
+        "won": true,
+        "truncated": false,
+        "actions": 69,
+        "terminal_wave": 3,
+        "terminal_tick": 10640,
+        "zero_tick_actions": 30,
+        "immediate_plant_shovels": 13,
+        "action_counts": {
+          "plant": 15,
+          "shovel": 15,
+          "wait": 39
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50832,
+        "won": true,
+        "truncated": false,
+        "actions": 69,
+        "terminal_wave": 3,
+        "terminal_tick": 10640,
+        "zero_tick_actions": 30,
+        "immediate_plant_shovels": 13,
+        "action_counts": {
+          "plant": 15,
+          "shovel": 15,
+          "wait": 39
+        }
+      }
+    },
+    {
+      "task_id": "heldout_fog_3",
+      "seed": 50896,
+      "seconds": 1.4931768870010274,
+      "masked": {
+        "seed": 50896,
+        "won": false,
+        "truncated": false,
+        "actions": 100,
+        "terminal_wave": 5,
+        "terminal_tick": 15379,
+        "zero_tick_actions": 40,
+        "immediate_plant_shovels": 17,
+        "action_counts": {
+          "plant": 20,
+          "shovel": 20,
+          "wait": 60
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50896,
+        "won": false,
+        "truncated": true,
+        "actions": 4000,
+        "terminal_wave": 2,
+        "terminal_tick": 6332,
+        "zero_tick_actions": 3976,
+        "immediate_plant_shovels": 7,
+        "action_counts": {
+          "plant": 10,
+          "shovel": 10,
+          "wait": 3980
+        }
+      }
+    },
+    {
+      "task_id": "heldout_fog_4",
+      "seed": 50960,
+      "seconds": 1.6195855019977898,
+      "masked": {
+        "seed": 50960,
+        "won": true,
+        "truncated": false,
+        "actions": 103,
+        "terminal_wave": 3,
+        "terminal_tick": 10512,
+        "zero_tick_actions": 64,
+        "immediate_plant_shovels": 26,
+        "action_counts": {
+          "plant": 32,
+          "shovel": 32,
+          "wait": 39
+        }
+      },
+      "archived_unmasked": {
+        "seed": 50960,
+        "won": false,
+        "truncated": true,
+        "actions": 4000,
+        "terminal_wave": 3,
+        "terminal_tick": 8739,
+        "zero_tick_actions": 3968,
+        "immediate_plant_shovels": 22,
+        "action_counts": {
+          "plant": 28,
+          "shovel": 28,
+          "wait": 3944
+        }
+      }
+    },
+    {
+      "task_id": "heldout_roof_1",
+      "seed": 51024,
+      "seconds": 0.9066190020021168,
+      "masked": {
+        "seed": 51024,
+        "won": false,
+        "truncated": false,
+        "actions": 62,
+        "terminal_wave": 2,
+        "terminal_tick": 4250,
+        "zero_tick_actions": 47,
+        "immediate_plant_shovels": 5,
+        "action_counts": {
+          "plant": 16,
+          "shovel": 31,
+          "wait": 15
+        }
+      },
+      "archived_unmasked": {
+        "seed": 51024,
+        "won": false,
+        "truncated": false,
+        "actions": 62,
+        "terminal_wave": 2,
+        "terminal_tick": 4250,
+        "zero_tick_actions": 47,
+        "immediate_plant_shovels": 5,
+        "action_counts": {
+          "plant": 16,
+          "shovel": 31,
+          "wait": 15
+        }
+      }
+    },
+    {
+      "task_id": "heldout_roof_2",
+      "seed": 51088,
+      "seconds": 0.8778601140002138,
+      "masked": {
+        "seed": 51088,
+        "won": false,
+        "truncated": false,
+        "actions": 62,
+        "terminal_wave": 2,
+        "terminal_tick": 6852,
+        "zero_tick_actions": 37,
+        "immediate_plant_shovels": 8,
+        "action_counts": {
+          "plant": 11,
+          "shovel": 26,
+          "wait": 25
+        }
+      },
+      "archived_unmasked": {
+        "seed": 51088,
+        "won": false,
+        "truncated": false,
+        "actions": 62,
+        "terminal_wave": 2,
+        "terminal_tick": 6852,
+        "zero_tick_actions": 37,
+        "immediate_plant_shovels": 8,
+        "action_counts": {
+          "plant": 11,
+          "shovel": 26,
+          "wait": 25
+        }
+      }
+    },
+    {
+      "task_id": "heldout_roof_3",
+      "seed": 51152,
+      "seconds": 0.9142277770006331,
+      "masked": {
+        "seed": 51152,
+        "won": false,
+        "truncated": false,
+        "actions": 63,
+        "terminal_wave": 2,
+        "terminal_tick": 6921,
+        "zero_tick_actions": 37,
+        "immediate_plant_shovels": 8,
+        "action_counts": {
+          "plant": 11,
+          "shovel": 26,
+          "wait": 26
+        }
+      },
+      "archived_unmasked": {
+        "seed": 51152,
+        "won": false,
+        "truncated": false,
+        "actions": 63,
+        "terminal_wave": 2,
+        "terminal_tick": 6921,
+        "zero_tick_actions": 37,
+        "immediate_plant_shovels": 8,
+        "action_counts": {
+          "plant": 11,
+          "shovel": 26,
+          "wait": 26
+        }
+      }
+    },
+    {
+      "task_id": "heldout_roof_4",
+      "seed": 51216,
+      "seconds": 0.8929030299987062,
+      "masked": {
+        "seed": 51216,
+        "won": false,
+        "truncated": false,
+        "actions": 64,
+        "terminal_wave": 2,
+        "terminal_tick": 7508,
+        "zero_tick_actions": 37,
+        "immediate_plant_shovels": 8,
+        "action_counts": {
+          "plant": 11,
+          "shovel": 26,
+          "wait": 27
+        }
+      },
+      "archived_unmasked": {
+        "seed": 51216,
+        "won": false,
+        "truncated": false,
+        "actions": 64,
+        "terminal_wave": 2,
+        "terminal_tick": 7508,
+        "zero_tick_actions": 37,
+        "immediate_plant_shovels": 8,
+        "action_counts": {
+          "plant": 11,
+          "shovel": 26,
+          "wait": 27
+        }
+      }
+    }
+  ],
+  "failed_first_probe": "event_progress_policy_v1_actual: output print erroneously referenced per-record wait_summary; original single completed case and KeyError retained; v2 fixes display only.",
+  "test_result": {
+    "count": 31,
+    "seconds": 3.236,
+    "status": "pass",
+    "first_failure": "old test load_config fixture needed ignored artifacts/task_family; linked original manifest read-only and retained first failed log."
+  }
+}

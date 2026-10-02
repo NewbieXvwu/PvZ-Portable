@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "experiment_id": "mainline_width128_v1_seed0",
-  "purpose": "Exploratory width candidate; identical inputs/reward/course/memory/critic/evaluation and 500k ceiling as mainline256. Initial useful segments do not select a winner or certify T6.",
+  "purpose": "Prepared width candidate updated BEFORE any width training: same explicit progress-v1 policy mask as new mainline256; identical reward/course/memory/critic/evaluation. 500k exploratory ceiling, useful short segments first.",
   "initialization_seed": 0,
   "sampling_seed": 1701,
   "model": {
@@ -14,7 +14,8 @@
     "critic_width": 256,
     "critic_layers": 1,
     "input_flags": 7,
-    "wait_mode": "events"
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
   },
   "reward": {
     "name": "R0",
