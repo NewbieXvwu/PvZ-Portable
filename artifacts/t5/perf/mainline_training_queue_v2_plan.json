@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "status_at_freeze": "waiting_frontier_first_segment",
+  "source_revision": "ecc6b39",
+  "controller_pid": 120099,
+  "prior_queue": "mainline_screening_queue_v1",
+  "scope": "Prioritize actual training: frontier seed1 smoke3 then resume20; frontier seed0 resume60 toward scheduled125k node; frontier seed2 smoke3 then resume20; short-history8 seed0 smoke3 then resume20. Frozen ecc6b39 source, unchanged original tasks/evaluations; all failures retained. No auxiliary prediction.",
+  "stages": [
+    {
+      "run": "mainline_frontier_v1_seed1",
+      "config": "experiments/t5/frontier_v1/seed1.json",
+      "stop_after_updates": 3,
+      "resume": false
+    },
+    {
+      "run": "mainline_frontier_v1_seed1",
+      "config": "experiments/t5/frontier_v1/seed1.json",
+      "stop_after_updates": 20,
+      "resume": true
+    },
+    {
+      "run": "mainline_frontier_v1_seed0",
+      "config": "experiments/t5/frontier_v1/seed0.json",
+      "stop_after_updates": 60,
+      "resume": true
+    },
+    {
+      "run": "mainline_frontier_v1_seed2",
+      "config": "experiments/t5/frontier_v1/seed2.json",
+      "stop_after_updates": 3,
+      "resume": false
+    },
+    {
+      "run": "mainline_frontier_v1_seed2",
+      "config": "experiments/t5/frontier_v1/seed2.json",
+      "stop_after_updates": 20,
+      "resume": true
+    },
+    {
+      "run": "mainline_short_history8_v1_seed0",
+      "config": "experiments/t6/short_history_v1/history8_seed0.json",
+      "stop_after_updates": 3,
+      "resume": false
+    },
+    {
+      "run": "mainline_short_history8_v1_seed0",
+      "config": "experiments/t6/short_history_v1/history8_seed0.json",
+      "stop_after_updates": 20,
+      "resume": true
+    }
+  ],
+  "logging": "Direct per-run files and60second progress. Fresh smoke must finish within30min and yield checkpoint, curve and evaluation. Any failed prior stage stops the queue and preserves evidence.",
+  "acceptance": "No stage declared learned; all own initial baselines/nodes/original tasks/seeds/thresholds preserved. Primary3initializations and125k observation remain pending, no auxiliary predictions."
+}

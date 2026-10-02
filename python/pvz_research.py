@@ -26,6 +26,7 @@ from pvz_agent_model import GameplayModelV1, model_architecture_version, configu
 from pvz_common import (ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION,
                         canonical_digest, git_metadata, sha256_file)
 import pvz_curriculum as course
+import pvz_task_mutation as mutation
 from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory
 from train_pvz_ppo import add_advantages, episode_digest, train_update
 from pvz_wait_events import summarize_wait_records
@@ -183,6 +184,10 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
     sampling_fields = {"manifest", "task_ids", "method", "rollout_episodes"}
     if sampling.get("method") in course.COURSE_METHODS:
         sampling_fields.add("curriculum")
+    if "task_mutation" in sampling:
+        sampling_fields.add("task_mutation")
+        if sampling.get("method") != "frontier_v1":
+            raise ValueError("append_neighbors_v1 task mutation requires frontier_v1 sampling")
     if set(sampling) != sampling_fields:
         raise ValueError("all sampling settings must be explicit")
     if sampling["method"] not in {"balanced", "legacy_recent", *course.COURSE_METHODS} or sampling["rollout_episodes"] < 1:
@@ -201,6 +206,8 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
     if not evaluation["modes"] or set(evaluation["modes"]) - {"greedy", "sampled"}:
         raise ValueError("evaluation modes must be greedy and/or sampled")
     eval_tasks = json.loads(_path(evaluation["manifest"]).read_text())["tasks"]
+    if "task_mutation" in sampling:
+        mutation.validate_settings(sampling["task_mutation"], train, eval_tasks)
     for tasks in (train, eval_tasks):
         if not tasks or len(tasks) != len({task["task_id"] for task in tasks}):
             raise ValueError("empty or duplicate task list")
@@ -406,6 +413,8 @@ def run_experiment(args: Any) -> None:
         source_paths.append(ROOT / "python/pvz_dual_memory.py")
     if "short_history" in config["model"]:
         source_paths.append(ROOT / "python/pvz_short_memory.py")
+    if "task_mutation" in config["sampling"]:
+        source_paths.append(ROOT / "python/pvz_task_mutation.py")
     fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
     fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),
                          "main.pak": sha256_file(resource_dir / "main.pak"),
@@ -460,6 +469,13 @@ def run_experiment(args: Any) -> None:
                     "gpu": torch.cuda.get_device_name(), "experiment_identity": identity,
                     "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
                     "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG")})
+    base_tasks = tasks
+    mutation_settings = config["sampling"].get("task_mutation")
+    if mutation_settings is not None:
+        if not args.resume:
+            state["task_mutation_state"] = mutation.initial_state(base_tasks)
+        mutation.validate_state(state["task_mutation_state"], mutation_settings, base_tasks, eval_tasks)
+        tasks = state["task_mutation_state"]["pool"]
     if config["sampling"]["method"] in course.COURSE_METHODS:
         if not args.resume:
             state["curriculum_state"] = course.initial_state(tasks)
@@ -516,6 +532,8 @@ def run_experiment(args: Any) -> None:
                       f"keeping the newest {TRAINED_CHECKPOINT_KEEP}", flush=True)
         atomic_json(output / "training_state.json", state)
         atomic_json(output / "learning_curve.json", state["learning_curve"])
+        if mutation_settings is not None:
+            atomic_json(output / "generated_training_pool.json", state["task_mutation_state"])
 
     def do_evaluation() -> None:
         record = evaluate(model, eval_tasks, config, resource_dir, output, state)
@@ -540,6 +558,15 @@ def run_experiment(args: Any) -> None:
             if stop_requested.is_set() or (args.stop_after_updates is not None
                                            and invocation_updates >= args.stop_after_updates):
                 break
+            if mutation_settings is not None:
+                additions = mutation.advance(state["task_mutation_state"], mutation_settings,
+                    base_tasks, eval_tasks, state["curriculum_state"],
+                    config["sampling"]["curriculum"], counters["decisions"])
+                if additions:
+                    course.append_tasks(state["curriculum_state"], additions)
+                    state["recent_passes"].update({task["task_id"]: [] for task in additions})
+                    print(f"{config['experiment_id']} appended {len(additions)} mutation tasks; "
+                          f"pool={len(tasks)} at decisions={counters['decisions']}", flush=True)
             batch_size = config["sampling"]["rollout_episodes"]
             if episode_limit is not None:
                 batch_size = min(batch_size, episode_limit - counters["episodes"])

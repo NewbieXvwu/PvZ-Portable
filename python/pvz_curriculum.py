@@ -54,6 +54,15 @@ def initial_state(tasks: list[dict[str, Any]]) -> dict[str, Any]:
             "completed": {key: 0 for key in ids}, "ignored_truncations": {key: 0 for key in ids}}
 
 
+def append_tasks(state: dict[str, Any], additions: list[dict[str, Any]]) -> None:
+    """Extend a declared mutable training pool without changing old histories."""
+    extension = initial_state(additions)
+    if set(extension["history"]) & set(state["history"]):
+        raise ValueError("curriculum additions reuse existing task IDs")
+    for field in ("task_metadata", "history", "completed", "ignored_truncations"):
+        state[field].update(extension[field])
+
+
 def validate_state(state: dict[str, Any], tasks: list[dict[str, Any]], settings: dict[str, Any]) -> None:
     validate_settings(settings)
     expected_metadata = initial_state(tasks)["task_metadata"]

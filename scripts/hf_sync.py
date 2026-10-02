@@ -56,6 +56,7 @@ EVIDENCE_GLOBS = [
     "experiment_config.json",
     "provenance.json",
     "resume.json",
+    "generated_training_pool.json",
     "evaluations/*.json.gz",
 ]
 
