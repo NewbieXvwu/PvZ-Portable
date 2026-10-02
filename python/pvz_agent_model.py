@@ -12,6 +12,7 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 from pvz_observation_features import (INPUT_ON_BOARD, INPUT_ROW_CONTEXT, INPUT_TARGET_RELATIONS,
                                       require_public_fields, row_context, packet_refresh)
+from pvz_wait_events import CONDITIONS, REASON_PRECEDENCE, validate_wait_result
 try:
     from torch.nn.attention.flex_attention import flex_attention
 except ImportError:  # pragma: no cover - depends on the installed PyTorch build
@@ -35,7 +36,35 @@ TOKEN_KINDS = {
 WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
 MODEL_ARCHITECTURE_VERSION = 7
+WAIT_MODEL_ARCHITECTURE_VERSION = 8
 FEATURE_COUNT = 32
+
+
+def model_architecture_version(config: dict[str, Any]) -> int:
+    """Legacy configs retain version 7; explicit paired wait models use version 8."""
+    if "wait_mode" not in config:
+        return MODEL_ARCHITECTURE_VERSION
+    if config["wait_mode"] not in ("fixed", "events"):
+        raise ValueError("wait_mode must be fixed or events")
+    return WAIT_MODEL_ARCHITECTURE_VERSION
+
+
+def validate_policy_action(config: dict[str, Any], action: dict[str, Any]) -> None:
+    """Do not silently replay an event action as a fixed-duration action."""
+    kind = action.get("type")
+    if kind not in ("plant", "shovel", "wait"):
+        raise ValueError(f"unsupported action type: {kind}")
+    event_wait = config.get("wait_mode") == "events" and kind == "wait"
+    if event_wait:
+        if (set(action) != {"type", "ticks", "until"} or type(action["until"]) is not str
+                or action["until"] not in CONDITIONS):
+            raise ValueError("event policy wait requires type, ticks and a valid until")
+    elif "until" in action:
+        raise ValueError("until is only valid for an event policy wait")
+    if kind == "wait":
+        ticks = action.get("ticks", 150)
+        if type(ticks) is not int or ticks not in WAIT_TICKS:
+            raise ValueError(f"wait ticks must be one of {WAIT_TICKS}: {action}")
 
 # Fill value for the padded columns of the batched packet-logit table.  Those
 # columns are always overwritten by ``masked_fill`` before the distribution is
@@ -689,11 +718,13 @@ class GameplayModelV1(nn.Module):
         super().__init__()
         self.config = {**MODEL_CONFIG, **(config or {})}
         self.config.setdefault("input_flags", 0)
-        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags"}
+        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags", "wait_mode"}
         if set(self.config) - allowed:
             raise ValueError(f"unknown model settings: {sorted(set(self.config) - allowed)}")
-        if any(type(value) is not int or value < 1 for key, value in self.config.items() if key != "input_flags"):
+        if any(type(value) is not int or value < 1 for key, value in self.config.items()
+               if key not in ("input_flags", "wait_mode")):
             raise ValueError("model dimensions must be positive integers")
+        model_architecture_version(self.config)
         if type(self.config["input_flags"]) is not int or not 0 <= self.config["input_flags"] <= 7:
             raise ValueError("input_flags must be from 0 to 7")
         if self.config["input_flags"] & INPUT_TARGET_RELATIONS and self.config["layers"] < 2:
@@ -750,10 +781,18 @@ class GameplayModelV1(nn.Module):
             critic.extend((nn.Linear(critic_width, critic_width), nn.Tanh()))
         critic.append(nn.Linear(critic_width, 1))
         self.privileged_critic = nn.Sequential(*critic)
+        if "wait_mode" in self.config:
+            # Both paired modes have identical weights/capacity. Append the new
+            # weights without shifting any legacy weight or caller's RNG stream.
+            with torch.random.fork_rng(devices=[]):
+                torch.random.default_generator.manual_seed(50_212)
+                self.wait_condition = nn.Linear(hidden, len(CONDITIONS))
+                self.wait_context = nn.Sequential(nn.Linear(20, 64), nn.SiLU())
 
     def _previous_action(self, action: dict[str, Any] | None, device: torch.device) -> Tensor:
         if action is None:
             return torch.zeros(1, 64, device=device)
+        validate_policy_action(self.config, action)
         action_types = {"plant": 0, "shovel": 1, "wait": 2}
         if action.get("type") not in action_types:
             raise ValueError(f"unsupported action type: {action.get('type')}")
@@ -785,14 +824,16 @@ class GameplayModelV1(nn.Module):
 
     def step(self, observation: dict[str, Any], hidden: Tensor | None = None,
              previous_action: dict[str, Any] | None = None, delta_ticks: int = 0,
-             events: dict[str, Any] | None = None) -> dict[str, Any]:
+             events: dict[str, Any] | None = None,
+             previous_wait_result: dict[str, Any] | None = None) -> dict[str, Any]:
         tensors, metadata = observation_tokens(observation, self.config["input_flags"])
         return self.step_tokens(tensors, metadata, observation["wave"], hidden,
-                                previous_action, delta_ticks, events)
+                                previous_action, delta_ticks, events, previous_wait_result)
 
     def step_tokens(self, tensors: dict[str, Tensor], metadata: dict[str, Any], wave: int,
                     hidden: Tensor | None = None, previous_action: dict[str, Any] | None = None,
-                    delta_ticks: int = 0, events: dict[str, Any] | None = None) -> dict[str, Any]:
+                    delta_ticks: int = 0, events: dict[str, Any] | None = None,
+                    previous_wait_result: dict[str, Any] | None = None) -> dict[str, Any]:
         """Same forward as :meth:`step`, but over pre-tokenized input.
 
         Rollouts tokenize once and store the packed tokens; training reuses them
@@ -819,6 +860,11 @@ class GameplayModelV1(nn.Module):
         x = self.encoder_norm(x)
 
         action_vector = self._previous_action(previous_action, device)
+        if "wait_mode" in self.config:
+            action_vector = action_vector + self._wait_context_batch(
+                [previous_action], [delta_ticks], [previous_wait_result], device)
+        elif previous_wait_result is not None:
+            raise ValueError("legacy model cannot consume event wait metadata")
         delta_index = min(31, max(0, int(math.log2(max(0, delta_ticks) + 1))))
         delta_vector = self.delta_embedding(torch.tensor([delta_index], device=device))
         event_vector = self.event_projection(self._event_features(events, device))
@@ -834,7 +880,7 @@ class GameplayModelV1(nn.Module):
                          if packet_ids else x.new_zeros((0, self.config["width"])))
         cell_tokens = torch.stack([x[0, metadata["cell_tokens"][i]] for i in cell_ids])
         packet_logits = (self.packet_key(packet_tokens) * self.packet_query(belief)).sum(-1) / math.sqrt(self.config["width"])
-        return {
+        output = {
             "hidden": hidden,
             "belief": belief,
             "type_logits": self.action_type(belief)[0],
@@ -850,6 +896,9 @@ class GameplayModelV1(nn.Module):
             "aux_outcome": self.aux_outcome(belief),
             "wave_index": wave,
         }
+        if "wait_mode" in self.config:
+            output["wait_condition_logits"] = self.wait_condition(belief)[0]
+        return output
 
     def _previous_action_batch(self, actions: list[dict[str, Any] | None], device: torch.device) -> Tensor:
         """Batch form of ``_previous_action``; None rows stay exactly zero."""
@@ -862,6 +911,7 @@ class GameplayModelV1(nn.Module):
                 cells.append(0)
                 durations.append(0)
                 continue
+            validate_policy_action(self.config, action)
             kind = action_types[action["type"]]
             packet = max(0, min(10, int(action.get("packet", -1)) + 1))
             cell = 0
@@ -882,6 +932,42 @@ class GameplayModelV1(nn.Module):
             self.previous_wait_embedding(index[:, 3]),
         ), dim=-1)
         vector = self.previous_action_projection(parts)
+        present = torch.tensor([action is not None for action in actions], device=device)
+        return vector * present[:, None].to(vector.dtype)
+
+    def _wait_context_batch(self, actions: list[dict[str, Any] | None], deltas: list[int],
+                            results: list[dict[str, Any] | None], device: torch.device) -> Tensor:
+        """Previous condition, primary/all reasons, initial flag and exact tick ratio.
+
+        Layout: condition(7, index 0 means no event condition), reason(6,
+        index 0 means no result), triggered(5), initial flag(1), actual tick/300(1).
+        Fixed controls use the same projection and actual-time feature.
+        """
+        rows = []
+        for action, delta, result in zip(actions, deltas, results):
+            if type(delta) is not int or delta < 0:
+                raise ValueError("actual elapsed ticks must be a nonnegative integer")
+            values = [0.0] * 20
+            if action is None:
+                if delta or result is not None:
+                    raise ValueError("initial policy context must have zero ticks and no wait result")
+            else:
+                validate_policy_action(self.config, action)
+                condition = action.get("until")
+                values[0 if condition is None else CONDITIONS.index(condition) + 1] = 1.0
+                values[19] = delta / 300.0
+                if condition is not None:
+                    validate_wait_result(action, result, delta)
+                    values[7 + REASON_PRECEDENCE.index(result["reason"]) + 1] = 1.0
+                    for reason in result["triggered"]:
+                        values[13 + REASON_PRECEDENCE.index(reason)] = 1.0
+                    values[18] = float(result["initial_condition_satisfied"])
+                elif result is not None:
+                    raise ValueError("only event waits may carry wait result metadata")
+                else:
+                    values[7] = 1.0
+            rows.append(values)
+        vector = self.wait_context(torch.tensor(rows, dtype=torch.float32, device=device))
         present = torch.tensor([action is not None for action in actions], device=device)
         return vector * present[:, None].to(vector.dtype)
 
@@ -918,6 +1004,16 @@ class GameplayModelV1(nn.Module):
         lengths_seq = np.array([len(sequence) for sequence in sequences], dtype=np.int64)
         t_max = int(lengths_seq.max())
         flat = [transition for sequence in sequences for transition in sequence]
+        if "wait_mode" in self.config:
+            for transition in flat:
+                if not {"previous_wait_result", "wait_result"} <= set(transition):
+                    raise ValueError("explicit wait model trajectory omitted wait metadata fields")
+                action = transition["action"]
+                validate_policy_action(self.config, action)
+                if action.get("until") is not None:
+                    validate_wait_result(action, transition["wait_result"], transition["action_duration_ticks"])
+                elif transition["wait_result"] is not None:
+                    raise ValueError("only event waits may carry wait result metadata")
         count = len(flat)
         offsets = np.concatenate(([0], np.cumsum(lengths_seq)))
 
@@ -965,6 +1061,13 @@ class GameplayModelV1(nn.Module):
 
         action_vector = self._previous_action_batch(
             [transition["previous_action"] for transition in flat], device)
+        if "wait_mode" in self.config:
+            action_vector = action_vector + self._wait_context_batch(
+                [transition["previous_action"] for transition in flat],
+                [transition["elapsed_since_previous_observation"] for transition in flat],
+                [transition.get("previous_wait_result") for transition in flat], device)
+        elif any(transition.get("previous_wait_result") is not None for transition in flat):
+            raise ValueError("legacy model cannot consume event wait metadata")
         delta_index = torch.tensor(
             [min(31, max(0, int(math.log2(max(0, int(transition["elapsed_since_previous_observation"])) + 1))))
              for transition in flat], dtype=torch.long, device=device)
@@ -994,6 +1097,7 @@ class GameplayModelV1(nn.Module):
 
         type_logits = self.action_type(belief)
         wait_logits = self.wait_duration(belief)
+        condition_logits = self.wait_condition(belief) if "wait_mode" in self.config else None
         value_out = torch.tanh(self.value(belief))
         aux_next_spawn = self.aux_next_spawn(belief)
         aux_lane_threat = self.aux_lane_threat(belief)
@@ -1027,6 +1131,8 @@ class GameplayModelV1(nn.Module):
                 "aux_outcome": aux_outcome[index:index + 1],
                 "wave_index": transition["wave"],
             })
+            if condition_logits is not None:
+                outputs[-1]["wait_condition_logits"] = condition_logits[index]
         return outputs, hidden_out
 
     def plant_cell_scores(self, output: dict[str, Any], packet: int) -> Tensor:
@@ -1076,6 +1182,8 @@ class GameplayModelV1(nn.Module):
 
 def select_action(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
                   action: dict[str, Any] | None = None, deterministic: bool = False) -> tuple[dict[str, Any], Tensor, Tensor]:
+    if action is not None:
+        validate_policy_action(model.config, action)
     device = output["type_logits"].device
     legal = _legal_of(observation)
     plant_masks = dict(zip(legal["packets"], legal["plant_mask"]))
@@ -1155,6 +1263,14 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         log_prob = log_prob + wait_dist.log_prob(duration)
         entropy = entropy + wait_dist.entropy()
         selected = {"type": "wait", "ticks": WAIT_TICKS[int(duration.item())]} if action is None else dict(action)
+        if model.config.get("wait_mode") == "events":
+            condition_logits = output["wait_condition_logits"]
+            condition_dist = torch.distributions.Categorical(logits=condition_logits)
+            condition = ((condition_logits.argmax() if deterministic else condition_dist.sample())
+                         if action is None else torch.tensor(CONDITIONS.index(action["until"]), device=device))
+            log_prob = log_prob + condition_dist.log_prob(condition)
+            entropy = entropy + condition_dist.entropy()
+            selected["until"] = CONDITIONS[int(condition.item())]
     else:
         raise ValueError(f"unsupported action index: {action_type}")
     return selected, log_prob, entropy
@@ -1183,6 +1299,10 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
     so doing it once per plant row serialised the update 150 times per minibatch.
     """
     device = outputs[0]["type_logits"].device
+    if len(outputs) != len(transitions):
+        raise ValueError("replay output/transition count differs")
+    for transition in transitions:
+        validate_policy_action(model.config, transition["action"])
     total = len(outputs)
     action_types = {"plant": 0, "shovel": 1, "wait": 2}
 
@@ -1281,13 +1401,20 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
 
     if wait_rows:
         duration = torch.tensor([
-            min(range(len(WAIT_TICKS)),
-                key=lambda k: abs(WAIT_TICKS[k] - transitions[i]["action"].get("ticks", 150)))
+            WAIT_TICKS.index(transitions[i]["action"].get("ticks", 150))
             for i in wait_rows], dtype=torch.long, device=device)
         wait_dist = torch.distributions.Categorical(logits=wait_logits[wait_rows])
         rows_t = torch.tensor(wait_rows, dtype=torch.long, device=device)
-        add_lp = add_lp.index_put((rows_t,), wait_dist.log_prob(duration))
-        add_ent = add_ent.index_put((rows_t,), wait_dist.entropy())
+        wait_lp, wait_ent = wait_dist.log_prob(duration), wait_dist.entropy()
+        if model.config.get("wait_mode") == "events":
+            condition_dist = torch.distributions.Categorical(
+                logits=torch.stack([outputs[i]["wait_condition_logits"] for i in wait_rows]))
+            condition = torch.tensor([CONDITIONS.index(transitions[i]["action"]["until"])
+                                      for i in wait_rows], dtype=torch.long, device=device)
+            wait_lp = wait_lp + condition_dist.log_prob(condition)
+            wait_ent = wait_ent + condition_dist.entropy()
+        add_lp = add_lp.index_put((rows_t,), wait_lp)
+        add_ent = add_ent.index_put((rows_t,), wait_ent)
 
     return log_prob + add_lp, entropy + add_ent
 
@@ -1295,14 +1422,16 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
 @torch.no_grad()
 def predict_action(model: GameplayModelV1, observation: dict[str, Any], hidden: Tensor | None,
                    previous_action: dict[str, Any] | None, delta_ticks: int,
-                   events: dict[str, Any] | None) -> tuple[dict[str, Any], Tensor, dict[str, Any]]:
-    output = model.step(observation, hidden, previous_action, delta_ticks, events)
+                   events: dict[str, Any] | None,
+                   previous_wait_result: dict[str, Any] | None = None) -> tuple[dict[str, Any], Tensor, dict[str, Any]]:
+    output = model.step(observation, hidden, previous_action, delta_ticks, events, previous_wait_result)
     action, _, _ = select_action(model, output, observation, deterministic=True)
     return action, output["hidden"], output
 
 
 def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], observation: dict[str, Any],
                                action: dict[str, Any], plant_weight: float = 1.0) -> Tensor:
+    validate_policy_action(model.config, action)
     legal = observation["legal_actions"]
     device = output["type_logits"].device
     valid_packets = sorted({item["packet"] for item in legal["plants"]})
@@ -1347,6 +1476,10 @@ def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], o
             raise ValueError(f"wait ticks must be one of {WAIT_TICKS}: {action}")
         duration = min(range(len(WAIT_TICKS)), key=lambda i: abs(WAIT_TICKS[i] - target_ticks))
         losses.append(F.cross_entropy(output["wait_logits"].unsqueeze(0), torch.tensor([duration], device=device)))
+        if model.config.get("wait_mode") == "events":
+            condition = CONDITIONS.index(action["until"])
+            losses.append(F.cross_entropy(output["wait_condition_logits"].unsqueeze(0),
+                                          torch.tensor([condition], device=device)))
     return torch.stack(losses).sum()
 
 

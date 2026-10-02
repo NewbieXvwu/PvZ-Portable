@@ -22,6 +22,8 @@ from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, legal_su
                              observation_tokens, pack_tokens, replay_log_probs, select_action)
 from pvz_common import canonical_digest
 from pvz_env import PvZEnv, TaskSpec
+from pvz_event_env import require_policy_env
+from pvz_wait_events import validate_wait_result
 from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 
 
@@ -56,11 +58,13 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
     shaping_weight = float(reward_config.get("shaping_weight", 1.0))
     if not 0 < gamma <= 1 or shaping_weight < 0:
         raise ValueError("invalid reward discount or shaping weight")
+    require_policy_env(model.config, env)
     started = time.perf_counter()
     observation, _ = env.reset(deck=task["deck"], task=_task_spec(task, environment_seed))
     reset_seconds = time.perf_counter() - started
     hidden = None
     previous_action = None
+    previous_wait_result = None
     elapsed_since_previous_observation = 0
     events: dict[str, Any] = {}
     transitions = []
@@ -93,7 +97,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         model_started = time.perf_counter()
         with torch.no_grad():
             output = model.step_tokens(tensors, metadata, wave, hidden, previous_action,
-                                       elapsed_since_previous_observation, events)
+                                       elapsed_since_previous_observation, events, previous_wait_result)
             action, log_prob, _ = select_action(model, output, legal)
             critic_extra = model.privileged_extra_from_inputs(
                 observation["wave_timer"], roster)
@@ -115,6 +119,8 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
             "potential": current_potential,
         }
         transitions.append(transition)
+        if "wait_mode" in model.config:
+            transition["previous_wait_result"] = previous_wait_result
         environment_started = time.perf_counter()
         observation, _, done, _, info = env.step(action)
         environment_seconds += time.perf_counter() - environment_started
@@ -122,6 +128,13 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
             raise RuntimeError(f"model selected an illegal action on seed {environment_seed}: {action}")
         hidden = output["hidden"]
         previous_action = action
+        previous_wait_result = info.get("wait_result")
+        if action.get("until") is not None:
+            validate_wait_result(action, previous_wait_result, info["ticks_advanced"])
+        elif previous_wait_result is not None:
+            raise ValueError("fixed actions cannot carry event wait metadata")
+        if "wait_mode" in model.config:
+            transition["wait_result"] = previous_wait_result
         transition["action_duration_ticks"] = info["ticks_advanced"]
         elapsed_since_previous_observation = transition["action_duration_ticks"]
         events = info["events"]
@@ -144,7 +157,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
     if truncated:
         with torch.no_grad():
             output = model.step(observation, hidden, previous_action,
-                                elapsed_since_previous_observation, events)
+                                elapsed_since_previous_observation, events, previous_wait_result)
             roster = wave_rosters.get(observation["wave"])
             if roster is None:
                 roster = env.critic_inputs(observation["wave"])["wave_zombies"]
@@ -379,6 +392,7 @@ def episode_hash(episode: dict[str, Any]) -> str:
             "tokens", "wave", "legal", "previous_action", "elapsed_since_previous_observation",
             "action_duration_ticks", "events", "critic_extra", "action", "log_prob",
             "value", "potential", "shaping_reward", "terminal_outcome", "reward",
+            "previous_wait_result", "wait_result",
         ) if key in transition
     }) for transition in episode["transitions"]]
     return canonical_digest({
@@ -394,6 +408,8 @@ EPISODE_DIGEST_FIELDS = (
     "action_duration_ticks", "events", "critic_extra", "action", "log_prob",
     "value", "potential", "shaping_reward", "terminal_outcome", "reward",
 )
+# Optional version-8 fields. Absent fields leave legacy digests byte-identical.
+EPISODE_OPTIONAL_DIGEST_FIELDS = ("previous_wait_result", "wait_result")
 
 # Recorded alongside every digest so a reader can tell which algorithm produced the
 # trajectory hashes without guessing from the digest length.
@@ -468,7 +484,7 @@ def episode_digest(episode: dict[str, Any], *, digest_size: int = 16) -> str:
     _digest_into(hasher, episode["result"])
     for transition in episode["transitions"]:
         hasher.update(b"|")
-        for key in EPISODE_DIGEST_FIELDS:
+        for key in EPISODE_DIGEST_FIELDS + EPISODE_OPTIONAL_DIGEST_FIELDS:
             if key in transition:
                 _digest_into(hasher, key)
                 _digest_into(hasher, transition[key])

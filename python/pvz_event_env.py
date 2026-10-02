@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pvz_env import PvZEnv
-from pvz_wait_events import CONDITIONS, REASON_PRECEDENCE, VERSION
+from pvz_wait_events import CONDITIONS, VERSION, validate_wait_result
 
 
 class EventWaitEnv(PvZEnv):
@@ -29,23 +29,13 @@ class EventWaitEnv(PvZEnv):
         observation, result = response.get('observation'), response.get('wait_result')
         if not response.get('ok') or not isinstance(observation, dict) or not isinstance(result, dict):
             raise RuntimeError('native event wait rejected or omitted its observation/result')
-        expected = {'version', 'condition', 'requested_ticks', 'actual_ticks', 'logic_steps',
-                    'stalled_clock_steps', 'initial_condition_satisfied', 'reason', 'triggered'}
-        integer_keys = ('version', 'requested_ticks', 'actual_ticks', 'logic_steps', 'stalled_clock_steps')
-        if (set(result) != expected or any(type(result[key]) is not int for key in integer_keys)
-                or result['version'] != VERSION or result['condition'] != condition or result['requested_ticks'] != ticks
-                or type(observation.get('tick')) is not int or type(self._tick) is not int):
+        if type(observation.get('tick')) is not int or type(self._tick) is not int:
             raise RuntimeError('native event wait metadata identity differs')
         actual = int(observation['tick']) - self._tick
-        reasons = result['triggered']
-        if (actual < 0 or result['actual_ticks'] != actual or not 0 <= result['logic_steps'] <= ticks
-                or not 0 <= result['stalled_clock_steps'] <= result['logic_steps']
-                or type(result['initial_condition_satisfied']) is not bool
-                or not isinstance(reasons, list) or not reasons
-                or any(reason not in REASON_PRECEDENCE for reason in reasons)
-                or reasons != sorted(set(reasons), key=REASON_PRECEDENCE.index)
-                or result['reason'] != reasons[0]):
-            raise RuntimeError('native event wait duration/reason metadata differs')
+        try:
+            validate_wait_result(action, result, actual)
+        except ValueError as exc:
+            raise RuntimeError(str(exc)) from exc
         events = response.get('events', {})
         self._annotate_observation(observation, events)
         self._adopt_tick(observation)
@@ -53,3 +43,16 @@ class EventWaitEnv(PvZEnv):
         self._record_operation({'kind': 'action', 'request': dict(action), 'action': dict(action),
                                 'ticks_advanced': actual, 'wait_result': dict(result)}, observation, events)
         return observation, 0.0, bool(observation.get('terminal')), False, info
+
+
+def policy_env(model_config: dict, *args, **kwargs) -> PvZEnv:
+    """Training/evaluation select the native interface from saved model config."""
+    mode = model_config.get('wait_mode', 'fixed')
+    if mode not in ('fixed', 'events'):
+        raise ValueError('wait_mode must be fixed or events')
+    return (EventWaitEnv if mode == 'events' else PvZEnv)(*args, **kwargs)
+
+
+def require_policy_env(model_config: dict, env: PvZEnv) -> None:
+    if model_config.get('wait_mode') == 'events' and not isinstance(env, EventWaitEnv):
+        raise ValueError('event policy requires EventWaitEnv')

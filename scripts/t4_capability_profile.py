@@ -20,13 +20,15 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_agent_model import (  # noqa: E402
     GameplayModelV1,
-    MODEL_ARCHITECTURE_VERSION,
+    model_architecture_version,
     configure_torch_threads,
     predict_action,
     select_action,
 )
 from pvz_common import ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION, sha256_file  # noqa: E402
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
+from pvz_event_env import policy_env, require_policy_env  # noqa: E402
+from pvz_wait_events import summarize_wait_records, validate_wait_result  # noqa: E402
 from pvz_seed_jobs import atomic_json  # noqa: E402
 from pvz_value import SEARCH_LABEL_VERSION, VALUE_SEMANTICS  # noqa: E402
 import scripted_baseline  # noqa: E402
@@ -52,7 +54,7 @@ def load_checkpoint(path: Path) -> tuple[GameplayModelV1, dict[str, Any]]:
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     provenance = checkpoint["provenance"]
     research = checkpoint.get("research_version") == 1
-    if (checkpoint["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
+    if (checkpoint["model_architecture_version"] != model_architecture_version(checkpoint["config"])
             or (not research and checkpoint.get("value_semantics") != VALUE_SEMANTICS)
             or (research and checkpoint.get("value_semantics") != "research_explicit_return_v1")
             or (not research and provenance.get("search_label_version") != SEARCH_LABEL_VERSION)
@@ -90,12 +92,15 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
                 model: GameplayModelV1 | None = None, *, deterministic: bool = True,
                 max_actions: int = MAX_ACTIONS,
                 allow_truncation: bool = False) -> dict[str, Any]:
+    if model is not None:
+        require_policy_env(model.config, env)
     observation, _ = env.reset(deck=task["deck"], task=_task_spec(task, seed))
     if observation["sun"] != task["sun_start"]:
         raise RuntimeError(f"{task['task_id']} seed {seed}: observed sun does not match sun_start")
     rng = random.Random(seed)
     hidden = None
     previous_action = None
+    previous_wait_result = None
     delta_ticks = 0
     events: dict[str, Any] = {}
     totals: Counter[str] = Counter()
@@ -108,6 +113,7 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
     immediate_shovels = 0
     action_counts: Counter[str] = Counter()
     zero_tick_actions = 0
+    wait_records = []
     while not observation["terminal"] and actions < max_actions:
         if strategy == "random":
             action = random_action(observation, rng)
@@ -117,7 +123,8 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
             if model is None:
                 raise RuntimeError("checkpoint strategy has no model")
             with torch.inference_mode():
-                output = model.step(observation, hidden, previous_action, delta_ticks, events)
+                output = model.step(observation, hidden, previous_action, delta_ticks, events,
+                                    previous_wait_result)
                 action, _, _ = select_action(model, output, observation, deterministic=deterministic)
                 hidden = output["hidden"]
         else:
@@ -130,7 +137,16 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
         totals["sun_produced"] += events.get("sun_produced", 0)
         totals["sun_spent"] += events.get("sun_spent", 0)
         previous_action = action
+        previous_wait_result = info.get("wait_result")
         delta_ticks = info["ticks_advanced"]
+        if action.get("until") is not None:
+            validate_wait_result(action, previous_wait_result, delta_ticks)
+        elif previous_wait_result is not None:
+            raise ValueError("fixed actions cannot carry event wait metadata")
+        if model is not None and "wait_mode" in model.config and action["type"] == "wait":
+            wait_records.append({"decision_index": actions, "action": dict(action),
+                                 "actual_ticks": delta_ticks, "terminal_tick": observation["tick"],
+                                 "wait_result": previous_wait_result})
         action_counts[action["type"]] += 1
         zero_tick_actions += delta_ticks == 0
         cell = (action.get("row"), action.get("col"))
@@ -149,7 +165,7 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
     truncated = not observation["terminal"]
     if truncated and not allow_truncation:
         raise RuntimeError(f"{task['task_id']} seed {seed}: exceeded {max_actions} actions without terminal result")
-    return {
+    record = {
         "seed": seed,
         "won": observation["result"] == 1,
         "result": observation["result"],
@@ -165,6 +181,10 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
         "actions": actions,
         "economy_curve": curve,
     }
+    if model is not None and "wait_mode" in model.config:
+        record["wait_mode"] = model.config["wait_mode"]
+        record["wait_records"] = wait_records
+    return record
 
 
 def wilson_95(passes: int, count: int) -> list[float]:
@@ -194,7 +214,7 @@ def summarize_episodes(records: list[dict[str, Any]]) -> dict[str, Any]:
          "mean_sun_spent": round(statistics.mean(point["sun_spent"] for point in points), 3)}
         for tick, points in sorted(curve_values.items())
     ]
-    return {
+    summary = {
         "sample_count": count,
         "pass_rate": round(passes / count, 6),
         "wilson_95": wilson_95(passes, count),
@@ -205,6 +225,11 @@ def summarize_episodes(records: list[dict[str, Any]]) -> dict[str, Any]:
         "terminal_tick_histogram_5000_tick_bins": dict(sorted(tick_hist.items())),
         "economy_curve": economy_curve,
     }
+    if any("wait_records" in record for record in records):
+        if any("wait_records" not in record for record in records):
+            raise ValueError("mixed legacy/explicit-wait evaluation rows")
+        summary["wait_summary"] = summarize_wait_records([row for record in records for row in record["wait_records"]])
+    return summary
 
 
 def _evaluate_split(env: PvZEnv, tasks: list[dict[str, Any]], strategy: str,
@@ -263,7 +288,7 @@ def _main() -> None:
             "state_sha256": _state_sha256(model.state_dict()),
         }
 
-    with PvZEnv(args.resource_dir) as env:
+    with policy_env(model.config, args.resource_dir) as env:
         first_run = {
             "train": _evaluate_split(env, train["tasks"], "checkpoint", model),
             "heldout": _evaluate_split(env, heldout["tasks"], "checkpoint", model),

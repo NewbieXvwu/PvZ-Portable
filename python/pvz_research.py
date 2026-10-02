@@ -22,12 +22,13 @@ from typing import Any
 import numpy as np
 import torch
 
-from pvz_agent_model import GameplayModelV1, MODEL_ARCHITECTURE_VERSION, configure_torch_threads
+from pvz_agent_model import GameplayModelV1, model_architecture_version, configure_torch_threads
 from pvz_common import (ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION,
                         canonical_digest, git_metadata, sha256_file)
 import pvz_curriculum as course
 from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory
 from train_pvz_ppo import add_advantages, episode_digest, train_update
+from pvz_wait_events import summarize_wait_records
 
 ROOT = Path(__file__).resolve().parent.parent
 RESEARCH_VERSION = 1
@@ -159,8 +160,9 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
         raise ValueError("research config fields/schema do not match version 1")
     model_fields = {"layers", "width", "heads", "ff_width", "gru_layers", "gru_width",
                     "critic_width", "critic_layers", "input_flags"}
-    if set(config["model"]) != model_fields:
+    if set(config["model"]) not in (model_fields, model_fields | {"wait_mode"}):
         raise ValueError("all model dimensions and input_flags must be explicit")
+    model_architecture_version(config["model"])
     reward = config["reward"]
     if set(reward) != {"name", "gamma", "shaping_weight"}:
         raise ValueError("reward must explicitly define name, gamma and shaping_weight")
@@ -322,7 +324,7 @@ def _trajectory_stats(episodes: list[dict[str, Any]]) -> dict[str, Any]:
             zero_ticks += step["action_duration_ticks"] == 0
             shaping_abs.append(abs(step["shaping_reward"]))
     var = float(np.var(returns))
-    return {"action_counts": dict(counts), "zero_tick_actions": zero_ticks,
+    stats = {"action_counts": dict(counts), "zero_tick_actions": zero_ticks,
             "immediate_plant_shovels": immediate,
             "immediate_shovel_fraction_of_plants": immediate / max(1, counts["plant"]),
             "mean_abs_shaping_reward": float(np.mean(shaping_abs)),
@@ -332,6 +334,12 @@ def _trajectory_stats(episodes: list[dict[str, Any]]) -> dict[str, Any]:
             "won": sum(episode["won"] for episode in episodes),
             "truncated": sum(episode["truncated"] for episode in episodes),
             "task_counts": dict(Counter(episode["task_id"] for episode in episodes))}
+    if any("wait_result" in step for episode in episodes for step in episode["transitions"]):
+        stats["wait_summary"] = summarize_wait_records([
+            {"action": step["action"], "wait_result": step["wait_result"],
+             "actual_ticks": step["action_duration_ticks"]}
+            for episode in episodes for step in episode["transitions"] if step["action"]["type"] == "wait"])
+    return stats
 
 
 def run_experiment(args: Any) -> None:
@@ -366,7 +374,7 @@ def run_experiment(args: Any) -> None:
     source_paths = [ROOT / "python" / name for name in (
         "pvz_agent_model.py", "pvz_research.py", "train_pvz_ppo.py", "train_pvz_ppo_task_family.py",
         "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py",
-        "pvz_observation_features.py", "pvz_curriculum.py")]
+        "pvz_observation_features.py", "pvz_curriculum.py", "pvz_event_env.py", "pvz_wait_events.py")]
     source_paths.append(ROOT / "scripts/t4_capability_profile.py")
     fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
     fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),
@@ -392,6 +400,9 @@ def run_experiment(args: Any) -> None:
         checkpoint = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
         if checkpoint["experiment_identity"] != identity:
             raise ValueError("resume config, source, simulator, resources or manifests changed")
+        if (checkpoint["config"] != model.config
+                or checkpoint["model_architecture_version"] != model_architecture_version(model.config)):
+            raise ValueError("resume model config/architecture differs")
         model.load_state_dict(checkpoint["state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         state = checkpoint["training_state"]
@@ -450,7 +461,7 @@ def run_experiment(args: Any) -> None:
         state["checkpoint"] = str(path.relative_to(output))
         checkpoint = {"state_dict": {key: value.detach().cpu() for key, value in model.state_dict().items()},
                       "optimizer_state_dict": optimizer.state_dict(), "rng_state": capture_rng(rng),
-                      "model_architecture_version": MODEL_ARCHITECTURE_VERSION,
+                      "model_architecture_version": model_architecture_version(model.config),
                       "config": model.config, "experiment_config": config,
                       "experiment_identity": identity, "training_state": state,
                       "value_semantics": "research_explicit_return_v1", "research_version": RESEARCH_VERSION,
