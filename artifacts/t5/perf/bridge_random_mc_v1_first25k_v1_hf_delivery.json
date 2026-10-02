@@ -3,13 +3,14 @@
   "status": "complete",
   "repo": "realnewbiexvwu/pvz-agent-artifacts",
   "branch": "evidence-bridge-random-mc-v1-first25k-v1",
-  "revision": "17828a5bc0230a546bb0b588f8d047b20ab86c55",
-  "seconds": 42.77662151600089,
+  "revision": "60a24a87868fc72f60930fe2b3c5abff9940bbe5",
+  "seconds": 52.70080682600383,
   "completed_seeds": [
     0,
-    1
+    1,
+    2
   ],
-  "raw_case_count": 544,
+  "raw_case_count": 816,
   "completed_training_prefix_manifest_cases": 515,
   "scope": "Available prescribed25k selected checkpoints/raw results with pending seeds explicit. Initial/2k models reference existing deliveries. Completed training prefix manifest rows are descriptive adaptive repeated draws, not fixed development evaluation; source rollout NPZ remain for the owning queue full125k delivery. No upload lock on live runs, no current full-run resume claim."
 }
