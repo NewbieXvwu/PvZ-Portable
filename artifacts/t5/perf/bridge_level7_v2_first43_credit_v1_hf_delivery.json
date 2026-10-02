@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-level7-v2-first43-credit-v1",
+  "revision": "5e61a5776a931829e47489670e35bd91fc1af74e",
+  "seconds": 3.6087690130007104,
+  "diagnostic_source_revision": "f005c47",
+  "dependency": "Original closed43 checkpoints/165NPZ at evidence-mainline-bridge-level7-v2-seed0-first43, revision82cea4ac2fa3fa506df90ffd5ee256562d2a143d. Source data were not recopied.",
+  "purpose": "Read-only complete scalar credit report / public action trace. No model training or acceptance claim."
+}

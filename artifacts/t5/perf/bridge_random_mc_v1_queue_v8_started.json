@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "status": "waiting_for_v7_planned_boundary",
+  "controller_pid": 150059,
+  "source_revision": "f005c47",
+  "configurations": [
+    "experiments/t7/bridge_random_mc_v1/seed0.json",
+    "experiments/t7/bridge_random_mc_v1/seed1.json",
+    "experiments/t7/bridge_random_mc_v1/seed2.json"
+  ],
+  "plan": "After both committed v7 resumes finish, assess its prescribed nodes. Then three genuinely random smokes, followed by round-robin bounded complete resumes to each125k node. The original500k ceiling and later nodes remain available for same-candidate extension. No reward/architecture adoption control.",
+  "acceptance": "Original full256>=60% and five-terrain/three-init criteria unchanged; not yet achieved.",
+  "source_worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/bridge_random_mc_f005c47",
+  "prior_controller": {
+    "queue": "v7",
+    "pid": 142594,
+    "status": "running",
+    "existing_planned_stages": [
+      60,
+      60
+    ]
+  },
+  "no_new_model_gpu_started": true,
+  "live_progress": "artifacts/research/mainline_training_queue_v8/progress.json",
+  "preservation": "Controller process is live. Keep both owning controllers while their children are alive. Trainer uses immutable f005c47 source; root document changes do not alter that run. Raw checkpoints, rollouts and logs go to HF, text receipts to Git."
+}
