@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "experiment_id": "mainline_bridge_level7_v1_seed0",
+  "purpose": "Exploratory continuation bridge from fixedfirst13fullstage boundary used in discoverability probes, not best checkpoint selection or same-candidate resume. Keep R3gamma1/architecture/PPO/runtime, add task/course only. No auxiliary heads or teacher trajectories.",
+  "initialization_seed": 0,
+  "sampling_seed": 1701,
+  "model": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7,
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
+  },
+  "reward": {
+    "name": "R3",
+    "gamma": 1.0,
+    "shaping_weight": 1
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 0.95,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "sampling": {
+    "manifest": "experiments/t7/bridge_level7_v1/train.json",
+    "task_ids": [],
+    "method": "frontier_v1",
+    "rollout_episodes": 4,
+    "curriculum": {
+      "window_episodes": 8,
+      "minimum_window_episodes": 2,
+      "uniform_fraction": 0.25,
+      "coverage": "terrain_wave_cap",
+      "frontier_pass_range": [
+        0.2,
+        0.8
+      ],
+      "initial_focus_task_ids": [
+        "train_bridge7_v1_aid_cap10"
+      ],
+      "initial_focus_completed_episodes": 64
+    }
+  },
+  "budget": {
+    "decisions": 500000,
+    "max_episodes": null,
+    "boundary_mode": "exact_decisions_v1"
+  },
+  "evaluation": {
+    "manifest": "experiments/t7/bridge_level7_v1/progress_evaluation.json",
+    "modes": [
+      "greedy",
+      "sampled"
+    ],
+    "decision_nodes": [
+      2000,
+      25000,
+      125000,
+      250000,
+      375000,
+      500000
+    ]
+  },
+  "runtime": {
+    "workers": 2,
+    "worker_threads": 1,
+    "worker_device": "cpu",
+    "update_device": "cuda",
+    "max_actions": 4000,
+    "cudnn_tf32": false,
+    "matmul_precision": "highest",
+    "deterministic_algorithms": true,
+    "cublas_workspace_config": ":4096:8"
+  },
+  "prerequisites": [],
+  "initialization": {
+    "method": "weights_transfer_v1",
+    "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_full_level7_v1_seed0/runs/run_1/update_000013_boundary_1790946288957446067.pt",
+    "source_sha256": "c400115918066625c2f1ca8bae1c1120cdeb5f37c00a6ff6a35194cc171d791c",
+    "note": "New bridge-course stage from prespecifiedfirst13completelevel7 boundary, the checkpoint used in prospective probes. Copy all same-config parameters; newAdamW/RNG/counters/course, recursively retain parent training costs. Later fullstage43losses remain delivered; not same-candidate resume or a curriculum causal comparison."
+  }
+}

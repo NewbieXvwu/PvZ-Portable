@@ -1,0 +1,139 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_training",
+  "purpose": "Prioritize discoverable terminal wins, then test transfer to original fulllevel7. No model/auxiliary-head expansion until useful training reaches a scheduled checkpoint.",
+  "evidence": [
+    "full_level7_v1_first_segment_actual.json",
+    "full_level7_aid_feasibility_v1",
+    "full_level7_aid_feasibility_v2",
+    "full_level7_aid_policy_probe_v1",
+    "full_level7_bridge_feasibility_v1",
+    "full_level7_bridge_policy_probe_v1"
+  ],
+  "selection": "cap10with5sun+5Peas: fixed13sampled2/4 vswait1/4, publiccontrol4/4. Allcap15/20/fullpolicyfailures retained. Small preliminary screen supports training utility, not formal learning or acceptance.",
+  "pool": {
+    "retained_multicap_tasks": 30,
+    "retained_ordinary_full_task": "train_full_level7_v1",
+    "added_bridge_tasks": 7,
+    "total_tasks": 38,
+    "new_seeds_per_task": 64,
+    "fixed_preplants": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        1,
+        3,
+        0
+      ],
+      [
+        1,
+        4,
+        0
+      ],
+      [
+        0,
+        0,
+        3
+      ],
+      [
+        0,
+        1,
+        3
+      ],
+      [
+        0,
+        2,
+        3
+      ],
+      [
+        0,
+        3,
+        3
+      ],
+      [
+        0,
+        4,
+        3
+      ]
+    ],
+    "unchanged": {
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "multiplier": 1,
+      "sun_start": 50,
+      "playthrough": 2
+    }
+  },
+  "sampling": "Existingfrontier_v1 with25%terrain/capcoverage floor. Optional prespecified initialfocus: allocate remaining75% to aidcap10 until64normal-terminal focusepisodes (winsandlosses), then ordinaryfrontier sampling from actualtraininghistory. No probe/validationresults injected. All38tasks alwaysretaincoveragefloor. This is an explicit exploratorycurriculum heuristic, not claimedoptimal.",
+  "initialization": "First13completelevel7 boundary, already fixed before two policy probes. Pilotseed0 only; retain complete ancestry and distinguish this exploration from equal-budget architecture comparisons. Do not report newstage counters as lifetime budgets.",
+  "evaluation": "Keep previous short views; increase ordinaryfull7 subset to8originaldevseeds, aidcap10/15to16each, otheraddedtasks8each. Full256originalseeds and five64seedterrain acceptance unchanged in experiments/t7/full_level7_v1/acceptance.json. Report aid/ordinary separately.",
+  "schedule": {
+    "smoke_updates": 3,
+    "smoke_timeout_seconds": 1800,
+    "first_resume_updates": 10,
+    "second_resume_updates": 30,
+    "nodes": [
+      2000,
+      25000,
+      125000,
+      250000,
+      375000,
+      500000
+    ],
+    "budget_ceiling": 500000,
+    "B": "not frozen until repeatedmultiwave learning observed",
+    "start": "After current frontierseed0segment reaches its original83update natural boundary; no running training is killed for reordering. Then unchanged frontierseed2 andshortFFqueued work retained."
+  },
+  "learning_claim": "Need multiple prespecified nodes above ownbaseline and >=2of3 independentinit seeds; onepilot positiveaid outcome is not fullgoal completion.",
+  "retained_cap1_training_probes": {
+    "train_day_1": [
+      60000,
+      60001
+    ],
+    "train_night_1": [
+      60256,
+      60257
+    ],
+    "train_pool_1": [
+      60512,
+      60513
+    ],
+    "train_fog_1": [
+      60768,
+      60769
+    ],
+    "train_roof_1": [
+      61024,
+      61025
+    ]
+  },
+  "validation_note": "Five existingcap1 training views intentionally reuse trainingseeds as labelled diagnostics. Never treat them as heldoutgeneralization. Newbridgeandoriginalfull development seeds are disjoint fromtraining. Preparation assertions initially overbroad about all-evaldisjointness and cap1literal-in-ID were corrected using real wave_cap metadata; no task/seed changed.",
+  "engineering_validation": {
+    "multistage_transfer_tests": 7,
+    "curriculum_tests": 23,
+    "preserved_old_tasks": 30,
+    "preserved_full_task": true,
+    "new_development_seeds_independent": true,
+    "initial_focus_probability": 0.7678571428571429,
+    "training_success": "not yet run; first3updateGPUsmoke required before scale"
+  }
+}

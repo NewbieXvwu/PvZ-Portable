@@ -19,10 +19,16 @@ COURSE_SCHEMA = 2
 def validate_settings(settings: dict[str, Any], method: str | None = None) -> None:
     fields = {"window_episodes", "minimum_window_episodes", "uniform_fraction", "coverage"}
     frontier_fields = fields | {"frontier_pass_range"}
-    if (set(settings) not in (fields, frontier_fields)
-            or (method == "frontier_v1" and set(settings) != frontier_fields)
+    focus_fields = {"initial_focus_task_ids", "initial_focus_completed_episodes"}
+    if (set(settings) not in (fields, frontier_fields, frontier_fields | focus_fields)
+            or (method == "frontier_v1" and set(settings) not in (frontier_fields, frontier_fields | focus_fields))
             or (method is not None and method != "frontier_v1" and set(settings) != fields)):
         raise ValueError("curriculum window sizes, uniform_fraction and coverage must be explicit")
+    if "initial_focus_task_ids" in settings:
+        ids, count = settings["initial_focus_task_ids"], settings["initial_focus_completed_episodes"]
+        if (not isinstance(ids, list) or not ids or any(type(key) is not str or not key for key in ids)
+                or len(ids) != len(set(ids)) or type(count) is not int or count < 1):
+            raise ValueError("initial focus requires unique task IDs and positive completed episodes")
     if "frontier_pass_range" in settings:
         band = settings["frontier_pass_range"]
         if (not isinstance(band, list) or len(band) != 2
@@ -67,6 +73,8 @@ def validate_state(state: dict[str, Any], tasks: list[dict[str, Any]], settings:
     validate_settings(settings)
     expected_metadata = initial_state(tasks)["task_metadata"]
     expected = {task["task_id"] for task in tasks}
+    if set(settings.get("initial_focus_task_ids", [])) - expected:
+        raise ValueError("initial focus names tasks outside the frozen training pool")
     if state.get("schema_version") != COURSE_SCHEMA:
         raise ValueError("curriculum state schema changed")
     for field in ("history", "completed", "ignored_truncations"):
@@ -159,6 +167,9 @@ def probabilities(tasks: list[dict[str, Any]], state: dict[str, Any],
                 task_details[key]["probability"] = group_mass * within
     if method == "frontier_v1":
         total_score = sum(row["frontier_score"] for row in task_details.values())
+        focus_ids = settings.get("initial_focus_task_ids", [])
+        focus_completed = sum(state["completed"][key] for key in focus_ids)
+        focus_active = bool(focus_ids) and focus_completed < settings["initial_focus_completed_episodes"]
         for row in task_details.values():
             # Mix a terrain/cap-balanced floor with a global frontier allocation.
             # Priority can cross singleton coverage groups, unlike the old LP
@@ -167,13 +178,20 @@ def probabilities(tasks: list[dict[str, Any]], state: dict[str, Any],
             row["coverage_base_probability"] = floor
             row["probability"] = (uniform * floor + (1 - uniform) * row["frontier_score"] / total_score
                                   if total_score > 0 else floor)
+        if focus_active:
+            # A declared bridge can bootstrap discoverable successes before a
+            # cold pool has outcome history. Keep the same coverage floor for
+            # every old/failed task; no probe or evaluation outcomes are imported.
+            for key, row in task_details.items():
+                row["probability"] = uniform * row["coverage_base_probability"] + (
+                    (1 - uniform) / len(focus_ids) if key in focus_ids else 0.)
         coverage_probabilities = {
             terrain: {cap: sum(task_details[key]["probability"] for key in keys)
                       for cap, keys in caps.items()} for terrain, caps in groups.items()}
     weights = [task_details[task["task_id"]]["probability"] for task in tasks]
     if not math.isclose(sum(weights), 1.0, rel_tol=0, abs_tol=1e-12):
         raise ValueError("curriculum probabilities do not sum to one")
-    return weights, {"method": method, "settings": dict(settings),
+    details = {"method": method, "settings": dict(settings),
                      "terrain_probabilities": ({terrain: sum(caps.values())
                                                 for terrain, caps in coverage_probabilities.items()}
                                                if method == "frontier_v1" else
@@ -181,3 +199,7 @@ def probabilities(tasks: list[dict[str, Any]], state: dict[str, Any],
                      "coverage_probabilities": coverage_probabilities,
                      "tasks": task_details,
                      "interpretation": "episode-assignment probabilities, not equal decision/tick/time budgets; explicit curriculum heuristic, no optimality claim"}
+    if method == "frontier_v1" and focus_ids:
+        details["initial_focus"] = {"task_ids": list(focus_ids), "completed": focus_completed,
+            "completed_episodes_limit": settings["initial_focus_completed_episodes"], "active": focus_active}
+    return weights, details

@@ -1,0 +1,2888 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "episodes": 160,
+  "purpose": "Short diagnostic evidence only; allv1failures,v2successes and2fixed13policyprobes retained. No teacher training, no original acceptance change.",
+  "source_revisions": {
+    "full_native_v1": "201ca7d",
+    "full_native_v2": "01c2113",
+    "bridge_native_and_policy": "453b094",
+    "policy_checkpoint_source": "c841bda"
+  },
+  "checkpoint_dependency": {
+    "schema_version": 1,
+    "status": "complete",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "branch": "evidence-mainline-full-level7-v1-seed0",
+    "run": "mainline_full_level7_v1_seed0",
+    "purpose": "Closed43-update completelevel7 singleGRU transfer candidate, complete resume target, evaluated/initial/boundary checkpoints, latest8 trained and raw rollouts/logs; no git binaries. Not full remote download verification.",
+    "revision": "54c2d480c5171cd88db365b194c58e9587cb9917",
+    "seconds": 224.50046088400268
+  },
+  "records": {
+    "full_level7_aid_feasibility_v1": {
+      "summaries": {
+        "full7_probe_v1_none": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 19495.75
+          },
+          "scripted": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 33369.25
+          }
+        },
+        "full7_probe_v1_economy5": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 20845.75
+          },
+          "scripted": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 45916.25
+          }
+        },
+        "full7_probe_v1_economy5_offense2": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 19705.25
+          },
+          "scripted": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 45597.75
+          }
+        },
+        "full7_probe_v1_economy5_offense5": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 25166.75
+          },
+          "scripted": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 42360.5
+          }
+        }
+      },
+      "seconds": 10.64350294399992,
+      "episodes": 32
+    },
+    "full_level7_aid_feasibility_v2": {
+      "summaries": {
+        "full7_probe_v2_none": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 19495.75
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 49267.0
+          }
+        },
+        "full7_probe_v2_economy5": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 20845.75
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 44124.0
+          }
+        },
+        "full7_probe_v2_economy5_offense2": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 19705.25
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 42113.75
+          }
+        },
+        "full7_probe_v2_economy5_offense5": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 25166.75
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 39596.5
+          }
+        }
+      },
+      "seconds": 14.673719375001383,
+      "episodes": 32
+    },
+    "full_level7_bridge_feasibility_v1": {
+      "summaries": {
+        "full7_bridge_probe_v1_cap10": {
+          "wait": {
+            "count": 4,
+            "won": 1,
+            "win_rate": 0.25,
+            "wilson_95": [
+              0.04558726080970055,
+              0.6993581574175981
+            ],
+            "truncated": 0,
+            "mean_tick": 22526.25
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 15562.0
+          }
+        },
+        "full7_bridge_probe_v1_cap15": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 23801.25
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 20029.25
+          }
+        },
+        "full7_bridge_probe_v1_cap20": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 23801.25
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 26658.25
+          }
+        },
+        "full7_bridge_probe_v1_capfull": {
+          "wait": {
+            "count": 4,
+            "won": 0,
+            "win_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.4898908364545973
+            ],
+            "truncated": 0,
+            "mean_tick": 23801.25
+          },
+          "scripted": {
+            "count": 4,
+            "won": 4,
+            "win_rate": 1.0,
+            "wilson_95": [
+              0.5101091635454027,
+              1.0
+            ],
+            "truncated": 0,
+            "mean_tick": 40135.75
+          }
+        }
+      },
+      "seconds": 9.939966468999046,
+      "episodes": 32
+    },
+    "full_level7_aid_policy_probe_v1": {
+      "status": "complete",
+      "seconds": 85.13100170799589,
+      "modes": {
+        "greedy": {
+          "overall": {
+            "sample_count": 16,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "mean_terminal_wave": 8.812,
+            "mean_survival_ticks": 21303.375,
+            "peak_offense": 1.75,
+            "terminal_wave_histogram": {
+              "7": 4,
+              "8": 6,
+              "9": 3,
+              "12": 2,
+              "14": 1
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 6,
+              "20000-24999": 9,
+              "30000-34999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 16,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 16,
+                "mean_sun": 290.625,
+                "mean_sun_produced": 242.188,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 16,
+                "mean_sun": 562.5,
+                "mean_sun_produced": 512.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 16,
+                "mean_sun": 770.312,
+                "mean_sun_produced": 720.312,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 16,
+                "mean_sun": 954.688,
+                "mean_sun_produced": 904.688,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 15000,
+                "sample_count": 16,
+                "mean_sun": 1123.438,
+                "mean_sun_produced": 1073.438,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 18000,
+                "sample_count": 15,
+                "mean_sun": 1263.333,
+                "mean_sun_produced": 1213.333,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 21000,
+                "sample_count": 8,
+                "mean_sun": 1506.25,
+                "mean_sun_produced": 1456.25,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 24000,
+                "sample_count": 2,
+                "mean_sun": 1850,
+                "mean_sun_produced": 1800,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 27000,
+                "sample_count": 1,
+                "mean_sun": 2100,
+                "mean_sun_produced": 2050,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 30000,
+                "sample_count": 1,
+                "mean_sun": 2225,
+                "mean_sun_produced": 2175,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 5732,
+              "condition_counts": {
+                "packet_became_ready": 4546,
+                "wave_changed": 1186
+              },
+              "primary_reason_counts": {
+                "max_ticks": 5475,
+                "condition": 52,
+                "zombie_entered_left_zone": 113,
+                "defense_lost": 76,
+                "terminal": 16
+              },
+              "all_trigger_counts": {
+                "max_ticks": 5493,
+                "condition": 52,
+                "zombie_entered_left_zone": 113,
+                "defense_lost": 76,
+                "terminal": 16
+              },
+              "requested_logic_ticks": 348000,
+              "actual_ticks": 340854,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 340870,
+              "stalled_clock_steps": 16,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "per_task": {
+            "full7_probe_v1_none": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 7.25,
+              "mean_survival_ticks": 19495.75,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "7": 3,
+                "8": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 3,
+                "20000-24999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 175,
+                  "mean_sun_produced": 125,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 287.5,
+                  "mean_sun_produced": 237.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 406.25,
+                  "mean_sun_produced": 356.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 512.5,
+                  "mean_sun_produced": 462.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 606.25,
+                  "mean_sun_produced": 556.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 693.75,
+                  "mean_sun_produced": 643.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 1,
+                  "mean_sun": 800,
+                  "mean_sun_produced": 750,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1335,
+                "condition_counts": {
+                  "packet_became_ready": 206,
+                  "wave_changed": 1129
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1255,
+                  "condition": 26,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 20,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1260,
+                  "condition": 26,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 20,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 80100,
+                "actual_ticks": 77983,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 77987,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_probe_v1_economy5": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 8,
+              "mean_survival_ticks": 20845.75,
+              "peak_offense": 0,
+              "terminal_wave_histogram": {
+                "7": 1,
+                "8": 2,
+                "9": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 1,
+                "20000-24999": 3
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 331.25,
+                  "mean_sun_produced": 281.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 650,
+                  "mean_sun_produced": 600,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 887.5,
+                  "mean_sun_produced": 837.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 1075,
+                  "mean_sun_produced": 1025,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 1262.5,
+                  "mean_sun_produced": 1212.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 1393.75,
+                  "mean_sun_produced": 1343.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 2,
+                  "mean_sun": 1512.5,
+                  "mean_sun_produced": 1462.5,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1397,
+                "condition_counts": {
+                  "packet_became_ready": 1340,
+                  "wave_changed": 57
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1336,
+                  "condition": 10,
+                  "zombie_entered_left_zone": 27,
+                  "defense_lost": 20,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1340,
+                  "condition": 10,
+                  "zombie_entered_left_zone": 27,
+                  "defense_lost": 20,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 85020,
+                "actual_ticks": 83383,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 83387,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_probe_v1_economy5_offense2": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 8.25,
+              "mean_survival_ticks": 19705.25,
+              "peak_offense": 2,
+              "terminal_wave_histogram": {
+                "8": 3,
+                "9": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 2,
+                "20000-24999": 2
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 325,
+                  "mean_sun_produced": 281.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 662.5,
+                  "mean_sun_produced": 612.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 887.5,
+                  "mean_sun_produced": 837.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 1100,
+                  "mean_sun_produced": 1050,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 1281.25,
+                  "mean_sun_produced": 1231.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 3,
+                  "mean_sun": 1450,
+                  "mean_sun_produced": 1400,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 2,
+                  "mean_sun": 1562.5,
+                  "mean_sun_produced": 1512.5,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1315,
+                "condition_counts": {
+                  "packet_became_ready": 1315
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1262,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 24,
+                  "defense_lost": 17,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1267,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 24,
+                  "defense_lost": 17,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 80340,
+                "actual_ticks": 78821,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 78825,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_probe_v1_economy5_offense5": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 11.75,
+              "mean_survival_ticks": 25166.75,
+              "peak_offense": 5,
+              "terminal_wave_histogram": {
+                "9": 1,
+                "12": 2,
+                "14": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "20000-24999": 3,
+                "30000-34999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 331.25,
+                  "mean_sun_produced": 281.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 650,
+                  "mean_sun_produced": 600,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 900,
+                  "mean_sun_produced": 850,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 1131.25,
+                  "mean_sun_produced": 1081.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 1343.75,
+                  "mean_sun_produced": 1293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 1562.5,
+                  "mean_sun_produced": 1512.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 3,
+                  "mean_sun": 1700,
+                  "mean_sun_produced": 1650,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 2,
+                  "mean_sun": 1850,
+                  "mean_sun_produced": 1800,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 1,
+                  "mean_sun": 2100,
+                  "mean_sun_produced": 2050,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 2225,
+                  "mean_sun_produced": 2175,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1685,
+                "condition_counts": {
+                  "packet_became_ready": 1685
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1622,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 32,
+                  "defense_lost": 19,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1626,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 32,
+                  "defense_lost": 19,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 102540,
+                "actual_ticks": 100667,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 100671,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            }
+          },
+          "truncated": 0
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 16,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "mean_terminal_wave": 10.438,
+            "mean_survival_ticks": 25149.5,
+            "peak_offense": 4,
+            "terminal_wave_histogram": {
+              "7": 1,
+              "8": 1,
+              "9": 7,
+              "10": 1,
+              "11": 2,
+              "12": 2,
+              "16": 1,
+              "17": 1
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 2,
+              "20000-24999": 7,
+              "25000-29999": 4,
+              "30000-34999": 3
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 16,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 16,
+                "mean_sun": 71.875,
+                "mean_sun_produced": 253.125,
+                "mean_sun_spent": 231.25
+              },
+              {
+                "tick": 6000,
+                "sample_count": 16,
+                "mean_sun": 112.5,
+                "mean_sun_produced": 540.625,
+                "mean_sun_spent": 478.125
+              },
+              {
+                "tick": 9000,
+                "sample_count": 16,
+                "mean_sun": 79.688,
+                "mean_sun_produced": 764.062,
+                "mean_sun_spent": 734.375
+              },
+              {
+                "tick": 12000,
+                "sample_count": 16,
+                "mean_sun": 60.938,
+                "mean_sun_produced": 981.25,
+                "mean_sun_spent": 970.312
+              },
+              {
+                "tick": 15000,
+                "sample_count": 16,
+                "mean_sun": 45.312,
+                "mean_sun_produced": 1182.812,
+                "mean_sun_spent": 1187.5
+              },
+              {
+                "tick": 18000,
+                "sample_count": 16,
+                "mean_sun": 48.438,
+                "mean_sun_produced": 1367.188,
+                "mean_sun_spent": 1368.75
+              },
+              {
+                "tick": 21000,
+                "sample_count": 14,
+                "mean_sun": 55.357,
+                "mean_sun_produced": 1553.571,
+                "mean_sun_spent": 1548.214
+              },
+              {
+                "tick": 24000,
+                "sample_count": 9,
+                "mean_sun": 61.111,
+                "mean_sun_produced": 1838.889,
+                "mean_sun_spent": 1827.778
+              },
+              {
+                "tick": 27000,
+                "sample_count": 4,
+                "mean_sun": 25,
+                "mean_sun_produced": 2368.75,
+                "mean_sun_spent": 2393.75
+              },
+              {
+                "tick": 30000,
+                "sample_count": 3,
+                "mean_sun": 66.667,
+                "mean_sun_produced": 2800,
+                "mean_sun_spent": 2783.333
+              },
+              {
+                "tick": 33000,
+                "sample_count": 1,
+                "mean_sun": 75,
+                "mean_sun_produced": 2925,
+                "mean_sun_spent": 2900
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 2815,
+              "condition_counts": {
+                "plant_count_decreased": 543,
+                "sun_increased": 333,
+                "packet_became_ready": 905,
+                "wave_changed": 696,
+                "timeout": 201,
+                "left_zone_occupied": 137
+              },
+              "primary_reason_counts": {
+                "max_ticks": 2247,
+                "condition": 362,
+                "zombie_entered_left_zone": 127,
+                "defense_lost": 63,
+                "terminal": 16
+              },
+              "all_trigger_counts": {
+                "max_ticks": 2249,
+                "condition": 366,
+                "zombie_entered_left_zone": 127,
+                "defense_lost": 63,
+                "terminal": 16
+              },
+              "requested_logic_ticks": 472320,
+              "actual_ticks": 402392,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 402408,
+              "stalled_clock_steps": 16,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "per_task": {
+            "full7_probe_v1_none": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 9,
+              "mean_survival_ticks": 23697.75,
+              "peak_offense": 1.5,
+              "terminal_wave_histogram": {
+                "9": 4
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "20000-24999": 3,
+                "25000-29999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 56.25,
+                  "mean_sun_produced": 150,
+                  "mean_sun_spent": 143.75
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 68.75,
+                  "mean_sun_produced": 337.5,
+                  "mean_sun_spent": 318.75
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 506.25,
+                  "mean_sun_spent": 518.75
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 675,
+                  "mean_sun_spent": 687.5
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 31.25,
+                  "mean_sun_produced": 843.75,
+                  "mean_sun_spent": 862.5
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 18.75,
+                  "mean_sun_produced": 968.75,
+                  "mean_sun_spent": 1000
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 4,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 1087.5,
+                  "mean_sun_spent": 1100
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 2,
+                  "mean_sun": 12.5,
+                  "mean_sun_produced": 1362.5,
+                  "mean_sun_spent": 1400
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 657,
+                "condition_counts": {
+                  "plant_count_decreased": 132,
+                  "sun_increased": 74,
+                  "packet_became_ready": 197,
+                  "wave_changed": 172,
+                  "timeout": 55,
+                  "left_zone_occupied": 27
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 538,
+                  "condition": 67,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 18,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 538,
+                  "condition": 67,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 18,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 110520,
+                "actual_ticks": 94791,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 94795,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_probe_v1_economy5": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 8.75,
+              "mean_survival_ticks": 22387,
+              "peak_offense": 2.5,
+              "terminal_wave_histogram": {
+                "7": 1,
+                "8": 1,
+                "9": 1,
+                "11": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 2,
+                "20000-24999": 1,
+                "25000-29999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 87.5,
+                  "mean_sun_produced": 275,
+                  "mean_sun_spent": 237.5
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 106.25,
+                  "mean_sun_produced": 568.75,
+                  "mean_sun_spent": 512.5
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 106.25,
+                  "mean_sun_produced": 806.25,
+                  "mean_sun_spent": 750
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1018.75,
+                  "mean_sun_spent": 993.75
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 56.25,
+                  "mean_sun_produced": 1218.75,
+                  "mean_sun_spent": 1212.5
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 1387.5,
+                  "mean_sun_spent": 1400
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 2,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 1675,
+                  "mean_sun_spent": 1675
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 1,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 1475,
+                  "mean_sun_spent": 1475
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 1,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 1600,
+                  "mean_sun_spent": 1650
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 632,
+                "condition_counts": {
+                  "wave_changed": 150,
+                  "packet_became_ready": 205,
+                  "plant_count_decreased": 134,
+                  "sun_increased": 69,
+                  "left_zone_occupied": 24,
+                  "timeout": 50
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 503,
+                  "condition": 79,
+                  "zombie_entered_left_zone": 29,
+                  "defense_lost": 17,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 503,
+                  "condition": 80,
+                  "zombie_entered_left_zone": 29,
+                  "defense_lost": 17,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 104520,
+                "actual_ticks": 89548,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 89552,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_probe_v1_economy5_offense2": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 10.5,
+              "mean_survival_ticks": 25563.25,
+              "peak_offense": 4.75,
+              "terminal_wave_histogram": {
+                "9": 2,
+                "12": 2
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "20000-24999": 2,
+                "25000-29999": 1,
+                "30000-34999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 81.25,
+                  "mean_sun_produced": 287.5,
+                  "mean_sun_spent": 256.25
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 118.75,
+                  "mean_sun_produced": 612.5,
+                  "mean_sun_spent": 543.75
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 93.75,
+                  "mean_sun_produced": 868.75,
+                  "mean_sun_spent": 825
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 56.25,
+                  "mean_sun_produced": 1087.5,
+                  "mean_sun_spent": 1081.25
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 1287.5,
+                  "mean_sun_spent": 1287.5
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 81.25,
+                  "mean_sun_produced": 1493.75,
+                  "mean_sun_spent": 1462.5
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 4,
+                  "mean_sun": 56.25,
+                  "mean_sun_produced": 1656.25,
+                  "mean_sun_spent": 1650
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 2,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1987.5,
+                  "mean_sun_spent": 1962.5
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 1,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 2450,
+                  "mean_sun_spent": 2500
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 2525,
+                  "mean_sun_spent": 2575
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 706,
+                "condition_counts": {
+                  "wave_changed": 175,
+                  "packet_became_ready": 227,
+                  "plant_count_decreased": 130,
+                  "sun_increased": 89,
+                  "left_zone_occupied": 39,
+                  "timeout": 46
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 565,
+                  "condition": 91,
+                  "zombie_entered_left_zone": 32,
+                  "defense_lost": 14,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 566,
+                  "condition": 91,
+                  "zombie_entered_left_zone": 32,
+                  "defense_lost": 14,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 119010,
+                "actual_ticks": 102253,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 102257,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_probe_v1_economy5_offense5": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 13.5,
+              "mean_survival_ticks": 28950,
+              "peak_offense": 7.25,
+              "terminal_wave_histogram": {
+                "10": 1,
+                "11": 1,
+                "16": 1,
+                "17": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "20000-24999": 1,
+                "25000-29999": 1,
+                "30000-34999": 2
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 300,
+                  "mean_sun_spent": 287.5
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 156.25,
+                  "mean_sun_produced": 643.75,
+                  "mean_sun_spent": 537.5
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 81.25,
+                  "mean_sun_produced": 875,
+                  "mean_sun_spent": 843.75
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1143.75,
+                  "mean_sun_spent": 1118.75
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 43.75,
+                  "mean_sun_produced": 1381.25,
+                  "mean_sun_spent": 1387.5
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 56.25,
+                  "mean_sun_produced": 1618.75,
+                  "mean_sun_spent": 1612.5
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1856.25,
+                  "mean_sun_spent": 1831.25
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 4,
+                  "mean_sun": 81.25,
+                  "mean_sun_produced": 2093.75,
+                  "mean_sun_spent": 2062.5
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 2,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 2712.5,
+                  "mean_sun_spent": 2712.5
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 2,
+                  "mean_sun": 100,
+                  "mean_sun_produced": 2937.5,
+                  "mean_sun_spent": 2887.5
+                },
+                {
+                  "tick": 33000,
+                  "sample_count": 1,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 2925,
+                  "mean_sun_spent": 2900
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 820,
+                "condition_counts": {
+                  "wave_changed": 199,
+                  "packet_became_ready": 276,
+                  "plant_count_decreased": 147,
+                  "sun_increased": 101,
+                  "left_zone_occupied": 47,
+                  "timeout": 50
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 641,
+                  "condition": 125,
+                  "zombie_entered_left_zone": 36,
+                  "defense_lost": 14,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 642,
+                  "condition": 128,
+                  "zombie_entered_left_zone": 36,
+                  "defense_lost": 14,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 138270,
+                "actual_ticks": 115800,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 115804,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            }
+          },
+          "truncated": 0
+        }
+      }
+    },
+    "full_level7_bridge_policy_probe_v1": {
+      "status": "complete",
+      "seconds": 96.48860768599843,
+      "modes": {
+        "greedy": {
+          "overall": {
+            "sample_count": 16,
+            "pass_rate": 0.0625,
+            "wilson_95": [
+              0.011119,
+              0.283287
+            ],
+            "mean_terminal_wave": 10.625,
+            "mean_survival_ticks": 23482.5,
+            "peak_offense": 5,
+            "terminal_wave_histogram": {
+              "9": 8,
+              "10": 2,
+              "12": 3,
+              "14": 3
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 4,
+              "20000-24999": 4,
+              "25000-29999": 5,
+              "30000-34999": 3
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 16,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 16,
+                "mean_sun": 343.75,
+                "mean_sun_produced": 293.75,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 16,
+                "mean_sun": 656.25,
+                "mean_sun_produced": 606.25,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 16,
+                "mean_sun": 900,
+                "mean_sun_produced": 850,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 16,
+                "mean_sun": 1118.75,
+                "mean_sun_produced": 1068.75,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 15000,
+                "sample_count": 16,
+                "mean_sun": 1343.75,
+                "mean_sun_produced": 1293.75,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 18000,
+                "sample_count": 12,
+                "mean_sun": 1600,
+                "mean_sun_produced": 1550,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 21000,
+                "sample_count": 8,
+                "mean_sun": 1750,
+                "mean_sun_produced": 1700,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 24000,
+                "sample_count": 8,
+                "mean_sun": 1912.5,
+                "mean_sun_produced": 1862.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 27000,
+                "sample_count": 3,
+                "mean_sun": 2000,
+                "mean_sun_produced": 1950,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 30000,
+                "sample_count": 3,
+                "mean_sun": 2075,
+                "mean_sun_produced": 2025,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 6283,
+              "condition_counts": {
+                "packet_became_ready": 6283
+              },
+              "primary_reason_counts": {
+                "max_ticks": 6071,
+                "condition": 32,
+                "zombie_entered_left_zone": 113,
+                "defense_lost": 51,
+                "terminal": 16
+              },
+              "all_trigger_counts": {
+                "max_ticks": 6088,
+                "condition": 32,
+                "zombie_entered_left_zone": 113,
+                "defense_lost": 52,
+                "terminal": 16
+              },
+              "requested_logic_ticks": 381540,
+              "actual_ticks": 375720,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 375735,
+              "stalled_clock_steps": 15,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "per_task": {
+            "full7_bridge_probe_v1_cap10": {
+              "sample_count": 4,
+              "pass_rate": 0.25,
+              "wilson_95": [
+                0.045587,
+                0.699358
+              ],
+              "mean_terminal_wave": 9.5,
+              "mean_survival_ticks": 22526.25,
+              "peak_offense": 5,
+              "terminal_wave_histogram": {
+                "9": 2,
+                "10": 2
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 1,
+                "20000-24999": 1,
+                "25000-29999": 2
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 343.75,
+                  "mean_sun_produced": 293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 656.25,
+                  "mean_sun_produced": 606.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 900,
+                  "mean_sun_produced": 850,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 1118.75,
+                  "mean_sun_produced": 1068.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 1343.75,
+                  "mean_sun_produced": 1293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 3,
+                  "mean_sun": 1600,
+                  "mean_sun_produced": 1550,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 2,
+                  "mean_sun": 1750,
+                  "mean_sun_produced": 1700,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 2,
+                  "mean_sun": 1912.5,
+                  "mean_sun_produced": 1862.5,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1504,
+                "condition_counts": {
+                  "packet_became_ready": 1504
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1457,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 23,
+                  "defense_lost": 12,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1462,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 23,
+                  "defense_lost": 13,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 91200,
+                "actual_ticks": 90105,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 90108,
+                "stalled_clock_steps": 3,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_bridge_probe_v1_cap15": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 11,
+              "mean_survival_ticks": 23801.25,
+              "peak_offense": 5,
+              "terminal_wave_histogram": {
+                "9": 2,
+                "12": 1,
+                "14": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 1,
+                "20000-24999": 1,
+                "25000-29999": 1,
+                "30000-34999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 343.75,
+                  "mean_sun_produced": 293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 656.25,
+                  "mean_sun_produced": 606.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 900,
+                  "mean_sun_produced": 850,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 1118.75,
+                  "mean_sun_produced": 1068.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 1343.75,
+                  "mean_sun_produced": 1293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 3,
+                  "mean_sun": 1600,
+                  "mean_sun_produced": 1550,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 2,
+                  "mean_sun": 1750,
+                  "mean_sun_produced": 1700,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 2,
+                  "mean_sun": 1912.5,
+                  "mean_sun_produced": 1862.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 1,
+                  "mean_sun": 2000,
+                  "mean_sun_produced": 1950,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 2075,
+                  "mean_sun_produced": 2025,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1593,
+                "condition_counts": {
+                  "packet_became_ready": 1593
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1538,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 13,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1542,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 13,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 96780,
+                "actual_ticks": 95205,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 95209,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_bridge_probe_v1_cap20": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 11,
+              "mean_survival_ticks": 23801.25,
+              "peak_offense": 5,
+              "terminal_wave_histogram": {
+                "9": 2,
+                "12": 1,
+                "14": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 1,
+                "20000-24999": 1,
+                "25000-29999": 1,
+                "30000-34999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 343.75,
+                  "mean_sun_produced": 293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 656.25,
+                  "mean_sun_produced": 606.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 900,
+                  "mean_sun_produced": 850,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 1118.75,
+                  "mean_sun_produced": 1068.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 1343.75,
+                  "mean_sun_produced": 1293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 3,
+                  "mean_sun": 1600,
+                  "mean_sun_produced": 1550,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 2,
+                  "mean_sun": 1750,
+                  "mean_sun_produced": 1700,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 2,
+                  "mean_sun": 1912.5,
+                  "mean_sun_produced": 1862.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 1,
+                  "mean_sun": 2000,
+                  "mean_sun_produced": 1950,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 2075,
+                  "mean_sun_produced": 2025,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1593,
+                "condition_counts": {
+                  "packet_became_ready": 1593
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1538,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 13,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1542,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 13,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 96780,
+                "actual_ticks": 95205,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 95209,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_bridge_probe_v1_capfull": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 11,
+              "mean_survival_ticks": 23801.25,
+              "peak_offense": 5,
+              "terminal_wave_histogram": {
+                "9": 2,
+                "12": 1,
+                "14": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "15000-19999": 1,
+                "20000-24999": 1,
+                "25000-29999": 1,
+                "30000-34999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 343.75,
+                  "mean_sun_produced": 293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 656.25,
+                  "mean_sun_produced": 606.25,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 900,
+                  "mean_sun_produced": 850,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 1118.75,
+                  "mean_sun_produced": 1068.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 1343.75,
+                  "mean_sun_produced": 1293.75,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 3,
+                  "mean_sun": 1600,
+                  "mean_sun_produced": 1550,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 2,
+                  "mean_sun": 1750,
+                  "mean_sun_produced": 1700,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 2,
+                  "mean_sun": 1912.5,
+                  "mean_sun_produced": 1862.5,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 1,
+                  "mean_sun": 2000,
+                  "mean_sun_produced": 1950,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 2075,
+                  "mean_sun_produced": 2025,
+                  "mean_sun_spent": 0
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 1593,
+                "condition_counts": {
+                  "packet_became_ready": 1593
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 1538,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 13,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 1542,
+                  "condition": 8,
+                  "zombie_entered_left_zone": 30,
+                  "defense_lost": 13,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 96780,
+                "actual_ticks": 95205,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 95209,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            }
+          },
+          "truncated": 0
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 16,
+            "pass_rate": 0.125,
+            "wilson_95": [
+              0.034977,
+              0.360228
+            ],
+            "mean_terminal_wave": 12.625,
+            "mean_survival_ticks": 29586.625,
+            "peak_offense": 6.5,
+            "terminal_wave_histogram": {
+              "10": 4,
+              "12": 5,
+              "13": 1,
+              "14": 3,
+              "15": 1,
+              "16": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "25000-29999": 12,
+              "30000-34999": 1,
+              "35000-39999": 3
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 16,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 16,
+                "mean_sun": 62.5,
+                "mean_sun_produced": 300,
+                "mean_sun_spent": 287.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 16,
+                "mean_sun": 200,
+                "mean_sun_produced": 656.25,
+                "mean_sun_spent": 506.25
+              },
+              {
+                "tick": 9000,
+                "sample_count": 16,
+                "mean_sun": 187.5,
+                "mean_sun_produced": 912.5,
+                "mean_sun_spent": 775
+              },
+              {
+                "tick": 12000,
+                "sample_count": 16,
+                "mean_sun": 40.625,
+                "mean_sun_produced": 1159.375,
+                "mean_sun_spent": 1168.75
+              },
+              {
+                "tick": 15000,
+                "sample_count": 16,
+                "mean_sun": 62.5,
+                "mean_sun_produced": 1418.75,
+                "mean_sun_spent": 1406.25
+              },
+              {
+                "tick": 18000,
+                "sample_count": 16,
+                "mean_sun": 68.75,
+                "mean_sun_produced": 1659.375,
+                "mean_sun_spent": 1640.625
+              },
+              {
+                "tick": 21000,
+                "sample_count": 16,
+                "mean_sun": 68.75,
+                "mean_sun_produced": 1884.375,
+                "mean_sun_spent": 1865.625
+              },
+              {
+                "tick": 24000,
+                "sample_count": 16,
+                "mean_sun": 78.125,
+                "mean_sun_produced": 2093.75,
+                "mean_sun_spent": 2065.625
+              },
+              {
+                "tick": 27000,
+                "sample_count": 15,
+                "mean_sun": 66.667,
+                "mean_sun_produced": 2296.667,
+                "mean_sun_spent": 2280
+              },
+              {
+                "tick": 30000,
+                "sample_count": 4,
+                "mean_sun": 68.75,
+                "mean_sun_produced": 2418.75,
+                "mean_sun_spent": 2400
+              },
+              {
+                "tick": 33000,
+                "sample_count": 3,
+                "mean_sun": 16.667,
+                "mean_sun_produced": 2625,
+                "mean_sun_spent": 2658.333
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 3240,
+              "condition_counts": {
+                "packet_became_ready": 1079,
+                "sun_increased": 378,
+                "wave_changed": 681,
+                "left_zone_occupied": 270,
+                "plant_count_decreased": 592,
+                "timeout": 240
+              },
+              "primary_reason_counts": {
+                "max_ticks": 2626,
+                "condition": 420,
+                "zombie_entered_left_zone": 124,
+                "defense_lost": 54,
+                "terminal": 16
+              },
+              "all_trigger_counts": {
+                "max_ticks": 2635,
+                "condition": 426,
+                "zombie_entered_left_zone": 124,
+                "defense_lost": 55,
+                "terminal": 16
+              },
+              "requested_logic_ticks": 549120,
+              "actual_ticks": 473386,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 473400,
+              "stalled_clock_steps": 14,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "per_task": {
+            "full7_bridge_probe_v1_cap10": {
+              "sample_count": 4,
+              "pass_rate": 0.5,
+              "wilson_95": [
+                0.150039,
+                0.849961
+              ],
+              "mean_terminal_wave": 10,
+              "mean_survival_ticks": 28153.25,
+              "peak_offense": 6.5,
+              "terminal_wave_histogram": {
+                "10": 4
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "25000-29999": 3,
+                "30000-34999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 300,
+                  "mean_sun_spent": 287.5
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 200,
+                  "mean_sun_produced": 656.25,
+                  "mean_sun_spent": 506.25
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 187.5,
+                  "mean_sun_produced": 912.5,
+                  "mean_sun_spent": 775
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 43.75,
+                  "mean_sun_produced": 1162.5,
+                  "mean_sun_spent": 1168.75
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 68.75,
+                  "mean_sun_produced": 1412.5,
+                  "mean_sun_spent": 1393.75
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 1637.5,
+                  "mean_sun_spent": 1625
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 1856.25,
+                  "mean_sun_spent": 1843.75
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 4,
+                  "mean_sun": 81.25,
+                  "mean_sun_produced": 2075,
+                  "mean_sun_spent": 2043.75
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 3,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 2233.333,
+                  "mean_sun_spent": 2208.333
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 125,
+                  "mean_sun_produced": 2175,
+                  "mean_sun_spent": 2100
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 764,
+                "condition_counts": {
+                  "packet_became_ready": 246,
+                  "sun_increased": 88,
+                  "wave_changed": 160,
+                  "left_zone_occupied": 69,
+                  "plant_count_decreased": 143,
+                  "timeout": 58
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 634,
+                  "condition": 98,
+                  "zombie_entered_left_zone": 18,
+                  "defense_lost": 10,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 636,
+                  "condition": 100,
+                  "zombie_entered_left_zone": 18,
+                  "defense_lost": 11,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 128430,
+                "actual_ticks": 112613,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 112615,
+                "stalled_clock_steps": 2,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_bridge_probe_v1_cap15": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 13.5,
+              "mean_survival_ticks": 30301.5,
+              "peak_offense": 6.5,
+              "terminal_wave_histogram": {
+                "12": 1,
+                "13": 1,
+                "14": 1,
+                "15": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "25000-29999": 3,
+                "35000-39999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 300,
+                  "mean_sun_spent": 287.5
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 200,
+                  "mean_sun_produced": 656.25,
+                  "mean_sun_spent": 506.25
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 187.5,
+                  "mean_sun_produced": 912.5,
+                  "mean_sun_spent": 775
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 43.75,
+                  "mean_sun_produced": 1162.5,
+                  "mean_sun_spent": 1168.75
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 68.75,
+                  "mean_sun_produced": 1412.5,
+                  "mean_sun_spent": 1393.75
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 1637.5,
+                  "mean_sun_spent": 1625
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 1856.25,
+                  "mean_sun_spent": 1843.75
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 4,
+                  "mean_sun": 81.25,
+                  "mean_sun_produced": 2075,
+                  "mean_sun_spent": 2043.75
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 4,
+                  "mean_sun": 93.75,
+                  "mean_sun_produced": 2275,
+                  "mean_sun_spent": 2231.25
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 2500,
+                  "mean_sun_spent": 2500
+                },
+                {
+                  "tick": 33000,
+                  "sample_count": 1,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 2625,
+                  "mean_sun_spent": 2675
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 829,
+                "condition_counts": {
+                  "packet_became_ready": 277,
+                  "sun_increased": 100,
+                  "wave_changed": 175,
+                  "left_zone_occupied": 70,
+                  "plant_count_decreased": 149,
+                  "timeout": 58
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 671,
+                  "condition": 106,
+                  "zombie_entered_left_zone": 34,
+                  "defense_lost": 14,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 674,
+                  "condition": 108,
+                  "zombie_entered_left_zone": 34,
+                  "defense_lost": 14,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 140370,
+                "actual_ticks": 121206,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 121210,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_bridge_probe_v1_cap20": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 13.5,
+              "mean_survival_ticks": 29948.5,
+              "peak_offense": 6.5,
+              "terminal_wave_histogram": {
+                "12": 2,
+                "14": 1,
+                "16": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "25000-29999": 3,
+                "35000-39999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 300,
+                  "mean_sun_spent": 287.5
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 200,
+                  "mean_sun_produced": 656.25,
+                  "mean_sun_spent": 506.25
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 187.5,
+                  "mean_sun_produced": 912.5,
+                  "mean_sun_spent": 775
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 1156.25,
+                  "mean_sun_spent": 1168.75
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 56.25,
+                  "mean_sun_produced": 1425,
+                  "mean_sun_spent": 1418.75
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1681.25,
+                  "mean_sun_spent": 1656.25
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1912.5,
+                  "mean_sun_spent": 1887.5
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 2112.5,
+                  "mean_sun_spent": 2087.5
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 2331.25,
+                  "mean_sun_spent": 2331.25
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 2500,
+                  "mean_sun_spent": 2500
+                },
+                {
+                  "tick": 33000,
+                  "sample_count": 1,
+                  "mean_sun": 0,
+                  "mean_sun_produced": 2625,
+                  "mean_sun_spent": 2675
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 820,
+                "condition_counts": {
+                  "packet_became_ready": 280,
+                  "sun_increased": 95,
+                  "wave_changed": 174,
+                  "left_zone_occupied": 65,
+                  "plant_count_decreased": 149,
+                  "timeout": 57
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 658,
+                  "condition": 107,
+                  "zombie_entered_left_zone": 36,
+                  "defense_lost": 15,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 660,
+                  "condition": 108,
+                  "zombie_entered_left_zone": 36,
+                  "defense_lost": 15,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 140040,
+                "actual_ticks": 119794,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 119798,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            },
+            "full7_bridge_probe_v1_capfull": {
+              "sample_count": 4,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.489891
+              ],
+              "mean_terminal_wave": 13.5,
+              "mean_survival_ticks": 29943.25,
+              "peak_offense": 6.5,
+              "terminal_wave_histogram": {
+                "12": 2,
+                "14": 1,
+                "16": 1
+              },
+              "terminal_tick_histogram_5000_tick_bins": {
+                "25000-29999": 3,
+                "35000-39999": 1
+              },
+              "economy_curve": [
+                {
+                  "tick": 0,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 0,
+                  "mean_sun_spent": 0
+                },
+                {
+                  "tick": 3000,
+                  "sample_count": 4,
+                  "mean_sun": 62.5,
+                  "mean_sun_produced": 300,
+                  "mean_sun_spent": 287.5
+                },
+                {
+                  "tick": 6000,
+                  "sample_count": 4,
+                  "mean_sun": 200,
+                  "mean_sun_produced": 656.25,
+                  "mean_sun_spent": 506.25
+                },
+                {
+                  "tick": 9000,
+                  "sample_count": 4,
+                  "mean_sun": 187.5,
+                  "mean_sun_produced": 912.5,
+                  "mean_sun_spent": 775
+                },
+                {
+                  "tick": 12000,
+                  "sample_count": 4,
+                  "mean_sun": 37.5,
+                  "mean_sun_produced": 1156.25,
+                  "mean_sun_spent": 1168.75
+                },
+                {
+                  "tick": 15000,
+                  "sample_count": 4,
+                  "mean_sun": 56.25,
+                  "mean_sun_produced": 1425,
+                  "mean_sun_spent": 1418.75
+                },
+                {
+                  "tick": 18000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1681.25,
+                  "mean_sun_spent": 1656.25
+                },
+                {
+                  "tick": 21000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 1912.5,
+                  "mean_sun_spent": 1887.5
+                },
+                {
+                  "tick": 24000,
+                  "sample_count": 4,
+                  "mean_sun": 75,
+                  "mean_sun_produced": 2112.5,
+                  "mean_sun_spent": 2087.5
+                },
+                {
+                  "tick": 27000,
+                  "sample_count": 4,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 2331.25,
+                  "mean_sun_spent": 2331.25
+                },
+                {
+                  "tick": 30000,
+                  "sample_count": 1,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 2500,
+                  "mean_sun_spent": 2500
+                },
+                {
+                  "tick": 33000,
+                  "sample_count": 1,
+                  "mean_sun": 50,
+                  "mean_sun_produced": 2625,
+                  "mean_sun_spent": 2625
+                }
+              ],
+              "wait_summary": {
+                "wait_actions": 827,
+                "condition_counts": {
+                  "packet_became_ready": 276,
+                  "sun_increased": 95,
+                  "wave_changed": 172,
+                  "left_zone_occupied": 66,
+                  "plant_count_decreased": 151,
+                  "timeout": 67
+                },
+                "primary_reason_counts": {
+                  "max_ticks": 663,
+                  "condition": 109,
+                  "zombie_entered_left_zone": 36,
+                  "defense_lost": 15,
+                  "terminal": 4
+                },
+                "all_trigger_counts": {
+                  "max_ticks": 665,
+                  "condition": 110,
+                  "zombie_entered_left_zone": 36,
+                  "defense_lost": 15,
+                  "terminal": 4
+                },
+                "requested_logic_ticks": 140280,
+                "actual_ticks": 119773,
+                "zero_actual_tick_waits": 0,
+                "logic_steps": 119777,
+                "stalled_clock_steps": 4,
+                "initial_condition_satisfied": 0
+              }
+            }
+          },
+          "truncated": 0
+        }
+      }
+    }
+  },
+  "findings": [
+    "Initial economy/shooter public control failedall16fullgames whilev2wholedeckdefense wonall16; wait lostall16. Includes4unassistedfullgamewins.",
+    "Fixedfirst13update policy lostall32fullgameaidcases; greedy5732wait actions and no plant/shovel.",
+    "Cap10bridge fixedpolicy sampled2/4 vswait1/4; cap15/20/full0/4. ExactWilson intervals retained, a smallprospective screen not formalRL proof.",
+    "Nextappend-only bridge stage is alreadyfrozen beforetraining, retainsall30shorttasks and originalordinaryfull7task.",
+    "One bookkeeping revision label e4540fe in bridgepolicyreport wasmistyped; actualsource453b094 and correction retained. No source/task/seed/checkpoint/outcome changed."
+  ]
+}

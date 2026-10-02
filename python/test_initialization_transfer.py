@@ -72,6 +72,20 @@ class InitializationTransferTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "weight transfer"):
             load_config(path)
 
+    def test_multistage_transfer_keeps_earlier_training_cost_without_parent_files(self):
+        ancestry = dict(kind="weights_transfer_v1", source_experiment_id="earlier-stage",
+                        source_counters=dict(episodes=11, decisions=2000, ticks=225562),
+                        source_wall_seconds=240.78, source_initialization_provenance=None)
+        self.checkpoint["training_state"]["initialization_provenance"] = ancestry
+        self.save_parent()
+        settings = {**self.settings, "source_sha256": sha256_file(self.source)}
+        record = transfer_weights(GameplayModelV1(SMALL), settings, self.source)
+        self.source.unlink()
+        self.assertEqual(record["source_initialization_provenance"], ancestry)
+        self.assertEqual(record["source_counters"]["decisions"], 47856)
+        record["source_initialization_provenance"]["source_counters"]["decisions"] = 0
+        self.assertEqual(ancestry["source_counters"]["decisions"], 2000)
+
     def test_source_identity_and_model_semantics_must_match(self):
         for field, value in (("config", {**self.parent.config, "input_flags": 7}),
                              ("model_architecture_version", 1), ("research_version", 0)):

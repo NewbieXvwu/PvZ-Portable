@@ -35,6 +35,47 @@ def outcomes(key, values):
 
 
 class CurriculumTests(unittest.TestCase):
+    def test_initial_focus_retains_all_tasks_and_ignores_truncated_episodes(self):
+        settings = {**SETTINGS, "frontier_pass_range": [.2, .8],
+                    "initial_focus_task_ids": ["progress"], "initial_focus_completed_episodes": 4}
+        state = initial_state(TASKS)
+        observe(state, [dict(task_id="progress", terminated=False, truncated=True, won=False)], settings)
+        weights, detail = probabilities(TASKS, state, settings, "frontier_v1")
+        self.assertEqual(detail["initial_focus"]["completed"], 0)
+        self.assertTrue(detail["initial_focus"]["active"])
+        self.assertAlmostEqual(weights[1], .75 + .25 / 6)
+        for weight, row in zip(weights, detail["tasks"].values()):
+            self.assertGreaterEqual(weight, .25 * row["coverage_base_probability"])
+        self.assertEqual(set(state["history"]), {t["task_id"] for t in TASKS})
+
+    def test_initial_focus_exit_and_assignment_rng_resume_at_completed_boundary(self):
+        settings = {**SETTINGS, "frontier_pass_range": [.2, .8],
+                    "initial_focus_task_ids": ["progress"], "initial_focus_completed_episodes": 4}
+        state = initial_state(TASKS)
+        observe(state, outcomes("progress", [True, False, True]), settings)
+        restored = json.loads(json.dumps(state));rng = random.Random(71);restored_rng = random.Random(71)
+        for current, next_rng in ((state, rng), (restored, restored_rng)):
+            weights, _ = probabilities(TASKS, current, settings, "frontier_v1")
+            drawn = _assign(TASKS, list(range(30)), next_rng, {}, "frontier_v1", weights)
+            if current is state:expected = drawn
+            else:self.assertEqual(drawn, expected)
+            observe(current, outcomes("progress", [False]), settings)
+        weights, detail = probabilities(TASKS, restored, settings, "frontier_v1")
+        self.assertFalse(detail["initial_focus"]["active"])
+        ordinary = {k:v for k,v in settings.items() if not k.startswith("initial_focus")}
+        reference, _ = probabilities(TASKS, state, ordinary, "frontier_v1")
+        self.assertEqual(weights, reference)
+        self.assertEqual(rng.getstate(), restored_rng.getstate())
+
+    def test_initial_focus_cannot_name_validation_or_use_implicit_limits(self):
+        settings = {**SETTINGS, "frontier_pass_range": [.2, .8],
+                    "initial_focus_task_ids": ["validation"], "initial_focus_completed_episodes": 4}
+        with self.assertRaisesRegex(ValueError, "outside the frozen training pool"):
+            probabilities(TASKS, initial_state(TASKS), settings, "frontier_v1")
+        for changes in ({"initial_focus_completed_episodes": 0}, {"initial_focus_task_ids": []},
+                        {"initial_focus_task_ids": ["progress", "progress"]}):
+            with self.assertRaises(ValueError):validate_settings({**settings, **changes}, "frontier_v1")
+
     def test_frontier_prioritizes_stable_edge_across_singleton_groups(self):
         tasks = [task for task in LENGTH_TASKS if task["task_id"].endswith("_0")]
         settings = {**LENGTH_SETTINGS, "frontier_pass_range": [.2, .8]}

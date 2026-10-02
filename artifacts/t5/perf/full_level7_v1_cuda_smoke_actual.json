@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "smoke_complete_then_complete_resume_running",
+  "status": "smoke_complete_followup_first_segment_closed",
   "experiment_id": "mainline_full_level7_v1_seed0",
   "source_revision": "c841bda",
   "scope": "Actual completelevel7 new-stage weight transfer,3CUDAupdates,checkpoint+nonempty curve+all reached evaluations,then complete stage resume. Progress52cases/mode includescap1/3/5 and2fulllevel7 cases; not final256seed acceptance.",
@@ -588,5 +588,6 @@
         }
       }
     }
-  ]
+  ],
+  "followup_report": "artifacts/t5/perf/full_level7_v1_first_segment_actual.json"
 }

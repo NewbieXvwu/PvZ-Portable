@@ -48,4 +48,5 @@ def transfer_weights(model: GameplayModelV1, settings: dict[str, Any], source: P
             "source_updates": state["updates"], "source_counters": copy.deepcopy(state["counters"]),
             "source_wall_seconds": state["wall_seconds"],
             "source_commit": checkpoint["provenance"]["commit"],
+            "source_initialization_provenance": copy.deepcopy(state.get("initialization_provenance")),
             "new_stage_state": "new AdamW, declared RNG seeds, zero stage counters and new curriculum; source budget recorded separately"}

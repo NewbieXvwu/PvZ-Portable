@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-full-level7-bridge-diagnostics-v1",
+  "purpose": "All160native/public-control and fixedpolicy diagnostic episodes, allfailures and corrections, frozen source/protocols/logs. Checkpoint dependency is separately deliveredfulllevel7run. No gitbinary.",
+  "revision": "54021524fa1a0e0109ed22e5f4b2e2aa5a8161fa",
+  "seconds": 15.288383327999327
+}
