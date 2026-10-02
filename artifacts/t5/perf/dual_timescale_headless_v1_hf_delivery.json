@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-dual-timescale-headless-v1",
+  "scope": "Failed v1 raw-shard reader diagnostic plus corrected v2 actual native GRU/LSTM CPU PPO proofs and source-test logs. CUDA candidate remains live and is uploaded at closed boundary.",
+  "sources": [
+    "dual_timescale_headless_v1_actual",
+    "dual_timescale_headless_v1_actual_v2"
+  ],
+  "revision": "1c096d5dfef5142237e9710940df92914aefdf6a",
+  "seconds": 14.641742472002079,
+  "previous_upload_error": "v1 push-evidence incorrectly supplied --log (supported by push only); parser rejected before upload. Failure report/log retained and included in v2 uploaded raw evidence."
+}
