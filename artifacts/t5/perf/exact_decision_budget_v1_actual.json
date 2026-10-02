@@ -1,0 +1,319 @@
+{
+  "schema_version": 1,
+  "scope": "actual explicitly configured SIGKILL/full-resume engineering probe; no learning pass",
+  "configs": [
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/experiments/t5/exact_decision_budget_v1/continuous.json",
+      "sha256": "52a07e4f1c39b1ce13c6554cd383b09508c3ac2a0cc900315984ca110fe2a735"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/experiments/t5/exact_decision_budget_v1/interrupted.json",
+      "sha256": "bb25450a724d26ab1cfaddb8857359202fab00d6fd7508dd252920d13f98a30c"
+    }
+  ],
+  "model_config": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "invocation_timeout_seconds": 600,
+  "exact_equality_required": true,
+  "coexecution": "preceding frozen reward matrix and corrected reevaluation completed before reference probe",
+  "protocol_sha256": "c9eb739a4dfe83225d1859572047a287d0adec0473fe8107b19051755e4048e4",
+  "waiting_seconds": 0.011651427000288095,
+  "continuous_command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/python/train_pvz_ppo_task_family.py",
+    "--resource-dir",
+    "/home/newbiexvwu/.cache/pvz-research-resources",
+    "--experiment-config",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/experiments/t5/exact_decision_budget_v1/continuous.json",
+    "--output-dir",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/exact_decision_budget_v1_actual/continuous"
+  ],
+  "interrupted_command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/python/train_pvz_ppo_task_family.py",
+    "--resource-dir",
+    "/home/newbiexvwu/.cache/pvz-research-resources",
+    "--experiment-config",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/experiments/t5/exact_decision_budget_v1/interrupted.json",
+    "--output-dir",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/exact_decision_budget_v1_actual/interrupted"
+  ],
+  "intentional_interruption": {
+    "exit_code": -9,
+    "last_complete_updates": 1,
+    "counters": {
+      "episodes": 20,
+      "decisions": 1377,
+      "ticks": 157201
+    },
+    "resume_pointer": {
+      "checkpoint": "runs/run_1/update_000001_trained_1790921687617942524.pt",
+      "sha256": "5afec40ac6bb1c1c848072e0dbe0619da6f812fe7abf866d532124071b74bf75"
+    },
+    "completed_partial_shards": [
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_20.npz",
+        "sha256": "0f8e053c3c8855b139650ab90967ebe19e2f7e72ed611211750d35d037c8c9de",
+        "mtime_ns": 1790921693706533070
+      },
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_21.npz",
+        "sha256": "fe03c546b2237fef05fcf848d46be8353acbdde20b5f08ae07d5a50720083d58",
+        "mtime_ns": 1790921693523903589
+      },
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_22.npz",
+        "sha256": "6e0645955768f215d248259cd9245bef330364f026e455ce65e96c1524d0dd6c",
+        "mtime_ns": 1790921695107903428
+      },
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_23.npz",
+        "sha256": "77f0219da76f1609e63aa6e209843f56e1e04434d96f8df7751ddedbd3ac494e",
+        "mtime_ns": 1790921695019903437
+      }
+    ],
+    "assigned_second_batch_size": 17,
+    "optimizer_states": 162,
+    "rng_components": [
+      "assignments",
+      "numpy",
+      "python",
+      "torch_cpu",
+      "torch_cuda"
+    ]
+  },
+  "resume_command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/python/train_pvz_ppo_task_family.py",
+    "--resource-dir",
+    "/home/newbiexvwu/.cache/pvz-research-resources",
+    "--experiment-config",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/exact_decision_budget_v1/experiments/t5/exact_decision_budget_v1/interrupted.json",
+    "--output-dir",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/exact_decision_budget_v1_actual/interrupted",
+    "--resume"
+  ],
+  "gate_result": "pass",
+  "differences": [],
+  "final_counters": {
+    "episodes": 79,
+    "decisions": 5000,
+    "ticks": 586056
+  },
+  "final_updates": 6,
+  "evaluated_nodes": 3,
+  "partial_shard_preservation": [
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_20.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_21.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_22.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/ea85bfe72e84c170f9bfd07d80c754c2248068624cb2a69e57a55375b584ba52/seed_23.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    }
+  ],
+  "resume_log_lines": [
+    "exact_decision_budget_interrupted_v1 update 2 cached=4 collect=13"
+  ],
+  "final_resume_pointers": [
+    {
+      "checkpoint": "runs/run_1/update_000006_boundary_1790921559642991121.pt",
+      "sha256": "ddabe76ea56d71cc8129ec7286e2cb1080d88ace4a8eccdfbb5bca1853f64e6e"
+    },
+    {
+      "checkpoint": "runs/run_1/update_000006_boundary_1790922001343026702.pt",
+      "sha256": "5484e58dc2403d988a7c8e5c6ef61461c8cdbeced997b3d728b6a09df6135f0e"
+    }
+  ],
+  "resources": [
+    {
+      "peak_process_tree_rss_bytes": 13802127360,
+      "min_system_available_bytes": 16092696576,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 3918213120,
+      "cuda_peak_reserved_bytes": 6132072448
+    },
+    {
+      "peak_process_tree_rss_bytes": 15222611968,
+      "min_system_available_bytes": 15889014784,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 3918213120,
+      "cuda_peak_reserved_bytes": 10143924224
+    }
+  ],
+  "continuous_wall_seconds": 426.6260123769998,
+  "interrupted_recorded_wall_seconds": 428.2082085409993,
+  "seconds": 875.1114322310004,
+  "source_root": "artifacts/research/exact_decision_budget_v1_actual",
+  "report_sha256": "b23cf1c8c168a5dd1a57a71c03722c2a26ffd30670699279f7d469143c6485d6",
+  "source_commit": "4c0e218",
+  "actual_decision_nodes": [
+    0,
+    2500,
+    5000
+  ],
+  "model_parameters": 7866721,
+  "exact_decision_budget_passed": true,
+  "equal_wall_comparison_implemented": false,
+  "learning_acceptance_passed": false,
+  "actual_coexecution": "2 prefix CPU workers and HF branch delivery overlapped. No other GPU learner.",
+  "coverage": "Original20 engineering tasks,2 environment seeds/task,one initialization0. No multiwave/three-init learning acceptance.",
+  "curriculum_truncations_ignored": 22,
+  "decision_quota_history": [
+    {
+      "boundary_mode": "exact_decisions_v1",
+      "boundary": 2500,
+      "reserved_decisions": 2500,
+      "quotas": {
+        "0": 125,
+        "1": 125,
+        "2": 125,
+        "3": 125,
+        "4": 125,
+        "5": 125,
+        "6": 125,
+        "7": 125,
+        "8": 125,
+        "9": 125,
+        "10": 125,
+        "11": 125,
+        "12": 125,
+        "13": 125,
+        "14": 125,
+        "15": 125,
+        "16": 125,
+        "17": 125,
+        "18": 125,
+        "19": 125
+      },
+      "actual_decisions": 1377,
+      "budget_boundary_truncations": 0
+    },
+    {
+      "boundary_mode": "exact_decisions_v1",
+      "boundary": 2500,
+      "reserved_decisions": 1123,
+      "quotas": {
+        "20": 67,
+        "21": 66,
+        "22": 66,
+        "23": 66,
+        "24": 66,
+        "25": 66,
+        "26": 66,
+        "27": 66,
+        "28": 66,
+        "29": 66,
+        "30": 66,
+        "31": 66,
+        "32": 66,
+        "33": 66,
+        "34": 66,
+        "35": 66,
+        "36": 66
+      },
+      "actual_decisions": 1057,
+      "budget_boundary_truncations": 7
+    },
+    {
+      "boundary_mode": "exact_decisions_v1",
+      "boundary": 2500,
+      "reserved_decisions": 66,
+      "quotas": {
+        "37": 33,
+        "38": 33
+      },
+      "actual_decisions": 66,
+      "budget_boundary_truncations": 2
+    },
+    {
+      "boundary_mode": "exact_decisions_v1",
+      "boundary": 5000,
+      "reserved_decisions": 2500,
+      "quotas": {
+        "39": 125,
+        "40": 125,
+        "41": 125,
+        "42": 125,
+        "43": 125,
+        "44": 125,
+        "45": 125,
+        "46": 125,
+        "47": 125,
+        "48": 125,
+        "49": 125,
+        "50": 125,
+        "51": 125,
+        "52": 125,
+        "53": 125,
+        "54": 125,
+        "55": 125,
+        "56": 125,
+        "57": 125,
+        "58": 125
+      },
+      "actual_decisions": 1288,
+      "budget_boundary_truncations": 0
+    },
+    {
+      "boundary_mode": "exact_decisions_v1",
+      "boundary": 5000,
+      "reserved_decisions": 1212,
+      "quotas": {
+        "59": 64,
+        "60": 64,
+        "61": 64,
+        "62": 64,
+        "63": 64,
+        "64": 64,
+        "65": 64,
+        "66": 64,
+        "67": 64,
+        "68": 64,
+        "69": 64,
+        "70": 64,
+        "71": 64,
+        "72": 64,
+        "73": 64,
+        "74": 63,
+        "75": 63,
+        "76": 63,
+        "77": 63
+      },
+      "actual_decisions": 1152,
+      "budget_boundary_truncations": 12
+    },
+    {
+      "boundary_mode": "exact_decisions_v1",
+      "boundary": 5000,
+      "reserved_decisions": 60,
+      "quotas": {
+        "78": 60
+      },
+      "actual_decisions": 60,
+      "budget_boundary_truncations": 1
+    }
+  ],
+  "old_approximate_protocol_and_scene_preserved": true
+}

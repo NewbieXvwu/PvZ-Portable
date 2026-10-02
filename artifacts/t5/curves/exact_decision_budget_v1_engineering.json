@@ -1,0 +1,1495 @@
+{
+  "schema_version": 1,
+  "scope": "Exact-budget engineering curve, not learning acceptance",
+  "source_curve_sha256": "c9f9d425475ded401694b5e98c5fbeea559c240f5ffafba8c1a8f8e1cb1f79dc",
+  "nodes": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "updates": 0,
+      "summary": {
+        "greedy": {
+          "overall": {
+            "sample_count": 40,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.087622
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            }
+          }
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 40,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.087622
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            }
+          }
+        }
+      },
+      "raw_seed_results_path": "evaluations/update_000000.json.gz"
+    },
+    {
+      "counters": {
+        "episodes": 39,
+        "decisions": 2500,
+        "ticks": 287041
+      },
+      "updates": 3,
+      "summary": {
+        "greedy": {
+          "overall": {
+            "sample_count": 40,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.087622
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            }
+          }
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 40,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.087622
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            }
+          }
+        }
+      },
+      "raw_seed_results_path": "evaluations/update_000003.json.gz"
+    },
+    {
+      "counters": {
+        "episodes": 79,
+        "decisions": 5000,
+        "ticks": 586056
+      },
+      "updates": 6,
+      "summary": {
+        "greedy": {
+          "overall": {
+            "sample_count": 40,
+            "pass_rate": 0.025,
+            "wilson_95": [
+              0.004427,
+              0.128814
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 2,
+              "pass_rate": 0.5,
+              "wilson_95": [
+                0.094531,
+                0.905469
+              ]
+            },
+            "train_night_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            }
+          }
+        },
+        "sampled": {
+          "overall": {
+            "sample_count": 40,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.087622
+            ]
+          },
+          "per_task": {
+            "train_day_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_day_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_night_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_pool_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_fog_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_1": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_2": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_3": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            },
+            "train_roof_4": {
+              "sample_count": 2,
+              "pass_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.65762
+              ]
+            }
+          }
+        }
+      },
+      "raw_seed_results_path": "evaluations/update_000006.json.gz"
+    }
+  ],
+  "update_history": [
+    {
+      "update": 1,
+      "counters": {
+        "episodes": 20,
+        "decisions": 1377,
+        "ticks": 157201
+      },
+      "losses": {
+        "policy_loss": -0.0002948636189103127,
+        "value_loss": 0.16740970872342587,
+        "entropy": 1.8535210967063904,
+        "advantage_mean": -0.6419763565063477,
+        "advantage_std": 0.3751794397830963,
+        "gradient_norm": 0.8517064452171326,
+        "approx_kl": 0.009898374926631957,
+        "clip_fraction": 0.15189641304314136,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5389435291290283,
+        "optimizer_steps": 20,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 212,
+          "shovel": 281,
+          "wait": 884
+        },
+        "zero_tick_actions": 493,
+        "immediate_plant_shovels": 88,
+        "immediate_shovel_fraction_of_plants": 0.41509433962264153,
+        "mean_abs_shaping_reward": 0.09038432358024015,
+        "mc_value_mse_before_update": 1.3763443990119262,
+        "mc_value_explained_variance_before_update": -0.007219440543854816,
+        "won": 0,
+        "truncated": 0,
+        "task_counts": {
+          "train_pool_2": 3,
+          "train_pool_4": 1,
+          "train_day_1": 2,
+          "train_roof_1": 1,
+          "train_fog_3": 1,
+          "train_roof_2": 1,
+          "train_night_1": 3,
+          "train_night_2": 1,
+          "train_roof_4": 3,
+          "train_fog_1": 1,
+          "train_day_4": 2,
+          "train_pool_1": 1
+        }
+      },
+      "decision_budget": {
+        "boundary_mode": "exact_decisions_v1",
+        "boundary": 2500,
+        "reserved_decisions": 2500,
+        "quotas": {
+          "0": 125,
+          "1": 125,
+          "2": 125,
+          "3": 125,
+          "4": 125,
+          "5": 125,
+          "6": 125,
+          "7": 125,
+          "8": 125,
+          "9": 125,
+          "10": 125,
+          "11": 125,
+          "12": 125,
+          "13": 125,
+          "14": 125,
+          "15": 125,
+          "16": 125,
+          "17": 125,
+          "18": 125,
+          "19": 125
+        },
+        "actual_decisions": 1377,
+        "budget_boundary_truncations": 0
+      }
+    },
+    {
+      "update": 2,
+      "counters": {
+        "episodes": 37,
+        "decisions": 2434,
+        "ticks": 278941
+      },
+      "losses": {
+        "policy_loss": -0.0004572065340148078,
+        "value_loss": 0.08240913723905881,
+        "entropy": 1.9191287888420954,
+        "advantage_mean": -0.13679645955562592,
+        "advantage_std": 0.27574291825294495,
+        "gradient_norm": 0.7852720618247986,
+        "approx_kl": 0.007945780957853131,
+        "clip_fraction": 0.09770141935182942,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5442800521850586,
+        "optimizer_steps": 18,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "wait": 678,
+          "plant": 160,
+          "shovel": 219
+        },
+        "zero_tick_actions": 379,
+        "immediate_plant_shovels": 58,
+        "immediate_shovel_fraction_of_plants": 0.3625,
+        "mean_abs_shaping_reward": 0.0845798383923099,
+        "mc_value_mse_before_update": 0.17447442534141377,
+        "mc_value_explained_variance_before_update": 0.04973815202612342,
+        "won": 0,
+        "truncated": 7,
+        "task_counts": {
+          "train_night_4": 1,
+          "train_fog_1": 1,
+          "train_roof_1": 1,
+          "train_pool_1": 3,
+          "train_night_3": 1,
+          "train_fog_3": 1,
+          "train_day_1": 1,
+          "train_night_1": 2,
+          "train_fog_4": 1,
+          "train_roof_3": 2,
+          "train_roof_4": 1,
+          "train_day_4": 1,
+          "train_night_2": 1
+        }
+      },
+      "decision_budget": {
+        "boundary_mode": "exact_decisions_v1",
+        "boundary": 2500,
+        "reserved_decisions": 1123,
+        "quotas": {
+          "20": 67,
+          "21": 66,
+          "22": 66,
+          "23": 66,
+          "24": 66,
+          "25": 66,
+          "26": 66,
+          "27": 66,
+          "28": 66,
+          "29": 66,
+          "30": 66,
+          "31": 66,
+          "32": 66,
+          "33": 66,
+          "34": 66,
+          "35": 66,
+          "36": 66
+        },
+        "actual_decisions": 1057,
+        "budget_boundary_truncations": 7
+      }
+    },
+    {
+      "update": 3,
+      "counters": {
+        "episodes": 39,
+        "decisions": 2500,
+        "ticks": 287041
+      },
+      "losses": {
+        "policy_loss": -0.006457488828649716,
+        "value_loss": 0.053428890183568,
+        "entropy": 1.7914321422576904,
+        "advantage_mean": -0.06058700382709503,
+        "advantage_std": 0.22276850044727325,
+        "gradient_norm": 0.8083548545837402,
+        "approx_kl": 0.0002112754441578879,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.1257309913635254,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 11,
+          "shovel": 11,
+          "wait": 44
+        },
+        "zero_tick_actions": 22,
+        "immediate_plant_shovels": 4,
+        "immediate_shovel_fraction_of_plants": 0.36363636363636365,
+        "mean_abs_shaping_reward": 0.10790402827947364,
+        "mc_value_mse_before_update": 0.053796372558650156,
+        "mc_value_explained_variance_before_update": -0.04744171905819572,
+        "won": 0,
+        "truncated": 2,
+        "task_counts": {
+          "train_night_2": 1,
+          "train_day_1": 1
+        }
+      },
+      "decision_budget": {
+        "boundary_mode": "exact_decisions_v1",
+        "boundary": 2500,
+        "reserved_decisions": 66,
+        "quotas": {
+          "37": 33,
+          "38": 33
+        },
+        "actual_decisions": 66,
+        "budget_boundary_truncations": 2
+      }
+    },
+    {
+      "update": 4,
+      "counters": {
+        "episodes": 59,
+        "decisions": 3788,
+        "ticks": 446677
+      },
+      "losses": {
+        "policy_loss": 0.001315442891791463,
+        "value_loss": 0.055515742488205434,
+        "entropy": 1.78473339676857,
+        "advantage_mean": -0.21054433286190033,
+        "advantage_std": 0.21126556396484375,
+        "gradient_norm": 1.3676447868347168,
+        "approx_kl": 0.011524048982296286,
+        "clip_fraction": 0.14847442433238028,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 1.1943449974060059,
+        "optimizer_steps": 20,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 199,
+          "wait": 851,
+          "shovel": 238
+        },
+        "zero_tick_actions": 437,
+        "immediate_plant_shovels": 91,
+        "immediate_shovel_fraction_of_plants": 0.457286432160804,
+        "mean_abs_shaping_reward": 0.0950418113407321,
+        "mc_value_mse_before_update": 0.1688744477341158,
+        "mc_value_explained_variance_before_update": 0.1544800878690783,
+        "won": 0,
+        "truncated": 0,
+        "task_counts": {
+          "train_fog_2": 2,
+          "train_fog_1": 2,
+          "train_night_4": 2,
+          "train_day_3": 2,
+          "train_day_4": 2,
+          "train_roof_4": 2,
+          "train_day_1": 2,
+          "train_pool_1": 1,
+          "train_night_1": 1,
+          "train_roof_3": 1,
+          "train_day_2": 1,
+          "train_pool_4": 1,
+          "train_pool_2": 1
+        }
+      },
+      "decision_budget": {
+        "boundary_mode": "exact_decisions_v1",
+        "boundary": 5000,
+        "reserved_decisions": 2500,
+        "quotas": {
+          "39": 125,
+          "40": 125,
+          "41": 125,
+          "42": 125,
+          "43": 125,
+          "44": 125,
+          "45": 125,
+          "46": 125,
+          "47": 125,
+          "48": 125,
+          "49": 125,
+          "50": 125,
+          "51": 125,
+          "52": 125,
+          "53": 125,
+          "54": 125,
+          "55": 125,
+          "56": 125,
+          "57": 125,
+          "58": 125
+        },
+        "actual_decisions": 1288,
+        "budget_boundary_truncations": 0
+      }
+    },
+    {
+      "update": 5,
+      "counters": {
+        "episodes": 78,
+        "decisions": 4940,
+        "ticks": 578106
+      },
+      "losses": {
+        "policy_loss": 0.0035271883942186834,
+        "value_loss": 0.04153925105929375,
+        "entropy": 1.9258315205574035,
+        "advantage_mean": -0.010275544598698616,
+        "advantage_std": 0.2067825347185135,
+        "gradient_norm": 0.9376476407051086,
+        "approx_kl": 0.009879183141860925,
+        "clip_fraction": 0.14510944806970655,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.52886962890625,
+        "optimizer_steps": 20,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 166,
+          "shovel": 206,
+          "wait": 780
+        },
+        "zero_tick_actions": 372,
+        "immediate_plant_shovels": 50,
+        "immediate_shovel_fraction_of_plants": 0.30120481927710846,
+        "mean_abs_shaping_reward": 0.07630421766230423,
+        "mc_value_mse_before_update": 0.06088810087968152,
+        "mc_value_explained_variance_before_update": 0.18736854929750668,
+        "won": 0,
+        "truncated": 12,
+        "task_counts": {
+          "train_pool_4": 2,
+          "train_night_2": 1,
+          "train_day_3": 1,
+          "train_fog_4": 1,
+          "train_roof_1": 3,
+          "train_night_1": 2,
+          "train_fog_3": 1,
+          "train_pool_2": 1,
+          "train_day_1": 3,
+          "train_fog_1": 1,
+          "train_pool_1": 1,
+          "train_day_4": 1,
+          "train_night_3": 1
+        }
+      },
+      "decision_budget": {
+        "boundary_mode": "exact_decisions_v1",
+        "boundary": 5000,
+        "reserved_decisions": 1212,
+        "quotas": {
+          "59": 64,
+          "60": 64,
+          "61": 64,
+          "62": 64,
+          "63": 64,
+          "64": 64,
+          "65": 64,
+          "66": 64,
+          "67": 64,
+          "68": 64,
+          "69": 64,
+          "70": 64,
+          "71": 64,
+          "72": 64,
+          "73": 64,
+          "74": 63,
+          "75": 63,
+          "76": 63,
+          "77": 63
+        },
+        "actual_decisions": 1152,
+        "budget_boundary_truncations": 12
+      }
+    },
+    {
+      "update": 6,
+      "counters": {
+        "episodes": 79,
+        "decisions": 5000,
+        "ticks": 586056
+      },
+      "losses": {
+        "policy_loss": -0.003520355854804369,
+        "value_loss": 0.03591150976717472,
+        "entropy": 1.8221904039382935,
+        "advantage_mean": 0.01007810328155756,
+        "advantage_std": 0.18982498347759247,
+        "gradient_norm": 0.6464406251907349,
+        "approx_kl": 0.0001694723992839986,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.07482433319091797,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false
+      },
+      "trajectory_stats": {
+        "action_counts": {
+          "plant": 9,
+          "shovel": 9,
+          "wait": 42
+        },
+        "zero_tick_actions": 18,
+        "immediate_plant_shovels": 2,
+        "immediate_shovel_fraction_of_plants": 0.2222222222222222,
+        "mean_abs_shaping_reward": 0.09572837092394436,
+        "mc_value_mse_before_update": 0.037155433975046406,
+        "mc_value_explained_variance_before_update": 0.4309041468714284,
+        "won": 0,
+        "truncated": 1,
+        "task_counts": {
+          "train_night_1": 1
+        }
+      },
+      "decision_budget": {
+        "boundary_mode": "exact_decisions_v1",
+        "boundary": 5000,
+        "reserved_decisions": 60,
+        "quotas": {
+          "78": 60
+        },
+        "actual_decisions": 60,
+        "budget_boundary_truncations": 1
+      }
+    }
+  ]
+}

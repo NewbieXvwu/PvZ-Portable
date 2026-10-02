@@ -1069,3 +1069,33 @@ hf_sync新增已有分支--revision，并绑定MANIFEST的hf_revision和pull/ls�
 上传/下载，SDK自动分批提交不能解决单分支累计文件数上限，依据
 [Hub upload documentation](https://huggingface.co/docs/huggingface_hub/guides/upload)。
 实际分支上传/固定revision下载核验须继续完成，当前科学与交付总体目标未完成。
+
+### 精确预算真实通过与动态补充正式启动（2026-10-02）
+
+完整256精确配额的两臂实际恢复通过，79局、5000决策、586056 tick、6次更新，真实
+评估节点0/2500/5000。模型、AdamW、全部RNG、课程、计数、逐update配额/损失/轨迹/
+逐局评估严格等值，4个update2缓存分片SHA/mtime保留。总875.111秒，连续426.626秒、
+恢复臂记录428.208秒；GPU allocated3.918GB、reserved最高10.144GB，swap峰值0，
+最低系统可用15.889GB。背景有prefix workers及HF上传，不能称专机或等耗时学习比较。
+22个配额截断由真实value/实际耗时bootstrap且不作为课程失败；这也是新小预算工程
+程序与旧整局程序的采样差异，不能归因为某一个输入/容量变量。greedy初始/2500均0/40，
+final1/40（Wilson0.443%–12.881%）；sample三个点均0/40，不作三初始化、多波或正式学习
+通过结论。证据见[actual](artifacts/t5/perf/exact_decision_budget_v1_actual.json)与
+[curve](artifacts/t5/curves/exact_decision_budget_v1_engineering.json)。
+
+新公开动态补充源13f0f7e及协议ed305faabebae78c2d1aa2c1e6ba90dba6ec0e4ee2706f9221bd3e5d8b4e65e0
+已正常push/fetch并核验14指纹及原120jobs/raw/result/manifest/patch全部引用链。原v2
+6480分支及fail保持；同30任务/前2环境种子/两控制全部另做120jobs。每个固定WAIT60
+timeout与独立raw WAIT0/WAIT1 oracle、公开回包和物理/RNG逐步等值，按前后公开wave、
+ready packet/defense集合定位每类首个见证边沿，再从原快照试三个最大时长并重现scout。
+终局或400步/24000tick上界均保留，所有job完成且真实完整录制回放通过后，才将两份
+实测计数联合验全部11项正覆盖。原先三零项不删；120s/job、3600s总、12GiB可用RAM
+门禁不放宽。30项合成公共边沿/原审计契约通过只是预检，当前真实补充仍在执行。
+
+HF独立分支evidence-random-target-coverage-v1-full实际上传并从固定revision
+3225743991d55b130ff406922a67dcbb7107620f逐772文件下载核验，1615883字节和全部SHA
+与source/manifest相同，原main部分现场保持。见
+[small actual](artifacts/t5/perf/hf_revision_small_actual_v1.json)。12 source run新批次在此
+真实门禁通过后启动，原v1/v2原生失败现场及精确恢复也改走各自证据分支。所有当前上传
+进度为ignored目录内progress.json；尚未完成固定revision全量下载核验的批次不记交付
+完成。新机制目标牌组覆盖、共同输入/课程三初始化/B、事件学习收益、T6/T7仍待执行。
