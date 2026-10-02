@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-informative-width-preparation-v1",
+  "revision": "42fe40d1514630ff8dbc117639b2bb8219e078ce",
+  "seconds": 3.385056766004709,
+  "scope": "Six prospective width configs, real parser/summary evidence, final12 statistical checks and retained failed first summary attempt. Architecture GPU trials are not started; B and actual architecture wall caps remain unfrozen. Immutable smoke checkpoints reused at HF88849948, not reuploaded."
+}

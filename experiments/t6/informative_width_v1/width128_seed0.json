@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "experiment_id": "mainline_informative_width128_v1_seed0",
+  "purpose": "Prospective width comparison after three-random reference establishes meaningful multiwave learning and B. Same13 retained tasks,136 development seeds/mode, R0/lambda1/event waits, six layers/eight heads, GRU256x2 and critic256x1. Encoder width and its required projections change together; FF4xwidth. No transfer, auxiliary heads, new seeds or tasks. Ceiling500k is not the common comparison B; freeze B and retained nodes before the first architecture GPU run.",
+  "initialization_seed": 0,
+  "sampling_seed": 1701,
+  "model": {
+    "layers": 6,
+    "width": 128,
+    "heads": 8,
+    "ff_width": 512,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7,
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
+  },
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 1.0,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "sampling": {
+    "manifest": "experiments/t7/bridge_level7_v1/train.json",
+    "task_ids": [
+      "train_roof_1",
+      "train_roof_2",
+      "train_roof_3",
+      "train_roof_4",
+      "train_multicap_v1_roof_cap1_variant",
+      "train_multicap_v1_roof_cap5_variant",
+      "train_full_level7_v1",
+      "train_bridge7_v1_aid_cap10",
+      "train_bridge7_v1_aid_cap15",
+      "train_bridge7_v1_aid_cap20",
+      "train_bridge7_v1_aid_capfull",
+      "train_bridge7_v1_ordinary_cap10",
+      "train_bridge7_v1_ordinary_cap15"
+    ],
+    "method": "frontier_v1",
+    "rollout_episodes": 4,
+    "curriculum": {
+      "window_episodes": 8,
+      "minimum_window_episodes": 2,
+      "uniform_fraction": 0.25,
+      "coverage": "terrain_wave_cap",
+      "frontier_pass_range": [
+        0.2,
+        0.8
+      ],
+      "initial_focus_task_ids": [
+        "train_bridge7_v1_aid_cap10"
+      ],
+      "initial_focus_completed_episodes": 64
+    }
+  },
+  "budget": {
+    "decisions": 500000,
+    "max_episodes": null,
+    "boundary_mode": "exact_decisions_v1"
+  },
+  "evaluation": {
+    "manifest": "experiments/t7/bridge_random_mc_v1/progress_evaluation.json",
+    "modes": [
+      "greedy",
+      "sampled"
+    ],
+    "decision_nodes": [
+      2000,
+      25000,
+      125000,
+      250000,
+      375000,
+      500000
+    ],
+    "idle_baseline": true
+  },
+  "runtime": {
+    "workers": 2,
+    "worker_threads": 1,
+    "worker_device": "cpu",
+    "update_device": "cuda",
+    "max_actions": 4000,
+    "cudnn_tf32": false,
+    "matmul_precision": "highest",
+    "deterministic_algorithms": true,
+    "cublas_workspace_config": ":4096:8"
+  },
+  "prerequisites": []
+}

@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "status": "prepared_not_launched",
+  "reference_source_revision": "f005c47",
+  "initialization_seeds": [
+    0,
+    1,
+    2
+  ],
+  "reference": "experiments/t7/bridge_random_mc_v1/seed0..2.json",
+  "budget_B": null,
+  "common_wall_budgets_seconds": null,
+  "launch_condition": "Use actual three-random reference to establish repeatable meaningful3/5/long wins for >=2initializations, then freeze B and actual wall-budget views before architecture GPU training. No additional baseline control runs or model-state hashes are required to admit the next stage.",
+  "budget_scope": "The executable configs retain the existing500k ceiling and scheduled nodes. Neither implies training every candidate to500k. Existing256 reference is reused when unchanged; first actual comparison uses the frozen B snapshots.",
+  "candidates": [
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed0.json",
+      "initialization_seed": 0,
+      "width": 128,
+      "changed_model_fields": [
+        "width",
+        "ff_width"
+      ],
+      "parameters_from_prior_actual_cpu_catalog": 2700446,
+      "reference_config": "experiments/t7/bridge_random_mc_v1/seed0.json",
+      "train_tasks": 13,
+      "evaluation_cases_per_mode": 136,
+      "parsed_by_actual_training_entry": true,
+      "non_model_recipe_and_task_definitions_equal": true
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed0.json",
+      "initialization_seed": 0,
+      "width": 512,
+      "changed_model_fields": [
+        "width",
+        "ff_width"
+      ],
+      "parameters_from_prior_actual_cpu_catalog": 28031390,
+      "reference_config": "experiments/t7/bridge_random_mc_v1/seed0.json",
+      "train_tasks": 13,
+      "evaluation_cases_per_mode": 136,
+      "parsed_by_actual_training_entry": true,
+      "non_model_recipe_and_task_definitions_equal": true
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed1.json",
+      "initialization_seed": 1,
+      "width": 128,
+      "changed_model_fields": [
+        "width",
+        "ff_width"
+      ],
+      "parameters_from_prior_actual_cpu_catalog": 2700446,
+      "reference_config": "experiments/t7/bridge_random_mc_v1/seed1.json",
+      "train_tasks": 13,
+      "evaluation_cases_per_mode": 136,
+      "parsed_by_actual_training_entry": true,
+      "non_model_recipe_and_task_definitions_equal": true
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed1.json",
+      "initialization_seed": 1,
+      "width": 512,
+      "changed_model_fields": [
+        "width",
+        "ff_width"
+      ],
+      "parameters_from_prior_actual_cpu_catalog": 28031390,
+      "reference_config": "experiments/t7/bridge_random_mc_v1/seed1.json",
+      "train_tasks": 13,
+      "evaluation_cases_per_mode": 136,
+      "parsed_by_actual_training_entry": true,
+      "non_model_recipe_and_task_definitions_equal": true
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed2.json",
+      "initialization_seed": 2,
+      "width": 128,
+      "changed_model_fields": [
+        "width",
+        "ff_width"
+      ],
+      "parameters_from_prior_actual_cpu_catalog": 2700446,
+      "reference_config": "experiments/t7/bridge_random_mc_v1/seed2.json",
+      "train_tasks": 13,
+      "evaluation_cases_per_mode": 136,
+      "parsed_by_actual_training_entry": true,
+      "non_model_recipe_and_task_definitions_equal": true
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed2.json",
+      "initialization_seed": 2,
+      "width": 512,
+      "changed_model_fields": [
+        "width",
+        "ff_width"
+      ],
+      "parameters_from_prior_actual_cpu_catalog": 28031390,
+      "reference_config": "experiments/t7/bridge_random_mc_v1/seed2.json",
+      "train_tasks": 13,
+      "evaluation_cases_per_mode": 136,
+      "parsed_by_actual_training_entry": true,
+      "non_model_recipe_and_task_definitions_equal": true
+    }
+  ],
+  "fixed": "GRU256x2, critic256x1, six encoder layers, eight heads, FF4xencoder width, complete reward/PPO/runtime/sampling/evaluation config and existing seed lists.",
+  "coverage": "Four retained roof development tasks are45/cap3,46/cap3,47/cap5,48/cap3 (16each); these satisfy the explicit3/5-wave progress coverage without modifying live evaluation tasks.",
+  "validation": {
+    "seconds": 0.005060616000264417,
+    "cuda_initialized": false,
+    "native_interactions": 0,
+    "model_constructions": 0,
+    "note": "Six real load_config calls plus three references; constructor parameter counts reused from the delivered18-construction CPU catalog. No GPU trial or superiority claim.",
+    "actual_summary_invocation": {
+      "seconds": 1.4304143999979715,
+      "exit_code": 0,
+      "actual_reference_candidates": 3,
+      "unstarted_width_candidates_retained": 6,
+      "actual_evaluation_checkpoints_read": 4,
+      "exact_interaction_and_wall_cap_views_verified": true,
+      "no_model_forward_or_environment_interaction": true,
+      "note": "Real immutable evaluated checkpoints in HF88849948 smoke snapshots supply cumulative wall/CPU/GPU cost. This is a reporting compatibility check, not learning or architecture superiority."
+    },
+    "comparison_statistical_tests": {
+      "count": 12,
+      "passed": 12,
+      "seconds": 0.005,
+      "log": "logs/comparison_tests.log"
+    },
+    "first_summary_attempt": {
+      "exit_code": 1,
+      "error": "KeyError: 'evaluation_role' on retained roof tasks; corrected by inheriting the unchanged manifest's explicit heldout split. No training or task definition changes.",
+      "log": "logs/validation_failed01.log"
+    }
+  }
+}

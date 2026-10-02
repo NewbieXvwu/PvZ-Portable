@@ -606,5 +606,14 @@
     "catalog_model_constructions": 9,
     "critic_check_model_constructions": 9,
     "total_cpu_model_constructions": 18
-  }
+  },
+  "prepared_width_configs": [
+    "experiments/t6/informative_width_v1/width128_seed0.json",
+    "experiments/t6/informative_width_v1/width512_seed0.json",
+    "experiments/t6/informative_width_v1/width128_seed1.json",
+    "experiments/t6/informative_width_v1/width512_seed1.json",
+    "experiments/t6/informative_width_v1/width128_seed2.json",
+    "experiments/t6/informative_width_v1/width512_seed2.json"
+  ],
+  "width_protocol": "experiments/t6/informative_width_v1/protocol.json"
 }
