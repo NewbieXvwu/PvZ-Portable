@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-02T03:31:41.449423+00:00",
+  "status": "draft_source_complete_not_formal_gate",
+  "source_commit": "f95f6a614cf2e8fb94f786c29da3cd88cdd5223d",
+  "source_dirty": false,
+  "branch": "research/event-wait-replay-gates-v1",
+  "source_directory": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/event_wait_replay_gates_v1",
+  "source_files_added": 3,
+  "binary_bytes_committed": 0,
+  "protocol": {
+    "path": "artifacts/worktrees/event_wait_replay_gates_v1/experiments/t5/event_wait_v1/replay_audit_draft.json",
+    "sha256": "1836023ff1c8c2e8206ef7388db28a88ddecb20c783aaabdddcf674dece8f029",
+    "release_status": "draft"
+  },
+  "required_fingerprints": {
+    "scripts/research_event_wait_replay_audit.py": "f5188199457166bda08e6376d602dccc7d527e1cde40f70ba9a6d0bc5860a156",
+    "python/test_event_wait_replay_audit.py": "b80c8f61194507a302ca458357ea6733798db19c55846ea193416488bdacaff6",
+    "scripts/research_event_wait_native_audit.py": "9206c6183c8550d6db4513c01a4e81dee13191de9792d73de1c0937cb0042a56",
+    "python/test_event_wait_native_audit.py": "0acb152df66fc1c53e7396e69c8e45840bcb91ccd4de2e7a89b7f8da04111a49",
+    "scripts/t4_capability_profile.py": "aaf0cecb5123870f546ff4821fda64a0bbc5756827111ba8e4c7d188cec5c8d0",
+    "scripts/scripted_baseline.py": "3fb638bd3dc0097eeb5713e7a9870c67cc30fc66f37db5e9a3812294cfd56acd",
+    "scripts/check_task_manifests.py": "c3d7b02f9f92a53b68fe63ce63bf9201d4f09c60a5612ab0167f00f30931e148",
+    "python/pvz_agent_model.py": "3d767b1ae496cbfb9926d62473047ce259f384d3ee2b8bac5fadb6f6b9a50e5f",
+    "python/pvz_observation_features.py": "828c73ad13e3d497e360a08a2deae16a69bd670120388a109d8c79c334b5f522",
+    "python/pvz_env.py": "9014ea2faa5530016c393c88c2bec738d3bc7be794b395952c5eafebf9054cd1",
+    "python/pvz_event_env.py": "d3a3dad403e295dc02d1cfda03f513984110f3934ff90e581a3740d041e5a451",
+    "python/pvz_wait_events.py": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "python/pvz_research.py": "df89e91c9e5146326ea20f4f420eaa258833657e52b56f602bad9fbbd0231d78",
+    "python/pvz_curriculum.py": "cf8f4233acea3077ca2fa99f49563d2aad084ad2e5fe2b8322597de4d17adbfc",
+    "python/train_pvz_ppo.py": "55a97087a762fec30dec78e4244b26d79ecd82989c2230cb849b01c5a21f1537",
+    "python/train_pvz_ppo_task_family.py": "12f4b10211c51b4adcee8ca2d377b41f779c1f4fd9f684c1939c659f29fd0887",
+    "src/EnvironmentWaitEvents.h": "da445d3359fd51c251054111cf212443ba3ccd374b88c3e168eebbfad2fd5eb9",
+    "src/LawnApp.h": "6409ce79fe539a3a7d3d7b7d925c1273f94edbf0b8d81d945a7b49af49b738ef",
+    "src/LawnApp.cpp": "5f00fc7411019259164c0f8811250dd01f3439f96f6e5012a2570866d027d783",
+    "src/main.cpp": "073548d2cbc7f3b186a340276ab89eee5d4cc3647e86635eec150551854a7aee"
+  },
+  "synthetic_checks": {
+    "new_checks": 18,
+    "combined_checks": 47,
+    "final_combined_passed": true,
+    "initial_new_only_checks": 15,
+    "initial_new_only_seconds": 4.277,
+    "extended_new_only_checks": 18,
+    "extended_new_only_seconds": 6.037,
+    "first_combined_seconds": 6.782,
+    "first_combined_errors": 1,
+    "first_combined_error": "FileNotFoundError: isolated clone artifacts/task_family/train.json missing in existing parser test",
+    "first_combined_failure_retained": true,
+    "fixture_fix": "Read-only link to the existing ignored original task manifest; no task/code/seed/threshold change.",
+    "final_combined_seconds": 6.809,
+    "full_reference_instantiation": {
+      "parameters": 7869607,
+      "architecture_version": 8,
+      "paired_fixed_events_init0_states_identical": true
+    },
+    "complete_cpu_case_pipeline": {
+      "scope": "synthetic environment only, small model; unit fixture output uses temporary test directories, logs retained",
+      "modes": [
+        "fixed",
+        "events"
+      ],
+      "episodes": 40,
+      "synthetic_decisions": 140,
+      "actual_adamw_lr0_batches": 20
+    }
+  },
+  "logs": [
+    {
+      "path": "logs/t5_research/event_wait_replay_gates_v1_units.log",
+      "sha256": "32e97b02a36513099907ca8bb8071210e15c44fd9be9dfef8340c7f8c8568dac",
+      "bytes": 10560
+    },
+    {
+      "path": "logs/t5_research/event_wait_replay_gates_v1_combined_units.log",
+      "sha256": "66f37f58bf4b97496444b5f52fb47a408585178f4189166950dab73045b118d0",
+      "bytes": 28249
+    }
+  ],
+  "prepared_actual_gate": {
+    "initialization_seeds": [
+      0,
+      1,
+      2
+    ],
+    "modes": [
+      "fixed",
+      "events"
+    ],
+    "model_config": {
+      "layers": 6,
+      "width": 256,
+      "heads": 8,
+      "ff_width": 1024,
+      "gru_layers": 2,
+      "gru_width": 256,
+      "critic_width": 256,
+      "critic_layers": 1,
+      "input_flags": 7
+    },
+    "episodes": 120,
+    "cases": 6,
+    "selected_task_ids": [
+      "train_day_1",
+      "train_night_1",
+      "train_pool_1",
+      "train_fog_1",
+      "train_roof_1"
+    ],
+    "first_existing_environment_seeds_per_task": 4,
+    "max_actions": 4000,
+    "allow_truncation": true,
+    "limits": {
+      "log_prob": 3e-06,
+      "privileged_value": 5e-05,
+      "entropy": 5e-05,
+      "condition_logits": 5e-05,
+      "final_hidden": 5e-05
+    },
+    "ppo": {
+      "lr": 0.0,
+      "gamma": 0.99,
+      "shaping_weight": 1.0,
+      "gae_lambda": 0.95,
+      "epochs": 2,
+      "sequence_length": 128,
+      "minibatch_chunks": 2,
+      "clip_epsilon": 0.2,
+      "value_coefficient": 0.5,
+      "entropy_coefficient": 0.01,
+      "target_kl": 0.03,
+      "attention_backend": "dense"
+    },
+    "sampling": "CPU; every sampled action log probability, privileged value and truncated bootstrap value compared",
+    "recurrence": "Every chronological decision plus carried 128-step no-grad chunk reference; actual lr0 PPO recomputes prefixes. No full-episode BPTT claim.",
+    "cross_device": "Every stored scalar/final recurrent state/bootstrap compared on CUDA; no CPU fallback",
+    "integrity": "Exact native120jobs/6480branches/positive coverage/raw SHA and record SHA prerequisite; same published protocol/sources, original tasks, binary/resources and complete CPU manifest required",
+    "failure_retention": "Flush raw request before native action, retain observations/metadata/saves/checkpoint/shards/progress/logs; kill only validated owned worker process groups",
+    "minimum_available_ram_bytes": 12884901888,
+    "minimum_free_vram_mib": 14000,
+    "case_timeout_seconds": 1200,
+    "stage_timeout_seconds": 7200
+  },
+  "actual_native_episodes": 0,
+  "actual_cuda_cases": 0,
+  "actual_sigkill_resume_passed": false,
+  "learning_benefit_verified": false,
+  "mainline_merged": false,
+  "source_remote_published": false,
+  "current_environment": {
+    "torch": "2.14.0+cu132",
+    "cuda_build": "13.2",
+    "cuda_available": false,
+    "dev_dxg_exists": false
+  },
+  "current_blockers": [
+    "GitHub write previously rejected: MCP tool call requires approval, but approval policy is never",
+    "No /dev/dxg; CUDA unavailable",
+    "Native event gate/source/protocol not yet published or executed"
+  ],
+  "failure_policy": "Keep the earlier combined failure output. Never label synthetic contracts as a native/CUDA/learning gate; no threshold reduction or formal CPU replacement.",
+  "main_head": "7f2b09463913da5990b8ebc1eaf070339903717b",
+  "learning_order": "Common input/reward/course baseline and measured shared B precede the independent paired-three-initialization fixed/events learning ablation, with actual equal-decision and equal-wall results."
+}

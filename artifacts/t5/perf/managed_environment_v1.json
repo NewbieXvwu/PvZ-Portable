@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "torch": "2.14.0+cu132",
+  "cuda_version": "13.2",
+  "cuda_available": false,
+  "cuda_visible_devices": null,
+  "dxg_device_present": false,
+  "snapshot_ns": 1790900604815296407,
+  "old_reevaluation_pid": 340709,
+  "old_reference_wait_pid": 341617,
+  "old_handles_unavailable": [
+    84953,
+    83450
+  ],
+  "original_reference_gpu_arms_started": false,
+  "reference_fresh_output_candidate": "artifacts/research/learning_reference256_interrupt_v2_managed",
+  "reference_helper_unchanged": true,
+  "reference_gate_passed": false,
+  "reevaluation_resumed_same_protocol": true,
+  "local_git_read_only": true,
+  "git_delivery_alternative": "Read query succeeded; write tool blocked by approval policy. No alternative delivery completed.",
+  "cuda_initialization_error": "Found no NVIDIA driver on your system. Please check that you have an NVIDIA GPU and installed a driver from http://www.nvidia.com/Download/index.aspx",
+  "git_database_write_attempt": "blocked",
+  "git_database_write_error": "MCP tool call requires approval, but approval policy is never",
+  "remote_commit_at_read": "7f2b09463913da5990b8ebc1eaf070339903717b",
+  "remote_commit_created": false
+}

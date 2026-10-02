@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "source_directory": "artifacts/research/event_wait_policy_contracts_v1",
+  "scope": "closed synthetic CPU contracts only; not native/CUDA/SIGKILL/learning acceptance",
+  "closed_report_sha256": "55ad0e10ad3c4639aade1fdaa0d60833332a4dae10e5e0c8f5b570e94a8cedc1",
+  "file_count": 16,
+  "bytes": 6571498,
+  "dry_run_result": "pass",
+  "actual_uploaded": false,
+  "dry_run_log": {
+    "path": "logs/t5_research/event_wait_policy_v1_hf_dry_run.log",
+    "sha256": "e0bade24fbaeb61c2c8e89e92d62cd704de243ccd70393e85dc794897ff9fbf5"
+  },
+  "git_checkpoint_npz_log_bytes": 0,
+  "local_delivery_commit": "f37ffdcfa9a8fb822e6577fede1387090dacf0f0"
+}

@@ -1,0 +1,640 @@
+{
+  "schema_version": 1,
+  "status": "complete_analysis_locally_not_delivered",
+  "scope": "All12 corrected old-encoder reward candidates; cap1-only training, ordinary cap3/cap5 validation transfer",
+  "curve_delivery_audit": "artifacts/t5/perf/reward_v2_corrected_curve_delivery_v1.json",
+  "curve_delivery_audit_sha256": "fe7cfcf7c511014fbc987f093fb67f7621af92ab964b9c2295ec3013113fd947",
+  "reevaluation_state_sha256": "c4be783fb5f2b509636ea26e7ecdd2b470f8b0bae2034eba8d5504ca3eccf0ea",
+  "completed_nodes": 60,
+  "evaluated_jobs": 268800,
+  "allowed_conveyor_rows_changed": 576,
+  "win_labels_changed": 105,
+  "non_conveyor_rows_changed": 0,
+  "baseline_full_row_differences": 0,
+  "baseline_paired_rows_compared": 40320,
+  "observed_repeatability_budgets": [
+    {
+      "reward": "R0",
+      "mode": "greedy",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": {
+        "node_index": 3,
+        "initialization_seeds": [
+          0,
+          1
+        ],
+        "maximum_actual_decisions_at_node": 375107
+      },
+      "qualifying_initializations_at_final_node": [
+        0,
+        1
+      ]
+    },
+    {
+      "reward": "R0",
+      "mode": "sampled",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": {
+        "node_index": 3,
+        "initialization_seeds": [
+          0,
+          1
+        ],
+        "maximum_actual_decisions_at_node": 375107
+      },
+      "qualifying_initializations_at_final_node": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "reward": "R1",
+      "mode": "greedy",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": {
+        "node_index": 4,
+        "initialization_seeds": [
+          0,
+          2
+        ],
+        "maximum_actual_decisions_at_node": 500039
+      },
+      "qualifying_initializations_at_final_node": [
+        0,
+        2
+      ]
+    },
+    {
+      "reward": "R1",
+      "mode": "sampled",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": {
+        "node_index": 3,
+        "initialization_seeds": [
+          0,
+          1
+        ],
+        "maximum_actual_decisions_at_node": 375099
+      },
+      "qualifying_initializations_at_final_node": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "reward": "R2",
+      "mode": "greedy",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": null,
+      "qualifying_initializations_at_final_node": [
+        1
+      ]
+    },
+    {
+      "reward": "R2",
+      "mode": "sampled",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": null,
+      "qualifying_initializations_at_final_node": [
+        1
+      ]
+    },
+    {
+      "reward": "R3",
+      "mode": "greedy",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": {
+        "node_index": 3,
+        "initialization_seeds": [
+          0,
+          1
+        ],
+        "maximum_actual_decisions_at_node": 375004
+      },
+      "qualifying_initializations_at_final_node": [
+        0,
+        1
+      ]
+    },
+    {
+      "reward": "R3",
+      "mode": "sampled",
+      "first_majority_with_multiple_above_baseline_cap3_cap5_nodes": {
+        "node_index": 3,
+        "initialization_seeds": [
+          0,
+          1
+        ],
+        "maximum_actual_decisions_at_node": 375004
+      },
+      "qualifying_initializations_at_final_node": [
+        0,
+        1
+      ]
+    }
+  ],
+  "budget_derivation": "At each frozen post-training node, count initializations with at least two prior-or-current nodes at which BOTH ordinary cap3 and cap5 wins exceed their own actual baseline. Report the first node with at least two such initializations and their largest actual decision count. Descriptive goal-related accounting, not an added significance test.",
+  "future_B_frozen": false,
+  "future_B_reason": "Common-input/reference256 runtime and actual recovery gate, common-pool dynamic-prefix checks and comparable real-wall protocol remain incomplete. Records measured old-model onset without freezing unmeasured new-model runtime or declaring reward winner.",
+  "completed_node_reevaluation_wall_sum_seconds": 23028.349981869003,
+  "timing_scope": "Sum of completed-node recorded wall; excludes unrecorded abandoned work before interruption, waiting and analysis; not original-plus-resumed end-to-end wall. Original training wall separate in each curve.",
+  "max_process_tree_RSS_bytes": 10560036864,
+  "min_system_available_bytes": 12371894272,
+  "diagnostic_sources": [
+    {
+      "experiment_id": "reward_r0_seed0_v2",
+      "source_path": "artifacts/t5/perf/reward_r0_seed0_v2_complete_diagnostics.json",
+      "source_sha256": "807a688cf7d9916a047350f0e669c6d3c089fd04b5f3e5ff83b43ced71b68e22",
+      "original_state_sha256": "84bdead5e9b5d9f87818270b707b5935bb61e23b1d182a55f0f70f874c192ffa",
+      "training_summary": {
+        "episodes": 11151,
+        "decisions": 500004,
+        "won": 6316,
+        "zero_tick_fraction": 0.2936076511387909,
+        "immediate_plant_shovels": 6776,
+        "immediate_shovel_fraction_of_plants": 0.06775728970841166,
+        "mc_value_mse": 0.328935682121574,
+        "mc_value_explained_variance": 0.5820795368298954,
+        "max_abs_shaping_telescoping_error": 1.2212453270876722e-15
+      },
+      "last_update": {
+        "update": 73,
+        "counters": {
+          "episodes": 11151,
+          "decisions": 500004,
+          "ticks": 80170116
+        },
+        "losses": {
+          "policy_loss": -0.005184573247223767,
+          "value_loss": 0.0012590664555318654,
+          "entropy": 1.1630578637123108,
+          "advantage_mean": -0.014473735354840755,
+          "advantage_std": 0.0331447497010231,
+          "gradient_norm": 1.0497545003890991,
+          "approx_kl": 0.00030440174521423335,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 0.11263656616210938,
+          "optimizer_steps": 2,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r1_seed0_v2",
+      "source_path": "artifacts/t5/perf/reward_r1_seed0_v2_complete_diagnostics.json",
+      "source_sha256": "109d44f9407b2933dcdb6b949fb6cef53b5a226b6884901afd307a90d462f7db",
+      "original_state_sha256": "b1702f9c0927f7d5a4f3b238ff69472946f02f38b42406cf15bace4ef38890ad",
+      "training_summary": {
+        "episodes": 10034,
+        "decisions": 500039,
+        "won": 5957,
+        "zero_tick_fraction": 0.25639400126790113,
+        "immediate_plant_shovels": 7386,
+        "immediate_shovel_fraction_of_plants": 0.08686141687835168,
+        "mc_value_mse": 0.22405417220000948,
+        "mc_value_explained_variance": 0.7162633335304895,
+        "max_abs_shaping_telescoping_error": 0.0
+      },
+      "last_update": {
+        "update": 61,
+        "counters": {
+          "episodes": 10034,
+          "decisions": 500039,
+          "ticks": 69232084
+        },
+        "losses": {
+          "policy_loss": -0.007308706979859636,
+          "value_loss": 0.0004723739402834326,
+          "entropy": 1.6901857256889343,
+          "advantage_mean": 0.018058016896247864,
+          "advantage_std": 0.01531177293509245,
+          "gradient_norm": 1.4153532981872559,
+          "approx_kl": 0.00029706143752927794,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 0.08623242378234863,
+          "optimizer_steps": 2,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r2_seed0_v2",
+      "source_path": "artifacts/t5/perf/reward_r2_seed0_v2_complete_diagnostics.json",
+      "source_sha256": "b5af73a482b4ba0914695ea522749d84b7b106af6af3b2fb4b4ab3c17ae13b63",
+      "original_state_sha256": "65c3c860fe9c6483ccfcc375d6710e17f45e3fddd075675f9cadbe5fb55c7a99",
+      "training_summary": {
+        "episodes": 6272,
+        "decisions": 500085,
+        "won": 1,
+        "zero_tick_fraction": 0.3133967225571653,
+        "immediate_plant_shovels": 36488,
+        "immediate_shovel_fraction_of_plants": 0.5500731159453063,
+        "mc_value_mse": 0.02185371433581653,
+        "mc_value_explained_variance": -113.8426093053689,
+        "max_abs_shaping_telescoping_error": 0.0
+      },
+      "last_update": {
+        "update": 34,
+        "counters": {
+          "episodes": 6272,
+          "decisions": 500085,
+          "ticks": 51311863
+        },
+        "losses": {
+          "policy_loss": -0.0015938295982778072,
+          "value_loss": 0.0010527423485958327,
+          "entropy": 1.672132670879364,
+          "advantage_mean": 0.014332044869661331,
+          "advantage_std": 0.028135079890489578,
+          "gradient_norm": 0.23286372423171997,
+          "approx_kl": 0.00033652429611535917,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 7.152557373046875e-07,
+          "max_log_prob_change": 0.13799643516540527,
+          "optimizer_steps": 6,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r3_seed0_v2",
+      "source_path": "artifacts/t5/perf/reward_r3_seed0_v2_complete_diagnostics_summary.json",
+      "source_sha256": "776053fb52ddc68a5838a43976427abd85b5936b7a0ea6412be5ed9a751f7621",
+      "original_state_sha256": "2e92fa9c3f8040a3499d980b84ecaac17738c9a62b5f148056dd0448d80d2ee6",
+      "training_summary": {
+        "episodes": 8613,
+        "decisions": 500036,
+        "won": 2235,
+        "zero_tick_fraction": 0.307149885208265,
+        "immediate_plant_shovels": 7641,
+        "immediate_shovel_fraction_of_plants": 0.08279875167959776,
+        "mc_value_mse": 0.4880028507588534,
+        "mc_value_explained_variance": 0.16864308206605627,
+        "max_abs_shaping_telescoping_error": 6.626643678231403e-16
+      },
+      "last_update": {
+        "update": 56,
+        "counters": {
+          "episodes": 8613,
+          "decisions": 500036,
+          "ticks": 67722272
+        },
+        "losses": {
+          "policy_loss": -0.004652572567152902,
+          "value_loss": 0.011498302686959505,
+          "entropy": 1.9821810722351074,
+          "advantage_mean": 0.03511163592338562,
+          "advantage_std": 0.10119549930095673,
+          "gradient_norm": 0.7290521264076233,
+          "approx_kl": 0.0003643816051242532,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.18697786331176758,
+          "optimizer_steps": 2,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r0_seed1_v2",
+      "source_path": "artifacts/t5/perf/reward_r0_seed1_v2_complete_diagnostics_summary.json",
+      "source_sha256": "e2dafa71f4fac43aaf217f5c2bcebbe4da7034fdaeb4bd13a6c6913cd8231cc9",
+      "original_state_sha256": "ac535914502f09ded587926c88b83c94bddc451ead135b8df8b63c89391b9fe4",
+      "training_summary": {
+        "episodes": 8546,
+        "decisions": 500013,
+        "won": 3591,
+        "zero_tick_fraction": 0.27952273240895736,
+        "immediate_plant_shovels": 4998,
+        "immediate_shovel_fraction_of_plants": 0.0488821078575201,
+        "mc_value_mse": 0.44179663918835815,
+        "mc_value_explained_variance": 0.3829600093599018,
+        "max_abs_shaping_telescoping_error": 1.1657341758564144e-15
+      },
+      "last_update": {
+        "update": 54,
+        "counters": {
+          "episodes": 8546,
+          "decisions": 500013,
+          "ticks": 66917059
+        },
+        "losses": {
+          "policy_loss": -0.009152540537929355,
+          "value_loss": 0.0006935081619303674,
+          "entropy": 1.6254987716674805,
+          "advantage_mean": 0.003245013300329447,
+          "advantage_std": 0.026251425966620445,
+          "gradient_norm": 1.2385729551315308,
+          "approx_kl": 0.00032654620424321656,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 0.11388540267944336,
+          "optimizer_steps": 2,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r1_seed1_v2",
+      "source_path": "artifacts/t5/perf/reward_r1_seed1_v2_complete_diagnostics_summary.json",
+      "source_sha256": "e2cdc06a713499f969942adb661542ffa8aa633e7e87c8395b7a0206baade3f7",
+      "original_state_sha256": "084d457729fc630ce829ddac89caa9ab1f7272d4efff0cb30f27c28cd83b1919",
+      "training_summary": {
+        "episodes": 9719,
+        "decisions": 500029,
+        "won": 3360,
+        "zero_tick_fraction": 0.2893652168174246,
+        "immediate_plant_shovels": 6851,
+        "immediate_shovel_fraction_of_plants": 0.07854399541415878,
+        "mc_value_mse": 0.4245072480846918,
+        "mc_value_explained_variance": 0.27306096034208005,
+        "max_abs_shaping_telescoping_error": 0.0
+      },
+      "last_update": {
+        "update": 61,
+        "counters": {
+          "episodes": 9719,
+          "decisions": 500029,
+          "ticks": 74053486
+        },
+        "losses": {
+          "policy_loss": -0.0032645328017544273,
+          "value_loss": 0.3746868073940277,
+          "entropy": 1.735509991645813,
+          "advantage_mean": -0.5554062128067017,
+          "advantage_std": 0.24952192604541779,
+          "gradient_norm": 2.2096683979034424,
+          "approx_kl": 0.0001866047980139951,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.10216474533081055,
+          "optimizer_steps": 2,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r2_seed1_v2",
+      "source_path": "artifacts/t5/perf/reward_r2_seed1_v2_complete_diagnostics_summary.json",
+      "source_sha256": "0c85a29e55cd43ba2d7473f83ab2eb77df977dfc66b95c34c23585522a8ef69f",
+      "original_state_sha256": "1a01b4c7fd95e48866b279c6ad6f99f6157580f781b6bd7de8aebed52bb88053",
+      "training_summary": {
+        "episodes": 8656,
+        "decisions": 500011,
+        "won": 3537,
+        "zero_tick_fraction": 0.29152158652509647,
+        "immediate_plant_shovels": 7278,
+        "immediate_shovel_fraction_of_plants": 0.07947063255478756,
+        "mc_value_mse": 0.3662451149576804,
+        "mc_value_explained_variance": 0.5660586635972172,
+        "max_abs_shaping_telescoping_error": 0.0
+      },
+      "last_update": {
+        "update": 55,
+        "counters": {
+          "episodes": 8656,
+          "decisions": 500011,
+          "ticks": 67346371
+        },
+        "losses": {
+          "policy_loss": -0.006233173676513104,
+          "value_loss": 0.0001506499611423351,
+          "entropy": 1.7388242483139038,
+          "advantage_mean": -0.00047250991337932646,
+          "advantage_std": 0.012310599908232689,
+          "gradient_norm": 1.142837405204773,
+          "approx_kl": 0.00025028601521626115,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.14388036727905273,
+          "optimizer_steps": 2,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r3_seed1_v2",
+      "source_path": "artifacts/t5/perf/reward_r3_seed1_v2_completed_diagnostics_compact.json",
+      "source_sha256": "4024f7acd156fda2f741b6aeb0afb82d269071f649f681245504e36347eba199",
+      "original_state_sha256": "b0b8e7cc99680c37396fb15e65be70b18c93a4fdb28961215cba5559c85b9075",
+      "training_summary": {
+        "episodes": 8080,
+        "decisions": 500014,
+        "won": 2263,
+        "zero_tick_fraction": 0.2881659313539221,
+        "immediate_plant_shovels": 5676,
+        "immediate_shovel_fraction_of_plants": 0.05998795167989516,
+        "mc_value_mse": 0.5694152586074903,
+        "mc_value_explained_variance": 0.1485084396184272,
+        "max_abs_shaping_telescoping_error": 4.961309141293668e-16
+      },
+      "last_update": {
+        "update": 47,
+        "counters": {
+          "episodes": 8080,
+          "decisions": 500014,
+          "ticks": 64288520
+        },
+        "losses": {
+          "policy_loss": -0.026387162506580353,
+          "value_loss": 0.25426092743873596,
+          "entropy": 2.0854689478874207,
+          "advantage_mean": 0.10221641510725021,
+          "advantage_std": 0.49384328722953796,
+          "gradient_norm": 1.348031997680664,
+          "approx_kl": 0.0004242847280382239,
+          "clip_fraction": 0.003816793905571103,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.3916196823120117,
+          "optimizer_steps": 4,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r0_seed2_v2",
+      "source_path": "artifacts/t5/perf/reward_r0_seed2_v2_complete_diagnostics_compact.json",
+      "source_sha256": "844789e899b9d48b9745c89698fb5002b7112ae25034bbc0d9e33bc57c804439",
+      "original_state_sha256": "873cdf332baafbf8b6aba6160dd4daa1cd5523e63e0b1300edd46aa52a299571",
+      "training_summary": {
+        "episodes": 9121,
+        "decisions": 500016,
+        "won": 2412,
+        "zero_tick_fraction": 0.3028023103260696,
+        "immediate_plant_shovels": 12320,
+        "immediate_shovel_fraction_of_plants": 0.1342969576070724,
+        "mc_value_mse": 0.37665105692373135,
+        "mc_value_explained_variance": 0.21206038112666192,
+        "max_abs_shaping_telescoping_error": 1.1622647289044608e-15
+      },
+      "last_update": {
+        "update": 56,
+        "counters": {
+          "episodes": 9121,
+          "decisions": 500016,
+          "ticks": 72433360
+        },
+        "losses": {
+          "policy_loss": -0.09622360020875931,
+          "value_loss": 0.19830678651730219,
+          "entropy": 1.910043716430664,
+          "advantage_mean": 0.0020723796915262938,
+          "advantage_std": 0.4451918303966522,
+          "gradient_norm": 1.2203936576843262,
+          "approx_kl": 0.0011449635598442809,
+          "clip_fraction": 0.007028388635565837,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.6099257469177246,
+          "optimizer_steps": 6,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r1_seed2_v2",
+      "source_path": "artifacts/t5/perf/reward_r1_seed2_v2_complete_diagnostics_compact.json",
+      "source_sha256": "c19af16f230f726c74434a5e02c23d48f55f6214c12e62068e6ef4db858ecd23",
+      "original_state_sha256": "d82c4329e3c8c1f6878a1f36ee5699217961f5a710f1af2ab768451122610ba8",
+      "training_summary": {
+        "episodes": 8641,
+        "decisions": 500024,
+        "won": 1421,
+        "zero_tick_fraction": 0.31844871446170586,
+        "immediate_plant_shovels": 17299,
+        "immediate_shovel_fraction_of_plants": 0.19548217958279657,
+        "mc_value_mse": 0.22601120219410775,
+        "mc_value_explained_variance": 0.14400318269026058,
+        "max_abs_shaping_telescoping_error": 0.0
+      },
+      "last_update": {
+        "update": 52,
+        "counters": {
+          "episodes": 8641,
+          "decisions": 500024,
+          "ticks": 69321563
+        },
+        "losses": {
+          "policy_loss": -0.06803961098194122,
+          "value_loss": 0.2256120191887021,
+          "entropy": 1.9475204944610596,
+          "advantage_mean": -0.059805601835250854,
+          "advantage_std": 0.43322235345840454,
+          "gradient_norm": 1.8327230215072632,
+          "approx_kl": 0.0006340852869670746,
+          "clip_fraction": 0.0058139534667134285,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.26327991485595703,
+          "optimizer_steps": 4,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r2_seed2_v2",
+      "source_path": "artifacts/t5/perf/reward_r2_seed2_v2_complete_diagnostics_compact.json",
+      "source_sha256": "bc2615d247363f019b9a47961e44da96a5b55c82899a18e790a7cdfaff914ec0",
+      "original_state_sha256": "c20319cd3d6e3c2ff285a3e0847e641a6acc4d3838655c0e6fa723512fcb8692",
+      "training_summary": {
+        "episodes": 7001,
+        "decisions": 503403,
+        "won": 2,
+        "zero_tick_fraction": 0.3383849520165752,
+        "immediate_plant_shovels": 40090,
+        "immediate_shovel_fraction_of_plants": 0.5588936443099914,
+        "mc_value_mse": 0.039743986141449715,
+        "mc_value_explained_variance": -66.26660777933566,
+        "max_abs_shaping_telescoping_error": 0.0
+      },
+      "last_update": {
+        "update": 37,
+        "counters": {
+          "episodes": 7001,
+          "decisions": 503403,
+          "ticks": 57314797
+        },
+        "losses": {
+          "policy_loss": 0.002767084069394817,
+          "value_loss": 5.9060544525233e-05,
+          "entropy": 1.6016336508180904,
+          "advantage_mean": -0.00591414887458086,
+          "advantage_std": 0.0062245531007647514,
+          "gradient_norm": 2.225196599960327,
+          "approx_kl": 0.0053183563893297505,
+          "clip_fraction": 0.05368413777497394,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 1.0482988357543945,
+          "optimizer_steps": 174,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    },
+    {
+      "experiment_id": "reward_r3_seed2_v2",
+      "source_path": "artifacts/t5/perf/reward_r3_seed2_v2_complete_diagnostics_compact.json",
+      "source_sha256": "ccafeaf63cf7e2c0e90f289567ed5dd7f396c8b9c27e48bae7e5cb818e5a6cec",
+      "original_state_sha256": "8d73f2ccbd5debc394f402530685ef27aa8615392411d70279d3f16bfb658f71",
+      "training_summary": {
+        "episodes": 6005,
+        "decisions": 500046,
+        "won": 18,
+        "zero_tick_fraction": 0.2936029885250557,
+        "immediate_plant_shovels": 24412,
+        "immediate_shovel_fraction_of_plants": 0.391688728439631,
+        "mc_value_mse": 0.08410766957739073,
+        "mc_value_explained_variance": -0.8565194351677974,
+        "max_abs_shaping_telescoping_error": 7.181755190543981e-16
+      },
+      "last_update": {
+        "update": 32,
+        "counters": {
+          "episodes": 6005,
+          "decisions": 500046,
+          "ticks": 49269098
+        },
+        "losses": {
+          "policy_loss": -0.005077720619738102,
+          "value_loss": 0.00045257910096552223,
+          "entropy": 1.967789813876152,
+          "advantage_mean": 0.008662143722176552,
+          "advantage_std": 0.023690789937973022,
+          "gradient_norm": 0.2525363564491272,
+          "approx_kl": 0.00047902297921053813,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 0.15555572509765625,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      },
+      "last_update_note": "Last update may contain only one episode at the frozen decision boundary; not a full-run or learning-quality statistic."
+    }
+  ],
+  "interpretations": [
+    "R0, R1 and R3 have ordinary multicap validation wins at multiple frozen nodes in at least two initializations. This does not support the claim that this environment cannot learn.",
+    "R0 seed0 cap5 greedy275->76 and sampled143->104 at375k->500k; R0 seed1 greedy182->1 but sampled100->165; R1 seed0 greedy186->1 but sampled225->224. Greedy and sampled decline are distinct observed phenomena, without causal proof of forgetting.",
+    "R2 ordinary multicap progress only in initialization1; R3 initialization2 has no ordinary multicap validation wins despite two successful initializations. Removing discount or shaping does not guarantee repeatability.",
+    "R3 final greedy wins favor night/fog with weak day/pool and roof. Averaging hides terrain failures; no universally best reward declared.",
+    "Original value/advantage and planting/shoveling diagnostics retained. Phi telescoping near machine precision does not support spurious net episode reward from immediate loops; excessive loops can consume decisions and damage learning.",
+    "Old-encoder transfer does not establish new-input/curriculum/event-wait benefit, reference256 recovery, architecture comparison or complete-level acceptance. No thresholds/tasks/seeds changed."
+  ],
+  "HF_dry_run": {
+    "status": "pass",
+    "files": 268984,
+    "bytes_note": "148.2 MB reported by hf_sync",
+    "log": "logs/t5_research/reward_v2_packet_cost_reevaluation_v2_hf_dry_run.log",
+    "uploaded": false,
+    "scope": "Closed corrected evaluation tree; original models/training shards/training logs need separate run uploads."
+  },
+  "git_delivery_complete": false,
+  "T5_E_gate_passed": false,
+  "goal_complete": false,
+  "analysis_generator_sha256": "bf7c8cf53836ca829f317094faae6099b36cb7d9717bc459075eb7ce6fe55af9"
+}

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "draft_source_complete_native_not_started",
+  "scope": "independent oracle, frozen launch controls and retention only",
+  "source_commit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+  "source_branch": "research/event-wait-native-audit-v1",
+  "source_directory": "artifacts/worktrees/event_wait_native_audit_v1",
+  "protocol_path": "artifacts/worktrees/event_wait_native_audit_v1/experiments/t5/event_wait_v1/native_audit_draft.json",
+  "protocol_sha256": "6cda9d3b8b08c5c4dc00d2dca6b444b6961eac1988031a06321d4a9b81f54718",
+  "source_fingerprints": {
+    "scripts/research_event_wait_native_audit.py": "9206c6183c8550d6db4513c01a4e81dee13191de9792d73de1c0937cb0042a56",
+    "python/test_event_wait_native_audit.py": "0acb152df66fc1c53e7396e69c8e45840bcb91ccd4de2e7a89b7f8da04111a49",
+    "python/pvz_wait_events.py": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21",
+    "python/pvz_event_env.py": "d3a3dad403e295dc02d1cfda03f513984110f3934ff90e581a3740d041e5a451",
+    "python/pvz_env.py": "9014ea2faa5530016c393c88c2bec738d3bc7be794b395952c5eafebf9054cd1",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_research.py": "df89e91c9e5146326ea20f4f420eaa258833657e52b56f602bad9fbbd0231d78",
+    "src/EnvironmentWaitEvents.h": "da445d3359fd51c251054111cf212443ba3ccd374b88c3e168eebbfad2fd5eb9",
+    "src/LawnApp.h": "6409ce79fe539a3a7d3d7b7d925c1273f94edbf0b8d81d945a7b49af49b738ef",
+    "src/LawnApp.cpp": "5f00fc7411019259164c0f8811250dd01f3439f96f6e5012a2570866d027d783",
+    "src/main.cpp": "073548d2cbc7f3b186a340276ab89eee5d4cc3647e86635eec150551854a7aee"
+  },
+  "unit_checks": {
+    "count": 5,
+    "result": "pass",
+    "scope": "synthetic no process; draft gate, macro income/spending, simultaneous terminal, already true and stalled clock"
+  },
+  "log": {
+    "path": "logs/t5_research/event_wait_native_audit_v1_units.log",
+    "sha256": "4684cc04a1b6a708f830d10b12350c89116f58e151666ef604d94710ec770ce1"
+  },
+  "formal_inventory": {
+    "tasks": 30,
+    "seeds_per_task": 2,
+    "regimes": 2,
+    "jobs": 120,
+    "macro_branches": 6480,
+    "job_timeout_seconds": 120,
+    "total_timeout_seconds": 3600
+  },
+  "positive_coverage_required": [
+    "terminal",
+    "defense_lost",
+    "zombie_entered_left_zone",
+    "initial_true",
+    "zero_actual_ticks",
+    "no_event_equivalent",
+    "condition:wave_changed",
+    "condition:packet_became_ready",
+    "condition:sun_increased",
+    "condition:left_zone_occupied",
+    "condition:plant_count_decreased"
+  ],
+  "actual_native_jobs": 0,
+  "native_gate_passed": false,
+  "remote_published": false,
+  "learning_benefit_verified": false,
+  "important_semantics": "reference raw WAIT1 is never Python step(1); one macro annotation; sun_spent uses initial-final difference, not additive per-tick clipped spending",
+  "blocker": "draft rejected before native launch; publish released source/protocol first; existing remote write approval unavailable",
+  "created_at": "2026-10-02T02:45:32.270854+00:00"
+}

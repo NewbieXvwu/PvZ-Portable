@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "scope": "isolated policy engineering; no real native/CUDA/learning gate",
+  "source_branch": "research/event-wait-policy-v1",
+  "source_commit": "bc89b2040d309f8a865e6f7893759c13439f047c",
+  "source_directory": "artifacts/worktrees/event_wait_policy_v1",
+  "base_commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+  "remote_published": false,
+  "source_files": [
+    {
+      "path": "experiments/t5/event_wait_v1/policy_contract_draft.json",
+      "bytes": 3780,
+      "sha256": "d75441d7c26d46e2c6784f3bac7f7b1f87272ed3d2c4834cf7e49e2af1be6c1c"
+    },
+    {
+      "path": "python/pvz_agent_model.py",
+      "bytes": 83559,
+      "sha256": "3d767b1ae496cbfb9926d62473047ce259f384d3ee2b8bac5fadb6f6b9a50e5f"
+    },
+    {
+      "path": "python/pvz_event_env.py",
+      "bytes": 3133,
+      "sha256": "d3a3dad403e295dc02d1cfda03f513984110f3934ff90e581a3740d041e5a451"
+    },
+    {
+      "path": "python/pvz_research.py",
+      "bytes": 35540,
+      "sha256": "df89e91c9e5146326ea20f4f420eaa258833657e52b56f602bad9fbbd0231d78"
+    },
+    {
+      "path": "python/pvz_wait_events.py",
+      "bytes": 8074,
+      "sha256": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21"
+    },
+    {
+      "path": "python/test_event_wait_policy.py",
+      "bytes": 25890,
+      "sha256": "a27a7a9dbca8e60730eab658252e3ab3d97884b379bca077f9e431d45993ab53"
+    },
+    {
+      "path": "python/train_pvz_ppo.py",
+      "bytes": 24722,
+      "sha256": "55a97087a762fec30dec78e4244b26d79ecd82989c2230cb849b01c5a21f1537"
+    },
+    {
+      "path": "python/train_pvz_ppo_task_family.py",
+      "bytes": 63274,
+      "sha256": "12f4b10211c51b4adcee8ca2d377b41f779c1f4fd9f684c1939c659f29fd0887"
+    },
+    {
+      "path": "scripts/research_event_wait_policy_contracts.py",
+      "bytes": 7708,
+      "sha256": "dff92f504fab613bfbffd4b7b63bbb7cbf9c779e0582c1818265f362ed6a765a"
+    },
+    {
+      "path": "scripts/t4_capability_profile.py",
+      "bytes": 17283,
+      "sha256": "aaf0cecb5123870f546ff4821fda64a0bbc5756827111ba8e4c7d188cec5c8d0"
+    }
+  ],
+  "policy_unit_tests": {
+    "count": 24,
+    "result": "pass",
+    "purpose": "synthetic policy, storage and recurrent optimizer contracts"
+  },
+  "legacy_checks": "related tests passed after readonly input links; two CUDA checks skipped",
+  "preserved_failed_checks": [
+    "old clone missing train/heldout/build/t4 baseline readonly fixtures",
+    "new parser fixture missing explicit runtime fields",
+    "new replay fixture missing unpack device"
+  ],
+  "numeric_report": {
+    "path": "artifacts/t5/perf/event_wait_policy_v1_synthetic_contracts.json",
+    "sha256": "8f08fdfb1344c0d6a03ee464bbd960f4984ebf98a03f6a12a4553ef84e387955"
+  },
+  "logs": [
+    {
+      "path": "logs/t5_research/event_wait_policy_v1_units.log",
+      "bytes": 83872,
+      "sha256": "7320c7e3b0b7a357339445e0d9f1bff33fcdfffddbb4a5efd0ccf071822c54cd"
+    },
+    {
+      "path": "logs/t5_research/event_wait_policy_v1_metrics.log",
+      "bytes": 1746,
+      "sha256": "960573599d304f6d16f7697ecb912e50f4b5c0f90123e8734bf07c0a35574323"
+    }
+  ],
+  "raw_evidence_directory": "artifacts/research/event_wait_policy_contracts_v1",
+  "raw_files": 12,
+  "raw_bytes": 6471195,
+  "binary_git_bytes": 0,
+  "tracked_ignored_paths": 0,
+  "native_audit_passed": false,
+  "cuda_update_passed": false,
+  "actual_sigkill_resume_passed": false,
+  "learning_benefit_verified": false,
+  "mainline_merged": false,
+  "next_work": "publish frozen native protocol/source; physics/RNG/event/snapshot/replay/cost gates; actual CPU/CUDA replay and SIGKILL restore; later three-paired-seed fixed/events comparison after common baseline/B",
+  "checked_at": "2026-10-02T02:26:39.285948+00:00"
+}

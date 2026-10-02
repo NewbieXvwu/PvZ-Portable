@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "scope": "read-only full reference preflight after managed environment change; no GPU execution/gate pass",
+  "protocol_path": "/home/newbiexvwu/PvZ-Portable/experiments/t5/learning_reference256_interrupt_v2.json",
+  "protocol_sha256": "8d58d2a9e9c91da81e35cd407b44e7928d18cb5e347ab1f69d4f574f5bf83aac",
+  "frozen_helper_sha256": "506699c17443c7e584f350a509ddc345a09aac5dbc4a21775172f9f3f4b78fce",
+  "source_fingerprints_verified": 27,
+  "configs_verified": 2,
+  "model": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "cpu_source_root_unchanged": "/home/newbiexvwu/PvZ-Portable-learning-packet-cost",
+  "fresh_output": "/home/newbiexvwu/PvZ-Portable/artifacts/research/learning_reference256_interrupt_v2_managed",
+  "source_accepts_output_outside_code_root": true,
+  "cuda_available": false,
+  "idle_states": {
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_comparison_v2_storage1_queue_state.json": "matrix_budget_complete",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/reward_v2_packet_cost_reevaluation_v2/state.json": "reevaluating"
+  },
+  "invocation_timeout_seconds": 600,
+  "total_timeout_seconds": 1800,
+  "minimum_free_vram_mib": 14000,
+  "minimum_available_ram_bytes": 12884901888,
+  "actual_reference_arms_started": false,
+  "gate_passed": false,
+  "cannot_use_cpu_update_fallback": true
+}

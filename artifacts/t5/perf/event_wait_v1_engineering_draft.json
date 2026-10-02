@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "scope": "isolated event-wait interface engineering; no formal native or learning gate",
+  "source_directory": "artifacts/worktrees/event_wait_v1",
+  "source_branch": "research/event-wait-v1",
+  "source_commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+  "base_commit": "3ffba3a7c0312c8d6f9b64cd7bab90d3d3621142",
+  "source_preserved_through": "local git clone/fetch; original main .git untouched; source objects do not depend on /tmp",
+  "changed_source_files": [
+    {
+      "path": "RESEARCH_EXECUTION.md",
+      "sha256": "c020ca8d21cfdc1cb6a9a8cdca043513f95b775b124122db9911287c40d6d944",
+      "bytes": 23789
+    },
+    {
+      "path": "experiments/t5/event_wait_v1/interface_draft.json",
+      "sha256": "19d976b8e1c0077e930fcfc96151d94209a98760ec3a5f0acb58b5fa1a65e33a",
+      "bytes": 4252
+    },
+    {
+      "path": "python/pvz_env.py",
+      "sha256": "9014ea2faa5530016c393c88c2bec738d3bc7be794b395952c5eafebf9054cd1",
+      "bytes": 39659
+    },
+    {
+      "path": "python/pvz_event_env.py",
+      "sha256": "b2380e9c10c68891e58b72fb60a79b3d61aabb2c60d7aff78761ecc02c0de138",
+      "bytes": 3567
+    },
+    {
+      "path": "python/pvz_wait_events.py",
+      "sha256": "9970985d23290a50e65dcd2de06d973491361cab0b6561b5b5e7475bd9ae9aa7",
+      "bytes": 4934
+    },
+    {
+      "path": "python/test_wait_events.py",
+      "sha256": "10b29d2b3714039fbd903838e8cbfbe8921ad45de894d607df7ffda99747dc36",
+      "bytes": 11338
+    },
+    {
+      "path": "src/EnvironmentWaitEvents.h",
+      "sha256": "da445d3359fd51c251054111cf212443ba3ccd374b88c3e168eebbfad2fd5eb9",
+      "bytes": 3825
+    },
+    {
+      "path": "src/LawnApp.cpp",
+      "sha256": "5f00fc7411019259164c0f8811250dd01f3439f96f6e5012a2570866d027d783",
+      "bytes": 110713
+    },
+    {
+      "path": "src/LawnApp.h",
+      "sha256": "6409ce79fe539a3a7d3d7b7d925c1273f94edbf0b8d81d945a7b49af49b738ef",
+      "bytes": 14860
+    },
+    {
+      "path": "src/main.cpp",
+      "sha256": "073548d2cbc7f3b186a340276ab89eee5d4cc3647e86635eec150551854a7aee",
+      "bytes": 24798
+    },
+    {
+      "path": "tests/test_environment_wait_events.cpp",
+      "sha256": "5bd4ba4dd91ef526df23dcdfdfc9286eb964bb3c880fc6b57b575f0acfe31a92",
+      "bytes": 2391
+    }
+  ],
+  "binary": {
+    "path": "/tmp/PvZ-Portable-event-wait-v1/build/pvz-portable",
+    "bytes": 5115216,
+    "sha256": "5c5957e5d51c08ef1aac39d36564026e3856720e017ebbc2bb899f8d52f6e0eb",
+    "build_status": "Release build passed; compiled precommit modified source at base3ff; source bytes equal committed4ee",
+    "delivery_channel": "HF; not uploaded; binary not staged in any git repo"
+  },
+  "verification": {
+    "python_synthetic_contract_tests": 20,
+    "python_result": "pass",
+    "native_reducer_contract_scenarios": 11,
+    "native_reducer_result": "pass",
+    "replay_metadata_test_scope": "synthetic roundtrip and tampering; manifest validation stubbed; not actual native replay or checkpoint recovery",
+    "recorded_initial_test_failure": "replay fixture omitted forced_seeds; corrected; first failing20-test output retained in appended log",
+    "full_native_build": "pass"
+  },
+  "logs": [
+    "logs/t5_research/event_wait_v1_contract_units.log",
+    "logs/t5_research/event_wait_v1_build.log"
+  ],
+  "formal_native_experiments_started": false,
+  "formal_learning_started": false,
+  "condition_policy_head_implemented": false,
+  "gate_passed": false,
+  "benefit_verified": false,
+  "mainline_merged": false,
+  "remote_published": false,
+  "remaining": [
+    "native paired physical/RNG and actual event/snapshot/replay audit after source/protocol publication",
+    "neural condition head, conditional LP/entropy and prior condition/reason input",
+    "explicit sampling/train/save/eval config and raw-shard/full-resume integration",
+    "CPU/CUDA actual update and interruption gates",
+    "same common baseline/reward/course/model/PPO/B/tasks/nodes and three paired initializations with actual equal-wall results"
+  ],
+  "global_goal_complete": false
+}

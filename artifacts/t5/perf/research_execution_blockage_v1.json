@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-02T03:37:32.964578+00:00",
+  "status": "external_execution_preconditions_unavailable",
+  "recommended_goal_status": "blocked",
+  "goal_completed": false,
+  "scope": "Required T5-T7 real experiments and delivery; engineering preparation is preserved, not substituted for acceptance",
+  "blocking_conditions": {
+    "cuda": {
+      "torch": "2.14.0+cu132",
+      "cuda_build": "13.2",
+      "cuda_available": false,
+      "dev_dxg_exists": false
+    },
+    "source_publication": {
+      "remote_branch": "pvz-env",
+      "remote_head_last_readonly_verified": "7f2b09463913da5990b8ebc1eaf070339903717b",
+      "automatic_approval_error": "MCP tool call requires approval, but approval policy is never",
+      "prior_write_attempts_rejected": true,
+      "retries_this_turn": 0
+    },
+    "hf_configuration": {
+      "HF_TOKEN_configured": false,
+      "PVZ_HF_REPO_configured": false
+    }
+  },
+  "recurrence": "The same publication/CUDA blocking conditions were recorded across at least three preceding consecutive goal turns and were rechecked this turn.",
+  "locally_reviewable": {
+    "main_head": "7f2b09463913da5990b8ebc1eaf070339903717b",
+    "source_branches": [
+      {
+        "directory": "artifacts/worktrees/event_wait_v1",
+        "branch": "research/event-wait-v1",
+        "commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+        "base_commit": "3ffba3a7c0312c8d6f9b64cd7bab90d3d3621142",
+        "remote_published": false,
+        "source_files": 11,
+        "binary_or_logs_committed": false,
+        "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+        "scope": "isolated engineering; not a formal native/learning trial"
+      },
+      {
+        "directory": "artifacts/worktrees/event_wait_policy_v1",
+        "branch": "research/event-wait-policy-v1",
+        "commit": "bc89b2040d309f8a865e6f7893759c13439f047c",
+        "base_commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+        "remote_published": false,
+        "source_files": 10,
+        "binary_or_logs_committed": false,
+        "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+        "scope": "isolated policy engineering; no real native/CUDA/learning gate"
+      },
+      {
+        "directory": "artifacts/worktrees/event_wait_native_audit_v1",
+        "branch": "research/event-wait-native-audit-v1",
+        "commit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+        "base_commit": "bc89b2040d309f8a865e6f7893759c13439f047c",
+        "remote_published": false,
+        "source_files": 3,
+        "binary_or_logs_committed": false,
+        "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+        "scope": "released-only native audit draft;5 synthetic contracts;0 native jobs"
+      },
+      {
+        "directory": "artifacts/worktrees/event_wait_replay_gates_v1",
+        "branch": "research/event-wait-replay-gates-v1",
+        "commit": "f95f6a614cf2e8fb94f786c29da3cd88cdd5223d",
+        "base_commit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+        "remote_published": false,
+        "source_files": 3,
+        "binary_or_logs_committed": false,
+        "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+        "scope": "released-only full256 event CPU/CUDA replay audit draft;18 synthetic contracts;0 actual episodes"
+      }
+    ],
+    "delivery_checkout": "artifacts/worktrees/pending_delivery_v1",
+    "delivery_branch": "research/pending-delivery-v1",
+    "latest_delivery_commit_before_this_stop_record": "8695ea51a6c7227325a948a227a21b08e6a9fa1f",
+    "curated_files_verified": 31,
+    "curated_files_total_bytes": 3230570,
+    "binary_bytes_committed": 0,
+    "event_replay_checks": {
+      "new_synthetic": 18,
+      "combined_synthetic": 47,
+      "passed": true,
+      "source_commit": "f95f6a614cf2e8fb94f786c29da3cd88cdd5223d",
+      "full_model_parameters": 7869607,
+      "actual_native_event_episodes": 0,
+      "actual_cuda_cases": 0
+    },
+    "original_reference_fingerprints_verified_unchanged": 27,
+    "failed_logs_preserved": true
+  },
+  "required_next_actual_work": [
+    "Restore GPU visibility in the execution environment and remote publication/HF delivery access; do not use CPU formal updates or override a gate.",
+    "Publish the curated conclusions/docs plus isolated source branches using Git; reconcile against the latest pvz-env documents before execution.",
+    "Complete the unchanged full256 actual SIGKILL/resume two-arm proof, then the new common-input/reward/course baseline and measured shared B.",
+    "Publish/release event native protocol; execute all120jobs/6480branches with positive coverage, exact physics/RNG/snapshot/record comparisons and raw integrity.",
+    "Freeze actual native report SHA in replay release; execute all120 native CPU policy episodes and full CUDA replay gates, including truncated bootstrap.",
+    "The existing explicit-config interruption auditor is generic in model config, so reuse its exact model/AdamW/RNG/course/counters/shard/evaluation comparisons for event mode once published real gate SHAs are available; no new stand-in proof.",
+    "Run the three paired initialization fixed/event learning comparison in its preregistered place, with shared tasks/reward/course/model/PPO/B/nodes and actual equal-wall results.",
+    "Complete architecture comparisons and full-level/five-terrain acceptance; preserve every failure and deliver code/KB via Git and models/raw/logs via HF."
+  ],
+  "unchanged_acceptance": {
+    "level7_development_seeds": "30000-30255",
+    "level7_win_rate": 0.6,
+    "minimum_initializations_for_multiterrain_pass": 2,
+    "overall_win_rate": 0.6,
+    "each_terrain_win_rate": 0.45,
+    "weakest_task_win_rate": 0.25,
+    "environment_seeds_per_task_at_least": 64,
+    "raw_results_and_wilson_required": true
+  },
+  "no_cleanup": true,
+  "no_gate_override": true,
+  "no_criteria_reduction": true,
+  "no_completed_goal_claim": true
+}

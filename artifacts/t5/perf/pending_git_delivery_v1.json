@@ -1,0 +1,294 @@
+{
+  "schema_version": 1,
+  "status": "ready_locally_not_delivered",
+  "branch": "pvz-env",
+  "local_head": "7f2b09463913da5990b8ebc1eaf070339903717b",
+  "files": [
+    {
+      "path": "RESEARCH_EXECUTION.md",
+      "bytes": 85689,
+      "sha256": "4c98c4793c3c1bb904adf3af71e7e12b1bc35877bd0ad8fcbe72d965a31d9943",
+      "git_blob_sha1": "7a431be3ccd7c3711332de4c1f8b3a3d02d2985c"
+    },
+    {
+      "path": "TODO.md",
+      "bytes": 49052,
+      "sha256": "c13823ccfddbfcd036664cc98416fe249bc01ec057b03b32c4c98fb2693e6048",
+      "git_blob_sha1": "3df60d7c98d5149836e7bd8384e7d4c1ab6e2dc3"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r0_seed0_v2_packet_cost_v2.json",
+      "bytes": 209735,
+      "sha256": "f055b887cd295d8ced338be4793fc1767e63595153c8ada6bb9210feb8e331d2",
+      "git_blob_sha1": "6bf1fae8adcc749563a106a48038834f0dd673cb"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r0_seed1_v2_packet_cost_v2.json",
+      "bytes": 209229,
+      "sha256": "30e6b655dcafaaf34811c0e7d54362dd3addf7f8235be0b0850de74cfd54a406",
+      "git_blob_sha1": "94a0f3c629888a6d828a64400172ac7e3239636d"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r0_seed2_v2_packet_cost_v2.json",
+      "bytes": 207195,
+      "sha256": "1d031755de52b17670453a86a8743eae213f672f4a8ea61ae54afb46c31d40c6",
+      "git_blob_sha1": "ed65e90323f51be89e4b81abe3b9822d614efa0a"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r1_seed0_v2_packet_cost_v2.json",
+      "bytes": 208254,
+      "sha256": "1b5b03711b7506f139e0eb442fe8b4d917297ad621218ecb7345e30e16ccfe99",
+      "git_blob_sha1": "296ed9733888719b5b6f963627a120fe7bd30c3d"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r1_seed1_v2_packet_cost_v2.json",
+      "bytes": 208211,
+      "sha256": "9a0a5ea31436be5ae9de2075a9dd153a2a5524b4245b033e4e70466ae64670b9",
+      "git_blob_sha1": "2bdce331e1911cec7b6e27a63a8c0ecf43279f5c"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r1_seed2_v2_packet_cost_v2.json",
+      "bytes": 207649,
+      "sha256": "ad23aec6a6bbb7142eea5c9527d784c9d0112328da7e98c17890c1d4e2015a4e",
+      "git_blob_sha1": "cc73d2fb3ddb1c902c830fbdbc983c2ecb6ea6ab"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r2_seed0_v2_packet_cost_v2.json",
+      "bytes": 203722,
+      "sha256": "15490da24fc652637751596657fdcd204626e7f8af88a52cd96e3e09409a2f18",
+      "git_blob_sha1": "845abc1e4d747e34cb418adbaf6d9d437c21b244"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r2_seed1_v2_packet_cost_v2.json",
+      "bytes": 208522,
+      "sha256": "f07dd40ebf076d5b499500ea217d2d9a0a027ed3f50299a8856bf302e0c1877c",
+      "git_blob_sha1": "54d95c1f79c297e48b8e93062072be6a71fa0b8c"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r2_seed2_v2_packet_cost_v2.json",
+      "bytes": 203850,
+      "sha256": "b0367fce6e23565e2d7b463b2afdaa85acc20c591a61cce37d1e792544faa438",
+      "git_blob_sha1": "e450a483a78b5b4f6b3c43e5f2c593d4cf63b364"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r3_seed0_v2_packet_cost_v2.json",
+      "bytes": 208729,
+      "sha256": "a1ee96dd06552133b4f88d90b28713490727d9f35405a78131bc30239fd9a6fd",
+      "git_blob_sha1": "1394a24f76880e31c71c7ba5fc9ae6aad69861ab"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r3_seed1_v2_packet_cost_v2.json",
+      "bytes": 209321,
+      "sha256": "6e9f95cc31735a0dc1ec55f9ef004452e7f05a43452d80277b60cd3f23eb2e3b",
+      "git_blob_sha1": "bc3b928204093e3262e92ffdafe6d3bc5cf0315e"
+    },
+    {
+      "path": "artifacts/t5/curves/reward_r3_seed2_v2_packet_cost_v2.json",
+      "bytes": 204485,
+      "sha256": "4cc0db065586c9ae2c7823e9f547bdb3522743a091b9933dabd3d50e72084790",
+      "git_blob_sha1": "5e60a2cfb18782e1271d750d656ec9904d476a19"
+    },
+    {
+      "path": "artifacts/t5/perf/event_wait_v1_engineering_draft.json",
+      "bytes": 4025,
+      "sha256": "e16f3d638a6dd119681d4f429af0ce211f0420a53ab1a4b238e1cdf550bae2ca",
+      "git_blob_sha1": "432cb93eac9cf0f105a760ee542f8f6a1c37e44c"
+    },
+    {
+      "path": "artifacts/t5/perf/managed_environment_v1.json",
+      "bytes": 1190,
+      "sha256": "839059b5656f1d2a998e6f523cf4748ad0d781dafca8ae79153d8ca3289c2372",
+      "git_blob_sha1": "4e073b0558bc2e9dc42e30767742757ca259d551"
+    },
+    {
+      "path": "artifacts/t5/perf/multicap_course_v1_full.json",
+      "bytes": 30541,
+      "sha256": "51c06d5b95620a58b1e41b7d26bc67978cb9f7faf933562db0b86cb5fc74688a",
+      "git_blob_sha1": "ff9454e8c936e132c79970a705111f27c5fc6f25"
+    },
+    {
+      "path": "artifacts/t5/perf/random_target_coverage_v1_inspection.json",
+      "bytes": 3650,
+      "sha256": "b7a10f471e67bcf840a5583afd35307b1eee3973b6b5f544144f2e17f7e284c3",
+      "git_blob_sha1": "2ca04dbe937706298be8367fbc5e7449836f969c"
+    },
+    {
+      "path": "artifacts/t5/perf/reference256_managed_preflight_v1.json",
+      "bytes": 1500,
+      "sha256": "3101995da502ae1c6a9cf42dd19c8b057821bce35613360e6e5042fbc0545858",
+      "git_blob_sha1": "dbbfd83d8c90967bf44f3f785361aa86e86faa4a"
+    },
+    {
+      "path": "artifacts/t5/perf/reward_v2_corrected_curve_delivery_v1.json",
+      "bytes": 284783,
+      "sha256": "fe7cfcf7c511014fbc987f093fb67f7621af92ab964b9c2295ec3013113fd947",
+      "git_blob_sha1": "bc6f91f5e5fbd8f9532b31896499abf982cb7a7c"
+    },
+    {
+      "path": "artifacts/t5/perf/reward_v2_corrected_reward_analysis_v1.json",
+      "bytes": 26470,
+      "sha256": "e0145283a7a2ee8ebcaccece4efdfecc47631e3310312eefe3daf3fc35fa2442",
+      "git_blob_sha1": "457e7d2e041b24e0a2ce080b0a7601c21f445da8"
+    },
+    {
+      "path": "artifacts/t5/perf/reward_v2_packet_cost_reevaluation_v2.json",
+      "bytes": 191155,
+      "sha256": "4856cf96f3fcf51305e05bb2b7d92f15a764c76655758a320c691c2b8d71bb94",
+      "git_blob_sha1": "cfb3a56678084636d127f097c741bd18b3b28acb"
+    },
+    {
+      "path": "experiments/t5/multicap_course_v1/prefix_full.json",
+      "bytes": 3543,
+      "sha256": "433625b0f48586ea1421f4a1c28c718156543f75169807642c1e7e5e2045b9af",
+      "git_blob_sha1": "53d1d30dd1204be968be9dd2b4f23ca3d68532f1"
+    },
+    {
+      "path": "experiments/t5/random_target_coverage_v1/full.json",
+      "bytes": 2876,
+      "sha256": "f0017b5f999db1c052afe857581479d19e9320c9bd55b7c7fe76dfaa4fea87ce",
+      "git_blob_sha1": "0deb7005a5a1d4046b586f59e2eef8db59bbe797"
+    },
+    {
+      "path": "scripts/research_corrected_curve_delivery.py",
+      "bytes": 15748,
+      "sha256": "09ffa002062d59d29fdbf89b8f5dd4d2b39b5e9e5a840c2bb43a7a976171e4b9",
+      "git_blob_sha1": "e5efb0f39374385ac3acaafd8e6f6d602cc7dc18"
+    },
+    {
+      "path": "scripts/research_corrected_reward_report_v1.py",
+      "bytes": 13622,
+      "sha256": "bf7c8cf53836ca829f317094faae6099b36cb7d9717bc459075eb7ce6fe55af9",
+      "git_blob_sha1": "7a212ca73748c6af2cb9d84423071ed32961b59a"
+    },
+    {
+      "path": "artifacts/t5/perf/event_wait_policy_v1_synthetic_contracts.json",
+      "bytes": 13728,
+      "sha256": "8f08fdfb1344c0d6a03ee464bbd960f4984ebf98a03f6a12a4553ef84e387955",
+      "git_blob_sha1": "cb04d04f1a93ee31d43b44a2afe924a6c1e7ddab"
+    },
+    {
+      "path": "artifacts/t5/perf/event_wait_policy_v1_engineering_draft.json",
+      "bytes": 3720,
+      "sha256": "54c6d43bc0ab2139be2a0d9001cb1355662a41bd171b7a004ab1d3cad6550f37",
+      "git_blob_sha1": "b7b0e4e0603c36d4a75749c4424dca1a03ce9da6"
+    },
+    {
+      "path": "artifacts/t5/perf/event_wait_native_audit_v1_draft.json",
+      "bytes": 3176,
+      "sha256": "55aee0e6d79949f9bb4e4bd8d016a92937edbb36bb3bf650a20fccea9c60c82b",
+      "git_blob_sha1": "752b150e65711332414166967a4a7ed2cd0b3a29"
+    },
+    {
+      "path": "artifacts/t5/perf/event_wait_policy_v1_hf_delivery_preparation.json",
+      "bytes": 667,
+      "sha256": "9845cdb116ba2292aed820a023968b5dafb9cebacfc95aa585986370b95e0c12",
+      "git_blob_sha1": "da014a43e04c020294ae50d6d34c87b754f29e05"
+    },
+    {
+      "path": "artifacts/t5/perf/event_wait_replay_gates_v1_draft.json",
+      "bytes": 7770,
+      "sha256": "df4c3688fdc6d63dfe25f2813fbed5a11fea09d957d091e6e6f268acb9e1fe5a",
+      "git_blob_sha1": "1f9c8ef7f1c2622e0fdf0641d080cd72d351f096"
+    },
+    {
+      "path": "artifacts/t5/perf/research_execution_blockage_v1.json",
+      "bytes": 5976,
+      "sha256": "a88e5e0d6cbcf5eb5236465a8270f2eef527ede869eb3b876ce299a9c594ca36",
+      "git_blob_sha1": "bf7a65dfc6b952f6de2af9a0afb9f2ea2a4e83e7"
+    }
+  ],
+  "binary_bytes": 0,
+  "publishing_error": "MCP tool call requires approval, but approval policy is never",
+  "new_experiments_started": false,
+  "published_protocol_reevaluation_resumed": true,
+  "no_checkpoints_or_logs_in_git": true,
+  "recovery_summary": {
+    "reevaluation_last_verified_complete_nodes": 60,
+    "reevaluation_same_protocol_session": 30003,
+    "gpu_blocker": "No /dev/dxg; PyTorch 2.14.0+cu132 cuda_available=False",
+    "reference_fingerprints_verified": 27,
+    "new_reference_arms_started": false,
+    "reevaluation_status": "complete",
+    "reevaluation_same_protocol_session_exit_code": 0
+  },
+  "total_text_bytes": 3237783,
+  "remote_head_last_readonly_verified": "7f2b09463913da5990b8ebc1eaf070339903717b",
+  "remote_verified_utc": "2026-10-02T03:33:24.466029+00:00",
+  "local_completed_evidence": {
+    "original_12runs_unchanged": true,
+    "corrected_curves": 12,
+    "corrected_nodes": 60,
+    "corrected_jobs": 268800,
+    "baseline_paired_rows": 40320,
+    "baseline_full_row_differences": 0,
+    "non_conveyor_changed_rows": 0,
+    "observed_R0_first_majority_repeat_decisions": 375107,
+    "new_full_experiments_still_not_started": [
+      "multicap_prefix_3840_pairs",
+      "legal_random_target_192",
+      "reference256_GPU_two_arms"
+    ],
+    "HF_reevaluation_dry_run": "pass;268984files;148.2MB;not_uploaded",
+    "event_wait_engineering": "20synthetic_python/11native_reducer_cases/Release_build; no official gate or learning benefit",
+    "event_wait_policy_engineering": "24synthetic units;6 paired CPU contracts/114 synthetic decisions;LP4.77e-7/value2.98e-8; no native/CUDA/learning gate",
+    "event_wait_native_audit_draft": "5synthetic contracts;120jobs/6480branches draft only;0actual native jobs",
+    "event_wait_policy_HF_dry_run": "pass;16files;6571498B;not uploaded",
+    "event_wait_replay_gate_draft": "18 new synthetic contracts/47 combined pass;full256 7869607 parameters;120 actual episodes draft only;0 actual native/CUDA cases"
+  },
+  "source_branches_pending": [
+    {
+      "directory": "artifacts/worktrees/event_wait_v1",
+      "branch": "research/event-wait-v1",
+      "commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+      "base_commit": "3ffba3a7c0312c8d6f9b64cd7bab90d3d3621142",
+      "remote_published": false,
+      "source_files": 11,
+      "binary_or_logs_committed": false,
+      "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+      "scope": "isolated engineering; not a formal native/learning trial"
+    },
+    {
+      "directory": "artifacts/worktrees/event_wait_policy_v1",
+      "branch": "research/event-wait-policy-v1",
+      "commit": "bc89b2040d309f8a865e6f7893759c13439f047c",
+      "base_commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+      "remote_published": false,
+      "source_files": 10,
+      "binary_or_logs_committed": false,
+      "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+      "scope": "isolated policy engineering; no real native/CUDA/learning gate"
+    },
+    {
+      "directory": "artifacts/worktrees/event_wait_native_audit_v1",
+      "branch": "research/event-wait-native-audit-v1",
+      "commit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+      "base_commit": "bc89b2040d309f8a865e6f7893759c13439f047c",
+      "remote_published": false,
+      "source_files": 3,
+      "binary_or_logs_committed": false,
+      "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+      "scope": "released-only native audit draft;5 synthetic contracts;0 native jobs"
+    },
+    {
+      "directory": "artifacts/worktrees/event_wait_replay_gates_v1",
+      "branch": "research/event-wait-replay-gates-v1",
+      "commit": "f95f6a614cf2e8fb94f786c29da3cd88cdd5223d",
+      "base_commit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+      "remote_published": false,
+      "source_files": 3,
+      "binary_or_logs_committed": false,
+      "delivery_remote": "https://github.com/NewbieXvwu/PvZ-Portable.git",
+      "scope": "released-only full256 event CPU/CUDA replay audit draft;18 synthetic contracts;0 actual episodes"
+    }
+  ],
+  "remote_document_rules_checked": {
+    "AGENTS_git_blob": "e90aa18f8d65efb431522b0e795415a530a967ab",
+    "TODO_HEAD_git_blob": "0052ab43acc42060846bb78f529977ef713aeba0",
+    "rules_unchanged": true
+  },
+  "local_delivery_checkout": "artifacts/worktrees/pending_delivery_v1",
+  "local_delivery_branch": "research/pending-delivery-v1",
+  "previous_local_delivery_commit": "8695ea51a6c7227325a948a227a21b08e6a9fa1f",
+  "local_delivery_status": "committed_in_private_checkout_not_remote_delivered",
+  "execution_preconditions": "blocked externally; independent event audit preparation complete; formal goals remain incomplete"
+}

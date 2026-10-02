@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "complete_inspection",
+  "scope": "random_legal_target_coverage_only_no_learning",
+  "protocol_sha256": "1fe03b052d307d9478dec9b6aa9bafc4b9dc44f3f389d7e3542dfcfbaaf35985",
+  "pool_protocol_sha256": "345f337d012cbfabb7c9d50d77a41ec316c8c06d83276c8e31e152cf61bd65f3",
+  "coexecution": "One CPU worker while full multicap diagnostic (2 workers) and corrected reevaluation (8 workers) run; reference256 waits for all60. No GPU model or optimizer.",
+  "limitations": [
+    "Source pool unchanged; all its tasks containing17/19/43 are selected mechanically, never by outcome. All64 seeds retained for full measurement.",
+    "The current selected decks cover Tanglekelp19 in pool cap1/3/5; no Squash17/Cattail43 coverage.",
+    "Native random control trajectories are never PPO training data. Activation proves observability, not learned exploitation/benefit or untrained neural baseline.",
+    "Wait/scripted zero activation does not prove neural or random policies have zero activation. This control tests that narrower question.",
+    "No activation threshold/win-rate gate is invented; publish exact coverage including all failures/truncations. Formal learning ablation still needs genuine coverage and a separate frozen protocol."
+  ],
+  "episodes": 6,
+  "summaries": {
+    "train_multicap_v1_pool_cap1_variant/legal_random": {
+      "episodes": 2,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.6576197724933469
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 167,
+        "min": 90,
+        "median": 92.0,
+        "p95": 94.0,
+        "max": 94,
+        "dense_token_pairs": 1419166
+      },
+      "target_states": 0,
+      "target_references": 0,
+      "resolved_targets": 0
+    },
+    "train_pool_2/legal_random": {
+      "episodes": 2,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.6576197724933469
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 139,
+        "min": 89,
+        "median": 94.0,
+        "p95": 99.0,
+        "max": 100,
+        "dense_token_pairs": 1223924
+      },
+      "target_states": 0,
+      "target_references": 0,
+      "resolved_targets": 0
+    },
+    "train_pool_4/legal_random": {
+      "episodes": 2,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.6576197724933469
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 152,
+        "min": 90,
+        "median": 93.0,
+        "p95": 96.0,
+        "max": 97,
+        "dense_token_pairs": 1308711
+      },
+      "target_states": 0,
+      "target_references": 0,
+      "resolved_targets": 0
+    }
+  },
+  "records_sha256": "34e1f4fccfe1f593c71189275e7a78f9911518ee57ee70c010ab3e5371310886",
+  "seconds": 12.09726955700171,
+  "resources": {
+    "peak_process_tree_rss_bytes": 1792610304,
+    "min_system_available_bytes": 12635447296,
+    "peak_system_swap_used_bytes": 207532032
+  },
+  "raw_files_sha_verified": 18,
+  "job_record_files_verified": 6,
+  "observations": 458,
+  "target_references": 0,
+  "resolved_targets": 0,
+  "wins": 0,
+  "truncated": 0,
+  "report_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/random_target_coverage_v1_inspection/report.json",
+  "report_sha256": "c96c85a6acf1bffbaa3ac074d68eb8e7251a62d0cd9ba6660ec8acf796dff7c9",
+  "full_protocol": "experiments/t5/random_target_coverage_v1/full.json",
+  "full_protocol_sha256": "f0017b5f999db1c052afe857581479d19e9320c9bd55b7c7fe76dfaa4fea87ce",
+  "hf_upload_complete": false,
+  "hf_dry_run_pass": true,
+  "hf_dry_run_log": "logs/t5_research/random_target_coverage_v1_inspection_hf_dry_run.log"
+}

@@ -1,0 +1,355 @@
+{
+  "schema_version": 1,
+  "completed_at": "2026-10-02T02:22:06.971978+00:00",
+  "scope": "synthetic CPU policy, recurrence and raw storage contracts; no simulator was started",
+  "source_commit": "bc89b2040d309f8a865e6f7893759c13439f047c",
+  "source_dirty": false,
+  "source_fingerprints": {
+    "python/pvz_agent_model.py": "3d767b1ae496cbfb9926d62473047ce259f384d3ee2b8bac5fadb6f6b9a50e5f",
+    "python/pvz_wait_events.py": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21",
+    "python/pvz_event_env.py": "d3a3dad403e295dc02d1cfda03f513984110f3934ff90e581a3740d041e5a451",
+    "python/train_pvz_ppo.py": "55a97087a762fec30dec78e4244b26d79ecd82989c2230cb849b01c5a21f1537",
+    "python/pvz_research.py": "df89e91c9e5146326ea20f4f420eaa258833657e52b56f602bad9fbbd0231d78",
+    "python/train_pvz_ppo_task_family.py": "12f4b10211c51b4adcee8ca2d377b41f779c1f4fd9f684c1939c659f29fd0887",
+    "scripts/t4_capability_profile.py": "aaf0cecb5123870f546ff4821fda64a0bbc5756827111ba8e4c7d188cec5c8d0",
+    "python/test_event_wait_policy.py": "a27a7a9dbca8e60730eab658252e3ab3d97884b379bca077f9e431d45993ab53",
+    "python/test_observation_context.py": "04cb888eba5a4b2815cd5644111220e5a0051191f712f7708eab17b7a48daad7",
+    "scripts/research_event_wait_policy_contracts.py": "dff92f504fab613bfbffd4b7b63bbb7cbf9c779e0582c1818265f362ed6a765a"
+  },
+  "engineering_checks_passed": true,
+  "native_audit_passed": false,
+  "cuda_update_passed": false,
+  "actual_sigkill_resume_passed": false,
+  "learning_benefit_verified": false,
+  "mainline_merged": false,
+  "torch_version": "2.14.0+cu132",
+  "cuda_available": false,
+  "records": [
+    {
+      "initialization_seed": 0,
+      "mode": "fixed",
+      "config": {
+        "layers": 2,
+        "width": 32,
+        "heads": 4,
+        "ff_width": 64,
+        "gru_layers": 2,
+        "gru_width": 16,
+        "critic_width": 24,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "fixed"
+      },
+      "paired_initial_parameters_identical": true,
+      "initial_state_sha256": "e271da7eb197a757b4a60f2555e7b1ad1af405746fd73ed0d4d91359fa57348e",
+      "parameters": 76303,
+      "episodes": 2,
+      "decisions": 19,
+      "synthetic_actual_ticks": 562,
+      "single_batched_max_abs_errors": {
+        "log_prob": 1.1920928955078125e-07,
+        "entropy": 1.1920928955078125e-07,
+        "privileged_value": 1.4901161193847656e-08,
+        "condition_logits": 8.940696716308594e-08,
+        "final_hidden": 4.917383193969727e-07
+      },
+      "cpu_synthetic_update_losses": {
+        "policy_loss": 0.23670237138867378,
+        "value_loss": 1.117700144648552,
+        "entropy": 1.9443773180246353,
+        "advantage_mean": -1.0578731298446655,
+        "advantage_std": 0.030417948961257935,
+        "gradient_norm": 2.15995717048645,
+        "approx_kl": 9.406805173739485e-05,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 0.0,
+        "max_log_prob_change": 0.03945577144622803,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "condition_head_changed": false,
+      "raw_shard": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/fixed_seed0.npz",
+        "sha256": "3a014719092e9e885b29bcb2a841454ab19450834d22e08aff35e43ff994aa26",
+        "bytes": 36566
+      },
+      "checkpoint": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/fixed_seed0_trained.pt",
+        "sha256": "5fd3cad2d518e3d3e5ff067b6f8559d5a8947aebb433305de4873eca3d5f2bde",
+        "bytes": 1040249
+      }
+    },
+    {
+      "initialization_seed": 0,
+      "mode": "events",
+      "config": {
+        "layers": 2,
+        "width": 32,
+        "heads": 4,
+        "ff_width": 64,
+        "gru_layers": 2,
+        "gru_width": 16,
+        "critic_width": 24,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "events"
+      },
+      "paired_initial_parameters_identical": true,
+      "initial_state_sha256": "e271da7eb197a757b4a60f2555e7b1ad1af405746fd73ed0d4d91359fa57348e",
+      "parameters": 76303,
+      "episodes": 2,
+      "decisions": 19,
+      "synthetic_actual_ticks": 412,
+      "single_batched_max_abs_errors": {
+        "log_prob": 4.76837158203125e-07,
+        "entropy": 4.76837158203125e-07,
+        "privileged_value": 1.4901161193847656e-08,
+        "condition_logits": 8.940696716308594e-08,
+        "final_hidden": 2.086162567138672e-07
+      },
+      "cpu_synthetic_update_losses": {
+        "policy_loss": 0.17160142213106155,
+        "value_loss": 1.1351109892129898,
+        "entropy": 2.8842401206493378,
+        "advantage_mean": -1.071306824684143,
+        "advantage_std": 0.02403266355395317,
+        "gradient_norm": 2.004525899887085,
+        "approx_kl": 0.000135246414743051,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 1.1920928955078125e-07,
+        "max_log_prob_change": 0.044828176498413086,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "condition_head_changed": true,
+      "raw_shard": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/events_seed0.npz",
+        "sha256": "ad0f420cf7bfe1a94ac7a59a303054109ce74ce0dcb5f08170201b8b5b1589df",
+        "bytes": 37081
+      },
+      "checkpoint": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/events_seed0_trained.pt",
+        "sha256": "15025b558219f6feaf133ecceac09ce22df848da117974065c4a75c379ad2358",
+        "bytes": 1043076
+      }
+    },
+    {
+      "initialization_seed": 1,
+      "mode": "fixed",
+      "config": {
+        "layers": 2,
+        "width": 32,
+        "heads": 4,
+        "ff_width": 64,
+        "gru_layers": 2,
+        "gru_width": 16,
+        "critic_width": 24,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "fixed"
+      },
+      "paired_initial_parameters_identical": true,
+      "initial_state_sha256": "afccc44882c9cd9a4ff06181377217bb5da1365ac3d4adb0de120f5a64a8372e",
+      "parameters": 76303,
+      "episodes": 2,
+      "decisions": 19,
+      "synthetic_actual_ticks": 562,
+      "single_batched_max_abs_errors": {
+        "log_prob": 2.384185791015625e-07,
+        "entropy": 2.384185791015625e-07,
+        "privileged_value": 1.4901161193847656e-08,
+        "condition_logits": 7.450580596923828e-08,
+        "final_hidden": 4.991888999938965e-07
+      },
+      "cpu_synthetic_update_losses": {
+        "policy_loss": 0.23599471524357796,
+        "value_loss": 1.3749845176935196,
+        "entropy": 1.9624924659729004,
+        "advantage_mean": -1.176283836364746,
+        "advantage_std": 0.039467643946409225,
+        "gradient_norm": 2.491276502609253,
+        "approx_kl": 0.00011104494410574262,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 2.384185791015625e-07,
+        "max_log_prob_change": 0.03200185298919678,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "condition_head_changed": false,
+      "raw_shard": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/fixed_seed1.npz",
+        "sha256": "d46fa44ca0b3b0239e60833fb95dab8b0ae4c45b2d9db0a2999507cb646cfc9c",
+        "bytes": 36565
+      },
+      "checkpoint": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/fixed_seed1_trained.pt",
+        "sha256": "fc8e786ce0851392c8ece9fb32609e937d1acb1356d26ddcbccd688e0997e4f1",
+        "bytes": 1040313
+      }
+    },
+    {
+      "initialization_seed": 1,
+      "mode": "events",
+      "config": {
+        "layers": 2,
+        "width": 32,
+        "heads": 4,
+        "ff_width": 64,
+        "gru_layers": 2,
+        "gru_width": 16,
+        "critic_width": 24,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "events"
+      },
+      "paired_initial_parameters_identical": true,
+      "initial_state_sha256": "afccc44882c9cd9a4ff06181377217bb5da1365ac3d4adb0de120f5a64a8372e",
+      "parameters": 76303,
+      "episodes": 2,
+      "decisions": 19,
+      "synthetic_actual_ticks": 412,
+      "single_batched_max_abs_errors": {
+        "log_prob": 4.76837158203125e-07,
+        "entropy": 4.76837158203125e-07,
+        "privileged_value": 2.9802322387695312e-08,
+        "condition_logits": 6.332993507385254e-08,
+        "final_hidden": 2.980232238769531e-07
+      },
+      "cpu_synthetic_update_losses": {
+        "policy_loss": 0.22061660885810852,
+        "value_loss": 1.4067946821451187,
+        "entropy": 2.8969132602214813,
+        "advantage_mean": -1.1904492378234863,
+        "advantage_std": 0.03379543870687485,
+        "gradient_norm": 2.704674005508423,
+        "approx_kl": 5.474115346260078e-05,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.024970054626464844,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "condition_head_changed": true,
+      "raw_shard": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/events_seed1.npz",
+        "sha256": "77d8cae6a4f03f1b36e1453c454c4f6a096e7231a42411dbaa469a8a9572f7e6",
+        "bytes": 37093
+      },
+      "checkpoint": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/events_seed1_trained.pt",
+        "sha256": "a22040e14a847b19e7755da8b7ba3ecdde7221629146cfba06a8e6027e944122",
+        "bytes": 1043140
+      }
+    },
+    {
+      "initialization_seed": 2,
+      "mode": "fixed",
+      "config": {
+        "layers": 2,
+        "width": 32,
+        "heads": 4,
+        "ff_width": 64,
+        "gru_layers": 2,
+        "gru_width": 16,
+        "critic_width": 24,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "fixed"
+      },
+      "paired_initial_parameters_identical": true,
+      "initial_state_sha256": "107031c2cdbab0965b707e8334e61a7d42b795026c26208e16c3604c534a1b29",
+      "parameters": 76303,
+      "episodes": 2,
+      "decisions": 19,
+      "synthetic_actual_ticks": 562,
+      "single_batched_max_abs_errors": {
+        "log_prob": 2.384185791015625e-07,
+        "entropy": 3.5762786865234375e-07,
+        "privileged_value": 2.2351741790771484e-08,
+        "condition_logits": 5.960464477539063e-08,
+        "final_hidden": 2.60770320892334e-07
+      },
+      "cpu_synthetic_update_losses": {
+        "policy_loss": 0.2040305882692337,
+        "value_loss": 0.7620071098208427,
+        "entropy": 1.9729140251874924,
+        "advantage_mean": -0.8793713450431824,
+        "advantage_std": 0.030867386609315872,
+        "gradient_norm": 1.7079112529754639,
+        "approx_kl": 0.00018891418949351646,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 0.0,
+        "max_log_prob_change": 0.054274797439575195,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "condition_head_changed": false,
+      "raw_shard": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/fixed_seed2.npz",
+        "sha256": "7966dc35de43f93905b90ec845436ea2f05658e83919e08a873d41d4f0d7670b",
+        "bytes": 36591
+      },
+      "checkpoint": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/fixed_seed2_trained.pt",
+        "sha256": "6fb0f9c453e14b8f531ebaf993d92f801fbf50efb9e2c16e00ae81a9420e3acd",
+        "bytes": 1040249
+      }
+    },
+    {
+      "initialization_seed": 2,
+      "mode": "events",
+      "config": {
+        "layers": 2,
+        "width": 32,
+        "heads": 4,
+        "ff_width": 64,
+        "gru_layers": 2,
+        "gru_width": 16,
+        "critic_width": 24,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "events"
+      },
+      "paired_initial_parameters_identical": true,
+      "initial_state_sha256": "107031c2cdbab0965b707e8334e61a7d42b795026c26208e16c3604c534a1b29",
+      "parameters": 76303,
+      "episodes": 2,
+      "decisions": 19,
+      "synthetic_actual_ticks": 412,
+      "single_batched_max_abs_errors": {
+        "log_prob": 4.76837158203125e-07,
+        "entropy": 4.76837158203125e-07,
+        "privileged_value": 2.2351741790771484e-08,
+        "condition_logits": 1.1920928955078125e-07,
+        "final_hidden": 2.5331974029541016e-07
+      },
+      "cpu_synthetic_update_losses": {
+        "policy_loss": 0.16610559448599815,
+        "value_loss": 0.7710566148161888,
+        "entropy": 2.9079838693141937,
+        "advantage_mean": -0.8860797882080078,
+        "advantage_std": 0.02445627935230732,
+        "gradient_norm": 1.6767189502716064,
+        "approx_kl": 0.00010715102297353951,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 2.384185791015625e-07,
+        "max_log_prob_change": 0.033889055252075195,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "condition_head_changed": true,
+      "raw_shard": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/events_seed2.npz",
+        "sha256": "70a99f12e967aed6dd92569133636e8d00c17c91e9c12e92e44ac3faebeb6aa5",
+        "bytes": 37132
+      },
+      "checkpoint": {
+        "path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_policy_contracts_v1/events_seed2_trained.pt",
+        "sha256": "420e1917276670ce0b1fcce063e8539ca5990e8e4a1f58b1c31b36b371325633",
+        "bytes": 1043140
+      }
+    }
+  ],
+  "peak_process_rss_bytes": 886358016,
+  "seconds": 4.282534621990635
+}
