@@ -620,7 +620,10 @@ artifacts/t5/perf/periodic_mutation_v1_hf_delivery.json。辅助预测仍全部�
 曲线与逐段损失见artifacts/t5/perf/frontier_v1_seed0_first_segment_actual.json。
 25000节点的greedy五波由自身初始2/10升到6/10，三波保持24/30；sampled五波仍4/10，
 样本很小，不能宣布稳定学习或课程更优。下一seed1已实际启动，seed0之后完整
-resume至125000预定节点附近；首段原始检查点/末八trained/分片/日志正在上传HF。
+resume至125000预定节点附近；首段原始检查点/末八trained/391个分片/日志已全部
+上传HF，修订67695915f6c2cc0e079a688696c9736b198584cf，交付索引见
+artifacts/t5/perf/frontier_v1_seed0_hf_delivery.json。seed1自身初始greedy70%、sampled67.5%，
+已完成2000节点并继续第三更新，不复用seed0基线。
 
 长课程下一依赖：当前显式研究入口只支持随机初始化与同配置完整resume，尚无跨
 课程的权重迁移入口。进入完整关卡时需要明确的新实验配置和权重迁移 provenance，
