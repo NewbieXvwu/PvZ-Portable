@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-v1-seed1-full-trace25k-v1",
+  "revision": "edb18952316444c4d2540fe4b192a138a00bb908",
+  "seconds": 3.8260770670021884,
+  "scope": "Two selected full-course CPU diagnostic traces, eighteen matched terminal/action fields, complete successful and failed-attempt logs/scripts. Evaluated model references HF17828a5b with no duplicate checkpoint. No original-full acceptance or representative failure-mechanism claim. Owning training continues unchanged."
+}
