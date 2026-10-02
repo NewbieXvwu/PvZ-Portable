@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "status": "three_first60_resume_segments_complete_training_continues",
+  "read_utc": "2026-10-02T23:39:22.711909+00:00",
+  "seeds": [
+    {
+      "seed": 0,
+      "run": "mainline_bridge_random_mc_v1_seed0",
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "initialization_kind": "random_initialization",
+      "initial_state_sha256": "40562ca4c3710ce41d46b6902b6d28de64f885ca9767bf910a59583aadf30fcf",
+      "segments": [
+        {
+          "requested_updates": 3,
+          "resume": false,
+          "seconds": 365.56844362300035,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 12,
+            "decisions": 1984,
+            "ticks": 217975
+          },
+          "increment": {
+            "episodes": 12,
+            "decisions": 1984,
+            "ticks": 217975
+          },
+          "checkpoint": "runs/run_1/update_000003_boundary_1790970472342942344.pt"
+        },
+        {
+          "requested_updates": 30,
+          "resume": true,
+          "seconds": 1390.1790324719987,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 129,
+            "decisions": 22192,
+            "ticks": 2281874
+          },
+          "increment": {
+            "episodes": 117,
+            "decisions": 20208,
+            "ticks": 2063899
+          },
+          "checkpoint": "runs/run_1/update_000033_boundary_1790973078031215658.pt"
+        },
+        {
+          "requested_updates": 60,
+          "resume": true,
+          "seconds": 2450.5886658340023,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 366,
+            "decisions": 58221,
+            "ticks": 6684452
+          },
+          "increment": {
+            "episodes": 237,
+            "decisions": 36029,
+            "ticks": 4402578
+          },
+          "checkpoint": "runs/run_1/update_000093_boundary_1790978381941158501.pt"
+        }
+      ],
+      "update93": {
+        "counters": {
+          "episodes": 366,
+          "decisions": 58221,
+          "ticks": 6684452
+        },
+        "active_wall_seconds": 4189.776706953991,
+        "losses": {
+          "policy_loss": 0.3021524463381086,
+          "value_loss": 0.36549846827983856,
+          "entropy": 3.056758778435843,
+          "advantage_mean": 0.35297054052352905,
+          "advantage_std": 0.5704424381256104,
+          "gradient_norm": 1.5331721305847168,
+          "approx_kl": 0.008409446774749085,
+          "clip_fraction": 0.058417858788743615,
+          "first_minibatch_log_prob_max_error": 1.9073486328125e-06,
+          "max_log_prob_change": 0.9264688491821289,
+          "optimizer_steps": 7,
+          "stopped_for_kl": true
+        },
+        "resources": {
+          "peak_process_tree_rss_bytes": 15332282368,
+          "min_system_available_bytes": 16734195712,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 5448893952,
+          "cuda_peak_reserved_bytes": 12943622144
+        },
+        "training_natural_wins": 42,
+        "training_truncated": 6
+      },
+      "finished_evaluation_decisions": [
+        0,
+        2000,
+        25000
+      ],
+      "source_rollout_delivery": "pending owning first125k complete-run HF upload"
+    },
+    {
+      "seed": 1,
+      "run": "mainline_bridge_random_mc_v1_seed1",
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "initialization_kind": "random_initialization",
+      "initial_state_sha256": "439ea5c5356c6f2dbf1a01fe9375a7e815b91ddc03845f701b9bc26150ab0337",
+      "segments": [
+        {
+          "requested_updates": 3,
+          "resume": false,
+          "seconds": 345.01696873999754,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 12,
+            "decisions": 1946,
+            "ticks": 214766
+          },
+          "increment": {
+            "episodes": 12,
+            "decisions": 1946,
+            "ticks": 214766
+          },
+          "checkpoint": "runs/run_1/update_000003_boundary_1790970813514025971.pt"
+        },
+        {
+          "requested_updates": 30,
+          "resume": true,
+          "seconds": 1715.277240457006,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 129,
+            "decisions": 24004,
+            "ticks": 2429820
+          },
+          "increment": {
+            "episodes": 117,
+            "decisions": 22058,
+            "ticks": 2215054
+          },
+          "checkpoint": "runs/run_1/update_000033_boundary_1790974792010490371.pt"
+        },
+        {
+          "requested_updates": 60,
+          "resume": true,
+          "seconds": 3801.2047190159938,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 364,
+            "decisions": 67460,
+            "ticks": 6640700
+          },
+          "increment": {
+            "episodes": 235,
+            "decisions": 43456,
+            "ticks": 4210880
+          },
+          "checkpoint": "runs/run_1/update_000093_boundary_1790982176477226242.pt"
+        }
+      ],
+      "update93": {
+        "counters": {
+          "episodes": 364,
+          "decisions": 67460,
+          "ticks": 6640700
+        },
+        "active_wall_seconds": 5833.280171255996,
+        "losses": {
+          "policy_loss": 0.01730325073003769,
+          "value_loss": 0.4677049994468689,
+          "entropy": 3.0968847274780273,
+          "advantage_mean": -0.10168904811143875,
+          "advantage_std": 0.6141737699508667,
+          "gradient_norm": 1.9386017322540283,
+          "approx_kl": 0.005762724147643894,
+          "clip_fraction": 0.055700056999921796,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 1.0088958740234375,
+          "optimizer_steps": 10,
+          "stopped_for_kl": false
+        },
+        "resources": {
+          "peak_process_tree_rss_bytes": 15305719808,
+          "min_system_available_bytes": 17700982784,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 6205157888,
+          "cuda_peak_reserved_bytes": 30763122688
+        },
+        "training_natural_wins": 48,
+        "training_truncated": 5
+      },
+      "finished_evaluation_decisions": [
+        0,
+        2000,
+        25000
+      ],
+      "source_rollout_delivery": "pending owning first125k complete-run HF upload"
+    },
+    {
+      "seed": 2,
+      "run": "mainline_bridge_random_mc_v1_seed2",
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "initialization_kind": "random_initialization",
+      "initial_state_sha256": "3419d853d567de27163ed488506fad6bf20dbcf2e3e95514e1d32348de0e89b3",
+      "segments": [
+        {
+          "requested_updates": 3,
+          "resume": false,
+          "seconds": 875.0489030550016,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 12,
+            "decisions": 2000,
+            "ticks": 198949
+          },
+          "increment": {
+            "episodes": 12,
+            "decisions": 2000,
+            "ticks": 198949
+          },
+          "checkpoint": "runs/run_1/update_000003_boundary_1790971689806961094.pt"
+        },
+        {
+          "requested_updates": 30,
+          "resume": true,
+          "seconds": 1135.1574720920034,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 132,
+            "decisions": 23045,
+            "ticks": 2304702
+          },
+          "increment": {
+            "episodes": 120,
+            "decisions": 21045,
+            "ticks": 2105753
+          },
+          "checkpoint": "runs/run_1/update_000033_boundary_1790975932156850832.pt"
+        },
+        {
+          "requested_updates": 60,
+          "resume": true,
+          "seconds": 2045.5529959160049,
+          "exit_code": 0,
+          "end_counters": {
+            "episodes": 369,
+            "decisions": 54097,
+            "ticks": 5858310
+          },
+          "increment": {
+            "episodes": 237,
+            "decisions": 31052,
+            "ticks": 3553608
+          },
+          "checkpoint": "runs/run_1/update_000093_boundary_1790984229898389406.pt"
+        }
+      ],
+      "update93": {
+        "counters": {
+          "episodes": 369,
+          "decisions": 54097,
+          "ticks": 5858310
+        },
+        "active_wall_seconds": 4040.1429976729996,
+        "losses": {
+          "policy_loss": -0.03311619758605957,
+          "value_loss": 0.24981954842805862,
+          "entropy": 2.943088340759277,
+          "advantage_mean": -0.4973202645778656,
+          "advantage_std": 0.3180738687515259,
+          "gradient_norm": 1.4266607761383057,
+          "approx_kl": 0.008192554334718036,
+          "clip_fraction": 0.084049250309666,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.8450281620025635,
+          "optimizer_steps": 5,
+          "stopped_for_kl": true
+        },
+        "resources": {
+          "peak_process_tree_rss_bytes": 15254282240,
+          "min_system_available_bytes": 18303078400,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 5660857344,
+          "cuda_peak_reserved_bytes": 14340325376
+        },
+        "training_natural_wins": 14,
+        "training_truncated": 5
+      },
+      "finished_evaluation_decisions": [
+        0,
+        2000,
+        25000
+      ],
+      "source_rollout_delivery": "pending owning first125k complete-run HF upload"
+    }
+  ],
+  "scope": "All three actual3/30/60-update segments closed normally. Update93 is equal optimizer update count but NOT equal decisions, ticks or time. Training natural wins and truncations retained as descriptive adaptive repeated draws, not development evaluation or majority learning. Most recent fixed development node25k; target125k and later original nodes unchanged. New active segment excluded from these closed endpoint statistics. Necessary source checkpoints/rollouts remain local pending original125k owning delivery.",
+  "active_segment": {
+    "seed": 0,
+    "pid": 194075,
+    "requested_updates": 60,
+    "resume": true,
+    "status": "running"
+  },
+  "controller_live": true
+}
