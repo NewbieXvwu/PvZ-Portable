@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "status": "prepared_before_start",
+  "priority": "Usefulmainline learning before remainingarchitecture candidate work",
+  "pilot_source_revision": "fd61240",
+  "source_metadata_correction": "Rootprotocol now records actualcomputed0.753571focusprobability; frozenfd61240runtimecode/settings match exactly, formerprotocolengineeringformula wasincorrectonly.",
+  "wait_for": {
+    "run": "mainline_frontier_v1_seed0",
+    "old_controller_pid": 125026,
+    "child_pid": 131163,
+    "original_natural_boundary_updates": 83,
+    "training_signal_sent": false,
+    "supervisor_only_SIGSTOP": true,
+    "supervisor_end_condition": "Only after originalchild is naturally exited0 inZstate and complete83update checkpoint/readyphase observed; never terminatealivechild for handoff"
+  },
+  "pilot_stages": [
+    [
+      "mainline_bridge_level7_v1_seed0",
+      3,
+      "fresh"
+    ],
+    [
+      "mainline_bridge_level7_v1_seed0",
+      10,
+      "complete_resume"
+    ],
+    [
+      "mainline_bridge_level7_v1_seed0",
+      30,
+      "complete_resume"
+    ]
+  ],
+  "smoke_timeout_seconds": 1800,
+  "smoke_requirements": [
+    "checkpoint",
+    "nonemptycurve",
+    "allreachableprescribed evaluations completed",
+    "readyphase"
+  ],
+  "pending_after_pilot": [
+    "mainline_frontier_v1_seed2 original3+20updates frozenecc6b39",
+    "mainline_short_history8_v1_seed0 original3+20updates frozenecc6b39"
+  ],
+  "reordering_reason": "Fullgameall169trainfailures plus greedywaitcollapse; shortbridge samplerhas2/4successvswait1/4. Prioritize acquiring useful terminalexperience, keep priorwork anddeferredseeds/architecturetasks. Assess pilot before blindlongscale. No new auxiliaryheads.",
+  "mechanism_test": {
+    "status": "pass",
+    "scope": "2s syntheticprocess only, not a training crash test",
+    "parent_stop_does_not_stop_child": true,
+    "child_natural_exit_state": "Z",
+    "child_kernel_wait_status": 0,
+    "field_count": 50,
+    "child_active_when_parent_terminated": false,
+    "parent_exit_code": -15
+  },
+  "logging": "60secondprogressincludestrueepisodes/decisions/ticks/elapsedwall/latestpolicyvalue_losses; continuessamplingprioractivechild whileoldsupervisor suspended.",
+  "delivery": "Allpriorv4progress/script/logs retained; completedboundaryevidence kept; futuremodel/checkpoints/rawlogs goHF, conclusions/config/codegit."
+}

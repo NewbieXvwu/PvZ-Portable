@@ -133,7 +133,8 @@
     "preserved_old_tasks": 30,
     "preserved_full_task": true,
     "new_development_seeds_independent": true,
-    "initial_focus_probability": 0.7678571428571429,
-    "training_success": "not yet run; first3updateGPUsmoke required before scale"
+    "initial_focus_probability": 0.7535714285714286,
+    "training_success": "not yet run; first3updateGPUsmoke required before scale",
+    "probability_correction": "Earlier metadata formula omitted five-terraincoverage and gave0.767857; actualsource/configcomputed0.7535714285714286. Functional code/settings unchanged; no experiment started under a different probability."
   }
 }
