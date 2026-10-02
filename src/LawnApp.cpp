@@ -1497,6 +1497,50 @@ void LawnApp::EnvironmentWait(int ticks)
 	}
 }
 
+EnvironmentWaitEvents::PublicState LawnApp::EnvironmentPublicWaitState()
+{
+	using namespace EnvironmentWaitEvents;
+	PublicState result;
+	result.terminal = EnvironmentTerminal();
+	if (!mBoard) return result;
+	result.tick = mBoard->mMainCounter;
+	result.wave = mBoard->mCurrentWave;
+	result.sun = mBoard->mSunMoney;
+	for (const Plant* plant : mBoard->mPlants)
+		result.plantCount += !plant->mDead;
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		if (packet.mActive && packet.mPacketType != SeedType::SEED_NONE)
+			result.readyPackets.emplace(i, static_cast<int>(packet.mPacketType), static_cast<int>(packet.mImitaterType));
+	}
+	for (const LawnMower* mower : mBoard->mLawnMowers)
+		if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY)
+			result.readyDefenses.emplace(mower->mRow, static_cast<int>(mower->mMowerType));
+	std::set<int> identities;
+	for (Zombie* zombie : mBoard->mZombies)
+	{
+		if (zombie->mDead) continue;
+		const int identity = static_cast<int>(mBoard->ZombieGetID(zombie));
+		if (identity == 0 || identity == -1 || !identities.insert(identity).second || !std::isfinite(zombie->mPosX))
+			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
+		// Exactly the existing public observation: no hidden hostility/queue flag.
+		// Only positions near the boundary need decimal rendering to decide the side.
+		const double x = std::abs(zombie->mPosX - LeftZoneMaxX) < 1.0 ?
+			RenderedPublicCoordinate(zombie->mPosX) : static_cast<double>(zombie->mPosX);
+		if (zombie->IsOnBoard() && x <= LeftZoneMaxX)
+			result.leftZoneZombies.insert(identity);
+	}
+	return result;
+}
+
+EnvironmentWaitEvents::Result LawnApp::EnvironmentWaitUntil(int ticks, int condition)
+{
+	return EnvironmentWaitEvents::Run(ticks, condition,
+		[this] { return EnvironmentPublicWaitState(); },
+		[this] { EnvironmentWait(1); });
+}
+
 void LawnApp::AdvanceLogicTick()
 {
 	++mAppCounter;

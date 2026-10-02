@@ -238,3 +238,39 @@ heldout_day_4 / sampled / seed50199。全部胜负、终局及截断标签相同
 完成update1并在update2至少4个但未齐分片时中断。完整恢复后全部模型/AdamW/RNG/
 计数/loss/轨迹/评估/课程状态及逐批课程概率必须严格相等，部分分片SHA/mtime保持。
 失败就停止并保留现场，不能缩网络、跳门禁或降低相等标准。工程通过仍非学习通过。
+
+
+## 2026-10-02 事件等待接口工程候选 v1
+
+从已冻结的3ffba3a候选通过本地Git克隆建立research/event-wait-v1独立checkout。
+此提交仅准备接口与合成契约检查，正式原生测量及学习对照尚未发布/启动。
+参数草案见experiments/t5/event_wait_v1/interface_draft.json；模型条件头、回放概率、
+显式训练/评估配置、真实恢复与CPU/CUDA更新尚待接入，不能作为可运行学习候选。
+
+原生新增WAIT_EVENT_V1：策略将选择条件及60/150/300最大等待；解释器沿原
+EnvironmentWait(1)推进，无卡片/格子/战术选择。六条件依次timeout、wave_changed、
+packet_became_ready、sun_increased、left_zone_occupied、plant_count_decreased；
+自动中断为READY防线丢失或新公开on_board zombie进入x<=160区域。所有谓词仅用
+已有公开字段，不读敌人隐藏阵营、下一波队列或私有plant ID。x比较按公开JSON
+六位有效数字进行，避免私有float与公开观测在阈值边界不一致。
+
+优先级terminal/defense_lost/zombie_entered_left_zone/condition/max_ticks，保留同tick
+全部原因。初始已经满足left_zone_occupied或terminal时可返回0实际tick；其他条件
+使用相邻tick变化。最大值限制与旧WAIT相同的AdvanceLogicTick调用次数，实际board
+时钟delta另存，包含未推进board时钟的次数；有界但不宣称解决零tick循环。
+
+Python EventWaitEnv仅发送一次原生macro，收入历史在返回tick注释一次；不能以
+Python逐tick step实现，因为那会改变sun_income_rate的历史。动作与wait_result均进
+replay；除了原事件、物理状态与实际耗时，还检查中断原因。旧fixed env及branch
+batching明确拒绝until字段，防止静默丢失所选条件；snapshot/restore正式配对待验。
+
+合成检查20项Python通过，C++状态机11组契约断言通过；包含瞬时事件、同tick多事件、
+初始条件、负数非空zombie ID、off-board、空槽到有效卡、终局、时钟停滞/倒退、收入
+记录、元数据篡改与replay原因检查。replay测试隔离元数据校验，manifest检查stub不
+提供真实清单完整性证据。补充replay fixture首轮缺forced_seeds而失败，修正后全20项
+通过，失败输出及首轮17项输出仍保留。Release原生编译成功，尚未执行真实游戏门禁。
+日志位于主工作区logs/t5_research/event_wait_v1_contract_units.log与event_wait_v1_build.log。
+
+学习实验仍在共同输入/课程基线完成后、T6之前，配对三初始化，固定奖励、课程、
+任务/种子/模型/PPO/B与预定节点，另报告真实等墙钟；source/协议正式发布后才执行
+原生验收。原任务、门槛、失败现场与已冻结候选不受此次隔离工程准备影响。

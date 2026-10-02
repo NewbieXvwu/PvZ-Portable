@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "status": "engineering_interface_candidate; not a learning or native-audit release",
+  "base_commit": "3ffba3a7c0312c8d6f9b64cd7bab90d3d3621142",
+  "interface_version": 1,
+  "native_command": "WAIT_EVENT_V1 <maximum_logic_ticks> <condition_index>",
+  "capability": "ready.wait_events_version == 1; unsupported simulator rejected",
+  "policy_duration_choices": [60, 150, 300],
+  "conditions": [
+    {"index": 0, "name": "timeout", "predicate": "no selected event; automatic emergencies remain enabled"},
+    {"index": 1, "name": "wave_changed", "predicate": "public wave differs from the preceding simulation tick"},
+    {"index": 2, "name": "packet_became_ready", "predicate": "new public active nonempty (index,type,imitater_type) tuple compared with the preceding tick; readiness does not imply affordability or a legal cell"},
+    {"index": 3, "name": "sun_increased", "predicate": "public sun exceeds the preceding simulation tick"},
+    {"index": 4, "name": "left_zone_occupied", "predicate": "any living public on_board zombie has public rendered x <= 160.0; level predicate may already hold at action start"},
+    {"index": 5, "name": "plant_count_decreased", "predicate": "number of public plants decreases from the preceding simulation tick; no hidden plant identity"}
+  ],
+  "automatic_emergencies": [
+    {"name": "defense_lost", "predicate": "a public (row,type) defense that was READY(state=1) is absent or no longer READY compared with the preceding tick"},
+    {"name": "zombie_entered_left_zone", "predicate": "a new signed public zombie ID joins the living on_board x<=160 set compared with the preceding tick; no hidden allegiance or future-wave input"}
+  ],
+  "simultaneous_precedence": ["terminal", "defense_lost", "zombie_entered_left_zone", "condition", "max_ticks"],
+  "simultaneous_reporting": "all triggered reasons retained in precedence order; first is primary reason",
+  "initial_condition_semantics": "terminal and already-true left_zone_occupied return zero actual ticks without forced advancement; edge predicates require a subsequent change",
+  "coordinate_semantics": "x uses exactly the default six-significant-digit public JSON rendering; native private float cannot move the threshold boundary",
+  "maximum_duration_semantics": "bound the same AdvanceLogicTick calls as legacy WAIT; report actual public board tick delta separately, including stalled clock steps",
+  "physical_operation": "each native advance calls the existing EnvironmentWait(1); automatic sun collection and simulator update order stay on the existing path",
+  "economic_history_semantics": "native action returns once; aggregate counters annotated once at its final tick like existing fixed WAIT; no Python micro-step income history",
+  "recorded_metadata": ["version", "condition", "requested_ticks", "actual_ticks", "logic_steps", "stalled_clock_steps", "initial_condition_satisfied", "reason", "triggered"],
+  "replay_semantics": "operation stores exact macro action and wait_result; replay checks interruption metadata in addition to physical state, events and actual duration",
+  "fixed_wait_compatibility": "fixed WAIT actions retain the old path; the fixed Python environment rejects until; branch batching explicitly rejects until pending complete native batch support",
+  "selected_threshold_rationale": "160 public pixels defines a concrete left-zone interruption hypothesis. It is not a victory threshold or an asserted optimal threat detector; freeze before any learning comparison.",
+  "pending_before_formal_native_audit": ["publish source and frozen engineering protocol", "paired no-event physical/RNG equivalence", "real terminal and event timing cases", "reset/snapshot/restore/replay", "resource cost"],
+  "pending_before_learning_comparison": ["condition policy head and matching log probability/entropy replay", "previous condition/reason and actual-duration input", "explicit train/save/eval configuration", "raw-shard metadata and full interrupted resume", "CPU/CUDA actual update gates", "common-input/course baseline and measured B", "three paired initializations with frozen task/seed/node and actual equal-wall protocols"],
+  "learning_benefit_verified": false,
+  "mainline_merged": false
+}
