@@ -735,3 +735,18 @@ experiments/t7/bridge_level7_v1显式新阶段。原30个短任务和原完整�
 低于形成有效经验的主线。原level7完整256种子60%及五地形验收原封不动。
 证据：artifacts/t5/perf/mower_idle_steering_v1_actual.json、
 frontier_v1_seed0_second_segment_actual.json、full_level7_terminal_signal_v1_actual.json。
+
+2026-10-02评估集地板补齐（独立复核）：对奖励矩阵实际使用的评估清单
+experiments/t5/reward_evaluation_v1.json（35任务×64种子=2240例）测同构建空操作地板
+= 1550/2240 = 69.2%（Wilson95 [0.673,0.711]）；分地形 roof 0/448，其余
+day0.882/fog0.866/night0.862/pool0.850；分cap cap1 0.800、cap3 0.792、cap5 0.434。
+与旧R0seed0检查点在同构建上的2240例评估对齐后：0决策0.0%、125k13.4%、250k46.5%、
+375k67.9%（greedy峰值）、500k55.5%。即**该评估集上任何检查点都未超过空操作地板**，
+峰值375k仍低1.3个百分点，末段低13.7个百分点。故"旧组累计胜率57%"与"末段检查点
+评估"都不构成策略学习证据；两条口径在本集合上不矛盾，都指向同一结论。
+另：seed0以外各run末段（最后15更新窗口）胜率0.0%~91.1%离散极大，而该池量程仅
+0.692→1.000，故种子间差异不能直接读作学习能力差异。今后新增任务池必须
+先建同构建空操作基线，并按地板分档（≤0.25才有区分度）标注。
+证据：artifacts/t5/perf/donothing_baseline_v2.json、donothing_baseline_eval35_v1.json。
+两份基线各整跑两次，88条与35条逐条零差异（完全可复现）；产物内记 simulator_sha256，
+跨构建地板不可相减。本机macOS二进制2056e13e与台式机生产dc8747f4为同源码不同平台。
