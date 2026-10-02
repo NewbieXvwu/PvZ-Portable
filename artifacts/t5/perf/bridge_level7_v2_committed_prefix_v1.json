@@ -1,0 +1,2504 @@
+{
+  "schema_version": 1,
+  "status": "complete_committed_prefix_diagnostic_not_closed_run",
+  "source_revision": "53fd8594c5dd355de1eb7dd501ca5b6fa1e25225",
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "experiment_id": "mainline_bridge_level7_v2_seed0",
+  "observed_source_status": "running",
+  "observed_source_phase": "ready",
+  "committed_updates": 100,
+  "committed_counters": {
+    "episodes": 393,
+    "decisions": 95084,
+    "ticks": 11446493
+  },
+  "saved_inventory_matches_committed_counters": true,
+  "observed_active_wall_seconds": 9388.623462472002,
+  "last_losses": {
+    "policy_loss": -0.7817678228020668,
+    "value_loss": 0.13717239862307906,
+    "entropy": 3.0066893100738525,
+    "advantage_mean": 0.14650093019008636,
+    "advantage_std": 0.21333670616149902,
+    "gradient_norm": 8.43671989440918,
+    "approx_kl": 0.0031125921765730404,
+    "clip_fraction": 0.02538330542544524,
+    "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+    "max_log_prob_change": 0.4154820442199707,
+    "optimizer_steps": 12,
+    "stopped_for_kl": false
+  },
+  "overall": {
+    "episodes": 393,
+    "normal": 389,
+    "categories": {
+      "policy_only_win": 119,
+      "both_loss": 243,
+      "both_win": 20,
+      "policy_truncated": 4,
+      "idle_only_win": 7
+    },
+    "normal_policy_wins": 139,
+    "decisions": 95084,
+    "ticks": 11446493,
+    "action_counts": {
+      "plant": 17126,
+      "wait": 74992,
+      "shovel": 2966
+    },
+    "unique_task_seed_pairs": 246
+  },
+  "per_training_task": {
+    "train_bridge7_v1_aid_cap10": {
+      "episodes": 87,
+      "normal": 86,
+      "categories": {
+        "policy_only_win": 40,
+        "both_loss": 19,
+        "both_win": 20,
+        "policy_truncated": 1,
+        "idle_only_win": 7
+      },
+      "normal_policy_wins": 60,
+      "decisions": 19606,
+      "ticks": 2086680,
+      "action_counts": {
+        "plant": 3081,
+        "wait": 15435,
+        "shovel": 1090
+      },
+      "unique_task_seed_pairs": 51
+    },
+    "train_bridge7_v1_aid_cap15": {
+      "episodes": 97,
+      "normal": 94,
+      "categories": {
+        "policy_only_win": 40,
+        "both_loss": 54,
+        "policy_truncated": 3
+      },
+      "normal_policy_wins": 40,
+      "decisions": 22394,
+      "ticks": 2802159,
+      "action_counts": {
+        "plant": 3910,
+        "wait": 17897,
+        "shovel": 587
+      },
+      "unique_task_seed_pairs": 53
+    },
+    "train_bridge7_v1_aid_cap20": {
+      "episodes": 109,
+      "normal": 109,
+      "categories": {
+        "both_loss": 71,
+        "policy_only_win": 38
+      },
+      "normal_policy_wins": 38,
+      "decisions": 30665,
+      "ticks": 3818810,
+      "action_counts": {
+        "shovel": 736,
+        "wait": 23495,
+        "plant": 6434
+      },
+      "unique_task_seed_pairs": 54
+    },
+    "train_bridge7_v1_aid_capfull": {
+      "episodes": 22,
+      "normal": 22,
+      "categories": {
+        "both_loss": 22
+      },
+      "normal_policy_wins": 0,
+      "decisions": 6616,
+      "ticks": 802560,
+      "action_counts": {
+        "wait": 5204,
+        "plant": 1269,
+        "shovel": 143
+      },
+      "unique_task_seed_pairs": 18
+    },
+    "train_bridge7_v1_ordinary_cap10": {
+      "episodes": 24,
+      "normal": 24,
+      "categories": {
+        "both_loss": 23,
+        "policy_only_win": 1
+      },
+      "normal_policy_wins": 1,
+      "decisions": 4756,
+      "ticks": 591185,
+      "action_counts": {
+        "plant": 724,
+        "wait": 3893,
+        "shovel": 139
+      },
+      "unique_task_seed_pairs": 21
+    },
+    "train_bridge7_v1_ordinary_cap15": {
+      "episodes": 23,
+      "normal": 23,
+      "categories": {
+        "both_loss": 23
+      },
+      "normal_policy_wins": 0,
+      "decisions": 4742,
+      "ticks": 572017,
+      "action_counts": {
+        "plant": 735,
+        "wait": 3885,
+        "shovel": 122
+      },
+      "unique_task_seed_pairs": 21
+    },
+    "train_full_level7_v1": {
+      "episodes": 31,
+      "normal": 31,
+      "categories": {
+        "both_loss": 31
+      },
+      "normal_policy_wins": 0,
+      "decisions": 6305,
+      "ticks": 773082,
+      "action_counts": {
+        "wait": 5183,
+        "plant": 973,
+        "shovel": 149
+      },
+      "unique_task_seed_pairs": 28
+    }
+  },
+  "after_previous_closed43": {
+    "train_bridge7_v1_aid_cap10": {
+      "episodes": 6,
+      "normal": 6,
+      "categories": {
+        "policy_only_win": 3,
+        "both_win": 2,
+        "both_loss": 1
+      },
+      "normal_policy_wins": 5,
+      "decisions": 1276,
+      "ticks": 153395,
+      "action_counts": {
+        "wait": 1021,
+        "plant": 237,
+        "shovel": 18
+      },
+      "unique_task_seed_pairs": 6
+    },
+    "train_bridge7_v1_aid_cap15": {
+      "episodes": 65,
+      "normal": 65,
+      "categories": {
+        "policy_only_win": 31,
+        "both_loss": 34
+      },
+      "normal_policy_wins": 31,
+      "decisions": 14924,
+      "ticks": 1928574,
+      "action_counts": {
+        "wait": 12050,
+        "plant": 2575,
+        "shovel": 299
+      },
+      "unique_task_seed_pairs": 46
+    },
+    "train_bridge7_v1_aid_cap20": {
+      "episodes": 96,
+      "normal": 96,
+      "categories": {
+        "policy_only_win": 38,
+        "both_loss": 58
+      },
+      "normal_policy_wins": 38,
+      "decisions": 27096,
+      "ticks": 3407197,
+      "action_counts": {
+        "wait": 20742,
+        "plant": 5817,
+        "shovel": 537
+      },
+      "unique_task_seed_pairs": 49
+    },
+    "train_bridge7_v1_aid_capfull": {
+      "episodes": 16,
+      "normal": 16,
+      "categories": {
+        "both_loss": 16
+      },
+      "normal_policy_wins": 0,
+      "decisions": 5048,
+      "ticks": 621762,
+      "action_counts": {
+        "shovel": 78,
+        "wait": 3972,
+        "plant": 998
+      },
+      "unique_task_seed_pairs": 13
+    },
+    "train_bridge7_v1_ordinary_cap10": {
+      "episodes": 14,
+      "normal": 14,
+      "categories": {
+        "both_loss": 13,
+        "policy_only_win": 1
+      },
+      "normal_policy_wins": 1,
+      "decisions": 2794,
+      "ticks": 349613,
+      "action_counts": {
+        "wait": 2300,
+        "plant": 434,
+        "shovel": 60
+      },
+      "unique_task_seed_pairs": 14
+    },
+    "train_bridge7_v1_ordinary_cap15": {
+      "episodes": 11,
+      "normal": 11,
+      "categories": {
+        "both_loss": 11
+      },
+      "normal_policy_wins": 0,
+      "decisions": 2328,
+      "ticks": 292464,
+      "action_counts": {
+        "plant": 380,
+        "wait": 1904,
+        "shovel": 44
+      },
+      "unique_task_seed_pairs": 11
+    },
+    "train_full_level7_v1": {
+      "episodes": 20,
+      "normal": 20,
+      "categories": {
+        "both_loss": 20
+      },
+      "normal_policy_wins": 0,
+      "decisions": 4058,
+      "ticks": 509698,
+      "action_counts": {
+        "wait": 3342,
+        "plant": 653,
+        "shovel": 63
+      },
+      "unique_task_seed_pairs": 19
+    }
+  },
+  "first_normal_success_by_task": {
+    "train_bridge7_v1_aid_cap10": {
+      "episode": {
+        "update": 1,
+        "episode_id": 0,
+        "task_id": "train_bridge7_v1_aid_cap10",
+        "environment_seed": 1350059,
+        "won": true,
+        "terminated": true,
+        "truncated": false,
+        "category": "policy_only_win",
+        "idle_won": false,
+        "idle_truncated": false,
+        "terminal_wave": 10,
+        "terminal_tick": 24780,
+        "decisions": 222,
+        "ticks": 24780,
+        "action_counts": {
+          "plant": 34,
+          "wait": 173,
+          "shovel": 15
+        },
+        "shard": "runs/run_1/.seed_jobs/update_000001/032fcffa12ff9b0ae8dda90f6129ffa0c6989f62180ef25fda0f6d8a95fed6d3/seed_0.npz"
+      },
+      "plant_actions": [
+        {
+          "decision": 0,
+          "tick_before": 0,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 4,
+            "row": 2
+          }
+        },
+        {
+          "decision": 11,
+          "tick_before": 927,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 5,
+            "row": 2
+          }
+        },
+        {
+          "decision": 14,
+          "tick_before": 1079,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 7,
+            "row": 3
+          }
+        },
+        {
+          "decision": 23,
+          "tick_before": 1950,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 31,
+          "tick_before": 2838,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 8,
+            "row": 3
+          }
+        },
+        {
+          "decision": 36,
+          "tick_before": 3408,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 1,
+            "row": 2
+          }
+        },
+        {
+          "decision": 39,
+          "tick_before": 3528,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 5,
+            "row": 0
+          }
+        },
+        {
+          "decision": 47,
+          "tick_before": 4429,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 1,
+            "row": 0
+          }
+        },
+        {
+          "decision": 61,
+          "tick_before": 5903,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 7,
+            "row": 0
+          }
+        },
+        {
+          "decision": 64,
+          "tick_before": 6166,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 3,
+            "row": 0
+          }
+        },
+        {
+          "decision": 79,
+          "tick_before": 8086,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 8,
+            "row": 3
+          }
+        },
+        {
+          "decision": 81,
+          "tick_before": 8236,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 85,
+          "tick_before": 8987,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 4
+          }
+        },
+        {
+          "decision": 97,
+          "tick_before": 10515,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 4
+          }
+        },
+        {
+          "decision": 101,
+          "tick_before": 10904,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 105,
+          "tick_before": 11174,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 4,
+            "row": 3
+          }
+        },
+        {
+          "decision": 110,
+          "tick_before": 11716,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 1
+          }
+        },
+        {
+          "decision": 112,
+          "tick_before": 11866,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 119,
+          "tick_before": 13066,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 4,
+            "row": 2
+          }
+        },
+        {
+          "decision": 124,
+          "tick_before": 13636,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 128,
+          "tick_before": 14146,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 2,
+            "row": 4
+          }
+        },
+        {
+          "decision": 133,
+          "tick_before": 14806,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 138,
+          "tick_before": 15510,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 141,
+          "tick_before": 15773,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 4,
+            "row": 4
+          }
+        },
+        {
+          "decision": 154,
+          "tick_before": 16679,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 160,
+          "tick_before": 17399,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 2,
+            "row": 2
+          }
+        },
+        {
+          "decision": 165,
+          "tick_before": 17807,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 5,
+            "row": 4
+          }
+        },
+        {
+          "decision": 175,
+          "tick_before": 19073,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 4,
+            "row": 1
+          }
+        },
+        {
+          "decision": 176,
+          "tick_before": 19073,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 1
+          }
+        },
+        {
+          "decision": 183,
+          "tick_before": 20183,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 193,
+          "tick_before": 20934,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 3
+          }
+        },
+        {
+          "decision": 194,
+          "tick_before": 20934,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 8,
+            "row": 4
+          }
+        },
+        {
+          "decision": 203,
+          "tick_before": 22374,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 3
+          }
+        },
+        {
+          "decision": 210,
+          "tick_before": 23304,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 5,
+            "row": 2
+          }
+        }
+      ],
+      "first_plant_tick": 0,
+      "criterion": "First chronologically collected normal win for this training task, from committed raw manifests. Not selected by score or checkpoint performance."
+    },
+    "train_bridge7_v1_aid_cap15": {
+      "episode": {
+        "update": 7,
+        "episode_id": 22,
+        "task_id": "train_bridge7_v1_aid_cap15",
+        "environment_seed": 1350159,
+        "won": true,
+        "terminated": true,
+        "truncated": false,
+        "category": "policy_only_win",
+        "idle_won": false,
+        "idle_truncated": false,
+        "terminal_wave": 15,
+        "terminal_tick": 25620,
+        "decisions": 247,
+        "ticks": 25620,
+        "action_counts": {
+          "plant": 41,
+          "wait": 197,
+          "shovel": 9
+        },
+        "shard": "runs/run_1/.seed_jobs/update_000007/0a749282ca649120c7bc8178cf0e77b892b0e76e5a4e4f64d66fc1ab0f5b262a/seed_22.npz"
+      },
+      "plant_actions": [
+        {
+          "decision": 0,
+          "tick_before": 0,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 11,
+          "tick_before": 1323,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 1
+          }
+        },
+        {
+          "decision": 16,
+          "tick_before": 2043,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 5,
+            "row": 1
+          }
+        },
+        {
+          "decision": 18,
+          "tick_before": 2043,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 1,
+            "row": 4
+          }
+        },
+        {
+          "decision": 19,
+          "tick_before": 2043,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 4,
+            "row": 3
+          }
+        },
+        {
+          "decision": 27,
+          "tick_before": 3139,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 1,
+            "row": 1
+          }
+        },
+        {
+          "decision": 30,
+          "tick_before": 3349,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 4,
+            "row": 0
+          }
+        },
+        {
+          "decision": 39,
+          "tick_before": 4190,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 7,
+            "row": 4
+          }
+        },
+        {
+          "decision": 49,
+          "tick_before": 5365,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 4,
+            "row": 2
+          }
+        },
+        {
+          "decision": 50,
+          "tick_before": 5365,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 4,
+            "row": 4
+          }
+        },
+        {
+          "decision": 52,
+          "tick_before": 5515,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 57,
+          "tick_before": 6014,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 2,
+            "row": 2
+          }
+        },
+        {
+          "decision": 63,
+          "tick_before": 6566,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 1
+          }
+        },
+        {
+          "decision": 74,
+          "tick_before": 7436,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 5,
+            "row": 0
+          }
+        },
+        {
+          "decision": 82,
+          "tick_before": 8306,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 5,
+            "row": 3
+          }
+        },
+        {
+          "decision": 88,
+          "tick_before": 9266,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 5,
+            "row": 2
+          }
+        },
+        {
+          "decision": 91,
+          "tick_before": 9626,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 5,
+            "row": 2
+          }
+        },
+        {
+          "decision": 93,
+          "tick_before": 9926,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 5,
+            "row": 1
+          }
+        },
+        {
+          "decision": 99,
+          "tick_before": 10347,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 111,
+          "tick_before": 11860,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 119,
+          "tick_before": 12927,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 1,
+            "row": 0
+          }
+        },
+        {
+          "decision": 133,
+          "tick_before": 14063,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 5,
+            "row": 1
+          }
+        },
+        {
+          "decision": 134,
+          "tick_before": 14063,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 8,
+            "row": 1
+          }
+        },
+        {
+          "decision": 135,
+          "tick_before": 14063,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 4
+          }
+        },
+        {
+          "decision": 144,
+          "tick_before": 15048,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 1,
+            "row": 4
+          }
+        },
+        {
+          "decision": 147,
+          "tick_before": 15258,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 4
+          }
+        },
+        {
+          "decision": 159,
+          "tick_before": 17028,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 8,
+            "row": 3
+          }
+        },
+        {
+          "decision": 166,
+          "tick_before": 17695,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 7,
+            "row": 0
+          }
+        },
+        {
+          "decision": 173,
+          "tick_before": 18505,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 3,
+            "row": 0
+          }
+        },
+        {
+          "decision": 176,
+          "tick_before": 18565,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 178,
+          "tick_before": 18865,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 191,
+          "tick_before": 20606,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 5,
+            "row": 2
+          }
+        },
+        {
+          "decision": 193,
+          "tick_before": 20666,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 1
+          }
+        },
+        {
+          "decision": 199,
+          "tick_before": 20966,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 4,
+            "row": 0
+          }
+        },
+        {
+          "decision": 207,
+          "tick_before": 21566,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 4,
+            "row": 2
+          }
+        },
+        {
+          "decision": 216,
+          "tick_before": 22226,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 224,
+          "tick_before": 23232,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 229,
+          "tick_before": 23562,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 8,
+            "row": 3
+          }
+        },
+        {
+          "decision": 240,
+          "tick_before": 25073,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 2,
+            "row": 3
+          }
+        },
+        {
+          "decision": 241,
+          "tick_before": 25073,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 3
+          }
+        },
+        {
+          "decision": 245,
+          "tick_before": 25583,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 8,
+            "row": 3
+          }
+        }
+      ],
+      "first_plant_tick": 0,
+      "criterion": "First chronologically collected normal win for this training task, from committed raw manifests. Not selected by score or checkpoint performance."
+    },
+    "train_bridge7_v1_aid_cap20": {
+      "episode": {
+        "update": 47,
+        "episode_id": 179,
+        "task_id": "train_bridge7_v1_aid_cap20",
+        "environment_seed": 1350270,
+        "won": true,
+        "terminated": true,
+        "truncated": false,
+        "category": "policy_only_win",
+        "idle_won": false,
+        "idle_truncated": false,
+        "terminal_wave": 20,
+        "terminal_tick": 44579,
+        "decisions": 393,
+        "ticks": 44579,
+        "action_counts": {
+          "wait": 310,
+          "plant": 79,
+          "shovel": 4
+        },
+        "shard": "runs/run_1/.seed_jobs/update_000047/64d999f2372585c30317569fe41782ab74bea371614a73b9b02d052b7cad7b14/seed_179.npz"
+      },
+      "plant_actions": [
+        {
+          "decision": 6,
+          "tick_before": 1350,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 9,
+          "tick_before": 1800,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 18,
+          "tick_before": 3001,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 0
+          }
+        },
+        {
+          "decision": 20,
+          "tick_before": 3061,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 5,
+            "row": 2
+          }
+        },
+        {
+          "decision": 21,
+          "tick_before": 3061,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 28,
+          "tick_before": 3961,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 1,
+            "row": 2
+          }
+        },
+        {
+          "decision": 35,
+          "tick_before": 4591,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 3,
+            "row": 3
+          }
+        },
+        {
+          "decision": 37,
+          "tick_before": 4741,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 0
+          }
+        },
+        {
+          "decision": 49,
+          "tick_before": 5702,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 50,
+          "tick_before": 5702,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 0
+          }
+        },
+        {
+          "decision": 54,
+          "tick_before": 6302,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 4,
+            "row": 2
+          }
+        },
+        {
+          "decision": 59,
+          "tick_before": 6962,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 62,
+          "tick_before": 7412,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 69,
+          "tick_before": 8582,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 2,
+            "row": 1
+          }
+        },
+        {
+          "decision": 73,
+          "tick_before": 8942,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 8,
+            "row": 1
+          }
+        },
+        {
+          "decision": 74,
+          "tick_before": 8942,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 84,
+          "tick_before": 10053,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 87,
+          "tick_before": 10413,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 4,
+            "row": 4
+          }
+        },
+        {
+          "decision": 88,
+          "tick_before": 10413,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 95,
+          "tick_before": 11164,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 8,
+            "row": 4
+          }
+        },
+        {
+          "decision": 98,
+          "tick_before": 11404,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 4,
+            "row": 0
+          }
+        },
+        {
+          "decision": 103,
+          "tick_before": 12146,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 107,
+          "tick_before": 12455,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 5,
+            "row": 0
+          }
+        },
+        {
+          "decision": 112,
+          "tick_before": 13355,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 114,
+          "tick_before": 13505,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 0
+          }
+        },
+        {
+          "decision": 115,
+          "tick_before": 13505,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 7,
+            "row": 0
+          }
+        },
+        {
+          "decision": 126,
+          "tick_before": 14656,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 128,
+          "tick_before": 14956,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 4,
+            "row": 1
+          }
+        },
+        {
+          "decision": 131,
+          "tick_before": 15256,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 0
+          }
+        },
+        {
+          "decision": 134,
+          "tick_before": 15616,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 138,
+          "tick_before": 16066,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 2
+          }
+        },
+        {
+          "decision": 143,
+          "tick_before": 16726,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 6,
+            "row": 3
+          }
+        },
+        {
+          "decision": 156,
+          "tick_before": 17957,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 4
+          }
+        },
+        {
+          "decision": 159,
+          "tick_before": 18167,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 162,
+          "tick_before": 18377,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 167,
+          "tick_before": 18918,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 168,
+          "tick_before": 18918,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 179,
+          "tick_before": 20568,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 186,
+          "tick_before": 21378,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 5,
+            "row": 4
+          }
+        },
+        {
+          "decision": 189,
+          "tick_before": 21588,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 193,
+          "tick_before": 22106,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 7,
+            "row": 4
+          }
+        },
+        {
+          "decision": 203,
+          "tick_before": 23099,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 1
+          }
+        },
+        {
+          "decision": 205,
+          "tick_before": 23399,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 210,
+          "tick_before": 23939,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 218,
+          "tick_before": 25049,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 220,
+          "tick_before": 25349,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 6,
+            "row": 3
+          }
+        },
+        {
+          "decision": 222,
+          "tick_before": 25360,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 223,
+          "tick_before": 25360,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 3
+          }
+        },
+        {
+          "decision": 230,
+          "tick_before": 26510,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 232,
+          "tick_before": 26660,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 241,
+          "tick_before": 27261,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 252,
+          "tick_before": 28860,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 258,
+          "tick_before": 29544,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 262,
+          "tick_before": 30061,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 263,
+          "tick_before": 30061,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 266,
+          "tick_before": 30472,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 7,
+            "row": 3
+          }
+        },
+        {
+          "decision": 269,
+          "tick_before": 30682,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 275,
+          "tick_before": 31492,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 0
+          }
+        },
+        {
+          "decision": 279,
+          "tick_before": 31838,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 0
+          }
+        },
+        {
+          "decision": 288,
+          "tick_before": 33062,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 290,
+          "tick_before": 33122,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 4
+          }
+        },
+        {
+          "decision": 299,
+          "tick_before": 34532,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 302,
+          "tick_before": 34944,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 3
+          }
+        },
+        {
+          "decision": 307,
+          "tick_before": 35594,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 312,
+          "tick_before": 36372,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 315,
+          "tick_before": 36822,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 317,
+          "tick_before": 36972,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 3
+          }
+        },
+        {
+          "decision": 321,
+          "tick_before": 37423,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 3
+          }
+        },
+        {
+          "decision": 329,
+          "tick_before": 38429,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 8,
+            "row": 3
+          }
+        },
+        {
+          "decision": 334,
+          "tick_before": 39045,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 3,
+            "row": 1
+          }
+        },
+        {
+          "decision": 338,
+          "tick_before": 39370,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 352,
+          "tick_before": 41051,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 0,
+            "row": 3
+          }
+        },
+        {
+          "decision": 353,
+          "tick_before": 41051,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 354,
+          "tick_before": 41051,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 362,
+          "tick_before": 41802,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 364,
+          "tick_before": 41862,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 371,
+          "tick_before": 42553,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 376,
+          "tick_before": 42793,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 1
+          }
+        },
+        {
+          "decision": 389,
+          "tick_before": 44202,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 3,
+            "row": 1
+          }
+        }
+      ],
+      "first_plant_tick": 1350,
+      "criterion": "First chronologically collected normal win for this training task, from committed raw manifests. Not selected by score or checkpoint performance."
+    },
+    "train_bridge7_v1_ordinary_cap10": {
+      "episode": {
+        "update": 49,
+        "episode_id": 187,
+        "task_id": "train_bridge7_v1_ordinary_cap10",
+        "environment_seed": 1350683,
+        "won": true,
+        "terminated": true,
+        "truncated": false,
+        "category": "policy_only_win",
+        "idle_won": false,
+        "idle_truncated": false,
+        "terminal_wave": 10,
+        "terminal_tick": 29744,
+        "decisions": 243,
+        "ticks": 29744,
+        "action_counts": {
+          "plant": 36,
+          "shovel": 4,
+          "wait": 203
+        },
+        "shard": "runs/run_1/.seed_jobs/update_000049/aaa46bc3ed17f91731bf6c99633124bbc500fed8f91c3d3310c68c4eb0e900a7/seed_187.npz"
+      },
+      "plant_actions": [
+        {
+          "decision": 0,
+          "tick_before": 0,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 1
+          }
+        },
+        {
+          "decision": 14,
+          "tick_before": 1740,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 4,
+            "row": 2
+          }
+        },
+        {
+          "decision": 19,
+          "tick_before": 2460,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 22,
+          "tick_before": 2791,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 3,
+            "row": 2
+          }
+        },
+        {
+          "decision": 33,
+          "tick_before": 4161,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 0,
+            "row": 2
+          }
+        },
+        {
+          "decision": 46,
+          "tick_before": 5966,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 3,
+            "row": 1
+          }
+        },
+        {
+          "decision": 49,
+          "tick_before": 6416,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 1
+          }
+        },
+        {
+          "decision": 54,
+          "tick_before": 6783,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 3,
+            "row": 4
+          }
+        },
+        {
+          "decision": 72,
+          "tick_before": 8943,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 3
+          }
+        },
+        {
+          "decision": 75,
+          "tick_before": 9117,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 81,
+          "tick_before": 9687,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 3,
+            "row": 0
+          }
+        },
+        {
+          "decision": 86,
+          "tick_before": 10437,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 97,
+          "tick_before": 11728,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 1
+          }
+        },
+        {
+          "decision": 103,
+          "tick_before": 12384,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 2,
+            "row": 4
+          }
+        },
+        {
+          "decision": 108,
+          "tick_before": 12989,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 2
+          }
+        },
+        {
+          "decision": 117,
+          "tick_before": 14159,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 2,
+            "row": 0
+          }
+        },
+        {
+          "decision": 119,
+          "tick_before": 14309,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 3
+          }
+        },
+        {
+          "decision": 131,
+          "tick_before": 16001,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 4
+          }
+        },
+        {
+          "decision": 132,
+          "tick_before": 16001,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 134,
+          "tick_before": 16061,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 7,
+            "row": 1
+          }
+        },
+        {
+          "decision": 142,
+          "tick_before": 17255,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 0
+          }
+        },
+        {
+          "decision": 150,
+          "tick_before": 18605,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 4
+          }
+        },
+        {
+          "decision": 152,
+          "tick_before": 18905,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 161,
+          "tick_before": 20016,
+          "plant_type": 5,
+          "action": {
+            "type": "plant",
+            "packet": 5,
+            "col": 7,
+            "row": 0
+          }
+        },
+        {
+          "decision": 168,
+          "tick_before": 21417,
+          "plant_type": 2,
+          "action": {
+            "type": "plant",
+            "packet": 2,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 169,
+          "tick_before": 21417,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 3,
+            "row": 4
+          }
+        },
+        {
+          "decision": 176,
+          "tick_before": 22266,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 6,
+            "row": 4
+          }
+        },
+        {
+          "decision": 180,
+          "tick_before": 22866,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 4,
+            "row": 3
+          }
+        },
+        {
+          "decision": 187,
+          "tick_before": 23676,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 3
+          }
+        },
+        {
+          "decision": 196,
+          "tick_before": 24786,
+          "plant_type": 3,
+          "action": {
+            "type": "plant",
+            "packet": 3,
+            "col": 8,
+            "row": 0
+          }
+        },
+        {
+          "decision": 197,
+          "tick_before": 24786,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 8,
+            "row": 2
+          }
+        },
+        {
+          "decision": 199,
+          "tick_before": 24846,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 3,
+            "row": 2
+          }
+        },
+        {
+          "decision": 204,
+          "tick_before": 25469,
+          "plant_type": 4,
+          "action": {
+            "type": "plant",
+            "packet": 4,
+            "col": 7,
+            "row": 2
+          }
+        },
+        {
+          "decision": 207,
+          "tick_before": 25621,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 3,
+            "row": 2
+          }
+        },
+        {
+          "decision": 220,
+          "tick_before": 27122,
+          "plant_type": 1,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 6,
+            "row": 2
+          }
+        },
+        {
+          "decision": 222,
+          "tick_before": 27182,
+          "plant_type": 0,
+          "action": {
+            "type": "plant",
+            "packet": 0,
+            "col": 6,
+            "row": 1
+          }
+        }
+      ],
+      "first_plant_tick": 0,
+      "criterion": "First chronologically collected normal win for this training task, from committed raw manifests. Not selected by score or checkpoint performance."
+    }
+  },
+  "seconds": 2.3948498610043316,
+  "scope": "Read only the immutable raw shards listed by one atomic saved state; do not glob live uncommitted updates. Current run continues untouched. This is a committed-update prefix, not a complete resumable run snapshot. Training draws include repeated seeds and changing course frequencies, not an independent policy evaluation.",
+  "interpretation": "Policy-only training wins on zero-idle long tasks are useful exploratory evidence. Do not substitute them for the125k fixed development evaluation, the three-random learning requirement or original full-course acceptance. No new native/model interactions, no reward/architecture changes.",
+  "native_idle_dependency": {
+    "branch": "evidence-bridge-random-v1-preparation",
+    "revision": "b2db80011aa3124fc3ef214ad35e3c783fb10ea7"
+  },
+  "raw_rollout_delivery": "All source shards remain locally preserved. The running v8 controller will deliver the full closed163 source run and logs on HF after v7 completes; this small diagnostic is not a replacement."
+}

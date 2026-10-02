@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-level7-v2-committed-prefix-v1",
+  "revision": "4e46779fe52964772b20eca9c564c8de66dc09e7",
+  "seconds": 4.642609898000956,
+  "host_source_revision": "70fb52e",
+  "training_source_revision": "53fd859",
+  "scope": "Committed100-update prefix metadata / first long-task normal-win public action replay. Source run is still training: this is not a full resumable run snapshot. Raw source shards remain preserved and v8 is scheduled to deliver closed163; no claim of stable heldout or three-init learning."
+}
