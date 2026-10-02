@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-full-acceptance-idle-v1",
+  "exit_code": 0,
+  "seconds": 6.462175354005012,
+  "utc": "2026-10-02T18:56:37.873131+00:00",
+  "source_revision": "d8adb9c",
+  "scope": "Complete576 frozen original full-course idle cases: level7development256 plus five-terrain64 each, all raw seeds/results, source script, original manifest, reproduction command and log. No network/PPO/task/threshold change or trained capability claim.",
+  "revision": "747d67bdee5a9448e7fb24bc65eef738fc3b419d"
+}

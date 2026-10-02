@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "status": "complete_all576_frozen_cases",
+  "source_revision": "d8adb9cd43dc4c7c81ab19fe5dc536ac5fc586f8",
+  "policy": "donothing (wait 300 ticks forever, never plants or shovels)",
+  "manifest": "experiments/t7/full_level7_v1/acceptance.json",
+  "thresholds": {
+    "level7_pass_rate": 0.6,
+    "terrain_macro_pass_rate": 0.6,
+    "each_terrain_pass_rate": 0.45,
+    "weakest_task_pass_rate": 0.25,
+    "required_initializations": 2
+  },
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "seconds": 5.5,
+  "workers": 8,
+  "max_actions": 4000,
+  "total_cases": 576,
+  "total_truncated": 0,
+  "tasks": [
+    {
+      "task_id": "level7_development",
+      "terrain": "day",
+      "level": 7,
+      "cases": 256,
+      "wins": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.01478385642587143
+      ],
+      "truncated": 0,
+      "mean_terminal_wave": 7.7734375,
+      "terminal_wave_histogram": {
+        "6": 5,
+        "7": 81,
+        "8": 137,
+        "9": 33
+      },
+      "mean_ticks": 20991.546875,
+      "decisions": 19612
+    },
+    {
+      "task_id": "full_day8",
+      "terrain": "day",
+      "level": 8,
+      "cases": 64,
+      "wins": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "mean_terminal_wave": 8.03125,
+      "terminal_wave_histogram": {
+        "6": 2,
+        "7": 9,
+        "8": 38,
+        "9": 15
+      },
+      "mean_ticks": 21811.546875,
+      "decisions": 5073
+    },
+    {
+      "task_id": "full_night12",
+      "terrain": "night",
+      "level": 12,
+      "cases": 64,
+      "wins": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "mean_terminal_wave": 7.96875,
+      "terminal_wave_histogram": {
+        "7": 11,
+        "8": 44,
+        "9": 9
+      },
+      "mean_ticks": 21527.984375,
+      "decisions": 5010
+    },
+    {
+      "task_id": "full_pool26",
+      "terrain": "pool",
+      "level": 26,
+      "cases": 64,
+      "wins": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "mean_terminal_wave": 7.703125,
+      "terminal_wave_histogram": {
+        "7": 24,
+        "8": 35,
+        "9": 5
+      },
+      "mean_ticks": 20900.1875,
+      "decisions": 4838
+    },
+    {
+      "task_id": "full_fog31",
+      "terrain": "fog",
+      "level": 31,
+      "cases": 64,
+      "wins": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "mean_terminal_wave": 7.859375,
+      "terminal_wave_histogram": {
+        "7": 16,
+        "8": 41,
+        "9": 7
+      },
+      "mean_ticks": 20984.953125,
+      "decisions": 4851
+    },
+    {
+      "task_id": "full_roof41",
+      "terrain": "roof",
+      "level": 41,
+      "cases": 64,
+      "wins": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "mean_terminal_wave": 3.1875,
+      "terminal_wave_histogram": {
+        "3": 52,
+        "4": 12
+      },
+      "mean_ticks": 9669.71875,
+      "decisions": 2136
+    }
+  ],
+  "five_terrain_macro_pass_rate": 0.0,
+  "scope": "Complete own frozen seed lists, not the generic screen described by baseline.json. No neural network, PPO, task or threshold changes. These are idle controls for future full-course model evaluation, not evidence of trained model acceptance. Wilson intervals are per-task environment-case summaries, not initialization uncertainty. RSS/GPU peaks were not instrumented for this native-only control.",
+  "observed_warnings": "Native INFO registry.regemu write warnings appeared in worker shutdown output; all576 cases terminated normally, no truncation, process exited0. Original append-only log retained."
+}

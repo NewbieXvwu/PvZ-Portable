@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "collect_seconds": 7.78614575300162,
+  "cache_resume_seconds": 0.0017211429949384183,
+  "seconds": 8.014926803996786,
+  "matches_saved_fields": {
+    "won": true,
+    "result": true,
+    "terminated": true,
+    "truncated": true,
+    "terminal_wave": true,
+    "terminal_tick": true,
+    "actions": true,
+    "action_counts": true,
+    "immediate_plant_shovels": true
+  },
+  "cached_result_exact": true,
+  "incomplete_acceptance_rejected": true,
+  "actual_job_count": 1,
+  "full_required_job_count": 1152,
+  "worker_device": "cpu",
+  "cuda_initialized": false,
+  "source_checkpoint_hf": {
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "branch": "evidence-bridge-level7-v2-125k-progress-v1",
+    "revision": "094248314a2d27036d932599d124c24733e3ab18",
+    "path": "bridge_level7_v2_125k_progress_v1/runs/run_1/update_000131_evaluated_1790965453718564074.pt"
+  },
+  "seed": 30000,
+  "scope": "One greedy frozen level7seed30000, using the real family worker and existing spawn/NPZ/cache mechanism. First collection executes native CPU policy inference, second collects0 and reads the existing shard. Not a SIGKILL test, full1152case evaluation, trained capability gate or extra PPO. Final manifest/aggregation checks were tested separately after backend validation; collect/worker implementation is unchanged. CLI full1152-case evaluation has not run.",
+  "resources": {
+    "peak_process_tree_rss_bytes": 2178183168,
+    "min_system_available_bytes": 18811559936,
+    "peak_system_swap_used_bytes": 0,
+    "cuda_peak_allocated_bytes": 0,
+    "cuda_peak_reserved_bytes": 0
+  },
+  "requested_workers": 2,
+  "active_workers": 1,
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "final_validation": {
+    "tests": 13,
+    "seconds": 0.124,
+    "result": "pass",
+    "log": "logs/full_acceptance_tests_v1.log"
+  },
+  "outcome": {
+    "won": false,
+    "result": 2,
+    "terminated": true,
+    "truncated": false,
+    "terminal_wave": 9,
+    "terminal_tick": 24859,
+    "actions": 203,
+    "action_counts": {
+      "wait": 160,
+      "plant": 43
+    },
+    "immediate_plant_shovels": 0
+  }
+}

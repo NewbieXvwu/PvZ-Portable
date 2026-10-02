@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-full-acceptance-backend-v1",
+  "exit_code": 0,
+  "seconds": 5.889707371999975,
+  "utc": "2026-10-02T19:24:09.138495+00:00",
+  "source_revision_before_changes": "d8adb9c",
+  "scope": "One real CPU evaluation job and its immutable NPZ, exact cached continuation, reproduction script, new evaluator/source/tests/logs. Not full1152-case or capability acceptance. Checkpoint reuses HF09424831.",
+  "revision": "cf6689cd0358d00dc592b68c8594675eeb1ba5bb"
+}

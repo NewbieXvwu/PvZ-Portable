@@ -1,11 +1,12 @@
 """Measure how much of a task pool a policy that never acts can already win.
 
 A win rate only means something relative to a floor. On short PvZ tasks the
-floor is high: lawnmowers absorb the first zombies, so a policy that only
-waits clears most 1/3/5-wave tasks without planting a single thing. Any task
-where this baseline wins is a task whose win rate carries no policy
-information, and it should not be used as a progress metric or weighted in a
-curriculum.
+floor can be high: lawnmowers absorb the first zombies, so a policy that only
+waits clears many short non-roof tasks without planting a single thing. A
+saturated floor makes raw win rate weak evidence of learning. Compare matched
+task/seed gains; do not automatically discard tasks where idle sometimes wins.
+Partially assisted bridge tasks can still provide useful training experience,
+and short roof tasks may have a zero floor.
 
 This script measures that floor. It runs no neural network at all -- the
 policy is "wait forever" -- so it needs no GPU, only the real simulator.
@@ -20,7 +21,9 @@ Usage::
 
 Reads each task's own frozen seed list, so the numbers are on the same seeds
 the project already evaluates on. ``--seeds`` is a screen, not the full 64;
-treat it as a screen and widen it before making an irreversible decision.
+treat it as a screen. A sufficiently large value retains every frozen seed;
+the output states whether the selected manifests have complete seed coverage.
+The descriptive floor bands below are not an automatic curriculum gate.
 
 The output records ``simulator_sha256``. Two baselines are only comparable when
 that matches: the 2026-10-02 mower/intro-initialisation fix moved the floor, so
@@ -142,11 +145,14 @@ def main() -> None:
     payload = {
         "schema_version": 1,
         "policy": "donothing (wait 300 ticks forever, never plants or shovels)",
-        "purpose": "floor for every win rate; a task the floor wins carries no policy information",
+        "purpose": "Matched idle floor for interpreting policy gains; saturated floors are weak progress metrics, not an automatic task exclusion rule",
         "simulator_sha256": _simulator_fingerprint(),
         "seeds_per_task": args.seeds, "max_actions": args.max_actions,
         "workers": args.workers, "seconds": elapsed,
-        "scope": "screen on each task's own frozen seeds, not the full 64-seed acceptance",
+        "scope": ("complete own frozen seed lists for all selected tasks"
+                  if all(entry["seeds"] == len(task.get("seeds") or [])
+                         for entry, task in zip(meta, task_specs, strict=True))
+                  else "prefix of each task's own frozen seeds; screening evidence, not full-seed acceptance"),
         "tasks": rows,
     }
     out = Path(args.output)

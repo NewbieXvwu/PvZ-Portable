@@ -903,3 +903,36 @@ evaluated模型做CPU推理12.13秒/475动作，两局各9项终局/动作字段
 这两局改模型、奖励或当前课程。完整公开轨迹/植物快照/复现入口/日志已上传
 HFbdd27af9（evidence-bridge-level7-v2-full-trace125k-v1）；检查点引用HF09424831，
 不重复上传。小结与索引见bridge_level7_v2_full_trace125k_v1*.json。
+
+2026-10-03正式完整关卡的生产idle对照已补齐：原acceptance.json原样读取，
+level7 development30000–30255共0/256（Wilson95[0,0.014784]），day8/night12/
+pool26/fog31/roof41各0/64（各[0,0.056624]）。576局/5.5秒/8native workers，
+全部自然终止、0预算截断，不涉及神经网或PPO。普通四地形平均在第7–8波
+失败，roof41约第3波；这张正式完整关卡尺子没有短波饱和问题。worker收尾
+有registry.regemu写入INFO警告，退出0且全部逐局证据齐全，日志原样保留。
+HF747d67bd（evidence-full-acceptance-idle-v1）保存全部种子/任务/脚本/日志。
+见full_acceptance_idle_v1_actual.json与对应HF索引；它不代表模型已经验收。
+donothing_baseline.py的文字已纠正：饱和地板削弱原始胜率的学习证据，不自动
+剔除有部分idle胜局的桥梁任务；scope现在按实际冻结种子覆盖显示全量或筛查。
+本次576结果来自改文字前的同一数值实现，原源文件在HF保留，未重复测量。
+
+正式完整评估入口已补scripts/evaluate_full_acceptance.py：单次评一个不可变
+research检查点，原576案例各greedy/sample一次，共1152，不开放减种子或改
+任务/门槛选项。复用现有family worker与run_seed_jobs的spawn/NPZ/缓存；中断
+前完成的每个种子可接续，完成报告不覆盖，失败尝试保留。统计原level7与五
+地形macro分开，按声明的点胜率门槛判断，Wilson只作区间，不另加下界门禁。
+三初始化汇总分别报同一个模式下的2/3通过，拒绝把两个不同模式的单次通过
+混成2/3；迁移链同一原始初始化也不能计成不同初始化。该工具没有宣布T5/
+T6/总目标通过的功能，正式全量神经网评估尚未运行。
+13项统计/缺失失败种子/任务替换/截断/门槛/初始化与模式检查通过，0.124秒。
+真实后端短验证用原125k普通完整首种子30000：1job/203动作、收集7.786秒，
+9字段与原评估一致；同目录缓存续接collect0、0.00172秒，结果完整相等；这
+1/1152局明确被正式统计拒绝。总8.015秒、实际1CPU worker（请求2、按job数
+收缩）、峰值进程树RSS2.03GiB、CUDA未初始化。不是新SIGKILL测试或能力验收，
+也没有重复整套训练恢复对照。见full_acceptance_backend_v1_actual.json，原始
+NPZ/脚本/日志走HF，125k检查点引用既有HF09424831，不重复上传。
+调用：venv Python scripts/evaluate_full_acceptance.py --checkpoint <已保存.pt>
+--resource-dir ~/.cache/pvz-research-resources --output-dir <独立评估目录> --workers 2。
+当前主线及v8三随机接续仍按各自冻结worktree运行，没有为这些CPU工作停训练。
+后端证据已交付HFcf6689cd（evidence-full-acceptance-backend-v1），包含实际NPZ、
+完整结果、复现入口、最终评估脚本、13项检查的源码与日志；索引随git推送。
