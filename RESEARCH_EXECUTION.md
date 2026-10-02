@@ -1030,3 +1030,42 @@ GPU无其他学习任务。协议中的coexecution描述是原计划，当前成
 不能称为专机画像。原轨迹不进入PPO训练。四奖励×三初始化HF交付已启动，包含全部
 必要里程碑/resume目标、最后8个存在的trained、原NPZ及闭合日志；原始曲线不替换，
 修正复评另行交付。完整三初始化能力、共同B、T6/T7及最终交付继续未验收。
+
+### 全量事件覆盖未通过、精确决策预算及HF文件数限制（2026-10-02）
+
+原生v2全部120 jobs/6480分支在848.404秒内完成，120次真实录制回放通过，未出现比较
+不一致；逐job原raw/result/manifest/patch链全部核验。但三项正覆盖计数为零：防线损失、
+波变化、卡片恢复可用，按原协议整体fail，不能称完整原生接口门禁通过。既有固定0/3000/
+9000前缀不足以检验所有瞬态，下一步另行冻结公开动态前缀补充及组合证据验证入口。
+新协议保留这120jobs/6480分支和全部11项正覆盖，不删种子、不重分类本次fail；未冻结/
+未执行补充。详见[coverage_failure](artifacts/t5/perf/event_wait_native_audit_v2_actual_coverage_failure.json)。
+
+随机合法控制全192局完成，195.683秒，576个raw/opening/peak文件逐SHA核验。13,740
+公开状态中目标身份状态、引用和解析均0；0/64胜局、0截断分别覆盖三项pool任务。
+这些牌组仅含Tanglekelp19且没有Squash17/Cattail43，本结果不证明神经策略或新牌组无法
+激活身份机制，后续收益消融必须先冻结并实际验证有效机制覆盖。详见
+[full.json](artifacts/t5/perf/random_target_coverage_v1_full.json)。实际并行背景独立记录，
+原协议里早先矩阵/复评共执行描述不作专机成本依据。
+
+预算候选由未修改3ff参考经Git clone产生research/exact-decision-budget-v1提交4c0e218，
+显式budget.boundary_mode=exact_decisions_v1才启用；旧配置/旧worker回包保持原行为。
+每批在真实交互之前按剩余决策分配正整数上限，和不超过下一评估/最终节点，短正常终局
+的未用配额由后续更新重新分配；不丢弃实际动作、不事后裁剪轨迹。预算截断仍使用原
+价值/实际耗时bootstrap，LP和recent成功历史不吞下人工截断失败标签。配额进入assignment/
+NPZ指纹及update_history，恢复重新构造同一计划，并验证每条实际长度和全部预定节点。
+32项新预算/旧PPO/CUDA/课程检查5.101秒通过；首轮5项因缺旧ignored清单/build报错，
+补原只读链接复核，首轮日志保持。新full256工程协议c9eb739a…、23源指纹发布后启动
+0/2500/5000实际节点和SIGKILL全状态比较，max500局是新片段程序的工程上限，旧max80
+协议及5021记录不变。尚未获得新实际恢复结论，实际等耗时比较仍待实施。
+
+HF奖励上传首个run成功，第二个run及随后随机证据均遇真实服务错误：默认main将有
+20001文件、超过20000上限，remote拒绝。旧main部分提交a53da265…以及两份failed
+progress和上传日志保留，不重试堆入同一分支。最初commit e860a9c97634b2db1f47ac0dae7563138b2c1e91
+仅.gitattributes，新的交付方案从该commit建立每run/复评节点独立证据分支；每个完整
+run最大11177文件，全部模型/raw/日志保持，Git仓库不收大文件，不打包替代完整原始文件。
+hf_sync新增已有分支--revision，并绑定MANIFEST的hf_revision和pull/ls路径；不自动
+删除远端或创建branch，21项旧完整性/续跑/清理安全及新分支契约通过。新方案见
+[routing plan](artifacts/t5/perf/hf_file_limit_delivery_revision_v1.json)。官方API支持revision
+上传/下载，SDK自动分批提交不能解决单分支累计文件数上限，依据
+[Hub upload documentation](https://huggingface.co/docs/huggingface_hub/guides/upload)。
+实际分支上传/固定revision下载核验须继续完成，当前科学与交付总体目标未完成。

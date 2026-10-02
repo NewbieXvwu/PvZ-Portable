@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "scope": "native semantics only; no learning acceptance",
+  "protocol_sha256": "212f203e60952083f9f27e9ddfd7fa7e2f2603e4ee30365f91ba7a19bc7ec557",
+  "expected_jobs": 120,
+  "counts": {
+    "max_ticks": 4561,
+    "initial_true": 351,
+    "zero_actual_ticks": 1752,
+    "no_event_equivalent": 4561,
+    "condition:left_zone_occupied": 351,
+    "terminal": 1740,
+    "condition": 424,
+    "condition:sun_increased": 68,
+    "zombie_entered_left_zone": 25,
+    "condition:plant_count_decreased": 5
+  },
+  "missing_coverage": [
+    "defense_lost",
+    "condition:wave_changed",
+    "condition:packet_became_ready"
+  ],
+  "gate_result": "fail",
+  "limitation": "missing real event coverage stops acceptance; no task/seed is deleted",
+  "seconds": 848.4040405209998,
+  "peak_process_tree_rss_bytes": 1308385280,
+  "min_system_available_bytes": 16181080064,
+  "output": "artifacts/research/event_wait_native_audit_v2_actual",
+  "report_sha256": "c96816db3ac9f86a65047da8a2a8ca5bb9093ddec8d4e9f8f72cf38ac6471cff",
+  "source_commit": "9e42bf0",
+  "completed_jobs": 120,
+  "checked_branches": 6480,
+  "real_record_replays": 120,
+  "raw_and_result_and_manifest_patch_chain_verified_jobs": 120,
+  "actual_coexecution": "2 prefix workers and HF uploads; random coverage completed during this native run; no GPU learning",
+  "next_step": "Separately preregister real public dynamic-prefix supplemental coverage for all three missing mechanisms; preserve these120 jobs/6480 branches and the fail result. No learning release or lower coverage threshold."
+}

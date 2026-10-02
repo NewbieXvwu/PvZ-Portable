@@ -125,7 +125,7 @@ def _validate_archive(source: Path) -> None:
 
 
 def _upload_snapshot(api, repo: str, source: Path, key: str,
-                     files: dict[str, Path], manifest: dict) -> None:
+                     files: dict[str, Path], manifest: dict, *, revision: str | None = None) -> None:
     """Copy mutable metadata/logs; link immutable checkpoints and rollout shards."""
     if "MANIFEST.json" in files:
         raise ValueError("source MANIFEST.json would collide with the HF delivery manifest")
@@ -143,10 +143,13 @@ def _upload_snapshot(api, repo: str, source: Path, key: str,
                 shutil.copy2(path, target)
             records[name] = {"bytes": target.stat().st_size, "sha256": _sha256(target)}
         manifest.update(schema_version=2, files=records)
+        if revision is not None:
+            manifest['hf_revision'] = revision
         (staging / "MANIFEST.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
         api.create_repo(repo_id=repo, repo_type="model", private=True, exist_ok=True)
         api.upload_folder(repo_id=repo, repo_type="model", folder_path=str(staging),
-                          path_in_repo=key, commit_message=f"sync {key}: hashed evidence snapshot")
+                          path_in_repo=key, commit_message=f"sync {key}: hashed evidence snapshot",
+                          **({'revision':revision} if revision is not None else {}))
         # A lock-free binary edited during upload must not be reported as verified.
         for name, path in files.items():
             if path.suffix in (".pt", ".npz") and _sha256(path) != records[name]["sha256"]:
@@ -176,7 +179,8 @@ def cmd_push_evidence(args) -> int:
             return 0
         HfApi, _ = _require_hf()
         _upload_snapshot(HfApi(token=os.environ.get("HF_TOKEN")), repo, source, args.name, files,
-                         {"source_directory": str(source), "kind": "complete_evidence_tree"})
+                         {"source_directory": str(source), "kind": "complete_evidence_tree"},
+                         revision=getattr(args, 'revision', None))
     return 0
 
 
@@ -298,7 +302,8 @@ def cmd_ls(args) -> int:
     api = HfApi(token=os.environ.get("HF_TOKEN"))
     repo = _repo_id(args.repo)
     try:
-        files = api.list_repo_files(repo_id=repo, repo_type="model")
+        files = api.list_repo_files(repo_id=repo, repo_type="model",
+                                   **({'revision':args.revision} if getattr(args, 'revision', None) else {}))
     except Exception as exc:  # 仓库不存在或没有权限
         print(f"无法列出 {repo}: {exc}")
         return 1
@@ -392,9 +397,11 @@ def _cmd_push_locked(args, run_dir: Path) -> int:
         if name in files:
             raise ValueError("duplicate external log name")
         files[name] = path.resolve()
-    _upload_snapshot(api, repo, run_dir, args.run, files, manifest)
+    _upload_snapshot(api, repo, run_dir, args.run, files, manifest,
+                     revision=getattr(args, 'revision', None))
 
-    print(f"\n完成。下载：python3 scripts/hf_sync.py pull {args.run}")
+    revision_arg = f" --revision {args.revision}" if getattr(args, 'revision', None) else ''
+    print(f"\n完成。下载：python3 scripts/hf_sync.py{revision_arg} pull {args.run}")
     return 0
 
 
@@ -409,6 +416,7 @@ def cmd_pull(args) -> int:
         repo_type="model",
         allow_patterns=[f"{args.run}/*"],
         local_dir=str(dest),
+        **({'revision':args.revision} if getattr(args, 'revision', None) else {}),
     )
     print("完成。")
     return 0
@@ -420,7 +428,8 @@ def cmd_pull_all(args) -> int:
     dest = Path(args.dest).expanduser().resolve() if args.dest else RESEARCH_DIR
     dest.mkdir(parents=True, exist_ok=True)
     print(f"下载 {repo} 全部内容 → {dest}")
-    snapshot_download(repo_id=repo, repo_type="model", local_dir=str(dest))
+    snapshot_download(repo_id=repo, repo_type="model", local_dir=str(dest),
+                      **({'revision':args.revision} if getattr(args, 'revision', None) else {}))
     print("完成。")
     return 0
 
@@ -429,6 +438,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--repo", help="HF 仓库 id，默认读 $PVZ_HF_REPO")
+    parser.add_argument("--revision", help="已有HF分支/读取版本；省略保持main。证据分支必须另行从空基础提交创建，工具不删除远端文件")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("ls", help="列出远端有哪些 run").set_defaults(func=cmd_ls)

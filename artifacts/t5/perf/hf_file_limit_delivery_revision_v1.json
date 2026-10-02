@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "status": "new_delivery_routing_preregistered",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "cause": "Actual HF BadRequestError: repository would contain20001 files, over limit20000; offending refs/heads/main",
+  "old_default_branch_partial_revision": "a53da2651c3d17242b29cbaee1754d43a7fb0c85",
+  "old_default_branch_and_all_local_failures_preserved": true,
+  "empty_base_revision": "e860a9c97634b2db1f47ac0dae7563138b2c1e91",
+  "empty_base_files": [
+    ".gitattributes"
+  ],
+  "routing": "One evidence branch per source run or raw evaluation node, created from the actual initial one-file commit; existing main remains untouched. Full arrays/checkpoints stay HF, no tar/forced Git/raw omissions. Each snapshot binds hf_revision and existing SHA256/byte inventory.",
+  "source_runs": [
+    {
+      "source_run": "reward_r0_seed0_v2",
+      "branch": "evidence-reward-r0-seed0-v2",
+      "expected_files_including_manifest_and_gitattributes": 11177,
+      "checkpoints": 8,
+      "rollouts": 11151,
+      "closed_logs": 6
+    },
+    {
+      "source_run": "reward_r0_seed1_v2",
+      "branch": "evidence-reward-r0-seed1-v2",
+      "expected_files_including_manifest_and_gitattributes": 8576,
+      "checkpoints": 15,
+      "rollouts": 8546,
+      "closed_logs": 3
+    },
+    {
+      "source_run": "reward_r0_seed2_v2",
+      "branch": "evidence-reward-r0-seed2-v2",
+      "expected_files_including_manifest_and_gitattributes": 9152,
+      "checkpoints": 15,
+      "rollouts": 9121,
+      "closed_logs": 4
+    },
+    {
+      "source_run": "reward_r1_seed0_v2",
+      "branch": "evidence-reward-r1-seed0-v2",
+      "expected_files_including_manifest_and_gitattributes": 10060,
+      "checkpoints": 8,
+      "rollouts": 10034,
+      "closed_logs": 6
+    },
+    {
+      "source_run": "reward_r1_seed1_v2",
+      "branch": "evidence-reward-r1-seed1-v2",
+      "expected_files_including_manifest_and_gitattributes": 9749,
+      "checkpoints": 15,
+      "rollouts": 9719,
+      "closed_logs": 3
+    },
+    {
+      "source_run": "reward_r1_seed2_v2",
+      "branch": "evidence-reward-r1-seed2-v2",
+      "expected_files_including_manifest_and_gitattributes": 8672,
+      "checkpoints": 15,
+      "rollouts": 8641,
+      "closed_logs": 4
+    },
+    {
+      "source_run": "reward_r2_seed0_v2",
+      "branch": "evidence-reward-r2-seed0-v2",
+      "expected_files_including_manifest_and_gitattributes": 6295,
+      "checkpoints": 8,
+      "rollouts": 6272,
+      "closed_logs": 3
+    },
+    {
+      "source_run": "reward_r2_seed1_v2",
+      "branch": "evidence-reward-r2-seed1-v2",
+      "expected_files_including_manifest_and_gitattributes": 8686,
+      "checkpoints": 15,
+      "rollouts": 8656,
+      "closed_logs": 3
+    },
+    {
+      "source_run": "reward_r2_seed2_v2",
+      "branch": "evidence-reward-r2-seed2-v2",
+      "expected_files_including_manifest_and_gitattributes": 7032,
+      "checkpoints": 15,
+      "rollouts": 7001,
+      "closed_logs": 4
+    },
+    {
+      "source_run": "reward_r3_seed0_v2",
+      "branch": "evidence-reward-r3-seed0-v2",
+      "expected_files_including_manifest_and_gitattributes": 8635,
+      "checkpoints": 8,
+      "rollouts": 8613,
+      "closed_logs": 2
+    },
+    {
+      "source_run": "reward_r3_seed1_v2",
+      "branch": "evidence-reward-r3-seed1-v2",
+      "expected_files_including_manifest_and_gitattributes": 8111,
+      "checkpoints": 16,
+      "rollouts": 8080,
+      "closed_logs": 3
+    },
+    {
+      "source_run": "reward_r3_seed2_v2",
+      "branch": "evidence-reward-r3-seed2-v2",
+      "expected_files_including_manifest_and_gitattributes": 6036,
+      "checkpoints": 15,
+      "rollouts": 6005,
+      "closed_logs": 4
+    }
+  ],
+  "engineering_branches": {
+    "random_target_coverage_v1_full": "evidence-random-target-coverage-v1-full",
+    "event_wait_native_audit_v1_actual": "evidence-event-wait-native-audit-v1-actual",
+    "event_wait_native_audit_v2_actual": "evidence-event-wait-native-audit-v2-actual"
+  },
+  "helper": "scripts/hf_sync.py --revision <branch> push|push-evidence|pull|pull-all|ls",
+  "tests_sha256": "49941e7d09af53a4cbc18a45fbe67d9a4dc4e3c50a9fb5d73fdd20b19caa4463",
+  "old_failure_states": {
+    "reward_matrix_hf_delivery_v1": "27c4811c92d55cab2e721b5f260887a5ae2f2b654d5171961c19bff38efc9133",
+    "event_and_target_hf_delivery_v1": "b18e0a07d25e1f004524a915fff546d4915f6489058c1609ec6b313c70cf315f"
+  },
+  "complete": false
+}

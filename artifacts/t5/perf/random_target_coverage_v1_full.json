@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "scope": "random_legal_target_coverage_only_no_learning",
+  "protocol_sha256": "f0017b5f999db1c052afe857581479d19e9320c9bd55b7c7fe76dfaa4fea87ce",
+  "pool_protocol_sha256": "345f337d012cbfabb7c9d50d77a41ec316c8c06d83276c8e31e152cf61bd65f3",
+  "coexecution": "One CPU worker while full multicap diagnostic (2 workers) and corrected reevaluation (8 workers) run; reference256 waits for all60. No GPU model or optimizer.",
+  "limitations": [
+    "Source pool unchanged; all its tasks containing17/19/43 are selected mechanically, never by outcome. All64 seeds retained for full measurement.",
+    "The current selected decks cover Tanglekelp19 in pool cap1/3/5; no Squash17/Cattail43 coverage.",
+    "Native random control trajectories are never PPO training data. Activation proves observability, not learned exploitation/benefit or untrained neural baseline.",
+    "Wait/scripted zero activation does not prove neural or random policies have zero activation. This control tests that narrower question.",
+    "No activation threshold/win-rate gate is invented; publish exact coverage including all failures/truncations. Formal learning ablation still needs genuine coverage and a separate frozen protocol."
+  ],
+  "episodes": 192,
+  "summaries": {
+    "train_multicap_v1_pool_cap1_variant/legal_random": {
+      "episodes": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 4628,
+        "min": 89,
+        "median": 92.0,
+        "p95": 93.0,
+        "max": 96,
+        "dense_token_pairs": 39068905
+      },
+      "target_states": 0,
+      "target_references": 0,
+      "resolved_targets": 0
+    },
+    "train_pool_2/legal_random": {
+      "episodes": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 4416,
+        "min": 89,
+        "median": 95.0,
+        "p95": 100.0,
+        "max": 102,
+        "dense_token_pairs": 39811114
+      },
+      "target_states": 0,
+      "target_references": 0,
+      "resolved_targets": 0
+    },
+    "train_pool_4/legal_random": {
+      "episodes": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "wilson_95": [
+        0.0,
+        0.05662405979280534
+      ],
+      "truncated": 0,
+      "tokens": {
+        "count": 4696,
+        "min": 90,
+        "median": 93.0,
+        "p95": 97.0,
+        "max": 99,
+        "dense_token_pairs": 41027954
+      },
+      "target_states": 0,
+      "target_references": 0,
+      "resolved_targets": 0
+    }
+  },
+  "records_sha256": "804aef16f2237a1e387029d6378e24ad7063be41a76a59c92bf9b57562dd5fe0",
+  "seconds": 195.68336601100054,
+  "resources": {
+    "peak_process_tree_rss_bytes": 1797046272,
+    "min_system_available_bytes": 19664490496,
+    "peak_system_swap_used_bytes": 0
+  },
+  "raw_files_sha256_verified": 576,
+  "observations": 13740,
+  "output": "artifacts/research/random_target_coverage_v1_full",
+  "report_sha256": "7fb60e58ff679792ade046abced669deeae1691d656e1cbbab71287dabbadd0a",
+  "actual_coexecution": "2 prefix workers plus1 random worker; native event job began later; matrix/corrected reevaluation already complete. No GPU learning.",
+  "mechanism_ablation_gate": "not_met: 0 target states/refs across all192 natural trajectories; explicit new activation protocol required; no tasks/seeds removed",
+  "learning_acceptance_passed": false
+}
