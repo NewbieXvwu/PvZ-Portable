@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-10-02T08:30:57.785386+00:00",
+  "experiment_id": "mainline_events_v1_seed0",
+  "source_revision": "039b183c56c9d38cc291418edae340d73981c842",
+  "purpose": "Actual mainline CUDA startup and resumed model training; preliminary evaluation is not learning acceptance.",
+  "state": {
+    "phase": "pending_evaluation",
+    "status": "running",
+    "updates": 2,
+    "counters": {
+      "episodes": 22,
+      "decisions": 2000,
+      "ticks": 205506
+    },
+    "wall_seconds": 602.7054332959997
+  },
+  "parameter_counts": {
+    "width128": 2702759,
+    "width256": 7869607,
+    "width512": 28033703
+  },
+  "initial_evaluation": {
+    "seconds": 493.45767823000097,
+    "counters": {
+      "episodes": 0,
+      "decisions": 0,
+      "ticks": 0
+    },
+    "modes": {
+      "greedy": {
+        "sample_count": 40,
+        "pass_rate": 0.4,
+        "wilson_95": [
+          0.263483,
+          0.554041
+        ],
+        "wait_summary": {
+          "wait_actions": 56791,
+          "condition_counts": {
+            "left_zone_occupied": 55164,
+            "plant_count_decreased": 1035,
+            "sun_increased": 577,
+            "wave_changed": 15
+          },
+          "primary_reason_counts": {
+            "max_ticks": 1376,
+            "zombie_entered_left_zone": 128,
+            "defense_lost": 75,
+            "condition": 55186,
+            "terminal": 26
+          },
+          "all_trigger_counts": {
+            "max_ticks": 1376,
+            "zombie_entered_left_zone": 128,
+            "defense_lost": 90,
+            "condition": 55187,
+            "terminal": 26
+          },
+          "requested_logic_ticks": 16977300,
+          "actual_ticks": 404714,
+          "zero_actual_tick_waits": 55120,
+          "logic_steps": 404724,
+          "stalled_clock_steps": 10,
+          "initial_condition_satisfied": 55120
+        },
+        "truncated": 14
+      },
+      "sampled": {
+        "sample_count": 40,
+        "pass_rate": 0.7,
+        "wilson_95": [
+          0.5457,
+          0.819252
+        ],
+        "wait_summary": {
+          "wait_actions": 3213,
+          "condition_counts": {
+            "plant_count_decreased": 573,
+            "sun_increased": 566,
+            "timeout": 495,
+            "left_zone_occupied": 556,
+            "packet_became_ready": 490,
+            "wave_changed": 533
+          },
+          "primary_reason_counts": {
+            "max_ticks": 2504,
+            "condition": 416,
+            "zombie_entered_left_zone": 150,
+            "defense_lost": 103,
+            "terminal": 40
+          },
+          "all_trigger_counts": {
+            "max_ticks": 2508,
+            "condition": 430,
+            "zombie_entered_left_zone": 150,
+            "defense_lost": 123,
+            "terminal": 40
+          },
+          "requested_logic_ticks": 568380,
+          "actual_ticks": 470860,
+          "zero_actual_tick_waits": 228,
+          "logic_steps": 470872,
+          "stalled_clock_steps": 12,
+          "initial_condition_satisfied": 228
+        },
+        "truncated": 0
+      }
+    }
+  },
+  "startup_update": {
+    "update": 1,
+    "counters": {
+      "episodes": 20,
+      "decisions": 1854,
+      "ticks": 191490
+    },
+    "losses": {
+      "policy_loss": 0.007320373505353928,
+      "value_loss": 0.1798697780817747,
+      "entropy": 2.9806790232658384,
+      "advantage_mean": -0.09144189953804016,
+      "advantage_std": 0.3881201148033142,
+      "gradient_norm": 0.6832295060157776,
+      "approx_kl": 0.011027058852239622,
+      "clip_fraction": 0.1611334715038538,
+      "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+      "max_log_prob_change": 0.7107968330383301,
+      "optimizer_steps": 20,
+      "stopped_for_kl": false
+    },
+    "trajectory_stats": {
+      "action_counts": {
+        "plant": 248,
+        "shovel": 316,
+        "wait": 1290
+      },
+      "zero_tick_actions": 652,
+      "immediate_plant_shovels": 112,
+      "immediate_shovel_fraction_of_plants": 0.45161290322580644,
+      "mean_abs_shaping_reward": 0.07822460971075741,
+      "mc_value_mse_before_update": 0.38480809083883294,
+      "mc_value_explained_variance_before_update": 0.0030917758873132417,
+      "won": 3,
+      "truncated": 12,
+      "task_counts": {
+        "train_fog_3": 3,
+        "train_roof_2": 1,
+        "train_day_2": 2,
+        "train_multicap_v1_pool_cap5_variant": 1,
+        "train_multicap_v1_day_cap5_variant": 1,
+        "train_multicap_v1_fog_cap1_variant": 1,
+        "train_night_3": 1,
+        "train_pool_1": 1,
+        "train_multicap_v1_roof_cap5_variant": 3,
+        "train_roof_3": 1,
+        "train_night_4": 2,
+        "train_night_2": 2,
+        "train_fog_2": 1
+      },
+      "wait_summary": {
+        "wait_actions": 1290,
+        "condition_counts": {
+          "timeout": 189,
+          "wave_changed": 239,
+          "sun_increased": 235,
+          "plant_count_decreased": 225,
+          "packet_became_ready": 174,
+          "left_zone_occupied": 228
+        },
+        "primary_reason_counts": {
+          "max_ticks": 1036,
+          "condition": 159,
+          "zombie_entered_left_zone": 55,
+          "defense_lost": 32,
+          "terminal": 8
+        },
+        "all_trigger_counts": {
+          "max_ticks": 1037,
+          "condition": 170,
+          "zombie_entered_left_zone": 55,
+          "defense_lost": 35,
+          "terminal": 8
+        },
+        "requested_logic_ticks": 226800,
+        "actual_ticks": 191490,
+        "zero_actual_tick_waits": 88,
+        "logic_steps": 191495,
+        "stalled_clock_steps": 5,
+        "initial_condition_satisfied": 88
+      }
+    },
+    "rollout_seconds": 19.769551306999347,
+    "ppo_seconds": 72.43550771500122
+  },
+  "continuation": "Same output/config --resume --stop-after-updates 20 is actively executing. Stops after 20 updates in this invocation, not at absolute update 20.",
+  "not_yet_resolved": [
+    "greedy already-satisfied wait conditions can loop at zero ticks",
+    "old late PPO degradation has no demonstrated cure in this new model",
+    "independent slow memory and differentiable goal conditioning are not implemented",
+    "auxiliary output heads are not auxiliary training losses"
+  ],
+  "evaluation_scope": "Twenty unchanged heldout tasks, first two original seeds per task, greedy and sampled; full 64-seed heldout acceptance remains unchanged."
+}

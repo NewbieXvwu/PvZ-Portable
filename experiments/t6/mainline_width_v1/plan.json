@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "status": "prepared_not_started",
+  "reference_configs": [
+    "experiments/t5/mainline_events_v1/seed0.json",
+    "experiments/t5/mainline_events_v1/seed1.json",
+    "experiments/t5/mainline_events_v1/seed2.json"
+  ],
+  "reuse_reference": "Existing mainline_events_v1 seed0..2; do not retrain the same 256 reference under a different ID.",
+  "candidates": [
+    "experiments/t6/mainline_width_v1/width128_seed0.json",
+    "experiments/t6/mainline_width_v1/width128_seed1.json",
+    "experiments/t6/mainline_width_v1/width128_seed2.json",
+    "experiments/t6/mainline_width_v1/width512_seed0.json",
+    "experiments/t6/mainline_width_v1/width512_seed1.json",
+    "experiments/t6/mainline_width_v1/width512_seed2.json"
+  ],
+  "parameter_counts": {
+    "width128": 2702759,
+    "width256": 7869607,
+    "width512": 28033703
+  },
+  "fixed_dimensions": {
+    "layers": 6,
+    "heads": 8,
+    "gru_width": 256,
+    "gru_layers": 2,
+    "critic_width": 256,
+    "critic_layers": 1
+  },
+  "changed_dimensions": [
+    "encoder width",
+    "ff width equals 4 times encoder width"
+  ],
+  "execution_priority": "Advance mainline actual learning first. Start width128 after the first useful training segment, then512 if resource capacity permits. No hour-scale prerequisite audits or repeated hash sweeps.",
+  "evaluation_limits": "Twenty unchanged heldout tasks, first two original seeds per task, greedy and sampled; full 64-seed heldout acceptance remains unchanged.",
+  "selection": "Use each initialization baseline, later learning curves, physical ticks, actual wall time and resource cost. A smoke, minimum loss or highest short score cannot select the final architecture.",
+  "slow_design": "Joint differentiable conditioning actor from TRAINING_DESIGN_PROPOSAL section5 remains a planned separate candidate, not falsely described as implemented."
+}
