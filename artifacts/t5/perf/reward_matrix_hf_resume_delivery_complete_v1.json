@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "status": "pass",
+  "already_full_verified": [
+    "reward_r0_seed0_v2",
+    "reward_r0_seed1_v2",
+    "reward_r0_seed2_v2",
+    "reward_r1_seed0_v2"
+  ],
+  "method": "Only8 newly uploaded runs: download tiny resume.json and match its target to the fixed-revision remote LFS object and local recorded pointer/size. No repeated whole-tree hash scan or raw/model download.",
+  "checked": [
+    {
+      "run": "reward_r1_seed1_v2",
+      "branch": "evidence-reward-r1-seed1-v2",
+      "revision": "19129d81c80056990714ba958c165c4ce66820c2",
+      "seconds": 421.1577158130003,
+      "resume_checkpoint": "runs/run_1/update_000061_boundary_1790840050263352604.pt",
+      "remote_size": 44963323,
+      "remote_lfs_sha256": "936dc492f2dc9fa1ebfe482dea8df2427c8861e0e0a067486101ffac5dd95415",
+      "pointer_equal": true
+    },
+    {
+      "run": "reward_r1_seed2_v2",
+      "branch": "evidence-reward-r1-seed2-v2",
+      "revision": "0bb67a2b452ff919ac702d4ea57c96ef81a323f5",
+      "seconds": 428.4809286969994,
+      "resume_checkpoint": "runs/run_1/update_000052_boundary_1790855050173844737.pt",
+      "remote_size": 44906427,
+      "remote_lfs_sha256": "9544013730cb3ee1a2c20405ab82d675f88fcb3bb257b837a4d42ad9027b88ad",
+      "pointer_equal": true
+    },
+    {
+      "run": "reward_r2_seed0_v2",
+      "branch": "evidence-reward-r2-seed0-v2",
+      "revision": "775b7b82c04219bd7eb52d71137c2b715a96bc91",
+      "seconds": 249.338959875,
+      "resume_checkpoint": "runs/run_1/update_000034_boundary_1790826540947902111.pt",
+      "remote_size": 44776059,
+      "remote_lfs_sha256": "296a247f71c5318149a042f7b1b092b91a51ee7d34ad8750deea1ee05eb107b6",
+      "pointer_equal": true
+    },
+    {
+      "run": "reward_r2_seed1_v2",
+      "branch": "evidence-reward-r2-seed1-v2",
+      "revision": "2a162589cad7a46bef9d864f88e9aab616e8ffcc",
+      "seconds": 424.8150370300009,
+      "resume_checkpoint": "runs/run_1/update_000055_boundary_1790843467539475109.pt",
+      "remote_size": 44920507,
+      "remote_lfs_sha256": "135bc482fb0681b33f980ddd46b83e71863ef488e9ae50dadd91fc587d5e7e2d",
+      "pointer_equal": true
+    },
+    {
+      "run": "reward_r2_seed2_v2",
+      "branch": "evidence-reward-r2-seed2-v2",
+      "revision": "78b9931c781e215b60ed8a0883f5e1336c2fec04",
+      "seconds": 345.3757224149995,
+      "resume_checkpoint": "runs/run_1/update_000037_boundary_1790858792157505929.pt",
+      "remote_size": 44808699,
+      "remote_lfs_sha256": "1b4703320a316af2ce8a5a80c8d9f5cf4721e5d7d2abb5e0c506a793784654ff",
+      "pointer_equal": true
+    },
+    {
+      "run": "reward_r3_seed0_v2",
+      "branch": "evidence-reward-r3-seed0-v2",
+      "revision": "d75df1fd237a2919a16798a4d8202ad004469709",
+      "seconds": 332.0111682679999,
+      "resume_checkpoint": "runs/run_1/update_000056_boundary_1790829825974980906.pt",
+      "remote_size": 44918331,
+      "remote_lfs_sha256": "98d860e1de805b65864ba223283b07a731f2d1c17879dad6ea2a3ab089e98673",
+      "pointer_equal": true
+    },
+    {
+      "run": "reward_r3_seed1_v2",
+      "branch": "evidence-reward-r3-seed1-v2",
+      "revision": "78ffb6ef5a1b12f6f83c29b84292f4f9196ccf48",
+      "seconds": 405.93742914500035,
+      "resume_checkpoint": "runs/run_1/update_000047_boundary_1790848656669996526.pt",
+      "remote_size": 44899835,
+      "remote_lfs_sha256": "59b2bda607a0f5bc46cf31ca9d83bc3ea4c8857f0fcb3305feb37a2ddf8b144e",
+      "pointer_equal": true
+    },
+    {
+      "run": "reward_r3_seed2_v2",
+      "branch": "evidence-reward-r3-seed2-v2",
+      "revision": "c867033cdfba43acbfd15066730bcf40d2b9775d",
+      "seconds": 337.513611892,
+      "resume_checkpoint": "runs/run_1/update_000032_boundary_1790862641424939291.pt",
+      "remote_size": 44767547,
+      "remote_lfs_sha256": "88f05069b1b26ceb222c7283f8c02bac7abf103b44bc1c6d57d62fdb420690d2",
+      "pointer_equal": true
+    }
+  ],
+  "seconds": 2.3520022190023155
+}

@@ -1244,3 +1244,17 @@ v2只修输出，结果见event_progress_policy_v1_actual.json。无需小时级
 宽度候选尚未开跑，在开始前同步相同mask，256参考改用新masked候选；旧曲线不混用。
 旧奖励12条run的HF分支上传均已实际完成；前4已完成全面远端摘要及模型下载核验，
 其余8不重跑全量摘要扫描，后续只核对续跑指针及对应远端模型对象。
+
+新masked主线812d8a6已实际启动，并完成自己的未训练评估与真实CUDA更新。初始greedy
+26/40(Wilson .495059–.778655)、sampled28/40(.545700–.819252)，两模式零tick等待/截断
+均0，80局评估65.683秒。2000节点greedy27/40、sampled25/40，80.619秒，零tick等待/截断
+仍0。节点是初步进度，原64种子/多初始化/完整关卡验收不变；尚无稳定学习结论。
+第一更新1817决策，真实采样18.688秒、CUDA PPO10.978秒、首小批回放4.768e-7，
+KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask，提前停止不同；
+初始相同权重/任务的评估493→66秒与实际空转减少直接相关。当前继续同一候选20更新
+段，progress日志已迁移；原候选监控正常关闭后日志随闭合模型一起后台HF上传。
+默认配置为experiments/t5/event_progress_policy_v1/seed0..2.json；128/512尚未开跑。
+[新启动实测](artifacts/t5/perf/mainline_event_progress_v1_startup_actual.json)，
+[新曲线](artifacts/t5/curves/mainline_event_progress_v1_seed0.json)。12奖励run全部上传后，
+新增8个只下载KB级resume指针及核对对应固定revision模型对象，全部通过，耗时2.352秒，
+不重复扫描万级分片；见reward_matrix_hf_resume_delivery_complete_v1.json。

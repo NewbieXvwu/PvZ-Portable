@@ -1,0 +1,289 @@
+{
+  "schema_version": 1,
+  "experiment_id": "mainline_event_progress_v1_seed0",
+  "source_revision": "812d8a627707f9fcd95ce16014c49034c39cd0a2",
+  "model_config": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7,
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
+  },
+  "parameter_count": 7869607,
+  "snapshot": {
+    "phase": "ready",
+    "status": "running",
+    "updates": 5,
+    "counters": {
+      "episodes": 83,
+      "decisions": 8997,
+      "ticks": 944245
+    },
+    "wall_seconds": 519.1999437020022
+  },
+  "initial_and_progress": [
+    {
+      "updates": 0,
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "seconds": 65.68294677000085,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.65,
+          "wilson_95": [
+            0.495059,
+            0.778655
+          ],
+          "truncated": 0,
+          "wait_summary": {
+            "wait_actions": 1916,
+            "condition_counts": {
+              "left_zone_occupied": 44,
+              "plant_count_decreased": 1186,
+              "sun_increased": 665,
+              "wave_changed": 21
+            },
+            "primary_reason_counts": {
+              "max_ticks": 1545,
+              "zombie_entered_left_zone": 154,
+              "defense_lost": 107,
+              "condition": 70,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 1545,
+              "zombie_entered_left_zone": 154,
+              "defense_lost": 128,
+              "condition": 71,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 511500,
+            "actual_ticks": 463693,
+            "zero_actual_tick_waits": 0,
+            "logic_steps": 463707,
+            "stalled_clock_steps": 14,
+            "initial_condition_satisfied": 0
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.7,
+          "wilson_95": [
+            0.5457,
+            0.819252
+          ],
+          "truncated": 0,
+          "wait_summary": {
+            "wait_actions": 2943,
+            "condition_counts": {
+              "plant_count_decreased": 572,
+              "sun_increased": 553,
+              "timeout": 517,
+              "left_zone_occupied": 319,
+              "packet_became_ready": 470,
+              "wave_changed": 512
+            },
+            "primary_reason_counts": {
+              "max_ticks": 2454,
+              "condition": 197,
+              "zombie_entered_left_zone": 148,
+              "defense_lost": 104,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 2458,
+              "condition": 211,
+              "zombie_entered_left_zone": 148,
+              "defense_lost": 121,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 519600,
+            "actual_ticks": 459495,
+            "zero_actual_tick_waits": 0,
+            "logic_steps": 459507,
+            "stalled_clock_steps": 12,
+            "initial_condition_satisfied": 0
+          }
+        }
+      }
+    },
+    {
+      "updates": 2,
+      "counters": {
+        "episodes": 23,
+        "decisions": 2000,
+        "ticks": 215532
+      },
+      "seconds": 80.61908560099982,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "wait_summary": {
+            "wait_actions": 3260,
+            "condition_counts": {
+              "plant_count_decreased": 154,
+              "timeout": 3104,
+              "sun_increased": 2
+            },
+            "primary_reason_counts": {
+              "max_ticks": 2958,
+              "zombie_entered_left_zone": 156,
+              "defense_lost": 106,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 2959,
+              "zombie_entered_left_zone": 156,
+              "defense_lost": 129,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 489000,
+            "actual_ticks": 466513,
+            "zero_actual_tick_waits": 0,
+            "logic_steps": 466526,
+            "stalled_clock_steps": 13,
+            "initial_condition_satisfied": 0
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.625,
+          "wilson_95": [
+            0.470324,
+            0.75777
+          ],
+          "truncated": 0,
+          "wait_summary": {
+            "wait_actions": 3308,
+            "condition_counts": {
+              "plant_count_decreased": 633,
+              "sun_increased": 597,
+              "timeout": 649,
+              "left_zone_occupied": 271,
+              "wave_changed": 557,
+              "packet_became_ready": 601
+            },
+            "primary_reason_counts": {
+              "max_ticks": 2802,
+              "condition": 206,
+              "zombie_entered_left_zone": 157,
+              "defense_lost": 103,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 2807,
+              "condition": 215,
+              "zombie_entered_left_zone": 158,
+              "defense_lost": 123,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 528270,
+            "actual_ticks": 472302,
+            "zero_actual_tick_waits": 0,
+            "logic_steps": 472317,
+            "stalled_clock_steps": 15,
+            "initial_condition_satisfied": 0
+          }
+        }
+      }
+    }
+  ],
+  "first_cuda_update": {
+    "counters": {
+      "episodes": 20,
+      "decisions": 1817,
+      "ticks": 197390
+    },
+    "losses": {
+      "policy_loss": -0.03878282755613327,
+      "value_loss": 0.18521668016910553,
+      "entropy": 2.9207494258880615,
+      "advantage_mean": -0.04873740300536156,
+      "advantage_std": 0.40703415870666504,
+      "gradient_norm": 1.081014633178711,
+      "approx_kl": 0.01630469062456898,
+      "clip_fraction": 0.24999999006589255,
+      "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+      "max_log_prob_change": 0.6975963115692139,
+      "optimizer_steps": 2,
+      "stopped_for_kl": true
+    },
+    "trajectory_stats": {
+      "action_counts": {
+        "plant": 253,
+        "shovel": 318,
+        "wait": 1246
+      },
+      "zero_tick_actions": 571,
+      "immediate_plant_shovels": 110,
+      "immediate_shovel_fraction_of_plants": 0.43478260869565216,
+      "mean_abs_shaping_reward": 0.08211880443555124,
+      "mc_value_mse_before_update": 0.4285675947492885,
+      "mc_value_explained_variance_before_update": 0.0006924440752478223,
+      "won": 6,
+      "truncated": 9,
+      "task_counts": {
+        "train_fog_3": 3,
+        "train_roof_2": 1,
+        "train_day_2": 2,
+        "train_multicap_v1_pool_cap5_variant": 1,
+        "train_multicap_v1_day_cap5_variant": 1,
+        "train_multicap_v1_fog_cap1_variant": 1,
+        "train_night_3": 1,
+        "train_pool_1": 1,
+        "train_multicap_v1_roof_cap5_variant": 3,
+        "train_roof_3": 1,
+        "train_night_4": 2,
+        "train_night_2": 2,
+        "train_fog_2": 1
+      },
+      "wait_summary": {
+        "wait_actions": 1246,
+        "condition_counts": {
+          "timeout": 189,
+          "wave_changed": 254,
+          "sun_increased": 245,
+          "plant_count_decreased": 233,
+          "packet_became_ready": 184,
+          "left_zone_occupied": 141
+        },
+        "primary_reason_counts": {
+          "max_ticks": 1065,
+          "condition": 75,
+          "zombie_entered_left_zone": 57,
+          "defense_lost": 38,
+          "terminal": 11
+        },
+        "all_trigger_counts": {
+          "max_ticks": 1065,
+          "condition": 82,
+          "zombie_entered_left_zone": 57,
+          "defense_lost": 41,
+          "terminal": 11
+        },
+        "requested_logic_ticks": 219600,
+        "actual_ticks": 197390,
+        "zero_actual_tick_waits": 0,
+        "logic_steps": 197395,
+        "stalled_clock_steps": 5,
+        "initial_condition_satisfied": 0
+      }
+    },
+    "rollout_seconds": 18.68826980200174,
+    "ppo_seconds": 10.978379338997911
+  },
+  "scope": "Actual new policy startup and preliminary learning progress, not T5/T6 acceptance. Full original64-seed evaluation and3-init repeatability remain required.",
+  "cost_caution": "Initial evaluations use same tasks, weights and hardware, observed wall493.458s unmasked vs65.683s masked. First PPO cost also changed because new run KL early-stop after2 optimizer steps; do not attribute that PPO speed change solely to masking."
+}
