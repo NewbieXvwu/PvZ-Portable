@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "experiment_id": "mainline_headless_width128_v1_seed1",
+  "purpose": "Headless width screening, no auxiliary heads; explicit input7/event progress mask/reward/LP course/tasks/seed lists/nodes held fixed.6 encoder layers8 heads, FF4xwidth; singleGRU256x2 and critic256x1 fixed. Useful short GPU segments, then remaining frozen scientific comparisons. Own initial baseline for each seed.",
+  "initialization_seed": 1,
+  "sampling_seed": 1701,
+  "model": {
+    "layers": 6,
+    "width": 128,
+    "heads": 8,
+    "ff_width": 512,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7,
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
+  },
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 0.95,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "sampling": {
+    "manifest": "experiments/t5/multicap_course_v1/train.json",
+    "task_ids": [],
+    "method": "learning_progress",
+    "rollout_episodes": 20,
+    "curriculum": {
+      "window_episodes": 8,
+      "minimum_window_episodes": 2,
+      "uniform_fraction": 0.25,
+      "coverage": "terrain_wave_cap"
+    }
+  },
+  "budget": {
+    "decisions": 500000,
+    "max_episodes": null,
+    "boundary_mode": "exact_decisions_v1"
+  },
+  "evaluation": {
+    "manifest": "experiments/t5/mainline_events_v1/progress_evaluation.json",
+    "modes": [
+      "greedy",
+      "sampled"
+    ],
+    "decision_nodes": [
+      2000,
+      25000,
+      125000,
+      250000,
+      375000,
+      500000
+    ]
+  },
+  "runtime": {
+    "workers": 2,
+    "worker_threads": 1,
+    "worker_device": "cpu",
+    "update_device": "cuda",
+    "max_actions": 4000,
+    "cudnn_tf32": false,
+    "matmul_precision": "highest",
+    "deterministic_algorithms": true,
+    "cublas_workspace_config": ":4096:8"
+  },
+  "prerequisites": []
+}

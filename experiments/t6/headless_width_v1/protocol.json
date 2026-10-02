@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "reference": "experiments/t7/dual_timescale_v1/single_seed0..2.json, headless256/GRU256x2/critic256x1; do not duplicate reference training under a second name.",
+  "widths": [
+    128,
+    256,
+    512
+  ],
+  "layers": 6,
+  "heads": 8,
+  "ff_width": "4*width",
+  "memory": "singleGRU256x2",
+  "critic": "256x1",
+  "initialization_seeds": [
+    0,
+    1,
+    2
+  ],
+  "tasks": "experiments/t5/multicap_course_v1/train.json",
+  "evaluation": "experiments/t5/mainline_events_v1/progress_evaluation.json",
+  "nodes": [
+    2000,
+    25000,
+    125000,
+    250000,
+    375000,
+    500000
+  ],
+  "budget": "500k exploratory ceiling; scientific common measuredB/completion remains separate from short screening.",
+  "adoption": "Source/config published before launch; actual512 GPU smoke next after current dual segment, no hours-long admission gate.",
+  "versions": "These are headless models. Old auxiliary-bearing128/256 segments kept with frozen025f371 and reported separately; no mixing their weights or gains into headless comparisons."
+}

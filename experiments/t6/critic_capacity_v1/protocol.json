@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "reference": "experiments/t7/dual_timescale_v1/single_seed0..2.json; critic256x1 reference reused, no duplicate baseline.",
+  "candidates": [
+    "critic128x1",
+    "critic512x2"
+  ],
+  "target": "Regression to configured environment return, not win probability. Actual training critic ends in an unrestricted linear layer; public unused value output does not define PPO critic range.",
+  "initialization_seeds": [
+    0,
+    1,
+    2
+  ],
+  "actor": "Common encoder256x6, singleGRU256x2, input7, native event progress mask; privileged data for critic only.",
+  "training": "experiments/t5/multicap_course_v1/train.json",
+  "evaluation": "experiments/t5/mainline_events_v1/progress_evaluation.json",
+  "nodes": [
+    2000,
+    25000,
+    125000,
+    250000,
+    375000,
+    500000
+  ],
+  "priority": "Mainline learning first, width/fast memory screening before value capacity. No new auxiliary predictions."
+}

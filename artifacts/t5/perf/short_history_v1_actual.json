@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "source_commit": "d00acfc5b6d9178d4dbce57897aa672071ef7a61",
+  "status": "pass",
+  "scope": "Actual full-size short-history8/16 CPU native collection, NPZ replay, actor gradients and PPO. Brief implementation proof, not learned efficacy or CUDA/comparison acceptance.",
+  "seconds": 25.208240715997817,
+  "unit_tests": {
+    "passed": 43,
+    "cuda_skipped": 1,
+    "seconds": 4.134
+  },
+  "candidates": {
+    "8": {
+      "parameter_count": 7422750,
+      "memory_parameter_count": 443264,
+      "model_config": {
+        "layers": 6,
+        "width": 256,
+        "heads": 8,
+        "ff_width": 1024,
+        "gru_layers": 2,
+        "gru_width": 256,
+        "critic_width": 256,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "events",
+        "wait_mask": "progress_v1",
+        "short_history": {
+          "history_decisions": 8,
+          "projection_width": 128,
+          "mlp_width": 256,
+          "mlp_layers": 2
+        }
+      },
+      "npz_replay_max_error": 4.76837158203125e-07,
+      "public_history_tick_horizon": {
+        "count": 128,
+        "mean": 732.4453125,
+        "minimum": 0,
+        "maximum": 1500
+      },
+      "actor_only_history_projection_grad_l1": 19.96133804321289,
+      "actual_cpu_ppo": {
+        "policy_loss": -0.002824176102876663,
+        "value_loss": 0.03513864893466234,
+        "entropy": 3.1176807284355164,
+        "advantage_mean": 0.07093097269535065,
+        "advantage_std": 0.17776642739772797,
+        "gradient_norm": 0.40338149666786194,
+        "approx_kl": 0.0033168671652674675,
+        "clip_fraction": 0.0625,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.4998798370361328,
+        "optimizer_steps": 4,
+        "stopped_for_kl": false
+      },
+      "actual_cpu_ppo_seconds": 5.851755413001229,
+      "memory_parameter_change_l1": 89.6098469812423,
+      "passed": true
+    },
+    "16": {
+      "parameter_count": 7684894,
+      "memory_parameter_count": 705408,
+      "model_config": {
+        "layers": 6,
+        "width": 256,
+        "heads": 8,
+        "ff_width": 1024,
+        "gru_layers": 2,
+        "gru_width": 256,
+        "critic_width": 256,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "events",
+        "wait_mask": "progress_v1",
+        "short_history": {
+          "history_decisions": 16,
+          "projection_width": 128,
+          "mlp_width": 256,
+          "mlp_layers": 2
+        }
+      },
+      "npz_replay_max_error": 4.76837158203125e-07,
+      "public_history_tick_horizon": {
+        "count": 128,
+        "mean": 1478.5546875,
+        "minimum": 0,
+        "maximum": 2610
+      },
+      "actor_only_history_projection_grad_l1": 21.96550750732422,
+      "actual_cpu_ppo": {
+        "policy_loss": -0.00624384731054306,
+        "value_loss": 0.03437159024178982,
+        "entropy": 3.107032895088196,
+        "advantage_mean": 0.06114484369754791,
+        "advantage_std": 0.17837382853031158,
+        "gradient_norm": 0.4014602601528168,
+        "approx_kl": 0.0026309750974178314,
+        "clip_fraction": 0.0546875,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.35756492614746094,
+        "optimizer_steps": 4,
+        "stopped_for_kl": false
+      },
+      "actual_cpu_ppo_seconds": 7.103496717998496,
+      "memory_parameter_change_l1": 135.47637604363263,
+      "passed": true
+    }
+  },
+  "raw_path": "artifacts/research/short_history_v1_actual",
+  "limitation": "Intentional64-decision diagnostic truncations. No CUDA/long-learning/three-initialization efficacy claim.",
+  "critic_check": "Actual PPO privileged_value_batch and collector privileged_value_from_extra both use the unrestricted linear asymmetric critic. No output-range correction needed."
+}
