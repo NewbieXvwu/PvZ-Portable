@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_training",
+  "purpose": "Exploratory R0 long-course bridge from the prespecifiedfirst13full boundary. Responds to user mower-idle finding: only cap>=10/full selected for training, matched idle gains measure progress. New stage, not causal reward comparison; retain old tasks and all failures. No auxiliary heads or architecture expansion.",
+  "supersedes_prepared_not_started": "experiments/t7/bridge_level7_v1",
+  "retained_training_manifest": "experiments/t7/bridge_level7_v1/train.json",
+  "selected_task_ids": [
+    "train_full_level7_v1",
+    "train_bridge7_v1_aid_cap10",
+    "train_bridge7_v1_aid_cap15",
+    "train_bridge7_v1_aid_cap20",
+    "train_bridge7_v1_aid_capfull",
+    "train_bridge7_v1_ordinary_cap10",
+    "train_bridge7_v1_ordinary_cap15"
+  ],
+  "retained_tasks": 38,
+  "selected_tasks": 7,
+  "short_tasks": "Retained byte-for-byte, excluded from this newstage sampling and progress. Frozen regression manifest: experiments/t7/bridge_level7_v1/progress_evaluation.json.",
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "reward_rationale": "Old12run cumulative training outcomes favor discounted R0/R1 across seeds, but these are not checkpoint evaluation rates and used a different pre-intro-fix native build. R0 is a pragmatic next candidate, not proof gamma1 is impossible. R3 natural terminal losses in fullstage164episodes have identical -1.0166666667 returns; discovery/curriculum and credit propagation remain concerns.",
+  "budget": "500000 newstage decisions, prespecified2k/25k/125k/250k/375k/500k nodes. Continue in bounded resumable segments beyond the first43updates if healthy. No universal500k minimum-to-learn, no short-run verdict of RL impossibility. Stop genuine crashes/gates/nonfinite losses; preserve evidence.",
+  "sampling": {
+    "window_episodes": 8,
+    "minimum_window_episodes": 2,
+    "uniform_fraction": 0.25,
+    "coverage": "terrain_wave_cap",
+    "frontier_pass_range": [
+      0.2,
+      0.8
+    ],
+    "initial_focus_task_ids": [
+      "train_bridge7_v1_aid_cap10"
+    ],
+    "initial_focus_completed_episodes": 64
+  },
+  "initialization": {
+    "method": "weights_transfer_v1",
+    "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_full_level7_v1_seed0/runs/run_1/update_000013_boundary_1790946288957446067.pt",
+    "source_sha256": "c400115918066625c2f1ca8bae1c1120cdeb5f37c00a6ff6a35194cc171d791c",
+    "note": "New bridge-course stage from prespecifiedfirst13completelevel7 boundary, the checkpoint used in prospective probes. Copy all same-config parameters; newAdamW/RNG/counters/course, recursively retain parent training costs. Later fullstage43losses remain delivered; not same-candidate resume or a curriculum causal comparison. R0 objective differs from R3 parent; initialize critic weights too but reset its optimizer, measure own initial baseline and recalibration. No unchanged-objective or same-candidate resume claim."
+  },
+  "progress_cases_per_mode": 72,
+  "progress": "Report each task, ordinary_long/ordinary_full/aided_long/aided_full, matched idle improved/degraded pairs and net win gain. Never call passive short-course wins or aided scores original fullgame acceptance.",
+  "acceptance": "experiments/t7/full_level7_v1/acceptance.json unchanged",
+  "architecture_and_runtime": "Same256two-layerGRU/PPO/event waits/progressmask/twoCPUworkers; no aux heads. Width/FF/dual comparisons deferred until meaningful strategy learning.",
+  "schedule": {
+    "smoke_updates": 3,
+    "smoke_max_seconds": 1800,
+    "resume_updates": [
+      10,
+      30
+    ],
+    "later": "Assess actual actions/returns, then continue same candidate toward500k; archive each completed boundary. At least2of3independentinitializations and existing fullgame acceptance still required."
+  },
+  "user_steering": "Use provided independent study as hypotheses, not substitute production evidence. Current shortfrontier0 safely closed update57,1053episodes132674decisions after125k eval. Original planned83updates revised prospectively after user idle-baseline discovery, no failedseed or criterion erased.",
+  "engineering_validation": {
+    "production_idle_cases": 194,
+    "production_idle_seconds": 11.429592114000116,
+    "level7cap3": "8/8",
+    "level7cap5": "8/8",
+    "level7cap10": "0/8",
+    "initial_task_probabilities": {
+      "train_full_level7_v1": 0.03125,
+      "train_bridge7_v1_aid_cap10": 0.78125,
+      "train_bridge7_v1_aid_cap15": 0.03125,
+      "train_bridge7_v1_aid_cap20": 0.0625,
+      "train_bridge7_v1_aid_capfull": 0.03125,
+      "train_bridge7_v1_ordinary_cap10": 0.03125,
+      "train_bridge7_v1_ordinary_cap15": 0.03125
+    },
+    "unit_tests": 39
+  }
+}

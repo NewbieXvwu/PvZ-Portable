@@ -117,6 +117,8 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
     while not observation["terminal"] and actions < max_actions:
         if strategy == "random":
             action = random_action(observation, rng)
+        elif strategy == "idle":
+            action = {"type": "wait", "ticks": 300}
         elif strategy == "scripted":
             action = scripted_baseline.choose(observation)
         elif strategy == "checkpoint":
@@ -134,8 +136,7 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
         if not info.get("ok"):
             raise RuntimeError(f"{task['task_id']} seed {seed}: illegal action {action}")
         events = info["events"]
-        totals["sun_produced"] += events.get("sun_produced", 0)
-        totals["sun_spent"] += events.get("sun_spent", 0)
+        totals.update(events)
         previous_action = action
         previous_wait_result = info.get("wait_result")
         delta_ticks = info["ticks_advanced"]
@@ -172,6 +173,7 @@ def run_episode(env: PvZEnv, task: dict[str, Any], seed: int, strategy: str,
         "terminated": not truncated,
         "truncated": truncated,
         "action_counts": dict(action_counts),
+        "events": dict(totals),
         "zero_tick_actions": zero_tick_actions,
         "immediate_plant_shovels": immediate_shovels,
         "terminal_wave": observation["wave"],

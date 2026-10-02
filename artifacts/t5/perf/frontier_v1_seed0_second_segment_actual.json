@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "status": "closed_user_directed_boundary",
+  "reason": "User identifies mower-only cap3/cap5 wins. Complete the alreadyreached125000 evaluation and close naturally; discontinue extra uninformative shortpool budget, no learninggate threshold lowered.",
+  "source_revision": "ecc6b39",
+  "snapshot": {
+    "status": "update_boundary_stop",
+    "phase": "ready",
+    "updates": 57,
+    "counters": {
+      "episodes": 1053,
+      "decisions": 132674,
+      "ticks": 14482145
+    },
+    "wall_seconds": 5966.336643053,
+    "checkpoint": "runs/run_1/update_000057_boundary_1790951165433425235.pt",
+    "resources": {
+      "peak_process_tree_rss_bytes": 15148699648,
+      "min_system_available_bytes": 15437791232,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 4609174016,
+      "cuda_peak_reserved_bytes": 15923675136
+    }
+  },
+  "new_segment_updates": 34,
+  "new_segment_decisions": 84818,
+  "new_segment_seconds": 3604.5504136550007,
+  "last_losses": {
+    "policy_loss": -0.00241606196631556,
+    "value_loss": 0.10135720366531092,
+    "entropy": 2.8163538601087486,
+    "advantage_mean": -0.03436751663684845,
+    "advantage_std": 0.29790642857551575,
+    "gradient_norm": 0.45573824644088745,
+    "approx_kl": 0.008669005720851905,
+    "clip_fraction": 0.11542590300086886,
+    "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+    "max_log_prob_change": 0.7465615272521973,
+    "optimizer_steps": 23,
+    "stopped_for_kl": true
+  },
+  "interpretation": "125kgreedy27/40 equals paired idle27/40, sampled26/40 below. 25kgreedy30/40 was not sustained. Short scores are regression only."
+}

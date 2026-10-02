@@ -205,7 +205,12 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
             raise ValueError("unknown selected training task")
         train = [task for task in train if task["task_id"] in selected]
     evaluation = config["evaluation"]
-    if set(evaluation) != {"manifest", "modes", "decision_nodes"}:
+    evaluation_fields = {"manifest", "modes", "decision_nodes"}
+    if "idle_baseline" in evaluation:
+        evaluation_fields.add("idle_baseline")
+        if type(evaluation["idle_baseline"]) is not bool:
+            raise ValueError("idle_baseline must be an explicit boolean")
+    if set(evaluation) != evaluation_fields:
         raise ValueError("all evaluation settings must be explicit")
     if not evaluation["modes"] or set(evaluation["modes"]) - {"greedy", "sampled"}:
         raise ValueError("evaluation modes must be greedy and/or sampled")
@@ -273,6 +278,12 @@ def evaluate(model: GameplayModelV1, tasks: list[dict[str, Any]], config: dict[s
              resource_dir: Path, output: Path, state: dict[str, Any]) -> dict[str, Any]:
     import train_pvz_ppo_task_family as family
     import t4_capability_profile as profile
+    started = time.monotonic()
+    idle = None
+    if config["evaluation"].get("idle_baseline", False):
+        from pvz_progress_metrics import idle_baseline
+        idle = idle_baseline(tasks, resource_dir, output, state["experiment_identity"],
+                             config["runtime"]["max_actions"])
     jobs = {}
     labels = []
     for mode in config["evaluation"]["modes"]:
@@ -284,7 +295,6 @@ def evaluate(model: GameplayModelV1, tasks: list[dict[str, Any]], config: dict[s
                                    "allow_truncation": True, "action_seed": seed + 170_000}
     weights = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
     runtime = config["runtime"]
-    started = time.monotonic()
     records = family._run_evaluation_jobs(jobs, weights, resource_dir, runtime["workers"],
                                          runtime["worker_threads"], "cpu", model.config)
     grouped = {mode: {task["task_id"]: [] for task in tasks}
@@ -299,12 +309,20 @@ def evaluate(model: GameplayModelV1, tasks: list[dict[str, Any]], config: dict[s
                          "per_task": {key: profile.summarize_episodes(rows)
                                       for key, rows in per_task.items()},
                          "truncated": sum(row["truncated"] for row in flat)}
+        if idle is not None:
+            from pvz_progress_metrics import progress_summary, paired_idle_summary
+            summary[mode]["progress_groups"] = progress_summary(tasks, per_task)
+            summary[mode]["paired_idle"] = paired_idle_summary(tasks, per_task, idle)
     path = output / "evaluations" / f"update_{state['updates']:06d}.json.gz"
     atomic_json(path, {"counters": state["counters"], "model_config": model.config,
                        "experiment_id": config["experiment_id"], "seed_results": grouped}, compressed=True)
-    return {"counters": dict(state["counters"]), "updates": state["updates"], "summary": summary,
+    record = {"counters": dict(state["counters"]), "updates": state["updates"], "summary": summary,
             "raw_seed_results_path": str(path.relative_to(output)),
             "seconds": time.monotonic() - started}
+    if idle is not None:
+        record["idle_control_path"] = "evaluations/idle_control.json.gz"
+        record["overall_scope"] = "Monitoring aggregate only; use progress_groups and matched idle gains for strategy learning."
+    return record
 
 
 def _assign(tasks: list[dict[str, Any]], job_ids: list[int], rng: random.Random,
@@ -413,6 +431,8 @@ def run_experiment(args: Any) -> None:
         "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py",
         "pvz_observation_features.py", "pvz_curriculum.py", "pvz_event_env.py", "pvz_wait_events.py")]
     source_paths.append(ROOT / "scripts/t4_capability_profile.py")
+    if config["evaluation"].get("idle_baseline", False):
+        source_paths.append(ROOT / "python/pvz_progress_metrics.py")
     if "slow_memory" in config["model"]:
         source_paths.append(ROOT / "python/pvz_dual_memory.py")
     if "short_history" in config["model"]:
@@ -557,9 +577,16 @@ def run_experiment(args: Any) -> None:
         state["learning_curve"].append(record)
         state["phase"] = "ready"
         save("evaluated")
-        print(f"{config['experiment_id']} evaluation update={state['updates']} "
-              + " ".join(f"{mode}={rows['overall']['pass_rate']:.4f}"
-                         for mode, rows in record["summary"].items()), flush=True)
+        if config["evaluation"].get("idle_baseline", False):
+            print(f"{config['experiment_id']} evaluation update={state['updates']} "
+                  + " ".join(f"{mode}/{group}={rows['policy']['pass_rate']:.4f} "
+                             f"idle={rows['idle']['pass_rate']:.4f} gain={rows['net_win_gain']:+.4f}"
+                             for mode, results in record["summary"].items()
+                             for group, rows in results["paired_idle"]["by_group"].items()), flush=True)
+        else:
+            print(f"{config['experiment_id']} evaluation update={state['updates']} "
+                  + " ".join(f"{mode}={rows['overall']['pass_rate']:.4f}"
+                             for mode, rows in record["summary"].items()), flush=True)
 
     try:
         save("resumed" if args.resume else "initial")

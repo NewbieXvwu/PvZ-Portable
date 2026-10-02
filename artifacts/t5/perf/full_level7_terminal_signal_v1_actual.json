@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "experiment_id": "mainline_full_level7_v1_seed0",
+  "source_run": "artifacts/research/mainline_full_level7_v1_seed0",
+  "reward_config": {
+    "name": "R3",
+    "gamma": 1.0,
+    "shaping_weight": 1
+  },
+  "snapshot": {
+    "updates": 43,
+    "counters": {
+      "episodes": 169,
+      "decisions": 31863,
+      "ticks": 3802112
+    },
+    "checkpoint": "runs/run_1/update_000043_boundary_1790947553627440382.pt"
+  },
+  "saved_inventory_matches_committed_counters": true,
+  "normal_terminal_count": 164,
+  "normal_terminal_wins": 0,
+  "truncated_count": 5,
+  "natural_terminal_reward_sums": {
+    "count": 164,
+    "mean": -1.0166666666666666,
+    "std": 9.653818920401872e-17,
+    "minimum": -1.0166666666666668,
+    "maximum": -1.0166666666666666
+  },
+  "natural_terminal_first_potentials": {
+    "count": 164,
+    "mean": 0.016666666666666663,
+    "std": 3.469446951953614e-18,
+    "minimum": 0.016666666666666666,
+    "maximum": 0.016666666666666666
+  },
+  "natural_terminal_episode_mc_value_mse": {
+    "count": 164,
+    "mean": 0.07622009799618941,
+    "std": 0.3843348182101881,
+    "minimum": 0.0014169782811163858,
+    "maximum": 3.0312481548349295
+  },
+  "natural_terminal_episode_gae_value_mse": {
+    "count": 164,
+    "mean": 0.014219917479643365,
+    "std": 0.052941068885398165,
+    "minimum": 0.0013049041429360221,
+    "maximum": 0.4154063600075105
+  },
+  "telescoping_error_gamma1": {
+    "count": 164,
+    "mean": 4.197184605290226e-17,
+    "std": 8.693667875932683e-17,
+    "minimum": 0.0,
+    "maximum": 2.220446049250313e-16
+  },
+  "action_counts": {
+    "plant": 2945,
+    "shovel": 1387,
+    "wait": 27531
+  },
+  "shovel_last_observed_packet_counts": {
+    "1": 646,
+    "4": 303,
+    "3": 305,
+    "0": 114,
+    "2": 1,
+    "5": 18
+  },
+  "positive_shaping_shovels": 86,
+  "interpretation": "Observed episode returns only; equal all-loss returns do not prove the environment unsolvable or RL impossible. Truncated rows retained separately; bootstraps are not natural wins. Packet tracking describes previously observed planted cards, not a native entity-identity audit.",
+  "seconds": 0.7753472660042462,
+  "gae_helper_body_identical_to_training_source_c841bda": true
+}
