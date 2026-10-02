@@ -584,3 +584,11 @@ artifacts/t5/perf/dual_timescale_headless_v1_hf_delivery.json。
 ecc6b39源码，之后接frontier_v1自身初始评估、3更新冒烟及同一模型resume20更新。
 运行失败会保留现场并停止队列，不忽略门禁或改变任务/阈值。短历史CPU原始证据
 和日志已上传HF，修订号见artifacts/t5/perf/short_history_v1_hf_delivery.json。
+
+512宽GPU冒烟已完成3更新/4104决策/455874实际tick，耗时不到10分钟；checkpoint、
+learning_curve和两节点完整评估均产出，未OOM。自身初始greedy65%/sampled70%，
+2000节点67.5%/67.5%，均40局且保留Wilson区间，不能据此选宽度赢家。第一更新
+只有2个optimizer step即停止于KL，PPO耗时不代表等工作量吞吐。快慢23更新原始
+检查点/8个末段trained/分片/日志已实际上传，版本见
+artifacts/t5/perf/mainline_headless_gru_v1_hf_delivery.json。frontier_v1单GRU候选已经
+实际启动，队列将完成3更新后完整resume下一20更新，继续真实学习。

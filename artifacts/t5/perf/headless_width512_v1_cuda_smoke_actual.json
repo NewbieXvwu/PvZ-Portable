@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "experiment_id": "mainline_headless_width512_v1_seed0",
+  "source_revision": "ecc6b39",
+  "parameters": 28031390,
+  "scope": "Actual CUDA smoke3updates, own initial and2000 evaluation, checkpoint/learning curve complete under30min. Firstupdate stopped forKL after2optimizer steps; do not treat short PPO seconds as full equal-work throughput or architecture superiority.",
+  "snapshot": {
+    "status": "update_boundary_stop",
+    "phase": "ready",
+    "updates": 3,
+    "counters": {
+      "episodes": 42,
+      "decisions": 4104,
+      "ticks": 455874
+    },
+    "wall_seconds": 590.0386666190025,
+    "checkpoint": "runs/run_1/update_000003_boundary_1790940600879822634.pt",
+    "resources": {
+      "peak_process_tree_rss_bytes": 15721967616,
+      "min_system_available_bytes": 16709521408,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 8049164800,
+      "cuda_peak_reserved_bytes": 19488833536
+    }
+  },
+  "update_history": [
+    {
+      "update": 1,
+      "counters": {
+        "episodes": 20,
+        "decisions": 1844,
+        "ticks": 199478
+      },
+      "losses": {
+        "policy_loss": 0.06794649362564087,
+        "value_loss": 0.2746000215411186,
+        "entropy": 2.910462498664856,
+        "advantage_mean": -0.06294075399637222,
+        "advantage_std": 0.36177992820739746,
+        "gradient_norm": 2.9866394996643066,
+        "approx_kl": 0.01843365840613842,
+        "clip_fraction": 0.23524020115534464,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.7677512168884277,
+        "optimizer_steps": 2,
+        "stopped_for_kl": true
+      },
+      "ppo_seconds": 9.157485174997419,
+      "rollout_seconds": 48.998869015998935
+    },
+    {
+      "update": 2,
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 214448
+      },
+      "losses": {
+        "policy_loss": -0.015634198649189912,
+        "value_loss": 0.026553253643214703,
+        "entropy": 3.012385129928589,
+        "advantage_mean": -0.061153706163167953,
+        "advantage_std": 0.1553673893213272,
+        "gradient_norm": 0.6948269009590149,
+        "approx_kl": 0.009502762546524018,
+        "clip_fraction": 0.16025641560554504,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.45875024795532227,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false
+      },
+      "ppo_seconds": 6.634225429999788,
+      "rollout_seconds": 8.397063804000936
+    },
+    {
+      "update": 3,
+      "counters": {
+        "episodes": 42,
+        "decisions": 4104,
+        "ticks": 455874
+      },
+      "losses": {
+        "policy_loss": -0.13857274750868478,
+        "value_loss": 0.2015142971649766,
+        "entropy": 2.802170157432556,
+        "advantage_mean": 0.2641415297985077,
+        "advantage_std": 0.38917773962020874,
+        "gradient_norm": 3.7951149940490723,
+        "approx_kl": 0.019282629087952745,
+        "clip_fraction": 0.2861040968161363,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 1.0384025573730469,
+        "optimizer_steps": 12,
+        "stopped_for_kl": true
+      },
+      "ppo_seconds": 43.111957307999546,
+      "rollout_seconds": 52.50562841200008
+    }
+  ],
+  "evaluations": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "seconds": 210.1206261280022,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.65,
+          "wilson_95": [
+            0.495059,
+            0.778655
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        },
+        "sampled": {
+          "pass_rate": 0.7,
+          "wilson_95": [
+            0.5457,
+            0.819252
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 214448
+      },
+      "seconds": 207.5622127630013,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        },
+        "sampled": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        }
+      }
+    }
+  ],
+  "interpretation": "No learned width winner or full-budget3-initialization claim. Preserved for continuation using frozen ecc6b39 source."
+}
