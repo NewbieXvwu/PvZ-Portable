@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-level7-v2-full-trace125k-v1",
+  "exit_code": 0,
+  "seconds": 4.597264395997627,
+  "utc": "2026-10-02T18:46:11.779036+00:00",
+  "host_source_revision": "e3470c0",
+  "training_source_revision": "53fd859",
+  "scope": "Two first frozen development full-course cases, greedy125k CPU inference; complete public actions/plant snapshots, script and log. Nine saved outcome fields match in each case. Not a new evaluation, representative performance estimate or causal reward/architecture diagnosis; source checkpoint already in HF09424831.",
+  "revision": "bdd27af97cb26806445ac991a119eca943f0a1db"
+}

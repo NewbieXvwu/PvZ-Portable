@@ -1,0 +1,315 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "source_checkpoint": "runs/run_1/update_000131_evaluated_1790965453718564074.pt",
+  "source_stage_revision": "53fd859",
+  "host_source_revision": "e3470c0",
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "seconds": 12.125212509003177,
+  "selection": "First frozen development seed of ordinary full and aided full, greedy125k. Both saved cases failed; selected by seed ordering, not policy performance. Diagnostic traces do not replace the complete scheduled evaluation.",
+  "scope": "CPU inference only with the same TaskSpec/deck/preplants/seed and saved evaluated model. Compare terminal/action fields with saved evaluation; no PPO, teacher, task mutation, extra GPU evaluation or claim of causal failure mechanism.",
+  "cases": [
+    {
+      "task": {
+        "task_id": "validation_full_level7_v1",
+        "terrain": "day",
+        "level": 7,
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "zombie_count_multiplier": 1.0,
+        "wave_cap": null,
+        "sun_start": 50,
+        "preplanted": [],
+        "playthrough": 2,
+        "seeds": [
+          30000,
+          30001,
+          30002,
+          30003,
+          30004,
+          30005,
+          30006,
+          30007
+        ],
+        "evaluation_role": "full_level7_progress_only"
+      },
+      "seed": 30000,
+      "outcome": {
+        "seed": 30000,
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 160,
+          "plant": 43
+        },
+        "events": {
+          "zombies_killed": 14,
+          "plants_eaten": 19,
+          "sun_produced": 2175,
+          "sun_spent": 2200,
+          "mower_triggered": 5,
+          "waves_started": 9,
+          "level_won": 0,
+          "level_lost": 1
+        },
+        "zero_tick_actions": 43,
+        "immediate_plant_shovels": 0,
+        "terminal_wave": 9,
+        "wave_count": 30,
+        "terminal_tick": 24859,
+        "peak_offense": 5,
+        "actions": 203,
+        "wait_mode": "events"
+      },
+      "match_saved_evaluation": {
+        "won": true,
+        "result": true,
+        "terminated": true,
+        "truncated": true,
+        "terminal_wave": true,
+        "terminal_tick": true,
+        "actions": true,
+        "action_counts": true,
+        "immediate_plant_shovels": true
+      },
+      "planted_types": {
+        "1": 23,
+        "3": 7,
+        "4": 8,
+        "0": 5
+      },
+      "first_plant_tick": 900,
+      "first_tick_by_type": {
+        "1": 900,
+        "3": 2001,
+        "4": 2402,
+        "0": 4203
+      },
+      "plants_by_row": {
+        "0": 19,
+        "1": 1,
+        "2": 2,
+        "3": 19,
+        "4": 2
+      },
+      "plant_rows_by_type": {
+        "0": {
+          "0": 3,
+          "1": 1,
+          "2": 1
+        },
+        "1": {
+          "0": 8,
+          "3": 14,
+          "4": 1
+        },
+        "3": {
+          "0": 2,
+          "2": 1,
+          "3": 4
+        },
+        "4": {
+          "0": 6,
+          "3": 1,
+          "4": 1
+        }
+      }
+    },
+    {
+      "task": {
+        "task_id": "validation_bridge7_v1_aid_capfull",
+        "terrain": "day",
+        "level": 7,
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "zombie_count_multiplier": 1.0,
+        "wave_cap": null,
+        "sun_start": 50,
+        "preplanted": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [
+            1,
+            3,
+            0
+          ],
+          [
+            1,
+            4,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ],
+          [
+            0,
+            1,
+            3
+          ],
+          [
+            0,
+            2,
+            3
+          ],
+          [
+            0,
+            3,
+            3
+          ],
+          [
+            0,
+            4,
+            3
+          ]
+        ],
+        "playthrough": 2,
+        "seeds": [
+          1400384,
+          1400385,
+          1400386,
+          1400387,
+          1400388,
+          1400389,
+          1400390,
+          1400391
+        ]
+      },
+      "seed": 1400384,
+      "outcome": {
+        "seed": 1400384,
+        "won": false,
+        "result": 2,
+        "terminated": true,
+        "truncated": false,
+        "action_counts": {
+          "wait": 170,
+          "plant": 102
+        },
+        "events": {
+          "zombies_killed": 92,
+          "plants_eaten": 81,
+          "sun_produced": 6425,
+          "sun_spent": 6475,
+          "mower_triggered": 2,
+          "waves_started": 25,
+          "level_won": 0,
+          "level_lost": 1
+        },
+        "zero_tick_actions": 102,
+        "immediate_plant_shovels": 0,
+        "terminal_wave": 25,
+        "wave_count": 30,
+        "terminal_tick": 41008,
+        "peak_offense": 13,
+        "actions": 272,
+        "wait_mode": "events"
+      },
+      "match_saved_evaluation": {
+        "won": true,
+        "result": true,
+        "terminated": true,
+        "truncated": true,
+        "terminal_wave": true,
+        "terminal_tick": true,
+        "actions": true,
+        "action_counts": true,
+        "immediate_plant_shovels": true
+      },
+      "planted_types": {
+        "0": 32,
+        "1": 43,
+        "3": 13,
+        "4": 13,
+        "2": 1
+      },
+      "first_plant_tick": 1800,
+      "first_tick_by_type": {
+        "0": 1800,
+        "1": 1800,
+        "3": 2400,
+        "4": 2400,
+        "2": 32268
+      },
+      "plants_by_row": {
+        "0": 22,
+        "1": 10,
+        "2": 27,
+        "3": 31,
+        "4": 12
+      },
+      "plant_rows_by_type": {
+        "0": {
+          "0": 7,
+          "1": 6,
+          "2": 10,
+          "3": 8,
+          "4": 1
+        },
+        "1": {
+          "0": 7,
+          "1": 1,
+          "2": 12,
+          "3": 16,
+          "4": 7
+        },
+        "2": {
+          "4": 1
+        },
+        "3": {
+          "0": 3,
+          "1": 1,
+          "2": 3,
+          "3": 4,
+          "4": 2
+        },
+        "4": {
+          "0": 5,
+          "1": 2,
+          "2": 2,
+          "3": 3,
+          "4": 1
+        }
+      }
+    }
+  ],
+  "architecture_observation": {
+    "selected_card_conditions_cell_logits": true,
+    "source": "python/pvz_agent_model.py:plant_cell_scores and replay_log_probs",
+    "meaning": "Cell query concatenates belief with selected packet token in both collection and PPO replay. The few-row placement pattern is not explained by a head using the same grid distribution for all cards. This code observation does not establish that the architecture or reward caused the two losses."
+  },
+  "checkpoint_hf": {
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "branch": "evidence-bridge-level7-v2-125k-progress-v1",
+    "revision": "094248314a2d27036d932599d124c24733e3ab18",
+    "path": "bridge_level7_v2_125k_progress_v1/runs/run_1/update_000131_evaluated_1790965453718564074.pt"
+  }
+}
