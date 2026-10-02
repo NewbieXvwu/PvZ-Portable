@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "method": "frontier_v1",
+  "pass_band": [
+    0.2,
+    0.8
+  ],
+  "score": "1 for recent normal-terminal training pass rate in inclusive band, else0; stable frontier does not require positive learning gain.",
+  "recent_window_episodes": 8,
+  "minimum_window_episodes": 2,
+  "coverage": "25% terrain/wave-cap-balanced episode assignment floor across all original tasks, plus75% global frontier allocation. Empty/unknown/allzero/no frontier falls back to100% balanced coverage.",
+  "limitations": "Explicit heuristic, not a theoretical optimality claim; assignment coverage does not imply equal decisions/ticks/time. No validation labels; truncations ignored as successes/failures and reported.",
+  "training_manifest": "experiments/t5/multicap_course_v1/train.json",
+  "evaluation_manifest": "experiments/t5/mainline_events_v1/progress_evaluation.json",
+  "task_mutation": "Separate future version; no mutation of current frozen pool or original validation.",
+  "auxiliary_prediction": "Cancelled; no auxiliary heads/losses.",
+  "adoption": "Optional mainline implementation after short sampler/config checks; no hours-long paired experiment as an adoption gate. Final repeated-learning acceptance unchanged."
+}

@@ -1,0 +1,345 @@
+{
+  "schema_version": 1,
+  "source_commit": "991f926d5d154d69a018fe71da98abf5aa7c547b",
+  "scope": "First3-update actual CUDA training smoke; checkpoint, populated learning curve and completed initial/2000 evaluation. Not final learning acceptance or source adoption efficacy.",
+  "snapshot": {
+    "updates": 3,
+    "counters": {
+      "episodes": 42,
+      "decisions": 4180,
+      "ticks": 452305
+    },
+    "wall_seconds": 379.36646592000034,
+    "checkpoint": "runs/run_1/update_000003_boundary_1790937848457433867.pt",
+    "resources": {
+      "peak_process_tree_rss_bytes": 12666384384,
+      "min_system_available_bytes": 18690703360,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 4252822016,
+      "cuda_peak_reserved_bytes": 14709424128
+    }
+  },
+  "updates": [
+    {
+      "update": 1,
+      "counters": {
+        "episodes": 20,
+        "decisions": 1886,
+        "ticks": 200312
+      },
+      "losses": {
+        "policy_loss": 0.014252161048352719,
+        "value_loss": 0.14997430592775346,
+        "entropy": 2.9203548073768615,
+        "advantage_mean": -0.044219791889190674,
+        "advantage_std": 0.35502663254737854,
+        "gradient_norm": 3.107916831970215,
+        "approx_kl": 0.01768610306738063,
+        "clip_fraction": 0.2638926200568676,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.7182149887084961,
+        "optimizer_steps": 20,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 40,
+          "max_events": 12,
+          "max_waves": 5,
+          "max_elapsed_ticks": 12719,
+          "max_leading_decisions": 0,
+          "examples": [
+            {
+              "core_decisions": 88,
+              "gradient_decisions": 88,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 4,
+              "elapsed_ticks": 7599
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 4,
+              "elapsed_ticks": 8978
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 10538
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 11754
+            },
+            {
+              "core_decisions": 89,
+              "gradient_decisions": 89,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 9711
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 5,
+              "elapsed_ticks": 11987
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 5,
+              "elapsed_ticks": 11281
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 10212
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 19.776785706999362,
+      "ppo_seconds": 74.01178700699893
+    },
+    {
+      "update": 2,
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 211875
+      },
+      "losses": {
+        "policy_loss": -0.0047479141585267115,
+        "value_loss": 0.027446085587143898,
+        "entropy": 3.184370994567871,
+        "advantage_mean": -0.08829482644796371,
+        "advantage_std": 0.13875138759613037,
+        "gradient_norm": 1.367170810699463,
+        "approx_kl": 0.0003237682399789277,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 7.152557373046875e-07,
+        "max_log_prob_change": 0.08537840843200684,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 4,
+          "max_events": 4,
+          "max_waves": 3,
+          "max_elapsed_ticks": 5959,
+          "max_leading_decisions": 0,
+          "examples": [
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5604
+            },
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5959
+            },
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5604
+            },
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5959
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 5.303862836000917,
+      "ppo_seconds": 4.404297701999894
+    },
+    {
+      "update": 3,
+      "counters": {
+        "episodes": 42,
+        "decisions": 4180,
+        "ticks": 452305
+      },
+      "losses": {
+        "policy_loss": 0.02094394713640213,
+        "value_loss": 0.16682856331268947,
+        "entropy": 2.882107702891032,
+        "advantage_mean": 0.07766327261924744,
+        "advantage_std": 0.348741352558136,
+        "gradient_norm": 0.9976570010185242,
+        "approx_kl": 0.015703783749507434,
+        "clip_fraction": 0.2540068211965263,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.6658523082733154,
+        "optimizer_steps": 15,
+        "stopped_for_kl": true,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 30,
+          "max_events": 17,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15487,
+          "max_leading_decisions": 7,
+          "examples": [
+            {
+              "core_decisions": 123,
+              "gradient_decisions": 123,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 13429
+            },
+            {
+              "core_decisions": 70,
+              "gradient_decisions": 70,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7981
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 10227
+            },
+            {
+              "core_decisions": 89,
+              "gradient_decisions": 89,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 4,
+              "elapsed_ticks": 8380
+            },
+            {
+              "core_decisions": 123,
+              "gradient_decisions": 123,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 13920
+            },
+            {
+              "core_decisions": 79,
+              "gradient_decisions": 79,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7842
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 13998
+            },
+            {
+              "core_decisions": 116,
+              "gradient_decisions": 116,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 12967
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 21.017946217998542,
+      "ppo_seconds": 48.80732694700055
+    }
+  ],
+  "evaluations": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "seconds": 105.18082597300236,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        },
+        "sampled": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 211875
+      },
+      "seconds": 98.96524702799798,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        },
+        "sampled": {
+          "pass_rate": 0.65,
+          "wilson_95": [
+            0.495059,
+            0.778655
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        }
+      }
+    }
+  ],
+  "continuation": "Resume same experiment for next20updates using frozen991f926 worktree; unchanged task pool/reward/criterion."
+}

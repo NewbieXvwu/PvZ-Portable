@@ -12,13 +12,23 @@ import math
 from typing import Any
 
 
-COURSE_METHODS = frozenset({"terrain_balanced", "learning_progress"})
+COURSE_METHODS = frozenset({"terrain_balanced", "learning_progress", "frontier_v1"})
 COURSE_SCHEMA = 2
 
 
-def validate_settings(settings: dict[str, Any]) -> None:
-    if set(settings) != {"window_episodes", "minimum_window_episodes", "uniform_fraction", "coverage"}:
+def validate_settings(settings: dict[str, Any], method: str | None = None) -> None:
+    fields = {"window_episodes", "minimum_window_episodes", "uniform_fraction", "coverage"}
+    frontier_fields = fields | {"frontier_pass_range"}
+    if (set(settings) not in (fields, frontier_fields)
+            or (method == "frontier_v1" and set(settings) != frontier_fields)
+            or (method is not None and method != "frontier_v1" and set(settings) != fields)):
         raise ValueError("curriculum window sizes, uniform_fraction and coverage must be explicit")
+    if "frontier_pass_range" in settings:
+        band = settings["frontier_pass_range"]
+        if (not isinstance(band, list) or len(band) != 2
+                or any(type(value) not in (int, float) or not math.isfinite(value) for value in band)
+                or not 0 < band[0] < band[1] < 1):
+            raise ValueError("frontier_pass_range must explicitly define two interior pass rates")
     if settings["coverage"] not in ("terrain", "terrain_wave_cap"):
         raise ValueError("curriculum coverage must be terrain or terrain_wave_cap")
     window, minimum = settings["window_episodes"], settings["minimum_window_episodes"]
@@ -91,6 +101,7 @@ def probabilities(tasks: list[dict[str, Any]], state: dict[str, Any],
                   settings: dict[str, Any], method: str) -> tuple[list[float], dict[str, Any]]:
     if method not in COURSE_METHODS:
         raise ValueError("unsupported curriculum method")
+    validate_settings(settings, method)
     validate_state(state, tasks, settings)
     groups = defaultdict(lambda: defaultdict(list))
     task_details = {}
@@ -113,6 +124,17 @@ def probabilities(tasks: list[dict[str, Any]], state: dict[str, Any],
                              "previous_pass_rate": previous, "recent_pass_rate": recent,
                              "positive_progress": gain, "completed": state["completed"][key],
                              "ignored_truncations": state["ignored_truncations"][key]}
+        if method == "frontier_v1":
+            # A stable intermediate win rate is a frontier even when adjacent
+            # windows show no positive gain. Only normal training terminals
+            # supply this estimate; cold tasks still receive the coverage floor.
+            frontier_size = min(window, len(history))
+            frontier_rate = (sum(history[-frontier_size:]) / frontier_size
+                             if frontier_size >= minimum else None)
+            low, high = settings["frontier_pass_range"]
+            task_details[key].update(frontier_window_size=frontier_size,
+                frontier_pass_rate=frontier_rate,
+                frontier_score=float(frontier_rate is not None and low <= frontier_rate <= high))
     terrain_mass = 1 / len(groups)
     uniform = settings["uniform_fraction"]
     coverage_probabilities = {}
@@ -126,11 +148,27 @@ def probabilities(tasks: list[dict[str, Any]], state: dict[str, Any],
                 if method == "learning_progress" and total_gain > 0:
                     within = uniform / len(keys) + (1 - uniform) * task_details[key]["positive_progress"] / total_gain
                 task_details[key]["probability"] = group_mass * within
+    if method == "frontier_v1":
+        total_score = sum(row["frontier_score"] for row in task_details.values())
+        for row in task_details.values():
+            # Mix a terrain/cap-balanced floor with a global frontier allocation.
+            # Priority can cross singleton coverage groups, unlike the old LP
+            # sampler; no task or failed seed is removed from the frozen pool.
+            floor = row["probability"]
+            row["coverage_base_probability"] = floor
+            row["probability"] = (uniform * floor + (1 - uniform) * row["frontier_score"] / total_score
+                                  if total_score > 0 else floor)
+        coverage_probabilities = {
+            terrain: {cap: sum(task_details[key]["probability"] for key in keys)
+                      for cap, keys in caps.items()} for terrain, caps in groups.items()}
     weights = [task_details[task["task_id"]]["probability"] for task in tasks]
     if not math.isclose(sum(weights), 1.0, rel_tol=0, abs_tol=1e-12):
         raise ValueError("curriculum probabilities do not sum to one")
     return weights, {"method": method, "settings": dict(settings),
-                     "terrain_probabilities": {terrain: terrain_mass for terrain in groups},
+                     "terrain_probabilities": ({terrain: sum(caps.values())
+                                                for terrain, caps in coverage_probabilities.items()}
+                                               if method == "frontier_v1" else
+                                               {terrain: terrain_mass for terrain in groups}),
                      "coverage_probabilities": coverage_probabilities,
                      "tasks": task_details,
-                     "interpretation": "episode-assignment probabilities, not equal decision/tick/time budgets; positive progress heuristic, no optimality claim"}
+                     "interpretation": "episode-assignment probabilities, not equal decision/tick/time budgets; explicit curriculum heuristic, no optimality claim"}

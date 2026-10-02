@@ -35,6 +35,71 @@ def outcomes(key, values):
 
 
 class CurriculumTests(unittest.TestCase):
+    def test_frontier_prioritizes_stable_edge_across_singleton_groups(self):
+        tasks = [task for task in LENGTH_TASKS if task["task_id"].endswith("_0")]
+        settings = {**LENGTH_SETTINGS, "frontier_pass_range": [.2, .8]}
+        state = initial_state(tasks)
+        for index, task in enumerate(tasks):
+            values = [False, True] * 16 if index == 0 else [bool(index % 2)] * 32
+            observe(state, outcomes(task["task_id"], values), settings)
+        weights, details = probabilities(tasks, state, settings, "frontier_v1")
+        self.assertGreater(weights[0], .75)
+        self.assertEqual(details["tasks"][tasks[0]["task_id"]]["positive_progress"], 0)
+        self.assertEqual(details["tasks"][tasks[0]["task_id"]]["frontier_pass_rate"], .5)
+        for task, weight in zip(tasks, weights):
+            row = details["tasks"][task["task_id"]]
+            self.assertGreaterEqual(weight, .25 * row["coverage_base_probability"])
+        self.assertAlmostEqual(sum(weights), 1)
+        self.assertGreater(details["terrain_probabilities"]["day"], .5)
+
+    def test_frontier_empty_or_zero_win_pool_falls_back_to_balanced_coverage(self):
+        settings = {**LENGTH_SETTINGS, "frontier_pass_range": [.2, .8]}
+        state = initial_state(LENGTH_TASKS)
+        for filled in (False, True):
+            if filled:
+                for task in LENGTH_TASKS:
+                    observe(state, outcomes(task["task_id"], [False] * 32), settings)
+            weights, _ = probabilities(LENGTH_TASKS, state, settings, "frontier_v1")
+            expected, _ = probabilities(LENGTH_TASKS, state, LENGTH_SETTINGS, "terrain_balanced")
+            self.assertEqual(weights, expected)
+
+    def test_frontier_band_is_inclusive_and_never_uses_truncations(self):
+        tasks = [dict(task_id=str(i), terrain="day", seeds=[0]) for i in range(4)]
+        settings = dict(window_episodes=5, minimum_window_episodes=5,
+                        uniform_fraction=.25, coverage="terrain", frontier_pass_range=[.2, .8])
+        state = initial_state(tasks)
+        for i, wins in enumerate((1, 4, 0, 5)):
+            observe(state, outcomes(str(i), [True] * wins + [False] * (5-wins)), settings)
+        observe(state, [dict(task_id="2", terminated=False, truncated=True, won=False)], settings)
+        weights, details = probabilities(tasks, state, settings, "frontier_v1")
+        self.assertEqual(weights, [.4375, .4375, .0625, .0625])
+        self.assertEqual(details["tasks"]["2"]["ignored_truncations"], 1)
+        self.assertEqual(state["completed"]["2"], 5)
+
+    def test_frontier_resume_keeps_next_assignments_and_original_seeds(self):
+        settings = {**SETTINGS, "frontier_pass_range": [.2, .8]}
+        state = initial_state(TASKS)
+        observe(state, outcomes("progress", [True, False] * 16), settings)
+        weights, details = probabilities(TASKS, state, settings, "frontier_v1")
+        rng = random.Random(17); saved_rng = rng.getstate()
+        expected = _assign(TASKS, list(range(40)), rng, {}, "frontier_v1", weights)
+        restored = json.loads(json.dumps(state)); next_rng = random.Random(); next_rng.setstate(saved_rng)
+        next_weights, next_details = probabilities(TASKS, restored, settings, "frontier_v1")
+        actual = _assign(TASKS, list(range(40)), next_rng, {}, "frontier_v1", next_weights)
+        self.assertEqual(actual, expected)
+        self.assertEqual(next_details, details)
+        self.assertEqual(next_rng.getstate(), rng.getstate())
+
+    def test_frontier_settings_cannot_be_implicit_or_attached_to_old_methods(self):
+        with self.assertRaises(ValueError):
+            validate_settings(SETTINGS, "frontier_v1")
+        settings = {**SETTINGS, "frontier_pass_range": [.2, .8]}
+        with self.assertRaises(ValueError):
+            validate_settings(settings, "learning_progress")
+        for band in ([0, .8], [.8, .2], [True, .8], [.2, float("nan")]):
+            with self.assertRaises(ValueError):
+                validate_settings({**settings, "frontier_pass_range": band}, "frontier_v1")
+
     def test_singleton_coverage_groups_make_progress_sampling_identical(self):
         tasks = [task for task in LENGTH_TASKS if task["task_id"].endswith("_0")]
         state = initial_state(tasks)
