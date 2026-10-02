@@ -208,17 +208,26 @@ def _rollout_worker(job_id: int) -> dict[str, Any]:
     if WORKER_MODEL is None or WORKER_ENV is None:
         raise RuntimeError("PPO rollout worker was not initialized")
     assignment = WORKER_ASSIGNMENTS[job_id]
+    limit = assignment.get("decision_quota", WORKER_MAX_ACTIONS)
+    if type(limit) is not int or not 1 <= limit <= WORKER_MAX_ACTIONS:
+        raise ValueError("invalid rollout decision reservation")
     torch.manual_seed(assignment["action_seed"])
-    return collect_task_episode(
+    episode = collect_task_episode(
         WORKER_MODEL,
         WORKER_ENV,
         assignment["task"],
         assignment["task_seed"],
         job_id,
-        WORKER_MAX_ACTIONS,
+        limit,
         WORKER_REWARD_CONFIG,
         allow_truncation=WORKER_ALLOW_TRUNCATION,
     )
+    if "decision_quota" in assignment:
+        episode["decision_quota"] = limit
+        episode["truncation_reason"] = (
+            "decision_budget_boundary" if episode["truncated"] and limit < WORKER_MAX_ACTIONS
+            else "max_actions" if episode["truncated"] else None)
+    return episode
 
 
 def _init_evaluation_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],

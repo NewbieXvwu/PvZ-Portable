@@ -209,13 +209,22 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
                 raise ValueError("empty or duplicate environment seeds")
     if sampling["method"] in course.COURSE_METHODS:
         course.initial_state(train)
-    if set(config["budget"]) != {"decisions", "max_episodes"} or config["budget"]["decisions"] < 1:
+    budget_fields = {"decisions", "max_episodes"}
+    if "boundary_mode" in config["budget"]:
+        budget_fields.add("boundary_mode")
+        if config["budget"]["boundary_mode"] != "exact_decisions_v1":
+            raise ValueError("unsupported explicit decision budget boundary mode")
+    if set(config["budget"]) != budget_fields or config["budget"]["decisions"] < 1:
         raise ValueError("budget must specify positive decisions and optional max_episodes")
     if config["budget"]["max_episodes"] is not None and config["budget"]["max_episodes"] < 1:
         raise ValueError("max_episodes must be null or positive")
     nodes = evaluation["decision_nodes"]
     if nodes != sorted(set(nodes)) or any(node <= 0 for node in nodes):
         raise ValueError("evaluation nodes must be sorted distinct positive decision counts")
+    if config["budget"].get("boundary_mode") == "exact_decisions_v1":
+        if (type(config["budget"]["decisions"]) is not int
+                or any(type(node) is not int or node > config["budget"]["decisions"] for node in nodes)):
+            raise ValueError("exact decision boundaries require integer nodes within the final budget")
     runtime = config["runtime"]
     if set(runtime) != {"workers", "worker_threads", "worker_device", "update_device", "max_actions",
                         "cudnn_tf32", "matmul_precision", "deterministic_algorithms",
@@ -302,6 +311,23 @@ def _assign(tasks: list[dict[str, Any]], job_ids: list[int], rng: random.Random,
         result[job_id] = {"task": task, "task_seed": rng.choice(task["seeds"]),
                           "action_seed": rng.randrange(1, 2**31)}
     return result
+
+
+def decision_quotas(job_ids: list[int], remaining: int, max_actions: int) -> dict[int, int]:
+    """Reserve every possible action before collection; never discard overflow.
+
+    A normal terminal can leave unused reservations. The next update refills the
+    remainder with fresh episodes; truncated histories use the existing value
+    bootstrap and do not become curriculum failures. Quotas are saved in each
+    assignment/collection fingerprint, so incomplete batches replay the same plan.
+    """
+    if (not job_ids or len(set(job_ids)) != len(job_ids)
+            or type(remaining) is not int or remaining < len(job_ids)
+            or type(max_actions) is not int or max_actions < 1):
+        raise ValueError("decision reservations require positive unique jobs and capacity")
+    quotient, remainder = divmod(remaining, len(job_ids))
+    return {job_id:min(max_actions, quotient + (index < remainder))
+            for index,job_id in enumerate(job_ids)}
 
 
 def _trajectory_stats(episodes: list[dict[str, Any]]) -> dict[str, Any]:
@@ -518,6 +544,9 @@ def run_experiment(args: Any) -> None:
             if counters["episodes"]:
                 mean_decisions = counters["decisions"] / counters["episodes"]
                 batch_size = min(batch_size, max(1, math.ceil((next_node - counters["decisions"]) / mean_decisions)))
+            exact_decisions = config["budget"].get("boundary_mode") == "exact_decisions_v1"
+            if exact_decisions:
+                batch_size = min(batch_size, next_node - counters["decisions"])
             job_ids = list(range(counters["episodes"], counters["episodes"] + batch_size))
             sampling = config["sampling"]
             sampling_weights, course_snapshot = None, None
@@ -525,6 +554,11 @@ def run_experiment(args: Any) -> None:
                 sampling_weights, course_snapshot = course.probabilities(
                     tasks, state["curriculum_state"], sampling["curriculum"], sampling["method"])
             assignments = _assign(tasks, job_ids, rng, state["recent_passes"], sampling["method"], sampling_weights)
+            if exact_decisions:
+                quotas = decision_quotas(job_ids, next_node - counters["decisions"],
+                                        config["runtime"]["max_actions"])
+                for job_id, quota in quotas.items():
+                    assignments[job_id]["decision_quota"] = quota
             weights = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
             metadata = {"research_version": RESEARCH_VERSION, "experiment_identity": identity,
                         "update": state["updates"] + 1,
@@ -540,6 +574,13 @@ def run_experiment(args: Any) -> None:
                                                runtime["worker_threads"], "cpu", model.config,
                                                config["reward"], True), label=label)
             rollout_seconds = time.monotonic() - started
+            if exact_decisions:
+                for job_id, episode in zip(job_ids, episodes, strict=True):
+                    if (episode["seed"] != job_id or episode.get("decision_quota") != quotas[job_id]
+                            or not 1 <= len(episode["transitions"]) <= quotas[job_id]):
+                        raise RuntimeError("collected episode violated its frozen decision reservation")
+                if counters["decisions"] + sum(len(e["transitions"]) for e in episodes) > next_node:
+                    raise RuntimeError("actual decisions exceed the evaluation/final budget boundary")
             stats = _trajectory_stats(episodes)
             add_advantages(episodes, config["ppo"]["gae_lambda"], config["reward"]["gamma"])
             started = time.monotonic()
@@ -556,6 +597,8 @@ def run_experiment(args: Any) -> None:
             state["updates"] += 1
             invocation_updates += 1
             for episode in episodes:
+                if exact_decisions and episode["truncated"]:
+                    continue
                 recent = state["recent_passes"][episode["task_id"]]
                 recent.append(episode["won"])
                 del recent[:-64]
@@ -568,6 +611,13 @@ def run_experiment(args: Any) -> None:
                         "shard_directory": str(shard_dir.relative_to(output))})
             if course_snapshot is not None:
                 state["update_history"][-1]["curriculum_sampling"] = course_snapshot
+            if exact_decisions:
+                state["update_history"][-1]["decision_budget"] = {
+                    "boundary_mode":"exact_decisions_v1", "boundary":next_node,
+                    "reserved_decisions":sum(quotas.values()), "quotas":quotas,
+                    "actual_decisions":sum(len(e["transitions"]) for e in episodes),
+                    "budget_boundary_truncations":sum(e.get("truncation_reason") == "decision_budget_boundary"
+                                                       for e in episodes)}
             due = state["evaluation_cursor"] < len(nodes) and counters["decisions"] >= nodes[state["evaluation_cursor"]]
             if due:
                 while state["evaluation_cursor"] < len(nodes) and counters["decisions"] >= nodes[state["evaluation_cursor"]]:
