@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-periodic-mutation-v1",
+  "source": "artifacts/research/periodic_mutation_v1_actual",
+  "scope": "Bounded mutation50 actual native resets,5 CPU full-size policy NPZ traces/PPO, disk round/task/RNG continuation and tests; no complete remote download audit or efficacy claim.",
+  "revision": "c147a298700b74fa90b04e24d3df46cc20cd7951",
+  "seconds": 11.753757356000278
+}

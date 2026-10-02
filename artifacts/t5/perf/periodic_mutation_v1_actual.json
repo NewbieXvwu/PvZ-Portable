@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "source_commit": "0baf3464824af9d1a97388ac411dcfe10c3038e3",
+  "scope": "Brief native engineering proof: real saved training history drives bounded hypothetical mutation rounds; reset all generated tasks; collect5 full-size CPU policy traces and execute PPO. This is not actual250k training, a GPU mutation run or efficacy proof.",
+  "real_history_origin": {
+    "run": "mainline_frontier_v1_seed0",
+    "updates": 18,
+    "counters": {
+      "episodes": 291,
+      "decisions": 34231,
+      "ticks": 3534885
+    }
+  },
+  "disk_round_restore": {
+    "pool_exact": true,
+    "course_exact": true,
+    "assignments100_exact": true,
+    "sampling_rng_exact": true,
+    "probabilities_exact": true
+  },
+  "rounds": 10,
+  "generated_tasks": 50,
+  "originals_unchanged": true,
+  "native_reset_passed": true,
+  "parameter_count": 7867294,
+  "sampled_stats": {
+    "action_counts": {
+      "plant": 49,
+      "wait": 208,
+      "shovel": 63
+    },
+    "zero_tick_actions": 112,
+    "immediate_plant_shovels": 20,
+    "immediate_shovel_fraction_of_plants": 0.40816326530612246,
+    "mean_abs_shaping_reward": 0.08636209695439345,
+    "mc_value_mse_before_update": 0.04497413402354952,
+    "mc_value_explained_variance_before_update": -0.011514017246421204,
+    "won": 0,
+    "truncated": 5,
+    "task_counts": {
+      "mutation_v1_r001_day": 1,
+      "mutation_v1_r001_night": 1,
+      "mutation_v1_r001_pool": 1,
+      "mutation_v1_r001_fog": 1,
+      "mutation_v1_r001_roof": 1
+    },
+    "wait_summary": {
+      "wait_actions": 208,
+      "condition_counts": {
+        "sun_increased": 40,
+        "wave_changed": 41,
+        "packet_became_ready": 35,
+        "left_zone_occupied": 36,
+        "timeout": 28,
+        "plant_count_decreased": 28
+      },
+      "primary_reason_counts": {
+        "max_ticks": 183,
+        "condition": 18,
+        "zombie_entered_left_zone": 6,
+        "defense_lost": 1
+      },
+      "all_trigger_counts": {
+        "max_ticks": 183,
+        "condition": 18,
+        "zombie_entered_left_zone": 6,
+        "defense_lost": 1
+      },
+      "requested_logic_ticks": 38070,
+      "actual_ticks": 34197,
+      "zero_actual_tick_waits": 0,
+      "logic_steps": 34197,
+      "stalled_clock_steps": 0,
+      "initial_condition_satisfied": 0
+    }
+  },
+  "npz_replay_max_error": 4.76837158203125e-07,
+  "actual_cpu_ppo": {
+    "policy_loss": 0.005833712007318225,
+    "value_loss": 0.044439438464386125,
+    "entropy": 3.03789952823094,
+    "advantage_mean": -0.0016666266601532698,
+    "advantage_std": 0.18503707647323608,
+    "gradient_norm": 0.8634990453720093,
+    "approx_kl": 0.018609497463330626,
+    "clip_fraction": 0.2734375,
+    "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+    "max_log_prob_change": 0.7311277389526367,
+    "optimizer_steps": 7,
+    "stopped_for_kl": true
+  },
+  "actual_cpu_ppo_seconds": 9.597846774002392,
+  "belief_parameter_change_l1": 187.02544571459293,
+  "seconds": 23.230176164001023,
+  "native_reset_coverage": {
+    "count": 50,
+    "passed": 50
+  },
+  "raw_evidence": "artifacts/research/periodic_mutation_v1_actual",
+  "unit_tests": {
+    "tests_run": 45,
+    "status": "pass",
+    "cuda_skipped": 1,
+    "hf_sync_tests": 8
+  }
+}
