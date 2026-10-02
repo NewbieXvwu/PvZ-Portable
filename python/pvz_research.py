@@ -27,6 +27,7 @@ from pvz_common import (ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION,
                         canonical_digest, git_metadata, sha256_file)
 import pvz_curriculum as course
 import pvz_task_mutation as mutation
+from pvz_initialization import transfer_weights, validate_transfer
 from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory
 from train_pvz_ppo import add_advantages, episode_digest, train_update
 from pvz_wait_events import summarize_wait_records
@@ -157,6 +158,9 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
     expected = {"schema_version", "experiment_id", "purpose", "initialization_seed",
                 "sampling_seed", "model", "reward", "ppo", "sampling", "budget",
                 "evaluation", "runtime", "prerequisites"}
+    if "initialization" in config:
+        expected.add("initialization")
+        validate_transfer(config["initialization"])
     if set(config) != expected or config["schema_version"] != RESEARCH_VERSION:
         raise ValueError("research config fields/schema do not match version 1")
     model_fields = {"layers", "width", "heads", "ff_width", "gru_layers", "gru_width",
@@ -415,12 +419,18 @@ def run_experiment(args: Any) -> None:
         source_paths.append(ROOT / "python/pvz_short_memory.py")
     if "task_mutation" in config["sampling"]:
         source_paths.append(ROOT / "python/pvz_task_mutation.py")
+    if "initialization" in config:
+        source_paths.append(ROOT / "python/pvz_initialization.py")
     fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
     fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),
                          "main.pak": sha256_file(resource_dir / "main.pak"),
                          "properties/partner.xml": sha256_file(resource_dir / "properties/partner.xml"),
                          "train_manifest": sha256_file(_path(config["sampling"]["manifest"])),
                          "evaluation_manifest": sha256_file(_path(config["evaluation"]["manifest"]))})
+    if "initialization" in config:
+        # A complete stage resume needs only its own checkpoint, even when the
+        # parent file lives on another machine or has not been downloaded.
+        fingerprints["weight_transfer_source_checkpoint"] = config["initialization"]["source_sha256"]
     identity = canonical_digest({"config": config, "fingerprints": fingerprints})
     seed = config["initialization_seed"]
     random.seed(seed)
@@ -451,16 +461,22 @@ def run_experiment(args: Any) -> None:
     else:
         if pointer.exists() or (output / "training_state.json").exists():
             raise RuntimeError("experiment directory already has state; use --resume for this candidate")
+        initialization = None
+        if "initialization" in config:
+            initialization = transfer_weights(model, config["initialization"],
+                                               _path(config["initialization"]["source_checkpoint"]))
         state = {"schema_version": RESEARCH_VERSION, "experiment_id": config["experiment_id"],
                  "experiment_identity": identity, "updates": 0,
                  "counters": {"episodes": 0, "decisions": 0, "ticks": 0}, "wall_seconds": 0.0,
                  "phase": "initial_evaluation", "evaluation_cursor": 0,
                  "recent_passes": {task["task_id"]: [] for task in tasks},
                  "learning_curve": [], "update_history": [],
-                 "invocations": [{"kind": "random_initialization", "seed": seed,
+                 "invocations": [{"kind": "weights_transfer_v1" if initialization else "random_initialization", "seed": seed,
                                   "started_at": _now(), "commit": revision}],
                  "initial_state_sha256": profile._state_sha256(model.state_dict()),
                  "status": "running"}
+        if initialization is not None:
+            state["initialization_provenance"] = initialization
         atomic_json(output / "experiment_config.json", config)
         atomic_json(output / "provenance.json", {"commit": revision, "worktree_dirty": dirty,
                     "fingerprints": fingerprints, "model_config": model.config,
@@ -468,7 +484,8 @@ def run_experiment(args: Any) -> None:
                     "torch": torch.__version__, "cuda": torch.version.cuda,
                     "gpu": torch.cuda.get_device_name(), "experiment_identity": identity,
                     "deterministic_algorithms": torch.are_deterministic_algorithms_enabled(),
-                    "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG")})
+                    "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+                    **({"initialization": initialization} if initialization is not None else {})})
     base_tasks = tasks
     mutation_settings = config["sampling"].get("task_mutation")
     if mutation_settings is not None:

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "purpose": "Directly begin ordinary fulllevel7 training after short actual learning signals; no architecture winner or formalT5/T7 pass claimed.",
+  "parent_selection": "Fixed first23update seed0 boundary47856D before full-stage results, not best-checkpoint selection; all prior checkpoints/failed nodes kept.",
+  "initialization": {
+    "method": "weights_transfer_v1",
+    "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_frontier_v1_seed0/runs/run_1/update_000023_boundary_1790942973035689115.pt",
+    "source_sha256": "a241272d741cefa15a6a32b8a8bca5e6879019e125409a4d1980fb3fb12f884c",
+    "note": "Transfer all identical headless singleGRU256 parameters after first23updates/47856decisions. New completelevel7 curriculum with R3gamma1; reset AdamW and stage RNG/counters explicitly. Not same-candidate resume or a reward causal comparison."
+  },
+  "objective": "R3gamma1 retains actual terminal win/loss objective across long elapsedticks. Environment Phi and terminal-zero semantics unchanged. This is a new training recipe, not attribution of R3 superiority; old4x3 reward results retained.",
+  "training": "Native AdventureIIlevel7 full30waves, ordinary50sun, multiplier1, same six-card deck,256 dedicated seeds1300000..1300255; no wave cap, aid, scripted actions or evaluation labels in PPO.",
+  "rollout": "4episodes/batch initially,2 CPU workers/1thread,128step current-parameter recurrent replay/2chunks, FP32 CUDA; actual complete episode costs and resource peaks determine subsequent budgets. Exact boundaries may truncate budget fragments with bootstrap, never counted as wins/failures for course.",
+  "smoke": "First3 updates within30min, checkpoint+nonempty curve+completed initial/2000 evaluations, then same new-stage complete resume10 updates. On error stop and preserve; no ignored gates.",
+  "budget": "500k stage decision ceiling, original prescribed2000/25000/125000/250000/375000/500000 nodes. Parent47856decisions/2361.79s recorded separately and added when reporting total training cost. B remains unfrozen.",
+  "evaluation": "Small26task progress list retains all previous20 tasks pluscap1 probes and2 originalfulllevel7 development seeds. Acceptance file is separate; no progress result substitutes256level7 or64/terrain assessment.",
+  "acceptance": "Existinglevel7 256seed60% unchanged. Five complete terrain tasks retain16 legacy seeds and predeclare48 additional validation seeds each, same levels and explicit decks; required2initializations overall60%,terrain45%,weakest25% unchanged. Report legacy subset and extended64 separately.",
+  "schedule": "After currently running frontier seed1 segment, insert fulllevel7 smoke/resume10 before frontierseed0 continuation toward125k; keep all other seed/architecture work. Current training source stays frozen and uninterrupted.",
+  "auxiliary_prediction": "Cancelled; no auxiliary heads/labels/losses."
+}
