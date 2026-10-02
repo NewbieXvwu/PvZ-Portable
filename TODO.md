@@ -512,3 +512,11 @@ sample0/40不作学习验收。详见exact_decision_budget_v1_actual.json及engi
 以及真实录制回放；全部11项正覆盖继续要求，30项合成检查不能代替本次真实完成。
 HF新分支small实际772文件/1615883字节已全部下载SHA核验，原main保持；12 source runs
 按该已验证路径正式交付中，原生两份失败现场及新精确恢复亦开始分支上传，仍待全量核验。
+
+事件动态补充已完成120jobs及真实回放，波次/冷却各360正覆盖，但defense_lost仍0，
+gate保持fail；120份raw/manifest/patch核验通过，不放开事件学习。发现READY割草机
+reset到败局仍在x=-160，正在隔离验证是否遗漏正常开场AnimateBoard初始化；旧二进制、
+任务/profile及失败现场保留。事件等待已列入后续实验和主线候选，尚未合入默认主线。
+完整3840动态前缀实测通过167620物理比较，全部raw/case链核验；这是headless前缀门禁，
+不是GUI开场保真或学习验收。HF独立分支已上传4/12奖励run，后被128 commits/hour限流
+拦下，按服务要求冷却再续，不声称整批已交付。细节见RESEARCH_EXECUTION最新记录。

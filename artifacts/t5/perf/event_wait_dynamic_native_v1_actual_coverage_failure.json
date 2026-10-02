@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "scope": "Retained6480 original branches plus public dynamic native coverage; no PPO learning",
+  "protocol_sha256": "ed305faabebae78c2d1aa2c1e6ba90dba6ec0e4ee2706f9221bd3e5d8b4e65e0",
+  "expected_jobs": 120,
+  "prior_report_sha256": "c96816db3ac9f86a65047da8a2a8ca5bb9093ddec8d4e9f8f72cf38ac6471cff",
+  "gate_result": "fail",
+  "supplemental_counts": {
+    "max_ticks": 16777,
+    "condition": 720,
+    "condition:wave_changed": 360,
+    "condition:packet_became_ready": 360,
+    "zombie_entered_left_zone": 184,
+    "terminal": 120
+  },
+  "combined_counts": {
+    "max_ticks": 21338,
+    "condition": 1144,
+    "condition:wave_changed": 360,
+    "condition:packet_became_ready": 360,
+    "zombie_entered_left_zone": 209,
+    "terminal": 1860,
+    "initial_true": 351,
+    "zero_actual_ticks": 1752,
+    "no_event_equivalent": 4561,
+    "condition:left_zone_occupied": 351,
+    "condition:sun_increased": 68,
+    "condition:plant_count_decreased": 5
+  },
+  "missing_coverage": [
+    "defense_lost"
+  ],
+  "original_gate_result_preserved": "fail",
+  "original_jobs": 120,
+  "original_branches": 6480,
+  "seconds": 946.9212840360005,
+  "peak_process_tree_rss_bytes": 1296134144,
+  "min_system_available_bytes": 19304783872,
+  "report_path": "artifacts/research/event_wait_dynamic_native_v1_actual/report.json",
+  "report_sha256": "2ff8078d6c71b7b9325ab294c7e593936e99f98504b61e539f4742dac3732692",
+  "verified_job_raw_manifest_patch_chains": 120,
+  "all_jobs_terminal": true,
+  "all_equality_and_record_replay_checks_passed": true,
+  "exit_code": 1,
+  "interpretation": "Native mechanics equality passed; required defense_lost positive coverage absent. Original and supplemental gate remain failed. No PPO/CUDA/learning release.",
+  "log": "logs/t5_research/event_wait_dynamic_native_v1_actual.log"
+}

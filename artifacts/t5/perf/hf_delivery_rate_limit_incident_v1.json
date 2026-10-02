@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "status": "partial_delivery_cooldown_required",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "completed_uploads": [
+    {
+      "run": "reward_r0_seed0_v2",
+      "branch": "evidence-reward-r0-seed0-v2",
+      "revision": "bd84ac1b8b075727066d8319c8a7c36ca3ed4b90",
+      "seconds": 139.44843815600052
+    },
+    {
+      "run": "reward_r0_seed1_v2",
+      "branch": "evidence-reward-r0-seed1-v2",
+      "revision": "f70dc7154fa7b38c998d36a472003d29e98f6e60",
+      "seconds": 111.46480478100057
+    },
+    {
+      "run": "reward_r0_seed2_v2",
+      "branch": "evidence-reward-r0-seed2-v2",
+      "revision": "1194ade1589ab61ff01b22df1ec05972638df392",
+      "seconds": 446.2583575819999
+    },
+    {
+      "run": "reward_r1_seed0_v2",
+      "branch": "evidence-reward-r1-seed0-v2",
+      "revision": "fb16fea2e1c2ab7ee0c622807b47a57e03fd8f5e",
+      "seconds": 398.67233676900014
+    }
+  ],
+  "all_completed_snapshots_remote_verified": false,
+  "failed_run": "reward_r1_seed1_v2",
+  "failed_branch": "evidence-reward-r1-seed1-v2",
+  "bulk_progress_path": "artifacts/research/reward_matrix_hf_delivery_revision_v2/progress.json",
+  "bulk_progress_sha256": "4e0dbd19a42984cddc5b6557d2895c24cfce038e9faccad58f5c8ecaecc7a56b",
+  "bulk_exit_code": 1,
+  "service_error": "429 Too Many Requests: You have exceeded the rate limit for repository commits (128 per hour). You can retry this action in about 1 hour.",
+  "native_exact_progress_path": "artifacts/research/native_and_exact_hf_revision_delivery_v1/progress.json",
+  "native_exact_progress_sha256": "d71dc52e557ae835cd46780270a26f1093e0169ebf17ad29c3c3df7399758f9c",
+  "native_exact_actual_exit_code": 1,
+  "native_exact_stale_running_status": true,
+  "native_exact_completed": 0,
+  "logs": [
+    "logs/t5_research/reward_matrix_hf_delivery_revision_v2.log",
+    "logs/t5_research/native_and_exact_hf_revision_delivery_v1.log"
+  ],
+  "not_before_utc": "2026-10-02T07:40:00Z",
+  "resume_rule": "Wait at least one hour after last service error; continue same existing partial branches via SDK content comparison, preserve all failure scenes/main/branches; no deletion or rate-limit bypass. Read-only verification/local engineering may continue."
+}

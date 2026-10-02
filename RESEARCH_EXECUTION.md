@@ -1099,3 +1099,33 @@ HF独立分支evidence-random-target-coverage-v1-full实际上传并从固定rev
 真实门禁通过后启动，原v1/v2原生失败现场及精确恢复也改走各自证据分支。所有当前上传
 进度为ignored目录内progress.json；尚未完成固定revision全量下载核验的批次不记交付
 完成。新机制目标牌组覆盖、共同输入/课程三初始化/B、事件学习收益、T6/T7仍待执行。
+
+### 动态事件覆盖失败、完整前缀通过及HF限流（2026-10-02）
+
+公开动态补充已完成120/120 jobs、120次真实录制回放，总946.921秒；波次变化和
+卡片再次可用各360次，所有独立oracle、公开回包、物理/RNG、快照重复和真实回放比较
+相等。联合原6480分支后仍缺defense_lost，全部11项要求保留，gate继续fail。
+120份raw/result/manifest/patch引用链已逐份SHA核验，见
+[补充失败](artifacts/t5/perf/event_wait_dynamic_native_v1_actual_coverage_failure.json)。
+事件等待继续在实验及主线候选清单；尚未开放CPU/CUDA采样回放或学习，也未合入默认主线。
+
+实际轨迹还发现独立的环境保真疑点：有割草机的多个任务从reset到败局，READY割草机
+x始终为-160；构造器确实初始化于-160，正常开场AnimateBoard会移至-21，而headless
+RESET在CancelIntro后直接StartPlaying。当前只记录遗漏开场初始化的假设，不据此宣称
+已修复或整套RL不可学习。屋顶默认无清洁车的profile保持；不增援、不改任务、不用注入
+僵尸伪造防线损失。隔离候选将复用正常开场例程并与真实CutScene更新路径做受控比较，
+协议先冻结，原失败二进制/轨迹/曲线保持。见
+[现场与来源SHA](artifacts/t5/perf/environment_intro_defense_anomaly_v1.json)。
+
+完整动态前缀3840/3840 cases实际通过，167620次物理比较，总3715.089秒，进程树RSS
+峰值3.211GB、最低系统可用15.851GB、swap0；3840份raw/case引用链全部核验。实际背景
+有精确预算CUDA恢复、事件CPU审计与HF传输，不当作专机吞吐。它证明headless全局与
+截波前缀一致，不能证明GUI开场保真，也不作学习验收。见
+[full actual](artifacts/t5/perf/multicap_course_v1_prefix_full_actual.json)。
+
+HF独立分支实际已上传R0三初始化及R1初始化0；随后R1初始化1被服务端429拦下：
+repository commits 128/hour，要求约1小时后再试。另一原生/精确恢复批次在创建首分支
+前亦失败；其旧progress遗留running，实际进程exit1，不再声称仍运行。保留全部部分提交
+与原日志，按冷却时间续同一分支，期间仅做远端只读完整性核验与本地工程。
+上传成功四份尚待固定revision逐文件远端核验；12份总体交付未完成。见
+[限流与固定revision](artifacts/t5/perf/hf_delivery_rate_limit_incident_v1.json)。

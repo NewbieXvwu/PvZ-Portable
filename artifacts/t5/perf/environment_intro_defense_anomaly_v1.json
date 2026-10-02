@@ -1,0 +1,615 @@
+{
+  "schema_version": 1,
+  "status": "observed_hypothesis_pending_controlled_test",
+  "source_commit": "13f0f7e",
+  "observations": [
+    {
+      "job_id": 0,
+      "task_id": "train_day_1",
+      "raw_path": "artifacts/research/event_wait_dynamic_native_v1_actual/job_0000/raw.jsonl.gz",
+      "raw_sha256": "1fde086d2e19a4bb7aecb39b0063abd5eaae5872a8ba84f5d1f423ceae03bfad",
+      "first_macro_state": {
+        "tick": 60,
+        "terminal": false,
+        "result": 0,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 203
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 303
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 403
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 503
+          }
+        ]
+      },
+      "final_macro_state": {
+        "tick": 7889,
+        "terminal": true,
+        "result": 2,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 203
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 303
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 403
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 503
+          }
+        ]
+      }
+    },
+    {
+      "job_id": 1,
+      "task_id": "train_day_1",
+      "raw_path": "artifacts/research/event_wait_dynamic_native_v1_actual/job_0001/raw.jsonl.gz",
+      "raw_sha256": "9d27db6241bc913f0f78a2c2c944cb1766e93f1fba082c007254b129747d126d",
+      "first_macro_state": {
+        "tick": 60,
+        "terminal": false,
+        "result": 0,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 203
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 303
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 403
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 503
+          }
+        ]
+      },
+      "final_macro_state": {
+        "tick": 9227,
+        "terminal": true,
+        "result": 2,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 203
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 303
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 403
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 503
+          }
+        ]
+      }
+    },
+    {
+      "job_id": 16,
+      "task_id": "train_night_1",
+      "raw_path": "artifacts/research/event_wait_dynamic_native_v1_actual/job_0016/raw.jsonl.gz",
+      "raw_sha256": "b0bd069403f4c7df5aef9ca2e0f8117aadc8b745d3e9555ca99ea8a050ed65cf",
+      "first_macro_state": {
+        "tick": 60,
+        "terminal": false,
+        "result": 0,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 203
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 303
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 403
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 503
+          }
+        ]
+      },
+      "final_macro_state": {
+        "tick": 7110,
+        "terminal": true,
+        "result": 2,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 203
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 303
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 403
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 503
+          }
+        ]
+      }
+    },
+    {
+      "job_id": 32,
+      "task_id": "train_pool_1",
+      "raw_path": "artifacts/research/event_wait_dynamic_native_v1_actual/job_0032/raw.jsonl.gz",
+      "raw_sha256": "5eb9e38e4234ebef3916e153c663fce49d8d41e2bac256db194bd8b0a070e9ed",
+      "first_macro_state": {
+        "tick": 60,
+        "terminal": false,
+        "result": 0,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 188
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 273
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 358
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 443
+          },
+          {
+            "type": 0,
+            "row": 5,
+            "state": 1,
+            "x": -160,
+            "y": 528
+          }
+        ]
+      },
+      "final_macro_state": {
+        "tick": 9016,
+        "terminal": true,
+        "result": 2,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 188
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 273
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 358
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 443
+          },
+          {
+            "type": 0,
+            "row": 5,
+            "state": 1,
+            "x": -160,
+            "y": 528
+          }
+        ]
+      }
+    },
+    {
+      "job_id": 48,
+      "task_id": "train_fog_1",
+      "raw_path": "artifacts/research/event_wait_dynamic_native_v1_actual/job_0048/raw.jsonl.gz",
+      "raw_sha256": "2820bc57bcc78e9623363743ca206d4e57aaca7a0f2a8c0e14822a99ad74818f",
+      "first_macro_state": {
+        "tick": 60,
+        "terminal": false,
+        "result": 0,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 188
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 273
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 358
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 443
+          },
+          {
+            "type": 0,
+            "row": 5,
+            "state": 1,
+            "x": -160,
+            "y": 528
+          }
+        ]
+      },
+      "final_macro_state": {
+        "tick": 9704,
+        "terminal": true,
+        "result": 2,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 188
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 273
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 358
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 443
+          },
+          {
+            "type": 0,
+            "row": 5,
+            "state": 1,
+            "x": -160,
+            "y": 528
+          }
+        ]
+      }
+    },
+    {
+      "job_id": 64,
+      "task_id": "train_roof_1",
+      "raw_path": "artifacts/research/event_wait_dynamic_native_v1_actual/job_0064/raw.jsonl.gz",
+      "raw_sha256": "c96aca971f5c74e7d36190f5eda6615b6337f277569f290f97c57716e31657f5",
+      "first_macro_state": {
+        "tick": 60,
+        "terminal": false,
+        "result": 0,
+        "defenses": []
+      },
+      "final_macro_state": {
+        "tick": 8871,
+        "terminal": true,
+        "result": 2,
+        "defenses": []
+      }
+    },
+    {
+      "job_id": 96,
+      "task_id": "train_multicap_v1_pool_cap1_variant",
+      "raw_path": "artifacts/research/event_wait_dynamic_native_v1_actual/job_0096/raw.jsonl.gz",
+      "raw_sha256": "6c01cafa5174725e7a9abe06afa27dd57279ee7e209a5a5e55e6af8c9f0e367b",
+      "first_macro_state": {
+        "tick": 60,
+        "terminal": false,
+        "result": 0,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 188
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 273
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 358
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 443
+          },
+          {
+            "type": 0,
+            "row": 5,
+            "state": 1,
+            "x": -160,
+            "y": 528
+          }
+        ]
+      },
+      "final_macro_state": {
+        "tick": 7258,
+        "terminal": true,
+        "result": 2,
+        "defenses": [
+          {
+            "type": 0,
+            "row": 0,
+            "state": 1,
+            "x": -160,
+            "y": 103
+          },
+          {
+            "type": 0,
+            "row": 1,
+            "state": 1,
+            "x": -160,
+            "y": 188
+          },
+          {
+            "type": 0,
+            "row": 2,
+            "state": 1,
+            "x": -160,
+            "y": 273
+          },
+          {
+            "type": 0,
+            "row": 3,
+            "state": 1,
+            "x": -160,
+            "y": 358
+          },
+          {
+            "type": 0,
+            "row": 4,
+            "state": 1,
+            "x": -160,
+            "y": 443
+          },
+          {
+            "type": 0,
+            "row": 5,
+            "state": 1,
+            "x": -160,
+            "y": 528
+          }
+        ]
+      }
+    }
+  ],
+  "source_fingerprints": {
+    "src/LawnApp.cpp": "5f00fc7411019259164c0f8811250dd01f3439f96f6e5012a2570866d027d783",
+    "src/Lawn/CutScene.cpp": "d9bede23e0bc9176f1ee266fc7f9a6db0a181014b80329f1aece95815a159393",
+    "src/Lawn/LawnMower.cpp": "94265ccd3bf6876ac9d48a965100e7c1d2c03fb02518702e427f0fbb9b276caf",
+    "src/Lawn/Zombie.cpp": "1f4308ceb96f6583946b0acbc00133e72fd234c65ebe01ffd3b115541707ef70"
+  },
+  "hypothesis": "Headless RESET cancels intro then immediately StartPlaying; it skips normal AnimateBoard mower placement. READY mowers remain at constructor x=-160; normal intro approaches x=-21. Roof-empty profile remains legitimate. No correction or learning claim yet.",
+  "failed_gates_retained": true
+}
