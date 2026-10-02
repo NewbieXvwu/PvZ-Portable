@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-02T05:39:25.862643+00:00",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "revision": "f50fa596cfb26fe1c6408df05644b5bb95468e99",
+  "prefix": "learning_reference256_interrupt_v2",
+  "remote_manifest_sha256": "656841ab65592dc8828c421c99eae3e1c1064bc3cab3d9a288cb12eccdcde273",
+  "files": 195,
+  "bytes": 1568656007,
+  "all_source_sha256_match": true,
+  "all_actual_remote_download_sha256_match": true,
+  "includes_both_resume_pointer_targets": true,
+  "scope": "Full256 real SIGKILL/partial-shard reuse/full-state equality engineering evidence; no learning acceptance."
+}

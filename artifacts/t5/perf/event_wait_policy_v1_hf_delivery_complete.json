@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-02T04:42:01.202115+00:00",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "revision": "3c68ddab4a8e148d7352620244b593867117432b",
+  "prefix": "event_wait_policy_contracts_v1",
+  "remote_manifest_sha256": "49600a768f8ac14d13a8aca7419c1c1449d74e0f5b7b5f3ea3a296c248826fef",
+  "uploaded_files": 16,
+  "source_sha256_all_match": true,
+  "source_scope": "synthetic CPU engineering contracts, not native or learning benefit"
+}

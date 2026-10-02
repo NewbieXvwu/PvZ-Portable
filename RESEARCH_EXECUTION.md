@@ -992,3 +992,41 @@ pvz-env仍7f2b094。完整256实际SIGKILL及新共同输入/奖励/课程基线
 连续/SIGKILL/恢复两臂，使用此前计划的独立managed目录；不修改任何冻结候选源或
 旧失败现场。实际门禁仍待两臂完结与严格全字段比较，不以启动/更新记作通过。
 环境快照与交付版本见[environment_restored_v1.json](artifacts/t5/perf/environment_restored_v1.json)。
+
+### 完整256实际恢复通过与事件原生失败修正（2026-10-02）
+
+原完整256协议v2已实际完成：两臂均77局、5021决策、604506 tick、5次更新，
+严格比较模型、AdamW162个状态、Python/NumPy/CPU Torch/CUDA Torch/任务分配RNG、
+课程、计数、训练损失/轨迹摘要、两节点greedy/sample逐局评估全部相同。
+SIGKILL发生在update1完成、update2已有4/20分片时；恢复日志cached=4 collect=16，
+全部4分片SHA和mtime未改。总745.012秒，连续端到端369.314秒、恢复臂记录360.346秒，
+这不是等耗时学习比较。GPU allocated峰值约3.918GB、reserved最高8.573GB，swap峰值0。
+初始greedy/sample均0/40；最终greedy11/40、sample0/40，仅两环境种子/任务且含旧援助任务，
+不据此宣布普通多波或三初始化能力达标。名义5000决策实际5021，预算边界仍须完善后，
+才能作严格等交互量架构/动作对照。原稿/原失败/冻结27项源不改。
+
+原始195文件、1,568,656,007字节已实际上传HF的learning_reference256_interrupt_v2，
+并从固定远端revision f50fa596cfb26fe1c6408df05644b5bb95468e99全部下载核验体积/SHA，
+包括两臂resume指针目标。Git结论分别见
+[actual.json](artifacts/t5/perf/learning_reference256_interrupt_v2_actual.json)、
+[engineering curve](artifacts/t5/curves/learning_reference256_interrupt_v2_engineering.json)、
+[HF verified](artifacts/t5/perf/learning_reference256_interrupt_v2_hf_delivery_complete.json)。
+事件策略小型合成16文件此前实际上传已完成，其范围仍仅CPU合成契约。
+
+事件原生v1实际job0在54次macro/oracle/物理RNG/snapshot等值比较后，录制回放报
+KeyError: manifest。直接deepcopy内存episode不是save_replay生成的真实容器，而且遗漏
+manifest_directory。整个门禁fail、completed_jobs=0，全部日志/raw/保存目录/record保持。
+详见[failure.json](artifacts/t5/perf/event_wait_native_audit_v1_actual_failure.json)。
+隔离提交9e42bf0使用实际PvZEnv.save_replay保存JSONL、manifest和working_tree.patch，
+重新读取原header/operations/footer，真实检查manifest/patch后执行replay_record(record,directory)。
+新增检查保留原debug哈希及原episode、验证被篡改patch/manifest必须拒绝，6项契约通过。
+新native_audit_release_v2协议212f203e…已正常push、fetch并逐source/binary/resource
+SHA预检后启动新输出；原120jobs/6480分支、任务/种子、正覆盖和资源/墙钟门禁全部保留，
+不重开失败v1或声明新native已通过。候选binary仍9204d301…，没有重新编译改动游戏行为。
+
+预先发布的3840局动态前缀和192局随机目标身份覆盖全量测量亦启动。实际共执行为
+2个prefix worker、1个random worker及随后1个native审计job；矩阵和修正复评已结束，
+GPU无其他学习任务。协议中的coexecution描述是原计划，当前成本须按本段实际背景解释，
+不能称为专机画像。原轨迹不进入PPO训练。四奖励×三初始化HF交付已启动，包含全部
+必要里程碑/resume目标、最后8个存在的trained、原NPZ及闭合日志；原始曲线不替换，
+修正复评另行交付。完整三初始化能力、共同B、T6/T7及最终交付继续未验收。

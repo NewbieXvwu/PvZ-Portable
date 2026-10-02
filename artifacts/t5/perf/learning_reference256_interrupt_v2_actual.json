@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "scope": "actual explicitly configured SIGKILL/full-resume engineering probe; no learning pass",
+  "configs": [
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/experiments/t5/learning_reference256_interrupt_v1/continuous.json",
+      "sha256": "496eb2894201d1cfd17b1d4c4b6c38767be867628775646cc419614dd18e13c3"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/experiments/t5/learning_reference256_interrupt_v1/interrupted.json",
+      "sha256": "6ef111aafa9cbe6d68035dd693b886144f17bb15c84d61dfe430dc38130e61d9"
+    }
+  ],
+  "model_config": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "invocation_timeout_seconds": 600,
+  "exact_equality_required": true,
+  "coexecution": "preceding frozen reward matrix and corrected reevaluation completed before reference probe",
+  "protocol_sha256": "8d58d2a9e9c91da81e35cd407b44e7928d18cb5e347ab1f69d4f574f5bf83aac",
+  "waiting_seconds": 0.00936382500003674,
+  "continuous_command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python",
+    "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/python/train_pvz_ppo_task_family.py",
+    "--resource-dir",
+    "/home/newbiexvwu/.cache/pvz-research-resources",
+    "--experiment-config",
+    "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/experiments/t5/learning_reference256_interrupt_v1/continuous.json",
+    "--output-dir",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/learning_reference256_interrupt_v2_managed/continuous"
+  ],
+  "interrupted_command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python",
+    "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/python/train_pvz_ppo_task_family.py",
+    "--resource-dir",
+    "/home/newbiexvwu/.cache/pvz-research-resources",
+    "--experiment-config",
+    "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/experiments/t5/learning_reference256_interrupt_v1/interrupted.json",
+    "--output-dir",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/learning_reference256_interrupt_v2_managed/interrupted"
+  ],
+  "intentional_interruption": {
+    "exit_code": -9,
+    "last_complete_updates": 1,
+    "counters": {
+      "episodes": 20,
+      "decisions": 1377,
+      "ticks": 157201
+    },
+    "resume_pointer": {
+      "checkpoint": "runs/run_1/update_000001_trained_1790915636042524994.pt",
+      "sha256": "507e456cc5f65b0e00881d6fccb29388151606202cc313f40c3cf077abc0ef21"
+    },
+    "completed_partial_shards": [
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_20.npz",
+        "sha256": "d2c4ea5b387cfd07484db68c7b819644456124cf82f6b4978182d1cf4d43eb8d",
+        "mtime_ns": 1790915641184510097
+      },
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_21.npz",
+        "sha256": "e90ed6bc5902b04ac70adc9f4ee685f3914e18a84a7df7034f8fadb77dcac8e9",
+        "mtime_ns": 1790915641140510101
+      },
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_22.npz",
+        "sha256": "b641db6fea2e7fcfeae6e788a780168fc2aead1cb55736cb250f021eca868d8d",
+        "mtime_ns": 1790915642528509967
+      },
+      {
+        "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_23.npz",
+        "sha256": "777aa1d7f9009b1f6dc9f98f88a7e5d02af8ce226342cbafae2ac834a1f2e7d3",
+        "mtime_ns": 1790915642168510002
+      }
+    ],
+    "assigned_second_batch_size": 20,
+    "optimizer_states": 162,
+    "rng_components": [
+      "assignments",
+      "numpy",
+      "python",
+      "torch_cpu",
+      "torch_cuda"
+    ]
+  },
+  "resume_command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python",
+    "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/python/train_pvz_ppo_task_family.py",
+    "--resource-dir",
+    "/home/newbiexvwu/.cache/pvz-research-resources",
+    "--experiment-config",
+    "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/experiments/t5/learning_reference256_interrupt_v1/interrupted.json",
+    "--output-dir",
+    "/home/newbiexvwu/PvZ-Portable/artifacts/research/learning_reference256_interrupt_v2_managed/interrupted",
+    "--resume"
+  ],
+  "gate_result": "pass",
+  "differences": [],
+  "final_counters": {
+    "episodes": 77,
+    "decisions": 5021,
+    "ticks": 604506
+  },
+  "final_updates": 5,
+  "evaluated_nodes": 2,
+  "partial_shard_preservation": [
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_20.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_21.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_22.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    },
+    {
+      "path": "runs/run_1/.seed_jobs/update_000002/9175608bea5a0a4a167987e11879ae9f610a8b4c6593492100c0575b3d37cbe3/seed_23.npz",
+      "same_sha256": true,
+      "same_mtime_ns": true
+    }
+  ],
+  "resume_log_lines": [
+    "learning_reference256_interrupted_v1 update 2 cached=4 collect=16"
+  ],
+  "final_resume_pointers": [
+    {
+      "checkpoint": "runs/run_1/update_000005_boundary_1790915512125447757.pt",
+      "sha256": "a36874493bfa856d8e38c46508db7e4b4dbc62f964919f4f3c653fcd111e3fd5"
+    },
+    {
+      "checkpoint": "runs/run_1/update_000005_boundary_1790915884427666094.pt",
+      "sha256": "8134ffe10ef653572702123464cba6c72359326f4849d953f0fd0b69d9d5bf37"
+    }
+  ],
+  "resources": [
+    {
+      "peak_process_tree_rss_bytes": 12671348736,
+      "min_system_available_bytes": 18410979328,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 3917733888,
+      "cuda_peak_reserved_bytes": 5983174656
+    },
+    {
+      "peak_process_tree_rss_bytes": 15188160512,
+      "min_system_available_bytes": 18238472192,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 3918213120,
+      "cuda_peak_reserved_bytes": 8573157376
+    }
+  ],
+  "continuous_wall_seconds": 369.31416420400006,
+  "interrupted_recorded_wall_seconds": 360.34574957199993,
+  "seconds": 745.012278062,
+  "source_root": "artifacts/research/learning_reference256_interrupt_v2_managed",
+  "report_sha256": "f21598cf246fa3ceabbf094f256542cc07a6f0724e1959bda06efc57803fb203",
+  "source_commit": "3ffba3a7c0312c8d6f9b64cd7bab90d3d3621142",
+  "model_parameters": 7866721,
+  "hf_evidence_prefix": "learning_reference256_interrupt_v2",
+  "hf_remote_repository": "realnewbiexvwu/pvz-agent-artifacts",
+  "nominal_decision_budget": 5000,
+  "actual_decision_budget": 5021,
+  "exact_budget_comparison_valid": false,
+  "learning_acceptance_passed": false,
+  "event_wait_model_gate_passed": false,
+  "notes": [
+    "This strict equality covers weights, AdamW, five RNG components, curriculum, counters, loss/trajectory history and both evaluation raw results.",
+    "77 episodes, 5021 decisions, 604506 ticks; four incomplete update2 shards retained with exact SHA256 and mtime.",
+    "Nominal decision budget overshot by21. Later architecture/action interface comparisons require actual equal decision and actual equal wall budgets; these two recovery-arm walls are not an equal-wall learning comparison."
+  ]
+}
