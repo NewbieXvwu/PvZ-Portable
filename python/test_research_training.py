@@ -201,6 +201,25 @@ class ExplicitConfigurationTests(unittest.TestCase):
         for step in episode["transitions"]:
             self.assertAlmostEqual(step["return"], 0.4)
 
+    def test_lambda1_matches_duration_discounted_episode_returns(self):
+        # Different critic estimates must cancel from the lambda1 target.
+        # Zero-tick plant/shovel actions neither discount nor shorten the trace.
+        for bootstrap in (0.0, 0.7):
+            with self.subTest(bootstrap=bootstrap):
+                episode = {"bootstrap_value": bootstrap, "transitions": [
+                    {"action_duration_ticks": 0, "reward": -0.03, "value": 4.2},
+                    {"action_duration_ticks": 150, "reward": 0.04, "value": -2.1},
+                    {"action_duration_ticks": 600, "reward": -0.05, "value": 0.6},
+                    {"action_duration_ticks": 0, "reward": 1.0, "value": -0.4}]}
+                target, expected = bootstrap, []
+                for step in reversed(episode["transitions"]):
+                    target = step["reward"] + 0.99 ** (step["action_duration_ticks"] / 300) * target
+                    expected.append(target)
+                add_advantages([episode], gae_lambda=1.0, gamma=0.99)
+                for step, target in zip(episode["transitions"], reversed(expected)):
+                    self.assertAlmostEqual(step["return"], target, places=12)
+                    self.assertAlmostEqual(step["advantage"], target - step["value"], places=12)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,0 +1,1024 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "source_run": "artifacts/research/mainline_bridge_level7_v2_seed0_first43_snapshot",
+  "experiment_id": "mainline_bridge_level7_v2_seed0",
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "snapshot": {
+    "updates": 43,
+    "counters": {
+      "episodes": 165,
+      "decisions": 37560,
+      "ticks": 4183790
+    },
+    "checkpoint": "runs/run_1/update_000043_boundary_1790955757784364969.pt"
+  },
+  "observed_estimator": {
+    "gamma": 0.99,
+    "gae_lambda": 0.95,
+    "reference_ticks": 300
+  },
+  "saved_inventory_matches_committed_counters": true,
+  "lambda1_full_return_max_abs_error": 3.552713678800501e-15,
+  "recorded_discount_max_abs_error": 0.0,
+  "normal_terminal_count": 161,
+  "normal_wins": {
+    "episodes": 64,
+    "first_raw_positive": {
+      "gae": 10,
+      "mc": 64
+    },
+    "first_normalized_positive": {
+      "gae": 18,
+      "mc": 39
+    },
+    "first_normalized_negative_to_positive": 21,
+    "gae_first_advantage": {
+      "count": 64,
+      "mean": -0.09832028801354609,
+      "std": 0.11266328906885129,
+      "minimum": -0.47215195741564986,
+      "maximum": 0.07765886068815611
+    },
+    "mc_first_advantage": {
+      "count": 64,
+      "mean": 0.37586292235628915,
+      "std": 0.12048025324197785,
+      "minimum": 0.11460549010093454,
+      "maximum": 0.711844128932023
+    },
+    "gae_normalized_first": {
+      "count": 64,
+      "mean": -0.6834959228290245,
+      "std": 0.7847365212974581,
+      "minimum": -2.243138313293457,
+      "maximum": 0.7607001066207886
+    },
+    "mc_normalized_first": {
+      "count": 64,
+      "mean": -0.20503797820128966,
+      "std": 1.4575601815051369,
+      "minimum": -4.431555271148682,
+      "maximum": 1.6438297033309937
+    },
+    "terminal_reward_prefix_ticks": {
+      "count": 64,
+      "mean": 24556.125,
+      "std": 4116.454240681536,
+      "minimum": 17500.0,
+      "maximum": 34960.0
+    },
+    "terminal_gae_coefficient": {
+      "count": 64,
+      "mean": 0.008956900824724416,
+      "std": 0.006499002382256264,
+      "minimum": 0.0007859811792806936,
+      "maximum": 0.027920937300182008
+    },
+    "terminal_mc_coefficient": {
+      "count": 64,
+      "mean": 0.44337415739410624,
+      "std": 0.05943967577265603,
+      "minimum": 0.30999499148668236,
+      "maximum": 0.5563990137699659
+    },
+    "terminal_lambda_attenuation": {
+      "count": 64,
+      "mean": 0.018706252339635368,
+      "std": 0.01158948327886076,
+      "minimum": 0.0025354641231823084,
+      "maximum": 0.050181500342711544
+    }
+  },
+  "normal_losses": {
+    "episodes": 97,
+    "first_raw_positive": {
+      "gae": 15,
+      "mc": 0
+    },
+    "first_normalized_positive": {
+      "gae": 30,
+      "mc": 14
+    },
+    "first_normalized_negative_to_positive": 4,
+    "gae_first_advantage": {
+      "count": 97,
+      "mean": -0.16018461248105287,
+      "std": 0.13541160084227677,
+      "minimum": -0.5147276480829446,
+      "maximum": 0.17892149211241976
+    },
+    "mc_first_advantage": {
+      "count": 97,
+      "mean": -0.4154525072305122,
+      "std": 0.16491730153786682,
+      "minimum": -0.7758596753502709,
+      "maximum": -0.08748196889171878
+    },
+    "gae_normalized_first": {
+      "count": 97,
+      "mean": -0.8177517218246442,
+      "std": 1.1173198455713296,
+      "minimum": -3.328336477279663,
+      "maximum": 1.278516173362732
+    },
+    "mc_normalized_first": {
+      "count": 97,
+      "mean": -0.676838901710034,
+      "std": 0.8294749462401642,
+      "minimum": -2.181840658187866,
+      "maximum": 2.5028750896453857
+    },
+    "terminal_reward_prefix_ticks": {
+      "count": 97,
+      "mean": 26073.79381443299,
+      "std": 5388.074318780691,
+      "minimum": 16846.0,
+      "maximum": 44799.0
+    },
+    "terminal_gae_coefficient": {
+      "count": 97,
+      "mean": 0.007643268210155843,
+      "std": 0.006836896072042209,
+      "minimum": 0.00010511618414300591,
+      "maximum": 0.031915952468607824
+    },
+    "terminal_mc_coefficient": {
+      "count": 97,
+      "mean": 0.42396729875787054,
+      "std": 0.07104905240759601,
+      "minimum": 0.22294801461797215,
+      "maximum": 0.5687240936995632
+    },
+    "terminal_lambda_attenuation": {
+      "count": 97,
+      "mean": 0.016152043112863605,
+      "std": 0.012192958830369756,
+      "minimum": 0.0004714829343653255,
+      "maximum": 0.05611851655693663
+    }
+  },
+  "budget_truncations": {
+    "episodes": 4,
+    "first_raw_positive": {
+      "gae": 0,
+      "mc": 0
+    },
+    "first_normalized_positive": {
+      "gae": 2,
+      "mc": 1
+    },
+    "first_normalized_negative_to_positive": 0,
+    "gae_first_advantage": {
+      "count": 4,
+      "mean": -0.13499435850605768,
+      "std": 0.06505395966931893,
+      "minimum": -0.24600837606002973,
+      "maximum": -0.08103070799031634
+    },
+    "mc_first_advantage": {
+      "count": 4,
+      "mean": -0.18900569545894558,
+      "std": 0.12343175460876293,
+      "minimum": -0.3658807254573856,
+      "maximum": -0.040118102920151166
+    },
+    "gae_normalized_first": {
+      "count": 4,
+      "mean": -1.635084304958582,
+      "std": 2.1135929802244906,
+      "minimum": -4.767289161682129,
+      "maximum": 0.42447471618652344
+    },
+    "mc_normalized_first": {
+      "count": 4,
+      "mean": -0.9007970709353685,
+      "std": 1.1191452013960228,
+      "minimum": -2.3591368198394775,
+      "maximum": 0.44390249252319336
+    },
+    "terminal_reward_prefix_ticks": {
+      "count": 0
+    },
+    "terminal_gae_coefficient": {
+      "count": 0
+    },
+    "terminal_mc_coefficient": {
+      "count": 0
+    },
+    "terminal_lambda_attenuation": {
+      "count": 0
+    }
+  },
+  "per_task": {
+    "train_bridge7_v1_aid_cap10": {
+      "wins": {
+        "episodes": 55,
+        "first_raw_positive": {
+          "gae": 10,
+          "mc": 55
+        },
+        "first_normalized_positive": {
+          "gae": 15,
+          "mc": 34
+        },
+        "first_normalized_negative_to_positive": 19,
+        "gae_first_advantage": {
+          "count": 55,
+          "mean": -0.09814803934438233,
+          "std": 0.11659273720980125,
+          "minimum": -0.47215195741564986,
+          "maximum": 0.07765886068815611
+        },
+        "mc_first_advantage": {
+          "count": 55,
+          "mean": 0.393998405988254,
+          "std": 0.11578041449867428,
+          "minimum": 0.11948955782927477,
+          "maximum": 0.711844128932023
+        },
+        "gae_normalized_first": {
+          "count": 55,
+          "mean": -0.684211697971279,
+          "std": 0.7953165851847813,
+          "minimum": -2.243138313293457,
+          "maximum": 0.7607001066207886
+        },
+        "mc_normalized_first": {
+          "count": 55,
+          "mean": -0.19540680181235076,
+          "std": 1.4936162285764836,
+          "minimum": -4.431555271148682,
+          "maximum": 1.6438297033309937
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 55,
+          "mean": 23838.50909090909,
+          "std": 3689.912779815348,
+          "minimum": 17500.0,
+          "maximum": 31807.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 55,
+          "mean": 0.009831931399504924,
+          "std": 0.006513729841839002,
+          "minimum": 0.0014976528591997946,
+          "maximum": 0.027920937300182008
+        },
+        "terminal_mc_coefficient": {
+          "count": 55,
+          "mean": 0.4533488880240194,
+          "std": 0.05483717326731503,
+          "minimum": 0.3445313785649888,
+          "maximum": 0.5563990137699659
+        },
+        "terminal_lambda_attenuation": {
+          "count": 55,
+          "mean": 0.020337367194489427,
+          "std": 0.01149510428952879,
+          "minimum": 0.0043469273116360976,
+          "maximum": 0.050181500342711544
+        }
+      },
+      "losses": {
+        "episodes": 25,
+        "first_raw_positive": {
+          "gae": 7,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 13,
+          "mc": 5
+        },
+        "first_normalized_negative_to_positive": 1,
+        "gae_first_advantage": {
+          "count": 25,
+          "mean": -0.1086113712213948,
+          "std": 0.12693404684149698,
+          "minimum": -0.4707965445492117,
+          "maximum": 0.013657324736458212
+        },
+        "mc_first_advantage": {
+          "count": 25,
+          "mean": -0.5033932645220118,
+          "std": 0.14815008811433933,
+          "minimum": -0.6743988731146947,
+          "maximum": -0.13875798775513393
+        },
+        "gae_normalized_first": {
+          "count": 25,
+          "mean": -0.2733134834468365,
+          "std": 0.778762676386031,
+          "minimum": -2.2391319274902344,
+          "maximum": 0.7910076975822449
+        },
+        "mc_normalized_first": {
+          "count": 25,
+          "mean": -0.5341353696957231,
+          "std": 0.6576281225895249,
+          "minimum": -1.753747582435608,
+          "maximum": 1.1245274543762207
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 25,
+          "mean": 23939.16,
+          "std": 3344.145040873676,
+          "minimum": 16846.0,
+          "maximum": 29020.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 25,
+          "mean": 0.009712745474731653,
+          "std": 0.008105552999883175,
+          "minimum": 0.002647938590740042,
+          "maximum": 0.031915952468607824
+        },
+        "terminal_mc_coefficient": {
+          "count": 25,
+          "mean": 0.45132585596030367,
+          "std": 0.05243171328519406,
+          "minimum": 0.37824903095687923,
+          "maximum": 0.5687240936995632
+        },
+        "terminal_lambda_attenuation": {
+          "count": 25,
+          "mean": 0.019983473239650343,
+          "std": 0.013597937196501484,
+          "minimum": 0.007000516522253549,
+          "maximum": 0.05611851655693663
+        }
+      }
+    },
+    "train_bridge7_v1_aid_cap15": {
+      "wins": {
+        "episodes": 9,
+        "first_raw_positive": {
+          "gae": 0,
+          "mc": 9
+        },
+        "first_normalized_positive": {
+          "gae": 3,
+          "mc": 5
+        },
+        "first_normalized_negative_to_positive": 2,
+        "gae_first_advantage": {
+          "count": 9,
+          "mean": -0.09937291876954675,
+          "std": 0.08477343306201765,
+          "minimum": -0.24605826907359832,
+          "maximum": -0.010342839594175545
+        },
+        "mc_first_advantage": {
+          "count": 9,
+          "mean": 0.2650349668276152,
+          "std": 0.08371640040924205,
+          "minimum": 0.11460549010093454,
+          "maximum": 0.3933167378287268
+        },
+        "gae_normalized_first": {
+          "count": 9,
+          "mean": -0.6791217414041361,
+          "std": 0.7166793670598741,
+          "minimum": -1.3414229154586792,
+          "maximum": 0.4599880874156952
+        },
+        "mc_normalized_first": {
+          "count": 9,
+          "mean": -0.2638951672448052,
+          "std": 1.2125102196436877,
+          "minimum": -2.6956708431243896,
+          "maximum": 1.2077610492706299
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 9,
+          "mean": 28941.555555555555,
+          "std": 3861.9354995221156,
+          "minimum": 22361.0,
+          "maximum": 34960.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 9,
+          "mean": 0.0036094917566213106,
+          "std": 0.0027914048493825525,
+          "minimum": 0.0007859811792806936,
+          "maximum": 0.010333649990418846
+        },
+        "terminal_mc_coefficient": {
+          "count": 9,
+          "mean": 0.3824174702113033,
+          "std": 0.049229337347128206,
+          "minimum": 0.30999499148668236,
+          "maximum": 0.47278311164439174
+        },
+        "terminal_lambda_attenuation": {
+          "count": 9,
+          "mean": 0.008738328226638366,
+          "std": 0.005657920156869339,
+          "minimum": 0.0025354641231823084,
+          "maximum": 0.021857062437101928
+        }
+      },
+      "losses": {
+        "episodes": 20,
+        "first_raw_positive": {
+          "gae": 1,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 7,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 20,
+          "mean": -0.1663675491264544,
+          "std": 0.0963174204772785,
+          "minimum": -0.3051157024724041,
+          "maximum": 0.005151424168481689
+        },
+        "mc_first_advantage": {
+          "count": 20,
+          "mean": -0.5303899219912565,
+          "std": 0.1084743271237506,
+          "minimum": -0.7758596753502709,
+          "maximum": -0.3630279075212086
+        },
+        "gae_normalized_first": {
+          "count": 20,
+          "mean": -0.5809495369903743,
+          "std": 0.6593606985023235,
+          "minimum": -1.5124667882919312,
+          "maximum": 0.49998971819877625
+        },
+        "mc_normalized_first": {
+          "count": 20,
+          "mean": -0.8462694868445396,
+          "std": 0.3560316667614071,
+          "minimum": -1.6240012645721436,
+          "maximum": -0.34458890557289124
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 20,
+          "mean": 28009.25,
+          "std": 4585.067893444982,
+          "minimum": 18581.0,
+          "maximum": 35310.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 20,
+          "mean": 0.005196549263706755,
+          "std": 0.005811186537120532,
+          "minimum": 0.0007316961108071353,
+          "maximum": 0.02238375115164432
+        },
+        "terminal_mc_coefficient": {
+          "count": 20,
+          "mean": 0.39600732090893026,
+          "std": 0.06275287392138615,
+          "minimum": 0.3063814055032339,
+          "maximum": 0.5366096799994321
+        },
+        "terminal_lambda_attenuation": {
+          "count": 20,
+          "mean": 0.011535677301555835,
+          "std": 0.010573478865987196,
+          "minimum": 0.002388187069007382,
+          "maximum": 0.041713282458244
+        }
+      }
+    },
+    "train_bridge7_v1_aid_cap20": {
+      "wins": {
+        "episodes": 0,
+        "first_raw_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 0
+        },
+        "mc_first_advantage": {
+          "count": 0
+        },
+        "gae_normalized_first": {
+          "count": 0
+        },
+        "mc_normalized_first": {
+          "count": 0
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 0
+        },
+        "terminal_gae_coefficient": {
+          "count": 0
+        },
+        "terminal_mc_coefficient": {
+          "count": 0
+        },
+        "terminal_lambda_attenuation": {
+          "count": 0
+        }
+      },
+      "losses": {
+        "episodes": 13,
+        "first_raw_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 1,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 13,
+          "mean": -0.23322112168508188,
+          "std": 0.10868655801844697,
+          "minimum": -0.5147276480829446,
+          "maximum": -0.058752543343627
+        },
+        "mc_first_advantage": {
+          "count": 13,
+          "mean": -0.42231750505429105,
+          "std": 0.15570748980179733,
+          "minimum": -0.7462195661295589,
+          "maximum": -0.18654153825161268
+        },
+        "gae_normalized_first": {
+          "count": 13,
+          "mean": -1.111159017452827,
+          "std": 0.6887460695761346,
+          "minimum": -2.368985891342163,
+          "maximum": 0.28366097807884216
+        },
+        "mc_normalized_first": {
+          "count": 13,
+          "mean": -1.0924866382892315,
+          "std": 0.48858133791612846,
+          "minimum": -1.8938854932785034,
+          "maximum": -0.47378504276275635
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 13,
+          "mean": 31524.76923076923,
+          "std": 6921.216980069841,
+          "minimum": 19393.0,
+          "maximum": 44799.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 13,
+          "mean": 0.003685909530236152,
+          "std": 0.0050011710548163515,
+          "minimum": 0.00010511618414300591,
+          "maximum": 0.018959375176029112
+        },
+        "terminal_mc_coefficient": {
+          "count": 13,
+          "mean": 0.3570881961052229,
+          "std": 0.08093838092126943,
+          "minimum": 0.22294801461797215,
+          "maximum": 0.5222090926397973
+        },
+        "terminal_lambda_attenuation": {
+          "count": 13,
+          "mean": 0.00838920767704298,
+          "std": 0.009523424711364248,
+          "minimum": 0.0004714829343653255,
+          "maximum": 0.036306099306291854
+        }
+      }
+    },
+    "train_bridge7_v1_aid_capfull": {
+      "wins": {
+        "episodes": 0,
+        "first_raw_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 0
+        },
+        "mc_first_advantage": {
+          "count": 0
+        },
+        "gae_normalized_first": {
+          "count": 0
+        },
+        "mc_normalized_first": {
+          "count": 0
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 0
+        },
+        "terminal_gae_coefficient": {
+          "count": 0
+        },
+        "terminal_mc_coefficient": {
+          "count": 0
+        },
+        "terminal_lambda_attenuation": {
+          "count": 0
+        }
+      },
+      "losses": {
+        "episodes": 6,
+        "first_raw_positive": {
+          "gae": 1,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 2,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 6,
+          "mean": -0.1415045023773485,
+          "std": 0.09597872458218139,
+          "minimum": -0.26248229604722817,
+          "maximum": 0.003850359088289977
+        },
+        "mc_first_advantage": {
+          "count": 6,
+          "mean": -0.4818838909398089,
+          "std": 0.12284815939284034,
+          "minimum": -0.6112440279415364,
+          "maximum": -0.2670600629390327
+        },
+        "gae_normalized_first": {
+          "count": 6,
+          "mean": -0.7546341034273306,
+          "std": 1.2434182556977307,
+          "minimum": -2.6489856243133545,
+          "maximum": 0.49531155824661255
+        },
+        "mc_normalized_first": {
+          "count": 6,
+          "mean": -0.7784750635425249,
+          "std": 0.6650337963245615,
+          "minimum": -2.181840658187866,
+          "maximum": -0.23194490373134613
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 6,
+          "mean": 30028.5,
+          "std": 7487.894024134333,
+          "minimum": 18403.0,
+          "maximum": 42596.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 6,
+          "mean": 0.005804395860175323,
+          "std": 0.008022685194852245,
+          "minimum": 0.0001649319523448188,
+          "maximum": 0.02321346553356558
+        },
+        "terminal_mc_coefficient": {
+          "count": 6,
+          "mean": 0.3772076979409213,
+          "std": 0.09345195153615753,
+          "minimum": 0.2400246418059889,
+          "maximum": 0.53981915029795
+        },
+        "terminal_lambda_attenuation": {
+          "count": 6,
+          "mean": 0.012104551998375707,
+          "std": 0.01446281431560535,
+          "minimum": 0.0006871459159519603,
+          "maximum": 0.043002300901613
+        }
+      }
+    },
+    "train_bridge7_v1_ordinary_cap10": {
+      "wins": {
+        "episodes": 0,
+        "first_raw_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 0
+        },
+        "mc_first_advantage": {
+          "count": 0
+        },
+        "gae_normalized_first": {
+          "count": 0
+        },
+        "mc_normalized_first": {
+          "count": 0
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 0
+        },
+        "terminal_gae_coefficient": {
+          "count": 0
+        },
+        "terminal_mc_coefficient": {
+          "count": 0
+        },
+        "terminal_lambda_attenuation": {
+          "count": 0
+        }
+      },
+      "losses": {
+        "episodes": 10,
+        "first_raw_positive": {
+          "gae": 1,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 1,
+          "mc": 2
+        },
+        "first_normalized_negative_to_positive": 1,
+        "gae_first_advantage": {
+          "count": 10,
+          "mean": -0.20596356331375257,
+          "std": 0.11452854696335021,
+          "minimum": -0.32444020138654783,
+          "maximum": 0.05343333504394681
+        },
+        "mc_first_advantage": {
+          "count": 10,
+          "mean": -0.2774619465594851,
+          "std": 0.07984020120296544,
+          "minimum": -0.3915461695645775,
+          "maximum": -0.1420144357697143
+        },
+        "gae_normalized_first": {
+          "count": 10,
+          "mean": -1.6838497817516327,
+          "std": 1.1825014828699336,
+          "minimum": -3.328336477279663,
+          "maximum": 0.5162610411643982
+        },
+        "mc_normalized_first": {
+          "count": 10,
+          "mean": -0.9278749190270901,
+          "std": 0.7948603611646748,
+          "minimum": -2.0159733295440674,
+          "maximum": 0.5037384629249573
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 10,
+          "mean": 24017.6,
+          "std": 2710.595845934986,
+          "minimum": 19106.0,
+          "maximum": 29340.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 10,
+          "mean": 0.008550840537210957,
+          "std": 0.004800327331920618,
+          "minimum": 0.0024802224194245765,
+          "maximum": 0.02010530976711325
+        },
+        "terminal_mc_coefficient": {
+          "count": 10,
+          "mean": 0.449100393357411,
+          "std": 0.04062302830883168,
+          "minimum": 0.3742157237165465,
+          "maximum": 0.5272542550476546
+        },
+        "terminal_lambda_attenuation": {
+          "count": 10,
+          "mean": 0.018288724241576532,
+          "std": 0.008527779025925759,
+          "minimum": 0.006627787829950277,
+          "maximum": 0.03813209580507986
+        }
+      }
+    },
+    "train_bridge7_v1_ordinary_cap15": {
+      "wins": {
+        "episodes": 0,
+        "first_raw_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 0
+        },
+        "mc_first_advantage": {
+          "count": 0
+        },
+        "gae_normalized_first": {
+          "count": 0
+        },
+        "mc_normalized_first": {
+          "count": 0
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 0
+        },
+        "terminal_gae_coefficient": {
+          "count": 0
+        },
+        "terminal_mc_coefficient": {
+          "count": 0
+        },
+        "terminal_lambda_attenuation": {
+          "count": 0
+        }
+      },
+      "losses": {
+        "episodes": 12,
+        "first_raw_positive": {
+          "gae": 3,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 4,
+          "mc": 5
+        },
+        "first_normalized_negative_to_positive": 1,
+        "gae_first_advantage": {
+          "count": 12,
+          "mean": -0.15073118587419823,
+          "std": 0.18335604297769245,
+          "minimum": -0.39574545152589935,
+          "maximum": 0.17892149211241976
+        },
+        "mc_first_advantage": {
+          "count": 12,
+          "mean": -0.24960825059246736,
+          "std": 0.08158188919134315,
+          "minimum": -0.39462292549038436,
+          "maximum": -0.08748196889171878
+        },
+        "gae_normalized_first": {
+          "count": 12,
+          "mean": -1.1456406199528526,
+          "std": 1.5976919235026772,
+          "minimum": -3.1734917163848877,
+          "maximum": 1.278516173362732
+        },
+        "mc_normalized_first": {
+          "count": 12,
+          "mean": -0.15457170208295187,
+          "std": 1.3839727062830234,
+          "minimum": -2.039964437484741,
+          "maximum": 2.5028750896453857
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 12,
+          "mean": 23138.75,
+          "std": 3141.984195934155,
+          "minimum": 18961.0,
+          "maximum": 28439.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 12,
+          "mean": 0.0106187349598044,
+          "std": 0.005911472961774178,
+          "minimum": 0.002981968374731705,
+          "maximum": 0.0207103457267761
+        },
+        "terminal_mc_coefficient": {
+          "count": 12,
+          "mean": 0.4631530517183899,
+          "std": 0.047924922694852136,
+          "minimum": 0.3856834445590772,
+          "maximum": 0.5298217090439283
+        },
+        "terminal_lambda_attenuation": {
+          "count": 12,
+          "mean": 0.021858032679037243,
+          "std": 0.010466929957112155,
+          "minimum": 0.007731647330988625,
+          "maximum": 0.03908927356741982
+        }
+      }
+    },
+    "train_full_level7_v1": {
+      "wins": {
+        "episodes": 0,
+        "first_raw_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 0,
+          "mc": 0
+        },
+        "first_normalized_negative_to_positive": 0,
+        "gae_first_advantage": {
+          "count": 0
+        },
+        "mc_first_advantage": {
+          "count": 0
+        },
+        "gae_normalized_first": {
+          "count": 0
+        },
+        "mc_normalized_first": {
+          "count": 0
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 0
+        },
+        "terminal_gae_coefficient": {
+          "count": 0
+        },
+        "terminal_mc_coefficient": {
+          "count": 0
+        },
+        "terminal_lambda_attenuation": {
+          "count": 0
+        }
+      },
+      "losses": {
+        "episodes": 11,
+        "first_raw_positive": {
+          "gae": 2,
+          "mc": 0
+        },
+        "first_normalized_positive": {
+          "gae": 2,
+          "mc": 2
+        },
+        "first_normalized_negative_to_positive": 1,
+        "gae_first_advantage": {
+          "count": 11,
+          "mean": -0.15872369889091892,
+          "std": 0.16126851457107483,
+          "minimum": -0.36474347771630666,
+          "maximum": 0.13646987902373917
+        },
+        "mc_first_advantage": {
+          "count": 11,
+          "mean": -0.2686285240395596,
+          "std": 0.07540811784461562,
+          "minimum": -0.4059047438086586,
+          "maximum": -0.16372967453675913
+        },
+        "gae_normalized_first": {
+          "count": 11,
+          "mean": -1.0282756442373449,
+          "std": 1.287229533999308,
+          "minimum": -3.2622382640838623,
+          "maximum": 1.2565935850143433
+        },
+        "mc_normalized_first": {
+          "count": 11,
+          "mean": -0.4879830174825408,
+          "std": 0.9837523440591183,
+          "minimum": -2.073650598526001,
+          "maximum": 1.9980316162109375
+        },
+        "terminal_reward_prefix_ticks": {
+          "count": 11,
+          "mean": 23878.18181818182,
+          "std": 2973.871361715745,
+          "minimum": 19646.0,
+          "maximum": 28898.0
+        },
+        "terminal_gae_coefficient": {
+          "count": 11,
+          "mean": 0.008997360936255099,
+          "std": 0.0049520929138731325,
+          "minimum": 0.002714825982882238,
+          "maximum": 0.018003486134148483
+        },
+        "terminal_mc_coefficient": {
+          "count": 11,
+          "mean": 0.4515728973744571,
+          "std": 0.04451961019319806,
+          "minimum": 0.37979814998186867,
+          "maximum": 0.5178016661476249
+        },
+        "terminal_lambda_attenuation": {
+          "count": 11,
+          "mean": 0.019052468960851707,
+          "std": 0.00895678718047769,
+          "minimum": 0.007148075847688638,
+          "maximum": 0.03476907725711263
+        }
+      }
+    }
+  },
+  "seconds": 0.9811296620027861,
+  "scope": "Saved closed experience only. No PPO, new rollout, or checkpoint changes. CPU float32 per-update normalization mirrors train_update; this is not a CUDA bitwise comparison. MC recomputation includes all saved bootstrap truncations.",
+  "interpretation": "Terminal coefficients are the direct contribution of the last reward/TD residual to the first estimate, excluding the last action's duration. GAE also carries intervening TD signals: attenuation or negative early advantages do not prove a bug. Lambda1 removes intermediate critic bootstraps, but has higher sampling variance; its policy learning quality remains untested."
+}

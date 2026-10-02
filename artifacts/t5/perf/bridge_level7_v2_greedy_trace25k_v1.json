@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_bridge_level7_v2_seed0_first43_snapshot/runs/run_1/update_000029_evaluated_1790954865541596811.pt",
+  "source_stage_revision": "53fd859",
+  "task": {
+    "task_id": "validation_bridge7_v1_aid_cap15",
+    "terrain": "day",
+    "level": 7,
+    "deck": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "zombie_count_multiplier": 1.0,
+    "wave_cap": 15,
+    "sun_start": 50,
+    "preplanted": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        1,
+        2,
+        0
+      ],
+      [
+        1,
+        3,
+        0
+      ],
+      [
+        1,
+        4,
+        0
+      ],
+      [
+        0,
+        0,
+        3
+      ],
+      [
+        0,
+        1,
+        3
+      ],
+      [
+        0,
+        2,
+        3
+      ],
+      [
+        0,
+        3,
+        3
+      ],
+      [
+        0,
+        4,
+        3
+      ]
+    ],
+    "playthrough": 2,
+    "seeds": [
+      1400128,
+      1400129,
+      1400130,
+      1400131,
+      1400132,
+      1400133,
+      1400134,
+      1400135,
+      1400136,
+      1400137,
+      1400138,
+      1400139,
+      1400140,
+      1400141,
+      1400142,
+      1400143
+    ]
+  },
+  "seed": 1400128,
+  "selection": "Firstprespecifiedaidcap15developmentseed, fixed25kcheckpoint; all16priorgreedycases failed. Onecase behavioraldiagnostic, not checkpoint/task/seed performance selection.",
+  "seconds": 5.16758342400135,
+  "match_saved_evaluation": {
+    "won": true,
+    "result": true,
+    "terminated": true,
+    "truncated": true,
+    "terminal_wave": true,
+    "terminal_tick": true,
+    "actions": true,
+    "action_counts": true,
+    "immediate_plant_shovels": true
+  },
+  "planted_types": {
+    "0": 1,
+    "2": 1,
+    "3": 1,
+    "5": 1,
+    "4": 1,
+    "1": 1
+  },
+  "scope": "Read-only CPUinference, sameTaskSpec/deck/preplants/seed; no PPO/teachertraining and no change to ongoing frozenmodel. Actualplantchoices describe onecase, not universalstrategy or rewardcause.",
+  "outcome": {
+    "won": false,
+    "result": 2,
+    "terminated": true,
+    "truncated": false,
+    "terminal_wave": 12,
+    "terminal_tick": 25607,
+    "actions": 185,
+    "action_counts": {
+      "wait": 179,
+      "plant": 6
+    },
+    "events": {
+      "zombies_killed": 23,
+      "plants_eaten": 7,
+      "sun_produced": 1825,
+      "sun_spent": 550,
+      "mower_triggered": 5,
+      "waves_started": 12,
+      "level_won": 0,
+      "level_lost": 1
+    },
+    "zero_tick_actions": 6,
+    "immediate_plant_shovels": 0
+  },
+  "plant_actions": [
+    {
+      "action": {
+        "type": "plant",
+        "packet": 0,
+        "col": 6,
+        "row": 2
+      },
+      "plant_type": 0,
+      "tick_before": 25385,
+      "wave_before": 11,
+      "sun_before": 1850,
+      "tick_after": 25385,
+      "sun_after": 1750
+    },
+    {
+      "action": {
+        "type": "plant",
+        "packet": 2,
+        "col": 3,
+        "row": 0
+      },
+      "plant_type": 2,
+      "tick_before": 25385,
+      "wave_before": 11,
+      "sun_before": 1750,
+      "tick_after": 25385,
+      "sun_after": 1600
+    },
+    {
+      "action": {
+        "type": "plant",
+        "packet": 3,
+        "col": 7,
+        "row": 2
+      },
+      "plant_type": 3,
+      "tick_before": 25385,
+      "wave_before": 11,
+      "sun_before": 1600,
+      "tick_after": 25385,
+      "sun_after": 1550
+    },
+    {
+      "action": {
+        "type": "plant",
+        "packet": 5,
+        "col": 3,
+        "row": 4
+      },
+      "plant_type": 5,
+      "tick_before": 25385,
+      "wave_before": 11,
+      "sun_before": 1550,
+      "tick_after": 25385,
+      "sun_after": 1375
+    },
+    {
+      "action": {
+        "type": "plant",
+        "packet": 4,
+        "col": 3,
+        "row": 3
+      },
+      "plant_type": 4,
+      "tick_before": 25385,
+      "wave_before": 11,
+      "sun_before": 1375,
+      "tick_after": 25385,
+      "sun_after": 1350
+    },
+    {
+      "action": {
+        "type": "plant",
+        "packet": 1,
+        "col": 6,
+        "row": 1
+      },
+      "plant_type": 1,
+      "tick_before": 25385,
+      "wave_before": 11,
+      "sun_before": 1350,
+      "tick_after": 25385,
+      "sun_after": 1300
+    }
+  ],
+  "first_plant_tick": 25385,
+  "first_plant_to_failure_ticks": 222,
+  "interpretation": "A fixed 25k checkpoint on the first prespecified aidcap15 development seed waits until tick25385, then plants six cards at zero elapsed time, losing222ticks later. Planting has resumed but is too late in this case. One trajectory does not prove the reward cause or all-seed behavior."
+}

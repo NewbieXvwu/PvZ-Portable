@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_training",
+  "purpose": "Establish actual learning across three genuinely random initializations using informative retained roof/day-long tasks and whole-episode outcome credit. Current warm-started bridge_v2 remains frozen and running; no architecture expansion is needed for this next reference.",
+  "training_manifest": "experiments/t7/bridge_level7_v1/train.json",
+  "retained_tasks": 38,
+  "selected_task_ids": [
+    "train_roof_1",
+    "train_roof_2",
+    "train_roof_3",
+    "train_roof_4",
+    "train_multicap_v1_roof_cap1_variant",
+    "train_multicap_v1_roof_cap5_variant",
+    "train_full_level7_v1",
+    "train_bridge7_v1_aid_cap10",
+    "train_bridge7_v1_aid_cap15",
+    "train_bridge7_v1_aid_cap20",
+    "train_bridge7_v1_aid_capfull",
+    "train_bridge7_v1_ordinary_cap10",
+    "train_bridge7_v1_ordinary_cap15"
+  ],
+  "training": "Existing7daylong/full tasks +all6retainedroofshort/multiwave task definitions/seeds unchanged. Roofzeroidle shown by production64seed baseline; shortdoesnot implypassive. No new acceptance thresholds or failedseed removal.",
+  "evaluation": "Retain all72 previous long/full cases and the same64 original roof heldout cases,136 per mode. No task definition or seed changes from prepared bridge_random_v1. Record own random baseline, fixed nodes, task Wilson intervals and paired idle differences. Final original full-course acceptance remains unchanged.",
+  "initialization": "Seeds0/1/2 from random, no initialization transfer field. All three differ only in experiment_id/initialization_seed. Stage0 of warm-started bridge_v2 cannot count as a random baseline.",
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "same_model_ppo_runtime": {
+    "model": {
+      "layers": 6,
+      "width": 256,
+      "heads": 8,
+      "ff_width": 1024,
+      "gru_layers": 2,
+      "gru_width": 256,
+      "critic_width": 256,
+      "critic_layers": 1,
+      "input_flags": 7,
+      "wait_mode": "events",
+      "wait_mask": "progress_v1"
+    },
+    "ppo": {
+      "learning_rate": 0.0001,
+      "ppo_epochs": 2,
+      "sequence_length": 128,
+      "minibatch_chunks": 2,
+      "clip_epsilon": 0.2,
+      "gae_lambda": 1.0,
+      "value_coefficient": 0.5,
+      "entropy_coefficient": 0.01,
+      "attention_backend": "dense",
+      "target_kl": 0.03
+    },
+    "runtime": {
+      "workers": 2,
+      "worker_threads": 1,
+      "worker_device": "cpu",
+      "update_device": "cuda",
+      "max_actions": 4000,
+      "cudnn_tf32": false,
+      "matmul_precision": "highest",
+      "deterministic_algorithms": true,
+      "cublas_workspace_config": ":4096:8"
+    }
+  },
+  "sampling": {
+    "window_episodes": 8,
+    "minimum_window_episodes": 2,
+    "uniform_fraction": 0.25,
+    "coverage": "terrain_wave_cap",
+    "frontier_pass_range": [
+      0.2,
+      0.8
+    ],
+    "initial_focus_task_ids": [
+      "train_bridge7_v1_aid_cap10"
+    ],
+    "initial_focus_completed_episodes": 64
+  },
+  "initial_task_probabilities": {
+    "train_roof_1": 0.020833333333333332,
+    "train_roof_2": 0.020833333333333332,
+    "train_roof_3": 0.020833333333333332,
+    "train_roof_4": 0.020833333333333332,
+    "train_multicap_v1_roof_cap1_variant": 0.020833333333333332,
+    "train_multicap_v1_roof_cap5_variant": 0.020833333333333332,
+    "train_full_level7_v1": 0.015625,
+    "train_bridge7_v1_aid_cap10": 0.765625,
+    "train_bridge7_v1_aid_cap15": 0.015625,
+    "train_bridge7_v1_aid_cap20": 0.03125,
+    "train_bridge7_v1_aid_capfull": 0.015625,
+    "train_bridge7_v1_ordinary_cap10": 0.015625,
+    "train_bridge7_v1_ordinary_cap15": 0.015625
+  },
+  "budget": {
+    "decisions": 500000,
+    "max_episodes": null,
+    "boundary_mode": "exact_decisions_v1"
+  },
+  "decision_nodes": [
+    2000,
+    25000,
+    125000,
+    250000,
+    375000,
+    500000
+  ],
+  "B": "Notyetfrozen; need >=2of3 aboveowninitialbaseline repeatedly with actualordinarymultiwave/longtask wins andmatchedidle gain. Ceiling500k is an executionbudget, not a mandatoryonsetrule.",
+  "acceptance": "experiments/t7/full_level7_v1/acceptance.json unchanged; fulllevel7dev256>=60%, fivefullterrain64cases at least2init overall60/terrain45/weakest25. Roofcap3/5 and aidcap10 are progressviews, not fullacceptance.",
+  "schedule": "Finish the already-running two60-update complete resumes of warm bridge_v2, assess scheduled125k if reached, then start each new seed with three-update smoke <=30min. All three successful smokes precede round-robin bounded complete resumes toward125k. Preserve every failure and stop expansion on a failed required smoke. No dummy short pretraining, no all-loss R3 warmup and no hours-long estimator adoption control.",
+  "auxiliary_heads": "Cancelled and absent; do not recreate.",
+  "task_mutation": "Implementedappend-only neighbor experiments remain pending; do not add anotherdynamicpool variable to this freshreference before meaningfullearning.",
+  "validation": {
+    "configs_parsed": 3,
+    "train_eval_seedsets_disjoint": true,
+    "progress_cases_per_mode": 136,
+    "training_task_definitions_unchanged": true,
+    "native_baseline": "Existing1160-case same-task production baseline is valid: estimator changes no simulator/task/seed. Do not repeat it.",
+    "native_baseline_cases": 1160,
+    "native_baseline_seconds": 13.7,
+    "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+    "roof_training_cases": 384,
+    "roof_training_idle_wins": 0,
+    "roof_heldout_cases": 64,
+    "roof_heldout_idle_wins": 0,
+    "ordinary_full_training_cases": 256,
+    "ordinary_full_training_idle_wins": 0,
+    "unit_tests": 42,
+    "lambda1_saved_transition_return_max_abs_error": 3.552713678800501e-15
+  },
+  "credit_assignment": {
+    "method": "whole_episode_discounted_mc_v1",
+    "implementation": "Existing add_advantages(gae_lambda=1.0,gamma=0.99): critic target is full discounted return; policy raw advantage is that return minus recorded value. Natural terminals bootstrap0; quota/action-limit truncations retain recorded bootstrap. Time discounts use actual duration/300 ticks. Zero-tick actions do not discount.",
+    "evidence": "artifacts/t5/perf/bridge_level7_v2_first43_credit_v1.json",
+    "closed_observed_experience": {
+      "updates": 43,
+      "episodes": 165,
+      "natural_wins": 64,
+      "gae_first_raw_positive_wins": 10,
+      "mc_first_raw_positive_wins": 64,
+      "gae_first_normalized_positive_wins": 18,
+      "mc_first_normalized_positive_wins": 39,
+      "normalized_negative_to_positive_wins": 21,
+      "mean_direct_terminal_gae_coefficient": 0.008956900824724414,
+      "mean_direct_terminal_mc_coefficient": 0.44337415739410624
+    },
+    "reason": "Long sparse outcomes supply successful complete episodes, while lambda0.95 suppresses their direct backward contribution and uses intermediate critic bootstraps. Reuse these episode outcomes directly before expanding architecture. This is an estimator change, not a claim of a GAE implementation bug.",
+    "risk": "Higher variance with four complete episodes per update; no proof of better policy quality. Raw or normalized advantage signs alone do not establish desirable actions. PPO clipping, critic baseline, gamma0.99, potential shaping and recurrent128-step gradient truncation remain unchanged.",
+    "not_full_memory_backprop": "Targets cover complete episodes; hidden-state gradients still use frozen sequence_length128 with current-parameter prefix replay.",
+    "decision_timing": "Prepared lambda0.95 configs at 17201bc have never started GPU training. This new explicitly versioned reference is frozen before first GPU use. The ongoing bridge_v2 stays lambda0.95 without restart or in-place edits.",
+    "comparison_claim": "No equal-budget from-random lambda0.95 arm is being run as an adoption gate. Judge the new reference by its own random baselines, matched idle, actual long-task wins and three initialization curves."
+  },
+  "prepared_reference_superseded": {
+    "source_revision": "17201bc",
+    "configuration": "experiments/t7/bridge_random_v1",
+    "gpu_training_started": false,
+    "native_task_baseline_still_valid": true,
+    "new_configuration": "experiments/t7/bridge_random_mc_v1"
+  }
+}
