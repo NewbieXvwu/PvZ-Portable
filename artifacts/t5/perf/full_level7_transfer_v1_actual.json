@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "source_commit": "c841bda3b2da3c4a3d8b9c2d33d610471fc2b641",
+  "scope": "Full-size explicit weight transfer from actual short-model boundary;7 native full reset counts;2 complete native sampled level7 episodes, NPZ replay and CPU PPO. No stage GPU/success/256seed acceptance claim.",
+  "initialization_provenance": {
+    "kind": "weights_transfer_v1",
+    "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_frontier_v1_seed0/runs/run_1/update_000023_boundary_1790942973035689115.pt",
+    "source_sha256": "a241272d741cefa15a6a32b8a8bca5e6879019e125409a4d1980fb3fb12f884c",
+    "note": "Transfer all identical headless singleGRU256 parameters after first23updates/47856decisions. New completelevel7 curriculum with R3gamma1; reset AdamW and stage RNG/counters explicitly. Not same-candidate resume or a reward causal comparison.",
+    "source_experiment_id": "mainline_frontier_v1_seed0",
+    "source_experiment_identity": "fb0994e500342c08d9fcfb63b1d43e5fa2b0a56b9bc5428bcdb55e9bf10aa8db",
+    "source_initialization_seed": 0,
+    "source_updates": 23,
+    "source_counters": {
+      "episodes": 391,
+      "decisions": 47856,
+      "ticks": 4964050
+    },
+    "source_wall_seconds": 2361.7862293979997,
+    "source_commit": "ecc6b39bc3c16c7859f2b070dd9fcb15c1f98746",
+    "new_stage_state": "new AdamW, declared RNG seeds, zero stage counters and new curriculum; source budget recorded separately"
+  },
+  "transfer_max_parameter_error": 0.0,
+  "new_optimizer_empty": true,
+  "torch_rng_unchanged": true,
+  "native_full_resets": [
+    {
+      "level": 1,
+      "wave_count": 20,
+      "sun": 50,
+      "packets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "level": 7,
+      "wave_count": 30,
+      "sun": 50,
+      "packets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "level": 8,
+      "wave_count": 20,
+      "sun": 50,
+      "packets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    {
+      "level": 12,
+      "wave_count": 30,
+      "sun": 50,
+      "packets": [
+        8,
+        9,
+        10,
+        12,
+        14,
+        15
+      ]
+    },
+    {
+      "level": 26,
+      "wave_count": 30,
+      "sun": 50,
+      "packets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        16
+      ]
+    },
+    {
+      "level": 31,
+      "wave_count": 20,
+      "sun": 50,
+      "packets": [
+        8,
+        9,
+        10,
+        14,
+        15,
+        16
+      ]
+    },
+    {
+      "level": 41,
+      "wave_count": 20,
+      "sun": 50,
+      "packets": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        33
+      ]
+    }
+  ],
+  "sampled_stats": {
+    "action_counts": {
+      "plant": 38,
+      "wait": 317,
+      "shovel": 37
+    },
+    "zero_tick_actions": 75,
+    "immediate_plant_shovels": 7,
+    "immediate_shovel_fraction_of_plants": 0.18421052631578946,
+    "mean_abs_shaping_reward": 0.05575396825396825,
+    "mc_value_mse_before_update": 2.255892602906671,
+    "mc_value_explained_variance_before_update": -14.266473330881853,
+    "won": 0,
+    "truncated": 0,
+    "task_counts": {
+      "train_full_level7_v1": 2
+    },
+    "wait_summary": {
+      "wait_actions": 317,
+      "condition_counts": {
+        "sun_increased": 26,
+        "wave_changed": 123,
+        "packet_became_ready": 25,
+        "left_zone_occupied": 15,
+        "timeout": 88,
+        "plant_count_decreased": 40
+      },
+      "primary_reason_counts": {
+        "max_ticks": 271,
+        "condition": 18,
+        "zombie_entered_left_zone": 16,
+        "defense_lost": 10,
+        "terminal": 2
+      },
+      "all_trigger_counts": {
+        "max_ticks": 273,
+        "condition": 18,
+        "zombie_entered_left_zone": 16,
+        "defense_lost": 10,
+        "terminal": 2
+      },
+      "requested_logic_ticks": 47670,
+      "actual_ticks": 43416,
+      "zero_actual_tick_waits": 0,
+      "logic_steps": 43418,
+      "stalled_clock_steps": 2,
+      "initial_condition_satisfied": 0
+    }
+  },
+  "actual_full_episodes_complete": true,
+  "npz_replay_max_error": 9.5367431640625e-07,
+  "actual_cpu_ppo": {
+    "policy_loss": 0.01615162007510662,
+    "value_loss": 0.2881016880273819,
+    "entropy": 2.658374786376953,
+    "advantage_mean": -0.46687445044517517,
+    "advantage_std": 0.37542200088500977,
+    "gradient_norm": 1.7070252895355225,
+    "approx_kl": 0.0006994074792601168,
+    "clip_fraction": 0.0,
+    "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+    "max_log_prob_change": 0.1723315715789795,
+    "optimizer_steps": 2,
+    "stopped_for_kl": false
+  },
+  "actual_cpu_ppo_seconds": 26.37986267499946,
+  "belief_parameter_change_l1": 134.86202002316713,
+  "seconds": 42.854808299998695
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "prior_queue": "mainline_training_queue_v2",
+  "prior_controller_pid": 120099,
+  "continue_live_child_pid": 122277,
+  "source_by_stage": {
+    "full_level7": "c841bda",
+    "prior_candidates": "ecc6b39"
+  },
+  "reason": "Mainline model training has priority; insert actual completelevel7 after currentseed1 boundary instead of postponing until all short-model architecture stages finish.",
+  "transition": "Only supersede queue controller; preserve live child, all checkpoints, logs, original task/seed pools and pending stages. New controller validates current child process identity and waits for its successful23update boundary.",
+  "stages": [
+    {
+      "run": "mainline_full_level7_v1_seed0",
+      "config": "experiments/t7/full_level7_v1/seed0.json",
+      "additional_updates": 3,
+      "resume": false,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/full_course_c841bda"
+    },
+    {
+      "run": "mainline_full_level7_v1_seed0",
+      "config": "experiments/t7/full_level7_v1/seed0.json",
+      "additional_updates": 10,
+      "resume": true,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/full_course_c841bda"
+    },
+    {
+      "run": "mainline_full_level7_v1_seed0",
+      "config": "experiments/t7/full_level7_v1/seed0.json",
+      "additional_updates": 30,
+      "resume": true,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/full_course_c841bda"
+    },
+    {
+      "run": "mainline_frontier_v1_seed0",
+      "config": "experiments/t5/frontier_v1/seed0.json",
+      "additional_updates": 60,
+      "resume": true,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/headless_screening_ecc6b39"
+    },
+    {
+      "run": "mainline_frontier_v1_seed2",
+      "config": "experiments/t5/frontier_v1/seed2.json",
+      "additional_updates": 3,
+      "resume": false,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/headless_screening_ecc6b39"
+    },
+    {
+      "run": "mainline_frontier_v1_seed2",
+      "config": "experiments/t5/frontier_v1/seed2.json",
+      "additional_updates": 20,
+      "resume": true,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/headless_screening_ecc6b39"
+    },
+    {
+      "run": "mainline_short_history8_v1_seed0",
+      "config": "experiments/t6/short_history_v1/history8_seed0.json",
+      "additional_updates": 3,
+      "resume": false,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/headless_screening_ecc6b39"
+    },
+    {
+      "run": "mainline_short_history8_v1_seed0",
+      "config": "experiments/t6/short_history_v1/history8_seed0.json",
+      "additional_updates": 20,
+      "resume": true,
+      "worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/headless_screening_ecc6b39"
+    }
+  ],
+  "full_level7_scope": "Transfer prespecified firstseed0 boundary47856D; new R3 stage counters/AdamW/RNG. Smoke3 then resume10 then30, reaching scheduled25000 stage node if actual episode lengths allow. Parent budget disclosed; no efficacy or acceptance claim.",
+  "smoke": "Fresh3updates must finish within30min and leave checkpoint,nonempty curve,completed initial and all actually reached scheduled evaluations. Error stops queue and preserves evidence.",
+  "logging": "Direct per-run files and60s progress, including live prior child after supervisory handoff.",
+  "acceptance": "Original256level7 seeds and five terrain64-case validation remain; no lowered thresholds. Auxiliary heads remain deleted."
+}
