@@ -78,7 +78,86 @@ def choose(observation: dict) -> dict:
     return {"type": "wait", "ticks": 150}
 
 
-def episode(env: PvZEnv, task: dict, seed: int, strategy: str, max_actions: int) -> dict:
+def choose_day_defense(observation: dict) -> dict:
+    """Use the whole public six-card day deck in a feasibility-only control.
+
+    The original probe uses only economy/shooters and is weak on later waves.
+    This separate version adds slowing, blockers and emergency explosives. Its
+    actions are never collected as learning data.
+    """
+    if observation["night"] or observation["roof"]:
+        raise ValueError("day-defense probe requires a day lawn")
+    legal = observation["legal_actions"]["plants"]
+    packets = observation["packets"]
+    by_type: dict[int, list[dict]] = {}
+    for option in legal:
+        by_type.setdefault(packets[option["packet"]]["type"], []).append(option)
+    rows = sorted({c["row"] for c in observation["cells"] if c["row_type"] == 1})
+    plants = [p for p in observation["plants"] if p.get("health", 0) > 0 and not p.get("squished")]
+    counts = Counter((p["type"], p["row"]) for p in plants)
+    zombies = [z for z in observation["zombies"] if z["on_board"] and z["body_health"] > 0]
+    threat = {r: min((z["x"] for z in zombies if z["row"] == r), default=9999) for r in rows}
+    order = sorted(rows, key=lambda r: (threat[r], counts[(0, r)] + counts[(5, r)], r))
+
+    def plant(kind: int, row: int, cols: tuple[int, ...]) -> dict | None:
+        for col in cols:
+            for option in by_type.get(kind, []):
+                if (option["row"], option["col"]) == (row, col):
+                    return {"type": "plant", **option}
+        return None
+
+    # Prefer a bomb that can intercept a close threat or a large visible group.
+    bomb = None
+    best = 0.
+    for option in by_type.get(2, []):
+        nearby = [z for z in zombies if abs(z["row"] - option["row"]) <= 1
+                  and abs((z["x"] + 40) - (80 * option["col"] + 80)) <= 115]
+        if any(z["x"] < 250 for z in nearby) or len(nearby) >= 5:
+            score = sum(1 + max(0., (600 - z["x"]) / 100) for z in nearby)
+            if score > best:
+                best, bomb = score, {"type": "plant", **option}
+    if bomb:
+        return bomb
+    for row in order:
+        shooters = counts[(0, row)] + counts[(5, row)]
+        if threat[row] < 550 and shooters:
+            action = plant(3, row, (7, 6))
+            if action and counts[(3, row)] < 1:
+                return action
+        if threat[row] < 9999 and shooters == 0:
+            action = plant(0, row, (3, 2, 4))
+            if action:
+                return action
+            if threat[row] > 550 and counts[(4, row)] == 0:
+                action = plant(4, row, (4, 3))
+                if action:
+                    return action
+    for row in order:
+        if threat[row] < 700 and counts[(5, row)] == 0:
+            action = plant(5, row, (2, 3, 4))
+            if action:
+                return action
+    for row in sorted(rows, key=lambda r: (counts[(1, r)], r)):
+        if counts[(1, row)] < 2:
+            action = plant(1, row, (0, 1))
+            if action:
+                return action
+    for row in sorted(rows, key=lambda r: (counts[(0, r)] + counts[(5, r)], threat[r], r)):
+        if counts[(5, row)] == 0:
+            action = plant(5, row, (2, 3, 4))
+            if action:
+                return action
+        if counts[(0, row)] < 4:
+            action = plant(0, row, (3, 4, 5, 6, 2))
+            if action:
+                return action
+    return {"type": "wait", "ticks": 75 if min(threat.values()) < 300 else 150}
+
+
+def episode(env: PvZEnv, task: dict, seed: int, strategy: str, max_actions: int,
+            scripted_policy: str = "economy_shooters_v1") -> dict:
+    policies = {"economy_shooters_v1": choose, "public_day_defense_v2": choose_day_defense}
+    choose_action = policies[scripted_policy]
     started = time.monotonic()
     spec = TaskSpec(level=task["level"], seed=seed, playthrough=task["playthrough"],
                     zombie_count_multiplier=task["zombie_count_multiplier"], wave_cap=task["wave_cap"],
@@ -95,7 +174,7 @@ def episode(env: PvZEnv, task: dict, seed: int, strategy: str, max_actions: int)
         raise ValueError("requested preplants missing from reset")
     counts, events = Counter(), Counter()
     for index in range(max_actions):
-        action = {"type": "wait", "ticks": 300} if strategy == "wait" else choose(observation)
+        action = {"type": "wait", "ticks": 300} if strategy == "wait" else choose_action(observation)
         observation, _, done, _, info = env.step(action)
         if not info["ok"]:
             raise RuntimeError(f"illegal feasibility action: {task['task_id']} seed {seed} {action}")
@@ -105,6 +184,7 @@ def episode(env: PvZEnv, task: dict, seed: int, strategy: str, max_actions: int)
             break
     return {"task_id": task["task_id"], "terrain": task["terrain"], "aid": task["aid"],
             "wave_cap": task["wave_cap"], "environment_seed": seed, "strategy": strategy,
+            "scripted_policy": scripted_policy if strategy == "scripted" else None,
             "won": observation["result"] == 1, "result": observation["result"],
             "terminated": bool(observation["terminal"]), "truncated": not observation["terminal"],
             "wave": observation["wave"], "wave_count": observation["wave_count"],
@@ -160,7 +240,8 @@ def main() -> None:
                         if path.exists():
                             record = json.loads(path.read_text())
                         else:
-                            record = episode(env, task, seed, strategy, config["max_actions"])
+                            record = episode(env, task, seed, strategy, config["max_actions"],
+                                             config.get("scripted_policy", "economy_shooters_v1"))
                             atomic_json(path, record)
                         records.append(record)
                     rows.extend(records)
