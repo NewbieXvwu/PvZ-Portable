@@ -1,0 +1,556 @@
+{
+  "schema_version": 1,
+  "split": "heldout",
+  "frozen": true,
+  "task_definition": [
+    "level",
+    "deck",
+    "zombie_count_multiplier",
+    "wave_cap",
+    "sun_start",
+    "preplanted"
+  ],
+  "sun_start_semantics": "All tasks record the current Adventure-II reset value of 50; RESET_V2 does not override it.",
+  "seed_start": 50000,
+  "seeds_per_task": 64,
+  "reserved_seed_ranges": [
+    {
+      "name": "train",
+      "first_seed": 0,
+      "count": 64
+    },
+    {
+      "name": "dagger",
+      "first_seed": 10000,
+      "count": 64
+    },
+    {
+      "name": "value_bootstrap",
+      "first_seed": 20000,
+      "count": 32
+    },
+    {
+      "name": "value_refinement",
+      "first_seed": 21000,
+      "count": 32
+    },
+    {
+      "name": "development",
+      "first_seed": 30000,
+      "count": 256
+    },
+    {
+      "name": "final_test",
+      "first_seed": 40000,
+      "count": 1024
+    }
+  ],
+  "frozen_seed_sets": [
+    {
+      "path": "artifacts/adventure2_level7/seeds/dev.json",
+      "role": "development",
+      "level": 7,
+      "playthrough": 2,
+      "first_seed": 30000,
+      "count": 256,
+      "included_in_heldout": false
+    },
+    {
+      "path": "artifacts/adventure2_level7/seeds/test.json",
+      "role": "final_test",
+      "level": 7,
+      "playthrough": 2,
+      "first_seed": 40000,
+      "count": 1024,
+      "included_in_heldout": false
+    },
+    {
+      "path": "artifacts/multiterrain/seeds/day_level8.json",
+      "role": "development",
+      "level": 8,
+      "playthrough": 2,
+      "first_seed": 30000,
+      "count": 16,
+      "included_in_heldout": false
+    },
+    {
+      "path": "artifacts/multiterrain/seeds/night_level12.json",
+      "role": "development",
+      "level": 12,
+      "playthrough": 2,
+      "first_seed": 30000,
+      "count": 16,
+      "included_in_heldout": false
+    },
+    {
+      "path": "artifacts/multiterrain/seeds/pool_level26.json",
+      "role": "development",
+      "level": 26,
+      "playthrough": 2,
+      "first_seed": 30000,
+      "count": 16,
+      "included_in_heldout": false
+    },
+    {
+      "path": "artifacts/multiterrain/seeds/fog_level31.json",
+      "role": "development",
+      "level": 31,
+      "playthrough": 2,
+      "first_seed": 30000,
+      "count": 16,
+      "included_in_heldout": false
+    },
+    {
+      "path": "artifacts/multiterrain/seeds/roof_level41.json",
+      "role": "development",
+      "level": 41,
+      "playthrough": 2,
+      "first_seed": 30000,
+      "count": 16,
+      "included_in_heldout": false
+    }
+  ],
+  "tasks": [
+    {
+      "task_id": "heldout_day_1",
+      "terrain": "day",
+      "level": 6,
+      "deck": [
+        0,
+        1,
+        3,
+        4,
+        7,
+        9
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50000,
+        50001
+      ]
+    },
+    {
+      "task_id": "heldout_day_2",
+      "terrain": "day",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "zombie_count_multiplier": 1.5,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50064,
+        50065
+      ]
+    },
+    {
+      "task_id": "heldout_day_3",
+      "terrain": "day",
+      "level": 9,
+      "deck": [
+        0,
+        1,
+        3,
+        4,
+        7,
+        9
+      ],
+      "zombie_count_multiplier": 2.0,
+      "wave_cap": 5,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50128,
+        50129
+      ]
+    },
+    {
+      "task_id": "heldout_day_4",
+      "terrain": "day",
+      "level": 10,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50192,
+        50193
+      ]
+    },
+    {
+      "task_id": "heldout_night_1",
+      "terrain": "night",
+      "level": 17,
+      "deck": [
+        8,
+        9,
+        10,
+        12,
+        13,
+        14
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50256,
+        50257
+      ]
+    },
+    {
+      "task_id": "heldout_night_2",
+      "terrain": "night",
+      "level": 18,
+      "deck": [
+        8,
+        9,
+        10,
+        12,
+        14,
+        15
+      ],
+      "zombie_count_multiplier": 1.5,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50320,
+        50321
+      ]
+    },
+    {
+      "task_id": "heldout_night_3",
+      "terrain": "night",
+      "level": 19,
+      "deck": [
+        8,
+        9,
+        10,
+        12,
+        13,
+        14
+      ],
+      "zombie_count_multiplier": 2.0,
+      "wave_cap": 5,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50384,
+        50385
+      ]
+    },
+    {
+      "task_id": "heldout_night_4",
+      "terrain": "night",
+      "level": 20,
+      "deck": [
+        8,
+        9,
+        10,
+        12,
+        14,
+        15
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50448,
+        50449
+      ]
+    },
+    {
+      "task_id": "heldout_pool_1",
+      "terrain": "pool",
+      "level": 27,
+      "deck": [
+        0,
+        1,
+        3,
+        4,
+        16,
+        19
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50512,
+        50513
+      ]
+    },
+    {
+      "task_id": "heldout_pool_2",
+      "terrain": "pool",
+      "level": 28,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        16
+      ],
+      "zombie_count_multiplier": 1.5,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50576,
+        50577
+      ]
+    },
+    {
+      "task_id": "heldout_pool_3",
+      "terrain": "pool",
+      "level": 29,
+      "deck": [
+        0,
+        1,
+        3,
+        4,
+        16,
+        19
+      ],
+      "zombie_count_multiplier": 2.0,
+      "wave_cap": 5,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50640,
+        50641
+      ]
+    },
+    {
+      "task_id": "heldout_pool_4",
+      "terrain": "pool",
+      "level": 30,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        16
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50704,
+        50705
+      ]
+    },
+    {
+      "task_id": "heldout_fog_1",
+      "terrain": "fog",
+      "level": 37,
+      "deck": [
+        8,
+        9,
+        10,
+        13,
+        14,
+        16
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50768,
+        50769
+      ]
+    },
+    {
+      "task_id": "heldout_fog_2",
+      "terrain": "fog",
+      "level": 38,
+      "deck": [
+        8,
+        9,
+        10,
+        14,
+        15,
+        16
+      ],
+      "zombie_count_multiplier": 1.5,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50832,
+        50833
+      ]
+    },
+    {
+      "task_id": "heldout_fog_3",
+      "terrain": "fog",
+      "level": 39,
+      "deck": [
+        8,
+        9,
+        10,
+        13,
+        14,
+        16
+      ],
+      "zombie_count_multiplier": 2.0,
+      "wave_cap": 5,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50896,
+        50897
+      ]
+    },
+    {
+      "task_id": "heldout_fog_4",
+      "terrain": "fog",
+      "level": 40,
+      "deck": [
+        8,
+        9,
+        10,
+        14,
+        15,
+        16
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        50960,
+        50961
+      ]
+    },
+    {
+      "task_id": "heldout_roof_1",
+      "terrain": "roof",
+      "level": 45,
+      "deck": [
+        0,
+        1,
+        3,
+        4,
+        7,
+        33
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        51024,
+        51025
+      ]
+    },
+    {
+      "task_id": "heldout_roof_2",
+      "terrain": "roof",
+      "level": 46,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        33
+      ],
+      "zombie_count_multiplier": 1.5,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        51088,
+        51089
+      ]
+    },
+    {
+      "task_id": "heldout_roof_3",
+      "terrain": "roof",
+      "level": 47,
+      "deck": [
+        0,
+        1,
+        3,
+        4,
+        7,
+        33
+      ],
+      "zombie_count_multiplier": 2.0,
+      "wave_cap": 5,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        51152,
+        51153
+      ]
+    },
+    {
+      "task_id": "heldout_roof_4",
+      "terrain": "roof",
+      "level": 48,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        33
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": 3,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        51216,
+        51217
+      ]
+    }
+  ],
+  "measurement_scope": "Progress only: unchanged20 heldout tasks, first2 of each original64 seeds. Full64-seed manifest and all original acceptance thresholds remain unchanged; this small view never certifies learning acceptance."
+}
