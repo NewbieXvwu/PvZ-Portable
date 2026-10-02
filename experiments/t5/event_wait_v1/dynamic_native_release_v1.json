@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "purpose": "native_event_public_dynamic_transient_coverage_supplement_only",
+  "release_status": "released",
+  "required_fingerprints": {
+    "scripts/research_event_wait_native_audit.py": "d71073484360160ca351ef6587c2d3a496906b157dc51bd9efe53ef70e8ebbd1",
+    "python/test_event_wait_native_audit.py": "7e0ab8edbb68eefe00d58bf37825ace47a51c2fcc32f6283698beac167e4e2ca",
+    "python/pvz_wait_events.py": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21",
+    "python/pvz_event_env.py": "d3a3dad403e295dc02d1cfda03f513984110f3934ff90e581a3740d041e5a451",
+    "python/pvz_env.py": "9014ea2faa5530016c393c88c2bec738d3bc7be794b395952c5eafebf9054cd1",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_research.py": "df89e91c9e5146326ea20f4f420eaa258833657e52b56f602bad9fbbd0231d78",
+    "src/EnvironmentWaitEvents.h": "da445d3359fd51c251054111cf212443ba3ccd374b88c3e168eebbfad2fd5eb9",
+    "src/LawnApp.h": "6409ce79fe539a3a7d3d7b7d925c1273f94edbf0b8d81d945a7b49af49b738ef",
+    "src/LawnApp.cpp": "5f00fc7411019259164c0f8811250dd01f3439f96f6e5012a2570866d027d783",
+    "src/main.cpp": "073548d2cbc7f3b186a340276ab89eee5d4cc3647e86635eec150551854a7aee",
+    "scripts/research_event_wait_dynamic_audit.py": "4b5bb2a18011d915f31083cae47caf89c3dd1271b4a44e6b42edf03480e37bc9",
+    "python/test_event_wait_dynamic_audit.py": "a0079b3ead9f368ad983d75b4ea62104639500cbc1e193905ff2f7047679977d"
+  },
+  "prior_audit": {
+    "protocol_path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/event_wait_native_audit_v1/experiments/t5/event_wait_v1/native_audit_release_v2.json",
+    "protocol_sha256": "212f203e60952083f9f27e9ddfd7fa7e2f2603e4ee30365f91ba7a19bc7ec557",
+    "report_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_native_audit_v2_actual/report.json",
+    "report_sha256": "c96816db3ac9f86a65047da8a2a8ca5bb9093ddec8d4e9f8f72cf38ac6471cff",
+    "original_jobs": 120,
+    "original_branches": 6480,
+    "original_gate_result": "fail"
+  },
+  "targets": [
+    "defense_lost",
+    "condition:wave_changed",
+    "condition:packet_became_ready"
+  ],
+  "durations": [
+    60,
+    150,
+    300
+  ],
+  "scout_action": {
+    "type": "wait",
+    "ticks": 60,
+    "until": "timeout"
+  },
+  "maximum_scout_actions": 400,
+  "maximum_scout_ticks": 24000,
+  "expected_jobs": 120,
+  "job_timeout_seconds": 120,
+  "total_timeout_seconds": 3600,
+  "minimum_available_ram_bytes": 12884901888,
+  "jobs": "All same30 tasks, first2 same environment seeds and both wait_only/one_first_legal_plant regimes, same order, no failed/terminal/bounded job deleted. Keep all source resources/binaries and original6480 branches verbatim.",
+  "dynamic_prefix_rule": "Every fixed WAIT60 timeout macro is checked against raw public WAIT0/WAIT1 oracle with one final income annotation and privileged physics/RNG comparison. Public before/after wave, ready packet set and ready defense set select only the first witnessed edge of each missing type per job. From its unchanged snapshot replay timeout/wave_changed/packet_became_ready at each60/150/300 duration, compare full public response/RNG and repeat candidate snapshot. Reproduce original scout result after branches, then continue until normal terminal or frozen action/tick bound. No hidden future queue, tactical control, policy weights or PPO demonstrations.",
+  "acceptance": "All120 supplemental jobs and real save_replay/manifest/patch/debug-RNG record replays complete; every scout/branch equals independent oracle. Combined original plus supplemental actual counts must cover every original11 requirements. Original full120/6480 gate_result stays fail; this is separately preregistered complementary coverage, not a reclassification or fewer required cases.",
+  "counts_scope": "Compared macro executions, including restored scout repeats; branch rows carry witnessed public edge and prefix. These counts are engineering coverage, never policy event frequency.",
+  "failure_policy": "Stop owned session only on mismatch/resource/deadline/record error, retain full raw/log/saves/record/manifests/partial report. No relaxing coverage or omitting jobs.",
+  "coexecution": "Full256 exact decision recovery finished before this run. Two dynamic-prefix workers and HF branch delivery may coexist; no GPU optimizer or learned policy is used.",
+  "tests": {
+    "count": 30,
+    "log": "/home/newbiexvwu/PvZ-Portable/logs/t5_research/event_wait_dynamic_audit_v1_tests.log",
+    "sha256": "0367a434eb6b8d3d475c6f6c35143a14910cdb78fbed0bbea6135b2fb4513af1",
+    "scope": "Synthetic public-edge/release/shared-original contracts only; not real event coverage"
+  },
+  "learning_acceptance_passed": false,
+  "mainline_merged": false
+}
