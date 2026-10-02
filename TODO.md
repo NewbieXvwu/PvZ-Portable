@@ -644,5 +644,27 @@ seed0预定125000节点和其余初始化/架构。源训练成本单独保留�
 完整迁移真实工程核验42.85秒通过：来源参数逐一误差0、新optimizer空、Torch RNG
 不受加载影响；两局普通level7自然失败终局分别202/190决策，无截断，NPZ回放最大
 9.54e-7；一次真实CPU PPO改变belief参数，未把失败称为会赢。原始数据/日志正在
-上传HF。GPU执行队列v3只替换调度器，不终止当前seed1训练子进程；完成23更新
-边界后接新完整关卡阶段。计划见artifacts/t5/perf/mainline_training_queue_v3_plan.json。
+上传HF，修订ded3b4fb54ddb9f74f4a14fa69271ad0c6f04050，索引见
+artifacts/t5/perf/full_level7_transfer_v1_hf_delivery.json。
+
+调度交接发生计划外中断：有意结束v2控制器后，seed1子进程也在update20 PPO阶段
+退出，未留Python异常；准确退出信号未取得，推测为执行会话子进程清理。原19更新/
+37317决策、全部日志和20个update20分片均保留；v3按既有23更新边界检查停止，未
+放宽门槛或开始下一模型。现用冻结ecc6b39的完整resume补原定四个更新，实际显示
+update20 cached=20 collect=0。v4等待恢复后真实23更新成功，再接完整level7阶段。
+以后不在训练中结束持有其子进程的调度器，按自然边界交接；未来子进程另开会话。
+事故和新计划见artifacts/t5/perf/frontier_seed1_supervisory_interruption_v1.json与
+artifacts/t5/perf/mainline_training_queue_v4_plan.json，原v3失败现场继续保留。
+
+seed1已按原配置恢复并完成23更新/415局/48074决策/5272634tick，累计保存墙钟2392.69秒；
+中断未提交的第一轮update20耗时不完整包含，不能当专机等墙钟比较。25000节点
+greedy70%与自身初始相同，sampled70%略高于初始67.5%，40例小视图尚无稳定学习
+证据。完整原始run已上传HF（11b981ae0fff0bab77fce9d01f4f67d549364158）。原19trained
+中断检查点已另存独立证据树/HF，后续默认裁剪不会丢掉该事故锚点。
+
+完整level7已实际CUDA启动，三更新冒烟240.78秒通过：11局/2000决策/225562tick，
+checkpoint、曲线及初始/2000节点均完成；CUDA已分配峰值4.04GB，无OOM、swap0。
+随后同一新阶段完整resume已继续。完整level7本身的两种评估口径在两个节点均0/2
+（Wilson95%0–65.8%），混合cap1/3/5进度总体胜率另报，不能当完整关卡成绩。
+实际证据artifacts/t5/perf/full_level7_v1_cuda_smoke_actual.json；继续10+30更新观察
+25000预定节点，原256种子与五地形验收仍未达标。

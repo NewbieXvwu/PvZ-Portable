@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "status": "recovered_original_23update_boundary",
+  "observed_at": "2026-10-02T12:45:49.377949+00:00",
+  "affected_run": "mainline_frontier_v1_seed1",
+  "last_complete_updates": 19,
+  "last_complete_counters": {
+    "episodes": 335,
+    "decisions": 37317,
+    "ticks": 4142126
+  },
+  "resume_pointer": {
+    "checkpoint": "runs/run_1/update_000019_trained_1790944905168521685.pt",
+    "sha256": "361629561c90957ae7efb655cfc54f114548fca9625a934c5a8f401d2afc6b1f"
+  },
+  "last_log_line": "mainline_frontier_v1_seed1 update20 ppo epoch1/2",
+  "old_controller_pid": 120099,
+  "old_controller_exit": 143,
+  "missing_training_child_pid": 122277,
+  "python_failure_records": [],
+  "cause": "Training child disappeared after intentional supervisor termination. Likely execution-session descendant cleanup; exact child exit signal was not retained. No Python OOM/worker-error traceback observed.",
+  "preservation": "All log/shards/training_state/latest complete checkpoint remain; no cleanup or gate override.",
+  "blocked_next_stage_error": "Prior frontier seed1 did not finish successfully at23update boundary; preserve all evidence and stop",
+  "recovery": "Frozen ecc6b39 source and same config, complete --resume for4additional updates to original23 boundary. Incomplete update20 optimizer changes rolled back; cached matching rollout shards reused. New fullstage waits for actualsuccessful23 boundary.",
+  "prevention": "Do not terminate owning supervisor while child trains. Future queue handoff only at natural boundaries; source/GPU configurations remain frozen.",
+  "resumed_pid": 124900,
+  "execution_session": 40512,
+  "actual_rollout_cache": {
+    "update": 20,
+    "cached": 20,
+    "collect": 0
+  },
+  "last_complete_checkpoint_preserved_at": "artifacts/research/frontier_seed1_supervisory_interruption_v1/runs/run_1/update_000019_trained_1790944905168521685.pt",
+  "snapshot_note": "Immutable original19trained checkpoint hardlinked in separate working evidence tree, original19 state+resume pointer, prior evaluations and20 cached update20 shards. Not the full prior19-update rollout corpus; full original run remains and is delivered separately.",
+  "recovered_counters": {
+    "episodes": 415,
+    "decisions": 48074,
+    "ticks": 5272634
+  },
+  "recovered_checkpoint": "runs/run_1/update_000023_boundary_1790945627000239803.pt"
+}

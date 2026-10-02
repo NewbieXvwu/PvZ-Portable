@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-full-level7-transfer-v1",
+  "source": "artifacts/research/full_level7_transfer_v1_actual",
+  "scope": "Actual full-size weight transfer, native full resets,2 complete sampled level7 losses, NPZ/PPO and stage initialization tests; no complete remote download audit or efficacy claim.",
+  "revision": "ded3b4fb54ddb9f74f4a14fa69271ad0c6f04050",
+  "seconds": 8.846658332000516
+}

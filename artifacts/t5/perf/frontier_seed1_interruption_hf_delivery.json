@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-frontier-seed1-supervisory-interruption-v1",
+  "source": "artifacts/research/frontier_seed1_supervisory_interruption_v1",
+  "scope": "Original19trained checkpoint and matching resume/state/evaluations,20 cached failed-update20 shards, supervisory failure records/logs; full run delivered separately; no complete remote download audit or efficacy claim.",
+  "revision": "af45f2162e27155d544e50d60cf6ca6759c982e5",
+  "seconds": 56.20030418999886
+}

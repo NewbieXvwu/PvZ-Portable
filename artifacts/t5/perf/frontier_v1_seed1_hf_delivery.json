@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-mainline-frontier-v1-seed1",
+  "run": "mainline_frontier_v1_seed1",
+  "purpose": "Closed23update frontierseed1 including complete recovery after supervisory interruption, complete resume target, evaluated/initial/boundary checkpoints, latest8 trained and raw rollouts/logs; no git binaries. Not full remote download verification.",
+  "revision": "11b981ae0fff0bab77fce9d01f4f67d549364158",
+  "seconds": 224.463512858998
+}
