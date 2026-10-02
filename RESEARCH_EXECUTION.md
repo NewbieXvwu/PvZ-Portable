@@ -1258,3 +1258,9 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 [新曲线](artifacts/t5/curves/mainline_event_progress_v1_seed0.json)。12奖励run全部上传后，
 新增8个只下载KB级resume指针及核对对应固定revision模型对象，全部通过，耗时2.352秒，
 不重复扫描万级分片；见reward_matrix_hf_resume_delivery_complete_v1.json。
+
+原14更新闭合候选已实际上传HF分支evidence-mainline-events-v1-seed0，固定revision
+4ca7c5b67558e8ff767123dbcf6ca07ccd4ebe53，含resume目标及最新8 trained/规定其他阶段、
+原始分片和两份日志。mask短诊断及首次失败现场/全部测试日志亦已上传分支
+ evidence-event-progress-policy-v1，revision49efd9ec24ef1c43d88e2e027a638d921548f758。
+这里只声明实际上传完成，不重复全量下载核验；交付索引mainline_event_progress_delivery_v1.json。
