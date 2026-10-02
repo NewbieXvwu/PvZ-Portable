@@ -86,8 +86,10 @@ def episode(env: PvZEnv, task: dict, seed: int, strategy: str, max_actions: int)
     observation, _ = env.reset(deck=task["deck"], task=spec)
     if observation["sun"] != task["sun_start"]:
         raise ValueError("unexpected starting sun")
-    if observation["wave_count"] != task["wave_cap"]:
+    if task["wave_cap"] is not None and observation["wave_count"] != task["wave_cap"]:
         raise ValueError("requested cap differs from the real task wave count")
+    if "expected_wave_count" in task and observation["wave_count"] != task["expected_wave_count"]:
+        raise ValueError("real complete task wave count differs from the frozen probe")
     initial_plants = [(p["type"], p["row"], p["col"]) for p in observation["plants"]]
     if not set(spec.preplanted).issubset(initial_plants):
         raise ValueError("requested preplants missing from reset")
