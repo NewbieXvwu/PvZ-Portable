@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "model_architecture_version": 15,
+  "primary_candidate": "8 decision frames",
+  "secondary_candidate": "16 decision frames",
+  "input": "Same public encoded global context, previous factored action/event-wait result, actual previous elapsed ticks and public events as singleGRU. Historical frames are learned projections of those public inputs.",
+  "memory": "Concatenate oldest to newest; zero padding at episode start. Finite raw projected history, no hidden recurrent state, no GRU/LSTM modules or auxiliary heads. Common gru_width means actor/critic output width; gru_layers is unused in this finite-history candidate.",
+  "gradient": "Prepend up toK-1 relevant frames for every PPO core. Re-encode all of them under current parameters with gradients; no detached old-parameter cache. Leading-frame PPO losses excluded; no need to rebuild earlier episode prefix.",
+  "time": "K is decisions, not ticks. Real action durations can be0 and interruptible wait duration varies. Report actual tick horizon separately; do not call it a fixed temporal memory span.",
+  "reference": "experiments/t7/dual_timescale_v1/single_seed0..2.json; architecture13, headless singleGRU256x2. Width selection remains incomplete; implementation prepared without making memory winner claims.",
+  "comparisons": "All three initializations, same frozen interaction nodes and tasks, actual costs/parameter counts; no hours-long adoption gate before short actual smoke.",
+  "auxiliary_prediction": "Cancelled, no replacement heads or losses."
+}

@@ -14,6 +14,7 @@ from pvz_observation_features import (INPUT_ON_BOARD, INPUT_ROW_CONTEXT, INPUT_T
                                       require_public_fields, row_context, packet_refresh)
 from pvz_wait_events import CONDITIONS, REASON_PRECEDENCE, public_state, validate_wait_result
 from pvz_dual_memory import DualMemory, planner_context as public_planner_context, validate_slow_config
+from pvz_short_memory import ShortHistoryMemory, validate_short_config
 try:
     from torch.nn.attention.flex_attention import flex_attention
 except ImportError:  # pragma: no cover - depends on the installed PyTorch build
@@ -40,11 +41,16 @@ MODEL_ARCHITECTURE_VERSION = 11
 WAIT_MODEL_ARCHITECTURE_VERSION = 12
 PROGRESS_WAIT_ARCHITECTURE_VERSION = 13
 DUAL_MODEL_ARCHITECTURE_VERSION = 14
+SHORT_MODEL_ARCHITECTURE_VERSION = 15
 FEATURE_COUNT = 32
 
 
 def model_architecture_version(config: dict[str, Any]) -> int:
     """Headless model versions; old7/8/9 checkpoints keep their frozen source."""
+    if "short_history" in config:
+        validate_short_config(config)
+        model_architecture_version({key: value for key, value in config.items() if key != "short_history"})
+        return SHORT_MODEL_ARCHITECTURE_VERSION
     if "slow_memory" in config:
         validate_slow_config(config)
         model_architecture_version({key: value for key, value in config.items() if key != "slow_memory"})
@@ -755,11 +761,11 @@ class GameplayModelV1(nn.Module):
         super().__init__()
         self.config = {**MODEL_CONFIG, **(config or {})}
         self.config.setdefault("input_flags", 0)
-        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags", "wait_mode", "wait_mask", "slow_memory"}
+        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags", "wait_mode", "wait_mask", "slow_memory", "short_history"}
         if set(self.config) - allowed:
             raise ValueError(f"unknown model settings: {sorted(set(self.config) - allowed)}")
         if any(type(value) is not int or value < 1 for key, value in self.config.items()
-               if key not in ("input_flags", "wait_mode", "wait_mask", "slow_memory")):
+               if key not in ("input_flags", "wait_mode", "wait_mask", "slow_memory", "short_history")):
             raise ValueError("model dimensions must be positive integers")
         model_architecture_version(self.config)
         if type(self.config["input_flags"]) is not int or not 0 <= self.config["input_flags"] <= 7:
@@ -798,7 +804,9 @@ class GameplayModelV1(nn.Module):
         self.delta_embedding = nn.Embedding(32, 32)
         self.event_projection = nn.Sequential(nn.Linear(8, 32), nn.SiLU())
         goal_width = self.config.get("slow_memory", {}).get("goal_width", 0)
-        self.belief = nn.GRU(width + 128 + goal_width, self.config["gru_width"], self.config["gru_layers"], batch_first=True)
+        self.belief = (ShortHistoryMemory(width + 128, self.config["gru_width"], self.config["short_history"])
+                       if "short_history" in self.config else
+                       nn.GRU(width + 128 + goal_width, self.config["gru_width"], self.config["gru_layers"], batch_first=True))
         hidden = self.config["gru_width"]
         self.action_type = nn.Linear(hidden, 3)
         self.packet_query = nn.Linear(hidden, width)
@@ -919,7 +927,10 @@ class GameplayModelV1(nn.Module):
         event_vector = self.event_projection(self._event_features(events, device))
         recurrent_input = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1).unsqueeze(1)
         slow_record = None
-        if "slow_memory" in self.config:
+        if "short_history" in self.config:
+            belief, hidden = self.belief.forward_sequences(recurrent_input[:, 0], [1],
+                [None if hidden is None else hidden[:, 0]])
+        elif "slow_memory" in self.config:
             if planner_context is None:
                 raise ValueError("dual step_tokens requires public planner_context")
             transition = dict(planner_context=planner_context, wave=wave, events=events,
@@ -1137,7 +1148,9 @@ class GameplayModelV1(nn.Module):
         recurrent_flat = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1)
 
         slow_records = None
-        if "slow_memory" in self.config:
+        if "short_history" in self.config:
+            belief, hidden_out = self.belief.forward_sequences(recurrent_flat, lengths_seq.tolist(), hiddens)
+        elif "slow_memory" in self.config:
             belief, hidden_out, slow_records = self.slow_memory.forward_sequences(
                 recurrent_flat, x[:, 0], self._kind_mean(x, kinds, TOKEN_KINDS["lane"]),
                 self._kind_mean(x, kinds, TOKEN_KINDS["seed_packet"]), sequences, hiddens, self.belief)

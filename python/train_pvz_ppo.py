@@ -288,7 +288,9 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
             for batch_start in range(0, len(layer), minibatch_chunks):
                 batch = layer[batch_start:batch_start + minibatch_chunks]
                 gradient_starts = [slow_gradient_start(episode["transitions"], start)
-                                   if "slow_memory" in model.config else start
+                                   if "slow_memory" in model.config else
+                                   max(0, start - model.config["short_history"]["history_decisions"] + 1)
+                                   if "short_history" in model.config else start
                                    for episode, start, _ in batch]
                 sequences = [episode["transitions"][origin:end]
                              for (episode, _, end), origin in zip(batch, gradient_starts, strict=True)]
@@ -297,7 +299,11 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                     for (episode, _, _), start in zip(batch, gradient_starts, strict=True):
                         hidden = None
                         # Limit prefix activation memory independently of its length.
-                        for prefix_start in range(0, start, sequence_length or 256):
+                        # Finite history is supplied by the differentiable
+                        # leading frames. An earlier prefix cannot affect its
+                        # core outputs, and must not become hidden recurrence.
+                        prefix_length = 0 if "short_history" in model.config else start
+                        for prefix_start in range(0, prefix_length, sequence_length or 256):
                             prefix_end = min(start, prefix_start + (sequence_length or 256))
                             _, hidden_out = model.forward_sequences(
                                 [episode["transitions"][prefix_start:prefix_end]], [hidden])
