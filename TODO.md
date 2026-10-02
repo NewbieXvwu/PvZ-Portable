@@ -614,3 +614,15 @@ ecc6b39源码，优先保持实际训练推进。
 下一轮池/课程/100个任务种子分配/RNG完全一致。这里的十轮是工程假设推进，不是
 已训练250000决策；新池CUDA长期学习仍待执行。原始证据及日志已上传HF，见
 artifacts/t5/perf/periodic_mutation_v1_hf_delivery.json。辅助预测仍全部取消。
+
+前沿seed0首段现已在23更新/391局/47856决策/4964050tick正常结束，活动2361.79秒；
+无OOM、swap0，树RSS峰值15.15GB（包含共享页重复），CUDA已分配峰值4.61GB。
+曲线与逐段损失见artifacts/t5/perf/frontier_v1_seed0_first_segment_actual.json。
+25000节点的greedy五波由自身初始2/10升到6/10，三波保持24/30；sampled五波仍4/10，
+样本很小，不能宣布稳定学习或课程更优。下一seed1已实际启动，seed0之后完整
+resume至125000预定节点附近；首段原始检查点/末八trained/分片/日志正在上传HF。
+
+长课程下一依赖：当前显式研究入口只支持随机初始化与同配置完整resume，尚无跨
+课程的权重迁移入口。进入完整关卡时需要明确的新实验配置和权重迁移 provenance，
+保留来源检查点及原曲线，不把换任务池/重置optimizer称作同候选resume；随后
+追加普通完整训练任务，原level7 development与五地形验收任务/种子/阈值不变。
