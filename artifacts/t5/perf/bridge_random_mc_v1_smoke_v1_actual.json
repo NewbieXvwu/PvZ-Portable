@@ -1,0 +1,1475 @@
+{
+  "schema_version": 1,
+  "status": "three_independent_random_smokes_complete",
+  "source_revision": "f005c47",
+  "seeds": [
+    {
+      "seed": 0,
+      "config": "experiments/t7/bridge_random_mc_v1/seed0.json",
+      "invocation": {
+        "kind": "random_initialization",
+        "seed": 0,
+        "started_at": "2026-10-02T19:41:50.769271+00:00",
+        "commit": "f005c47e9c4a736060d554cc6b53daa8a47f8265"
+      },
+      "initial_state_sha256": "40562ca4c3710ce41d46b6902b6d28de64f885ca9767bf910a59583aadf30fcf",
+      "initialization_provenance": null,
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+      "updates": 3,
+      "counters": {
+        "episodes": 12,
+        "decisions": 1984,
+        "ticks": 217975
+      },
+      "process_wall_seconds": 365.56844362300035,
+      "active_wall_seconds": 362.1572015139973,
+      "sampling_seconds": 29.148233266001625,
+      "ppo_seconds": 61.54119154599903,
+      "evaluation_seconds": 270.0088176089994,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15100321792,
+        "min_system_available_bytes": 18602270720,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 4303021056,
+        "cuda_peak_reserved_bytes": 11404312576
+      },
+      "latest_loss": {
+        "policy_loss": 0.23487821174785495,
+        "value_loss": 0.06401591747999191,
+        "entropy": 3.042298763990402,
+        "advantage_mean": 0.17576827108860016,
+        "advantage_std": 0.21462537348270416,
+        "gradient_norm": 1.672223687171936,
+        "approx_kl": 0.011624031030805781,
+        "clip_fraction": 0.22233773954212666,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.6562771797180176,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "max_replay_log_probability_error": 9.5367431640625e-07,
+      "training_natural_wins": 0,
+      "training_truncated": 2,
+      "training_action_counts": {
+        "plant": 216,
+        "shovel": 331,
+        "wait": 1437
+      },
+      "checkpoint": "runs/run_1/update_000003_boundary_1790970472342942344.pt",
+      "resume_path": "runs/mainline_bridge_random_mc_v1_seed0/resume.json",
+      "evaluation_nodes": [
+        {
+          "counters": {
+            "episodes": 0,
+            "decisions": 0,
+            "ticks": 0
+          },
+          "updates": 0,
+          "seconds": 270.0088176089994,
+          "modes": {
+            "greedy": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 21009.875
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 5,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20564.625
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.688,
+                "mean_survival_ticks": 20581
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.375,
+                "mean_survival_ticks": 21103.875
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.5,
+                "mean_survival_ticks": 19888.375
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.375,
+                "mean_survival_ticks": 19860.875
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.25,
+                "mean_survival_ticks": 20674.875
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.312,
+                "mean_survival_ticks": 4681.25
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.438,
+                "mean_survival_ticks": 7398
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.812,
+                "mean_survival_ticks": 7771.188
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.812,
+                "mean_survival_ticks": 8362.062
+              }
+            },
+            "sampled": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 8,
+                "mean_survival_ticks": 21654.75
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 5,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20851.562
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.938,
+                "mean_survival_ticks": 20923.625
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 8,
+                "mean_survival_ticks": 21913.75
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20013
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.375,
+                "mean_survival_ticks": 20837
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.5,
+                "mean_survival_ticks": 20851.25
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.438,
+                "mean_survival_ticks": 5352.375
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.5,
+                "mean_survival_ticks": 7667.562
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.375,
+                "mean_survival_ticks": 7553.75
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.812,
+                "mean_survival_ticks": 8485.688
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "config": "experiments/t7/bridge_random_mc_v1/seed1.json",
+      "invocation": {
+        "kind": "random_initialization",
+        "seed": 1,
+        "started_at": "2026-10-02T19:47:55.819498+00:00",
+        "commit": "f005c47e9c4a736060d554cc6b53daa8a47f8265"
+      },
+      "initial_state_sha256": "439ea5c5356c6f2dbf1a01fe9375a7e815b91ddc03845f701b9bc26150ab0337",
+      "initialization_provenance": null,
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+      "updates": 3,
+      "counters": {
+        "episodes": 12,
+        "decisions": 1946,
+        "ticks": 214766
+      },
+      "process_wall_seconds": 345.01696873999754,
+      "active_wall_seconds": 337.9496956199946,
+      "sampling_seconds": 28.511649274994852,
+      "ppo_seconds": 72.09116701700259,
+      "evaluation_seconds": 236.2223906329964,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15088115712,
+        "min_system_available_bytes": 18624061440,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 4209143296,
+        "cuda_peak_reserved_bytes": 4812963840
+      },
+      "latest_loss": {
+        "policy_loss": 0.2872435150202364,
+        "value_loss": 0.07005512434989214,
+        "entropy": 2.8744863867759705,
+        "advantage_mean": 0.147768035531044,
+        "advantage_std": 0.2447221577167511,
+        "gradient_norm": 0.9766585230827332,
+        "approx_kl": 0.006219516348210163,
+        "clip_fraction": 0.08898788318037987,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5321042537689209,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "max_replay_log_probability_error": 9.5367431640625e-07,
+      "training_natural_wins": 0,
+      "training_truncated": 1,
+      "training_action_counts": {
+        "plant": 201,
+        "shovel": 317,
+        "wait": 1428
+      },
+      "checkpoint": "runs/run_1/update_000003_boundary_1790970813514025971.pt",
+      "resume_path": "runs/mainline_bridge_random_mc_v1_seed1/resume.json",
+      "evaluation_nodes": [
+        {
+          "counters": {
+            "episodes": 0,
+            "decisions": 0,
+            "ticks": 0
+          },
+          "updates": 0,
+          "seconds": 236.2223906329964,
+          "modes": {
+            "greedy": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20617
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 5,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20591.938
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.688,
+                "mean_survival_ticks": 20659.438
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 21140.75
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 8.125,
+                "mean_survival_ticks": 21928
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20846.75
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20787.625
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.062,
+                "mean_survival_ticks": 4522.562
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.5,
+                "mean_survival_ticks": 7514.688
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.75,
+                "mean_survival_ticks": 7947.188
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.812,
+                "mean_survival_ticks": 8121.812
+              }
+            },
+            "sampled": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20494.125
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 5,
+                "mean_terminal_wave": 8.062,
+                "mean_survival_ticks": 21558.125
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.5,
+                "mean_survival_ticks": 20345.375
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 8.125,
+                "mean_survival_ticks": 21388.875
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 21540.375
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20078.875
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 21122
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.375,
+                "mean_survival_ticks": 5275.188
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.438,
+                "mean_survival_ticks": 7458.312
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.438,
+                "mean_survival_ticks": 7524.688
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.75,
+                "mean_survival_ticks": 8310
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2,
+      "config": "experiments/t7/bridge_random_mc_v1/seed2.json",
+      "invocation": {
+        "kind": "random_initialization",
+        "seed": 2,
+        "started_at": "2026-10-02T19:53:40.939692+00:00",
+        "commit": "f005c47e9c4a736060d554cc6b53daa8a47f8265"
+      },
+      "initial_state_sha256": "3419d853d567de27163ed488506fad6bf20dbcf2e3e95514e1d32348de0e89b3",
+      "initialization_provenance": null,
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+      "updates": 3,
+      "counters": {
+        "episodes": 12,
+        "decisions": 2000,
+        "ticks": 198949
+      },
+      "process_wall_seconds": 875.0489030550016,
+      "active_wall_seconds": 869.126673497005,
+      "sampling_seconds": 29.058596017996024,
+      "ppo_seconds": 74.06086005599354,
+      "evaluation_seconds": 764.7002984819919,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15103700992,
+        "min_system_available_bytes": 18414817280,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 4203664896,
+        "cuda_peak_reserved_bytes": 6750732288
+      },
+      "latest_loss": {
+        "policy_loss": 0.21130311054488024,
+        "value_loss": 0.0434839534573257,
+        "entropy": 2.95899506409963,
+        "advantage_mean": 0.11990989744663239,
+        "advantage_std": 0.19405072927474976,
+        "gradient_norm": 0.9125409126281738,
+        "approx_kl": 0.009174902673943766,
+        "clip_fraction": 0.15749008314950125,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.4278223514556885,
+        "optimizer_steps": 6,
+        "stopped_for_kl": true
+      },
+      "max_replay_log_probability_error": 9.5367431640625e-07,
+      "training_natural_wins": 0,
+      "training_truncated": 4,
+      "training_action_counts": {
+        "plant": 194,
+        "shovel": 312,
+        "wait": 1494
+      },
+      "checkpoint": "runs/run_1/update_000003_boundary_1790971689806961094.pt",
+      "resume_path": "runs/mainline_bridge_random_mc_v1_seed2/resume.json",
+      "evaluation_nodes": [
+        {
+          "counters": {
+            "episodes": 0,
+            "decisions": 0,
+            "ticks": 0
+          },
+          "updates": 0,
+          "seconds": 326.3737317149935,
+          "modes": {
+            "greedy": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20140.5
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 5,
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20678.188
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.562,
+                "mean_survival_ticks": 20348.438
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.375,
+                "mean_survival_ticks": 20208.75
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 21600.375
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 8,
+                "mean_survival_ticks": 21039
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.5,
+                "mean_survival_ticks": 20409.25
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 3,
+                "wilson_95": [
+                  0.065916,
+                  0.430089
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 3,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.875,
+                "mean_survival_ticks": 7806.438
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.562,
+                "mean_survival_ticks": 7697.125
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.562,
+                "mean_survival_ticks": 7497.062
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.875,
+                "mean_survival_ticks": 8295.312
+              }
+            },
+            "sampled": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.5,
+                "mean_survival_ticks": 19810.75
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 5,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20660.5
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.5,
+                "mean_survival_ticks": 20586.562
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 8.125,
+                "mean_survival_ticks": 21352.5
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.5,
+                "mean_survival_ticks": 20160.875
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.375,
+                "mean_survival_ticks": 20362.25
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20599.875
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.5,
+                "mean_survival_ticks": 5471.938
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.562,
+                "mean_survival_ticks": 7769.375
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.5,
+                "mean_survival_ticks": 7559.125
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.562,
+                "mean_survival_ticks": 8127.938
+              }
+            }
+          }
+        },
+        {
+          "counters": {
+            "episodes": 12,
+            "decisions": 2000,
+            "ticks": 198949
+          },
+          "updates": 3,
+          "seconds": 438.32656676699844,
+          "modes": {
+            "greedy": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 5,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.312,
+                "mean_survival_ticks": 5356.75
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 3,
+                "mean_survival_ticks": 8629.75
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 3,
+                "mean_survival_ticks": 8650.125
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 3,
+                "mean_survival_ticks": 8836.125
+              }
+            },
+            "sampled": {
+              "validation_full_level7_v1": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 21117.125
+              },
+              "validation_bridge7_v1_aid_cap10": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 5,
+                "improved_pairs": 0,
+                "degraded_pairs": 5,
+                "mean_terminal_wave": 8.062,
+                "mean_survival_ticks": 21151.75
+              },
+              "validation_bridge7_v1_aid_cap15": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 8.375,
+                "mean_survival_ticks": 21214.5
+              },
+              "validation_bridge7_v1_aid_cap20": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 19983.625
+              },
+              "validation_bridge7_v1_aid_capfull": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 21008.625
+              },
+              "validation_bridge7_v1_ordinary_cap10": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20271.5
+              },
+              "validation_bridge7_v1_ordinary_cap15": {
+                "cases": 8,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 7.375,
+                "mean_survival_ticks": 20378.75
+              },
+              "heldout_roof_1": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.812,
+                "mean_survival_ticks": 6309.875
+              },
+              "heldout_roof_2": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.812,
+                "mean_survival_ticks": 7961.062
+              },
+              "heldout_roof_3": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.688,
+                "mean_survival_ticks": 7785.5
+              },
+              "heldout_roof_4": {
+                "cases": 16,
+                "won": 0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "truncated": 0,
+                "idle_wins": 0,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "mean_terminal_wave": 2.938,
+                "mean_survival_ticks": 8248
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "protocol": "experiments/t7/bridge_random_mc_v1/protocol.json",
+  "scope": "Each source run was closed before copying mutable state and hardlinking immutable files. All initial/evaluated/boundary/trained checkpoints, 36 raw rollout shards, per-seed results, complete resume state and logs retained. Each smoke includes its own untrained136-case/mode evaluation; seed2 also reaches the prescribed2k node. These are engineering smoke results, not sustained multi-wave learning, architecture superiority, or formal full-course acceptance. No seed deletion or threshold changes. The owning queue continues sequential round-robin full resumes to the exact125k nodes without upload locks on live runs."
+}

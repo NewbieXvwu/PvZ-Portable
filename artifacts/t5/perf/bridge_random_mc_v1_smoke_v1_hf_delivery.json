@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-v1-smoke-v1",
+  "revision": "88849948dc760a03f817a75a6324eddcef7554e0",
+  "seconds": 195.77711061499576,
+  "scope": "All three immutable smoke snapshots, necessary checkpoints and per-case raw results. No duplicate warm-run checkpoint upload, no live training locks during upload."
+}
