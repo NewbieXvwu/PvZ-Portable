@@ -1,0 +1,3526 @@
+{
+  "schema_version": 1,
+  "status": "scheduled125k_evaluation_complete_current_run_continues",
+  "source_revision": "53fd859",
+  "host_source_revision": "8a85ff5",
+  "experiment_id": "mainline_bridge_level7_v2_seed0",
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "seconds": 0.44612309799413197,
+  "verified_wait_seconds": 1442.5943790339952,
+  "current_observed": {
+    "updates": 131,
+    "counters": {
+      "episodes": 511,
+      "decisions": 125000,
+      "ticks": 15281831
+    },
+    "status": "running",
+    "phase": "ready"
+  },
+  "initialization_provenance": {
+    "kind": "weights_transfer_v1",
+    "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_full_level7_v1_seed0/runs/run_1/update_000013_boundary_1790946288957446067.pt",
+    "source_sha256": "c400115918066625c2f1ca8bae1c1120cdeb5f37c00a6ff6a35194cc171d791c",
+    "note": "New bridge-course stage from prespecifiedfirst13completelevel7 boundary, the checkpoint used in prospective probes. Copy all same-config parameters; newAdamW/RNG/counters/course, recursively retain parent training costs. Later fullstage43losses remain delivered; not same-candidate resume or a curriculum causal comparison. R0 objective differs from R3 parent; initialize critic weights too but reset its optimizer, measure own initial baseline and recalibration. No unchanged-objective or same-candidate resume claim.",
+    "source_experiment_id": "mainline_full_level7_v1_seed0",
+    "source_experiment_identity": "947fa1a2c717b32f2584687077debc3ec5dbf7937768ca65dbc8e253a6e3f3ec",
+    "source_initialization_seed": 0,
+    "source_updates": 13,
+    "source_counters": {
+      "episodes": 51,
+      "decisions": 9606,
+      "ticks": 1128315
+    },
+    "source_wall_seconds": 653.7822612769996,
+    "source_commit": "c841bda3b2da3c4a3d8b9c2d33d610471fc2b641",
+    "source_initialization_provenance": {
+      "kind": "weights_transfer_v1",
+      "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_frontier_v1_seed0/runs/run_1/update_000023_boundary_1790942973035689115.pt",
+      "source_sha256": "a241272d741cefa15a6a32b8a8bca5e6879019e125409a4d1980fb3fb12f884c",
+      "note": "Transfer all identical headless singleGRU256 parameters after first23updates/47856decisions. New completelevel7 curriculum with R3gamma1; reset AdamW and stage RNG/counters explicitly. Not same-candidate resume or a reward causal comparison.",
+      "source_experiment_id": "mainline_frontier_v1_seed0",
+      "source_experiment_identity": "fb0994e500342c08d9fcfb63b1d43e5fa2b0a56b9bc5428bcdb55e9bf10aa8db",
+      "source_initialization_seed": 0,
+      "source_updates": 23,
+      "source_counters": {
+        "episodes": 391,
+        "decisions": 47856,
+        "ticks": 4964050
+      },
+      "source_wall_seconds": 2361.7862293979997,
+      "source_commit": "ecc6b39bc3c16c7859f2b070dd9fcb15c1f98746",
+      "new_stage_state": "new AdamW, declared RNG seeds, zero stage counters and new curriculum; source budget recorded separately"
+    },
+    "new_stage_state": "new AdamW, declared RNG seeds, zero stage counters and new curriculum; source budget recorded separately"
+  },
+  "nodes": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "updates": 0,
+      "active_wall_seconds": 377.9282036069999,
+      "evaluation_seconds": 377.01107260199933,
+      "resources": {
+        "peak_process_tree_rss_bytes": 3595505664,
+        "min_system_available_bytes": 19210231808,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 31482368,
+        "cuda_peak_reserved_bytes": 50331648
+      },
+      "checkpoint": "runs/run_1/update_000000_evaluated_1790952577890538249.pt",
+      "modes": {
+        "greedy": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2845
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 5,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 6614
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 6653
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 3391
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 3522
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2872
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2824
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        },
+        "sampled": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 24.75,
+              "mean_shovels": 13.0,
+              "mean_immediate_plant_shovels": 0.75,
+              "total_actions": {
+                "wait": 1248,
+                "plant": 198,
+                "shovel": 104
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 8.5,
+                  "mean_survival_ticks": 22668.25,
+                  "peak_offense": 1.75
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 9,
+              "truncated": 0,
+              "mean_plants": 37.0625,
+              "mean_shovels": 18.625,
+              "mean_immediate_plant_shovels": 0.1875,
+              "total_actions": {
+                "wait": 2880,
+                "plant": 593,
+                "shovel": 298
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 7,
+                "degraded_pairs": 3,
+                "net_win_gain": 0.25,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.5625,
+                  "wilson_95": [
+                    0.331786,
+                    0.769013
+                  ],
+                  "mean_terminal_wave": 9.812,
+                  "mean_survival_ticks": 25917.312,
+                  "peak_offense": 6.625
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 2,
+              "truncated": 0,
+              "mean_plants": 40.1875,
+              "mean_shovels": 18.125,
+              "mean_immediate_plant_shovels": 0.1875,
+              "total_actions": {
+                "wait": 3209,
+                "plant": 643,
+                "shovel": 290
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 2,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.125,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.125,
+                  "wilson_95": [
+                    0.034977,
+                    0.360228
+                  ],
+                  "mean_terminal_wave": 13.062,
+                  "mean_survival_ticks": 28377.438,
+                  "peak_offense": 7.5
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 38.5,
+              "mean_shovels": 21.5,
+              "mean_immediate_plant_shovels": 0.25,
+              "total_actions": {
+                "wait": 1629,
+                "plant": 308,
+                "shovel": 172
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 13.5,
+                  "mean_survival_ticks": 29999.125,
+                  "peak_offense": 6.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 38.625,
+              "mean_shovels": 20.0,
+              "mean_immediate_plant_shovels": 0.75,
+              "total_actions": {
+                "wait": 1539,
+                "plant": 309,
+                "shovel": 160
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 12.375,
+                  "mean_survival_ticks": 27501.875,
+                  "peak_offense": 7.625
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 21.625,
+              "mean_shovels": 13.5,
+              "mean_immediate_plant_shovels": 0.875,
+              "total_actions": {
+                "plant": 173,
+                "shovel": 108,
+                "wait": 1140
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 8,
+                  "mean_survival_ticks": 20550,
+                  "peak_offense": 1.125
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 25.625,
+              "mean_shovels": 14.5,
+              "mean_immediate_plant_shovels": 1.25,
+              "total_actions": {
+                "plant": 205,
+                "shovel": 116,
+                "wait": 1298
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 8.625,
+                  "mean_survival_ticks": 22955.5,
+                  "peak_offense": 1.125
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.5,
+                "mean_survival_ticks": 22668.25,
+                "peak_offense": 1.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 9,
+              "degraded_pairs": 3,
+              "net_win_gain": 0.15,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.275,
+                "wilson_95": [
+                  0.16108,
+                  0.42835
+                ],
+                "mean_terminal_wave": 11.85,
+                "mean_survival_ticks": 27717.725,
+                "peak_offense": 7.025
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.375,
+                "mean_survival_ticks": 27501.875,
+                "peak_offense": 7.625
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 8.312,
+                "mean_survival_ticks": 21752.75,
+                "peak_offense": 1.125
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        }
+      },
+      "source_raw_path": "evaluations/update_000000.json.gz"
+    },
+    {
+      "counters": {
+        "episodes": 9,
+        "decisions": 2000,
+        "ticks": 226044
+      },
+      "updates": 3,
+      "active_wall_seconds": 777.7175055379994,
+      "evaluation_seconds": 261.94417133800016,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15122309120,
+        "min_system_available_bytes": 18653573120,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 5156872192,
+        "cuda_peak_reserved_bytes": 5643436032
+      },
+      "checkpoint": "runs/run_1/update_000003_evaluated_1790952977679839606.pt",
+      "modes": {
+        "greedy": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1565
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 5,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 3269
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 3413
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1706
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1880
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1499
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 0.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1478
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        },
+        "sampled": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 24.125,
+              "mean_shovels": 11.125,
+              "mean_immediate_plant_shovels": 0.375,
+              "total_actions": {
+                "wait": 1383,
+                "plant": 193,
+                "shovel": 89
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 9.125,
+                  "mean_survival_ticks": 23994.5,
+                  "peak_offense": 1.625
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 10,
+              "truncated": 0,
+              "mean_plants": 33.625,
+              "mean_shovels": 14.0625,
+              "mean_immediate_plant_shovels": 0.1875,
+              "total_actions": {
+                "wait": 2696,
+                "plant": 538,
+                "shovel": 225
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 6,
+                "degraded_pairs": 1,
+                "net_win_gain": 0.3125,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.625,
+                  "wilson_95": [
+                    0.38641,
+                    0.815188
+                  ],
+                  "mean_terminal_wave": 9.812,
+                  "mean_survival_ticks": 23463.25,
+                  "peak_offense": 8
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 3,
+              "truncated": 0,
+              "mean_plants": 39.0,
+              "mean_shovels": 15.5625,
+              "mean_immediate_plant_shovels": 0.0625,
+              "total_actions": {
+                "wait": 3320,
+                "plant": 624,
+                "shovel": 249
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 3,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.1875,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.1875,
+                  "wilson_95": [
+                    0.065916,
+                    0.430089
+                  ],
+                  "mean_terminal_wave": 13.188,
+                  "mean_survival_ticks": 28309.312,
+                  "peak_offense": 8.5
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 37.25,
+              "mean_shovels": 17.0,
+              "mean_immediate_plant_shovels": 0.125,
+              "total_actions": {
+                "wait": 1658,
+                "plant": 298,
+                "shovel": 136
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 13.75,
+                  "mean_survival_ticks": 28913.375,
+                  "peak_offense": 7.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 36.25,
+              "mean_shovels": 16.875,
+              "mean_immediate_plant_shovels": 0.125,
+              "total_actions": {
+                "wait": 1645,
+                "plant": 290,
+                "shovel": 135
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 12.875,
+                  "mean_survival_ticks": 28146.75,
+                  "peak_offense": 8
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 26.625,
+              "mean_shovels": 12.0,
+              "mean_immediate_plant_shovels": 0.5,
+              "total_actions": {
+                "plant": 213,
+                "wait": 1414,
+                "shovel": 96
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 8.875,
+                  "mean_survival_ticks": 24260.375,
+                  "peak_offense": 2
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 27.0,
+              "mean_shovels": 13.125,
+              "mean_immediate_plant_shovels": 0.875,
+              "total_actions": {
+                "plant": 216,
+                "shovel": 105,
+                "wait": 1473
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 9.125,
+                  "mean_survival_ticks": 25124.125,
+                  "peak_offense": 1.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 9.125,
+                "mean_survival_ticks": 23994.5,
+                "peak_offense": 1.625
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 9,
+              "degraded_pairs": 1,
+              "net_win_gain": 0.2,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.325,
+                "wilson_95": [
+                  0.200845,
+                  0.479823
+                ],
+                "mean_terminal_wave": 11.95,
+                "mean_survival_ticks": 26491.7,
+                "peak_offense": 8.175
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.875,
+                "mean_survival_ticks": 28146.75,
+                "peak_offense": 8
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 9,
+                "mean_survival_ticks": 24692.25,
+                "peak_offense": 1.938
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        }
+      },
+      "source_raw_path": "evaluations/update_000003.json.gz"
+    },
+    {
+      "counters": {
+        "episodes": 109,
+        "decisions": 25000,
+        "ticks": 2661854
+      },
+      "updates": 29,
+      "active_wall_seconds": 2651.6446816160023,
+      "evaluation_seconds": 256.20772868600034,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15251353600,
+        "min_system_available_bytes": 18557804544,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 6405961728,
+        "cuda_peak_reserved_bytes": 25398607872
+      },
+      "checkpoint": "runs/run_1/update_000029_evaluated_1790954865541596811.pt",
+      "modes": {
+        "greedy": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 13.375,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1274,
+                "plant": 107
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 8.25,
+                  "mean_survival_ticks": 22129.125,
+                  "peak_offense": 2.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 5,
+              "truncated": 0,
+              "mean_plants": 6.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2788,
+                "plant": 96
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24954.812,
+                  "peak_offense": 6.375
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 11.3125,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2903,
+                "plant": 181
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 12.125,
+                  "mean_survival_ticks": 25667,
+                  "peak_offense": 6.625
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 14.375,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1566,
+                "plant": 115
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 12.625,
+                  "mean_survival_ticks": 27500.875,
+                  "peak_offense": 7.25
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 10.875,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1534,
+                "plant": 87
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 12.125,
+                  "mean_survival_ticks": 26930,
+                  "peak_offense": 6.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 19.75,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1501,
+                "plant": 158
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 8.875,
+                  "mean_survival_ticks": 25688.625,
+                  "peak_offense": 2.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 16.875,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1411,
+                "plant": 135
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 9.125,
+                  "mean_survival_ticks": 24220.5,
+                  "peak_offense": 3.125
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.25,
+                "mean_survival_ticks": 22129.125,
+                "peak_offense": 2.875
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 11.375,
+                "mean_survival_ticks": 25748.9,
+                "peak_offense": 6.65
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.125,
+                "mean_survival_ticks": 26930,
+                "peak_offense": 6.875
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 9,
+                "mean_survival_ticks": 24954.562,
+                "peak_offense": 3
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        },
+        "sampled": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 28.125,
+              "mean_shovels": 11.625,
+              "mean_immediate_plant_shovels": 0.75,
+              "total_actions": {
+                "wait": 1181,
+                "plant": 225,
+                "shovel": 93
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 8.5,
+                  "mean_survival_ticks": 23073.375,
+                  "peak_offense": 2.625
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 10,
+              "truncated": 0,
+              "mean_plants": 35.8125,
+              "mean_shovels": 11.4375,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2520,
+                "plant": 573,
+                "shovel": 183
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 8,
+                "degraded_pairs": 3,
+                "net_win_gain": 0.3125,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.625,
+                  "wilson_95": [
+                    0.38641,
+                    0.815188
+                  ],
+                  "mean_terminal_wave": 9.938,
+                  "mean_survival_ticks": 24276.125,
+                  "peak_offense": 8.938
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 5,
+              "truncated": 0,
+              "mean_plants": 38.9375,
+              "mean_shovels": 13.0625,
+              "mean_immediate_plant_shovels": 0.0625,
+              "total_actions": {
+                "wait": 2981,
+                "plant": 623,
+                "shovel": 209
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 5,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.3125,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 13.812,
+                  "mean_survival_ticks": 28559.625,
+                  "peak_offense": 9.125
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 40.0,
+              "mean_shovels": 13.875,
+              "mean_immediate_plant_shovels": 0.125,
+              "total_actions": {
+                "wait": 1541,
+                "plant": 320,
+                "shovel": 111
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 15,
+                  "mean_survival_ticks": 29199.5,
+                  "peak_offense": 9.75
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 43.625,
+              "mean_shovels": 16.5,
+              "mean_immediate_plant_shovels": 0.125,
+              "total_actions": {
+                "wait": 1667,
+                "plant": 349,
+                "shovel": 132
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 16,
+                  "mean_survival_ticks": 32042.5,
+                  "peak_offense": 10
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 31.5,
+              "mean_shovels": 14.875,
+              "mean_immediate_plant_shovels": 0.5,
+              "total_actions": {
+                "plant": 252,
+                "wait": 1296,
+                "shovel": 119
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 9.125,
+                  "mean_survival_ticks": 24756,
+                  "peak_offense": 1.75
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 37.125,
+              "mean_shovels": 13.625,
+              "mean_immediate_plant_shovels": 1.0,
+              "total_actions": {
+                "plant": 297,
+                "shovel": 109,
+                "wait": 1396
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 10.125,
+                  "mean_survival_ticks": 26853.125,
+                  "peak_offense": 3.125
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.5,
+                "mean_survival_ticks": 23073.375,
+                "peak_offense": 2.625
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 13,
+              "degraded_pairs": 3,
+              "net_win_gain": 0.25,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.375,
+                "wilson_95": [
+                  0.24223,
+                  0.529676
+                ],
+                "mean_terminal_wave": 12.5,
+                "mean_survival_ticks": 26974.2,
+                "peak_offense": 9.175
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 16,
+                "mean_survival_ticks": 32042.5,
+                "peak_offense": 10
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 9.625,
+                "mean_survival_ticks": 25804.562,
+                "peak_offense": 2.438
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        }
+      },
+      "source_raw_path": "evaluations/update_000029.json.gz"
+    },
+    {
+      "counters": {
+        "episodes": 511,
+        "decisions": 125000,
+        "ticks": 15281831
+      },
+      "updates": 131,
+      "active_wall_seconds": 12837.927332965999,
+      "evaluation_seconds": 300.6139765649932,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15251353600,
+        "min_system_available_bytes": 16708956160,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 8291854848,
+        "cuda_peak_reserved_bytes": 30586961920
+      },
+      "checkpoint": "runs/run_1/update_000131_evaluated_1790965453718564074.pt",
+      "modes": {
+        "greedy": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 52.875,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1216,
+                "plant": 423
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 10.75,
+                  "mean_survival_ticks": 26278.625,
+                  "peak_offense": 6
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 16,
+              "truncated": 0,
+              "mean_plants": 46.125,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1181,
+                "plant": 738
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 11,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.6875,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 1.0,
+                  "wilson_95": [
+                    0.806392,
+                    1.0
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 19487,
+                  "peak_offense": 17.562
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 12,
+              "truncated": 0,
+              "mean_plants": 64.1875,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1619,
+                "plant": 1027
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 12,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.75,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 0.75,
+                  "wilson_95": [
+                    0.505017,
+                    0.898179
+                  ],
+                  "mean_terminal_wave": 15,
+                  "mean_survival_ticks": 26255.438,
+                  "peak_offense": 17
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 6,
+              "truncated": 0,
+              "mean_plants": 91.75,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1160,
+                "plant": 734
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 6,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.75,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.75,
+                  "wilson_95": [
+                    0.409275,
+                    0.928521
+                  ],
+                  "mean_terminal_wave": 20,
+                  "mean_survival_ticks": 36820.125,
+                  "peak_offense": 18.125
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 2,
+              "truncated": 0,
+              "mean_plants": 119.625,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1770,
+                "plant": 957
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 2,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.25,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.25,
+                  "wilson_95": [
+                    0.071479,
+                    0.590725
+                  ],
+                  "mean_terminal_wave": 27,
+                  "mean_survival_ticks": 48985.125,
+                  "peak_offense": 18
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 51.0,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1203,
+                "plant": 408
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 9,
+                  "mean_survival_ticks": 27181.5,
+                  "peak_offense": 7.25
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 2,
+              "truncated": 0,
+              "mean_plants": 59.875,
+              "mean_shovels": 0.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1156,
+                "plant": 479
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 2,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.25,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.25,
+                  "wilson_95": [
+                    0.071479,
+                    0.590725
+                  ],
+                  "mean_terminal_wave": 10.75,
+                  "mean_survival_ticks": 27076.125,
+                  "peak_offense": 7.625
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 10.75,
+                "mean_survival_ticks": 26278.625,
+                "peak_offense": 6
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 29,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.725,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.85,
+                "wilson_95": [
+                  0.709277,
+                  0.929388
+                ],
+                "mean_terminal_wave": 14,
+                "mean_survival_ticks": 25661,
+                "peak_offense": 17.45
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 2,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.25,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.25,
+                "wilson_95": [
+                  0.071479,
+                  0.590725
+                ],
+                "mean_terminal_wave": 27,
+                "mean_survival_ticks": 48985.125,
+                "peak_offense": 18
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 2,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.125,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.034977,
+                  0.360228
+                ],
+                "mean_terminal_wave": 9.875,
+                "mean_survival_ticks": 27128.812,
+                "peak_offense": 7.438
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        },
+        "sampled": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "wins": 0,
+              "truncated": 0,
+              "mean_plants": 56.25,
+              "mean_shovels": 3.875,
+              "mean_immediate_plant_shovels": 0.25,
+              "total_actions": {
+                "wait": 1429,
+                "plant": 450,
+                "shovel": 31
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 0,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.0,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 12.125,
+                  "mean_survival_ticks": 30337.25,
+                  "peak_offense": 7.25
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.625,
+                  "mean_survival_ticks": 20805.5,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "wins": 16,
+              "truncated": 0,
+              "mean_plants": 41.0,
+              "mean_shovels": 2.625,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 1588,
+                "plant": 656,
+                "shovel": 42
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 11,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.6875,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 1.0,
+                  "wilson_95": [
+                    0.806392,
+                    1.0
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 19554.938,
+                  "peak_offense": 15.375
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.3125,
+                  "wilson_95": [
+                    0.141646,
+                    0.555956
+                  ],
+                  "mean_terminal_wave": 10,
+                  "mean_survival_ticks": 24710.375,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "wins": 16,
+              "truncated": 0,
+              "mean_plants": 56.4375,
+              "mean_shovels": 3.0,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2127,
+                "plant": 903,
+                "shovel": 48
+              },
+              "paired_idle": {
+                "cases": 16,
+                "improved_pairs": 16,
+                "degraded_pairs": 0,
+                "net_win_gain": 1.0,
+                "policy": {
+                  "sample_count": 16,
+                  "pass_rate": 1.0,
+                  "wilson_95": [
+                    0.806392,
+                    1.0
+                  ],
+                  "mean_terminal_wave": 15,
+                  "mean_survival_ticks": 26228.438,
+                  "peak_offense": 16.188
+                },
+                "idle": {
+                  "sample_count": 16,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.193608
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 24861.5,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "wins": 2,
+              "truncated": 0,
+              "mean_plants": 68.5,
+              "mean_shovels": 4.0,
+              "mean_immediate_plant_shovels": 0.125,
+              "total_actions": {
+                "wait": 1377,
+                "plant": 548,
+                "shovel": 32
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 2,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.25,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.25,
+                  "wilson_95": [
+                    0.071479,
+                    0.590725
+                  ],
+                  "mean_terminal_wave": 19.125,
+                  "mean_survival_ticks": 32262.375,
+                  "peak_offense": 15.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.125,
+                  "mean_survival_ticks": 25346.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "wins": 4,
+              "truncated": 0,
+              "mean_plants": 106.5,
+              "mean_shovels": 5.625,
+              "mean_immediate_plant_shovels": 0.0,
+              "total_actions": {
+                "wait": 2099,
+                "plant": 852,
+                "shovel": 45
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 4,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.5,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.5,
+                  "wilson_95": [
+                    0.215216,
+                    0.784784
+                  ],
+                  "mean_terminal_wave": 28.75,
+                  "mean_survival_ticks": 49682.25,
+                  "peak_offense": 19
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 11.625,
+                  "mean_survival_ticks": 26230.75,
+                  "peak_offense": 5
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "wins": 4,
+              "truncated": 0,
+              "mean_plants": 50.0,
+              "mean_shovels": 2.875,
+              "mean_immediate_plant_shovels": 0.125,
+              "total_actions": {
+                "plant": 400,
+                "wait": 1299,
+                "shovel": 23
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 4,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.5,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.5,
+                  "wilson_95": [
+                    0.215216,
+                    0.784784
+                  ],
+                  "mean_terminal_wave": 9.75,
+                  "mean_survival_ticks": 27741.625,
+                  "peak_offense": 7.875
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.875,
+                  "mean_survival_ticks": 20945.75,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "wins": 1,
+              "truncated": 0,
+              "mean_plants": 50.875,
+              "mean_shovels": 2.0,
+              "mean_immediate_plant_shovels": 0.125,
+              "total_actions": {
+                "plant": 407,
+                "wait": 1288,
+                "shovel": 16
+              },
+              "paired_idle": {
+                "cases": 8,
+                "improved_pairs": 1,
+                "degraded_pairs": 0,
+                "net_win_gain": 0.125,
+                "policy": {
+                  "sample_count": 8,
+                  "pass_rate": 0.125,
+                  "wilson_95": [
+                    0.022417,
+                    0.470888
+                  ],
+                  "mean_terminal_wave": 11.375,
+                  "mean_survival_ticks": 28238.875,
+                  "peak_offense": 8
+                },
+                "idle": {
+                  "sample_count": 8,
+                  "pass_rate": 0.0,
+                  "wilson_95": [
+                    0.0,
+                    0.324408
+                  ],
+                  "mean_terminal_wave": 7.75,
+                  "mean_survival_ticks": 20670.125,
+                  "peak_offense": 0
+                },
+                "policy_truncated": 0,
+                "idle_truncated": 0
+              }
+            }
+          },
+          "paired_idle_by_group": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.125,
+                "mean_survival_ticks": 30337.25,
+                "peak_offense": 7.25
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved_pairs": 29,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.725,
+              "policy": {
+                "sample_count": 40,
+                "pass_rate": 0.85,
+                "wilson_95": [
+                  0.709277,
+                  0.929388
+                ],
+                "mean_terminal_wave": 13.825,
+                "mean_survival_ticks": 24765.825,
+                "peak_offense": 15.8
+              },
+              "idle": {
+                "sample_count": 40,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.054595,
+                  0.261121
+                ],
+                "mean_terminal_wave": 10.875,
+                "mean_survival_ticks": 24898.1,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved_pairs": 4,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.5,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.5,
+                "wilson_95": [
+                  0.215216,
+                  0.784784
+                ],
+                "mean_terminal_wave": 28.75,
+                "mean_survival_ticks": 49682.25,
+                "peak_offense": 19
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75,
+                "peak_offense": 5
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved_pairs": 5,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.3125,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10.562,
+                "mean_survival_ticks": 27990.25,
+                "peak_offense": 7.938
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 7.812,
+                "mean_survival_ticks": 20807.938,
+                "peak_offense": 0
+              },
+              "policy_truncated": 0,
+              "idle_truncated": 0
+            }
+          }
+        }
+      },
+      "source_raw_path": "evaluations/update_000131.json.gz"
+    }
+  ],
+  "scope": "Existing frozen0/2k/25k/125k development data only. No new inference or PPO, no checkpoint or config changes. Small task samples and one warm-started initialization do not establish three-random stable learning or original full-course acceptance. Active wall includes stage sampling, PPO, storage/resumes and scheduled evaluations; ancestor costs listed separately. CUDA reserved counters are raw observations, not physical resident memory or evidence of OOM.",
+  "full_details_hf": {
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "branch": "evidence-bridge-level7-v2-125k-progress-v1",
+    "revision": "094248314a2d27036d932599d124c24733e3ab18",
+    "path": "bridge_level7_v2_125k_progress_v1/report.json",
+    "raw_nodes": "bridge_level7_v2_125k_progress_v1/evaluations/",
+    "checkpoint": "runs/run_1/update_000131_evaluated_1790965453718564074.pt"
+  },
+  "git_summary_scope": "Task/group paired outcomes, Wilson intervals, action totals and resources retained here; detailed economy/wait/timing distributions are in the HF full report, raw results and Git learning_curve. Numerical results unchanged."
+}
