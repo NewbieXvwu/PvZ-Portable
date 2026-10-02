@@ -1,0 +1,2438 @@
+{
+  "schema_version": 1,
+  "experiment_id": "mainline_headless_gru_v1_seed0",
+  "source_revision": "991f926d5d154d69a018fe71da98abf5aa7c547b",
+  "model_parameters": 8133854,
+  "scope": "Closed3-update CUDA smoke plus same candidate20update complete-resume segment. Last prescribed evaluation is25000; boundary43613 model has not had an extra unplanned final evaluation.",
+  "snapshot": {
+    "status": "update_boundary_stop",
+    "phase": "ready",
+    "updates": 23,
+    "counters": {
+      "episodes": 415,
+      "decisions": 43613,
+      "ticks": 4862148
+    },
+    "wall_seconds": 2370.395486778001,
+    "resources": {
+      "peak_process_tree_rss_bytes": 12727869440,
+      "min_system_available_bytes": 17075355648,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 4926426112,
+      "cuda_peak_reserved_bytes": 16269705216
+    },
+    "checkpoint": "runs/run_1/update_000023_boundary_1790939998643964194.pt"
+  },
+  "update_history": [
+    {
+      "update": 1,
+      "counters": {
+        "episodes": 20,
+        "decisions": 1886,
+        "ticks": 200312
+      },
+      "losses": {
+        "policy_loss": 0.014252161048352719,
+        "value_loss": 0.14997430592775346,
+        "entropy": 2.9203548073768615,
+        "advantage_mean": -0.044219791889190674,
+        "advantage_std": 0.35502663254737854,
+        "gradient_norm": 3.107916831970215,
+        "approx_kl": 0.01768610306738063,
+        "clip_fraction": 0.2638926200568676,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.7182149887084961,
+        "optimizer_steps": 20,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 40,
+          "max_events": 12,
+          "max_waves": 5,
+          "max_elapsed_ticks": 12719,
+          "max_leading_decisions": 0,
+          "examples": [
+            {
+              "core_decisions": 88,
+              "gradient_decisions": 88,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 4,
+              "elapsed_ticks": 7599
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 4,
+              "elapsed_ticks": 8978
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 10538
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 11754
+            },
+            {
+              "core_decisions": 89,
+              "gradient_decisions": 89,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 9711
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 5,
+              "elapsed_ticks": 11987
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 5,
+              "elapsed_ticks": 11281
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 10212
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 19.776785706999362,
+      "ppo_seconds": 74.01178700699893
+    },
+    {
+      "update": 2,
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 211875
+      },
+      "losses": {
+        "policy_loss": -0.0047479141585267115,
+        "value_loss": 0.027446085587143898,
+        "entropy": 3.184370994567871,
+        "advantage_mean": -0.08829482644796371,
+        "advantage_std": 0.13875138759613037,
+        "gradient_norm": 1.367170810699463,
+        "approx_kl": 0.0003237682399789277,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 7.152557373046875e-07,
+        "max_log_prob_change": 0.08537840843200684,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 4,
+          "max_events": 4,
+          "max_waves": 3,
+          "max_elapsed_ticks": 5959,
+          "max_leading_decisions": 0,
+          "examples": [
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5604
+            },
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5959
+            },
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5604
+            },
+            {
+              "core_decisions": 57,
+              "gradient_decisions": 57,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 5959
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 5.303862836000917,
+      "ppo_seconds": 4.404297701999894
+    },
+    {
+      "update": 3,
+      "counters": {
+        "episodes": 42,
+        "decisions": 4180,
+        "ticks": 452305
+      },
+      "losses": {
+        "policy_loss": 0.02094394713640213,
+        "value_loss": 0.16682856331268947,
+        "entropy": 2.882107702891032,
+        "advantage_mean": 0.07766327261924744,
+        "advantage_std": 0.348741352558136,
+        "gradient_norm": 0.9976570010185242,
+        "approx_kl": 0.015703783749507434,
+        "clip_fraction": 0.2540068211965263,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.6658523082733154,
+        "optimizer_steps": 15,
+        "stopped_for_kl": true,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 30,
+          "max_events": 17,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15487,
+          "max_leading_decisions": 7,
+          "examples": [
+            {
+              "core_decisions": 123,
+              "gradient_decisions": 123,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 13429
+            },
+            {
+              "core_decisions": 70,
+              "gradient_decisions": 70,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7981
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 10227
+            },
+            {
+              "core_decisions": 89,
+              "gradient_decisions": 89,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 4,
+              "elapsed_ticks": 8380
+            },
+            {
+              "core_decisions": 123,
+              "gradient_decisions": 123,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 13920
+            },
+            {
+              "core_decisions": 79,
+              "gradient_decisions": 79,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7842
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 13998
+            },
+            {
+              "core_decisions": 116,
+              "gradient_decisions": 116,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 12967
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 21.017946217998542,
+      "ppo_seconds": 48.80732694700055
+    },
+    {
+      "update": 4,
+      "counters": {
+        "episodes": 62,
+        "decisions": 6613,
+        "ticks": 696431
+      },
+      "losses": {
+        "policy_loss": -0.057414286335309345,
+        "value_loss": 0.20179901861896118,
+        "entropy": 2.797646713256836,
+        "advantage_mean": -0.10408993065357208,
+        "advantage_std": 0.42340677976608276,
+        "gradient_norm": 1.8488093614578247,
+        "approx_kl": 0.008531039977701145,
+        "clip_fraction": 0.11962460291882356,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.6084237098693848,
+        "optimizer_steps": 30,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 60,
+          "max_events": 13,
+          "max_waves": 6,
+          "max_elapsed_ticks": 14315,
+          "max_leading_decisions": 20,
+          "examples": [
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 13907
+            },
+            {
+              "core_decisions": 65,
+              "gradient_decisions": 65,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6979
+            },
+            {
+              "core_decisions": 116,
+              "gradient_decisions": 116,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 4,
+              "elapsed_ticks": 9280
+            },
+            {
+              "core_decisions": 103,
+              "gradient_decisions": 103,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 4,
+              "elapsed_ticks": 8932
+            },
+            {
+              "core_decisions": 71,
+              "gradient_decisions": 71,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7734
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 6,
+              "elapsed_ticks": 14315
+            },
+            {
+              "core_decisions": 61,
+              "gradient_decisions": 61,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 7043
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 9,
+              "waves": 5,
+              "elapsed_ticks": 12433
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 23.868558043999656,
+      "ppo_seconds": 92.74991118100297
+    },
+    {
+      "update": 5,
+      "counters": {
+        "episodes": 82,
+        "decisions": 9008,
+        "ticks": 948586
+      },
+      "losses": {
+        "policy_loss": 0.04413806249698003,
+        "value_loss": 0.19877674961462616,
+        "entropy": 2.7356258630752563,
+        "advantage_mean": -0.12728345394134521,
+        "advantage_std": 0.3794519305229187,
+        "gradient_norm": 9.155929565429688,
+        "approx_kl": 0.010393273792622093,
+        "clip_fraction": 0.1406653406098485,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.6257596015930176,
+        "optimizer_steps": 30,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 58,
+          "max_events": 14,
+          "max_waves": 6,
+          "max_elapsed_ticks": 14896,
+          "max_leading_decisions": 14,
+          "examples": [
+            {
+              "core_decisions": 92,
+              "gradient_decisions": 92,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 3,
+              "elapsed_ticks": 7184
+            },
+            {
+              "core_decisions": 65,
+              "gradient_decisions": 65,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7259
+            },
+            {
+              "core_decisions": 125,
+              "gradient_decisions": 125,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 13062
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 12229
+            },
+            {
+              "core_decisions": 101,
+              "gradient_decisions": 101,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 11215
+            },
+            {
+              "core_decisions": 110,
+              "gradient_decisions": 110,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 4,
+              "elapsed_ticks": 8996
+            },
+            {
+              "core_decisions": 82,
+              "gradient_decisions": 82,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 8551
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 4,
+              "elapsed_ticks": 14587
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 23.39046283999778,
+      "ppo_seconds": 93.53505527400193
+    },
+    {
+      "update": 6,
+      "counters": {
+        "episodes": 102,
+        "decisions": 11547,
+        "ticks": 1215541
+      },
+      "losses": {
+        "policy_loss": 0.15702139080635139,
+        "value_loss": 0.23435527512005397,
+        "entropy": 2.782012258257185,
+        "advantage_mean": -0.2112472504377365,
+        "advantage_std": 0.3998180031776428,
+        "gradient_norm": 4.3893280029296875,
+        "approx_kl": 0.009183167874863951,
+        "clip_fraction": 0.12555582894544517,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.9091606140136719,
+        "optimizer_steps": 28,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 56,
+          "max_events": 14,
+          "max_waves": 6,
+          "max_elapsed_ticks": 14177,
+          "max_leading_decisions": 18,
+          "examples": [
+            {
+              "core_decisions": 116,
+              "gradient_decisions": 116,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 12798
+            },
+            {
+              "core_decisions": 54,
+              "gradient_decisions": 54,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6377
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 5,
+              "elapsed_ticks": 12814
+            },
+            {
+              "core_decisions": 72,
+              "gradient_decisions": 72,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6978
+            },
+            {
+              "core_decisions": 113,
+              "gradient_decisions": 113,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12698
+            },
+            {
+              "core_decisions": 64,
+              "gradient_decisions": 64,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7286
+            },
+            {
+              "core_decisions": 110,
+              "gradient_decisions": 110,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12730
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 5,
+              "elapsed_ticks": 12977
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 24.93730161900021,
+      "ppo_seconds": 93.8033069430021
+    },
+    {
+      "update": 7,
+      "counters": {
+        "episodes": 122,
+        "decisions": 13948,
+        "ticks": 1448204
+      },
+      "losses": {
+        "policy_loss": -0.13619617585624968,
+        "value_loss": 0.11049314066102463,
+        "entropy": 2.76074823311397,
+        "advantage_mean": -0.10190188139677048,
+        "advantage_std": 0.386519193649292,
+        "gradient_norm": 1.842721700668335,
+        "approx_kl": 0.010498386816055114,
+        "clip_fraction": 0.15092837564381106,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.6389899253845215,
+        "optimizer_steps": 28,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 56,
+          "max_events": 14,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15387,
+          "max_leading_decisions": 18,
+          "examples": [
+            {
+              "core_decisions": 82,
+              "gradient_decisions": 82,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 4,
+              "elapsed_ticks": 7514
+            },
+            {
+              "core_decisions": 80,
+              "gradient_decisions": 80,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7413
+            },
+            {
+              "core_decisions": 86,
+              "gradient_decisions": 86,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 8674
+            },
+            {
+              "core_decisions": 112,
+              "gradient_decisions": 112,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12820
+            },
+            {
+              "core_decisions": 79,
+              "gradient_decisions": 79,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6897
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 9,
+              "waves": 6,
+              "elapsed_ticks": 12977
+            },
+            {
+              "core_decisions": 108,
+              "gradient_decisions": 108,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 4,
+              "elapsed_ticks": 7871
+            },
+            {
+              "core_decisions": 86,
+              "gradient_decisions": 86,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7798
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 22.624508069999138,
+      "ppo_seconds": 92.83104752400322
+    },
+    {
+      "update": 8,
+      "counters": {
+        "episodes": 142,
+        "decisions": 15981,
+        "ticks": 1653557
+      },
+      "losses": {
+        "policy_loss": -0.020929334840426844,
+        "value_loss": 0.0605545435876896,
+        "entropy": 2.9498867988586426,
+        "advantage_mean": -0.22713768482208252,
+        "advantage_std": 0.2798653244972229,
+        "gradient_norm": 0.894943118095398,
+        "approx_kl": 0.011321146705692323,
+        "clip_fraction": 0.17603254038840532,
+        "first_minibatch_log_prob_max_error": 7.152557373046875e-07,
+        "max_log_prob_change": 0.6233420372009277,
+        "optimizer_steps": 24,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 48,
+          "max_events": 14,
+          "max_waves": 6,
+          "max_elapsed_ticks": 14665,
+          "max_leading_decisions": 6,
+          "examples": [
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 5,
+              "elapsed_ticks": 12573
+            },
+            {
+              "core_decisions": 80,
+              "gradient_decisions": 80,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 8400
+            },
+            {
+              "core_decisions": 97,
+              "gradient_decisions": 97,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 4,
+              "elapsed_ticks": 8569
+            },
+            {
+              "core_decisions": 68,
+              "gradient_decisions": 68,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7019
+            },
+            {
+              "core_decisions": 123,
+              "gradient_decisions": 123,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 12886
+            },
+            {
+              "core_decisions": 78,
+              "gradient_decisions": 78,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 7991
+            },
+            {
+              "core_decisions": 114,
+              "gradient_decisions": 114,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 11671
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 14665
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 20.39240032699672,
+      "ppo_seconds": 78.6837139929994
+    },
+    {
+      "update": 9,
+      "counters": {
+        "episodes": 162,
+        "decisions": 17890,
+        "ticks": 1866153
+      },
+      "losses": {
+        "policy_loss": -0.1888456833190643,
+        "value_loss": 0.020261086344432373,
+        "entropy": 2.937153724523691,
+        "advantage_mean": -0.09560615569353104,
+        "advantage_std": 0.1409555971622467,
+        "gradient_norm": 3.1682658195495605,
+        "approx_kl": 0.0117596529419713,
+        "clip_fraction": 0.17944754087007964,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.7542848587036133,
+        "optimizer_steps": 26,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 50,
+          "max_events": 15,
+          "max_waves": 6,
+          "max_elapsed_ticks": 16972,
+          "max_leading_decisions": 6,
+          "examples": [
+            {
+              "core_decisions": 68,
+              "gradient_decisions": 68,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 7734
+            },
+            {
+              "core_decisions": 113,
+              "gradient_decisions": 113,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 4,
+              "elapsed_ticks": 12485
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 15346
+            },
+            {
+              "core_decisions": 65,
+              "gradient_decisions": 65,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6439
+            },
+            {
+              "core_decisions": 67,
+              "gradient_decisions": 67,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7801
+            },
+            {
+              "core_decisions": 64,
+              "gradient_decisions": 64,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6435
+            },
+            {
+              "core_decisions": 80,
+              "gradient_decisions": 80,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 8902
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 16257
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 19.425273381002626,
+      "ppo_seconds": 69.9789022469995
+    },
+    {
+      "update": 10,
+      "counters": {
+        "episodes": 182,
+        "decisions": 19795,
+        "ticks": 2090955
+      },
+      "losses": {
+        "policy_loss": -0.09687460782543685,
+        "value_loss": 0.016339392396800507,
+        "entropy": 3.1200893200360813,
+        "advantage_mean": -0.1406612992286682,
+        "advantage_std": 0.11784645169973373,
+        "gradient_norm": 13.327560424804688,
+        "approx_kl": 0.010567835028408669,
+        "clip_fraction": 0.141891622915864,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.727668285369873,
+        "optimizer_steps": 26,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 50,
+          "max_events": 14,
+          "max_waves": 6,
+          "max_elapsed_ticks": 16096,
+          "max_leading_decisions": 10,
+          "examples": [
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 14465
+            },
+            {
+              "core_decisions": 78,
+              "gradient_decisions": 78,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 8532
+            },
+            {
+              "core_decisions": 109,
+              "gradient_decisions": 109,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 11176
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 15838
+            },
+            {
+              "core_decisions": 109,
+              "gradient_decisions": 109,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12422
+            },
+            {
+              "core_decisions": 91,
+              "gradient_decisions": 91,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 10924
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 16096
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 4,
+              "elapsed_ticks": 8322
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 20.238847094999073,
+      "ppo_seconds": 72.96853826200095
+    },
+    {
+      "update": 11,
+      "counters": {
+        "episodes": 202,
+        "decisions": 21802,
+        "ticks": 2326964
+      },
+      "losses": {
+        "policy_loss": 0.045174081111326814,
+        "value_loss": 0.01953626627800986,
+        "entropy": 3.037845024040767,
+        "advantage_mean": -0.1130845844745636,
+        "advantage_std": 0.10743600130081177,
+        "gradient_norm": 1.4498158693313599,
+        "approx_kl": 0.011502323076586305,
+        "clip_fraction": 0.18806918690513288,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.7876639366149902,
+        "optimizer_steps": 28,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 54,
+          "max_events": 16,
+          "max_waves": 6,
+          "max_elapsed_ticks": 16628,
+          "max_leading_decisions": 16,
+          "examples": [
+            {
+              "core_decisions": 108,
+              "gradient_decisions": 108,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 13205
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 6,
+              "elapsed_ticks": 16569
+            },
+            {
+              "core_decisions": 78,
+              "gradient_decisions": 78,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 8231
+            },
+            {
+              "core_decisions": 54,
+              "gradient_decisions": 54,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6700
+            },
+            {
+              "core_decisions": 102,
+              "gradient_decisions": 102,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 2,
+              "elapsed_ticks": 9201
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 6,
+              "elapsed_ticks": 16628
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 6,
+              "elapsed_ticks": 16514
+            },
+            {
+              "core_decisions": 82,
+              "gradient_decisions": 82,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 4,
+              "elapsed_ticks": 11047
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 20.315949829997408,
+      "ppo_seconds": 79.97060538699952
+    },
+    {
+      "update": 12,
+      "counters": {
+        "episodes": 222,
+        "decisions": 23874,
+        "ticks": 2579002
+      },
+      "losses": {
+        "policy_loss": 0.2829980802937196,
+        "value_loss": 0.16803688572970435,
+        "entropy": 3.1137239933013916,
+        "advantage_mean": -0.1058778315782547,
+        "advantage_std": 0.20666934549808502,
+        "gradient_norm": 3.389777183532715,
+        "approx_kl": 0.009766560135176405,
+        "clip_fraction": 0.1562706113148194,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.5513367652893066,
+        "optimizer_steps": 26,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 50,
+          "max_events": 19,
+          "max_waves": 6,
+          "max_elapsed_ticks": 17604,
+          "max_leading_decisions": 6,
+          "examples": [
+            {
+              "core_decisions": 102,
+              "gradient_decisions": 102,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12716
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 6,
+              "elapsed_ticks": 17604
+            },
+            {
+              "core_decisions": 38,
+              "gradient_decisions": 38,
+              "leading_decisions": 0,
+              "events": 3,
+              "waves": 2,
+              "elapsed_ticks": 5711
+            },
+            {
+              "core_decisions": 114,
+              "gradient_decisions": 114,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 12525
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 16,
+              "waves": 6,
+              "elapsed_ticks": 15658
+            },
+            {
+              "core_decisions": 97,
+              "gradient_decisions": 97,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 8741
+            },
+            {
+              "core_decisions": 115,
+              "gradient_decisions": 115,
+              "leading_decisions": 0,
+              "events": 17,
+              "waves": 6,
+              "elapsed_ticks": 14682
+            },
+            {
+              "core_decisions": 88,
+              "gradient_decisions": 88,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 11009
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 21.041853419999825,
+      "ppo_seconds": 83.59508725400156
+    },
+    {
+      "update": 13,
+      "counters": {
+        "episodes": 233,
+        "decisions": 24839,
+        "ticks": 2692926
+      },
+      "losses": {
+        "policy_loss": 0.02134546684101224,
+        "value_loss": 0.0225663606931145,
+        "entropy": 3.320220649242401,
+        "advantage_mean": -0.009094449691474438,
+        "advantage_std": 0.12612943351268768,
+        "gradient_norm": 0.78059321641922,
+        "approx_kl": 0.011461419953169147,
+        "clip_fraction": 0.1668229588928322,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.7301359176635742,
+        "optimizer_steps": 12,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 22,
+          "max_events": 13,
+          "max_waves": 6,
+          "max_elapsed_ticks": 13338,
+          "max_leading_decisions": 0,
+          "examples": [
+            {
+              "core_decisions": 102,
+              "gradient_decisions": 102,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 5,
+              "elapsed_ticks": 10901
+            },
+            {
+              "core_decisions": 51,
+              "gradient_decisions": 51,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6436
+            },
+            {
+              "core_decisions": 102,
+              "gradient_decisions": 102,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 6,
+              "elapsed_ticks": 13338
+            },
+            {
+              "core_decisions": 85,
+              "gradient_decisions": 85,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 11603
+            },
+            {
+              "core_decisions": 60,
+              "gradient_decisions": 60,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 8296
+            },
+            {
+              "core_decisions": 88,
+              "gradient_decisions": 88,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 8980
+            },
+            {
+              "core_decisions": 103,
+              "gradient_decisions": 103,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 5,
+              "elapsed_ticks": 12582
+            },
+            {
+              "core_decisions": 92,
+              "gradient_decisions": 92,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 11343
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 12.229048946999683,
+      "ppo_seconds": 41.51853428200047
+    },
+    {
+      "update": 14,
+      "counters": {
+        "episodes": 235,
+        "decisions": 25000,
+        "ticks": 2713719
+      },
+      "losses": {
+        "policy_loss": -0.0051417944964420315,
+        "value_loss": 0.007610793923959136,
+        "entropy": 3.2459336519241333,
+        "advantage_mean": -0.04920871928334236,
+        "advantage_std": 0.0544000007212162,
+        "gradient_norm": 1.1644885540008545,
+        "approx_kl": 0.00025158398784697056,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.11208486557006836,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 4,
+          "max_events": 10,
+          "max_waves": 4,
+          "max_elapsed_ticks": 10438,
+          "max_leading_decisions": 0,
+          "examples": [
+            {
+              "core_decisions": 81,
+              "gradient_decisions": 81,
+              "leading_decisions": 0,
+              "events": 9,
+              "waves": 4,
+              "elapsed_ticks": 10438
+            },
+            {
+              "core_decisions": 80,
+              "gradient_decisions": 80,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 10355
+            },
+            {
+              "core_decisions": 81,
+              "gradient_decisions": 81,
+              "leading_decisions": 0,
+              "events": 9,
+              "waves": 4,
+              "elapsed_ticks": 10438
+            },
+            {
+              "core_decisions": 80,
+              "gradient_decisions": 80,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 10355
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 5.681871912001952,
+      "ppo_seconds": 5.9527994969976135
+    },
+    {
+      "update": 15,
+      "counters": {
+        "episodes": 255,
+        "decisions": 26947,
+        "ticks": 2953864
+      },
+      "losses": {
+        "policy_loss": -0.08960076729999855,
+        "value_loss": 0.015759964537044816,
+        "entropy": 3.2539467378096147,
+        "advantage_mean": -0.06056828424334526,
+        "advantage_std": 0.11614640057086945,
+        "gradient_norm": 3.2598533630371094,
+        "approx_kl": 0.012303998704407026,
+        "clip_fraction": 0.18443556112999265,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.976590633392334,
+        "optimizer_steps": 22,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 44,
+          "max_events": 18,
+          "max_waves": 6,
+          "max_elapsed_ticks": 17924,
+          "max_leading_decisions": 8,
+          "examples": [
+            {
+              "core_decisions": 109,
+              "gradient_decisions": 109,
+              "leading_decisions": 0,
+              "events": 17,
+              "waves": 6,
+              "elapsed_ticks": 14768
+            },
+            {
+              "core_decisions": 42,
+              "gradient_decisions": 42,
+              "leading_decisions": 0,
+              "events": 2,
+              "waves": 2,
+              "elapsed_ticks": 4877
+            },
+            {
+              "core_decisions": 126,
+              "gradient_decisions": 126,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 15990
+            },
+            {
+              "core_decisions": 87,
+              "gradient_decisions": 87,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 10904
+            },
+            {
+              "core_decisions": 119,
+              "gradient_decisions": 119,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 2,
+              "elapsed_ticks": 12807
+            },
+            {
+              "core_decisions": 48,
+              "gradient_decisions": 48,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6785
+            },
+            {
+              "core_decisions": 111,
+              "gradient_decisions": 111,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 5,
+              "elapsed_ticks": 11968
+            },
+            {
+              "core_decisions": 39,
+              "gradient_decisions": 39,
+              "leading_decisions": 0,
+              "events": 3,
+              "waves": 2,
+              "elapsed_ticks": 4848
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 20.88718817500194,
+      "ppo_seconds": 84.5077649599989
+    },
+    {
+      "update": 16,
+      "counters": {
+        "episodes": 275,
+        "decisions": 28655,
+        "ticks": 3161804
+      },
+      "losses": {
+        "policy_loss": -0.13904579835278646,
+        "value_loss": 0.013736545291197087,
+        "entropy": 3.2727926458631242,
+        "advantage_mean": -0.07282563298940659,
+        "advantage_std": 0.10669273883104324,
+        "gradient_norm": 0.9890432357788086,
+        "approx_kl": 0.006807981604166949,
+        "clip_fraction": 0.07767155139396588,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.8918070793151855,
+        "optimizer_steps": 14,
+        "stopped_for_kl": true,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 27,
+          "max_events": 18,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15872,
+          "max_leading_decisions": 18,
+          "examples": [
+            {
+              "core_decisions": 46,
+              "gradient_decisions": 46,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6554
+            },
+            {
+              "core_decisions": 62,
+              "gradient_decisions": 62,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7678
+            },
+            {
+              "core_decisions": 95,
+              "gradient_decisions": 95,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 4,
+              "elapsed_ticks": 12252
+            },
+            {
+              "core_decisions": 110,
+              "gradient_decisions": 110,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 4,
+              "elapsed_ticks": 15048
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 18,
+              "waves": 4,
+              "elapsed_ticks": 14823
+            },
+            {
+              "core_decisions": 81,
+              "gradient_decisions": 81,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7398
+            },
+            {
+              "core_decisions": 81,
+              "gradient_decisions": 81,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 2,
+              "elapsed_ticks": 8149
+            },
+            {
+              "core_decisions": 89,
+              "gradient_decisions": 89,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 2,
+              "elapsed_ticks": 10653
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 18.41218308200041,
+      "ppo_seconds": 41.13217081000039
+    },
+    {
+      "update": 17,
+      "counters": {
+        "episodes": 295,
+        "decisions": 30575,
+        "ticks": 3398917
+      },
+      "losses": {
+        "policy_loss": 0.017679934017360212,
+        "value_loss": 0.010219550970941783,
+        "entropy": 3.2115052938461304,
+        "advantage_mean": -0.027846455574035645,
+        "advantage_std": 0.08077844977378845,
+        "gradient_norm": 1.7334116697311401,
+        "approx_kl": 0.012185176178304986,
+        "clip_fraction": 0.21353826146911492,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.5219941139221191,
+        "optimizer_steps": 10,
+        "stopped_for_kl": true,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 20,
+          "max_events": 16,
+          "max_waves": 6,
+          "max_elapsed_ticks": 16724,
+          "max_leading_decisions": 0,
+          "examples": [
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 6,
+              "elapsed_ticks": 15217
+            },
+            {
+              "core_decisions": 91,
+              "gradient_decisions": 91,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12273
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 16724
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 6,
+              "elapsed_ticks": 16265
+            },
+            {
+              "core_decisions": 105,
+              "gradient_decisions": 105,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 11915
+            },
+            {
+              "core_decisions": 105,
+              "gradient_decisions": 105,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 12628
+            },
+            {
+              "core_decisions": 125,
+              "gradient_decisions": 125,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 6,
+              "elapsed_ticks": 16675
+            },
+            {
+              "core_decisions": 44,
+              "gradient_decisions": 44,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 6524
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 20.1227557409984,
+      "ppo_seconds": 40.34165366700108
+    },
+    {
+      "update": 18,
+      "counters": {
+        "episodes": 315,
+        "decisions": 32683,
+        "ticks": 3637858
+      },
+      "losses": {
+        "policy_loss": -0.15945324887378284,
+        "value_loss": 0.007772508757905318,
+        "entropy": 3.152495604294997,
+        "advantage_mean": -0.030041689053177834,
+        "advantage_std": 0.08489351719617844,
+        "gradient_norm": 2.452695369720459,
+        "approx_kl": 0.007017285672191065,
+        "clip_fraction": 0.10720226727426052,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.6497678756713867,
+        "optimizer_steps": 26,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 52,
+          "max_events": 14,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15085,
+          "max_leading_decisions": 23,
+          "examples": [
+            {
+              "core_decisions": 29,
+              "gradient_decisions": 29,
+              "leading_decisions": 0,
+              "events": 2,
+              "waves": 2,
+              "elapsed_ticks": 3438
+            },
+            {
+              "core_decisions": 85,
+              "gradient_decisions": 85,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 4,
+              "elapsed_ticks": 9046
+            },
+            {
+              "core_decisions": 77,
+              "gradient_decisions": 77,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 3,
+              "elapsed_ticks": 7432
+            },
+            {
+              "core_decisions": 124,
+              "gradient_decisions": 124,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 15085
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 6,
+              "elapsed_ticks": 12773
+            },
+            {
+              "core_decisions": 111,
+              "gradient_decisions": 111,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12482
+            },
+            {
+              "core_decisions": 84,
+              "gradient_decisions": 84,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 10420
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 14925
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 21.457689546001347,
+      "ppo_seconds": 84.61528566100242
+    },
+    {
+      "update": 19,
+      "counters": {
+        "episodes": 335,
+        "decisions": 34583,
+        "ticks": 3849230
+      },
+      "losses": {
+        "policy_loss": 0.09554651096307983,
+        "value_loss": 0.29512130599080894,
+        "entropy": 3.2488339145978293,
+        "advantage_mean": -0.028998123481869698,
+        "advantage_std": 0.4584338068962097,
+        "gradient_norm": 11.685589790344238,
+        "approx_kl": 0.008322202535055112,
+        "clip_fraction": 0.12421852202775578,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5063352584838867,
+        "optimizer_steps": 24,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 48,
+          "max_events": 19,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15193,
+          "max_leading_decisions": 22,
+          "examples": [
+            {
+              "core_decisions": 68,
+              "gradient_decisions": 68,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7481
+            },
+            {
+              "core_decisions": 84,
+              "gradient_decisions": 84,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 8610
+            },
+            {
+              "core_decisions": 88,
+              "gradient_decisions": 88,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 4,
+              "elapsed_ticks": 9017
+            },
+            {
+              "core_decisions": 49,
+              "gradient_decisions": 49,
+              "leading_decisions": 0,
+              "events": 3,
+              "waves": 2,
+              "elapsed_ticks": 5810
+            },
+            {
+              "core_decisions": 76,
+              "gradient_decisions": 76,
+              "leading_decisions": 0,
+              "events": 7,
+              "waves": 2,
+              "elapsed_ticks": 8009
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 14758
+            },
+            {
+              "core_decisions": 118,
+              "gradient_decisions": 118,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 4,
+              "elapsed_ticks": 12701
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 6,
+              "elapsed_ticks": 15085
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 19.69024042700039,
+      "ppo_seconds": 80.08950031999848
+    },
+    {
+      "update": 20,
+      "counters": {
+        "episodes": 355,
+        "decisions": 37057,
+        "ticks": 4132162
+      },
+      "losses": {
+        "policy_loss": -0.17638150705345745,
+        "value_loss": 0.0106832230351223,
+        "entropy": 3.1111308377364586,
+        "advantage_mean": -0.07019887119531631,
+        "advantage_std": 0.06789064407348633,
+        "gradient_norm": 1.854905605316162,
+        "approx_kl": 0.011489206790671839,
+        "clip_fraction": 0.19745706357061862,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.682952880859375,
+        "optimizer_steps": 29,
+        "stopped_for_kl": true,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 57,
+          "max_events": 16,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15747,
+          "max_leading_decisions": 12,
+          "examples": [
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 6,
+              "elapsed_ticks": 13965
+            },
+            {
+              "core_decisions": 69,
+              "gradient_decisions": 69,
+              "leading_decisions": 0,
+              "events": 9,
+              "waves": 4,
+              "elapsed_ticks": 8097
+            },
+            {
+              "core_decisions": 107,
+              "gradient_decisions": 107,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 13211
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 13502
+            },
+            {
+              "core_decisions": 103,
+              "gradient_decisions": 103,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 6,
+              "elapsed_ticks": 14290
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 6,
+              "elapsed_ticks": 14421
+            },
+            {
+              "core_decisions": 127,
+              "gradient_decisions": 127,
+              "leading_decisions": 0,
+              "events": 16,
+              "waves": 6,
+              "elapsed_ticks": 15747
+            },
+            {
+              "core_decisions": 115,
+              "gradient_decisions": 115,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 12951
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 23.927690778997203,
+      "ppo_seconds": 103.7736425050025
+    },
+    {
+      "update": 21,
+      "counters": {
+        "episodes": 375,
+        "decisions": 39187,
+        "ticks": 4366492
+      },
+      "losses": {
+        "policy_loss": 0.05231854419868726,
+        "value_loss": 0.09393205300260049,
+        "entropy": 3.0653158517984243,
+        "advantage_mean": -0.10314686596393585,
+        "advantage_std": 0.21032336354255676,
+        "gradient_norm": 0.584750235080719,
+        "approx_kl": 0.009727033870429015,
+        "clip_fraction": 0.1251561315730214,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.7519936561584473,
+        "optimizer_steps": 26,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 52,
+          "max_events": 15,
+          "max_waves": 6,
+          "max_elapsed_ticks": 16385,
+          "max_leading_decisions": 7,
+          "examples": [
+            {
+              "core_decisions": 86,
+              "gradient_decisions": 86,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 4,
+              "elapsed_ticks": 7976
+            },
+            {
+              "core_decisions": 91,
+              "gradient_decisions": 91,
+              "leading_decisions": 0,
+              "events": 9,
+              "waves": 5,
+              "elapsed_ticks": 9589
+            },
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 13020
+            },
+            {
+              "core_decisions": 84,
+              "gradient_decisions": 84,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 4,
+              "elapsed_ticks": 7693
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 6,
+              "elapsed_ticks": 13661
+            },
+            {
+              "core_decisions": 73,
+              "gradient_decisions": 73,
+              "leading_decisions": 0,
+              "events": 10,
+              "waves": 4,
+              "elapsed_ticks": 7724
+            },
+            {
+              "core_decisions": 79,
+              "gradient_decisions": 79,
+              "leading_decisions": 0,
+              "events": 5,
+              "waves": 2,
+              "elapsed_ticks": 7439
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 5,
+              "elapsed_ticks": 12925
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 21.335038319000887,
+      "ppo_seconds": 89.4733498079986
+    },
+    {
+      "update": 22,
+      "counters": {
+        "episodes": 395,
+        "decisions": 41326,
+        "ticks": 4595669
+      },
+      "losses": {
+        "policy_loss": -0.08761810285684007,
+        "value_loss": 0.009246230335870327,
+        "entropy": 3.1250417782710147,
+        "advantage_mean": -0.07651431858539581,
+        "advantage_std": 0.0826735645532608,
+        "gradient_norm": 6.131709098815918,
+        "approx_kl": 0.00967794024696699,
+        "clip_fraction": 0.12488713237242056,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.8455080986022949,
+        "optimizer_steps": 26,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 50,
+          "max_events": 15,
+          "max_waves": 6,
+          "max_elapsed_ticks": 15715,
+          "max_leading_decisions": 18,
+          "examples": [
+            {
+              "core_decisions": 67,
+              "gradient_decisions": 67,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 8341
+            },
+            {
+              "core_decisions": 72,
+              "gradient_decisions": 72,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 8136
+            },
+            {
+              "core_decisions": 112,
+              "gradient_decisions": 112,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 6,
+              "elapsed_ticks": 12715
+            },
+            {
+              "core_decisions": 103,
+              "gradient_decisions": 103,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 2,
+              "elapsed_ticks": 8496
+            },
+            {
+              "core_decisions": 89,
+              "gradient_decisions": 89,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 8812
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 15,
+              "waves": 6,
+              "elapsed_ticks": 14754
+            },
+            {
+              "core_decisions": 111,
+              "gradient_decisions": 111,
+              "leading_decisions": 0,
+              "events": 8,
+              "waves": 4,
+              "elapsed_ticks": 9082
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 13,
+              "waves": 6,
+              "elapsed_ticks": 14474
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 21.420423265000863,
+      "ppo_seconds": 85.56961625199983
+    },
+    {
+      "update": 23,
+      "counters": {
+        "episodes": 415,
+        "decisions": 43613,
+        "ticks": 4862148
+      },
+      "losses": {
+        "policy_loss": 0.2575253929410662,
+        "value_loss": 0.16821486974367872,
+        "entropy": 3.102385776383536,
+        "advantage_mean": -0.12297703325748444,
+        "advantage_std": 0.2494511902332306,
+        "gradient_norm": 3.772695541381836,
+        "approx_kl": 0.006730247737972864,
+        "clip_fraction": 0.08512382046319544,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.4586191177368164,
+        "optimizer_steps": 28,
+        "stopped_for_kl": false,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 56,
+          "max_events": 15,
+          "max_waves": 6,
+          "max_elapsed_ticks": 16352,
+          "max_leading_decisions": 18,
+          "examples": [
+            {
+              "core_decisions": 100,
+              "gradient_decisions": 100,
+              "leading_decisions": 0,
+              "events": 12,
+              "waves": 4,
+              "elapsed_ticks": 10741
+            },
+            {
+              "core_decisions": 66,
+              "gradient_decisions": 66,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7699
+            },
+            {
+              "core_decisions": 108,
+              "gradient_decisions": 108,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 4,
+              "elapsed_ticks": 12809
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 15844
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 14,
+              "waves": 6,
+              "elapsed_ticks": 13873
+            },
+            {
+              "core_decisions": 77,
+              "gradient_decisions": 77,
+              "leading_decisions": 0,
+              "events": 4,
+              "waves": 2,
+              "elapsed_ticks": 7469
+            },
+            {
+              "core_decisions": 88,
+              "gradient_decisions": 88,
+              "leading_decisions": 0,
+              "events": 6,
+              "waves": 2,
+              "elapsed_ticks": 8805
+            },
+            {
+              "core_decisions": 128,
+              "gradient_decisions": 128,
+              "leading_decisions": 0,
+              "events": 11,
+              "waves": 6,
+              "elapsed_ticks": 15196
+            }
+          ]
+        }
+      },
+      "rollout_seconds": 22.975291280999954,
+      "ppo_seconds": 94.98535354200067
+    }
+  ],
+  "evaluations": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "seconds": 105.18082597300236,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0,
+          "per_task_pass_rates": {
+            "heldout_day_1": 1.0,
+            "heldout_day_2": 1.0,
+            "heldout_day_3": 1.0,
+            "heldout_day_4": 1.0,
+            "heldout_night_1": 1.0,
+            "heldout_night_2": 1.0,
+            "heldout_night_3": 0.0,
+            "heldout_night_4": 1.0,
+            "heldout_pool_1": 1.0,
+            "heldout_pool_2": 1.0,
+            "heldout_pool_3": 0.0,
+            "heldout_pool_4": 1.0,
+            "heldout_fog_1": 1.0,
+            "heldout_fog_2": 1.0,
+            "heldout_fog_3": 0.5,
+            "heldout_fog_4": 1.0,
+            "heldout_roof_1": 0.0,
+            "heldout_roof_2": 0.0,
+            "heldout_roof_3": 0.0,
+            "heldout_roof_4": 0.0
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0,
+          "per_task_pass_rates": {
+            "heldout_day_1": 1.0,
+            "heldout_day_2": 1.0,
+            "heldout_day_3": 1.0,
+            "heldout_day_4": 1.0,
+            "heldout_night_1": 1.0,
+            "heldout_night_2": 1.0,
+            "heldout_night_3": 0.0,
+            "heldout_night_4": 1.0,
+            "heldout_pool_1": 1.0,
+            "heldout_pool_2": 1.0,
+            "heldout_pool_3": 0.5,
+            "heldout_pool_4": 1.0,
+            "heldout_fog_1": 1.0,
+            "heldout_fog_2": 1.0,
+            "heldout_fog_3": 0.0,
+            "heldout_fog_4": 1.0,
+            "heldout_roof_1": 0.0,
+            "heldout_roof_2": 0.0,
+            "heldout_roof_3": 0.0,
+            "heldout_roof_4": 0.0
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 22,
+        "decisions": 2000,
+        "ticks": 211875
+      },
+      "seconds": 98.96524702799798,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0,
+          "per_task_pass_rates": {
+            "heldout_day_1": 1.0,
+            "heldout_day_2": 1.0,
+            "heldout_day_3": 1.0,
+            "heldout_day_4": 1.0,
+            "heldout_night_1": 1.0,
+            "heldout_night_2": 1.0,
+            "heldout_night_3": 0.0,
+            "heldout_night_4": 1.0,
+            "heldout_pool_1": 1.0,
+            "heldout_pool_2": 1.0,
+            "heldout_pool_3": 0.0,
+            "heldout_pool_4": 1.0,
+            "heldout_fog_1": 1.0,
+            "heldout_fog_2": 1.0,
+            "heldout_fog_3": 0.5,
+            "heldout_fog_4": 1.0,
+            "heldout_roof_1": 0.0,
+            "heldout_roof_2": 0.0,
+            "heldout_roof_3": 0.0,
+            "heldout_roof_4": 0.0
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.65,
+          "wilson_95": [
+            0.495059,
+            0.778655
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0,
+          "per_task_pass_rates": {
+            "heldout_day_1": 1.0,
+            "heldout_day_2": 1.0,
+            "heldout_day_3": 0.5,
+            "heldout_day_4": 1.0,
+            "heldout_night_1": 1.0,
+            "heldout_night_2": 1.0,
+            "heldout_night_3": 0.0,
+            "heldout_night_4": 1.0,
+            "heldout_pool_1": 1.0,
+            "heldout_pool_2": 1.0,
+            "heldout_pool_3": 0.5,
+            "heldout_pool_4": 1.0,
+            "heldout_fog_1": 1.0,
+            "heldout_fog_2": 1.0,
+            "heldout_fog_3": 0.0,
+            "heldout_fog_4": 1.0,
+            "heldout_roof_1": 0.0,
+            "heldout_roof_2": 0.0,
+            "heldout_roof_3": 0.0,
+            "heldout_roof_4": 0.0
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 235,
+        "decisions": 25000,
+        "ticks": 2713719
+      },
+      "seconds": 68.49660506500004,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0,
+          "per_task_pass_rates": {
+            "heldout_day_1": 1.0,
+            "heldout_day_2": 1.0,
+            "heldout_day_3": 1.0,
+            "heldout_day_4": 1.0,
+            "heldout_night_1": 1.0,
+            "heldout_night_2": 1.0,
+            "heldout_night_3": 0.0,
+            "heldout_night_4": 1.0,
+            "heldout_pool_1": 1.0,
+            "heldout_pool_2": 1.0,
+            "heldout_pool_3": 0.0,
+            "heldout_pool_4": 1.0,
+            "heldout_fog_1": 1.0,
+            "heldout_fog_2": 1.0,
+            "heldout_fog_3": 0.5,
+            "heldout_fog_4": 1.0,
+            "heldout_roof_1": 0.0,
+            "heldout_roof_2": 0.0,
+            "heldout_roof_3": 0.0,
+            "heldout_roof_4": 0.0
+          }
+        },
+        "sampled": {
+          "pass_rate": 0.7,
+          "wilson_95": [
+            0.5457,
+            0.819252
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0,
+          "per_task_pass_rates": {
+            "heldout_day_1": 1.0,
+            "heldout_day_2": 1.0,
+            "heldout_day_3": 0.5,
+            "heldout_day_4": 1.0,
+            "heldout_night_1": 1.0,
+            "heldout_night_2": 1.0,
+            "heldout_night_3": 0.0,
+            "heldout_night_4": 1.0,
+            "heldout_pool_1": 1.0,
+            "heldout_pool_2": 1.0,
+            "heldout_pool_3": 1.0,
+            "heldout_pool_4": 1.0,
+            "heldout_fog_1": 1.0,
+            "heldout_fog_2": 1.0,
+            "heldout_fog_3": 0.5,
+            "heldout_fog_4": 1.0,
+            "heldout_roof_1": 0.0,
+            "heldout_roof_2": 0.0,
+            "heldout_roof_3": 0.0,
+            "heldout_roof_4": 0.0
+          }
+        }
+      }
+    }
+  ],
+  "interpretation": "Greedy remained67.5% at0/2000/25000; sampled67.5%/65%/70%. No clear sustained gain, no proof dual beats singleGRU. Gradient coverage max_waves means distinct public wave indices and may include initial0, not count of completed waves.",
+  "anomalies": "NoOOM/worker death observed in completed23updates; temporary registry-write INFO lines preserved in logs."
+}

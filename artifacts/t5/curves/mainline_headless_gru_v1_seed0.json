@@ -6840,5 +6840,3431 @@
     },
     "raw_seed_results_path": "evaluations/update_000002.json.gz",
     "seconds": 98.96524702799798
+  },
+  {
+    "counters": {
+      "episodes": 235,
+      "decisions": 25000,
+      "ticks": 2713719
+    },
+    "updates": 14,
+    "summary": {
+      "greedy": {
+        "overall": {
+          "sample_count": 40,
+          "pass_rate": 0.675,
+          "wilson_95": [
+            0.520177,
+            0.799155
+          ],
+          "mean_terminal_wave": 3.35,
+          "mean_survival_ticks": 12085.175,
+          "peak_offense": 0,
+          "terminal_wave_histogram": {
+            "2": 2,
+            "3": 30,
+            "5": 8
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "10000-14999": 22,
+            "15000-19999": 4,
+            "20000-24999": 1,
+            "5000-9999": 13
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 40,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 40,
+              "mean_sun": 102.5,
+              "mean_sun_produced": 52.5,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 6000,
+              "sample_count": 38,
+              "mean_sun": 163.816,
+              "mean_sun_produced": 113.816,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 9000,
+              "sample_count": 35,
+              "mean_sun": 208.571,
+              "mean_sun_produced": 158.571,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 12000,
+              "sample_count": 22,
+              "mean_sun": 235.227,
+              "mean_sun_produced": 185.227,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 15000,
+              "sample_count": 5,
+              "mean_sun": 270,
+              "mean_sun_produced": 220,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 18000,
+              "sample_count": 2,
+              "mean_sun": 362.5,
+              "mean_sun_produced": 312.5,
+              "mean_sun_spent": 0
+            }
+          ],
+          "wait_summary": {
+            "wait_actions": 4024,
+            "condition_counts": {
+              "timeout": 4024
+            },
+            "primary_reason_counts": {
+              "max_ticks": 3704,
+              "zombie_entered_left_zone": 164,
+              "defense_lost": 116,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 3707,
+              "zombie_entered_left_zone": 164,
+              "defense_lost": 132,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 508350,
+            "actual_ticks": 483407,
+            "zero_actual_tick_waits": 0,
+            "logic_steps": 483420,
+            "stalled_clock_steps": 13,
+            "initial_condition_satisfied": 0
+          }
+        },
+        "per_task": {
+          "heldout_day_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 12890.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 162.5,
+                "mean_sun_produced": 112.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 287.5,
+                "mean_sun_produced": 237.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 400,
+                "mean_sun_produced": 350,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 500,
+                "mean_sun_produced": 450,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 177,
+              "condition_counts": {
+                "timeout": 177
+              },
+              "primary_reason_counts": {
+                "max_ticks": 165,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 4,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 165,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 27000,
+              "actual_ticks": 25781,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 25781,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_day_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 13420,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 162.5,
+                "mean_sun_produced": 112.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 287.5,
+                "mean_sun_produced": 237.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 400,
+                "mean_sun_produced": 350,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 500,
+                "mean_sun_produced": 450,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 183,
+              "condition_counts": {
+                "timeout": 183
+              },
+              "primary_reason_counts": {
+                "max_ticks": 163,
+                "zombie_entered_left_zone": 10,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 163,
+                "zombie_entered_left_zone": 10,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 28200,
+              "actual_ticks": 26840,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 26840,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_day_3": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 13862,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 162.5,
+                "mean_sun_produced": 112.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 300,
+                "mean_sun_produced": 250,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 412.5,
+                "mean_sun_produced": 362.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 512.5,
+                "mean_sun_produced": 462.5,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 193,
+              "condition_counts": {
+                "timeout": 193
+              },
+              "primary_reason_counts": {
+                "max_ticks": 170,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 170,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 29400,
+              "actual_ticks": 27724,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 27724,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_day_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 12586,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 175,
+              "condition_counts": {
+                "timeout": 175
+              },
+              "primary_reason_counts": {
+                "max_ticks": 155,
+                "zombie_entered_left_zone": 10,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 155,
+                "zombie_entered_left_zone": 10,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 27000,
+              "actual_ticks": 25172,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 25172,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 12620.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 174,
+              "condition_counts": {
+                "timeout": 174
+              },
+              "primary_reason_counts": {
+                "max_ticks": 162,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 4,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 162,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 26400,
+              "actual_ticks": 25241,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 25241,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 13382,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 185,
+              "condition_counts": {
+                "timeout": 185
+              },
+              "primary_reason_counts": {
+                "max_ticks": 164,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 165,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 28500,
+              "actual_ticks": 26764,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 26764,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_3": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 18825.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 1,
+              "20000-24999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 15000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 18000,
+                "sample_count": 1,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 352,
+              "condition_counts": {
+                "timeout": 352
+              },
+              "primary_reason_counts": {
+                "max_ticks": 326,
+                "zombie_entered_left_zone": 14,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 326,
+                "zombie_entered_left_zone": 14,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 39480,
+              "actual_ticks": 37651,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 37653,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 11402.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 158,
+              "condition_counts": {
+                "timeout": 158
+              },
+              "primary_reason_counts": {
+                "max_ticks": 138,
+                "zombie_entered_left_zone": 10,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 138,
+                "zombie_entered_left_zone": 10,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 24300,
+              "actual_ticks": 22805,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 22805,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 14100.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 162.5,
+                "mean_sun_produced": 112.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 287.5,
+                "mean_sun_produced": 237.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 400,
+                "mean_sun_produced": 350,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 500,
+                "mean_sun_produced": 450,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 191,
+              "condition_counts": {
+                "timeout": 191
+              },
+              "primary_reason_counts": {
+                "max_ticks": 179,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 4,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 179,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 28950,
+              "actual_ticks": 28201,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 28201,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 10107.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "5000-9999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 150,
+                "mean_sun_produced": 100,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 275,
+                "mean_sun_produced": 225,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 387.5,
+                "mean_sun_produced": 337.5,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 144,
+              "condition_counts": {
+                "timeout": 144
+              },
+              "primary_reason_counts": {
+                "max_ticks": 126,
+                "zombie_entered_left_zone": 8,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 126,
+                "zombie_entered_left_zone": 8,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 22200,
+              "actual_ticks": 20215,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 20215,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_3": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 18359,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 162.5,
+                "mean_sun_produced": 112.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 287.5,
+                "mean_sun_produced": 237.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 400,
+                "mean_sun_produced": 350,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 500,
+                "mean_sun_produced": 450,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 15000,
+                "sample_count": 2,
+                "mean_sun": 600,
+                "mean_sun_produced": 550,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 18000,
+                "sample_count": 1,
+                "mean_sun": 675,
+                "mean_sun_produced": 625,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 250,
+              "condition_counts": {
+                "timeout": 250
+              },
+              "primary_reason_counts": {
+                "max_ticks": 228,
+                "zombie_entered_left_zone": 12,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 229,
+                "zombie_entered_left_zone": 12,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 38400,
+              "actual_ticks": 36718,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 36720,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 8715,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 121,
+              "condition_counts": {
+                "timeout": 121
+              },
+              "primary_reason_counts": {
+                "max_ticks": 103,
+                "zombie_entered_left_zone": 8,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 103,
+                "zombie_entered_left_zone": 8,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 19200,
+              "actual_ticks": 17430,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 17430,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 12520.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 173,
+              "condition_counts": {
+                "timeout": 173
+              },
+              "primary_reason_counts": {
+                "max_ticks": 161,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 4,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 161,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 26100,
+              "actual_ticks": 25041,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 25041,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 11447.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 159,
+              "condition_counts": {
+                "timeout": 159
+              },
+              "primary_reason_counts": {
+                "max_ticks": 140,
+                "zombie_entered_left_zone": 9,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 140,
+                "zombie_entered_left_zone": 9,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 24300,
+              "actual_ticks": 22895,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 22895,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_3": {
+            "sample_count": 2,
+            "pass_rate": 0.5,
+            "wilson_95": [
+              0.094531,
+              0.905469
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 15323.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "15000-19999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 15000,
+                "sample_count": 1,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 207,
+              "condition_counts": {
+                "timeout": 207
+              },
+              "primary_reason_counts": {
+                "max_ticks": 185,
+                "zombie_entered_left_zone": 12,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 186,
+                "zombie_entered_left_zone": 12,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 32400,
+              "actual_ticks": 30647,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 30648,
+              "stalled_clock_steps": 1,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 9581.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 133,
+              "condition_counts": {
+                "timeout": 133
+              },
+              "primary_reason_counts": {
+                "max_ticks": 114,
+                "zombie_entered_left_zone": 9,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 114,
+                "zombie_entered_left_zone": 9,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 20700,
+              "actual_ticks": 19163,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 19163,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_1": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 2,
+            "mean_survival_ticks": 5531.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "2": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 176,
+              "condition_counts": {
+                "timeout": 176
+              },
+              "primary_reason_counts": {
+                "max_ticks": 170,
+                "zombie_entered_left_zone": 4,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 170,
+                "zombie_entered_left_zone": 4,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 11280,
+              "actual_ticks": 11063,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 11065,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_2": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 8858,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 187.5,
+                "mean_sun_produced": 137.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 300,
+                "mean_sun_produced": 250,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 375,
+                "mean_sun_produced": 325,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 290,
+              "condition_counts": {
+                "timeout": 290
+              },
+              "primary_reason_counts": {
+                "max_ticks": 283,
+                "zombie_entered_left_zone": 5,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 283,
+                "zombie_entered_left_zone": 5,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 17880,
+              "actual_ticks": 17716,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 17718,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_3": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 9040.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 175,
+                "mean_sun_produced": 125,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 300,
+                "mean_sun_produced": 250,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 400,
+                "mean_sun_produced": 350,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 285,
+              "condition_counts": {
+                "timeout": 285
+              },
+              "primary_reason_counts": {
+                "max_ticks": 278,
+                "zombie_entered_left_zone": 5,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 278,
+                "zombie_entered_left_zone": 5,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 18300,
+              "actual_ticks": 18081,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 18083,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_4": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 9129.5,
+            "peak_offense": 0,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 175,
+                "mean_sun_produced": 125,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 287.5,
+                "mean_sun_produced": 237.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 387.5,
+                "mean_sun_produced": 337.5,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 298,
+              "condition_counts": {
+                "timeout": 298
+              },
+              "primary_reason_counts": {
+                "max_ticks": 294,
+                "zombie_entered_left_zone": 2,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 294,
+                "zombie_entered_left_zone": 2,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 18360,
+              "actual_ticks": 18259,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 18261,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          }
+        },
+        "truncated": 0
+      },
+      "sampled": {
+        "overall": {
+          "sample_count": 40,
+          "pass_rate": 0.7,
+          "wilson_95": [
+            0.5457,
+            0.819252
+          ],
+          "mean_terminal_wave": 3.425,
+          "mean_survival_ticks": 12104.15,
+          "peak_offense": 3.025,
+          "terminal_wave_histogram": {
+            "3": 31,
+            "4": 1,
+            "5": 8
+          },
+          "terminal_tick_histogram_5000_tick_bins": {
+            "10000-14999": 17,
+            "15000-19999": 9,
+            "5000-9999": 14
+          },
+          "economy_curve": [
+            {
+              "tick": 0,
+              "sample_count": 40,
+              "mean_sun": 50,
+              "mean_sun_produced": 0,
+              "mean_sun_spent": 0
+            },
+            {
+              "tick": 3000,
+              "sample_count": 40,
+              "mean_sun": 38.75,
+              "mean_sun_produced": 79.375,
+              "mean_sun_spent": 90.625
+            },
+            {
+              "tick": 6000,
+              "sample_count": 40,
+              "mean_sun": 39.375,
+              "mean_sun_produced": 155,
+              "mean_sun_spent": 165.625
+            },
+            {
+              "tick": 9000,
+              "sample_count": 33,
+              "mean_sun": 36.667,
+              "mean_sun_produced": 241.212,
+              "mean_sun_spent": 254.545
+            },
+            {
+              "tick": 12000,
+              "sample_count": 21,
+              "mean_sun": 32.143,
+              "mean_sun_produced": 316.667,
+              "mean_sun_spent": 334.524
+            },
+            {
+              "tick": 15000,
+              "sample_count": 9,
+              "mean_sun": 14.444,
+              "mean_sun_produced": 361.667,
+              "mean_sun_spent": 397.222
+            },
+            {
+              "tick": 18000,
+              "sample_count": 2,
+              "mean_sun": 15,
+              "mean_sun_produced": 15,
+              "mean_sun_spent": 50
+            }
+          ],
+          "wait_summary": {
+            "wait_actions": 3101,
+            "condition_counts": {
+              "timeout": 1267,
+              "left_zone_occupied": 272,
+              "sun_increased": 481,
+              "wave_changed": 601,
+              "plant_count_decreased": 182,
+              "packet_became_ready": 298
+            },
+            "primary_reason_counts": {
+              "max_ticks": 2684,
+              "condition": 165,
+              "zombie_entered_left_zone": 136,
+              "defense_lost": 76,
+              "terminal": 40
+            },
+            "all_trigger_counts": {
+              "max_ticks": 2690,
+              "condition": 177,
+              "zombie_entered_left_zone": 136,
+              "defense_lost": 90,
+              "terminal": 40
+            },
+            "requested_logic_ticks": 533070,
+            "actual_ticks": 484166,
+            "zero_actual_tick_waits": 0,
+            "logic_steps": 484178,
+            "stalled_clock_steps": 12,
+            "initial_condition_satisfied": 0
+          }
+        },
+        "per_task": {
+          "heldout_day_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 13440.5,
+            "peak_offense": 0.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 150,
+                "mean_sun_spent": 175
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 287.5,
+                "mean_sun_spent": 312.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 412.5,
+                "mean_sun_spent": 437.5
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 37.5,
+                "mean_sun_produced": 525,
+                "mean_sun_spent": 537.5
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 169,
+              "condition_counts": {
+                "timeout": 72,
+                "left_zone_occupied": 15,
+                "sun_increased": 26,
+                "wave_changed": 40,
+                "plant_count_decreased": 6,
+                "packet_became_ready": 10
+              },
+              "primary_reason_counts": {
+                "max_ticks": 149,
+                "condition": 8,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 4,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 150,
+                "condition": 8,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 28830,
+              "actual_ticks": 26881,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 26881,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_day_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 14068.5,
+            "peak_offense": 0.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 162.5,
+                "mean_sun_spent": 187.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 325,
+                "mean_sun_spent": 350
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 0,
+                "mean_sun_produced": 500,
+                "mean_sun_spent": 550
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 37.5,
+                "mean_sun_produced": 637.5,
+                "mean_sun_spent": 650
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 192,
+              "condition_counts": {
+                "plant_count_decreased": 8,
+                "sun_increased": 29,
+                "packet_became_ready": 24,
+                "timeout": 81,
+                "left_zone_occupied": 12,
+                "wave_changed": 38
+              },
+              "primary_reason_counts": {
+                "max_ticks": 153,
+                "condition": 18,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 153,
+                "condition": 18,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 33450,
+              "actual_ticks": 28137,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 28137,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_day_3": {
+            "sample_count": 2,
+            "pass_rate": 0.5,
+            "wilson_95": [
+              0.094531,
+              0.905469
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 16807,
+            "peak_offense": 1,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 162.5,
+                "mean_sun_spent": 162.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 62.5,
+                "mean_sun_produced": 300,
+                "mean_sun_spent": 287.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 437.5,
+                "mean_sun_spent": 462.5
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 525,
+                "mean_sun_spent": 562.5
+              },
+              {
+                "tick": 15000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 637.5,
+                "mean_sun_spent": 675
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 217,
+              "condition_counts": {
+                "left_zone_occupied": 12,
+                "wave_changed": 50,
+                "timeout": 93,
+                "sun_increased": 32,
+                "packet_became_ready": 16,
+                "plant_count_decreased": 14
+              },
+              "primary_reason_counts": {
+                "max_ticks": 182,
+                "condition": 9,
+                "zombie_entered_left_zone": 14,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 183,
+                "condition": 10,
+                "zombie_entered_left_zone": 14,
+                "defense_lost": 10,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 37470,
+              "actual_ticks": 33614,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 33615,
+              "stalled_clock_steps": 1,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_day_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 7971,
+            "peak_offense": 5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 62.5,
+                "mean_sun_produced": 12.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 75,
+                "mean_sun_produced": 25,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 108,
+              "condition_counts": {
+                "sun_increased": 24,
+                "packet_became_ready": 17,
+                "wave_changed": 14,
+                "timeout": 38,
+                "left_zone_occupied": 11,
+                "plant_count_decreased": 4
+              },
+              "primary_reason_counts": {
+                "max_ticks": 90,
+                "condition": 10,
+                "zombie_entered_left_zone": 3,
+                "defense_lost": 3,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 90,
+                "condition": 10,
+                "zombie_entered_left_zone": 3,
+                "defense_lost": 3,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 18240,
+              "actual_ticks": 15942,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 15942,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 12922,
+            "peak_offense": 6,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 17.5,
+                "mean_sun_produced": 30,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 37.5,
+                "mean_sun_spent": 75
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 37.5,
+                "mean_sun_spent": 75
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 166,
+              "condition_counts": {
+                "packet_became_ready": 11,
+                "sun_increased": 17,
+                "timeout": 74,
+                "wave_changed": 34,
+                "left_zone_occupied": 21,
+                "plant_count_decreased": 9
+              },
+              "primary_reason_counts": {
+                "max_ticks": 155,
+                "zombie_entered_left_zone": 5,
+                "defense_lost": 3,
+                "terminal": 2,
+                "condition": 1
+              },
+              "all_trigger_counts": {
+                "max_ticks": 155,
+                "zombie_entered_left_zone": 5,
+                "condition": 3,
+                "defense_lost": 4,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 26910,
+              "actual_ticks": 25844,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 25844,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 10853.5,
+            "peak_offense": 3.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 17.5,
+                "mean_sun_produced": 30,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 37.5,
+                "mean_sun_spent": 75
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 17.5,
+                "mean_sun_produced": 67.5,
+                "mean_sun_spent": 100
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 143,
+              "condition_counts": {
+                "wave_changed": 32,
+                "timeout": 62,
+                "sun_increased": 22,
+                "left_zone_occupied": 7,
+                "plant_count_decreased": 8,
+                "packet_became_ready": 12
+              },
+              "primary_reason_counts": {
+                "max_ticks": 124,
+                "condition": 5,
+                "zombie_entered_left_zone": 7,
+                "defense_lost": 5,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 125,
+                "condition": 7,
+                "zombie_entered_left_zone": 7,
+                "defense_lost": 7,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 23760,
+              "actual_ticks": 21707,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 21707,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_3": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 18659,
+            "peak_offense": 4,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 15000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 18000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 254,
+              "condition_counts": {
+                "packet_became_ready": 35,
+                "left_zone_occupied": 23,
+                "timeout": 106,
+                "wave_changed": 40,
+                "sun_increased": 38,
+                "plant_count_decreased": 12
+              },
+              "primary_reason_counts": {
+                "max_ticks": 224,
+                "zombie_entered_left_zone": 13,
+                "defense_lost": 10,
+                "condition": 5,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 224,
+                "zombie_entered_left_zone": 13,
+                "defense_lost": 10,
+                "condition": 5,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 40740,
+              "actual_ticks": 37318,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 37320,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_night_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 11286.5,
+            "peak_offense": 4.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "5000-9999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 57.5,
+                "mean_sun_produced": 7.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 65,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 72.5,
+                "mean_sun_produced": 22.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 95,
+                "mean_sun_produced": 45,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 152,
+              "condition_counts": {
+                "timeout": 69,
+                "wave_changed": 16,
+                "plant_count_decreased": 10,
+                "sun_increased": 31,
+                "left_zone_occupied": 8,
+                "packet_became_ready": 18
+              },
+              "primary_reason_counts": {
+                "max_ticks": 128,
+                "condition": 12,
+                "zombie_entered_left_zone": 7,
+                "defense_lost": 3,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 128,
+                "condition": 13,
+                "zombie_entered_left_zone": 7,
+                "defense_lost": 4,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 26160,
+              "actual_ticks": 22573,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 22573,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 11150,
+            "peak_offense": 1.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "5000-9999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 150,
+                "mean_sun_spent": 175
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 62.5,
+                "mean_sun_produced": 312.5,
+                "mean_sun_spent": 300
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 25,
+                "mean_sun_produced": 450,
+                "mean_sun_spent": 475
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 25,
+                "mean_sun_produced": 675,
+                "mean_sun_spent": 700
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 130,
+              "condition_counts": {
+                "timeout": 55,
+                "wave_changed": 21,
+                "plant_count_decreased": 12,
+                "sun_increased": 22,
+                "left_zone_occupied": 13,
+                "packet_became_ready": 7
+              },
+              "primary_reason_counts": {
+                "max_ticks": 112,
+                "condition": 10,
+                "zombie_entered_left_zone": 4,
+                "defense_lost": 2,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 112,
+                "condition": 10,
+                "zombie_entered_left_zone": 4,
+                "defense_lost": 3,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 24090,
+              "actual_ticks": 22300,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 22300,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 15031.5,
+            "peak_offense": 0.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "15000-19999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 150,
+                "mean_sun_spent": 150
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 312.5,
+                "mean_sun_spent": 350
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 450,
+                "mean_sun_spent": 450
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 37.5,
+                "mean_sun_produced": 562.5,
+                "mean_sun_spent": 575
+              },
+              {
+                "tick": 15000,
+                "sample_count": 1,
+                "mean_sun": 25,
+                "mean_sun_produced": 550,
+                "mean_sun_spent": 575
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 186,
+              "condition_counts": {
+                "packet_became_ready": 15,
+                "sun_increased": 29,
+                "left_zone_occupied": 15,
+                "wave_changed": 42,
+                "plant_count_decreased": 8,
+                "timeout": 77
+              },
+              "primary_reason_counts": {
+                "max_ticks": 159,
+                "condition": 11,
+                "zombie_entered_left_zone": 9,
+                "defense_lost": 5,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 160,
+                "condition": 12,
+                "zombie_entered_left_zone": 9,
+                "defense_lost": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 32250,
+              "actual_ticks": 30063,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 30063,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_3": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 15646.5,
+            "peak_offense": 0.5,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 0,
+                "mean_sun_produced": 137.5,
+                "mean_sun_spent": 187.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 62.5,
+                "mean_sun_produced": 287.5,
+                "mean_sun_spent": 275
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 437.5,
+                "mean_sun_spent": 437.5
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 37.5,
+                "mean_sun_produced": 550,
+                "mean_sun_spent": 562.5
+              },
+              {
+                "tick": 15000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 662.5,
+                "mean_sun_spent": 700
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 193,
+              "condition_counts": {
+                "timeout": 91,
+                "plant_count_decreased": 8,
+                "sun_increased": 34,
+                "wave_changed": 35,
+                "packet_became_ready": 15,
+                "left_zone_occupied": 10
+              },
+              "primary_reason_counts": {
+                "max_ticks": 162,
+                "condition": 11,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 7,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 162,
+                "condition": 11,
+                "zombie_entered_left_zone": 11,
+                "defense_lost": 7,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 34440,
+              "actual_ticks": 31293,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 31293,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_pool_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 9695,
+            "peak_offense": 4.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "5000-9999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 62.5,
+                "mean_sun_produced": 12.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 75,
+                "mean_sun_produced": 25,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 125,
+                "mean_sun_produced": 75,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 125,
+                "mean_sun_produced": 75,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 114,
+              "condition_counts": {
+                "packet_became_ready": 7,
+                "wave_changed": 28,
+                "sun_increased": 10,
+                "timeout": 49,
+                "left_zone_occupied": 14,
+                "plant_count_decreased": 6
+              },
+              "primary_reason_counts": {
+                "max_ticks": 104,
+                "condition": 4,
+                "zombie_entered_left_zone": 3,
+                "terminal": 2,
+                "defense_lost": 1
+              },
+              "all_trigger_counts": {
+                "max_ticks": 104,
+                "condition": 4,
+                "zombie_entered_left_zone": 3,
+                "terminal": 2,
+                "defense_lost": 2
+              },
+              "requested_logic_ticks": 20550,
+              "actual_ticks": 19390,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 19390,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_1": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 11291,
+            "peak_offense": 3.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 7.5,
+                "mean_sun_produced": 7.5,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 2.5,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 2.5,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 5,
+                "mean_sun_produced": 30,
+                "mean_sun_spent": 75
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 149,
+              "condition_counts": {
+                "packet_became_ready": 13,
+                "wave_changed": 35,
+                "timeout": 53,
+                "sun_increased": 28,
+                "left_zone_occupied": 14,
+                "plant_count_decreased": 6
+              },
+              "primary_reason_counts": {
+                "max_ticks": 139,
+                "condition": 3,
+                "zombie_entered_left_zone": 3,
+                "defense_lost": 2,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 139,
+                "condition": 5,
+                "zombie_entered_left_zone": 3,
+                "defense_lost": 3,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 23730,
+              "actual_ticks": 22582,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 22582,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_2": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 12452.5,
+            "peak_offense": 5.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 15,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 17.5,
+                "mean_sun_produced": 30,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 17.5,
+                "mean_sun_produced": 30,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 12000,
+                "sample_count": 1,
+                "mean_sun": 20,
+                "mean_sun_produced": 45,
+                "mean_sun_spent": 75
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 145,
+              "condition_counts": {
+                "sun_increased": 20,
+                "timeout": 61,
+                "left_zone_occupied": 9,
+                "packet_became_ready": 17,
+                "wave_changed": 29,
+                "plant_count_decreased": 9
+              },
+              "primary_reason_counts": {
+                "max_ticks": 127,
+                "condition": 5,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 5,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 127,
+                "condition": 6,
+                "zombie_entered_left_zone": 6,
+                "defense_lost": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 27420,
+              "actual_ticks": 24905,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 24905,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_3": {
+            "sample_count": 2,
+            "pass_rate": 0.5,
+            "wilson_95": [
+              0.094531,
+              0.905469
+            ],
+            "mean_terminal_wave": 5,
+            "mean_survival_ticks": 17448.5,
+            "peak_offense": 5,
+            "terminal_wave_histogram": {
+              "5": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "15000-19999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 7.5,
+                "mean_sun_produced": 7.5,
+                "mean_sun_spent": 50
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 10,
+                "mean_sun_produced": 22.5,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 17.5,
+                "mean_sun_produced": 30,
+                "mean_sun_spent": 62.5
+              },
+              {
+                "tick": 12000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 37.5,
+                "mean_sun_spent": 75
+              },
+              {
+                "tick": 15000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 37.5,
+                "mean_sun_spent": 75
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 213,
+              "condition_counts": {
+                "timeout": 92,
+                "packet_became_ready": 19,
+                "wave_changed": 49,
+                "plant_count_decreased": 16,
+                "sun_increased": 30,
+                "left_zone_occupied": 7
+              },
+              "primary_reason_counts": {
+                "max_ticks": 185,
+                "condition": 4,
+                "zombie_entered_left_zone": 15,
+                "defense_lost": 7,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 185,
+                "condition": 4,
+                "zombie_entered_left_zone": 15,
+                "defense_lost": 8,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 38460,
+              "actual_ticks": 34897,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 34898,
+              "stalled_clock_steps": 1,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_fog_4": {
+            "sample_count": 2,
+            "pass_rate": 1.0,
+            "wilson_95": [
+              0.34238,
+              1.0
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 8179.5,
+            "peak_offense": 10.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 65,
+                "mean_sun_produced": 15,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 72.5,
+                "mean_sun_produced": 22.5,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 105,
+              "condition_counts": {
+                "timeout": 41,
+                "left_zone_occupied": 6,
+                "wave_changed": 22,
+                "packet_became_ready": 9,
+                "sun_increased": 20,
+                "plant_count_decreased": 7
+              },
+              "primary_reason_counts": {
+                "max_ticks": 90,
+                "condition": 8,
+                "zombie_entered_left_zone": 4,
+                "defense_lost": 1,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 90,
+                "condition": 8,
+                "zombie_entered_left_zone": 4,
+                "defense_lost": 1,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 18600,
+              "actual_ticks": 16359,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 16359,
+              "stalled_clock_steps": 0,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_1": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 7775,
+            "peak_offense": 2,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 75,
+                "mean_sun_produced": 25,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 112.5,
+                "mean_sun_produced": 62.5,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 125,
+                "mean_sun_produced": 75,
+                "mean_sun_spent": 0
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 99,
+              "condition_counts": {
+                "sun_increased": 15,
+                "packet_became_ready": 13,
+                "wave_changed": 19,
+                "left_zone_occupied": 14,
+                "timeout": 29,
+                "plant_count_decreased": 9
+              },
+              "primary_reason_counts": {
+                "max_ticks": 88,
+                "condition": 7,
+                "zombie_entered_left_zone": 2,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 88,
+                "condition": 8,
+                "zombie_entered_left_zone": 2,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 16980,
+              "actual_ticks": 15550,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 15552,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_2": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 8942,
+            "peak_offense": 0.5,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 162.5,
+                "mean_sun_spent": 200
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 37.5,
+                "mean_sun_produced": 325,
+                "mean_sun_spent": 337.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 50,
+                "mean_sun_produced": 525,
+                "mean_sun_spent": 525
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 117,
+              "condition_counts": {
+                "sun_increased": 17,
+                "timeout": 35,
+                "left_zone_occupied": 19,
+                "wave_changed": 18,
+                "packet_became_ready": 19,
+                "plant_count_decreased": 9
+              },
+              "primary_reason_counts": {
+                "max_ticks": 99,
+                "condition": 10,
+                "zombie_entered_left_zone": 6,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 99,
+                "condition": 11,
+                "zombie_entered_left_zone": 6,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 20220,
+              "actual_ticks": 17884,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 17886,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_3": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 3.5,
+            "mean_survival_ticks": 8495,
+            "peak_offense": 0.5,
+            "terminal_wave_histogram": {
+              "3": 1,
+              "4": 1
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "5000-9999": 2
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 100,
+                "mean_sun_produced": 175,
+                "mean_sun_spent": 125
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 325,
+                "mean_sun_spent": 362.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 1,
+                "mean_sun": 25,
+                "mean_sun_produced": 475,
+                "mean_sun_spent": 500
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 115,
+              "condition_counts": {
+                "sun_increased": 22,
+                "timeout": 39,
+                "left_zone_occupied": 18,
+                "wave_changed": 19,
+                "packet_became_ready": 10,
+                "plant_count_decreased": 7
+              },
+              "primary_reason_counts": {
+                "max_ticks": 95,
+                "condition": 14,
+                "zombie_entered_left_zone": 4,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 96,
+                "condition": 14,
+                "zombie_entered_left_zone": 4,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 18810,
+              "actual_ticks": 16990,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 16992,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          },
+          "heldout_roof_4": {
+            "sample_count": 2,
+            "pass_rate": 0.0,
+            "wilson_95": [
+              0.0,
+              0.65762
+            ],
+            "mean_terminal_wave": 3,
+            "mean_survival_ticks": 9968.5,
+            "peak_offense": 1,
+            "terminal_wave_histogram": {
+              "3": 2
+            },
+            "terminal_tick_histogram_5000_tick_bins": {
+              "10000-14999": 1,
+              "5000-9999": 1
+            },
+            "economy_curve": [
+              {
+                "tick": 0,
+                "sample_count": 2,
+                "mean_sun": 50,
+                "mean_sun_produced": 0,
+                "mean_sun_spent": 0
+              },
+              {
+                "tick": 3000,
+                "sample_count": 2,
+                "mean_sun": 87.5,
+                "mean_sun_produced": 175,
+                "mean_sun_spent": 137.5
+              },
+              {
+                "tick": 6000,
+                "sample_count": 2,
+                "mean_sun": 12.5,
+                "mean_sun_produced": 325,
+                "mean_sun_spent": 362.5
+              },
+              {
+                "tick": 9000,
+                "sample_count": 2,
+                "mean_sun": 87.5,
+                "mean_sun_produced": 500,
+                "mean_sun_spent": 462.5
+              }
+            ],
+            "wait_summary": {
+              "wait_actions": 134,
+              "condition_counts": {
+                "timeout": 50,
+                "sun_increased": 15,
+                "left_zone_occupied": 24,
+                "wave_changed": 20,
+                "packet_became_ready": 11,
+                "plant_count_decreased": 14
+              },
+              "primary_reason_counts": {
+                "max_ticks": 119,
+                "condition": 10,
+                "zombie_entered_left_zone": 3,
+                "terminal": 2
+              },
+              "all_trigger_counts": {
+                "max_ticks": 120,
+                "condition": 10,
+                "zombie_entered_left_zone": 3,
+                "terminal": 2
+              },
+              "requested_logic_ticks": 21960,
+              "actual_ticks": 19937,
+              "zero_actual_tick_waits": 0,
+              "logic_steps": 19939,
+              "stalled_clock_steps": 2,
+              "initial_condition_satisfied": 0
+            }
+          }
+        },
+        "truncated": 0
+      }
+    },
+    "raw_seed_results_path": "evaluations/update_000014.json.gz",
+    "seconds": 68.49660506500004
   }
 ]
