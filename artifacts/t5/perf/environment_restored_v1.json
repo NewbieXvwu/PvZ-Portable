@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-02T04:29:50.656259+00:00",
+  "prior_blockage": "artifacts/t5/perf/research_execution_blockage_v1.json",
+  "status": "execution_conditions_restored",
+  "torch": "2.14.0+cu132",
+  "cuda_build": "13.2",
+  "cuda_available": true,
+  "dev_dxg_exists": true,
+  "gpu_name": "NVIDIA GeForce RTX 5080",
+  "free_vram_bytes": 15681454080,
+  "total_vram_bytes": 17066033152,
+  "nproc": 20,
+  "free_g": "               total        used        free      shared  buff/cache   available\nMem:              23           4          13           0           6          18\nSwap:              8           0           8\n",
+  "git_conclusions_published_commit": "bc577eee0c83d6ab0ea1940f9606d6c3de44c061",
+  "source_branches_published": {
+    "event_interface": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+    "event_policy": "bc89b2040d309f8a865e6f7893759c13439f047c",
+    "native_audit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+    "replay_audit": "f95f6a614cf2e8fb94f786c29da3cd88cdd5223d"
+  },
+  "git_atomic_multi_ref_attempt": "remote rejected all four refs without explanation; read-only check confirmed no refs created; subsequent ordinary individual pushes all succeeded without force",
+  "reference": {
+    "protocol": "experiments/t5/learning_reference256_interrupt_v2.json",
+    "protocol_sha256": "8d58d2a9e9c91da81e35cd407b44e7928d18cb5e347ab1f69d4f574f5bf83aac",
+    "helper_source_and_27_fingerprints_unchanged": true,
+    "output": "artifacts/research/learning_reference256_interrupt_v2_managed",
+    "supervisor_session": 14436,
+    "started": true,
+    "gate_passed": false
+  },
+  "thresholds_and_failed_scenes_unchanged": true,
+  "goal_complete": false,
+  "environment_log": {
+    "path": "logs/t5_research/environment_restored_v1.txt",
+    "sha256": "5f76082b6889d195b7b82e2143321fe03568ca959eef38ff1ff9f598723fa4e4"
+  }
+}

@@ -978,3 +978,17 @@ pvz-env仍7f2b094。完整256实际SIGKILL及新共同输入/奖励/课程基线
 从完整256实际恢复及共同输入/课程基线/B开始，事件审计/对照保持既定顺序；T6/T7和
 完整交付仍待做。阻塞、待办、保留阈值与本地版本见
 [research_execution_blockage_v1.json](artifacts/t5/perf/research_execution_blockage_v1.json)。
+
+### 执行环境恢复与正式续接（2026-10-02）
+
+权限/网络/GPU恢复后重新自检：torch2.14.0+cu132、CUDA13.2、RTX5080、cuda_available=true、
+/dev/dxg存在，WSL可见约23GiB、20 CPU。此前32结论路径及pending清单通过正常Git
+提交bc577eee0c83d6ab0ea1940f9606d6c3de44c061并push pvz-env；四个独立事件源码分支
+亦已正常逐个push，未强制提交或加入二进制。多ref原子push首轮被remote全部拒绝，
+只读确认未建立任何ref后，普通逐ref推送成功，记录保留。
+
+原256协议、两显式配置、helper和27个来源SHA/两个idle状态校验通过；全60修正复评
+与矩阵均已完成，原等待进程不存在且managed输出未创建。按已发布同协议启动完整
+连续/SIGKILL/恢复两臂，使用此前计划的独立managed目录；不修改任何冻结候选源或
+旧失败现场。实际门禁仍待两臂完结与严格全字段比较，不以启动/更新记作通过。
+环境快照与交付版本见[environment_restored_v1.json](artifacts/t5/perf/environment_restored_v1.json)。
