@@ -1,0 +1,762 @@
+{
+  "schema_version": 1,
+  "status": "completed_rollout_prefix_at_read",
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "seeds": [
+    {
+      "seed": 0,
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "completed_update_at_read": 65,
+      "counters": {
+        "episodes": 254,
+        "decisions": 42437,
+        "ticks": 4653688
+      },
+      "windows": [
+        {
+          "updates": [
+            1,
+            33
+          ],
+          "overall": {
+            "episodes": 129,
+            "natural_episodes": 126,
+            "natural_wins": 3,
+            "categories": {
+              "both_loss": 104,
+              "idle_only_win": 19,
+              "budget_truncated": 3,
+              "policy_only_win": 3
+            },
+            "unique_task_seed_pairs": 101,
+            "decisions": 22192,
+            "ticks": 2281874,
+            "draw_weighted_net_gain": -0.12698412698412698
+          },
+          "per_task": {
+            "train_bridge7_v1_aid_cap10": {
+              "episodes": 70,
+              "natural_episodes": 68,
+              "natural_wins": 1,
+              "categories": {
+                "both_loss": 48,
+                "idle_only_win": 19,
+                "budget_truncated": 2,
+                "policy_only_win": 1
+              },
+              "unique_task_seed_pairs": 45,
+              "decisions": 14329,
+              "ticks": 1502123,
+              "draw_weighted_net_gain": -0.2647058823529412
+            },
+            "train_bridge7_v1_aid_cap15": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 1223,
+              "ticks": 118838,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_cap20": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 830,
+              "ticks": 83588,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_capfull": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 771,
+              "ticks": 73015,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap10": {
+              "episodes": 6,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5,
+                "budget_truncated": 1
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 942,
+              "ticks": 104550,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap15": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 515,
+              "ticks": 57773,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_full_level7_v1": {
+              "episodes": 1,
+              "natural_episodes": 1,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 1
+              },
+              "unique_task_seed_pairs": 1,
+              "decisions": 208,
+              "ticks": 20482,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_multicap_v1_roof_cap1_variant": {
+              "episodes": 10,
+              "natural_episodes": 10,
+              "natural_wins": 2,
+              "categories": {
+                "policy_only_win": 2,
+                "both_loss": 8
+              },
+              "unique_task_seed_pairs": 10,
+              "decisions": 792,
+              "ticks": 79405,
+              "draw_weighted_net_gain": 0.2
+            },
+            "train_multicap_v1_roof_cap5_variant": {
+              "episodes": 8,
+              "natural_episodes": 8,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 8
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 757,
+              "ticks": 71399,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_1": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 517,
+              "ticks": 48818,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_2": {
+              "episodes": 6,
+              "natural_episodes": 6,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 6
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 510,
+              "ticks": 49191,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_3": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 464,
+              "ticks": 40841,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_4": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 334,
+              "ticks": 31851,
+              "draw_weighted_net_gain": 0.0
+            }
+          }
+        },
+        {
+          "updates": [
+            34,
+            65
+          ],
+          "overall": {
+            "episodes": 125,
+            "natural_episodes": 122,
+            "natural_wins": 24,
+            "categories": {
+              "both_loss": 92,
+              "budget_truncated": 3,
+              "both_win": 12,
+              "policy_only_win": 12,
+              "idle_only_win": 6
+            },
+            "unique_task_seed_pairs": 109,
+            "decisions": 20245,
+            "ticks": 2371814,
+            "draw_weighted_net_gain": 0.04918032786885246
+          },
+          "per_task": {
+            "train_bridge7_v1_aid_cap10": {
+              "episodes": 54,
+              "natural_episodes": 54,
+              "natural_wins": 24,
+              "categories": {
+                "both_loss": 24,
+                "both_win": 12,
+                "policy_only_win": 12,
+                "idle_only_win": 6
+              },
+              "unique_task_seed_pairs": 39,
+              "decisions": 11270,
+              "ticks": 1310889,
+              "draw_weighted_net_gain": 0.1111111111111111
+            },
+            "train_bridge7_v1_aid_cap15": {
+              "episodes": 4,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "budget_truncated": 1,
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 745,
+              "ticks": 91852,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_cap20": {
+              "episodes": 8,
+              "natural_episodes": 8,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 8
+              },
+              "unique_task_seed_pairs": 8,
+              "decisions": 1595,
+              "ticks": 193621,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_capfull": {
+              "episodes": 9,
+              "natural_episodes": 8,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 8,
+                "budget_truncated": 1
+              },
+              "unique_task_seed_pairs": 9,
+              "decisions": 1854,
+              "ticks": 225130,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap10": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 783,
+              "ticks": 101872,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap15": {
+              "episodes": 2,
+              "natural_episodes": 1,
+              "natural_wins": 0,
+              "categories": {
+                "budget_truncated": 1,
+                "both_loss": 1
+              },
+              "unique_task_seed_pairs": 2,
+              "decisions": 321,
+              "ticks": 40908,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_full_level7_v1": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 482,
+              "ticks": 63214,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_multicap_v1_roof_cap1_variant": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 342,
+              "ticks": 36196,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_multicap_v1_roof_cap5_variant": {
+              "episodes": 7,
+              "natural_episodes": 7,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 7
+              },
+              "unique_task_seed_pairs": 7,
+              "decisions": 533,
+              "ticks": 58770,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_1": {
+              "episodes": 6,
+              "natural_episodes": 6,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 6
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 557,
+              "ticks": 53491,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_2": {
+              "episodes": 6,
+              "natural_episodes": 6,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 6
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 469,
+              "ticks": 48695,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_3": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 200,
+              "ticks": 24180,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_4": {
+              "episodes": 14,
+              "natural_episodes": 14,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 14
+              },
+              "unique_task_seed_pairs": 14,
+              "decisions": 1094,
+              "ticks": 122996,
+              "draw_weighted_net_gain": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "completed_update_at_read": 33,
+      "counters": {
+        "episodes": 129,
+        "decisions": 24004,
+        "ticks": 2429820
+      },
+      "windows": [
+        {
+          "updates": [
+            1,
+            33
+          ],
+          "overall": {
+            "episodes": 129,
+            "natural_episodes": 127,
+            "natural_wins": 4,
+            "categories": {
+              "both_loss": 101,
+              "idle_only_win": 22,
+              "budget_truncated": 2,
+              "policy_only_win": 3,
+              "both_win": 1
+            },
+            "unique_task_seed_pairs": 97,
+            "decisions": 24004,
+            "ticks": 2429820,
+            "draw_weighted_net_gain": -0.14960629921259844
+          },
+          "per_task": {
+            "train_bridge7_v1_aid_cap10": {
+              "episodes": 76,
+              "natural_episodes": 75,
+              "natural_wins": 4,
+              "categories": {
+                "both_loss": 49,
+                "idle_only_win": 22,
+                "budget_truncated": 1,
+                "policy_only_win": 3,
+                "both_win": 1
+              },
+              "unique_task_seed_pairs": 45,
+              "decisions": 15982,
+              "ticks": 1658313,
+              "draw_weighted_net_gain": -0.25333333333333335
+            },
+            "train_bridge7_v1_aid_cap15": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 1228,
+              "ticks": 114893,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_cap20": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 1154,
+              "ticks": 115458,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_capfull": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 1200,
+              "ticks": 112880,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap10": {
+              "episodes": 6,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5,
+                "budget_truncated": 1
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 948,
+              "ticks": 106624,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap15": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 808,
+              "ticks": 80366,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_multicap_v1_roof_cap1_variant": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 284,
+              "ticks": 25635,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_multicap_v1_roof_cap5_variant": {
+              "episodes": 6,
+              "natural_episodes": 6,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 6
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 566,
+              "ticks": 52861,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_1": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 379,
+              "ticks": 36886,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_2": {
+              "episodes": 8,
+              "natural_episodes": 8,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 8
+              },
+              "unique_task_seed_pairs": 7,
+              "decisions": 793,
+              "ticks": 68874,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_3": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 345,
+              "ticks": 30128,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_4": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 317,
+              "ticks": 26902,
+              "draw_weighted_net_gain": 0.0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "seed": 2,
+      "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+      "completed_update_at_read": 33,
+      "counters": {
+        "episodes": 132,
+        "decisions": 23045,
+        "ticks": 2304702
+      },
+      "windows": [
+        {
+          "updates": [
+            1,
+            33
+          ],
+          "overall": {
+            "episodes": 132,
+            "natural_episodes": 128,
+            "natural_wins": 5,
+            "categories": {
+              "both_loss": 104,
+              "idle_only_win": 19,
+              "budget_truncated": 4,
+              "policy_only_win": 5
+            },
+            "unique_task_seed_pairs": 102,
+            "decisions": 23045,
+            "ticks": 2304702,
+            "draw_weighted_net_gain": -0.109375
+          },
+          "per_task": {
+            "train_bridge7_v1_aid_cap10": {
+              "episodes": 71,
+              "natural_episodes": 68,
+              "natural_wins": 2,
+              "categories": {
+                "both_loss": 47,
+                "idle_only_win": 19,
+                "budget_truncated": 3,
+                "policy_only_win": 2
+              },
+              "unique_task_seed_pairs": 46,
+              "decisions": 14920,
+              "ticks": 1495631,
+              "draw_weighted_net_gain": -0.25
+            },
+            "train_bridge7_v1_aid_cap15": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 856,
+              "ticks": 91490,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_cap20": {
+              "episodes": 5,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 5,
+              "decisions": 1015,
+              "ticks": 105387,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_aid_capfull": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 913,
+              "ticks": 95346,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap10": {
+              "episodes": 6,
+              "natural_episodes": 5,
+              "natural_wins": 0,
+              "categories": {
+                "budget_truncated": 1,
+                "both_loss": 5
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 1043,
+              "ticks": 115721,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_bridge7_v1_ordinary_cap15": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 674,
+              "ticks": 77676,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_multicap_v1_roof_cap1_variant": {
+              "episodes": 2,
+              "natural_episodes": 2,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 2
+              },
+              "unique_task_seed_pairs": 2,
+              "decisions": 159,
+              "ticks": 16328,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_multicap_v1_roof_cap5_variant": {
+              "episodes": 8,
+              "natural_episodes": 8,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 8
+              },
+              "unique_task_seed_pairs": 8,
+              "decisions": 692,
+              "ticks": 63180,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_1": {
+              "episodes": 14,
+              "natural_episodes": 14,
+              "natural_wins": 3,
+              "categories": {
+                "both_loss": 11,
+                "policy_only_win": 3
+              },
+              "unique_task_seed_pairs": 10,
+              "decisions": 1351,
+              "ticks": 120430,
+              "draw_weighted_net_gain": 0.21428571428571427
+            },
+            "train_roof_2": {
+              "episodes": 7,
+              "natural_episodes": 7,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 7
+              },
+              "unique_task_seed_pairs": 6,
+              "decisions": 683,
+              "ticks": 58171,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_3": {
+              "episodes": 4,
+              "natural_episodes": 4,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 4
+              },
+              "unique_task_seed_pairs": 4,
+              "decisions": 381,
+              "ticks": 32533,
+              "draw_weighted_net_gain": 0.0
+            },
+            "train_roof_4": {
+              "episodes": 3,
+              "natural_episodes": 3,
+              "natural_wins": 0,
+              "categories": {
+                "both_loss": 3
+              },
+              "unique_task_seed_pairs": 3,
+              "decisions": 358,
+              "ticks": 32809,
+              "draw_weighted_net_gain": 0.0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "seconds": 2.055900917002873,
+  "native_interactions": 0,
+  "model_evaluations": 0,
+  "scope": "Exact completed immutable rollout manifest inventory. The first33 updates are the common closed smoke+30-update stage; later windows end at the latest completed update read, not a selected best endpoint. All failures and budget truncations retained. Training uses adaptive sampling and repeated seeds, so these are descriptive draw-weighted paired outcomes, not independent validation or architecture comparisons. Fixed development nodes and original acceptance remain decisive. Source NPZ files remain preserved locally for the owning queue full125k delivery; this report does not claim to deliver the current full-run raw shards/resume snapshot."
+}
