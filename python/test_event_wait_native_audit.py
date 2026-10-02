@@ -7,7 +7,9 @@ import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from research_event_wait_native_audit import check_protocol, oracle_macro_wait
+from research_event_wait_native_audit import check_protocol, oracle_macro_wait, saved_replay_record
+from pvz_common import canonical_digest, sha256_bytes
+from pvz_env import PvZEnv, REPLAY_FORMAT_VERSION
 from test_wait_events import observation
 
 
@@ -40,6 +42,39 @@ class RawOracle:
 
 
 class NativeAuditContracts(unittest.TestCase):
+    def test_saved_replay_uses_real_manifest_and_retains_operations_and_debug_state(self):
+        env = PvZEnv.__new__(PvZEnv)
+        patch = b'fixture source patch\n'
+        manifest = dict(source_revision='fixture', source_dirty=True,
+                        working_tree_patch_sha256=sha256_bytes(patch), build_config={},
+                        resource_sha256='fixture-resource', properties_partner_sha256='fixture-properties',
+                        executable_sha256='fixture-executable')
+        env._manifest_data = lambda: (manifest, patch)
+        env.episode = dict(format_version=REPLAY_FORMAT_VERSION, task={}, deck=[], initial_state={'tick':0},
+            operations=[dict(record_type='operation', kind='action', action=dict(type='wait', ticks=60, until='timeout'),
+                wait_result={'actual_ticks':60}, state={'tick':60}, debug_state_sha256='retained-debug-state')],
+            final_state={'tick':60})
+        before = copy.deepcopy(env.episode)
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            record = saved_replay_record(env, directory)
+            self.assertEqual(env.episode, before)
+            self.assertEqual({key:value for key,value in record.items() if key != 'manifest'}, before)
+            written = json.loads((directory/'experiment_manifest.json').read_text())
+            self.assertEqual(record['manifest'], dict(path='experiment_manifest.json', sha256=canonical_digest(written)))
+            self.assertEqual((directory/'working_tree.patch').read_bytes(), patch)
+            self.assertTrue((directory/'episode.jsonl.gz').is_file())
+            self.assertTrue((directory/'record.json.gz').is_file())
+            # These are the real integrity checks used by replay_record, not a mock.
+            (directory/'working_tree.patch').write_bytes(b'corrupted patch')
+            with self.assertRaisesRegex(ValueError, 'patch is missing or corrupted'):
+                env._check_manifest(record['manifest'], directory)
+            (directory/'working_tree.patch').write_bytes(patch)
+            written['executable_sha256'] = 'changed-executable'
+            (directory/'experiment_manifest.json').write_text(json.dumps(written))
+            with self.assertRaisesRegex(ValueError, 'manifest digest mismatch'):
+                env._check_manifest(record['manifest'], directory)
+
     def test_draft_gate_precedes_source_binary_resources_and_process_creation(self):
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/'draft.json'

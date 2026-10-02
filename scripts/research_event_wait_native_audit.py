@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-import copy
 import fcntl
 import gzip
 import json
@@ -103,6 +102,26 @@ def _spec(task, seed):
                     preplanted=tuple(tuple(p) for p in task['preplanted']))
 
 
+def saved_replay_record(env, directory):
+    """Use the real replay writer and retain its checked build manifest and patch."""
+    directory = Path(directory)
+    path = directory/'episode.jsonl.gz'
+    env.save_replay(path)
+    with gzip.open(path, 'rt', encoding='utf-8') as stream:
+        items = [json.loads(line) for line in stream]
+    if (len(items) < 2 or items[0].get('record_type') != 'header'
+            or items[-1].get('record_type') != 'footer'
+            or any(item.get('record_type') != 'operation' for item in items[1:-1])):
+        raise ValueError('saved replay header/operations/footer are incomplete')
+    record = {key:value for key,value in items[0].items() if key != 'record_type'}
+    record['operations'] = items[1:-1]
+    record['final_state'] = items[-1]['final_state']
+    # Do not substitute a stub manifest or weaken replay_record's build check.
+    env._check_manifest(record['manifest'], directory)
+    atomic_json(directory/'record.json.gz', record, compressed=True)
+    return record
+
+
 def run_job(job, protocol, directory):
     """One process/session owns both simulators; full raw traces survive failures."""
     directory = Path(directory)
@@ -188,9 +207,8 @@ def run_job(job, protocol, directory):
                     reference.release_snapshot(parent_ref)
                     candidate.release_snapshot(parent_cand)
                 # Real record replay checks every stored macro and snapshot operation and debug RNG.
-                record = copy.deepcopy(candidate.episode)
-                atomic_json(directory/'record.json.gz', record, compressed=True)
-                candidate.replay_record(record)
+                record = saved_replay_record(candidate, directory)
+                candidate.replay_record(record, directory)
                 trace('record_replay', dict(operations=len(record['operations']),passed=True))
             atomic_json(directory/'result.json', dict(job_id=job['job_id'], task_id=task['task_id'], seed=seed,
                 regime=regime, rows=rows, counts=dict(counts), record_replay_passed=True,

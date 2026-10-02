@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "purpose": "event_wait_native_public_oracle_and_exact_physics_rng_snapshot_record_replay_only",
+  "release_status": "released",
+  "release_rule": "Published v2 repairs only the audit replay container: use real save_replay manifest/patch and pass its directory to replay_record. Original binary/tasks/seeds/120 jobs/6480 branches/coverage/equality/resource/time limits unchanged. Failed v1 scene retained; v2 uses a new output.",
+  "interface_base_commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+  "policy_base_commit": "bc89b2040d309f8a865e6f7893759c13439f047c",
+  "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "resource_fingerprints": {
+    "main.pak": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+    "properties/partner.xml": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3"
+  },
+  "required_fingerprints": {
+    "scripts/research_event_wait_native_audit.py": "d71073484360160ca351ef6587c2d3a496906b157dc51bd9efe53ef70e8ebbd1",
+    "python/test_event_wait_native_audit.py": "7e0ab8edbb68eefe00d58bf37825ace47a51c2fcc32f6283698beac167e4e2ca",
+    "python/pvz_wait_events.py": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21",
+    "python/pvz_event_env.py": "d3a3dad403e295dc02d1cfda03f513984110f3934ff90e581a3740d041e5a451",
+    "python/pvz_env.py": "9014ea2faa5530016c393c88c2bec738d3bc7be794b395952c5eafebf9054cd1",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_research.py": "df89e91c9e5146326ea20f4f420eaa258833657e52b56f602bad9fbbd0231d78",
+    "src/EnvironmentWaitEvents.h": "da445d3359fd51c251054111cf212443ba3ccd374b88c3e168eebbfad2fd5eb9",
+    "src/LawnApp.h": "6409ce79fe539a3a7d3d7b7d925c1273f94edbf0b8d81d945a7b49af49b738ef",
+    "src/LawnApp.cpp": "5f00fc7411019259164c0f8811250dd01f3439f96f6e5012a2570866d027d783",
+    "src/main.cpp": "073548d2cbc7f3b186a340276ab89eee5d4cc3647e86635eec150551854a7aee"
+  },
+  "task_manifest": {
+    "path": "/home/newbiexvwu/PvZ-Portable/experiments/t5/multicap_course_v1/train.json",
+    "sha256": "15aa6e7c9ca54f9880999401d931d003f77a7e0a71d98488bd87a833d1fc3325"
+  },
+  "all_task_ids_in_order": [
+    "train_day_1",
+    "train_day_2",
+    "train_day_3",
+    "train_day_4",
+    "train_night_1",
+    "train_night_2",
+    "train_night_3",
+    "train_night_4",
+    "train_pool_1",
+    "train_pool_2",
+    "train_pool_3",
+    "train_pool_4",
+    "train_fog_1",
+    "train_fog_2",
+    "train_fog_3",
+    "train_fog_4",
+    "train_roof_1",
+    "train_roof_2",
+    "train_roof_3",
+    "train_roof_4",
+    "train_multicap_v1_day_cap1_variant",
+    "train_multicap_v1_day_cap5_variant",
+    "train_multicap_v1_night_cap1_variant",
+    "train_multicap_v1_night_cap5_variant",
+    "train_multicap_v1_pool_cap1_variant",
+    "train_multicap_v1_pool_cap5_variant",
+    "train_multicap_v1_fog_cap1_variant",
+    "train_multicap_v1_fog_cap5_variant",
+    "train_multicap_v1_roof_cap1_variant",
+    "train_multicap_v1_roof_cap5_variant"
+  ],
+  "reference_executable": {
+    "path": "/home/newbiexvwu/PvZ-Portable-learning-packet-cost/build/pvz-portable",
+    "sha256": "371a75d7e4c35b03267e9932510f44abaf2ee8f087870acd8277f27306767a3c"
+  },
+  "candidate_executable": {
+    "path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/event_wait_native_audit_v1/build/pvz-portable",
+    "sha256": "9204d301ffdfca6801e68030001a95229184e07855f4b8cbe2e81a2f8b4df063"
+  },
+  "seeds_per_task": 2,
+  "regimes": [
+    "wait_only",
+    "one_first_legal_plant"
+  ],
+  "conditions": [
+    "timeout",
+    "wave_changed",
+    "packet_became_ready",
+    "sun_increased",
+    "left_zone_occupied",
+    "plant_count_decreased"
+  ],
+  "durations": [
+    60,
+    150,
+    300
+  ],
+  "prefix_ticks": [
+    0,
+    3000,
+    9000
+  ],
+  "max_prefix_actions": 180,
+  "job_timeout_seconds": 120,
+  "total_timeout_seconds": 3600,
+  "minimum_available_ram_bytes": 12884901888,
+  "required_positive_coverage": [
+    "terminal",
+    "defense_lost",
+    "zombie_entered_left_zone",
+    "initial_true",
+    "zero_actual_ticks",
+    "no_event_equivalent",
+    "condition:wave_changed",
+    "condition:packet_became_ready",
+    "condition:sun_increased",
+    "condition:left_zone_occupied",
+    "condition:plant_count_decreased"
+  ],
+  "scope": "All30 unchanged pool tasks, first2 fixed seeds, two engineering regimes;120 jobs with54 macro branches each; all failures/terminal prefixes retained. No learned policy or PPO data.",
+  "oracle": "reference binary raw WAIT0 + WAIT1 public-state oracle; never Python step(1); one final income annotation; additive counters telescope, macro sun_spent=max(initial.sun-final.sun,0), final terminal flags retained.",
+  "acceptance": "Every macro full public response/reason/actualticks agrees with public oracle; full privileged physics and RNG equals reference; no-event branches equal original fixed WAIT; every snapshot macro repeats; complete real record replay. Missing positive coverage yields gate fail, requiring separately preregistered supplemental fixtures without lowering this list.",
+  "cost_scope": "oracle/macro command wall times plus whole audit RSS/available RAM; not learned policy throughput, equal-wall training or GPU cost.",
+  "failure_policy": "Owned per-job session/timeouts only; keep raw gzJSON, logs, save folders, records and partial report. Execution lock blocks live HF snapshots.",
+  "limitations": [
+    "Fixed prefixes may miss transient events. Coverage is measured; draft does not claim success.",
+    "First-legal plant is an engineering intervention, never an executor policy or training demonstration.",
+    "Privileged physics/RNG is used by the auditor only; event predicates use public fields only."
+  ],
+  "native_audit_started": false,
+  "learning_benefit_verified": false,
+  "mainline_merged": false,
+  "draft_protocol_sha256": "6cda9d3b8b08c5c4dc00d2dca6b444b6961eac1988031a06321d4a9b81f54718",
+  "rebuild_provenance": {
+    "previous_unexecuted_candidate": {
+      "path": "/tmp/PvZ-Portable-event-wait-v1/build/pvz-portable",
+      "sha256": "5c5957e5d51c08ef1aac39d36564026e3856720e017ebbc2bb899f8d52f6e0eb"
+    },
+    "cause": "Old /tmp compiled artifact no longer exists after environment restoration; release preflight stopped before any native job.",
+    "build_source_commit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+    "cpp_and_cmake_identical_to_interface_commit": "4ee6d1a29ac7fea7cf2a7d7163bf228a791bd8c5",
+    "compiler": "GNU C/C++15.2.0",
+    "cmake": "4.2.3",
+    "build_type": "Release",
+    "parallel_build_jobs": 2,
+    "binary_bytes": 5115216,
+    "generated_version": "// Generated from CMake/ProjectVersion.h.in by CMake; do not edit.\n#pragma once\n\n#define PVZP_VERSION \"0.2.4-158-g1e5daa96eabc\"\n#define PVZP_BUILD_NUMBER 1083\n#define PVZP_COMMIT_DATE \"2026-10-02\"\n",
+    "generated_version_sha256": "05eb49c72fbf15520f2068193ca50a17c3bcf3c26dbd48d9098926507f8e2804",
+    "build_log": "/home/newbiexvwu/PvZ-Portable/logs/t5_research/event_wait_v1_restored_build.log",
+    "build_log_sha256": "b67026e15f202d9eb1af1a1b80f994d0c12c26d0bb4583cddc686a3de612f1f5",
+    "old_draft_unchanged": true
+  },
+  "execution_order": "Full256 actual recovery proof completed before native audit; this remains native engineering, no learning acceptance or demonstration data.",
+  "prior_failed_attempt": {
+    "protocol_path": "experiments/t5/event_wait_v1/native_audit_release_v1.json",
+    "protocol_sha256": "d09026e895ba3573c0895e6400da1efb12db271bfe3585cefe9219ed3dc759c9",
+    "report_path": "/home/newbiexvwu/PvZ-Portable/artifacts/research/event_wait_native_audit_v1_actual/report.json",
+    "report_sha256": "d74f1a033f1692c1474cba38932da0efb782e823b0e51e4393f0732afcbf43ba",
+    "failure_sha256": "b9ac623c67ec338bcf32310a7aeda9ee52fa5256bade86ea7ad624d860e89a10",
+    "cause": "KeyError manifest: in-memory episode is not a replay container; no replay_record manifest_directory was supplied. The gate remains failed."
+  },
+  "replay_container": "Real PvZEnv.save_replay JSONL.gz plus real experiment_manifest.json/working_tree.patch; normalized record.json.gz retains original operations/state/debug hashes and original manifest reference. replay_record executes with the actual manifest directory."
+}
