@@ -592,3 +592,8 @@ learning_curve和两节点完整评估均产出，未OOM。自身初始greedy65%
 检查点/8个末段trained/分片/日志已实际上传，版本见
 artifacts/t5/perf/mainline_headless_gru_v1_hf_delivery.json。frontier_v1单GRU候选已经
 实际启动，队列将完成3更新后完整resume下一20更新，继续真实学习。
+
+512原始检查点/分片/日志也已上传HF，修订见
+artifacts/t5/perf/headless_width512_v1_hf_delivery.json。frontier_v1已实际完成冒烟与
+完整resume，当前继续训练；初始65%/70%，2000节点62.5%/65%，尚未显示收益，低点
+照实保留。三个初始化、完整原任务验收、长关卡训练及定期变异任务池仍未完成。

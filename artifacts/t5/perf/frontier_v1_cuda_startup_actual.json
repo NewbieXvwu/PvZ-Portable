@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "experiment_id": "mainline_frontier_v1_seed0",
+  "source_revision": "ecc6b39",
+  "scope": "Actual singleGRU/0.2-0.8 global-frontier CUDA training. Own initial evaluation, first3update smoke and full resume into next20update segment; current snapshot not a final efficacy result.",
+  "snapshot": {
+    "status": "running",
+    "phase": "ready",
+    "updates": 7,
+    "counters": {
+      "episodes": 123,
+      "decisions": 14860,
+      "ticks": 1577878
+    },
+    "wall_seconds": 762.0648687149987,
+    "resources": {
+      "peak_process_tree_rss_bytes": 15148699648,
+      "min_system_available_bytes": 17630199808,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 4377166336,
+      "cuda_peak_reserved_bytes": 14384365568
+    },
+    "checkpoint": "runs/run_1/update_000007_trained_1790941373314270425.pt"
+  },
+  "curriculum": {
+    "method": "frontier_v1",
+    "uniform_fraction": 0.25,
+    "frontier_pass_range": [
+      0.2,
+      0.8
+    ],
+    "task_pool": "Unchanged original30 training tasks and1920 original seeds; no validation labels or task mutation."
+  },
+  "evaluations": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "seconds": 63.5652062650006,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.65,
+          "wilson_95": [
+            0.495059,
+            0.778655
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        },
+        "sampled": {
+          "pass_rate": 0.7,
+          "wilson_95": [
+            0.5457,
+            0.819252
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 23,
+        "decisions": 2000,
+        "ticks": 215304
+      },
+      "seconds": 77.67193260599743,
+      "modes": {
+        "greedy": {
+          "pass_rate": 0.625,
+          "wilson_95": [
+            0.470324,
+            0.75777
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        },
+        "sampled": {
+          "pass_rate": 0.65,
+          "wilson_95": [
+            0.495059,
+            0.778655
+          ],
+          "truncated": 0,
+          "zero_actual_tick_waits": 0
+        }
+      }
+    }
+  ],
+  "latest_update": {
+    "update": 7,
+    "counters": {
+      "episodes": 123,
+      "decisions": 14860,
+      "ticks": 1577878
+    },
+    "losses": {
+      "policy_loss": 0.026146950998476574,
+      "value_loss": 0.224811874662659,
+      "entropy": 2.8967878903661455,
+      "advantage_mean": -0.09129698574542999,
+      "advantage_std": 0.4241657257080078,
+      "gradient_norm": 2.243231773376465,
+      "approx_kl": 0.007836067311765681,
+      "clip_fraction": 0.09861158496434135,
+      "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+      "max_log_prob_change": 0.48413610458374023,
+      "optimizer_steps": 28,
+      "stopped_for_kl": false
+    },
+    "ppo_seconds": 80.85142220900161,
+    "rollout_seconds": 21.6738375169989
+  },
+  "interpretation": "Initial65%/70%,2000node62.5%/65%; no demonstrated gain so far. Preserve lower nodes, continue useful training. Task mutation remains next independent pool version."
+}
