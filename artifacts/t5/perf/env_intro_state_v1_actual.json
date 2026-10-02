@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "gate_result": "pass",
+  "scope": "Existing normal skipped-intro CutScene updates versus candidate existing animation/removal path, strict native fidelity; no PPO or full rendered GUI equivalence claim",
+  "protocol_sha256": "7f968cf1f140483e24f57f864b490bda3c70421971f393996588dab2a2e46dc0",
+  "expected_jobs": 120,
+  "limitations": [
+    "Existing headless setup/deck/profile/RNG reset retained. This controlled audit covers ordinary skipped-intro completion, not a full rendered GUI or all 50 challenge levels.",
+    "Thirty original/new frozen pool tasks, first two seeds, both declared controls. It is an engineering gate, not64-seed learning acceptance.",
+    "Controls are never PPO training demonstrations. No zombie or mower injection; empty roof-cleaner profiles remain empty.",
+    "Original 6480-branch and dynamic coverage gates stay failed and archived; a subsequent corrected native event release must satisfy all original positive conditions.",
+    "Old trained candidates are not retrospectively described as using the corrected environment. New policy baselines and engineering gates will bind the new binary."
+  ],
+  "binary_fingerprints": {
+    "legacy_executable": {
+      "path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/event_wait_native_audit_v1/build/pvz-portable",
+      "sha256": "9204d301ffdfca6801e68030001a95229184e07855f4b8cbe2e81a2f8b4df063",
+      "bytes": 5115216
+    },
+    "reference_executable": {
+      "path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/env_intro_state_v1/build_reference/pvz-portable",
+      "sha256": "1b02c5bbce3c402f9a51f99392817dfb982d34244c8d1eccfec159017e0ab00a",
+      "bytes": 5115216
+    },
+    "candidate_executable": {
+      "path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/env_intro_state_v1/build/pvz-portable",
+      "sha256": "27a00b2dbebdc24b2937a82e66a1fd219e5530188913be1b8eb7eed083dc5d2b",
+      "bytes": 5115216
+    }
+  },
+  "missing_coverage": [],
+  "mower_triggered": 300,
+  "physical_comparisons": 23961,
+  "real_record_replays": 240,
+  "all_candidate_reference_fields_equal": true,
+  "seconds": 508.9213160420004,
+  "peak_process_tree_rss_bytes": 1274265600,
+  "min_system_available_bytes": 22233968640,
+  "peak_swap_used_bytes": 0,
+  "report_path": "artifacts/research/env_intro_state_v1_actual/report.json",
+  "report_sha256": "9284a5d7c60d34d6898f350062dff0ea9197ae8a2396dc9a766d891aad9d6df8",
+  "verified_job_raw_result_chains": 120,
+  "verified_manifest_patch_record_chains": 240,
+  "source_branch": "research/env-intro-state-v1",
+  "source_head": "bd95963395320c9a7f706e37cbd865cc616bc1f9",
+  "all_jobs_terminal": true,
+  "control_wins": 92,
+  "control_games": 120,
+  "not_learning_acceptance": true,
+  "old_event_gates_preserved": "fail",
+  "interpretation": "Corrected skipped-intro candidate agrees with actual ordinary two CutScene updates; natural mower triggers restored. Control wins are not PPO learning; corrected baseline must be remeasured."
+}
