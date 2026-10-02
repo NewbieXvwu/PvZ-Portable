@@ -106,11 +106,28 @@ def checkpoint(output):
 
 def read_protocol(path, configs, loaded):
     protocol = json.loads(path.read_text())
+    exact_budget = any(c['budget'].get('boundary_mode') == 'exact_decisions_v1' for c in loaded)
+    if exact_budget:
+        if protocol.get('release_status') != 'released':
+            raise RuntimeError('exact-budget actual recovery requires a published released protocol')
+        published_ref = 'refs/remotes/delivery/research/exact-decision-budget-v1'
+        relative = str(path.resolve().relative_to(ROOT))
+        published = subprocess.check_output(['git','-C',str(ROOT),'show',published_ref+':'+relative])
+        if published != path.read_bytes():
+            raise RuntimeError('exact-budget protocol differs from fetched publication')
+        previous = protocol['prior_full256_recovery']
+        prior = Path(previous['path'])
+        if sha256_file(prior) != previous['sha256'] or json.loads(prior.read_text())['gate_result'] != 'pass':
+            raise RuntimeError('preceding unchanged full256 recovery evidence differs or did not pass')
     if sha256_file(Path(__file__)) != protocol["helper_sha256"]:
         raise ValueError("interruption helper changed after preregistration")
     for name, expected in protocol["required_fingerprints"].items():
         if sha256_file(ROOT / name) != expected:
             raise ValueError(f"preregistered interruption source/config changed: {name}")
+        if exact_budget and not name.startswith('build/'):
+            published = subprocess.check_output(['git','-C',str(ROOT),'show',published_ref+':'+name])
+            if published != (ROOT/name).read_bytes():
+                raise RuntimeError(f'exact-budget source differs from fetched publication: {name}')
     if [str(p.relative_to(ROOT)) for p in configs] != protocol["configs"]:
         raise ValueError("configs differ from the preregistered pair")
     if any(c["model"] != protocol["model"] for c in loaded):
@@ -249,6 +266,8 @@ def main():
         for index, (a, b) in enumerate(zip(left["training_state"]["update_history"], right["training_state"]["update_history"], strict=True)):
             for key in ("update", "counters", "losses", "trajectory_stats", "episode_digests"):
                 compare(a[key], b[key], f"update_history[{index}].{key}", differences)
+            if loaded[0]['budget'].get('boundary_mode') == 'exact_decisions_v1':
+                compare(a['decision_budget'], b['decision_budget'], f'update_history[{index}].decision_budget', differences)
             if loaded[0]["sampling"]["method"] in ("terrain_balanced", "learning_progress"):
                 compare(a["curriculum_sampling"], b["curriculum_sampling"],
                         f"update_history[{index}].curriculum_sampling", differences)
@@ -271,6 +290,14 @@ def main():
             differences.append({"path": "partial_shard_reuse", "kind": "preservation_or_log"})
         if left["training_state"]["status"] != "budget_complete" or right["training_state"]["status"] != "budget_complete":
             differences.append({"path": "final_status", "kind": "budget_incomplete"})
+        if loaded[0]['budget'].get('boundary_mode') == 'exact_decisions_v1':
+            expected = [0, *loaded[0]['evaluation']['decision_nodes']]
+            if loaded[0]['budget']['decisions'] not in expected:
+                expected.append(loaded[0]['budget']['decisions'])
+            actual = [row['counters']['decisions'] for row in left['training_state']['learning_curve']]
+            if actual != expected or left['training_state']['counters']['decisions'] != loaded[0]['budget']['decisions']:
+                differences.append({'path':'exact_decision_boundaries','kind':'node_or_final_overshoot',
+                                    'expected':expected,'actual':actual})
         remaining_timeout()
         report.update({"gate_result": "pass" if not differences else "fail", "differences": differences,
                        "final_counters": left["training_state"]["counters"], "final_updates": left["training_state"]["updates"],

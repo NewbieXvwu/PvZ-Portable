@@ -1,0 +1,38 @@
+{
+  "task_id": "T5-exact-decision-budget-preflight-v1",
+  "gate_result": "pass",
+  "scope": "Authorization only for new exact-decision full256 engineering recovery pair; not actual recovery success, equal-wall learning or curriculum efficacy",
+  "allowed_experiment_ids": [
+    "exact_decision_budget_continuous_v1",
+    "exact_decision_budget_interrupted_v1"
+  ],
+  "simulator_sha256": "371a75d7e4c35b03267e9932510f44abaf2ee8f087870acd8277f27306767a3c",
+  "required_fingerprints": {
+    "python/pvz_agent_model.py": "726add4209185db025353d1fd516211a47195915dbbee3e6a55328c09c9d2783",
+    "python/pvz_research.py": "83450d8f1e29b69a61643bb07ad720a8f2e4c299c3f07738e01e0679cec8ae16",
+    "python/train_pvz_ppo.py": "750a0c9cdf7f183db16196ac126bc03081637b081ac03b0401986e871ecd2e6e",
+    "python/train_pvz_ppo_task_family.py": "a53e4b20d43e456303a91e3768d419e3c80f1eb5a7ded3c70033aeff44a6eadb",
+    "python/pvz_env.py": "17261457c00cfea5497100d3c1de2c8cf741e2bc7410486000edaf4ac39ceee0",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "python/pvz_observation_features.py": "828c73ad13e3d497e360a08a2deae16a69bd670120388a109d8c79c334b5f522",
+    "python/pvz_curriculum.py": "cf8f4233acea3077ca2fa99f49563d2aad084ad2e5fe2b8322597de4d17adbfc",
+    "scripts/t4_capability_profile.py": "60ebdbe7704a9e33ae36646462fc3f454e9d96bf8decbac8436799c47e783afb",
+    "scripts/research_observation_interrupt_audit.py": "e731104d4b9ac7038856fd29cff2b6d2c26d564c1533b0b3e6a22249cc4367ef",
+    "src/LawnApp.cpp": "dbe518e8e329276aa7867da9e5f8fe3c036d0689352a2ce300d4ee4adf76720c",
+    "gates/T2-learning-empty-packet-v1.json": "9ed0179b4ac1b00a91ab25f08a0ec096727100f38b1c2768ef75df8cd96bdfe5",
+    "artifacts/t5/perf/learning_packet_cost_native_equivalence_v1.json": "e01a22af252fc09ead12f4f46439851bec1ca18cb1fe22e205f7f35a693e04a9",
+    "python/test_reference_interrupt_protocol.py": "ce59008eb17603ba2ac5901c7d9da1c94213c22e37f47724eaec53fa1ce1b3e8",
+    "experiments/task_family/train.json": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d",
+    "experiments/t5/learning_reference256_interrupt_v1/evaluation.json": "1ef1dbe269462cbab3b59d325f8e63bec0aec00e49c471b08be5353f1fb2077f",
+    "python/test_exact_decision_budget.py": "286222d2ad527c41e537881f87b09473d0524841a49d074f5a53b6c56dc33324"
+  },
+  "checks": {
+    "unchanged_full256_real_recovery_pass_preserved": true,
+    "exact_budget_and_existing_PPO_course_32_contracts_passed": true,
+    "legacy_assignment_output_unchanged_and_stale_gates_still_rejected": true
+  },
+  "test_log_sha256": "4cd3c3facc060e9f2ebcca01d14303d655140151d0671044f005758f756834cc",
+  "first_test_failure_preserved": "logs/t5_research/exact_decision_budget_v1_combined_tests.log (5 errors from absent old ignored train/heldout and build fixtures, fixed with read-only links; no gate override)"
+}
