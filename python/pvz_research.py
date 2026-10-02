@@ -188,7 +188,7 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
     if sampling["method"] not in {"balanced", "legacy_recent", *course.COURSE_METHODS} or sampling["rollout_episodes"] < 1:
         raise ValueError("unsupported sampling method or rollout size")
     if sampling["method"] in course.COURSE_METHODS:
-        course.validate_settings(sampling["curriculum"])
+        course.validate_settings(sampling["curriculum"], sampling["method"])
     train = json.loads(_path(sampling["manifest"]).read_text())["tasks"]
     selected = set(sampling["task_ids"])
     if selected:
