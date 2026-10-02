@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-v1-first2k-v1",
+  "revision": "018ffea2d23cb94a742fed20dbd715dbb78f5e68",
+  "seconds": 84.09424011100054,
+  "scope": "All six declared0/2k nodes,1632 raw case results and exact idle control; two new evaluated checkpoints included. Four existing model points reference HF88849948 explicitly. Selected-node evidence, not full currentrun resume. Training continues unchanged."
+}

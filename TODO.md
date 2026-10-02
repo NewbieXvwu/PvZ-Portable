@@ -1000,3 +1000,19 @@ policy-only胜，不替代预定开发节点的重复多数学习；下一段仍
 已有heldout split修正，无训练/任务定义改变。900秒视图仅是报告功能示例，
 不是事前结构实验预算。配置/最终源码/逐局汇总及全部尝试日志已交付HF42fe40d1
 （evidence-informative-width-preparation-v1），2.2MB/3.385秒，无checkpoint重复上传。
+
+三随机参考的全部0/2k固定节点现已交付：6节点×136案例/模式×2，共1632逐局
+结果，自然终止全部保留，不因低分删种子。只读提取1.300秒，无新Native或模型
+评估。累计活动成本由各不可变evaluated checkpoint读取：2k时seed0/1/2为
+644.04/744.98/868.96秒，包含各自起点评估。seed0的sampled heldout_roof_1
+（L45/cap3）0/16→1/16，Wilson95[0.011,0.283]、同种子idle0/16；其它屋顶
+cap3/5与普通长/原完整均0。seed0/2的greedy aidcap10为5/16且与idle同胜负，
+seed1greedy、三个sampled的aidcap10均0/16，比idle5/16低；seed2原greedy
+屋顶3/16已降至0。尚不满足多数初始化、多次预定节点的可重复3/5波进步。
+该包只新增seed0/1的两个2k evaluated模型，另4个既有模型点精确引用HF88849948，
+未重复上传原始三个初始化或seed2 checkpoint；是节点证据，不冒充当前全run
+resume。原始结果/配置/来源/复现入口/日志已交付HF018ffea2
+（evidence-bridge-random-mc-v1-first2k-v1），183.4MB/84.09秒；曲线同步更新。
+seed1首个30更新段现正常闭合：新增117局22058决策、1715.28秒，累计第33更新
+129局24004决策；v8已进入seed2首个30更新段，随后继续既定60更新轮转及
+25k/125k节点。候选、任务清单、阈值、奖励/网络均未因早期结果改变。
