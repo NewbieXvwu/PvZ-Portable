@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-v1-diagnostics25k-v1",
+  "revision": "f3c64543245ab6c94f9631eff996918cb805f46b",
+  "seconds": 7.204965264012571,
+  "scope": "All431completed25k-prefix episode diagnostic rows and112update summaries, descriptive action advantages/critic errors/rewards, exact checkpoint references, actual existing diagnostic source, reproduction scripts and logs. No duplicated checkpoints or observation NPZ. Source NPZ pending owning first125k complete run deliveries; local frozen hardlinks preserved. Primary training unchanged and running."
+}

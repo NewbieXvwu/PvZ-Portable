@@ -1,0 +1,2230 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "execution": {
+    "status": "complete",
+    "seeds": [
+      {
+        "seed": 0,
+        "checkpoint": "runs/run_1/update_000039_evaluated_1790976336505148100.pt",
+        "counters": {
+          "episodes": 150,
+          "decisions": 25000,
+          "ticks": 2602269
+        },
+        "copied_state": true,
+        "hardlinked_source_shards": 150,
+        "command": [
+          "/home/newbiexvwu/.venvs/ml/bin/python",
+          "/home/newbiexvwu/PvZ-Portable/scripts/research_trajectory_diagnostics.py",
+          "--experiment-dir",
+          "/home/newbiexvwu/PvZ-Portable/artifacts/research/bridge_random_mc_v1_diagnostics25k_v1/local_source_snapshots/mainline_bridge_random_mc_v1_seed0",
+          "--output",
+          "/home/newbiexvwu/PvZ-Portable/artifacts/research/bridge_random_mc_v1_diagnostics25k_v1/seed0_diagnostics.json"
+        ],
+        "exit_code": 0,
+        "output": "seed0_diagnostics.json"
+      },
+      {
+        "seed": 1,
+        "checkpoint": "runs/run_1/update_000036_evaluated_1790979102470960725.pt",
+        "counters": {
+          "episodes": 136,
+          "decisions": 25000,
+          "ticks": 2503145
+        },
+        "copied_state": true,
+        "hardlinked_source_shards": 136,
+        "command": [
+          "/home/newbiexvwu/.venvs/ml/bin/python",
+          "/home/newbiexvwu/PvZ-Portable/scripts/research_trajectory_diagnostics.py",
+          "--experiment-dir",
+          "/home/newbiexvwu/PvZ-Portable/artifacts/research/bridge_random_mc_v1_diagnostics25k_v1/local_source_snapshots/mainline_bridge_random_mc_v1_seed1",
+          "--output",
+          "/home/newbiexvwu/PvZ-Portable/artifacts/research/bridge_random_mc_v1_diagnostics25k_v1/seed1_diagnostics.json"
+        ],
+        "exit_code": 0,
+        "output": "seed1_diagnostics.json"
+      },
+      {
+        "seed": 2,
+        "checkpoint": "runs/run_1/update_000037_evaluated_1790982518151570767.pt",
+        "counters": {
+          "episodes": 145,
+          "decisions": 25000,
+          "ticks": 2551104
+        },
+        "copied_state": true,
+        "hardlinked_source_shards": 145,
+        "command": [
+          "/home/newbiexvwu/.venvs/ml/bin/python",
+          "/home/newbiexvwu/PvZ-Portable/scripts/research_trajectory_diagnostics.py",
+          "--experiment-dir",
+          "/home/newbiexvwu/PvZ-Portable/artifacts/research/bridge_random_mc_v1_diagnostics25k_v1/local_source_snapshots/mainline_bridge_random_mc_v1_seed2",
+          "--output",
+          "/home/newbiexvwu/PvZ-Portable/artifacts/research/bridge_random_mc_v1_diagnostics25k_v1/seed2_diagnostics.json"
+        ],
+        "exit_code": 0,
+        "output": "seed2_diagnostics.json"
+      }
+    ],
+    "seconds": 3.1205835440050578,
+    "extra_native_interactions": 0,
+    "extra_model_forward_passes": 0,
+    "cuda_initialized": false,
+    "scope": "Each precise25k immutable evaluated checkpoint fixes the completed training prefix. All source episodes including budget truncations retained. Adaptive repeated training draws are descriptive, not independent development evaluation or causal comparisons. Existing offline diagnostic uses float64 recomputation with actual duration discounts and per-update population-std normalization. Source rollout shards remain local pending owning first125k full-run delivery; no duplicate upload of checkpoints or observation arrays.",
+    "checkpoint_delivery": {
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "branch": "evidence-bridge-random-mc-v1-first25k-v1",
+      "revision": "60a24a87868fc72f60930fe2b3c5abff9940bbe5"
+    }
+  },
+  "seeds": [
+    {
+      "seed": 0,
+      "counters": {
+        "episodes": 150,
+        "decisions": 25000,
+        "ticks": 2602269
+      },
+      "updates": 39,
+      "summary": {
+        "episodes": 150,
+        "decisions": 25000,
+        "won": 3,
+        "truncated": 6,
+        "action_counts": {
+          "plant": 2861,
+          "shovel": 3696,
+          "wait": 18443
+        },
+        "zero_tick_fraction": 0.26228,
+        "immediate_plant_shovels": 354,
+        "immediate_shovel_fraction_of_plants": 0.12373296050332051,
+        "mc_value_mse": 0.11255248014641395,
+        "mc_value_explained_variance": -0.2916834114953768,
+        "mc_return": {
+          "count": 25000,
+          "mean": -1.0814121401523755,
+          "std": 0.2949935048702232,
+          "min": -1.7065927916213983,
+          "p05": -1.5502068546067846,
+          "median": -1.075260115464216,
+          "p95": -0.6824390232678639,
+          "max": 0.6583333333333334,
+          "positive_fraction": 0.01472
+        },
+        "raw_advantage": {
+          "count": 25000,
+          "mean": 0.012193486000974212,
+          "std": 0.3352667580383686,
+          "min": -1.5501257852385533,
+          "p05": -0.502712760640199,
+          "median": 0.03865308147439564,
+          "p95": 0.4050451080200355,
+          "max": 2.116020675751227,
+          "positive_fraction": 0.55732
+        },
+        "normalized_advantage": {
+          "count": 25000,
+          "mean": 1.8758328224066645e-17,
+          "std": 1.0,
+          "min": -4.245839247575185,
+          "p05": -1.739725821369355,
+          "median": 0.052671960047243935,
+          "p95": 1.5287628938631461,
+          "max": 3.4916220172177144,
+          "positive_fraction": 0.5172
+        },
+        "td_error": {
+          "count": 25000,
+          "mean": -0.002519183129028782,
+          "std": 0.10011818049708301,
+          "min": -1.271015133957068,
+          "p05": -0.15832671914897808,
+          "median": 0.005305609737820349,
+          "p95": 0.04678634930204844,
+          "max": 2.0964541753133137,
+          "positive_fraction": 0.63964
+        },
+        "absolute_shaping_reward": {
+          "count": 25000,
+          "mean": 0.0334407760053812,
+          "std": 0.09285126017208599,
+          "min": 0.0,
+          "p05": 0.0,
+          "median": 0.0023809673743555027,
+          "p95": 0.32499999999999996,
+          "max": 0.7000000000000001,
+          "positive_fraction": 0.90212
+        },
+        "discounted_terminal_return": {
+          "count": 150,
+          "mean": -0.5222016513280884,
+          "std": 0.2410300276709427,
+          "min": -0.7992707837659182,
+          "p05": -0.7721175309290995,
+          "median": -0.4994688451737548,
+          "p95": 0.0,
+          "max": 0.8591656178411013,
+          "positive_fraction": 0.02
+        },
+        "discounted_shaping_return": {
+          "count": 150,
+          "mean": -0.3174398727512566,
+          "std": 0.10225305505862636,
+          "min": -0.35000000000000075,
+          "p05": -0.35000000000000053,
+          "median": -0.3500000000000001,
+          "p95": -0.01666666666666672,
+          "max": 0.2458140143195868,
+          "positive_fraction": 0.013333333333333334
+        },
+        "first_to_terminal_td_trace_weight": {
+          "count": 150,
+          "mean": 0.5743792100451738,
+          "std": 0.12951745553477056,
+          "min": 0.34801149349998867,
+          "p05": 0.4454594160230946,
+          "median": 0.5094057886548946,
+          "p95": 0.7765183456698935,
+          "max": 0.9423952723959552,
+          "positive_fraction": 1.0
+        },
+        "max_abs_shaping_telescoping_error": 8.326672684688674e-16,
+        "by_action": {
+          "plant": {
+            "count": 2861,
+            "raw_advantage": {
+              "count": 2861,
+              "mean": 0.02270977732710835,
+              "std": 0.33878640650587233,
+              "min": -1.5005795972877078,
+              "p05": -0.5031517933069153,
+              "median": 0.05106510318813895,
+              "p95": 0.41418990912565345,
+              "max": 2.0452211527416893,
+              "positive_fraction": 0.5777700104858441
+            },
+            "normalized_advantage": {
+              "count": 2861,
+              "mean": 0.04262224680540117,
+              "std": 1.0082974561815956,
+              "min": -4.245839247575185,
+              "p05": -1.6784187123354755,
+              "median": 0.11659778649680817,
+              "p95": 1.5420607750193538,
+              "max": 3.4382561752819902,
+              "positive_fraction": 0.5400209716882209
+            }
+          },
+          "shovel": {
+            "count": 3696,
+            "raw_advantage": {
+              "count": 3696,
+              "mean": -0.0495029965955156,
+              "std": 0.33537915727224304,
+              "min": -1.5501257852385533,
+              "p05": -0.5511263159468506,
+              "median": -0.013129392036616366,
+              "p95": 0.2901219002065174,
+              "max": 1.7879102719880877,
+              "positive_fraction": 0.4810606060606061
+            },
+            "normalized_advantage": {
+              "count": 3696,
+              "mean": -0.2565178031020251,
+              "std": 0.9815974726796242,
+              "min": -3.4510154786069314,
+              "p05": -1.9815273802726152,
+              "median": -0.1722081496774241,
+              "p95": 1.1672101677205897,
+              "max": 3.3953694467415136,
+              "positive_fraction": 0.4412878787878788
+            }
+          },
+          "wait": {
+            "count": 18443,
+            "raw_advantage": {
+              "count": 18443,
+              "mean": 0.022926180800765812,
+              "std": 0.33335491701702563,
+              "min": -1.5040711715014758,
+              "p05": -0.4902615988859812,
+              "median": 0.044754360997153284,
+              "p95": 0.41769430943300273,
+              "max": 2.116020675751227,
+              "positive_fraction": 0.5694301360949954
+            },
+            "normalized_advantage": {
+              "count": 18443,
+              "mean": 0.044794640359748006,
+              "std": 0.994609405432203,
+              "min": -4.1266892049149035,
+              "p05": -1.6724920077881884,
+              "median": 0.088126666182581,
+              "p95": 1.5799188959500505,
+              "max": 3.4916220172177144,
+              "positive_fraction": 0.5288727430461422
+            }
+          }
+        },
+        "by_plant_card": {
+          "0": {
+            "count": 191,
+            "normalized_advantage": {
+              "count": 191,
+              "mean": 0.30049055342249226,
+              "std": 0.7487029961446169,
+              "min": -2.075802099897211,
+              "p05": -1.0546106011071095,
+              "median": 0.4536622045973091,
+              "p95": 1.301676000989951,
+              "max": 1.8331569526859015,
+              "positive_fraction": 0.7015706806282722
+            }
+          },
+          "1": {
+            "count": 1273,
+            "normalized_advantage": {
+              "count": 1273,
+              "mean": 0.058107968023579974,
+              "std": 1.0443934963760648,
+              "min": -4.245839247575185,
+              "p05": -1.7463535024247014,
+              "median": 0.13906519304265522,
+              "p95": 1.5536640551626901,
+              "max": 3.2774055478502526,
+              "positive_fraction": 0.5530243519245875
+            }
+          },
+          "2": {
+            "count": 11,
+            "normalized_advantage": {
+              "count": 11,
+              "mean": 0.12339882656043905,
+              "std": 0.8427889632179989,
+              "min": -1.1517852242583768,
+              "p05": -0.9985897288472256,
+              "median": 0.522482154310712,
+              "p95": 1.2912639371559838,
+              "max": 1.3194956169453278,
+              "positive_fraction": 0.5454545454545454
+            }
+          },
+          "3": {
+            "count": 453,
+            "normalized_advantage": {
+              "count": 453,
+              "mean": 0.11275326930817553,
+              "std": 0.9703370864214699,
+              "min": -2.622679287804834,
+              "p05": -1.5510543262349883,
+              "median": 0.14742200519419357,
+              "p95": 1.6753088495782928,
+              "max": 2.9653103909832477,
+              "positive_fraction": 0.5739514348785872
+            }
+          },
+          "33": {
+            "count": 254,
+            "normalized_advantage": {
+              "count": 254,
+              "mean": -0.4999868520647719,
+              "std": 1.0819067790303483,
+              "min": -3.588546665413765,
+              "p05": -2.030995740353739,
+              "median": -0.6106125135930097,
+              "p95": 1.3926786465800984,
+              "max": 3.4382561752819902,
+              "positive_fraction": 0.27165354330708663
+            }
+          },
+          "4": {
+            "count": 664,
+            "normalized_advantage": {
+              "count": 664,
+              "mean": 0.09719228676887333,
+              "std": 0.9385403867350083,
+              "min": -2.7836550693522186,
+              "p05": -1.4919879605338626,
+              "median": 0.15210732668982754,
+              "p95": 1.5216791247264894,
+              "max": 2.921471306566608,
+              "positive_fraction": 0.5451807228915663
+            }
+          },
+          "5": {
+            "count": 15,
+            "normalized_advantage": {
+              "count": 15,
+              "mean": 0.040231535579415646,
+              "std": 0.5457374675133781,
+              "min": -1.1406093486507736,
+              "p05": -0.8642103521043275,
+              "median": 0.2286601510639758,
+              "p95": 0.6458254578912439,
+              "max": 0.8138886237903341,
+              "positive_fraction": 0.6666666666666666
+            }
+          }
+        },
+        "wait_choice_counts": {
+          "60": 6511,
+          "300": 5154,
+          "150": 6778
+        }
+      },
+      "per_task": {
+        "train_bridge7_v1_aid_cap10": {
+          "episodes": 73,
+          "decisions": 14935,
+          "won": 1,
+          "truncated": 2,
+          "action_counts": {
+            "plant": 1638,
+            "shovel": 2155,
+            "wait": 11142
+          },
+          "immediate_shovel_fraction_of_plants": 0.13797313797313798,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.19214180917248366,
+            "shovel": -0.17000836915711223,
+            "wait": 0.10531690707660113
+          }
+        },
+        "train_roof_3": {
+          "episodes": 6,
+          "decisions": 530,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 132,
+            "wait": 330,
+            "plant": 68
+          },
+          "immediate_shovel_fraction_of_plants": 0.17647058823529413,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.9917451754854545,
+            "shovel": -1.0111008294692132,
+            "wait": -0.8772009104271211
+          }
+        },
+        "train_bridge7_v1_ordinary_cap10": {
+          "episodes": 7,
+          "decisions": 1114,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "plant": 111,
+            "shovel": 101,
+            "wait": 902
+          },
+          "immediate_shovel_fraction_of_plants": 0.2882882882882883,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.2928479995175505,
+            "shovel": -0.7535179083084739,
+            "wait": 0.20456166703546075
+          }
+        },
+        "train_roof_2": {
+          "episodes": 7,
+          "decisions": 610,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 398,
+            "shovel": 125,
+            "plant": 87
+          },
+          "immediate_shovel_fraction_of_plants": 0.034482758620689655,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.6230284709206602,
+            "shovel": -0.4439767129329792,
+            "wait": -0.6003258725796681
+          }
+        },
+        "train_bridge7_v1_aid_cap15": {
+          "episodes": 6,
+          "decisions": 1362,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "wait": 1042,
+            "shovel": 171,
+            "plant": 149
+          },
+          "immediate_shovel_fraction_of_plants": 0.03355704697986577,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.14794249302814869,
+            "shovel": -0.26022699101528374,
+            "wait": 0.0685179629781638
+          }
+        },
+        "train_bridge7_v1_aid_cap20": {
+          "episodes": 6,
+          "decisions": 1195,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 135,
+            "wait": 887,
+            "shovel": 173
+          },
+          "immediate_shovel_fraction_of_plants": 0.2,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.07749959310194822,
+            "shovel": -0.5286591696171086,
+            "wait": -0.01273559413534739
+          }
+        },
+        "train_multicap_v1_roof_cap5_variant": {
+          "episodes": 10,
+          "decisions": 916,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 119,
+            "shovel": 195,
+            "wait": 602
+          },
+          "immediate_shovel_fraction_of_plants": 0.04201680672268908,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.2885648788239915,
+            "shovel": -0.2127562405880726,
+            "wait": -0.12475399584350635
+          }
+        },
+        "train_bridge7_v1_ordinary_cap15": {
+          "episodes": 4,
+          "decisions": 645,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "plant": 71,
+            "wait": 512,
+            "shovel": 62
+          },
+          "immediate_shovel_fraction_of_plants": 0.18309859154929578,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.08858807140315099,
+            "shovel": -0.5254576408966364,
+            "wait": -0.03485081509456807
+          }
+        },
+        "train_roof_1": {
+          "episodes": 9,
+          "decisions": 897,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 188,
+            "wait": 588,
+            "plant": 121
+          },
+          "immediate_shovel_fraction_of_plants": 0.024793388429752067,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.7708204856941372,
+            "shovel": -0.42409063712418077,
+            "wait": -0.553979826047612
+          }
+        },
+        "train_roof_4": {
+          "episodes": 4,
+          "decisions": 427,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 56,
+            "shovel": 86,
+            "wait": 285
+          },
+          "immediate_shovel_fraction_of_plants": 0.07142857142857142,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.1816097531078676,
+            "shovel": -0.13880110827285058,
+            "wait": -0.030148194942127778
+          }
+        },
+        "train_bridge7_v1_aid_capfull": {
+          "episodes": 6,
+          "decisions": 1272,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "wait": 945,
+            "plant": 152,
+            "shovel": 175
+          },
+          "immediate_shovel_fraction_of_plants": 0.13157894736842105,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.35832317640313316,
+            "shovel": 0.015458387464642434,
+            "wait": 0.3909731293540147
+          }
+        },
+        "train_multicap_v1_roof_cap1_variant": {
+          "episodes": 11,
+          "decisions": 889,
+          "won": 2,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 133,
+            "shovel": 114,
+            "wait": 642
+          },
+          "immediate_shovel_fraction_of_plants": 0.03007518796992481,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.36284342121973073,
+            "shovel": -0.12158043574936873,
+            "wait": -0.13022159075960144
+          }
+        },
+        "train_full_level7_v1": {
+          "episodes": 1,
+          "decisions": 208,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 168,
+            "plant": 21,
+            "shovel": 19
+          },
+          "immediate_shovel_fraction_of_plants": 0.0,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.4786163767792396,
+            "shovel": -0.20055147201199716,
+            "wait": 0.4637455492419863
+          }
+        }
+      },
+      "last10_updates": [
+        {
+          "update": 30,
+          "counters": {
+            "episodes": 117,
+            "decisions": 20374,
+            "ticks": 2099484
+          },
+          "episodes": 4,
+          "decisions": 296,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.03331679285680913,
+          "mc_value_explained_variance": 0.4506434364898648,
+          "mc_return_variance": 0.03848082244376838,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.1938010023042481,
+            "shovel": 0.10491800977110988,
+            "wait": 0.019820751018735313
+          }
+        },
+        {
+          "update": 31,
+          "counters": {
+            "episodes": 121,
+            "decisions": 21094,
+            "ticks": 2172748
+          },
+          "episodes": 4,
+          "decisions": 720,
+          "won": 1,
+          "truncated": 0,
+          "mc_value_mse": 0.7251692962505827,
+          "mc_value_explained_variance": 0.05383565835869619,
+          "mc_return_variance": 0.4253550082645157,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.05794016480818423,
+            "shovel": 0.08069200635485767,
+            "wait": -0.0019405069232731908
+          }
+        },
+        {
+          "update": 32,
+          "counters": {
+            "episodes": 125,
+            "decisions": 21484,
+            "ticks": 2209143
+          },
+          "episodes": 4,
+          "decisions": 390,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.08502346826115796,
+          "mc_value_explained_variance": 0.24439285029723123,
+          "mc_return_variance": 0.02469464934715432,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.1767871305066647,
+            "shovel": 0.06920984661155362,
+            "wait": 0.013433806667627588
+          }
+        },
+        {
+          "update": 33,
+          "counters": {
+            "episodes": 129,
+            "decisions": 22192,
+            "ticks": 2281874
+          },
+          "episodes": 4,
+          "decisions": 708,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.2537872300066296,
+          "mc_value_explained_variance": -0.08985486407387411,
+          "mc_return_variance": 0.054424168984349895,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.04500306114029607,
+            "shovel": -0.19108169809120007,
+            "wait": 0.02786740981740061
+          }
+        },
+        {
+          "update": 34,
+          "counters": {
+            "episodes": 133,
+            "decisions": 22821,
+            "ticks": 2348517
+          },
+          "episodes": 4,
+          "decisions": 629,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.05585649627604298,
+          "mc_value_explained_variance": 0.48663753438413015,
+          "mc_return_variance": 0.049158767204458505,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.0687000898803536,
+            "shovel": 0.0547658426161183,
+            "wait": -0.0017893460535189714
+          }
+        },
+        {
+          "update": 35,
+          "counters": {
+            "episodes": 137,
+            "decisions": 23161,
+            "ticks": 2381849
+          },
+          "episodes": 4,
+          "decisions": 340,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.02673158636339568,
+          "mc_value_explained_variance": 0.35344989531914095,
+          "mc_return_variance": 0.03446363401135088,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.17572866943201287,
+            "shovel": 0.053680292308135515,
+            "wait": 0.011274026349443304
+          }
+        },
+        {
+          "update": 36,
+          "counters": {
+            "episodes": 141,
+            "decisions": 23725,
+            "ticks": 2443958
+          },
+          "episodes": 4,
+          "decisions": 564,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.024883872275502258,
+          "mc_value_explained_variance": 0.6046012247843436,
+          "mc_return_variance": 0.06058440069062879,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.03558268045869759,
+            "shovel": -0.23125337421111228,
+            "wait": 0.05591299749610069
+          }
+        },
+        {
+          "update": 37,
+          "counters": {
+            "episodes": 145,
+            "decisions": 24441,
+            "ticks": 2534678
+          },
+          "episodes": 4,
+          "decisions": 716,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.03752003881141083,
+          "mc_value_explained_variance": 0.4739684922636267,
+          "mc_return_variance": 0.04075759624783549,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.05573680461279632,
+            "shovel": -0.7728753082711052,
+            "wait": 0.14493513747273462
+          }
+        },
+        {
+          "update": 38,
+          "counters": {
+            "episodes": 149,
+            "decisions": 24870,
+            "ticks": 2584564
+          },
+          "episodes": 4,
+          "decisions": 429,
+          "won": 0,
+          "truncated": 2,
+          "mc_value_mse": 0.03704929672551975,
+          "mc_value_explained_variance": 0.7184915638411415,
+          "mc_return_variance": 0.06945614640919708,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.0881362030325523,
+            "shovel": -0.4779653934656762,
+            "wait": 0.18571154232172812
+          }
+        },
+        {
+          "update": 39,
+          "counters": {
+            "episodes": 150,
+            "decisions": 25000,
+            "ticks": 2602269
+          },
+          "episodes": 1,
+          "decisions": 130,
+          "won": 0,
+          "truncated": 1,
+          "mc_value_mse": 0.07268430811508907,
+          "mc_value_explained_variance": 0.13658482621534151,
+          "mc_return_variance": 0.02483328940161476,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.16689335165303826,
+            "shovel": -1.0213536029003716,
+            "wait": 0.11678762540405588
+          }
+        }
+      ],
+      "max_abs_offline_vs_actual_training_advantage_error": {
+        "mean": 7.935155710292463e-08,
+        "std": 3.1410514411689405e-08
+      },
+      "diagnostic_seconds": 0.8273581100074807
+    },
+    {
+      "seed": 1,
+      "counters": {
+        "episodes": 136,
+        "decisions": 25000,
+        "ticks": 2503145
+      },
+      "updates": 36,
+      "summary": {
+        "episodes": 136,
+        "decisions": 25000,
+        "won": 4,
+        "truncated": 5,
+        "action_counts": {
+          "plant": 3133,
+          "shovel": 3621,
+          "wait": 18246
+        },
+        "zero_tick_fraction": 0.2702,
+        "immediate_plant_shovels": 424,
+        "immediate_shovel_fraction_of_plants": 0.13533354612192786,
+        "mc_value_mse": 0.1855878584778314,
+        "mc_value_explained_variance": -0.5650192233609965,
+        "mc_return": {
+          "count": 25000,
+          "mean": -1.031731624856501,
+          "std": 0.34429032282791944,
+          "min": -1.7083333333333335,
+          "p05": -1.5288037366711287,
+          "median": -1.0521658531675937,
+          "p95": -0.5475036998187994,
+          "max": 0.34418181818181814,
+          "positive_fraction": 0.0402
+        },
+        "raw_advantage": {
+          "count": 25000,
+          "mean": 0.008775620540917774,
+          "std": 0.43070970149504784,
+          "min": -1.5948434638164173,
+          "p05": -0.6572260598668229,
+          "median": 0.009009513822716857,
+          "p95": 0.548102901202157,
+          "max": 1.9067655031030828,
+          "positive_fraction": 0.51304
+        },
+        "normalized_advantage": {
+          "count": 25000,
+          "mean": 1.5347723092418164e-17,
+          "std": 1.0,
+          "min": -5.164877906288437,
+          "p05": -1.6937264974631634,
+          "median": 0.04290803224069731,
+          "p95": 1.5493002562950322,
+          "max": 2.4356686746163847,
+          "positive_fraction": 0.51452
+        },
+        "td_error": {
+          "count": 25000,
+          "mean": -0.002408387714654018,
+          "std": 0.1029091535197975,
+          "min": -1.5750255594650904,
+          "p05": -0.1681916671467787,
+          "median": 0.004658641562680477,
+          "p95": 0.04847603819767645,
+          "max": 1.9067655031030828,
+          "positive_fraction": 0.64244
+        },
+        "absolute_shaping_reward": {
+          "count": 25000,
+          "mean": 0.033851986599759576,
+          "std": 0.0922866514145774,
+          "min": 0.0,
+          "p05": 0.0,
+          "median": 0.0021721105871313484,
+          "p95": 0.32499999999999996,
+          "max": 0.7083333333333334,
+          "positive_fraction": 0.91584
+        },
+        "discounted_terminal_return": {
+          "count": 136,
+          "mean": -0.5045040667024187,
+          "std": 0.22613273956235236,
+          "min": -0.7988960011375642,
+          "p05": -0.7613386619680705,
+          "median": -0.494457900386968,
+          "p95": 0.0,
+          "max": 0.49694850617104525,
+          "positive_fraction": 0.029411764705882353
+        },
+        "discounted_shaping_return": {
+          "count": 136,
+          "mean": -0.31840004804095,
+          "std": 0.0962637529350535,
+          "min": -0.35000000000000114,
+          "p05": -0.35000000000000064,
+          "median": -0.3500000000000001,
+          "p95": -0.016666666666666774,
+          "max": 0.04288631751914479,
+          "positive_fraction": 0.007352941176470588
+        },
+        "first_to_terminal_td_trace_weight": {
+          "count": 136,
+          "mean": 0.5546245959924674,
+          "std": 0.1268448721585634,
+          "min": 0.37074671526869285,
+          "p05": 0.4172223331638386,
+          "median": 0.49786525993390357,
+          "p95": 0.7710451009089649,
+          "max": 1.0,
+          "positive_fraction": 1.0
+        },
+        "max_abs_shaping_telescoping_error": 1.1102230246251565e-15,
+        "by_action": {
+          "plant": {
+            "count": 3133,
+            "raw_advantage": {
+              "count": 3133,
+              "mean": 0.03286186330953042,
+              "std": 0.4697271792916941,
+              "min": -1.385241675424552,
+              "p05": -0.6589361680411653,
+              "median": 0.019404137380093438,
+              "p95": 0.9362053261054059,
+              "max": 1.8769472514409866,
+              "positive_fraction": 0.5196297478455155
+            },
+            "normalized_advantage": {
+              "count": 3133,
+              "mean": 0.06505138031159495,
+              "std": 1.0188515498094641,
+              "min": -4.241914784195792,
+              "p05": -1.6569829871258992,
+              "median": 0.12802546927254177,
+              "p95": 1.5597005027638267,
+              "max": 2.2731933503837154,
+              "positive_fraction": 0.5467602936482604
+            }
+          },
+          "shovel": {
+            "count": 3621,
+            "raw_advantage": {
+              "count": 3621,
+              "mean": -0.06473887269327427,
+              "std": 0.40785284175671627,
+              "min": -1.5948434638164173,
+              "p05": -0.6851291572217466,
+              "median": -0.0519115737469826,
+              "p95": 0.41394680551161706,
+              "max": 1.8939421590019734,
+              "positive_fraction": 0.431924882629108
+            },
+            "normalized_advantage": {
+              "count": 3621,
+              "mean": -0.30097786319195863,
+              "std": 0.9835238217519638,
+              "min": -5.164877906288437,
+              "p05": -2.0161512887708932,
+              "median": -0.23821252664539327,
+              "p95": 1.264662144610035,
+              "max": 2.037734230920579,
+              "positive_fraction": 0.424192212096106
+            }
+          },
+          "wait": {
+            "count": 18246,
+            "raw_advantage": {
+              "count": 18246,
+              "mean": 0.01922907781412538,
+              "std": 0.4266152612807531,
+              "min": -1.5947994653706639,
+              "p05": -0.6505326112698199,
+              "median": 0.020133010695026394,
+              "p95": 0.5494975798968417,
+              "max": 1.9067655031030828,
+              "positive_fraction": 0.5280061383316892
+            },
+            "normalized_advantage": {
+              "count": 18246,
+              "mean": 0.048560499183484346,
+              "std": 0.9893879032285708,
+              "min": -3.762333423949334,
+              "p05": -1.6053568316924518,
+              "median": 0.07524742296689063,
+              "p95": 1.5788425980756464,
+              "max": 2.4356686746163847,
+              "positive_fraction": 0.5269100076729146
+            }
+          }
+        },
+        "by_plant_card": {
+          "0": {
+            "count": 263,
+            "normalized_advantage": {
+              "count": 263,
+              "mean": 0.30254753170713405,
+              "std": 0.8439399321189683,
+              "min": -2.004913356031869,
+              "p05": -1.1736960960378835,
+              "median": 0.3948728020533604,
+              "p95": 1.4506546517601526,
+              "max": 1.9082796823746042,
+              "positive_fraction": 0.6577946768060836
+            }
+          },
+          "1": {
+            "count": 1452,
+            "normalized_advantage": {
+              "count": 1452,
+              "mean": 0.10475992043574768,
+              "std": 1.0463451233812742,
+              "min": -4.241914784195792,
+              "p05": -1.6437694042647546,
+              "median": 0.18924157433122238,
+              "p95": 1.6317504616560357,
+              "max": 2.2731933503837154,
+              "positive_fraction": 0.568870523415978
+            }
+          },
+          "2": {
+            "count": 22,
+            "normalized_advantage": {
+              "count": 22,
+              "mean": 0.25759632271760585,
+              "std": 0.8925085251356777,
+              "min": -1.1827646362080277,
+              "p05": -0.8075531728706927,
+              "median": 0.0841616325003068,
+              "p95": 1.5061227992575956,
+              "max": 1.655623691183856,
+              "positive_fraction": 0.5
+            }
+          },
+          "3": {
+            "count": 465,
+            "normalized_advantage": {
+              "count": 465,
+              "mean": 0.15867124919054346,
+              "std": 0.9562094076783232,
+              "min": -2.5084868364925494,
+              "p05": -1.53054837584385,
+              "median": 0.23533409701601402,
+              "p95": 1.563602838034353,
+              "max": 2.190759076464942,
+              "positive_fraction": 0.5612903225806452
+            }
+          },
+          "33": {
+            "count": 233,
+            "normalized_advantage": {
+              "count": 233,
+              "mean": -0.7910599605907219,
+              "std": 0.9409861998905358,
+              "min": -3.692691355061235,
+              "p05": -2.271723394447169,
+              "median": -0.7883230108248546,
+              "p95": 0.715658440304016,
+              "max": 1.3504339086026362,
+              "positive_fraction": 0.21888412017167383
+            }
+          },
+          "4": {
+            "count": 682,
+            "normalized_advantage": {
+              "count": 682,
+              "mean": 0.09438925734160127,
+              "std": 0.9496748906128266,
+              "min": -2.386212712513145,
+              "p05": -1.514660916481157,
+              "median": 0.11657360371345628,
+              "p95": 1.5293972872375352,
+              "max": 2.2348226606950385,
+              "positive_fraction": 0.5557184750733137
+            }
+          },
+          "5": {
+            "count": 16,
+            "normalized_advantage": {
+              "count": 16,
+              "mean": 0.7886760338638282,
+              "std": 0.7655343404344997,
+              "min": -0.5618920794243508,
+              "p05": -0.5211376879276939,
+              "median": 1.1079814941388615,
+              "p95": 1.6172655129034847,
+              "max": 1.7417267414158866,
+              "positive_fraction": 0.75
+            }
+          }
+        },
+        "wait_choice_counts": {
+          "60": 8967,
+          "300": 5792,
+          "150": 3487
+        }
+      },
+      "per_task": {
+        "train_bridge7_v1_aid_cap10": {
+          "episodes": 78,
+          "decisions": 16480,
+          "won": 4,
+          "truncated": 3,
+          "action_counts": {
+            "plant": 2047,
+            "shovel": 2311,
+            "wait": 12122
+          },
+          "immediate_shovel_fraction_of_plants": 0.14948705422569614,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.19200262557323142,
+            "shovel": -0.20665484805616807,
+            "wait": 0.08764633968384809
+          }
+        },
+        "train_roof_3": {
+          "episodes": 5,
+          "decisions": 455,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 130,
+            "wait": 266,
+            "plant": 59
+          },
+          "immediate_shovel_fraction_of_plants": 0.2542372881355932,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.7442842587862284,
+            "shovel": -1.003852429203117,
+            "wait": -0.6223869186132831
+          }
+        },
+        "train_bridge7_v1_ordinary_cap10": {
+          "episodes": 6,
+          "decisions": 948,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "plant": 98,
+            "shovel": 94,
+            "wait": 756
+          },
+          "immediate_shovel_fraction_of_plants": 0.32653061224489793,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.44227370319840686,
+            "shovel": -0.7354232767364068,
+            "wait": 0.3448795431533135
+          }
+        },
+        "train_roof_2": {
+          "episodes": 8,
+          "decisions": 793,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 529,
+            "shovel": 159,
+            "plant": 105
+          },
+          "immediate_shovel_fraction_of_plants": 0.08571428571428572,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.9439950467565102,
+            "shovel": -0.863015890461994,
+            "wait": -0.73010983717084
+          }
+        },
+        "train_bridge7_v1_aid_cap15": {
+          "episodes": 5,
+          "decisions": 1228,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 913,
+            "shovel": 171,
+            "plant": 144
+          },
+          "immediate_shovel_fraction_of_plants": 0.1111111111111111,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.36546659256763064,
+            "shovel": 0.049404390759506,
+            "wait": 0.3023356661527061
+          }
+        },
+        "train_bridge7_v1_aid_cap20": {
+          "episodes": 5,
+          "decisions": 1154,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 152,
+            "wait": 831,
+            "shovel": 171
+          },
+          "immediate_shovel_fraction_of_plants": 0.09868421052631579,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.21797513114681555,
+            "shovel": -0.09776481381807046,
+            "wait": 0.25224566778675944
+          }
+        },
+        "train_multicap_v1_roof_cap5_variant": {
+          "episodes": 7,
+          "decisions": 701,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 102,
+            "shovel": 124,
+            "wait": 475
+          },
+          "immediate_shovel_fraction_of_plants": 0.0392156862745098,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.4310095899338253,
+            "shovel": -0.38577537965953623,
+            "wait": -0.2938124059700157
+          }
+        },
+        "train_bridge7_v1_ordinary_cap15": {
+          "episodes": 4,
+          "decisions": 808,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 80,
+            "wait": 656,
+            "shovel": 72
+          },
+          "immediate_shovel_fraction_of_plants": 0.15,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.7022133779175052,
+            "shovel": -0.27492426249956525,
+            "wait": 0.5307373454352199
+          }
+        },
+        "train_roof_1": {
+          "episodes": 5,
+          "decisions": 520,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 94,
+            "wait": 347,
+            "plant": 79
+          },
+          "immediate_shovel_fraction_of_plants": 0.012658227848101266,
+          "normalized_advantage_means_by_action": {
+            "plant": -1.1415394198898405,
+            "shovel": -0.9676663718389514,
+            "wait": -0.958320653972193
+          }
+        },
+        "train_roof_4": {
+          "episodes": 4,
+          "decisions": 319,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "plant": 47,
+            "shovel": 62,
+            "wait": 210
+          },
+          "immediate_shovel_fraction_of_plants": 0.0,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.5817676908479721,
+            "shovel": -0.46348900320141057,
+            "wait": -0.37482921513851064
+          }
+        },
+        "train_bridge7_v1_aid_capfull": {
+          "episodes": 5,
+          "decisions": 1200,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 880,
+            "plant": 159,
+            "shovel": 161
+          },
+          "immediate_shovel_fraction_of_plants": 0.06289308176100629,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.08719804789962168,
+            "shovel": -0.02383837491420991,
+            "wait": 0.14898566833402418
+          }
+        },
+        "train_multicap_v1_roof_cap1_variant": {
+          "episodes": 4,
+          "decisions": 394,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 72,
+            "plant": 61,
+            "wait": 261
+          },
+          "immediate_shovel_fraction_of_plants": 0.06557377049180328,
+          "normalized_advantage_means_by_action": {
+            "plant": -1.3745453617523495,
+            "shovel": -1.0552235629707054,
+            "wait": -1.1473845857456548
+          }
+        }
+      },
+      "last10_updates": [
+        {
+          "update": 27,
+          "counters": {
+            "episodes": 105,
+            "decisions": 19513,
+            "ticks": 2026048
+          },
+          "episodes": 4,
+          "decisions": 786,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.15075727792126065,
+          "mc_value_explained_variance": 0.09061481545884831,
+          "mc_return_variance": 0.06415489119852144,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.11049101906312914,
+            "shovel": -0.40882309512177756,
+            "wait": 0.09030413525184727
+          }
+        },
+        {
+          "update": 28,
+          "counters": {
+            "episodes": 109,
+            "decisions": 20263,
+            "ticks": 2094894
+          },
+          "episodes": 4,
+          "decisions": 750,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.04405275727054472,
+          "mc_value_explained_variance": 0.14755324582203166,
+          "mc_return_variance": 0.05049811968141035,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.03774893650980447,
+            "shovel": -0.13223103585415255,
+            "wait": 0.02999791179752169
+          }
+        },
+        {
+          "update": 29,
+          "counters": {
+            "episodes": 113,
+            "decisions": 21016,
+            "ticks": 2168815
+          },
+          "episodes": 4,
+          "decisions": 753,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.05616478366183762,
+          "mc_value_explained_variance": 0.2041078133694053,
+          "mc_return_variance": 0.06842846504639172,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.039172956998763324,
+            "shovel": -0.2603161351064643,
+            "wait": 0.04591246526869806
+          }
+        },
+        {
+          "update": 30,
+          "counters": {
+            "episodes": 117,
+            "decisions": 21809,
+            "ticks": 2244639
+          },
+          "episodes": 4,
+          "decisions": 793,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.041753649170772324,
+          "mc_value_explained_variance": 0.2589538982681794,
+          "mc_return_variance": 0.03035968232208774,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.02189996745460614,
+            "shovel": -0.2481121012064771,
+            "wait": 0.056299257778839026
+          }
+        },
+        {
+          "update": 31,
+          "counters": {
+            "episodes": 121,
+            "decisions": 22647,
+            "ticks": 2319849
+          },
+          "episodes": 4,
+          "decisions": 838,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.036097005672874216,
+          "mc_value_explained_variance": 0.3750050811622093,
+          "mc_return_variance": 0.05390032886833556,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.023260508816806143,
+            "shovel": -0.45085846230381044,
+            "wait": 0.08134339255434798
+          }
+        },
+        {
+          "update": 32,
+          "counters": {
+            "episodes": 125,
+            "decisions": 23097,
+            "ticks": 2353256
+          },
+          "episodes": 4,
+          "decisions": 450,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.037579178501519754,
+          "mc_value_explained_variance": 0.20490625827947695,
+          "mc_return_variance": 0.01804477805520069,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.16235038764607576,
+            "shovel": -0.13141063590863564,
+            "wait": 0.06665298869301858
+          }
+        },
+        {
+          "update": 33,
+          "counters": {
+            "episodes": 129,
+            "decisions": 24004,
+            "ticks": 2429820
+          },
+          "episodes": 4,
+          "decisions": 907,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.072585036798664,
+          "mc_value_explained_variance": 0.42607938848060345,
+          "mc_return_variance": 0.07336322924843981,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.08193331921258329,
+            "shovel": -0.46366300158466983,
+            "wait": 0.08397792984125765
+          }
+        },
+        {
+          "update": 34,
+          "counters": {
+            "episodes": 133,
+            "decisions": 24778,
+            "ticks": 2486107
+          },
+          "episodes": 4,
+          "decisions": 774,
+          "won": 0,
+          "truncated": 2,
+          "mc_value_mse": 0.04139941479490948,
+          "mc_value_explained_variance": 0.5644100423948173,
+          "mc_return_variance": 0.0853931836225791,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.030521257332343964,
+            "shovel": -0.21342598364311746,
+            "wait": 0.0471998310344648
+          }
+        },
+        {
+          "update": 35,
+          "counters": {
+            "episodes": 135,
+            "decisions": 24998,
+            "ticks": 2503085
+          },
+          "episodes": 2,
+          "decisions": 220,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.02330383783154716,
+          "mc_value_explained_variance": 0.26485112395935506,
+          "mc_return_variance": 0.031523505758333195,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.09602054371641038,
+            "shovel": -0.11897747723812382,
+            "wait": 0.06470778070273417
+          }
+        },
+        {
+          "update": 36,
+          "counters": {
+            "episodes": 136,
+            "decisions": 25000,
+            "ticks": 2503145
+          },
+          "episodes": 1,
+          "decisions": 2,
+          "won": 0,
+          "truncated": 1,
+          "mc_value_mse": 0.13084135242007822,
+          "mc_value_explained_variance": -403.79749100757107,
+          "mc_return_variance": 6.944444444444396e-05,
+          "normalized_advantage_means_by_action": {
+            "plant": -1.0,
+            "wait": 1.0
+          }
+        }
+      ],
+      "max_abs_offline_vs_actual_training_advantage_error": {
+        "mean": 4.1255172389398354e-08,
+        "std": 3.069866583160774e-08
+      },
+      "diagnostic_seconds": 0.7872915560001275
+    },
+    {
+      "seed": 2,
+      "counters": {
+        "episodes": 145,
+        "decisions": 25000,
+        "ticks": 2551104
+      },
+      "updates": 37,
+      "summary": {
+        "episodes": 145,
+        "decisions": 25000,
+        "won": 6,
+        "truncated": 5,
+        "action_counts": {
+          "plant": 2517,
+          "shovel": 3582,
+          "wait": 18901
+        },
+        "zero_tick_fraction": 0.24396,
+        "immediate_plant_shovels": 453,
+        "immediate_shovel_fraction_of_plants": 0.1799761620977354,
+        "mc_value_mse": 0.15569700085932678,
+        "mc_value_explained_variance": -0.30596223238802667,
+        "mc_return": {
+          "count": 25000,
+          "mean": -1.017927108289039,
+          "std": 0.3450958335343861,
+          "min": -1.7333333333333334,
+          "p05": -1.5430009015404107,
+          "median": -1.0284179675682026,
+          "p95": -0.5775568736218126,
+          "max": 0.6583333333333334,
+          "positive_fraction": 0.03576
+        },
+        "raw_advantage": {
+          "count": 25000,
+          "mean": 0.012979877561443955,
+          "std": 0.3943710481739458,
+          "min": -1.511074675619602,
+          "p05": -0.6600370575639525,
+          "median": 0.03397420050493604,
+          "p95": 0.5092858251769862,
+          "max": 1.886773770623923,
+          "positive_fraction": 0.5538
+        },
+        "normalized_advantage": {
+          "count": 25000,
+          "mean": -1.0231815394945443e-17,
+          "std": 1.0,
+          "min": -5.712577836497047,
+          "p05": -1.741773550734788,
+          "median": 0.04422130416911507,
+          "p95": 1.6031901380514098,
+          "max": 2.6849864310516134,
+          "positive_fraction": 0.51396
+        },
+        "td_error": {
+          "count": 25000,
+          "mean": -0.002492911055428242,
+          "std": 0.11055995135318475,
+          "min": -1.363892751932144,
+          "p05": -0.296542090053956,
+          "median": 0.004647099214782235,
+          "p95": 0.07460004626844347,
+          "max": 1.8803036530812582,
+          "positive_fraction": 0.67372
+        },
+        "absolute_shaping_reward": {
+          "count": 25000,
+          "mean": 0.03792186534188144,
+          "std": 0.09936502468861698,
+          "min": 0.0,
+          "p05": 0.0,
+          "median": 0.001355432628537545,
+          "p95": 0.32500000000000007,
+          "max": 0.7333333333333334,
+          "positive_fraction": 0.91348
+        },
+        "discounted_terminal_return": {
+          "count": 145,
+          "mean": -0.4970308920321384,
+          "std": 0.27942673130551077,
+          "min": -0.7953976110875323,
+          "p05": -0.7747110758559551,
+          "median": -0.5046491449147045,
+          "p95": 0.0,
+          "max": 0.7738447030153034,
+          "positive_fraction": 0.041379310344827586
+        },
+        "discounted_shaping_return": {
+          "count": 145,
+          "mean": -0.3214546200827078,
+          "std": 0.0927354538526348,
+          "min": -0.3500000000000008,
+          "p05": -0.3500000000000004,
+          "median": -0.35,
+          "p95": -0.016666666666666784,
+          "max": 0.08741580797853686,
+          "positive_fraction": 0.013793103448275862
+        },
+        "first_to_terminal_td_trace_weight": {
+          "count": 145,
+          "mean": 0.5694269242782071,
+          "std": 0.12560415459698895,
+          "min": 0.39438543273271753,
+          "p05": 0.43654412889430033,
+          "median": 0.5105498661031123,
+          "p95": 0.7753758334575331,
+          "max": 0.7953976110875315,
+          "positive_fraction": 1.0
+        },
+        "max_abs_shaping_telescoping_error": 8.326672684688674e-16,
+        "by_action": {
+          "plant": {
+            "count": 2517,
+            "raw_advantage": {
+              "count": 2517,
+              "mean": 0.03186234758296548,
+              "std": 0.40723294102184315,
+              "min": -1.3462058279254645,
+              "p05": -0.6590630500991866,
+              "median": 0.04794562602923097,
+              "p95": 0.600477546911331,
+              "max": 1.8567250267401543,
+              "positive_fraction": 0.5740961462058005
+            },
+            "normalized_advantage": {
+              "count": 2517,
+              "mean": 0.08326011978776136,
+              "std": 1.0285056354756088,
+              "min": -5.712577836497047,
+              "p05": -1.6958607694875367,
+              "median": 0.13179982340053142,
+              "p95": 1.653788773006487,
+              "max": 2.5642577308987473,
+              "positive_fraction": 0.5566150178784267
+            }
+          },
+          "shovel": {
+            "count": 3582,
+            "raw_advantage": {
+              "count": 3582,
+              "mean": -0.08923944784297753,
+              "std": 0.3840282435198048,
+              "min": -1.511074675619602,
+              "p05": -0.8148402754320898,
+              "median": -0.05322614471346243,
+              "p95": 0.3057585246741474,
+              "max": 1.6800052965511265,
+              "positive_fraction": 0.40145170295924065
+            },
+            "normalized_advantage": {
+              "count": 3582,
+              "mean": -0.42586849589503567,
+              "std": 0.9365037338369704,
+              "min": -4.294470797702472,
+              "p05": -2.0467735241246556,
+              "median": -0.3654187710396053,
+              "p95": 0.9976355497497936,
+              "max": 2.5738307054260376,
+              "positive_fraction": 0.3623673925181463
+            }
+          },
+          "wait": {
+            "count": 18901,
+            "raw_advantage": {
+              "count": 18901,
+              "mean": 0.0298373161390043,
+              "std": 0.39162411420741566,
+              "min": -1.4590413608649213,
+              "p05": -0.6272150508905389,
+              "median": 0.04848830543583529,
+              "p95": 0.5245138455339488,
+              "max": 1.886773770623923,
+              "positive_fraction": 0.579969313792921
+            },
+            "normalized_advantage": {
+              "count": 18901,
+              "mean": 0.06962040266600826,
+              "std": 0.987654481209925,
+              "min": -3.973616397829924,
+              "p05": -1.6518907277589459,
+              "median": 0.10279247290675371,
+              "p95": 1.646006654323353,
+              "max": 2.6849864310516134,
+              "positive_fraction": 0.5370086238823343
+            }
+          }
+        },
+        "by_plant_card": {
+          "0": {
+            "count": 221,
+            "normalized_advantage": {
+              "count": 221,
+              "mean": 0.11883621246799417,
+              "std": 0.7975312649811949,
+              "min": -2.252413938979114,
+              "p05": -1.1084268716972032,
+              "median": 0.15224493927869842,
+              "p95": 1.3311811032213723,
+              "max": 2.3474715665839416,
+              "positive_fraction": 0.583710407239819
+            }
+          },
+          "1": {
+            "count": 837,
+            "normalized_advantage": {
+              "count": 837,
+              "mean": 0.10143572622538953,
+              "std": 1.106234588868481,
+              "min": -5.712577836497047,
+              "p05": -1.8594406972514919,
+              "median": 0.18933651758408168,
+              "p95": 1.6610818770110023,
+              "max": 2.5642577308987473,
+              "positive_fraction": 0.5878136200716846
+            }
+          },
+          "2": {
+            "count": 21,
+            "normalized_advantage": {
+              "count": 21,
+              "mean": 0.0645409294743666,
+              "std": 0.8987203272487125,
+              "min": -1.6830910504351047,
+              "p05": -1.1569655227304323,
+              "median": -0.02275213306594415,
+              "p95": 1.4219653008080948,
+              "max": 1.7051305884332122,
+              "positive_fraction": 0.47619047619047616
+            }
+          },
+          "3": {
+            "count": 512,
+            "normalized_advantage": {
+              "count": 512,
+              "mean": 0.18543287448506418,
+              "std": 0.9506971056264945,
+              "min": -2.6616470629072144,
+              "p05": -1.3337458435682275,
+              "median": 0.21706561953692777,
+              "p95": 1.6618318088390989,
+              "max": 2.2225988623593316,
+              "positive_fraction": 0.580078125
+            }
+          },
+          "33": {
+            "count": 236,
+            "normalized_advantage": {
+              "count": 236,
+              "mean": -0.4456323939717647,
+              "std": 1.1717812391231608,
+              "min": -3.6231820327977338,
+              "p05": -2.0330292215933814,
+              "median": -0.6536086516506895,
+              "p95": 1.8398595867311152,
+              "max": 2.4055723360454517,
+              "positive_fraction": 0.288135593220339
+            }
+          },
+          "4": {
+            "count": 658,
+            "normalized_advantage": {
+              "count": 658,
+              "mean": 0.16355372343236926,
+              "std": 0.9534651099982977,
+              "min": -2.4543274911057353,
+              "p05": -1.5305905688010295,
+              "median": 0.17996796551529187,
+              "p95": 1.6463383122597164,
+              "max": 2.2875914353102837,
+              "positive_fraction": 0.5866261398176292
+            }
+          },
+          "5": {
+            "count": 32,
+            "normalized_advantage": {
+              "count": 32,
+              "mean": -0.01077751864873236,
+              "std": 0.7764538213258122,
+              "min": -1.6543388617624335,
+              "p05": -1.1936728567597177,
+              "median": 0.11605210168343989,
+              "p95": 1.2405920334384475,
+              "max": 1.4648421261915556,
+              "positive_fraction": 0.59375
+            }
+          }
+        },
+        "wait_choice_counts": {
+          "60": 10185,
+          "300": 6261,
+          "150": 2455
+        }
+      },
+      "per_task": {
+        "train_bridge7_v1_aid_cap10": {
+          "episodes": 79,
+          "decisions": 16397,
+          "won": 3,
+          "truncated": 3,
+          "action_counts": {
+            "plant": 1604,
+            "shovel": 2216,
+            "wait": 12577
+          },
+          "immediate_shovel_fraction_of_plants": 0.22630922693266833,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.18623571685041332,
+            "shovel": -0.42690885196195233,
+            "wait": 0.09674128194721056
+          }
+        },
+        "train_roof_3": {
+          "episodes": 4,
+          "decisions": 381,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 104,
+            "wait": 231,
+            "plant": 46
+          },
+          "immediate_shovel_fraction_of_plants": 0.21739130434782608,
+          "normalized_advantage_means_by_action": {
+            "plant": -1.2452329416968164,
+            "shovel": -1.2334603450008588,
+            "wait": -1.0370729240033871
+          }
+        },
+        "train_bridge7_v1_ordinary_cap10": {
+          "episodes": 6,
+          "decisions": 1043,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "plant": 102,
+            "shovel": 95,
+            "wait": 846
+          },
+          "immediate_shovel_fraction_of_plants": 0.22549019607843138,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.49030501090810924,
+            "shovel": -0.6242018248481375,
+            "wait": 0.3235000849559578
+          }
+        },
+        "train_roof_2": {
+          "episodes": 9,
+          "decisions": 834,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 564,
+            "shovel": 179,
+            "plant": 91
+          },
+          "immediate_shovel_fraction_of_plants": 0.03296703296703297,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.4551444301437417,
+            "shovel": -0.3532333016092774,
+            "wait": -0.3014138387256652
+          }
+        },
+        "train_bridge7_v1_aid_cap15": {
+          "episodes": 5,
+          "decisions": 1048,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 796,
+            "shovel": 143,
+            "plant": 109
+          },
+          "immediate_shovel_fraction_of_plants": 0.13761467889908258,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.044822159503765564,
+            "shovel": -0.30273465973530883,
+            "wait": 0.0244257835260142
+          }
+        },
+        "train_bridge7_v1_aid_cap20": {
+          "episodes": 6,
+          "decisions": 1076,
+          "won": 0,
+          "truncated": 1,
+          "action_counts": {
+            "plant": 111,
+            "wait": 820,
+            "shovel": 145
+          },
+          "immediate_shovel_fraction_of_plants": 0.15315315315315314,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.0963046307641312,
+            "shovel": -0.22158541554844363,
+            "wait": 0.20453626585304407
+          }
+        },
+        "train_multicap_v1_roof_cap5_variant": {
+          "episodes": 8,
+          "decisions": 692,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 73,
+            "shovel": 162,
+            "wait": 457
+          },
+          "immediate_shovel_fraction_of_plants": 0.0684931506849315,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.4654560327879873,
+            "shovel": -0.6228752313396003,
+            "wait": -0.2895756393216337
+          }
+        },
+        "train_bridge7_v1_ordinary_cap15": {
+          "episodes": 4,
+          "decisions": 674,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 64,
+            "wait": 553,
+            "shovel": 57
+          },
+          "immediate_shovel_fraction_of_plants": 0.125,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.47724891581146256,
+            "shovel": -0.39603736102358095,
+            "wait": 0.3442971553743315
+          }
+        },
+        "train_roof_1": {
+          "episodes": 14,
+          "decisions": 1351,
+          "won": 3,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 253,
+            "wait": 947,
+            "plant": 151
+          },
+          "immediate_shovel_fraction_of_plants": 0.013245033112582781,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.1563909155809693,
+            "shovel": -0.31767985425201245,
+            "wait": -0.10992673260778868
+          }
+        },
+        "train_roof_4": {
+          "episodes": 4,
+          "decisions": 432,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "plant": 54,
+            "shovel": 89,
+            "wait": 289
+          },
+          "immediate_shovel_fraction_of_plants": 0.018518518518518517,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.48540680484508025,
+            "shovel": -0.3729145052337826,
+            "wait": -0.32842508246819635
+          }
+        },
+        "train_bridge7_v1_aid_capfull": {
+          "episodes": 4,
+          "decisions": 913,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "wait": 715,
+            "plant": 89,
+            "shovel": 109
+          },
+          "immediate_shovel_fraction_of_plants": 0.056179775280898875,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.30845700729783365,
+            "shovel": 0.1998069800559063,
+            "wait": 0.4388660920848442
+          }
+        },
+        "train_multicap_v1_roof_cap1_variant": {
+          "episodes": 2,
+          "decisions": 159,
+          "won": 0,
+          "truncated": 0,
+          "action_counts": {
+            "shovel": 30,
+            "plant": 23,
+            "wait": 106
+          },
+          "immediate_shovel_fraction_of_plants": 0.043478260869565216,
+          "normalized_advantage_means_by_action": {
+            "plant": -1.3145812403498567,
+            "shovel": -1.264627806736776,
+            "wait": -1.1786453425710288
+          }
+        }
+      },
+      "last10_updates": [
+        {
+          "update": 28,
+          "counters": {
+            "episodes": 112,
+            "decisions": 20123,
+            "ticks": 1982251
+          },
+          "episodes": 4,
+          "decisions": 816,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.16830094928333147,
+          "mc_value_explained_variance": 0.30634128742800615,
+          "mc_return_variance": 0.046039797364809544,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.16113939269511968,
+            "shovel": -0.5565103517937994,
+            "wait": 0.055713107704766236
+          }
+        },
+        {
+          "update": 29,
+          "counters": {
+            "episodes": 116,
+            "decisions": 20679,
+            "ticks": 2048135
+          },
+          "episodes": 4,
+          "decisions": 556,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.09395840581153386,
+          "mc_value_explained_variance": 0.3881099983855779,
+          "mc_return_variance": 0.06013072001078166,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.13707887125646734,
+            "shovel": -0.1546224908500209,
+            "wait": 0.04995568774613547
+          }
+        },
+        {
+          "update": 30,
+          "counters": {
+            "episodes": 120,
+            "decisions": 21324,
+            "ticks": 2116322
+          },
+          "episodes": 4,
+          "decisions": 645,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.03694375099187558,
+          "mc_value_explained_variance": 0.35289723749112545,
+          "mc_return_variance": 0.05337754790746388,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.09256015219518565,
+            "shovel": -0.10563263349322381,
+            "wait": 0.02692141469409101
+          }
+        },
+        {
+          "update": 31,
+          "counters": {
+            "episodes": 124,
+            "decisions": 21897,
+            "ticks": 2171290
+          },
+          "episodes": 4,
+          "decisions": 573,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.03402317803509865,
+          "mc_value_explained_variance": 0.40248771398417726,
+          "mc_return_variance": 0.048363984965021534,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.09835742327703187,
+            "shovel": -0.20126606190896798,
+            "wait": 0.05495184366358584
+          }
+        },
+        {
+          "update": 32,
+          "counters": {
+            "episodes": 128,
+            "decisions": 22473,
+            "ticks": 2233114
+          },
+          "episodes": 4,
+          "decisions": 576,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.036301313962101865,
+          "mc_value_explained_variance": 0.3750541892827163,
+          "mc_return_variance": 0.05541473223053797,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.006730130819108432,
+            "shovel": -0.18901164149820657,
+            "wait": 0.03288598784227184
+          }
+        },
+        {
+          "update": 33,
+          "counters": {
+            "episodes": 132,
+            "decisions": 23045,
+            "ticks": 2304702
+          },
+          "episodes": 4,
+          "decisions": 572,
+          "won": 1,
+          "truncated": 0,
+          "mc_value_mse": 0.5397625431973184,
+          "mc_value_explained_variance": 0.05541031543818742,
+          "mc_return_variance": 0.4167137147994171,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.1305537720448778,
+            "shovel": -0.15495624170364533,
+            "wait": 0.004029244990168545
+          }
+        },
+        {
+          "update": 34,
+          "counters": {
+            "episodes": 136,
+            "decisions": 23678,
+            "ticks": 2388793
+          },
+          "episodes": 4,
+          "decisions": 633,
+          "won": 1,
+          "truncated": 0,
+          "mc_value_mse": 0.49531832570219286,
+          "mc_value_explained_variance": 0.09120616428713624,
+          "mc_return_variance": 0.4658643441947836,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.0382295922492268,
+            "shovel": -0.06985967046712772,
+            "wait": 0.019513938586179273
+          }
+        },
+        {
+          "update": 35,
+          "counters": {
+            "episodes": 140,
+            "decisions": 24195,
+            "ticks": 2454240
+          },
+          "episodes": 4,
+          "decisions": 517,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.055823436789515776,
+          "mc_value_explained_variance": 0.6139722861084969,
+          "mc_return_variance": 0.047568615631953,
+          "normalized_advantage_means_by_action": {
+            "plant": 0.057697000407702086,
+            "shovel": -0.07063674576323792,
+            "wait": 0.008071366131965513
+          }
+        },
+        {
+          "update": 36,
+          "counters": {
+            "episodes": 144,
+            "decisions": 24939,
+            "ticks": 2543523
+          },
+          "episodes": 4,
+          "decisions": 744,
+          "won": 0,
+          "truncated": 0,
+          "mc_value_mse": 0.022948803903630653,
+          "mc_value_explained_variance": 0.5659833902164815,
+          "mc_return_variance": 0.03738734280944213,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.02876846623569205,
+            "shovel": -0.38650647366280383,
+            "wait": 0.09351893977193637
+          }
+        },
+        {
+          "update": 37,
+          "counters": {
+            "episodes": 145,
+            "decisions": 25000,
+            "ticks": 2551104
+          },
+          "episodes": 1,
+          "decisions": 61,
+          "won": 0,
+          "truncated": 1,
+          "mc_value_mse": 0.012855052119191947,
+          "mc_value_explained_variance": -0.30225117881450947,
+          "mc_return_variance": 0.004242785913770906,
+          "normalized_advantage_means_by_action": {
+            "plant": -0.7242647454003266,
+            "shovel": -0.08646116792904948,
+            "wait": 0.15485417773239757
+          }
+        }
+      ],
+      "max_abs_offline_vs_actual_training_advantage_error": {
+        "mean": 6.967413512803944e-08,
+        "std": 3.09716980950725e-08
+      },
+      "diagnostic_seconds": 0.7795004490035353
+    }
+  ],
+  "conservation_checks": "Every completed update and episode accounted for. All25k actions per seed retained. Action counts, wins, truncations, immediate shovels, MC MSE/EV match training history; float64 offline advantages match actual float32 training means/std within recorded error.",
+  "interpretation": "Descriptive on-policy training prefixes of changing policies and adaptive repeated tasks. Action-conditioned advantage means are associations, not intervention effects or gradients for action-type logits. Pooled MC EV mixes changing critics and must not be interpreted as final-checkpoint EV. Tiny exact-budget boundary updates are preserved with sample sizes and return variance, not omitted or treated as evidence of global critic collapse. Development learning/acceptance remain determined by frozen declared nodes.",
+  "next_action": "Continue existing frozen three-initialization training to prescribed125k. No reward, architecture, entropy, task pool or boundary update mutation based on these observations."
+}
