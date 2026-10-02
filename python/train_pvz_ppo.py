@@ -18,7 +18,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, legal_summary,
+from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, policy_legal_summary,
                              observation_tokens, pack_tokens, replay_log_probs, select_action)
 from pvz_common import canonical_digest
 from pvz_env import PvZEnv, TaskSpec
@@ -92,7 +92,7 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         # observation_tokens already rounds both inference and replay inputs to
         # fp16-representable values; compact storage adds no further quantization.
         packed = pack_tokens(tensors, metadata)
-        legal = legal_summary(observation["legal_actions"])
+        legal = policy_legal_summary(observation, model.config)
         tokenization_seconds += time.perf_counter() - tokenize_started
         model_started = time.perf_counter()
         with torch.no_grad():

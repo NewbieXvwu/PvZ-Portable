@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "name": "event_progress_policy_v1",
+  "reason": "Mainline actual initial greedy 55120/56791 zero waits and 14 truncations; 2000-node greedy 98530/100910 zero waits and 25 truncations. Additional ordinary sampling succeeds but greedy evaluation wastes 815.405 seconds.",
+  "changed_policy": "Mask only left_zone_occupied when the unquantized public current observation already has an onboard zombie x<=160. All other wait conditions, durations, plant/shovel actions, automatic interrupts and native physics unchanged.",
+  "mask_storage": "Persist wait_condition_mask in compact public legality; scalar sampling, batched PPO replay and cloning use same mask. Never infer mask from float16 position near160.",
+  "version": "Policy/checkpoint architecture tag9; parameter shapes/count unchanged; legacy tags7/8 preserve old policy.",
+  "before_training_check": "Brief masked-distribution/replay tests and an actual same-weight initial policy intervention on first original seed of all20 progress tasks, plus two32-decision actual full256 sampled trajectories and one CPU PPO update. No three-init/hour-scale adoption gate.",
+  "control_reference": "Existing mainline initial greedy evaluation rows, reused without new baseline execution. Diagnostic intervention only, not a controlled final-performance experiment.",
+  "training": "Independent random initialization using explicit seed0..2 configs after merge; same500k ceiling. Existing unmasked run remains intact and may resume on its preserved source.",
+  "not_claimed": [
+    "overall policy optimality",
+    "no zero-tick plant or shovel actions",
+    "solution to late PPO degradation",
+    "slow actor implemented",
+    "learning acceptance"
+  ]
+}

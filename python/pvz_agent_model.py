@@ -12,7 +12,7 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 from pvz_observation_features import (INPUT_ON_BOARD, INPUT_ROW_CONTEXT, INPUT_TARGET_RELATIONS,
                                       require_public_fields, row_context, packet_refresh)
-from pvz_wait_events import CONDITIONS, REASON_PRECEDENCE, validate_wait_result
+from pvz_wait_events import CONDITIONS, REASON_PRECEDENCE, public_state, validate_wait_result
 try:
     from torch.nn.attention.flex_attention import flex_attention
 except ImportError:  # pragma: no cover - depends on the installed PyTorch build
@@ -37,11 +37,16 @@ WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
 MODEL_ARCHITECTURE_VERSION = 7
 WAIT_MODEL_ARCHITECTURE_VERSION = 8
+PROGRESS_WAIT_ARCHITECTURE_VERSION = 9
 FEATURE_COUNT = 32
 
 
 def model_architecture_version(config: dict[str, Any]) -> int:
     """Legacy configs retain version 7; explicit paired wait models use version 8."""
+    if "wait_mask" in config:
+        if config.get("wait_mode") != "events" or config["wait_mask"] != "progress_v1":
+            raise ValueError("wait_mask=progress_v1 requires wait_mode=events")
+        return PROGRESS_WAIT_ARCHITECTURE_VERSION
     if "wait_mode" not in config:
         return MODEL_ARCHITECTURE_VERSION
     if config["wait_mode"] not in ("fixed", "events"):
@@ -475,10 +480,36 @@ def legal_summary(legal_actions: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _legal_of(observation_or_summary: dict[str, Any]) -> dict[str, Any]:
+def policy_legal_summary(observation: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    """Keep the public, unquantized wait predicate alongside compact legality.
+
+    Only left_zone_occupied can be true before an event wait starts. The other
+    conditions compare against the start of the wait; timeout always remains.
+    """
+    legal = legal_summary(observation["legal_actions"])
+    if config.get("wait_mask") == "progress_v1":
+        occupied = bool(public_state(observation).left_zone_zombies)
+        legal["wait_condition_mask"] = tuple(name != "left_zone_occupied" or not occupied
+                                             for name in CONDITIONS)
+    return legal
+
+
+def _wait_condition_mask(config: dict[str, Any], legal: dict[str, Any]) -> tuple[bool, ...]:
+    if config.get("wait_mask") != "progress_v1":
+        return (True,) * len(CONDITIONS)
+    mask = legal.get("wait_condition_mask")
+    if (not isinstance(mask, (tuple, list)) or len(mask) != len(CONDITIONS)
+            or any(type(value) is not bool for value in mask)
+            or any(not value for name, value in zip(CONDITIONS, mask, strict=True)
+                   if name != "left_zone_occupied")):
+        raise ValueError("progress_v1 requires the saved public wait_condition_mask")
+    return tuple(mask)
+
+
+def _legal_of(observation_or_summary: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
     """Accept either a raw observation (has ``legal_actions``) or a summary."""
     if "legal_actions" in observation_or_summary:
-        return legal_summary(observation_or_summary["legal_actions"])
+        return policy_legal_summary(observation_or_summary, config)
     return observation_or_summary
 
 
@@ -718,11 +749,11 @@ class GameplayModelV1(nn.Module):
         super().__init__()
         self.config = {**MODEL_CONFIG, **(config or {})}
         self.config.setdefault("input_flags", 0)
-        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags", "wait_mode"}
+        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags", "wait_mode", "wait_mask"}
         if set(self.config) - allowed:
             raise ValueError(f"unknown model settings: {sorted(set(self.config) - allowed)}")
         if any(type(value) is not int or value < 1 for key, value in self.config.items()
-               if key not in ("input_flags", "wait_mode")):
+               if key not in ("input_flags", "wait_mode", "wait_mask")):
             raise ValueError("model dimensions must be positive integers")
         model_architecture_version(self.config)
         if type(self.config["input_flags"]) is not int or not 0 <= self.config["input_flags"] <= 7:
@@ -1185,7 +1216,8 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
     if action is not None:
         validate_policy_action(model.config, action)
     device = output["type_logits"].device
-    legal = _legal_of(observation)
+    legal = _legal_of(observation, model.config)
+    condition_mask = _wait_condition_mask(model.config, legal)
     plant_masks = dict(zip(legal["packets"], legal["plant_mask"]))
     valid_packets = list(legal["packets"])
     valid_shovels = _mask_cells(legal["shovel_mask"])
@@ -1264,7 +1296,11 @@ def select_action(model: GameplayModelV1, output: dict[str, Any], observation: d
         entropy = entropy + wait_dist.entropy()
         selected = {"type": "wait", "ticks": WAIT_TICKS[int(duration.item())]} if action is None else dict(action)
         if model.config.get("wait_mode") == "events":
-            condition_logits = output["wait_condition_logits"]
+            condition_logits = output["wait_condition_logits"].masked_fill(
+                ~torch.tensor(condition_mask, dtype=torch.bool, device=device),
+                torch.finfo(output["wait_condition_logits"].dtype).min)
+            if action is not None and not condition_mask[CONDITIONS.index(action["until"])]:
+                raise ValueError("event wait condition is already satisfied")
             condition_dist = torch.distributions.Categorical(logits=condition_logits)
             condition = ((condition_logits.argmax() if deterministic else condition_dist.sample())
                          if action is None else torch.tensor(CONDITIONS.index(action["until"]), device=device))
@@ -1303,6 +1339,10 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
         raise ValueError("replay output/transition count differs")
     for transition in transitions:
         validate_policy_action(model.config, transition["action"])
+        mask = _wait_condition_mask(model.config, transition["legal"])
+        if (transition["action"].get("until") is not None
+                and not mask[CONDITIONS.index(transition["action"]["until"])]):
+            raise ValueError("event wait condition is already satisfied")
     total = len(outputs)
     action_types = {"plant": 0, "shovel": 1, "wait": 2}
 
@@ -1407,8 +1447,11 @@ def replay_log_probs(model: GameplayModelV1, outputs: list[dict[str, Any]],
         rows_t = torch.tensor(wait_rows, dtype=torch.long, device=device)
         wait_lp, wait_ent = wait_dist.log_prob(duration), wait_dist.entropy()
         if model.config.get("wait_mode") == "events":
+            condition_logits = torch.stack([outputs[i]["wait_condition_logits"] for i in wait_rows])
+            masks = torch.tensor([_wait_condition_mask(model.config, transitions[i]["legal"])
+                                  for i in wait_rows], dtype=torch.bool, device=device)
             condition_dist = torch.distributions.Categorical(
-                logits=torch.stack([outputs[i]["wait_condition_logits"] for i in wait_rows]))
+                logits=condition_logits.masked_fill(~masks, torch.finfo(condition_logits.dtype).min))
             condition = torch.tensor([CONDITIONS.index(transitions[i]["action"]["until"])
                                       for i in wait_rows], dtype=torch.long, device=device)
             wait_lp = wait_lp + condition_dist.log_prob(condition)
@@ -1478,7 +1521,13 @@ def hard_behavior_cloning_loss(model: GameplayModelV1, output: dict[str, Any], o
         losses.append(F.cross_entropy(output["wait_logits"].unsqueeze(0), torch.tensor([duration], device=device)))
         if model.config.get("wait_mode") == "events":
             condition = CONDITIONS.index(action["until"])
-            losses.append(F.cross_entropy(output["wait_condition_logits"].unsqueeze(0),
+            mask = _wait_condition_mask(model.config, policy_legal_summary(observation, model.config))
+            if not mask[condition]:
+                raise ValueError("event wait condition is already satisfied")
+            condition_logits = output["wait_condition_logits"].masked_fill(
+                ~torch.tensor(mask, dtype=torch.bool, device=device),
+                torch.finfo(output["wait_condition_logits"].dtype).min)
+            losses.append(F.cross_entropy(condition_logits.unsqueeze(0),
                                           torch.tensor([condition], device=device)))
     return torch.stack(losses).sum()
 

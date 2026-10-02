@@ -160,7 +160,8 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
         raise ValueError("research config fields/schema do not match version 1")
     model_fields = {"layers", "width", "heads", "ff_width", "gru_layers", "gru_width",
                     "critic_width", "critic_layers", "input_flags"}
-    if set(config["model"]) not in (model_fields, model_fields | {"wait_mode"}):
+    if set(config["model"]) not in (model_fields, model_fields | {"wait_mode"},
+                                  model_fields | {"wait_mode", "wait_mask"}):
         raise ValueError("all model dimensions and input_flags must be explicit")
     model_architecture_version(config["model"])
     reward = config["reward"]
