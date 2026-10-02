@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_training",
+  "purpose": "Meet T5-E explicit from-random three-init requirement on a task pool that does not rely on mower-only nonroofshortwins. Prepare nextbaseline while currentwarmstartedbridge_v2 continues its alreadycommitted60+60complete resumes.",
+  "training_manifest": "experiments/t7/bridge_level7_v1/train.json",
+  "retained_tasks": 38,
+  "selected_task_ids": [
+    "train_roof_1",
+    "train_roof_2",
+    "train_roof_3",
+    "train_roof_4",
+    "train_multicap_v1_roof_cap1_variant",
+    "train_multicap_v1_roof_cap5_variant",
+    "train_full_level7_v1",
+    "train_bridge7_v1_aid_cap10",
+    "train_bridge7_v1_aid_cap15",
+    "train_bridge7_v1_aid_cap20",
+    "train_bridge7_v1_aid_capfull",
+    "train_bridge7_v1_ordinary_cap10",
+    "train_bridge7_v1_ordinary_cap15"
+  ],
+  "training": "Existing7daylong/full tasks +all6retainedroofshort/multiwave task definitions/seeds unchanged. Roofzeroidle shown by production64seed baseline; shortdoesnot implypassive. No new acceptance thresholds or failedseed removal.",
+  "evaluation": "Previous72cap>=10/full cases retained unchanged, plusfirst16ofeach4originalroofheldout64seed lists; keepexisting2seedsubset. Ownrandom initial greedy/sampledscores, matchedidle andtask-levelWilson at prespecified nodes.",
+  "initialization": "Seeds0/1/2 genuinely fromrandom, no inheritednetwork/optimizer/history. Warmstartedbridge_v2 stages and theirparent costs remain retained; cannot count itsstage0 asrandom baseline or treat newreference asreward/course causal test.",
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "same_model_ppo_runtime": {
+    "model": {
+      "layers": 6,
+      "width": 256,
+      "heads": 8,
+      "ff_width": 1024,
+      "gru_layers": 2,
+      "gru_width": 256,
+      "critic_width": 256,
+      "critic_layers": 1,
+      "input_flags": 7,
+      "wait_mode": "events",
+      "wait_mask": "progress_v1"
+    },
+    "ppo": {
+      "learning_rate": 0.0001,
+      "ppo_epochs": 2,
+      "sequence_length": 128,
+      "minibatch_chunks": 2,
+      "clip_epsilon": 0.2,
+      "gae_lambda": 0.95,
+      "value_coefficient": 0.5,
+      "entropy_coefficient": 0.01,
+      "attention_backend": "dense",
+      "target_kl": 0.03
+    },
+    "runtime": {
+      "workers": 2,
+      "worker_threads": 1,
+      "worker_device": "cpu",
+      "update_device": "cuda",
+      "max_actions": 4000,
+      "cudnn_tf32": false,
+      "matmul_precision": "highest",
+      "deterministic_algorithms": true,
+      "cublas_workspace_config": ":4096:8"
+    }
+  },
+  "sampling": {
+    "window_episodes": 8,
+    "minimum_window_episodes": 2,
+    "uniform_fraction": 0.25,
+    "coverage": "terrain_wave_cap",
+    "frontier_pass_range": [
+      0.2,
+      0.8
+    ],
+    "initial_focus_task_ids": [
+      "train_bridge7_v1_aid_cap10"
+    ],
+    "initial_focus_completed_episodes": 64
+  },
+  "initial_task_probabilities": {
+    "train_roof_1": 0.020833333333333332,
+    "train_roof_2": 0.020833333333333332,
+    "train_roof_3": 0.020833333333333332,
+    "train_roof_4": 0.020833333333333332,
+    "train_multicap_v1_roof_cap1_variant": 0.020833333333333332,
+    "train_multicap_v1_roof_cap5_variant": 0.020833333333333332,
+    "train_full_level7_v1": 0.015625,
+    "train_bridge7_v1_aid_cap10": 0.765625,
+    "train_bridge7_v1_aid_cap15": 0.015625,
+    "train_bridge7_v1_aid_cap20": 0.03125,
+    "train_bridge7_v1_aid_capfull": 0.015625,
+    "train_bridge7_v1_ordinary_cap10": 0.015625,
+    "train_bridge7_v1_ordinary_cap15": 0.015625
+  },
+  "budget": {
+    "decisions": 500000,
+    "max_episodes": null,
+    "boundary_mode": "exact_decisions_v1"
+  },
+  "decision_nodes": [
+    2000,
+    25000,
+    125000,
+    250000,
+    375000,
+    500000
+  ],
+  "B": "Notyetfrozen; need >=2of3 aboveowninitialbaseline repeatedly with actualordinarymultiwave/longtask wins andmatchedidle gain. Ceiling500k is an executionbudget, not a mandatoryonsetrule.",
+  "acceptance": "experiments/t7/full_level7_v1/acceptance.json unchanged; fulllevel7dev256>=60%, fivefullterrain64cases at least2init overall60/terrain45/weakest25. Roofcap3/5 and aidcap10 are progressviews, not fullacceptance.",
+  "schedule": "Currentv2queue_v7 remainsrunning. After currentplannedcompleteboundary, assess prescribed125kif reached and then prioritize fresh3seedreference over furtherarchitecture expansion. Eachnewseed first3updates <=30min checkpoint/curve/finished-evals smoke, followed by boundedcomplete-resume segments. No dummyshort pretraining or13all-lossR3warmup to matchexploratoryhistory.",
+  "auxiliary_heads": "Cancelled and absent; do not recreate.",
+  "task_mutation": "Implementedappend-only neighbor experiments remain pending; do not add anotherdynamicpool variable to this freshreference before meaningfullearning.",
+  "validation": {
+    "configs_parsed": 3,
+    "train_eval_seedsets_disjoint": true,
+    "progress_cases_per_mode": 136,
+    "training_task_definitions_unchanged": true,
+    "native_baseline": "Will record beforestart, not modellearning claim.",
+    "native_baseline_cases": 1160,
+    "native_baseline_seconds": 13.7,
+    "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+    "roof_training_cases": 384,
+    "roof_training_idle_wins": 0,
+    "roof_heldout_cases": 64,
+    "roof_heldout_idle_wins": 0,
+    "ordinary_full_training_cases": 256,
+    "ordinary_full_training_idle_wins": 0,
+    "unit_tests": 41
+  }
+}

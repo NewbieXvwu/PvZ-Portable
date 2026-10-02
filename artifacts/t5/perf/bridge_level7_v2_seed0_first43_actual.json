@@ -2015,7 +2015,7 @@
     "optimizer_steps": 10,
     "stopped_for_kl": false
   },
-  "interpretation": "At25k sampled aidedcap10 10/16 vsstageinitial9/16, cap15 5/16 vs2/16, matchedidle5/16 and0/16. Earlysingle-init change, not confirmed repeatedlearning; greedy remainsidenticalidle andordinarylong/fullstill0. Newstageinitialweights alreadytrainedin ancestorstages. No reward/course causal or architectureclaim.",
+  "interpretation": "At25k sampled aidedcap10 10/16 vsstageinitial9/16, cap15 5/16 vs2/16, matchedidle5/16 and0/16. Earlysingle-init change, not confirmed repeatedlearning; greedy remainsidenticalidle andordinarylong/fullstill0. Newstageinitialweights alreadytrainedin ancestorstages. No reward/course causal or architectureclaim. Winlabels remainidenticalidle forgreedy, butbehavior is not unchanged:25k greedy meanplants6.0aidcap10/11.3125aidcap15 vs0atstageinitial, shovels0. Moreplantswithoutadditionalwins do not establishusefulgreedy strategy.",
   "cost_estimate": {
     "observed_smoke_seconds": 785.0290537289984,
     "last30_decisions": 25898,
@@ -2028,5 +2028,6 @@
   "anomalies": [
     "No training crash, OOM or workerdeath recorded in closed3segments. Rawcuda reserved25,398,607,872 exceedsphysicalGPUcapacity; reportcounterverbatim, do not callOOM without error.",
     "NativeRegEmu temporaryregistry write warnings appear nearworkerexit; complete segments exit0. Fourbudgettruncations retained andexcludedfromcourse outcomes."
-  ]
+  ],
+  "behavior_followup": "artifacts/t5/perf/bridge_level7_v2_first43_behavior_v1.json"
 }

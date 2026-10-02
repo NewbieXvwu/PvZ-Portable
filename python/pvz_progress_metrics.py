@@ -17,11 +17,15 @@ from pvz_seed_jobs import atomic_json
 
 def task_group(task: dict) -> str:
     cap = task["wave_cap"]
+    aided = bool(task["preplanted"]) or task["sun_start"] > 50 or task["zombie_count_multiplier"] < 1
     if cap is not None and cap < 10:
+        if task.get("terrain") == "roof":
+            return ("aided_" if aided else "") + ("roof_short" if cap < 3 else "roof_multiwave")
         return "short_regression"
-    aided = bool(task["preplanted"]) or task["sun_start"] != 50 or task["zombie_count_multiplier"] != 1
     if aided:
         return "aided_full" if cap is None else "aided_long"
+    if task["sun_start"] != 50 or task["zombie_count_multiplier"] != 1:
+        return "variant_full" if cap is None else "variant_long"
     return "ordinary_full" if cap is None else "ordinary_long"
 
 

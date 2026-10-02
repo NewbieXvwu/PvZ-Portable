@@ -72,6 +72,20 @@ class ProgressMetricTests(unittest.TestCase):
                 idle_baseline(tasks, Path('/unused_resources'), output, 'otherstage', 4000)
             self.assertEqual(path.read_bytes(), before)
 
+    def test_roof_multiwave_is_distinct_from_passive_short_regression(self):
+        tasks = [task('roof', 3, [1]), task('day', 3, [2])]
+        tasks[0]['terrain'] = 'roof'
+        records = {'roof': [row(1, False)], 'day': [row(2, True)]}
+        result = progress_summary(tasks, records)
+        self.assertEqual(set(result), {'roof_multiwave', 'short_regression'})
+        self.assertEqual(result['roof_multiwave']['sample_count'], 1)
+
+    def test_harder_multiplier_is_not_labelled_aid(self):
+        tasks = [task('hard', 10, [1]), task('aid', 10, [2], True)]
+        tasks[0]['zombie_count_multiplier'] = 1.5
+        result = progress_summary(tasks, {'hard': [row(1, False)], 'aid': [row(2, True)]})
+        self.assertEqual(set(result), {'variant_long', 'aided_long'})
+
 
 if __name__ == '__main__':
     unittest.main()
