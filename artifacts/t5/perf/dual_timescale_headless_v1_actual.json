@@ -1,0 +1,205 @@
+{
+  "schema_version": 1,
+  "source_commit": "991f926d5d154d69a018fe71da98abf5aa7c547b",
+  "status": "pass",
+  "scope": "Actual full-size GRU/LSTM dual model, native collection/NPZ replay/actor-only gradient and CPU PPO. Brief implementation proof, no learned superiority or full CUDA/resume claim.",
+  "seconds": 20.441522866000014,
+  "unit_tests": {
+    "model_and_dual_and_wait": {
+      "passed": 77,
+      "seconds": 16.148
+    },
+    "resume_and_training_cpu": {
+      "passed": 15,
+      "seconds": 4.317
+    },
+    "cuda_resume_test_skipped": "GPU occupied by live width training; not claimed here"
+  },
+  "auxiliary_heads": "Deleted parameters and forward outputs; cancelled future plan by user.",
+  "actual_cells": {
+    "gru": {
+      "model_config": {
+        "layers": 6,
+        "width": 256,
+        "heads": 8,
+        "ff_width": 1024,
+        "gru_layers": 1,
+        "gru_width": 256,
+        "critic_width": 256,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "events",
+        "wait_mask": "progress_v1",
+        "slow_memory": {
+          "cell": "gru",
+          "layers": 1,
+          "goal_width": 64,
+          "max_ticks": 3000,
+          "max_decisions": 64
+        }
+      },
+      "parameter_count": 8133854,
+      "reused_raw_shards": [
+        "artifacts/research/dual_timescale_headless_v1_actual/gru_sampled_job_000.npz",
+        "artifacts/research/dual_timescale_headless_v1_actual/gru_sampled_job_001.npz"
+      ],
+      "npz_replay_max_error": 4.76837158203125e-07,
+      "actor_only_slow_grad_l1": 88.72176809608936,
+      "actor_only_goal_grad_l1": 16.71719753742218,
+      "actor_only_gradient_origin": 61,
+      "actor_only_gradient_target": 63,
+      "actual_cpu_ppo": {
+        "policy_loss": -0.004451487213373184,
+        "value_loss": 0.03189688827842474,
+        "entropy": 2.9923654794692993,
+        "advantage_mean": 0.06751097738742828,
+        "advantage_std": 0.17867612838745117,
+        "gradient_norm": 2.256683588027954,
+        "approx_kl": 0.020888737092415493,
+        "clip_fraction": 0.23958333333333334,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5695583820343018,
+        "optimizer_steps": 2,
+        "stopped_for_kl": true,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 4,
+          "max_events": 2,
+          "max_waves": 2,
+          "max_elapsed_ticks": 3151,
+          "max_leading_decisions": 16,
+          "examples": [
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 16,
+              "leading_decisions": 0,
+              "events": 1,
+              "waves": 1,
+              "elapsed_ticks": 1411
+            },
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 16,
+              "leading_decisions": 0,
+              "events": 2,
+              "waves": 2,
+              "elapsed_ticks": 2161
+            },
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 32,
+              "leading_decisions": 16,
+              "events": 2,
+              "waves": 2,
+              "elapsed_ticks": 3151
+            },
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 21,
+              "leading_decisions": 5,
+              "events": 1,
+              "waves": 1,
+              "elapsed_ticks": 1891
+            }
+          ]
+        }
+      },
+      "actual_cpu_ppo_seconds": 4.373568320999766,
+      "slow_parameter_change_l1": 65.23637703526765,
+      "passed": true
+    },
+    "lstm": {
+      "model_config": {
+        "layers": 6,
+        "width": 256,
+        "heads": 8,
+        "ff_width": 1024,
+        "gru_layers": 1,
+        "gru_width": 256,
+        "critic_width": 256,
+        "critic_layers": 1,
+        "input_flags": 7,
+        "wait_mode": "events",
+        "wait_mask": "progress_v1",
+        "slow_memory": {
+          "cell": "lstm",
+          "layers": 1,
+          "goal_width": 64,
+          "max_ticks": 3000,
+          "max_decisions": 64
+        }
+      },
+      "parameter_count": 8265438,
+      "npz_replay_max_error": 4.76837158203125e-07,
+      "actor_only_slow_grad_l1": 43.846494160592556,
+      "actor_only_goal_grad_l1": 8.677344918251038,
+      "actor_only_gradient_origin": 61,
+      "actor_only_gradient_target": 63,
+      "actual_cpu_ppo": {
+        "policy_loss": -0.0259576216340065,
+        "value_loss": 0.03235580027103424,
+        "entropy": 2.992055296897888,
+        "advantage_mean": 0.04969923198223114,
+        "advantage_std": 0.18921270966529846,
+        "gradient_norm": 2.183103561401367,
+        "approx_kl": 0.021725992982586224,
+        "clip_fraction": 0.2916666666666667,
+        "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+        "max_log_prob_change": 0.5768799781799316,
+        "optimizer_steps": 2,
+        "stopped_for_kl": true,
+        "slow_gradient_coverage": {
+          "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+          "window_count": 4,
+          "max_events": 2,
+          "max_waves": 2,
+          "max_elapsed_ticks": 3151,
+          "max_leading_decisions": 16,
+          "examples": [
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 16,
+              "leading_decisions": 0,
+              "events": 1,
+              "waves": 1,
+              "elapsed_ticks": 1411
+            },
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 16,
+              "leading_decisions": 0,
+              "events": 2,
+              "waves": 2,
+              "elapsed_ticks": 2161
+            },
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 32,
+              "leading_decisions": 16,
+              "events": 2,
+              "waves": 2,
+              "elapsed_ticks": 3151
+            },
+            {
+              "core_decisions": 16,
+              "gradient_decisions": 21,
+              "leading_decisions": 5,
+              "events": 1,
+              "waves": 1,
+              "elapsed_ticks": 1891
+            }
+          ]
+        }
+      },
+      "actual_cpu_ppo_seconds": 4.275396978002391,
+      "slow_parameter_change_l1": 72.68354713916779,
+      "passed": true
+    }
+  },
+  "previous_diagnostic_failure": "v1 raw-episode NPZ was passed to wrapper reader and result integer misread; raw shards/error retained, v2 wraps metadata/result and reuses GRU shards.",
+  "raw_paths": [
+    "artifacts/research/dual_timescale_headless_v1_actual",
+    "artifacts/research/dual_timescale_headless_v1_actual_v2"
+  ],
+  "limitation": "Native diagnostic includes intentional64-decision truncations and short-phase gradients. Not learning efficacy, full checkpoint resume, or CUDA validation."
+}

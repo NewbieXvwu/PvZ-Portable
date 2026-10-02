@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "runs": {
+    "mainline_event_progress_v1_seed0": {
+      "status": "complete",
+      "branch": "evidence-mainline-event-progress-v1-seed0",
+      "revision": "91b610b092b629fb788e136d13a19079110bae11",
+      "seconds": 177.21212592200027
+    },
+    "mainline_width128_v1_seed0": {
+      "status": "complete",
+      "branch": "evidence-mainline-width128-v1-seed0",
+      "revision": "96f84a9c86723698fd30eab388269278c2872dca",
+      "seconds": 95.50622809299966
+    }
+  },
+  "scope": "Closed segments, full resume pointers plus milestones/latest8 trained/raw rollout shards/log snapshots. No repeated complete download/hash audit.",
+  "seconds": 275.7970234690001
+}
