@@ -1129,3 +1129,26 @@ repository commits 128/hour，要求约1小时后再试。另一原生/精确恢
 与原日志，按冷却时间续同一分支，期间仅做远端只读完整性核验与本地工程。
 上传成功四份尚待固定revision逐文件远端核验；12份总体交付未完成。见
 [限流与固定revision](artifacts/t5/perf/hf_delivery_rate_limit_incident_v1.json)。
+
+### 原生开场保真隔离修正：开跑前冻结（2026-10-02）
+
+源445224c、release bd95963已push至research/env-intro-state-v1；协议SHA
+7f968cf1f140483e24f57f864b490bda3c70421971f393996588dab2a2e46dc0，绑定550个
+原生/配置/包装器来源、原30任务清单、资源及保留失败证据。候选binary
+27a00b2dbebdc24b2937a82e66a1fd219e5530188913be1b8eb7eed083dc5d2b
+复用原AnimateBoard与RemoveCutsceneZombies后StartPlaying；正常开场参考binary
+1b02c5bbce3c402f9a51f99392817dfb982d34244c8d1eccfec159017e0ab00a
+通过仅审计编译define执行CancelIntro后的原两次CutScene::Update，仅暂时绕过首帧
+计数guard并恢复，不推进玩法帧。参考绝不用于策略训练。
+
+120组合保留30任务/前2种子/等待及首个合法种植两控制，每组合另录旧binary reset，
+候选与正常开场参考逐字段严格比较reset/固定WAIT60/物理RNG/快照/真实manifest回放。
+不注入割草机或僵尸，不改变屋顶profile；还要求自然mower_trigger至少一次。
+120s/job、1800s总、12GiB可用RAM，任一差异/资源不足停并保留现场。3项严格契约检查
+通过是预检，真实门禁结果待执行；这不是全GUI保真、学习通过或事件正覆盖通过。
+旧两份事件fail不改，修正后事件门禁须另发协议，继续要求全部11项。
+
+HF冷却期间只读核验已完成四个已上传奖励run：38957个文件的固定revision远端LFS
+SHA256/git blob SHA1与source/schema2 manifest逐项一致；全部46个检查点含4个resume
+目标还实际下载核验SHA256。原始NPZ用远端对象摘要验证，未声称全部实际下载。
+详见[只读核验](artifacts/t5/perf/reward_matrix_hf_remote_verify_v1.json)，整体12份交付仍未完成。
