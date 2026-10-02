@@ -1,0 +1,11 @@
+{
+  "run": "mainline_bridge_level7_v2_seed0",
+  "branch": "evidence-mainline-bridge-level7-v2-seed0-closed163",
+  "status": "complete",
+  "start_utc": "2026-10-02T19:41:47.413299+00:00",
+  "pid": 159686,
+  "exit_code": 0,
+  "end_utc": "2026-10-02T19:46:48.327815+00:00",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "revision": "36b5dfdcb646c7419194a1a837d0fab891b54a96"
+}

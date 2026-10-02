@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-level7-v2-closed163-v1",
+  "revision": "c52b884e13b923981010948d4c0e198ee223966d",
+  "seconds": 2.8208414160035318,
+  "purpose": "Read-only closed163 inventory, all639 retained episode/control pairs and five actual segment costs. Required checkpoints, raw rollouts and complete Adam/RNG/course resume are separately delivered on evidence-mainline-bridge-level7-v2-seed0-closed163 at36b5dfdcb646c7419194a1a837d0fab891b54a96."
+}
