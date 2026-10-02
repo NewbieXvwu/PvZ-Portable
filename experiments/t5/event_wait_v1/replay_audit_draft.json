@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "release_status": "draft",
+  "purpose": "actual_native_full256_wait_policy_cpu_sampling_then_cuda_replay_at_lr0_no_learning",
+  "release_rule": "Publish released protocol and required sources on research/event-wait-replay-gates-v1; fetch delivery ref. Complete published native gate and freeze its protocol/report SHA first. Draft never starts collection.",
+  "base_commit": "1e5daa96eabc0a5db6c87cc98a16cb237e28d7b6",
+  "model_config": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7
+  },
+  "parameter_count": 7869607,
+  "model_architecture_version": 8,
+  "initialization_seeds": [
+    0,
+    1,
+    2
+  ],
+  "modes": [
+    "fixed",
+    "events"
+  ],
+  "task_manifest": {
+    "path": "experiments/task_family/train.json",
+    "sha256": "d3c8dfed61e90d874b0b8e0c8753eef930d65e8ad6edfe816b870c6ce813392d"
+  },
+  "selected_task_ids": [
+    "train_day_1",
+    "train_night_1",
+    "train_pool_1",
+    "train_fog_1",
+    "train_roof_1"
+  ],
+  "seeds_per_task": 4,
+  "expected_cases": 6,
+  "expected_episodes": 120,
+  "sampling_seed_rule": "torch.manual_seed(environment_seed+170000)",
+  "max_actions": 4000,
+  "allow_truncation": true,
+  "scope": "Engineering only: all five unchanged ordinary cap1 tasks, first four existing environment seeds, paired random initializations 0/1/2 and modes; no failed/truncated/zero-tick episode removed. Outcomes are retained, no win threshold or learning conclusion.",
+  "ppo": {
+    "lr": 0.0,
+    "gamma": 0.99,
+    "shaping_weight": 1.0,
+    "gae_lambda": 0.95,
+    "epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "target_kl": 0.03,
+    "attention_backend": "dense"
+  },
+  "limits": {
+    "log_prob": 3e-06,
+    "privileged_value": 5e-05,
+    "entropy": 5e-05,
+    "condition_logits": 5e-05,
+    "final_hidden": 5e-05
+  },
+  "recurrence_reference": "Every step single-forward and chronological 128-step no-grad chunks carry the same full recurrent history. Store all nine scalars per step and final recurrent state; real AdamW lr0 uses paired episodes, 128-step chunks, current-weight prefix recomputation. This is not full-episode BPTT.",
+  "value_reference": "Every sampled privileged value and final truncated bootstrap is replayed. Store bootstrap packed inputs/critic extra; discount and GAE remain based on actual elapsed board ticks.",
+  "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "resource_fingerprints": {
+    "main.pak": "7a50e3b247e1b678fa034e0fabe305f419c38a59cdfc5dd379c2f434b5d4a421",
+    "properties/partner.xml": "69d1423cc849e3c4f231db6aa47038efc67bdea677ccee96200911720eadafc3"
+  },
+  "executable": {
+    "path": "/tmp/PvZ-Portable-event-wait-v1/build/pvz-portable",
+    "sha256": "5c5957e5d51c08ef1aac39d36564026e3856720e017ebbc2bb899f8d52f6e0eb"
+  },
+  "required_fingerprints": {
+    "scripts/research_event_wait_replay_audit.py": "f5188199457166bda08e6376d602dccc7d527e1cde40f70ba9a6d0bc5860a156",
+    "python/test_event_wait_replay_audit.py": "b80c8f61194507a302ca458357ea6733798db19c55846ea193416488bdacaff6",
+    "scripts/research_event_wait_native_audit.py": "9206c6183c8550d6db4513c01a4e81dee13191de9792d73de1c0937cb0042a56",
+    "python/test_event_wait_native_audit.py": "0acb152df66fc1c53e7396e69c8e45840bcb91ccd4de2e7a89b7f8da04111a49",
+    "scripts/t4_capability_profile.py": "aaf0cecb5123870f546ff4821fda64a0bbc5756827111ba8e4c7d188cec5c8d0",
+    "scripts/scripted_baseline.py": "3fb638bd3dc0097eeb5713e7a9870c67cc30fc66f37db5e9a3812294cfd56acd",
+    "scripts/check_task_manifests.py": "c3d7b02f9f92a53b68fe63ce63bf9201d4f09c60a5612ab0167f00f30931e148",
+    "python/pvz_agent_model.py": "3d767b1ae496cbfb9926d62473047ce259f384d3ee2b8bac5fadb6f6b9a50e5f",
+    "python/pvz_observation_features.py": "828c73ad13e3d497e360a08a2deae16a69bd670120388a109d8c79c334b5f522",
+    "python/pvz_env.py": "9014ea2faa5530016c393c88c2bec738d3bc7be794b395952c5eafebf9054cd1",
+    "python/pvz_event_env.py": "d3a3dad403e295dc02d1cfda03f513984110f3934ff90e581a3740d041e5a451",
+    "python/pvz_wait_events.py": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21",
+    "python/pvz_common.py": "cd3b6fb5628e7a290ee1992f2ce9f28da6c2f6da88209687ee1dd6e802fbba8a",
+    "python/pvz_seed_jobs.py": "e8a6622d38ae7147e51ff62c694fd7724093347ab666f39163d898dae8140591",
+    "python/pvz_value.py": "b80e96759e6ad181cf43f8bd1cae3caabf9d0689add2701f79aaf39eafca422d",
+    "python/pvz_research.py": "df89e91c9e5146326ea20f4f420eaa258833657e52b56f602bad9fbbd0231d78",
+    "python/pvz_curriculum.py": "cf8f4233acea3077ca2fa99f49563d2aad084ad2e5fe2b8322597de4d17adbfc",
+    "python/train_pvz_ppo.py": "55a97087a762fec30dec78e4244b26d79ecd82989c2230cb849b01c5a21f1537",
+    "python/train_pvz_ppo_task_family.py": "12f4b10211c51b4adcee8ca2d377b41f779c1f4fd9f684c1939c659f29fd0887",
+    "src/EnvironmentWaitEvents.h": "da445d3359fd51c251054111cf212443ba3ccd374b88c3e168eebbfad2fd5eb9",
+    "src/LawnApp.h": "6409ce79fe539a3a7d3d7b7d925c1273f94edbf0b8d81d945a7b49af49b738ef",
+    "src/LawnApp.cpp": "5f00fc7411019259164c0f8811250dd01f3439f96f6e5012a2570866d027d783",
+    "src/main.cpp": "073548d2cbc7f3b186a340276ab89eee5d4cc3647e86635eec150551854a7aee"
+  },
+  "native_audit": {
+    "source_root": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/event_wait_native_audit_v1",
+    "protocol_path": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/event_wait_native_audit_v1/experiments/t5/event_wait_v1/native_audit_draft.json",
+    "protocol_sha256": null,
+    "report_path": null,
+    "report_sha256": null,
+    "release_requirement": "Populate only after complete actual published native gate: 120 jobs, all 6480 branches, positive event coverage and full raw/record SHA validation; synthetic results cannot satisfy this prerequisite."
+  },
+  "minimum_available_ram_bytes": 12884901888,
+  "minimum_free_vram_mib": 14000,
+  "case_timeout_seconds": 1200,
+  "stage_timeout_seconds": 7200,
+  "precision": "FP32; deterministic algorithms; CUBLAS_WORKSPACE_CONFIG=:4096:8 before CUDA query/seeding; cuDNN/matmul TF32 disabled; dense attention; one CPU thread. No GPU fallback.",
+  "failure_policy": "Stop on failed gate, OOM, worker death, stalled case or timeout. Preserve raw actions, observations, saves, logs, shards, initial checkpoint, partial progress and traceback. Do not shrink model or change seeds/tolerances after starting.",
+  "owned_workers": "One spawn worker/session per case. Requests flushed before each native action; raw observations and metadata flushed after each macro. Kill only owned process groups after validated worker pid/pgid.",
+  "delivery": "Code/protocol/KB conclusions Git; models/raw/logs HF. No git force, no checkpoints/shards/logs Git.",
+  "learning_order": "Engineering gates do not launch event learning; common input/reward/course baseline and measured shared B precede three paired initialization learning comparison with actual equal decision and wall budgets."
+}
