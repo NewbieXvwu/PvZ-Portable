@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-mainline-frontier-v1-seed0",
+  "revision": "2939d1c52d0e6e4419cd99b975078e6fd422cc45",
+  "seconds": 197.7864407800007,
+  "closed_snapshot": {
+    "updates": 57,
+    "counters": {
+      "episodes": 1053,
+      "decisions": 132674,
+      "ticks": 14482145
+    },
+    "checkpoint": "runs/run_1/update_000057_boundary_1790951165433425235.pt",
+    "wall_seconds": 5966.336643053
+  },
+  "prior23update_revision_preserved": "67695915f6c2cc0e079a688696c9736b198584cf",
+  "purpose": "Complete57updateboundary, all1053rawNPZ, resume/evaluated/initial/boundary/resumed/latest8trained andlogs. Formershortcourse stopped at userdirectedboundary; all failures preserved. Immutablepriorversion retained."
+}

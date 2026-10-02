@@ -32,6 +32,7 @@ manifest disagreed on 0 entries.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 import sys
@@ -84,7 +85,10 @@ def _one_episode(job: tuple) -> dict:
         decisions += 1
         if done:
             break
-    return {"won": observation.get("result") == 1,
+    return {"seed": seed, "won": observation.get("result") == 1,
+            "result": observation.get("result"),
+            "terminated": bool(observation.get("terminal")),
+            "truncated": not bool(observation.get("terminal")),
             "terminal_wave": observation.get("wave"),
             "ticks": observation.get("tick"), "decisions": decisions}
 
@@ -97,12 +101,14 @@ def main() -> None:
     p.add_argument("--max-actions", type=int, default=800)
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     p.add_argument("--output", default="artifacts/t5/perf/donothing_baseline_v1.json")
+    p.add_argument("--raw-output", type=Path, help="Optional gzip JSON with every task/seed result, including truncations; keep raw evidence outside git")
     args = p.parse_args()
 
-    jobs, meta = [], []
+    jobs, meta, task_specs = [], [], []
     for manifest in args.manifest:
         tasks = json.loads(Path(manifest).read_text(encoding="utf-8"))["tasks"]
         for task in tasks:
+            task_specs.append(task)
             seeds = list(task.get("seeds") or [])[: args.seeds]
             meta.append({"manifest": manifest, "task_id": task["task_id"],
                          "terrain": task.get("terrain"), "level": task["level"],
@@ -122,14 +128,16 @@ def main() -> None:
             results.append(result)
     elapsed = round(time.perf_counter() - started, 1)
 
-    cursor, rows = 0, []
-    for entry in meta:
+    cursor, rows, raw_tasks = 0, [], []
+    for entry, task in zip(meta, task_specs, strict=True):
         batch = results[cursor:cursor + entry["seeds"]]
         cursor += entry["seeds"]
         wins = sum(r["won"] for r in batch)
         rows.append({**entry, "baseline_wins": wins, "n": len(batch),
+                     "truncated": sum(r["truncated"] for r in batch),
                      "baseline_win_rate": wins / len(batch) if batch else None,
                      "mean_terminal_wave": round(sum(r["terminal_wave"] or 0 for r in batch) / len(batch), 1) if batch else None})
+        raw_tasks.append({"manifest": entry["manifest"], "task": task, "episodes": batch})
 
     payload = {
         "schema_version": 1,
@@ -144,6 +152,12 @@ def main() -> None:
     out = Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, ensure_ascii=False, indent=1), encoding="utf-8")
+    if args.raw_output is not None:
+        args.raw_output.parent.mkdir(parents=True, exist_ok=True)
+        with gzip.open(args.raw_output, "wt", encoding="utf-8") as stream:
+            json.dump({"schema_version": 1, "simulator_sha256": payload["simulator_sha256"],
+                       "policy": payload["policy"], "max_actions": args.max_actions,
+                       "seeds_per_task": args.seeds, "tasks": raw_tasks}, stream, ensure_ascii=False)
 
     print(f"{len(jobs)} episodes in {elapsed}s -> {out}", flush=True)
     print(f"simulator_sha256 {payload['simulator_sha256']}", flush=True)

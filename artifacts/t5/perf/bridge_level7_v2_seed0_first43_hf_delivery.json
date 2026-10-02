@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-mainline-bridge-level7-v2-seed0-first43",
+  "revision": "82cea4ac2fa3fa506df90ffd5ee256562d2a143d",
+  "seconds": 224.03749764100212,
+  "source_revision": "53fd859",
+  "snapshot": "43updates/165episodes/37560decisions/4183790ticks, completeownstage resume target plus165rawNPZ/evaluations/matchedidle/8trained/milestones/logs. Latercontinuation is samecandidate, not newexperiment.",
+  "dependency": "Full13boundary parent/source ancestry already delivered in evidence-mainline-full-level7-v1-seed0 revision54c2d480c5171cd88db365b194c58e9587cb9917. Complete stage resume needs only own checkpoint."
+}

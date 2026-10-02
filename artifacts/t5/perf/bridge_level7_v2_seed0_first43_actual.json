@@ -1,0 +1,2032 @@
+{
+  "schema_version": 1,
+  "status": "complete_first43_boundary",
+  "source_revision": "53fd859",
+  "config": "experiments/t7/bridge_level7_v2/seed0.json",
+  "snapshot": {
+    "status": "update_boundary_stop",
+    "phase": "ready",
+    "updates": 43,
+    "counters": {
+      "episodes": 165,
+      "decisions": 37560,
+      "ticks": 4183790
+    },
+    "wall_seconds": 3543.887497194002,
+    "checkpoint": "runs/run_1/update_000043_boundary_1790955757784364969.pt",
+    "resources": {
+      "peak_process_tree_rss_bytes": 15251353600,
+      "min_system_available_bytes": 18557804544,
+      "peak_system_swap_used_bytes": 0,
+      "cuda_peak_allocated_bytes": 6405961728,
+      "cuda_peak_reserved_bytes": 25398607872
+    }
+  },
+  "initialization_provenance": {
+    "kind": "weights_transfer_v1",
+    "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_full_level7_v1_seed0/runs/run_1/update_000013_boundary_1790946288957446067.pt",
+    "source_sha256": "c400115918066625c2f1ca8bae1c1120cdeb5f37c00a6ff6a35194cc171d791c",
+    "note": "New bridge-course stage from prespecifiedfirst13completelevel7 boundary, the checkpoint used in prospective probes. Copy all same-config parameters; newAdamW/RNG/counters/course, recursively retain parent training costs. Later fullstage43losses remain delivered; not same-candidate resume or a curriculum causal comparison. R0 objective differs from R3 parent; initialize critic weights too but reset its optimizer, measure own initial baseline and recalibration. No unchanged-objective or same-candidate resume claim.",
+    "source_experiment_id": "mainline_full_level7_v1_seed0",
+    "source_experiment_identity": "947fa1a2c717b32f2584687077debc3ec5dbf7937768ca65dbc8e253a6e3f3ec",
+    "source_initialization_seed": 0,
+    "source_updates": 13,
+    "source_counters": {
+      "episodes": 51,
+      "decisions": 9606,
+      "ticks": 1128315
+    },
+    "source_wall_seconds": 653.7822612769996,
+    "source_commit": "c841bda3b2da3c4a3d8b9c2d33d610471fc2b641",
+    "source_initialization_provenance": {
+      "kind": "weights_transfer_v1",
+      "source_checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_frontier_v1_seed0/runs/run_1/update_000023_boundary_1790942973035689115.pt",
+      "source_sha256": "a241272d741cefa15a6a32b8a8bca5e6879019e125409a4d1980fb3fb12f884c",
+      "note": "Transfer all identical headless singleGRU256 parameters after first23updates/47856decisions. New completelevel7 curriculum with R3gamma1; reset AdamW and stage RNG/counters explicitly. Not same-candidate resume or a reward causal comparison.",
+      "source_experiment_id": "mainline_frontier_v1_seed0",
+      "source_experiment_identity": "fb0994e500342c08d9fcfb63b1d43e5fa2b0a56b9bc5428bcdb55e9bf10aa8db",
+      "source_initialization_seed": 0,
+      "source_updates": 23,
+      "source_counters": {
+        "episodes": 391,
+        "decisions": 47856,
+        "ticks": 4964050
+      },
+      "source_wall_seconds": 2361.7862293979997,
+      "source_commit": "ecc6b39bc3c16c7859f2b070dd9fcb15c1f98746",
+      "new_stage_state": "new AdamW, declared RNG seeds, zero stage counters and new curriculum; source budget recorded separately"
+    },
+    "new_stage_state": "new AdamW, declared RNG seeds, zero stage counters and new curriculum; source budget recorded separately"
+  },
+  "segments": [
+    {
+      "requested_updates": 3,
+      "resume": false,
+      "status": "complete",
+      "start_utc": "2026-10-02T14:43:16.521670+00:00",
+      "pid": 137154,
+      "latest_progress": {
+        "utc": "2026-10-02T14:56:16.550465+00:00",
+        "queue": "v6",
+        "stage": 1,
+        "status": "running",
+        "phase": "pending_evaluation",
+        "updates": 3,
+        "counters": {
+          "episodes": 9,
+          "decisions": 2000,
+          "ticks": 226044
+        },
+        "wall_seconds": 515.6120818000054,
+        "resources": {
+          "peak_process_tree_rss_bytes": 15122309120,
+          "min_system_available_bytes": 18653573120,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 5156872192,
+          "cuda_peak_reserved_bytes": 5643436032
+        },
+        "latest_loss": {
+          "policy_loss": 0.3617582470178604,
+          "value_loss": 0.0063021625828696415,
+          "entropy": 3.497933268547058,
+          "advantage_mean": 0.08199562132358551,
+          "advantage_std": 0.06880304217338562,
+          "gradient_norm": 2.0716123580932617,
+          "approx_kl": 0.00129415986884851,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 7.152557373046875e-07,
+          "max_log_prob_change": 0.1689920425415039,
+          "optimizer_steps": 4,
+          "stopped_for_kl": false
+        }
+      },
+      "exit_code": 0,
+      "seconds": 785.0290537289984,
+      "final_progress": {
+        "utc": "2026-10-02T14:56:21.552933+00:00",
+        "queue": "v6",
+        "stage": 1,
+        "status": "update_boundary_stop",
+        "phase": "ready",
+        "updates": 3,
+        "counters": {
+          "episodes": 9,
+          "decisions": 2000,
+          "ticks": 226044
+        },
+        "wall_seconds": 777.8592403310031,
+        "resources": {
+          "peak_process_tree_rss_bytes": 15122309120,
+          "min_system_available_bytes": 18653573120,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 5156872192,
+          "cuda_peak_reserved_bytes": 5643436032
+        },
+        "latest_loss": {
+          "policy_loss": 0.3617582470178604,
+          "value_loss": 0.0063021625828696415,
+          "entropy": 3.497933268547058,
+          "advantage_mean": 0.08199562132358551,
+          "advantage_std": 0.06880304217338562,
+          "gradient_norm": 2.0716123580932617,
+          "approx_kl": 0.00129415986884851,
+          "clip_fraction": 0.0,
+          "first_minibatch_log_prob_max_error": 7.152557373046875e-07,
+          "max_log_prob_change": 0.1689920425415039,
+          "optimizer_steps": 4,
+          "stopped_for_kl": false
+        }
+      },
+      "counters": {
+        "episodes": 9,
+        "decisions": 2000,
+        "ticks": 226044
+      },
+      "checkpoint": "runs/run_1/update_000003_boundary_1790952977821634349.pt"
+    },
+    {
+      "requested_updates": 10,
+      "resume": true,
+      "status": "complete",
+      "start_utc": "2026-10-02T14:56:21.555887+00:00",
+      "pid": 138043,
+      "latest_progress": {
+        "utc": "2026-10-02T15:07:21.617460+00:00",
+        "queue": "v6",
+        "stage": 2,
+        "status": "running",
+        "phase": "ready",
+        "updates": 12,
+        "counters": {
+          "episodes": 45,
+          "decisions": 10692,
+          "ticks": 1111441
+        },
+        "wall_seconds": 1380.2861598240052,
+        "resources": {
+          "peak_process_tree_rss_bytes": 15248252928,
+          "min_system_available_bytes": 18565505024,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 6405961728,
+          "cuda_peak_reserved_bytes": 25398607872
+        },
+        "latest_loss": {
+          "policy_loss": 0.11345348258813222,
+          "value_loss": 0.28848766659696895,
+          "entropy": 3.2021124164263406,
+          "advantage_mean": -0.10039754211902618,
+          "advantage_std": 0.32828253507614136,
+          "gradient_norm": 2.2462918758392334,
+          "approx_kl": 0.004978222757927142,
+          "clip_fraction": 0.057515960186719894,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.7557311058044434,
+          "optimizer_steps": 12,
+          "stopped_for_kl": false
+        }
+      },
+      "exit_code": 0,
+      "seconds": 670.0626307390048,
+      "final_progress": {
+        "utc": "2026-10-02T15:07:31.621507+00:00",
+        "queue": "v6",
+        "stage": 2,
+        "status": "update_boundary_stop",
+        "phase": "ready",
+        "updates": 13,
+        "counters": {
+          "episodes": 49,
+          "decisions": 11662,
+          "ticks": 1207352
+        },
+        "wall_seconds": 1439.6320396380033,
+        "resources": {
+          "peak_process_tree_rss_bytes": 15251353600,
+          "min_system_available_bytes": 18565505024,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 6405961728,
+          "cuda_peak_reserved_bytes": 25398607872
+        },
+        "latest_loss": {
+          "policy_loss": 0.35329059064388274,
+          "value_loss": 0.13888208956923337,
+          "entropy": 3.1356048583984375,
+          "advantage_mean": -0.2339237779378891,
+          "advantage_std": 0.2716866135597229,
+          "gradient_norm": 3.7879514694213867,
+          "approx_kl": 0.01087227410171181,
+          "clip_fraction": 0.19244832443073392,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.5137035846710205,
+          "optimizer_steps": 10,
+          "stopped_for_kl": false
+        }
+      },
+      "counters": {
+        "episodes": 49,
+        "decisions": 11662,
+        "ticks": 1207352
+      },
+      "checkpoint": "runs/run_1/update_000013_boundary_1790953645145454685.pt"
+    },
+    {
+      "requested_updates": 30,
+      "resume": true,
+      "status": "complete",
+      "start_utc": "2026-10-02T15:07:31.625290+00:00",
+      "pid": 139151,
+      "latest_progress": {
+        "utc": "2026-10-02T15:42:31.806438+00:00",
+        "queue": "v6",
+        "stage": 3,
+        "status": "running",
+        "phase": "ready",
+        "updates": 42,
+        "counters": {
+          "episodes": 161,
+          "decisions": 36596,
+          "ticks": 4074021
+        },
+        "wall_seconds": 3469.7486833650037,
+        "resources": {
+          "peak_process_tree_rss_bytes": 15251353600,
+          "min_system_available_bytes": 18557804544,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 6405961728,
+          "cuda_peak_reserved_bytes": 25398607872
+        },
+        "latest_loss": {
+          "policy_loss": -0.521075314283371,
+          "value_loss": 0.1791134461760521,
+          "entropy": 3.118074727058411,
+          "advantage_mean": 0.20433318614959717,
+          "advantage_std": 0.29959192872047424,
+          "gradient_norm": 4.059869766235352,
+          "approx_kl": 0.008401538757607342,
+          "clip_fraction": 0.09769488773308695,
+          "first_minibatch_log_prob_max_error": 1.9073486328125e-06,
+          "max_log_prob_change": 0.6956560611724854,
+          "optimizer_steps": 10,
+          "stopped_for_kl": false
+        }
+      },
+      "exit_code": 0,
+      "seconds": 2110.181604757003,
+      "final_progress": {
+        "utc": "2026-10-02T15:42:41.810793+00:00",
+        "queue": "v6",
+        "stage": 3,
+        "status": "update_boundary_stop",
+        "phase": "ready",
+        "updates": 43,
+        "counters": {
+          "episodes": 165,
+          "decisions": 37560,
+          "ticks": 4183790
+        },
+        "wall_seconds": 3543.887497194002,
+        "resources": {
+          "peak_process_tree_rss_bytes": 15251353600,
+          "min_system_available_bytes": 18557804544,
+          "peak_system_swap_used_bytes": 0,
+          "cuda_peak_allocated_bytes": 6405961728,
+          "cuda_peak_reserved_bytes": 25398607872
+        },
+        "latest_loss": {
+          "policy_loss": 0.1582150049507618,
+          "value_loss": 0.07521041901782155,
+          "entropy": 3.0617574214935304,
+          "advantage_mean": -0.08238532394170761,
+          "advantage_std": 0.2531285583972931,
+          "gradient_norm": 2.5545623302459717,
+          "approx_kl": 0.008339135162532329,
+          "clip_fraction": 0.09418573388829828,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.725055456161499,
+          "optimizer_steps": 10,
+          "stopped_for_kl": false
+        }
+      },
+      "counters": {
+        "episodes": 165,
+        "decisions": 37560,
+        "ticks": 4183790
+      },
+      "checkpoint": "runs/run_1/update_000043_boundary_1790955757784364969.pt"
+    }
+  ],
+  "evaluation_nodes": [
+    {
+      "counters": {
+        "episodes": 0,
+        "decisions": 0,
+        "ticks": 0
+      },
+      "updates": 0,
+      "seconds": 377.01107260199933,
+      "modes": {
+        "greedy": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              }
+            }
+          },
+          "groups": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.125,
+              "policy_wilson_95": [
+                0.054595,
+                0.261121
+              ],
+              "idle_rate": 0.125,
+              "idle_wilson_95": [
+                0.054595,
+                0.261121
+              ]
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.193608
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.193608
+              ]
+            }
+          }
+        },
+        "sampled": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.5,
+                "mean_survival_ticks": 22668.25
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "improved_pairs": 7,
+              "degraded_pairs": 3,
+              "net_win_gain": 0.25,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.5625,
+                "wilson_95": [
+                  0.331786,
+                  0.769013
+                ],
+                "mean_terminal_wave": 9.812,
+                "mean_survival_ticks": 25917.312
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "improved_pairs": 2,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.125,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.125,
+                "wilson_95": [
+                  0.034977,
+                  0.360228
+                ],
+                "mean_terminal_wave": 13.062,
+                "mean_survival_ticks": 28377.438
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 13.5,
+                "mean_survival_ticks": 29999.125
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.375,
+                "mean_survival_ticks": 27501.875
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8,
+                "mean_survival_ticks": 20550
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.625,
+                "mean_survival_ticks": 22955.5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              }
+            }
+          },
+          "groups": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved": 9,
+              "degraded": 3,
+              "gain": 0.15,
+              "policy_rate": 0.275,
+              "policy_wilson_95": [
+                0.16108,
+                0.42835
+              ],
+              "idle_rate": 0.125,
+              "idle_wilson_95": [
+                0.054595,
+                0.261121
+              ]
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.193608
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.193608
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 9,
+        "decisions": 2000,
+        "ticks": 226044
+      },
+      "updates": 3,
+      "seconds": 261.94417133800016,
+      "modes": {
+        "greedy": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              }
+            }
+          },
+          "groups": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.125,
+              "policy_wilson_95": [
+                0.054595,
+                0.261121
+              ],
+              "idle_rate": 0.125,
+              "idle_wilson_95": [
+                0.054595,
+                0.261121
+              ]
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.193608
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.193608
+              ]
+            }
+          }
+        },
+        "sampled": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 9.125,
+                "mean_survival_ticks": 23994.5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "improved_pairs": 6,
+              "degraded_pairs": 1,
+              "net_win_gain": 0.3125,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.625,
+                "wilson_95": [
+                  0.38641,
+                  0.815188
+                ],
+                "mean_terminal_wave": 9.812,
+                "mean_survival_ticks": 23463.25
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "improved_pairs": 3,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.1875,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.1875,
+                "wilson_95": [
+                  0.065916,
+                  0.430089
+                ],
+                "mean_terminal_wave": 13.188,
+                "mean_survival_ticks": 28309.312
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 13.75,
+                "mean_survival_ticks": 28913.375
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.875,
+                "mean_survival_ticks": 28146.75
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.875,
+                "mean_survival_ticks": 24260.375
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 9.125,
+                "mean_survival_ticks": 25124.125
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              }
+            }
+          },
+          "groups": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved": 9,
+              "degraded": 1,
+              "gain": 0.2,
+              "policy_rate": 0.325,
+              "policy_wilson_95": [
+                0.200845,
+                0.479823
+              ],
+              "idle_rate": 0.125,
+              "idle_wilson_95": [
+                0.054595,
+                0.261121
+              ]
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.193608
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.193608
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "counters": {
+        "episodes": 109,
+        "decisions": 25000,
+        "ticks": 2661854
+      },
+      "updates": 29,
+      "seconds": 256.20772868600034,
+      "modes": {
+        "greedy": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.25,
+                "mean_survival_ticks": 22129.125
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24954.812
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 12.125,
+                "mean_survival_ticks": 25667
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.625,
+                "mean_survival_ticks": 27500.875
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 12.125,
+                "mean_survival_ticks": 26930
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.875,
+                "mean_survival_ticks": 25688.625
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 9.125,
+                "mean_survival_ticks": 24220.5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              }
+            }
+          },
+          "groups": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.125,
+              "policy_wilson_95": [
+                0.054595,
+                0.261121
+              ],
+              "idle_rate": 0.125,
+              "idle_wilson_95": [
+                0.054595,
+                0.261121
+              ]
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.193608
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.193608
+              ]
+            }
+          }
+        },
+        "sampled": {
+          "per_task": {
+            "validation_full_level7_v1": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 8.5,
+                "mean_survival_ticks": 23073.375
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.625,
+                "mean_survival_ticks": 20805.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "cases": 16,
+              "improved_pairs": 8,
+              "degraded_pairs": 3,
+              "net_win_gain": 0.3125,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.625,
+                "wilson_95": [
+                  0.38641,
+                  0.815188
+                ],
+                "mean_terminal_wave": 9.938,
+                "mean_survival_ticks": 24276.125
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 10,
+                "mean_survival_ticks": 24710.375
+              }
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "cases": 16,
+              "improved_pairs": 5,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.3125,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 16,
+                "pass_rate": 0.3125,
+                "wilson_95": [
+                  0.141646,
+                  0.555956
+                ],
+                "mean_terminal_wave": 13.812,
+                "mean_survival_ticks": 28559.625
+              },
+              "idle": {
+                "sample_count": 16,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.193608
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 24861.5
+              }
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 15,
+                "mean_survival_ticks": 29199.5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.125,
+                "mean_survival_ticks": 25346.75
+              }
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 16,
+                "mean_survival_ticks": 32042.5
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 11.625,
+                "mean_survival_ticks": 26230.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 9.125,
+                "mean_survival_ticks": 24756
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.875,
+                "mean_survival_ticks": 20945.75
+              }
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "cases": 8,
+              "improved_pairs": 0,
+              "degraded_pairs": 0,
+              "net_win_gain": 0.0,
+              "policy_truncated": 0,
+              "idle_truncated": 0,
+              "policy": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 10.125,
+                "mean_survival_ticks": 26853.125
+              },
+              "idle": {
+                "sample_count": 8,
+                "pass_rate": 0.0,
+                "wilson_95": [
+                  0.0,
+                  0.324408
+                ],
+                "mean_terminal_wave": 7.75,
+                "mean_survival_ticks": 20670.125
+              }
+            }
+          },
+          "groups": {
+            "ordinary_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "aided_long": {
+              "cases": 40,
+              "improved": 13,
+              "degraded": 3,
+              "gain": 0.25,
+              "policy_rate": 0.375,
+              "policy_wilson_95": [
+                0.24223,
+                0.529676
+              ],
+              "idle_rate": 0.125,
+              "idle_wilson_95": [
+                0.054595,
+                0.261121
+              ]
+            },
+            "aided_full": {
+              "cases": 8,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.324408
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.324408
+              ]
+            },
+            "ordinary_long": {
+              "cases": 16,
+              "improved": 0,
+              "degraded": 0,
+              "gain": 0.0,
+              "policy_rate": 0.0,
+              "policy_wilson_95": [
+                0.0,
+                0.193608
+              ],
+              "idle_rate": 0.0,
+              "idle_wilson_95": [
+                0.0,
+                0.193608
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "all_episode_inventory_matches_counters": true,
+  "natural_terminal_episodes": 161,
+  "natural_terminal_wins": 64,
+  "budget_truncations": 4,
+  "action_counts": {
+    "plant": 6032,
+    "wait": 29661,
+    "shovel": 1867
+  },
+  "positive_shaping_shovels": 117,
+  "per_training_task": {
+    "train_bridge7_v1_aid_cap10": {
+      "episodes": 81,
+      "wins": 55,
+      "truncated": 1,
+      "decisions": 18330
+    },
+    "train_bridge7_v1_aid_cap20": {
+      "episodes": 13,
+      "wins": 0,
+      "truncated": 0,
+      "decisions": 3569
+    },
+    "train_bridge7_v1_ordinary_cap15": {
+      "episodes": 12,
+      "wins": 0,
+      "truncated": 0,
+      "decisions": 2414
+    },
+    "train_bridge7_v1_aid_cap15": {
+      "episodes": 32,
+      "wins": 9,
+      "truncated": 3,
+      "decisions": 7470
+    },
+    "train_full_level7_v1": {
+      "episodes": 11,
+      "wins": 0,
+      "truncated": 0,
+      "decisions": 2247
+    },
+    "train_bridge7_v1_aid_capfull": {
+      "episodes": 6,
+      "wins": 0,
+      "truncated": 0,
+      "decisions": 1568
+    },
+    "train_bridge7_v1_ordinary_cap10": {
+      "episodes": 10,
+      "wins": 0,
+      "truncated": 0,
+      "decisions": 1962
+    }
+  },
+  "focus_completed": 80,
+  "last_losses": {
+    "policy_loss": 0.1582150049507618,
+    "value_loss": 0.07521041901782155,
+    "entropy": 3.0617574214935304,
+    "advantage_mean": -0.08238532394170761,
+    "advantage_std": 0.2531285583972931,
+    "gradient_norm": 2.5545623302459717,
+    "approx_kl": 0.008339135162532329,
+    "clip_fraction": 0.09418573388829828,
+    "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+    "max_log_prob_change": 0.725055456161499,
+    "optimizer_steps": 10,
+    "stopped_for_kl": false
+  },
+  "interpretation": "At25k sampled aidedcap10 10/16 vsstageinitial9/16, cap15 5/16 vs2/16, matchedidle5/16 and0/16. Earlysingle-init change, not confirmed repeatedlearning; greedy remainsidenticalidle andordinarylong/fullstill0. Newstageinitialweights alreadytrainedin ancestorstages. No reward/course causal or architectureclaim.",
+  "cost_estimate": {
+    "observed_smoke_seconds": 785.0290537289984,
+    "last30_decisions": 25898,
+    "last30_seconds": 2110.181604757003,
+    "remaining_stage_decisions_to500k": 462440,
+    "seconds_extrapolated_train_only": 37679.83555887823,
+    "scope": "Last30segment includes25k evaluation; heuristic, behavior/fulltasklength/resource costs can change. No B frozen from single-init pilot."
+  },
+  "next": "Same frozen53fd859/source andconfig complete-resume60+60, queuedv7; observe prescribed125k/250k/375k/500k, no new cutoff or loweredfullacceptance.",
+  "anomalies": [
+    "No training crash, OOM or workerdeath recorded in closed3segments. Rawcuda reserved25,398,607,872 exceedsphysicalGPUcapacity; reportcounterverbatim, do not callOOM without error.",
+    "NativeRegEmu temporaryregistry write warnings appear nearworkerexit; complete segments exit0. Fourbudgettruncations retained andexcludedfromcourse outcomes."
+  ]
+}

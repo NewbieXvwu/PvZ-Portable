@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+  "allfourmanifests_seconds": 38.0,
+  "allfourmanifests_cases": 7872,
+  "raw_cases": 4672,
+  "raw_seconds": 26.5,
+  "raw_case_scope": "Raw38bridge training tasks +35reward evaluation tasks,64fixedseeds each. Original20/30trainingtaskdefinitions are exactsubsets of retained38; same-task counts checked against all123entry firstpass. No need rerun every overlappingmanifest for rawcapture.",
+  "truncated": 0,
+  "mac_compact_differences": [
+    {
+      "manifest": "experiments/t5/multicap_course_v1/train.json",
+      "task_id": "train_multicap_v1_pool_cap5_variant",
+      "production_wins": 48,
+      "mac_wins": 47,
+      "cases": 64
+    },
+    {
+      "manifest": "experiments/t7/bridge_level7_v1/train.json",
+      "task_id": "train_multicap_v1_pool_cap5_variant",
+      "production_wins": 48,
+      "mac_wins": 47,
+      "cases": 64
+    }
+  ],
+  "old_reward_model_reevaluation_simulator_sha256": "9e963b0bb5e5adcc18257ced6c6193faa241d9fb93d1603e9dfcc3471898b4c2",
+  "interpretation": "Productioneval35idle69.2% agrees with mac aggregation, but oldR0node model reevaluations are from9e963b0b, notcurrentdc8747f4. Do notsubtract crossbuild scores or claim olderpolicies categorically worse. Nearhighidlefloor shorttasks demoted from progress; lowfloor alone does not prove a task is learnable. Aidcap10>25%idle floor retained prospectively as discoverable bridge, no binary25%screen cutoff introduced.",
+  "old_original_model_eval_simulator_sha256": "943131ba0009bb8a53dad6ae7f2f661a30302b4026ca7b6dd83281de1162de84",
+  "old_original_model_eval_rates": [
+    {
+      "decisions": 0,
+      "modes": {
+        "greedy": 0.0,
+        "sampled": 0.006696
+      }
+    },
+    {
+      "decisions": 125019,
+      "modes": {
+        "greedy": 0.134375,
+        "sampled": 0.114732
+      }
+    },
+    {
+      "decisions": 250061,
+      "modes": {
+        "greedy": 0.465179,
+        "sampled": 0.273214
+      }
+    },
+    {
+      "decisions": 375034,
+      "modes": {
+        "greedy": 0.679018,
+        "sampled": 0.546875
+      }
+    },
+    {
+      "decisions": 500004,
+      "modes": {
+        "greedy": 0.555357,
+        "sampled": 0.559821
+      }
+    }
+  ],
+  "old_packet_corrected_model_eval_rates": [
+    {
+      "decisions": 0,
+      "modes": {
+        "greedy": 0.0,
+        "sampled": 0.006696428571428571
+      }
+    },
+    {
+      "decisions": 125019,
+      "modes": {
+        "greedy": 0.134375,
+        "sampled": 0.11473214285714285
+      }
+    },
+    {
+      "decisions": 250061,
+      "modes": {
+        "greedy": 0.46785714285714286,
+        "sampled": 0.2714285714285714
+      }
+    },
+    {
+      "decisions": 375034,
+      "modes": {
+        "greedy": 0.6816964285714285,
+        "sampled": 0.5450892857142857
+      }
+    },
+    {
+      "decisions": 500004,
+      "modes": {
+        "greedy": 0.5544642857142857,
+        "sampled": 0.5602678571428571
+      }
+    }
+  ],
+  "exact_attribution": "Quoted13.4/46.5/67.9/55.5% belong original943131ba curve. Packet-corrected9e963b0b 13.4/46.8/68.2/55.4%. Neither is a freshdc8747f4 policy reevaluation. Current69.2% idlecannot be subtracted from either. ExistingHF rawidle delivery remainsunchanged; thisexpanded Gitconclusion supplies attribution."
+}

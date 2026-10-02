@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "experiment_id": "mainline_bridge_level7_v2_seed0",
+  "source_run": "artifacts/research/mainline_bridge_level7_v2_seed0_first43_snapshot",
+  "reward_config": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "snapshot": {
+    "updates": 43,
+    "counters": {
+      "episodes": 165,
+      "decisions": 37560,
+      "ticks": 4183790
+    },
+    "checkpoint": "runs/run_1/update_000043_boundary_1790955757784364969.pt"
+  },
+  "saved_inventory_matches_committed_counters": true,
+  "normal_terminal_count": 161,
+  "normal_terminal_wins": 64,
+  "truncated_count": 4,
+  "natural_terminal_reward_sums": {
+    "count": 161,
+    "mean": -0.926088129186598,
+    "std": 0.9245936905584524,
+    "minimum": -2.1539128287559097,
+    "maximum": 0.3305145028004758
+  },
+  "natural_terminal_first_potentials": {
+    "count": 161,
+    "mean": 0.28167701863354044,
+    "std": 0.13455964231281095,
+    "minimum": 0.016666666666666666,
+    "maximum": 0.35000000000000003
+  },
+  "natural_terminal_episode_mc_value_mse": {
+    "count": 161,
+    "mean": 0.40833638808019734,
+    "std": 0.3796725711908826,
+    "minimum": 0.00610605215566415,
+    "maximum": 2.256205437035387
+  },
+  "natural_terminal_episode_gae_value_mse": {
+    "count": 161,
+    "mean": 0.08536803047468076,
+    "std": 0.07320225557758284,
+    "minimum": 0.004063678016917101,
+    "maximum": 0.3644879232023548
+  },
+  "telescoping_error_gamma1": {
+    "count": 0
+  },
+  "action_counts": {
+    "plant": 6032,
+    "wait": 29661,
+    "shovel": 1867
+  },
+  "shovel_last_observed_packet_counts": {
+    "not_observed": 612,
+    "1": 459,
+    "4": 214,
+    "3": 229,
+    "0": 308,
+    "5": 45
+  },
+  "positive_shaping_shovels": 117,
+  "interpretation": "Observed episode returns only; equal all-loss returns do not prove the environment unsolvable or RL impossible. Truncated rows retained separately; bootstraps are not natural wins. Packet tracking describes previously observed planted cards, not a native entity-identity audit.",
+  "seconds": 0.9217683620008756
+}

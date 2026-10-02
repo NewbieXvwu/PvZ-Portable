@@ -740,13 +740,42 @@ frontier_v1_seed0_second_segment_actual.json、full_level7_terminal_signal_v1_ac
 experiments/t5/reward_evaluation_v1.json（35任务×64种子=2240例）测同构建空操作地板
 = 1550/2240 = 69.2%（Wilson95 [0.673,0.711]）；分地形 roof 0/448，其余
 day0.882/fog0.866/night0.862/pool0.850；分cap cap1 0.800、cap3 0.792、cap5 0.434。
-与旧R0seed0检查点在同构建上的2240例评估对齐后：0决策0.0%、125k13.4%、250k46.5%、
-375k67.9%（greedy峰值）、500k55.5%。即**该评估集上任何检查点都未超过空操作地板**，
-峰值375k仍低1.3个百分点，末段低13.7个百分点。故"旧组累计胜率57%"与"末段检查点
-评估"都不构成策略学习证据；两条口径在本集合上不矛盾，都指向同一结论。
+旧R0seed0原始2240例曲线为0决策0.0%、125k13.4%、250k46.5%、375k67.9%、
+500k55.5%，对应943131ba原构建。后续packet-cost修正复评使用9e963b0b，greedy对应
+0.0%、13.4%、46.8%、68.2%、55.4%。**两套旧成绩都不能与当前69.2%直接相减**：
+当前生产为dc8747f4，两套均早于intro/mower修正，并非刚在生产重新测量的模型成绩。
+“所有检查点未超过地板、低1.3/13.7个百分点”的结论暂不成立，累计口径纠正仍有效。
+来源：reward_r0_seed0_v2的provenance/原曲线，及artifacts/t5/perf/
+reward_v2_packet_cost_reevaluation_v2.json与curves/reward_r0_seed0_v2_packet_cost_v2.json。
 另：seed0以外各run末段（最后15更新窗口）胜率0.0%~91.1%离散极大，而该池量程仅
 0.692→1.000，故种子间差异不能直接读作学习能力差异。今后新增任务池必须
 先建同构建空操作基线，并按地板分档（≤0.25才有区分度）标注。
 证据：artifacts/t5/perf/donothing_baseline_v2.json、donothing_baseline_eval35_v1.json。
 两份基线各整跑两次，88条与35条逐条零差异（完全可复现）；产物内记 simulator_sha256，
 跨构建地板不可相减。本机macOS二进制2056e13e与台式机生产dc8747f4为同源码不同平台。
+
+生产整池补充：8cf7596的新脚本复核7872局/38秒，旧20任务980/1280，新30任务
+1456/1920，38任务1539/2432，奖励评估1550/2240。与mac仅pool_cap5_variant
+多1胜（该任务在两个manifest各出现一次）；不用跨平台哈希冒充同构建。脚本
+已补可选raw-output、每局seed/自然终止/预算截断；另4672局26.5秒补存38+35
+任务全部逐局证据，其余20/30是38的精确子集，0截断。两项截断记录测试通过。
+地板≤25%只作筛查描述，不能作为自动改池/采用硬门禁；aidcap10约31%仍是
+有可发现胜局的桥梁，保持预声明v2配置。屋顶短任务有真实区分度，后续多地形
+课程不因短波数永久排除，但不改正在运行的level7候选。旧R0/R1init0记录确有
+自然屋顶胜局1104/2218、1220/2016（全程训练，不是最后策略成绩）；不把旧
+模型学习全部抹掉，也不据整体98%反推屋顶末段93%而忽略实际任务采样权重。
+R0bridge_v2首段43更新/165局/37560决策/3543.89秒正常闭合；3更新冒烟785.0秒，
+resume10更新670.1秒、30更新2110.2秒，检查点/曲线/全部已到达评估均齐全。
+161自然局有64胜，4预算截断保留；25k采样aidcap10=10/16（初始9/16、idle5/16），
+aidcap15=5/16（初始2/16、idle0/16），greedy仍等于idle，无援助长/完整仍0。
+以上仅单初始化早期变化，不宣称稳定学习、奖励因果或完整关卡达标。当前已
+接同冻结53fd859源码和相同配置的两段resume60；架构扩容保持低优先级。
+完整首43snapshot已先保存必要milestone/resume/latest8trained/165NPZ，再续跑，
+小诊断与frontier0完整57边界已上传HF：mower833cb8e、terminald3692fa、frontier2939d1c。
+新曲线/各段loss/Wilson/祖先成本见bridge_level7_v2_seed0_first43_actual.json；
+生产基线与跨构建口径纠正见production_idle_baseline_review_v1.json。
+
+本轮同步交付已闭合：bridge首43检查点/165NPZ/最新8trained/状态/曲线/idle/日志
+HF82cea4ac（evidence-mainline-bridge-level7-v2-seed0-first43），生产4672逐局基线
+HF26697c35（evidence-production-task-idle-baseline-v1）。当前同候选继续运行，
+原完整60%/多地形/三初始化验收未完成，不以首段成功或小幅采样增益结束目标。
