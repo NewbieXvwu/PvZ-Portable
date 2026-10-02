@@ -128,7 +128,7 @@ class ObservationTokenTests(unittest.TestCase):
         self.assertEqual(tensors["features"].dtype, torch.float32)
 
     def test_lane_context_vocabulary_bumps_the_architecture_version(self) -> None:
-        self.assertEqual(MODEL_ARCHITECTURE_VERSION, 7)
+        self.assertEqual(MODEL_ARCHITECTURE_VERSION, 11)
         self.assertEqual(TOKEN_KINDS["lane"], 10)
         self.assertEqual(TOKEN_KINDS["lane_enemy"], 11)
         self.assertEqual(len(TOKEN_KINDS), 12)
@@ -259,6 +259,8 @@ class GameplayModelTests(unittest.TestCase):
         self.assertEqual(tuple(output["cell_keys"].shape), (CELL_COUNT, MODEL_CONFIG["width"]))
         self.assertEqual(tuple(output["value"].shape), (1,))
         self.assertEqual(output["wave_index"], source["wave"])
+        self.assertFalse(any(name.startswith("aux_") for name in self.model.state_dict()))
+        self.assertFalse(any(name.startswith("aux_") for name in output))
 
     def test_compact_critic_inputs_match_the_full_privileged_state(self) -> None:
         privileged = {"hidden": {

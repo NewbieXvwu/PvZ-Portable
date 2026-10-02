@@ -147,9 +147,9 @@ class EventWaitPolicyTests(unittest.TestCase):
             torch.testing.assert_close(draws[1], draws[2], rtol=0, atol=0)
 
     def test_architecture_tag_is_configuration_specific(self):
-        self.assertEqual(model_architecture_version(SMALL), 7)
+        self.assertEqual(model_architecture_version(SMALL), 11)
         for mode in ('fixed', 'events'):
-            self.assertEqual(model_architecture_version({**SMALL, 'wait_mode': mode}), 8)
+            self.assertEqual(model_architecture_version({**SMALL, 'wait_mode': mode}), 12)
         for mode in ('event', None, True):
             with self.assertRaisesRegex(ValueError, 'wait_mode'):
                 GameplayModelV1({**SMALL, 'wait_mode': mode})

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "purpose": "Implementation and actual native smoke first; no hours-long adoption gate. Scientific final three-initialization comparisons remain incomplete.",
+  "auxiliary_prediction": "Cancelled by user on 2026-10-02; all three heads and outputs deleted.",
+  "model_architecture_versions": {
+    "fixed": 11,
+    "events": 12,
+    "progress": 13,
+    "dual": 14
+  },
+  "checkpoint_compatibility": "Old versions 7/8/9 use preserved Git revision 025f371; new candidates start at their own random initialization. No silent migration or mixing width evidence across versions.",
+  "slow_memory": {
+    "input": "Public global/lane/packet embeddings plus 16 public phase features; no privileged actor inputs.",
+    "triggers": [
+      "initial observation",
+      "wave change",
+      "defense_lost",
+      "zombie_entered_left_zone",
+      "plants eaten",
+      "mower triggered",
+      "3000 actual ticks since phase",
+      "64 decisions since phase"
+    ],
+    "goal": "Learned differentiable internal condition, held within a phase; no independent slow action likelihood.",
+    "gradient": "Each PPO core window starts gradients at its producing event, reconstructing earlier prefix with current parameters under no_grad. Leading frames receive no duplicate PPO loss; earlier slow history remains truncated.",
+    "intervals": "Initial explicit research choices; no claim of optimality.",
+    "critic": "Existing asymmetric critic retained; environment return only."
+  },
+  "comparison": {
+    "single": "Two fast GRU layers, hidden256",
+    "dual": "One fast GRU256 plus one slow GRU/LSTM256; goal64",
+    "train_manifest": "experiments/t5/multicap_course_v1/train.json",
+    "evaluation_manifest": "experiments/t5/mainline_events_v1/progress_evaluation.json",
+    "initialization_seeds": [
+      0,
+      1,
+      2
+    ],
+    "budget_decisions": 500000,
+    "nodes": [
+      2000,
+      25000,
+      125000,
+      250000,
+      375000,
+      500000
+    ],
+    "measurement": "Interaction and actual wall time, gradients, event/wave coverage, actual reserved/allocated CUDA and host memory. Small progress view does not replace original full evaluation."
+  }
+}

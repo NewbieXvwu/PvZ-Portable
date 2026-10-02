@@ -23,6 +23,7 @@ from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, policy_l
 from pvz_common import canonical_digest
 from pvz_env import PvZEnv, TaskSpec
 from pvz_event_env import require_policy_env
+from pvz_dual_memory import gradient_start as slow_gradient_start
 from pvz_wait_events import validate_wait_result
 from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 
@@ -94,10 +95,12 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         packed = pack_tokens(tensors, metadata)
         legal = policy_legal_summary(observation, model.config)
         tokenization_seconds += time.perf_counter() - tokenize_started
+        planner_context = model.planner_context(observation)
         model_started = time.perf_counter()
         with torch.no_grad():
             output = model.step_tokens(tensors, metadata, wave, hidden, previous_action,
-                                       elapsed_since_previous_observation, events, previous_wait_result)
+                                       elapsed_since_previous_observation, events, previous_wait_result,
+                                       planner_context=planner_context)
             action, log_prob, _ = select_action(model, output, legal)
             critic_extra = model.privileged_extra_from_inputs(
                 observation["wave_timer"], roster)
@@ -119,6 +122,9 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
             "potential": current_potential,
         }
         transitions.append(transition)
+        if "slow_memory" in model.config:
+            transition.update(planner_context=planner_context, slow_update=output["slow_update"],
+                              slow_stage_start=output["slow_stage_start"])
         if "wait_mode" in model.config:
             transition["previous_wait_result"] = previous_wait_result
         environment_started = time.perf_counter()
@@ -212,7 +218,7 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                  minibatch_chunks: int = 1,
                  attention_backend: str = "auto",
                  label: str | None = None,
-                 target_kl: float | None = None) -> dict[str, float]:
+                 target_kl: float | None = None) -> dict[str, Any]:
     """PPO over complete episodes (sequence_length=0) or truncated sequences.
 
     Every truncated minibatch rebuilds its prefix without gradients using the
@@ -268,6 +274,7 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
     policy_losses, value_losses, entropies = [], [], []
     kls, clips, replay_errors = [], [], []
     stop_for_kl = False
+    slow_windows = []
     last_progress = time.monotonic()
     model.train()
     for epoch in range(ppo_epochs):
@@ -280,10 +287,14 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
             random.shuffle(layer)
             for batch_start in range(0, len(layer), minibatch_chunks):
                 batch = layer[batch_start:batch_start + minibatch_chunks]
-                sequences = [episode["transitions"][start:end] for episode, start, end in batch]
+                gradient_starts = [slow_gradient_start(episode["transitions"], start)
+                                   if "slow_memory" in model.config else start
+                                   for episode, start, _ in batch]
+                sequences = [episode["transitions"][origin:end]
+                             for (episode, _, end), origin in zip(batch, gradient_starts, strict=True)]
                 hiddens = []
                 with torch.no_grad():
-                    for episode, start, _ in batch:
+                    for (episode, _, _), start in zip(batch, gradient_starts, strict=True):
                         hidden = None
                         # Limit prefix activation memory independently of its length.
                         for prefix_start in range(0, start, sequence_length or 256):
@@ -293,7 +304,14 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                             hidden = hidden_out[:, 0, :]
                         hiddens.append(hidden)
                 outputs, _ = model.forward_sequences(sequences, hiddens)
-                flat_transitions = [transition for sequence in sequences for transition in sequence]
+                # Leading frames produce the held goal with gradients. Their
+                # PPO losses are excluded, so every original chunk is counted once.
+                core_outputs, flat_transitions, offset = [], [], 0
+                for (episode, start, end), origin, sequence in zip(batch, gradient_starts, sequences, strict=True):
+                    core_outputs.extend(outputs[offset + start-origin:offset + len(sequence)])
+                    flat_transitions.extend(episode["transitions"][start:end])
+                    offset += len(sequence)
+                outputs = core_outputs
                 log_probs, entropies_for_chunk = replay_log_probs(model, outputs, flat_transitions)
                 belief = torch.cat([output["belief"] for output in outputs], dim=0)
                 extras = torch.tensor([transition["critic_extra"] for transition in flat_transitions],
@@ -337,6 +355,15 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                 if not torch.isfinite(gradient_norm):
                     raise FloatingPointError("PPO gradient norm became non-finite")
                 optimizer.step()
+                if "slow_memory" in model.config:
+                    for (episode, start, end), origin in zip(batch, gradient_starts, strict=True):
+                        frames = episode["transitions"][origin:end]
+                        slow_windows.append(dict(core_decisions=end-start, gradient_decisions=end-origin,
+                            leading_decisions=start-origin, events=sum(t["slow_update"] for t in frames),
+                            waves=len({t["wave"] for t in frames}),
+                            elapsed_ticks=frames[-1]["planner_context"]["tick"]
+                                          + frames[-1]["action_duration_ticks"]
+                                          - frames[0]["planner_context"]["tick"]))
                 policy_losses.append(float(policy_loss.detach().item()))
                 value_losses.append(float(value_loss.detach().item()))
                 entropies.append(float(entropy.detach().item()))
@@ -351,7 +378,7 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
     model.eval()
     if not policy_losses:
         raise RuntimeError("PPO performed no optimization; inspect replay consistency and KL")
-    return {
+    result = {
         "policy_loss": sum(policy_losses) / len(policy_losses),
         "value_loss": sum(value_losses) / len(value_losses),
         "entropy": sum(entropies) / len(entropies),
@@ -365,6 +392,17 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         "optimizer_steps": len(policy_losses),
         "stopped_for_kl": stop_for_kl,
     }
+    if slow_windows:
+        result["slow_gradient_coverage"] = {
+            "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
+            "window_count": len(slow_windows),
+            "max_events": max(row["events"] for row in slow_windows),
+            "max_waves": max(row["waves"] for row in slow_windows),
+            "max_elapsed_ticks": max(row["elapsed_ticks"] for row in slow_windows),
+            "max_leading_decisions": max(row["leading_decisions"] for row in slow_windows),
+            "examples": slow_windows[:8],
+        }
+    return result
 
 
 def _jsonable(value: Any) -> Any:
@@ -393,6 +431,7 @@ def episode_hash(episode: dict[str, Any]) -> str:
             "action_duration_ticks", "events", "critic_extra", "action", "log_prob",
             "value", "potential", "shaping_reward", "terminal_outcome", "reward",
             "previous_wait_result", "wait_result",
+            "planner_context", "slow_update", "slow_stage_start",
         ) if key in transition
     }) for transition in episode["transitions"]]
     return canonical_digest({
@@ -409,7 +448,8 @@ EPISODE_DIGEST_FIELDS = (
     "value", "potential", "shaping_reward", "terminal_outcome", "reward",
 )
 # Optional version-8 fields. Absent fields leave legacy digests byte-identical.
-EPISODE_OPTIONAL_DIGEST_FIELDS = ("previous_wait_result", "wait_result")
+EPISODE_OPTIONAL_DIGEST_FIELDS = ("previous_wait_result", "wait_result",
+                                 "planner_context", "slow_update", "slow_stage_start")
 
 # Recorded alongside every digest so a reader can tell which algorithm produced the
 # trajectory hashes without guessing from the digest length.

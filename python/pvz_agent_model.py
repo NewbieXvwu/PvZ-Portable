@@ -13,6 +13,7 @@ from torch.nn import functional as F
 from pvz_observation_features import (INPUT_ON_BOARD, INPUT_ROW_CONTEXT, INPUT_TARGET_RELATIONS,
                                       require_public_fields, row_context, packet_refresh)
 from pvz_wait_events import CONDITIONS, REASON_PRECEDENCE, public_state, validate_wait_result
+from pvz_dual_memory import DualMemory, planner_context as public_planner_context, validate_slow_config
 try:
     from torch.nn.attention.flex_attention import flex_attention
 except ImportError:  # pragma: no cover - depends on the installed PyTorch build
@@ -35,14 +36,19 @@ TOKEN_KINDS = {
 }
 WAIT_TICKS = (60, 150, 300)
 MODEL_CONFIG = {"layers": 4, "width": 192, "heads": 6, "ff_width": 768, "gru_layers": 2, "gru_width": 256}
-MODEL_ARCHITECTURE_VERSION = 7
-WAIT_MODEL_ARCHITECTURE_VERSION = 8
-PROGRESS_WAIT_ARCHITECTURE_VERSION = 9
+MODEL_ARCHITECTURE_VERSION = 11
+WAIT_MODEL_ARCHITECTURE_VERSION = 12
+PROGRESS_WAIT_ARCHITECTURE_VERSION = 13
+DUAL_MODEL_ARCHITECTURE_VERSION = 14
 FEATURE_COUNT = 32
 
 
 def model_architecture_version(config: dict[str, Any]) -> int:
-    """Legacy configs retain version 7; explicit paired wait models use version 8."""
+    """Headless model versions; old7/8/9 checkpoints keep their frozen source."""
+    if "slow_memory" in config:
+        validate_slow_config(config)
+        model_architecture_version({key: value for key, value in config.items() if key != "slow_memory"})
+        return DUAL_MODEL_ARCHITECTURE_VERSION
     if "wait_mask" in config:
         if config.get("wait_mode") != "events" or config["wait_mask"] != "progress_v1":
             raise ValueError("wait_mask=progress_v1 requires wait_mode=events")
@@ -749,11 +755,11 @@ class GameplayModelV1(nn.Module):
         super().__init__()
         self.config = {**MODEL_CONFIG, **(config or {})}
         self.config.setdefault("input_flags", 0)
-        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags", "wait_mode", "wait_mask"}
+        allowed = set(MODEL_CONFIG) | {"critic_width", "critic_layers", "input_flags", "wait_mode", "wait_mask", "slow_memory"}
         if set(self.config) - allowed:
             raise ValueError(f"unknown model settings: {sorted(set(self.config) - allowed)}")
         if any(type(value) is not int or value < 1 for key, value in self.config.items()
-               if key not in ("input_flags", "wait_mode", "wait_mask")):
+               if key not in ("input_flags", "wait_mode", "wait_mask", "slow_memory")):
             raise ValueError("model dimensions must be positive integers")
         model_architecture_version(self.config)
         if type(self.config["input_flags"]) is not int or not 0 <= self.config["input_flags"] <= 7:
@@ -791,7 +797,8 @@ class GameplayModelV1(nn.Module):
         self.previous_action_projection = nn.Sequential(nn.Linear(256, 64), nn.SiLU())
         self.delta_embedding = nn.Embedding(32, 32)
         self.event_projection = nn.Sequential(nn.Linear(8, 32), nn.SiLU())
-        self.belief = nn.GRU(width + 128, self.config["gru_width"], self.config["gru_layers"], batch_first=True)
+        goal_width = self.config.get("slow_memory", {}).get("goal_width", 0)
+        self.belief = nn.GRU(width + 128 + goal_width, self.config["gru_width"], self.config["gru_layers"], batch_first=True)
         hidden = self.config["gru_width"]
         self.action_type = nn.Linear(hidden, 3)
         self.packet_query = nn.Linear(hidden, width)
@@ -801,9 +808,6 @@ class GameplayModelV1(nn.Module):
         self.shovel_cell_query = nn.Linear(hidden, width)
         self.wait_duration = nn.Linear(hidden, len(WAIT_TICKS))
         self.value = nn.Linear(hidden, 1)
-        self.aux_next_spawn = nn.Linear(hidden, 1)
-        self.aux_lane_threat = nn.Linear(hidden, 6)
-        self.aux_outcome = nn.Linear(hidden, 2)
         self.privileged_features = nn.Sequential(nn.Linear(16, 64), nn.SiLU())
         critic_width = self.config.get("critic_width", hidden)
         critic_layers = self.config.get("critic_layers", 1)
@@ -819,6 +823,18 @@ class GameplayModelV1(nn.Module):
                 torch.random.default_generator.manual_seed(50_212)
                 self.wait_condition = nn.Linear(hidden, len(CONDITIONS))
                 self.wait_context = nn.Sequential(nn.Linear(20, 64), nn.SiLU())
+        if "slow_memory" in self.config:
+            self.slow_memory = DualMemory(self.config)
+
+    def planner_context(self, observation: dict[str, Any]) -> dict[str, int] | None:
+        return public_planner_context(observation) if "slow_memory" in self.config else None
+
+    @staticmethod
+    def _kind_mean(encoded: Tensor, kinds: Tensor, kind: int) -> Tensor:
+        if kinds.ndim == 1:
+            kinds = kinds.unsqueeze(0)
+        mask = (kinds == kind).unsqueeze(-1).to(encoded.dtype)
+        return (encoded * mask).sum(1) / mask.sum(1).clamp(min=1)
 
     def _previous_action(self, action: dict[str, Any] | None, device: torch.device) -> Tensor:
         if action is None:
@@ -859,12 +875,14 @@ class GameplayModelV1(nn.Module):
              previous_wait_result: dict[str, Any] | None = None) -> dict[str, Any]:
         tensors, metadata = observation_tokens(observation, self.config["input_flags"])
         return self.step_tokens(tensors, metadata, observation["wave"], hidden,
-                                previous_action, delta_ticks, events, previous_wait_result)
+                                previous_action, delta_ticks, events, previous_wait_result,
+                                planner_context=self.planner_context(observation))
 
     def step_tokens(self, tensors: dict[str, Tensor], metadata: dict[str, Any], wave: int,
                     hidden: Tensor | None = None, previous_action: dict[str, Any] | None = None,
                     delta_ticks: int = 0, events: dict[str, Any] | None = None,
-                    previous_wait_result: dict[str, Any] | None = None) -> dict[str, Any]:
+                    previous_wait_result: dict[str, Any] | None = None,
+                    *, planner_context: dict[str, int] | None = None) -> dict[str, Any]:
         """Same forward as :meth:`step`, but over pre-tokenized input.
 
         Rollouts tokenize once and store the packed tokens; training reuses them
@@ -900,10 +918,22 @@ class GameplayModelV1(nn.Module):
         delta_vector = self.delta_embedding(torch.tensor([delta_index], device=device))
         event_vector = self.event_projection(self._event_features(events, device))
         recurrent_input = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1).unsqueeze(1)
-        if hidden is None:
-            hidden = torch.zeros(self.config["gru_layers"], 1, self.config["gru_width"], device=device)
-        belief, hidden = self.belief(recurrent_input, hidden)
-        belief = belief[:, 0, :]
+        slow_record = None
+        if "slow_memory" in self.config:
+            if planner_context is None:
+                raise ValueError("dual step_tokens requires public planner_context")
+            transition = dict(planner_context=planner_context, wave=wave, events=events,
+                              previous_wait_result=previous_wait_result)
+            belief, hidden, slow_records = self.slow_memory.forward_sequences(
+                recurrent_input[:, 0], x[:, 0], self._kind_mean(x, kinds, TOKEN_KINDS["lane"]),
+                self._kind_mean(x, kinds, TOKEN_KINDS["seed_packet"]), [[transition]],
+                [None if hidden is None else hidden[:, 0]], self.belief, verify_records=False)
+            slow_record = slow_records[0]
+        else:
+            if hidden is None:
+                hidden = torch.zeros(self.config["gru_layers"], 1, self.config["gru_width"], device=device)
+            belief, hidden = self.belief(recurrent_input, hidden)
+            belief = belief[:, 0, :]
 
         packet_ids = sorted(metadata["packet_tokens"])
         cell_ids = list(range(54))
@@ -922,13 +952,12 @@ class GameplayModelV1(nn.Module):
             "cell_tokens": cell_tokens,
             "cell_keys": self.cell_key(cell_tokens),
             "value": torch.tanh(self.value(belief)).squeeze(-1),
-            "aux_next_spawn": self.aux_next_spawn(belief),
-            "aux_lane_threat": self.aux_lane_threat(belief),
-            "aux_outcome": self.aux_outcome(belief),
             "wave_index": wave,
         }
         if "wait_mode" in self.config:
             output["wait_condition_logits"] = self.wait_condition(belief)[0]
+        if slow_record is not None:
+            output.update(slow_record)
         return output
 
     def _previous_action_batch(self, actions: list[dict[str, Any] | None], device: torch.device) -> Tensor:
@@ -1107,32 +1136,34 @@ class GameplayModelV1(nn.Module):
             [transition["events"] for transition in flat], device))
         recurrent_flat = torch.cat((x[:, 0, :], action_vector, delta_vector, event_vector), dim=-1)
 
-        # regroup the flattened steps into (B, T_max, D) grid for the GRU;
-        # grid[b, t] = flat index for real steps, -1 on padding
-        batch = len(sequences)
-        grid = np.full((batch, t_max), -1, dtype=np.int64)
-        for b in range(batch):
-            grid[b, :lengths_seq[b]] = np.arange(offsets[b], offsets[b + 1])
-        grid_t = torch.from_numpy(grid).to(device)
-        recurrent = recurrent_flat[grid_t.clamp(min=0)]
-        seq_lengths = torch.from_numpy(lengths_seq).to(device)
-        packed_input = nn.utils.rnn.pack_padded_sequence(
-            recurrent, seq_lengths.cpu(), batch_first=True, enforce_sorted=False)
-        hidden_in = torch.zeros(self.config["gru_layers"], batch, self.config["gru_width"], device=device)
-        for b, start_hidden in enumerate(hiddens):
-            if start_hidden is not None:
-                hidden_in[:, b, :] = start_hidden
-        belief_seq, hidden_out = self.belief(packed_input, hidden_in)
-        belief_padded, _ = nn.utils.rnn.pad_packed_sequence(belief_seq, batch_first=True, total_length=t_max)
-        belief = belief_padded[grid_t >= 0]  # (N, H); row-major mask order == flat order
+        slow_records = None
+        if "slow_memory" in self.config:
+            belief, hidden_out, slow_records = self.slow_memory.forward_sequences(
+                recurrent_flat, x[:, 0], self._kind_mean(x, kinds, TOKEN_KINDS["lane"]),
+                self._kind_mean(x, kinds, TOKEN_KINDS["seed_packet"]), sequences, hiddens, self.belief)
+        else:
+            # Ragged single-timescale sequences retain the existing packed GRU.
+            batch = len(sequences)
+            grid = np.full((batch, t_max), -1, dtype=np.int64)
+            for b in range(batch):
+                grid[b, :lengths_seq[b]] = np.arange(offsets[b], offsets[b + 1])
+            grid_t = torch.from_numpy(grid).to(device)
+            recurrent = recurrent_flat[grid_t.clamp(min=0)]
+            seq_lengths = torch.from_numpy(lengths_seq).to(device)
+            packed_input = nn.utils.rnn.pack_padded_sequence(
+                recurrent, seq_lengths.cpu(), batch_first=True, enforce_sorted=False)
+            hidden_in = torch.zeros(self.config["gru_layers"], batch, self.config["gru_width"], device=device)
+            for b, start_hidden in enumerate(hiddens):
+                if start_hidden is not None:
+                    hidden_in[:, b, :] = start_hidden
+            belief_seq, hidden_out = self.belief(packed_input, hidden_in)
+            belief_padded, _ = nn.utils.rnn.pad_packed_sequence(belief_seq, batch_first=True, total_length=t_max)
+            belief = belief_padded[grid_t >= 0]
 
         type_logits = self.action_type(belief)
         wait_logits = self.wait_duration(belief)
         condition_logits = self.wait_condition(belief) if "wait_mode" in self.config else None
         value_out = torch.tanh(self.value(belief))
-        aux_next_spawn = self.aux_next_spawn(belief)
-        aux_lane_threat = self.aux_lane_threat(belief)
-        aux_outcome = self.aux_outcome(belief)
         packet_query_all = self.packet_query(belief)
         arange = torch.arange(count, device=device)
         cell_index_t = torch.from_numpy(cell_index).to(device=device, dtype=torch.long)
@@ -1157,13 +1188,12 @@ class GameplayModelV1(nn.Module):
                 "cell_tokens": cell_tokens[index],
                 "cell_keys": cell_keys[index],
                 "value": value_out[index],
-                "aux_next_spawn": aux_next_spawn[index:index + 1],
-                "aux_lane_threat": aux_lane_threat[index:index + 1],
-                "aux_outcome": aux_outcome[index:index + 1],
                 "wave_index": transition["wave"],
             })
             if condition_logits is not None:
                 outputs[-1]["wait_condition_logits"] = condition_logits[index]
+            if slow_records is not None:
+                outputs[-1].update(slow_records[index])
         return outputs, hidden_out
 
     def plant_cell_scores(self, output: dict[str, Any], packet: int) -> Tensor:

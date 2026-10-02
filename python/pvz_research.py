@@ -160,8 +160,7 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
         raise ValueError("research config fields/schema do not match version 1")
     model_fields = {"layers", "width", "heads", "ff_width", "gru_layers", "gru_width",
                     "critic_width", "critic_layers", "input_flags"}
-    if set(config["model"]) not in (model_fields, model_fields | {"wait_mode"},
-                                  model_fields | {"wait_mode", "wait_mask"}):
+    if not model_fields <= set(config["model"]) <= model_fields | {"wait_mode", "wait_mask", "slow_memory"}:
         raise ValueError("all model dimensions and input_flags must be explicit")
     model_architecture_version(config["model"])
     reward = config["reward"]
@@ -403,6 +402,8 @@ def run_experiment(args: Any) -> None:
         "pvz_env.py", "pvz_seed_jobs.py", "pvz_common.py", "pvz_value.py",
         "pvz_observation_features.py", "pvz_curriculum.py", "pvz_event_env.py", "pvz_wait_events.py")]
     source_paths.append(ROOT / "scripts/t4_capability_profile.py")
+    if "slow_memory" in config["model"]:
+        source_paths.append(ROOT / "python/pvz_dual_memory.py")
     fingerprints = {str(path.relative_to(ROOT)): sha256_file(path) for path in source_paths}
     fingerprints.update({"simulator": sha256_file(ROOT / "build/pvz-portable"),
                          "main.pak": sha256_file(resource_dir / "main.pak"),

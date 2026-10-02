@@ -77,8 +77,8 @@ class ProgressWaitTests(unittest.TestCase):
         torch.testing.assert_close(hard_behavior_cloning_loss(self.model,out,self.obs,action),-lp)
 
     def test_new_policy_version_and_legacy_configuration(self):
-        self.assertEqual(model_architecture_version(self.config),9)
-        self.assertEqual(model_architecture_version({**SMALL,'wait_mode':'events'}),8)
+        self.assertEqual(model_architecture_version(self.config),13)
+        self.assertEqual(model_architecture_version({**SMALL,'wait_mode':'events'}),12)
         for cfg in ({**self.config,'wait_mode':'fixed'}, {**self.config,'wait_mask':False}):
             with self.assertRaisesRegex(ValueError,'wait_mask'):
                 GameplayModelV1(cfg)
