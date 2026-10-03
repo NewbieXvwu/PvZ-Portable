@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "scope": "First closed30-update full-resume segment of selected seed0, no new evaluation or independent initialization. Subsequent250k continuation remains live; full stage logs/checkpoint restore delivery pending its close.",
+  "run": "mainline_bridge_random_mc_v1_seed0",
+  "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+  "stage": {
+    "status": "complete",
+    "requested_updates": 30,
+    "resume": true,
+    "start_counters": {
+      "episodes": 736,
+      "decisions": 125000,
+      "ticks": 14941334
+    },
+    "start_utc": "2026-10-03T04:03:54.146982+00:00",
+    "command": [
+      "/home/newbiexvwu/.venvs/ml/bin/python",
+      "-u",
+      "python/train_pvz_ppo_task_family.py",
+      "--resource-dir",
+      "/home/newbiexvwu/.cache/pvz-research-resources",
+      "--experiment-config",
+      "experiments/t7/bridge_random_mc_v1/seed0.json",
+      "--output-dir",
+      "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_bridge_random_mc_v1_seed0",
+      "--stop-after-updates",
+      "30",
+      "--resume"
+    ],
+    "pid": 227636,
+    "latest": {
+      "updates": 215,
+      "counters": {
+        "episodes": 852,
+        "decisions": 151532,
+        "ticks": 18330886
+      },
+      "wall_seconds": 12535.504221720003,
+      "phase": "ready",
+      "resources": {
+        "peak_process_tree_rss_bytes": 15332282368,
+        "min_system_available_bytes": 16734195712,
+        "peak_system_swap_used_bytes": 221184,
+        "cuda_peak_allocated_bytes": 7993869824,
+        "cuda_peak_reserved_bytes": 27466399744
+      }
+    },
+    "latest_loss": {
+      "policy_loss": -0.2240468692034483,
+      "value_loss": 0.23612124898603984,
+      "entropy": 2.921602027756827,
+      "advantage_mean": 0.3194536566734314,
+      "advantage_std": 0.4025762975215912,
+      "gradient_norm": 3.9459736347198486,
+      "approx_kl": 0.010174069453829102,
+      "clip_fraction": 0.1220122576425118,
+      "first_minibatch_log_prob_max_error": 1.430511474609375e-06,
+      "max_log_prob_change": 0.6801247596740723,
+      "optimizer_steps": 14,
+      "stopped_for_kl": false
+    },
+    "exit_code": 0,
+    "seconds": 2371.3823572969995,
+    "end": {
+      "updates": 216,
+      "counters": {
+        "episodes": 856,
+        "decisions": 152909,
+        "ticks": 18510471
+      },
+      "wall_seconds": 12670.302772959003,
+      "phase": "ready",
+      "resources": {
+        "peak_process_tree_rss_bytes": 15332282368,
+        "min_system_available_bytes": 16734195712,
+        "peak_system_swap_used_bytes": 221184,
+        "cuda_peak_allocated_bytes": 7993869824,
+        "cuda_peak_reserved_bytes": 27466399744
+      },
+      "checkpoint": "runs/run_1/update_000216_boundary_1791002576371743422.pt"
+    }
+  },
+  "start125k_hf": {
+    "run": "mainline_bridge_random_mc_v1_seed0",
+    "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
+    "status": "complete",
+    "start_utc": "2026-10-03T02:55:23.206409+00:00",
+    "pid": 217770,
+    "exit_code": 0,
+    "end_utc": "2026-10-03T03:00:24.446965+00:00",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "revision": "32fdb14437ee43ea4a643b3be0db18ab123cb3f4"
+  },
+  "acceptance": "No new learning/full acceptance claim."
+}

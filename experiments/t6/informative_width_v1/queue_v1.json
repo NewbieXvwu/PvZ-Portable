@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "status": "frozen_before_start",
+  "created_utc": "2026-10-03T04:42:39.010812+00:00",
+  "source_revision": "29776a4",
+  "source_worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/informative_width_29776a4",
+  "prior_queue": "artifacts/research/mainline_training_queue_v9/progress.json",
+  "prior_required_status": "declared250k_complete_assessment_and_delivery_pending",
+  "prior_run": "mainline_bridge_random_mc_v1_seed0",
+  "prior_required_decisions": 250000,
+  "protocol": "experiments/t6/informative_width_v1/protocol.json",
+  "order": [
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed0.json",
+      "output_dir": "artifacts/research/mainline_informative_width128_v1_seed0",
+      "log": "logs/t5_research/mainline_informative_width128_v1_seed0.log",
+      "seed": 0,
+      "width": 128
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed0.json",
+      "output_dir": "artifacts/research/mainline_informative_width512_v1_seed0",
+      "log": "logs/t5_research/mainline_informative_width512_v1_seed0.log",
+      "seed": 0,
+      "width": 512
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed1.json",
+      "output_dir": "artifacts/research/mainline_informative_width128_v1_seed1",
+      "log": "logs/t5_research/mainline_informative_width128_v1_seed1.log",
+      "seed": 1,
+      "width": 128
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed1.json",
+      "output_dir": "artifacts/research/mainline_informative_width512_v1_seed1",
+      "log": "logs/t5_research/mainline_informative_width512_v1_seed1.log",
+      "seed": 1,
+      "width": 512
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed2.json",
+      "output_dir": "artifacts/research/mainline_informative_width128_v1_seed2",
+      "log": "logs/t5_research/mainline_informative_width128_v1_seed2.log",
+      "seed": 2,
+      "width": 128
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed2.json",
+      "output_dir": "artifacts/research/mainline_informative_width512_v1_seed2",
+      "log": "logs/t5_research/mainline_informative_width512_v1_seed2.log",
+      "seed": 2,
+      "width": 512
+    }
+  ],
+  "reuse_reference_configs": [
+    "experiments/t7/bridge_random_mc_v1/seed0.json",
+    "experiments/t7/bridge_random_mc_v1/seed1.json",
+    "experiments/t7/bridge_random_mc_v1/seed2.json"
+  ],
+  "decision_nodes": [
+    0,
+    2000,
+    25000,
+    125000
+  ],
+  "wall_budgets_seconds": [
+    8648.289784946013,
+    10551.235641094005
+  ],
+  "target_decisions": 125000,
+  "smoke_updates": 3,
+  "smoke_timeout_seconds": 1800,
+  "round_updates": [
+    30,
+    60
+  ],
+  "wall_point_retention": "At a shared cap crossing, preserve the latest actually completed checkpoint at/before the cap from the existing retained window. Record cap gap and selection cost. No interpolation. CPU scoring and faster-candidate extensions remain follow-up work; this queue does not claim completed equal-time comparison.",
+  "delivery": "Upload the prior paused250k full run and controller logs; each completed width125k full run includes initial/evaluated/boundary/resumed, last8trained, resume target, raw rollouts, state/config/provenance and controller logs. Model files go to HF only.",
+  "scope": "Single GPU, no changes to frozen live recipe/tasks/seeds/acceptance. Six fresh random width candidates, all six smokes before expansion, then complete-resume round-robin to B125k. Preserve failed candidates; nonzero/smoke-timeout stops expansion. All three256 reference successes/failures remain in comparison. No width adoption or T5-E/T6/T7 completion.",
+  "controller_script": "scripts/run_informative_width_queue.py",
+  "controller_exception_policy": "On controller error, request the currently owned child finish its complete update/due evaluation before exiting; retain all failure state. Never SIGKILL or restart another live trainer."
+}
