@@ -69,9 +69,23 @@ skill 描述的才是**学习者的失败模式**，评估探针与课程设计�
 
 
 
-**当前状态：S0–S4 均已通过。** 工具面 12 个
+**当前状态：S0–S5 均已通过。** 工具面 12 个
 （`ping / vocabulary / constants / policy / capture / index / frame / lane / actions /
 whatif / narrative / lint_skills`），与 `episode_query.py` 的子命令一一对应，另发 3 个资源。
+
+**主模型供应商（2026-10-03 深夜切换）**：`gemini-3.8-flash-high` @
+`http://localhost:8317`（Gemini 协议），走 dsh 的 **llm-pi-ai google 路由**。
+接法与机关（详见 profile patch 内注释）：路由 `api` 字段只允许
+openai/anthropic 三种协议、**不含 google**；但路由键命中 pi-ai 内置
+catalog 供应商 `google` 时，`sharedCatalogApi`（llm-pi-ai/src/catalog.ts）
+让手声明模型自动继承 `google-generative-ai` 协议——这就是"底层支持
+但未显式允许配置"的突破点。凭据 `GEMINI_API_KEY` 走 launch environment；
+deepseek 路由配置保留为备用（切回只改 `agent-default-model` 两行）。
+选 Gemini 协议的决定性理由：**thoughtSignature 在工具调用之间往返**
+（会话日志已验证每个 tool-call turn 都携带），模型跨几十轮工具调用
+保留推理上下文——正是教师流水线的工作形态。注意网关的 Gemini 路径
+只认 `gemini-3.8-flash-high`，catalog 里的 `gemini-3.8-flash` 不认。
+
 S3（2026-10-03）让模型真跑了一局败局诊断：它**找到了能通关的改动**（决策 96 的
 土豆雷换列 → 30/30），但**一条 skill 都没写**。
 S4（2026-10-03）换了场景（L21 泳池关）重跑，验证 skill 判据与闸门：
