@@ -46,8 +46,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from pvz_constants import PLANT_NAME, ZOMBIE_NAME  # noqa: E402
 from render_episode import (  # noqa: E402
-    DEFAULT_RESOURCE_DIR, GRID_ROWS, PLANT_GLYPH, PLANT_NAME, ZOMBIE_NAME,
+    DEFAULT_RESOURCE_DIR, GRID_ROWS, PLANT_GLYPH,
     _board_ascii, _disp, _lane_causal, _lane_line, _lane_rows, _lane_table,
     _lane_warnings, _mower_fired, _plant_diff, _render_row, _signals,
     _wave_matrix, collect,
@@ -312,7 +313,11 @@ def _fmt_scene(frame: dict) -> str:
                            f"**一棵常规植物都种不下**"))
         extra = ""
         if deck_known and pvz_constants.CATTAIL in in_deck:
-            extra = f"（但香蒲 {pvz_constants.CATTAIL} 能直接种在水上，本卡组有它）"
+            # 香蒲是睡莲的升级植物：只能种在已有睡莲的格上（Board.cpp:2849），
+            # 空水格直接种会被 Plant::IsUpgrade 拦下（Board.cpp:2866）。
+            # 曾误写成"香蒲能直接种在水上"——那是只看了水路检查、没看升级检查。
+            extra = (f"（香蒲 {pvz_constants.CATTAIL} 是睡莲的升级，"
+                     f"要种在已有睡莲的格上，225☀）")
         warn.append(f"  ⚠ 水路：常规植物要先种睡莲({pvz_constants.LILYPAD})才能种 —— {tail}{extra}")
 
     if scene.get("roof"):
@@ -334,6 +339,13 @@ def _fmt_scene(frame: dict) -> str:
     if scene.get("night"):
         warn.append("  ⚠ **夜间：天空不掉阳光。** 阳光只能来自向日葵，"
                     "开局经济节奏和白天关完全不是一回事。")
+
+    graves = frame.get("graves") or []
+    if graves:
+        spots = "、".join(f"({r},{c})" for r, c, *_ in graves[:12])
+        more = f"（共 {len(graves)} 个）" if len(graves) > 12 else ""
+        warn.append(f"  ⚠ **墓碑/壶占位**：{spots}{more} —— 这些格子**种不了**，"
+                    f"策略没往这里种不是决策错误。墓碑吞噬者({pvz_constants.GRAVE_BUSTER})能清掉墓碑。")
 
     return "\n".join([f"{head} ｜ {summary}"] + warn)
 

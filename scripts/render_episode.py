@@ -34,8 +34,9 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
-from scripted_baseline import DECK as SCRIPTED_DECK  # noqa: E402
+from pvz_constants import PLANT_NAME  # noqa: E402  # ZOMBIE_NAME 也在 pvz_constants
 from scripted_baseline import choose as scripted_choose  # noqa: E402
+from scripted_baseline import deck_for_level, profile_for_deck  # noqa: E402
 
 DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
 
@@ -56,29 +57,6 @@ PLANT_GLYPH = {
     32: "u", 33: "o", 34: "K", 35: ",", 36: "G", 37: "U", 38: "M", 39: "%",
     40: "4", 41: "$", 42: "@", 43: "!", 44: "&", 45: "+", 46: "#", 47: "0",
     48: "I",
-}
-
-PLANT_NAME = {
-    0: "豌豆射手", 1: "向日葵", 2: "樱桃炸弹", 3: "坚果墙", 4: "土豆雷", 5: "寒冰射手",
-    6: "大嘴花", 7: "双发射手", 8: "小喷菇", 9: "阳光菇", 10: "大喷菇", 11: "墓碑吞噬者",
-    12: "魅惑菇", 13: "胆小菇", 14: "寒冰菇", 15: "毁灭菇", 16: "睡莲", 17: "窝瓜",
-    18: "三线射手", 19: "缠绕水草", 20: "火爆辣椒", 21: "地刺", 22: "火炬树桩", 23: "高坚果",
-    24: "海蘑菇", 25: "路灯花", 26: "仙人掌", 27: "三叶草", 28: "裂荚射手", 29: "杨桃",
-    30: "南瓜头", 31: "磁力菇", 32: "卷心菜投手", 33: "花盆", 34: "玉米投手", 35: "咖啡豆",
-    36: "大蒜", 37: "叶子保护伞", 38: "金盏花", 39: "西瓜投手", 40: "机枪射手", 41: "双子向日葵",
-    42: "忧郁菇", 43: "香蒲", 44: "冰西瓜", 45: "吸金磁", 46: "地刺王", 47: "玉米加农炮",
-    48: "模仿者",
-}
-
-ZOMBIE_NAME = {
-    0: "普通僵尸", 1: "旗帜僵尸", 2: "路障僵尸", 3: "撑杆僵尸", 4: "铁桶僵尸",
-    5: "报纸僵尸", 6: "铁门僵尸", 7: "橄榄球僵尸", 8: "舞王僵尸", 9: "伴舞僵尸",
-    10: "鸭子救生圈僵尸", 11: "潜水僵尸", 12: "冰车僵尸", 13: "雪橇僵尸",
-    14: "海豚骑士僵尸", 15: "小丑僵尸", 16: "气球僵尸", 17: "矿工僵尸",
-    18: "跳跳僵尸", 19: "雪人僵尸", 20: "蹦极僵尸", 21: "梯子僵尸",
-    22: "投石车僵尸", 23: "巨人僵尸", 24: "小鬼僵尸", 25: "僵王博士",
-    26: "豌豆头僵尸", 27: "坚果头僵尸", 28: "辣椒头僵尸", 29: "机枪头僵尸",
-    30: "窝瓜头僵尸", 31: "高坚果头僵尸", 32: "红眼巨人",
 }
 
 ZOMBIE_GLYPH = {
@@ -201,6 +179,10 @@ def _frame(obs: dict) -> dict:
             "wave_count": obs.get("wave_count"),
         },
         "row_terrain": row_terrain,             # 5 项，GridSquareType 编号
+        # 坟墓/花瓶等占位物（夜间草地关与 ScaryPotter 关）：这些格子**种不了**，
+        # 模型看不到它们会把"策略没往那格种"误读成决策错误。只存位置，
+        # 翻译成人话在 episode_query._fmt_scene。大多数关没有 → 存 []。
+        "graves": [[g["row"], g["col"], g["type"]] for g in (obs.get("grid_items") or [])],
         "result": obs.get("result"),
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
@@ -225,8 +207,11 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     反事实重放，不是近似。
     """
     env = PvZEnv(resource_dir, headless=True)
-    deck = deck or SCRIPTED_DECK
-    task = TaskSpec(level=level, seed=seed, playthrough=2)
+    # 卡组按关卡地形定（AGENTS.md「任务与卡组」）；显式传 deck 的调用方
+    # （whatif 重放旧存档）用传入值，profile 也从这份卡组推导 —— 槽位数、
+    # 升级植物所有权都和卡组一致，旧存档（6 卡、无升级）重放时行为不变。
+    deck = tuple(deck) if deck else deck_for_level(level)
+    task = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(deck))
     obs, _ = env.reset(deck=deck, task=task)
 
     frames = [_frame(obs)]

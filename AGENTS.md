@@ -183,3 +183,45 @@ git ls-files -z artifacts logs | git check-ignore -z --stdin --no-index
 
 **另：`git rm` 会同时删工作区文件。** 删归档目录前先确认文件都被 git 跟踪
 （`git ls-files --error-unmatch <path>`），否则删掉就真没了。
+
+---
+
+## 8. 任务与卡组（2026-10-03 定）
+
+**卡组必须覆盖关卡地形。这是任务设计的硬约束，不是偏好。**
+
+本仓库的全部实验（脚本基线、教师诊断、RL 训练）都跑在冒险模式 50 关上，
+而关卡地形由 `Board::PickBackground`（每 10 关一个区）决定：
+
+| 区 | 场景 | 地形要求 |
+|---|---|---|
+| 1–10 | 白天草地 | 无 |
+| 11–20（含 35） | 夜间草地（天不掉阳光；有墓碑格） | 无（墓碑格种不了） |
+| 21–30 | 白天泳池 | 水路必须有睡莲(16)或其升级香蒲(43) |
+| 31–40（35 除外） | 夜间泳池有雾 | 同上 |
+| 41–49 / 50 | 屋顶 / Boss | 屋顶格要有花盆(33)——本环境屋顶关开局预置 c0–c4 |
+
+因此：
+
+1. **禁止全关卡共用一套固定卡组。** 之前 `(0,1,2,3,4,5)` 跑所有关，
+   泳池关两条水路零火力 → 结构性输局。诊断这种局只会得出"卡组×地形不匹配"
+   这种一次性的结论，产不出可教的政策缺陷数据。新关卡入选任务集前，
+   先用 `scripts/scripted_baseline.py` 的 `deck_for_level`（场景判定从
+   `pvz_constants.background_for_level` 现解析，含第 35 关 ScaryPotter
+   特例）核对覆盖。
+2. **升级植物必须声明所有权。** `Plant::IsUpgrade`（Plant.cpp）列出的
+   升级植物（40–47，含香蒲 43）进卡组时，`PlayerProfileContext` 的
+   `owned_upgrade_plants` 必须包含它，且槽位数 = 卡组长度（`LawnApp.cpp:1329`
+   校验，违反直接拒绝 reset）。升级植物**只能种在各自底座上**
+   （香蒲→睡莲上，Board.cpp:2849），空格直接种被 `Board.cpp:2866` 拦下。
+3. **卡组长度上限 10**（`SEEDBANK_MAX`，GameConstants.h），下限 6。
+4. **改任务卡组 = 换任务族。** 卡组变化会改变任务语义与全部历史证据的
+   可比性。改之前必须：新开任务族名（不覆盖旧名）、在 DESIGN.md 的任务
+   清单里登记、并且旧存档的 `whatif` 重放不受影响（重放走存档里记录的
+   deck，不读现行规则）。
+
+配套实现（改卡组规则只改这里，别处引用）：
+`scripts/scripted_baseline.py` 的 `deck_for_level` / `profile_for_deck`；
+场景文字渲染在 `scripts/episode_query.py` 的 `_fmt_scene`；规则描述
+`DECISION_RULES` 与 `choose()` 同文件同居（描述里的数字会被
+`decision_rules_text()` 校验）。

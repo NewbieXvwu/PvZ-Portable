@@ -43,7 +43,32 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "python"))
 
-from render_episode import PLANT_NAME, ZOMBIE_NAME  # noqa: E402
+# 植物 / 僵尸的 SeedType/ZombieType 编号 -> 中文名。
+# 以前放在 render_episode 里，导致 pvz_constants → render_episode →
+# scripted_baseline → pvz_constants 的循环导入（2026-10-03），搬到这里归位：
+# 名字表本来就是常量。
+PLANT_NAME = {
+    0: "豌豆射手", 1: "向日葵", 2: "樱桃炸弹", 3: "坚果墙", 4: "土豆雷", 5: "寒冰射手",
+    6: "大嘴花", 7: "双发射手", 8: "小喷菇", 9: "阳光菇", 10: "大喷菇", 11: "墓碑吞噬者",
+    12: "魅惑菇", 13: "胆小菇", 14: "寒冰菇", 15: "毁灭菇", 16: "睡莲", 17: "窝瓜",
+    18: "三线射手", 19: "缠绕水草", 20: "火爆辣椒", 21: "地刺", 22: "火炬树桩", 23: "高坚果",
+    24: "海蘑菇", 25: "路灯花", 26: "仙人掌", 27: "三叶草", 28: "裂荚射手", 29: "杨桃",
+    30: "南瓜头", 31: "磁力菇", 32: "卷心菜投手", 33: "花盆", 34: "玉米投手", 35: "咖啡豆",
+    36: "大蒜", 37: "叶子保护伞", 38: "金盏花", 39: "西瓜投手", 40: "机枪射手", 41: "双子向日葵",
+    42: "忧郁菇", 43: "香蒲", 44: "冰西瓜", 45: "吸金磁", 46: "地刺王", 47: "玉米加农炮",
+    48: "模仿者",
+}
+
+ZOMBIE_NAME = {
+    0: "普通僵尸", 1: "旗帜僵尸", 2: "路障僵尸", 3: "撑杆僵尸", 4: "铁桶僵尸",
+    5: "报纸僵尸", 6: "铁门僵尸", 7: "橄榄球僵尸", 8: "舞王僵尸", 9: "伴舞僵尸",
+    10: "鸭子救生圈僵尸", 11: "潜水僵尸", 12: "冰车僵尸", 13: "雪橇僵尸",
+    14: "海豚骑士僵尸", 15: "小丑僵尸", 16: "气球僵尸", 17: "矿工僵尸",
+    18: "跳跳僵尸", 19: "雪人僵尸", 20: "蹦极僵尸", 21: "梯子僵尸",
+    22: "投石车僵尸", 23: "巨人僵尸", 24: "小鬼僵尸", 25: "僵王博士",
+    26: "豌豆头僵尸", 27: "坚果头僵尸", 28: "辣椒头僵尸", 29: "机枪头僵尸",
+    30: "窝瓜头僵尸", 31: "高坚果头僵尸", 32: "红眼巨人",
+}
 
 PLANT_CPP = ROOT / "src" / "Lawn" / "Plant.cpp"
 ZOMBIE_CPP = ROOT / "src" / "Lawn" / "Zombie.cpp"
@@ -392,7 +417,11 @@ _GRIDSQUARE_LABEL = {
 # 水路 / 屋顶 各自需要的"底座"植物（SeedType 编号）。
 #   睡莲：Board.cpp:2789 起 —— 非水生植物在水上必须先有睡莲。
 #   花盆：Board.cpp:2822 起 —— `StageHasRoof() && !aHasFlowerPot` → 需要花盆。
-#   香蒲：源码里唯一能直接种在水上的例外（Board.cpp:2818 的条件里被排除）。
+#   香蒲：**睡莲的升级植物**，只能种在已有睡莲的那格上（Board.cpp:2849 起
+#     `aUnderPlant->IsUpgradableTo(CATTAIL)` → OK）。空水格直接种会被
+#     `Plant::IsUpgrade` 拦成 PLANTING_NEEDS_UPGRADE（Board.cpp:2866）。
+#     曾把 2818 行"水上无睡莲时放行香蒲"误读成"香蒲可免睡莲直接种"——
+#     那只是让香蒲**通过**水路检查，后面还有升级检查等着它（2026-10-03 实测踩过）。
 #
 # ⚠ 但**别拿源码规则当实测结论用**。屋顶那条就是这样栽的（2026-10-03）：
 #   按源码推"卡组里没花盆 → 一棵都种不下"，实测第 41 关**开局就预置了 25 个花盆**
@@ -401,6 +430,7 @@ _GRIDSQUARE_LABEL = {
 LILYPAD = 16
 FLOWER_POT = 33
 CATTAIL = 43
+GRAVE_BUSTER = 11
 
 
 def background_label(value) -> str:
@@ -421,6 +451,61 @@ def gridsquare_label(value) -> str:
     return _GRIDSQUARE_LABEL.get(name, name)
 
 
+def upgrade_plants() -> frozenset[int]:
+    """升级植物集合（SeedType 编号），从 `Plant::IsUpgrade`（Plant.cpp）解析。
+
+    为什么要单独一个函数：升级植物进卡组前必须写进 profile 的
+    `owned_upgrade_plants`，否则 reset 被拒；而且它们**种不下**——
+    香蒲必须有睡莲垫底、双子向日葵必须有向日葵垫底（Board.cpp:2866
+    `Plant::IsUpgrade → PLANTING_NEEDS_UPGRADE`，只有"种在底座上"的
+    分支能提前放行）。模型不知道这条会得出"香蒲怎么种都不合法"的困惑。
+    """
+    start, end = _function_span(_read(PLANT_CPP), "bool Plant::IsUpgrade")
+    body = _read(PLANT_CPP)[start:end]
+    names = re.findall(r"SeedType::(SEED_[A-Z_]+)", body)
+    if not names:
+        raise RuntimeError("Plant::IsUpgrade 里没解析到任何 SEED_*。函数挪位置了？")
+    ids = {seed: i for i, seed in
+           ((k, v) for v, k in _parse_enum(_read(CONST_ENUMS), "SeedType").items())}
+    missing = [n for n in names if n not in ids]
+    if missing:
+        raise RuntimeError(f"IsUpgrade 里的这些枚举在 SeedType 里找不到：{missing}")
+    return frozenset(ids[n] for n in names)
+
+
+def background_for_level(level: int) -> str:
+    """关卡号 -> BackgroundType 枚举名。规则照抄 `Board::PickBackground`（Board.cpp）。
+
+    特例：第 35 关是 ScaryPotter 挑战（LawnApp.cpp:2749
+    `IsAdventureMode() && mBoard->mLevel == 35`），在 31..40 的雾区里
+    ** override 成夜间草地**——只按"每 10 关一个区"推会推错这一关。
+    实测印证（2026-10-03）：L35 terrain=1、night=1、无雾无水、15 个墓/壶格。
+    """
+    if not 1 <= level <= 50:
+        raise RuntimeError(f"关卡号要在 1..50，收到 {level}。")
+    if level == 35:  # IsScaryPotterLevel：优先于雾区判定（Board.cpp:867 起）
+        return "BACKGROUND_2_NIGHT"
+    text = _read(BOARD_CPP)
+    start, end = _function_span(text, "void Board::PickBackground")
+    body_bg = text[start:end]
+    adventure = body_bg[body_bg.index("GAMEMODE_ADVENTURE"):body_bg.index("case GameMode::GAMEMODE_SURVIVAL")]
+    bg = background_types()
+    known = set(bg.values())
+    # mLevel <= N * LEVELS_PER_AREA → BACKGROUND_X，按出现顺序取第一个命中的。
+    thresholds = re.findall(
+        r"mLevel <= (\d+) \* LEVELS_PER_AREA\)\s*\{\s*mBackground = BackgroundType::(BACKGROUND_\w+);",
+        adventure)
+    for n_str, bg_name in thresholds:
+        if level <= int(n_str) * 10:
+            if bg_name not in known:
+                raise RuntimeError(f"PickBackground 里的 {bg_name} 不在 BackgroundType 枚举里。")
+            return bg_name
+    # 40 < level < FINAL_LEVEL → ROOF；== FINAL_LEVEL → BOSS（GameConstants.h: FINAL_LEVEL = 50）。
+    if level < 50:
+        return "BACKGROUND_5_ROOF"
+    return "BACKGROUND_6_BOSS"
+
+
 def level_report(level: int) -> list[str]:
     """按源码规则现算这一关的静态参数 —— **规则也一并给出**，不只给结论。
 
@@ -439,6 +524,9 @@ def level_report(level: int) -> list[str]:
     specials = zombie_specials()
 
     L = [f"── level {level} 的静态参数（按源码规则现算）──", ""]
+    L.append(f"  场景：{background_for_level(level)}"
+             f"（规则 Board::PickBackground；第 35 关是 ScaryPotter 特例）")
+    L.append("")
     L.append(f"  基础波数 gZombieWaves[{level - 1}] = {base}"
              f"（来源 src/Lawn/Challenge.cpp）")
     L.append("  实际波数规则（Board::PickZombieWaves）：")
@@ -515,7 +603,7 @@ def _fmt_terrain() -> list[str]:
     L.append("  每格地形（enum GridSquareType）= **这一格能不能种**：")
     note = {
         "GRIDSQUARE_GRASS": "直接种",
-        "GRIDSQUARE_POOL": f"常规植物要先种睡莲({LILYPAD})；香蒲({CATTAIL})可直接种在水上",
+        "GRIDSQUARE_POOL": f"常规植物要先种睡莲({LILYPAD})；香蒲({CATTAIL})是睡莲的升级，只能种在已有睡莲的格上",
         # DIRT / NONE 的说明已经写在标签里了，这里不再重复一遍。
         "GRIDSQUARE_HIGH_GROUND": f"常规植物要先种花盆({FLOWER_POT})",
     }
@@ -537,6 +625,16 @@ def _fmt_terrain() -> list[str]:
     L.append("  ⚠ **夜间不掉自然阳光。** 实测对照（同一套卡组、什么都不种）：")
     L.append("    白天关 60 步后阳光 50 → 200；夜间关 60 步后仍是 50。")
     L.append("    所以夜间关阳光只能来自向日葵，开局经济节奏和白天完全不是一回事。")
+    L.append("")
+    L.append("  **哪一关是什么场景**（Board::PickBackground，每 10 关一个区；")
+    L.append("    第 35 关是 ScaryPotter 挑战，override 成夜间草地）：")
+    L.append("    1–10 白天草地 ｜ 11–20 夜间草地（有墓碑格，种不了）｜ 21–30 白天泳池")
+    L.append("    ｜ 31–40 夜间泳池有雾（35 除外）｜ 41–49 屋顶 ｜ 50 Boss。")
+    L.append("")
+    L.append("  ⚠ **升级植物种不下底座以外的地方。** 从 Plant::IsUpgrade 解析出的升级植物：")
+    L.append(f"    {', '.join(str(i) for i in sorted(upgrade_plants()))}（含香蒲 {CATTAIL}）。")
+    L.append("    它们必须种在各自的底座上（香蒲 → 睡莲上；双子向日葵 → 向日葵上），")
+    L.append("    且进卡组前必须在 profile 里声明 owned_upgrade_plants，否则 reset 直接被拒。")
     L.append("")
     L.append("  在工具输出里看这些：`frame` 的「场景：…」那一行；棋盘上 `~` = 水路。")
     return L
