@@ -5,8 +5,8 @@
   "reference_source_revision": "f005c47",
   "common_tasks": "Same13 retained roof/day-long training tasks,136 development cases and paired native idle. Existing1160-case production baseline is reused; old short-mower outcomes are historical evidence only.",
   "common_reward_ppo": "R0 gamma0.99, shaping1, whole-episode MC through lambda1, event progress mask, sequence_length128, two epochs and four episodes/update. Reference remains frozen; no in-place changes to queued or live runs.",
-  "budget_B": null,
-  "budget_policy": "DetermineB from the actual three-random reference: >=2initializations repeatedly above own random baseline and matched idle on meaningful roof3/5/long tasks. Then freeze common interaction budget and the already-preserved scheduled nodes<=B before major architecture runs. B/4,B/2 are useful suggested views when saved checkpoints exist, not an admission gate requiring duplicated hours of baseline training. Report actual wall-budget views from immutable evaluated checkpoints.500k is a ceiling, not assumed learning onset.",
+  "budget_B": 125000,
+  "budget_policy": "Prospective initial architecture B125k, based on completed three-random informative125k evidence, preserving exact original0/2k/25k/125k views. T5-E remains unpassed, especially cap5 and greedy retention. Use the width protocol for measured wall caps, actual checkpoint selection and required timing limits; do not infer fully equal elapsed-time evidence from sparse points. Existing500k is a ceiling, not presumed onset.",
   "initialization_seeds": [
     0,
     1,
@@ -559,7 +559,7 @@
   ],
   "cost_policy": "Existing research_comparison_summary.py reads exact cumulative wall_seconds from evaluated checkpoint training_state. End-to-end costs include own random initial evaluation, sampling, PPO, saved resumptions and scheduled evaluations; use available measured nodes, do not fabricate interpolated scores. One reference is reused when selected structure/recipe is unchanged.",
   "old_evidence": "Keep all auxiliary-bearing and headless historical successes/failures under their original code/task/estimator scopes. No reclassification as new three-init equal-budget results, no failed-seed deletion.",
-  "scope": "Preparation of existing implemented architectures only. Do not launch the whole matrix before the main reference establishes learning; do not add a generic experiment framework or auxiliary heads.",
+  "scope": "Existing implemented architecture sequence; first width trial follows the live selected250k primary continuation. All major comparisons retain seeds0/1/2 and recipe/tasks/acceptance. This pre-start budget decision is not architecture adoption or completion of T5-E/T6/T7.",
   "validation": {
     "three_seed_critic_actor_comparisons": [
       {
@@ -615,5 +615,21 @@
     "experiments/t6/informative_width_v1/width128_seed2.json",
     "experiments/t6/informative_width_v1/width512_seed2.json"
   ],
-  "width_protocol": "experiments/t6/informative_width_v1/protocol.json"
+  "width_protocol": "experiments/t6/informative_width_v1/protocol.json",
+  "common_wall_budgets_seconds": [
+    8648.289784946013,
+    10551.235641094005
+  ],
+  "budget_evidence": {
+    "evidence": "artifacts/t5/perf/bridge_random_mc_v1_first125k_v1_actual.json",
+    "hf_revision": "5b634ef766cf69a9967d8f362ab5bb37d550e090",
+    "measured_reference125k_wall_seconds": [
+      10329.400370045994,
+      10551.235641094005,
+      8648.289784946013
+    ],
+    "same_native_same_tasks_same_seeds": true,
+    "nontrivial_signal": "At125k seed0/1 sampled aidcap15 are15/16 and11/16 vs both own random and idle0/16; seed0 greedy aidedfull6/8 vs own25k/idle0/8. Roofcap3 wins also exist, while all cap5/originalfull fail and seed1 greedy regresses.125k is informative for architecture learning/stability and cost screening;500k is not required onset.",
+    "criterion_unchanged": "Three-init sustained progress and repeated roof3/5 wins, original full256 and five-terrain thresholds remain unachieved. No lowering of those requirements."
+  }
 }

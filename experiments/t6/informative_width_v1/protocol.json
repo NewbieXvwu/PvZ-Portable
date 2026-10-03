@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "status": "prepared_not_launched",
+  "status": "budget_frozen_before_first_architecture_training",
   "reference_source_revision": "f005c47",
   "initialization_seeds": [
     0,
@@ -8,10 +8,13 @@
     2
   ],
   "reference": "experiments/t7/bridge_random_mc_v1/seed0..2.json",
-  "budget_B": null,
-  "common_wall_budgets_seconds": null,
-  "launch_condition": "Use actual three-random reference to establish repeatable meaningful3/5/long wins for >=2initializations, then freeze B and actual wall-budget views before architecture GPU training. No additional baseline control runs or model-state hashes are required to admit the next stage.",
-  "budget_scope": "The executable configs retain the existing500k ceiling and scheduled nodes. Neither implies training every candidate to500k. Existing256 reference is reused when unchanged; first actual comparison uses the frozen B snapshots.",
+  "budget_B": 125000,
+  "common_wall_budgets_seconds": [
+    8648.289784946013,
+    10551.235641094005
+  ],
+  "launch_condition": "After the current selected seed0 original250k continuation closes and leaves the GPU free, begin the existing width candidates with independent random seeds0/1/2. Preserve engineering prerequisites and all failures. Current125k signal supports diagnostic architecture training despite T5-E cap5/stability still unpassed; it does not authorize adoption or claim T5-E completion.",
+  "budget_scope": "B125k supplies exact common-interaction comparisons at the original saved nodes, reusing all three256 references including failures. Existing500k ceiling/later nodes remain for same-candidate extension, not mandatory consumption. B/4/B/2 are not retrospectively added to completed references.",
   "candidates": [
     {
       "config": "experiments/t6/informative_width_v1/width128_seed0.json",
@@ -133,5 +136,32 @@
       "error": "KeyError: 'evaluation_role' on retained roof tasks; corrected by inheriting the unchanged manifest's explicit heldout split. No training or task definition changes.",
       "log": "logs/validation_failed01.log"
     }
-  }
+  },
+  "superseded_preparation_launch_condition": "Use actual three-random reference to establish repeatable meaningful3/5/long wins for >=2initializations, then freeze B and actual wall-budget views before architecture GPU training. No additional baseline control runs or model-state hashes are required to admit the next stage.",
+  "frozen_decision_nodes": [
+    0,
+    2000,
+    25000,
+    125000
+  ],
+  "budget_frozen_utc": "2026-10-03T04:31:27.817812+00:00",
+  "decision_basis": {
+    "evidence": "artifacts/t5/perf/bridge_random_mc_v1_first125k_v1_actual.json",
+    "hf_revision": "5b634ef766cf69a9967d8f362ab5bb37d550e090",
+    "measured_reference125k_wall_seconds": [
+      10329.400370045994,
+      10551.235641094005,
+      8648.289784946013
+    ],
+    "same_native_same_tasks_same_seeds": true,
+    "nontrivial_signal": "At125k seed0/1 sampled aidcap15 are15/16 and11/16 vs both own random and idle0/16; seed0 greedy aidedfull6/8 vs own25k/idle0/8. Roofcap3 wins also exist, while all cap5/originalfull fail and seed1 greedy regresses.125k is informative for architecture learning/stability and cost screening;500k is not required onset.",
+    "criterion_unchanged": "Three-init sustained progress and repeated roof3/5 wins, original full256 and five-terrain thresholds remain unachieved. No lowering of those requirements."
+  },
+  "wall_view_policy": {
+    "basis": "Measured minimum/maximum end-to-end125k reference times, read from immutable evaluated checkpoint states.",
+    "selection": "Use only actual immutable completed policies at or before each common wall cap; report decisions/ticks/episodes/used seconds and cap gap. No interpolation or outcome-based checkpoint selection.",
+    "extension": "After B, a faster candidate may continue the same complete state toward the maximum shared wall budget, within the unchanged500k ceiling. A slow candidate still reaches B for interaction comparison even if it exceeds a wall cap. Retain wall-selected checkpoints before pruning.",
+    "limitations": "Sparse historical nodes can leave unused time; available-node views are explicitly bounded views, not proof of identical consumed wall time. Any additional wall-point scoring must retain identical136 cases/mode and record its actual cost; do not mark the equal-time requirement complete on indirect timing evidence."
+  },
+  "revision_reason": "Prospective change before any new architecture GPU run: preventing all structure trials until cap5 success blocks investigation of the measured instability. User prioritizes real mainline/model training and allows valuable experiments; preserve original acceptance instead of claiming it has passed."
 }

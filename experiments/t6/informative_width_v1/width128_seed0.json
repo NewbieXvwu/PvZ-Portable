@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "experiment_id": "mainline_informative_width128_v1_seed0",
-  "purpose": "Prospective width comparison after three-random reference establishes meaningful multiwave learning and B. Same13 retained tasks,136 development seeds/mode, R0/lambda1/event waits, six layers/eight heads, GRU256x2 and critic256x1. Encoder width and its required projections change together; FF4xwidth. No transfer, auxiliary heads, new seeds or tasks. Ceiling500k is not the common comparison B; freeze B and retained nodes before the first architecture GPU run.",
+  "purpose": "Prospective informative width comparison, common B125000 and original0/2k/25k/125k nodes. All seeds0/1/2, same13 retained tasks and136 development cases/mode; R0/lambda1/events, six layers/eight heads, GRU256x2, critic256x1. Width and FF4xwidth projections alone change; no transfer or auxiliary heads. Current T5-E cap5/stability unpassed; this diagnoses architecture effects without claiming adoption. Original500k ceiling permits same-candidate wall-budget extension as specified in protocol.json.",
   "initialization_seed": 0,
   "sampling_seed": 1701,
   "model": {
