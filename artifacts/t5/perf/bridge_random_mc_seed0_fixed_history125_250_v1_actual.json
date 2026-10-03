@@ -1,0 +1,641 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "plan": {
+    "schema_version": 1,
+    "status": "frozen_before_inference",
+    "run": "mainline_bridge_random_mc_v1_seed0",
+    "nodes": [
+      {
+        "episodes": 736,
+        "decisions": 125000,
+        "ticks": 14941334
+      },
+      {
+        "episodes": 1302,
+        "decisions": 250000,
+        "ticks": 29755987
+      }
+    ],
+    "checkpoints": [
+      "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/update_000186_evaluated_1790996112577481248.pt",
+      "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/update_000328_evaluated_1791011792409363636.pt"
+    ],
+    "selection": "First two actual post125k collection jobs per roof/aided-day/ordinary-day category, chronological update then numeric job. No outcome filtering.",
+    "selected": [
+      {
+        "category": "aided_day",
+        "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000187/098343d44fbf5246e8448c823b2cb68ca9d788c011883ddf892617b803490270/seed_736.npz",
+        "collection_update": 187,
+        "task_id": "train_bridge7_v1_aid_cap20",
+        "job": 736,
+        "environment_seed": 1350294,
+        "collection_model_state_sha256": "a64e14bd29f9cbff4158167708a89780aca3c2bec4b51b900e187cfae1785304"
+      },
+      {
+        "category": "aided_day",
+        "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000187/098343d44fbf5246e8448c823b2cb68ca9d788c011883ddf892617b803490270/seed_737.npz",
+        "collection_update": 187,
+        "task_id": "train_bridge7_v1_aid_cap20",
+        "job": 737,
+        "environment_seed": 1350305,
+        "collection_model_state_sha256": "a64e14bd29f9cbff4158167708a89780aca3c2bec4b51b900e187cfae1785304"
+      },
+      {
+        "category": "roof",
+        "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000189/c697ed8311fa5d8ccfee14c26f83670e2384935677c6ccfcec0d096dcd577a57/seed_744.npz",
+        "collection_update": 189,
+        "task_id": "train_multicap_v1_roof_cap1_variant",
+        "job": 744,
+        "environment_seed": 130534,
+        "collection_model_state_sha256": "e518f96974c13c34a03f965cdd37fb8a29a93c1e8c2490273f357916c39b7d5c"
+      },
+      {
+        "category": "roof",
+        "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000190/0c4128ab7c197ceebe503959a2d5472a39847e1e0037d3d6dbe3ab06ee782d9c/seed_749.npz",
+        "collection_update": 190,
+        "task_id": "train_multicap_v1_roof_cap1_variant",
+        "job": 749,
+        "environment_seed": 130572,
+        "collection_model_state_sha256": "b49387cbadfec8b0a2ccceab49bc9daf250cb1e4583f0002277b64209b740ba0"
+      },
+      {
+        "category": "ordinary_day",
+        "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000192/28f448c1ad382a41b8f29613df83615bdddd24a5b33d73563c5b826c87b5828f/seed_756.npz",
+        "collection_update": 192,
+        "task_id": "train_bridge7_v1_ordinary_cap15",
+        "job": 756,
+        "environment_seed": 1350786,
+        "collection_model_state_sha256": "b8a478252acff698ca7880115b7ba898754b2e42859f33d989fd019e5b305e6f"
+      },
+      {
+        "category": "ordinary_day",
+        "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000193/fe9214b1716d0251d3ca58864321ca2932523f7f3892d5e537fb3fd9f586d353/seed_760.npz",
+        "collection_update": 193,
+        "task_id": "train_full_level7_v1",
+        "job": 760,
+        "environment_seed": 1300205,
+        "collection_model_state_sha256": "53c6c823ba8898ba85b830fc202e24c533a5695343babe3892c94628b00c9bb6"
+      }
+    ],
+    "scope": "Read-only CPU fixed-public-history action-distribution comparison. Different checkpoint recurrent states are recomputed from each full stored prefix. Only collectionupdate187 uses the exact125k collection policy; later jobs are off-policy for both. No new Native games or intervention."
+  },
+  "episodes": [
+    {
+      "category": "aided_day",
+      "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000187/098343d44fbf5246e8448c823b2cb68ca9d788c011883ddf892617b803490270/seed_736.npz",
+      "collection_update": 187,
+      "task_id": "train_bridge7_v1_aid_cap20",
+      "job": 736,
+      "environment_seed": 1350294,
+      "collection_model_state_sha256": "a64e14bd29f9cbff4158167708a89780aca3c2bec4b51b900e187cfae1785304",
+      "won": true,
+      "truncated": false,
+      "decisions": 259,
+      "summary": {
+        "all_decisions": {
+          "decisions": 259,
+          "plant_probability_before": 0.2907055862621911,
+          "plant_probability_after": 0.3387269383461779,
+          "wait_probability_before": 0.681776796068464,
+          "wait_probability_after": 0.6442093140370136,
+          "old_greedy_types": {
+            "plant": 131,
+            "wait": 128
+          },
+          "new_greedy_types": {
+            "wait": 128,
+            "plant": 131
+          },
+          "type_changes": {
+            "plant->wait": 1,
+            "plant->plant": 130,
+            "wait->wait": 127,
+            "wait->plant": 1
+          },
+          "mean_type_js": 0.003405150014396512,
+          "mean_plant_log_probability_change": 0.07741766086416355,
+          "new_plant_probability_below_001": 127,
+          "new_plant_probability_below_01": 127
+        },
+        "legal_plant_decisions": {
+          "decisions": 132,
+          "plant_probability_before": 0.570399597287178,
+          "plant_probability_after": 0.6646233108459096,
+          "wait_probability_before": 0.4129830969102455,
+          "wait_probability_after": 0.32607207018317597,
+          "old_greedy_types": {
+            "plant": 131,
+            "wait": 1
+          },
+          "new_greedy_types": {
+            "wait": 1,
+            "plant": 131
+          },
+          "type_changes": {
+            "plant->wait": 1,
+            "plant->plant": 130,
+            "wait->plant": 1
+          },
+          "mean_type_js": 0.005891543390603285,
+          "mean_plant_log_probability_change": 0.1519028345743815,
+          "new_plant_probability_below_001": 0,
+          "new_plant_probability_below_01": 0
+        }
+      }
+    },
+    {
+      "category": "aided_day",
+      "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000187/098343d44fbf5246e8448c823b2cb68ca9d788c011883ddf892617b803490270/seed_737.npz",
+      "collection_update": 187,
+      "task_id": "train_bridge7_v1_aid_cap20",
+      "job": 737,
+      "environment_seed": 1350305,
+      "collection_model_state_sha256": "a64e14bd29f9cbff4158167708a89780aca3c2bec4b51b900e187cfae1785304",
+      "won": true,
+      "truncated": false,
+      "decisions": 340,
+      "summary": {
+        "all_decisions": {
+          "decisions": 340,
+          "plant_probability_before": 0.24640602855121388,
+          "plant_probability_after": 0.25370495810228233,
+          "wait_probability_before": 0.7244320282164742,
+          "wait_probability_after": 0.7286169543862343,
+          "old_greedy_types": {
+            "plant": 144,
+            "wait": 196
+          },
+          "new_greedy_types": {
+            "wait": 220,
+            "plant": 120
+          },
+          "type_changes": {
+            "plant->wait": 25,
+            "plant->plant": 119,
+            "wait->wait": 195,
+            "wait->plant": 1
+          },
+          "mean_type_js": 0.003437751912176335,
+          "mean_plant_log_probability_change": 0.008663028566276326,
+          "new_plant_probability_below_001": 195,
+          "new_plant_probability_below_01": 195
+        },
+        "legal_plant_decisions": {
+          "decisions": 145,
+          "plant_probability_before": 0.5777796531545705,
+          "plant_probability_after": 0.5948943845156965,
+          "wait_probability_before": 0.4057118066425981,
+          "wait_probability_after": 0.3947847783565521,
+          "old_greedy_types": {
+            "plant": 144,
+            "wait": 1
+          },
+          "new_greedy_types": {
+            "wait": 25,
+            "plant": 120
+          },
+          "type_changes": {
+            "plant->wait": 25,
+            "plant->plant": 119,
+            "wait->plant": 1
+          },
+          "mean_type_js": 0.006610031594955844,
+          "mean_plant_log_probability_change": 0.02031330836230311,
+          "new_plant_probability_below_001": 0,
+          "new_plant_probability_below_01": 0
+        }
+      }
+    },
+    {
+      "category": "roof",
+      "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000189/c697ed8311fa5d8ccfee14c26f83670e2384935677c6ccfcec0d096dcd577a57/seed_744.npz",
+      "collection_update": 189,
+      "task_id": "train_multicap_v1_roof_cap1_variant",
+      "job": 744,
+      "environment_seed": 130534,
+      "collection_model_state_sha256": "e518f96974c13c34a03f965cdd37fb8a29a93c1e8c2490273f357916c39b7d5c",
+      "won": false,
+      "truncated": false,
+      "decisions": 70,
+      "summary": {
+        "all_decisions": {
+          "decisions": 70,
+          "plant_probability_before": 0.2771782751594271,
+          "plant_probability_after": 0.1073240271636418,
+          "wait_probability_before": 0.6557368146521705,
+          "wait_probability_after": 0.8327851780823299,
+          "old_greedy_types": {
+            "plant": 36,
+            "wait": 34
+          },
+          "new_greedy_types": {
+            "wait": 70
+          },
+          "type_changes": {
+            "plant->wait": 36,
+            "wait->wait": 34
+          },
+          "mean_type_js": 0.03247669535968661,
+          "mean_plant_log_probability_change": -0.506157363312585,
+          "new_plant_probability_below_001": 33,
+          "new_plant_probability_below_01": 33
+        },
+        "legal_plant_decisions": {
+          "decisions": 37,
+          "plant_probability_before": 0.5243913313826999,
+          "plant_probability_after": 0.20304545679607908,
+          "wait_probability_before": 0.43057288914113434,
+          "wait_probability_after": 0.7409585972090025,
+          "old_greedy_types": {
+            "plant": 36,
+            "wait": 1
+          },
+          "new_greedy_types": {
+            "wait": 37
+          },
+          "type_changes": {
+            "plant->wait": 36,
+            "wait->wait": 1
+          },
+          "mean_type_js": 0.05958393165791357,
+          "mean_plant_log_probability_change": -0.9575950116724581,
+          "new_plant_probability_below_001": 0,
+          "new_plant_probability_below_01": 0
+        }
+      }
+    },
+    {
+      "category": "roof",
+      "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000190/0c4128ab7c197ceebe503959a2d5472a39847e1e0037d3d6dbe3ab06ee782d9c/seed_749.npz",
+      "collection_update": 190,
+      "task_id": "train_multicap_v1_roof_cap1_variant",
+      "job": 749,
+      "environment_seed": 130572,
+      "collection_model_state_sha256": "b49387cbadfec8b0a2ccceab49bc9daf250cb1e4583f0002277b64209b740ba0",
+      "won": false,
+      "truncated": false,
+      "decisions": 72,
+      "summary": {
+        "all_decisions": {
+          "decisions": 72,
+          "plant_probability_before": 0.16058568242523405,
+          "plant_probability_after": 0.06419429058829944,
+          "wait_probability_before": 0.7581730153825548,
+          "wait_probability_after": 0.8743069304360284,
+          "old_greedy_types": {
+            "plant": 22,
+            "wait": 50
+          },
+          "new_greedy_types": {
+            "wait": 72
+          },
+          "type_changes": {
+            "plant->wait": 22,
+            "wait->wait": 50
+          },
+          "mean_type_js": 0.01925676118440202,
+          "mean_plant_log_probability_change": -0.2845959812402725,
+          "new_plant_probability_below_001": 50,
+          "new_plant_probability_below_01": 50
+        },
+        "legal_plant_decisions": {
+          "decisions": 22,
+          "plant_probability_before": 0.5255531424825842,
+          "plant_probability_after": 0.21009040556170724,
+          "wait_probability_before": 0.42394671656868677,
+          "wait_probability_after": 0.7335248697887767,
+          "old_greedy_types": {
+            "plant": 22
+          },
+          "new_greedy_types": {
+            "wait": 22
+          },
+          "type_changes": {
+            "plant->wait": 22
+          },
+          "mean_type_js": 0.05827741375700994,
+          "mean_plant_log_probability_change": -0.9314050295136191,
+          "new_plant_probability_below_001": 0,
+          "new_plant_probability_below_01": 0
+        }
+      }
+    },
+    {
+      "category": "ordinary_day",
+      "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000192/28f448c1ad382a41b8f29613df83615bdddd24a5b33d73563c5b826c87b5828f/seed_756.npz",
+      "collection_update": 192,
+      "task_id": "train_bridge7_v1_ordinary_cap15",
+      "job": 756,
+      "environment_seed": 1350786,
+      "collection_model_state_sha256": "b8a478252acff698ca7880115b7ba898754b2e42859f33d989fd019e5b305e6f",
+      "won": true,
+      "truncated": false,
+      "decisions": 295,
+      "summary": {
+        "all_decisions": {
+          "decisions": 295,
+          "plant_probability_before": 0.17649665505199108,
+          "plant_probability_after": 0.08514776462215488,
+          "wait_probability_before": 0.7757558700391802,
+          "wait_probability_after": 0.8880116503117448,
+          "old_greedy_types": {
+            "plant": 93,
+            "wait": 202
+          },
+          "new_greedy_types": {
+            "wait": 295
+          },
+          "type_changes": {
+            "plant->wait": 93,
+            "wait->wait": 202
+          },
+          "mean_type_js": 0.016739882996810947,
+          "mean_plant_log_probability_change": -0.2316025463201232,
+          "new_plant_probability_below_001": 202,
+          "new_plant_probability_below_01": 202
+        },
+        "legal_plant_decisions": {
+          "decisions": 93,
+          "plant_probability_before": 0.5598549810788964,
+          "plant_probability_after": 0.2700923716509214,
+          "wait_probability_before": 0.4153699878082481,
+          "wait_probability_after": 0.7078455539159877,
+          "old_greedy_types": {
+            "plant": 93
+          },
+          "new_greedy_types": {
+            "wait": 93
+          },
+          "type_changes": {
+            "plant->wait": 93
+          },
+          "mean_type_js": 0.04678906374160321,
+          "mean_plant_log_probability_change": -0.7346532383272725,
+          "new_plant_probability_below_001": 0,
+          "new_plant_probability_below_01": 0
+        }
+      }
+    },
+    {
+      "category": "ordinary_day",
+      "path": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/.seed_jobs/update_000193/fe9214b1716d0251d3ca58864321ca2932523f7f3892d5e537fb3fd9f586d353/seed_760.npz",
+      "collection_update": 193,
+      "task_id": "train_full_level7_v1",
+      "job": 760,
+      "environment_seed": 1300205,
+      "collection_model_state_sha256": "53c6c823ba8898ba85b830fc202e24c533a5695343babe3892c94628b00c9bb6",
+      "won": false,
+      "truncated": false,
+      "decisions": 259,
+      "summary": {
+        "all_decisions": {
+          "decisions": 259,
+          "plant_probability_before": 0.15950515141358246,
+          "plant_probability_after": 0.06433386283721702,
+          "wait_probability_before": 0.7920748493616185,
+          "wait_probability_after": 0.8951120542283224,
+          "old_greedy_types": {
+            "plant": 72,
+            "wait": 187
+          },
+          "new_greedy_types": {
+            "wait": 259
+          },
+          "type_changes": {
+            "plant->wait": 72,
+            "wait->wait": 187
+          },
+          "mean_type_js": 0.01889733621579461,
+          "mean_plant_log_probability_change": -0.25586723682963247,
+          "new_plant_probability_below_001": 187,
+          "new_plant_probability_below_01": 187
+        },
+        "legal_plant_decisions": {
+          "decisions": 72,
+          "plant_probability_before": 0.5737754752238592,
+          "plant_probability_after": 0.23142320103943348,
+          "wait_probability_before": 0.40213299004567993,
+          "wait_probability_after": 0.7337188977334235,
+          "old_greedy_types": {
+            "plant": 72
+          },
+          "new_greedy_types": {
+            "wait": 72
+          },
+          "type_changes": {
+            "plant->wait": 72
+          },
+          "mean_type_js": 0.06524469095489217,
+          "mean_plant_log_probability_change": -0.9204113102621503,
+          "new_plant_probability_below_001": 0,
+          "new_plant_probability_below_01": 0
+        }
+      }
+    }
+  ],
+  "overall": {
+    "all_decisions": {
+      "decisions": 1295,
+      "plant_probability_before": 0.21885234934482795,
+      "plant_probability_after": 0.17598895339662043,
+      "wait_probability_before": 0.7392837695403449,
+      "wait_probability_after": 0.7950752873908599,
+      "old_greedy_types": {
+        "plant": 498,
+        "wait": 797
+      },
+      "new_greedy_types": {
+        "wait": 1044,
+        "plant": 251
+      },
+      "type_changes": {
+        "plant->wait": 249,
+        "plant->plant": 249,
+        "wait->wait": 795,
+        "wait->plant": 2
+      },
+      "mean_type_js": 0.01200254868592563,
+      "mean_plant_log_probability_change": -0.12935728780551306,
+      "new_plant_probability_below_001": 794,
+      "new_plant_probability_below_01": 794
+    },
+    "legal_plant_decisions": {
+      "decisions": 501,
+      "plant_probability_before": 0.5656961924182679,
+      "plant_probability_after": 0.4549015861249969,
+      "wait_probability_before": 0.41154289334833977,
+      "wait_probability_after": 0.5239435499180815,
+      "old_greedy_types": {
+        "plant": 498,
+        "wait": 3
+      },
+      "new_greedy_types": {
+        "wait": 250,
+        "plant": 251
+      },
+      "type_changes": {
+        "plant->wait": 249,
+        "plant->plant": 249,
+        "wait->plant": 2,
+        "wait->wait": 1
+      },
+      "mean_type_js": 0.028486721675741688,
+      "mean_plant_log_probability_change": -0.33436664213201484,
+      "new_plant_probability_below_001": 0,
+      "new_plant_probability_below_01": 0
+    }
+  },
+  "per_category": {
+    "aided_day": {
+      "all_decisions": {
+        "decisions": 599,
+        "plant_probability_before": 0.2655605952409353,
+        "plant_probability_after": 0.2904673836167547,
+        "wait_probability_before": 0.7059884470372845,
+        "wait_probability_after": 0.6921201616475896,
+        "old_greedy_types": {
+          "plant": 275,
+          "wait": 324
+        },
+        "new_greedy_types": {
+          "wait": 348,
+          "plant": 251
+        },
+        "type_changes": {
+          "plant->wait": 26,
+          "plant->plant": 249,
+          "wait->wait": 322,
+          "wait->plant": 2
+        },
+        "mean_type_js": 0.003423655265223123,
+        "mean_plant_log_probability_change": 0.03839165922596379,
+        "new_plant_probability_below_001": 322,
+        "new_plant_probability_below_01": 322
+      },
+      "legal_plant_decisions": {
+        "decisions": 277,
+        "plant_probability_before": 0.5742628034271489,
+        "plant_probability_after": 0.6281226093373143,
+        "wait_probability_before": 0.4091768258315131,
+        "wait_probability_after": 0.3620408163389144,
+        "old_greedy_types": {
+          "plant": 275,
+          "wait": 2
+        },
+        "new_greedy_types": {
+          "wait": 26,
+          "plant": 251
+        },
+        "type_changes": {
+          "plant->wait": 26,
+          "plant->plant": 249,
+          "wait->plant": 2
+        },
+        "mean_type_js": 0.006267647324289642,
+        "mean_plant_log_probability_change": 0.08302023060054986,
+        "new_plant_probability_below_001": 0,
+        "new_plant_probability_below_01": 0
+      }
+    },
+    "roof": {
+      "all_decisions": {
+        "decisions": 142,
+        "plant_probability_before": 0.21806090419561092,
+        "plant_probability_after": 0.08545542833670763,
+        "wait_probability_before": 0.707676296712647,
+        "wait_probability_after": 0.8538384609658953,
+        "old_greedy_types": {
+          "plant": 58,
+          "wait": 84
+        },
+        "new_greedy_types": {
+          "wait": 142
+        },
+        "type_changes": {
+          "plant->wait": 58,
+          "wait->wait": 84
+        },
+        "mean_type_js": 0.02577363014404935,
+        "mean_plant_log_probability_change": -0.39381638085338433,
+        "new_plant_probability_below_001": 83,
+        "new_plant_probability_below_01": 83
+      },
+      "legal_plant_decisions": {
+        "decisions": 59,
+        "plant_probability_before": 0.5248245490809619,
+        "plant_probability_after": 0.2056723868442794,
+        "wait_probability_before": 0.4281021129276793,
+        "wait_probability_after": 0.7381866988489183,
+        "old_greedy_types": {
+          "plant": 58,
+          "wait": 1
+        },
+        "new_greedy_types": {
+          "wait": 59
+        },
+        "type_changes": {
+          "plant->wait": 58,
+          "wait->wait": 1
+        },
+        "mean_type_js": 0.059096755491474924,
+        "mean_plant_log_probability_change": -0.9478292556132301,
+        "new_plant_probability_below_001": 0,
+        "new_plant_probability_below_01": 0
+      }
+    },
+    "ordinary_day": {
+      "all_decisions": {
+        "decisions": 554,
+        "plant_probability_before": 0.16855297374811412,
+        "plant_probability_after": 0.07541707768659729,
+        "wait_probability_before": 0.783385140155627,
+        "wait_probability_after": 0.8913311532258127,
+        "old_greedy_types": {
+          "plant": 165,
+          "wait": 389
+        },
+        "new_greedy_types": {
+          "wait": 554
+        },
+        "type_changes": {
+          "plant->wait": 165,
+          "wait->wait": 389
+        },
+        "mean_type_js": 0.01774851184828526,
+        "mean_plant_log_probability_change": -0.2429465081287205,
+        "new_plant_probability_below_001": 389,
+        "new_plant_probability_below_01": 389
+      },
+      "legal_plant_decisions": {
+        "decisions": 165,
+        "plant_probability_before": 0.5659293785239711,
+        "plant_probability_after": 0.2532185517477267,
+        "wait_probability_before": 0.4095938433300365,
+        "wait_probability_after": 0.7191357403090506,
+        "old_greedy_types": {
+          "plant": 165
+        },
+        "new_greedy_types": {
+          "wait": 165
+        },
+        "type_changes": {
+          "plant->wait": 165
+        },
+        "mean_type_js": 0.05484242834376566,
+        "mean_plant_log_probability_change": -0.8157113060806737,
+        "new_plant_probability_below_001": 0,
+        "new_plant_probability_below_01": 0
+      }
+    }
+  },
+  "exact_collection_replay": {
+    "rows": 599,
+    "update": 187,
+    "max_abs_error": 9.5367431640625e-07
+  },
+  "seconds": 58.053551723001874,
+  "cuda_initialized": false,
+  "raw_rows": "rows.json.gz",
+  "scope": "Six prospectively selected fixed histories only, not deployment win rate or a representative population. Probability change is model behavior evidence; no reward/curriculum/capacity causal attribution. The125k native public histories are frozen;250k on-policy state distribution can differ. Exact collection replay check applies only to update187."
+}

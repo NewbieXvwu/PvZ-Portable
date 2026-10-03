@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "deliveries": [
+    {
+      "kind": "full",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "branch": "evidence-mainline-informative-width128-v1-seed0-first30",
+      "revision": "1c291ac98cf2d25b3b6d0af99737c9e9a10ec40c",
+      "seconds": 77.90584266500082
+    },
+    {
+      "kind": "nodes",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "branch": "evidence-informative-width-seed0-first30-v1",
+      "revision": "a4b94bebbf8772c2739ea85d141489b3971e7202",
+      "seconds": 7.173413764001452
+    }
+  ],
+  "scope": "Full paused128seed0 update33 restore with initial/evaluated/boundary/resumed, trained8 window, actual resume target, all132 training shards, evaluations/config/state/provenance/logs. Separate lightweight packet has immutable512seed0 original0/2k raw272 cases per node+idle, without copying its still-owned live run or model. No125k or width-learning/equal-time/full acceptance pass."
+}

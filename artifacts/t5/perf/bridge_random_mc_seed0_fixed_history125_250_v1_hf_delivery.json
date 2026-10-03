@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-seed0-fixed-history125-250-v1",
+  "revision": "0277f25129a62e6f02f8e02a86a9b70c9eb81fb8",
+  "seconds": 6.229590119008208,
+  "source_full_run_branch": "evidence-mainline-bridge-random-mc-v1-seed0-selected250k",
+  "source_full_run_revision": "b1a3695990aef473c29f39f818f4ec4c88bfbffe",
+  "scope": "Six selected histories/1295 decision rows, before-inference selection plan, CPU code/log/config/provenance and summary. Both immutable125k/250k models and six original raw trajectories are referenced from the already-delivered full250k bundle, not copied again. No new Native games, training change or causal/learning acceptance claim."
+}
