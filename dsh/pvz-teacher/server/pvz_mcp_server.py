@@ -112,7 +112,24 @@ RESOURCE_DIR = os.environ.get("PVZ_RESOURCE_DIR") or ""
 
 
 def _tool_ping(args: dict[str, Any]) -> tuple[str, bool]:
-    """S0 的连通性探针。回传它实际看到的仓库状态，好让"通了"这件事可证伪。"""
+    """S0 的连通性探针。回传它实际看到的仓库状态，好让"通了"这件事可证伪。
+
+    ⚠️ 默认**只回最小信息**，绝对路径要显式开 `PVZ_MCP_VERBOSE_PING=1` 才给。
+    为什么改（2026-10-03 实测）：这个工具原先把 `root` / `query_script` 的绝对
+    路径一起回了。S3 那轮里模型第 2 步调它，**第 8 步就直接去读
+    `/Users/newbiexvwu/PvZAgent`** —— 而当时 `tool-fs` 是开着的（S3 要让它写
+    skill），`fs-sandbox` 只限制**写**、不限制读。也就是说：
+    **我们自己的探针把仓库地址告诉了模型，等于亲手拆掉了隔离层。**
+    探针的价值在于"通没通"，不在于"仓库在哪"；后者是给做实验的人看的，
+    所以放进显式开关。
+    """
+    if os.environ.get("PVZ_MCP_VERBOSE_PING") != "1":
+        return json.dumps(
+            {"pong": True, "tools": sorted(TOOLS), "argv_echo": args},
+            ensure_ascii=False,
+            indent=2,
+        ), False
+
     info = {
         "pong": True,
         "root": str(ROOT),
