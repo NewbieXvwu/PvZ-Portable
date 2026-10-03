@@ -15,7 +15,9 @@ S2 这类实验的结论是"模型几轮内找到了改法"。**这句话必须�
 关键事件（实测确认）：
 - `tool/call`     → `data.name`、`data.arguments`
 - `tool/result`   → `data.message.isError`、`data.message.content[].text`
-- `assistant/message` → `data.usage`（inputTokens/outputTokens/cacheReadTokens/
+- `assistant/message` → `data.message.content[]`，块类型有
+  `reasoning`（**模型的推理轨迹**，字段是 `{type, text}`）、`text`、`tool-call`；
+  以及 `data.usage`（inputTokens/outputTokens/cacheReadTokens/
   cacheWriteTokens/totalTokens）—— **token 花销在这里，不在 step/end**
 
 用法
@@ -23,6 +25,7 @@ S2 这类实验的结论是"模型几轮内找到了改法"。**这句话必须�
     trace_session.py                      # 最新的一个会话
     trace_session.py --list               # 列出最近的会话
     trace_session.py --session <id 前缀>   # 指定会话
+    trace_session.py --reasoning          # 只打印推理轨迹（最常看这个）
     trace_session.py --full               # 打印工具返回的完整内容
 """
 
@@ -75,11 +78,33 @@ def _compact(value, limit: int = 220) -> str:
     return s if len(s) <= limit else s[:limit] + "…"
 
 
+def _reasoning_blocks(events: list[dict]) -> list[tuple[int, str]]:
+    """抽出模型的推理轨迹。返回 [(turn, text)]。
+
+    这是 headless 模式 stdout 里那些 `dsh: reasoning:` 行的**完整版** ——
+    stdout 是流式截断过的，会话日志里才是全文。
+    """
+    out: list[tuple[int, str]] = []
+    for ev in events:
+        if ev.get("type") != "assistant/message":
+            continue
+        d = ev.get("data") or {}
+        turn = d.get("turn") or 0
+        for c in (d.get("message") or {}).get("content") or []:
+            if isinstance(c, dict) and c.get("type") == "reasoning":
+                text = (c.get("text") or "").strip()
+                if text:
+                    out.append((turn, text))
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--session", default=None, help="会话 id 前缀；默认最新一个")
     ap.add_argument("--list", action="store_true", help="列出最近会话")
+    ap.add_argument("--reasoning", action="store_true",
+                    help="只打印推理轨迹（最常看这个）")
     ap.add_argument("--full", action="store_true", help="打印工具返回的完整内容")
     ap.add_argument("--max-result", type=int, default=1200, help="单条结果最多打印多少字符")
     args = ap.parse_args()
@@ -105,6 +130,18 @@ def main() -> int:
     events = _decompress(target)
     print(f"会话：{target.parent.name}")
     print(f"事件：{len(events)} 条\n")
+
+    # ---- 只打印推理轨迹 --------------------------------------------------
+    if args.reasoning:
+        blocks = _reasoning_blocks(events)
+        print(f"── 推理轨迹 {len(blocks)} 段 " + "─" * 30)
+        for i, (turn, text) in enumerate(blocks, 1):
+            print(f"\n【第 {i} 段 · turn {turn}】")
+            for line in text.splitlines():
+                print(f"  {line}")
+        if not blocks:
+            print("（这个会话没有推理块 —— 可能用了 mock LLM，或 reasoningEffort 是 off）")
+        return 0
 
     # ---- 工具调用轨迹 ----------------------------------------------------
     calls: list[tuple[dict, dict | None]] = []

@@ -213,6 +213,14 @@ _A_ARCHIVE = {
 }
 
 TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
+    "vocabulary": (
+        "**动作写法速查**。whatif 的 try 参数怎么写、每个植物对应哪个 packet 数字、"
+        "有哪些合法动作类型。第一次用 whatif 前看一眼，能省掉试错。\n"
+        "（加这个工具的原因：实测模型为了搞清楚 packet id 浪费了 6 次调用，"
+        "还因为猜错数字拿到了**另一个植物的结果**却没察觉。）",
+        _schema({}, []),
+        _make_cli_handler("vocabulary", []),
+    ),
     "ping": (
         "连通性探针。回传本 server 看到的仓库根、解释器、工具脚本路径、资源目录，"
         "以及它们是否真实存在，还有当前可用的工具列表。"

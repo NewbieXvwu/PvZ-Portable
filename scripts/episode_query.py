@@ -544,7 +544,19 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
 
     cands: list[dict] = []
     for raw in raw_actions:
-        cands.append(_parse_action(raw))
+        try:
+            cands.append(_parse_action(raw))
+        except Exception as exc:  # noqa: BLE001 - 参数写错要给可读提示，不是 traceback
+            # 之前这里直接抛，模型看到的是一坨 Python 栈 —— 它据此改不出对的东西。
+            # 现在把"哪里错了 + 正确写法"直接回给它。
+            return "\n".join(L + [
+                f"✗ --try 的写法有问题：{raw!r}",
+                f"  {exc}",
+                "",
+                "  正确写法：plant:<packet>:<row>:<col> / wait:<ticks> / shovel:<row>:<col>",
+                "  packet 可以写数字、中文名（豌豆射手）或英文别名（peashooter）。",
+                "  想省事就用 --enumerate：输出左列可以直接复制当 --try。",
+            ])
     if enumerate_:
         probe = collect(resource_dir, meta["task"]["seed"], meta["task"]["level"],
                         meta["task"]["policy"], 4000, deck,
@@ -563,6 +575,8 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
 
     L.append(f"试 {len(cands)} 个候选（每次都要从头重放，约 1–3 秒/个）：")
     L.append("")
+    L.append("  左列**可以直接复制**当作 --try 用，不用自己翻译成数字。")
+    L.append("")
     results = []
     for cand in cands:
         try:
@@ -577,8 +591,8 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     for delta, cand, o in results:
         mark = "★" if delta > 0 else ("·" if delta == 0 else "↓")
         sign = f"+{delta}" if delta > 0 else str(delta)
-        L.append(f"  {mark} {_action_text(cand, deck):<34} "
-                 f"→ 第 {o['final_wave']:>2}/{o['wave_count']} 波  "
+        L.append(f"  {mark} {_action_cli(cand):<15} {_action_text(cand, deck):<28}"
+                 f" → 第 {o['final_wave']:>2}/{o['wave_count']} 波  "
                  f"{sign:>4} 波  {o['reason']}")
     best = max((r[0] for r in results), default=0)
     L.append("")
@@ -612,14 +626,95 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     return "\n".join(L)
 
 
+# 常见植物的英文别名。模型很自然会写 `plant:peashooter:3:6` —— 与其让它
+# 去猜数字，不如认下来。（2026-10-03：实测模型为找 packet id 浪费了 6 次调用，
+# 还把 `plant:4:...` 当成豌豆射手用，得到了一个**静默错误**的结果。）
+_PLANT_ALIAS = {
+    "peashooter": 0, "sunflower": 1, "cherrybomb": 2, "cherry": 2,
+    "wallnut": 3, "wall-nut": 3, "potatomine": 4, "potato": 4,
+    "snowpea": 5, "chomper": 6, "repeater": 7, "puffshroom": 8,
+    "sunshroom": 9, "fumeshroom": 10, "gravebuster": 11, "hypnoshroom": 12,
+    "scaredyshroom": 13, "iceshroom": 14, "doomshroom": 15, "lilypad": 16,
+    "squash": 17, "threepeater": 18, "tanglekelp": 19, "jalapeno": 20,
+    "spikeweed": 21, "torchwood": 22, "tallnut": 23, "seashroom": 24,
+    "plantern": 25, "cactus": 26, "blover": 27, "splitpea": 28, "starfruit": 29,
+}
+
+
+def _plant_id(token: str) -> int:
+    """把 packet 参数解析成整数 id。接受数字、中文名、英文别名。
+
+    为什么值得为"名字"写这么多代码：工具**输出**用的是名字
+    （`种下 豌豆射手 @(3,6)`），工具**输入**却要数字 —— 中间那道映射
+    模型只能靠猜。而猜错的代价不是报错，是**静默拿到另一个植物的结果**。
+    与其训练模型背 id，不如让输入和输出说同一种语言。
+    """
+    token = token.strip()
+    if token.isdigit():
+        return int(token)
+    for pid, name in PLANT_NAME.items():
+        if token == name:
+            return pid
+    key = token.lower().replace(" ", "").replace("_", "").replace("-", "")
+    if key in _PLANT_ALIAS:
+        return _PLANT_ALIAS[key]
+    # 报错要把**可用清单**一起给出来，否则模型只能继续猜。
+    names = "、".join(f"{pid}={name}" for pid, name in sorted(PLANT_NAME.items()))
+    raise ValueError(
+        f"认不出这个植物：{token!r}。可以写数字 id、中文名，或英文别名。\n"
+        f"当前可用：{names}"
+    )
+
+
+def _vocabulary() -> str:
+    """动作写法速查。给模型看的"一页纸"。
+
+    为什么单独做一个命令：实测模型为了搞清楚 packet id 是什么，连着调了
+    `list_mcp_resources` / `list_mcp_resource_templates` 四次（都失败），
+    再靠试数字（2 → 1 → 0）反推。工具**输出**用名字、**输入**要数字，
+    中间那道映射没写在任何地方 —— 这个命令就是补上它。
+    """
+    L = ["── 动作写法 ──", ""]
+    L.append("  plant:<packet>:<row>:<col>   在 row 行 col 列种下 packet 号植物")
+    L.append("  wait:<ticks>                 等 ticks 个 tick（默认 60）")
+    L.append("  shovel:<row>:<col>           铲掉 row 行 col 列的植物")
+    L.append("")
+    L.append("  <packet> 可以写**数字 id、中文名，或英文别名**，三种都认：")
+    L.append("    plant:0:3:6 / plant:豌豆射手:3:6 / plant:peashooter:3:6   ← 等价")
+    L.append("  也可以直接给原始 JSON。")
+    L.append("")
+    L.append("── 植物 id 表 ──")
+    L.append("")
+    items = sorted(PLANT_NAME.items())
+    for i in range(0, len(items), 3):
+        row = "   ".join(f"{pid:>2} = {name}" for pid, name in items[i:i + 3])
+        L.append("  " + row)
+    L.append("")
+    L.append("  英文别名（部分）：peashooter=0  sunflower=1  cherry=2  wallnut=3")
+    L.append("                    potatomine=4  snowpea=5  repeater=7  squash=17")
+    L.append("                    jalapeno=20  torchwood=22  cactus=26  starfruit=29")
+    L.append("")
+    L.append("── 行列范围 ──")
+    L.append(f"  row 0..{GRID_ROWS - 1}（路，0 是最上面一条）")
+    L.append("  col 0..8（列，0 靠房子、8 靠僵尸来的方向；射手朝右打）")
+    L.append("")
+    L.append("── 省事的办法 ──")
+    L.append("  用 whatif --enumerate 时，输出的**左列就是可以直接复制的 --try 字符串**，")
+    L.append("  不用自己翻译。")
+    return "\n".join(L)
+
+
 def _parse_action(raw: str) -> dict:
-    """支持简写 plant:packet:row:col / wait:ticks / shovel:row:col，也支持原始 JSON。"""
+    """支持简写 plant:packet:row:col / wait:ticks / shovel:row:col，也支持原始 JSON。
+
+    `packet` 可以是数字 id、中文名（豌豆射手）或英文别名（peashooter）。
+    """
     raw = raw.strip()
     if raw.startswith("{"):
         return json.loads(raw)
     parts = raw.split(":")
     if parts[0] == "plant" and len(parts) == 4:
-        return {"type": "plant", "packet": int(parts[1]),
+        return {"type": "plant", "packet": _plant_id(parts[1]),
                 "row": int(parts[2]), "col": int(parts[3])}
     if parts[0] == "wait":
         return {"type": "wait", "ticks": int(parts[1]) if len(parts) > 1 else 60}
@@ -627,6 +722,22 @@ def _parse_action(raw: str) -> dict:
         return {"type": "shovel", "row": int(parts[1]), "col": int(parts[2])}
     raise ValueError(f"看不懂的动作写法：{raw}（用 plant:packet:row:col / "
                      f"wait:ticks / shovel:row:col，或原始 JSON）")
+
+
+def _action_cli(cand: dict) -> str:
+    """把一个候选动作渲染成**可以直接粘回去**的 `--try` 字符串。
+
+    这是修"输出用名字、输入要数字"那个坑的关键：模型不用再做任何翻译，
+    复制粘贴即可。实测模型为了反推这个映射浪费了 6 次工具调用。
+    """
+    t = cand.get("type")
+    if t == "plant":
+        return f"plant:{cand['packet']}:{cand['row']}:{cand['col']}"
+    if t == "wait":
+        return f"wait:{cand.get('ticks', 60)}"
+    if t == "shovel":
+        return f"shovel:{cand['row']}:{cand['col']}"
+    return json.dumps(cand, ensure_ascii=False)
 
 
 # ---------------------------------------------------------------- CLI
@@ -645,6 +756,8 @@ def main() -> None:
     c.add_argument("--deck", default=None)
     c.add_argument("--max-actions", type=int, default=4000)
     c.add_argument("--out", required=True)
+
+    sub.add_parser("vocabulary", help="动作写法速查（不需要 --archive）")
 
     for name in ("index", "strip", "lane", "events", "between", "diff", "trace", "frame",
                  "narrative", "actions", "whatif"):
@@ -699,6 +812,11 @@ def main() -> None:
                       Path(args.out), args.max_actions)
         print(f"已存档到 {args.out}：{res['meta']['frame_count']} 帧，"
               f"{res['meta']['outcome']['reason']}")
+        return
+
+    if args.cmd == "vocabulary":
+        # 不需要存档，所以要在 load() 之前返回。
+        print(_vocabulary())
         return
 
     meta, frames = load(Path(args.archive))
