@@ -3,19 +3,35 @@
   "status": "complete",
   "repo": "realnewbiexvwu/pvz-agent-artifacts",
   "branch": "evidence-bridge-random-mc-v1-first125k-v1",
-  "revision": "2a046aa8ceae6d79d784eee7d1b6fbb227ee7f27",
-  "seconds": 6.688550755003234,
+  "revision": "aee11a2860324769327cf5371a868fda8b371f37",
+  "seconds": 6.756776274007279,
   "completed_seeds": [
-    0
+    0,
+    1
   ],
-  "raw_case_count": 272,
+  "raw_case_count": 544,
   "owning_full_run_deliveries": [
     {
       "run": "mainline_bridge_random_mc_v1_seed0",
       "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
-      "status": "uploading",
+      "status": "complete",
       "start_utc": "2026-10-03T02:55:23.206409+00:00",
-      "pid": 217770
+      "pid": 217770,
+      "exit_code": 0,
+      "end_utc": "2026-10-03T03:00:24.446965+00:00",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "revision": "32fdb14437ee43ea4a643b3be0db18ab123cb3f4"
+    },
+    {
+      "run": "mainline_bridge_random_mc_v1_seed1",
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed1-first125k",
+      "status": "complete",
+      "start_utc": "2026-10-03T03:15:40.683272+00:00",
+      "pid": 219550,
+      "exit_code": 0,
+      "end_utc": "2026-10-03T03:20:41.670999+00:00",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "revision": "94900e6900d44e976003841f811f219ae0fb1e13"
     }
   ],
   "scope": "Existing prescribed125k node raw evaluations/configs/costs and paired initial/2k/25k/idle outcomes. Checkpoints and full resume/rollout evidence reference owning first125k run deliveries, pending until explicitly complete. No checkpoint or observation shard duplicated; no new model/Native evaluation or owning training mutation."

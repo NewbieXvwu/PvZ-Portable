@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-v1-seed1-degradation125k-v1",
+  "revision": "914aea3b998fedcaa99fdf6dd4f918f5fb62227d",
+  "seconds": 3.5966818150045583,
+  "cases": 2,
+  "matched_terminal_action_fields": 18,
+  "checkpoint_references": [
+    {
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "branch": "evidence-bridge-random-mc-v1-first25k-v1",
+      "revision": "60a24a87868fc72f60930fe2b3c5abff9940bbe5",
+      "path": "bridge_random_mc_v1_first25k_v1/mainline_bridge_random_mc_v1_seed1/runs/run_1/update_000036_evaluated_1790979102470960725.pt"
+    },
+    {
+      "kind": "owning_full_run_checkpoint_reference_no_duplicate",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed1-first125k",
+      "revision": "94900e6900d44e976003841f811f219ae0fb1e13",
+      "delivery_status": "complete",
+      "path": "mainline_bridge_random_mc_v1_seed1/runs/run_1/update_000162_evaluated_1790997333961730856.pt"
+    }
+  ],
+  "scope": "Two actual same-seed25k/125k outcome-selected CPU replays, full action/layout traces and source/plan/config/logs. Descriptive diagnostic, no causal PPO/architecture claim or primary training mutation. Existing models referenced, none duplicated."
+}

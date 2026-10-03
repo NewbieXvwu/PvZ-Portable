@@ -2,7 +2,8 @@
   "schema_version": 1,
   "status": "partial_prescribed125k_evidence",
   "completed_seeds": [
-    0
+    0,
+    1
   ],
   "seeds": [
     {
@@ -1211,8 +1212,8 @@
         "kind": "owning_full_run_checkpoint_reference_no_duplicate",
         "repo": "realnewbiexvwu/pvz-agent-artifacts",
         "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
-        "revision": null,
-        "delivery_status": "uploading",
+        "revision": "32fdb14437ee43ea4a643b3be0db18ab123cb3f4",
+        "delivery_status": "complete",
         "path": "mainline_bridge_random_mc_v1_seed0/runs/run_1/update_000186_evaluated_1790996112577481248.pt"
       },
       "prior25k_reference": {
@@ -1232,11 +1233,1044 @@
       "seed": 1,
       "initial_state_sha256": "439ea5c5356c6f2dbf1a01fe9375a7e815b91ddc03845f701b9bc26150ab0337",
       "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
-      "status": "prescribed125k_not_yet_reached",
-      "counters_at_read": {
-        "episodes": 604,
-        "decisions": 116372,
-        "ticks": 11327388
+      "status": "prescribed125k_complete",
+      "counters": {
+        "episodes": 639,
+        "decisions": 125000,
+        "ticks": 12168508
+      },
+      "update": 162,
+      "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+      "modes": {
+        "greedy": {
+          "validation_full_level7_v1": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 8.125,
+            "mean_survival_ticks": 21458.125,
+            "action_counts": {
+              "wait": 2679,
+              "plant": 114
+            },
+            "mean_plants": 14.25,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 18.375,
+            "initial_mean_shovels": 18.375,
+            "prior2k_mean_plants": 18.5,
+            "prior2k_mean_shovels": 18.5,
+            "prior25k_mean_plants": 59.75,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 114
+          },
+          "validation_bridge7_v1_aid_cap10": {
+            "cases": 16,
+            "won": 6,
+            "wilson_95": [
+              0.184812,
+              0.61359
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 16,
+            "idle_wins": 5,
+            "improved_vs_initial_seeds": [
+              1400000,
+              1400007,
+              1400009,
+              1400011,
+              1400012,
+              1400014
+            ],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [
+              1400009
+            ],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [
+              1400001,
+              1400002,
+              1400003,
+              1400004,
+              1400005,
+              1400006,
+              1400008,
+              1400010,
+              1400013,
+              1400015
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 10.0,
+            "mean_survival_ticks": 24707.875,
+            "action_counts": {
+              "wait": 6729,
+              "plant": 162
+            },
+            "mean_plants": 10.125,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 18.1875,
+            "initial_mean_shovels": 28.1875,
+            "prior2k_mean_plants": 18.75,
+            "prior2k_mean_shovels": 28.75,
+            "prior25k_mean_plants": 48.625,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 162
+          },
+          "validation_bridge7_v1_aid_cap15": {
+            "cases": 16,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 13,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [
+              1400129,
+              1400130,
+              1400131,
+              1400132,
+              1400133,
+              1400134,
+              1400136,
+              1400137,
+              1400138,
+              1400139,
+              1400140,
+              1400142,
+              1400143
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 12.4375,
+            "mean_survival_ticks": 26098.8125,
+            "action_counts": {
+              "wait": 6761,
+              "plant": 262
+            },
+            "mean_plants": 16.375,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 18.3125,
+            "initial_mean_shovels": 28.3125,
+            "prior2k_mean_plants": 18.1875,
+            "prior2k_mean_shovels": 28.1875,
+            "prior25k_mean_plants": 64.5625,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 262
+          },
+          "validation_bridge7_v1_aid_cap20": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 3,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [
+              1400256,
+              1400261,
+              1400262
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 12.625,
+            "mean_survival_ticks": 27250.75,
+            "action_counts": {
+              "wait": 3560,
+              "plant": 176
+            },
+            "mean_plants": 22.0,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 18.625,
+            "initial_mean_shovels": 28.625,
+            "prior2k_mean_plants": 18.75,
+            "prior2k_mean_shovels": 28.75,
+            "prior25k_mean_plants": 85.25,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 177
+          },
+          "validation_bridge7_v1_aid_capfull": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 1,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [
+              1400388
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 13.375,
+            "mean_survival_ticks": 28438.375,
+            "action_counts": {
+              "wait": 3638,
+              "plant": 203
+            },
+            "mean_plants": 25.375,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 19.0,
+            "initial_mean_shovels": 29.0,
+            "prior2k_mean_plants": 18.0,
+            "prior2k_mean_shovels": 28.0,
+            "prior25k_mean_plants": 115.5,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 203
+          },
+          "validation_bridge7_v1_ordinary_cap10": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 8.0,
+            "mean_survival_ticks": 21218.75,
+            "action_counts": {
+              "wait": 2648,
+              "plant": 102
+            },
+            "mean_plants": 12.75,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 18.625,
+            "initial_mean_shovels": 18.625,
+            "prior2k_mean_plants": 18.0,
+            "prior2k_mean_shovels": 18.0,
+            "prior25k_mean_plants": 52.5,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 102
+          },
+          "validation_bridge7_v1_ordinary_cap15": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 2,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [
+              1400771,
+              1400775
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 8.25,
+            "mean_survival_ticks": 21105.0,
+            "action_counts": {
+              "wait": 2678,
+              "plant": 92
+            },
+            "mean_plants": 11.5,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 18.25,
+            "initial_mean_shovels": 18.25,
+            "prior2k_mean_plants": 18.375,
+            "prior2k_mean_shovels": 18.375,
+            "prior25k_mean_plants": 74.0,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 92
+          },
+          "heldout_roof_1": {
+            "cases": 16,
+            "won": 2,
+            "wilson_95": [
+              0.034977,
+              0.360228
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 2,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [
+              51027,
+              51028
+            ],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [
+              51027,
+              51028
+            ],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [
+              51027,
+              51028
+            ],
+            "degraded_vs25k_seeds": [
+              51033,
+              51036
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 2.8125,
+            "mean_survival_ticks": 6919.3125,
+            "action_counts": {
+              "plant": 367,
+              "wait": 1270
+            },
+            "mean_plants": 22.9375,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 1.5,
+            "initial_mean_shovels": 16.5,
+            "prior2k_mean_plants": 1.5,
+            "prior2k_mean_shovels": 16.5,
+            "prior25k_mean_plants": 21.75,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 367
+          },
+          "heldout_roof_2": {
+            "cases": 16,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 3.0,
+            "mean_survival_ticks": 8937.0,
+            "action_counts": {
+              "plant": 260,
+              "wait": 1295
+            },
+            "mean_plants": 16.25,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 10.5,
+            "initial_mean_shovels": 25.5,
+            "prior2k_mean_plants": 10.5,
+            "prior2k_mean_shovels": 25.5,
+            "prior25k_mean_plants": 19.875,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 260
+          },
+          "heldout_roof_3": {
+            "cases": 16,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 3.125,
+            "mean_survival_ticks": 8833.1875,
+            "action_counts": {
+              "plant": 246,
+              "wait": 1350
+            },
+            "mean_plants": 15.375,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 11.125,
+            "initial_mean_shovels": 26.125,
+            "prior2k_mean_plants": 11.125,
+            "prior2k_mean_shovels": 26.125,
+            "prior25k_mean_plants": 18.5,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 246
+          },
+          "heldout_roof_4": {
+            "cases": 16,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 1,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [
+              51219
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 3.0,
+            "mean_survival_ticks": 9548.4375,
+            "action_counts": {
+              "plant": 288,
+              "wait": 1594
+            },
+            "mean_plants": 18.0,
+            "mean_shovels": 0.0,
+            "initial_mean_plants": 11.3125,
+            "initial_mean_shovels": 26.3125,
+            "prior2k_mean_plants": 11.3125,
+            "prior2k_mean_shovels": 26.3125,
+            "prior25k_mean_plants": 24.0625,
+            "prior25k_mean_shovels": 0.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 288
+          }
+        },
+        "sampled": {
+          "validation_full_level7_v1": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 9.75,
+            "mean_survival_ticks": 23921.75,
+            "action_counts": {
+              "wait": 1491,
+              "plant": 278,
+              "shovel": 59
+            },
+            "mean_plants": 34.75,
+            "mean_shovels": 7.375,
+            "initial_mean_plants": 17.875,
+            "initial_mean_shovels": 17.75,
+            "prior2k_mean_plants": 17.75,
+            "prior2k_mean_shovels": 17.75,
+            "prior25k_mean_plants": 20.5,
+            "prior25k_mean_shovels": 18.625,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 337
+          },
+          "validation_bridge7_v1_aid_cap10": {
+            "cases": 16,
+            "won": 14,
+            "wilson_95": [
+              0.639772,
+              0.965023
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 5,
+            "improved_vs_initial_seeds": [
+              1400000,
+              1400001,
+              1400002,
+              1400004,
+              1400005,
+              1400006,
+              1400007,
+              1400009,
+              1400010,
+              1400011,
+              1400012,
+              1400013,
+              1400014,
+              1400015
+            ],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [
+              1400001,
+              1400002,
+              1400004,
+              1400005,
+              1400006,
+              1400009,
+              1400010,
+              1400013,
+              1400015
+            ],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [
+              1400000,
+              1400001,
+              1400002,
+              1400004,
+              1400005,
+              1400006,
+              1400007,
+              1400009,
+              1400010,
+              1400011,
+              1400012,
+              1400013,
+              1400014,
+              1400015
+            ],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 9.9375,
+            "mean_survival_ticks": 21731.6875,
+            "action_counts": {
+              "wait": 2729,
+              "plant": 659,
+              "shovel": 117
+            },
+            "mean_plants": 41.1875,
+            "mean_shovels": 7.3125,
+            "initial_mean_plants": 19.75,
+            "initial_mean_shovels": 29.375,
+            "prior2k_mean_plants": 19.1875,
+            "prior2k_mean_shovels": 29.0625,
+            "prior25k_mean_plants": 27.3125,
+            "prior25k_mean_shovels": 33.75,
+            "immediate_plant_shovels": 2,
+            "immediate_plant_shovel_fraction": 0.0030349013657056147,
+            "zero_tick_actions": 776
+          },
+          "validation_bridge7_v1_aid_cap15": {
+            "cases": 16,
+            "won": 11,
+            "wilson_95": [
+              0.444044,
+              0.858354
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [
+              1400128,
+              1400129,
+              1400130,
+              1400134,
+              1400135,
+              1400138,
+              1400139,
+              1400140,
+              1400141,
+              1400142,
+              1400143
+            ],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [
+              1400128,
+              1400129,
+              1400130,
+              1400134,
+              1400135,
+              1400138,
+              1400139,
+              1400140,
+              1400141,
+              1400142,
+              1400143
+            ],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [
+              1400128,
+              1400129,
+              1400130,
+              1400134,
+              1400135,
+              1400138,
+              1400139,
+              1400140,
+              1400141,
+              1400142,
+              1400143
+            ],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 14.8125,
+            "mean_survival_ticks": 27875.9375,
+            "action_counts": {
+              "wait": 3492,
+              "plant": 838,
+              "shovel": 139
+            },
+            "mean_plants": 52.375,
+            "mean_shovels": 8.6875,
+            "initial_mean_plants": 18.875,
+            "initial_mean_shovels": 28.6875,
+            "prior2k_mean_plants": 18.4375,
+            "prior2k_mean_shovels": 28.25,
+            "prior25k_mean_plants": 28.25,
+            "prior25k_mean_shovels": 34.0,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 978
+          },
+          "validation_bridge7_v1_aid_cap20": {
+            "cases": 8,
+            "won": 1,
+            "wilson_95": [
+              0.022417,
+              0.470888
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [
+              1400262
+            ],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [
+              1400262
+            ],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [
+              1400262
+            ],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 17.0,
+            "mean_survival_ticks": 33244.75,
+            "action_counts": {
+              "wait": 2140,
+              "plant": 474,
+              "shovel": 106
+            },
+            "mean_plants": 59.25,
+            "mean_shovels": 13.25,
+            "initial_mean_plants": 19.75,
+            "initial_mean_shovels": 29.5,
+            "prior2k_mean_plants": 19.75,
+            "prior2k_mean_shovels": 29.5,
+            "prior25k_mean_plants": 31.125,
+            "prior25k_mean_shovels": 35.75,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 581
+          },
+          "validation_bridge7_v1_aid_capfull": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 21.125,
+            "mean_survival_ticks": 39267.625,
+            "action_counts": {
+              "wait": 2530,
+              "plant": 567,
+              "shovel": 109
+            },
+            "mean_plants": 70.875,
+            "mean_shovels": 13.625,
+            "initial_mean_plants": 19.625,
+            "initial_mean_shovels": 29.625,
+            "prior2k_mean_plants": 19.25,
+            "prior2k_mean_shovels": 29.25,
+            "prior25k_mean_plants": 28.75,
+            "prior25k_mean_shovels": 34.25,
+            "immediate_plant_shovels": 1,
+            "immediate_plant_shovel_fraction": 0.001763668430335097,
+            "zero_tick_actions": 677
+          },
+          "validation_bridge7_v1_ordinary_cap10": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 8.625,
+            "mean_survival_ticks": 23491.875,
+            "action_counts": {
+              "plant": 275,
+              "wait": 1467,
+              "shovel": 80
+            },
+            "mean_plants": 34.375,
+            "mean_shovels": 10.0,
+            "initial_mean_plants": 17.75,
+            "initial_mean_shovels": 17.5,
+            "prior2k_mean_plants": 18.875,
+            "prior2k_mean_shovels": 18.75,
+            "prior25k_mean_plants": 20.0,
+            "prior25k_mean_shovels": 19.25,
+            "immediate_plant_shovels": 2,
+            "immediate_plant_shovel_fraction": 0.007272727272727273,
+            "zero_tick_actions": 355
+          },
+          "validation_bridge7_v1_ordinary_cap15": {
+            "cases": 8,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.324408
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 9.25,
+            "mean_survival_ticks": 23671.5,
+            "action_counts": {
+              "plant": 288,
+              "wait": 1444,
+              "shovel": 84
+            },
+            "mean_plants": 36.0,
+            "mean_shovels": 10.5,
+            "initial_mean_plants": 18.375,
+            "initial_mean_shovels": 18.25,
+            "prior2k_mean_plants": 17.5,
+            "prior2k_mean_shovels": 17.375,
+            "prior25k_mean_plants": 19.875,
+            "prior25k_mean_shovels": 18.75,
+            "immediate_plant_shovels": 2,
+            "immediate_plant_shovel_fraction": 0.006944444444444444,
+            "zero_tick_actions": 372
+          },
+          "heldout_roof_1": {
+            "cases": 16,
+            "won": 2,
+            "wilson_95": [
+              0.034977,
+              0.360228
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 4,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [
+              51026,
+              51032
+            ],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [
+              51026,
+              51032
+            ],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [
+              51026,
+              51032
+            ],
+            "degraded_vs25k_seeds": [
+              51029,
+              51030,
+              51036,
+              51037
+            ],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 2.8125,
+            "mean_survival_ticks": 7424.0,
+            "action_counts": {
+              "shovel": 84,
+              "plant": 385,
+              "wait": 834
+            },
+            "mean_plants": 24.0625,
+            "mean_shovels": 5.25,
+            "initial_mean_plants": 16.5,
+            "initial_mean_shovels": 29.875,
+            "prior2k_mean_plants": 15.125,
+            "prior2k_mean_shovels": 28.8125,
+            "prior25k_mean_plants": 25.625,
+            "prior25k_mean_shovels": 17.25,
+            "immediate_plant_shovels": 3,
+            "immediate_plant_shovel_fraction": 0.007792207792207792,
+            "zero_tick_actions": 469
+          },
+          "heldout_roof_2": {
+            "cases": 16,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 3.0,
+            "mean_survival_ticks": 8558.4375,
+            "action_counts": {
+              "plant": 241,
+              "shovel": 150,
+              "wait": 917
+            },
+            "mean_plants": 15.0625,
+            "mean_shovels": 9.375,
+            "initial_mean_plants": 10.8125,
+            "initial_mean_shovels": 25.8125,
+            "prior2k_mean_plants": 10.3125,
+            "prior2k_mean_shovels": 24.6875,
+            "prior25k_mean_plants": 14.4375,
+            "prior25k_mean_shovels": 19.5625,
+            "immediate_plant_shovels": 1,
+            "immediate_plant_shovel_fraction": 0.004149377593360996,
+            "zero_tick_actions": 391
+          },
+          "heldout_roof_3": {
+            "cases": 16,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 2.9375,
+            "mean_survival_ticks": 8389.0625,
+            "action_counts": {
+              "wait": 904,
+              "plant": 240,
+              "shovel": 134
+            },
+            "mean_plants": 15.0,
+            "mean_shovels": 8.375,
+            "initial_mean_plants": 11.0,
+            "initial_mean_shovels": 25.375,
+            "prior2k_mean_plants": 10.5625,
+            "prior2k_mean_shovels": 25.4375,
+            "prior25k_mean_plants": 14.1875,
+            "prior25k_mean_shovels": 17.6875,
+            "immediate_plant_shovels": 0,
+            "immediate_plant_shovel_fraction": 0.0,
+            "zero_tick_actions": 374
+          },
+          "heldout_roof_4": {
+            "cases": 16,
+            "won": 0,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "initial_wins": 0,
+            "prior2k_wins": 0,
+            "prior25k_wins": 0,
+            "idle_wins": 0,
+            "improved_vs_initial_seeds": [],
+            "degraded_vs_initial_seeds": [],
+            "improved_vs_idle_seeds": [],
+            "degraded_vs_idle_seeds": [],
+            "improved_vs25k_seeds": [],
+            "degraded_vs25k_seeds": [],
+            "truncated": 0,
+            "nonterminated": 0,
+            "mean_terminal_wave": 3.0,
+            "mean_survival_ticks": 9159.6875,
+            "action_counts": {
+              "shovel": 119,
+              "plant": 273,
+              "wait": 1048
+            },
+            "mean_plants": 17.0625,
+            "mean_shovels": 7.4375,
+            "initial_mean_plants": 11.75,
+            "initial_mean_shovels": 26.6875,
+            "prior2k_mean_plants": 11.8125,
+            "prior2k_mean_shovels": 26.5625,
+            "prior25k_mean_plants": 16.8125,
+            "prior25k_mean_shovels": 19.5,
+            "immediate_plant_shovels": 2,
+            "immediate_plant_shovel_fraction": 0.007326007326007326,
+            "zero_tick_actions": 392
+          }
+        }
+      },
+      "evaluation_seconds": 513.9230191980023,
+      "active_wall_seconds": 10551.235641094005,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15305719808,
+        "min_system_available_bytes": 16927461376,
+        "peak_system_swap_used_bytes": 204800,
+        "cuda_peak_allocated_bytes": 6900918784,
+        "cuda_peak_reserved_bytes": 30763122688
+      },
+      "loss_at_node": {
+        "policy_loss": -0.15592730188343143,
+        "value_loss": 0.005617001709262175,
+        "entropy": 2.9962614263807024,
+        "advantage_mean": -0.06278399378061295,
+        "advantage_std": 0.04654819890856743,
+        "gradient_norm": 1.2277272939682007,
+        "approx_kl": 0.008212263361201622,
+        "clip_fraction": 0.1084681935608387,
+        "first_minibatch_log_prob_max_error": 1.0728836059570312e-06,
+        "max_log_prob_change": 0.6679787635803223,
+        "optimizer_steps": 7,
+        "stopped_for_kl": true
+      },
+      "sampling_seconds": 1991.4947244421346,
+      "ppo_seconds": 6712.183444431968,
+      "training_natural_wins": 95,
+      "training_truncated": 8,
+      "model_reference": {
+        "kind": "owning_full_run_checkpoint_reference_no_duplicate",
+        "repo": "realnewbiexvwu/pvz-agent-artifacts",
+        "branch": "evidence-mainline-bridge-random-mc-v1-seed1-first125k",
+        "revision": "94900e6900d44e976003841f811f219ae0fb1e13",
+        "delivery_status": "complete",
+        "path": "mainline_bridge_random_mc_v1_seed1/runs/run_1/update_000162_evaluated_1790997333961730856.pt"
+      },
+      "prior25k_reference": {
+        "repo": "realnewbiexvwu/pvz-agent-artifacts",
+        "branch": "evidence-bridge-random-mc-v1-first25k-v1",
+        "revision": "60a24a87868fc72f60930fe2b3c5abff9940bbe5",
+        "path": "bridge_random_mc_v1_first25k_v1/mainline_bridge_random_mc_v1_seed1"
+      },
+      "initial_and2k_reference": {
+        "repo": "realnewbiexvwu/pvz-agent-artifacts",
+        "branch": "evidence-bridge-random-mc-v1-first2k-v1",
+        "revision": "018ffea2d23cb94a742fed20dbd715dbb78f5e68",
+        "path": "bridge_random_mc_v1_first2k_v1/mainline_bridge_random_mc_v1_seed1"
       }
     },
     {
@@ -1245,23 +2279,38 @@
       "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
       "status": "prescribed125k_not_yet_reached",
       "counters_at_read": {
-        "episodes": 609,
-        "decisions": 91028,
-        "ticks": 10043407
+        "episodes": 641,
+        "decisions": 95212,
+        "ticks": 10464263
       }
     }
   ],
-  "seconds": 0.9356056609976804,
+  "seconds": 1.1007913109933725,
   "owning_full_run_deliveries": [
     {
       "run": "mainline_bridge_random_mc_v1_seed0",
       "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
-      "status": "uploading",
+      "status": "complete",
       "start_utc": "2026-10-03T02:55:23.206409+00:00",
-      "pid": 217770
+      "pid": 217770,
+      "exit_code": 0,
+      "end_utc": "2026-10-03T03:00:24.446965+00:00",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "revision": "32fdb14437ee43ea4a643b3be0db18ab123cb3f4"
+    },
+    {
+      "run": "mainline_bridge_random_mc_v1_seed1",
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed1-first125k",
+      "status": "complete",
+      "start_utc": "2026-10-03T03:15:40.683272+00:00",
+      "pid": 219550,
+      "exit_code": 0,
+      "end_utc": "2026-10-03T03:20:41.670999+00:00",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "revision": "94900e6900d44e976003841f811f219ae0fb1e13"
     }
   ],
-  "raw_case_count": 272,
+  "raw_case_count": 544,
   "extra_model_evaluations": 0,
   "native_interactions": 0,
   "cuda_initialized": false,
