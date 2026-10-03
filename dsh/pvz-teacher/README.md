@@ -17,6 +17,41 @@
 | `bundle/package.json` | bundle 清单（`dsh.bundle.patch` 指向下一个文件）。 |
 | `bundle/cordis.patch.yml` | 往组合树里插一行 `@deepseek-ai/dsh-mcp-client`。 |
 | `verify_s0.sh` | S0 端到端验收，**不需要 API key**。 |
+| `tools/logging_proxy.py` | 记录型反向代理：看到 DSH 实际发出的请求体。可选修复 `thinking.budget_tokens`。 |
+| `tools/test_repair.py` | 上面那个修复的回归测试（离线可跑）。 |
+
+## 已知的 DSH 兼容性问题：`thinking.budget_tokens` 缺失
+
+**症状**（接严格校验 Anthropic 规范的网关时）：
+
+```
+INVALID_REQUEST: invalid Claude request:
+  thinking: budget_tokens must be at least 1024 when type is enabled
+```
+
+**根因**在 DSH 里，不在网关：`packages/llm/llm-deepseek/src/serialize.ts:155`
+
+```js
+thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
+...effort === 'off' ? {} : { output_config: { effort } },
+```
+
+**无条件不发 `budget_tokens`**。官方端点宽容接受，严格网关直接拒。
+改 DSH 配置改不出来 —— 代码里根本没有这个字段。
+
+**两条出路**：
+
+1. 走代理补上（不改上游）：
+   ```sh
+   python3 tools/logging_proxy.py --upstream <真端点>/v1 --port 8950 \
+       --log /tmp/llm-req.jsonl --fix-thinking-budget 32768
+   DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 dsh --profile pvz-teacher "..."
+   ```
+2. 给 DSH 源码打补丁（运行时更干净，但会与上游分叉）。
+
+`tools/test_repair.py` 钉住了补丁的边界行为，包括一个**已知无解的边界**：
+`max_tokens <= 1024` 时，`budget_tokens < max_tokens` 与 `budget_tokens >= 1024`
+无法同时满足，怎么改都过不去。
 
 ## 怎么验
 

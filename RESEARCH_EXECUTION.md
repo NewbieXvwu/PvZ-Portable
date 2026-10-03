@@ -1275,6 +1275,9 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 > 后来按用户要求切到最新 tag `dsh-v0.2.0-rc.2`，发现 preset 的实现被整个换掉了。
 > 下面全部以 **v0.2.0-rc.2 源码**为准，第一版的错误在 §2 里列明。
 > 当天晚些时候又补了 §3.1–§3.5：S0 实测结果、版本统一、以及两个跳 tag 才会遇到的坑。
+> 收尾时再加 §3.6–§3.7：接真实端点暴露的 **DSH `thinking` 参数缺 `budget_tokens`**
+> （已定位到 `serialize.ts:155`，配置改不出来，只能走代理或打补丁），
+> 以及 **端点 401**（未解决，需用户确认，见 §3.7）。
 
 ### 0. 这一节是什么
 
@@ -1475,6 +1478,88 @@ done
 实测它会同时把包名追加进 `package.json` 的 `dsh.profile.bundles` —— 也就是走的是
 plugin-manager（"Installation enables a new bundle by default"），不是裸 pnpm 透传。
 所以**不需要**再手工改 `bundles` 列表。
+
+#### 3.6 DSH 发的 `thinking` 参数过不了严格网关（已定位到根因，不是配置问题）
+
+**症状**：把 `DEEPSEEK_BASE_URL` 指到 discovery-api 这类按 Anthropic Messages 规范
+严格校验的网关，`reasoningEffort` 只要不是 `off` 就报：
+
+```
+INVALID_REQUEST: invalid Claude request:
+  thinking: budget_tokens must be at least 1024 when type is enabled
+```
+
+**先做了观测，没有猜。** `tools/logging_proxy.py` 把 DSH 真实发出的请求体录了下来
+（`--log /tmp/llm-req.jsonl`），一次运行就定死了事实：
+
+| 字段 | 实际值 |
+|---|---|
+| `model` | `deepseek-v4-flash-0731` ✅ 目录条目生效了 |
+| `max_tokens` | `65536` ✅ 目录条目的 `maxTokens` 生效了 |
+| `thinking` | `{ "type": "enabled" }` —— **没有 `budget_tokens`** |
+| `output_config` | `{ "effort": "max" }` ✅ `reasoningEffort: max` 生效了 |
+| `tools` | 28 个 |
+| system 长度 | 2862 字符 |
+
+**根因在 DSH 里，不在网关**：`packages/llm/llm-deepseek/src/serialize.ts:155`
+
+```js
+thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
+...effort === 'off' ? {} : { output_config: { effort } },
+```
+
+**无条件不发 `budget_tokens`**。类型声明也只有 `output_config` 没有预算字段
+（`packages/llm/llm-deepseek/src/wire-types.ts:31`）。底层的
+`@earendil-works/pi-ai@0.87.1` 本来是发的（`dist/api/anthropic-messages.js:691` 的
+`budget_tokens: options.thinkingBudgetTokens || 1024`，并在 `:896` 用
+`Math.min(adjusted.thinkingBudget, Math.max(0, maxTokens - 1024))` 夹紧），
+**但 DSH 自己的序列化器绕过了它、直接构造参数**，所以这个字段永远不出现。
+
+结论：**改 DSH 的配置改不出来** —— 代码里根本没有这个字段可以配。两条出路：
+
+1. **走代理补上**（不改上游，推荐先这么做）：
+   ```sh
+   python3 dsh/pvz-teacher/tools/logging_proxy.py \
+       --upstream <真端点>/v1 --port 8950 \
+       --log /tmp/llm-req.jsonl --fix-thinking-budget 32768
+   DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 dsh --profile pvz-teacher "..."
+   ```
+   代理**先原样记录、再改**（`record["body"]` 是原始字节，`record["repaired"]` 是改动说明），
+   所以"DSH 到底发了什么"这个事实不会被修复动作污染。
+2. **给 DSH 源码打补丁**：运行时更干净，但从此与上游分叉，跳版本时要重新处理。
+
+**一个已知无解的边界（钉在测试里，不是含糊带过）**：
+`tools/test_repair.py` 里有一条用例专门说明 —— 当 `max_tokens <= 1024` 时，
+`budget_tokens < max_tokens` 与 `budget_tokens >= 1024` 无法同时满足，
+**怎么改都过不去**。所以这个修复不是万能的，只在 `max_tokens > 1024` 时成立
+（我们实际用的 65536 远大于它）。
+
+#### 3.7 discovery-api 端点的 401（**未解决，需要用户确认**）
+
+同一个 key 在 15:18–15:26 是通的（`/v1/models` 200，`/chat/completions` 与
+`/v1/messages` 都有响应），从约 15:32 起稳定返回：
+
+```
+401 invalid API key
+```
+
+排查过的、**能排除**的可能：
+
+- **不是 key 抄错**：key 长度 67（`sk-` + 64 位 hex），与用户给的原文逐字节一致，
+  SHA-256 前缀 `cdb50fa4830b7aef`。
+- **不是限流**：响应里**没有任何** `x-ratelimit-*` / `retry-after` 头。
+  限流会带这些头，401 不带。
+- **不是本地网络/代理**：响应头是 `server: istio-envoy` +
+  `www-authenticate: Bearer realm="inference-gateway"` +
+  `set-cookie: acw_tc=...`（阿里云 WAF），说明请求确实打到了网关、被网关拒了。
+
+一个**有意思的旁证**：带 `thinking: {type:"enabled"}` 的请求返回的是**体校验 400**
+（就是 §3.6 那个错），而不是 401 —— 说明**体校验发生在鉴权之前**。
+这反过来支持"401 是真的鉴权失败"，不是网关整体不可达。
+
+**需要用户做的**：确认这个 key 是否被吊销 / 是否要用别的鉴权形式（比如
+`Authorization: Bearer` 之外的头）/ 额度是否需要充值。这一条**我无法从代码侧验证**，
+所以停在这里上报，不继续试错。
 
 
 ### 4. 架构（三层，各自独立可测）
