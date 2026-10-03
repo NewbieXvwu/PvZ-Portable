@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# S2 端到端验收：`pvz://vocabulary` 资源在 DSH 会话里真的能被**列到**、被**读到**。
+# S2/S3 端到端验收：MCP 资源在 DSH 会话里真的能被**列到**、被**读到**。
 #
 # 为什么必须验这一层，而不是只跑 smoke_handshake.py
 # -------------------------------------------------
@@ -158,6 +158,12 @@ run_case "list_mcp_resources" '{"server":"pvz"}' "pvz://vocabulary" \
 run_case "read_mcp_resource" '{"server":"pvz","uri":"pvz://vocabulary"}' "plant:" \
   "② resources/read 能取回正文"
 
+# S3 加的第二个资源。断言用的是**模型当初猜错的那个数**（土豆雷引爆倒计时 1500
+# tick）—— 这样这一条通过的含义不只是"通道通"，而是"当初那个具体的错误
+# 现在有权威答案可取了"。断言一个泛泛的字符串（比如 "tick"）证不了这件事。
+run_case "read_mcp_resource" '{"server":"pvz","uri":"pvz://constants"}' "1500" \
+  "③ 常量资源可读，且含当初被猜错的那个数"
+
 echo
-ok "S2 通过：pvz://vocabulary 在 DSH 会话里可列、可读"
+ok "S2/S3 通过：pvz://vocabulary 与 pvz://constants 在 DSH 会话里可列、可读"
 exit 0

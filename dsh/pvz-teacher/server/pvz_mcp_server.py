@@ -28,6 +28,11 @@ stdio，JSON-RPC。用官方 `mcp` SDK 的低层 `Server`（回调式，不是 F
 - S2（2026-10-03 通过）：词汇表问题修复（`vocabulary` 工具、别名输入、
   可复制的枚举列、自纠正报错），并把 `vocabulary` 发布成资源 `pvz://vocabulary`
   —— 见下面「资源」一节的实测依据。
+- S3（2026-10-03）：常量与规则补全 —— `constants` 工具 + `pvz://constants`、
+  `policy` 工具 + `pvz://scripted-policy`。触发点是 S3 会话的推理轨迹：
+  模型在**猜**游戏常量（土豆雷引爆时间猜了 900 → ~1600，实际是 1500 tick 倒计时
+  ＋升起动画），并反复反推脚本策略的规则而反推不出来。它猜错的不是游戏常识，
+  而是 tick↔秒 的换算率（60 vs 100）。一个常数错，写下的"可迁移结论"整条跟着错。
 """
 
 from __future__ import annotations
@@ -240,6 +245,56 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
         "还因为猜错数字拿到了**另一个植物的结果**却没察觉。）",
         _schema({}, []),
         _make_cli_handler("vocabulary", []),
+    ),
+    # `constants` 与 `policy` 两个工具：**为什么值得常驻**（2026-10-03 实测）
+    #
+    # 这两个是"调用**之前**就得知道的东西"这一类 —— 与 `vocabulary` 同理：
+    # 模型不会去查一个它不知道自己需要查的表。
+    #
+    # · 常量：模型花了大段推理去**猜**土豆雷引爆时间，先猜 900 tick、又反推到
+    #   ~1600。正确答案是 1500 tick 倒计时 + 一段升起动画。它猜错的不是游戏常识，
+    #   而是 tick↔秒 的换算率（按 60 tick/s 算，这里是 100）。一个常数错，
+    #   它写下的「可迁移结论」整条跟着错 —— 而那条结论是要沉淀成 skill 的。
+    #   所以描述里必须明说"别用通用 PvZ 常识推，这是另一个实现"。
+    #
+    # · 策略规则：模型多轮在推理里反推"脚本策略到底按什么规则走"，
+    #   原文如「maybe the policy adds a shooter when the row is at ⚠…but row 3's
+    #   turn never came」。规则本身不在它能看到的任何数据里 —— 数据是行为的
+    #   结果，不是行为的规则。
+    #
+    # 描述写短、理由写这里：工具描述**每个请求都发**，注释不发。
+    "constants": (
+        "**游戏常量表**，从 C++ 源码现场解析（不是抄本，不会漂移）。\n"
+        "时间基准（多少 tick 算一秒）、战斗常量、植物表（花费/冷却/攻击间隔/血量）、"
+        "僵尸表（血量/首次出现关卡与波/抽样权重）、源码常量清单。\n"
+        "给 level 还会现算该关的波数与可能出现的僵尸。\n"
+        "**不确定某个数值时来这里查，别用通用 PvZ 常识推** —— 这是另一个实现。",
+        _schema(
+            {
+                "section": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": ["time", "combat", "plants", "zombies", "level", "literals"],
+                    },
+                    "description": "只取这几节（省 token）。不给就全给。",
+                },
+                "level": {
+                    "type": "integer",
+                    "description": "关卡号 1..50。给了就额外算这一关的波数与可能出现的僵尸。",
+                },
+            },
+            [],
+        ),
+        _make_cli_handler("constants", [("section", "--section", "list"),
+                                        ("level", "--level", "int")]),
+    ),
+    "policy": (
+        "**脚本策略的决策规则**，文字描述（不给源码）。\n"
+        "用来看懂「这一局里那套规则策略当时为什么这么走」：它的落点由一条固定顺序的 "
+        "if-else 链决定，不是随机的，也不随局面自适应。",
+        _schema({}, []),
+        _make_cli_handler("policy", []),
     ),
     "ping": (
         "连通性探针。回传本 server 看到的仓库根、解释器、工具脚本路径、资源目录，"
@@ -456,26 +511,58 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
 
 RESOURCES: dict[str, tuple[str, str, str]] = {
     # uri -> (name, description, mimeType)
+    #
+    # 判据（三条，按顺序问）：
+    #   1. 调用**之前**就必须知道的 → 常驻（放进工具描述）
+    #   2. 大而全的参考表，且模型知道自己需要它 → **资源**（读之前零成本）
+    #   3. 兜底：模型连"自己缺什么"都不知道 → 只能在错误信息里列可用值
+    #
+    # `pvz://constants` 落在 2 和 3 之间：它比 `vocabulary` 大得多（1.2 万字符），
+    # 常驻不划算；但"我不知道引爆时间"这件事模型**意识得到**（它确实去猜了），
+    # 所以资源 + 一个可查询的工具是合适的组合。
     "pvz://vocabulary": (
         "动作写法速查",
         "whatif 的 try 参数怎么写、每个植物对应哪个 packet 数字、"
         "合法动作类型、行列范围。不确定语法时先读这一份。",
         "text/markdown",
     ),
+    "pvz://constants": (
+        "游戏常量表",
+        "时间基准（tick↔秒）、战斗常量、植物表（花费/冷却/攻击间隔/血量）、"
+        "僵尸表（血量/首次关卡与波/抽样权重）。从 C++ 源码现场解析。"
+        "任何「这个数是多少」的问题都在这里，别用通用 PvZ 常识推。",
+        "text/markdown",
+    ),
+    "pvz://scripted-policy": (
+        "脚本策略的决策规则",
+        "这一局里那套规则策略按什么顺序做决策、阈值是多少。"
+        "想知道「它当时为什么这么走」就读这份。",
+        "text/markdown",
+    ),
+}
+
+# uri -> 生成正文的 CLI 子命令（**不在这里手写正文**）。
+# 正文一律由 episode_query.py 现场生成，与对应工具走同一条命令 ——
+# 这里再抄一份必然漂移，而漂移的参考文档会让模型照着不存在的规则推理。
+RESOURCE_COMMANDS: dict[str, list[str]] = {
+    "pvz://vocabulary": ["vocabulary"],
+    "pvz://constants": ["constants"],
+    "pvz://scripted-policy": ["policy"],
 }
 
 
 def _resource_body(uri: str) -> str:
     """按 uri 现场生成资源正文。不认识就抛，让调用方看到可用清单。"""
-    if uri == "pvz://vocabulary":
-        rc, out, err = _run_query(["vocabulary"], timeout=120.0)
-        if rc != 0:
-            return (
-                f"[读取 {uri} 失败] episode_query.py vocabulary 退出码 {rc}\n"
-                f"--- stdout ---\n{out}\n--- stderr ---\n{err}"
-            )
-        return out
-    raise ValueError(f"没有这个资源：{uri!r}。可用：{sorted(RESOURCES)}")
+    argv = RESOURCE_COMMANDS.get(uri)
+    if argv is None:
+        raise ValueError(f"没有这个资源：{uri!r}。可用：{sorted(RESOURCES)}")
+    rc, out, err = _run_query(argv, timeout=120.0)
+    if rc != 0:
+        return (
+            f"[读取 {uri} 失败] episode_query.py {' '.join(argv)} 退出码 {rc}\n"
+            f"--- stdout ---\n{out}\n--- stderr ---\n{err}"
+        )
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -485,7 +572,7 @@ def _resource_body(uri: str) -> str:
 # 工具名里的 `pvz` 前缀（`mcp__pvz__<tool>`）不在这里定义 —— 它是 bundle 的
 # `config.serverName`，见 ../bundle/cordis.patch.yml。这里再写一份常量只会漂移。
 
-SERVER_VERSION = "0.3.0-s2"
+SERVER_VERSION = "0.4.0-s3"
 
 
 async def _on_list_tools(
@@ -566,7 +653,13 @@ server: Server = Server(
         "结论要你自己下。模拟器是确定性的，所以 whatif 给的是精确结果而不是估计。\n"
         "**不确定动作怎么写**（plant 的 packet 是什么、行列范围、有哪些动作类型）"
         "时，读资源 `pvz://vocabulary`，或调 `vocabulary` 工具 —— "
-        "两者是同一份内容，别靠猜 id。"
+        "两者是同一份内容，别靠猜 id。\n"
+        "**不确定某个数值**（血量、花费、冷却、引爆时间、tick 与秒的换算、"
+        "这一关有多少波、会出现哪些僵尸）时，读资源 `pvz://constants`，"
+        "或调 `constants` 工具。**这是另一个实现，不要用通用 PvZ 常识替代** —— "
+        "实测有模型按 60 tick/s 推算引爆时间，而这里是 100 tick/s。\n"
+        "**想知道那套规则策略为什么这么走**时，读资源 `pvz://scripted-policy`，"
+        "或调 `policy` 工具。"
     ),
     on_list_tools=_on_list_tools,
     on_call_tool=_on_call_tool,

@@ -89,8 +89,8 @@ async def run(full_env: bool) -> int:
             print(f"✓ tools/list —— {len(names)} 个：{names}")
 
             # S1：工具面必须齐全，少一个就说明工具表被改坏了。
-            expected = {"ping", "vocabulary", "capture", "index", "frame", "lane",
-                        "actions", "whatif", "narrative"}
+            expected = {"ping", "vocabulary", "constants", "policy", "capture", "index",
+                        "frame", "lane", "actions", "whatif", "narrative"}
             missing = expected - set(names)
             if missing:
                 print(f"✗ tools/list 缺少：{sorted(missing)}")
@@ -125,34 +125,56 @@ async def run(full_env: bool) -> int:
                           f"{[hex(c) for c in found]}")
                     ok = False
 
-            # 资源：S2 加的 `pvz://vocabulary`。它存在的理由是可实测的 ——
+            # 资源：S2 加的 `pvz://vocabulary`，S3 加的 `pvz://constants` /
+            # `pvz://scripted-policy`。它们存在的理由是可实测的 ——
             # 模型找不到动作语法时会去调 `list_mcp_resources`（DSH 的 system prompt
             # 主动告诉了它这个通道），我们一个资源都不发布就等于给了它一个空房间。
             resources = await session.list_resources()
             uris = [str(r.uri) for r in resources.resources]
             print(f"✓ resources/list —— {len(uris)} 个：{uris}")
-            if "pvz://vocabulary" not in uris:
-                print("✗ 缺少资源 pvz://vocabulary —— 模型会拿到空列表")
-                ok = False
 
-            try:
-                # 注意：客户端签名收的是 **str**，不是 AnyUrl ——
-                # 传 AnyUrl 会被 pydantic 挡在**客户端**，服务端根本没被调到。
-                # （第一版就踩了这个：负例"读不存在的 uri"因此**假通过**，
-                #  它报的是客户端的 ValidationError，不是服务端的拒绝。）
-                body = await session.read_resource("pvz://vocabulary")
-                text = "".join(
-                    getattr(c, "text", "") for c in body.contents
-                )
-                # 正文必须真的是"能照着写"的：有动作语法、有植物名、有行列范围。
-                for needle in ("plant:", "豌豆射手", "row 0..4"):
-                    if needle not in text:
-                        print(f"✗ pvz://vocabulary 正文里没有 {needle!r}")
-                        ok = False
-                print(f"✓ resources/read pvz://vocabulary —— {len(text)} 字符")
-            except Exception as exc:  # noqa: BLE001
-                print(f"✗ 读 pvz://vocabulary 抛异常：{type(exc).__name__}: {exc}")
-                ok = False
+            # 工具/资源描述里不能出现**绝对路径**。这不是洁癖：S3 那轮里 `ping` 的
+            # 返回带上了仓库根路径，模型看到后第 8 步就去读了那个目录（当时 tool-fs
+            # 是开着的，而 fs-sandbox 只限制写、不限制读）—— 探针自己拆了隔离层。
+            # 工具/资源描述**每个请求都发**，是同一类"指路牌"，所以一起守。
+            leak = re.compile(r"(?:^|[\s\"'(=])/(?:Users|home|tmp|var|private)/")
+            for label, blob in (
+                [(f"tool {t.name}", t.description or "") for t in listed.tools]
+                + [(f"resource {r.uri}", r.description or "") for r in resources.resources]
+            ):
+                hit = leak.search(blob)
+                if hit:
+                    print(f"✗ {label} 的描述里有绝对路径：{hit.group(0)!r} —— "
+                          f"等于把仓库位置告诉模型")
+                    ok = False
+
+            # 每个资源必须真的能读到"有信息量"的正文。只查"存在"不够：
+            # 一个空正文的资源会让模型以为"通道是空的"，比没有更坏。
+            need = {
+                "pvz://vocabulary": ("plant:", "豌豆射手", "row 0..4"),
+                "pvz://constants": ("tick", "100", "土豆雷", "1500", "僵尸"),
+                "pvz://scripted-policy": ("if-else", "坚果墙", "col >= 6", "wave <= 4"),
+            }
+            for uri, needles in need.items():
+                if uri not in uris:
+                    print(f"✗ 缺少资源 {uri} —— 模型会拿到空列表")
+                    ok = False
+                    continue
+                try:
+                    # 注意：客户端签名收的是 **str**，不是 AnyUrl ——
+                    # 传 AnyUrl 会被 pydantic 挡在**客户端**，服务端根本没被调到。
+                    # （第一版就踩了这个：负例"读不存在的 uri"因此**假通过**，
+                    #  它报的是客户端的 ValidationError，不是服务端的拒绝。）
+                    body = await session.read_resource(uri)
+                    text = "".join(getattr(c, "text", "") for c in body.contents)
+                    for needle in needles:
+                        if needle not in text:
+                            print(f"✗ {uri} 正文里没有 {needle!r}")
+                            ok = False
+                    print(f"✓ resources/read {uri} —— {len(text)} 字符")
+                except Exception as exc:  # noqa: BLE001
+                    print(f"✗ 读 {uri} 抛异常：{type(exc).__name__}: {exc}")
+                    ok = False
 
             # 不存在的 uri 必须**报错**，不能静默回空内容 ——
             # 静默空内容和"通道是空的"长得一模一样，模型分不出来。

@@ -826,6 +826,14 @@ def main() -> None:
     c.add_argument("--out", required=True)
 
     sub.add_parser("vocabulary", help="动作写法速查（不需要 --archive）")
+    sub.add_parser("policy", help="脚本策略的决策规则（不需要 --archive）")
+
+    p = sub.add_parser("constants", help="游戏常量表（不需要 --archive）")
+    p.add_argument("--section", action="append", default=None,
+                   help="只输出这一节，可重复。用 --list-sections 看有哪些。")
+    p.add_argument("--level", type=int, default=None,
+                   help="关卡号 1..50：额外给出该关波数与可能出现的僵尸。")
+    p.add_argument("--list-sections", action="store_true", help="列出可用的节名")
 
     for name in ("index", "strip", "lane", "events", "between", "diff", "trace", "frame",
                  "narrative", "actions", "whatif"):
@@ -885,6 +893,29 @@ def main() -> None:
     if args.cmd == "vocabulary":
         # 不需要存档，所以要在 load() 之前返回。
         print(_vocabulary())
+        return
+
+    if args.cmd == "policy":
+        # 描述写在 scripted_baseline.py 里、紧挨着它描述的 choose()，
+        # 并自带"数字必须能在源码里找到"的校验 —— 见那个文件的注释。
+        from scripted_baseline import decision_rules_text
+        print(decision_rules_text())
+        return
+
+    if args.cmd == "constants":
+        # 同样不需要存档。常量表是从 C++ 源码现解析的，见 pvz_constants.py。
+        import pvz_constants
+        if args.list_sections:
+            print("可用节名：" + "、".join(pvz_constants.SECTIONS))
+            return
+        bad = [s for s in (args.section or []) if s not in pvz_constants.SECTIONS]
+        if bad:
+            # 报错要把**可用值**一起给出来，否则模型只能继续猜。
+            print(f"没有这些节：{bad}。可用：{list(pvz_constants.SECTIONS)}")
+            raise SystemExit(2)
+        print(pvz_constants.render(
+            tuple(args.section) if args.section else pvz_constants.SECTIONS,
+            level=args.level), end="")
         return
 
     meta, frames = load(Path(args.archive))
