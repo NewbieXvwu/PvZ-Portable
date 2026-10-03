@@ -1264,3 +1264,162 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 原始分片和两份日志。mask短诊断及首次失败现场/全部测试日志亦已上传分支
  evidence-event-progress-policy-v1，revision49efd9ec24ef1c43d88e2e027a638d921548f758。
 这里只声明实际上传完成，不重复全量下载核验；交付索引mainline_event_progress_delivery_v1.json。
+
+---
+
+## 2026-10-03 LLM 教师方案：DSH 接入的源码核对结果与执行计划
+
+**状态：待批准，未开跑。** 本节只声明设计依据与执行顺序，不含任何实验结果。
+
+### 0. 这一节是什么
+
+手写脚本教师已判死（576 用例五地形宏平均 10.9%，夜/泳池/雾/屋顶各 0/64）。
+规则集方案被用户否掉（写脚本的也是 LLM，照样跑不动）。改走**让 LLM 自己当教师**：
+给它一局输掉的对局 + 可滑时间轴 + 精确反事实，让它自己提改动、自己验证、
+把结论写成 skill。
+
+本节记录两件事：① 读 DSH 源码后**核对过的**接入事实（区分"确认"与"待实测"）；
+② 分步执行计划与验收。
+
+### 1. 已从源码确认的事实
+
+DSH 源码在 `~/deepseek-harness`，版本 `dsh-v0.1.2-rc.1`（`git describe`），
+56 个包，`engines.node: ^22.19.0 || >=24.0.0`（本机托管 node 22.22.2 满足）。
+
+| 事实 | 可核对的来源 |
+|---|---|
+| preset = 一个目录 + `agent.cordis.yml`；用户 preset 放 `<dshHome>/.agent-presets`；id 必须匹配 `[a-z0-9][a-z0-9-]*`（id 就是目录名） | `packages/preset/agent-presets/README.zh.md` |
+| 行格式：`- id: <本地 id>` / `name: <包名>` / `config: {...}` / `disabled: !!js <表达式>`；组是 `name: cordis:group` + `group: true` + `isolate: {<服务>: true}` + `config: [<行>]` | `packages/preset/agent-presets/presets/standard/agent.cordis.yml` |
+| **压缩是 per-preset 可选的**：`minimal` preset 明确写 "Context compaction is absent" | 同上 `presets/minimal/agent.cordis.yml` |
+| **超大工具输出的修剪阈值可配**：`thresholdChars: 8192` / `headChars: 4096` / `tailChars: 1024` | standard preset 的 `tool-result-pruner` 行 |
+| MCP 原生支持，字段：`serverName` / `transport: stdio｜streamable-http` / `command` / `args` / `env` / `cwd` / `url` / `headers` / `toolCallTimeoutMs`（默认 60000）/ `failOnStartupError` / `reconnect.*` | `packages/mcp/mcp-client/README.zh.md` |
+| MCP 工具名固定为 `mcp__<serverName>__<tool>`；**只桥接 tools，resources 与 prompts 不支持** | 同上 |
+| `mcp-client` 只有 `inject = ['tools']`、不 provide 任何服务 → 在组合里**不需要 realm**（与 standard preset 里的 `tool-fs` 同类） | `packages/mcp/mcp-client/src/index.ts:29,32` |
+| 官方 MCP 挂载写法（含 `- insert:` 外层） | `apps/cli/config/examples/mcp-memory/*.cordis.yml` |
+| skill = 目录包 `<name>/SKILL.md` 或平铺 `<name>.md`；frontmatter 必填 `name`+`description`，可选 `whenToUse`/`metadata`/`disable-model-invocation`/`user-invocable`；名称为 kebab-case；**不支持嵌套 `**/SKILL.md`** | `packages/skill/skill-filesystem/README.zh.md` |
+| skill 根目录按 rank：100 `<projectRoot>/.dsh/skills`、200 `<projectRoot>/.agents/skills`、300 custom、400 `<dshHome>/skills`、500 `<agentsHome>/skills`、600 bundled；`projectRoot` = 含 `.git` 的最近祖先（本项目即仓库根） | `docs/subsystems/skills.zh.md` |
+| **Chokidar 监视 + 模型自己的 write/edit 会让目录失效 → 新写的 skill 无需重启即生效** | 同上 |
+| preset 里启用 skill 只需两行：`dsh-skill-filesystem` + `dsh-tool-skill` | standard preset |
+| **一次性入口**：`dsh --profile headless "<任务>"`（跑一个全新持久化会话，打印最终答案后退出） | `apps/cli/README.zh.md` |
+| **Python SDK**：`pip install deepseek-harness-sdk`，stdio 行分隔 JSON-RPC 驱动，**打包同版本 runtime wheel，不需要系统 Node**；入参含 `dsh_home`/`cwd`/`provider`/`model`/`reasoning_effort`/`max_tokens` | `python/sdk/README.zh.md` |
+| 后台任务：`dsh-tool-jobs`（`run_in_background`）；持久 shell：`dsh-tool-bash-persistent`（`timeoutMs` 可配） | standard / minimal preset |
+| 子代理：`dsh-tool-subagent`，`provider: spawn｜fork｜codex｜claude-code`，`backgroundMode: continuable｜one-shot` | standard preset |
+| 会话产出任何内容后**不能**换 preset（换掉会让已记录的工具调用无法重放） | `packages/preset/agent-presets/README.zh.md` |
+| preset 的权限 == 它引用插件的权限 | 同上 |
+
+### 2. 我上一条消息说错的地方（更正）
+
+**我说"做成 DSH 的 Agent Preset"——这只在 `web` profile 成立。**
+
+`agent-presets` 这个插件**只在 `web-app` bundle 里挂载**。逐 bundle 核对：
+
+| bundle | 是否含 `dsh-agent-presets` | 是否含 `dsh-mcp-client` |
+|---|---|---|
+| `base` | 否 | **否** |
+| `headless` | 否 | 否 |
+| `sdk-app` | 否 | 否 |
+| `sdk-minimal` | 否（且是独立最小树，不含 base） | 否 |
+| `web-app` | **是（唯一一处）** | 否 |
+
+所以：**无人值守长跑走 headless 或 sdk，那里没有 preset 机制**，但有等价能力——
+profile 级用户 patch（`$DSH_HOME/profiles/<name>/cordis.patch.yml`），
+行格式与 preset 完全相同。修正后的结论：**同一份行列表，两处引用**
+（web 里当 agent preset 给人看/调；headless/sdk 里当 profile patch 无人值守跑）。
+**不要维护两份**——这个仓库为重复实现付过代价。
+
+另外两条更正：
+- 我引用新闻说"v0.2"，源码实际是 **`0.1.2-rc.1`**。以源码为准。
+- 我原以为"上下文不受控"是反对用现成 Harness 的理由。源码核对后不成立：
+  `compaction-basic` 与 `compaction-tool-result-pruner` **都在 `base` bundle 里**，
+  三个 profile 都有；修剪阈值可配；而且会话原始事件留在只追加日志里，
+  摘要只替换模型可见面。
+
+### 3. 还没确认的（必须实测，不许照猜写代码）
+
+1. **headless / sdk profile 是否真的吃 profile 级 patch**——README 说了 patch 分层，
+   但我没实测过一行 patch 生效。
+2. `agent.cordis.yml` 里挂 `dsh-mcp-client` 是否真的不需要 realm（推理依据是
+   `inject=['tools']` 且不 provide，与 `tool-fs` 同类；**推理不是实测**）。
+3. `<dshHome>/.agent-presets/<id>/agent.cordis.yml` 的确切目录布局。
+4. Python SDK 与自定义 patch 的叠加顺序（SDK 用 `--profile sdk`，patch 是另一层）。
+5. MCP server 从 stdio 起来后 DSH 是否按 `mcp__<serverName>__<tool>` 列出工具。
+6. DeepSeek API key 与计费口径（长跑的钱从哪出）。
+
+**第 1、5 条是 go/no-go。** 先写一个最小 MCP server（只暴露一个 `ping`），
+挂上去，确认工具在模型工具表里出现，再动真东西。
+
+### 4. 架构（三层，各自独立可测）
+
+```
+① MCP server（我们的，Python）
+   scripts/pvz_mcp_server.py —— stdio，把 episode_query 的 12 个子命令包成工具
+   工具名：mcp__pvz__capture / __index / __lane / __actions / __whatif / ...
+   为什么先做：它不绑定 DSH。在这个环境（任何 MCP 宿主）里都能交互式调试，
+   改一行立刻试。这是最快的回路，也是唯一不依赖 DSH 的资产。
+
+② 组合层（一份 YAML，两处引用）
+   挂 MCP client + persona + 调过的 compaction 阈值 + 只留需要的工具
+   - web 里：<dshHome>/.agent-presets/pvz-teacher/agent.cordis.yml（人看着调）
+   - headless/sdk 里：$DSH_HOME/profiles/<p>/cordis.patch.yml（无人值守跑）
+
+③ 技能层（模型自己写）
+   <projectRoot>/.agents/skills/pvz-*/SKILL.md —— 走仓库，进 git
+   DSH 的 Chokidar 会热刷新，模型写完立刻能用，不用重启
+```
+
+### 5. 分步执行与验收
+
+**S0 · 最小 MCP server 打通（go/no-go）**
+只暴露一个 `ping` 工具。挂进 DSH，让模型调一次。
+验收：工具出现在工具表里、调用成功返回。**不过就停下改方案，不往上堆。**
+
+**S1 · 真工具包成 MCP**
+把 `capture/index/lane/actions/whatif/frame/narrative` 暴露出来。
+验收：模型能用一句话拿到「seed 30001 第 266 步枚举第 3 路全部替代方案」的结果。
+
+**S2 · 一局闭环（本方案的核心检验）**
+拿 seed 30001 那局输的。**不告诉它答案。** 看它自己能不能从 `actions` 的输出里
+挑出第 266 步附近值得改的地方，几轮内找到能通关的改动。
+记录：它看了哪几步、提了什么、每个改动的真实结果、几轮后最好成绩、token 花销。
+
+判定：
+- 几轮内找到 → 方案成立，铺开到多条 seed
+- 一直提无效改动 → **工具给的信息不够，回去改工具**（这一步本身有价值）
+- 找到了但要几十轮 → 筛选不够，得让它先看更有价值的帧
+
+**S3 · 写成 skill 并在没见过的种子上验**
+让它把 S2 的发现写成 `SKILL.md`（kebab-case 名，frontmatter 带 `name`/`description`）。
+然后**换没见过的 seed 加载这个 skill 再打一遍**。
+验收：换 seed 仍有效 = 是策略；换 seed 就崩 = 是剧本，退回 S2。
+
+**S4 · 多条 seed 攒教师数据**
+通关的时间线存成「状态 → 动作」对照样本，作为训练数据。
+这一步的产出是**教师数据**，不是最终策略。
+
+### 6. 边界
+
+- **不碰正在跑的训练主线**（台式机 125k 队列）。本方案用独立 seed、独立输出目录。
+- **不修改 `TODO.md` / `DESIGN.md`**：这两个文件被
+  `python/train_pvz_ppo_task_family.py:792` 的 `protected_paths` 做 SHA 校验，
+  训练跑中途改动会让门禁记成 `protected_unchanged: false`。本节的落点选在
+  `RESEARCH_EXECUTION.md`（不在保护名单内）正是这个原因。
+- 预算无上限，但**无上限不等于无记账**（见 §7）。
+- 唯一防卡死规则：**连着若干轮最好改动都是 +0 波就停下，去查工具哪里给的信息不够**。
+
+### 7. 记账与 skill 治理
+
+**每轮必须落盘**（否则 +0 停下时无法诊断）：轮次、它看了哪几步、
+提了什么改动、每个改动的真实结果（第几波 + `reason` 字段）、当时的理由、token 花销。
+
+**skill 治理**（这个仓库刚为产物膨胀付过 2.0 GB 的代价）：
+- 命名空间 `pvz-` 前缀；
+- skill 目录**进 git**（是代码/配置层，不是大文件）；
+- 新 skill 取代旧 skill 时，旧的归档并注明被谁取代；
+- 定期清点：没人加载过的 skill 就是死重量。
+
+### 8. 判据备忘（沿用）
+
+- 「第 30/30 波」**不等于通关**：`土豆雷@(3,4)` 也是 30/30 但 `reason` 是「僵尸进屋」。
+  看结局必须读 `reason` 字段。
+- 反事实是精确的，但**一次只能改一个点**；改两个点要重放两次，组合爆炸。
+- 「算得准」≠「说明白」：机制解释是对照两条时间线推出来的，不是受控实验。
