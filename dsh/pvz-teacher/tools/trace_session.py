@@ -98,6 +98,121 @@ def _reasoning_blocks(events: list[dict]) -> list[tuple[int, str]]:
     return out
 
 
+# 推理里"我觉得信息不够"的措辞。刻意收窄 —— "可能/应该" 这类词在正常推理里
+# 太常见，放进来只会淹掉真信号。这里只找**明确指向缺失信息**的说法。
+#
+# **必须中英双语**：实测模型即使收到中文提示词，**推理轨迹仍然用英文写**
+# （2026-10-03，S2 干净轮）。只写中文标记会得到 0 命中，然后你会误以为
+# "模型没有困惑" —— 那是标记的问题，不是模型的问题。
+_MISSING_INFO_MARKERS = (
+    # 中文
+    "不知道", "不确定", "搞不清", "不清楚", "没写", "找不到", "看不到",
+    "没说明", "缺少", "猜一下", "猜是", "得猜", "试试看", "只能试",
+    "没有说明", "没告诉我", "看不出来", "无法确定",
+    # 英文
+    "don't know", "do not know", "not sure", "unclear", "doesn't say",
+    "does not say", "not specified", "not documented", "have to guess",
+    "let me guess", "no way to know", "can't tell", "cannot tell",
+    "unable to determine", "missing", "not given", "no indication",
+    "let me try", "worth trying", "try a few",
+)
+
+# "原地打转"的措辞：说明上一步没解决问题。
+# 注意排除**游戏语义**里的词：`wasted`（浪费阳光）、`useless`（这株没用）
+# 在 PvZ 语境里是正常分析用词，放进来会淹掉真信号（实测 11 句里 10 句是误报）。
+_BLOCKED_MARKERS = (
+    # 中文
+    "没用", "不行", "白试", "卡住", "没效果", "还是不知道",
+    # 英文
+    "didn't work", "did not work", "doesn't work", "does not work",
+    "no effect", "that failed", "still don't know", "i'm stuck",
+    "no improvement", "no progress",
+)
+
+
+def _sentences(text: str) -> list[str]:
+    """按中英文句读切句。够用就行，不追求语言学正确。"""
+    out, buf = [], []
+    for ch in text:
+        if ch in "。！？!?\n":
+            s = "".join(buf).strip()
+            if s:
+                out.append(s)
+            buf = []
+        else:
+            buf.append(ch)
+    tail = "".join(buf).strip()
+    if tail:
+        out.append(tail)
+    return out
+
+
+def _tool_calls(events: list[dict]) -> list[tuple[dict, dict | None]]:
+    calls: list[tuple[dict, dict | None]] = []
+    pending: dict | None = None
+    for ev in events:
+        t = ev.get("type")
+        if t == "tool/call":
+            pending = ev.get("data") or {}
+        elif t == "tool/result":
+            calls.append((pending or {}, ev.get("data") or {}))
+            pending = None
+    return calls
+
+
+def _report_confusion(events: list[dict]) -> None:
+    """把「模型在哪里卡了」变成一份可核查的清单。
+
+    三类硬证据，按可信度从高到低：
+      ① 工具**报错** —— 它撞到的墙，不需要解释
+      ② **重复调用**（同工具同参数 ≥2 次）—— 原地打转，它自己没意识到
+      ③ 推理里出现**指向信息缺失**的措辞 —— 最弱，但能指出该补什么
+    """
+    calls = _tool_calls(events)
+    errs = []
+    seen: dict[str, list[int]] = {}
+    for i, (call, result) in enumerate(calls, 1):
+        name = call.get("name", "?")
+        args = json.dumps(call.get("arguments"), ensure_ascii=False, sort_keys=True)
+        seen.setdefault(f"{name} {args}", []).append(i)
+        if (result.get("message") or {}).get("isError"):
+            errs.append((i, name, call.get("arguments"),
+                         _text_of(result.get("message") or {})))
+
+    repeats = {k: v for k, v in seen.items() if len(v) >= 2}
+
+    print(f"── 卡点报告：{len(calls)} 次调用 " + "─" * 26)
+
+    print(f"\n① 工具报错 {len(errs)} 次")
+    for i, name, args, text in errs:
+        first = next((l for l in text.splitlines() if l.strip()), "")
+        print(f"   [{i:2}] {name}  {_compact(args, 120)}")
+        print(f"         {first[:160]}")
+
+    print(f"\n② 原地打转（同工具同参数重复） {len(repeats)} 组")
+    for k, idxs in sorted(repeats.items(), key=lambda kv: -len(kv[1])):
+        print(f"   {len(idxs)} 次：{_compact(k, 150)}")
+        print(f"        出现在调用 {idxs}")
+
+    print("\n③ 推理里指向「信息缺失」的句子")
+    hits = 0
+    for turn, text in _reasoning_blocks(events):
+        for s in _sentences(text):
+            if any(m in s for m in _MISSING_INFO_MARKERS):
+                hits += 1
+                print(f"   [turn {turn}] {s[:200]}")
+    print(f"   共 {hits} 句")
+
+    print("\n④ 推理里「上一步没解决」的句子")
+    hits2 = 0
+    for turn, text in _reasoning_blocks(events):
+        for s in _sentences(text):
+            if any(m in s for m in _BLOCKED_MARKERS):
+                hits2 += 1
+                print(f"   [turn {turn}] {s[:200]}")
+    print(f"   共 {hits2} 句")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -106,6 +221,8 @@ def main() -> int:
     ap.add_argument("--reasoning", action="store_true",
                     help="只打印推理轨迹（最常看这个）")
     ap.add_argument("--full", action="store_true", help="打印工具返回的完整内容")
+    ap.add_argument("--confusion", action="store_true",
+                    help="只打印卡点报告：报错 / 原地打转 / 推理里的信息缺失信号")
     ap.add_argument("--max-result", type=int, default=1200, help="单条结果最多打印多少字符")
     args = ap.parse_args()
 
@@ -143,17 +260,13 @@ def main() -> int:
             print("（这个会话没有推理块 —— 可能用了 mock LLM，或 reasoningEffort 是 off）")
         return 0
 
-    # ---- 工具调用轨迹 ----------------------------------------------------
-    calls: list[tuple[dict, dict | None]] = []
-    pending: dict | None = None
-    for ev in events:
-        t = ev.get("type")
-        if t == "tool/call":
-            pending = ev.get("data") or {}
-        elif t == "tool/result":
-            calls.append((pending or {}, ev.get("data") or {}))
-            pending = None
+    # ---- 只打印卡点报告 --------------------------------------------------
+    if args.confusion:
+        _report_confusion(events)
+        return 0
 
+    # ---- 工具调用轨迹 ----------------------------------------------------
+    calls = _tool_calls(events)
     print(f"── 工具调用 {len(calls)} 次 " + "─" * 30)
     for i, (call, result) in enumerate(calls, 1):
         name = call.get("name", "?")

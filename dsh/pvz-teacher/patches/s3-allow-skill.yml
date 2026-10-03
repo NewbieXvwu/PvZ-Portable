@@ -1,0 +1,72 @@
+# S3 隔离叠加层：允许写文件（写 skill），但仍然读不到仓库。
+#
+# 和 isolate.yml 的差别只有一个方向
+# --------------------------------
+# isolate.yml 把"能读到仓库"的工具全关掉，连文件写入也关了 ——
+# 因为 S2 的命题只是"工具够不够用"，模型不需要写任何东西。
+#
+# S3 的命题多了一条：**模型会不会自己把发现沉淀成 skill**。
+# 而 DSH 里 skill 是**磁盘上的文件**（`<root>/<name>/SKILL.md`），
+# 没有任何"创建 skill"的工具 —— 要写 skill 就必须能写文件。
+#
+# 所以这里把 `tool-fs` / `skill-filesystem` / `tool-skill` 放回来，
+# 但**继续关掉 `tool-fs-search` 和 `tool-bash`**：那两个是"按内容搜整个
+# 文件系统"和"任意执行命令"，正是 2026-10-03 那次答案泄漏的通道
+# （模型 grep 到 RESEARCH_EXECUTION.md §3.9 里的结论）。
+#
+# 还有一个必须堵的口子：`fs-sandbox` 只限制**写**，读是不受限的
+# （见 packages/fs/fs-sandbox/README：「preserving the local filesystem's
+# read behavior」「the mutation fence does not restrict observation」）。
+# 也就是说模型理论上能用绝对路径去读仓库。
+# 对策不是加更多闸门，而是：
+#   ① 会话 cwd 放在 /tmp/pvz-s3（干净目录），相对路径全部落在那里；
+#   ② 提示词里不出现仓库路径；
+#   ③ **跑完去会话日志里核**有没有出现 /Users/newbiexvwu/PvZAgent 的读操作 ——
+#      有就作废这次运行。允许 + 事后核查，比假装锁死了更诚实。
+#
+# 用法
+# ----
+#   cd /tmp/pvz-s3
+#   DSH_HOME=... dsh --profile pvz-teacher \
+#       --patch /Users/newbiexvwu/PvZAgent/dsh/pvz-teacher/patches/s3-allow-skill.yml \
+#       "你的任务…"
+#
+# 关掉 / 保留
+# -----------
+#   关：tool-fs-search（按内容搜文件）、tool-bash / tool-pwsh / tool-jobs（执行命令）
+#   关：子代理（子代理同样能读文件）、ptc-runtime / workflow（可执行代码）、联网
+#   留：tool-fs（**写入 skill 的唯一通道**）、skill-filesystem + tool-skill
+#       （让 skill 目录出现在模型视野里，否则它不知道"skill"这个机制存在）
+
+- id: tool-fs-search
+  disabled: true
+
+- id: tool-bash
+  disabled: true
+- id: tool-pwsh
+  disabled: true
+- id: tool-jobs
+  disabled: true
+
+- id: tool-subagent
+  disabled: true
+- id: tool-subagent-fork
+  disabled: true
+- id: tool-subagent-control
+  disabled: true
+- id: tool-subagent-list-agents
+  disabled: true
+
+- id: ptc-runtime
+  disabled: true
+- id: workflow-ptc
+  disabled: true
+- id: tool-workflow
+  disabled: true
+
+- id: tool-web
+  disabled: true
+- id: web-search-deepseek
+  disabled: true
+- id: web-fetch-http
+  disabled: true
