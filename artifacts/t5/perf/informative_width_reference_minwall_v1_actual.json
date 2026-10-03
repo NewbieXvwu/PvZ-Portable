@@ -1,0 +1,1615 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "plan": {
+    "schema_version": 1,
+    "status": "frozen_before_start",
+    "created_utc": "2026-10-03T11:25:49.870910+00:00",
+    "jobs": [
+      {
+        "seed": 0,
+        "point": {
+          "source_checkpoint": "artifacts/research/mainline_bridge_random_mc_v1_seed0/runs/run_1/update_000153_resumed_1790992733379648982.pt",
+          "wall_seconds": 6950.205683195985,
+          "updates": 153,
+          "counters": {
+            "episodes": 606,
+            "decisions": 98734,
+            "ticks": 11696358
+          },
+          "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+          "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+          "wall_cap_seconds": 8648.289784946013,
+          "unused_wall_seconds": 1698.084101750028,
+          "unused_fraction": 0.19634912149982128,
+          "retained_checkpoint": "artifacts/research/informative_width_reference_wall_selection_v1/points/mainline_bridge_random_mc_v1_seed0/cap_8648.289785.pt"
+        },
+        "run_dir": "artifacts/research/mainline_bridge_random_mc_v1_seed0",
+        "output_dir": "artifacts/research/informative_width_reference0_minwall_v1",
+        "log": "logs/t5_research/informative_width_reference0_minwall_v1.log"
+      },
+      {
+        "seed": 1,
+        "point": {
+          "source_checkpoint": "artifacts/research/mainline_bridge_random_mc_v1_seed1/runs/run_1/update_000093_resumed_1790987000650565490.pt",
+          "wall_seconds": 5833.728897285,
+          "updates": 93,
+          "counters": {
+            "episodes": 364,
+            "decisions": 67460,
+            "ticks": 6640700
+          },
+          "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+          "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+          "wall_cap_seconds": 8648.289784946013,
+          "unused_wall_seconds": 2814.560887661013,
+          "unused_fraction": 0.3254471066129502,
+          "retained_checkpoint": "artifacts/research/informative_width_reference_wall_selection_v1/points/mainline_bridge_random_mc_v1_seed1/cap_8648.289785.pt"
+        },
+        "run_dir": "artifacts/research/mainline_bridge_random_mc_v1_seed1",
+        "output_dir": "artifacts/research/informative_width_reference1_minwall_v1",
+        "log": "logs/t5_research/informative_width_reference1_minwall_v1.log"
+      }
+    ],
+    "workers": 2,
+    "worker_threads": 1,
+    "job_timeout_seconds": 1800,
+    "observed_reference125k_assessment_seconds": [
+      454.30792956100777,
+      513.9230191980023
+    ],
+    "scope": "Two necessary missing width wall views, same frozen policies/caps/all136 cases per greedy+sampled mode and paired existing idle. CPU sequential only, concurrent with existing GPU queue. Expected combined~16min from original reference125k evaluation, each bounded30min; preserve any timeout and all raw shards, stop subsequent jobs on failure. No trainer restart/recipe/seedlist/acceptance changes; extra assessment cost separate from source wall and historical unused gaps explicit."
+  },
+  "stages": [
+    {
+      "seed": 0,
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "scripts/evaluate_width_wall_point.py",
+        "--checkpoint",
+        "artifacts/research/informative_width_reference_wall_selection_v1/points/mainline_bridge_random_mc_v1_seed0/cap_8648.289785.pt",
+        "--run-dir",
+        "artifacts/research/mainline_bridge_random_mc_v1_seed0",
+        "--wall-cap-seconds",
+        "8648.289784946013",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--output-dir",
+        "artifacts/research/informative_width_reference0_minwall_v1"
+      ],
+      "status": "complete",
+      "pid": 267021,
+      "seconds": 415.08573757699924,
+      "exit_code": 0
+    },
+    {
+      "seed": 1,
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "scripts/evaluate_width_wall_point.py",
+        "--checkpoint",
+        "artifacts/research/informative_width_reference_wall_selection_v1/points/mainline_bridge_random_mc_v1_seed1/cap_8648.289785.pt",
+        "--run-dir",
+        "artifacts/research/mainline_bridge_random_mc_v1_seed1",
+        "--wall-cap-seconds",
+        "8648.289784946013",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--output-dir",
+        "artifacts/research/informative_width_reference1_minwall_v1"
+      ],
+      "status": "complete",
+      "pid": 268497,
+      "seconds": 735.1100585700042,
+      "exit_code": 0
+    }
+  ],
+  "scores": [
+    {
+      "initialization_seed": 0,
+      "source_updates": 153,
+      "source_counters": {
+        "episodes": 606,
+        "decisions": 98734,
+        "ticks": 11696358
+      },
+      "source_active_wall_seconds": 6950.205683195985,
+      "wall_cap_seconds": 8648.289784946013,
+      "unused_wall_seconds": 1698.084101750028,
+      "extra_model_cases": 272,
+      "seconds": 408.18261883700325,
+      "resources": {
+        "peak_process_tree_rss_bytes": 3154370560,
+        "min_system_available_bytes": 16140517376,
+        "peak_system_swap_used_bytes": 142123008,
+        "cuda_peak_allocated_bytes": 0,
+        "cuda_peak_reserved_bytes": 0
+      },
+      "cuda_initialized": false,
+      "summary": {
+        "greedy": {
+          "cohorts": {
+            "full_level7_progress_only/capNone/x1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.125
+            },
+            "validation/capNone": {
+              "won": 1,
+              "count": 16,
+              "win_rate": 0.0625,
+              "wilson_95": [
+                0.01111934476464252,
+                0.28328737570298945
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 18.0625
+            },
+            "validation/terrain/day": {
+              "won": 32,
+              "count": 72,
+              "win_rate": 0.4444444444444444,
+              "wilson_95": [
+                0.33539070561321394,
+                0.559126091341948
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.722222222222221
+            },
+            "all_tasks_diagnostic": {
+              "won": 33,
+              "count": 136,
+              "win_rate": 0.2426470588235294,
+              "wilson_95": [
+                0.17831528492081586,
+                0.32111785464793974
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.691176470588236
+            },
+            "heldout/cap10/x1": {
+              "won": 16,
+              "count": 24,
+              "win_rate": 0.6666666666666666,
+              "wilson_95": [
+                0.4670631683813174,
+                0.8202780967270225
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.75
+            },
+            "validation/cap10": {
+              "won": 16,
+              "count": 24,
+              "win_rate": 0.6666666666666666,
+              "wilson_95": [
+                0.4670631683813174,
+                0.8202780967270225
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.75
+            },
+            "heldout/cap15/x1": {
+              "won": 12,
+              "count": 24,
+              "win_rate": 0.5,
+              "wilson_95": [
+                0.3142742581957335,
+                0.6857257418042665
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 12.958333333333334
+            },
+            "validation/cap15": {
+              "won": 12,
+              "count": 24,
+              "win_rate": 0.5,
+              "wilson_95": [
+                0.3142742581957335,
+                0.6857257418042665
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 12.958333333333334
+            },
+            "heldout/cap20/x1": {
+              "won": 3,
+              "count": 8,
+              "win_rate": 0.375,
+              "wilson_95": [
+                0.13684428582359742,
+                0.6942576053973727
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 19.25
+            },
+            "validation/cap20": {
+              "won": 3,
+              "count": 8,
+              "win_rate": 0.375,
+              "wilson_95": [
+                0.13684428582359742,
+                0.6942576053973727
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 19.25
+            },
+            "heldout/capNone/x1": {
+              "won": 1,
+              "count": 8,
+              "win_rate": 0.125,
+              "wilson_95": [
+                0.02241749145005667,
+                0.4708881822128535
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 26.0
+            },
+            "heldout/cap3/x1": {
+              "won": 1,
+              "count": 32,
+              "win_rate": 0.03125,
+              "wilson_95": [
+                0.005537860164003122,
+                0.15744263820012558
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "validation/cap3": {
+              "won": 1,
+              "count": 48,
+              "win_rate": 0.020833333333333332,
+              "wilson_95": [
+                0.003687110977510649,
+                0.10899217995251861
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "validation/terrain/roof": {
+              "won": 1,
+              "count": 64,
+              "win_rate": 0.015625,
+              "wilson_95": [
+                0.002763541923337505,
+                0.08334101600094265
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.03125
+            },
+            "heldout/cap3/x1.5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout/cap5/x2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            },
+            "validation/cap5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            }
+          },
+          "per_task": {
+            "validation_full_level7_v1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.125
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "won": 16,
+              "count": 16,
+              "win_rate": 1.0,
+              "wilson_95": [
+                0.8063923194655637,
+                1.0
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.0
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "won": 12,
+              "count": 16,
+              "win_rate": 0.75,
+              "wilson_95": [
+                0.5050168346449122,
+                0.8981793250878696
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 15.0
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "won": 3,
+              "count": 8,
+              "win_rate": 0.375,
+              "wilson_95": [
+                0.13684428582359742,
+                0.6942576053973727
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 19.25
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "won": 1,
+              "count": 8,
+              "win_rate": 0.125,
+              "wilson_95": [
+                0.02241749145005667,
+                0.4708881822128535
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 26.0
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.25
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.875
+            },
+            "heldout_roof_1": {
+              "won": 1,
+              "count": 16,
+              "win_rate": 0.0625,
+              "wilson_95": [
+                0.01111934476464252,
+                0.28328737570298945
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout_roof_2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout_roof_3": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            },
+            "heldout_roof_4": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            }
+          }
+        },
+        "sampled": {
+          "cohorts": {
+            "full_level7_progress_only/capNone/x1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.625
+            },
+            "validation/capNone": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 11.1875
+            },
+            "validation/terrain/day": {
+              "won": 15,
+              "count": 72,
+              "win_rate": 0.20833333333333334,
+              "wilson_95": [
+                0.13052054982100708,
+                0.31569263419359334
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 11.38888888888889
+            },
+            "all_tasks_diagnostic": {
+              "won": 22,
+              "count": 136,
+              "win_rate": 0.16176470588235295,
+              "wilson_95": [
+                0.10932123264702741,
+                0.23279089364333716
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 7.4411764705882355
+            },
+            "heldout/cap10/x1": {
+              "won": 10,
+              "count": 24,
+              "win_rate": 0.4166666666666667,
+              "wilson_95": [
+                0.24467602609811764,
+                0.6116533413477124
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.25
+            },
+            "validation/cap10": {
+              "won": 10,
+              "count": 24,
+              "win_rate": 0.4166666666666667,
+              "wilson_95": [
+                0.24467602609811764,
+                0.6116533413477124
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.25
+            },
+            "heldout/cap15/x1": {
+              "won": 3,
+              "count": 24,
+              "win_rate": 0.125,
+              "wilson_95": [
+                0.04344334080123444,
+                0.31003881270500067
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 12.083333333333334
+            },
+            "validation/cap15": {
+              "won": 3,
+              "count": 24,
+              "win_rate": 0.125,
+              "wilson_95": [
+                0.04344334080123444,
+                0.31003881270500067
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 12.083333333333334
+            },
+            "heldout/cap20/x1": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 16.125
+            },
+            "validation/cap20": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 16.125
+            },
+            "heldout/capNone/x1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.75
+            },
+            "heldout/cap3/x1": {
+              "won": 7,
+              "count": 32,
+              "win_rate": 0.21875,
+              "wilson_95": [
+                0.11023836252604186,
+                0.3875499364924353
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "validation/cap3": {
+              "won": 7,
+              "count": 48,
+              "win_rate": 0.14583333333333334,
+              "wilson_95": [
+                0.07248249326603709,
+                0.27167176524746284
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 2.9583333333333335
+            },
+            "validation/terrain/roof": {
+              "won": 7,
+              "count": 64,
+              "win_rate": 0.109375,
+              "wilson_95": [
+                0.05400113344416797,
+                0.20898641326896122
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout/cap3/x1.5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 2.875
+            },
+            "heldout/cap5/x2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            },
+            "validation/cap5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            }
+          },
+          "per_task": {
+            "validation_full_level7_v1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.625
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "won": 10,
+              "count": 16,
+              "win_rate": 0.625,
+              "wilson_95": [
+                0.38641040545502714,
+                0.8151876744113636
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.875
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "won": 3,
+              "count": 16,
+              "win_rate": 0.1875,
+              "wilson_95": [
+                0.06591599071428142,
+                0.4300888096197414
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.8125
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 16.125
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.75
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.0
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.625
+            },
+            "heldout_roof_1": {
+              "won": 7,
+              "count": 16,
+              "win_rate": 0.4375,
+              "wilson_95": [
+                0.23098652405492354,
+                0.6682144360118811
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout_roof_2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 2.875
+            },
+            "heldout_roof_3": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            },
+            "heldout_roof_4": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            }
+          }
+        }
+      }
+    },
+    {
+      "initialization_seed": 1,
+      "source_updates": 93,
+      "source_counters": {
+        "episodes": 364,
+        "decisions": 67460,
+        "ticks": 6640700
+      },
+      "source_active_wall_seconds": 5833.728897285,
+      "wall_cap_seconds": 8648.289784946013,
+      "unused_wall_seconds": 2814.560887661013,
+      "extra_model_cases": 272,
+      "seconds": 729.3109794100019,
+      "resources": {
+        "peak_process_tree_rss_bytes": 3203620864,
+        "min_system_available_bytes": 16149815296,
+        "peak_system_swap_used_bytes": 142123008,
+        "cuda_peak_allocated_bytes": 0,
+        "cuda_peak_reserved_bytes": 0
+      },
+      "cuda_initialized": false,
+      "summary": {
+        "greedy": {
+          "cohorts": {
+            "full_level7_progress_only/capNone/x1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 11.0
+            },
+            "validation/capNone": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 17.875
+            },
+            "validation/terrain/day": {
+              "won": 32,
+              "count": 72,
+              "win_rate": 0.4444444444444444,
+              "wilson_95": [
+                0.33539070561321394,
+                0.559126091341948
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.916666666666666
+            },
+            "all_tasks_diagnostic": {
+              "won": 38,
+              "count": 136,
+              "win_rate": 0.27941176470588236,
+              "wilson_95": [
+                0.2108551863368588,
+                0.36008750472207457
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.823529411764707
+            },
+            "heldout/cap10/x1": {
+              "won": 16,
+              "count": 24,
+              "win_rate": 0.6666666666666666,
+              "wilson_95": [
+                0.4670631683813174,
+                0.8202780967270225
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.0
+            },
+            "validation/cap10": {
+              "won": 16,
+              "count": 24,
+              "win_rate": 0.6666666666666666,
+              "wilson_95": [
+                0.4670631683813174,
+                0.8202780967270225
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.0
+            },
+            "heldout/cap15/x1": {
+              "won": 14,
+              "count": 24,
+              "win_rate": 0.5833333333333334,
+              "wilson_95": [
+                0.3883466586522876,
+                0.7553239739018824
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.166666666666666
+            },
+            "validation/cap15": {
+              "won": 14,
+              "count": 24,
+              "win_rate": 0.5833333333333334,
+              "wilson_95": [
+                0.3883466586522876,
+                0.7553239739018824
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.166666666666666
+            },
+            "heldout/cap20/x1": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 20.0
+            },
+            "validation/cap20": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 20.0
+            },
+            "heldout/capNone/x1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 24.75
+            },
+            "heldout/cap3/x1": {
+              "won": 6,
+              "count": 32,
+              "win_rate": 0.1875,
+              "wilson_95": [
+                0.08889544689565954,
+                0.3530915520137596
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "validation/cap3": {
+              "won": 6,
+              "count": 48,
+              "win_rate": 0.125,
+              "wilson_95": [
+                0.058570514385719794,
+                0.24700458286386834
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "validation/terrain/roof": {
+              "won": 6,
+              "count": 64,
+              "win_rate": 0.09375,
+              "wilson_95": [
+                0.04367825258519838,
+                0.18982879599645597
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.09375
+            },
+            "heldout/cap3/x1.5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout/cap5/x2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.375
+            },
+            "validation/cap5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.375
+            }
+          },
+          "per_task": {
+            "validation_full_level7_v1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 11.0
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "won": 16,
+              "count": 16,
+              "win_rate": 1.0,
+              "wilson_95": [
+                0.8063923194655637,
+                1.0
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.0
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "won": 14,
+              "count": 16,
+              "win_rate": 0.875,
+              "wilson_95": [
+                0.639771727342413,
+                0.9650225122567595
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 15.0
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 20.0
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 24.75
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.0
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.5
+            },
+            "heldout_roof_1": {
+              "won": 6,
+              "count": 16,
+              "win_rate": 0.375,
+              "wilson_95": [
+                0.18481232558863633,
+                0.6135895945449727
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout_roof_2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout_roof_3": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.375
+            },
+            "heldout_roof_4": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            }
+          }
+        },
+        "sampled": {
+          "cohorts": {
+            "full_level7_progress_only/capNone/x1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.125
+            },
+            "validation/capNone": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 14.125
+            },
+            "validation/terrain/day": {
+              "won": 24,
+              "count": 72,
+              "win_rate": 0.3333333333333333,
+              "wilson_95": [
+                0.23534643443153785,
+                0.448203956433948
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 12.680555555555555
+            },
+            "all_tasks_diagnostic": {
+              "won": 31,
+              "count": 136,
+              "win_rate": 0.22794117647058823,
+              "wilson_95": [
+                0.1654850456961226,
+                0.30534427327656194
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 8.132352941176471
+            },
+            "heldout/cap10/x1": {
+              "won": 13,
+              "count": 24,
+              "win_rate": 0.5416666666666666,
+              "wilson_95": [
+                0.3507486535891948,
+                0.72108666268789
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.791666666666666
+            },
+            "validation/cap10": {
+              "won": 13,
+              "count": 24,
+              "win_rate": 0.5416666666666666,
+              "wilson_95": [
+                0.3507486535891948,
+                0.72108666268789
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.791666666666666
+            },
+            "heldout/cap15/x1": {
+              "won": 9,
+              "count": 24,
+              "win_rate": 0.375,
+              "wilson_95": [
+                0.21159367559548778,
+                0.5729003755732572
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.083333333333334
+            },
+            "validation/cap15": {
+              "won": 9,
+              "count": 24,
+              "win_rate": 0.375,
+              "wilson_95": [
+                0.21159367559548778,
+                0.5729003755732572
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 13.083333333333334
+            },
+            "heldout/cap20/x1": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 17.25
+            },
+            "validation/cap20": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 17.25
+            },
+            "heldout/capNone/x1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 18.125
+            },
+            "heldout/cap3/x1": {
+              "won": 7,
+              "count": 32,
+              "win_rate": 0.21875,
+              "wilson_95": [
+                0.11023836252604186,
+                0.3875499364924353
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "validation/cap3": {
+              "won": 7,
+              "count": 48,
+              "win_rate": 0.14583333333333334,
+              "wilson_95": [
+                0.07248249326603709,
+                0.27167176524746284
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 2.9791666666666665
+            },
+            "validation/terrain/roof": {
+              "won": 7,
+              "count": 64,
+              "win_rate": 0.109375,
+              "wilson_95": [
+                0.05400113344416797,
+                0.20898641326896122
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.015625
+            },
+            "heldout/cap3/x1.5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 2.9375
+            },
+            "heldout/cap5/x2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            },
+            "validation/cap5": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            }
+          },
+          "per_task": {
+            "validation_full_level7_v1": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.125
+            },
+            "validation_bridge7_v1_aid_cap10": {
+              "won": 13,
+              "count": 16,
+              "win_rate": 0.8125,
+              "wilson_95": [
+                0.5699111903802586,
+                0.9340840092857187
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.0
+            },
+            "validation_bridge7_v1_aid_cap15": {
+              "won": 9,
+              "count": 16,
+              "win_rate": 0.5625,
+              "wilson_95": [
+                0.331785563988119,
+                0.7690134759450765
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 14.625
+            },
+            "validation_bridge7_v1_aid_cap20": {
+              "won": 2,
+              "count": 8,
+              "win_rate": 0.25,
+              "wilson_95": [
+                0.071479212752109,
+                0.5907245696898311
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 17.25
+            },
+            "validation_bridge7_v1_aid_capfull": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 18.125
+            },
+            "validation_bridge7_v1_ordinary_cap10": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 9.375
+            },
+            "validation_bridge7_v1_ordinary_cap15": {
+              "won": 0,
+              "count": 8,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.32440756488388023
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 10.0
+            },
+            "heldout_roof_1": {
+              "won": 7,
+              "count": 16,
+              "win_rate": 0.4375,
+              "wilson_95": [
+                0.23098652405492354,
+                0.6682144360118811
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            },
+            "heldout_roof_2": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 2.9375
+            },
+            "heldout_roof_3": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.125
+            },
+            "heldout_roof_4": {
+              "won": 0,
+              "count": 16,
+              "win_rate": 0.0,
+              "wilson_95": [
+                0.0,
+                0.1936076805344365
+              ],
+              "truncated": 0,
+              "mean_terminal_wave": 3.0
+            }
+          }
+        }
+      }
+    }
+  ],
+  "source_full_run_references": [
+    {
+      "seed": 0,
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed0-selected250k",
+      "revision": "b1a3695990aef473c29f39f818f4ec4c88bfbffe"
+    },
+    {
+      "seed": 1,
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed1-first125k",
+      "revision": "94900e6900d44e976003841f811f219ae0fb1e13"
+    }
+  ],
+  "scope": "Both missing reference wall policies assessed on all136 cases/mode; actual source counters and historical cap gaps explicit. All272 new Native/NN cases per policy run CPU only. Six new width candidates and equal-consumed-wall comparison remain pending; no learning or original full acceptance claim.",
+  "existing_128_seed2_probe": {
+    "experiment_id": "mainline_informative_width128_v1_seed2",
+    "decision_nodes": [
+      {
+        "counters": {
+          "episodes": 0,
+          "decisions": 0,
+          "ticks": 0
+        },
+        "updates": 0,
+        "views": [
+          {
+            "mode": "greedy",
+            "task_id": "validation_bridge7_v1_aid_cap10",
+            "won": 8,
+            "count": 16,
+            "wilson_95": [
+              0.279996,
+              0.720004
+            ],
+            "plant_actions": 829
+          },
+          {
+            "mode": "sampled",
+            "task_id": "heldout_roof_1",
+            "won": 0,
+            "count": 16,
+            "wilson_95": [
+              0.0,
+              0.193608
+            ],
+            "plant_actions": 306
+          }
+        ]
+      },
+      {
+        "counters": {
+          "episodes": 13,
+          "decisions": 2000,
+          "ticks": 219872
+        },
+        "updates": 4,
+        "views": [
+          {
+            "mode": "greedy",
+            "task_id": "validation_bridge7_v1_aid_cap10",
+            "won": 5,
+            "count": 16,
+            "wilson_95": [
+              0.141646,
+              0.555956
+            ],
+            "plant_actions": 0
+          },
+          {
+            "mode": "sampled",
+            "task_id": "heldout_roof_1",
+            "won": 2,
+            "count": 16,
+            "wilson_95": [
+              0.034977,
+              0.360228
+            ],
+            "plant_actions": 304
+          }
+        ]
+      }
+    ]
+  },
+  "extra_probe_native_cases": 0,
+  "seed1_minwall_to_125k_paired": {
+    "greedy": {
+      "validation_full_level7_v1": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "validation_bridge7_v1_aid_cap10": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 10
+      },
+      "validation_bridge7_v1_aid_cap15": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 14
+      },
+      "validation_bridge7_v1_aid_cap20": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 2
+      },
+      "validation_bridge7_v1_aid_capfull": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "validation_bridge7_v1_ordinary_cap10": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "validation_bridge7_v1_ordinary_cap15": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "heldout_roof_1": {
+        "count": 16,
+        "improved_pairs": 2,
+        "degraded_pairs": 6
+      },
+      "heldout_roof_2": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "heldout_roof_3": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "heldout_roof_4": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      }
+    },
+    "sampled": {
+      "validation_full_level7_v1": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "validation_bridge7_v1_aid_cap10": {
+        "count": 16,
+        "improved_pairs": 3,
+        "degraded_pairs": 2
+      },
+      "validation_bridge7_v1_aid_cap15": {
+        "count": 16,
+        "improved_pairs": 4,
+        "degraded_pairs": 2
+      },
+      "validation_bridge7_v1_aid_cap20": {
+        "count": 8,
+        "improved_pairs": 1,
+        "degraded_pairs": 2
+      },
+      "validation_bridge7_v1_aid_capfull": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "validation_bridge7_v1_ordinary_cap10": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "validation_bridge7_v1_ordinary_cap15": {
+        "count": 8,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "heldout_roof_1": {
+        "count": 16,
+        "improved_pairs": 1,
+        "degraded_pairs": 6
+      },
+      "heldout_roof_2": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "heldout_roof_3": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      },
+      "heldout_roof_4": {
+        "count": 16,
+        "improved_pairs": 0,
+        "degraded_pairs": 0
+      }
+    }
+  },
+  "paired_scope": "Same Native/task/seed/mode, descriptive observed flips from67460 to125000 decisions, no isolated reward/course/architecture cause or population significance claim."
+}

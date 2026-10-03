@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-informative-width-reference-minwall-v1",
+  "revision": "b5e272d9e76a8b18bb31b85216937c05094bf836",
+  "seconds": 7.931230100992252,
+  "scope": "Both completed lower-cap256 reference policies:544 new CPU model/Native cases with every136-case task/seed cohort in both modes, paired existing idle, full compressed seed results and per-point metadata/logs/config/provenance; controller plan/status/code/log preserved. Extra unchanged128seed2 0/2k raw episodes and selected summaries reused without inference. Source models referenced from existing immutable full HF runs; no PT recopies or live full-run copy. Historical cap gaps and six new width candidates remain pending, no equal-consumed-wall/adoption/full-acceptance claim. Adds same-seed67460→125k paired seed1 win flips and copied existing125k raw rows; pairing computed after the first closed assessment upload, so refreshed the metadata packet. No extra inference/Native cases.",
+  "previous_delivery_revision": "74031ed4d0658687804c4d0dee36467911522e66"
+}
