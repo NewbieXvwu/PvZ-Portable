@@ -23,8 +23,11 @@ stdio，JSON-RPC。用官方 `mcp` SDK 的低层 `Server`（回调式，不是 F
 ----
 - S0（2026-10-03 通过，两重验收）：只暴露 `ping`，验证"bundle → profile → 组合树 →
   会话里能调到"这条管道。管道不通就停下改方案，不往上堆功能。
-- S1（当前）：把 `capture / index / frame / lane / actions / whatif / narrative`
-  暴露出来。它们与 CLI 子命令一一对应，`ping` 保留作探针。
+- S1（2026-10-03 通过）：把 `capture / index / frame / lane / actions / whatif /
+  narrative` 暴露出来。它们与 CLI 子命令一一对应，`ping` 保留作探针。
+- S2（2026-10-03 通过）：词汇表问题修复（`vocabulary` 工具、别名输入、
+  可复制的枚举列、自纠正报错），并把 `vocabulary` 发布成资源 `pvz://vocabulary`
+  —— 见下面「资源」一节的实测依据。
 """
 
 from __future__ import annotations
@@ -405,13 +408,64 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
 
 
 # ---------------------------------------------------------------------------
+# 资源（MCP resources）—— 参考类文档走这里，不走 prompt
+# ---------------------------------------------------------------------------
+#
+# 为什么除了 `vocabulary` 工具之外还要发一份资源
+# ------------------------------------------------
+# 2026-10-03 实测：模型不知道动作语法时，**第一反应不是猜，是找文档**。
+# 它在 S2 干净轮里连着调了 4 次：
+#
+#   [6] ✗ unknown tool "mcp__pvz__list_mcp_resources"
+#   [7] ✗ unknown tool "mcp__pvz__list_mcp_resource_templates"
+#   [8] · MCP server: pvz  {"resources":[]}
+#   [9] · MCP server: pvz  {"resourceTemplates":[]}
+#
+# 而这 4 次是**它唯一知道的文档通道**：DSH 的 `mcp-resources` 只要配了
+# 一个 MCP server 就会挂上那三个共享工具，并且 **system prompt 里会列出
+# server 名** —— 也就是它被明确告知"有 pvz，去问它"。我们一个资源都没发布，
+# 于是它拿到的是一句"空的"。
+#
+# 所以：参考类文档（语法、词表、枚举表）**发布成资源**，
+# 让模型走它已经会走的通道；不读就不占上下文。
+#
+# 单一事实源
+# ----------
+# 资源正文由 `episode_query.py vocabulary` 现场生成，与 `vocabulary` 工具
+# 走的是**同一条命令**。这里绝不手抄一份 —— 两份必然漂移。
+
+RESOURCES: dict[str, tuple[str, str, str]] = {
+    # uri -> (name, description, mimeType)
+    "pvz://vocabulary": (
+        "动作写法速查",
+        "whatif 的 try 参数怎么写、每个植物对应哪个 packet 数字、"
+        "合法动作类型、行列范围。不确定语法时先读这一份。",
+        "text/markdown",
+    ),
+}
+
+
+def _resource_body(uri: str) -> str:
+    """按 uri 现场生成资源正文。不认识就抛，让调用方看到可用清单。"""
+    if uri == "pvz://vocabulary":
+        rc, out, err = _run_query(["vocabulary"], timeout=120.0)
+        if rc != 0:
+            return (
+                f"[读取 {uri} 失败] episode_query.py vocabulary 退出码 {rc}\n"
+                f"--- stdout ---\n{out}\n--- stderr ---\n{err}"
+            )
+        return out
+    raise ValueError(f"没有这个资源：{uri!r}。可用：{sorted(RESOURCES)}")
+
+
+# ---------------------------------------------------------------------------
 # MCP 接线
 # ---------------------------------------------------------------------------
 #
 # 工具名里的 `pvz` 前缀（`mcp__pvz__<tool>`）不在这里定义 —— 它是 bundle 的
 # `config.serverName`，见 ../bundle/cordis.patch.yml。这里再写一份常量只会漂移。
 
-SERVER_VERSION = "0.2.0-s1"
+SERVER_VERSION = "0.3.0-s2"
 
 
 async def _on_list_tools(
@@ -452,6 +506,35 @@ async def _on_call_tool(
     )
 
 
+async def _on_list_resources(
+    ctx: Any, params: Any
+) -> types.ListResourcesResult:
+    return types.ListResourcesResult(
+        resources=[
+            types.Resource(
+                uri=uri, name=name, description=desc, mimeType=mime
+            )
+            for uri, (name, desc, mime) in RESOURCES.items()
+        ]
+    )
+
+
+async def _on_read_resource(
+    ctx: Any, params: types.ReadResourceRequestParams
+) -> types.ReadResourceResult:
+    uri = str(params.uri)
+    entry = RESOURCES.get(uri)
+    if entry is None:
+        # 抛出去 → JSON-RPC error → 模型看到失败原因与可用清单，而不是空内容。
+        raise ValueError(f"没有这个资源：{uri!r}。可用：{sorted(RESOURCES)}")
+    text = await asyncio.to_thread(_resource_body, uri)
+    return types.ReadResourceResult(
+        contents=[
+            types.TextResourceContents(uri=uri, mimeType=entry[2], text=text)
+        ]
+    )
+
+
 server: Server = Server(
     "pvz-teacher",
     version=SERVER_VERSION,
@@ -460,10 +543,15 @@ server: Server = Server(
         "再用 index 看哪里值得看，然后用 frame / lane / actions 细看，"
         "最后用 whatif 做**精确的**反事实回放来验证你的改动到底有没有用。\n"
         "所有工具都只是搬运 episode_query.py 的输出，不含任何游戏判断 —— "
-        "结论要你自己下。模拟器是确定性的，所以 whatif 给的是精确结果而不是估计。"
+        "结论要你自己下。模拟器是确定性的，所以 whatif 给的是精确结果而不是估计。\n"
+        "**不确定动作怎么写**（plant 的 packet 是什么、行列范围、有哪些动作类型）"
+        "时，读资源 `pvz://vocabulary`，或调 `vocabulary` 工具 —— "
+        "两者是同一份内容，别靠猜 id。"
     ),
     on_list_tools=_on_list_tools,
     on_call_tool=_on_call_tool,
+    on_list_resources=_on_list_resources,
+    on_read_resource=_on_read_resource,
 )
 
 

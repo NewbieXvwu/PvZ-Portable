@@ -40,6 +40,7 @@ from pathlib import Path
 
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
+from mcp.shared.exceptions import MCPError
 
 HERE = Path(__file__).resolve().parent
 SERVER = HERE / "pvz_mcp_server.py"
@@ -123,6 +124,53 @@ async def run(full_env: bool) -> int:
                     print(f"✗ {tool.name} 的 description 含零宽字符："
                           f"{[hex(c) for c in found]}")
                     ok = False
+
+            # 资源：S2 加的 `pvz://vocabulary`。它存在的理由是可实测的 ——
+            # 模型找不到动作语法时会去调 `list_mcp_resources`（DSH 的 system prompt
+            # 主动告诉了它这个通道），我们一个资源都不发布就等于给了它一个空房间。
+            resources = await session.list_resources()
+            uris = [str(r.uri) for r in resources.resources]
+            print(f"✓ resources/list —— {len(uris)} 个：{uris}")
+            if "pvz://vocabulary" not in uris:
+                print("✗ 缺少资源 pvz://vocabulary —— 模型会拿到空列表")
+                ok = False
+
+            try:
+                # 注意：客户端签名收的是 **str**，不是 AnyUrl ——
+                # 传 AnyUrl 会被 pydantic 挡在**客户端**，服务端根本没被调到。
+                # （第一版就踩了这个：负例"读不存在的 uri"因此**假通过**，
+                #  它报的是客户端的 ValidationError，不是服务端的拒绝。）
+                body = await session.read_resource("pvz://vocabulary")
+                text = "".join(
+                    getattr(c, "text", "") for c in body.contents
+                )
+                # 正文必须真的是"能照着写"的：有动作语法、有植物名、有行列范围。
+                for needle in ("plant:", "豌豆射手", "row 0..4"):
+                    if needle not in text:
+                        print(f"✗ pvz://vocabulary 正文里没有 {needle!r}")
+                        ok = False
+                print(f"✓ resources/read pvz://vocabulary —— {len(text)} 字符")
+            except Exception as exc:  # noqa: BLE001
+                print(f"✗ 读 pvz://vocabulary 抛异常：{type(exc).__name__}: {exc}")
+                ok = False
+
+            # 不存在的 uri 必须**报错**，不能静默回空内容 ——
+            # 静默空内容和"通道是空的"长得一模一样，模型分不出来。
+            # 而且必须确认这是**服务端**的拒绝，不是客户端自己先挂了。
+            try:
+                await session.read_resource("pvz://nope")
+                print("✗ 读不存在的资源居然成功了 —— 应该报错")
+                ok = False
+            except MCPError as exc:
+                if "没有这个资源" in str(exc):
+                    print("✓ resources/read 不存在的 uri —— 服务端正确拒绝")
+                else:
+                    print(f"✗ 拒绝原因不对：{exc}")
+                    ok = False
+            except Exception as exc:  # noqa: BLE001
+                print(f"✗ 报的是客户端异常（服务端没被调到）："
+                      f"{type(exc).__name__}: {exc}")
+                ok = False
 
             called = await session.call_tool("ping", {"note": "冒烟测试"})
             if called.is_error:

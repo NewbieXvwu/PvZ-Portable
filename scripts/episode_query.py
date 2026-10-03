@@ -690,9 +690,14 @@ def _vocabulary() -> str:
         row = "   ".join(f"{pid:>2} = {name}" for pid, name in items[i:i + 3])
         L.append("  " + row)
     L.append("")
-    L.append("  英文别名（部分）：peashooter=0  sunflower=1  cherry=2  wallnut=3")
-    L.append("                    potatomine=4  snowpea=5  repeater=7  squash=17")
-    L.append("                    jalapeno=20  torchwood=22  cactus=26  starfruit=29")
+    # 别名清单**从 `_PLANT_ALIAS` 现场生成**，不手抄。
+    # 手抄副本会漂移：加了别名忘改这里，工具就静默少报一个能用的写法。
+    # （植物 id 表在下面也是从 PLANT_NAME 生成的 —— 同一原则。）
+    L.append("  英文别名（全部，与解析器同一张表）：")
+    alias_items = sorted(_PLANT_ALIAS.items(), key=lambda kv: (kv[1], kv[0]))
+    for i in range(0, len(alias_items), 4):
+        row = "  ".join(f"{name}={pid}" for name, pid in alias_items[i:i + 4])
+        L.append("    " + row)
     L.append("")
     L.append("── 行列范围 ──")
     L.append(f"  row 0..{GRID_ROWS - 1}（路，0 是最上面一条）")

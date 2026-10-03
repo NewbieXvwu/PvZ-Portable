@@ -21,6 +21,8 @@
 | `bundle/cordis.patch.yml` | 往组合树里插一行 `@deepseek-ai/dsh-mcp-client`，并注入 `PVZ_RESOURCE_DIR`。 |
 | `verify_s0.sh` | S0 端到端验收（管道），**不需要 API key**。 |
 | `verify_s1.py` | S1 端到端验收（工具面），**不需要 API key**。 |
+| `verify_s2.sh` | S2 端到端验收（**资源通道**：`list_mcp_resources` 不再返回空），**不需要 API key**。 |
+| `patches/isolate.yml` | 实验隔离叠加层：关掉"能读到仓库"的工具，把观测面收敛到我们的工具面上。 |
 | `tools/logging_proxy.py` | 记录型反向代理：看到 DSH 实际发出的请求体。可选修复 `thinking.budget_tokens`。 |
 | `tools/test_repair.py` | 上面那个修复的回归测试（离线可跑）。 |
 | `tools/trace_session.py` | 把一次会话的工具调用轨迹还原成可读证据（调了什么、参数、结果、token 花销）。 |
@@ -55,6 +57,32 @@
 **② `enumerate` 输出的左列就是可直接复制的 `--try` 字符串**，不用翻译；
 **③ 参数写错返回可自我纠正的提示**（列出全部可用植物），不再是 traceback。
 另加 `vocabulary` 工具补上"文档无处可查"。
+
+## 资源：`pvz://vocabulary`
+
+参考类文档（动作语法、植物 id 表、行列范围）除了 `vocabulary` 工具，
+还发布成 **MCP resource**。理由是实测的：
+
+模型不知道语法时**第一反应不是猜，是找文档** —— 它在 S2 干净轮里连着调了 4 次
+资源通道（`list_mcp_resources` / `list_mcp_resource_templates`，前两次还猜错了
+工具名），拿到的是 `{"resources":[]}`。而这条通道**是 DSH 主动告诉它的**：
+`packages/mcp/mcp-resources` 只要配了一个 server 就挂上那三个共享工具，
+并且把 server 名写进 system prompt。**我们一个资源都不发布 = 给了它一个空房间。**
+
+**单一事实源**：资源正文由 `episode_query.py vocabulary` 现场生成，
+与 `vocabulary` 工具走**同一条命令**，不手抄第二份。
+
+放哪的三条判据（照此分类，别凭感觉）：
+
+| 信息 | 放哪 | 为什么 |
+|---|---|---|
+| 第一次调用**之前**就必须知道 | 常驻（`instructions` / 工具描述） | 不知道自己缺知识的模型**不会去查** |
+| 大而全的参考表 | **资源**（次选：查询工具） | 走它已经会走的通道；不读就不占上下文 |
+| 兜底 | 错误信息里列出可用值 | 不查也不会**静默**拿错 |
+
+一个反直觉点：MCP 工具描述是**常驻**的（9 个工具 schema 实测 4,484 字符，
+每个请求都发），所以"放工具描述"和"放 system prompt"在 token 上**没有区别**，
+区别只在**位置**。真正的选择是"放哪个位置、有没有第二份"。
 
 ## 已知的 DSH 兼容性问题：`thinking.budget_tokens` 缺失
 
@@ -137,6 +165,17 @@ S1 验收：用真 MCP 客户端走完 `capture → index → whatif`，断言
 `index` 自称为目录、`whatif` 枚举出至少一个能通关的替代方案。
 **为什么不用命令行跑 CLI 交差**：CLI 通只说明 `episode_query.py` 没问题，
 那是**已经存在**的东西；S1 要验的是新增的那层参数翻译。
+
+```sh
+bash dsh/pvz-teacher/verify_s2.sh        # S2：资源通道，退出码 0 = 全通
+```
+
+S2 验收跑**两次**会话：一次让 mock 调 `list_mcp_resources`，断言列表里有
+`pvz://vocabulary`；一次调 `read_mcp_resource`，断言正文里真有 `plant:` 语法。
+**为什么不能只跑 `smoke_handshake.py`**：那只证明"server 自己发了资源"，
+而 S2 要修的是"模型找不到文档"—— 中间还隔着 DSH 的 `mcp-resources` provider、
+MCP client、以及 system prompt 有没有把 server 名告诉模型。这三层断任何一层，
+server 端看起来都是好的。
 
 **为什么都不需要 API key**：S0 用 DSH 自带的 `@deepseek-ai/dsh-llm-mock-server`，
 它的 `tool_call_success` 行为能按指定工具名/参数假装模型发起调用。
