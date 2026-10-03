@@ -47,7 +47,7 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from render_episode import (  # noqa: E402
-    DEFAULT_RESOURCE_DIR, GRID_ROWS, PLANT_NAME, ZOMBIE_NAME,
+    DEFAULT_RESOURCE_DIR, GRID_ROWS, PLANT_GLYPH, PLANT_NAME, ZOMBIE_NAME,
     _board_ascii, _disp, _lane_causal, _lane_line, _lane_rows, _lane_table,
     _lane_warnings, _mower_fired, _plant_diff, _render_row, _signals,
     _wave_matrix, collect,
@@ -186,6 +186,42 @@ def _index(meta: dict, frames: list) -> str:
 # ---------------------------------------------------------------- 查询
 
 
+def _fmt_legend(cur: dict) -> str:
+    """本帧棋盘上出现的字符分别是什么意思。
+
+    为什么必须逐帧给（2026-10-03 实测）
+    ----------------------------------
+    棋盘用**大小写**区分"这株血量满不满"（见 `render_episode._board_ascii`：
+    `g if hp >= mx else g.lower()`），而这个约定**没写在任何模型能看到的地方**。
+    模型看到 `p` 只能猜 —— 实测它猜成"小喷菇"或"刚种下还在蓄力"，都不对：
+    那个 `p` 是**受伤的豌豆射手**（156/300）。
+
+    更麻烦的是这个约定会撞车：**11 组字母大小写各自对应两个不同物种**
+    （`P`=豌豆射手 / `p`=小喷菇，`S`=向日葵 / `s`=阳光菇，`T`=土豆雷 / `t`=火炬树桩…），
+    所以"p 到底是受伤的豌豆还是健康的小喷菇"**靠字符本身分辨不出来**。
+    字母不能改（人也在读这个棋盘），那就把答案放在棋盘下面。
+    """
+    seen: dict[str, list[str]] = {}
+    has_lower = False
+    for _r, _c, t, hp, mx in cur.get("plants") or []:
+        g = PLANT_GLYPH.get(t, "?")
+        injured = hp < mx
+        ch = g.lower() if injured else g
+        if injured:
+            has_lower = True
+        name = PLANT_NAME.get(t, f"type{t}")
+        note = f"{name}(受伤 {hp}/{mx})" if injured else name
+        bucket = seen.setdefault(ch, [])
+        if note not in bucket:
+            bucket.append(note)
+    if not seen:
+        return ""
+    parts = "  ".join(f"{ch}={'. 或 '.join(v)}" for ch, v in sorted(seen.items()))
+    if has_lower:
+        return ("字符说明（**小写 = 这株血量不满**，不是另一个物种）：" + parts)
+    return "字符说明：" + parts
+
+
 def _fmt_frame(prev: dict | None, cur: dict, idx: int, total: int) -> str:
     L = [f"── 帧 {idx}/{total}  tick {cur['tick']}  第 {cur['wave']} 波  "
          f"阳光 {cur['sun']}  阳光收入 {cur.get('sun_income_rate')} ──"]
@@ -195,6 +231,9 @@ def _fmt_frame(prev: dict | None, cur: dict, idx: int, total: int) -> str:
     L.append("  " + _board_ascii(cur, "zombie").replace("\n", "\n  "))
     L.append("  " + _lane_table(cur).replace("\n", "\n  "))
     L.append("本帧变化：" + "；".join(_changes(prev, cur)))
+    legend = _fmt_legend(cur)
+    if legend:
+        L.append(legend)
     return "\n".join(L)
 
 
@@ -540,6 +579,16 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     L = [f"基线：第 {decision} 步（tick {frames[decision]['tick']}）做的是 "
          f"{_action_text(base_act, deck)} → 最终第 {base['final_wave']}/"
          f"{base['wave_count']} 波，{base['reason']}",
+         "",
+         # 重放语义必须写出来。2026-10-03 实测：模型在推理里反复追问
+         # "whatif 是照抄原局录下的动作序列、只换一条，还是用策略从头重跑？"
+         # —— 它猜对了，但**是猜的**，而这个区别直接决定结果怎么解读：
+         # 照抄的话后面几步是"同一条动作撞上不同局面"，重跑的话后面几步
+         # 是"策略对新局面重新决策"。我们的实现是后者。
+         "重放方式：**同一套策略从头重跑**，只把第 "
+         f"{decision} 步的动作换掉；之后的决策由策略看着新局面**重新做出**，"
+         "不是照抄原局录下的那串动作。所以结果反映的是「改了这一步之后，"
+         "策略会怎么接着打」，不是「只改这一步、后面硬按原剧本走」。",
          ""]
 
     cands: list[dict] = []
@@ -702,6 +751,20 @@ def _vocabulary() -> str:
     L.append("── 行列范围 ──")
     L.append(f"  row 0..{GRID_ROWS - 1}（路，0 是最上面一条）")
     L.append("  col 0..8（列，0 靠房子、8 靠僵尸来的方向；射手朝右打）")
+    L.append("")
+    L.append("── 棋盘字符（frame / strip / lane 里的棋盘）──")
+    L.append("  植物格：一个字母 = 一株植物。")
+    L.append("    **小写 = 这株血量不满**，不是另一个物种：`P`=健康的豌豆射手，")
+    L.append("    `p`=受伤的豌豆射手。字母表里大小写确实各自对应不同物种")
+    L.append("    （`p` 单独看也可以是 小喷菇），所以**别猜** —— ")
+    L.append("    frame 输出末尾会给出「本帧出现的字符」对照，直接看那里。")
+    L.append("  僵尸格：一个数字 = **这一格有几只僵尸**，不是种类。")
+    L.append("")
+    L.append("  植物字母表（type=字母 名称）：")
+    glyph_items = sorted(PLANT_GLYPH.items())
+    for i in range(0, len(glyph_items), 4):
+        row = "  ".join(f"{t}={g} {PLANT_NAME.get(t, '?')}" for t, g in glyph_items[i:i + 4])
+        L.append("    " + row)
     L.append("")
     L.append("── 省事的办法 ──")
     L.append("  用 whatif --enumerate 时，输出的**左列就是可以直接复制的 --try 字符串**，")
