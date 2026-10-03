@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "started_actual",
+  "started_utc": "2026-10-03T04:03:54.415293+00:00",
+  "controller_pid": 227635,
+  "trainer_pid": 227636,
+  "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+  "run": "mainline_bridge_random_mc_v1_seed0",
+  "initial_counters": {
+    "episodes": 736,
+    "decisions": 125000,
+    "ticks": 14941334
+  },
+  "target_declared_evaluation_decisions": 250000,
+  "script": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_training_queue_v9/run.py",
+  "log": "/home/newbiexvwu/PvZ-Portable/logs/t5_research/mainline_training_queue_v9.log",
+  "scope": "Actual complete-resume child, preserved initialization and post125k counter advance observed. Frozen recipe/tasks/seeds/thresholds unchanged. Training remains active;250k node and its new delivery not yet complete.",
+  "observed_utc": "2026-10-03T04:12:59.935744+00:00",
+  "observed_updates": 191,
+  "observed_counters": {
+    "episodes": 756,
+    "decisions": 130549,
+    "ticks": 15646989
+  },
+  "observed_invocation": {
+    "kind": "complete_resume",
+    "started_at": "2026-10-03T04:03:56.437230+00:00",
+    "commit": "f005c47e9c4a736060d554cc6b53daa8a47f8265"
+  }
+}

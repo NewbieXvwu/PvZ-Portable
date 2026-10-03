@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-10-03T04:03:54.054281+00:00",
+  "status": "frozen_before_start",
+  "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+  "source_worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/bridge_random_mc_f005c47",
+  "run": "mainline_bridge_random_mc_v1_seed0",
+  "configuration": "experiments/t7/bridge_random_mc_v1/seed0.json",
+  "resume_checkpoint": "runs/run_1/update_000186_boundary_1790996112988108426.pt",
+  "start_updates": 186,
+  "start_counters": {
+    "episodes": 736,
+    "decisions": 125000,
+    "ticks": 14941334
+  },
+  "preserved125k_full_run_reference": {
+    "run": "mainline_bridge_random_mc_v1_seed0",
+    "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
+    "status": "complete",
+    "start_utc": "2026-10-03T02:55:23.206409+00:00",
+    "pid": 217770,
+    "exit_code": 0,
+    "end_utc": "2026-10-03T03:00:24.446965+00:00",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "revision": "32fdb14437ee43ea4a643b3be0db18ab123cb3f4"
+  },
+  "target_declared_evaluation_decisions": 250000,
+  "bounded_update_segments": [
+    30,
+    60,
+    60,
+    60
+  ],
+  "selection": "After all three fixed125k nodes, seed0 has strongest greedy long-task results: aidfull6/8, ordinarycap10 4/8, ordinaryfull0/8 with mean terminal wave15. Extend this same genuinely random-origin candidate with complete optimizer/RNG/course resume, not a new initialization.",
+  "scope": "Single GPU trainer, frozen recipe/tasks/seeds/thresholds, original250k evaluation and500k ceiling unchanged. Other candidates retain all125k failures and milestones; not forced to500k. No reward/architecture change or causal comparison. Originalv8 completed all training and deliveries. Stop at the completed declared250k node or bounded segment limit; preserve nonzero failures.",
+  "preserved_preparation_failure": {
+    "preparation_error": "AssertionError: expected earlier uploads-pending status, but originalv8 had normally finished all deliveries",
+    "controller_pid": 227606,
+    "controller_error": "FileNotFoundError: plan.json",
+    "controller_exit_code": "not_reaped_by_launcher",
+    "trainer_started": false,
+    "script": "run_failed01.py",
+    "log": "launch_failed01.log"
+  }
+}
