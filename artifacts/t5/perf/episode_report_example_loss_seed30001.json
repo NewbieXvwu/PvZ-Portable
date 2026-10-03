@@ -1,0 +1,1816 @@
+{
+  "schema": "episode_report_v1",
+  "task": {
+    "level": 7,
+    "seed": 30001,
+    "playthrough": 2,
+    "deck": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "policy": "scripted"
+  },
+  "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 17,
+    "wave_count": 30,
+    "final_tick": 30952,
+    "actions": 567,
+    "rejected_actions": 0
+  },
+  "totals": {
+    "zombies_killed": 40,
+    "plants_eaten": 27,
+    "sun_produced": 3800,
+    "mower_triggered": 3,
+    "waves_started": 17,
+    "level_lost": 1
+  },
+  "reference": {
+    "policy": "donothing",
+    "outcome": {
+      "result": 2,
+      "won": false,
+      "reason": "僵尸进屋",
+      "final_wave": 7,
+      "wave_count": 30,
+      "final_tick": 17281,
+      "actions": 289,
+      "rejected_actions": 0
+    }
+  },
+  "turning_points": [
+    {
+      "kind": "1 号草坪被压到 1 格",
+      "tick": 12420,
+      "wave": 6,
+      "detail": "最前僵尸进入 c1"
+    },
+    {
+      "kind": "割草机启动",
+      "tick": 14220,
+      "wave": 6,
+      "detail": "第 6 波，[1] 号草坪的后手被用掉"
+    },
+    {
+      "kind": "3 号草坪被压到 1 格",
+      "tick": 14400,
+      "wave": 6,
+      "detail": "最前僵尸进入 c1"
+    },
+    {
+      "kind": "4 号草坪被压到 1 格",
+      "tick": 18960,
+      "wave": 9,
+      "detail": "最前僵尸进入 c1"
+    },
+    {
+      "kind": "波数停滞",
+      "tick": 29760,
+      "wave": 17,
+      "detail": "最后一次推进到第 17 波后，又过了 1192 tick 没能再推进（终局停在 17）"
+    },
+    {
+      "kind": "终局",
+      "tick": 30952,
+      "wave": 17,
+      "detail": "僵尸进屋，第 17/30 波，场上还剩 8 只僵尸"
+    }
+  ],
+  "diagnosis": [
+    "3 号路全程火力上限只有 1，其它路最高到 4——五条路里相对最弱的一条。",
+    "3 号路在后半程（9–17 波）有 7 个波次僵尸数超过火力数，是全盘输出最跟不上压力的一路。",
+    "3 号路植物净损失 13 株（全路合计 28 株），是补种最频繁的一路。",
+    "割草机共消耗 3 台：第 6 波 [1] 号路；第 7 波 [3] 号路；第 10 波 [4] 号路。",
+    "终局时 [1, 3, 4] 号草坪已无割草机，这几路再被突破就是直接进屋。",
+    "第 14 波时手里有 500 阳光，场上却仍有「有僵尸、零火力」的路——钱没换成火力。"
+  ],
+  "wave_matrix": [
+    {
+      "wave": 0,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 1,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 2,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 0,
+          "zombies": 0
+        }
+      ],
+      "sun": 50,
+      "mowers_used": 0,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 1,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 1,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 2,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 0,
+          "zombies": 1
+        }
+      ],
+      "sun": 0,
+      "mowers_used": 0,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 2,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 1,
+          "shooters": 0,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 0,
+          "zombies": 0
+        }
+      ],
+      "sun": 75,
+      "mowers_used": 0,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 3,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 1,
+          "shooters": 1,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 0,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 0,
+          "zombies": 0
+        }
+      ],
+      "sun": 25,
+      "mowers_used": 0,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 4,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 0,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 1,
+          "zombies": 0
+        },
+        {
+          "row": 2,
+          "shooters": 1,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 0,
+          "zombies": 1
+        }
+      ],
+      "sun": 50,
+      "mowers_used": 0,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 5,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 1,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 2,
+          "zombies": 0
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 0,
+          "zombies": 1
+        }
+      ],
+      "sun": 0,
+      "mowers_used": 0,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 6,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 0
+        },
+        {
+          "row": 1,
+          "shooters": 1,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 2,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 1
+        },
+        {
+          "row": 4,
+          "shooters": 1,
+          "zombies": 1
+        }
+      ],
+      "sun": 50,
+      "mowers_used": 0,
+      "mowers_fired_rows": [
+        1
+      ]
+    },
+    {
+      "wave": 7,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 2,
+          "zombies": 0
+        },
+        {
+          "row": 2,
+          "shooters": 2,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 1,
+          "zombies": 1
+        }
+      ],
+      "sun": 75,
+      "mowers_used": 1,
+      "mowers_fired_rows": [
+        3
+      ]
+    },
+    {
+      "wave": 8,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 1,
+          "shooters": 2,
+          "zombies": 0
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 0
+        },
+        {
+          "row": 4,
+          "shooters": 1,
+          "zombies": 2
+        }
+      ],
+      "sun": 0,
+      "mowers_used": 2,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 9,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 2,
+          "zombies": 0
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 1
+        },
+        {
+          "row": 4,
+          "shooters": 3,
+          "zombies": 1
+        }
+      ],
+      "sun": 50,
+      "mowers_used": 2,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 10,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 2,
+          "zombies": 3
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 1
+        },
+        {
+          "row": 4,
+          "shooters": 3,
+          "zombies": 3
+        }
+      ],
+      "sun": 75,
+      "mowers_used": 2,
+      "mowers_fired_rows": [
+        4
+      ]
+    },
+    {
+      "wave": 11,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "zombies": 3
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 2
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "zombies": 0
+        }
+      ],
+      "sun": 50,
+      "mowers_used": 3,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 12,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "zombies": 3
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 2
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "zombies": 0
+        }
+      ],
+      "sun": 125,
+      "mowers_used": 3,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 13,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 0
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 2
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "zombies": 1
+        }
+      ],
+      "sun": 300,
+      "mowers_used": 3,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 14,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 3
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "zombies": 1
+        }
+      ],
+      "sun": 450,
+      "mowers_used": 3,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 15,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "zombies": 4
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "zombies": 1
+        }
+      ],
+      "sun": 275,
+      "mowers_used": 3,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 16,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 0
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 4
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "zombies": 2
+        }
+      ],
+      "sun": 75,
+      "mowers_used": 3,
+      "mowers_fired_rows": []
+    },
+    {
+      "wave": 17,
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "zombies": 1
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "zombies": 2
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "zombies": 5
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "zombies": 3
+        }
+      ],
+      "sun": 25,
+      "mowers_used": 3,
+      "mowers_fired_rows": []
+    }
+  ],
+  "key_frames": [
+    {
+      "tick": 12420,
+      "wave": 6,
+      "sun": 75,
+      "plants_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     S  S  P  P  P  .  .  .  .\n  r1     S  S  P  .  .  .  .  .  .\n  r2     S  S  P  P  .  .  .  .  .\n  r3     S  S  .  .  .  .  .  .  .\n  r4     S  S  P  .  .  .  .  .  .",
+      "zombies_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     .  .  .  .  .  .  .  .  .\n  r1     .  1  .  .  .  .  .  .  .\n  r2     .  .  .  .  .  .  .  .  .\n  r3     .  .  .  .  .  .  .  .  .\n  r4     .  .  1  .  .  .  .  .  .",
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        },
+        {
+          "row": 1,
+          "shooters": 1,
+          "economy": 2,
+          "walls": 0,
+          "plants": 3,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 280,
+          "front_col": 1,
+          "ticks_to_mower": 270,
+          "eta_label": "270t",
+          "mower": "待命",
+          "verdict": "紧急"
+        },
+        {
+          "row": 2,
+          "shooters": 2,
+          "economy": 2,
+          "walls": 0,
+          "plants": 4,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 270,
+          "front_col": 9,
+          "ticks_to_mower": 1974,
+          "eta_label": "1974t",
+          "mower": "待命",
+          "verdict": "交火中"
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "economy": 2,
+          "walls": 0,
+          "plants": 2,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 500,
+          "front_col": 9,
+          "ticks_to_mower": 1172,
+          "eta_label": "1172t",
+          "mower": "待命",
+          "verdict": "裸路承压"
+        },
+        {
+          "row": 4,
+          "shooters": 1,
+          "economy": 2,
+          "walls": 0,
+          "plants": 3,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 12,
+          "front_col": 2,
+          "ticks_to_mower": 835,
+          "eta_label": "835t",
+          "mower": "待命",
+          "verdict": "紧急"
+        }
+      ]
+    },
+    {
+      "tick": 14220,
+      "wave": 6,
+      "sun": 75,
+      "plants_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     S  S  P  P  P  .  .  .  .\n  r1     .  S  P  P  .  .  .  .  W\n  r2     S  S  P  P  .  .  .  .  .\n  r3     S  S  .  .  .  .  .  .  .\n  r4     S  S  P  .  .  .  .  .  .",
+      "zombies_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     .  .  .  .  .  .  .  .  .\n  r1     .  .  .  .  .  .  .  .  .\n  r2     .  .  .  .  .  .  .  .  .\n  r3     .  .  1  .  .  .  .  .  .\n  r4     .  .  .  .  .  .  .  .  .",
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        },
+        {
+          "row": 1,
+          "shooters": 2,
+          "economy": 1,
+          "walls": 1,
+          "plants": 4,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 280,
+          "front_col": -1,
+          "ticks_to_mower": 0,
+          "eta_label": "0t",
+          "mower": "已触发",
+          "verdict": "紧急"
+        },
+        {
+          "row": 2,
+          "shooters": 2,
+          "economy": 2,
+          "walls": 0,
+          "plants": 4,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "economy": 2,
+          "walls": 0,
+          "plants": 2,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 500,
+          "front_col": 2,
+          "ticks_to_mower": 302,
+          "eta_label": "302t",
+          "mower": "待命",
+          "verdict": "裸路承压"
+        },
+        {
+          "row": 4,
+          "shooters": 1,
+          "economy": 2,
+          "walls": 0,
+          "plants": 3,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        }
+      ]
+    },
+    {
+      "tick": 14400,
+      "wave": 6,
+      "sun": 100,
+      "plants_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     S  S  P  P  P  .  .  .  .\n  r1     .  S  P  P  .  .  .  .  W\n  r2     S  S  P  P  .  .  .  .  .\n  r3     S  S  .  .  .  .  .  .  .\n  r4     S  S  P  .  .  .  .  .  .",
+      "zombies_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     .  .  .  .  .  .  .  .  .\n  r1     .  .  .  .  .  .  .  .  .\n  r2     .  .  .  .  .  .  .  .  .\n  r3     .  1  .  .  .  .  .  .  .\n  r4     .  .  .  .  .  .  .  .  .",
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        },
+        {
+          "row": 1,
+          "shooters": 2,
+          "economy": 1,
+          "walls": 1,
+          "plants": 4,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "已触发",
+          "verdict": "平静"
+        },
+        {
+          "row": 2,
+          "shooters": 2,
+          "economy": 2,
+          "walls": 0,
+          "plants": 4,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        },
+        {
+          "row": 3,
+          "shooters": 0,
+          "economy": 2,
+          "walls": 0,
+          "plants": 2,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 500,
+          "front_col": 1,
+          "ticks_to_mower": null,
+          "eta_label": "停住",
+          "mower": "待命",
+          "verdict": "裸路承压"
+        },
+        {
+          "row": 4,
+          "shooters": 1,
+          "economy": 2,
+          "walls": 0,
+          "plants": 3,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        }
+      ]
+    },
+    {
+      "tick": 18960,
+      "wave": 9,
+      "sun": 75,
+      "plants_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     S  S  P  P  P  .  .  .  .\n  r1     S  S  P  P  .  .  .  .  W\n  r2     S  S  P  P  P  .  .  .  .\n  r3     S  S  P  .  .  .  .  .  .\n  r4     S  S  .  P  P  .  .  .  W",
+      "zombies_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     .  .  .  .  .  .  .  .  .\n  r1     .  .  .  .  .  .  .  .  .\n  r2     .  .  .  .  .  .  1  .  .\n  r3     .  .  .  .  .  .  1  .  .\n  r4     .  1  .  .  .  .  .  .  .",
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        },
+        {
+          "row": 1,
+          "shooters": 2,
+          "economy": 2,
+          "walls": 1,
+          "plants": 5,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "已消耗",
+          "verdict": "无后手"
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 200,
+          "front_col": 6,
+          "ticks_to_mower": 1814,
+          "eta_label": "1814t",
+          "mower": "待命",
+          "verdict": "交火中"
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "economy": 2,
+          "walls": 0,
+          "plants": 3,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 130,
+          "front_col": 6,
+          "ticks_to_mower": 1676,
+          "eta_label": "1676t",
+          "mower": "已消耗",
+          "verdict": "无后手"
+        },
+        {
+          "row": 4,
+          "shooters": 2,
+          "economy": 2,
+          "walls": 1,
+          "plants": 5,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 180,
+          "front_col": 1,
+          "ticks_to_mower": 629,
+          "eta_label": "629t",
+          "mower": "待命",
+          "verdict": "紧急"
+        }
+      ]
+    },
+    {
+      "tick": 29760,
+      "wave": 17,
+      "sun": 25,
+      "plants_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     S  S  P  P  P  .  .  .  .\n  r1     S  S  P  P  P  .  .  .  .\n  r2     S  S  P  P  P  .  .  .  .\n  r3     .  .  P  .  .  .  .  .  .\n  r4     S  S  P  P  P  P  .  .  w",
+      "zombies_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     .  .  .  .  .  .  .  1  .\n  r1     .  .  .  .  .  1  .  .  .\n  r2     .  .  .  .  .  .  .  .  .\n  r3     2  .  .  .  .  .  .  2  .\n  r4     .  .  .  .  .  .  .  .  2",
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 2,
+          "off_board": 0,
+          "zombie_hp": 270,
+          "front_col": 7,
+          "ticks_to_mower": null,
+          "eta_label": "停住",
+          "mower": "待命",
+          "verdict": "交火中"
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 145,
+          "front_col": 5,
+          "ticks_to_mower": 695,
+          "eta_label": "695t",
+          "mower": "已消耗",
+          "verdict": "无后手"
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 2,
+          "off_board": 0,
+          "zombie_hp": 540,
+          "front_col": 9,
+          "ticks_to_mower": 2953,
+          "eta_label": "2953t",
+          "mower": "待命",
+          "verdict": "交火中"
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "economy": 0,
+          "walls": 0,
+          "plants": 1,
+          "zombies": 5,
+          "off_board": 0,
+          "zombie_hp": 2420,
+          "front_col": 0,
+          "ticks_to_mower": 37,
+          "eta_label": "37t",
+          "mower": "已消耗",
+          "verdict": "已破"
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "economy": 2,
+          "walls": 1,
+          "plants": 7,
+          "zombies": 3,
+          "off_board": 0,
+          "zombie_hp": 1460,
+          "front_col": 8,
+          "ticks_to_mower": 1869,
+          "eta_label": "1869t",
+          "mower": "已消耗",
+          "verdict": "无后手"
+        }
+      ]
+    },
+    {
+      "tick": 30952,
+      "wave": 17,
+      "sun": 75,
+      "plants_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     S  S  P  P  P  .  .  .  .\n  r1     S  S  P  P  P  .  .  .  .\n  r2     S  S  P  P  P  .  .  .  .\n  r3     .  .  P  .  .  .  .  .  w\n  r4     S  S  P  P  P  P  .  .  .",
+      "zombies_ascii": "        c0 c1 c2 c3 c4 c5 c6 c7 c8\n  r0     .  .  .  .  .  .  .  .  .\n  r1     .  .  .  .  .  .  .  .  .\n  r2     .  .  .  .  .  .  .  1  .\n  r3     .  .  .  .  1  1  .  .  1\n  r4     .  .  .  .  .  .  .  .  2",
+      "lanes": [
+        {
+          "row": 0,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "待命",
+          "verdict": "平静"
+        },
+        {
+          "row": 1,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 0,
+          "off_board": 0,
+          "zombie_hp": 0,
+          "front_col": null,
+          "ticks_to_mower": null,
+          "eta_label": null,
+          "mower": "已消耗",
+          "verdict": "无后手"
+        },
+        {
+          "row": 2,
+          "shooters": 3,
+          "economy": 2,
+          "walls": 0,
+          "plants": 5,
+          "zombies": 1,
+          "off_board": 0,
+          "zombie_hp": 110,
+          "front_col": 7,
+          "ticks_to_mower": 2371,
+          "eta_label": "2371t",
+          "mower": "待命",
+          "verdict": "交火中"
+        },
+        {
+          "row": 3,
+          "shooters": 1,
+          "economy": 0,
+          "walls": 1,
+          "plants": 2,
+          "zombies": 5,
+          "off_board": 0,
+          "zombie_hp": 2260,
+          "front_col": -2,
+          "ticks_to_mower": 0,
+          "eta_label": "0t",
+          "mower": "已消耗",
+          "verdict": "已破"
+        },
+        {
+          "row": 4,
+          "shooters": 4,
+          "economy": 2,
+          "walls": 0,
+          "plants": 6,
+          "zombies": 2,
+          "off_board": 0,
+          "zombie_hp": 740,
+          "front_col": 8,
+          "ticks_to_mower": 1853,
+          "eta_label": "1853t",
+          "mower": "已消耗",
+          "verdict": "无后手"
+        }
+      ]
+    }
+  ],
+  "event_log": [
+    {
+      "tick": 0,
+      "wave": 0,
+      "kind": "种植",
+      "detail": "(0,0) 向日葵"
+    },
+    {
+      "tick": 780,
+      "wave": 0,
+      "kind": "种植",
+      "detail": "(1,0) 向日葵"
+    },
+    {
+      "tick": 1560,
+      "wave": 0,
+      "kind": "种植",
+      "detail": "(2,0) 向日葵"
+    },
+    {
+      "tick": 1800,
+      "wave": 1,
+      "kind": "开波",
+      "detail": "第 1 波开始"
+    },
+    {
+      "tick": 2040,
+      "wave": 1,
+      "kind": "种植",
+      "detail": "(4,6) 土豆雷"
+    },
+    {
+      "tick": 2460,
+      "wave": 1,
+      "kind": "种植",
+      "detail": "(3,0) 向日葵"
+    },
+    {
+      "tick": 3240,
+      "wave": 1,
+      "kind": "种植",
+      "detail": "(4,0) 向日葵"
+    },
+    {
+      "tick": 3900,
+      "wave": 2,
+      "kind": "开波",
+      "detail": "第 2 波开始（上一波清掉 1 只）"
+    },
+    {
+      "tick": 4020,
+      "wave": 2,
+      "kind": "种植",
+      "detail": "(0,1) 向日葵"
+    },
+    {
+      "tick": 4380,
+      "wave": 2,
+      "kind": "种植",
+      "detail": "(1,2) 豌豆射手"
+    },
+    {
+      "tick": 4920,
+      "wave": 2,
+      "kind": "种植",
+      "detail": "(1,1) 向日葵"
+    },
+    {
+      "tick": 5460,
+      "wave": 2,
+      "kind": "种植",
+      "detail": "(1,6) 土豆雷"
+    },
+    {
+      "tick": 5700,
+      "wave": 3,
+      "kind": "开波",
+      "detail": "第 3 波开始"
+    },
+    {
+      "tick": 5760,
+      "wave": 3,
+      "kind": "植物被吃",
+      "detail": "(1,6) 土豆雷"
+    },
+    {
+      "tick": 5940,
+      "wave": 3,
+      "kind": "种植",
+      "detail": "(2,1) 向日葵"
+    },
+    {
+      "tick": 6480,
+      "wave": 3,
+      "kind": "种植",
+      "detail": "(2,2) 豌豆射手"
+    },
+    {
+      "tick": 6780,
+      "wave": 3,
+      "kind": "种植",
+      "detail": "(3,1) 向日葵"
+    },
+    {
+      "tick": 7560,
+      "wave": 3,
+      "kind": "种植",
+      "detail": "(4,1) 向日葵"
+    },
+    {
+      "tick": 7680,
+      "wave": 4,
+      "kind": "开波",
+      "detail": "第 4 波开始（上一波清掉 1 只）"
+    },
+    {
+      "tick": 8040,
+      "wave": 4,
+      "kind": "种植",
+      "detail": "(2,3) 豌豆射手"
+    },
+    {
+      "tick": 8520,
+      "wave": 4,
+      "kind": "种植",
+      "detail": "(0,6) 土豆雷"
+    },
+    {
+      "tick": 8820,
+      "wave": 4,
+      "kind": "种植",
+      "detail": "(0,2) 豌豆射手"
+    },
+    {
+      "tick": 9600,
+      "wave": 4,
+      "kind": "种植",
+      "detail": "(0,3) 豌豆射手"
+    },
+    {
+      "tick": 9720,
+      "wave": 4,
+      "kind": "植物被吃",
+      "detail": "(0,6) 土豆雷"
+    },
+    {
+      "tick": 10380,
+      "wave": 4,
+      "kind": "种植",
+      "detail": "(0,4) 豌豆射手"
+    },
+    {
+      "tick": 10440,
+      "wave": 5,
+      "kind": "开波",
+      "detail": "第 5 波开始（上一波清掉 1 只）"
+    },
+    {
+      "tick": 11160,
+      "wave": 5,
+      "kind": "种植",
+      "detail": "(4,2) 豌豆射手"
+    },
+    {
+      "tick": 11940,
+      "wave": 5,
+      "kind": "种植",
+      "detail": "(4,3) 豌豆射手"
+    },
+    {
+      "tick": 12240,
+      "wave": 5,
+      "kind": "植物被吃",
+      "detail": "(4,3) 豌豆射手"
+    },
+    {
+      "tick": 12300,
+      "wave": 6,
+      "kind": "开波",
+      "detail": "第 6 波开始（上一波清掉 1 只）"
+    },
+    {
+      "tick": 12420,
+      "wave": 6,
+      "kind": "种植",
+      "detail": "(1,8) 坚果墙"
+    },
+    {
+      "tick": 12840,
+      "wave": 6,
+      "kind": "植物被吃",
+      "detail": "(1,1) 向日葵"
+    },
+    {
+      "tick": 12840,
+      "wave": 6,
+      "kind": "种植",
+      "detail": "(1,1) 向日葵"
+    },
+    {
+      "tick": 13140,
+      "wave": 6,
+      "kind": "植物被吃",
+      "detail": "(1,1) 向日葵"
+    },
+    {
+      "tick": 13380,
+      "wave": 6,
+      "kind": "种植",
+      "detail": "(1,3) 豌豆射手"
+    },
+    {
+      "tick": 13800,
+      "wave": 6,
+      "kind": "种植",
+      "detail": "(1,1) 向日葵"
+    },
+    {
+      "tick": 13920,
+      "wave": 6,
+      "kind": "植物被吃",
+      "detail": "(1,0) 向日葵"
+    },
+    {
+      "tick": 14220,
+      "wave": 6,
+      "kind": "割草机启动",
+      "detail": "1 号草坪后手被用掉"
+    },
+    {
+      "tick": 14400,
+      "wave": 6,
+      "kind": "种植",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 14460,
+      "wave": 6,
+      "kind": "割草机启动",
+      "detail": "1 号草坪后手被用掉"
+    },
+    {
+      "tick": 14760,
+      "wave": 6,
+      "kind": "种植",
+      "detail": "(1,0) 向日葵"
+    },
+    {
+      "tick": 14940,
+      "wave": 6,
+      "kind": "植物被吃",
+      "detail": "(3,0) 向日葵"
+    },
+    {
+      "tick": 15240,
+      "wave": 7,
+      "kind": "开波",
+      "detail": "第 7 波开始（上一波清掉 4 只）"
+    },
+    {
+      "tick": 15240,
+      "wave": 7,
+      "kind": "割草机启动",
+      "detail": "3 号草坪后手被用掉"
+    },
+    {
+      "tick": 15480,
+      "wave": 7,
+      "kind": "割草机启动",
+      "detail": "3 号草坪后手被用掉"
+    },
+    {
+      "tick": 15540,
+      "wave": 7,
+      "kind": "种植",
+      "detail": "(3,0) 向日葵"
+    },
+    {
+      "tick": 15960,
+      "wave": 7,
+      "kind": "种植",
+      "detail": "(2,4) 豌豆射手"
+    },
+    {
+      "tick": 16200,
+      "wave": 8,
+      "kind": "开波",
+      "detail": "第 8 波开始"
+    },
+    {
+      "tick": 16740,
+      "wave": 8,
+      "kind": "种植",
+      "detail": "(4,3) 豌豆射手"
+    },
+    {
+      "tick": 17520,
+      "wave": 8,
+      "kind": "种植",
+      "detail": "(4,4) 豌豆射手"
+    },
+    {
+      "tick": 17760,
+      "wave": 9,
+      "kind": "开波",
+      "detail": "第 9 波开始（上一波清掉 4 只）"
+    },
+    {
+      "tick": 18120,
+      "wave": 9,
+      "kind": "植物被吃",
+      "detail": "(4,3) 豌豆射手"
+    },
+    {
+      "tick": 18240,
+      "wave": 9,
+      "kind": "种植",
+      "detail": "(4,8) 坚果墙"
+    },
+    {
+      "tick": 18720,
+      "wave": 9,
+      "kind": "种植",
+      "detail": "(4,3) 豌豆射手"
+    },
+    {
+      "tick": 18960,
+      "wave": 9,
+      "kind": "植物被吃",
+      "detail": "(4,2) 豌豆射手"
+    },
+    {
+      "tick": 19500,
+      "wave": 9,
+      "kind": "种植",
+      "detail": "(4,2) 豌豆射手"
+    },
+    {
+      "tick": 19920,
+      "wave": 9,
+      "kind": "植物被吃",
+      "detail": "(4,1) 向日葵"
+    },
+    {
+      "tick": 19920,
+      "wave": 9,
+      "kind": "种植",
+      "detail": "(4,1) 向日葵"
+    },
+    {
+      "tick": 20220,
+      "wave": 9,
+      "kind": "植物被吃",
+      "detail": "(4,1) 向日葵"
+    },
+    {
+      "tick": 20520,
+      "wave": 10,
+      "kind": "开波",
+      "detail": "第 10 波开始（上一波清掉 3 只）"
+    },
+    {
+      "tick": 20580,
+      "wave": 10,
+      "kind": "种植",
+      "detail": "(4,5) 豌豆射手"
+    },
+    {
+      "tick": 21120,
+      "wave": 10,
+      "kind": "植物被吃",
+      "detail": "(4,0) 向日葵"
+    },
+    {
+      "tick": 21120,
+      "wave": 10,
+      "kind": "种植",
+      "detail": "(4,0) 向日葵"
+    },
+    {
+      "tick": 21420,
+      "wave": 10,
+      "kind": "植物被吃",
+      "detail": "(4,0) 向日葵"
+    },
+    {
+      "tick": 21600,
+      "wave": 10,
+      "kind": "种植",
+      "detail": "(1,4) 豌豆射手"
+    },
+    {
+      "tick": 21780,
+      "wave": 10,
+      "kind": "割草机启动",
+      "detail": "4 号草坪后手被用掉"
+    },
+    {
+      "tick": 22020,
+      "wave": 11,
+      "kind": "开波",
+      "detail": "第 11 波开始（上一波清掉 4 只）"
+    },
+    {
+      "tick": 22020,
+      "wave": 11,
+      "kind": "割草机启动",
+      "detail": "4 号草坪后手被用掉"
+    },
+    {
+      "tick": 22020,
+      "wave": 11,
+      "kind": "种植",
+      "detail": "(4,0) 向日葵"
+    },
+    {
+      "tick": 22800,
+      "wave": 11,
+      "kind": "种植",
+      "detail": "(4,1) 向日葵"
+    },
+    {
+      "tick": 23160,
+      "wave": 11,
+      "kind": "植物被吃",
+      "detail": "(1,8) 坚果墙"
+    },
+    {
+      "tick": 23400,
+      "wave": 12,
+      "kind": "开波",
+      "detail": "第 12 波开始（上一波清掉 3 只）"
+    },
+    {
+      "tick": 24780,
+      "wave": 13,
+      "kind": "开波",
+      "detail": "第 13 波开始（上一波清掉 5 只）"
+    },
+    {
+      "tick": 25860,
+      "wave": 14,
+      "kind": "开波",
+      "detail": "第 14 波开始（上一波清掉 2 只）"
+    },
+    {
+      "tick": 26400,
+      "wave": 14,
+      "kind": "种植",
+      "detail": "(3,8) 坚果墙"
+    },
+    {
+      "tick": 26760,
+      "wave": 14,
+      "kind": "植物被吃",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 26760,
+      "wave": 14,
+      "kind": "种植",
+      "detail": "(3,2) 寒冰射手"
+    },
+    {
+      "tick": 26940,
+      "wave": 14,
+      "kind": "植物被吃",
+      "detail": "(3,2) 寒冰射手"
+    },
+    {
+      "tick": 26940,
+      "wave": 14,
+      "kind": "种植",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 27180,
+      "wave": 14,
+      "kind": "植物被吃",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 27240,
+      "wave": 15,
+      "kind": "开波",
+      "detail": "第 15 波开始（上一波清掉 2 只）"
+    },
+    {
+      "tick": 27540,
+      "wave": 15,
+      "kind": "种植",
+      "detail": "(3,2) 寒冰射手"
+    },
+    {
+      "tick": 27780,
+      "wave": 15,
+      "kind": "植物被吃",
+      "detail": "(3,2) 寒冰射手"
+    },
+    {
+      "tick": 27780,
+      "wave": 15,
+      "kind": "种植",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 28140,
+      "wave": 15,
+      "kind": "植物被吃",
+      "detail": "(3,1) 向日葵"
+    },
+    {
+      "tick": 28140,
+      "wave": 15,
+      "kind": "种植",
+      "detail": "(3,1) 向日葵"
+    },
+    {
+      "tick": 28380,
+      "wave": 15,
+      "kind": "植物被吃",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 28440,
+      "wave": 15,
+      "kind": "植物被吃",
+      "detail": "(3,1) 向日葵"
+    },
+    {
+      "tick": 28560,
+      "wave": 15,
+      "kind": "种植",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 28620,
+      "wave": 16,
+      "kind": "开波",
+      "detail": "第 16 波开始（上一波清掉 2 只）"
+    },
+    {
+      "tick": 28920,
+      "wave": 16,
+      "kind": "种植",
+      "detail": "(3,1) 向日葵"
+    },
+    {
+      "tick": 28980,
+      "wave": 16,
+      "kind": "植物被吃",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 29160,
+      "wave": 16,
+      "kind": "植物被吃",
+      "detail": "(3,8) 坚果墙"
+    },
+    {
+      "tick": 29220,
+      "wave": 16,
+      "kind": "植物被吃",
+      "detail": "(3,1) 向日葵"
+    },
+    {
+      "tick": 29340,
+      "wave": 16,
+      "kind": "种植",
+      "detail": "(3,2) 豌豆射手"
+    },
+    {
+      "tick": 29640,
+      "wave": 16,
+      "kind": "植物被吃",
+      "detail": "(3,0) 向日葵"
+    },
+    {
+      "tick": 29760,
+      "wave": 17,
+      "kind": "开波",
+      "detail": "第 17 波开始（上一波清掉 2 只）"
+    },
+    {
+      "tick": 29820,
+      "wave": 17,
+      "kind": "种植",
+      "detail": "(3,8) 坚果墙"
+    },
+    {
+      "tick": 30240,
+      "wave": 17,
+      "kind": "种植",
+      "detail": "(3,0) 向日葵"
+    },
+    {
+      "tick": 30540,
+      "wave": 17,
+      "kind": "植物被吃",
+      "detail": "(3,0) 向日葵"
+    },
+    {
+      "tick": 30840,
+      "wave": 17,
+      "kind": "植物被吃",
+      "detail": "(4,8) 坚果墙"
+    },
+    {
+      "tick": 30952,
+      "wave": 17,
+      "kind": "防线失守",
+      "detail": "僵尸进屋"
+    }
+  ]
+}

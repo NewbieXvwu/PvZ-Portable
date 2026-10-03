@@ -1,0 +1,9683 @@
+{
+ "schema_version": 1,
+ "policy": "scripted_baseline.choose (5-priority rule list; each task uses its own deck)",
+ "simulator_sha256": "2056e13ef46c9820bd6ad5a9e14b25b20f9b28ce400ac02799099a4b6390fe01",
+ "manifest": "experiments/t7/full_level7_v1/acceptance.json",
+ "max_actions": 4000,
+ "workers": 8,
+ "seconds": 32.0,
+ "purpose": "Score the only known winning policy on the frozen acceptance set; existing records cover 4 seeds per probe, which cannot separate a solver from a coin flip.",
+ "scope": "No neural network, no PPO, no GPU. Read-only. This is a teacher-quality probe, not a change to any threshold or any running training candidate.",
+ "thresholds": {
+  "level7_pass_rate": 0.6,
+  "terrain_macro_pass_rate": 0.6,
+  "each_terrain_pass_rate": 0.45,
+  "weakest_task_pass_rate": 0.25,
+  "required_initializations": 2
+ },
+ "level7_development_win_rate": 0.37890625,
+ "five_terrain_macro_pass_rate": 0.109375,
+ "weakest_task_pass_rate": 0.0,
+ "tasks": [
+  {
+   "task_id": "level7_development",
+   "terrain": "day",
+   "level": 7,
+   "wave_cap": null,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "seeds": 256,
+   "wins": 97,
+   "n": 256,
+   "win_rate": 0.37890625,
+   "truncated": 0,
+   "mean_terminal_wave": 26.38,
+   "mean_mowers_triggered": 2.36,
+   "mean_sun_left": 864.6,
+   "episodes": [
+    {
+     "seed": 30000,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 65255,
+     "actions": 1175,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30001,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 30952,
+     "actions": 567,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30002,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63352,
+     "actions": 1128,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 11,
+      "3": 2
+     },
+     "sun_left": 1375
+    },
+    {
+     "seed": 30003,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62363,
+     "actions": 1117,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "3": 3,
+      "5": 4,
+      "0": 10
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30004,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 31970,
+     "actions": 581,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 1,
+      "0": 13,
+      "3": 2
+     },
+     "sun_left": 325
+    },
+    {
+     "seed": 30005,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63700,
+     "actions": 1143,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 2,
+      "3": 1,
+      "0": 10
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30006,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64420,
+     "actions": 1138,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1800
+    },
+    {
+     "seed": 30007,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63661,
+     "actions": 1142,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "3": 1,
+      "5": 4
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30008,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 59157,
+     "actions": 1054,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "5": 4,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 800
+    },
+    {
+     "seed": 30009,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 54914,
+     "actions": 995,
+     "mowers": 4,
+     "plants_left": {
+      "1": 8,
+      "0": 11,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30010,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64661,
+     "actions": 1154,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 8,
+      "3": 3,
+      "5": 4
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30011,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 57129,
+     "actions": 1020,
+     "mowers": 3,
+     "plants_left": {
+      "5": 3,
+      "1": 9,
+      "0": 11,
+      "3": 2
+     },
+     "sun_left": 1200
+    },
+    {
+     "seed": 30012,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62863,
+     "actions": 1112,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 10,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 1600
+    },
+    {
+     "seed": 30013,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 49117,
+     "actions": 872,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 2
+     },
+     "sun_left": 1975
+    },
+    {
+     "seed": 30014,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 52807,
+     "actions": 950,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "5": 2,
+      "3": 2
+     },
+     "sun_left": 1025
+    },
+    {
+     "seed": 30015,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 32354,
+     "actions": 585,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 975
+    },
+    {
+     "seed": 30016,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60176,
+     "actions": 1078,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "3": 2,
+      "5": 2,
+      "0": 10
+     },
+     "sun_left": 400
+    },
+    {
+     "seed": 30017,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 66112,
+     "actions": 1184,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 7,
+      "5": 2,
+      "3": 3
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30018,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61919,
+     "actions": 1096,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 8,
+      "5": 4
+     },
+     "sun_left": 1350
+    },
+    {
+     "seed": 30019,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 54832,
+     "actions": 973,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 12,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 1450
+    },
+    {
+     "seed": 30020,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55803,
+     "actions": 1002,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "3": 1,
+      "5": 4
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30021,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 50221,
+     "actions": 905,
+     "mowers": 4,
+     "plants_left": {
+      "0": 10,
+      "1": 10,
+      "5": 4
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30022,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 57750,
+     "actions": 1041,
+     "mowers": 4,
+     "plants_left": {
+      "3": 3,
+      "0": 6,
+      "1": 8,
+      "5": 4
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30023,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 48197,
+     "actions": 877,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "3": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30024,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 48631,
+     "actions": 867,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 10,
+      "3": 2
+     },
+     "sun_left": 1125
+    },
+    {
+     "seed": 30025,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61268,
+     "actions": 1076,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 3050
+    },
+    {
+     "seed": 30026,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61720,
+     "actions": 1101,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30027,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 35102,
+     "actions": 631,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 1000
+    },
+    {
+     "seed": 30028,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 65359,
+     "actions": 1160,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 7,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 1350
+    },
+    {
+     "seed": 30029,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 28864,
+     "actions": 527,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 3,
+      "4": 1
+     },
+     "sun_left": 600
+    },
+    {
+     "seed": 30030,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60100,
+     "actions": 1056,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 8,
+      "5": 4
+     },
+     "sun_left": 2775
+    },
+    {
+     "seed": 30031,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 59922,
+     "actions": 1063,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 1625
+    },
+    {
+     "seed": 30032,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 53573,
+     "actions": 965,
+     "mowers": 2,
+     "plants_left": {
+      "0": 11,
+      "1": 8,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30033,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 31618,
+     "actions": 572,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 775
+    },
+    {
+     "seed": 30034,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 33545,
+     "actions": 611,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 3
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30035,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55717,
+     "actions": 1004,
+     "mowers": 4,
+     "plants_left": {
+      "1": 7,
+      "0": 11,
+      "5": 2,
+      "3": 2
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30036,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 28095,
+     "actions": 507,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30037,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 32519,
+     "actions": 589,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 900
+    },
+    {
+     "seed": 30038,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 56809,
+     "actions": 1008,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "5": 4,
+      "0": 9,
+      "3": 1
+     },
+     "sun_left": 1475
+    },
+    {
+     "seed": 30039,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63095,
+     "actions": 1120,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 9
+     },
+     "sun_left": 1475
+    },
+    {
+     "seed": 30040,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 55956,
+     "actions": 1009,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "5": 3,
+      "0": 11,
+      "3": 2
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30041,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63848,
+     "actions": 1140,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30042,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 33384,
+     "actions": 614,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "3": 1,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30043,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 22,
+     "tick": 37330,
+     "actions": 676,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 125
+    },
+    {
+     "seed": 30044,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 32343,
+     "actions": 587,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30045,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62800,
+     "actions": 1128,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "3": 2,
+      "5": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30046,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64703,
+     "actions": 1153,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 3,
+      "5": 3
+     },
+     "sun_left": 350
+    },
+    {
+     "seed": 30047,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 45660,
+     "actions": 809,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 11,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 1950
+    },
+    {
+     "seed": 30048,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61928,
+     "actions": 1115,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "5": 2,
+      "3": 3,
+      "0": 5
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30049,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 43424,
+     "actions": 776,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 1,
+      "5": 2
+     },
+     "sun_left": 1100
+    },
+    {
+     "seed": 30050,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 55979,
+     "actions": 1006,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "5": 4,
+      "0": 10,
+      "3": 2
+     },
+     "sun_left": 500
+    },
+    {
+     "seed": 30051,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 39028,
+     "actions": 705,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30052,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 22,
+     "tick": 42774,
+     "actions": 754,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 2550
+    },
+    {
+     "seed": 30053,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55719,
+     "actions": 1006,
+     "mowers": 4,
+     "plants_left": {
+      "0": 7,
+      "1": 6,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30054,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 66654,
+     "actions": 1199,
+     "mowers": 4,
+     "plants_left": {
+      "0": 10,
+      "1": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30055,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 53018,
+     "actions": 962,
+     "mowers": 4,
+     "plants_left": {
+      "0": 11,
+      "1": 10,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30056,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 30693,
+     "actions": 560,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "3": 2,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 500
+    },
+    {
+     "seed": 30057,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 51847,
+     "actions": 933,
+     "mowers": 3,
+     "plants_left": {
+      "5": 3,
+      "1": 9,
+      "0": 11,
+      "3": 3
+     },
+     "sun_left": 400
+    },
+    {
+     "seed": 30058,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 50115,
+     "actions": 904,
+     "mowers": 3,
+     "plants_left": {
+      "0": 10,
+      "1": 8,
+      "5": 4
+     },
+     "sun_left": 625
+    },
+    {
+     "seed": 30059,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 31762,
+     "actions": 575,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 825
+    },
+    {
+     "seed": 30060,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 30022,
+     "actions": 545,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30061,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 28769,
+     "actions": 532,
+     "mowers": 4,
+     "plants_left": {
+      "3": 2,
+      "1": 10,
+      "0": 13
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30062,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 35774,
+     "actions": 646,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "3": 1,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30063,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 47383,
+     "actions": 845,
+     "mowers": 3,
+     "plants_left": {
+      "5": 2,
+      "1": 10,
+      "0": 12,
+      "3": 1
+     },
+     "sun_left": 1225
+    },
+    {
+     "seed": 30064,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 31579,
+     "actions": 573,
+     "mowers": 3,
+     "plants_left": {
+      "0": 13,
+      "5": 1,
+      "1": 10,
+      "3": 2
+     },
+     "sun_left": 575
+    },
+    {
+     "seed": 30065,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 54062,
+     "actions": 970,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 275
+    },
+    {
+     "seed": 30066,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 67613,
+     "actions": 1212,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 8,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 175
+    },
+    {
+     "seed": 30067,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 35800,
+     "actions": 654,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30068,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62833,
+     "actions": 1119,
+     "mowers": 3,
+     "plants_left": {
+      "1": 7,
+      "0": 10,
+      "5": 4,
+      "3": 3
+     },
+     "sun_left": 975
+    },
+    {
+     "seed": 30069,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 23,
+     "tick": 43687,
+     "actions": 784,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30070,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 68326,
+     "actions": 1212,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 1475
+    },
+    {
+     "seed": 30071,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 31681,
+     "actions": 578,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30072,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62887,
+     "actions": 1130,
+     "mowers": 5,
+     "plants_left": {
+      "0": 10,
+      "1": 10,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 225
+    },
+    {
+     "seed": 30073,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 59022,
+     "actions": 1061,
+     "mowers": 1,
+     "plants_left": {
+      "1": 7,
+      "0": 11,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30074,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 52057,
+     "actions": 927,
+     "mowers": 3,
+     "plants_left": {
+      "0": 10,
+      "1": 9,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 1550
+    },
+    {
+     "seed": 30075,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 48953,
+     "actions": 883,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 2
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30076,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 46288,
+     "actions": 833,
+     "mowers": 2,
+     "plants_left": {
+      "1": 6,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 775
+    },
+    {
+     "seed": 30077,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 43810,
+     "actions": 784,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 12,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 950
+    },
+    {
+     "seed": 30078,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 13,
+     "tick": 25002,
+     "actions": 460,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "3": 3,
+      "0": 13
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30079,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62080,
+     "actions": 1104,
+     "mowers": 3,
+     "plants_left": {
+      "5": 4,
+      "1": 10,
+      "0": 7,
+      "3": 1
+     },
+     "sun_left": 1775
+    },
+    {
+     "seed": 30080,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 59323,
+     "actions": 1068,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 9,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30081,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 50943,
+     "actions": 920,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "5": 3,
+      "0": 11,
+      "3": 2
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30082,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 33479,
+     "actions": 610,
+     "mowers": 5,
+     "plants_left": {
+      "1": 8,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 600
+    },
+    {
+     "seed": 30083,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62606,
+     "actions": 1121,
+     "mowers": 3,
+     "plants_left": {
+      "5": 3,
+      "1": 8,
+      "3": 3,
+      "0": 9
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30084,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63088,
+     "actions": 1124,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 9,
+      "5": 3
+     },
+     "sun_left": 1250
+    },
+    {
+     "seed": 30085,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 59456,
+     "actions": 1048,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 2250
+    },
+    {
+     "seed": 30086,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62874,
+     "actions": 1121,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "0": 10,
+      "5": 4,
+      "3": 3
+     },
+     "sun_left": 950
+    },
+    {
+     "seed": 30087,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62939,
+     "actions": 1109,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 2325
+    },
+    {
+     "seed": 30088,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 45249,
+     "actions": 812,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 11,
+      "3": 1
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30089,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64562,
+     "actions": 1145,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 1950
+    },
+    {
+     "seed": 30090,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62958,
+     "actions": 1135,
+     "mowers": 3,
+     "plants_left": {
+      "1": 7,
+      "0": 10,
+      "3": 3,
+      "5": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30091,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62216,
+     "actions": 1099,
+     "mowers": 2,
+     "plants_left": {
+      "0": 10,
+      "1": 8,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 2225
+    },
+    {
+     "seed": 30092,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 41727,
+     "actions": 758,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 175
+    },
+    {
+     "seed": 30093,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 54578,
+     "actions": 963,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 2,
+      "5": 3
+     },
+     "sun_left": 2425
+    },
+    {
+     "seed": 30094,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 36060,
+     "actions": 647,
+     "mowers": 2,
+     "plants_left": {
+      "0": 13,
+      "1": 9,
+      "3": 2,
+      "5": 1
+     },
+     "sun_left": 1300
+    },
+    {
+     "seed": 30095,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 33974,
+     "actions": 604,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 1625
+    },
+    {
+     "seed": 30096,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 43318,
+     "actions": 792,
+     "mowers": 5,
+     "plants_left": {
+      "0": 12,
+      "3": 3,
+      "1": 7,
+      "4": 1
+     },
+     "sun_left": 125
+    },
+    {
+     "seed": 30097,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 57066,
+     "actions": 1022,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 500
+    },
+    {
+     "seed": 30098,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64563,
+     "actions": 1154,
+     "mowers": 3,
+     "plants_left": {
+      "5": 4,
+      "0": 10,
+      "1": 9,
+      "3": 2
+     },
+     "sun_left": 1400
+    },
+    {
+     "seed": 30099,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 39337,
+     "actions": 715,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30100,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 66760,
+     "actions": 1189,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 1300
+    },
+    {
+     "seed": 30101,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 65440,
+     "actions": 1176,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 8,
+      "5": 1,
+      "3": 2
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30102,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 21,
+     "tick": 41890,
+     "actions": 764,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 3
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30103,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60072,
+     "actions": 1072,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 1,
+      "5": 3
+     },
+     "sun_left": 1200
+    },
+    {
+     "seed": 30104,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63650,
+     "actions": 1123,
+     "mowers": 1,
+     "plants_left": {
+      "3": 2,
+      "1": 9,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1925
+    },
+    {
+     "seed": 30105,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 39582,
+     "actions": 721,
+     "mowers": 4,
+     "plants_left": {
+      "0": 13,
+      "1": 10,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 275
+    },
+    {
+     "seed": 30106,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 42796,
+     "actions": 764,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 13,
+      "5": 1,
+      "3": 2
+     },
+     "sun_left": 1300
+    },
+    {
+     "seed": 30107,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61114,
+     "actions": 1090,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 725
+    },
+    {
+     "seed": 30108,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 53308,
+     "actions": 961,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "0": 9,
+      "3": 2,
+      "5": 3
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30109,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 43308,
+     "actions": 780,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "5": 2
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30110,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 42997,
+     "actions": 770,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 825
+    },
+    {
+     "seed": 30111,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 49740,
+     "actions": 889,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "5": 1,
+      "3": 2
+     },
+     "sun_left": 1475
+    },
+    {
+     "seed": 30112,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64216,
+     "actions": 1143,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 9,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 1100
+    },
+    {
+     "seed": 30113,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 48559,
+     "actions": 862,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 1750
+    },
+    {
+     "seed": 30114,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 46739,
+     "actions": 831,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 2,
+      "5": 3
+     },
+     "sun_left": 1775
+    },
+    {
+     "seed": 30115,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 34521,
+     "actions": 624,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 14
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30116,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 52952,
+     "actions": 941,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "5": 3,
+      "0": 11,
+      "3": 1
+     },
+     "sun_left": 1475
+    },
+    {
+     "seed": 30117,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61960,
+     "actions": 1117,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30118,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55776,
+     "actions": 1009,
+     "mowers": 4,
+     "plants_left": {
+      "1": 8,
+      "3": 2,
+      "0": 9,
+      "5": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30119,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 59634,
+     "actions": 1053,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1850
+    },
+    {
+     "seed": 30120,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63618,
+     "actions": 1137,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 600
+    },
+    {
+     "seed": 30121,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 45822,
+     "actions": 828,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30122,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60151,
+     "actions": 1062,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 2075
+    },
+    {
+     "seed": 30123,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 37116,
+     "actions": 670,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "3": 2,
+      "0": 12,
+      "5": 2
+     },
+     "sun_left": 650
+    },
+    {
+     "seed": 30124,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 58840,
+     "actions": 1061,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 8,
+      "5": 2
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30125,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 44658,
+     "actions": 787,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 2275
+    },
+    {
+     "seed": 30126,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 52031,
+     "actions": 940,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30127,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 57433,
+     "actions": 1025,
+     "mowers": 3,
+     "plants_left": {
+      "3": 2,
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1575
+    },
+    {
+     "seed": 30128,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 56874,
+     "actions": 1024,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 11,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30129,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61954,
+     "actions": 1108,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30130,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 49183,
+     "actions": 880,
+     "mowers": 3,
+     "plants_left": {
+      "0": 10,
+      "1": 8,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30131,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64010,
+     "actions": 1132,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1800
+    },
+    {
+     "seed": 30132,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63270,
+     "actions": 1132,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 200
+    },
+    {
+     "seed": 30133,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 35269,
+     "actions": 645,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30134,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62680,
+     "actions": 1117,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 11,
+      "3": 1
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30135,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 37169,
+     "actions": 676,
+     "mowers": 4,
+     "plants_left": {
+      "1": 8,
+      "0": 12,
+      "5": 2,
+      "4": 2,
+      "3": 1
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30136,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64589,
+     "actions": 1140,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 2425
+    },
+    {
+     "seed": 30137,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 59109,
+     "actions": 1070,
+     "mowers": 5,
+     "plants_left": {
+      "1": 8,
+      "0": 9,
+      "5": 2,
+      "3": 3
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30138,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 35272,
+     "actions": 645,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30139,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60119,
+     "actions": 1073,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 1100
+    },
+    {
+     "seed": 30140,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60334,
+     "actions": 1080,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 2,
+      "0": 8,
+      "3": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30141,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61063,
+     "actions": 1087,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 6,
+      "3": 1
+     },
+     "sun_left": 925
+    },
+    {
+     "seed": 30142,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 28862,
+     "actions": 519,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 1000
+    },
+    {
+     "seed": 30143,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61117,
+     "actions": 1072,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 2425
+    },
+    {
+     "seed": 30144,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 56793,
+     "actions": 1022,
+     "mowers": 4,
+     "plants_left": {
+      "3": 3,
+      "1": 8,
+      "5": 4,
+      "0": 6
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30145,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 58310,
+     "actions": 1052,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "5": 1,
+      "3": 2
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30146,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 53249,
+     "actions": 958,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3,
+      "3": 2
+     },
+     "sun_left": 425
+    },
+    {
+     "seed": 30147,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 30344,
+     "actions": 544,
+     "mowers": 2,
+     "plants_left": {
+      "0": 14,
+      "1": 10,
+      "3": 1
+     },
+     "sun_left": 1150
+    },
+    {
+     "seed": 30148,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 55049,
+     "actions": 993,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 250
+    },
+    {
+     "seed": 30149,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63841,
+     "actions": 1138,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "3": 1,
+      "0": 10
+     },
+     "sun_left": 1075
+    },
+    {
+     "seed": 30150,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 58637,
+     "actions": 1035,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 2075
+    },
+    {
+     "seed": 30151,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62427,
+     "actions": 1116,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 9,
+      "5": 3,
+      "3": 2
+     },
+     "sun_left": 1100
+    },
+    {
+     "seed": 30152,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 52461,
+     "actions": 939,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "3": 2,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1250
+    },
+    {
+     "seed": 30153,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64616,
+     "actions": 1138,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 2400
+    },
+    {
+     "seed": 30154,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64584,
+     "actions": 1150,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "3": 2,
+      "0": 8,
+      "5": 4
+     },
+     "sun_left": 1425
+    },
+    {
+     "seed": 30155,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61866,
+     "actions": 1093,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 7,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 2100
+    },
+    {
+     "seed": 30156,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60722,
+     "actions": 1085,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 125
+    },
+    {
+     "seed": 30157,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63916,
+     "actions": 1154,
+     "mowers": 3,
+     "plants_left": {
+      "1": 7,
+      "5": 4,
+      "0": 7,
+      "3": 2
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30158,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 30905,
+     "actions": 555,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 1175
+    },
+    {
+     "seed": 30159,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61422,
+     "actions": 1105,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 2,
+      "0": 10,
+      "3": 2
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30160,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55344,
+     "actions": 1003,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "2": 1,
+      "3": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30161,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 50556,
+     "actions": 916,
+     "mowers": 3,
+     "plants_left": {
+      "0": 13,
+      "1": 7,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30162,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 36545,
+     "actions": 669,
+     "mowers": 4,
+     "plants_left": {
+      "0": 14,
+      "1": 7,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30163,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62410,
+     "actions": 1124,
+     "mowers": 4,
+     "plants_left": {
+      "1": 6,
+      "0": 6,
+      "5": 2,
+      "3": 2
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30164,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 45952,
+     "actions": 827,
+     "mowers": 2,
+     "plants_left": {
+      "3": 1,
+      "1": 9,
+      "5": 4,
+      "0": 10
+     },
+     "sun_left": 900
+    },
+    {
+     "seed": 30165,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 38754,
+     "actions": 695,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30166,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 46010,
+     "actions": 830,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "5": 3,
+      "0": 11,
+      "3": 2
+     },
+     "sun_left": 175
+    },
+    {
+     "seed": 30167,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61854,
+     "actions": 1108,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 10,
+      "5": 3
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30168,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62080,
+     "actions": 1113,
+     "mowers": 2,
+     "plants_left": {
+      "0": 9,
+      "1": 10,
+      "5": 4,
+      "3": 3
+     },
+     "sun_left": 900
+    },
+    {
+     "seed": 30169,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 33792,
+     "actions": 622,
+     "mowers": 4,
+     "plants_left": {
+      "3": 3,
+      "1": 7,
+      "0": 7
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30170,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 54000,
+     "actions": 980,
+     "mowers": 3,
+     "plants_left": {
+      "0": 9,
+      "1": 10,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30171,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64660,
+     "actions": 1167,
+     "mowers": 5,
+     "plants_left": {
+      "0": 6,
+      "1": 7,
+      "3": 5,
+      "5": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30172,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 64686,
+     "actions": 1154,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "3": 2,
+      "5": 4,
+      "0": 5
+     },
+     "sun_left": 1175
+    },
+    {
+     "seed": 30173,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 36186,
+     "actions": 656,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "3": 2,
+      "0": 12,
+      "5": 2
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30174,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60251,
+     "actions": 1079,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 325
+    },
+    {
+     "seed": 30175,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61076,
+     "actions": 1088,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 7,
+      "3": 2
+     },
+     "sun_left": 1125
+    },
+    {
+     "seed": 30176,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 25092,
+     "actions": 453,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 725
+    },
+    {
+     "seed": 30177,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 42915,
+     "actions": 767,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 11,
+      "3": 1
+     },
+     "sun_left": 1475
+    },
+    {
+     "seed": 30178,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60970,
+     "actions": 1089,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 10,
+      "3": 2
+     },
+     "sun_left": 975
+    },
+    {
+     "seed": 30179,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63460,
+     "actions": 1137,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "3": 2,
+      "0": 9,
+      "5": 4
+     },
+     "sun_left": 800
+    },
+    {
+     "seed": 30180,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63091,
+     "actions": 1132,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30181,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61000,
+     "actions": 1067,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 2725
+    },
+    {
+     "seed": 30182,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 37553,
+     "actions": 682,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30183,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 34880,
+     "actions": 639,
+     "mowers": 3,
+     "plants_left": {
+      "0": 13,
+      "1": 9,
+      "3": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30184,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63321,
+     "actions": 1140,
+     "mowers": 4,
+     "plants_left": {
+      "3": 3,
+      "1": 8,
+      "0": 8,
+      "5": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30185,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 48175,
+     "actions": 863,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 1075
+    },
+    {
+     "seed": 30186,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 46948,
+     "actions": 852,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30187,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62444,
+     "actions": 1101,
+     "mowers": 1,
+     "plants_left": {
+      "1": 8,
+      "5": 4,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 2150
+    },
+    {
+     "seed": 30188,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62769,
+     "actions": 1119,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 900
+    },
+    {
+     "seed": 30189,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60520,
+     "actions": 1069,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 1875
+    },
+    {
+     "seed": 30190,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 59620,
+     "actions": 1057,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 1350
+    },
+    {
+     "seed": 30191,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 32236,
+     "actions": 591,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30192,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63075,
+     "actions": 1129,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 625
+    },
+    {
+     "seed": 30193,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 58874,
+     "actions": 1062,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "3": 1,
+      "5": 3
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30194,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60983,
+     "actions": 1087,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "3": 1,
+      "0": 8
+     },
+     "sun_left": 1200
+    },
+    {
+     "seed": 30195,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55699,
+     "actions": 994,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 925
+    },
+    {
+     "seed": 30196,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62685,
+     "actions": 1126,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 8,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30197,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 46618,
+     "actions": 840,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 12
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30198,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 54128,
+     "actions": 961,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 1875
+    },
+    {
+     "seed": 30199,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 49248,
+     "actions": 875,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "3": 1,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1750
+    },
+    {
+     "seed": 30200,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61990,
+     "actions": 1109,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 850
+    },
+    {
+     "seed": 30201,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60880,
+     "actions": 1077,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1375
+    },
+    {
+     "seed": 30202,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 51009,
+     "actions": 914,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "5": 2,
+      "3": 2
+     },
+     "sun_left": 975
+    },
+    {
+     "seed": 30203,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 65947,
+     "actions": 1166,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 2525
+    },
+    {
+     "seed": 30204,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 37555,
+     "actions": 682,
+     "mowers": 2,
+     "plants_left": {
+      "1": 7,
+      "5": 2,
+      "0": 12,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30205,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 66717,
+     "actions": 1175,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "5": 4,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 2100
+    },
+    {
+     "seed": 30206,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63247,
+     "actions": 1132,
+     "mowers": 2,
+     "plants_left": {
+      "0": 10,
+      "1": 9,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 275
+    },
+    {
+     "seed": 30207,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 50316,
+     "actions": 894,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "3": 2,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 1725
+    },
+    {
+     "seed": 30208,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 47470,
+     "actions": 862,
+     "mowers": 4,
+     "plants_left": {
+      "0": 12,
+      "1": 7,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30209,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 24,
+     "tick": 45440,
+     "actions": 828,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30210,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 49210,
+     "actions": 883,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "3": 2,
+      "5": 2
+     },
+     "sun_left": 600
+    },
+    {
+     "seed": 30211,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60401,
+     "actions": 1073,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "5": 2,
+      "3": 2
+     },
+     "sun_left": 1200
+    },
+    {
+     "seed": 30212,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 66517,
+     "actions": 1180,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 9,
+      "3": 3,
+      "5": 4
+     },
+     "sun_left": 2150
+    },
+    {
+     "seed": 30213,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 44616,
+     "actions": 785,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "5": 1,
+      "0": 13,
+      "3": 1
+     },
+     "sun_left": 2550
+    },
+    {
+     "seed": 30214,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 53987,
+     "actions": 967,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "5": 4,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 1075
+    },
+    {
+     "seed": 30215,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60886,
+     "actions": 1072,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 8,
+      "3": 2
+     },
+     "sun_left": 2750
+    },
+    {
+     "seed": 30216,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 28,
+     "tick": 53127,
+     "actions": 937,
+     "mowers": 1,
+     "plants_left": {
+      "1": 8,
+      "0": 12,
+      "5": 2,
+      "3": 2
+     },
+     "sun_left": 2125
+    },
+    {
+     "seed": 30217,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 58604,
+     "actions": 1052,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 1,
+      "5": 3
+     },
+     "sun_left": 425
+    },
+    {
+     "seed": 30218,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63049,
+     "actions": 1115,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 2025
+    },
+    {
+     "seed": 30219,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 26141,
+     "actions": 481,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 3
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30220,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55790,
+     "actions": 998,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 9,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 1150
+    },
+    {
+     "seed": 30221,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 40692,
+     "actions": 736,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30222,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 57617,
+     "actions": 1016,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 2750
+    },
+    {
+     "seed": 30223,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63881,
+     "actions": 1140,
+     "mowers": 0,
+     "plants_left": {
+      "3": 2,
+      "1": 10,
+      "5": 2,
+      "0": 12
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30224,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61506,
+     "actions": 1077,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 2950
+    },
+    {
+     "seed": 30225,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62581,
+     "actions": 1116,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 950
+    },
+    {
+     "seed": 30226,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 27,
+     "tick": 47834,
+     "actions": 857,
+     "mowers": 3,
+     "plants_left": {
+      "1": 7,
+      "0": 9,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 825
+    },
+    {
+     "seed": 30227,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 29999,
+     "actions": 554,
+     "mowers": 5,
+     "plants_left": {
+      "1": 10,
+      "3": 2,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 175
+    },
+    {
+     "seed": 30228,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 60988,
+     "actions": 1083,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 1350
+    },
+    {
+     "seed": 30229,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 51463,
+     "actions": 933,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "3": 2,
+      "5": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30230,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 21,
+     "tick": 39126,
+     "actions": 702,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30231,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 39719,
+     "actions": 721,
+     "mowers": 4,
+     "plants_left": {
+      "5": 2,
+      "3": 2,
+      "0": 12,
+      "1": 10
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30232,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 22,
+     "tick": 42674,
+     "actions": 765,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "3": 1,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 1400
+    },
+    {
+     "seed": 30233,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 57772,
+     "actions": 1040,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30234,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 55121,
+     "actions": 985,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30235,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 56780,
+     "actions": 1018,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 8,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30236,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 48731,
+     "actions": 871,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "3": 1,
+      "5": 2
+     },
+     "sun_left": 1625
+    },
+    {
+     "seed": 30237,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61455,
+     "actions": 1081,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 2000
+    },
+    {
+     "seed": 30238,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 21,
+     "tick": 40938,
+     "actions": 738,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30239,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62228,
+     "actions": 1118,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "3": 2,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 275
+    },
+    {
+     "seed": 30240,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62796,
+     "actions": 1114,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 8,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 1425
+    },
+    {
+     "seed": 30241,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62068,
+     "actions": 1104,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "2": 1,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 1200
+    },
+    {
+     "seed": 30242,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 25,
+     "tick": 48228,
+     "actions": 863,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 1350
+    },
+    {
+     "seed": 30243,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63035,
+     "actions": 1129,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 7,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 225
+    },
+    {
+     "seed": 30244,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61111,
+     "actions": 1092,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "3": 1,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 525
+    },
+    {
+     "seed": 30245,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61497,
+     "actions": 1095,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 5,
+      "5": 4,
+      "3": 2
+     },
+     "sun_left": 1300
+    },
+    {
+     "seed": 30246,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24119,
+     "actions": 446,
+     "mowers": 4,
+     "plants_left": {
+      "0": 11,
+      "1": 10,
+      "3": 4
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30247,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 26,
+     "tick": 47186,
+     "actions": 840,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "5": 4,
+      "3": 2,
+      "0": 10
+     },
+     "sun_left": 1650
+    },
+    {
+     "seed": 30248,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 29,
+     "tick": 53654,
+     "actions": 966,
+     "mowers": 1,
+     "plants_left": {
+      "3": 2,
+      "1": 8,
+      "0": 10,
+      "5": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30249,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 62705,
+     "actions": 1109,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 1875
+    },
+    {
+     "seed": 30250,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 56920,
+     "actions": 1009,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 12,
+      "5": 1
+     },
+     "sun_left": 1650
+    },
+    {
+     "seed": 30251,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 36840,
+     "actions": 664,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 2,
+      "0": 12,
+      "3": 1
+     },
+     "sun_left": 800
+    },
+    {
+     "seed": 30252,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 63370,
+     "actions": 1137,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "3": 2,
+      "0": 8,
+      "5": 3
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30253,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 66420,
+     "actions": 1194,
+     "mowers": 4,
+     "plants_left": {
+      "0": 11,
+      "1": 9,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30254,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 30,
+     "tick": 61044,
+     "actions": 1075,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 10
+     },
+     "sun_left": 2800
+    },
+    {
+     "seed": 30255,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 34684,
+     "actions": 633,
+     "mowers": 4,
+     "plants_left": {
+      "0": 14,
+      "1": 9,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 650
+    }
+   ]
+  },
+  {
+   "task_id": "full_day8",
+   "terrain": "day",
+   "level": 8,
+   "wave_cap": null,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "seeds": 64,
+   "wins": 35,
+   "n": 64,
+   "win_rate": 0.546875,
+   "truncated": 0,
+   "mean_terminal_wave": 19.25,
+   "mean_mowers_triggered": 1.89,
+   "mean_sun_left": 587.9,
+   "episodes": [
+    {
+     "seed": 30000,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 39009,
+     "actions": 714,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "4": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30001,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 49882,
+     "actions": 893,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "5": 2,
+      "3": 2
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30002,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 41768,
+     "actions": 756,
+     "mowers": 2,
+     "plants_left": {
+      "1": 7,
+      "3": 2,
+      "0": 12,
+      "5": 2
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30003,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 43206,
+     "actions": 757,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 2250
+    },
+    {
+     "seed": 30004,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 38184,
+     "actions": 696,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "5": 2,
+      "0": 12,
+      "4": 1,
+      "3": 2,
+      "2": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30005,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 36788,
+     "actions": 673,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "4": 1,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30006,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 46153,
+     "actions": 832,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30007,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 49730,
+     "actions": 900,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 11,
+      "5": 1,
+      "3": 3
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30008,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 30805,
+     "actions": 567,
+     "mowers": 4,
+     "plants_left": {
+      "0": 10,
+      "3": 3,
+      "1": 8
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30009,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 46966,
+     "actions": 844,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 13,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30010,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 39372,
+     "actions": 708,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "3": 1,
+      "5": 2
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30011,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 50266,
+     "actions": 897,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 200
+    },
+    {
+     "seed": 30012,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47817,
+     "actions": 857,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 4,
+      "0": 8,
+      "3": 2
+     },
+     "sun_left": 525
+    },
+    {
+     "seed": 30013,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47305,
+     "actions": 844,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "5": 2
+     },
+     "sun_left": 800
+    },
+    {
+     "seed": 30014,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47475,
+     "actions": 837,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 2100
+    },
+    {
+     "seed": 30015,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47593,
+     "actions": 848,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "5": 2
+     },
+     "sun_left": 500
+    },
+    {
+     "seed": 30016,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 28591,
+     "actions": 528,
+     "mowers": 5,
+     "plants_left": {
+      "3": 4,
+      "0": 6,
+      "1": 8,
+      "4": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30017,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 45590,
+     "actions": 800,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "5": 4
+     },
+     "sun_left": 2050
+    },
+    {
+     "seed": 30018,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 48011,
+     "actions": 862,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 14
+     },
+     "sun_left": 150
+    },
+    {
+     "seed": 30019,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 41883,
+     "actions": 760,
+     "mowers": 2,
+     "plants_left": {
+      "1": 8,
+      "3": 2,
+      "0": 11
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30020,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 45865,
+     "actions": 823,
+     "mowers": 3,
+     "plants_left": {
+      "0": 12,
+      "1": 10,
+      "5": 2
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30021,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 45274,
+     "actions": 817,
+     "mowers": 2,
+     "plants_left": {
+      "0": 11,
+      "1": 9,
+      "3": 1,
+      "5": 3
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30022,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47178,
+     "actions": 845,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "3": 1,
+      "5": 2
+     },
+     "sun_left": 1025
+    },
+    {
+     "seed": 30023,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 49231,
+     "actions": 876,
+     "mowers": 3,
+     "plants_left": {
+      "0": 13,
+      "1": 10,
+      "5": 1
+     },
+     "sun_left": 1625
+    },
+    {
+     "seed": 30024,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 43497,
+     "actions": 772,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 9,
+      "5": 2
+     },
+     "sun_left": 725
+    },
+    {
+     "seed": 30025,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 45506,
+     "actions": 819,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 3,
+      "0": 6,
+      "3": 3
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30026,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47844,
+     "actions": 856,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 1,
+      "5": 3
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30027,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 41753,
+     "actions": 760,
+     "mowers": 3,
+     "plants_left": {
+      "0": 14,
+      "1": 9,
+      "3": 1
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30028,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 35042,
+     "actions": 637,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 14
+     },
+     "sun_left": 125
+    },
+    {
+     "seed": 30029,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 18,
+     "tick": 38735,
+     "actions": 707,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "0": 13,
+      "3": 1
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30030,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 40434,
+     "actions": 719,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 1,
+      "5": 3
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30031,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 51924,
+     "actions": 943,
+     "mowers": 5,
+     "plants_left": {
+      "3": 2,
+      "0": 13,
+      "1": 8,
+      "5": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30032,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 43092,
+     "actions": 785,
+     "mowers": 3,
+     "plants_left": {
+      "0": 14,
+      "1": 10,
+      "3": 2
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30033,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 34874,
+     "actions": 643,
+     "mowers": 5,
+     "plants_left": {
+      "1": 8,
+      "0": 7,
+      "3": 2
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30034,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 42574,
+     "actions": 771,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30035,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 45379,
+     "actions": 796,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 2125
+    },
+    {
+     "seed": 30036,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 42518,
+     "actions": 751,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 2,
+      "3": 1
+     },
+     "sun_left": 1350
+    },
+    {
+     "seed": 30037,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 43271,
+     "actions": 755,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "5": 2
+     },
+     "sun_left": 2700
+    },
+    {
+     "seed": 30038,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 44826,
+     "actions": 790,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 1650
+    },
+    {
+     "seed": 30039,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 44246,
+     "actions": 788,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 1025
+    },
+    {
+     "seed": 30040,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 39904,
+     "actions": 724,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 10,
+      "3": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30041,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 51454,
+     "actions": 921,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3,
+      "3": 1
+     },
+     "sun_left": 800
+    },
+    {
+     "seed": 30042,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 42811,
+     "actions": 769,
+     "mowers": 3,
+     "plants_left": {
+      "0": 13,
+      "1": 8,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 1375
+    },
+    {
+     "seed": 30043,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 42446,
+     "actions": 773,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30044,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47447,
+     "actions": 857,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "3": 3,
+      "0": 9,
+      "5": 4
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30045,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 36666,
+     "actions": 666,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "5": 2,
+      "0": 12,
+      "3": 1
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30046,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 43348,
+     "actions": 779,
+     "mowers": 1,
+     "plants_left": {
+      "3": 1,
+      "1": 10,
+      "5": 3,
+      "0": 11
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30047,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 38047,
+     "actions": 695,
+     "mowers": 3,
+     "plants_left": {
+      "0": 14,
+      "1": 10,
+      "4": 1
+     },
+     "sun_left": 150
+    },
+    {
+     "seed": 30048,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 48619,
+     "actions": 861,
+     "mowers": 1,
+     "plants_left": {
+      "1": 8,
+      "0": 10,
+      "3": 2,
+      "5": 4
+     },
+     "sun_left": 1325
+    },
+    {
+     "seed": 30049,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 44807,
+     "actions": 791,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "3": 1,
+      "5": 1
+     },
+     "sun_left": 1550
+    },
+    {
+     "seed": 30050,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 45828,
+     "actions": 812,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 800
+    },
+    {
+     "seed": 30051,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 28299,
+     "actions": 518,
+     "mowers": 3,
+     "plants_left": {
+      "0": 14,
+      "1": 9,
+      "3": 2
+     },
+     "sun_left": 175
+    },
+    {
+     "seed": 30052,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 33878,
+     "actions": 615,
+     "mowers": 3,
+     "plants_left": {
+      "3": 2,
+      "1": 9,
+      "0": 13,
+      "5": 1
+     },
+     "sun_left": 425
+    },
+    {
+     "seed": 30053,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47767,
+     "actions": 850,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30054,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 51075,
+     "actions": 920,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "3": 2,
+      "5": 3,
+      "0": 11,
+      "4": 1
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30055,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 44624,
+     "actions": 796,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30056,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 19,
+     "tick": 38950,
+     "actions": 714,
+     "mowers": 4,
+     "plants_left": {
+      "0": 12,
+      "1": 7,
+      "3": 2
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30057,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 44497,
+     "actions": 798,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "3": 1,
+      "5": 3
+     },
+     "sun_left": 200
+    },
+    {
+     "seed": 30058,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 47620,
+     "actions": 855,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "5": 2,
+      "0": 12,
+      "3": 2
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30059,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 42741,
+     "actions": 773,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 800
+    },
+    {
+     "seed": 30060,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 44166,
+     "actions": 787,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 13,
+      "5": 1,
+      "3": 1
+     },
+     "sun_left": 850
+    },
+    {
+     "seed": 30061,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 43343,
+     "actions": 759,
+     "mowers": 0,
+     "plants_left": {
+      "1": 10,
+      "0": 11,
+      "5": 3
+     },
+     "sun_left": 2350
+    },
+    {
+     "seed": 30062,
+     "won": true,
+     "result": 1,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 43814,
+     "actions": 782,
+     "mowers": 1,
+     "plants_left": {
+      "1": 9,
+      "0": 10,
+      "5": 4,
+      "3": 1
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30063,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 20,
+     "tick": 49288,
+     "actions": 896,
+     "mowers": 5,
+     "plants_left": {
+      "1": 7,
+      "0": 9,
+      "3": 3
+     },
+     "sun_left": 25
+    }
+   ]
+  },
+  {
+   "task_id": "full_night12",
+   "terrain": "night",
+   "level": 12,
+   "wave_cap": null,
+   "deck": [
+    8,
+    9,
+    10,
+    12,
+    14,
+    15
+   ],
+   "seeds": 64,
+   "wins": 0,
+   "n": 64,
+   "win_rate": 0.0,
+   "truncated": 0,
+   "mean_terminal_wave": 7.97,
+   "mean_mowers_triggered": 4.97,
+   "mean_sun_left": 50.0,
+   "episodes": [
+    {
+     "seed": 30000,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21736,
+     "actions": 363,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30001,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20961,
+     "actions": 350,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30002,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20565,
+     "actions": 343,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30003,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22151,
+     "actions": 370,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30004,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 21169,
+     "actions": 353,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30005,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 21357,
+     "actions": 356,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30006,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21586,
+     "actions": 360,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30007,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20025,
+     "actions": 334,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30008,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19041,
+     "actions": 318,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30009,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21124,
+     "actions": 353,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30010,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 23662,
+     "actions": 395,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30011,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20533,
+     "actions": 343,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30012,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21436,
+     "actions": 358,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30013,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22058,
+     "actions": 368,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30014,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20267,
+     "actions": 338,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30015,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23851,
+     "actions": 398,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30016,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21810,
+     "actions": 364,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30017,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 21730,
+     "actions": 363,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30018,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22364,
+     "actions": 373,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30019,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23369,
+     "actions": 390,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30020,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 24112,
+     "actions": 402,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30021,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23591,
+     "actions": 394,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30022,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23094,
+     "actions": 385,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30023,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 22774,
+     "actions": 380,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30024,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21962,
+     "actions": 367,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30025,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 22053,
+     "actions": 368,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30026,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21574,
+     "actions": 360,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30027,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21612,
+     "actions": 361,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30028,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 22344,
+     "actions": 373,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30029,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18687,
+     "actions": 312,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30030,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21590,
+     "actions": 360,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30031,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21806,
+     "actions": 364,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30032,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20979,
+     "actions": 350,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30033,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20336,
+     "actions": 339,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30034,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20397,
+     "actions": 340,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30035,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18354,
+     "actions": 306,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30036,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21027,
+     "actions": 351,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30037,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22386,
+     "actions": 374,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30038,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20656,
+     "actions": 345,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30039,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21111,
+     "actions": 352,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30040,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22001,
+     "actions": 367,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30041,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21881,
+     "actions": 365,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30042,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23009,
+     "actions": 384,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30043,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 22155,
+     "actions": 370,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30044,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23028,
+     "actions": 384,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30045,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 22006,
+     "actions": 367,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30046,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22008,
+     "actions": 367,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30047,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19841,
+     "actions": 331,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30048,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18093,
+     "actions": 302,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30049,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20502,
+     "actions": 342,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30050,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22987,
+     "actions": 384,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30051,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18226,
+     "actions": 304,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30052,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21033,
+     "actions": 351,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30053,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20847,
+     "actions": 348,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30054,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22323,
+     "actions": 373,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30055,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21661,
+     "actions": 362,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30056,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21921,
+     "actions": 366,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30057,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20148,
+     "actions": 336,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30058,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22787,
+     "actions": 380,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30059,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20119,
+     "actions": 336,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30060,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22608,
+     "actions": 377,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30061,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 21296,
+     "actions": 355,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30062,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 22421,
+     "actions": 374,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30063,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 23650,
+     "actions": 395,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    }
+   ]
+  },
+  {
+   "task_id": "full_pool26",
+   "terrain": "pool",
+   "level": 26,
+   "wave_cap": null,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    16
+   ],
+   "seeds": 64,
+   "wins": 0,
+   "n": 64,
+   "win_rate": 0.0,
+   "truncated": 0,
+   "mean_terminal_wave": 12.25,
+   "mean_mowers_triggered": 2.73,
+   "mean_sun_left": 789.1,
+   "episodes": [
+    {
+     "seed": 30000,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 29783,
+     "actions": 531,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 1275
+    },
+    {
+     "seed": 30001,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 26620,
+     "actions": 478,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 900
+    },
+    {
+     "seed": 30002,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24398,
+     "actions": 444,
+     "mowers": 4,
+     "plants_left": {
+      "0": 14,
+      "1": 9,
+      "3": 2,
+      "4": 1
+     },
+     "sun_left": 400
+    },
+    {
+     "seed": 30003,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 28572,
+     "actions": 503,
+     "mowers": 2,
+     "plants_left": {
+      "1": 9,
+      "0": 14
+     },
+     "sun_left": 1425
+    },
+    {
+     "seed": 30004,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 23404,
+     "actions": 420,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 725
+    },
+    {
+     "seed": 30005,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 26762,
+     "actions": 484,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "3": 2,
+      "0": 14
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30006,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 28040,
+     "actions": 502,
+     "mowers": 3,
+     "plants_left": {
+      "0": 14,
+      "1": 10,
+      "3": 1
+     },
+     "sun_left": 1050
+    },
+    {
+     "seed": 30007,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 23727,
+     "actions": 426,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 650
+    },
+    {
+     "seed": 30008,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 30026,
+     "actions": 532,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1475
+    },
+    {
+     "seed": 30009,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 26356,
+     "actions": 480,
+     "mowers": 4,
+     "plants_left": {
+      "0": 14,
+      "1": 9,
+      "4": 1,
+      "3": 2
+     },
+     "sun_left": 350
+    },
+    {
+     "seed": 30010,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 22139,
+     "actions": 397,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 625
+    },
+    {
+     "seed": 30011,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 31453,
+     "actions": 573,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 2,
+      "4": 1
+     },
+     "sun_left": 350
+    },
+    {
+     "seed": 30012,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 25407,
+     "actions": 454,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 1025
+    },
+    {
+     "seed": 30013,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24216,
+     "actions": 434,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 825
+    },
+    {
+     "seed": 30014,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 30458,
+     "actions": 550,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "3": 1,
+      "0": 14
+     },
+     "sun_left": 850
+    },
+    {
+     "seed": 30015,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 29056,
+     "actions": 527,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 450
+    },
+    {
+     "seed": 30016,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 22877,
+     "actions": 418,
+     "mowers": 5,
+     "plants_left": {
+      "1": 9,
+      "0": 12,
+      "3": 2,
+      "4": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30017,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 22881,
+     "actions": 417,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30018,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 29382,
+     "actions": 517,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1800
+    },
+    {
+     "seed": 30019,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 25908,
+     "actions": 470,
+     "mowers": 3,
+     "plants_left": {
+      "1": 8,
+      "0": 14,
+      "4": 2,
+      "3": 2
+     },
+     "sun_left": 250
+    },
+    {
+     "seed": 30020,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 19359,
+     "actions": 350,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 425
+    },
+    {
+     "seed": 30021,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 13,
+     "tick": 28443,
+     "actions": 504,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1375
+    },
+    {
+     "seed": 30022,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 22770,
+     "actions": 409,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 625
+    },
+    {
+     "seed": 30023,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24434,
+     "actions": 444,
+     "mowers": 3,
+     "plants_left": {
+      "0": 14,
+      "1": 9,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30024,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 22563,
+     "actions": 405,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30025,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 25228,
+     "actions": 455,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 650
+    },
+    {
+     "seed": 30026,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24062,
+     "actions": 438,
+     "mowers": 4,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30027,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 28479,
+     "actions": 506,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1250
+    },
+    {
+     "seed": 30028,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 28266,
+     "actions": 503,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 1300
+    },
+    {
+     "seed": 30029,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 33589,
+     "actions": 606,
+     "mowers": 5,
+     "plants_left": {
+      "0": 14,
+      "1": 9,
+      "4": 3
+     },
+     "sun_left": 650
+    },
+    {
+     "seed": 30030,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 18625,
+     "actions": 342,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 12,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30031,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 29710,
+     "actions": 524,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1650
+    },
+    {
+     "seed": 30032,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 24270,
+     "actions": 433,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 925
+    },
+    {
+     "seed": 30033,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 19972,
+     "actions": 360,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30034,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24616,
+     "actions": 451,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "3": 2,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30035,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 21283,
+     "actions": 390,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 125
+    },
+    {
+     "seed": 30036,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 22556,
+     "actions": 403,
+     "mowers": 1,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30037,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 13,
+     "tick": 26721,
+     "actions": 475,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1175
+    },
+    {
+     "seed": 30038,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 29584,
+     "actions": 522,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 1675
+    },
+    {
+     "seed": 30039,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 28301,
+     "actions": 502,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1375
+    },
+    {
+     "seed": 30040,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 26336,
+     "actions": 467,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 1300
+    },
+    {
+     "seed": 30041,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 27149,
+     "actions": 483,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1100
+    },
+    {
+     "seed": 30042,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24936,
+     "actions": 453,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30043,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 29663,
+     "actions": 530,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 1200
+    },
+    {
+     "seed": 30044,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 15,
+     "tick": 32757,
+     "actions": 586,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 1100
+    },
+    {
+     "seed": 30045,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 13,
+     "tick": 24351,
+     "actions": 439,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1,
+      "3": 1
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30046,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 24404,
+     "actions": 435,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 950
+    },
+    {
+     "seed": 30047,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 32717,
+     "actions": 590,
+     "mowers": 5,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 775
+    },
+    {
+     "seed": 30048,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24363,
+     "actions": 435,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 925
+    },
+    {
+     "seed": 30049,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 28630,
+     "actions": 519,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 2
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30050,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 14,
+     "tick": 27796,
+     "actions": 492,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 1350
+    },
+    {
+     "seed": 30051,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 27023,
+     "actions": 491,
+     "mowers": 4,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "4": 2,
+      "3": 2
+     },
+     "sun_left": 350
+    },
+    {
+     "seed": 30052,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 17,
+     "tick": 31004,
+     "actions": 555,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 14
+     },
+     "sun_left": 925
+    },
+    {
+     "seed": 30053,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 23513,
+     "actions": 422,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1,
+      "4": 1
+     },
+     "sun_left": 775
+    },
+    {
+     "seed": 30054,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 21402,
+     "actions": 385,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 600
+    },
+    {
+     "seed": 30055,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 22290,
+     "actions": 399,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30056,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 16,
+     "tick": 27856,
+     "actions": 492,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 1550
+    },
+    {
+     "seed": 30057,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 21890,
+     "actions": 402,
+     "mowers": 3,
+     "plants_left": {
+      "3": 2,
+      "1": 9,
+      "0": 13,
+      "4": 1
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30058,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 13,
+     "tick": 25244,
+     "actions": 457,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 550
+    },
+    {
+     "seed": 30059,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 13,
+     "tick": 27120,
+     "actions": 487,
+     "mowers": 3,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 900
+    },
+    {
+     "seed": 30060,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 24206,
+     "actions": 432,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14,
+      "4": 1
+     },
+     "sun_left": 900
+    },
+    {
+     "seed": 30061,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 11,
+     "tick": 22581,
+     "actions": 411,
+     "mowers": 3,
+     "plants_left": {
+      "1": 9,
+      "0": 14,
+      "3": 1
+     },
+     "sun_left": 350
+    },
+    {
+     "seed": 30062,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 13,
+     "tick": 24872,
+     "actions": 444,
+     "mowers": 2,
+     "plants_left": {
+      "1": 10,
+      "0": 14
+     },
+     "sun_left": 950
+    },
+    {
+     "seed": 30063,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 23650,
+     "actions": 434,
+     "mowers": 5,
+     "plants_left": {
+      "1": 8,
+      "4": 2,
+      "0": 11,
+      "3": 3
+     },
+     "sun_left": 50
+    }
+   ]
+  },
+  {
+   "task_id": "full_fog31",
+   "terrain": "fog",
+   "level": 31,
+   "wave_cap": null,
+   "deck": [
+    8,
+    9,
+    10,
+    14,
+    15,
+    16
+   ],
+   "seeds": 64,
+   "wins": 0,
+   "n": 64,
+   "win_rate": 0.0,
+   "truncated": 0,
+   "mean_terminal_wave": 7.86,
+   "mean_mowers_triggered": 4.39,
+   "mean_sun_left": 50.0,
+   "episodes": [
+    {
+     "seed": 30000,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19382,
+     "actions": 324,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30001,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19497,
+     "actions": 325,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30002,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19390,
+     "actions": 324,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30003,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20957,
+     "actions": 350,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30004,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21408,
+     "actions": 357,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30005,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21512,
+     "actions": 359,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30006,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 23362,
+     "actions": 390,
+     "mowers": 6,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30007,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21486,
+     "actions": 359,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30008,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21849,
+     "actions": 365,
+     "mowers": 6,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30009,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19670,
+     "actions": 328,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30010,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18083,
+     "actions": 302,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30011,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21768,
+     "actions": 363,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30012,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19556,
+     "actions": 326,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30013,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19777,
+     "actions": 330,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30014,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19958,
+     "actions": 333,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30015,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20108,
+     "actions": 336,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30016,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22887,
+     "actions": 382,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30017,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18316,
+     "actions": 306,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30018,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19538,
+     "actions": 326,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30019,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22830,
+     "actions": 381,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30020,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20676,
+     "actions": 345,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30021,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21239,
+     "actions": 354,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30022,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20391,
+     "actions": 340,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30023,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20460,
+     "actions": 342,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30024,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20402,
+     "actions": 341,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30025,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21023,
+     "actions": 351,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30026,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22165,
+     "actions": 370,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30027,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20018,
+     "actions": 334,
+     "mowers": 6,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30028,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 23164,
+     "actions": 387,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30029,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22511,
+     "actions": 376,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30030,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19597,
+     "actions": 327,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30031,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 26589,
+     "actions": 444,
+     "mowers": 6,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30032,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21007,
+     "actions": 351,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30033,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19354,
+     "actions": 323,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30034,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22384,
+     "actions": 374,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30035,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21357,
+     "actions": 356,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30036,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18366,
+     "actions": 307,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30037,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25721,
+     "actions": 429,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30038,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20747,
+     "actions": 346,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30039,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22103,
+     "actions": 369,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30040,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 18206,
+     "actions": 304,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30041,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19834,
+     "actions": 331,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30042,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24633,
+     "actions": 411,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30043,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22226,
+     "actions": 371,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30044,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21097,
+     "actions": 352,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30045,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 19930,
+     "actions": 333,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30046,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19862,
+     "actions": 332,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30047,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22365,
+     "actions": 373,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30048,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21484,
+     "actions": 359,
+     "mowers": 6,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30049,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21479,
+     "actions": 358,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30050,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 21144,
+     "actions": 353,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30051,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20162,
+     "actions": 337,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30052,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21665,
+     "actions": 362,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30053,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22435,
+     "actions": 374,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30054,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22129,
+     "actions": 369,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30055,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18516,
+     "actions": 309,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30056,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 20735,
+     "actions": 346,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30057,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 21027,
+     "actions": 351,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30058,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20556,
+     "actions": 343,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30059,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21342,
+     "actions": 356,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30060,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 23148,
+     "actions": 386,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30061,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18269,
+     "actions": 305,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30062,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 18737,
+     "actions": 313,
+     "mowers": 4,
+     "plants_left": {},
+     "sun_left": 50
+    },
+    {
+     "seed": 30063,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21448,
+     "actions": 358,
+     "mowers": 5,
+     "plants_left": {},
+     "sun_left": 50
+    }
+   ]
+  },
+  {
+   "task_id": "full_roof41",
+   "terrain": "roof",
+   "level": 41,
+   "wave_cap": null,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    33
+   ],
+   "seeds": 64,
+   "wins": 0,
+   "n": 64,
+   "win_rate": 0.0,
+   "truncated": 0,
+   "mean_terminal_wave": 7.41,
+   "mean_mowers_triggered": 0.0,
+   "mean_sun_left": 476.6,
+   "episodes": [
+    {
+     "seed": 30000,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 21250,
+     "actions": 383,
+     "mowers": 0,
+     "plants_left": {
+      "33": 15,
+      "1": 8,
+      "0": 7
+     },
+     "sun_left": 450
+    },
+    {
+     "seed": 30001,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 26981,
+     "actions": 482,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "1": 8,
+      "0": 6
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30002,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25177,
+     "actions": 451,
+     "mowers": 0,
+     "plants_left": {
+      "33": 12,
+      "1": 7,
+      "0": 4
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30003,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25743,
+     "actions": 461,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "1": 8,
+      "0": 10
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30004,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 21338,
+     "actions": 384,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "0": 9,
+      "1": 8
+     },
+     "sun_left": 400
+    },
+    {
+     "seed": 30005,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23562,
+     "actions": 419,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "0": 7,
+      "1": 7
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30006,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25998,
+     "actions": 465,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "1": 8,
+      "0": 10
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30007,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24945,
+     "actions": 445,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "0": 6,
+      "1": 8
+     },
+     "sun_left": 825
+    },
+    {
+     "seed": 30008,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 24102,
+     "actions": 430,
+     "mowers": 0,
+     "plants_left": {
+      "33": 15,
+      "0": 6,
+      "1": 9
+     },
+     "sun_left": 825
+    },
+    {
+     "seed": 30009,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18946,
+     "actions": 342,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "0": 9,
+      "1": 8
+     },
+     "sun_left": 325
+    },
+    {
+     "seed": 30010,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19328,
+     "actions": 347,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "0": 9,
+      "1": 8
+     },
+     "sun_left": 425
+    },
+    {
+     "seed": 30011,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 4,
+     "tick": 12538,
+     "actions": 228,
+     "mowers": 0,
+     "plants_left": {
+      "33": 20,
+      "0": 6,
+      "1": 8
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30012,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25240,
+     "actions": 450,
+     "mowers": 0,
+     "plants_left": {
+      "33": 12,
+      "1": 7,
+      "0": 5
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30013,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 6,
+     "tick": 18267,
+     "actions": 329,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "0": 9,
+      "1": 8
+     },
+     "sun_left": 375
+    },
+    {
+     "seed": 30014,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 32339,
+     "actions": 572,
+     "mowers": 0,
+     "plants_left": {
+      "33": 16,
+      "0": 8,
+      "1": 8
+     },
+     "sun_left": 1300
+    },
+    {
+     "seed": 30015,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24698,
+     "actions": 442,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "0": 6,
+      "1": 8
+     },
+     "sun_left": 650
+    },
+    {
+     "seed": 30016,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 4,
+     "tick": 12838,
+     "actions": 234,
+     "mowers": 0,
+     "plants_left": {
+      "33": 20,
+      "0": 6,
+      "1": 9
+     },
+     "sun_left": 75
+    },
+    {
+     "seed": 30017,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25816,
+     "actions": 463,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "0": 7,
+      "1": 7
+     },
+     "sun_left": 700
+    },
+    {
+     "seed": 30018,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 24020,
+     "actions": 431,
+     "mowers": 0,
+     "plants_left": {
+      "33": 11,
+      "0": 5,
+      "1": 6
+     },
+     "sun_left": 575
+    },
+    {
+     "seed": 30019,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22104,
+     "actions": 399,
+     "mowers": 0,
+     "plants_left": {
+      "33": 13,
+      "2": 1,
+      "1": 7,
+      "0": 5
+     },
+     "sun_left": 275
+    },
+    {
+     "seed": 30020,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24182,
+     "actions": 435,
+     "mowers": 0,
+     "plants_left": {
+      "33": 15,
+      "0": 7,
+      "1": 8
+     },
+     "sun_left": 525
+    },
+    {
+     "seed": 30021,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 4,
+     "tick": 12599,
+     "actions": 230,
+     "mowers": 0,
+     "plants_left": {
+      "33": 20,
+      "1": 10,
+      "0": 5
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30022,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 4,
+     "tick": 13191,
+     "actions": 241,
+     "mowers": 0,
+     "plants_left": {
+      "33": 20,
+      "0": 7,
+      "1": 9
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30023,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20289,
+     "actions": 366,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "0": 10,
+      "1": 8
+     },
+     "sun_left": 275
+    },
+    {
+     "seed": 30024,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 6,
+     "tick": 15812,
+     "actions": 288,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "0": 8,
+      "1": 8
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30025,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22371,
+     "actions": 402,
+     "mowers": 0,
+     "plants_left": {
+      "33": 11,
+      "0": 5,
+      "1": 6
+     },
+     "sun_left": 400
+    },
+    {
+     "seed": 30026,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 6,
+     "tick": 17908,
+     "actions": 324,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "0": 9,
+      "1": 8
+     },
+     "sun_left": 225
+    },
+    {
+     "seed": 30027,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21847,
+     "actions": 393,
+     "mowers": 0,
+     "plants_left": {
+      "33": 16,
+      "0": 8,
+      "1": 8
+     },
+     "sun_left": 500
+    },
+    {
+     "seed": 30028,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 4,
+     "tick": 10495,
+     "actions": 192,
+     "mowers": 0,
+     "plants_left": {
+      "33": 19,
+      "1": 9,
+      "0": 4
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30029,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22307,
+     "actions": 400,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "0": 5,
+      "1": 9
+     },
+     "sun_left": 600
+    },
+    {
+     "seed": 30030,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20723,
+     "actions": 370,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "1": 8,
+      "0": 9
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30031,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 5,
+     "tick": 13853,
+     "actions": 253,
+     "mowers": 0,
+     "plants_left": {
+      "0": 9,
+      "33": 20,
+      "1": 9
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30032,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18074,
+     "actions": 329,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "0": 8,
+      "1": 9
+     },
+     "sun_left": 125
+    },
+    {
+     "seed": 30033,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 20641,
+     "actions": 371,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "0": 6,
+      "1": 8
+     },
+     "sun_left": 450
+    },
+    {
+     "seed": 30034,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18777,
+     "actions": 340,
+     "mowers": 0,
+     "plants_left": {
+      "33": 16,
+      "0": 8,
+      "1": 8
+     },
+     "sun_left": 175
+    },
+    {
+     "seed": 30035,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 5,
+     "tick": 15371,
+     "actions": 281,
+     "mowers": 0,
+     "plants_left": {
+      "0": 8,
+      "33": 17,
+      "1": 8
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30036,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19288,
+     "actions": 346,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "1": 8,
+      "0": 10
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30037,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22939,
+     "actions": 410,
+     "mowers": 0,
+     "plants_left": {
+      "33": 11,
+      "1": 6,
+      "0": 5
+     },
+     "sun_left": 625
+    },
+    {
+     "seed": 30038,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 27869,
+     "actions": 498,
+     "mowers": 0,
+     "plants_left": {
+      "33": 15,
+      "0": 7,
+      "1": 7
+     },
+     "sun_left": 775
+    },
+    {
+     "seed": 30039,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 5,
+     "tick": 13568,
+     "actions": 249,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "1": 9,
+      "0": 6
+     },
+     "sun_left": 50
+    },
+    {
+     "seed": 30040,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24704,
+     "actions": 440,
+     "mowers": 0,
+     "plants_left": {
+      "33": 12,
+      "0": 4,
+      "1": 6
+     },
+     "sun_left": 850
+    },
+    {
+     "seed": 30041,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 18324,
+     "actions": 332,
+     "mowers": 0,
+     "plants_left": {
+      "33": 16,
+      "0": 8,
+      "1": 8
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30042,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 23501,
+     "actions": 424,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "1": 8,
+      "0": 6
+     },
+     "sun_left": 350
+    },
+    {
+     "seed": 30043,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 5,
+     "tick": 13478,
+     "actions": 246,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "0": 6,
+      "1": 8
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30044,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 4,
+     "tick": 12983,
+     "actions": 239,
+     "mowers": 0,
+     "plants_left": {
+      "33": 19,
+      "1": 10,
+      "0": 5
+     },
+     "sun_left": 0
+    },
+    {
+     "seed": 30045,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24927,
+     "actions": 446,
+     "mowers": 0,
+     "plants_left": {
+      "33": 16,
+      "0": 8,
+      "1": 8
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30046,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19862,
+     "actions": 358,
+     "mowers": 0,
+     "plants_left": {
+      "33": 15,
+      "0": 7,
+      "1": 8
+     },
+     "sun_left": 400
+    },
+    {
+     "seed": 30047,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 26897,
+     "actions": 480,
+     "mowers": 0,
+     "plants_left": {
+      "33": 13,
+      "1": 8,
+      "0": 5
+     },
+     "sun_left": 850
+    },
+    {
+     "seed": 30048,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 22245,
+     "actions": 396,
+     "mowers": 0,
+     "plants_left": {
+      "33": 16,
+      "1": 8,
+      "0": 8
+     },
+     "sun_left": 750
+    },
+    {
+     "seed": 30049,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 5,
+     "tick": 12887,
+     "actions": 236,
+     "mowers": 0,
+     "plants_left": {
+      "33": 20,
+      "1": 10,
+      "0": 6
+     },
+     "sun_left": 100
+    },
+    {
+     "seed": 30050,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 10,
+     "tick": 31851,
+     "actions": 565,
+     "mowers": 0,
+     "plants_left": {
+      "33": 8,
+      "0": 4,
+      "1": 4
+     },
+     "sun_left": 1150
+    },
+    {
+     "seed": 30051,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 23916,
+     "actions": 429,
+     "mowers": 0,
+     "plants_left": {
+      "33": 15,
+      "0": 7,
+      "1": 8
+     },
+     "sun_left": 525
+    },
+    {
+     "seed": 30052,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25907,
+     "actions": 461,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "1": 6,
+      "0": 7
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30053,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 7,
+     "tick": 19487,
+     "actions": 352,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "1": 8,
+      "0": 10
+     },
+     "sun_left": 275
+    },
+    {
+     "seed": 30054,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24481,
+     "actions": 438,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "1": 8,
+      "0": 9
+     },
+     "sun_left": 675
+    },
+    {
+     "seed": 30055,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24050,
+     "actions": 428,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "0": 10,
+      "1": 8
+     },
+     "sun_left": 875
+    },
+    {
+     "seed": 30056,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 8,
+     "tick": 21828,
+     "actions": 391,
+     "mowers": 0,
+     "plants_left": {
+      "33": 16,
+      "0": 8,
+      "1": 8
+     },
+     "sun_left": 575
+    },
+    {
+     "seed": 30057,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24725,
+     "actions": 445,
+     "mowers": 0,
+     "plants_left": {
+      "33": 17,
+      "1": 9,
+      "0": 8
+     },
+     "sun_left": 475
+    },
+    {
+     "seed": 30058,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 6,
+     "tick": 17675,
+     "actions": 319,
+     "mowers": 0,
+     "plants_left": {
+      "33": 18,
+      "1": 8,
+      "0": 10
+     },
+     "sun_left": 300
+    },
+    {
+     "seed": 30059,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 4,
+     "tick": 12480,
+     "actions": 229,
+     "mowers": 0,
+     "plants_left": {
+      "33": 19,
+      "0": 6,
+      "1": 9
+     },
+     "sun_left": 25
+    },
+    {
+     "seed": 30060,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 26306,
+     "actions": 470,
+     "mowers": 0,
+     "plants_left": {
+      "33": 14,
+      "0": 4,
+      "1": 8
+     },
+     "sun_left": 825
+    },
+    {
+     "seed": 30061,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 25209,
+     "actions": 452,
+     "mowers": 0,
+     "plants_left": {
+      "33": 8,
+      "1": 5,
+      "0": 2
+     },
+     "sun_left": 600
+    },
+    {
+     "seed": 30062,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24667,
+     "actions": 444,
+     "mowers": 0,
+     "plants_left": {
+      "33": 12,
+      "0": 6,
+      "1": 5
+     },
+     "sun_left": 450
+    },
+    {
+     "seed": 30063,
+     "won": false,
+     "result": 2,
+     "terminal": true,
+     "truncated": false,
+     "wave": 9,
+     "tick": 24201,
+     "actions": 433,
+     "mowers": 0,
+     "plants_left": {
+      "33": 12,
+      "1": 6,
+      "0": 5
+     },
+     "sun_left": 650
+    }
+   ]
+  }
+ ]
+}
