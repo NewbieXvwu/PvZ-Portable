@@ -356,6 +356,71 @@ def zombie_allowed_levels() -> dict[str, list[int]]:
     return out
 
 
+def background_types() -> dict[int, str]:
+    """`enum BackgroundType`：编号 -> 枚举名（关卡背景，决定这一关是白天/夜间/泳池/雾/屋顶）。"""
+    return {v: k for k, v in _parse_enum(_read(CONST_ENUMS), "BackgroundType").items()}
+
+
+def grid_square_types() -> dict[int, str]:
+    """`enum GridSquareType`：编号 -> 枚举名（**每一格**的地形）。
+
+    注意它和 `BackgroundType` 是两套东西：前者是"这一格能不能种"，
+    后者是"这一关长什么样"。混淆它们会得出错误结论 —— 见下面的 `_fmt_terrain`。
+    """
+    return {v: k for k, v in _parse_enum(_read(CONST_ENUMS), "GridSquareType").items()}
+
+
+# 枚举名 -> 给人/模型看的中文名。编号是**事实**（从 ConstEnums.h 解析），
+# 中文名是**标签**。认不出就原样回英文，绝不猜 —— 猜错的标签比没有标签更坏。
+_BACKGROUND_LABEL = {
+    "BACKGROUND_1_DAY": "白天",
+    "BACKGROUND_2_NIGHT": "夜间",
+    "BACKGROUND_3_POOL": "白天泳池",
+    "BACKGROUND_4_FOG": "夜间泳池（有雾）",
+    "BACKGROUND_5_ROOF": "屋顶",
+    "BACKGROUND_6_BOSS": "Boss 关",
+}
+
+_GRIDSQUARE_LABEL = {
+    "GRIDSQUARE_NONE": "无（种不了）",
+    "GRIDSQUARE_GRASS": "普通地面",
+    "GRIDSQUARE_DIRT": "硬地（种不了）",
+    "GRIDSQUARE_POOL": "水路",
+    "GRIDSQUARE_HIGH_GROUND": "高地/屋顶",
+}
+
+# 水路 / 屋顶 各自需要的"底座"植物（SeedType 编号）。
+#   睡莲：Board.cpp:2789 起 —— 非水生植物在水上必须先有睡莲。
+#   花盆：Board.cpp:2822 起 —— `StageHasRoof() && !aHasFlowerPot` → 需要花盆。
+#   香蒲：源码里唯一能直接种在水上的例外（Board.cpp:2818 的条件里被排除）。
+#
+# ⚠ 但**别拿源码规则当实测结论用**。屋顶那条就是这样栽的（2026-10-03）：
+#   按源码推"卡组里没花盆 → 一棵都种不下"，实测第 41 关**开局就预置了 25 个花盆**
+#   （c0–c4 × 5 路），直接种就行。所以 `episode_query._fmt_scene` 里屋顶那段是
+#   **从这一帧的植物里读花盆在哪几列**，不照抄这条规则。
+LILYPAD = 16
+FLOWER_POT = 33
+CATTAIL = 43
+
+
+def background_label(value) -> str:
+    """BackgroundType 的编号 -> 中文名。认不出就回英文枚举名（不猜、不返回空）。"""
+    name = background_types().get(int(value)) if value is not None else None
+    if name is None:
+        return f"(未知背景 {value})"
+    return _BACKGROUND_LABEL.get(name, name)
+
+
+def gridsquare_label(value) -> str:
+    """GridSquareType 的编号 -> 中文名。同上：认不出就回英文枚举名。"""
+    if value == -1:
+        return "混合地形"
+    name = grid_square_types().get(int(value)) if value is not None else None
+    if name is None:
+        return f"(未知地形 {value})"
+    return _GRIDSQUARE_LABEL.get(name, name)
+
+
 def level_report(level: int) -> list[str]:
     """按源码规则现算这一关的静态参数 —— **规则也一并给出**，不只给结论。
 
@@ -423,7 +488,58 @@ def numeric_constants() -> dict[str, list[tuple[str, str, str]]]:
 
 # ---------------------------------------------------------------- 渲染
 
-SECTIONS = ("time", "combat", "plants", "zombies", "level", "literals")
+SECTIONS = ("time", "combat", "plants", "zombies", "level", "terrain", "literals")
+
+
+def _fmt_terrain() -> list[str]:
+    """场景与地形 —— 这一节存在的理由不是"把枚举列出来"，是**防止两套编号被搞混**。
+
+    实测踩到的两个坑（2026-10-03），两个都是"照着源码推断"推错的：
+
+      · **屋顶的花盆要求不能照抄源码。** 源码 Board.cpp:2822 写的是
+        `StageHasRoof() && !aHasFlowerPot` → 需要花盆。按这条推出
+        "卡组里没花盆 → 一棵都种不下"，**实测是错的**：本环境在屋顶关
+        **开局就预置好了花盆**（第 41 关是 c0–c4 × 5 路，共 25 个），直接种就行。
+        所以"屋顶哪几列能种"要看这一帧里花盆在哪 —— `episode_query._fmt_scene`
+        是**从这一帧的植物里读出来的**，不照抄这条规则。
+        另外屋顶关每格的 terrain 仍是 1（普通地面）：这个约束不体现在地形值上。
+
+      · **水路是 terrain=3，不是 2。** `PlantRowType` 里水路才是 2；
+        两套枚举编号不同，混用会把水路说成旱地。
+    """
+    L = ["── 场景与地形 ──", ""]
+    L.append("  关卡背景（enum BackgroundType）= **这一关长什么样**：")
+    for value, name in sorted(background_types().items()):
+        L.append(f"    {value} = {name:<24} {_BACKGROUND_LABEL.get(name, name)}")
+    L.append("")
+    L.append("  每格地形（enum GridSquareType）= **这一格能不能种**：")
+    note = {
+        "GRIDSQUARE_GRASS": "直接种",
+        "GRIDSQUARE_POOL": f"常规植物要先种睡莲({LILYPAD})；香蒲({CATTAIL})可直接种在水上",
+        # DIRT / NONE 的说明已经写在标签里了，这里不再重复一遍。
+        "GRIDSQUARE_HIGH_GROUND": f"常规植物要先种花盆({FLOWER_POT})",
+    }
+    for value, name in sorted(grid_square_types().items()):
+        tail = note.get(name, "")
+        L.append(f"    {value} = {name:<24} {_GRIDSQUARE_LABEL.get(name, name)}"
+                 + (f"　{tail}" if tail else ""))
+    L.append("")
+    L.append("  ⚠ **两套编号不是一回事**：背景说的是「这一关」，地形说的是「这一格」。")
+    L.append("    另外 `PlantRowType` 是第三套（水路 = 2，而地形里水路 = 3），别拿它当地形用。")
+    L.append("")
+    L.append("  ⚠ **屋顶：别照源码推，看花盆在哪。** 源码 Board.cpp:2822 要求每格先有")
+    L.append(f"    花盆({FLOWER_POT})，但本环境**开局就预置好了花盆**（实测第 41 关：")
+    L.append("    c0–c4 × 5 路共 25 个），所以直接种就行、不用自己种花盆；")
+    L.append("    而没有花盆的那几列（实测 c5–c8）**种不下**。")
+    L.append("    另外屋顶关每格的 terrain 仍是 1（普通地面）—— 这个约束")
+    L.append("    **不体现在地形值上**，看 terrain 判断不出屋顶。")
+    L.append("")
+    L.append("  ⚠ **夜间不掉自然阳光。** 实测对照（同一套卡组、什么都不种）：")
+    L.append("    白天关 60 步后阳光 50 → 200；夜间关 60 步后仍是 50。")
+    L.append("    所以夜间关阳光只能来自向日葵，开局经济节奏和白天完全不是一回事。")
+    L.append("")
+    L.append("  在工具输出里看这些：`frame` 的「场景：…」那一行；棋盘上 `~` = 水路。")
+    return L
 
 
 def _fmt_time(rate: int) -> list[str]:
@@ -575,6 +691,9 @@ def render(sections: tuple[str, ...] = SECTIONS, level: int | None = None) -> st
         else:
             L += level_report(level)
             L.append("")
+    if "terrain" in want:
+        L += _fmt_terrain()
+        L.append("")
     if "literals" in want:
         L += _fmt_literals(consts)
     L.append("")

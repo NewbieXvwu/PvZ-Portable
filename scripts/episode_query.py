@@ -53,6 +53,10 @@ from render_episode import (  # noqa: E402
     _wave_matrix, collect,
 )
 
+# 游戏常量（从 C++ 源码现场解析）。地形/背景的**中文名**也从这里拿 ——
+# 不在本文件里手抄一份标签表，抄了会和源码漂移。
+import pvz_constants  # noqa: E402
+
 SCHEMA = "episode_archive_v1"
 
 
@@ -151,6 +155,10 @@ def _index(meta: dict, frames: list) -> str:
              f"{meta['task']['policy']} / {o['reason']}")
     L.append(f"推进到第 {o['final_wave']}/{o['wave_count']} 波，"
              f"{o['actions']} 次决策，{o['final_tick']} tick，共 {len(frames)} 帧存档")
+    # index 是模型**第一眼**看的东西，场景要在这里就给 —— 等到 frame 才说，
+    # 前面那张逐波态势表已经被当成"五条路都一样"读过了。
+    if frames:
+        L.append(_fmt_scene(frames[0]))
     L.append("")
     L.append("── 逐波态势（每波取僵尸最多那一帧；格内 火力/僵尸数）──")
     L.append(_wave_matrix({"frames": frames}))
@@ -251,9 +259,91 @@ def _fmt_bank(cur: dict) -> str:
     return "卡槽：" + " ｜ ".join(parts)
 
 
+def _fmt_scene(frame: dict) -> str:
+    """场景：这一关是什么、**哪几路种得下**、种不下是因为什么。
+
+    地形这东西**必须解释，不能只给值**，因为每一步都少一点都会误导：
+
+      · 只给 `terrain=2`        → 模型得猜 2 是什么；
+      · 只给「泳池关」           → 模型不知道具体哪几路种不了；
+      · 给了「第 2、3 路是水路」但不说卡组里没睡莲 → 模型会去算「该在水路种什么」，
+        而那两路物理上一棵都种不下。
+
+    所以这里把**能不能种连同原因**一起给。这是机械事实（源码 Board.cpp 的种植判定），
+    不是游戏判断 —— 不属于"工具不该下结论"的那一类。
+
+    两条实测踩到的坑，写在这里是因为它们会让人推错：
+      · 屋顶关的 `roof` 标志位为 1 时，每格 terrain 仍是「普通地面」，
+        但源码要求先种花盆。**看地形判断屋顶会得到"能随便种"的错误结论。**
+      · 泳池关的水路 terrain=3，而 `PlantRowType` 里水路是 2 —— 两套枚举别混。
+    """
+    scene = frame.get("scene") or {}
+    rows = frame.get("row_terrain") or []
+    if not scene and not rows:
+        return "场景：（这份存档是旧版 capture 生成的，没有记录场景；重新 capture 一次就有）"
+
+    level = scene.get("level")
+    waves = scene.get("wave_count")
+    head = "场景：第 " + (str(level) if level is not None else "?") + " 关"
+    head += " · " + pvz_constants.background_label(scene.get("terrain"))
+    if waves is not None:
+        head += f" · 共 {waves} 波"
+
+    # 地形摘要单独占第一行。首版把警告也拼在这一行，输出成
+    # 「场景：… ｜   ⚠ 夜间…」—— 读起来像场景名的一部分，所以分开。
+    water = [r for r, terrain in enumerate(rows) if terrain == 3]
+    if water:
+        others = [r for r in range(len(rows)) if r not in water]
+        summary = (f"第 {'、'.join(str(r) for r in water)} 路是**水路**（棋盘上画成 `~`）"
+                   + (f"，其余 {'、'.join(str(r) for r in others)} 路是普通地面" if others else ""))
+    elif rows:
+        summary = f"{len(rows)} 条路全是普通地面"
+    else:
+        summary = "地形未记录"
+
+    in_deck = {p[1] for p in (frame.get("packets") or []) if p[1] >= 0}
+    deck_known = bool(frame.get("packets"))
+    warn: list[str] = []
+
+    if water:
+        tail = ("先确认卡组里有没有睡莲（旧存档没记卡槽）" if not deck_known
+                else ("本局卡组里有睡莲" if pvz_constants.LILYPAD in in_deck
+                      else f"本局卡组里**没有**睡莲 → 第 {'、'.join(str(r) for r in water)} 路"
+                           f"**一棵常规植物都种不下**"))
+        extra = ""
+        if deck_known and pvz_constants.CATTAIL in in_deck:
+            extra = f"（但香蒲 {pvz_constants.CATTAIL} 能直接种在水上，本卡组有它）"
+        warn.append(f"  ⚠ 水路：常规植物要先种睡莲({pvz_constants.LILYPAD})才能种 —— {tail}{extra}")
+
+    if scene.get("roof"):
+        # 屋顶的花盆**本环境会预先摆好**，所以"能不能种"取决于花盆在哪几列 ——
+        # 这是从**这一帧的植物里读出来的**，不是照抄源码规则。
+        # 首版照抄源码写成"卡组里没花盆 → 一棵都种不下"，实测是错的：
+        # 第 41 关开局就有 25 个花盆（c0–c4 × 5 路），直接种就行。
+        pot_cols = sorted({c for _r, c, t, *_ in (frame.get("plants") or [])
+                           if t == pvz_constants.FLOWER_POT})
+        if pot_cols:
+            cols = (f"c{min(pot_cols)}–c{max(pot_cols)}" if len(pot_cols) > 3
+                    else "、".join(f"c{c}" for c in pot_cols))
+            warn.append(f"  ⚠ 屋顶：**只能种在已有花盆的格子上**（棋盘上 `o` = 花盆）。"
+                        f"本关花盆在 {cols}，其余列种不下。")
+        else:
+            warn.append(f"  ⚠ 屋顶：每一格都要先种花盆({pvz_constants.FLOWER_POT})才能种别的；"
+                        f"这一帧没看到花盆，种之前先确认哪些格子有。")
+
+    if scene.get("night"):
+        warn.append("  ⚠ **夜间：天空不掉阳光。** 阳光只能来自向日葵，"
+                    "开局经济节奏和白天关完全不是一回事。")
+
+    return "\n".join([f"{head} ｜ {summary}"] + warn)
+
+
 def _fmt_frame(prev: dict | None, cur: dict, idx: int, total: int) -> str:
     L = [f"── 帧 {idx}/{total}  tick {cur['tick']}  第 {cur['wave']} 波  "
          f"阳光 {cur['sun']}  阳光收入 {cur.get('sun_income_rate')} ──"]
+    # 场景放在最前面：不知道"哪几路种得下"就去读棋盘，等于让人对着一张没有
+    # 图例的地图做规划。
+    L.append(_fmt_scene(cur))
     L.append(_fmt_bank(cur))
     L.append("植物：")
     L.append("  " + _board_ascii(cur, "plant").replace("\n", "\n  "))
@@ -464,6 +554,7 @@ def _fmt_narrative(frames: list, w0: int | None, w1: int | None,
             # 棋盘不能单独出现 —— 大小写规则不写在棋盘旁边，读的人（和模型）
             # 只能猜 `p` 是"受伤的豌豆"还是"健康的小喷菇"。
             # frame 一直带着这条说明，这里漏了。
+            L.append("    " + _fmt_scene(entry))
             bank = _fmt_bank(entry)
             L.append("    " + bank)
             legend = _fmt_legend(entry)

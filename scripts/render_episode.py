@@ -164,6 +164,24 @@ def _frame(obs: dict) -> dict:
         ]
         for p in obs.get("packets") or []
     ]
+    # 场景（关卡背景 + 每格地形）。原生观测一直发 `terrain` / `night` / `pool` /
+    # `fog` / `roof` / `grid`（`pvz_agent_model.py` 就在读它们），是这个压缩函数
+    # 原先把它们丢了。
+    #
+    # 丢掉的代价（2026-10-03 实测量化）：**水路能不能种**取决于这一格是不是
+    # `GRIDSQUARE_POOL`，而卡组里没有睡莲时整条路就是死的。模型看不到地形，
+    # 只能从"策略一直没往第 2、3 路种东西"去反推为什么 —— 而那个反推是错的，
+    # 它会以为"策略选错了路"，实际是"那两路物理上种不了"。
+    #
+    # 这里只存**事实**（编号与布尔），不把它们翻译成人话 —— 名字与"能不能种"
+    # 的推导交给 `episode_query._fmt_scene`，那边能拿到植物名表与卡组。
+    grid = obs.get("grid") or []
+    row_terrain = []
+    for row in grid[:GRID_ROWS]:
+        vals = {int(v) for v in row}
+        # 一行内地形不一致时记 -1（"混合"）。实测 25 关里没出现过，
+        # 但**不能**假定一致 —— 假定错了会把水路说成旱地，那比不说更坏。
+        row_terrain.append(vals.pop() if len(vals) == 1 else -1)
     return {
         "tick": obs["tick"],
         "wave": obs["wave"],
@@ -173,6 +191,16 @@ def _frame(obs: dict) -> dict:
         "zombies": zombies,
         "mowers": mowers,
         "packets": packets,
+        "scene": {
+            "level": obs.get("level"),
+            "terrain": obs.get("terrain"),      # BackgroundType 的编号
+            "night": bool(obs.get("night")),
+            "pool": bool(obs.get("pool")),
+            "fog": bool(obs.get("fog")),
+            "roof": bool(obs.get("roof")),
+            "wave_count": obs.get("wave_count"),
+        },
+        "row_terrain": row_terrain,             # 5 项，GridSquareType 编号
         "result": obs.get("result"),
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
@@ -553,6 +581,16 @@ def _lane_warnings(frame: dict) -> list:
 def _board_ascii(frame: dict, mode: str) -> str:
     """mode='plant' 画植物，'zombie' 画僵尸密度。"""
     grid = [["." for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
+    # 地形底纹：水路画成 `~`。让"这两路种不了"在棋盘上**看得见** ——
+    # 只看文字说明，模型仍会去算"该在第 2 路种什么"，而那两路物理上种不下。
+    #
+    # 只画水路（GridSquareType 3）。**屋顶不画**：屋顶关每格的 terrain 仍是
+    # 普通地面（实测第 41 关），花盆要求来自 `roof` 标志位；画了会让人以为
+    # "只有这几格需要花盆"，那是错的。见 pvz_constants._fmt_terrain。
+    row_terrain = frame.get("row_terrain") or []
+    for r, t in enumerate(row_terrain[:GRID_ROWS]):
+        if t == 3:  # GRIDSQUARE_POOL
+            grid[r] = ["~" for _ in range(GRID_COLS)]
     if mode == "plant":
         for r, c, t, hp, mx in frame["plants"]:
             if 0 <= r < GRID_ROWS and 0 <= c < GRID_COLS:
@@ -566,7 +604,9 @@ def _board_ascii(frame: dict, mode: str) -> str:
             if not (0 <= c < GRID_COLS):
                 continue
             cur = grid[r][c]
-            n = 1 if cur == "." else int(cur) + 1
+            # `~`（水路）也当空格处理 —— 僵尸是会游过水路的，
+            # 而且 `int("~")` 会抛异常，那不是"没有僵尸"，是程序炸了。
+            n = 1 if cur in (".", "~") else int(cur) + 1
             grid[r][c] = str(min(n, 9))
 
     header = "        " + " ".join(f"c{c}" for c in range(GRID_COLS))

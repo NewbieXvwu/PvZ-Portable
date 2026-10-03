@@ -266,7 +266,8 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
     "constants": (
         "**游戏常量表**，从 C++ 源码现场解析（不是抄本，不会漂移）。\n"
         "时间基准（多少 tick 算一秒）、战斗常量、植物表（花费/冷却/攻击间隔/血量）、"
-        "僵尸表（血量/首次出现关卡与波/抽样权重）、源码常量清单。\n"
+        "僵尸表（血量/首次出现关卡与波/抽样权重）、**场景与地形**（哪几路种得下）、"
+        "源码常量清单。\n"
         "给 level 还会现算该关的波数与可能出现的僵尸。\n"
         "**不确定某个数值时来这里查，别用通用 PvZ 常识推** —— 这是另一个实现。",
         _schema(
@@ -275,7 +276,8 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["time", "combat", "plants", "zombies", "level", "literals"],
+                        "enum": ["time", "combat", "plants", "zombies", "level", "terrain",
+                                 "literals"],
                     },
                     "description": "只取这几节（省 token）。不给就全给。",
                 },
@@ -572,7 +574,7 @@ def _resource_body(uri: str) -> str:
 # 工具名里的 `pvz` 前缀（`mcp__pvz__<tool>`）不在这里定义 —— 它是 bundle 的
 # `config.serverName`，见 ../bundle/cordis.patch.yml。这里再写一份常量只会漂移。
 
-SERVER_VERSION = "0.4.0-s3"
+SERVER_VERSION = "0.5.0-s4"
 
 
 async def _on_list_tools(
@@ -659,7 +661,10 @@ server: Server = Server(
         "或调 `constants` 工具。**这是另一个实现，不要用通用 PvZ 常识替代** —— "
         "实测有模型按 60 tick/s 推算引爆时间，而这里是 100 tick/s。\n"
         "**想知道那套规则策略为什么这么走**时，读资源 `pvz://scripted-policy`，"
-        "或调 `policy` 工具。"
+        "或调 `policy` 工具。\n"
+        "**场景与地形**（这一关是白天/夜间/泳池/屋顶、哪几路种不下）在每个 "
+        "`frame` / `index` / `narrative` 输出的「场景：…」那一行，不用另外查；"
+        "棋盘上 `~` = 水路。要查规则本身看 `constants` 的 terrain 一节。",
     ),
     on_list_tools=_on_list_tools,
     on_call_tool=_on_call_tool,
