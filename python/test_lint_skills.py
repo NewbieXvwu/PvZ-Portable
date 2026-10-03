@@ -241,5 +241,113 @@ class LintSkills(unittest.TestCase):
         self.assertTrue(any("绝对路径" in n for n in notes), notes)
 
 
+class ProbeGate(unittest.TestCase):
+    """probe 条件的验收边界。
+
+    这一层是"教师写的失败模式能不能变成自动筛子"的开关，所以必须钉住**会拒**的
+    情况：条件在自家证据上抓不到（比主张窄）、反例被误标（泛化过头）、
+    用了词表外的字段（发明新判据）。
+    """
+
+    def setUp(self) -> None:
+        holder = tempfile.TemporaryDirectory()
+        self.addCleanup(holder.cleanup)
+        self.root = Path(holder.name)
+        self.skills = self.root / "skills"
+        self.skills.mkdir()
+
+    def _archive(self, frames: list) -> Path:
+        """写一份带完整字段的存档（probe 要读植物/僵尸/阳光/波次）。"""
+        archive = self.root / "ep"
+        archive.mkdir(parents=True, exist_ok=True)
+        (archive / "meta.json").write_text(
+            json.dumps({"task": {"deck": [0, 1, 2, 3, 4, 5], "policy": "scripted"}}),
+            encoding="utf-8")
+        with (archive / "frames.jsonl").open("w", encoding="utf-8") as fh:
+            for fr in frames:
+                fh.write(json.dumps(fr) + "\n")
+        return archive
+
+    def _frames(self) -> list:
+        """决策 1、2 都在僵尸贴脸（x=100）的那条路上种向日葵 → 该命中；
+        决策 3 在一条没有僵尸的路上种向日葵 → 反例，不该命中。
+
+        注意僵尸要放在**决策前**的那一帧上（策略当时看到的就是它）。
+        """
+        zombie = [1, 0, 100.0, 0.0, 200, True, False, 0, 0, 0]
+
+        def frame(tick, plants, zombies, action=None):
+            return {"tick": tick, "wave": 1, "sun": 100, "plants": plants,
+                    "zombies": zombies, "action": action,
+                    "row_terrain": [1] * 6, "lanes": list(range(6))}
+        return [
+            frame(0, [], [zombie]),                                     # 0 开局
+            frame(60, [[1, 0, 1, 300, 300]], [zombie],                  # 1 送菜
+                  {"type": "plant", "packet": 1, "row": 1, "col": 0}),
+            frame(120, [[1, 0, 1, 300, 300], [1, 1, 1, 300, 300]],      # 2 再送一次
+                  [zombie], {"type": "plant", "packet": 1, "row": 1, "col": 1}),
+            frame(180, [[1, 0, 1, 300, 300], [1, 1, 1, 300, 300],       # 3 反例
+                        [3, 0, 1, 300, 300]], [],
+                  {"type": "plant", "packet": 1, "row": 3, "col": 0}),
+        ]
+
+    def _skill(self, name: str, probe: str | None, points: str, counter: str = "") -> Path:
+        skill = self.skills / name
+        skill.mkdir(parents=True, exist_ok=True)
+        fm_probe = f"probe:\n{probe}\n" if probe else ""
+        text = (f"---\nname: {name}\ndescription: 演示用\n{fm_probe}---\n\n"
+                f"# 规则\n\n正文。\n\n## 证据\n\n```pvz-evidence\n"
+                f"kind: mechanism\nclaim: a\nfalsifier: b\n{points}{counter}\n```\n")
+        (skill / "SKILL.md").write_text(text, encoding="utf-8")
+        return skill
+
+    def test_probe_passes_when_points_hit_and_counterpoints_do_not(self) -> None:
+        archive = self._archive(self._frames())
+        skill = self._skill("ok", "  action_type: plant\n  plant_role: [producer]\n"
+                                  "  lane_front_zombie_x_max: 260",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关\n"
+                            f"point: {archive} | 2 | plant:1:1:1 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3")
+        fails, notes = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertEqual(fails, [], fails)
+        self.assertTrue(any("probe" in n and "通过" in n for n in notes), notes)
+
+    def test_probe_is_rejected_when_own_evidence_is_not_caught(self) -> None:
+        """条件号称描述决策 1，却抓不到它 → 拒（比主张窄）。"""
+        archive = self._archive(self._frames())
+        skill = self._skill("narrow", "  action_type: plant\n  plant_role: [wall]",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3")
+        fails, _ = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertTrue(any("probe" in f for f in fails), fails)
+
+    def test_probe_is_rejected_when_counterexample_is_flagged(self) -> None:
+        """条件泛化过头，把反例也标红 → 拒。"""
+        archive = self._archive(self._frames())
+        skill = self._skill("wide", "  action_type: plant\n  plant_role: [producer]",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3")
+        fails, _ = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertTrue(any("误判" in f for f in fails), fails)
+
+    def test_probe_with_unknown_field_is_rejected(self) -> None:
+        """词表外的字段 = 发明新判据，整条拒。"""
+        archive = self._archive(self._frames())
+        skill = self._skill("invented", "  action_type: plant\n  my_own_score_max: 5",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3")
+        fails, _ = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertTrue(any("不认识" in f for f in fails), fails)
+
+    def test_skill_without_probe_is_still_valid(self) -> None:
+        archive = self._archive(self._frames())
+        skill = self._skill("noprobe", None,
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关\n"
+                            f"point: {archive} | 3 | plant:1:3:0 | wait:60 | 通关")
+        fails, notes = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertEqual(fails, [], fails)
+        self.assertFalse(any("probe" in n for n in notes), notes)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -272,6 +272,19 @@ def _make_cli_handler(cmd: str, spec: list[tuple[str, str, str]]) -> Handler:
     return handler
 
 
+def _make_cli_handler_probe() -> Handler:
+    """probe 工具要按给的参数选子命令（eval / check），不是固定一个。"""
+    def handler(args: dict[str, Any]) -> tuple[str, bool]:
+        if args.get("skill"):
+            return _run_query_tool(["probe", "check", "--skill", args["skill"]])
+        if args.get("archive") and args.get("probe"):
+            return _run_query_tool(["probe", "eval", "--probe", args["probe"],
+                                    "--archive", args["archive"]])
+        return ("probe 需要成对给参数：eval 要 archive + probe，check 要 skill。"
+                "不确定能写哪些字段就读资源 pvz://probe-fields。"), True
+    return handler
+
+
 def _schema(props: dict[str, Any], required: list[str]) -> dict[str, Any]:
     return {
         "type": "object",
@@ -341,11 +354,13 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                                         ("level", "--level", "int")]),
     ),
     "policy": (
-        "**脚本策略的决策规则**，文字描述（不给源码）。\n"
-        "用来看懂「这一局里那套规则策略当时为什么这么走」：它的落点由一条固定顺序的 "
-        "if-else 链决定，不是随机的，也不随局面自适应。",
-        _schema({}, []),
-        _make_cli_handler("policy", []),
+        "**这一局是谁在打、按什么规则。**\n"
+        "给了 --archive 就按那一份存档回答：RL 存档会明确告诉你它是训练出来的模型、"
+        "**没有可读的规则表**（别拿脚本规则去解释它）。不给存档就是脚本策略的规则表。",
+        _schema({"archive": {"type": "string",
+                             "description": "存档目录。强烈建议给：RL 局和脚本局的答案完全不同。"}},
+                []),
+        _make_cli_handler("policy", [("archive", "--archive", "str")]),
     ),
     # `lint_skills`：**写完 skill 一定要调它**。
     #
@@ -403,10 +418,18 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                 "level": {"type": "integer", "description": "关卡号，默认 7。"},
                 "policy": {
                     "type": "string",
-                    "enum": ["scripted", "donothing"],
-                    "description": "用哪套策略打这一局：scripted（默认）或 donothing（对照用）。",
+                    "enum": ["scripted", "donothing", "ppo"],
+                    "description": "用哪套策略打这一局：scripted（默认）、donothing（对照用）、"
+                                   "ppo（训练出来的 RL 模型，必须同时给 checkpoint）。",
                 },
+                "checkpoint": {"type": "string",
+                               "description": "policy=ppo 时的检查点 .pt 路径。只做推理，不训练。"},
+                "sampled": {"type": "boolean",
+                            "description": "policy=ppo 时按概率采样；默认贪心（可复现）。"},
                 "deck": {"type": "string", "description": "卡组，逗号分隔的卡片 id。不给就用该关默认卡组。"},
+                "wave_cap": {"type": "integer",
+                             "description": "只打前 N 波。复现训练任务族时常用（它们多半设了上限）。"},
+                "zombie_mult": {"type": "number", "description": "僵尸数量倍率（复现训练任务）。"},
                 "max_actions": {"type": "integer", "description": "动作数上限，默认 4000。"},
                 "out": {"type": "string", "description": "存档写到哪个目录（必需）。"},
             },
@@ -418,12 +441,39 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                 ("seed", "--seed", "int"),
                 ("level", "--level", "int"),
                 ("policy", "--policy", "str"),
+                ("checkpoint", "--checkpoint", "str"),
+                ("sampled", "--sampled", "flag"),
                 ("deck", "--deck", "str"),
+                ("wave_cap", "--wave-cap", "int"),
+                ("zombie_mult", "--zombie-mult", "float"),
                 ("max_actions", "--max-actions", "int"),
                 ("out", "--out", "str"),
                 ("_res", "--resource-dir", "env"),
             ],
         ),
+    ),
+    # `probe`：**把"什么算这个失败模式"写成能自动跑的条件**（可选）。
+    #
+    # 为什么它值得存在：教师看一局要几分钟，训练一晚上打几万局 —— 没有这一层，
+    # 教师永远只能看它碰巧看到的那一局。有了这一层，它写下的判据能被自动跑在
+    # 每一局上，把可疑的局挑出来。
+    #
+    # 为什么条件是封闭词表：它只能引用工具本来就在显示的量。**不许发明新逻辑**
+    # —— 一条能自由发挥的"条件"迟早会长成第二个策略脚本，那就是把硬编码塞回主线。
+    "probe": (
+        "把失败模式写成**能自动跑在每一局上的条件**，或验收一条写好的条件。\n"
+        "给 archive + probe 就是在那一局上跑（列出命中的决策）；给 skill 就是验收\n"
+        "（派生局必须命中、反例必须不命中，过不了就不入库）。\n"
+        "条件只能引用 `pvz://probe-fields` 里那几个字段 —— 不许自己发明判据。",
+        _schema({
+            "archive": {"type": "string", "description": "存档目录（eval 模式）。"},
+            "probe": {"type": "string",
+                      "description": "条件，JSON：如 {\"action_type\":\"plant\","
+                                     "\"plant_role\":[\"producer\"],"
+                                     "\"lane_front_zombie_x_max\":260}"},
+            "skill": {"type": "string", "description": "skill 目录（check 模式）。"},
+        }, []),
+        _make_cli_handler_probe(),
     ),
     "index": (
         "存档的**目录**：哪里值得看。它列出各条信号（每条都带产生它的规则名），"
@@ -615,9 +665,16 @@ RESOURCES: dict[str, tuple[str, str, str]] = {
         "text/markdown",
     ),
     "pvz://scripted-policy": (
-        "脚本策略的决策规则",
-        "这一局里那套规则策略按什么顺序做决策、阈值是多少。"
-        "想知道「它当时为什么这么走」就读这份。",
+        "脚本策略的决策规则（**只适用于 scripted 存档**）",
+        "脚本策略按什么顺序做决策、阈值是多少。想知道「它当时为什么这么走」就读这份。\n"
+        "⚠ 如果手上那局是 RL 模型打的（capture 时 policy=ppo），这份规则描述的"
+        "**不是**它 —— 那时用 policy 工具并带上 --archive，它会告诉你那局是谁在打。",
+        "text/markdown",
+    ),
+    "pvz://probe-fields": (
+        "可自动跑的「失败模式条件」能写哪些字段（封闭词表）",
+        "把发现写成能跑在每一局上的条件时用。只能引用这里的字段 —— "
+        "每个都是工具本来就在显示的量（火力、最前僵尸距离、植物类别、这株活了多久）。",
         "text/markdown",
     ),
 }
@@ -629,6 +686,7 @@ RESOURCE_COMMANDS: dict[str, list[str]] = {
     "pvz://vocabulary": ["vocabulary"],
     "pvz://constants": ["constants"],
     "pvz://scripted-policy": ["policy"],
+    "pvz://probe-fields": ["probe", "fields"],
 }
 
 
@@ -739,8 +797,11 @@ server: Server = Server(
         "这一关有多少波、会出现哪些僵尸）时，读资源 `pvz://constants`，"
         "或调 `constants` 工具。**这是另一个实现，不要用通用 PvZ 常识替代** —— "
         "实测有模型按 60 tick/s 推算引爆时间，而这里是 100 tick/s。\n"
-        "**想知道那套规则策略为什么这么走**时，读资源 `pvz://scripted-policy`，"
-        "或调 `policy` 工具。\n"
+        "**想知道打这一局的是谁、按什么规则走**时，调 `policy` 工具并带上存档路径。\n"
+        "注意：如果那局是 RL 模型打的（policy=ppo），它**没有可读的规则表** —— "
+        "那时别拿 `pvz://scripted-policy` 里的规则去解释它的每一步，那套规则描述的"
+        "是另一个策略。想弄清它某一步为什么这么选，用 `whatif --enumerate` 把它当时"
+        "所有合法动作的结果都算出来。\n"
         "**场景与地形**（这一关是白天/夜间/泳池/屋顶、哪几路种不下）在每个 "
         "`frame` / `index` / `narrative` 输出的「场景：…」那一行，不用另外查；"
         "棋盘上 `~` = 水路。要查规则本身看 `constants` 的 terrain 一节。\n"

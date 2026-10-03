@@ -229,10 +229,55 @@ def _frame(obs: dict) -> dict:
     }
 
 
+_POLICY_CACHE: dict = {}
+
+
+def load_checkpoint_policy(path: str) -> tuple:
+    """加载一个训练好的检查点，返回 (model, checkpoint)。同一路径只加载一次。
+
+    模型是 RL 训练出来的策略（GameplayModelV1），不是规则脚本。加载它只做
+    **推理**：给它观测、它吐动作。不训练、不改权重。
+    """
+    import torch
+    from pvz_agent_model import GameplayModelV1
+    key = str(Path(path).resolve())
+    if key not in _POLICY_CACHE:
+        checkpoint = torch.load(key, map_location="cpu", weights_only=False)
+        model = GameplayModelV1(checkpoint["config"]).eval()
+        # strict=False 的理由（2026-10-04 实测）：存档里常带训练专用的辅助预测头
+        # （aux_next_spawn / aux_lane_threat / aux_outcome），当前代码的模型没有
+        # 这几个头 —— 它们只在算损失时有用，**选动作用不到**，所以丢掉它们不改变
+        # 策略行为。反过来，"模型有、存档没有"的参数会被随机初始化，那是灾难：
+        # 策略会变成半个随机网络，诊断出来的"失败模式"其实是加载事故。
+        # 所以 missing 必须为空，否则直接报错而不是悄悄跑下去。
+        missing, unexpected = model.load_state_dict(checkpoint["state_dict"], strict=False)
+        if missing:
+            raise RuntimeError(f"检查点缺少 {len(missing)} 个参数（例：{list(missing)[:3]}）；"
+                               f"该存档与当前模型结构不兼容，不能用它回放")
+        checkpoint["_dropped_aux_heads"] = sorted(unexpected)
+        _POLICY_CACHE[key] = (model, checkpoint)
+    return _POLICY_CACHE[key]
+
+
+def _ppo_action(model, obs: dict, state: dict, deterministic: bool) -> dict:
+    """问训练好的策略"这一步做什么"。state 携带它的跨步记忆（GRU hidden 等）。"""
+    import torch
+    from pvz_agent_model import select_action
+    with torch.inference_mode():
+        output = model.step(obs, state["hidden"], state["previous_action"],
+                            state["delta_ticks"], state["events"],
+                            state["previous_wait_result"])
+        action, _, _ = select_action(model, output, obs, deterministic=deterministic)
+    state["hidden"] = output["hidden"]
+    return action
+
+
 def collect(resource_dir: str, seed: int, level: int, policy: str,
             max_actions: int = MAX_ACTIONS, deck=None, override: dict | None = None,
             capture_legal_at: int | None = None,
-            prefix_actions: list | None = None) -> dict:
+            prefix_actions: list | None = None,
+            checkpoint: str | None = None, deterministic: bool = True,
+            task_extra: dict | None = None) -> dict:
     """跑一局，记录每一帧的紧凑状态、**这一步的决策**、以及事件增量。
 
     frames[i] = 做完第 i 次决策之后的局面（frames[0] 是开局）。
@@ -253,12 +298,44 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     都忠实到分叉点为止，策略行为修订（见 scripted_baseline.POLICY_REVISION）
     不会让旧存档的 whatif 静默分叉。
     """
-    env = PvZEnv(resource_dir, headless=True)
+    model = None
+    checkpoint_meta = None
+    if policy == "ppo":
+        if not checkpoint:
+            raise ValueError("policy=ppo 需要 checkpoint=<检查点路径>")
+        model, _loaded = load_checkpoint_policy(checkpoint)
+        # 事件等待型策略发的动作只有对应的 env 子类接得住，所以 env 由模型
+        # 自己的 config 决定（wait_mode），不能写死 PvZEnv。
+        from pvz_event_env import policy_env
+        env = policy_env(model.config, resource_dir, headless=True)
+        import hashlib
+        checkpoint_meta = {
+            "checkpoint": str(checkpoint),
+            "checkpoint_sha256": hashlib.sha256(
+                Path(checkpoint).read_bytes()).hexdigest()[:16],
+            "deterministic": bool(deterministic),
+            # 存档自己记录了它是哪套观测格式训出来的。本机代码是 v4，
+            # 拿 v3 的存档回放会得到"模型看不懂的观测"，诊断结论不可信 ——
+            # 所以把这个数写进 meta，回放前能一眼核对。
+            "observation_version": ((_loaded.get("provenance") or {})
+                                    .get("observation_version")),
+            # 透明记录：哪些训练专用头被丢掉了（不影响选动作，但要看得见）。
+            "dropped_aux_heads": _loaded.get("_dropped_aux_heads") or [],
+        }
+        import torch
+        torch.manual_seed(seed)
+    else:
+        env = PvZEnv(resource_dir, headless=True)
     # 卡组按关卡地形定（AGENTS.md「任务与卡组」）；显式传 deck 的调用方
-    # （whatif 重放旧存档）用传入值，profile 也从这份卡组推导 —— 槽位数、
-    # 升级植物所有权都和卡组一致，旧存档（6 卡、无升级）重放时行为不变。
+    # （whatif 重放旧存档、或复现某个评估任务）用传入值，profile 也从这份卡组
+    # 推导 —— 槽位数、升级植物所有权都和卡组一致，旧存档（6 卡、无升级）
+    # 重放时行为不变。
     deck = tuple(deck) if deck else deck_for_level(level)
-    task = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(deck))
+    task_kwargs = {"level": level, "seed": seed, "playthrough": 2,
+                   "profile": profile_for_deck(deck)}
+    if task_extra:  # 复现评估任务：波数上限、僵尸倍率、预种植物……
+        task_kwargs.update({k: v for k, v in task_extra.items() if v is not None})
+    task = TaskSpec(**task_kwargs)
     obs, _ = env.reset(deck=deck, task=task)
 
     frames = [_frame(obs)]
@@ -270,21 +347,34 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     rejected = 0
     kills_since_wave = 0
     legal_at = None
+    # 训练出来的策略是有记忆的（GRU + 上一步动作/事件），跨步状态必须自己带着走。
+    ppo_state = {"hidden": None, "previous_action": None, "delta_ticks": 0,
+                 "events": None, "previous_wait_result": None}
 
     while not obs["terminal"] and actions < max_actions:
         if capture_legal_at is not None and actions == capture_legal_at - 1:
             legal_at = obs.get("legal_actions")
         if prefix_actions is not None and actions < len(prefix_actions):
             action = prefix_actions[actions]
+        elif policy == "ppo":
+            action = _ppo_action(model, obs, ppo_state, deterministic)
         else:
             action = scripted_choose(obs) if policy == "scripted" else {"type": "wait", "ticks": 60}
-            if override and (actions + 1) in override:
-                action = override[actions + 1]
+        if override and (actions + 1) in override:
+            action = override[actions + 1]
         obs, _, done, _, info = env.step(action)
         was_rejected = not info.get("ok")
         if was_rejected:
             rejected += 1
             obs, _, done, _, info = env.step({"type": "wait", "ticks": 60})
+        if policy == "ppo":
+            # 策略的跨步记忆要按**实际发生的**那一步推进：被拒的动作后面
+            # 补的是等待，记忆也得跟着那次等待走，否则它的内部状态会和
+            # 它真正看到的局面错位。
+            ppo_state["previous_action"] = action
+            ppo_state["delta_ticks"] = info.get("ticks_advanced") or 0
+            ppo_state["events"] = info.get("events")
+            ppo_state["previous_wait_result"] = info.get("wait_result")
         ev = info.get("events") or {}
         for key in events_total:
             events_total[key] += int(ev.get(key) or 0)
@@ -327,7 +417,12 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
         "schema": "episode_report_v1",
         "task": {"level": level, "seed": seed, "playthrough": 2,
                  "deck": list(deck), "policy": policy,
-                 "policy_revision": POLICY_REVISION},
+                 "policy_revision": POLICY_REVISION,
+                 **({"wave_cap": task.wave_cap,
+                     "zombie_count_multiplier": task.zombie_count_multiplier}
+                    if (task.wave_cap or task.zombie_count_multiplier != 1.0) else {}),
+                 # RL 回放必须记下"是哪个检查点打的"，否则证据无法复现。
+                 **(checkpoint_meta or {})},
         "legal_at": legal_at,
         "outcome": {
             "result": result,

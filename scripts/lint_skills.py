@@ -336,6 +336,24 @@ def lint_skill(skill_dir: Path, check_archives: bool = True) -> tuple[list[str],
                     f"        存档是原局跑出来的，不是写出来的 —— 对不上就是这条证据编的。"
                 )
 
+    # --- 4b. probe（可选）：写了"什么算这个失败模式"的条件，就要能自动验收 ---
+    #
+    # 为什么并进闸门而不是单独跑：教师写完 skill 会调一次闸门。如果验收在别处，
+    # 它八成不会主动跑 —— S3 的实测就是"没有当场拒，它就不会补"。
+    # 条件的判据（派生局必须命中、反例必须不命中）写在 scripts/probe.py 里，
+    # 这里只负责把结果接进"过 / 不过"。
+    if check_archives:
+        try:
+            import probe
+            ok, report, has_probe = probe.check_skill(skill_dir)
+            if has_probe and not ok:
+                fails.append("probe 条件验收不通过（不能变成自动筛子）：\n        "
+                             + report.replace("\n", "\n        "))
+            elif has_probe:
+                notes.append("probe 条件验收通过 —— 可以变成自动筛子")
+        except Exception as exc:  # noqa: BLE001 - 验收脚本炸了不该让整条 skill 判死
+            notes.append(f"（probe 验收没跑起来：{exc}）")
+
     # --- 5. 提示（不判失败）---
     body = _strip_evidence(text)
     if ABS_PATH.search(body):

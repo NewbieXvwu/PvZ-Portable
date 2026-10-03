@@ -66,8 +66,11 @@ SCHEMA = "episode_archive_v1"
 
 
 def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
-            out_dir: Path, max_actions: int) -> dict:
-    rec = collect(resource_dir, seed, level, policy, max_actions, deck)
+            out_dir: Path, max_actions: int, checkpoint: str | None = None,
+            deterministic: bool = True, task_extra: dict | None = None) -> dict:
+    rec = collect(resource_dir, seed, level, policy, max_actions, deck,
+                  checkpoint=checkpoint, deterministic=deterministic,
+                  task_extra=task_extra)
     out_dir.mkdir(parents=True, exist_ok=True)
     meta = {
         "schema": SCHEMA,
@@ -77,6 +80,9 @@ def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
         "policy_revision": rec["task"].get("policy_revision"),
         "frame_count": len(rec["frames"]),
     }
+    if policy == "ppo":
+        meta["checkpoint"] = rec["task"].get("checkpoint")
+        meta["checkpoint_sha256"] = rec["task"].get("checkpoint_sha256")
     (out_dir / "meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     with (out_dir / "frames.jsonl").open("w", encoding="utf-8") as fh:
@@ -733,7 +739,13 @@ def _run_variant(meta: dict, override: dict, resource_dir: str,
                  prefix: list | None = None) -> dict:
     t = meta["task"]
     rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
-                  4000, t.get("deck"), override=override, prefix_actions=prefix)
+                  4000, t.get("deck"), override=override, prefix_actions=prefix,
+                  # RL 存档的反事实重放必须用**同一个检查点**，否则"改一步之后
+                  # 会怎样"问的是另一个模型。
+                  checkpoint=t.get("checkpoint"),
+                  deterministic=t.get("deterministic", True),
+                  task_extra={"wave_cap": t.get("wave_cap"),
+                              "zombie_count_multiplier": t.get("zombie_count_multiplier")})
     return rec["outcome"]
 
 
@@ -794,7 +806,12 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     if enumerate_:
         probe = collect(resource_dir, meta["task"]["seed"], meta["task"]["level"],
                         meta["task"]["policy"], 4000, deck,
-                        capture_legal_at=decision, prefix_actions=prefix)
+                        capture_legal_at=decision, prefix_actions=prefix,
+                        checkpoint=meta["task"].get("checkpoint"),
+                        deterministic=meta["task"].get("deterministic", True),
+                        task_extra={"wave_cap": meta["task"].get("wave_cap"),
+                                    "zombie_count_multiplier":
+                                        meta["task"].get("zombie_count_multiplier")})
         legal = probe.get("legal_at") or {}
         for p in (legal.get("plants") or []):
             if row_filter is not None and p["row"] != row_filter:
@@ -838,7 +855,12 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             out = Path(save_best)
             t = meta["task"]
             rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
-                          4000, deck, override={decision: top[1]}, prefix_actions=prefix)
+                          4000, deck, override={decision: top[1]}, prefix_actions=prefix,
+                          checkpoint=t.get("checkpoint"),
+                          deterministic=t.get("deterministic", True),
+                          task_extra={"wave_cap": t.get("wave_cap"),
+                                      "zombie_count_multiplier":
+                                          t.get("zombie_count_multiplier")})
             out.mkdir(parents=True, exist_ok=True)
             (out / "meta.json").write_text(json.dumps(
                 {"schema": SCHEMA,
@@ -1017,13 +1039,24 @@ def main() -> None:
     c.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     c.add_argument("--seed", type=int, required=True)
     c.add_argument("--level", type=int, default=7)
-    c.add_argument("--policy", choices=["scripted", "donothing"], default="scripted")
+    c.add_argument("--policy", choices=["scripted", "donothing", "ppo"], default="scripted")
+    c.add_argument("--checkpoint", default=None,
+                   help="--policy ppo 时用：训练出来的检查点 .pt 路径。只做推理，不训练。")
+    c.add_argument("--sampled", action="store_true",
+                   help="--policy ppo 时用：按概率采样（默认贪心，可复现）。")
     c.add_argument("--deck", default=None)
+    c.add_argument("--wave-cap", type=int, default=None,
+                   help="复现评估任务：这一关只打前 N 波（训练用的任务族常设上限）。")
+    c.add_argument("--zombie-mult", type=float, default=None,
+                   help="复现评估任务：僵尸数量倍率。")
     c.add_argument("--max-actions", type=int, default=4000)
     c.add_argument("--out", required=True)
 
     sub.add_parser("vocabulary", help="动作写法速查（不需要 --archive）")
-    sub.add_parser("policy", help="脚本策略的决策规则（不需要 --archive）")
+    pol = sub.add_parser("policy", help="这一局是谁在打、按什么规则（--archive 可选）")
+    pol.add_argument("--archive", default=None,
+                     help="给了就按存档回答：RL 存档会说明它是训练出的模型，"
+                          "不打印脚本规则（那套规则描述的不是它）。")
 
     p = sub.add_parser("constants", help="游戏常量表（不需要 --archive）")
     p.add_argument("--section", action="append", default=None,
@@ -1081,8 +1114,12 @@ def main() -> None:
 
     if args.cmd == "capture":
         deck = [int(v) for v in args.deck.split(",")] if args.deck else None
+        task_extra = {"wave_cap": args.wave_cap,
+                      "zombie_count_multiplier": args.zombie_mult} \
+            if (args.wave_cap or args.zombie_mult) else None
         res = capture(args.resource_dir, args.seed, args.level, args.policy, deck,
-                      Path(args.out), args.max_actions)
+                      Path(args.out), args.max_actions, checkpoint=args.checkpoint,
+                      deterministic=not args.sampled, task_extra=task_extra)
         print(f"已存档到 {args.out}：{res['meta']['frame_count']} 帧，"
               f"{res['meta']['outcome']['reason']}")
         return
@@ -1093,6 +1130,36 @@ def main() -> None:
         return
 
     if args.cmd == "policy":
+        if args.archive:
+            meta, _ = load(Path(args.archive))
+            t = meta["task"]
+            if t.get("policy") == "ppo":
+                # 这条分支存在的理由：脚本规则那份文档描述的是 if-else 链，
+                # 而 RL 存档里打棋的是**训练出来的网络**。如果把那份规则发给
+                # 模型，它会拿着一套不存在的规则去解释每一步（"这一步命中了
+                # 规则 ③"），整份诊断就建立在一个错误前提上 —— 和 S5 那次
+                # 6 路渲染 bug 是同一类事故，只是更难发现。
+                L = ["这一局是**训练出来的 RL 模型**打的，不是规则脚本。",
+                     "",
+                     f"  检查点：{t.get('checkpoint')}",
+                     f"  指纹（前 16 位）：{t.get('checkpoint_sha256')}",
+                     f"  观测格式版本：{t.get('observation_version')}（本机代码 4）",
+                     f"  选动作方式：{'贪心（可复现）' if t.get('deterministic') else '按概率采样'}",
+                     "",
+                     "它没有可以读的 if-else 规则表 —— 它的行为是网络权重决定的，",
+                     "**没有文档能告诉你它为什么这么走**。想知道它某一步为什么",
+                     "这么选，只能看当时局面（frame / lane）和试别的动作会怎样",
+                     "（whatif --enumerate，会把它当时所有合法动作的结果都算出来）。",
+                     "",
+                     "注意：下面这份规则表描述的是 scripted 策略，和这一局无关：",
+                     ""]
+                from scripted_baseline import decision_rules_text
+                print("\n".join(L))
+                print(decision_rules_text())
+                return
+            from scripted_baseline import decision_rules_text
+            print(decision_rules_text())
+            return
         # 描述写在 scripted_baseline.py 里、紧挨着它描述的 choose()，
         # 并自带"数字必须能在源码里找到"的校验 —— 见那个文件的注释。
         from scripted_baseline import decision_rules_text
