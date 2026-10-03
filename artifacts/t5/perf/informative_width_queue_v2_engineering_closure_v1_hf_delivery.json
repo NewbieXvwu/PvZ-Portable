@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-informative-width-queue-v2-engineering-closure-v1",
+  "revision": "2323248ff137332d54c1d0cfd1a50d116747326f",
+  "seconds": 4.100321028003236,
+  "original_timeout_full_run": {
+    "run": "mainline_informative_width512_v1_seed1",
+    "branch": "evidence-mainline-informative-width512-v1-seed1-smoke-timeout",
+    "status": "complete",
+    "start_utc": "2026-10-03T09:16:30.459561+00:00",
+    "pid": 249566,
+    "exit_code": 0,
+    "end_utc": "2026-10-03T09:20:01.259682+00:00",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "revision": "055f338fe45137be727d4ace9f57907e1379ccea"
+  },
+  "scope": "Actual six engineering closures and started first30update training segment, original failed timeout, own random origins, complete resume invocation and three new engineering state/config/provenance/curves. No PT/raw copy here; final full125k candidate deliveries remain required. Original failed full512seed1 restoration is referenced and complete. No learning/architecture/full acceptance claim."
+}

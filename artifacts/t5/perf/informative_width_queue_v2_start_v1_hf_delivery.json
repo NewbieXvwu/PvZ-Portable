@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-informative-width-queue-v2-start-v1",
+  "revision": "253e01cf7d2bba58d907d26e80cc51462086858c",
+  "seconds": 2.995048543001758,
+  "original_timeout_full_run": {
+    "run": "mainline_informative_width512_v1_seed1",
+    "branch": "evidence-mainline-informative-width512-v1-seed1-smoke-timeout",
+    "status": "complete",
+    "start_utc": "2026-10-03T09:16:30.459561+00:00",
+    "pid": 249566,
+    "exit_code": 0,
+    "end_utc": "2026-10-03T09:20:01.259682+00:00",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "revision": "055f338fe45137be727d4ace9f57907e1379ccea"
+  },
+  "scope": "Immutable q11 launch metadata, plan/controller/code and first128seed2 engineering state/curve/config/provenance. No PT or raw model-case copy here; initial cases and full probe model remain local pending owning final125k delivery. Original512seed1 failed full restoration already delivered on referenced branch; this is not whole-goal completion."
+}

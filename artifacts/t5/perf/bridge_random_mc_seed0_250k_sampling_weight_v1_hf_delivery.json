@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-seed0-250k-sampling-weight-v1",
+  "revision": "a1131b87145fd041b9f7d35bdbc988524dcbed71",
+  "seconds": 6.951105524000013,
+  "source_full_run_revision": "b1a3695990aef473c29f39f818f4ec4c88bfbffe",
+  "scope": "All1302 episode scalar rows, fixed windows, read-only collection code, config/provenance/results/log; no new model or environment interaction. Original PT/raw/state restoration is the referenced previously delivered full250k run."
+}

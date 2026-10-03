@@ -1,0 +1,605 @@
+{
+  "schema_version": 1,
+  "status": "six_engineering_closures_complete_original125k_training_started",
+  "observed_utc": "2026-10-03T09:37:34.385485+00:00",
+  "controller_revision": "067b24c59922907cc3c080701910fdf7cc65600b",
+  "controller_pid": 249564,
+  "all_six_engineering_closures_complete_utc": "2026-10-03T09:35:01.901381+00:00",
+  "stages": [
+    {
+      "run": "mainline_informative_width128_v1_seed0",
+      "seed": 0,
+      "width": 128,
+      "requested_updates": 3,
+      "resume": false,
+      "start_utc": "2026-10-03T07:17:21.331450+00:00",
+      "start_counters": null,
+      "status": "complete",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t6/informative_width_v1/width128_seed0.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_informative_width128_v1_seed0",
+        "--stop-after-updates",
+        "3"
+      ],
+      "pid": 244566,
+      "latest": {
+        "run": "mainline_informative_width128_v1_seed0",
+        "updates": 3,
+        "counters": {
+          "episodes": 12,
+          "decisions": 2000,
+          "ticks": 199103
+        },
+        "wall_seconds": 322.7685923699901,
+        "phase": "pending_evaluation",
+        "status": "running",
+        "resources": {
+          "peak_process_tree_rss_bytes": 14979108864,
+          "min_system_available_bytes": 18429464576,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 2355206144,
+          "cuda_peak_reserved_bytes": 3762290688
+        },
+        "latest_loss": {
+          "policy_loss": 0.3756498545408249,
+          "value_loss": 0.05960113974288106,
+          "entropy": 3.1677597165107727,
+          "advantage_mean": 0.15978267788887024,
+          "advantage_std": 0.20398633182048798,
+          "gradient_norm": 1.316163182258606,
+          "approx_kl": 0.007898883719462901,
+          "clip_fraction": 0.12556062173098326,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.44587039947509766,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      },
+      "exit_code": 0,
+      "seconds": 480.6499817559961,
+      "final": {
+        "run": "mainline_informative_width128_v1_seed0",
+        "updates": 3,
+        "counters": {
+          "episodes": 12,
+          "decisions": 2000,
+          "ticks": 199103
+        },
+        "wall_seconds": 451.1245310719969,
+        "phase": "ready",
+        "status": "update_boundary_stop",
+        "resources": {
+          "peak_process_tree_rss_bytes": 14979108864,
+          "min_system_available_bytes": 18429464576,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 2355206144,
+          "cuda_peak_reserved_bytes": 3762290688
+        },
+        "latest_loss": {
+          "policy_loss": 0.3756498545408249,
+          "value_loss": 0.05960113974288106,
+          "entropy": 3.1677597165107727,
+          "advantage_mean": 0.15978267788887024,
+          "advantage_std": 0.20398633182048798,
+          "gradient_norm": 1.316163182258606,
+          "approx_kl": 0.007898883719462901,
+          "clip_fraction": 0.12556062173098326,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.44587039947509766,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      }
+    },
+    {
+      "run": "mainline_informative_width512_v1_seed0",
+      "seed": 0,
+      "width": 512,
+      "requested_updates": 3,
+      "resume": false,
+      "start_utc": "2026-10-03T07:25:21.988346+00:00",
+      "start_counters": null,
+      "status": "complete",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t6/informative_width_v1/width512_seed0.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_informative_width512_v1_seed0",
+        "--stop-after-updates",
+        "3"
+      ],
+      "pid": 245654,
+      "latest": {
+        "run": "mainline_informative_width512_v1_seed0",
+        "updates": 2,
+        "counters": {
+          "episodes": 8,
+          "decisions": 1304,
+          "ticks": 142546
+        },
+        "wall_seconds": 890.6977782640024,
+        "phase": "ready",
+        "status": "running",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15624056832,
+          "min_system_available_bytes": 18374864896,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 7995468800,
+          "cuda_peak_reserved_bytes": 16741564416
+        },
+        "latest_loss": {
+          "policy_loss": 0.2552923262119293,
+          "value_loss": 0.07659128541126847,
+          "entropy": 3.0084648728370667,
+          "advantage_mean": 0.18695023655891418,
+          "advantage_std": 0.2465544044971466,
+          "gradient_norm": 2.487732410430908,
+          "approx_kl": 0.018215958727523685,
+          "clip_fraction": 0.26229721680283546,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.8906898498535156,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      },
+      "exit_code": 0,
+      "seconds": 960.0536321020045,
+      "final": {
+        "run": "mainline_informative_width512_v1_seed0",
+        "updates": 3,
+        "counters": {
+          "episodes": 12,
+          "decisions": 1980,
+          "ticks": 216188
+        },
+        "wall_seconds": 940.2600829599978,
+        "phase": "ready",
+        "status": "update_boundary_stop",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15624056832,
+          "min_system_available_bytes": 18374864896,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 7996732928,
+          "cuda_peak_reserved_bytes": 16741564416
+        },
+        "latest_loss": {
+          "policy_loss": 0.253244096878916,
+          "value_loss": 0.09621543483808637,
+          "entropy": 2.9633936882019043,
+          "advantage_mean": 0.1868652105331421,
+          "advantage_std": 0.26833319664001465,
+          "gradient_norm": 3.0535125732421875,
+          "approx_kl": 0.01011309603927657,
+          "clip_fraction": 0.18167129065841436,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.4538562297821045,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      }
+    },
+    {
+      "run": "mainline_informative_width128_v1_seed1",
+      "seed": 1,
+      "width": 128,
+      "requested_updates": 3,
+      "resume": false,
+      "start_utc": "2026-10-03T07:41:22.046569+00:00",
+      "start_counters": null,
+      "status": "complete",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t6/informative_width_v1/width128_seed1.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_informative_width128_v1_seed1",
+        "--stop-after-updates",
+        "3"
+      ],
+      "pid": 246544,
+      "latest": {
+        "run": "mainline_informative_width128_v1_seed1",
+        "updates": 3,
+        "counters": {
+          "episodes": 12,
+          "decisions": 2000,
+          "ticks": 208724
+        },
+        "wall_seconds": 308.3830421120074,
+        "phase": "pending_evaluation",
+        "status": "running",
+        "resources": {
+          "peak_process_tree_rss_bytes": 14985494528,
+          "min_system_available_bytes": 18843971584,
+          "peak_system_swap_used_bytes": 225280,
+          "cuda_peak_allocated_bytes": 2338486272,
+          "cuda_peak_reserved_bytes": 2694840320
+        },
+        "latest_loss": {
+          "policy_loss": 0.3269893415272236,
+          "value_loss": 0.067761171143502,
+          "entropy": 2.9468385875225067,
+          "advantage_mean": 0.2194848656654358,
+          "advantage_std": 0.2202266901731491,
+          "gradient_norm": 1.3102285861968994,
+          "approx_kl": 0.0033920080022653565,
+          "clip_fraction": 0.05103781260550022,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 0.28130388259887695,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      },
+      "exit_code": 0,
+      "seconds": 540.0486076990055,
+      "final": {
+        "run": "mainline_informative_width128_v1_seed1",
+        "updates": 3,
+        "counters": {
+          "episodes": 12,
+          "decisions": 2000,
+          "ticks": 208724
+        },
+        "wall_seconds": 511.944445866,
+        "phase": "ready",
+        "status": "update_boundary_stop",
+        "resources": {
+          "peak_process_tree_rss_bytes": 14985494528,
+          "min_system_available_bytes": 18843971584,
+          "peak_system_swap_used_bytes": 225280,
+          "cuda_peak_allocated_bytes": 2338486272,
+          "cuda_peak_reserved_bytes": 2694840320
+        },
+        "latest_loss": {
+          "policy_loss": 0.3269893415272236,
+          "value_loss": 0.067761171143502,
+          "entropy": 2.9468385875225067,
+          "advantage_mean": 0.2194848656654358,
+          "advantage_std": 0.2202266901731491,
+          "gradient_norm": 1.3102285861968994,
+          "approx_kl": 0.0033920080022653565,
+          "clip_fraction": 0.05103781260550022,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 0.28130388259887695,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      }
+    },
+    {
+      "run": "mainline_informative_width128_v1_seed2",
+      "seed": 2,
+      "width": 128,
+      "requested_updates": 1,
+      "resume": false,
+      "engineering_probe": true,
+      "start_utc": "2026-10-03T09:16:31.235900+00:00",
+      "start_counters": null,
+      "status": "complete",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t6/informative_width_v1/width128_seed2.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_informative_width128_v1_seed2",
+        "--stop-after-updates",
+        "1"
+      ],
+      "pid": 249567,
+      "latest": {
+        "run": "mainline_informative_width128_v1_seed2",
+        "updates": 0,
+        "counters": {
+          "episodes": 0,
+          "decisions": 0,
+          "ticks": 0
+        },
+        "wall_seconds": 150.96318069800327,
+        "phase": "ready",
+        "status": "running",
+        "resources": {
+          "peak_process_tree_rss_bytes": 3437236224,
+          "min_system_available_bytes": 19496382464,
+          "peak_system_swap_used_bytes": 140423168,
+          "cuda_peak_allocated_bytes": 10814976,
+          "cuda_peak_reserved_bytes": 31457280
+        }
+      },
+      "exit_code": 0,
+      "seconds": 210.01754098100355,
+      "final": {
+        "run": "mainline_informative_width128_v1_seed2",
+        "updates": 1,
+        "counters": {
+          "episodes": 4,
+          "decisions": 631,
+          "ticks": 71773
+        },
+        "wall_seconds": 184.72418769400974,
+        "phase": "ready",
+        "status": "update_boundary_stop",
+        "resources": {
+          "peak_process_tree_rss_bytes": 12571914240,
+          "min_system_available_bytes": 19496382464,
+          "peak_system_swap_used_bytes": 140423168,
+          "cuda_peak_allocated_bytes": 2390744064,
+          "cuda_peak_reserved_bytes": 2833252352
+        },
+        "latest_loss": {
+          "policy_loss": 0.28841442754492164,
+          "value_loss": 0.352462864946574,
+          "entropy": 2.960099756717682,
+          "advantage_mean": -0.9306840300559998,
+          "advantage_std": 0.23329514265060425,
+          "gradient_norm": 1.6893550157546997,
+          "approx_kl": 0.005283768481040424,
+          "clip_fraction": 0.0661771697923541,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.32917094230651855,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      }
+    },
+    {
+      "run": "mainline_informative_width512_v1_seed2",
+      "seed": 2,
+      "width": 512,
+      "requested_updates": 1,
+      "resume": false,
+      "engineering_probe": true,
+      "start_utc": "2026-10-03T09:20:01.258429+00:00",
+      "start_counters": null,
+      "status": "complete",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t6/informative_width_v1/width512_seed2.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_informative_width512_v1_seed2",
+        "--stop-after-updates",
+        "1"
+      ],
+      "pid": 250149,
+      "latest": {
+        "run": "mainline_informative_width512_v1_seed2",
+        "updates": 0,
+        "counters": {
+          "episodes": 0,
+          "decisions": 0,
+          "ticks": 0
+        },
+        "wall_seconds": 792.6453233909997,
+        "phase": "ready",
+        "status": "running",
+        "resources": {
+          "peak_process_tree_rss_bytes": 4100149248,
+          "min_system_available_bytes": 20552245248,
+          "peak_system_swap_used_bytes": 140423168,
+          "cuda_peak_allocated_bytes": 116713984,
+          "cuda_peak_reserved_bytes": 117440512
+        }
+      },
+      "exit_code": 0,
+      "seconds": 840.5694187570043,
+      "final": {
+        "run": "mainline_informative_width512_v1_seed2",
+        "updates": 1,
+        "counters": {
+          "episodes": 4,
+          "decisions": 642,
+          "ticks": 69042
+        },
+        "wall_seconds": 828.1130715760082,
+        "phase": "ready",
+        "status": "update_boundary_stop",
+        "resources": {
+          "peak_process_tree_rss_bytes": 12806909952,
+          "min_system_available_bytes": 20462596096,
+          "peak_system_swap_used_bytes": 140423168,
+          "cuda_peak_allocated_bytes": 7995224064,
+          "cuda_peak_reserved_bytes": 12360613888
+        },
+        "latest_loss": {
+          "policy_loss": 0.08331319689750671,
+          "value_loss": 0.5089847346146902,
+          "entropy": 3.0414583683013916,
+          "advantage_mean": -1.0428876876831055,
+          "advantage_std": 0.23835648596286774,
+          "gradient_norm": 1.6409448385238647,
+          "approx_kl": 0.011009041086903648,
+          "clip_fraction": 0.11418838985264301,
+          "first_minibatch_log_prob_max_error": 4.76837158203125e-07,
+          "max_log_prob_change": 0.6825661659240723,
+          "optimizer_steps": 3,
+          "stopped_for_kl": true
+        }
+      }
+    },
+    {
+      "run": "mainline_informative_width512_v1_seed1",
+      "seed": 1,
+      "width": 512,
+      "requested_updates": 1,
+      "resume": true,
+      "engineering_probe": true,
+      "start_utc": "2026-10-03T09:34:01.832943+00:00",
+      "start_counters": {
+        "episodes": 12,
+        "decisions": 2000,
+        "ticks": 212418
+      },
+      "status": "complete",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t6/informative_width_v1/width512_seed1.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_informative_width512_v1_seed1",
+        "--stop-after-updates",
+        "1",
+        "--resume"
+      ],
+      "pid": 250879,
+      "latest": {
+        "run": "mainline_informative_width512_v1_seed1",
+        "updates": 3,
+        "counters": {
+          "episodes": 12,
+          "decisions": 2000,
+          "ticks": 212418
+        },
+        "wall_seconds": 2780.3269631850126,
+        "phase": "ready",
+        "status": "running",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15639699456,
+          "min_system_available_bytes": 17083912192,
+          "peak_system_swap_used_bytes": 140423168,
+          "cuda_peak_allocated_bytes": 8007958016,
+          "cuda_peak_reserved_bytes": 9294577664
+        },
+        "latest_loss": {
+          "policy_loss": 0.26215813867747784,
+          "value_loss": 0.0537270016502589,
+          "entropy": 2.8213322162628174,
+          "advantage_mean": 0.16756071150302887,
+          "advantage_std": 0.19148461520671844,
+          "gradient_norm": 2.2485995292663574,
+          "approx_kl": 0.011160572234075516,
+          "clip_fraction": 0.17938976269215345,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.6423745155334473,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      },
+      "exit_code": 0,
+      "seconds": 60.01729195601365,
+      "final": {
+        "run": "mainline_informative_width512_v1_seed1",
+        "updates": 4,
+        "counters": {
+          "episodes": 16,
+          "decisions": 2768,
+          "ticks": 294071
+        },
+        "wall_seconds": 2833.6299591800052,
+        "phase": "ready",
+        "status": "update_boundary_stop",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15639699456,
+          "min_system_available_bytes": 17083912192,
+          "peak_system_swap_used_bytes": 140423168,
+          "cuda_peak_allocated_bytes": 8176925184,
+          "cuda_peak_reserved_bytes": 13461618688
+        },
+        "latest_loss": {
+          "policy_loss": 0.2271052859723568,
+          "value_loss": 0.05641429009847343,
+          "entropy": 2.789827913045883,
+          "advantage_mean": -0.2242048680782318,
+          "advantage_std": 0.2137196660041809,
+          "gradient_norm": 1.0030404329299927,
+          "approx_kl": 0.009683874901384115,
+          "clip_fraction": 0.15727188158780336,
+          "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+          "max_log_prob_change": 0.6666908264160156,
+          "optimizer_steps": 8,
+          "stopped_for_kl": false
+        }
+      }
+    }
+  ],
+  "origins": {
+    "mainline_informative_width128_v1_seed0": {
+      "initial_state_sha256": "da2a2a0b1e467e1b805e2f29e4d00c3749638c06fa66647b6b1cef6b5215f6fe",
+      "kind": "random_initialization"
+    },
+    "mainline_informative_width512_v1_seed0": {
+      "initial_state_sha256": "f721319088d09aa4529e8f61a2c037d390daa2d88dea08286014b15aee9a4756",
+      "kind": "random_initialization"
+    },
+    "mainline_informative_width128_v1_seed1": {
+      "initial_state_sha256": "c3ef934dfd434eb5589189fcf482c9569b0a92e24b528ad90a0949fbbae1a7ca",
+      "kind": "random_initialization"
+    },
+    "mainline_informative_width128_v1_seed2": {
+      "initial_state_sha256": "094f4b3a9c9ecf4791538ffcc9feae88b34e5b5baa38e81797974eb5e5dd77fd",
+      "kind": "random_initialization"
+    },
+    "mainline_informative_width512_v1_seed2": {
+      "initial_state_sha256": "6508c1400f630ac60d354a004b56cb53478f2bf37bbf854d8624e8bbfc4020c3",
+      "kind": "random_initialization"
+    },
+    "mainline_informative_width512_v1_seed1": {
+      "initial_state_sha256": "cc901cd163875292665adacdf9668388250dd66be1fcab6e2414a8ceb4d632e6",
+      "kind": "random_initialization"
+    }
+  },
+  "original_timeout": {
+    "status": "failed_preserved",
+    "error": "Traceback (most recent call last):\n  File \"/home/newbiexvwu/PvZ-Portable/scripts/run_informative_width_queue.py\", line 247, in <module>\n    train(entry, plan['smoke_updates'], False)\n    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/newbiexvwu/PvZ-Portable/scripts/run_informative_width_queue.py\", line 204, in train\n    raise RuntimeError('Required width smoke/resume failed; preserve all state and stop expansion')\nRuntimeError: Required width smoke/resume failed; preserve all state and stop expansion\n",
+    "run": "mainline_informative_width512_v1_seed1",
+    "seconds": 2790.4254612829973
+  },
+  "complete_resume_invocation": {
+    "kind": "complete_resume",
+    "started_at": "2026-10-03T09:34:04.350222+00:00",
+    "commit": "29776a49f56254d144a743205a5c3985f48d18b6"
+  },
+  "original_timeout_full_run_delivery": {
+    "run": "mainline_informative_width512_v1_seed1",
+    "branch": "evidence-mainline-informative-width512-v1-seed1-smoke-timeout",
+    "status": "complete",
+    "start_utc": "2026-10-03T09:16:30.459561+00:00",
+    "pid": 249566,
+    "exit_code": 0,
+    "end_utc": "2026-10-03T09:20:01.259682+00:00",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "revision": "055f338fe45137be727d4ace9f57907e1379ccea"
+  },
+  "started_first_segment": {
+    "run": "mainline_informative_width128_v1_seed0",
+    "start_utc": "2026-10-03T09:35:01.912459+00:00",
+    "pid": 251102,
+    "status": "running",
+    "requested_updates": 30,
+    "resume": true,
+    "engineering_probe": false,
+    "start_counters": {
+      "episodes": 12,
+      "decisions": 2000,
+      "ticks": 199103
+    }
+  },
+  "scope": "Three q10 engineering closures reused, two new genuine random one-update probes plus full512seed1 resume completed under prospectiveq11. Original timeout remains failed; all initial/2k assessments kept when due. No new width125k, equal-time result, architecture adoption or T5-E/T6/T7 pass. Raw/model restoration of new candidates follows original125k final delivery."
+}
