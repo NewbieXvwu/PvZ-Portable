@@ -149,6 +149,21 @@ def _frame(obs: dict) -> dict:
     # 存成 [[row, state], ...] 而不是 {row: state}：JSON 的对象键永远是字符串，
     # 整数键的字典存盘再读回来会变成 "0"/"1"，后面按行号取就会炸。
     mowers = [[d["row"], d["state"]] for d in obs.get("defenses") or []]
+    # 卡槽（seed bank）。原生观测**本来就发**这几个字段（见 LawnApp.cpp 的
+    # `"packets":[...]`：index/type/imitater_type/active/cooldown/refresh_time/cost），
+    # 是这个压缩函数原先把它们丢了。丢掉的代价是可实测的 —— S3 那轮模型写道：
+    #     "What cards are in the deck? Let me check a frame's seed bank.
+    #      The frame output didn't show seed bank. Let me check vocabulary—no.
+    #      Maybe the frame tool has a way to show? Not in this output."
+    # 它连试三条路都拿不到"手里有什么牌、哪张冷却好了"，最后只能从 `actions`
+    # 里出现过的植物去反推卡组。数据一直都在，只是没往外送。
+    packets = [
+        [
+            p["index"], p["type"], bool(p["active"]),
+            int(p["cooldown"]), int(p["refresh_time"]), int(p["cost"]),
+        ]
+        for p in obs.get("packets") or []
+    ]
     return {
         "tick": obs["tick"],
         "wave": obs["wave"],
@@ -157,6 +172,7 @@ def _frame(obs: dict) -> dict:
         "plants": plants,
         "zombies": zombies,
         "mowers": mowers,
+        "packets": packets,
         "result": obs.get("result"),
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
@@ -294,12 +310,23 @@ def _mower_map(frame: dict) -> dict:
 def _mower_fired(prev: dict, cur: dict) -> list:
     """这一帧有哪些草坪的割草机被用掉了。
 
-    两种情况都要算：状态变成 TRIGGERED(=2)，或者整条从 defenses 列表里消失
-    （割草机跑完一趟就被回收，一次 60 tick 的等待足以跳过 state=2 那一帧）。
+    一台割草机在 defenses 里走完两步：`state 1 → 2`（被触发、正在跑），
+    然后整条从列表里消失（跑完一趟被回收）。**这是同一台机器的两个阶段，
+    不是两台机器** —— 所以只在**第一次**能看见它出事的那一帧报一次。
+
+    两种都要算，但第二种是有条件的：状态变成 TRIGGERED(=2)，或者整条从
+    defenses 列表里消失**且上一帧还不是 2**（一次 60 tick 的等待足以跳过
+    state=2 那一帧，那时只能靠"消失"来发现）。
+
+    为什么加 `s != 2` 这个条件（2026-10-03 实测）：不加的话，同一台割草机会
+    在触发帧和回收帧各报一次，文本一模一样。模型读到两条一模一样的
+    "割草机被用掉"，只能猜"是不是有两台？"，然后写：
+        "33600 割草机被用掉 and 33960 割草机被用掉 — maybe two mowers? Odd but whatever."
+    它放过了这个疑点，但**它在那上面花掉的注意力是真的**。
     """
     a, b = _mower_map(prev), _mower_map(cur)
     fired = [r for r, s in b.items() if s == 2 and a.get(r) != 2]
-    fired += [r for r in a if r not in b and r not in fired]
+    fired += [r for r, s in a.items() if r not in b and s != 2 and r not in fired]
     return sorted(fired)
 
 

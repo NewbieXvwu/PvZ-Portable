@@ -222,9 +222,39 @@ def _fmt_legend(cur: dict) -> str:
     return "字符说明：" + parts
 
 
+def _fmt_bank(cur: dict) -> str:
+    """卡槽一行：手里有哪几张牌、各要多少阳光、哪张冷却好了。
+
+    这是**字段缺失**的修复，不是文档缺失：原生观测一直发 `packets`，是渲染层
+    把它丢了。S3 那轮模型为了知道卡组，连着试了三条路（frame → vocabulary →
+    猜 frame 有没有别的开关）都没拿到，最后只能从 `actions` 里出现过的植物反推。
+    加文档解决不了这种问题 —— 它要的是**这一帧的事实**，不是一份说明。
+    """
+    packets = cur.get("packets")
+    if packets is None:
+        # 旧存档（这份 frames.jsonl 是用旧版 capture 生成的）没有这个字段。
+        # 必须**说出来**，不能显示成"没有卡牌" —— 那会让模型以为卡组是空的。
+        return "卡槽：（这份存档是旧版 capture 生成的，没有记录卡槽；重新 capture 一次就有）"
+    if not packets:
+        return "卡槽：（空）"
+    parts = []
+    for index, ptype, active, cooldown, refresh, cost in packets:
+        if ptype < 0:
+            parts.append(f"{index}·空槽")
+            continue
+        name = PLANT_NAME.get(ptype, f"type{ptype}")
+        if active and cooldown <= 0:
+            state = "就绪"
+        else:
+            state = f"冷却中 剩{cooldown} tick"
+        parts.append(f"{index}·{name} {cost}☀ {state}")
+    return "卡槽：" + " ｜ ".join(parts)
+
+
 def _fmt_frame(prev: dict | None, cur: dict, idx: int, total: int) -> str:
     L = [f"── 帧 {idx}/{total}  tick {cur['tick']}  第 {cur['wave']} 波  "
          f"阳光 {cur['sun']}  阳光收入 {cur.get('sun_income_rate')} ──"]
+    L.append(_fmt_bank(cur))
     L.append("植物：")
     L.append("  " + _board_ascii(cur, "plant").replace("\n", "\n  "))
     L.append("僵尸：")
@@ -431,6 +461,14 @@ def _fmt_narrative(frames: list, w0: int | None, w1: int | None,
         if detail >= 3:
             L.append("  棋盘：")
             L.append("    " + _board_ascii(entry, "plant").replace("\n", "\n    "))
+            # 棋盘不能单独出现 —— 大小写规则不写在棋盘旁边，读的人（和模型）
+            # 只能猜 `p` 是"受伤的豌豆"还是"健康的小喷菇"。
+            # frame 一直带着这条说明，这里漏了。
+            bank = _fmt_bank(entry)
+            L.append("    " + bank)
+            legend = _fmt_legend(entry)
+            if legend:
+                L.append("    " + legend)
 
         recs = []
         for k in range(lo + 1, hi + 1):
@@ -440,8 +478,13 @@ def _fmt_narrative(frames: list, w0: int | None, w1: int | None,
         lines: list[tuple[int, str]] = []
         for t, k, e in recs:
             if e["kind"] == "mower":
-                sym, why = _lane_causal(frames[k], e["row"])
-                lines.append((t, f"⚠ {e['row']} 号路割草机被用掉。当时该路：{why or '暂无威胁'}"
+                # 看**出事前**那一帧，不是出事后那一帧。割草机的职责就是把那一路
+                # 清空，所以事后帧永远是"暂无威胁"—— 那正是它干完活的样子。
+                # （实测：修之前这句话印出来是「割草机被用掉。当时该路：暂无威胁」，
+                #  自相矛盾，模型只会当成噪音跳过。）
+                sym, why = _lane_causal(frames[k - 1], e["row"])
+                lines.append((t, f"⚠ {e['row']} 号路割草机被用掉。"
+                                 f"出事前该路：{why or f'判定 {sym}，没有值得展开的原因'}"
                                  f" —— 这台机器是这一路最后的缓冲，之后每株新种的植物都会"
                                  f"直接暴露在僵尸面前"))
 
