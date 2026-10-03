@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-width512-seed1-smoke-timeout-probe-v1",
+  "revision": "a876e59d9a64be8162645f06e86271d01ee89920",
+  "seconds": 6.970883720001439,
+  "previous_revision": "49c2a5c98e479346f31cab6f3212c74fced126a4",
+  "model_bytes": 336709267,
+  "actual_cases": 1,
+  "scope": "Corrected closed-timeout metadata plus original mislabeled metadata, trained3 snapshot, one CPU case matching16 gameplay fields of its original completed assessment, raw shard/code/config/provenance. Full original failed run is separate delivery, required before resume; original q10 remains failed."
+}
