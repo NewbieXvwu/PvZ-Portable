@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "observed_utc": "2026-10-03T06:05:48.765413+00:00",
+  "status": "closed_complete60_update_segment",
+  "run": "mainline_bridge_random_mc_v1_seed0",
+  "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+  "stage": {
+    "status": "complete",
+    "requested_updates": 60,
+    "resume": true,
+    "start_counters": {
+      "episodes": 856,
+      "decisions": 152909,
+      "ticks": 18510471
+    },
+    "start_utc": "2026-10-03T04:43:25.563552+00:00",
+    "command": [
+      "/home/newbiexvwu/.venvs/ml/bin/python",
+      "-u",
+      "python/train_pvz_ppo_task_family.py",
+      "--resource-dir",
+      "/home/newbiexvwu/.cache/pvz-research-resources",
+      "--experiment-config",
+      "experiments/t7/bridge_random_mc_v1/seed0.json",
+      "--output-dir",
+      "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_bridge_random_mc_v1_seed0",
+      "--stop-after-updates",
+      "60",
+      "--resume"
+    ],
+    "pid": 231364,
+    "latest": {
+      "updates": 275,
+      "counters": {
+        "episodes": 1092,
+        "decisions": 208534,
+        "ticks": 24682830
+      },
+      "wall_seconds": 16961.68730912901,
+      "phase": "ready",
+      "resources": {
+        "peak_process_tree_rss_bytes": 15332282368,
+        "min_system_available_bytes": 16734195712,
+        "peak_system_swap_used_bytes": 221184,
+        "cuda_peak_allocated_bytes": 8407389696,
+        "cuda_peak_reserved_bytes": 27466399744
+      }
+    },
+    "latest_loss": {
+      "policy_loss": -0.18180469361444315,
+      "value_loss": 0.11894566224267085,
+      "entropy": 2.8337318897247314,
+      "advantage_mean": -0.061179567128419876,
+      "advantage_std": 0.3273108899593353,
+      "gradient_norm": 2.006572961807251,
+      "approx_kl": 0.009764567841417514,
+      "clip_fraction": 0.11715648953731243,
+      "first_minibatch_log_prob_max_error": 1.6689300537109375e-06,
+      "max_log_prob_change": 0.8334441184997559,
+      "optimizer_steps": 12,
+      "stopped_for_kl": true
+    },
+    "exit_code": 0,
+    "seconds": 4413.145475131998,
+    "end": {
+      "updates": 276,
+      "counters": {
+        "episodes": 1096,
+        "decisions": 209761,
+        "ticks": 24818451
+      },
+      "wall_seconds": 17071.902541668,
+      "phase": "ready",
+      "resources": {
+        "peak_process_tree_rss_bytes": 15332282368,
+        "min_system_available_bytes": 16734195712,
+        "peak_system_swap_used_bytes": 221184,
+        "cuda_peak_allocated_bytes": 8407389696,
+        "cuda_peak_reserved_bytes": 27466399744
+      },
+      "checkpoint": "runs/run_1/update_000276_boundary_1791007009071015755.pt"
+    }
+  },
+  "actual_delta": {
+    "episodes": 240,
+    "decisions": 56852,
+    "ticks": 6307980
+  },
+  "decisions_per_controller_elapsed_second": 12.882421465677957,
+  "episodes_per_controller_elapsed_hour": 195.77872627780474,
+  "latest_observed": {
+    "controller_pid": 227635,
+    "trainer_pid": 238406,
+    "updates": 282,
+    "counters": {
+      "episodes": 1120,
+      "decisions": 214338,
+      "ticks": 25283734
+    },
+    "last_invocation": {
+      "kind": "complete_resume",
+      "started_at": "2026-10-03T05:57:01.694516+00:00",
+      "commit": "f005c47e9c4a736060d554cc6b53daa8a47f8265"
+    }
+  },
+  "known_prior125k_delivery": {
+    "run": "mainline_bridge_random_mc_v1_seed0",
+    "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
+    "status": "complete",
+    "start_utc": "2026-10-03T02:55:23.206409+00:00",
+    "pid": 217770,
+    "exit_code": 0,
+    "end_utc": "2026-10-03T03:00:24.446965+00:00",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "revision": "32fdb14437ee43ea4a643b3be0db18ab123cb3f4"
+  },
+  "scope": "Same genuinely random-origin seed0 complete resume, original frozen recipe/tasks/seeds/thresholds. Segment elapsed includes process monitoring/exit detection. No new fixed development evaluation; last remains125k. Boundary checkpoint and logs preserved, scheduled owning full250k upload pending. No independent initialization, architecture superiority or full acceptance claim."
+}

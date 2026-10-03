@@ -1376,3 +1376,12 @@ v9原控制器及训练子进程仍活动，没有新增GPU任务。启动观察
 HF交付2e8aaa0e（evidence-informative-width-reference-report-v1），4.36秒；原始模型/恢复材料引用
 既有first125k与0/2k/25k节点包。证据见
 [informative_width_reference_report_v1_actual.json](artifacts/t5/perf/informative_width_reference_report_v1_actual.json)。
+
+v9下一60更新段已正常退出0：4413.15秒，152909→209761决策，
+新增240局/56852决策/6307980tick；总276更新/1096局/24818451tick。
+末次policy/value loss为-0.181805/0.118946，首minibatch旧概率
+回放最大误差1.67e-06；完整边界检查点、Adam/RNG和课程
+状态保留。原拥有者已自动续接下一60更新段；最近固定开发点仍125k，不根据
+本段训练窗口或损失宣称新能力。第250k原定评估及全部验收不变，v10仍等待。
+完整新恢复包按计划待250k闭合后由v10上传，当前记录不冒充已交付的恢复快照。
+实际记录见[mainline_training_queue_v9_first60_v1_actual.json](artifacts/t5/perf/mainline_training_queue_v9_first60_v1_actual.json)。
