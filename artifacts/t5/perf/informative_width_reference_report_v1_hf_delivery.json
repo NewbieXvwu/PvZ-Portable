@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-informative-width-reference-report-v1",
+  "revision": "2e8aaa0ed097a7e71aaf77c55a1608e4622e7a1b",
+  "seconds": 4.360059917002218,
+  "completed_at_B": 3,
+  "total_candidates": 9,
+  "scope": "Descriptive nine-candidate report/config/code and12 existing reference points only. Checkpoints/raw restore reference existing HF runs; six width candidates unstarted. No new training/model evaluation or equal-time completion claimed."
+}

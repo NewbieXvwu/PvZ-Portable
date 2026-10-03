@@ -1363,3 +1363,16 @@ v10等待控制器已实际启动（PID 232412，执行代码b7c094b、训练源
 v9原控制器及训练子进程仍活动，没有新增GPU任务。启动观察见
 [informative_width_queue_v1_launch_actual.json](artifacts/t5/perf/informative_width_queue_v1_launch_actual.json)。
 这只验证接续队列在等待原拥有者，不算任何宽度学习/等耗时结果。
+
+宽度汇总清单已单独冻结为experiments/t6/informative_width_v1/comparison_v1.json，
+含128/256/512×三初始化共9候选；执行队列仍只有6个新候选，未改活动计划。
+真实research_comparison_summary.py调用读取原始逐局记录和12个不可变参考检查点，
+3.67秒、峰值RSS777588736字节、CUDA未初始化、无模型前向或Native交互；
+共同125k证据仅3/9，六新候选均保留not_started，不能声称结构试验已完成。
+8648.29秒视图中seed0/1可用评估仍是25k，未用时间6503.95/5889.02秒；
+10551.24秒视图中seed2仍有1902.95秒空缺。这些真实计时证明稀疏节点不能
+代替充分的等耗时模型比较；v10保留墙钟检查点，后续仍须评分/实际延长。
+3MB全报告留在research/HF，Git只存小型actual和引用索引，未复制模型/分片。
+HF交付2e8aaa0e（evidence-informative-width-reference-report-v1），4.36秒；原始模型/恢复材料引用
+既有first125k与0/2k/25k节点包。证据见
+[informative_width_reference_report_v1_actual.json](artifacts/t5/perf/informative_width_reference_report_v1_actual.json)。

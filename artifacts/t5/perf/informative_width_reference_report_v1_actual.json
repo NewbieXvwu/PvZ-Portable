@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "observed_utc": "2026-10-03T05:04:10.244749+00:00",
+  "status": "actual_reference_report_only_width_matrix_incomplete",
+  "comparison_queue": "experiments/t6/informative_width_v1/comparison_v1.json",
+  "execution_queue": "experiments/t6/informative_width_v1/queue_v1.json",
+  "command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python",
+    "scripts/research_comparison_summary.py",
+    "--queue",
+    "experiments/t6/informative_width_v1/comparison_v1.json",
+    "--output",
+    "artifacts/research/informative_width_reference_report_v1/report.json",
+    "--comparison-axis",
+    "model"
+  ],
+  "actual_seconds": 3.6689056049945066,
+  "peak_process_rss_bytes": 777588736,
+  "cuda_initialized": false,
+  "native_interactions": 0,
+  "model_constructions": 0,
+  "completed_at_B": 3,
+  "total_candidates": 9,
+  "all_candidates_complete": false,
+  "candidates": [
+    {
+      "experiment_id": "mainline_informative_width128_v1_seed0",
+      "initialization_seed": 0,
+      "width": 128,
+      "status": "not_started",
+      "evaluated_decision_nodes": []
+    },
+    {
+      "experiment_id": "mainline_bridge_random_mc_v1_seed0",
+      "initialization_seed": 0,
+      "width": 256,
+      "status": "running",
+      "evaluated_decision_nodes": [
+        0,
+        2000,
+        25000,
+        125000
+      ]
+    },
+    {
+      "experiment_id": "mainline_informative_width512_v1_seed0",
+      "initialization_seed": 0,
+      "width": 512,
+      "status": "not_started",
+      "evaluated_decision_nodes": []
+    },
+    {
+      "experiment_id": "mainline_informative_width128_v1_seed1",
+      "initialization_seed": 1,
+      "width": 128,
+      "status": "not_started",
+      "evaluated_decision_nodes": []
+    },
+    {
+      "experiment_id": "mainline_bridge_random_mc_v1_seed1",
+      "initialization_seed": 1,
+      "width": 256,
+      "status": "update_boundary_stop",
+      "evaluated_decision_nodes": [
+        0,
+        2000,
+        25000,
+        125000
+      ]
+    },
+    {
+      "experiment_id": "mainline_informative_width512_v1_seed1",
+      "initialization_seed": 1,
+      "width": 512,
+      "status": "not_started",
+      "evaluated_decision_nodes": []
+    },
+    {
+      "experiment_id": "mainline_informative_width128_v1_seed2",
+      "initialization_seed": 2,
+      "width": 128,
+      "status": "not_started",
+      "evaluated_decision_nodes": []
+    },
+    {
+      "experiment_id": "mainline_bridge_random_mc_v1_seed2",
+      "initialization_seed": 2,
+      "width": 256,
+      "status": "update_boundary_stop",
+      "evaluated_decision_nodes": [
+        0,
+        2000,
+        25000,
+        125000
+      ]
+    },
+    {
+      "experiment_id": "mainline_informative_width512_v1_seed2",
+      "initialization_seed": 2,
+      "width": 512,
+      "status": "not_started",
+      "evaluated_decision_nodes": []
+    }
+  ],
+  "budget_views": {
+    "interaction_points": [
+      {
+        "decisions": 0,
+        "all_candidates_observed": false,
+        "observed": [
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed0",
+            "initialization_seed": 0,
+            "evaluation_index": 0,
+            "actual_active_wall_seconds": 270.6946895410001
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed1",
+            "initialization_seed": 1,
+            "evaluation_index": 0,
+            "actual_active_wall_seconds": 236.56333744699805
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed2",
+            "initialization_seed": 2,
+            "evaluation_index": 0,
+            "actual_active_wall_seconds": 326.73231285700604
+          }
+        ],
+        "missing": [
+          "mainline_informative_width128_v1_seed0",
+          "mainline_informative_width512_v1_seed0",
+          "mainline_informative_width128_v1_seed1",
+          "mainline_informative_width512_v1_seed1",
+          "mainline_informative_width128_v1_seed2",
+          "mainline_informative_width512_v1_seed2"
+        ]
+      },
+      {
+        "decisions": 2000,
+        "all_candidates_observed": false,
+        "observed": [
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed0",
+            "initialization_seed": 0,
+            "evaluation_index": 1,
+            "actual_active_wall_seconds": 644.0428893229982
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed1",
+            "initialization_seed": 1,
+            "evaluation_index": 1,
+            "actual_active_wall_seconds": 744.9789879460004
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed2",
+            "initialization_seed": 2,
+            "evaluation_index": 1,
+            "actual_active_wall_seconds": 868.9605991360004
+          }
+        ],
+        "missing": [
+          "mainline_informative_width128_v1_seed0",
+          "mainline_informative_width512_v1_seed0",
+          "mainline_informative_width128_v1_seed1",
+          "mainline_informative_width512_v1_seed1",
+          "mainline_informative_width128_v1_seed2",
+          "mainline_informative_width512_v1_seed2"
+        ]
+      },
+      {
+        "decisions": 25000,
+        "all_candidates_observed": false,
+        "observed": [
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed0",
+            "initialization_seed": 0,
+            "evaluation_index": 2,
+            "actual_active_wall_seconds": 2144.3407039769954
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed1",
+            "initialization_seed": 1,
+            "evaluation_index": 2,
+            "actual_active_wall_seconds": 2759.273913568002
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed2",
+            "initialization_seed": 2,
+            "evaluation_index": 2,
+            "actual_active_wall_seconds": 2328.3961851649947
+          }
+        ],
+        "missing": [
+          "mainline_informative_width128_v1_seed0",
+          "mainline_informative_width512_v1_seed0",
+          "mainline_informative_width128_v1_seed1",
+          "mainline_informative_width512_v1_seed1",
+          "mainline_informative_width128_v1_seed2",
+          "mainline_informative_width512_v1_seed2"
+        ]
+      },
+      {
+        "decisions": 125000,
+        "all_candidates_observed": false,
+        "observed": [
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed0",
+            "initialization_seed": 0,
+            "evaluation_index": 3,
+            "actual_active_wall_seconds": 10329.400370045994
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed1",
+            "initialization_seed": 1,
+            "evaluation_index": 3,
+            "actual_active_wall_seconds": 10551.235641094005
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed2",
+            "initialization_seed": 2,
+            "evaluation_index": 3,
+            "actual_active_wall_seconds": 8648.289784946013
+          }
+        ],
+        "missing": [
+          "mainline_informative_width128_v1_seed0",
+          "mainline_informative_width512_v1_seed0",
+          "mainline_informative_width128_v1_seed1",
+          "mainline_informative_width512_v1_seed1",
+          "mainline_informative_width128_v1_seed2",
+          "mainline_informative_width512_v1_seed2"
+        ]
+      }
+    ],
+    "wall_budget_views": [
+      {
+        "wall_budget_seconds": 8648.289784946013,
+        "all_candidates_observed": false,
+        "observed": [
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed0",
+            "initialization_seed": 0,
+            "evaluation_index": 2,
+            "actual_decisions": 25000,
+            "actual_active_wall_seconds": 2144.3407039769954,
+            "unused_budget_seconds": 6503.949080969018
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed1",
+            "initialization_seed": 1,
+            "evaluation_index": 2,
+            "actual_decisions": 25000,
+            "actual_active_wall_seconds": 2759.273913568002,
+            "unused_budget_seconds": 5889.015871378011
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed2",
+            "initialization_seed": 2,
+            "evaluation_index": 3,
+            "actual_decisions": 125000,
+            "actual_active_wall_seconds": 8648.289784946013,
+            "unused_budget_seconds": 0.0
+          }
+        ],
+        "missing": [
+          "mainline_informative_width128_v1_seed0",
+          "mainline_informative_width512_v1_seed0",
+          "mainline_informative_width128_v1_seed1",
+          "mainline_informative_width512_v1_seed1",
+          "mainline_informative_width128_v1_seed2",
+          "mainline_informative_width512_v1_seed2"
+        ]
+      },
+      {
+        "wall_budget_seconds": 10551.235641094005,
+        "all_candidates_observed": false,
+        "observed": [
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed0",
+            "initialization_seed": 0,
+            "evaluation_index": 3,
+            "actual_decisions": 125000,
+            "actual_active_wall_seconds": 10329.400370045994,
+            "unused_budget_seconds": 221.83527104801033
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed1",
+            "initialization_seed": 1,
+            "evaluation_index": 3,
+            "actual_decisions": 125000,
+            "actual_active_wall_seconds": 10551.235641094005,
+            "unused_budget_seconds": 0.0
+          },
+          {
+            "experiment_id": "mainline_bridge_random_mc_v1_seed2",
+            "initialization_seed": 2,
+            "evaluation_index": 3,
+            "actual_decisions": 125000,
+            "actual_active_wall_seconds": 8648.289784946013,
+            "unused_budget_seconds": 1902.9458561479914
+          }
+        ],
+        "missing": [
+          "mainline_informative_width128_v1_seed0",
+          "mainline_informative_width512_v1_seed0",
+          "mainline_informative_width128_v1_seed1",
+          "mainline_informative_width512_v1_seed1",
+          "mainline_informative_width128_v1_seed2",
+          "mainline_informative_width512_v1_seed2"
+        ]
+      }
+    ],
+    "wall_scope": "Latest actually evaluated immutable checkpoint at or before each shared active-wall cap; actual spent time and unused cap are explicit. No interpolated score, exact equal-time observation, or extra evaluation is claimed. Freeze useful caps from reference costs before architecture GPU trials."
+  },
+  "full_report_bytes": 3074292,
+  "scope": "Actual existing summary invocation read12 genuine-reference checkpoints/raw results and retained six unstarted width candidates. No training, Native interaction or model forward. Sparse wall views expose unused gaps up to6503.95s and1902.95s, not equal-time completion. Additional checkpoint scoring/extensions and width comparison remain pending. Live250k candidate and waiting execution controller unchanged."
+}

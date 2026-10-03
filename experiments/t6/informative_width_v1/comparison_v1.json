@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "matrix": "informative_width_v1",
+  "purpose": "Report-only nine-candidate paired width matrix. Reuse all three genuine256 reference random origins, including seed1 greedy regression and seed2 long-task failure. Six unstarted128/512 candidates remain visible. No training, task, seed, recipe or acceptance change; no adoption based on partial reference-only data.",
+  "budget_B": 125000,
+  "common_decision_budget": 125000,
+  "common_wall_budgets_seconds": [
+    8648.289784946013,
+    10551.235641094005
+  ],
+  "initialization_seeds": [
+    0,
+    1,
+    2
+  ],
+  "frozen_interaction_views": [
+    0,
+    2000,
+    25000,
+    125000
+  ],
+  "execution_queue": "experiments/t6/informative_width_v1/queue_v1.json",
+  "protocol": "experiments/t6/informative_width_v1/protocol.json",
+  "order": [
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed0.json",
+      "output_dir": "artifacts/research/mainline_informative_width128_v1_seed0",
+      "log": "logs/t5_research/mainline_informative_width128_v1_seed0.log"
+    },
+    {
+      "config": "experiments/t7/bridge_random_mc_v1/seed0.json",
+      "output_dir": "artifacts/research/mainline_bridge_random_mc_v1_seed0",
+      "log": "logs/t5_research/mainline_bridge_random_mc_v1_seed0.log"
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed0.json",
+      "output_dir": "artifacts/research/mainline_informative_width512_v1_seed0",
+      "log": "logs/t5_research/mainline_informative_width512_v1_seed0.log"
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed1.json",
+      "output_dir": "artifacts/research/mainline_informative_width128_v1_seed1",
+      "log": "logs/t5_research/mainline_informative_width128_v1_seed1.log"
+    },
+    {
+      "config": "experiments/t7/bridge_random_mc_v1/seed1.json",
+      "output_dir": "artifacts/research/mainline_bridge_random_mc_v1_seed1",
+      "log": "logs/t5_research/mainline_bridge_random_mc_v1_seed1.log"
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed1.json",
+      "output_dir": "artifacts/research/mainline_informative_width512_v1_seed1",
+      "log": "logs/t5_research/mainline_informative_width512_v1_seed1.log"
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width128_seed2.json",
+      "output_dir": "artifacts/research/mainline_informative_width128_v1_seed2",
+      "log": "logs/t5_research/mainline_informative_width128_v1_seed2.log"
+    },
+    {
+      "config": "experiments/t7/bridge_random_mc_v1/seed2.json",
+      "output_dir": "artifacts/research/mainline_bridge_random_mc_v1_seed2",
+      "log": "logs/t5_research/mainline_bridge_random_mc_v1_seed2.log"
+    },
+    {
+      "config": "experiments/t6/informative_width_v1/width512_seed2.json",
+      "output_dir": "artifacts/research/mainline_informative_width512_v1_seed2",
+      "log": "logs/t5_research/mainline_informative_width512_v1_seed2.log"
+    }
+  ],
+  "scope": "Existing summary entry selects actual immutable evaluated points with real wall time/cap gaps. Additional retained wall-checkpoint scoring and faster-candidate extensions are pending; this sparse available-node report does not complete the equal-time comparison."
+}
