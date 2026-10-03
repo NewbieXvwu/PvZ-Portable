@@ -188,6 +188,16 @@ def _frame(obs: dict) -> dict:
     # 而棋盘渲染里根本没有 r5）。
     lane_terrain = _LANE_TERRAIN
     lanes = [r for r, t in enumerate(row_terrain) if t in lane_terrain]
+    # 全局计数：脚本策略的关键规则前置条件（③生产者<10、⑤射手<14、
+    # ④香蒲<2）都是**全盘**量，而不是某一条路的。模型曾被迫从棋盘 ASCII
+    # 里逐格数向日葵来判断"经济规则会不会触发"——数了三遍、每遍都标注
+    # 不确定。这里直接给出可核对的事实，别让它做易错的数数工作。
+    totals = {
+        "producers": sum(1 for p in plants if p[2] in ECONOMY_TYPES),
+        "shooters": sum(1 for p in plants if p[2] in SHOOTER_TYPES),
+        "lilypads": sum(1 for p in plants if p[2] == 16),
+        "cattails": sum(1 for p in plants if p[2] == 43),
+    }
     return {
         "tick": obs["tick"],
         "wave": obs["wave"],
@@ -208,6 +218,7 @@ def _frame(obs: dict) -> dict:
         },
         "row_terrain": row_terrain,             # grid 全部行，GridSquareType 编号
         "lanes": lanes,                         # 真实路号（泳池/雾 6 条，其余 5 条）
+        "totals": totals,                       # 全盘生产者/射手/睡莲/香蒲计数
         # 坟墓/花瓶等占位物（夜间草地关与 ScaryPotter 关）：这些格子**种不了**，
         # 模型看不到它们会把"策略没往那格种"误读成决策错误。只存位置，
         # 翻译成人话在 episode_query._fmt_scene。大多数关没有 → 存 []。

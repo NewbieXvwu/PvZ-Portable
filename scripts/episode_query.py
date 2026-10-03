@@ -362,6 +362,13 @@ def _fmt_frame(prev: dict | None, cur: dict, idx: int, total: int) -> str:
     # 图例的地图做规划。
     L.append(_fmt_scene(cur))
     L.append(_fmt_bank(cur))
+    # 全盘计数：脚本策略的关键规则前置（生产者/射手/香蒲阈值）是全盘量。
+    # 没有这行，读的人只能从棋盘 ASCII 逐格数 —— 实测模型数了三遍还标注不确定。
+    t = cur.get("totals")
+    if t:
+        L.append(f"全盘计数：生产者 {t['producers']}、射手 {t['shooters']}、"
+                 f"睡莲 {t['lilypads']}、香蒲 {t['cattails']}"
+                 f"（脚本策略的经济/火力/水路规则阈值见 policy 命令）")
     L.append("植物：")
     L.append("  " + _board_ascii(cur, "plant").replace("\n", "\n  "))
     L.append("僵尸：")
@@ -643,15 +650,20 @@ def _action_text(a: dict | None, deck: list) -> str:
     if not a:
         return "（开局）"
     kind = a.get("type")
+    rule = a.get("rule")
     if kind == "plant":
         pk = a.get("packet")
         ty = deck[pk] if isinstance(pk, int) and 0 <= pk < len(deck) else pk
-        return f"种下 {PLANT_NAME.get(ty, ty)} @({a.get('row')},{a.get('col')})"
-    if kind == "shovel":
-        return f"铲除 @({a.get('row')},{a.get('col')})"
-    if kind == "wait":
-        return f"等待 {a.get('ticks')} tick"
-    return json.dumps(a, ensure_ascii=False)
+        txt = f"种下 {PLANT_NAME.get(ty, ty)} @({a.get('row')},{a.get('col')})"
+    elif kind == "shovel":
+        txt = f"铲除 @({a.get('row')},{a.get('col')})"
+    elif kind == "wait":
+        txt = f"等待 {a.get('ticks')} tick"
+    else:
+        return json.dumps(a, ensure_ascii=False)
+    # rule 是脚本策略自己标注的"命中了哪条规则"（capture 时由 choose() 写入）。
+    # 旧存档 / whatif 的 override 动作没有这个字段 → 不加后缀。
+    return f"{txt}〔{rule}〕" if rule else txt
 
 
 def _action_consequence(frames: list, i: int, act: dict | None) -> str:
@@ -925,6 +937,16 @@ def _vocabulary() -> str:
     L.append("── 省事的办法 ──")
     L.append("  用 whatif --enumerate 时，输出的**左列就是可以直接复制的 --try 字符串**，")
     L.append("  不用自己翻译。")
+    L.append("")
+    L.append("── 复盘用的两个事实 ──")
+    L.append("  · actions 输出里每个动作可能带〔规则名〕后缀（如〔③经济〕）——那是")
+    L.append("    脚本策略自己标注的\"这个决策命中了哪条规则\"，不用再从行为反推。")
+    L.append("    whatif 的 override 动作没有后缀（它是你给的动作，不是策略选的）。")
+    L.append("  · frame 输出的「全盘计数」行给出生产者/射手/睡莲/香蒲的全盘总数；")
+    L.append("    脚本策略的关键规则阈值（③生产者、⑤射手、④香蒲）都是**全盘量**，")
+    L.append("    用这行直接判断哪条规则会触发，别从棋盘字符里数。")
+    L.append("  · 环境是确定性的：同 (level, seed, policy, deck) 重抓一局，帧序列与")
+    L.append("    决策编号逐位一致。重新 capture 后旧分析里的决策序号可直接复用。")
     return "\n".join(L)
 
 

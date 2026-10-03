@@ -100,19 +100,20 @@ DECISION_RULES = """\
 
   ③ 经济
      生产者 = 阳光菇(9)（夜间优先，或卡组里没有向日葵时）；否则向日葵(1)。
-     生产者 < 10 株 → 在 col <= 2 种（优先最靠左的列；同列里优先生产者最少的那一路）。
+     生产者 < 10 株 → 在 col <= 2 种（优先最靠左的列；同列里优先生产者最少
+     的那一路；仍并列时取合法列表里靠前的那条路，实测即行号较小的）。
 
   ④ 水路防御（卡组里有睡莲(16)才会触发；草地关没有这张牌）
      ④a. 某条水路上还没有睡莲/香蒲 → 在该路 col 2..5 种睡莲
-         （优先最危险的水路，取最靠右的列）。
+         （优先最危险的水路，取最靠左的列）。
      ④b. 场上香蒲(43) < 2 株，且香蒲有合法位（必须种在睡莲上，225☀）
-         → 种香蒲（优先最危险的那一路，取最靠右的列）。
+         → 种香蒲（优先最危险的那一路，取最靠左的列）。
 
   ⑤ 火力（射手 = 豌豆射手 + 寒冰射手，合计 < 14 株时）
      ⑤a. 寒冰射手 < 4 株且阳光 >= 275
          → 在 col 2..5 种寒冰射手（优先最危险的那一路）。
      ⑤b. 否则
-         → 在 col 2..5 种豌豆射手（优先最危险的那一路；同一路优先最靠右的列）。
+         → 在 col 2..5 种豌豆射手（优先最危险的那一路；同一路优先最靠左的列）。
 
   ⑥ 早期地雷
      土豆雷 < 4 株且 wave <= 4
@@ -121,6 +122,10 @@ DECISION_RULES = """\
   ⑦ 以上都不满足 → wait 60 tick。
 
 「最危险的那一路」= 该路「最前僵尸的 x」最小；该路没有僵尸时视为 9999。
+**x 的单位是像素横坐标**：每列 80 像素、最左列 c0 的左缘 x=40（列 c 的中心
+≈ 80*c+40）。所以 ① 的 x<260 ≈ 最前僵尸走进 c2 深处，② 的 x<320 ≈ 刚进 c3。
+lane 工具输出的「距割草机 xxx t」是**另一个口径**（用该僵尸自身速度换算的
+时间），和 x 不是一回事，别拿 260/320 去比它。
 
 三条容易误判的行为：
 · 选中的落点若被引擎拒绝（例如格子已被占、那一格是墓碑），这一步**退化成 wait 60 tick**，
@@ -130,6 +135,9 @@ DECISION_RULES = """\
 · 香蒲(43)是睡莲(16)的升级植物：空水格上**没有**香蒲的合法位，
   必须先有睡莲。legal_actions 里看不到香蒲的位置通常就是这两个原因之一
   （没睡莲垫底，或阳光不足 225——付不起的卡整个不出合法位）。
+· 环境是确定性的：同 (level, seed, policy, deck) 重抓一局，帧序列与决策
+  编号**逐位一致**。重新 capture 后，旧分析里的决策序号可以直接复用，
+  不需要重新核对（引擎同状态必给同 legal 列表，策略是固定 if-else 链）。
 """
 
 
@@ -160,7 +168,7 @@ def decision_rules_text() -> str:
 def choose(observation: dict) -> dict:
     legal = observation["legal_actions"]["plants"]
     if not legal:
-        return {"type": "wait", "ticks": 60}
+        return {"type": "wait", "ticks": 60, "rule": "⑦无满足条件→wait"}
     packets = observation["packets"]
     by_type: dict[int, list[dict]] = {}
     for placement in legal:
@@ -177,6 +185,7 @@ def choose(observation: dict) -> dict:
         return {"type": "plant", **max(options, key=key_fn)}
 
     def row_threat(row: int) -> float:
+        # zombie["x"] 是像素横坐标：每列 80 像素，最左列左缘 x=40。
         xs = [z["x"] for z in zombies if z["row"] == row]
         return min(xs) if xs else 9999.0
 
@@ -187,6 +196,7 @@ def choose(observation: dict) -> dict:
             action = pick(WALLNUT, lambda item: item["row"] == row and item["col"] >= 5,
                           lambda item: item["col"])
             if action:
+                action["rule"] = "①紧急坚果墙"
                 return action
 
     # 2. cherry bomb on a clustered breach
@@ -195,6 +205,7 @@ def choose(observation: dict) -> dict:
         row = Counter(z["row"] for z in cluster).most_common(1)[0][0]
         action = pick(CHERRY, lambda item: item["row"] == row, lambda item: -item["col"])
         if action:
+            action["rule"] = "②樱桃炸弹"
             return action
 
     # 3. economy first: two columns of sun producers at the back
@@ -206,6 +217,7 @@ def choose(observation: dict) -> dict:
         action = pick(producer, lambda item: item["col"] <= 2,
                       lambda item: (-item["col"], rows_with(plants, producer)[item["row"]]))
         if action:
+            action["rule"] = "③经济"
             return action
 
     # 4. water lanes: lily pads first, then cattails on them.
@@ -221,12 +233,14 @@ def choose(observation: dict) -> dict:
                           lambda item: item["row"] == target and 2 <= item["col"] <= 5,
                           lambda item: -item["col"])
             if action:
+                action["rule"] = "④a水路防御·睡莲"
                 return action
         cattail_options = by_type.get(CATTAIL)
         if cattail_options and count[CATTAIL] < 2:
             action = pick(CATTAIL, lambda item: 2 <= item["col"] <= 5,
                           lambda item: (-row_threat(item["row"]), -item["col"]))
             if action:
+                action["rule"] = "④b水路防御·香蒲"
                 return action
 
     # 5. offence: peashooters (with a few snow peas) in the middle columns
@@ -236,19 +250,22 @@ def choose(observation: dict) -> dict:
             action = pick(SNOWPEA, lambda item: 2 <= item["col"] <= 5,
                           lambda item: -row_threat(item["row"]))
             if action:
+                action["rule"] = "⑤a火力·寒冰"
                 return action
         action = pick(PEASHOOTER, lambda item: 2 <= item["col"] <= 5,
                       lambda item: (-row_threat(item["row"]), -item["col"]))
         if action:
+            action["rule"] = "⑤b火力·豌豆"
             return action
 
     # 6. cheap early mines on the lane the first zombies walk down
     if count[POTATO] < 4 and observation["wave"] <= 4:
         action = pick(POTATO, lambda item: item["col"] >= 6, lambda item: -row_threat(item["row"]))
         if action:
+            action["rule"] = "⑥早期地雷"
             return action
 
-    return {"type": "wait", "ticks": 60}
+    return {"type": "wait", "ticks": 60, "rule": "⑦无满足条件→wait"}
 
 
 def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000,
