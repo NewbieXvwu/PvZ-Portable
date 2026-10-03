@@ -5,21 +5,37 @@
 [`RESEARCH_EXECUTION.md`](../../RESEARCH_EXECUTION.md) 的
 「2026-10-03 LLM 教师方案」一节。
 
-**当前状态：S0 通过，且验过两重。** 只剩一个 `ping` 工具，但整条管道
-（bundle → profile → 会话里可调用）已经用 **mock LLM**（不需要 key）和
-**真实模型**（deepseek-v4-flash-0731）各验过一次。S1（铺开真正的诊断工具）未开始。
+**当前状态：S0 与 S1 均已通过。** 工具面已铺开 —— 8 个工具
+（`ping / capture / index / frame / lane / actions / whatif / narrative`），
+与 `episode_query.py` 的子命令一一对应。S0 用 mock LLM（不需要 key）
+和真实模型各验过一次；S1 用真 MCP 客户端走完一次完整诊断。
+**S2（让模型自己找出一局败局的改法）未开始。**
 
 ## 目录
 
 | 文件 | 作用 |
 |---|---|
-| `server/pvz_mcp_server.py` | MCP server 本体。stdio，官方 `mcp` SDK 低层 `Server`。**只做搬运**，不做任何游戏判断。 |
+| `server/pvz_mcp_server.py` | MCP server 本体。stdio，官方 `mcp` SDK 低层 `Server`。**只做搬运**，不做任何游戏判断。工具表是声明式的（参数名→CLI 旗标→类型），加工具 = 加一行。 |
 | `server/smoke_handshake.py` | 不经 DSH 的握手冒烟测试。有它才能区分"server 坏了"和"接线错了"。 |
 | `bundle/package.json` | bundle 清单（`dsh.bundle.patch` 指向下一个文件）。 |
-| `bundle/cordis.patch.yml` | 往组合树里插一行 `@deepseek-ai/dsh-mcp-client`。 |
-| `verify_s0.sh` | S0 端到端验收，**不需要 API key**。 |
+| `bundle/cordis.patch.yml` | 往组合树里插一行 `@deepseek-ai/dsh-mcp-client`，并注入 `PVZ_RESOURCE_DIR`。 |
+| `verify_s0.sh` | S0 端到端验收（管道），**不需要 API key**。 |
+| `verify_s1.py` | S1 端到端验收（工具面），**不需要 API key**。 |
 | `tools/logging_proxy.py` | 记录型反向代理：看到 DSH 实际发出的请求体。可选修复 `thinking.budget_tokens`。 |
 | `tools/test_repair.py` | 上面那个修复的回归测试（离线可跑）。 |
+
+## 工具一览
+
+| 工具 | 用途 |
+|---|---|
+| `capture` | 跑一局并**完整落盘**。所有其它工具的前提。 |
+| `index` | 存档的**目录**：哪里值得看。带规则名，但**不是结论**。 |
+| `frame` | 某一 tick 的完整状态（含相邻帧对比）。最细粒度。 |
+| `lane` | 按行（路）看整局演变。 |
+| `actions` | 列出做过的每个决策；`max_life` 过滤"种下很快就死"的。 |
+| `whatif` | **反事实回放** —— 换掉某个动作**真的重放一整局**。模拟器确定性 ⇒ 精确结果，不是估计。 |
+| `narrative` | 把一段时间叙述成一段话。压缩过，只能当线索。 |
+| `ping` | 连通性探针（S0 留下的，会回报资源目录是否存在）。 |
 
 ## 已知的 DSH 兼容性问题：`thinking.budget_tokens` 缺失
 
@@ -85,22 +101,38 @@ DEEPSEEK_API_KEY=sk-... \
 ## 怎么验
 
 ```sh
-bash dsh/pvz-teacher/verify_s0.sh      # 退出码 0 = 全通
+bash dsh/pvz-teacher/verify_s0.sh        # S0：管道，退出码 0 = 全通
 ```
 
 它做四件事：起 mock LLM → 跑一次 headless 会话 → 解压会话日志 →
 断言 `mcp__pvz__ping` 被调用且 `isError=false`。
 
-**为什么不需要 API key**：DSH 自带 `@deepseek-ai/dsh-llm-mock-server`，
+```sh
+export PVZ_ROOT=/Users/newbiexvwu/PvZAgent
+export PVZ_PYTHON=~/.local/share/pvz-agent/mcp-venv/bin/python
+export PVZ_RESOURCE_DIR=/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN
+~/.local/share/pvz-agent/mcp-venv/bin/python dsh/pvz-teacher/verify_s1.py
+```
+
+S1 验收：用真 MCP 客户端走完 `capture → index → whatif`，断言
+`index` 自称为目录、`whatif` 枚举出至少一个能通关的替代方案。
+**为什么不用命令行跑 CLI 交差**：CLI 通只说明 `episode_query.py` 没问题，
+那是**已经存在**的东西；S1 要验的是新增的那层参数翻译。
+
+**为什么都不需要 API key**：S0 用 DSH 自带的 `@deepseek-ai/dsh-llm-mock-server`，
 它的 `tool_call_success` 行为能按指定工具名/参数假装模型发起调用。
 证据取的是**会话日志**（`$DSH_HOME/sessions/**/session.v4.jsonl.zstd`），
 不是 mock 的 stdout —— 前者才是"模型真的收到了什么"的权威记录。
+S1 根本不经过模型，直接问 server。
 
 只想验 server 本身（不碰 DSH）：
 
 ```sh
-~/.local/share/pvz-agent/mcp-venv/bin/python dsh/pvz-teacher/server/smoke_handshake.py
+PVZ_RESOURCE_DIR=... ~/.local/share/pvz-agent/mcp-venv/bin/python \
+    dsh/pvz-teacher/server/smoke_handshake.py
 ```
+
+它会校验 8 个工具都在、每个 `inputSchema` 自洽、描述里没有零宽字符。
 
 ## 机器本地的前置（不进 git）
 

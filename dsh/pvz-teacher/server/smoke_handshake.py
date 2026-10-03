@@ -85,10 +85,44 @@ async def run(full_env: bool) -> int:
 
             listed = await session.list_tools()
             names = [t.name for t in listed.tools]
-            print(f"✓ tools/list —— {names}")
-            if "ping" not in names:
-                print("✗ tools/list 里没有 ping")
+            print(f"✓ tools/list —— {len(names)} 个：{names}")
+
+            # S1：工具面必须齐全，少一个就说明工具表被改坏了。
+            expected = {"ping", "capture", "index", "frame", "lane",
+                        "actions", "whatif", "narrative"}
+            missing = expected - set(names)
+            if missing:
+                print(f"✗ tools/list 缺少：{sorted(missing)}")
                 ok = False
+
+            # 每个工具的 inputSchema 必须能被解析成 object，且 required 里的字段
+            # 都真的在 properties 里 —— 这类漂移（schema 声明了、handler 不认）
+            # 在运行期表现为"模型填了参数但没生效"，很难查。
+            for tool in listed.tools:
+                schema = tool.input_schema or {}
+                if schema.get("type") != "object":
+                    print(f"✗ {tool.name} 的 inputSchema.type 不是 object")
+                    ok = False
+                    continue
+                props = schema.get("properties") or {}
+                undeclared = [r for r in (schema.get("required") or []) if r not in props]
+                if undeclared:
+                    print(f"✗ {tool.name} 的 required 里有未声明的字段：{undeclared}")
+                    ok = False
+                if not (tool.description or "").strip():
+                    print(f"✗ {tool.name} 没有 description —— 模型只能靠猜")
+                    ok = False
+
+            # 描述文本里不能有零宽字符（曾经混进一个 U+200B，肉眼看不出来，
+            # 却会让模型读到一个断掉的词）。
+            invisible = {0x200B, 0x200C, 0x200D, 0xFEFF}
+            for tool in listed.tools:
+                blob = (tool.description or "")
+                found = sorted({ord(c) for c in blob if ord(c) in invisible})
+                if found:
+                    print(f"✗ {tool.name} 的 description 含零宽字符："
+                          f"{[hex(c) for c in found]}")
+                    ok = False
 
             called = await session.call_tool("ping", {"note": "冒烟测试"})
             if called.is_error:

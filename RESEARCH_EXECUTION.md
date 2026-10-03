@@ -1269,7 +1269,7 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 
 ## 2026-10-03 LLM 教师方案：DSH 接入的源码核对结果与执行计划
 
-**状态：S0 已通过（2026-10-03），S1 未开始。**
+**状态：S0 已通过（两重验收），S1 已通过（2026-10-03），S2 未开始。**
 
 > 本节在 2026-10-03 当天被**重写过一次**：第一版读的是 `dsh-v0.1.2-rc.1`，
 > 后来按用户要求切到最新 tag `dsh-v0.2.0-rc.2`，发现 preset 的实现被整个换掉了。
@@ -1602,22 +1602,83 @@ $ DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 DEEPSEEK_API_KEY=... \
 **副产品**：`tools=28` 说明这个端点**支持 tool use**，模型也确实用上了。
 所以"LLM 当教师"这条线的模型侧前提已经具备，剩下的全是我们的工具面（S1）要铺开的事。
 
+#### 3.9 S1 通过：工具面铺开，且反事实枚举直接找到了通关改动（2026-10-03）
+
+**做了什么**：把 `capture / index / frame / lane / actions / whatif / narrative`
+暴露成 MCP 工具（加 `ping` 共 8 个）。设计上**与 CLI 子命令一一对应、不做二次加工** ——
+模型看到的就是人在命令行看到的那一屏。唯一的加工是超长输出会截断，
+且截断处有明确标注（静默截断会让模型以为自己看全了，比报错更坏）。
+
+**验收**（`verify_s1.py`，退出码 0）。关键设计：**不用命令行跑 CLI 交差** ——
+CLI 跑得通只证明 `episode_query.py` 没问题，那是**已经存在**的东西。
+S1 要验的是新增的那层（MCP 参数 → argv 的翻译、必填项、`--try` 这类可重复参数
+的展开、长输出），所以必须用真的 MCP 客户端把工具调用发进 server。
+
+```
+✓ 握手 —— pvz-teacher@0.2.0-s1
+✓ capture  1.0s   568 帧，僵尸进屋
+✓ index    2940 字符，且明确声明"这是目录，不是结论"
+✓ whatif  14.8s   12 个候选，其中 3 个把结果变成「通关」
+```
+
+**结果比预期强。** 第 266 步原动作是 `种下 豌豆射手 @(3,2)`，最终第 17/30 波僵尸进屋。
+枚举第 3 路的 12 个替代动作：
+
+| 替代动作 | 结果 |
+|---|---|
+| 种下 豌豆射手 **@(3,6)** | 第 30/30 波，**通关** |
+| 种下 豌豆射手 @(3,4) / @(3,5) | 第 30/30 波，**通关** |
+| 种下 豌豆射手 @(3,7) | 第 29/30 波，僵尸进屋 |
+| 种下 豌豆射手 @(3,8) | 第 27/30 波，僵尸进屋 |
+| 种下 豌豆射手 @(3,3) / 土豆雷 @(3,3) / 土豆雷 @(3,5) | 第 18/30 波，+1 波 |
+| 种下 豌豆射手 @(3,2)（**基线**） | 第 17/30 波，0 波 |
+| 种下 土豆雷 @(3,2) | 第 15/30 波，**-2 波** |
+
+**这一步为什么值得单独记一笔**：`index` 的规则信号确实指向了第 3 路
+（"火力上限只有 1"、"压力>火力"、"净损失 13 株"），但**规则给不出真正的改动** ——
+它说不出"往后退 4 格就能赢"。真正的解法是**位置**（col 2 → col 6），
+是枚举回放找出来的，不是任何规则推出来的。这正好验证了整个方案的分工假设：
+**规则负责"哪里值得看"，反事实回放负责"到底该怎么改"**。
+
+顺带一个反直觉的观察：同样是豌豆射手，@(3,3) 只 +1 波，@(3,6) 却通关 ——
+差 3 格就是"几乎没用"和"直接赢"的区别。这解释了为什么基于规则的诊断
+永远盖不全败局：它连"同一株植物种在哪"这一维都覆盖不了。
+
+**成本账（实测）**：capture 1.0 s；whatif 枚举 12 个候选 14.8 s（约 1.2 s/候选，
+每个候选都要从头重放整局）。也就是说"问一次反事实问题"的代价是十几秒 ——
+**这个量级允许模型做几十轮试错**，S2 的预算假设成立。
+
+**新增的机器依赖**：`capture` / `whatif` 要真跑模拟器，所以 bundle 里加了
+`PVZ_RESOURCE_DIR`。注意 `episode_query.py` 自己的默认值
+（`~/.cache/pvz-research-resources`）在本机**不存在**，不给这个变量 capture 直接失败 ——
+这是 `ping` 会回报 `resource_dir_exists` 的原因。
+
 
 ### 4. 架构（三层，各自独立可测）
 
 ```
-① MCP server（我们的，Python）  —— 已落地
+① MCP server（我们的，Python）  —— 已落地（S1 的 8 个工具都在）
    dsh/pvz-teacher/server/pvz_mcp_server.py
      stdio，用官方 mcp SDK 的低层 Server（回调式，不是 FastMCP，
      因为要对 tools/list 有完全控制）
      它只做搬运：把一次工具调用翻译成一条 episode_query.py 子进程命令，
      stdout 原样回传。自己不做任何游戏判断。
+     工具表是**声明式**的（参数名 → CLI 旗标 → 类型的映射表），
+     所以工具 schema 不可能和 CLI 漂移；加工具 = 加一行映射。
+     8 个工具：ping / capture / index / frame / lane / actions / whatif / narrative
    dsh/pvz-teacher/server/smoke_handshake.py
      不经 DSH 的握手冒烟测试。有它才能区分"server 坏了"和"接线错了"。
      用**与 DSH 一致的已擦除环境**跑（照抄 scrubbedParentEnv 的规则），
      所以它通过 = DSH 里也不会因为环境被擦而挂。
+     另外它还会校验每个工具的 inputSchema 自洽（required 字段必须在
+     properties 里、必须有 description、描述里不能有零宽字符）。
+   dsh/pvz-teacher/verify_s1.py
+     S1 验收：用真 MCP 客户端走完 capture → index → whatif 并断言结果。
+     刻意**不用命令行跑 CLI 交差** —— CLI 通只说明 episode_query.py 没问题。
    解释器：~/.local/share/pvz-agent/mcp-venv（仓库外，不进 git）
      只装 mcp SDK。仓库 .gitignore 里**没有** venv 条目，放仓库里会被跟踪。
+     实测：episode_query.py 及其依赖链只用到标准库，所以这个 venv 够用
+     （不需要 numpy/torch）。
 
 ② 组合层（一个 bundle，恰好两个文件）  —— 已落地
    dsh/pvz-teacher/bundle/
@@ -1626,12 +1687,14 @@ $ DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 DEEPSEEK_API_KEY=... \
      cordis.patch.yml    - insert: 一行 @deepseek-ai/dsh-mcp-client
                            （serverName: pvz, transport: stdio,
                             command/args/cwd 全绝对路径）
-   S0 阶段**只有 MCP 行**。persona / 工具裁剪 / compaction 阈值那一组
-   等 S1 真工具定下来再加，避免现在拍脑袋写一堆没验证的配置。
+   S0 阶段只有 MCP 行；S1 阶段加了 `PVZ_RESOURCE_DIR`（capture/whatif 要真跑模拟器）。
+   persona / 工具裁剪 / compaction 阈值那一组等 S2 有实测数据再加，
+   避免现在拍脑袋写一堆没验证的配置。
    安装：dsh plugin --profile pvz-teacher add file:/绝对路径
          （会自动启用，不用手工改 bundles —— 见 §3.5）
    验证：dsh --profile pvz-teacher --dump-config
-         bash dsh/pvz-teacher/verify_s0.sh
+         bash dsh/pvz-teacher/verify_s0.sh          # 管道（不需要 key）
+         <venv>/bin/python dsh/pvz-teacher/verify_s1.py   # 工具面（不需要 key）
 
 ③ 技能层（模型自己写）  —— 未开始
    <仓库根>/.agents/skills/pvz-*/SKILL.md —— 走 git，进版本控制
@@ -1648,9 +1711,11 @@ $ DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 DEEPSEEK_API_KEY=... \
 
 两重都过了，且 `reasoningEffort: max` 已在线上验证生效。**继续往上走。**
 
-**S1 · 真工具包成 MCP**
-把 `capture/index/lane/actions/whatif/frame/narrative` 暴露出来。
-验收：模型能用一句话拿到「seed 30001 第 266 步枚举第 3 路全部替代方案」的结果。
+**S1 · 真工具包成 MCP —— ✅ 2026-10-03 通过**
+把 `capture/index/frame/lane/actions/whatif/narrative` 暴露出来（`ping` 保留作探针）。
+工具与 `episode_query.py` 的子命令**一一对应，不做二次加工**。
+验收（§3.9）：模型能用一句话拿到「seed 30001 第 266 步枚举第 3 路全部替代方案」的结果。
+**过了，而且结果比预期强** —— 枚举发现把豌豆射手从第 2 列挪到第 6 列就能**通关**。
 
 **S2 · 一局闭环（本方案的核心检验）**
 拿 seed 30001 那局输的。**不告诉它答案。** 看它自己能不能从 `actions` 的输出里

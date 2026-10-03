@@ -29,7 +29,11 @@
         # S0 是 go/no-go：server 起不来就让插件激活失败，别静默降级成"工具不见了"。
         failOnStartupError: true
         env:
-          # 这两个名字不含 KEY/TOKEN/SECRET、也不是 DSH_* 前缀，本来就能穿过擦除。
-          # 显式写出来是为了让意图可读：server 该去哪找仓库和解释器。
+          # 这几个名字不含 KEY/TOKEN/SECRET、也不是 DSH_* 前缀，本来就能穿过擦除。
+          # 显式写出来是为了让意图可读：server 该去哪找仓库、解释器和游戏资源。
           PVZ_ROOT: /Users/newbiexvwu/PvZAgent
           PVZ_PYTHON: /Users/newbiexvwu/.local/share/pvz-agent/mcp-venv/bin/python
+          # capture / whatif 要真跑模拟器，必须给到资源目录。
+          # 注意 `episode_query.py` 自己的默认值（~/.cache/pvz-research-resources）
+          # 在本机**不存在**，不给这个变量 capture 会直接失败。
+          PVZ_RESOURCE_DIR: /Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN

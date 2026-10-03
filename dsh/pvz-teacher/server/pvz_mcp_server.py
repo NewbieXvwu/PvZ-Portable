@@ -21,8 +21,10 @@ stdio，JSON-RPC。用官方 `mcp` SDK 的低层 `Server`（回调式，不是 F
 
 阶段
 ----
-S0（当前）：只暴露 `ping`。目的是验证"bundle → profile → 组合树 → 会话里能调到"
-这条管道通不通，**不通就停下改方案，不往上堆功能**。
+- S0（2026-10-03 通过，两重验收）：只暴露 `ping`，验证"bundle → profile → 组合树 →
+  会话里能调到"这条管道。管道不通就停下改方案，不往上堆功能。
+- S1（当前）：把 `capture / index / frame / lane / actions / whatif / narrative`
+  暴露出来。它们与 CLI 子命令一一对应，`ping` 保留作探针。
 """
 
 from __future__ import annotations
@@ -87,8 +89,23 @@ def _run_query(args: list[str], timeout: float = 900.0) -> tuple[int, str, str]:
 #
 # 每项：name -> (description, inputSchema, handler)
 # handler 收到 dict 参数，返回 (text, is_error)。
+#
+# 设计立场：**工具与 `episode_query.py` 的子命令一一对应，不做二次加工。**
+# 模型看到的就是人在命令行看到的那一屏 —— 同一个入口，同一份输出，
+# 不存在第二套实现，也就不存在"工具的结论和 CLI 的结论对不上"这种问题。
+# 唯一的例外是超长输出会被截断（见 MAX_OUTPUT_CHARS），且截断处有明确标注。
 
 Handler = Callable[[dict[str, Any]], tuple[str, bool]]
+
+# 工具输出上限。CLI 本身就是按"一次一屏"设计的，但 `whatif --enumerate`
+# 在没收敛参数时可能很长。超了截断并**明确告知**，不静默丢内容 ——
+# 静默截断会让模型以为自己看到了全部，那比报错更坏。
+MAX_OUTPUT_CHARS = int(os.environ.get("PVZ_MCP_MAX_OUTPUT_CHARS") or 60000)
+
+# 模拟器资源目录。CLI 的默认值是 `~/.cache/pvz-research-resources`，
+# 本机并不存在（真目录在 Downloads 下），所以这里用环境变量显式给，
+# 由 bundle 的 `config.env` 注入。
+RESOURCE_DIR = os.environ.get("PVZ_RESOURCE_DIR") or ""
 
 
 def _tool_ping(args: dict[str, Any]) -> tuple[str, bool]:
@@ -101,6 +118,10 @@ def _tool_ping(args: dict[str, Any]) -> tuple[str, bool]:
         "python_exists": Path(PYTHON).is_file() or bool(_which(PYTHON)),
         "query_script": str(QUERY_SCRIPT),
         "query_script_exists": QUERY_SCRIPT.is_file(),
+        "resource_dir": RESOURCE_DIR or "(未设置)",
+        "resource_dir_exists": Path(RESOURCE_DIR).is_dir() if RESOURCE_DIR else False,
+        "max_output_chars": MAX_OUTPUT_CHARS,
+        "tools": sorted(TOOLS),
         "argv_echo": args,
     }
     return json.dumps(info, ensure_ascii=False, indent=2), False
@@ -112,21 +133,265 @@ def _which(name: str) -> str | None:
     return which(name)
 
 
+def _run_query_tool(argv: list[str], timeout: float = 900.0) -> tuple[str, bool]:
+    """跑一次 CLI，把结果整理成 (text, is_error)。
+
+    失败**不抛异常**：把 stdout/stderr 原样交给模型，让它自己判断是参数写错了
+    还是环境有问题。工具把错误吞掉或包装成友好文案，模型就失去了纠错依据。
+    """
+    try:
+        rc, out, err = _run_query(argv, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        return (
+            f"超时（{timeout:.0f}s 未返回）：episode_query.py {' '.join(argv)}\n"
+            f"如果这是 whatif --enumerate，用 row / limit 收敛枚举范围。",
+            True,
+        )
+
+    if rc != 0:
+        detail = (err or "").strip() or (out or "").strip() or "(没有任何输出)"
+        return f"episode_query.py 退出码 {rc}：\n{detail}", True
+
+    text = out.rstrip("\n")
+    if not text:
+        return "(命令成功，但没有任何输出)", False
+    if len(text) > MAX_OUTPUT_CHARS:
+        return (
+            text[:MAX_OUTPUT_CHARS]
+            + f"\n\n[输出被截断：共 {len(text)} 字符，只回了前 {MAX_OUTPUT_CHARS} 个。"
+            f"用更窄的参数（every / wave / limit / row）重看一遍，别当成已看全。]",
+            False,
+        )
+    return text, False
+
+
+def _cli_argv(cmd: str, args: dict[str, Any], spec: list[tuple[str, str, str]]) -> list[str]:
+    """把工具参数翻译成 CLI argv。
+
+    spec 里每项是 (参数名, CLI 旗标, 类型)，类型 ∈ str / int / flag / list / env。
+    `env` 用于资源目录这类由部署环境注入、不该让模型填的参数。
+    """
+    argv = [cmd]
+    for key, flag, kind in spec:
+        if kind == "env":
+            if RESOURCE_DIR:
+                argv += [flag, RESOURCE_DIR]
+            continue
+        if key not in args or args[key] is None:
+            continue
+        val = args[key]
+        if kind == "flag":
+            if val:
+                argv.append(flag)
+        elif kind == "list":
+            for item in val:
+                argv += [flag, str(item)]
+        else:
+            argv += [flag, str(val)]
+    return argv
+
+
+def _make_cli_handler(cmd: str, spec: list[tuple[str, str, str]]) -> Handler:
+    def handler(args: dict[str, Any]) -> tuple[str, bool]:
+        return _run_query_tool(_cli_argv(cmd, args, spec))
+
+    return handler
+
+
+def _schema(props: dict[str, Any], required: list[str]) -> dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": props,
+        "required": required,
+        "additionalProperties": False,
+    }
+
+
+_A_ARCHIVE = {
+    "type": "string",
+    "description": "存档目录路径（capture 的 out 返回的那个）。",
+}
+
 TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
     "ping": (
-        "连通性探针。回传本 server 看到的仓库根、解释器、工具脚本路径，"
-        "以及它们是否真实存在。用它确认 MCP 管道通了、且指向的是正确的仓库。",
-        {
-            "type": "object",
-            "properties": {
+        "连通性探针。回传本 server 看到的仓库根、解释器、工具脚本路径、资源目录，"
+        "以及它们是否真实存在，还有当前可用的工具列表。"
+        "用它确认 MCP 管道通了、且指向的是正确的仓库。",
+        _schema(
+            {
                 "note": {
                     "type": "string",
                     "description": "随便填点什么，会被原样回显，用来确认参数传递无损。",
                 }
             },
-            "additionalProperties": False,
-        },
+            [],
+        ),
         _tool_ping,
+    ),
+    "capture": (
+        "跑一局并**完整落盘**成存档。存档是无损的：每一帧都在盘上，之后可以用 "
+        "frame / lane / strip / trace 查任意 tick、任意路、任意一只僵尸。"
+        "这是所有其它工具的前提 —— 没有存档，其它工具无从查起。"
+        "一局 level 7 大约 0.2~1.4 s。",
+        _schema(
+            {
+                "seed": {"type": "integer", "description": "随机种子。同一个 seed 结果完全可复现。"},
+                "level": {"type": "integer", "description": "关卡号，默认 7。"},
+                "policy": {
+                    "type": "string",
+                    "enum": ["scripted", "donothing"],
+                    "description": "用哪套策略打这一局：scripted（默认）或 donothing（对照用）。",
+                },
+                "deck": {"type": "string", "description": "卡组，逗号分隔的卡片 id。不给就用该关默认卡组。"},
+                "max_actions": {"type": "integer", "description": "动作数上限，默认 4000。"},
+                "out": {"type": "string", "description": "存档写到哪个目录（必需）。"},
+            },
+            ["seed", "out"],
+        ),
+        _make_cli_handler(
+            "capture",
+            [
+                ("seed", "--seed", "int"),
+                ("level", "--level", "int"),
+                ("policy", "--policy", "str"),
+                ("deck", "--deck", "str"),
+                ("max_actions", "--max-actions", "int"),
+                ("out", "--out", "str"),
+                ("_res", "--resource-dir", "env"),
+            ],
+        ),
+    ),
+    "index": (
+        "存档的**目录**：哪里值得看。它列出各条信号（每条都带产生它的规则名），"
+        "但**不构成结论** —— 规则能覆盖的失败方式有限，这些只是候选，"
+        "每一条都可以被后续的 frame / lane 查询推翻。建议第一眼先看它。",
+        _schema({"archive": _A_ARCHIVE}, ["archive"]),
+        _make_cli_handler("index", [("archive", "--archive", "str")]),
+    ),
+    "frame": (
+        "看某一 tick 的完整状态（含相邻帧做对比）。tick 会被吸附到最近的已存帧。"
+        "这是最细的粒度 —— 当你已经知道要盯哪一步时用它。",
+        _schema(
+            {
+                "archive": _A_ARCHIVE,
+                "tick": {"type": "integer", "description": "目标 tick，会吸附到最近的已存帧。"},
+            },
+            ["archive", "tick"],
+        ),
+        _make_cli_handler("frame", [("archive", "--archive", "str"), ("tick", "--tick", "int")]),
+    ),
+    "lane": (
+        "按**行（路）**看整局的演变。想知道“第 3 路是什么时候崩的”就用它。",
+        _schema(
+            {
+                "archive": _A_ARCHIVE,
+                "row": {"type": "integer", "description": "行号（路）。"},
+            },
+            ["archive", "row"],
+        ),
+        _make_cli_handler("lane", [("archive", "--archive", "str"), ("row", "--row", "int")]),
+    ),
+    "actions": (
+        "列出这局**做过的每个决策**（种了什么、种在哪、活了多久）。"
+        "`max_life` 能过滤出“种下去很快就死”的决策 —— 这类决策最值得复盘，"
+        "因为它的失败是局部的、可归因的。",
+        _schema(
+            {
+                "archive": _A_ARCHIVE,
+                "from": {"type": "integer", "description": "起始决策序号，默认 1。"},
+                "to": {"type": "integer", "description": "结束决策序号，默认到最后一个。"},
+                "max_life": {
+                    "type": "integer",
+                    "description": "只显示种下去活不过这么多 tick 的决策。",
+                },
+            },
+            ["archive"],
+        ),
+        _make_cli_handler(
+            "actions",
+            [
+                ("archive", "--archive", "str"),
+                ("from", "--from", "int"),
+                ("to", "--to", "int"),
+                ("max_life", "--max-life", "int"),
+            ],
+        ),
+    ),
+    "whatif": (
+        "**反事实回放** —— 这是整条线上最关键的工具。在指定的决策点上，"
+        "把当时的动作换成别的动作，然后**真的重放一整局**，告诉你结果如何。"
+        "因为模拟器是确定性的（同一 task+seed+动作序列结果逐位相同），"
+        "这里得到的不是估计、不是启发式，而是**精确的**结果。\n"
+        "两种用法：① 给 `try` 指定想试的动作；② `enumerate=true` 枚举该点上"
+        "所有合法动作（用 row / limit 收敛）。\n"
+        "`save_best` 填一个目录路径时，会把最好的那个反事实整局存成新存档，"
+        "之后可以用 lane / narrative / frame 复查它 —— 也就是“改完之后这局长什么样”。",
+        _schema(
+            {
+                "archive": _A_ARCHIVE,
+                "decision": {"type": "integer", "description": "要改的决策序号（见 actions）。"},
+                "try": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "想试的替代动作，可给多个。写法："
+                    "plant:packet:row:col / wait:ticks / shovel:row:col，或原始 JSON。",
+                },
+                "enumerate": {
+                    "type": "boolean",
+                    "description": "枚举该决策点上所有合法动作（用 row / limit 收敛）。",
+                },
+                "row": {"type": "integer", "description": "枚举时只试这一行。"},
+                "limit": {"type": "integer", "description": "枚举上限，默认 12。"},
+                "save_best": {
+                    "type": "string",
+                    "description": "把最好的反事实整局存成一个**新存档目录**（填目录路径），"
+                    "之后可以用 lane / narrative / frame 复查它 —— 也就是"
+                    "\u201c改完之后这局长什么样\u201d。",
+                },
+            },
+            ["archive", "decision"],
+        ),
+        _make_cli_handler(
+            "whatif",
+            [
+                ("archive", "--archive", "str"),
+                ("decision", "--decision", "int"),
+                ("try", "--try", "list"),
+                ("enumerate", "--enumerate", "flag"),
+                ("row", "--row", "int"),
+                ("limit", "--limit", "int"),
+                ("save_best", "--save-best", "str"),
+                ("_res", "--resource-dir", "env"),
+            ],
+        ),
+    ),
+    "narrative": (
+        "把一段时间**叙述成一段话**（按波次或全局限定范围）。"
+        "适合快速建立“这局大概怎么输的”的印象，代价是细节被压缩 —— "
+        "压缩时哪些留哪些丢是规则决定的，所以它**只能当线索，不能当结论**，"
+        "要下判断请回到 frame / lane / whatif。",
+        _schema(
+            {
+                "archive": _A_ARCHIVE,
+                "wave": {"type": "integer", "description": "起始波次。不给就从头。"},
+                "to_wave": {"type": "integer", "description": "结束波次。"},
+                "detail": {
+                    "type": "integer",
+                    "enum": [1, 2, 3],
+                    "description": "详细程度 1~3，默认 2。",
+                },
+            },
+            ["archive"],
+        ),
+        _make_cli_handler(
+            "narrative",
+            [
+                ("archive", "--archive", "str"),
+                ("wave", "--wave", "int"),
+                ("to_wave", "--to-wave", "int"),
+                ("detail", "--detail", "int"),
+            ],
+        ),
     ),
 }
 
@@ -138,7 +403,7 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
 # 工具名里的 `pvz` 前缀（`mcp__pvz__<tool>`）不在这里定义 —— 它是 bundle 的
 # `config.serverName`，见 ../bundle/cordis.patch.yml。这里再写一份常量只会漂移。
 
-SERVER_VERSION = "0.1.0-s0"
+SERVER_VERSION = "0.2.0-s1"
 
 
 async def _on_list_tools(
@@ -183,7 +448,11 @@ server: Server = Server(
     "pvz-teacher",
     version=SERVER_VERSION,
     instructions=(
-        "PvZ 对局诊断工具。这一阶段只有 ping —— 管道验证用的探针。"
+        "PvZ 对局诊断工具。工作流通常是：先用 capture 把一局完整落盘，"
+        "再用 index 看哪里值得看，然后用 frame / lane / actions 细看，"
+        "最后用 whatif 做**精确的**反事实回放来验证你的改动到底有没有用。\n"
+        "所有工具都只是搬运 episode_query.py 的输出，不含任何游戏判断 —— "
+        "结论要你自己下。模拟器是确定性的，所以 whatif 给的是精确结果而不是估计。"
     ),
     on_list_tools=_on_list_tools,
     on_call_tool=_on_call_tool,
