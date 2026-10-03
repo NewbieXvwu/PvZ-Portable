@@ -1,0 +1,35 @@
+# pvz-teacher bundle —— 往 profile 的组合树里插一行 MCP client。
+#
+# 这一行做什么：DSH 启动时按 stdio 起 `pvz_mcp_server.py`，把它的工具注册成
+# `mcp__pvz__<tool>`。S0 阶段只有 `mcp__pvz__ping`。
+#
+# 为什么每个路径都写绝对路径
+# --------------------------
+# DSH 起 MCP 子进程用的是 `scrubbedParentEnv()`
+# （packages/subprocess/subprocess/src/index.ts）：丢掉名字匹配
+# `/KEY|PASSWORD|SECRET|TOKEN/i` 的、以及所有 `DSH_*` 前缀的。
+# PATH 会留下，但**不要依赖它** —— 这台机器上 `dsh` 走的是 mise 的 node 24，
+# 而 venv 用的是 mise 的 python 3.14，两者不在同一条 PATH 上。
+# 写死绝对路径，行为才可复现。
+#
+# 代价（诚实标注）：这个文件是**机器专属**的。换机器要改 `command` 和 `env`。
+# 等 S1 定下来再考虑用 Loader `!!js` 从环境变量取，或做成安装脚本生成。
+
+- insert:
+    - id: pvz-teacher-mcp
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        # 决定工具名前缀：mcp__pvz__<tool>。必须匹配 ^[A-Za-z0-9_-]{1,32}$。
+        serverName: pvz
+        transport: stdio
+        command: /Users/newbiexvwu/.local/share/pvz-agent/mcp-venv/bin/python
+        args:
+          - /Users/newbiexvwu/PvZAgent/dsh/pvz-teacher/server/pvz_mcp_server.py
+        cwd: /Users/newbiexvwu/PvZAgent
+        # S0 是 go/no-go：server 起不来就让插件激活失败，别静默降级成"工具不见了"。
+        failOnStartupError: true
+        env:
+          # 这两个名字不含 KEY/TOKEN/SECRET、也不是 DSH_* 前缀，本来就能穿过擦除。
+          # 显式写出来是为了让意图可读：server 该去哪找仓库和解释器。
+          PVZ_ROOT: /Users/newbiexvwu/PvZAgent
+          PVZ_PYTHON: /Users/newbiexvwu/.local/share/pvz-agent/mcp-venv/bin/python

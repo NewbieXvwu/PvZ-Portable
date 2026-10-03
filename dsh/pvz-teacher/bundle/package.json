@@ -1,0 +1,12 @@
+{
+  "name": "@local/pvz-teacher",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "把 PvZ 对局诊断工具挂进 DeepSeek Harness：一个 MCP server + 后续的教师 skill。",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

@@ -1269,11 +1269,12 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 
 ## 2026-10-03 LLM 教师方案：DSH 接入的源码核对结果与执行计划
 
-**状态：待批准，未开跑。** 本节只声明设计依据与执行顺序，不含任何实验结果。
+**状态：S0 已通过（2026-10-03），S1 未开始。**
 
 > 本节在 2026-10-03 当天被**重写过一次**：第一版读的是 `dsh-v0.1.2-rc.1`，
 > 后来按用户要求切到最新 tag `dsh-v0.2.0-rc.2`，发现 preset 的实现被整个换掉了。
 > 下面全部以 **v0.2.0-rc.2 源码**为准，第一版的错误在 §2 里列明。
+> 当天晚些时候又补了 §3.1–§3.5：S0 实测结果、版本统一、以及两个跳 tag 才会遇到的坑。
 
 ### 0. 这一节是什么
 
@@ -1354,50 +1355,169 @@ profile patch 各维护一份"的问题，因为根本只有一份。
 
 ### 3. 还没确认的（要实测，不许照猜写代码）
 
-前几版列了 6 条，现在**只剩 1 条是外部依赖，3 条可以本地实测且不需要 API key**：
+前几版列了 6 条，后来又缩到 4 条。**2026-10-03 实测后只剩 1 条是外部依赖**：
 
-| # | 待确认 | 怎么确认 | 要不要 key |
+| # | 待确认 | 结论 | 怎么确认的 |
 |---|---|---|---|
-| 1 | 我们的 bundle 装进 profile 后，组合树是否如预期 | `dsh --profile <p> --dump-config`，**不需要启动、不需要 key** | 否 |
-| 2 | MCP server 起来后是否真按 `mcp__pvz__<tool>` 列出工具 | `--dump-config` 看到行之后，起一个会话调 `mcp__pvz__ping` | 是 |
-| 3 | skill 热刷新是否真的在我们这条链路上生效 | 会话里让模型写一个 `SKILL.md`，看它能否立刻加载 | 是 |
-| 4 | **DeepSeek API key 与计费口径**（长跑的钱从哪个账号出） | 只能问用户 | — |
+| 1 | bundle 装进 profile 后组合树是否如预期 | ✅ **已通过** | `dsh --profile pvz-teacher --dump-config`，见 §3.1 |
+| 2 | MCP server 起来后是否真按 `mcp__pvz__<tool>` 列出工具、且能被调用 | ✅ **已通过** | 起会话调 `mcp__pvz__ping`，**不需要 API key**，见 §3.1 |
+| 3 | skill 热刷新是否真的在我们这条链路上生效 | ⬜ 待测，**但也可以不需要 key** | 见 §3.2 |
+| 4 | **DeepSeek API key 与计费口径**（长跑的钱从哪个账号出） | ⬜ 只能问用户 | — |
 
-**第 1 条现在就能做，且不需要 key。** 先把它跑掉，再谈别的。
+**第 1、2 条已经跑掉了。** 原本以为第 2 条必须花真钱，其实不用 —— 见下面。
+
+#### 3.1 S0 已通过（2026-10-03）：不需要 API key 也能端到端验证
+
+关键发现：DSH 仓库自带 **`@deepseek-ai/dsh-llm-mock-server`**
+（`packages/test-support/llm-mock-server/`），一个可脚本化的 Messages 兼容 HTTP/SSE 端点。
+它的 `tool_call_success` 行为能按我们指定的**工具名和参数**"假装模型发起一次工具调用"：
+
+```sh
+pnpm run mock:llm --port 8934 --api-key mock-key \
+  --sequence tool_call_success,success,success,success,success,success,success,success \
+  --tool-name mcp__pvz__ping \
+  --tool-arguments '{"note":"来自 verify_s0 的调用"}' \
+  --success-text "工具已调用，收工。"
+
+DEEPSEEK_BASE_URL=http://127.0.0.1:8934/v1 DEEPSEEK_API_KEY=mock-key \
+  dsh --profile pvz-teacher "调用一下 mcp__pvz__ping，把结果告诉我"
+```
+
+于是整条链路离线跑完：mock 发出调用 → DSH 路由到 MCP client → MCP client 起
+`pvz_mcp_server.py` 并转发 → server 返回 JSON → 结果回灌进模型上下文。
+
+**证据不是 mock 的 stdout，而是会话日志**（`$DSH_HOME/sessions/**/session.v4.jsonl.zstd`，
+zstd 压的 JSONL）——那才是"模型真的收到了什么"的权威记录：
+
+```
+{"type":"tool/call","data":{"name":"mcp__pvz__ping","arguments":"{\"note\":\"来自 verify_s0 的调用\"}"}}
+{"type":"tool/result","data":{"message":{"isError":false,
+  "content":[{"text":"{\n  \"pong\": true,\n  \"root\": \"/Users/newbiexvwu/PvZAgent\", ... }"}]}}}
+```
+
+**可复现**：`bash dsh/pvz-teacher/verify_s0.sh`（退出码 0 = 全通）。
+这个脚本已经把上面整套（起 mock → 跑会话 → 解压日志 → 断言工具名/isError/回显）串起来了。
+
+#### 3.2 第 3 条（skill 热刷新）也能不需要 key
+
+mock 的局限要讲清楚：`--tool-name` / `--tool-arguments` 是**单值**的，所以一次运行里
+所有 `tool_call_success` 只能发出**同一个**工具调用。这意味着 mock 能验证
+"一次工具调用能到达并返回"，**不能**验证多步推理。S2（自己找改动）必须用真模型。
+
+但 skill 热刷新本身**不需要模型**：往 skill 根目录写一个 `SKILL.md`，看目录是否被
+Chokidar 拾取即可。第 3 条应该用这个办法测，不要花在 mock 上。
+
+#### 3.3 版本统一（2026-10-03）
+
+用户要求"统一版本，省得搞混"。实测三边并不一致：
+
+| 对象 | 改前 | 改后 |
+|---|---|---|
+| 全局 `dsh` CLI（mise node 24） | **0.1.3-alpha.2** | **0.2.0-rc.2** |
+| 本地源码 `~/deepseek-harness` | `dsh-v0.2.0-rc.2` | 不变（已是 npm 的 `latest`） |
+| PyPI `deepseek-harness-sdk` | 未装 | **不装** |
+
+**统一到 `0.2.0-rc.2` 的理由（三条，可复核）**：
+
+1. 它是 npm 的 `latest` dist-tag —— `npm i @deepseek-ai/dsh` 默认拿到的就是它。
+   `alpha` 才是今天（10-03 11:48）发的 `0.2.1-alpha.1`。
+2. **我们依赖的路径在 alpha 里一行没变**：`git diff dsh-v0.2.0-rc.2 dsh-v0.2.1-alpha.1`
+   显示 `mcp-client`、`skill`、`subprocess` 三个包各自只有 `README×3 + package.json`（版本号）
+   变化，`src/` 零改动。唯一有实改的是 `plugin-manager`（3 个 src 文件），改的是
+   运行时 `plugin_manager` 工具那条路，不是我们用的 CLI 那条路。
+3. rc.2 的源码核对与构建已经做完；切 alpha 要重做，换来的东西对当前路径是零。
+
+**PyPI 的坑**：`deepseek-harness-sdk` 最新只到 **`0.1.5rc1`**，没有 0.2.x。
+所以之前笔记里"Python SDK 打包同版本运行时"这句**是对的但不完整** —— 同的是 0.1.5，
+不是我们的 0.2.0-rc.2。**结论：不用 Python SDK，走 CLI。**
+等它出 0.2.x 再评估。
+
+**升级全局 CLI 的正确姿势**（有个坑）：`npm prefix -g` 在这台机器上指向托管 node
+（`~/.workbuddy-ai/binaries/node/...`），而 `dsh` 实际装在 mise 的 node 24 下。
+直接 `npm install -g` 会装错地方，必须显式指定：
+
+```sh
+npm install -g --prefix ~/.local/share/mise/installs/node/24.18.0 \
+  @deepseek-ai/dsh@0.2.0-rc.2
+```
+
+**代价（诚实标注）**：npm 报了 **5 个包的 install script 被拦**，包括
+`@deepseek-ai/dsh-subprocess-local` 的 `ensure-spawn-helper.mjs`、`node-pty`、`koffi`。
+MCP stdio 的 spawn 由 MCP SDK 自己管（见 `mcp-client/src/transport.ts` 注释），
+所以当前路径不受影响；但**将来要用 PTY / 终端工具时这个装法要重装**。
+
+#### 3.4 跳 tag 之后必须清旧构建产物（踩过，会以假故障的形式出现）
+
+源码 `git checkout` 到新 tag **不会**清理被 gitignore 的 `lib/`。
+rc.2 里有一批包被改名或删除（`preset/agent-presets` → `preset/agent-preset`、
+`settings/settings-file` 消失等），它们的旧 `lib/` 会留在原地，
+被 `tsdown` 的 `packages/*/*` 通配扫到，然后以**完全无关的报错**炸掉构建：
+
+```
+[MISSING_EXPORT] "SettingsProvider" is not exported by "../settings/src/index.ts"
+```
+
+`SettingsProvider` 在 rc.2 里根本不存在，引用只出现在
+`packages/settings/settings-file/lib/**`（旧产物）里。**实测有 10 个这样的残骸目录**，
+判据是「有 `lib/` 但没有 `package.json`」。删掉再构建即可（都是未跟踪的产物）。
+
+**下次跳 tag 的检查命令**：
+
+```bash
+for d in packages/*/*/; do
+  [ -d "$d/lib" ] && [ ! -f "$d/package.json" ] && echo "残骸: $d"
+done
+```
+
+#### 3.5 另一个坑：`dsh plugin add` 会自动启用 bundle
+
+之前记的"`dsh plugin --profile X add` 只是转发给 pnpm、只写 `dependencies`"是**错的**。
+实测它会同时把包名追加进 `package.json` 的 `dsh.profile.bundles` —— 也就是走的是
+plugin-manager（"Installation enables a new bundle by default"），不是裸 pnpm 透传。
+所以**不需要**再手工改 `bundles` 列表。
+
 
 ### 4. 架构（三层，各自独立可测）
 
 ```
-① MCP server（我们的，Python）
-   scripts/pvz_mcp_server.py —— stdio，把 episode_query 的 12 个子命令包成工具
-   工具名：mcp__pvz__capture / __index / __lane / __actions / __whatif / ...
-   为什么先做：它不绑定 DSH。在任何 MCP 宿主里都能交互式调试，改一行立刻试。
-   这是最快的回路，也是唯一不依赖 DSH 的资产。
+① MCP server（我们的，Python）  —— 已落地
+   dsh/pvz-teacher/server/pvz_mcp_server.py
+     stdio，用官方 mcp SDK 的低层 Server（回调式，不是 FastMCP，
+     因为要对 tools/list 有完全控制）
+     它只做搬运：把一次工具调用翻译成一条 episode_query.py 子进程命令，
+     stdout 原样回传。自己不做任何游戏判断。
+   dsh/pvz-teacher/server/smoke_handshake.py
+     不经 DSH 的握手冒烟测试。有它才能区分"server 坏了"和"接线错了"。
+     用**与 DSH 一致的已擦除环境**跑（照抄 scrubbedParentEnv 的规则），
+     所以它通过 = DSH 里也不会因为环境被擦而挂。
+   解释器：~/.local/share/pvz-agent/mcp-venv（仓库外，不进 git）
+     只装 mcp SDK。仓库 .gitignore 里**没有** venv 条目，放仓库里会被跟踪。
 
-② 组合层（一个 bundle，恰好两个文件）
-   pvz-teacher-bundle/
-     package.json        { "name": "@local/dsh-pvz-teacher", ...,
+② 组合层（一个 bundle，恰好两个文件）  —— 已落地
+   dsh/pvz-teacher/bundle/
+     package.json        { "name": "@local/pvz-teacher",
                            "dsh": { "bundle": { "patch": "./cordis.patch.yml" } } }
-     cordis.patch.yml    - insert:
-                           - mcp-client 行（serverName: pvz, transport: stdio,
-                             command: <python>, args: [scripts/pvz_mcp_server.py],
-                             cwd: <仓库绝对路径>）
-                           - preset-pvz-teacher 声明行（persona + plugins 列表 +
-                             调过的 compaction 阈值 + 只留需要的工具）
-   安装：dsh plugin --profile sdk add file:/绝对路径
-   验证：dsh --profile sdk --dump-config
+     cordis.patch.yml    - insert: 一行 @deepseek-ai/dsh-mcp-client
+                           （serverName: pvz, transport: stdio,
+                            command/args/cwd 全绝对路径）
+   S0 阶段**只有 MCP 行**。persona / 工具裁剪 / compaction 阈值那一组
+   等 S1 真工具定下来再加，避免现在拍脑袋写一堆没验证的配置。
+   安装：dsh plugin --profile pvz-teacher add file:/绝对路径
+         （会自动启用，不用手工改 bundles —— 见 §3.5）
+   验证：dsh --profile pvz-teacher --dump-config
+         bash dsh/pvz-teacher/verify_s0.sh
 
-③ 技能层（模型自己写）
+③ 技能层（模型自己写）  —— 未开始
    <仓库根>/.agents/skills/pvz-*/SKILL.md —— 走 git，进版本控制
    DSH 的 Chokidar 会热刷新，模型写完立刻能用，不用重启
 ```
 
 ### 5. 分步执行与验收
 
-**S0 · 最小 MCP server 打通（go/no-go）**
+**S0 · 最小 MCP server 打通（go/no-go）—— ✅ 2026-10-03 通过**
 只暴露一个 `ping` 工具。打包成 bundle，装进 profile。
 验收：`--dump-config` 能看到行，且会话里能调 `mcp__pvz__ping` 成功。
-**不过就停下改方案，不往上堆。**
+两条都过了，证据与可复现脚本见 §3.1。**继续往上走。**
 
 **S1 · 真工具包成 MCP**
 把 `capture/index/lane/actions/whatif/frame/narrative` 暴露出来。
@@ -1429,8 +1549,16 @@ profile patch 各维护一份"的问题，因为根本只有一份。
   `python/train_pvz_ppo_task_family.py:792` 的 `protected_paths` 做 SHA 校验，
   训练跑中途改动会让门禁记成 `protected_unchanged: false`。本节的落点选在
   `RESEARCH_EXECUTION.md`（不在保护名单内）正是这个原因。
-- **DSH 源码树是只读参考**（`~/deepseek-harness`，已切到 `dsh-v0.2.0-rc.2`），
-  我们的产物不写进它。`DSH_HOME` 用独立目录。
+- **DSH 源码树是只读参考**（`~/deepseek-harness`，已切到 `dsh-v0.2.0-rc.2`，
+  与全局 `dsh` CLI 同版本 —— 见 §3.3），我们的产物不写进它。
+- **本方案的三个机器本地路径**（都不进 git，换机器要重建）：
+  | 路径 | 是什么 |
+  |---|---|
+  | `~/.local/share/pvz-agent/mcp-venv` | MCP server 的 Python venv（只有 mcp SDK） |
+  | `~/.local/share/pvz-agent/dsh-home` | 隔离的 `DSH_HOME`，不碰用户真实的那个 |
+  | `~/deepseek-harness` | DSH 源码（只读参考 + `pnpm run mock:llm` 的来源） |
+- `dsh/pvz-teacher/bundle/cordis.patch.yml` 里是**绝对路径**，所以 bundle 本身是
+  机器专属的。等 S1 定下来再考虑用 Loader `!!js` 从环境变量取。
 - 预算无上限，但**无上限不等于无记账**（见 §7）。
 - 唯一防卡死规则：**连着若干轮最好改动都是 +0 波就停下，去查工具哪里给的信息不够**。
 
