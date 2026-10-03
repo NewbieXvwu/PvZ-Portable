@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-v1-first125k-v1",
+  "revision": "2a046aa8ceae6d79d784eee7d1b6fbb227ee7f27",
+  "seconds": 6.688550755003234,
+  "completed_seeds": [
+    0
+  ],
+  "raw_case_count": 272,
+  "owning_full_run_deliveries": [
+    {
+      "run": "mainline_bridge_random_mc_v1_seed0",
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
+      "status": "uploading",
+      "start_utc": "2026-10-03T02:55:23.206409+00:00",
+      "pid": 217770
+    }
+  ],
+  "scope": "Existing prescribed125k node raw evaluations/configs/costs and paired initial/2k/25k/idle outcomes. Checkpoints and full resume/rollout evidence reference owning first125k run deliveries, pending until explicitly complete. No checkpoint or observation shard duplicated; no new model/Native evaluation or owning training mutation."
+}
