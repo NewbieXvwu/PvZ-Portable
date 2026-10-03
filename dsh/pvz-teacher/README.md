@@ -23,6 +23,7 @@
 | `verify_s1.py` | S1 端到端验收（工具面），**不需要 API key**。 |
 | `tools/logging_proxy.py` | 记录型反向代理：看到 DSH 实际发出的请求体。可选修复 `thinking.budget_tokens`。 |
 | `tools/test_repair.py` | 上面那个修复的回归测试（离线可跑）。 |
+| `tools/trace_session.py` | 把一次会话的工具调用轨迹还原成可读证据（调了什么、参数、结果、token 花销）。 |
 
 ## 工具一览
 
