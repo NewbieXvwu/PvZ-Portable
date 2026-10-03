@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "status": "two_seed0_width_smokes_complete",
+  "runs": [
+    {
+      "run": "mainline_informative_width128_v1_seed0",
+      "width": 128,
+      "initialization_seed": 0,
+      "source_revision": "29776a49f56254d144a743205a5c3985f48d18b6",
+      "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+      "initial_state_sha256": "da2a2a0b1e467e1b805e2f29e4d00c3749638c06fa66647b6b1cef6b5215f6fe",
+      "updates": 3,
+      "counters": {
+        "episodes": 12,
+        "decisions": 2000,
+        "ticks": 199103
+      },
+      "phase": "ready",
+      "status": "update_boundary_stop",
+      "checkpoint": "runs/run_1/update_000003_boundary_1791012295258988119.pt",
+      "exit_code": 0,
+      "controller_elapsed_seconds": 480.6499817559961,
+      "active_wall_seconds": 451.1245310719969,
+      "sampling_seconds": 21.400724979001097,
+      "ppo_seconds": 76.19865708499856,
+      "resources": {
+        "peak_process_tree_rss_bytes": 14979108864,
+        "min_system_available_bytes": 18429464576,
+        "peak_system_swap_used_bytes": 221184,
+        "cuda_peak_allocated_bytes": 2355206144,
+        "cuda_peak_reserved_bytes": 3762290688
+      },
+      "last_losses": {
+        "policy_loss": 0.3756498545408249,
+        "value_loss": 0.05960113974288106,
+        "entropy": 3.1677597165107727,
+        "advantage_mean": 0.15978267788887024,
+        "advantage_std": 0.20398633182048798,
+        "gradient_norm": 1.316163182258606,
+        "approx_kl": 0.007898883719462901,
+        "clip_fraction": 0.12556062173098326,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.44587039947509766,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "evaluation_nodes": [
+        {
+          "decisions": 0,
+          "seconds": 224.03388605600048,
+          "raw_path": "evaluations/update_000000.json.gz"
+        },
+        {
+          "decisions": 2000,
+          "seconds": 128.19850546300586,
+          "raw_path": "evaluations/update_000003.json.gz"
+        }
+      ],
+      "owning_hf_branch": "evidence-mainline-informative-width128-v1-seed0-smoke"
+    },
+    {
+      "run": "mainline_informative_width512_v1_seed0",
+      "width": 512,
+      "initialization_seed": 0,
+      "source_revision": "29776a49f56254d144a743205a5c3985f48d18b6",
+      "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+      "initial_state_sha256": "f721319088d09aa4529e8f61a2c037d390daa2d88dea08286014b15aee9a4756",
+      "updates": 3,
+      "counters": {
+        "episodes": 12,
+        "decisions": 1980,
+        "ticks": 216188
+      },
+      "phase": "ready",
+      "status": "update_boundary_stop",
+      "checkpoint": "runs/run_1/update_000003_boundary_1791013263936565633.pt",
+      "exit_code": 0,
+      "controller_elapsed_seconds": 960.0536321020045,
+      "active_wall_seconds": 940.2600829599978,
+      "sampling_seconds": 68.93260458001168,
+      "ppo_seconds": 75.0200981819944,
+      "resources": {
+        "peak_process_tree_rss_bytes": 15624056832,
+        "min_system_available_bytes": 18374864896,
+        "peak_system_swap_used_bytes": 221184,
+        "cuda_peak_allocated_bytes": 7996732928,
+        "cuda_peak_reserved_bytes": 16741564416
+      },
+      "last_losses": {
+        "policy_loss": 0.253244096878916,
+        "value_loss": 0.09621543483808637,
+        "entropy": 2.9633936882019043,
+        "advantage_mean": 0.1868652105331421,
+        "advantage_std": 0.26833319664001465,
+        "gradient_norm": 3.0535125732421875,
+        "approx_kl": 0.01011309603927657,
+        "clip_fraction": 0.18167129065841436,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.4538562297821045,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "evaluation_nodes": [
+        {
+          "decisions": 0,
+          "seconds": 793.6037616750109,
+          "raw_path": "evaluations/update_000000.json.gz"
+        }
+      ],
+      "owning_hf_branch": "evidence-mainline-informative-width512-v1-seed0-smoke"
+    }
+  ],
+  "closed_smokes": 2,
+  "required_smokes_before_expansion": 6,
+  "current_run": "mainline_informative_width512_v1_seed1",
+  "current_trainer_pid": 247388,
+  "scope": "Two genuine random-origin seed0 widths closed0 with complete boundary/curve/evaluation/idle.512 ends1980 decisions and has initial evaluation only; do not call it a2k policy evaluation. All six smokes are still required before expansion. No width superiority, equal-budget result, full acceptance or whole-goal completion."
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-width-wall-score-entry-v1-validation",
+  "revision": "8f68bb32e3fc34c3f12f92605b75bdc1ae439e9d",
+  "seconds": 7.3604526440030895,
+  "model_references": {
+    "scored_source_model": {
+      "run": "mainline_informative_width128_v1_seed0",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "branch": "evidence-mainline-informative-width128-v1-seed0-smoke",
+      "revision": "51a620a824c2145d51aff99acaba29a076dfe3d6",
+      "status": "complete",
+      "exit_code": 0,
+      "include_rollouts": true,
+      "include_trained_window": true,
+      "resume_target_included": true
+    },
+    "guard_over_cap_source": {
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed0-selected250k",
+      "revision": "b1a3695990aef473c29f39f818f4ec4c88bfbffe",
+      "checkpoint": "mainline_bridge_random_mc_v1_seed0/runs/run_1/update_000186_evaluated_1790996112577481248.pt"
+    }
+  },
+  "reused_cases": 272,
+  "actual_engineering_cases": 1,
+  "scope": "Read-only raw272case reuse, one real frozen CPUcase/shard cache,3 intentional CLI rejection logs+preserved failure reports, source code/config metadata. Models reference already delivered owners; no duplicate PT, no equal-wall/structure/learning/acceptance completion claim."
+}

@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "status": "entry_engineering_validated",
+  "entry": "scripts/evaluate_width_wall_point.py",
+  "reused_cases": 272,
+  "reuse_seconds": 0.6759542430081638,
+  "reused_source_counters": {
+    "episodes": 12,
+    "decisions": 2000,
+    "ticks": 199103
+  },
+  "paired_idle_exact_with_original": true,
+  "extra_cases_in_reuse": 0,
+  "worker_probe": {
+    "schema_version": 1,
+    "status": "pass",
+    "actual_cases": 1,
+    "cached_second_call": true,
+    "timings_seconds": [
+      5.896125490995473,
+      0.003027205995749682
+    ],
+    "checked_fields": [
+      "seed",
+      "won",
+      "result",
+      "terminated",
+      "truncated",
+      "action_counts",
+      "events",
+      "zero_tick_actions",
+      "immediate_plant_shovels",
+      "terminal_wave",
+      "wave_count",
+      "terminal_tick",
+      "peak_offense",
+      "actions",
+      "economy_curve",
+      "wait_mode"
+    ],
+    "seed": 30000,
+    "task_id": "validation_full_level7_v1",
+    "mode": "greedy",
+    "actions": 164,
+    "cuda_initialized": false,
+    "checkpoint": "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_informative_width128_v1_seed0/runs/run_1/update_000003_boundary_1791012295258988119.pt",
+    "scope": "One existing frozen case, same worker/initializer/job/shard path used by wall scoring.16 gameplay fields match original evaluation and cache replay. This verifies worker/cache wiring only, not full new272case scoring, equal-time comparisons or learning."
+  },
+  "cli_guards": {
+    "schema_version": 1,
+    "status": "pass",
+    "cases": [
+      {
+        "name": "over_cap",
+        "exit_code": 1,
+        "expected_rejection": "Selected policy exceeds the frozen wall cap",
+        "seconds": 2.31594033401052,
+        "log": "logs/t5_research/width_wall_score_entry_v1_guard_over_cap.log"
+      },
+      {
+        "name": "completed_preserved",
+        "exit_code": 1,
+        "expected_rejection": "Preserve completed/failed evidence",
+        "seconds": 2.212376449999283,
+        "log": "logs/t5_research/width_wall_score_entry_v1_guard_completed_preserved.log"
+      },
+      {
+        "name": "undeclared_cap",
+        "exit_code": 1,
+        "expected_rejection": "Require an unchanged preregistered width wall cap",
+        "seconds": 2.190029516001232,
+        "log": "logs/t5_research/width_wall_score_entry_v1_guard_undeclared_cap.log"
+      }
+    ],
+    "completed_report_unchanged": true,
+    "scope": "Intentional fail-fast CLI probes. No training, Native episode or CUDA operation; failed over-cap evidence retained. These are engineering checks, not failed training seeds."
+  },
+  "raw_evidence": "artifacts/research/width_wall_score_entry_v1_reuse_validation",
+  "cuda_initialized": false,
+  "scope": "Frozen width wall-scoring entry, existing272case reuse, one actualCPU frozen case+cache, fail-fast over-cap/undeclared-cap/completed-preservation. This is not a near-cap policy, full new272case scoring, equal-wall comparison, candidate choice or goal completion."
+}
