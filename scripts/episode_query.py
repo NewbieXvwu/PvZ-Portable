@@ -47,6 +47,7 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_constants import PLANT_NAME, ZOMBIE_NAME  # noqa: E402
+from scripted_baseline import POLICY_REVISION  # noqa: E402
 from render_episode import (  # noqa: E402
     DEFAULT_RESOURCE_DIR, PLANT_GLYPH,
     _board_ascii, _disp, _lane_causal, _lane_line, _lane_rows, _lane_table,
@@ -73,6 +74,7 @@ def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
         "task": rec["task"],
         "outcome": rec["outcome"],
         "totals": rec["totals"],
+        "policy_revision": rec["task"].get("policy_revision"),
         "frame_count": len(rec["frames"]),
     }
     (out_dir / "meta.json").write_text(
@@ -727,10 +729,11 @@ def _fmt_actions(frames: list, deck: list, lo: int, hi: int | None,
 # 任何硬编码规则都替代不了它。
 
 
-def _run_variant(meta: dict, override: dict, resource_dir: str) -> dict:
+def _run_variant(meta: dict, override: dict, resource_dir: str,
+                 prefix: list | None = None) -> dict:
     t = meta["task"]
     rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
-                  4000, t.get("deck"), override=override)
+                  4000, t.get("deck"), override=override, prefix_actions=prefix)
     return rec["outcome"]
 
 
@@ -740,6 +743,19 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     deck = meta["task"].get("deck") or []
     if decision < 1 or decision >= len(frames):
         return f"（决策序号要在 1–{len(frames) - 1} 之间）"
+
+    # 前缀照抄：第 1..N-1 步用存档里录下的真实动作，保证重放到分叉点为止
+    # 与存档逐位一致（哪怕存档产生于旧的策略修订——见 POLICY_REVISION）。
+    # 第 N 步用 override，之后由当前策略接管。
+    prefix = [f.get("action") for f in frames[1:decision]]
+    revision_note = ""
+    revision_note = ""
+    if meta.get("task", {}).get("policy_revision") != POLICY_REVISION:
+        stored = meta.get("task", {}).get("policy_revision") or "未记录（策略修订号机制引入前）"
+        revision_note = (
+            f"⚠ 此存档产生于策略修订 {POLICY_REVISION} 之前（存档版本：{stored}）。"
+            f"重放的第 1..{decision - 1} 步已按存档动作忠实回放，第 {decision} 步换成指定动作，"
+            "**之后**的决策由当前（修订后）策略重新做出——与存档当时的策略行为可能不同。\n\n")
 
     base_act = frames[decision].get("action")
     base = meta["outcome"]
@@ -757,6 +773,8 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
          "不是照抄原局录下的那串动作。所以结果反映的是「改了这一步之后，"
          "策略会怎么接着打」，不是「只改这一步、后面硬按原剧本走」。",
          ""]
+    if revision_note:
+        L.append(revision_note)
 
     cands: list[dict] = []
     for raw in raw_actions:
@@ -776,7 +794,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     if enumerate_:
         probe = collect(resource_dir, meta["task"]["seed"], meta["task"]["level"],
                         meta["task"]["policy"], 4000, deck,
-                        capture_legal_at=decision)
+                        capture_legal_at=decision, prefix_actions=prefix)
         legal = probe.get("legal_at") or {}
         for p in (legal.get("plants") or []):
             if row_filter is not None and p["row"] != row_filter:
@@ -796,7 +814,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     results = []
     for cand in cands:
         try:
-            o = _run_variant(meta, {decision: cand}, resource_dir)
+            o = _run_variant(meta, {decision: cand}, resource_dir, prefix=prefix)
         except Exception as exc:  # noqa: BLE001 - 单个候选失败不该打断整批
             L.append(f"  {_action_text(cand, deck):<34} 重放失败：{exc}")
             continue
@@ -820,12 +838,13 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             out = Path(save_best)
             t = meta["task"]
             rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
-                          4000, deck, override={decision: top[1]})
+                          4000, deck, override={decision: top[1]}, prefix_actions=prefix)
             out.mkdir(parents=True, exist_ok=True)
             (out / "meta.json").write_text(json.dumps(
                 {"schema": SCHEMA,
-                 "task": {**t, "note": f"反事实：第 {decision} 步改为 "
-                                       f"{_action_text(top[1], deck)}"},
+                 "task": {**t, "policy_revision": POLICY_REVISION,
+                          "note": f"反事实：第 {decision} 步改为 "
+                                  f"{_action_text(top[1], deck)}"},
                  "outcome": rec["outcome"], "totals": rec["totals"],
                  "frame_count": len(rec["frames"])},
                 ensure_ascii=False, indent=2), encoding="utf-8")

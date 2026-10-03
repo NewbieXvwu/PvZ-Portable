@@ -36,7 +36,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
 from pvz_constants import PLANT_NAME, grid_square_types  # noqa: E402
 from scripted_baseline import choose as scripted_choose  # noqa: E402
-from scripted_baseline import deck_for_level, profile_for_deck  # noqa: E402
+from scripted_baseline import deck_for_level, POLICY_REVISION, profile_for_deck  # noqa: E402
 
 # 真实路的地形集合：草地或水路。DIRT/NONE/HIGH_GROUND 是填充或特殊格。
 _LANE_TERRAIN = frozenset(
@@ -231,7 +231,8 @@ def _frame(obs: dict) -> dict:
 
 def collect(resource_dir: str, seed: int, level: int, policy: str,
             max_actions: int = MAX_ACTIONS, deck=None, override: dict | None = None,
-            capture_legal_at: int | None = None) -> dict:
+            capture_legal_at: int | None = None,
+            prefix_actions: list | None = None) -> dict:
     """跑一局，记录每一帧的紧凑状态、**这一步的决策**、以及事件增量。
 
     frames[i] = 做完第 i 次决策之后的局面（frames[0] 是开局）。
@@ -245,6 +246,12 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     override = {决策序号: 动作}：到那一步时不用策略的默认选择，改用给定动作。
     环境是确定性的（同 task+seed+动作序列 → 逐位相同的结果），所以这是精确的
     反事实重放，不是近似。
+
+    prefix_actions = 前缀动作表（第 1..N 步）：提供时这些步**照抄给定动作**、
+    不问策略。whatif 重放旧存档用：把存档里第 1..N-1 步的真实动作作为前缀，
+    第 N 步 override，之后让策略接管 —— 这样重放对**任何历史版本的策略**
+    都忠实到分叉点为止，策略行为修订（见 scripted_baseline.POLICY_REVISION）
+    不会让旧存档的 whatif 静默分叉。
     """
     env = PvZEnv(resource_dir, headless=True)
     # 卡组按关卡地形定（AGENTS.md「任务与卡组」）；显式传 deck 的调用方
@@ -267,9 +274,12 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     while not obs["terminal"] and actions < max_actions:
         if capture_legal_at is not None and actions == capture_legal_at - 1:
             legal_at = obs.get("legal_actions")
-        action = scripted_choose(obs) if policy == "scripted" else {"type": "wait", "ticks": 60}
-        if override and (actions + 1) in override:
-            action = override[actions + 1]
+        if prefix_actions is not None and actions < len(prefix_actions):
+            action = prefix_actions[actions]
+        else:
+            action = scripted_choose(obs) if policy == "scripted" else {"type": "wait", "ticks": 60}
+            if override and (actions + 1) in override:
+                action = override[actions + 1]
         obs, _, done, _, info = env.step(action)
         was_rejected = not info.get("ok")
         if was_rejected:
@@ -316,7 +326,8 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     return {
         "schema": "episode_report_v1",
         "task": {"level": level, "seed": seed, "playthrough": 2,
-                 "deck": list(deck), "policy": policy},
+                 "deck": list(deck), "policy": policy,
+                 "policy_revision": POLICY_REVISION},
         "legal_at": legal_at,
         "outcome": {
             "result": result,

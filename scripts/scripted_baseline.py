@@ -75,6 +75,11 @@ def rows_with(plants: list[dict], kind: int) -> Counter:
 # 为什么用 ①②③ 而不是 1. 2. 3.：`decision_rules_text()` 会校验描述里
 # 出现的每个数字都能在源码里找到。用阿拉伯数字做序号，序号本身会被
 # 当成"常量"去校验，校验就变成了噪音。
+# 策略行为修订号：choose() 的**行为**一变就递增。capture 的 meta 里会记录
+# 它，whatif 据此判断"重放用的策略和存档当时的策略是否一致"——不一致时
+# 明确警告，不静默分叉（2026-10-04 rule ① 几何修复就是第一个跨版本的例子）。
+POLICY_REVISION = "v2-2026-10-04-wallnut-front"
+
 DECISION_RULES = """\
 ── 脚本策略的决策规则（scripted policy）──
 
@@ -91,8 +96,11 @@ DECISION_RULES = """\
 按下面的顺序判断，命中即返回：
 
   ① 紧急坚果墙
-     某一路「最前僵尸的 x < 260」，且该路 col >= 5 处没有坚果墙
-     → 在该路 col >= 5 处种坚果墙（取最靠右的合法列）。
+     某一路「最前僵尸的 x < 260」，且该路僵尸的**必经之路**
+     （col ≤ 最前僵尸所在列）上没有坚果墙
+     → 在必经之路上种坚果墙（取最靠右的合法列：挡在它走向房子的路上，
+     且离房子尽可能远）。2026-10-04 几何修复：旧版种在 col >= 5，
+     那在深入腹地的僵尸**身后**，拦不住任何东西。
 
   ② 樱桃炸弹清场
      x < 320 的僵尸 >= 4 只
@@ -189,15 +197,24 @@ def choose(observation: dict) -> dict:
         xs = [z["x"] for z in zombies if z["row"] == row]
         return min(xs) if xs else 9999.0
 
-    # 1. emergency wall-nut in front of anything close to the house
+    # 1. emergency wall-nut: block in front of the zombie's remaining path.
+    #    2026-10-04 几何修复（S6 教师会话发现，见 dsh/pvz-teacher/README.md）：
+    #    旧版在 col >= 5 种坚果，但触发条件是僵尸已深入 c0..c2（x < 260）——
+    #    僵尸自高列向低列走，col >= 5 在它**身后**，这株坚果对眼前威胁毫无
+    #    拦截作用（实测 L21 决策 216：僵尸在 c2，坚果种 (1,8)，lane 判定
+    #    "火力被绕过"）。现在把坚果放进僵尸的**必经之路**（col ≤ 最前僵尸
+    #    所在列），取最靠右的合法列 = 离房子最远、最贴近僵尸的拦截点。
     for row in range(6):
-        if row_threat(row) < 260 and not any(
-                p["type"] == WALLNUT and p["row"] == row and p["col"] >= 5 for p in plants):
-            action = pick(WALLNUT, lambda item: item["row"] == row and item["col"] >= 5,
-                          lambda item: item["col"])
-            if action:
-                action["rule"] = "①紧急坚果墙"
-                return action
+        threat = row_threat(row)
+        if threat < 260:
+            front_col = int((threat - 40) // 80)
+            if not any(
+                    p["type"] == WALLNUT and p["row"] == row and p["col"] <= front_col for p in plants):
+                action = pick(WALLNUT, lambda item: item["row"] == row and item["col"] <= front_col,
+                              lambda item: item["col"])
+                if action:
+                    action["rule"] = "①紧急坚果墙"
+                    return action
 
     # 2. cherry bomb on a clustered breach
     cluster = [z for z in zombies if z["x"] < 320]
