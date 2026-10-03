@@ -5,12 +5,24 @@
 [`RESEARCH_EXECUTION.md`](../../RESEARCH_EXECUTION.md) 的
 「2026-10-03 LLM 教师方案」一节。
 
-**当前状态：S0–S3 均已通过。** 工具面 11 个
+**当前状态：S0–S4 均已通过。** 工具面 12 个
 （`ping / vocabulary / constants / policy / capture / index / frame / lane / actions /
-whatif / narrative`），与 `episode_query.py` 的子命令一一对应，另发 3 个资源。
+whatif / narrative / lint_skills`），与 `episode_query.py` 的子命令一一对应，另发 3 个资源。
 S3（2026-10-03）让模型真跑了一局败局诊断：它**找到了能通关的改动**（决策 96 的
-土豆雷换列 → 30/30），但**一条 skill 都没写** —— 这是 S4 要修的东西，
-判据见下面「[什么时候写 skill](#什么时候写-skill)」。
+土豆雷换列 → 30/30），但**一条 skill 都没写**。
+S4（2026-10-03）换了场景（L21 泳池关）重跑，验证 skill 判据与闸门：
+
+- **诊断正确**：模型发现 L21 是结构性输局 —— 卡组 0..5 里没有任何能种水路的植物，
+  第 2、3 路全程零火力，割草机一耗尽必输。**"没有单点通关改动"是它自己的结论**
+  （4 个决策点 × 13 次 whatif，全部独立复核吻合），不是答不出来。
+- **地形字段用上了**：它主动调 `constants --section terrain --level 21`，
+  从「场景：」行发现泳池关；S3 里那种"看不见地形"的困惑没有复现。
+- **skill 恰好 1 条，不是 0 条也不是一筐**：`pvz-deck-terrain-mismatch`
+  （kind: mechanism，三问全过、4 个证据点、falsifier 完整）。它考虑过把
+  "孤睡莲反而更差"单独立条，自己否了 —— 判据起了作用。`lint_skills` 2/2 通过。
+- **对照 S3**：推理轨迹里 "skill" 从 **0 次 → 208 次**（329k 字符推理）。
+  根因确认：S3 的负结果是"没有判据"，不是"没有能力"。
+
 
 ## 目录
 
