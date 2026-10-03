@@ -208,7 +208,9 @@ git ls-files -z artifacts logs | git check-ignore -z --stdin --no-index
    这种一次性的结论，产不出可教的政策缺陷数据。新关卡入选任务集前，
    先用 `scripts/scripted_baseline.py` 的 `deck_for_level`（场景判定从
    `pvz_constants.background_for_level` 现解析，含第 35 关 ScaryPotter
-   特例）核对覆盖。
+   特例）核对覆盖。**反过来同理：打不过的时候，必须先考虑是不是该换卡组，
+   再考虑改策略** —— 卡组覆盖不了地形的局是结构性输局，在动作层怎么改都救不回来；
+   把"该换卡组"误诊成"策略失误"是最坏的一种错误结论。
 2. **升级植物必须声明所有权。** `Plant::IsUpgrade`（Plant.cpp）列出的
    升级植物（40–47，含香蒲 43）进卡组时，`PlayerProfileContext` 的
    `owned_upgrade_plants` 必须包含它，且槽位数 = 卡组长度（`LawnApp.cpp:1329`
