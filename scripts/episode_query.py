@@ -178,8 +178,8 @@ def _index(meta: dict, frames: list) -> str:
     L.append("  whatif --decision <帧号> --enumerate --row <路> --save-best <DIR>")
     L.append("  环境是确定性的（同 seed + 同动作序列 → 逐位相同），所以"
              "「如果那一步换个做法」是精确可算的。")
-    L.append("  实测：seed 30001 第 266 步，豌豆射手从 c2 挪到 c6 → 第 17/30 波"
-             "（输）变成 30/30 波（通关），+13 波。")
+    L.append("  实测：同一株植物种在哪一列，就足以改变整局胜负 —— 这类差别"
+             "规则推不出来，但回放能精确算出来。")
     return "\n".join(L)
 
 

@@ -1,0 +1,72 @@
+# 实验隔离叠加层：把"能读到仓库"的工具全部关掉。
+#
+# 为什么需要它
+# ------------
+# S2 的命题是"**不告诉它答案**，看它能不能用我们造的工具自己找到改法"。
+# 但 dsh-base 默认带 `tool-bash` / `tool-fs` / `tool-fs-search`，模型可以
+# `grep` 整个仓库 —— 而仓库里**确实存着这个答案**：
+#   - `scripts/render_episode.py` 的 docstring 记了这次修复与反例
+#   - `RESEARCH_EXECUTION.md` §3.9 直接写了结论
+# 2026-10-03 实测：模型第 2 步拿到 index 输出里的剧透后，第 4 步就直接
+# `actions --from 255 --to 280` —— 正好是答案所在区间。那次实验作废。
+#
+# 所以：跑"模型能否自主发现"这类实验时，**必须把模型的观测面收敛到
+# 我们设计的工具面上**，否则测的是"它会不会 grep 仓库"，不是"工具够不够用"。
+#
+# 用法（不改 profile，只是叠一层）
+# --------------------------------
+#   dsh --profile pvz-teacher \
+#       --patch dsh/pvz-teacher/patches/isolate.yml \
+#       "你的任务…"
+#
+# 关掉的分类
+# ----------
+#   文件：tool-fs / tool-fs-search
+#   终端：tool-bash / tool-pwsh / tool-jobs
+#   技能：skill-filesystem / tool-skill（skill 目录里也可能有笔记）
+#   子代理：tool-subagent*（子代理同样能读文件）
+#   代码执行：ptc-runtime / workflow-ptc / tool-workflow
+#   联网：tool-web / web-search-deepseek / web-fetch-http
+#
+# **保留**：agent 循环本身、我们的 8 个 pvz 工具、todo/goal 这类纯规划工具
+# （它们不接触外部世界，留着能让模型自己记账，反而更接近真实使用）。
+
+- id: tool-fs
+  disabled: true
+- id: tool-fs-search
+  disabled: true
+
+- id: tool-bash
+  disabled: true
+- id: tool-pwsh
+  disabled: true
+- id: tool-jobs
+  disabled: true
+
+- id: skill-filesystem
+  disabled: true
+- id: tool-skill
+  disabled: true
+
+- id: tool-subagent
+  disabled: true
+- id: tool-subagent-fork
+  disabled: true
+- id: tool-subagent-control
+  disabled: true
+- id: tool-subagent-list-agents
+  disabled: true
+
+- id: ptc-runtime
+  disabled: true
+- id: workflow-ptc
+  disabled: true
+- id: tool-workflow
+  disabled: true
+
+- id: tool-web
+  disabled: true
+- id: web-search-deepseek
+  disabled: true
+- id: web-fetch-http
+  disabled: true
