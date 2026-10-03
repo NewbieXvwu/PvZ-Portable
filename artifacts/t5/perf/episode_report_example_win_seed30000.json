@@ -94,7 +94,7 @@
     "2 号路在后半程（15–30 波）有 13 个波次僵尸数超过火力数，是全盘输出最跟不上压力的一路。",
     "2 号路植物净损失 21 株（全路合计 63 株），是补种最频繁的一路。",
     "割草机共消耗 4 台：第 9 波 [1] 号路；第 27 波 [3] 号路；第 29 波 [4] 号路；第 30 波 [2] 号路。",
-    "终局时 [1, 2, 3, 4] 号草坪已无割草机，这几路再被突破就是直接进屋。"
+    "终局时这几路已经没有割草机：1 号路（4 个火力）、2 号路（1 个火力）、3 号路（3 个火力）、4 号路（2 个火力）。没有割草机 = 再被突破就直接进屋，没有缓冲；但火力够的路照样守得住 —— 这是风险敞口，不是失败原因。"
   ],
   "wave_matrix": [
     {
@@ -1150,7 +1150,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 1,
@@ -1165,7 +1165,7 @@
           "ticks_to_mower": 600,
           "eta_label": "600t",
           "mower": "待命",
-          "verdict": "紧急"
+          "verdict": "✗ 火力被绕过"
         },
         {
           "row": 2,
@@ -1180,7 +1180,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 3,
@@ -1195,7 +1195,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 4,
@@ -1210,7 +1210,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         }
       ]
     },
@@ -1234,7 +1234,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 1,
@@ -1249,7 +1249,7 @@
           "ticks_to_mower": 0,
           "eta_label": "0t",
           "mower": "已触发",
-          "verdict": "紧急"
+          "verdict": "✗ 火力被绕过"
         },
         {
           "row": 2,
@@ -1264,7 +1264,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 3,
@@ -1279,7 +1279,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 4,
@@ -1294,7 +1294,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         }
       ]
     },
@@ -1318,7 +1318,7 @@
           "ticks_to_mower": 1793,
           "eta_label": "1793t",
           "mower": "待命",
-          "verdict": "交火中"
+          "verdict": "⚠ 余量不足(2.5x)"
         },
         {
           "row": 1,
@@ -1333,7 +1333,7 @@
           "ticks_to_mower": 2724,
           "eta_label": "2724t",
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 压得住(3.2x)（无后手）"
         },
         {
           "row": 2,
@@ -1348,7 +1348,7 @@
           "ticks_to_mower": 482,
           "eta_label": "482t",
           "mower": "待命",
-          "verdict": "紧急"
+          "verdict": "✗ 火力被绕过"
         },
         {
           "row": 3,
@@ -1363,7 +1363,7 @@
           "ticks_to_mower": 903,
           "eta_label": "903t",
           "mower": "待命",
-          "verdict": "交火中"
+          "verdict": "✗ 打不过(0.9x)"
         },
         {
           "row": 4,
@@ -1378,7 +1378,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         }
       ]
     },
@@ -1402,7 +1402,7 @@
           "ticks_to_mower": 919,
           "eta_label": "919t",
           "mower": "待命",
-          "verdict": "交火中"
+          "verdict": "⚠ 余量不足(1.1x)"
         },
         {
           "row": 1,
@@ -1417,7 +1417,7 @@
           "ticks_to_mower": 2706,
           "eta_label": "2706t",
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 压得住(2.4x)（无后手）"
         },
         {
           "row": 2,
@@ -1432,7 +1432,7 @@
           "ticks_to_mower": 2518,
           "eta_label": "2518t",
           "mower": "待命",
-          "verdict": "交火中"
+          "verdict": "⚠ 余量不足(3.5x)"
         },
         {
           "row": 3,
@@ -1447,7 +1447,7 @@
           "ticks_to_mower": 504,
           "eta_label": "504t",
           "mower": "待命",
-          "verdict": "紧急"
+          "verdict": "✗ 火力被绕过"
         },
         {
           "row": 4,
@@ -1462,7 +1462,7 @@
           "ticks_to_mower": 1751,
           "eta_label": "1751t",
           "mower": "待命",
-          "verdict": "交火中"
+          "verdict": "⚠ 余量不足(2.5x)"
         }
       ]
     },
@@ -1486,7 +1486,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 1,
@@ -1501,7 +1501,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 平静（无后手）"
         },
         {
           "row": 2,
@@ -1516,7 +1516,7 @@
           "ticks_to_mower": null,
           "eta_label": "停住",
           "mower": "待命",
-          "verdict": "交火中"
+          "verdict": "✗ 火力被绕过"
         },
         {
           "row": 3,
@@ -1531,7 +1531,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 平静（无后手）"
         },
         {
           "row": 4,
@@ -1546,7 +1546,7 @@
           "ticks_to_mower": 427,
           "eta_label": "427t",
           "mower": "待命",
-          "verdict": "紧急"
+          "verdict": "✗ 火力被绕过"
         }
       ]
     },
@@ -1570,7 +1570,7 @@
           "ticks_to_mower": 3028,
           "eta_label": "3028t",
           "mower": "待命",
-          "verdict": "交火中"
+          "verdict": "⚠ 余量不足(4.5x)"
         },
         {
           "row": 1,
@@ -1585,7 +1585,7 @@
           "ticks_to_mower": 1685,
           "eta_label": "1685t",
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "⚠ 余量不足(3.3x)（无后手）"
         },
         {
           "row": 2,
@@ -1600,7 +1600,7 @@
           "ticks_to_mower": 639,
           "eta_label": "639t",
           "mower": "待命",
-          "verdict": "紧急"
+          "verdict": "✗ 火力被绕过"
         },
         {
           "row": 3,
@@ -1615,7 +1615,7 @@
           "ticks_to_mower": 2463,
           "eta_label": "2463t",
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "⚠ 余量不足(1.0x)（无后手）"
         },
         {
           "row": 4,
@@ -1630,7 +1630,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "已触发",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         }
       ]
     },
@@ -1654,7 +1654,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "待命",
-          "verdict": "平静"
+          "verdict": "✓ 平静"
         },
         {
           "row": 1,
@@ -1669,7 +1669,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 平静（无后手）"
         },
         {
           "row": 2,
@@ -1684,7 +1684,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 平静（无后手）"
         },
         {
           "row": 3,
@@ -1699,7 +1699,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 平静（无后手）"
         },
         {
           "row": 4,
@@ -1714,7 +1714,7 @@
           "ticks_to_mower": null,
           "eta_label": null,
           "mower": "已消耗",
-          "verdict": "无后手"
+          "verdict": "✓ 平静（无后手）"
         }
       ]
     }

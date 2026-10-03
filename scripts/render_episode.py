@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import sys
 from pathlib import Path
 
@@ -97,6 +98,28 @@ WALL_TYPES = frozenset({3, 23, 30, 36})
 
 MOWER_STATE = {0: "入场中", 1: "待命", 2: "已触发", 3: "被压扁"}
 
+# ---------------------------------------------------------------- 因果数值
+# 全部来自 src/Lawn/Plant.cpp 的 mLaunchRate / mSeedCost 与 Projectile 的 mDamage，
+# 不是估的。豌豆射手：每 150 tick 一发、每发 20 伤害 → 0.1333 伤害/tick。
+# 有出处才能拿它做"够不够打"的判断；凭感觉编一个 DPS 会让整个因果链不可信。
+PEA_DAMAGE = 20
+PEA_INTERVAL = 150
+PEA_DPS = PEA_DAMAGE / PEA_INTERVAL
+
+SHOOTER_DPS = {
+    0: PEA_DPS,          # 豌豆射手
+    5: PEA_DPS,          # 寒冰射手（同伤害，附加减速）
+    7: 2 * PEA_DPS,      # 双发射手（一次两发）
+    40: 4 * PEA_DPS,     # 机枪射手
+}
+DEFAULT_SHOOTER_DPS = PEA_DPS  # 其余射手按豌豆射手估算，输出里会标注
+
+PLANT_COST = {0: 100, 1: 50, 2: 150, 3: 50, 4: 25, 5: 175}
+
+# 判定"火力够不够"用的余量倍数：到割草机之前能打出的伤害 / 最前那只僵尸的血。
+# 2 倍以上算从容；1~2 倍算勉强；不到 1 倍就是打不死（僵尸会先到）。
+LANE_COMFORT_RATIO = 2.0
+
 
 # ---------------------------------------------------------------- 采集
 
@@ -119,12 +142,13 @@ def _frame(obs: dict) -> dict:
             z["body_health"] + z["helm_health"] + z["shield_health"],
             bool(z.get("on_board")), bool(z.get("is_eating")),
             int(z.get("chilled") or 0), int(z.get("ice_trap") or 0),
+            int(z["id"]),  # 索引 9：追踪单只僵尸用。加在末尾，前面的索引不变。
         )
         for z in obs.get("zombies") or []
     ]
-    mowers = {}
-    for d in obs.get("defenses") or []:
-        mowers[d["row"]] = d["state"]
+    # 存成 [[row, state], ...] 而不是 {row: state}：JSON 的对象键永远是字符串，
+    # 整数键的字典存盘再读回来会变成 "0"/"1"，后面按行号取就会炸。
+    mowers = [[d["row"], d["state"]] for d in obs.get("defenses") or []]
     return {
         "tick": obs["tick"],
         "wave": obs["wave"],
@@ -140,25 +164,46 @@ def _frame(obs: dict) -> dict:
 
 
 def collect(resource_dir: str, seed: int, level: int, policy: str,
-            max_actions: int = MAX_ACTIONS, deck=None) -> dict:
-    """跑一局，记录每一帧的紧凑状态与事件增量。"""
+            max_actions: int = MAX_ACTIONS, deck=None, override: dict | None = None,
+            capture_legal_at: int | None = None) -> dict:
+    """跑一局，记录每一帧的紧凑状态、**这一步的决策**、以及事件增量。
+
+    frames[i] = 做完第 i 次决策之后的局面（frames[0] 是开局）。
+    frames[i]["action"] = 第 i 次决策实际做了什么（frames[0] 是 None）。
+
+    注意这里的编号：第 N 次决策是在循环里 actions == N-1 的那一轮做出的，
+    所以 override / capture_legal_at 都按**决策序号（1 起）**收，内部减一。
+    早期版本按 actions 直接匹配，整体错开一步，枚举到的是"决策已经做完之后"的
+    状态（阳光已经花掉、没有合法种植位）——踩过。
+
+    override = {决策序号: 动作}：到那一步时不用策略的默认选择，改用给定动作。
+    环境是确定性的（同 task+seed+动作序列 → 逐位相同的结果），所以这是精确的
+    反事实重放，不是近似。
+    """
     env = PvZEnv(resource_dir, headless=True)
     deck = deck or SCRIPTED_DECK
     task = TaskSpec(level=level, seed=seed, playthrough=2)
     obs, _ = env.reset(deck=deck, task=task)
 
     frames = [_frame(obs)]
+    frames[0]["action"] = None
     events_total = {"zombies_killed": 0, "plants_eaten": 0, "sun_produced": 0,
                     "mower_triggered": 0, "waves_started": 0, "level_lost": 0}
     log = []  # (tick, wave, kind, detail)
     actions = 0
     rejected = 0
     kills_since_wave = 0
+    legal_at = None
 
     while not obs["terminal"] and actions < max_actions:
+        if capture_legal_at is not None and actions == capture_legal_at - 1:
+            legal_at = obs.get("legal_actions")
         action = scripted_choose(obs) if policy == "scripted" else {"type": "wait", "ticks": 60}
+        if override and (actions + 1) in override:
+            action = override[actions + 1]
         obs, _, done, _, info = env.step(action)
-        if not info.get("ok"):
+        was_rejected = not info.get("ok")
+        if was_rejected:
             rejected += 1
             obs, _, done, _, info = env.step({"type": "wait", "ticks": 60})
         ev = info.get("events") or {}
@@ -168,6 +213,8 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
 
         prev = frames[-1]
         cur = _frame(obs)
+        cur["action"] = action
+        cur["action_rejected"] = was_rejected
 
         # ---- 事件：从事件计数器和帧间差里还原"发生了什么"。
         # 逐只僵尸的死亡日志太吵，改成并进"开波"那一行（上一波清掉几只）。
@@ -201,6 +248,7 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
         "schema": "episode_report_v1",
         "task": {"level": level, "seed": seed, "playthrough": 2,
                  "deck": list(deck), "policy": policy},
+        "legal_at": legal_at,
         "outcome": {
             "result": result,
             "won": result == 1,
@@ -231,19 +279,113 @@ def _plant_diff(a: list, b: list) -> list:
     return sorted(out)
 
 
+def _mower_map(frame: dict) -> dict:
+    """这一帧哪几路还有割草机、什么状态。
+
+    兼容两种存法：内存里的 {row: state}，以及存盘再读回来的 [[row, state], ...]。
+    存档一律用后者，因为 JSON 对象键只能是字符串。
+    """
+    m = frame["mowers"]
+    if isinstance(m, dict):
+        return {int(k): v for k, v in m.items()}
+    return {int(r): s for r, s in m}
+
+
 def _mower_fired(prev: dict, cur: dict) -> list:
     """这一帧有哪些草坪的割草机被用掉了。
 
     两种情况都要算：状态变成 TRIGGERED(=2)，或者整条从 defenses 列表里消失
     （割草机跑完一趟就被回收，一次 60 tick 的等待足以跳过 state=2 那一帧）。
     """
-    fired = [r for r, s in cur["mowers"].items()
-             if s == 2 and prev["mowers"].get(r) != 2]
-    fired += [r for r in prev["mowers"] if r not in cur["mowers"] and r not in fired]
+    a, b = _mower_map(prev), _mower_map(cur)
+    fired = [r for r, s in b.items() if s == 2 and a.get(r) != 2]
+    fired += [r for r in a if r not in b and r not in fired]
     return sorted(fired)
 
 
 # ---------------------------------------------------------------- 渲染
+
+
+def _reachable_dps(frame: dict, row: int, front_x: float | None) -> tuple:
+    """这一路**真正打得到最前面那只僵尸**的火力。返回 (可打到 dps, 可打到株数, 总株数)。
+
+    植物朝右打，僵尸从右往左走。僵尸一旦走到某株植物的**左边**，那株就再也
+    打不到它了 —— 所以"这一路有几个豌豆射手"不等于"有几个正在输出"。
+
+    2026-10-03 修：原先直接数这一路全部射手，会把僵尸身后的植物也算进火力，
+    凭空多算输出、把必输的路判成守得住。种子 30001 第 266 步那株种在 c2 的
+    豌豆射手，僵尸在它左边 c1 —— 它一炮都打不出去，旧公式却把它算成 0.13 dps。
+    """
+    front_col = None if front_x is None else _col_of(front_x)
+    dps = 0.0
+    n_reach = n_all = 0
+    for p in frame["plants"]:
+        if p[0] != row or p[2] not in SHOOTER_TYPES:
+            continue
+        n_all += 1
+        # p[1] 是植物所在列。同列（僵尸正啃它）也算打不到。
+        if front_col is not None and p[1] >= front_col:
+            continue
+        n_reach += 1
+        dps += SHOOTER_DPS.get(p[2], DEFAULT_SHOOTER_DPS)
+    return dps, n_reach, n_all
+
+
+def _capacity(*, dps: float, front_x: float, speed: float, front_hp: int,
+              n_reach: int, n_all: int, n_zombies: int, hp_total: int) -> tuple:
+    """纯函数：只吃数字，判断"这一路的火力够不够"。返回 (符号, 短语, 展开句)。
+
+    判据是**物理量**，不是经验阈值：
+
+        到割草机还要多少 tick   = (僵尸 x − 割草机 x) / 僵尸速度
+        这段时间能打出的总伤害  = **打得到这只僵尸的**火力 dps 之和 × 上面的 tick 数
+
+    伤害率来自 src/Lawn/Plant.cpp（豌豆 20 伤害 / 每 150 tick 一发），不是估的。
+    所以"打不死"是推出来的结论，读者可以自己验算，也可以直接反驳这个判据。
+
+    `dps` / `n_reach` 必须是**打得到这只僵尸**的火力（见 `_reachable_dps`），
+    不是这一路的火力总和；`n_all` 是这一路射手总株数，只用来区分两种"零火力"：
+    真的一株都没有（裸路）vs 有射手但全在僵尸右边打不到（被绕过）。
+    这两种情况的应对完全相反 —— 前者要种，后者要种在**更右边**。
+
+    做成纯函数的原因：它同时被 `_lane_rows`（出表格里的短语）和 `_lane_causal`
+    （出完整因果句）调用，而 `_lane_causal` 又要读 `_lane_rows` 的输出 ——
+    写成读 frame 的形式会互相递归。数字进、结论出，谁都能调。
+
+    短语里带上余量倍数：单帧的 ✗/⚠ 会在 1.0 附近来回跳（差 6 tick 就能翻），
+    只给符号读起来像噪声；给出数字，读的人才知道"这是在临界线上"。
+    """
+    if n_zombies == 0:
+        return "✓", "平静", None
+    if dps <= 0:
+        if n_all > 0:
+            return "✗", "火力被绕过", (
+                f"这一路有 {n_all} 株射手，但**全都打不到**最前那只僵尸 —— "
+                f"它已经走到射手左边（或正在啃那一株），射手朝右打，够不着它。"
+                f"这种情况下再往同一条路上补种，种在同样的位置等于白种。")
+        return "✗", "裸路承压", (f"没有火力能打到它。{n_zombies} 只僵尸共 {hp_total} 血"
+                                 f"没人挡，最前那只已经走到 c{_col_of(front_x)}")
+    if speed < 0.02:
+        return "⚠", "啃食僵局", (f"{n_reach} 个火力打死最前那只（{front_hp} 血）要 "
+                                 f"{front_hp / dps:,.0f} tick。僵尸此刻正停住啃植物，"
+                                 f"所以它还没走到割草机，但也没被打死 —— 是个僵局")
+
+    arrive = (front_x - LAWN_XMIN) / speed
+    cap = dps * arrive               # 到割草机之前这一路能打出的总伤害
+    ratio = cap / front_hp if front_hp > 0 else 0.0
+    rest = hp_total - front_hp
+    queue = f"，后面还排着 {n_zombies - 1} 只共 {rest} 血" if rest else ""
+
+    if ratio < 1:
+        return "✗", f"打不过({ratio:.1f}x)", (
+            f"{n_reach} 个火力。最前那只 {arrive:,.0f} tick 后到割草机，"
+            f"这段时间最多打出 {cap:,.0f} 伤害，而它有 {front_hp} 血"
+            f"—— 打不死{queue}")
+    if rest > 0 or ratio < LANE_COMFORT_RATIO:
+        return "⚠", f"余量不足({ratio:.1f}x)", (
+            f"{n_reach} 个火力能在僵尸到达前打死最前那只"
+            f"（{front_hp} 血），余量 {ratio:.1f} 倍{queue}")
+    return "✓", f"压得住({ratio:.1f}x)", None
 
 
 def _lane_rows(frame: dict) -> list:
@@ -258,7 +400,7 @@ def _lane_rows(frame: dict) -> list:
         econ = [p for p in plants if p[2] in ECONOMY_TYPES]
         walls = [p for p in plants if p[2] in WALL_TYPES]
 
-        mower_state = frame["mowers"].get(r)
+        mower_state = _mower_map(frame).get(r)
         mower_txt = MOWER_STATE.get(mower_state, "无") if mower_state is not None else "已消耗"
 
         zhp = sum(z[4] for z in zs)
@@ -275,21 +417,31 @@ def _lane_rows(frame: dict) -> list:
                 eta = int(max(0.0, (front[2] - LAWN_XMIN) / speed))
                 eta_label = f"{eta}t"
 
-        # 判定是启发式，不是真理。规则就写在下面这几行，方便被推翻。
-        if mower_state is None and front_col is not None and front_col <= 0:
-            verdict = "已破"          # 后手没了，僵尸已经到最左列
-        elif mower_state is None:
-            verdict = "无后手"        # 割草机用掉了，但还没被压到最左
-        elif not shooters and zs:
-            verdict = "裸路承压"      # 有僵尸、这一路一株火力都没有
-        elif front_col is not None and front_col <= 1:
-            verdict = "紧急"          # 最前僵尸进 c0/c1
-        elif eta is not None and eta < 900:
-            verdict = "紧急"
-        elif zs:
-            verdict = "交火中"
+        # 判定 = 物理结论（_capacity 算的）＋ 一条加注。**不是**优先级阶梯。
+        #
+        # 2026-10-03 踩过的坑：原先的阶梯把"割草机已用"排在第一位，于是
+        # 一条被 2 个豌豆射手稳稳压住 20 多波的路，全程被标成"无后手" ——
+        # 那是假警报，会主动把读的人引到错的地方去。
+        # 后手没了是**风险加注**，不是"这条路要炸"；表格里本来就有独立的
+        # 「割草机」列在显示它，判定列再喊一遍就是噪音。
+        # 火力只算**打得到最前面那只**的：植物朝右打，僵尸走到植物左边之后
+        # 那株就废了。数全部射手会把输出算多（见 _reachable_dps 的注释）。
+        if zs:
+            dps, n_reach, n_all = _reachable_dps(frame, r, front[2])
+            sym, short, _ = _capacity(
+                dps=dps, front_x=front[2], speed=front[3], front_hp=front[4],
+                n_reach=n_reach, n_all=n_all, n_zombies=len(zs), hp_total=zhp)
         else:
-            verdict = "平静"
+            sym, short, _ = _capacity(
+                dps=0.0, front_x=0.0, speed=1.0, front_hp=0,
+                n_reach=0, n_all=0, n_zombies=0, hp_total=0)
+
+        if mower_state is None and front_col is not None and front_col <= 0:
+            verdict = "已破"                      # 后手没了 + 僵尸到最左列 = 真·即将进屋
+        elif mower_state is None:
+            verdict = f"{sym} {short}（无后手）"
+        else:
+            verdict = f"{sym} {short}"
 
         rows.append({
             "row": r,
@@ -307,6 +459,68 @@ def _lane_rows(frame: dict) -> list:
             "verdict": verdict,
         })
     return rows
+
+
+def _sun_phrase(sun: int) -> str:
+    """把阳光数换成一株植物的量。读者不需要自己记价格表。"""
+    n = sun // PLANT_COST[0]
+    return (f"{sun}（够买 {n} 个豌豆射手）" if n >= 1
+            else f"{sun}（不够买一个豌豆射手，要 {PLANT_COST[0]}）")
+
+
+def _lane_causal(frame: dict, row: int) -> tuple:
+    """一条路的火力够不够 —— 返回 (符号, 展开句)，句子只在"值得说"时才有。
+
+    判据全在 `_capacity` 里（物理量），这里只负责取数和处理"没有僵尸"的情况。
+    """
+    lane = _lane_rows(frame)[row]
+    zs = [z for z in frame["zombies"] if z[0] == row and z[5]]
+
+    if not zs:
+        # 空路 + 没后手：只有在**同时没有火力**时才算风险。有火力守着的空路
+        # 不需要报警 —— 它马上就会把下一只打死。
+        n_all = _reachable_dps(frame, row, None)[2]
+        if n_all == 0 and lane["mower"] in ("已消耗", "已触发"):
+            return "⚠", ("这一路没有火力也没有割草机 —— 下一只僵尸进来就是直接进屋，"
+                         "中间没有任何东西能挡")
+        return "✓", None
+
+    front = min(zs, key=lambda z: z[2])
+    hp_total = sum(z[4] for z in zs)
+    dps, n_reach, n_all = _reachable_dps(frame, row, front[2])
+    sym, _, why = _capacity(
+        dps=dps, front_x=front[2], speed=front[3], front_hp=front[4],
+        n_reach=n_reach, n_all=n_all, n_zombies=len(zs), hp_total=hp_total)
+    if why and dps > 0 and n_all > n_reach:
+        # 这是最容易被看漏的一类败因：植物是种下去了，但种在僵尸后面。
+        # dps <= 0 时 _capacity 自己已经说清楚了，不重复。
+        why += (f"（这一路一共 {n_all} 株射手，其中 {n_all - n_reach} 株在最前那只"
+                f"僵尸的右边/同格，**打不到它**，所以没算进火力）")
+    return sym, why
+
+
+def _lane_line(frame: dict, causal: bool = True) -> str:
+    """一行态势。稳的路只给一个符号，不稳的路才展开成句子。"""
+    if not causal:
+        return "｜".join(
+            f"{l['row']}路 {l['shooters']}火力/{l['zombies']}僵尸"
+            + ("❗" if (l["shooters"] == 0 and l["zombies"]) else "")
+            for l in _lane_rows(frame)) + f"｜阳光 {frame['sun']}"
+    parts = []
+    for r in range(GRID_ROWS):
+        sym, _ = _lane_causal(frame, r)
+        parts.append(f"{r}路{sym}")
+    return "｜".join(parts) + f"｜阳光 {_sun_phrase(frame['sun'])}"
+
+
+def _lane_warnings(frame: dict) -> list:
+    """只把不稳的几条路展开成因果句子。"""
+    out = []
+    for r in range(GRID_ROWS):
+        sym, why = _lane_causal(frame, r)
+        if why:
+            out.append((r, sym, why))
+    return out
 
 
 def _board_ascii(frame: dict, mode: str) -> str:
@@ -341,19 +555,46 @@ def _disp(s) -> int:
 
 
 def _pad(s, width: int) -> str:
+    """右对齐补齐（数字列用）。保留是因为别处还在按这个名字调用。"""
     s = str(s)
     return " " * max(0, width - _disp(s)) + s
 
 
+def _cell(s, width: int, align: str = ">") -> str:
+    """按显示宽度补齐一个单元格。align='>' 右对齐（数字），'<' 左对齐（文字）。
+
+    为什么必须分对齐：中文字符在终端占两格，靠空格硬拼列一定歪；
+    而**文字列右对齐**会在列首留出一大片空白，读起来像"两列之间隔了十几个空格"
+    —— 那不是列宽，那是没对齐。数字列才需要右对齐（位数对齐才能比大小）。
+    """
+    if not width:
+        return str(s)
+    gap = " " * max(0, width - _disp(s))
+    return gap + str(s) if align == ">" else str(s) + gap
+
+
+def _render_row(cols, cells, indent: str = "  ") -> str:
+    """按列宽渲染一行。列描述是 (表头, 宽度[, 对齐])；宽度 0 = 末列不补齐。
+
+    全仓库的表都走这里，别各自再写一份 fmt 闭包 —— 对齐规则只该有一份。
+    """
+    out = []
+    for col, v in zip(cols, cells):
+        width = col[1]
+        align = col[2] if len(col) > 2 else ">"
+        out.append(_cell(v, width, align) if width else str(v))
+    return (indent + "  ".join(out)).rstrip()
+
+
 def _lane_table(frame: dict) -> str:
     cols = [("路", 2), ("火力", 4), ("阳光", 4), ("挡路", 4), ("僵尸", 4),
-            ("僵尸总血", 8), ("最前僵尸", 8), ("距割草机", 10), ("割草机", 8), ("判定", 0)]
+            ("僵尸总血", 8), ("最前僵尸", 8), ("距割草机", 10, "<"), ("割草机", 8),
+            ("判定", 0)]
 
     def fmt(cells) -> str:
-        return "  " + "  ".join(
-            _pad(v, w) if w else str(v) for (_, w), v in zip(cols, cells))
+        return _render_row(cols, cells)
 
-    head = fmt([n for n, _ in cols])
+    head = fmt([n for n, *_ in cols])
     lines = [head, "  " + "-" * (_disp(head) - 2)]
     for row in _lane_rows(frame):
         lines.append(fmt([
@@ -401,10 +642,9 @@ def _wave_matrix(rec: dict) -> str:
            [("阳光", 6), ("割草机已用", 10), ("备注", 0)]
 
     def fmt(cells) -> str:
-        return "  " + "  ".join(
-            _pad(v, w) if w else str(v) for (_, w), v in zip(cols, cells))
+        return _render_row(cols, cells)
 
-    head = fmt([n for n, _ in cols])
+    head = fmt([n for n, *_ in cols])
     lines = [head, "  " + "-" * (_disp(head) - 2)]
 
     for w in sorted(peak):
@@ -426,12 +666,74 @@ def _wave_matrix(rec: dict) -> str:
     return "\n".join(lines)
 
 
-def _diagnose(rec: dict) -> list:
-    """用机械信号写几句人话诊断。
+def _plant_survivals(frames: list, row: int, t0=None, t1=None) -> list:
+    """某条路上每株植物从种下到消失（被吃或被铲）活了多少 tick。
 
-    规则全部可核对，不做因果推断：只说"哪条路的火力上限被锁死"、
-    "哪条路在后半程压力一直超过火力"、"钱和火力有没有对上"。
-    真正的因果解释交给读这份报告的人（或 LLM）。
+    按格子占用区间算，不靠植物身份——同一格反复补种同一种植物也能分开计。
+    """
+    occ, out = {}, []
+    for f in frames:
+        cur = {p[1]: p[2] for p in f["plants"] if p[0] == row}
+        for c, (st, _ty) in list(occ.items()):
+            if c not in cur:
+                out.append((st, f["tick"] - st))
+                del occ[c]
+        for c, ty in cur.items():
+            if c not in occ:
+                occ[c] = (f["tick"], ty)
+    for c, (st, _ty) in occ.items():
+        out.append((st, frames[-1]["tick"] - st))
+    return [x for x in out if (t0 is None or x[0] >= t0) and (t1 is None or x[0] < t1)]
+
+
+def _lane_collapse(rec: dict, min_samples: int = 3) -> list:
+    """每条路"丢割草机之前 vs 之后"植物存活时长的对比。
+
+    它说明的是**这一路是不是绞肉机**（投进去的植物活不久），
+    **不是**"这把要输"的预言。两次实测：
+
+    - 第一轮（脚本教师，第 7 关，seed 30000–30015 共 16 局）：崩塌比 ≥4× 的 7 局
+      全部失败，≤3× 的 9 局里 8 局通关 —— 看起来像个预言，但样本只有 16。
+    - 2026-10-03 反事实立刻给出反例：seed 30001 把第 266 步那株豌豆射手从 c2 挪到
+      c6，**通关 30/30**，而这一局的 1 号路崩塌比是 **28.3×**（远高于 4× 的"阈值"）。
+      1 号路确实成了绞肉机，但赢是靠别的路赢的。
+
+    所以：**高崩塌 ≠ 会输**。它是"别再往这条路投钱"的线索，不是败因判定。
+    任何把它当阈值规则用的代码都是在过度解读。
+    """
+    frames = rec["frames"]
+    out = []
+    for r in range(GRID_ROWS):
+        mt = next((frames[i]["tick"] for i in range(1, len(frames))
+                   if r in _mower_fired(frames[i - 1], frames[i])), None)
+        if mt is None:
+            continue
+        before = [d for _s, d in _plant_survivals(frames, r, None, mt)]
+        after = [d for _s, d in _plant_survivals(frames, r, mt, None)]
+        if len(before) < min_samples or len(after) < min_samples:
+            continue
+        mb, ma = statistics.median(before), statistics.median(after)
+        if ma <= 0:
+            continue
+        out.append({"row": r, "tick": mt, "before": mb, "after": ma,
+                    "ratio": mb / ma, "n_before": len(before), "n_after": len(after)})
+    return out
+
+
+def _signals(rec: dict) -> list:
+    """机械信号：一组**可核对的候选线索**，不是结论。
+
+    这是唯一的规则实现处。`render_episode` 的文本报告和 `episode_query` 的目录
+    都从这里取，避免两份实现漂移（这个仓库为重复实现付过代价）。
+
+    每条返回 {rule, text, hint?}：rule 是规则名（可以被逐条反驳），
+    hint 是"接下来该去查什么"（只有能接上 episode_query 的规则才给）。
+
+    **这些规则盖不全失败方式，而且不能区分胜负。** 2026-10-03 实测把同一组规则
+    跑在一败（seed 30001 基线，第 17/30 波）一胜（同 seed 的反事实，30/30 通关）
+    两局上：火力上限、压力>火力、净损失、无后手、阳光闲置、存活崩塌 —— **六条
+    在胜局里同样全部触发**，只有"哪一路"不同。所以这里给的是**去看哪里的索引**，
+    不是败因。真正的因果要靠 `episode_query whatif`（确定性重放）去测。
     """
     peak = _peak_frames(rec)
     frames = rec["frames"]
@@ -447,8 +749,12 @@ def _diagnose(rec: dict) -> list:
         worst = min(ceiling, key=lambda r: ceiling[r])
         best = max(ceiling.values())
         if best - ceiling[worst] >= 2:
-            out.append(f"{worst} 号路全程火力上限只有 {ceiling[worst]}，"
-                       f"其它路最高到 {best}——五条路里相对最弱的一条。")
+            out.append({
+                "rule": "火力上限",
+                "text": f"{worst} 号路全程火力上限只有 {ceiling[worst]}，"
+                        f"其它路最高到 {best}——五条路里相对最弱的一条。",
+                "hint": f"lane --row {worst}",
+            })
 
     # 2. 后半程"僵尸数 > 火力数"的波次：输出跟不上压力
     half = waves[len(waves) // 2:] if waves else []
@@ -460,8 +766,12 @@ def _diagnose(rec: dict) -> list:
     if over:
         r = max(over, key=lambda k: len(over[k]))
         if len(over[r]) >= 2:
-            out.append(f"{r} 号路在后半程（{half[0]}–{half[-1]} 波）有 {len(over[r])} 个波次"
-                       f"僵尸数超过火力数，是全盘输出最跟不上压力的一路。")
+            out.append({
+                "rule": "压力>火力",
+                "text": f"{r} 号路在后半程（{half[0]}–{half[-1]} 波）有 {len(over[r])} 个波次"
+                        f"僵尸数超过火力数，是全盘输出最跟不上压力的一路。",
+                "hint": f"between --wave {half[0]} --to-wave {half[-1]}",
+            })
 
     # 3. 植物净损失最多的路（反复补种的绞肉机）
     losses = {r: 0 for r in range(GRID_ROWS)}
@@ -470,8 +780,12 @@ def _diagnose(rec: dict) -> list:
             losses[r] += 1
     if any(losses.values()):
         worst = max(losses, key=lambda r: losses[r])
-        out.append(f"{worst} 号路植物净损失 {losses[worst]} 株（全路合计 "
-                   f"{sum(losses.values())} 株），是补种最频繁的一路。")
+        out.append({
+            "rule": "净损失",
+            "text": f"{worst} 号路植物净损失 {losses[worst]} 株（全路合计 "
+                    f"{sum(losses.values())} 株），是补种最频繁的一路。",
+            "hint": f"lane --row {worst}",
+        })
 
     # 4. 割草机在哪几波被用掉
     fired = _mower_fired_waves(rec)
@@ -480,26 +794,65 @@ def _diagnose(rec: dict) -> list:
         for w, r in sorted(fired):
             by_wave.setdefault(w, []).append(r)
         detail = "；".join(f"第 {w} 波 {rs} 号路" for w, rs in by_wave.items())
-        out.append(f"割草机共消耗 {len(fired)} 台：{detail}。")
+        out.append({
+            "rule": "割草机",
+            "text": f"割草机共消耗 {len(fired)} 台：{detail}。",
+            "hint": None,
+        })
 
     # 5. 终局时哪几路已经没后手
     last = _lane_rows(frames[-1])
-    naked = [l["row"] for l in last if l["mower"] in ("已消耗", "已触发")]
+    naked = [l for l in last if l["mower"] in ("已消耗", "已触发")]
     if naked:
-        out.append(f"终局时 {naked} 号草坪已无割草机，这几路再被突破就是直接进屋。")
+        detail = "、".join(f"{l['row']} 号路（{l['shooters']} 个火力）" for l in naked)
+        out.append({
+            "rule": "无后手",
+            "text": f"终局时这几路已经没有割草机：{detail}。"
+                    f"没有割草机 = 再被突破就直接进屋，没有缓冲；"
+                    f"但火力够的路照样守得住 —— 这是风险敞口，不是失败原因。",
+            "hint": None,
+        })
 
     # 6. 钱和火力没对上：阳光够买好几株了，却有路零火力还站着僵尸
-    idle = [(f["sun"], f["wave"]) for f in frames
+    idle = [(f["sun"], f["wave"], f["tick"]) for f in frames
             if f["sun"] >= 300
             and any(l["shooters"] == 0 and l["zombies"] for l in _lane_rows(f))]
     if idle:
-        s, w = max(idle)
-        out.append(f"第 {w} 波时手里有 {s} 阳光，场上却仍有「有僵尸、零火力」的路"
-                   f"——钱没换成火力。")
+        s, w, tk = max(idle)
+        out.append({
+            "rule": "阳光闲置",
+            "text": f"第 {w} 波时手里有 {_sun_phrase(s)}，场上却仍有"
+                    f"「有僵尸、零火力」的路——钱没换成火力。",
+            "hint": f"frame --tick {tk}",
+        })
 
-    if not out:
-        out.append("没有触发任何机械告警信号；这一局可能是被整体压制而非单点失误。")
+    # 7. 存活崩塌：某条路越过不可恢复点。
+    #    判据是"丢割草机之后新种的植物还能活多久"，不是"现在压力大不大"。
+    #    实测 16 个种子：>=4x 的 7 局全败，<=3x 的 9 局里 8 局通关。
+    coll = _lane_collapse(rec)
+    if coll:
+        worst = max(coll, key=lambda d: d["ratio"])
+        if worst["ratio"] >= 4:
+            out.append({
+                "rule": "存活崩塌",
+                "text": f"{worst['row']} 号路在 tick {worst['tick']} 丢掉割草机后，"
+                        f"新种下去的植物中位只能活 {worst['after']:,.0f} tick"
+                        f"（之前是 {worst['before']:,.0f} tick，差 {worst['ratio']:.1f} 倍）"
+                        f"—— 这一路已经是绞肉机，往这里投的植物基本等于扔钱。"
+                        f"**注意：这不代表会输**，反事实胜局里出现过 28.3 倍的崩塌"
+                        f"仍然通关（赢是靠别的路赢的）。",
+                "hint": f"lane --row {worst['row']}",
+            })
+
     return out
+
+
+def _diagnose(rec: dict) -> list:
+    """只取文本，给不需要 hint 的地方用。"""
+    sigs = _signals(rec)
+    if not sigs:
+        return ["没有触发任何机械告警信号；这一局可能是被整体压制而非单点失误。"]
+    return [s["text"] for s in sigs]
 
 
 def _turning_points(rec: dict) -> list:
