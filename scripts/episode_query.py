@@ -48,10 +48,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_constants import PLANT_NAME, ZOMBIE_NAME  # noqa: E402
 from render_episode import (  # noqa: E402
-    DEFAULT_RESOURCE_DIR, GRID_ROWS, PLANT_GLYPH,
+    DEFAULT_RESOURCE_DIR, PLANT_GLYPH,
     _board_ascii, _disp, _lane_causal, _lane_line, _lane_rows, _lane_table,
     _lane_warnings, _mower_fired, _plant_diff, _render_row, _signals,
-    _wave_matrix, collect,
+    _wave_matrix, collect, lane_indices,
 )
 
 # 游戏常量（从 C++ 源码现场解析）。地形/背景的**中文名**也从这里拿 ——
@@ -292,13 +292,18 @@ def _fmt_scene(frame: dict) -> str:
 
     # 地形摘要单独占第一行。首版把警告也拼在这一行，输出成
     # 「场景：… ｜   ⚠ 夜间…」—— 读起来像场景名的一部分，所以分开。
-    water = [r for r, terrain in enumerate(rows) if terrain == 3]
+    # 只统计**真实路**（lanes）：非泳池关的第 6 行是 DIRT 填充，
+    # 不是路 —— 把它算进去会说成"6 条路"。
+    lane_ids = lane_indices(frame)
+    terrain_of = {r: t for r, t in enumerate(rows)}
+    water = [r for r in lane_ids if terrain_of.get(r) == 3]
     if water:
-        others = [r for r in range(len(rows)) if r not in water]
-        summary = (f"第 {'、'.join(str(r) for r in water)} 路是**水路**（棋盘上画成 `~`）"
+        others = [r for r in lane_ids if r not in water]
+        summary = (f"{len(lane_ids)} 条路；第 {'、'.join(str(r) for r in water)} 路"
+                   f"是**水路**（棋盘上画成 `~`）"
                    + (f"，其余 {'、'.join(str(r) for r in others)} 路是普通地面" if others else ""))
-    elif rows:
-        summary = f"{len(rows)} 条路全是普通地面"
+    elif lane_ids:
+        summary = f"{len(lane_ids)} 条路全是普通地面"
     else:
         summary = "地形未记录"
 
@@ -370,8 +375,11 @@ def _fmt_frame(prev: dict | None, cur: dict, idx: int, total: int) -> str:
 
 
 def _fmt_strip(frames: list, every: int) -> str:
+    # 路号从数据来（泳池/雾 6 条，其余 5 条）；按路号索引 lanes 字典，
+    # 别按列表下标（6 路棋盘下标与路号错一位）。
+    lane_ids = lane_indices(frames[-1]) if frames else []
     cols = [("帧", 6), ("tick", 8), ("波", 4)] + \
-           [(f"{r}号路", 8) for r in range(GRID_ROWS)] + \
+           [(f"{r}号路", 8) for r in lane_ids] + \
            [("阳光", 6), ("剩割草机", 10), ("本帧变化", 0)]
 
     def fmt(cells) -> str:
@@ -381,17 +389,18 @@ def _fmt_strip(frames: list, every: int) -> str:
     L = [head, "  " + "-" * (_disp(head) - 2)]
     for i in range(0, len(frames), every):
         f = frames[i]
-        lanes = _lane_rows(f)
+        lanes = {l["row"]: l for l in _lane_rows(f)}
         cells = [i, f["tick"], f["wave"]] + \
-                [f"{lanes[r]['shooters']}/{lanes[r]['zombies']}" for r in range(GRID_ROWS)] + \
-                [f["sun"], f"{len(f['mowers'])}/{GRID_ROWS}",
+                [f"{lanes[r]['shooters']}/{lanes[r]['zombies']}" for r in lane_ids] + \
+                [f["sun"], f"{len(f['mowers'])}/{len(lane_ids)}",
                  "；".join(_changes(frames[i - 1] if i else None, f))]
         L.append(fmt(cells))
     if (len(frames) - 1) % every:
-        L.append(fmt([len(frames) - 1, frames[-1]["tick"], frames[-1]["wave"]] +
-                     [f"{_lane_rows(frames[-1])[r]['shooters']}/"
-                      f"{_lane_rows(frames[-1])[r]['zombies']}" for r in range(GRID_ROWS)] +
-                     [frames[-1]["sun"], f"{len(frames[-1]['mowers'])}/{GRID_ROWS}", "（终局）"]))
+        f = frames[-1]
+        lanes = {l["row"]: l for l in _lane_rows(f)}
+        L.append(fmt([len(frames) - 1, f["tick"], f["wave"]] +
+                     [f"{lanes[r]['shooters']}/{lanes[r]['zombies']}" for r in lane_ids] +
+                     [f["sun"], f"{len(f['mowers'])}/{len(lane_ids)}", "（终局）"]))
     L.append("  格内写法：火力/僵尸数。每隔 %d 帧取一帧。" % every)
     return "\n".join(L)
 
@@ -689,7 +698,7 @@ def _fmt_actions(frames: list, deck: list, lo: int, hi: int | None,
             lived = int(cons.split("活了 ")[1].split(" tick")[0].replace(",", ""))
             if lived > max_life:
                 continue
-        sym = "｜".join(f"{r}路{_lane_causal(f, r)[0]}" for r in range(GRID_ROWS))
+        sym = "｜".join(f"{r}路{_lane_causal(f, r)[0]}" for r in lane_indices(f))
         L.append(fmt([i, f["tick"], f["wave"], _action_text(act, deck),
                       sym, cons]))
         n_shown += 1
@@ -895,7 +904,8 @@ def _vocabulary() -> str:
         L.append("    " + row)
     L.append("")
     L.append("── 行列范围 ──")
-    L.append(f"  row 0..{GRID_ROWS - 1}（路，0 是最上面一条）")
+    L.append("  row 0..4（路，0 是最上面一条；**泳池/雾关是 6 条路，"
+             "多一个 row 5**——棋盘行数以「场景：」行与棋盘渲染为准，别背这个数）")
     L.append("  col 0..8（列，0 靠房子、8 靠僵尸来的方向；射手朝右打）")
     L.append("")
     L.append("── 棋盘字符（frame / strip / lane 里的棋盘）──")

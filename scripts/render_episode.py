@@ -34,17 +34,38 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
-from pvz_constants import PLANT_NAME  # noqa: E402  # ZOMBIE_NAME 也在 pvz_constants
+from pvz_constants import PLANT_NAME, grid_square_types  # noqa: E402
 from scripted_baseline import choose as scripted_choose  # noqa: E402
 from scripted_baseline import deck_for_level, profile_for_deck  # noqa: E402
+
+# 真实路的地形集合：草地或水路。DIRT/NONE/HIGH_GROUND 是填充或特殊格。
+_LANE_TERRAIN = frozenset(
+    v for v, name in grid_square_types().items()
+    if name in ("GRIDSQUARE_GRASS", "GRIDSQUARE_POOL"))
 
 DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
 
 MAX_ACTIONS = 4000
 LAWN_XMIN = 40
 CELL_PX = 80
-GRID_ROWS = 5
-GRID_COLS = 9
+GRID_ROWS = 5    # ⚠ 只是"大多数关"的路数，**不是棋盘行数**。棋盘 grid 恒为 6×9，
+GRID_COLS = 9    # 泳池/雾关是 6 条路（第 5 行是真实的草地路，割草机 6 台），
+                 # 草地/屋顶关第 5 行是 DIRT 填充（地形 2，5 台割草机）。
+                 # 2026-10-03 S5 实验中模型抓到这个不一致后修正：
+                 # 一切"几条路"的判断都走 lane_indices()，别再用这个常数。
+
+
+def lane_indices(frame: dict) -> list:
+    """这一帧的**真实路号**（0 起）。
+
+    新存档有 `lanes` 字段（_frame 按 GridSquareType ∈ {GRASS, POOL} 现算）；
+    旧存档没有 → 回退为 row_terrain 的全部行（旧渲染只存了真实路，
+    但泳池旧存档会缺第 5 路 —— 那是修复前的缺陷，别拿它当事实）。
+    """
+    lanes = frame.get("lanes")
+    if lanes:
+        return list(lanes)
+    return list(range(len(frame.get("row_terrain") or [])))
 
 # ---------------------------------------------------------------- 类型名称表
 # 编号来自 src/ConstEnums.h 的 SeedType / ZombieType，不要凭记忆改。
@@ -155,11 +176,18 @@ def _frame(obs: dict) -> dict:
     # 的推导交给 `episode_query._fmt_scene`，那边能拿到植物名表与卡组。
     grid = obs.get("grid") or []
     row_terrain = []
-    for row in grid[:GRID_ROWS]:
+    for row in grid:
         vals = {int(v) for v in row}
         # 一行内地形不一致时记 -1（"混合"）。实测 25 关里没出现过，
         # 但**不能**假定一致 —— 假定错了会把水路说成旱地，那比不说更坏。
         row_terrain.append(vals.pop() if len(vals) == 1 else -1)
+    # 真实路 = 地形是草地或水路的行。非泳池关的第 6 行（下标 5）是 DIRT 填充，
+    # 不是路 —— 泳池/雾关它却是真实的草地路（实测 L21：row 5 有合法种植位、
+    # 割草机 6 台）。之前按"前 5 行"硬截，泳池关整整丢了一条路，
+    # S5 实验里的模型抓到了这个不一致（它发现策略在 (5,0) 种了向日葵
+    # 而棋盘渲染里根本没有 r5）。
+    lane_terrain = _LANE_TERRAIN
+    lanes = [r for r, t in enumerate(row_terrain) if t in lane_terrain]
     return {
         "tick": obs["tick"],
         "wave": obs["wave"],
@@ -178,7 +206,8 @@ def _frame(obs: dict) -> dict:
             "roof": bool(obs.get("roof")),
             "wave_count": obs.get("wave_count"),
         },
-        "row_terrain": row_terrain,             # 5 项，GridSquareType 编号
+        "row_terrain": row_terrain,             # grid 全部行，GridSquareType 编号
+        "lanes": lanes,                         # 真实路号（泳池/雾 6 条，其余 5 条）
         # 坟墓/花瓶等占位物（夜间草地关与 ScaryPotter 关）：这些格子**种不了**，
         # 模型看不到它们会把"策略没往那格种"误读成决策错误。只存位置，
         # 翻译成人话在 episode_query._fmt_scene。大多数关没有 → 存 []。
@@ -431,7 +460,7 @@ def _capacity(*, dps: float, front_x: float, speed: float, front_hp: int,
 def _lane_rows(frame: dict) -> list:
     """每一路一行派生指标。这是"一眼看出哪路要炸"的核心。"""
     rows = []
-    for r in range(GRID_ROWS):
+    for r in lane_indices(frame):
         plants = [p for p in frame["plants"] if p[0] == r]
         zs = [z for z in frame["zombies"] if z[0] == r and z[5]]
         off = [z for z in frame["zombies"] if z[0] == r and not z[5]]
@@ -547,7 +576,7 @@ def _lane_line(frame: dict, causal: bool = True) -> str:
             + ("❗" if (l["shooters"] == 0 and l["zombies"]) else "")
             for l in _lane_rows(frame)) + f"｜阳光 {frame['sun']}"
     parts = []
-    for r in range(GRID_ROWS):
+    for r in lane_indices(frame):
         sym, _ = _lane_causal(frame, r)
         parts.append(f"{r}路{sym}")
     return "｜".join(parts) + f"｜阳光 {_sun_phrase(frame['sun'])}"
@@ -556,7 +585,7 @@ def _lane_line(frame: dict, causal: bool = True) -> str:
 def _lane_warnings(frame: dict) -> list:
     """只把不稳的几条路展开成因果句子。"""
     out = []
-    for r in range(GRID_ROWS):
+    for r in lane_indices(frame):
         sym, why = _lane_causal(frame, r)
         if why:
             out.append((r, sym, why))
@@ -565,7 +594,9 @@ def _lane_warnings(frame: dict) -> list:
 
 def _board_ascii(frame: dict, mode: str) -> str:
     """mode='plant' 画植物，'zombie' 画僵尸密度。"""
-    grid = [["." for _ in range(GRID_COLS)] for _ in range(GRID_ROWS)]
+    lanes = lane_indices(frame)
+    nrows = (max(lanes) + 1) if lanes else GRID_ROWS
+    grid = [["." for _ in range(GRID_COLS)] for _ in range(nrows)]
     # 地形底纹：水路画成 `~`。让"这两路种不了"在棋盘上**看得见** ——
     # 只看文字说明，模型仍会去算"该在第 2 路种什么"，而那两路物理上种不下。
     #
@@ -573,17 +604,17 @@ def _board_ascii(frame: dict, mode: str) -> str:
     # 普通地面（实测第 41 关），花盆要求来自 `roof` 标志位；画了会让人以为
     # "只有这几格需要花盆"，那是错的。见 pvz_constants._fmt_terrain。
     row_terrain = frame.get("row_terrain") or []
-    for r, t in enumerate(row_terrain[:GRID_ROWS]):
-        if t == 3:  # GRIDSQUARE_POOL
+    for r, t in enumerate(row_terrain):
+        if r < nrows and t == 3:  # GRIDSQUARE_POOL
             grid[r] = ["~" for _ in range(GRID_COLS)]
     if mode == "plant":
         for r, c, t, hp, mx in frame["plants"]:
-            if 0 <= r < GRID_ROWS and 0 <= c < GRID_COLS:
+            if 0 <= r < nrows and 0 <= c < GRID_COLS:
                 g = PLANT_GLYPH.get(t, "?")
                 grid[r][c] = g if hp >= mx else g.lower()
     else:
         for r, t, x, *_ in frame["zombies"]:
-            if not (0 <= r < GRID_ROWS):
+            if not (0 <= r < nrows):
                 continue
             c = _col_of(x)
             if not (0 <= c < GRID_COLS):
@@ -596,7 +627,7 @@ def _board_ascii(frame: dict, mode: str) -> str:
 
     header = "        " + " ".join(f"c{c}" for c in range(GRID_COLS))
     lines = [header]
-    for r in range(GRID_ROWS):
+    for r in range(nrows):
         lines.append(f"  r{r}     " + "  ".join(grid[r]))
     return "\n".join(lines)
 
@@ -689,8 +720,10 @@ def _wave_matrix(rec: dict) -> str:
     """逐波态势矩阵：整局压成一张表。格子写成 火力/僵尸数。"""
     peak = _peak_frames(rec)
     fired = _mower_fired_waves(rec)
+    # 路号从数据来（泳池/雾 6 条，其余 5 条），别用 GRID_ROWS 硬编码。
+    lane_ids = lane_indices(peak[sorted(peak)[-1]]) if peak else []
 
-    cols = [("波", 4)] + [(f"{r}号路", 8) for r in range(GRID_ROWS)] + \
+    cols = [("波", 4)] + [(f"{r}号路", 8) for r in lane_ids] + \
            [("阳光", 6), ("割草机已用", 10), ("备注", 0)]
 
     def fmt(cells) -> str:
@@ -701,20 +734,23 @@ def _wave_matrix(rec: dict) -> str:
 
     for w in sorted(peak):
         f = peak[w]
-        lanes = _lane_rows(f)
+        # 按**路号**索引，别按下标 —— 泳池/雾关 lanes=[0,1,4,5]，
+        # 列表下标与路号错一位（6 路棋盘的实测坑）。
+        lanes = {l["row"]: l for l in _lane_rows(f)}
+        lane_ids = sorted(lanes)
         cells = [w] + [f"{lanes[r]['shooters']}/{lanes[r]['zombies']}"
-                       for r in range(GRID_ROWS)]
+                       for r in lane_ids]
         notes = []
-        hit = [r for r in range(GRID_ROWS) if (w, r) in fired]
+        hit = [r for r in lane_ids if (w, r) in fired]
         if hit:
             notes.append("割草机 " + "、".join(str(r) for r in hit))
-        bare = [r for r in range(GRID_ROWS)
+        bare = [r for r in lane_ids
                 if lanes[r]["shooters"] == 0 and lanes[r]["zombies"]]
         if bare:
             notes.append("裸路 " + "、".join(str(r) for r in bare))
-        cells += [f["sun"], GRID_ROWS - len(f["mowers"]), "；".join(notes)]
+        cells += [f["sun"], len(lane_ids) - len(f["mowers"]), "；".join(notes)]
         lines.append(fmt(cells))
-    lines.append("  格内写法：火力/僵尸数。割草机已用 = 已消耗台数（满额 5）。")
+    lines.append(f"  格内写法：火力/僵尸数。割草机已用 = 已消耗台数（满额 {len(lane_ids)}）。")
     return "\n".join(lines)
 
 
@@ -755,7 +791,7 @@ def _lane_collapse(rec: dict, min_samples: int = 3) -> list:
     """
     frames = rec["frames"]
     out = []
-    for r in range(GRID_ROWS):
+    for r in lane_indices(frames[-1]):
         mt = next((frames[i]["tick"] for i in range(1, len(frames))
                    if r in _mower_fired(frames[i - 1], frames[i])), None)
         if mt is None:
@@ -791,9 +827,11 @@ def _signals(rec: dict) -> list:
     frames = rec["frames"]
     waves = sorted(peak)
     out = []
+    # 路号从数据来（泳池/雾 6 条，其余 5 条），别用 GRID_ROWS 硬编码。
+    lane_ids = lane_indices(frames[-1])
 
     # 1. 火力上限：整局每条路最多同时有几个火力植物
-    ceiling = {r: 0 for r in range(GRID_ROWS)}
+    ceiling = {r: 0 for r in lane_ids}
     for w in waves:
         for lane in _lane_rows(peak[w]):
             ceiling[lane["row"]] = max(ceiling[lane["row"]], lane["shooters"])
@@ -804,13 +842,13 @@ def _signals(rec: dict) -> list:
             out.append({
                 "rule": "火力上限",
                 "text": f"{worst} 号路全程火力上限只有 {ceiling[worst]}，"
-                        f"其它路最高到 {best}——五条路里相对最弱的一条。",
+                        f"其它路最高到 {best}——{len(lane_ids)} 条路里相对最弱的一条。",
                 "hint": f"lane --row {worst}",
             })
 
     # 2. 后半程"僵尸数 > 火力数"的波次：输出跟不上压力
     half = waves[len(waves) // 2:] if waves else []
-    over = {r: [] for r in range(GRID_ROWS)}
+    over = {r: [] for r in lane_ids}
     for w in half:
         for lane in _lane_rows(peak[w]):
             if lane["zombies"] > lane["shooters"]:
@@ -826,7 +864,7 @@ def _signals(rec: dict) -> list:
             })
 
     # 3. 植物净损失最多的路（反复补种的绞肉机）
-    losses = {r: 0 for r in range(GRID_ROWS)}
+    losses = {r: 0 for r in lane_ids}
     for i in range(1, len(frames)):
         for r, _c, _t, _h in _plant_diff(frames[i - 1]["plants"], frames[i]["plants"]):
             losses[r] += 1
@@ -923,7 +961,7 @@ def _turning_points(rec: dict) -> list:
             break
 
     # 2. 每条路第一次被打到 1 格以内
-    for r in range(GRID_ROWS):
+    for r in lane_indices(frames[-1]):
         for i, f in enumerate(frames):
             front = [z for z in f["zombies"] if z[0] == r and z[5]]
             if front and min(_col_of(z[2]) for z in front) <= 1:
@@ -955,7 +993,7 @@ def _turning_points(rec: dict) -> list:
         planted = _plant_diff(f["plants"], frames[i - 1]["plants"])
         if planted:
             last_plant_tick = f["tick"]
-        bare = [r for r in range(GRID_ROWS)
+        bare = [r for r in lane_indices(f)
                 if not any(p[2] in SHOOTER_TYPES for p in f["plants"] if p[0] == r)
                 and any(z[0] == r and z[5] for z in f["zombies"])]
         if bare and f["sun"] >= 300 and f["tick"] - last_plant_tick >= 1500:
@@ -1080,14 +1118,15 @@ def to_payload(rec: dict, reference: dict | None = None, compact: bool = False) 
 
     wave_matrix = []
     for w in sorted(peak):
-        lanes = _lane_rows(peak[w])
+        lanes = {l["row"]: l for l in _lane_rows(peak[w])}
+        lane_ids = sorted(lanes)
         wave_matrix.append({
             "wave": w,
             "lanes": [{"row": r, "shooters": lanes[r]["shooters"],
-                       "zombies": lanes[r]["zombies"]} for r in range(GRID_ROWS)],
+                       "zombies": lanes[r]["zombies"]} for r in lane_ids],
             "sun": peak[w]["sun"],
-            "mowers_used": GRID_ROWS - len(peak[w]["mowers"]),
-            "mowers_fired_rows": [r for r in range(GRID_ROWS) if (w, r) in fired],
+            "mowers_used": len(lane_ids) - len(peak[w]["mowers"]),
+            "mowers_fired_rows": [r for r in lane_ids if (w, r) in fired],
         })
 
     return {
