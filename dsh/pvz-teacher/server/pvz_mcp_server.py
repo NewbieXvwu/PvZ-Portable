@@ -190,6 +190,55 @@ def _run_query_tool(argv: list[str], timeout: float = 900.0) -> tuple[str, bool]
     return text, False
 
 
+def _run_script(script: str, argv: list[str], timeout: float = 60.0) -> tuple[int, str, str]:
+    """跑 `scripts/` 下的另一个脚本（不是 episode_query.py）。
+
+    `lint_skills.py` 是独立脚本 —— 它不归 `episode_query.py` 管，
+    硬塞成它的子命令只会让两个入口互相污染。
+    """
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join(
+        [str(ROOT / "scripts"), str(ROOT / "python"), env.get("PYTHONPATH", "")]
+    ).rstrip(os.pathsep)
+    proc = subprocess.run(
+        [PYTHON, str(ROOT / "scripts" / script), *argv],
+        cwd=str(ROOT),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    return proc.returncode, proc.stdout, proc.stderr
+
+
+def _tool_lint_skills(args: dict[str, Any]) -> tuple[str, bool]:
+    """skill 闸门。**写完 skill 一定要跑它** —— 见工具描述里的理由。
+
+    为什么做成工具而不是让模型跑命令行（2026-10-03 实测发现的问题）：
+    隔离层 `patches/s3-allow-skill.yml` 里 **`tool-bash` 是关掉的**
+    （正是 2026-10-03 那次答案泄漏的通道），所以模型**没有命令行可用**。
+    任务模板第一版里写"写完自己跑 `python3 scripts/lint_skills.py`"，
+    那句话在沙箱里根本执行不了 —— 一句执行不了的指令比不写更坏：
+    它会让模型以为自己验过了。
+    """
+    d = args.get("dir") or os.environ.get("PVZ_SKILLS_DIR") or ""
+    if not d:
+        return ("没有给 `dir`，环境变量 PVZ_SKILLS_DIR 也没设。\n"
+                "填你写 skill 的那个目录（它的每个子目录是一个 skill），"
+                "例如 /tmp/pvz-s4/.dsh/skills 。"), True
+    argv = [d]
+    if args.get("no_check_archives"):
+        argv.append("--no-check-archives")
+    try:
+        rc, out, err = _run_script("lint_skills.py", argv)
+    except subprocess.TimeoutExpired:
+        return f"超时（60s）：lint_skills.py {d}", True
+    text = (out or "").rstrip("\n") or "(没有输出)"
+    if rc != 0 and not text:
+        text = err.strip() or "(退出码非 0，且没有任何输出)"
+    return text, rc != 0
+
+
 def _cli_argv(cmd: str, args: dict[str, Any], spec: list[tuple[str, str, str]]) -> list[str]:
     """把工具参数翻译成 CLI argv。
 
@@ -297,6 +346,36 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
         "if-else 链决定，不是随机的，也不随局面自适应。",
         _schema({}, []),
         _make_cli_handler("policy", []),
+    ),
+    # `lint_skills`：**写完 skill 一定要调它**。
+    #
+    # 它的判据（三问）见任务模板，这里只说为什么它必须存在：
+    # 判据喊口号没用 —— 2026-10-03 的 S3 里模型产出了 4 条判断却没写任何 skill，
+    # 推理里 `skill` 一词出现 0 次。所以闸门要能**当场**告诉它对不对：
+    # 证据不足就当场拒，它才有机会补；事后才发现就只能作废。
+    #
+    # 描述写短、理由写注释：工具描述每个请求都发。
+    "lint_skills": (
+        "**skill 闸门** —— 写完 skill 之后必须跑一次。\n"
+        "它查：证据有没有、够不够（至少 2 个不同决策点）、"
+        "以及每条证据里的「改动前」是否与存档里那一帧**真实做出的动作**一致"
+        "（存档是跑出来的，改不了 —— 对不上就是这条证据编的）。\n"
+        "返回 ✗ 时按它说的补证据；**别把没过闸门的 skill 留在库里。**",
+        _schema(
+            {
+                "dir": {
+                    "type": "string",
+                    "description": "skill 所在目录（每个子目录是一个 skill）。"
+                                   "就是任务里让你写 SKILL.md 的那个目录。",
+                },
+                "no_check_archives": {
+                    "type": "boolean",
+                    "description": "只查结构，不去存档里核对（存档不在本机时）。默认 false。",
+                },
+            },
+            ["dir"],
+        ),
+        _tool_lint_skills,
     ),
     "ping": (
         "连通性探针。回传本 server 看到的仓库根、解释器、工具脚本路径、资源目录，"
@@ -664,7 +743,9 @@ server: Server = Server(
         "或调 `policy` 工具。\n"
         "**场景与地形**（这一关是白天/夜间/泳池/屋顶、哪几路种不下）在每个 "
         "`frame` / `index` / `narrative` 输出的「场景：…」那一行，不用另外查；"
-        "棋盘上 `~` = 水路。要查规则本身看 `constants` 的 terrain 一节。",
+        "棋盘上 `~` = 水路。要查规则本身看 `constants` 的 terrain 一节。\n"
+        "**如果任务要求你把判断沉淀成 skill**：写完之后调 `lint_skills` 过闸门。"
+        "这是唯一的检查入口 —— 隔离层里没有命令行可用。"
     ),
     on_list_tools=_on_list_tools,
     on_call_tool=_on_call_tool,

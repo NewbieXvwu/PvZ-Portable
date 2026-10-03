@@ -90,7 +90,7 @@ async def run(full_env: bool) -> int:
 
             # S1：工具面必须齐全，少一个就说明工具表被改坏了。
             expected = {"ping", "vocabulary", "constants", "policy", "capture", "index",
-                        "frame", "lane", "actions", "whatif", "narrative"}
+                        "frame", "lane", "actions", "whatif", "narrative", "lint_skills"}
             missing = expected - set(names)
             if missing:
                 print(f"✗ tools/list 缺少：{sorted(missing)}")
