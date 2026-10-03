@@ -352,8 +352,64 @@
       },
       "checkpoint": "runs/run_1/update_000153_boundary_1790986994242045717.pt",
       "scope": "Additional normal closed resume, not a new development evaluation or full-run HF restore package. Source checkpoint/shards pending owning125k delivery."
+    },
+    {
+      "seed": 1,
+      "run": "mainline_bridge_random_mc_v1_seed1",
+      "requested_updates": 60,
+      "resume": true,
+      "exit_code": 0,
+      "seconds": 3516.2719698629953,
+      "start_counters": {
+        "episodes": 364,
+        "decisions": 67460,
+        "ticks": 6640700
+      },
+      "end_updates": 153,
+      "end_counters": {
+        "episodes": 604,
+        "decisions": 116372,
+        "ticks": 11327388
+      },
+      "increment": {
+        "episodes": 240,
+        "decisions": 48912,
+        "ticks": 4686688
+      },
+      "active_wall_seconds": 9344.258171859,
+      "losses": {
+        "policy_loss": -0.1708479830995202,
+        "value_loss": 0.4561728136613965,
+        "entropy": 2.8791185319423676,
+        "advantage_mean": 0.457091748714447,
+        "advantage_std": 0.5906591415405273,
+        "gradient_norm": 2.8315205574035645,
+        "approx_kl": 0.007104317340974161,
+        "clip_fraction": 0.08967987110372633,
+        "first_minibatch_log_prob_max_error": 1.9073486328125e-06,
+        "max_log_prob_change": 0.6289777755737305,
+        "optimizer_steps": 8,
+        "stopped_for_kl": false
+      },
+      "resources": {
+        "peak_process_tree_rss_bytes": 15305719808,
+        "min_system_available_bytes": 17700982784,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 6900918784,
+        "cuda_peak_reserved_bytes": 30763122688
+      },
+      "checkpoint": "runs/run_1/update_000153_boundary_1790990511179902900.pt",
+      "scope": "Additional normal closed resume, not a new development evaluation or full-run HF restore package. Source checkpoint/shards pending owning125k delivery."
     }
   ],
-  "continued_segments_read_utc": "2026-10-03T00:27:30.954030+00:00",
-  "continued_segments_scope": "Append-only milestone metadata; original first93-update rows unchanged. Costs from owning controller process and closed training state. No equal-decision/time or learning claim."
+  "continued_segments_read_utc": "2026-10-03T01:23:51.028868+00:00",
+  "continued_segments_scope": "Append-only milestone metadata; original first93-update rows unchanged. Costs from owning controller process and closed training state. No equal-decision/time or learning claim.",
+  "continued_active_observation": {
+    "seed": 2,
+    "pid": 207112,
+    "status": "running",
+    "requested_updates": 60,
+    "resume": true,
+    "scope": "Observation at continued_segments_read_utc, not persistent current status."
+  }
 }
