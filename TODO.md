@@ -1181,3 +1181,10 @@ value loss为0.05661/0.09727。闭合指针及资源成本已追加至既有
 bridge_random_mc_v1_first60_segments_v1_actual.json的continued_closed_segments，
 原93更新记录未覆盖。v8已自动完整resume seed1继续；最新固定开发评估仍为
 25k，不由本段训练量推断新能力。必要检查点/分片继续等待原125k完整交付。
+
+预定125k节点的只读提取/交付观察进程已启动（计划见
+bridge_random_mc_v1_first125k_delivery_plan_v1.json），复用25k提取逻辑并增加
+自身25k逐种子配对。首次实际读取0.030秒，三个节点均未到达；不新评估、
+不改原控制器或任务/种子/阈值。仅节点到达或原完整run上传完成时更新小型
+证据，125k检查点引用原队列first125k分支及其实际revision，不再次上传。
+成功/失败/待到达种子与待完成模型交付分别保留；此准备不构成学习验收。

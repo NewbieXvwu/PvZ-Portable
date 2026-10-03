@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "status": "watcher_started_nodes_not_yet_reached",
+  "started_utc": "2026-10-03T00:39:34.543973+00:00",
+  "pid": 202151,
+  "log": "logs/t5_research/bridge_random_mc_v1_first125k_watch.log",
+  "source": "artifacts/research/bridge_random_mc_v1_first125k_v1",
+  "owning_training_controller_pid": 150059,
+  "declared_target_decisions": 125000,
+  "initialization_seeds": [
+    0,
+    1,
+    2
+  ],
+  "cases_per_mode_per_seed": 136,
+  "modes": [
+    "greedy",
+    "sampled"
+  ],
+  "comparison_nodes": [
+    0,
+    2000,
+    25000,
+    125000
+  ],
+  "paired_control": "Existing same-Native/task/environment-seed idle",
+  "actual_node_extract_seconds": 0.030091801003436558,
+  "actual_pending_nodes": 3,
+  "extra_model_evaluations": 0,
+  "extra_native_interactions": 0,
+  "checkpoint_delivery": "Use owning evidence-mainline-bridge-random-mc-v1-seedN-first125k branch and immutable evaluated path; revision remains pending until owning upload complete. No checkpoint reupload in selected-node package.",
+  "scope": "Only future existing fixed-node capture and small evidence delivery. No task, seed, threshold, model, reward, budget or owning-controller change. This is not a new training/evaluation protocol and does not establish learning. Original125k owning full-run uploads unchanged."
+}
