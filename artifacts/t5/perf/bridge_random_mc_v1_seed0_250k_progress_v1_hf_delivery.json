@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-bridge-random-mc-v1-seed0-250k-progress-v1",
+  "revision": "a7b99e997f2ddf9249b834099d38fbb6fb955a55",
+  "seconds": 6.211980947002303,
+  "raw_case_count": 272,
+  "owning_full_run_delivery": {
+    "run": "mainline_bridge_random_mc_v1_seed0",
+    "branch": "evidence-mainline-bridge-random-mc-v1-seed0-selected250k",
+    "status": "complete",
+    "start_utc": "2026-10-03T07:17:17.336270+00:00",
+    "pid": 244565,
+    "exit_code": 0,
+    "end_utc": "2026-10-03T07:21:51.346877+00:00",
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "revision": "b1a3695990aef473c29f39f818f4ec4c88bfbffe"
+  },
+  "scope": "Original selected250k raw evaluations and own0/2k/25k/125k/idle pairs, configs/costs/analysis code. Model/complete resume/rollouts reference the completed owning selected250k upload. No model or rollout duplication, no new Native/model evaluation, no majority/full acceptance claim."
+}

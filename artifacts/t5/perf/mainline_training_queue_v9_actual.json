@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "status": "declared250k_complete_assessment_and_delivery_pending",
+  "controller_pid": 227635,
+  "plan": {
+    "schema_version": 1,
+    "created_utc": "2026-10-03T04:03:54.054281+00:00",
+    "status": "frozen_before_start",
+    "source_revision": "f005c47e9c4a736060d554cc6b53daa8a47f8265",
+    "source_worktree": "/home/newbiexvwu/PvZ-Portable/artifacts/worktrees/bridge_random_mc_f005c47",
+    "run": "mainline_bridge_random_mc_v1_seed0",
+    "configuration": "experiments/t7/bridge_random_mc_v1/seed0.json",
+    "resume_checkpoint": "runs/run_1/update_000186_boundary_1790996112988108426.pt",
+    "start_updates": 186,
+    "start_counters": {
+      "episodes": 736,
+      "decisions": 125000,
+      "ticks": 14941334
+    },
+    "preserved125k_full_run_reference": {
+      "run": "mainline_bridge_random_mc_v1_seed0",
+      "branch": "evidence-mainline-bridge-random-mc-v1-seed0-first125k",
+      "status": "complete",
+      "start_utc": "2026-10-03T02:55:23.206409+00:00",
+      "pid": 217770,
+      "exit_code": 0,
+      "end_utc": "2026-10-03T03:00:24.446965+00:00",
+      "repo": "realnewbiexvwu/pvz-agent-artifacts",
+      "revision": "32fdb14437ee43ea4a643b3be0db18ab123cb3f4"
+    },
+    "target_declared_evaluation_decisions": 250000,
+    "bounded_update_segments": [
+      30,
+      60,
+      60,
+      60
+    ],
+    "selection": "After all three fixed125k nodes, seed0 has strongest greedy long-task results: aidfull6/8, ordinarycap10 4/8, ordinaryfull0/8 with mean terminal wave15. Extend this same genuinely random-origin candidate with complete optimizer/RNG/course resume, not a new initialization.",
+    "scope": "Single GPU trainer, frozen recipe/tasks/seeds/thresholds, original250k evaluation and500k ceiling unchanged. Other candidates retain all125k failures and milestones; not forced to500k. No reward/architecture change or causal comparison. Originalv8 completed all training and deliveries. Stop at the completed declared250k node or bounded segment limit; preserve nonzero failures.",
+    "preserved_preparation_failure": {
+      "preparation_error": "AssertionError: expected earlier uploads-pending status, but originalv8 had normally finished all deliveries",
+      "controller_pid": 227606,
+      "controller_error": "FileNotFoundError: plan.json",
+      "controller_exit_code": "not_reaped_by_launcher",
+      "trainer_started": false,
+      "script": "run_failed01.py",
+      "log": "launch_failed01.log"
+    }
+  },
+  "stages": [
+    {
+      "status": "complete",
+      "requested_updates": 30,
+      "resume": true,
+      "start_counters": {
+        "episodes": 736,
+        "decisions": 125000,
+        "ticks": 14941334
+      },
+      "start_utc": "2026-10-03T04:03:54.146982+00:00",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t7/bridge_random_mc_v1/seed0.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_bridge_random_mc_v1_seed0",
+        "--stop-after-updates",
+        "30",
+        "--resume"
+      ],
+      "pid": 227636,
+      "latest": {
+        "updates": 215,
+        "counters": {
+          "episodes": 852,
+          "decisions": 151532,
+          "ticks": 18330886
+        },
+        "wall_seconds": 12535.504221720003,
+        "phase": "ready",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15332282368,
+          "min_system_available_bytes": 16734195712,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 7993869824,
+          "cuda_peak_reserved_bytes": 27466399744
+        }
+      },
+      "latest_loss": {
+        "policy_loss": -0.2240468692034483,
+        "value_loss": 0.23612124898603984,
+        "entropy": 2.921602027756827,
+        "advantage_mean": 0.3194536566734314,
+        "advantage_std": 0.4025762975215912,
+        "gradient_norm": 3.9459736347198486,
+        "approx_kl": 0.010174069453829102,
+        "clip_fraction": 0.1220122576425118,
+        "first_minibatch_log_prob_max_error": 1.430511474609375e-06,
+        "max_log_prob_change": 0.6801247596740723,
+        "optimizer_steps": 14,
+        "stopped_for_kl": false
+      },
+      "exit_code": 0,
+      "seconds": 2371.3823572969995,
+      "end": {
+        "updates": 216,
+        "counters": {
+          "episodes": 856,
+          "decisions": 152909,
+          "ticks": 18510471
+        },
+        "wall_seconds": 12670.302772959003,
+        "phase": "ready",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15332282368,
+          "min_system_available_bytes": 16734195712,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 7993869824,
+          "cuda_peak_reserved_bytes": 27466399744
+        },
+        "checkpoint": "runs/run_1/update_000216_boundary_1791002576371743422.pt"
+      }
+    },
+    {
+      "status": "complete",
+      "requested_updates": 60,
+      "resume": true,
+      "start_counters": {
+        "episodes": 856,
+        "decisions": 152909,
+        "ticks": 18510471
+      },
+      "start_utc": "2026-10-03T04:43:25.563552+00:00",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t7/bridge_random_mc_v1/seed0.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_bridge_random_mc_v1_seed0",
+        "--stop-after-updates",
+        "60",
+        "--resume"
+      ],
+      "pid": 231364,
+      "latest": {
+        "updates": 275,
+        "counters": {
+          "episodes": 1092,
+          "decisions": 208534,
+          "ticks": 24682830
+        },
+        "wall_seconds": 16961.68730912901,
+        "phase": "ready",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15332282368,
+          "min_system_available_bytes": 16734195712,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 8407389696,
+          "cuda_peak_reserved_bytes": 27466399744
+        }
+      },
+      "latest_loss": {
+        "policy_loss": -0.18180469361444315,
+        "value_loss": 0.11894566224267085,
+        "entropy": 2.8337318897247314,
+        "advantage_mean": -0.061179567128419876,
+        "advantage_std": 0.3273108899593353,
+        "gradient_norm": 2.006572961807251,
+        "approx_kl": 0.009764567841417514,
+        "clip_fraction": 0.11715648953731243,
+        "first_minibatch_log_prob_max_error": 1.6689300537109375e-06,
+        "max_log_prob_change": 0.8334441184997559,
+        "optimizer_steps": 12,
+        "stopped_for_kl": true
+      },
+      "exit_code": 0,
+      "seconds": 4413.145475131998,
+      "end": {
+        "updates": 276,
+        "counters": {
+          "episodes": 1096,
+          "decisions": 209761,
+          "ticks": 24818451
+        },
+        "wall_seconds": 17071.902541668,
+        "phase": "ready",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15332282368,
+          "min_system_available_bytes": 16734195712,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 8407389696,
+          "cuda_peak_reserved_bytes": 27466399744
+        },
+        "checkpoint": "runs/run_1/update_000276_boundary_1791007009071015755.pt"
+      }
+    },
+    {
+      "status": "complete",
+      "requested_updates": 60,
+      "resume": true,
+      "start_counters": {
+        "episodes": 1096,
+        "decisions": 209761,
+        "ticks": 24818451
+      },
+      "start_utc": "2026-10-03T05:56:58.755652+00:00",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "-u",
+        "python/train_pvz_ppo_task_family.py",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--experiment-config",
+        "experiments/t7/bridge_random_mc_v1/seed0.json",
+        "--output-dir",
+        "/home/newbiexvwu/PvZ-Portable/artifacts/research/mainline_bridge_random_mc_v1_seed0",
+        "--stop-after-updates",
+        "60",
+        "--resume"
+      ],
+      "pid": 238406,
+      "latest": {
+        "updates": 328,
+        "counters": {
+          "episodes": 1302,
+          "decisions": 250000,
+          "ticks": 29755987
+        },
+        "wall_seconds": 21843.259080561,
+        "phase": "ready",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15332282368,
+          "min_system_available_bytes": 16734195712,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 8407389696,
+          "cuda_peak_reserved_bytes": 32220643328
+        }
+      },
+      "latest_loss": {
+        "policy_loss": -0.0035949644662398583,
+        "value_loss": 0.02899740356951952,
+        "entropy": 3.3691405057907104,
+        "advantage_mean": 0.12842802703380585,
+        "advantage_std": 0.12779241800308228,
+        "gradient_norm": 0.8549084067344666,
+        "approx_kl": 0.0009913862450048327,
+        "clip_fraction": 0.0,
+        "first_minibatch_log_prob_max_error": 1.430511474609375e-06,
+        "max_log_prob_change": 0.1747446060180664,
+        "optimizer_steps": 2,
+        "stopped_for_kl": false
+      },
+      "requested_complete_update_and_due_evaluation_stop": "2026-10-03T07:10:32.423707+00:00",
+      "exit_code": 0,
+      "seconds": 4804.005062974989,
+      "end": {
+        "updates": 328,
+        "counters": {
+          "episodes": 1302,
+          "decisions": 250000,
+          "ticks": 29755987
+        },
+        "wall_seconds": 21843.573732576006,
+        "phase": "ready",
+        "resources": {
+          "peak_process_tree_rss_bytes": 15332282368,
+          "min_system_available_bytes": 16734195712,
+          "peak_system_swap_used_bytes": 221184,
+          "cuda_peak_allocated_bytes": 8407389696,
+          "cuda_peak_reserved_bytes": 32220643328
+        },
+        "checkpoint": "runs/run_1/update_000328_boundary_1791011792723189907.pt"
+      }
+    }
+  ],
+  "acceptance": "Three-init sustained learning, cap5 and original full acceptance remain unachieved.",
+  "utc": "2026-10-03T07:17:02.858926+00:00"
+}
