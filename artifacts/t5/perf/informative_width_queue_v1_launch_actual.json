@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "observed_utc": "2026-10-03T04:51:47.106462+00:00",
+  "status": "actual_waiting_controller_no_width_trainer",
+  "controller_pid": 232412,
+  "controller_revision": "b7c094baf1a12a32fade075b206a30d1424ef5c3",
+  "controller_script": "scripts/run_informative_width_queue.py",
+  "training_source_revision": "29776a4",
+  "queue_plan": "experiments/t6/informative_width_v1/queue_v1.json",
+  "actual_child_pids": [],
+  "width_stages": [],
+  "prior_controller_pid": 227635,
+  "prior_trainer_pid": 231364,
+  "prior_current": {
+    "updates": 226,
+    "counters": {
+      "episodes": 896,
+      "decisions": 160116,
+      "ticks": 19438047
+    },
+    "wall_seconds": 13151.770708928008,
+    "phase": "ready",
+    "status": "running"
+  },
+  "scope": "Real controller invocation read the live owner and remained waiting with zero children; no model construction, Native interaction or overlapping GPU training by this queue. Width learning, wall scoring, adoption and original acceptance pending."
+}

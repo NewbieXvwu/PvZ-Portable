@@ -1357,3 +1357,9 @@ trained窗口裁剪；记录未用时间，评分及快候选等墙钟延长仍�
 250k旧候选与125k新宽度的完整包走HF，控制器及配置、结果文本走Git；
 入口scripts/run_informative_width_queue.py是这个固定队列的直接执行脚本，
 调用现有训练/恢复/上传入口，不新增训练框架或改主线模型默认值。
+
+v10等待控制器已实际启动（PID 232412，执行代码b7c094b、训练源码29776a4）。
+真实/proc检查其无子进程，progress为waiting_for_owning250k_queue且width stages为空；
+v9原控制器及训练子进程仍活动，没有新增GPU任务。启动观察见
+[informative_width_queue_v1_launch_actual.json](artifacts/t5/perf/informative_width_queue_v1_launch_actual.json)。
+这只验证接续队列在等待原拥有者，不算任何宽度学习/等耗时结果。
