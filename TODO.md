@@ -1174,3 +1174,10 @@ bridge_random_mc_v1_diagnostics25k_v1_actual.json。开发集仍是学习进度�
 bridge_random_mc_v1_first60_segments_v1_actual.json；必要源分片/检查点待
 原125k完整交付，本记录不是恢复包。v8已自动启动seed0下一60更新段，
 之后继续seed1/2轮转至预定125k，未重启控制器或新建替代候选。
+
+seed0下一60更新段也正常闭合：2766.06秒，新增240局/40513决策/5011906tick；
+累计第153更新606局/98734决策/11696358tick，活动6949.66秒，最后policy/
+value loss为0.05661/0.09727。闭合指针及资源成本已追加至既有
+bridge_random_mc_v1_first60_segments_v1_actual.json的continued_closed_segments，
+原93更新记录未覆盖。v8已自动完整resume seed1继续；最新固定开发评估仍为
+25k，不由本段训练量推断新能力。必要检查点/分片继续等待原125k完整交付。

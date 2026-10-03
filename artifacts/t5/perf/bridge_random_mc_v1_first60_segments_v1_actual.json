@@ -303,5 +303,57 @@
     "resume": true,
     "status": "running"
   },
-  "controller_live": true
+  "controller_live": true,
+  "continued_closed_segments": [
+    {
+      "seed": 0,
+      "run": "mainline_bridge_random_mc_v1_seed0",
+      "requested_updates": 60,
+      "resume": true,
+      "exit_code": 0,
+      "seconds": 2766.060263533989,
+      "start_counters": {
+        "episodes": 366,
+        "decisions": 58221,
+        "ticks": 6684452
+      },
+      "end_updates": 153,
+      "end_counters": {
+        "episodes": 606,
+        "decisions": 98734,
+        "ticks": 11696358
+      },
+      "increment": {
+        "episodes": 240,
+        "decisions": 40513,
+        "ticks": 5011906
+      },
+      "active_wall_seconds": 6949.661760237992,
+      "losses": {
+        "policy_loss": 0.056606719037517905,
+        "value_loss": 0.09727133670821786,
+        "entropy": 3.2684285640716553,
+        "advantage_mean": 0.29024243354797363,
+        "advantage_std": 0.1912735402584076,
+        "gradient_norm": 0.9547141790390015,
+        "approx_kl": 0.007794807147648599,
+        "clip_fraction": 0.0819424730208185,
+        "first_minibatch_log_prob_max_error": 9.5367431640625e-07,
+        "max_log_prob_change": 0.6908068656921387,
+        "optimizer_steps": 8,
+        "stopped_for_kl": true
+      },
+      "resources": {
+        "peak_process_tree_rss_bytes": 15332282368,
+        "min_system_available_bytes": 16734195712,
+        "peak_system_swap_used_bytes": 0,
+        "cuda_peak_allocated_bytes": 6407429120,
+        "cuda_peak_reserved_bytes": 14824767488
+      },
+      "checkpoint": "runs/run_1/update_000153_boundary_1790986994242045717.pt",
+      "scope": "Additional normal closed resume, not a new development evaluation or full-run HF restore package. Source checkpoint/shards pending owning125k delivery."
+    }
+  ],
+  "continued_segments_read_utc": "2026-10-03T00:27:30.954030+00:00",
+  "continued_segments_scope": "Append-only milestone metadata; original first93-update rows unchanged. Costs from owning controller process and closed training state. No equal-decision/time or learning claim."
 }
