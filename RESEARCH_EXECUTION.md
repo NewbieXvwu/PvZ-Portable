@@ -1271,6 +1271,10 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 
 **状态：待批准，未开跑。** 本节只声明设计依据与执行顺序，不含任何实验结果。
 
+> 本节在 2026-10-03 当天被**重写过一次**：第一版读的是 `dsh-v0.1.2-rc.1`，
+> 后来按用户要求切到最新 tag `dsh-v0.2.0-rc.2`，发现 preset 的实现被整个换掉了。
+> 下面全部以 **v0.2.0-rc.2 源码**为准，第一版的错误在 §2 里列明。
+
 ### 0. 这一节是什么
 
 手写脚本教师已判死（576 用例五地形宏平均 10.9%，夜/泳池/雾/屋顶各 0/64）。
@@ -1281,72 +1285,85 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 本节记录两件事：① 读 DSH 源码后**核对过的**接入事实（区分"确认"与"待实测"）；
 ② 分步执行计划与验收。
 
-### 1. 已从源码确认的事实
+### 1. 已从源码确认的事实（v0.2.0-rc.2）
 
-DSH 源码在 `~/deepseek-harness`，版本 `dsh-v0.1.2-rc.1`（`git describe`），
-56 个包，`engines.node: ^22.19.0 || >=24.0.0`（本机托管 node 22.22.2 满足）。
+源码在 `~/deepseek-harness`，tag `dsh-v0.2.0-rc.2`，64 个包，
+`engines.node: ^22.19.0 || >=24.0.0`（本机托管 node 22.22.2 满足）。
+
+**1.1 preset 的实现形态（v0.2 与 v0.1 完全不同）**
 
 | 事实 | 可核对的来源 |
 |---|---|
-| preset = 一个目录 + `agent.cordis.yml`；用户 preset 放 `<dshHome>/.agent-presets`；id 必须匹配 `[a-z0-9][a-z0-9-]*`（id 就是目录名） | `packages/preset/agent-presets/README.zh.md` |
-| 行格式：`- id: <本地 id>` / `name: <包名>` / `config: {...}` / `disabled: !!js <表达式>`；组是 `name: cordis:group` + `group: true` + `isolate: {<服务>: true}` + `config: [<行>]` | `packages/preset/agent-presets/presets/standard/agent.cordis.yml` |
-| **压缩是 per-preset 可选的**：`minimal` preset 明确写 "Context compaction is absent" | 同上 `presets/minimal/agent.cordis.yml` |
-| **超大工具输出的修剪阈值可配**：`thresholdChars: 8192` / `headChars: 4096` / `tailChars: 1024` | standard preset 的 `tool-result-pruner` 行 |
-| MCP 原生支持，字段：`serverName` / `transport: stdio｜streamable-http` / `command` / `args` / `env` / `cwd` / `url` / `headers` / `toolCallTimeoutMs`（默认 60000）/ `failOnStartupError` / `reconnect.*` | `packages/mcp/mcp-client/README.zh.md` |
-| MCP 工具名固定为 `mcp__<serverName>__<tool>`；**只桥接 tools，resources 与 prompts 不支持** | 同上 |
-| `mcp-client` 只有 `inject = ['tools']`、不 provide 任何服务 → 在组合里**不需要 realm**（与 standard preset 里的 `tool-fs` 同类） | `packages/mcp/mcp-client/src/index.ts:29,32` |
-| 官方 MCP 挂载写法（含 `- insert:` 外层） | `apps/cli/config/examples/mcp-memory/*.cordis.yml` |
-| skill = 目录包 `<name>/SKILL.md` 或平铺 `<name>.md`；frontmatter 必填 `name`+`description`，可选 `whenToUse`/`metadata`/`disable-model-invocation`/`user-invocable`；名称为 kebab-case；**不支持嵌套 `**/SKILL.md`** | `packages/skill/skill-filesystem/README.zh.md` |
-| skill 根目录按 rank：100 `<projectRoot>/.dsh/skills`、200 `<projectRoot>/.agents/skills`、300 custom、400 `<dshHome>/skills`、500 `<agentsHome>/skills`、600 bundled；`projectRoot` = 含 `.git` 的最近祖先（本项目即仓库根） | `docs/subsystems/skills.zh.md` |
-| **Chokidar 监视 + 模型自己的 write/edit 会让目录失效 → 新写的 skill 无需重启即生效** | 同上 |
-| preset 里启用 skill 只需两行：`dsh-skill-filesystem` + `dsh-tool-skill` | standard preset |
-| **一次性入口**：`dsh --profile headless "<任务>"`（跑一个全新持久化会话，打印最终答案后退出） | `apps/cli/README.zh.md` |
-| **Python SDK**：`pip install deepseek-harness-sdk`，stdio 行分隔 JSON-RPC 驱动，**打包同版本 runtime wheel，不需要系统 Node**；入参含 `dsh_home`/`cwd`/`provider`/`model`/`reasoning_effort`/`max_tokens` | `python/sdk/README.zh.md` |
-| 后台任务：`dsh-tool-jobs`（`run_in_background`）；持久 shell：`dsh-tool-bash-persistent`（`timeoutMs` 可配） | standard / minimal preset |
-| 子代理：`dsh-tool-subagent`，`provider: spawn｜fork｜codex｜claude-code`，`backgroundMode: continuable｜one-shot` | standard preset |
-| 会话产出任何内容后**不能**换 preset（换掉会让已记录的工具调用无法重放） | `packages/preset/agent-presets/README.zh.md` |
-| preset 的权限 == 它引用插件的权限 | 同上 |
+| **preset 不是目录。** v0.2 起 preset 就是 bundle 补丁里的一行声明：`@deepseek-ai/dsh-agent-preset`，`config` 字段为 `id`（必填，小写字母/数字/连字符）、`plugins`（必填，Cordis entry list）、`name`/`description`/`order`（可选）。**注册表不扫描目录，也不接受 preset 路径。** | `packages/preset/agent-preset/README.zh.md`、`packages/preset/agent-preset/skills/editing-cordis-compositions/SKILL.md` |
+| 随附的 web preset 是 `packages/bundle/web-app/presets/{standard,ptc,minimal,cordis}.patch.yml`（不是 `agent.cordis.yml`） | 同上 |
+| **创建/修改 preset 的唯一方式**：写一个 bundle——**恰好两个文件**（`package.json` 声明 `dsh.bundle.patch`，加 `cordis.patch.yml`）——装进 profile | 同上 |
+| 覆盖随附 preset：按 Loader 行 id `preset-<id>` 写覆盖补丁。**覆盖会替换整个 `config`**，必须重述 `id`/`plugins` 及其余全部字段 | 同上 |
+| 官方可直接抄的模板：`packages/preset/agent-preset/skills/cordis-plugin-development/templates/mcp/`（2 个文件） | 同上 |
 
-### 2. 我上一条消息说错的地方（更正）
+**1.2 profile、分层与安装**
 
-**我说"做成 DSH 的 Agent Preset"——这只在 `web` profile 成立。**
+| 事实 | 可核对的来源 |
+|---|---|
+| **配置层叠加顺序**：`dsh.profile.bundles` 各 bundle 的 patch → profile 自己的 `cordis.patch.yml` → home 级 `$DSH_HOME/cordis.patch.yml` → `--patch` 覆盖层 | `apps/cli/README.zh.md:43` |
+| **不启动就能检查组合树**：`--dump-default-config` / `--dump-config`；另有 `--dump-config-schema` 打印 entry/patch 的 JSON Schema | `apps/cli/README.zh.md` |
+| 新建 profile：`dsh --profile <name> --from-default-profile <template>` | 同上 |
+| 安装本地 bundle：`dsh plugin --profile <p> add file:/绝对路径`。**只有这条管理命令需要 pnpm；启动不需要** | `docs/user/guide/python-sdk.zh.md:137,148` |
+| **持久配置变更**：直接编辑 `$DSH_HOME/profiles/<p>/cordis.patch.yml`；**单次启动变更**：从 Python 传 patch 文件 | 同上 :148 |
+| 入口仍在：`dsh --profile headless "<任务>"`（一次性，打印最终答案后退出）、`dsh --profile sdk`（JSON-RPC stdio） | `apps/cli/README.zh.md` |
+| Python SDK：`pip install deepseek-harness-sdk`，**打包同版本 runtime wheel，不需要系统 Node** | `docs/user/guide/python-sdk.zh.md` |
 
-`agent-presets` 这个插件**只在 `web-app` bundle 里挂载**。逐 bundle 核对：
+**1.3 MCP**
 
-| bundle | 是否含 `dsh-agent-presets` | 是否含 `dsh-mcp-client` |
-|---|---|---|
-| `base` | 否 | **否** |
-| `headless` | 否 | 否 |
-| `sdk-app` | 否 | 否 |
-| `sdk-minimal` | 否（且是独立最小树，不含 base） | 否 |
-| `web-app` | **是（唯一一处）** | 否 |
+| 事实 | 可核对的来源 |
+|---|---|
+| `mcp-client` 只有 `inject = ['tools']`、**不 provide 任何服务** → 组合里**不需要 realm**（与 standard preset 里的 `tool-fs` 同类） | `packages/mcp/mcp-client/src/index.ts` |
+| 工具名固定 `mcp__<serverName>__<rawName>`；`serverName` 匹配 `^[A-Za-z0-9_-]{1,32}$`，同一 scope 内唯一；**不同 Agent 可复用同名** | 同上 |
+| stdio 配置字段（含默认值）：`transport` / `serverName` / `command` / `args`(`[]`) / `env`(`{}`) / `cwd`(**`''`**) / `toolCallTimeoutMs`(`60000`) / `failOnStartupError`(`false`) / `maxInstructionBytes`(`32768`) / `reconnect{enabled,initialDelayMs,maxDelayMs,maxAttempts}` | 同上（Config schema） |
+| **v0.2 新增 `dsh-mcp-resources`**，随附 profile 自动挂载一次：按需发现与读取 MCP 资源，提供三个共享工具，需显式指定服务器名。**v0.1 时"resources 不支持"的结论已过期。** | `packages/mcp/mcp-resources/README.zh.md` |
+| 官方 MCP 配方：bundle = `package.json`（带 `dsh.bundle.patch`）+ `cordis.patch.yml`；用 `plugin_manager` 的 `install_bundle` 安装；用 `mcp__<serverName>__ping` 验证；**环境凭据会被清洗，用 Loader `!!js` 引用现有凭据，别把密钥写进对话** | `.../cordis-plugin-development/references/mcp-bundle.md` |
+| 真实 profile patch 样例（可照抄格式）：`snapshots/session/plugin-manager-mcp/profile.patch.yml` | 源码 |
 
-所以：**无人值守长跑走 headless 或 sdk，那里没有 preset 机制**，但有等价能力——
-profile 级用户 patch（`$DSH_HOME/profiles/<name>/cordis.patch.yml`），
-行格式与 preset 完全相同。修正后的结论：**同一份行列表，两处引用**
-（web 里当 agent preset 给人看/调；headless/sdk 里当 profile patch 无人值守跑）。
-**不要维护两份**——这个仓库为重复实现付过代价。
+**1.4 skill 与压缩**
 
-另外两条更正：
-- 我引用新闻说"v0.2"，源码实际是 **`0.1.2-rc.1`**。以源码为准。
-- 我原以为"上下文不受控"是反对用现成 Harness 的理由。源码核对后不成立：
-  `compaction-basic` 与 `compaction-tool-result-pruner` **都在 `base` bundle 里**，
-  三个 profile 都有；修剪阈值可配；而且会话原始事件留在只追加日志里，
-  摘要只替换模型可见面。
+| 事实 | 可核对的来源 |
+|---|---|
+| skill 根目录 rank：100 `<projectRoot>/.dsh/skills`、200 `<projectRoot>/.agents/skills`、300 custom、400 `<dshHome>/skills`、500 user-agents、600 bundled；`projectRoot` = 含 `.git` 的最近祖先（本项目即仓库根） | `docs/subsystems/skills.zh.md:68-77` |
+| skill = `<name>/SKILL.md` 或 `<name>.md`，frontmatter 必填 `name`+`description`；kebab-case；**不支持嵌套 `**/SKILL.md`** | `packages/skill/skill-filesystem/README.zh.md` |
+| **Chokidar 监视 + 模型自己的 write/edit 会让 skill 目录失效 → 新写的 skill 无需重启即生效** | `docs/subsystems/skills.zh.md` |
+| `skill` + `skill-filesystem` + `tool-skill` **都在 `base` bundle**，所以 headless / sdk / web 都有 skill 能力 | `packages/bundle/base/cordis.patch.yml` |
+| 压缩同样全在 `base`：`compaction-basic` + `compaction-tool-result-pruner` + `compaction-image-offload` + `command-compact`；修剪阈值可配（`thresholdChars` / `headChars` / `tailChars`） | 同上 + `presets/standard.patch.yml` |
+| `plugin-manager` 也在 `base` → **模型自己就能装 bundle**（这是"自演化"的另一半） | `packages/bundle/base/cordis.patch.yml` |
 
-### 3. 还没确认的（必须实测，不许照猜写代码）
+### 2. 我先后说错的两处（都已更正）
 
-1. **headless / sdk profile 是否真的吃 profile 级 patch**——README 说了 patch 分层，
-   但我没实测过一行 patch 生效。
-2. `agent.cordis.yml` 里挂 `dsh-mcp-client` 是否真的不需要 realm（推理依据是
-   `inject=['tools']` 且不 provide，与 `tool-fs` 同类；**推理不是实测**）。
-3. `<dshHome>/.agent-presets/<id>/agent.cordis.yml` 的确切目录布局。
-4. Python SDK 与自定义 patch 的叠加顺序（SDK 用 `--profile sdk`，patch 是另一层）。
-5. MCP server 从 stdio 起来后 DSH 是否按 `mcp__<serverName>__<tool>` 列出工具。
-6. DeepSeek API key 与计费口径（长跑的钱从哪出）。
+**错误一：我说"做成 DSH 的 Agent Preset"——这只在 web profile 成立。**
+`agent-preset-registry` 只挂在 `web-app` bundle；`base` / `headless` / `sdk-app` /
+`sdk-minimal` 都没有。
 
-**第 1、5 条是 go/no-go。** 先写一个最小 MCP server（只暴露一个 `ping`），
-挂上去，确认工具在模型工具表里出现，再动真东西。
+**错误二（更严重）：我说"preset = 目录 + `agent.cordis.yml`"——那是 v0.1 的形态，
+v0.2 已废弃。** 我第一版读的是 `dsh-v0.1.2-rc.1`，把当时的结构当成了现行结构。
+
+**两次更正后的最终结论**：**preset 和 profile patch 本来就是同一个机制**——都是
+bundle 补丁。所以"同一份行列表两处引用"不是妥协，而是它本来的设计：
+**写一个 bundle，装进 profile，preset 声明就在里面。** 不存在"为 preset 和
+profile patch 各维护一份"的问题，因为根本只有一份。
+
+顺带更正：我引用的新闻说"v0.2"，方向对了但当时源码停在 0.1.2-rc.1；
+另外我最早反对用现成 Harness 的理由"上下文不受控"不成立——
+压缩全在 `base`，阈值可配，且会话原始事件留在只追加日志里。
+
+### 3. 还没确认的（要实测，不许照猜写代码）
+
+前几版列了 6 条，现在**只剩 1 条是外部依赖，3 条可以本地实测且不需要 API key**：
+
+| # | 待确认 | 怎么确认 | 要不要 key |
+|---|---|---|---|
+| 1 | 我们的 bundle 装进 profile 后，组合树是否如预期 | `dsh --profile <p> --dump-config`，**不需要启动、不需要 key** | 否 |
+| 2 | MCP server 起来后是否真按 `mcp__pvz__<tool>` 列出工具 | `--dump-config` 看到行之后，起一个会话调 `mcp__pvz__ping` | 是 |
+| 3 | skill 热刷新是否真的在我们这条链路上生效 | 会话里让模型写一个 `SKILL.md`，看它能否立刻加载 | 是 |
+| 4 | **DeepSeek API key 与计费口径**（长跑的钱从哪个账号出） | 只能问用户 | — |
+
+**第 1 条现在就能做，且不需要 key。** 先把它跑掉，再谈别的。
 
 ### 4. 架构（三层，各自独立可测）
 
@@ -1354,24 +1371,33 @@ profile 级用户 patch（`$DSH_HOME/profiles/<name>/cordis.patch.yml`），
 ① MCP server（我们的，Python）
    scripts/pvz_mcp_server.py —— stdio，把 episode_query 的 12 个子命令包成工具
    工具名：mcp__pvz__capture / __index / __lane / __actions / __whatif / ...
-   为什么先做：它不绑定 DSH。在这个环境（任何 MCP 宿主）里都能交互式调试，
-   改一行立刻试。这是最快的回路，也是唯一不依赖 DSH 的资产。
+   为什么先做：它不绑定 DSH。在任何 MCP 宿主里都能交互式调试，改一行立刻试。
+   这是最快的回路，也是唯一不依赖 DSH 的资产。
 
-② 组合层（一份 YAML，两处引用）
-   挂 MCP client + persona + 调过的 compaction 阈值 + 只留需要的工具
-   - web 里：<dshHome>/.agent-presets/pvz-teacher/agent.cordis.yml（人看着调）
-   - headless/sdk 里：$DSH_HOME/profiles/<p>/cordis.patch.yml（无人值守跑）
+② 组合层（一个 bundle，恰好两个文件）
+   pvz-teacher-bundle/
+     package.json        { "name": "@local/dsh-pvz-teacher", ...,
+                           "dsh": { "bundle": { "patch": "./cordis.patch.yml" } } }
+     cordis.patch.yml    - insert:
+                           - mcp-client 行（serverName: pvz, transport: stdio,
+                             command: <python>, args: [scripts/pvz_mcp_server.py],
+                             cwd: <仓库绝对路径>）
+                           - preset-pvz-teacher 声明行（persona + plugins 列表 +
+                             调过的 compaction 阈值 + 只留需要的工具）
+   安装：dsh plugin --profile sdk add file:/绝对路径
+   验证：dsh --profile sdk --dump-config
 
 ③ 技能层（模型自己写）
-   <projectRoot>/.agents/skills/pvz-*/SKILL.md —— 走仓库，进 git
+   <仓库根>/.agents/skills/pvz-*/SKILL.md —— 走 git，进版本控制
    DSH 的 Chokidar 会热刷新，模型写完立刻能用，不用重启
 ```
 
 ### 5. 分步执行与验收
 
 **S0 · 最小 MCP server 打通（go/no-go）**
-只暴露一个 `ping` 工具。挂进 DSH，让模型调一次。
-验收：工具出现在工具表里、调用成功返回。**不过就停下改方案，不往上堆。**
+只暴露一个 `ping` 工具。打包成 bundle，装进 profile。
+验收：`--dump-config` 能看到行，且会话里能调 `mcp__pvz__ping` 成功。
+**不过就停下改方案，不往上堆。**
 
 **S1 · 真工具包成 MCP**
 把 `capture/index/lane/actions/whatif/frame/narrative` 暴露出来。
@@ -1403,6 +1429,8 @@ profile 级用户 patch（`$DSH_HOME/profiles/<name>/cordis.patch.yml`），
   `python/train_pvz_ppo_task_family.py:792` 的 `protected_paths` 做 SHA 校验，
   训练跑中途改动会让门禁记成 `protected_unchanged: false`。本节的落点选在
   `RESEARCH_EXECUTION.md`（不在保护名单内）正是这个原因。
+- **DSH 源码树是只读参考**（`~/deepseek-harness`，已切到 `dsh-v0.2.0-rc.2`），
+  我们的产物不写进它。`DSH_HOME` 用独立目录。
 - 预算无上限，但**无上限不等于无记账**（见 §7）。
 - 唯一防卡死规则：**连着若干轮最好改动都是 +0 波就停下，去查工具哪里给的信息不够**。
 
@@ -1423,3 +1451,5 @@ profile 级用户 patch（`$DSH_HOME/profiles/<name>/cordis.patch.yml`），
   看结局必须读 `reason` 字段。
 - 反事实是精确的，但**一次只能改一个点**；改两个点要重放两次，组合爆炸。
 - 「算得准」≠「说明白」：机制解释是对照两条时间线推出来的，不是受控实验。
+- **DSH 的字段以源码为准，不以博客为准**；源码以最新 tag 为准，不以 clone 时的
+  默认分支为准。这两条各踩过一次。
