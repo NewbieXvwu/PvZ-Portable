@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "status": "complete",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "branch": "evidence-informative-width-reference-wall-views-v1",
+  "revision": "a00d599766d2ddb0bc131360b4e4f7650863aa60",
+  "seconds": 9.701249751000432,
+  "scope": "Nine-candidate wall selection with six interaction-budget-pending rows; all selected source policies retained locally as hardlinks and referenced from three existing immutable full HF runs. Four reused exact-policy all136 cases/mode evaluations, raw compressed rows, source configs/provenance, selector code and logs. Initial packet-root metadata failure preserved. No model recopies, no new Native/NN/GPU cases. Lower-cap ref0/ref1 scoring and actual new-width/time comparison remain pending."
+}
