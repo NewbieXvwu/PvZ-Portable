@@ -5,8 +5,9 @@
 [`RESEARCH_EXECUTION.md`](../../RESEARCH_EXECUTION.md) 的
 「2026-10-03 LLM 教师方案」一节。
 
-**当前状态：S0 通过。** 只剩一个 `ping` 工具，但整条管道（bundle → profile →
-会话里可调用）已验证。
+**当前状态：S0 通过，且验过两重。** 只剩一个 `ping` 工具，但整条管道
+（bundle → profile → 会话里可调用）已经用 **mock LLM**（不需要 key）和
+**真实模型**（deepseek-v4-flash-0731）各验过一次。S1（铺开真正的诊断工具）未开始。
 
 ## 目录
 
@@ -39,6 +40,17 @@ thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
 **无条件不发 `budget_tokens`**。官方端点宽容接受，严格网关直接拒。
 改 DSH 配置改不出来 —— 代码里根本没有这个字段。
 
+**单变量对照（curl，不经过 DSH）**，把范围收窄到一个字段：
+
+| 请求体 | 结果 |
+|---|---|
+| `thinking:{"type":"enabled"}`（DSH 的发法） | **400** |
+| `thinking:{"type":"enabled","budget_tokens":1024}` | **200** |
+| 上一行 + `output_config:{"effort":"max"}` | **200** |
+
+只差一个字段，400 变 200 —— 根因确认，不必再推测。
+`output_config.effort` 网关是认的，所以"思考拉满"本身没问题。
+
 **两条出路**：
 
 1. 走代理补上（不改上游）：
@@ -52,6 +64,23 @@ thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
 `tools/test_repair.py` 钉住了补丁的边界行为，包括一个**已知无解的边界**：
 `max_tokens <= 1024` 时，`budget_tokens < max_tokens` 与 `budget_tokens >= 1024`
 无法同时满足，怎么改都过不去。
+
+### 接真实端点跑一次
+
+```sh
+DSH_HOME="$HOME/.local/share/pvz-agent/dsh-home" \
+DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 \
+DEEPSEEK_API_KEY=sk-... \
+  dsh --profile pvz-teacher "调用一下 mcp__pvz__ping，把返回的 JSON 原样告诉我"
+```
+
+**实测通过（2026-10-03）**：模型先出推理、再发起 `mcp__pvz__ping`、原样回显 JSON，退出码 0。
+代理录到的请求证实 `output_config.effort = "max"` 与 `max_tokens = 65536` 都落到了线上，
+且 `tools=28`（含 `mcp__pvz__ping`）—— 该端点**支持 tool use**。
+另有一个 `thinking.type = "disabled"` 的标题生成请求，代理**正确地没碰它**。
+
+**注意 401 可能是瞬时的。** 当天出现过一段稳定 401 的窗口，未做任何改动就自行恢复。
+遇到时先记录时间窗、隔一会儿用最小请求（`/v1/models`）复测，**不要直接判定 key 失效**。
 
 ## 怎么验
 

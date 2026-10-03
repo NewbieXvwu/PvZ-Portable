@@ -11,7 +11,8 @@
 2. **修复**（可选，默认关）。`--fix-thinking-budget` 会补上 DSH 漏发的
    `thinking.budget_tokens`，让严格校验 Anthropic 规范的网关也能用。
    原因见 `_repair` 的注释。**默认关闭**：观察工具不该偷偷改东西，
-   记录里 `body` 永远是原样的，改了什么单独记在 `repaired`。
+   记录里 `body` 记的始终是**修复前**的内容（合法 JSON 会解析成对象落盘，
+   字段不变、空白归一化），改了什么单独记在 `repaired`。
 
 只依赖标准库（`http.server` + `urllib`），不需要装任何东西。
 
@@ -139,12 +140,14 @@ class Handler(BaseHTTPRequestHandler):
             "headers": headers,
         }
         try:
-            # 记录 DSH 原样发出的请求体 —— 诊断要看的就是这个。
+            # 记录 DSH 发出的请求体 —— 诊断要看的就是这个。
+            # 注意落盘形式：合法 JSON 会被解析成对象再写回（不是字节级原样），
+            # 字段内容不变，但 key 顺序与空白会归一化。要字节级比对就别用这个。
             record["body"] = json.loads(body.decode("utf-8")) if body else None
         except Exception:
             record["body"] = body.decode("utf-8", "replace")
 
-        # 修复放在记录之后：record["body"] 永远是原样的，
+        # 修复放在记录之后：record["body"] 记的始终是**修复前**的内容，
         # 改了什么单独记在 record["repaired"]。
         body, repaired = _repair(body)
         if repaired is not None:

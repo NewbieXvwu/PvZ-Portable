@@ -1275,9 +1275,10 @@ KL阈值触发后2个optimizer steps。不能将PPO72→11秒单独归因于mask
 > 后来按用户要求切到最新 tag `dsh-v0.2.0-rc.2`，发现 preset 的实现被整个换掉了。
 > 下面全部以 **v0.2.0-rc.2 源码**为准，第一版的错误在 §2 里列明。
 > 当天晚些时候又补了 §3.1–§3.5：S0 实测结果、版本统一、以及两个跳 tag 才会遇到的坑。
-> 收尾时再加 §3.6–§3.7：接真实端点暴露的 **DSH `thinking` 参数缺 `budget_tokens`**
-> （已定位到 `serialize.ts:155`，配置改不出来，只能走代理或打补丁），
-> 以及 **端点 401**（未解决，需用户确认，见 §3.7）。
+> 收尾时再加 §3.6–§3.8：接真实端点暴露的 **DSH `thinking` 参数缺 `budget_tokens`**
+> （已定位到 `serialize.ts:155`，配置改不出来，只能走代理或打补丁）、
+> **一次瞬时 401**（已自行恢复，别误判成 key 吊销），
+> 以及**真实模型端到端跑通**（§3.8，`reasoningEffort: max` 已在线验证）。
 
 ### 0. 这一节是什么
 
@@ -1515,6 +1516,18 @@ thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
 `Math.min(adjusted.thinkingBudget, Math.max(0, maxTokens - 1024))` 夹紧），
 **但 DSH 自己的序列化器绕过了它、直接构造参数**，所以这个字段永远不出现。
 
+**用 curl 做了单变量对照，把范围收窄到一个字段**（不经过 DSH，排除 DSH 之外的干扰）：
+
+| 请求体 | 结果 |
+|---|---|
+| A) `thinking:{"type":"enabled"}`（**DSH 当前的发法**） | **400** `budget_tokens must be at least 1024 when type is enabled` |
+| B) `thinking:{"type":"enabled","budget_tokens":1024}` | **200** |
+| C) B + `output_config:{"effort":"max"}` | **200** |
+
+A 与 B 只差一个字段，结果从 400 变 200 —— **这就是根因，不需要再推测**。
+C 说明 `output_config.effort` 网关是认的，所以"思考拉满"这件事本身没问题，
+卡住的只是那个缺失的预算字段。
+
 结论：**改 DSH 的配置改不出来** —— 代码里根本没有这个字段可以配。两条出路：
 
 1. **走代理补上**（不改上游，推荐先这么做）：
@@ -1524,8 +1537,10 @@ thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
        --log /tmp/llm-req.jsonl --fix-thinking-budget 32768
    DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 dsh --profile pvz-teacher "..."
    ```
-   代理**先原样记录、再改**（`record["body"]` 是原始字节，`record["repaired"]` 是改动说明），
-   所以"DSH 到底发了什么"这个事实不会被修复动作污染。
+   代理**先记录、再改**（`record["body"]` 记的始终是**修复前**的内容，
+   `record["repaired"]` 是改动说明），所以"DSH 到底发了什么"这个事实不会被修复动作污染。
+   注意 `body` 是**按 JSON 解析后落盘**的（字段不变、空白与 key 顺序归一化），
+   不是字节级原样 —— 要字节级比对别用它。
 2. **给 DSH 源码打补丁**：运行时更干净，但从此与上游分叉，跳版本时要重新处理。
 
 **一个已知无解的边界（钉在测试里，不是含糊带过）**：
@@ -1534,32 +1549,58 @@ thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
 **怎么改都过不去**。所以这个修复不是万能的，只在 `max_tokens > 1024` 时成立
 （我们实际用的 65536 远大于它）。
 
-#### 3.7 discovery-api 端点的 401（**未解决，需要用户确认**）
+#### 3.7 discovery-api 的 401 是**暂时性**的（已自行恢复，不是 key 被吊销）
 
-同一个 key 在 15:18–15:26 是通的（`/v1/models` 200，`/chat/completions` 与
-`/v1/messages` 都有响应），从约 15:32 起稳定返回：
+**先说结论：不要因为一段时间的 401 就判定 key 失效。** 当天出现过一个
+15:32–16:0x 的窗口，同一把 key 稳定返回 `401 invalid API key`，之后**未经任何改动自行恢复**
+（复测 `/v1/models` 200、`/v1/messages` 200）。期间我一度按"key 被吊销"上报，
+这个判断**是错的**，记在这里避免下次重犯。
 
-```
-401 invalid API key
-```
-
-排查过的、**能排除**的可能：
+当时排查掉的可能（都仍然成立，可复用）：
 
 - **不是 key 抄错**：key 长度 67（`sk-` + 64 位 hex），与用户给的原文逐字节一致，
   SHA-256 前缀 `cdb50fa4830b7aef`。
 - **不是限流**：响应里**没有任何** `x-ratelimit-*` / `retry-after` 头。
-  限流会带这些头，401 不带。
 - **不是本地网络/代理**：响应头是 `server: istio-envoy` +
   `www-authenticate: Bearer realm="inference-gateway"` +
-  `set-cookie: acw_tc=...`（阿里云 WAF），说明请求确实打到了网关、被网关拒了。
+  `set-cookie: acw_tc=...`（阿里云 WAF），请求确实打到了网关、被网关拒了。
 
-一个**有意思的旁证**：带 `thinking: {type:"enabled"}` 的请求返回的是**体校验 400**
-（就是 §3.6 那个错），而不是 401 —— 说明**体校验发生在鉴权之前**。
-这反过来支持"401 是真的鉴权失败"，不是网关整体不可达。
+一个**有意思的旁证**：401 窗口期内，带 `thinking: {type:"enabled"}` 的请求返回的是
+**体校验 400**（§3.6 那个错）而不是 401 —— 说明**体校验发生在鉴权之前**。
 
-**需要用户做的**：确认这个 key 是否被吊销 / 是否要用别的鉴权形式（比如
-`Authorization: Bearer` 之外的头）/ 额度是否需要充值。这一条**我无法从代码侧验证**，
-所以停在这里上报，不继续试错。
+**正确的处置方式**：遇到这种 401，先做两件事再下结论 ——
+① 记下时间窗；② 隔一段时间用**最小请求**（`/v1/models` 就行）复测。
+本次的教训是：这类网关在鉴权链路上有**瞬态失败**，把它当成"key 废了"会白白中断工作。
+
+#### 3.8 真实模型端到端已跑通（2026-10-03，S0 的第二重验收）
+
+S0 此前只用 mock LLM 验过（§3.1，不需要 key）。接上真端点后补了真实模型验收，
+**这一次是真的模型在调真的工具**：
+
+```
+$ DEEPSEEK_BASE_URL=http://127.0.0.1:8950/v1 DEEPSEEK_API_KEY=... \
+  dsh --profile pvz-teacher "调用一下 mcp__pvz__ping，参数 note 填「真实模型端到端测试」…"
+```
+
+模型先出推理、再发起 `mcp__pvz__ping`、拿到 JSON 后原样回显，退出码 0。
+代理录到的 5 个请求里，关键是第 4、5 个：
+
+| # | path | `thinking` | `output_config` | tools | 代理动作 |
+|---|---|---|---|---|---|
+| 3 | `/v1/messages` | `disabled` | — | 0 | 未改（标题生成，**正确地没动**） |
+| 4 | `/v1/messages` | `enabled` | `{effort: max}` | **28（含 `mcp__pvz__ping`）** | `budget_tokens=32768` |
+| 5 | `/v1/messages` | `enabled` | `{effort: max}` | 28 | `budget_tokens=32768` |
+
+**这一条同时验掉了三件事**：
+
+1. `reasoningEffort: max` 确实落到了线上（`output_config.effort = "max"`），
+   模型的推理过程在终端里可见 —— 这是用户要的"思考拉满"的实证，不是配置文件的自我声明。
+2. 目录条目的 `maxTokens: 65536` 确实生效（`max_tokens: 65536`）。
+3. 第 3 个请求 `thinking.type = disabled`，代理**没碰它** ——
+   说明修复逻辑是按需触发，不是无脑改写所有请求。
+
+**副产品**：`tools=28` 说明这个端点**支持 tool use**，模型也确实用上了。
+所以"LLM 当教师"这条线的模型侧前提已经具备，剩下的全是我们的工具面（S1）要铺开的事。
 
 
 ### 4. 架构（三层，各自独立可测）
@@ -1599,10 +1640,13 @@ thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
 
 ### 5. 分步执行与验收
 
-**S0 · 最小 MCP server 打通（go/no-go）—— ✅ 2026-10-03 通过**
+**S0 · 最小 MCP server 打通（go/no-go）—— ✅ 2026-10-03 通过（两重验收）**
 只暴露一个 `ping` 工具。打包成 bundle，装进 profile。
 验收：`--dump-config` 能看到行，且会话里能调 `mcp__pvz__ping` 成功。
-两条都过了，证据与可复现脚本见 §3.1。**继续往上走。**
+- **第一重（mock LLM，不需要 key）**：证据与可复现脚本见 §3.1，`verify_s0.sh` 退出 0。
+- **第二重（真实模型 deepseek-v4-flash-0731）**：见 §3.8，模型自主发起工具调用并原样回显结果。
+
+两重都过了，且 `reasoningEffort: max` 已在线上验证生效。**继续往上走。**
 
 **S1 · 真工具包成 MCP**
 把 `capture/index/lane/actions/whatif/frame/narrative` 暴露出来。
@@ -1644,6 +1688,10 @@ thinking: { type: effort === 'off' ? 'disabled' : 'enabled' },
   | `~/deepseek-harness` | DSH 源码（只读参考 + `pnpm run mock:llm` 的来源） |
 - `dsh/pvz-teacher/bundle/cordis.patch.yml` 里是**绝对路径**，所以 bundle 本身是
   机器专属的。等 S1 定下来再考虑用 Loader `!!js` 从环境变量取。
+- **接严格网关时必须挂着 `tools/logging_proxy.py`**（见 §3.6）：它既补
+  `budget_tokens`，也是"模型到底看到了什么"的唯一观测点。
+  也就是说这条线上多了一个**进程内依赖**，跑真实端点前先确认它在监听。
+  等 DSH 上游补上这个字段、或我们给源码打了补丁，这一跳就可以撤掉。
 - 预算无上限，但**无上限不等于无记账**（见 §7）。
 - 唯一防卡死规则：**连着若干轮最好改动都是 +0 波就停下，去查工具哪里给的信息不够**。
 
