@@ -407,6 +407,29 @@ DEEPSEEK_API_KEY=sk-... \
   dsh --profile pvz-teacher "调用一下 mcp__pvz__ping，把返回的 JSON 原样告诉我"
 ```
 
+**跑 RL 存档（`policy=ppo`）需要 torch，而两个解释器是分开的**：
+
+| 谁 | 用什么解释器 | 需要什么包 |
+|---|---|---|
+| MCP server 自己 | bundle `command` 指定的（mcp-venv） | `mcp` |
+| 它 fork 出去的 `episode_query.py` | bundle `env.PVZ_PYTHON` | numpy；跑 RL 还要 **torch** |
+
+mcp-venv 里**没有 torch 也没有 numpy**，所以 `PVZ_PYTHON` 必须指向 mise 的 python 3.14。
+`ping` 会回一个 `rl_replay` 布尔量（就是"那个解释器能不能 import torch"），
+一眼能看出这个能力在不在 —— 2026-10-04 的 S7 首轮就是这里配错，教师整轮拿不到
+反事实证据，还花了好几轮自己定位依赖问题。
+
+⚠ **改了 `dsh/pvz-teacher/bundle/cordis.patch.yml` 之后要同步到已部署副本**：
+
+```
+~/.local/share/pvz-agent/dsh-home/profiles/pvz-teacher/node_modules/@local/pvz-teacher/cordis.patch.yml
+~/.local/share/pvz-agent/dsh-home/profiles/pvz-teacher-web/node_modules/@local/pvz-teacher/cordis.patch.yml
+```
+
+DSH 读的是**已部署副本**，不是仓库里的源文件（2026-10-04 踩过：改了源文件后
+`rl_replay` 仍是 false，因为部署副本还指向 mcp-venv）。
+
+
 **实测通过（2026-10-03）**：模型先出推理、再发起 `mcp__pvz__ping`、原样回显 JSON，退出码 0。
 代理录到的请求证实 `output_config.effort = "max"` 与 `max_tokens = 65536` 都落到了线上，
 且 `tools=28`（含 `mcp__pvz__ping`）—— 该端点**支持 tool use**。

@@ -130,7 +130,8 @@ def _tool_ping(args: dict[str, Any]) -> tuple[str, bool]:
     """
     if os.environ.get("PVZ_MCP_VERBOSE_PING") != "1":
         return json.dumps(
-            {"pong": True, "tools": sorted(TOOLS), "argv_echo": args},
+            {"pong": True, "tools": sorted(TOOLS), "rl_replay": _torch_available(),
+             "argv_echo": args},
             ensure_ascii=False,
             indent=2,
         ), False
@@ -150,6 +151,27 @@ def _tool_ping(args: dict[str, Any]) -> tuple[str, bool]:
         "argv_echo": args,
     }
     return json.dumps(info, ensure_ascii=False, indent=2), False
+
+
+_TORCH_OK: bool | None = None
+
+
+def _torch_available() -> bool:
+    """跑工具的那个解释器能不能加载 torch —— 决定 RL 回放/反事实能不能做。
+
+    为什么要在 ping 里说（2026-10-04 实测）：S7 那轮教师在 RL 存档上跑 whatif
+    一直报 ModuleNotFoundError，它花了好几轮才定位到"是环境没 torch"，
+    而这本该一句话就知道。能力可见 = 少一轮无谓的排查。
+    """
+    global _TORCH_OK
+    if _TORCH_OK is None:
+        try:
+            proc = subprocess.run([PYTHON, "-c", "import torch"], capture_output=True,
+                                  text=True, timeout=60.0)
+            _TORCH_OK = proc.returncode == 0
+        except Exception:  # noqa: BLE001
+            _TORCH_OK = False
+    return _TORCH_OK
 
 
 def _which(name: str) -> str | None:

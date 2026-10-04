@@ -32,7 +32,13 @@
           # 这几个名字不含 KEY/TOKEN/SECRET、也不是 DSH_* 前缀，本来就能穿过擦除。
           # 显式写出来是为了让意图可读：server 该去哪找仓库、解释器和游戏资源。
           PVZ_ROOT: /Users/newbiexvwu/PvZAgent
-          PVZ_PYTHON: /Users/newbiexvwu/.local/share/pvz-agent/mcp-venv/bin/python
+          # ⚠ 跑工具的解释器**不是** server 自己的解释器，两者要分开看：
+          #   server 自己需要 `mcp` 包 → 只能跑在 mcp-venv 上（见上面的 command）；
+          #   而被它 fork 出去的 episode_query.py 需要 numpy，跑 RL 存档还需要 torch
+          #   → mcp-venv 里**都没有**。所以这里指向 mise 的 python 3.14。
+          #   2026-10-04 教训：这里曾经写成 mcp-venv，结果 RL 存档的 capture/whatif
+          #   一律 ModuleNotFoundError: torch，S7 首轮因此整轮拿不到反事实证据。
+          PVZ_PYTHON: /Users/newbiexvwu/.local/share/mise/installs/python/3.14/bin/python3
           # capture / whatif 要真跑模拟器，必须给到资源目录。
           # 注意 `episode_query.py` 自己的默认值（~/.cache/pvz-research-resources）
           # 在本机**不存在**，不给这个变量 capture 会直接失败。
