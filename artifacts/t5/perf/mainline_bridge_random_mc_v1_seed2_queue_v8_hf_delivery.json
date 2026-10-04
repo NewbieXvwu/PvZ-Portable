@@ -1,0 +1,11 @@
+{
+  "run": "mainline_bridge_random_mc_v1_seed2",
+  "branch": "evidence-mainline-bridge-random-mc-v1-seed2-first125k",
+  "status": "complete",
+  "start_utc": "2026-10-03T03:55:58.904407+00:00",
+  "pid": 227194,
+  "exit_code": 0,
+  "end_utc": "2026-10-03T04:00:59.748541+00:00",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "revision": "68cbf1eaeb2bd98886b14f4b5818024b0fb5676f"
+}
