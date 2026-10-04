@@ -1065,6 +1065,14 @@ def main() -> None:
                    help="关卡号 1..50：额外给出该关波数与可能出现的僵尸。")
     p.add_argument("--list-sections", action="store_true", help="列出可用的节名")
 
+    # probe：把"失败模式条件"跑起来。子命令（eval / check / scan / fields）原样
+    # 转给 scripts/probe.py —— 这一层不重新实现，也不改它的输出：教师从 MCP 看到的
+    # 和人在命令行看到的是同一屏。REMAINDER 是为了让子命令自己的旗标不被这里解析。
+    pr = sub.add_parser("probe", help="跑 / 验收「失败模式条件」（子命令见 probe.py）")
+    pr.add_argument("rest", nargs=argparse.REMAINDER,
+                    help="eval --probe ... --archive ... / check --skill DIR / "
+                         "scan ... / fields")
+
     for name in ("index", "strip", "lane", "events", "between", "diff", "trace", "frame",
                  "narrative", "actions", "whatif"):
         p = sub.add_parser(name)
@@ -1111,6 +1119,11 @@ def main() -> None:
             p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
 
     args = ap.parse_args()
+
+    if args.cmd == "probe":
+        # 整条转给 probe.py，退出码原样传出 —— lint_skills 的闸门靠它判成败。
+        import probe  # noqa: PLC0415  只有这条子命令需要它
+        sys.exit(probe.main(args.rest))
 
     if args.cmd == "capture":
         deck = [int(v) for v in args.deck.split(",")] if args.deck else None

@@ -24,14 +24,29 @@
 词表
 ----
   action_type            plant / wait / shovel
-  plant_role             producer / shooter / wall / other
+  plant_role             producer / shooter / wall / defense / other
+                         （**可重叠**：坚果墙既是 wall 也是 defense，
+                           写 [defense] 会把坚果墙和土豆雷一起抓到）
   lane_front_zombie_x_max  该路最前僵尸的 x ≤ N（x 越小越靠近房子；每列 80px）
   lane_firepower_max     该路**打得到**最前僵尸的火力 dps ≤ N
   lane_shooters_max      该路射手株数 ≤ N
+  lane_zombie_count_max  该路僵尸数 ≤ N（0 = 这条路上没敌人）
+  other_lane_zombie_count_min  别的路的僵尸总数 ≥ N（1 = 别的路有敌人）
+  other_lane_front_zombie_x_max  别的路最靠房子的僵尸 x ≤ N（别的路的敌人有多近）
+  action_col_min         动作落点列 ≥ N（0 起；屋顶预置花盆在 c0–c2，c3+ 是外侧）
+  action_col_max         动作落点列 ≤ N
   plant_life_ticks_max   这株种下后活不过 N tick
   sun_max                决策时阳光 ≤ N
   sun_min                决策时阳光 ≥ N
   wave_min               第 N 波之后才适用
+  wave_max               第 N 波之前才适用（含第 N 波）
+
+"该路"一律指**这一步动作落在的那一路**。`other_lane_*` 是"除了它以外"的路 ——
+这两组配合起来才能说清"种错路了"这类跨路判据：动作所在路没敌人（
+`lane_zombie_count_max: 0`），而别的路有敌人（`other_lane_zombie_count_min: 1`）。
+
+动作没有行/列的时候（wait 没有落点），带行/列字段的条件**不算命中** ——
+不是"跳过这一条约束"，那样会让每条带行字段的条件都把 wait 全标红。
 
 用法
 ----
@@ -49,6 +64,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -58,24 +74,52 @@ sys.path.insert(0, str(ROOT / "python"))
 
 from render_episode import (  # noqa: E402
     ECONOMY_TYPES, SHOOTER_TYPES, WALL_TYPES, _reachable_dps)
+from pvz_constants import PLANT_NAME  # noqa: E402
 
 # ---------------------------------------------------------------- 词表
 
+# "定点防御"：不发射子弹，只能在本路拦住或炸掉僵尸的植物。
+# 前四个就是 render_episode.WALL_TYPES（坚果墙/高坚果/南瓜头/大蒜），
+# 后面是地雷与地刺类（土豆雷/窝瓜/地刺/地刺王）。
+# 这是一张**植物编号表**，不是新逻辑 —— 编号本来就在 pvz://vocabulary 里，
+# 列出来是为了让"什么算防御植物"可核对、不用猜。
+#
+# ⚠ defense **包含** wall（坚果墙既是"挡路的"也是"防御的"），所以类别之间会重叠。
+# 因此一个植物可以有多个类别（见 `_roles_of`），`plant_role: [defense]` 会同时
+# 抓到坚果墙和土豆雷。写成互斥的单标签会让"坚果墙算不算防御植物"变成一句谎话。
+DEFENSE_TYPES = frozenset(WALL_TYPES | {4, 17, 21, 46})
+
 FIELDS = {
     "action_type": "这一步做了什么：plant / wait / shovel",
-    "plant_role": "种的植物属于哪类：producer / shooter / wall / other",
+    "plant_role": "种的植物属于哪类：producer / shooter / wall / defense / other",
     "lane_front_zombie_x_max": "该路最前僵尸的 x ≤ N（越小越靠近房子，每列 80px）",
     "lane_firepower_max": "该路打得到最前僵尸的火力 dps ≤ N",
     "lane_shooters_max": "该路射手株数 ≤ N",
+    "lane_zombie_count_max": "该路僵尸数 ≤ N（0 = 这条路上没敌人）",
+    "other_lane_zombie_count_min": "别的路的僵尸总数 ≥ N（1 = 别的路有敌人）",
+    "other_lane_front_zombie_x_max": "别的路最靠房子的僵尸 x ≤ N（别的路的敌人有多近）",
+    "action_col_min": "动作落点列 ≥ N（0 起）",
+    "action_col_max": "动作落点列 ≤ N",
     "plant_life_ticks_max": "种下的这株活不过 N tick",
     "sun_max": "决策时阳光 ≤ N",
     "sun_min": "决策时阳光 ≥ N",
     "wave_min": "第 N 波之后才算",
+    "wave_max": "第 N 波之前才算（含第 N 波）",
 }
 
-# 上限型字段：值是"最多多少"；wave_min 是下限型，语义相反。
+# 上限型字段：值是"最多多少"；*_min 型语义相反。
 _MAX_FIELDS = {"lane_front_zombie_x_max", "lane_firepower_max", "lane_shooters_max",
-               "plant_life_ticks_max", "sun_max"}
+               "lane_zombie_count_max", "other_lane_front_zombie_x_max",
+               "action_col_max", "plant_life_ticks_max", "sun_max", "wave_max"}
+_MIN_FIELDS = {"other_lane_zombie_count_min", "action_col_min", "sun_min", "wave_min"}
+
+# 需要"动作落点"才能判的字段。动作没有落点（wait）时，带这些字段的条件不算命中。
+_ROW_FIELDS = {"lane_front_zombie_x_max", "lane_firepower_max", "lane_shooters_max",
+               "lane_zombie_count_max", "other_lane_zombie_count_min",
+               "other_lane_front_zombie_x_max"}
+_COL_FIELDS = {"action_col_min", "action_col_max"}
+
+_ROLES = ("producer", "shooter", "wall", "defense", "other")
 
 
 def validate_probe(probe: dict) -> list[str]:
@@ -98,26 +142,48 @@ def validate_probe(probe: dict) -> list[str]:
     if "plant_role" in probe:
         roles = probe["plant_role"]
         roles = roles if isinstance(roles, list) else [roles]
-        bad = [r for r in roles if r not in ("producer", "shooter", "wall", "other")]
+        bad = [r for r in roles if r not in _ROLES]
         if bad:
-            problems.append(f"plant_role 只能是 producer/shooter/wall/other，收到 {bad}")
+            problems.append(f"plant_role 只能是 {'/'.join(_ROLES)}，收到 {bad}")
+    # 阈值必须是整数：写成 "0" 或 0.5 会让比较静默走另一条路。
+    for key in sorted((_MAX_FIELDS | _MIN_FIELDS) & set(probe)):
+        value = probe[key]
+        if isinstance(value, bool) or not isinstance(value, int):
+            problems.append(f"{key} 的阈值必须是整数，收到 {value!r}")
     return problems
 
 
-def _role_of(plant_type: int) -> str:
+def _roles_of(plant_type: int) -> set:
+    """这株植物属于哪几类。**是集合不是单值** —— 坚果墙既是 wall 也是 defense。
+
+    类别表之间本来就会重叠（defense ⊃ wall），硬塞成单值就得二选一，
+    而被丢掉的那一半会变成"条件抓不到它号称的那个现象"。
+    """
+    roles = set()
     if plant_type in ECONOMY_TYPES:
-        return "producer"
-    if plant_type in WALL_TYPES:
-        return "wall"
+        roles.add("producer")
     if plant_type in SHOOTER_TYPES:
-        return "shooter"
-    return "other"
+        roles.add("shooter")
+    if plant_type in WALL_TYPES:
+        roles.add("wall")
+    if plant_type in DEFENSE_TYPES:
+        roles.add("defense")
+    return roles or {"other"}
 
 
 def _front_zombie_x(frame: dict, row: int) -> float | None:
     """这一路最靠房子（x 最小）的那只僵尸在哪。没有僵尸返回 None。"""
     xs = [z[2] for z in frame.get("zombies") or [] if z[0] == row]
     return min(xs) if xs else None
+
+
+def _lane_zombie_count(frame: dict, row: int) -> int:
+    return sum(1 for z in frame.get("zombies") or [] if z[0] == row)
+
+
+def _other_lane_xs(frame: dict, row: int) -> list:
+    """除了这一路以外，其它路上所有僵尸的 x。"""
+    return [z[2] for z in frame.get("zombies") or [] if z[0] != row]
 
 
 def _lane_shooters(frame: dict, row: int) -> int:
@@ -151,6 +217,18 @@ def evaluate(frames: list, deck: list, probe: dict) -> list[dict]:
         if "action_type" in probe and kind != probe["action_type"]:
             continue
         row = act.get("row")
+        col = act.get("col")
+        # 动作没有落点（wait）时，带行/列字段的条件判不了 —— 不算命中。
+        # 注意不能"跳过这条约束"，那样会让每条带行字段的条件都把 wait 全标红。
+        if (_ROW_FIELDS & set(probe)) and row is None:
+            continue
+        if (_COL_FIELDS & set(probe)) and col is None:
+            continue
+        if "action_col_min" in probe and col < probe["action_col_min"]:
+            continue
+        if "action_col_max" in probe and col > probe["action_col_max"]:
+            continue
+
         plant_type = None
         if kind == "plant":
             pk = act.get("packet")
@@ -158,7 +236,7 @@ def evaluate(frames: list, deck: list, probe: dict) -> list[dict]:
             if "plant_role" in probe:
                 want = probe["plant_role"]
                 want = want if isinstance(want, list) else [want]
-                if _role_of(plant_type) not in want:
+                if not (_roles_of(plant_type) & set(want)):
                     continue
         elif "plant_role" in probe:
             continue  # 条件限定了植物类别，这一步没种东西 → 不算命中
@@ -167,6 +245,9 @@ def evaluate(frames: list, deck: list, probe: dict) -> list[dict]:
             if "lane_shooters_max" in probe and \
                     _lane_shooters(prev, row) > probe["lane_shooters_max"]:
                 continue
+            if "lane_zombie_count_max" in probe and \
+                    _lane_zombie_count(prev, row) > probe["lane_zombie_count_max"]:
+                continue
             front_x = _front_zombie_x(prev, row)
             if "lane_front_zombie_x_max" in probe:
                 if front_x is None or front_x > probe["lane_front_zombie_x_max"]:
@@ -174,6 +255,13 @@ def evaluate(frames: list, deck: list, probe: dict) -> list[dict]:
             if "lane_firepower_max" in probe:
                 dps, _, _ = _reachable_dps(prev, row, front_x)
                 if dps > probe["lane_firepower_max"]:
+                    continue
+            others = _other_lane_xs(prev, row)
+            if "other_lane_zombie_count_min" in probe and \
+                    len(others) < probe["other_lane_zombie_count_min"]:
+                continue
+            if "other_lane_front_zombie_x_max" in probe:
+                if not others or min(others) > probe["other_lane_front_zombie_x_max"]:
                     continue
 
         if "plant_life_ticks_max" in probe:
@@ -187,6 +275,8 @@ def evaluate(frames: list, deck: list, probe: dict) -> list[dict]:
             continue
         if "wave_min" in probe and (prev.get("wave") or 0) < probe["wave_min"]:
             continue
+        if "wave_max" in probe and (prev.get("wave") or 0) > probe["wave_max"]:
+            continue
 
         hits.append({"decision": i, "tick": cur.get("tick"), "wave": cur.get("wave"),
                      "action": act,
@@ -195,6 +285,12 @@ def evaluate(frames: list, deck: list, probe: dict) -> list[dict]:
 
 
 # ---------------------------------------------------------------- 存档读写
+
+# 证据块围栏。**必须与 lint_skills.EVIDENCE_BLOCK 的名字一致** ——
+# 两份正则各写一份是为了不让 lint_skills 和 probe 互相 import
+# （lint_skills 在函数里 import probe，反向再来一次会加载出第二个模块副本）。
+_EVIDENCE_BLOCK = re.compile(r"```pvz-evidence[ \t]*\n(.*?)```", re.S)
+
 
 def load_archive(path: str | Path) -> tuple[dict, list]:
     meta = json.loads((Path(path) / "meta.json").read_text(encoding="utf-8"))
@@ -220,7 +316,12 @@ def _load_skill_probe(skill_dir: str | Path) -> tuple[dict | None, list, list]:
     text = (Path(skill_dir) / "SKILL.md").read_text(encoding="utf-8")
     probe = _frontmatter_probe(text)
     points, counterpoints = [], []
-    for line in text.splitlines():
+    # 只在 ```pvz-evidence 块里找点和反例 —— 正文里写一句"counterpoint: ..."
+    # 不该被当成证据。围栏名必须与 lint_skills.EVIDENCE_BLOCK 一致。
+    block = _EVIDENCE_BLOCK.search(text)
+    if block is None:
+        return probe, points, counterpoints
+    for line in block.group(1).splitlines():
         line = line.strip()
         if line.startswith("point:"):
             points.append(line[len("point:"):].strip())
@@ -362,7 +463,7 @@ def check_skill(skill_dir: str) -> tuple[bool, str, bool]:
 
 # ---------------------------------------------------------------- CLI
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -379,12 +480,23 @@ def main() -> int:
 
     sub.add_parser("fields", help="列出可用字段（封闭词表）")
 
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     if args.cmd == "fields":
         print("条件只能引用这些字段（每个都是工具本来就在显示的量）：")
         for key, desc in FIELDS.items():
-            print(f"  {key:26s} {desc}")
+            print(f"  {key:30s} {desc}")
+        print("")
+        print("plant_role 的类别表（植物编号来自 pvz://vocabulary，不是猜的）：")
+        for role, types in (("producer", ECONOMY_TYPES), ("shooter", SHOOTER_TYPES),
+                            ("wall", WALL_TYPES), ("defense", DEFENSE_TYPES)):
+            names = "、".join(f"{t}={PLANT_NAME.get(t, '?')}" for t in sorted(types))
+            print(f"  {role:9s} {names}")
+        print("  other     上面四类之外的植物")
+        print("")
+        print("类别会重叠：defense ⊃ wall（坚果墙两类都算），"
+              "所以 plant_role: [defense] 会把坚果墙一起抓上；"
+              "写 [wall, defense] 是多余的，写 [wall] 只抓挡路的那四种。")
         return 0
 
     if args.cmd == "eval":

@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
 import lint_skills  # noqa: E402
+import probe  # noqa: E402
 
 POTATO = {"type": "plant", "packet": 4, "row": 3, "col": 6}
 WAIT = {"type": "wait", "ticks": 60}
@@ -347,6 +348,154 @@ class ProbeGate(unittest.TestCase):
         fails, notes = lint_skills.lint_skill(skill, check_archives=True)
         self.assertEqual(fails, [], fails)
         self.assertFalse(any("probe" in n for n in notes), notes)
+
+    # ---------------------------------------------- 跨路 / 列位置（S7 的覆盖缺口）
+
+    def _frames_lane_choice(self, deck_packet: int = 3) -> list:
+        """3 路上有僵尸，动作落在别的路上。
+
+        决策 1、2 把防御植物种在**没僵尸**的 2 路（错路）→ 该命中；
+        决策 3 种在**有僵尸**的 3 路（对路）→ 反例，不该命中。
+        决策 4 是 wait：它没有落点，带行字段的条件判不了它，**不算命中**。
+        """
+        zombie = [3, 0, 600.0, 0.0, 200, True, False, 0, 0, 0]
+
+        def frame(tick, plants, action=None):
+            return {"tick": tick, "wave": 1, "sun": 100, "plants": plants,
+                    "zombies": [zombie], "action": action,
+                    "row_terrain": [1] * 6, "lanes": list(range(6))}
+        plant = lambda row, col: {"type": "plant", "packet": deck_packet,
+                                  "row": row, "col": col}
+        return [
+            frame(0, []),
+            frame(60, [[2, 1, 3, 300, 300]], plant(2, 1)),            # 1 错路
+            frame(120, [[2, 1, 3, 300, 300], [2, 3, 3, 300, 300]],    # 2 错路
+                  plant(2, 3)),
+            frame(180, [[2, 1, 3, 300, 300], [2, 3, 3, 300, 300],     # 3 对路
+                        [3, 1, 3, 300, 300]], plant(3, 1)),
+            frame(240, [[2, 1, 3, 300, 300], [2, 3, 3, 300, 300],     # 4 wait
+                        [3, 1, 3, 300, 300]], {"type": "wait", "ticks": 60}),
+        ]
+
+    def test_cross_lane_probe_passes(self) -> None:
+        """「种在了没敌人的路，而别的路有敌人」——S7 那条同行拦截机制的判据。
+
+        `plant_role: [defense]` 必须同时抓到坚果墙（wall 类）和土豆雷（地雷类），
+        所以类别是集合不是单标签。packet 3 → 坚果墙，就是被单标签漏掉的那个。
+        """
+        archive = self._archive(self._frames_lane_choice())
+        skill = self._skill("crosslane",
+                            "  action_type: plant\n  plant_role: [defense]\n"
+                            "  lane_zombie_count_max: 0\n  other_lane_zombie_count_min: 1",
+                            f"point: {archive} | 1 | plant:3:2:1 | wait:60 | 通关\n"
+                            f"point: {archive} | 2 | plant:3:2:3 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3")
+        fails, notes = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertEqual(fails, [], fails)
+        self.assertTrue(any("probe" in n and "通过" in n for n in notes), notes)
+
+    def test_wait_action_does_not_satisfy_lane_conditions(self) -> None:
+        """wait 没有落点，带行字段的条件判不了它。
+
+        如果写成"跳过这条约束"，每条带行字段的条件都会把 wait 全标红 ——
+        筛出来的"可疑局"里会有一大半是等待动作。
+        """
+        archive = self._archive(self._frames_lane_choice())
+        frames = self._frames_lane_choice()
+        hits = probe.evaluate(frames, [0, 1, 2, 3, 4, 5],
+                              {"lane_zombie_count_max": 0})
+        self.assertEqual([h["decision"] for h in hits], [1, 2])
+        self.assertNotIn(4, [h["decision"] for h in hits])
+        self.assertTrue(archive.exists())
+
+    def test_column_probe_passes(self) -> None:
+        """「开局把阳光花在外侧列」——S7 那条屋顶经济机制的判据（列位置）。"""
+        zombie_free = []
+
+        def frame(tick, plants, action=None):
+            return {"tick": tick, "wave": 0, "sun": 50, "plants": plants,
+                    "zombies": zombie_free, "action": action,
+                    "row_terrain": [1] * 6, "lanes": list(range(6))}
+        plant = lambda col: {"type": "plant", "packet": 2, "row": 2, "col": col}
+        frames = [
+            frame(0, []),
+            frame(60, [[2, 6, 2, 300, 300]], plant(6)),      # 1 外侧 → 命中
+            frame(120, [[2, 6, 2, 300, 300], [2, 8, 2, 300, 300]],
+                  plant(8)),                                  # 2 外侧 → 命中
+            frame(180, [[2, 6, 2, 300, 300], [2, 8, 2, 300, 300],
+                        [2, 2, 2, 300, 300]], plant(2)),      # 3 内侧 → 反例
+        ]
+        archive = self._archive(frames)
+        skill = self._skill("outercol",
+                            "  action_type: plant\n  plant_role: [other]\n"
+                            "  action_col_min: 3\n  wave_max: 0",
+                            f"point: {archive} | 1 | plant:2:2:6 | wait:60 | 通关\n"
+                            f"point: {archive} | 2 | plant:2:2:8 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3")
+        fails, notes = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertEqual(fails, [], fails)
+        self.assertTrue(any("probe" in n and "通过" in n for n in notes), notes)
+
+    def test_probe_threshold_must_be_an_integer(self) -> None:
+        """`sun_max: 50` 和 `sun_max: "50"` 在 Python 里比较结果不同 —— 静默走错路。"""
+        archive = self._archive(self._frames())
+        skill = self._skill("strnum", "  action_type: plant\n  sun_max: 不是数字",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3")
+        fails, _ = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertTrue(any("必须是整数" in f for f in fails), fails)
+
+    # ------------------------------------------------------------ 反例点
+
+    def test_counterpoints_may_repeat(self) -> None:
+        """反例和证据点一样是列表字段。只能写一条的话，写的人会把两条挤进一行。"""
+        archive = self._archive(self._frames())
+        skill = self._skill("twocounter",
+                            "  action_type: plant\n  plant_role: [producer]\n"
+                            "  lane_front_zombie_x_max: 260",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关\n"
+                            f"point: {archive} | 2 | plant:1:1:1 | wait:60 | 通关",
+                            f"\ncounterpoint: {archive} | 3\ncounterpoint: {archive} | 2")
+        # 决策 2 是证据点也是反例 → 反例被误标，闸门该拒它。
+        fails, _ = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertTrue(any("误判" in f for f in fails), fails)
+        self.assertFalse(any("写了两遍" in f for f in fails), fails)
+
+    def test_counterpoint_needs_archive_and_decision(self) -> None:
+        archive = self._archive(self._frames())
+        skill = self._skill("prosecounter", "  action_type: plant",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关\n"
+                            f"point: {archive} | 2 | plant:1:1:1 | wait:60 | 通关",
+                            "\ncounterpoint: 有时候这样种也没事")
+        fails, _ = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertTrue(any("2 段" in f for f in fails), fails)
+
+    def test_counterpoint_archive_must_exist(self) -> None:
+        archive = self._archive(self._frames())
+        skill = self._skill("ghostcounter", "  action_type: plant",
+                            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关\n"
+                            f"point: {archive} | 2 | plant:1:1:1 | wait:60 | 通关",
+                            f"\ncounterpoint: {self.root}/nope | 1")
+        fails, _ = lint_skills.lint_skill(skill, check_archives=True)
+        self.assertTrue(any("counterpoint 的存档不存在" in f for f in fails), fails)
+
+    def test_counterpoint_in_prose_is_not_evidence(self) -> None:
+        """正文里写一句「counterpoint: ...」不算反例 —— 只认 ```pvz-evidence 块里的。"""
+        archive = self._archive(self._frames())
+        skill = self.skills / "prosecounterpoint"
+        skill.mkdir(parents=True)
+        (skill / "SKILL.md").write_text(
+            "---\nname: prosecounterpoint\ndescription: 演示用\n"
+            "probe:\n  action_type: plant\n---\n\n"
+            "# 规则\n\n正文里随口提一句 counterpoint: 这里不算证据。\n\n"
+            "## 证据\n\n```pvz-evidence\nkind: mechanism\nclaim: a\nfalsifier: b\n"
+            f"point: {archive} | 1 | plant:1:1:0 | wait:60 | 通关\n"
+            f"point: {archive} | 2 | plant:1:1:1 | wait:60 | 通关\n```\n",
+            encoding="utf-8")
+        ok, report, has_probe = probe.check_skill(str(skill))
+        self.assertTrue(has_probe)
+        self.assertFalse(ok)
+        self.assertIn("没有反例点", report)
 
 
 if __name__ == "__main__":

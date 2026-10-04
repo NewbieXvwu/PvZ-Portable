@@ -136,6 +136,7 @@ def _parse_evidence(text: str) -> dict | None:
 
     fields: dict[str, str] = {}
     points: list[str] = []
+    counterpoints: list[str] = []
     last_key: str | None = None
     for raw in m.group(1).splitlines():
         if not raw.strip() or raw.strip().startswith("#"):
@@ -144,8 +145,8 @@ def _parse_evidence(text: str) -> dict | None:
         # 这类字段本来就该是一句完整的话，硬压成一行既难写也难读，
         # 而写的人（模型）很自然会换行 —— 与其报错，不如认下来。
         if raw[:1] in (" ", "\t") and last_key is not None:
-            if last_key == "point":
-                raise BadEvidence("`point` 不能折行 —— 一条证据写一行")
+            if last_key in ("point", "counterpoint"):
+                raise BadEvidence(f"`{last_key}` 不能折行 —— 一条证据写一行")
             fields[last_key] = f"{fields[last_key]} {raw.strip()}"
             continue
         line = raw.strip()
@@ -153,15 +154,22 @@ def _parse_evidence(text: str) -> dict | None:
         if not sep:
             raise BadEvidence(f"这一行既不是 `key: value` 也不是 `point:`：{line!r}")
         key, val = key.strip(), val.strip()
+        # `point` 和 `counterpoint` 都是**可重复**的列表字段 —— 一条一行。
+        # 反例如果只能写一条，写的人就会把两条挤进一行（probe 那边读不出来）。
         if key == "point":
             points.append(val)
             last_key = "point"
+            continue
+        if key == "counterpoint":
+            counterpoints.append(val)
+            last_key = "counterpoint"
             continue
         if key in fields:
             raise BadEvidence(f"字段 `{key}` 写了两遍")
         fields[key] = val
         last_key = key
     fields["_points"] = points  # type: ignore[assignment]
+    fields["_counterpoints"] = counterpoints  # type: ignore[assignment]
     return fields
 
 
@@ -336,7 +344,41 @@ def lint_skill(skill_dir: Path, check_archives: bool = True) -> tuple[list[str],
                     f"        存档是原局跑出来的，不是写出来的 —— 对不上就是这条证据编的。"
                 )
 
-    # --- 4b. probe（可选）：写了"什么算这个失败模式"的条件，就要能自动验收 ---
+    # --- 4b. 反例点：给 probe 条件用的"泛化过头"探针，必须能定位到具体决策 ---
+    #
+    # 散文写的反例机器验不了（"有时候这样种也没事"）。所以反例和证据点一样，
+    # 必须是「存档 | 决策号」—— 存档在、决策号在范围内，才有资格当反例。
+    for i, raw in enumerate(ev["_counterpoints"], 1):  # type: ignore[index]
+        parts = [p.strip() for p in raw.split("|")]
+        if len(parts) != 2:
+            fails.append(
+                f"第 {i} 条 counterpoint 要有 2 段（存档 | 决策号），"
+                f"这一条有 {len(parts)} 段：{raw!r}"
+            )
+            continue
+        archive_s, decision_s = parts
+        if not decision_s.lstrip("-").isdigit():
+            fails.append(f"第 {i} 条 counterpoint 的决策号不是整数：{decision_s!r}")
+            continue
+        if not check_archives:
+            continue
+        archive = Path(archive_s)
+        if not archive.is_dir():
+            fails.append(f"第 {i} 条 counterpoint 的存档不存在：{archive}")
+            continue
+        try:
+            actions = _load_actions(archive)
+        except BadEvidence as exc:
+            fails.append(f"第 {i} 条 counterpoint：{exc}")
+            continue
+        idx = int(decision_s)
+        if not 0 <= idx < len(actions):
+            fails.append(
+                f"第 {i} 条 counterpoint 的决策号越界：{idx}，"
+                f"这个存档只到决策 {len(actions) - 1}"
+            )
+
+    # --- 4c. probe（可选）：写了"什么算这个失败模式"的条件，就要能自动验收 ---
     #
     # 为什么并进闸门而不是单独跑：教师写完 skill 会调一次闸门。如果验收在别处，
     # 它八成不会主动跑 —— S3 的实测就是"没有当场拒，它就不会补"。

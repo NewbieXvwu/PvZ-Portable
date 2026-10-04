@@ -42,10 +42,28 @@ capture → 诊断 → whatif → skill 流程原样复用，产出的**就是�
     新抓的 roof_seed61218 决策 15 同样改法多推 1 波）。
   · `roof-early-economy`：开局把阳光花在外侧铺花盆（决策 1/7）而不是先在
     预置花盆里种向日葵 → 经济启动窗口被错过，全场种不出射手（改后各 +2 波）。
-- ** probe 覆盖缺口（诚实记录）**：这两条都没写成自动筛子，因为当前封闭词表
-  只描述"动作所在的那一路"，而这两条机制的判据是**跨路 / 位置**的
-  （"种在了别的路"、"种在了外侧列"）。要么扩词表（加列范围、别的路的威胁），
-  要么它们就只作叙述 —— 这是待定的取舍，不是缺陷。
+- **probe 覆盖缺口已补（2026-10-04）**：这两条当时都写不成自动筛子，因为封闭
+  词表只描述"动作所在的那一路"。现在词表加了跨路与列位置两组字段
+  （`lane_zombie_count_max` / `other_lane_zombie_count_min` /
+  `other_lane_front_zombie_x_max` / `action_col_min` / `action_col_max` /
+  `wave_max`），`plant_role` 也加了 `defense` 一类。两条机制现在都过了闸门：
+
+  | skill | 条件 | 证据点 | 反例 |
+  |---|---|---|---|
+  | `match-lane-threat` | `plant_role: [defense]` + `lane_zombie_count_max: 0` + `other_lane_zombie_count_min: 1` | 3/3 命中 | 2 条不命中 |
+  | `roof-early-economy` | `plant_role: [other]` + `action_col_min: 3` + `wave_max: 0` | 2/2 命中 | 2 条不命中 |
+
+  验证用的副本在 `/tmp/pvz-s7-probe/skills`（原始 S7 产出保持原样，不动），
+  `scripts/lint_skills.py <dir>` 2/2 通过。
+- **顺带修掉三个真问题**（都是写这两条 probe 时撞出来的）：
+  1. `plant_role` 原本是单标签，坚果墙同时属于 wall 和 defense，会被判成 wall
+     → `[defense]` 抓不到它。改成**类别集合**（可重叠），`defense ⊃ wall`。
+  2. `episode_query.py` **没有 `probe` 子命令**，而 MCP 的 `probe` 工具和
+     `pvz://probe-fields` 资源都是靠 `episode_query.py probe ...` 调用的
+     → 两个入口一直是坏的（exit 2）。已补上转发。
+  3. `lint_skills` 和 `probe` 对 `counterpoint` 的格式理解不一致：前者当单值字段
+     且拒绝重复，后者按行扫描 → 写两条反例必被拒。现在两边都是**可重复的
+     列表字段**，且 probe 只在 ```pvz-evidence 块里读（正文里提一句不算证据）。
 
 ## 什么时候跑：时机、场景与时间账（2026-10-03 实测）
 
