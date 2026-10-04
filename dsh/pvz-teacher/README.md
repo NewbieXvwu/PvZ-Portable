@@ -65,6 +65,40 @@ capture → 诊断 → whatif → skill 流程原样复用，产出的**就是�
      且拒绝重复，后者按行扫描 → 写两条反例必被拒。现在两边都是**可重复的
      列表字段**，且 probe 只在 ```pvz-evidence 块里读（正文里提一句不算证据）。
 
+**接主线时撞出来的两个硬问题（2026-10-04，都是"会静默给出一局看起来正常的结果"）**
+
+1. **卡组会错位。** 训练用的是任务清单里的 `deck`
+   （`train_pvz_ppo.py:64` = `env.reset(deck=task["deck"], ...)`），而
+   `capture --policy ppo` 不给 `--deck` 时用的是 `deck_for_level()` ——
+   那是**脚本基线**的卡组。第 49 关两者就不一样：脚本 `[0,1,2,3,4,5,33]`
+   vs T7 清单 `[0,1,3,4,7,33]`。卡槽错位 = 模型说"用第 2 槽"本机种出另一个
+   植物，而且它看到的观测本身就是另一副卡槽（分布外输入）。
+   现在 `policy=ppo` **不带卡组直接报错**；新增
+   `--task-manifest <清单> --task-id <任务>`，level / deck / 波数上限 /
+   僵尸倍率 / 预种植物全部从清单取（手抄必漂，第 49 关的卡组就是这么漂的）。
+   MCP 的 `capture` 工具同步加了 `task_manifest` / `task_id`。
+   **注意：援助任务的预种植物只有走 `--task-manifest` 才带得上**，
+   手写 `--level/--deck` 复现不出援助任务。
+2. **模拟器 build 对不上。** 检查点的 `provenance.fingerprints.simulator`
+   记着它是在哪个 `build/pvz-portable` 上训的。项目里
+   `evaluate_full_acceptance.py` 拿这个做**硬门禁**（不一致直接 raise
+   "Checkpoint and evaluation native builds differ"），但回放这条路**从不检查**。
+   实测：本机 build `2056e13e`，主线检查点 `dc8747f4`（台式机生产构建），
+   S7 那个检查点 `371a75d7` —— 三个都不一样。
+   ⚠ 跨平台编译同一份源码字节就不同，所以"不一致"**不等于行为变了**；
+   但它必须可见：现在 `collect()` 把 `simulator_build` 写进存档 meta，
+   capture 会打印警告，措辞明确说明"whatif 的结果属于本机 build"。
+   （源码指纹是另一回事：主线检查点的 17 个 `python/*.py` + `scripts/*.py`
+   指纹与本机**逐个相同**，所以观测格式与代码语义确实一致，见下。）
+
+**主线检查点能不能直接回放（2026-10-04 实测）**：能。
+`mainline_bridge_random_mc_v1_seed0` 的 `update_000328_boundary`（HF 分支
+`evidence-mainline-bridge-random-mc-v1-seed0-selected250k`）：
+`observation_version=4`、`protocol_version=4`、`task_version=2`、
+`wait_mode=events`，且 17 个源码文件指纹与本机逐个相同 → 在本机直接跑通
+（`capture --task-manifest experiments/t7/bridge_level7_v1/train.json
+--task-id train_roof_4`，level 49 / cap 5，本机 build 上输在僵尸进屋）。
+
 ## 什么时候跑：时机、场景与时间账（2026-10-03 实测）
 
 **实测成本**（S4+S5 两个完整诊断会话，reasoningEffort=high）：一次完整

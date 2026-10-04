@@ -52,7 +52,8 @@ from render_episode import (  # noqa: E402
     DEFAULT_RESOURCE_DIR, PLANT_GLYPH,
     _board_ascii, _disp, _lane_causal, _lane_line, _lane_rows, _lane_table,
     _lane_warnings, _mower_fired, _plant_diff, _render_row, _signals,
-    _wave_matrix, collect, lane_indices,
+    _wave_matrix, collect, lane_indices, load_training_task,
+    training_task_kwargs,
 )
 
 # 游戏常量（从 C++ 源码现场解析）。地形/背景的**中文名**也从这里拿 ——
@@ -83,6 +84,9 @@ def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
     if policy == "ppo":
         meta["checkpoint"] = rec["task"].get("checkpoint")
         meta["checkpoint_sha256"] = rec["task"].get("checkpoint_sha256")
+        # 这一局是在哪个模拟器 build 上跑的。见 render_episode.simulator_build()：
+        # 跨平台比对没有意义，但"换了 build"这件事必须在存档里看得见。
+        meta["simulator_build"] = rec["task"].get("simulator_build")
     (out_dir / "meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     with (out_dir / "frames.jsonl").open("w", encoding="utf-8") as fh:
@@ -1037,7 +1041,8 @@ def main() -> None:
 
     c = sub.add_parser("capture", help="跑一局并落盘")
     c.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
-    c.add_argument("--seed", type=int, required=True)
+    c.add_argument("--seed", type=int, default=None,
+                   help="不给就取 --task-manifest 里该任务的第一个种子。")
     c.add_argument("--level", type=int, default=7)
     c.add_argument("--policy", choices=["scripted", "donothing", "ppo"], default="scripted")
     c.add_argument("--checkpoint", default=None,
@@ -1045,6 +1050,13 @@ def main() -> None:
     c.add_argument("--sampled", action="store_true",
                    help="--policy ppo 时用：按概率采样（默认贪心，可复现）。")
     c.add_argument("--deck", default=None)
+    c.add_argument("--task-manifest", default=None,
+                   help="复现训练任务：任务清单 json（如 "
+                        "experiments/t7/bridge_level7_v1/train.json）。给了它就用清单里的 "
+                        "level / deck / 波数上限 / 僵尸倍率 / 预种植物 —— 这些是训练时"
+                        "真正用的值，手抄到命令行会漂。")
+    c.add_argument("--task-id", default=None,
+                   help="--task-manifest 里的任务 id（如 train_roof_4）。")
     c.add_argument("--wave-cap", type=int, default=None,
                    help="复现评估任务：这一关只打前 N 波（训练用的任务族常设上限）。")
     c.add_argument("--zombie-mult", type=float, default=None,
@@ -1127,14 +1139,44 @@ def main() -> None:
 
     if args.cmd == "capture":
         deck = [int(v) for v in args.deck.split(",")] if args.deck else None
+        seed = args.seed
+        level = args.level
         task_extra = {"wave_cap": args.wave_cap,
-                      "zombie_count_multiplier": args.zombie_mult} \
+                      "zombie_count_multiplier": args.zombie_mult,
+                      "preplanted": None} \
             if (args.wave_cap or args.zombie_mult) else None
-        res = capture(args.resource_dir, args.seed, args.level, args.policy, deck,
+        if args.task_manifest or args.task_id:
+            if not (args.task_manifest and args.task_id):
+                print("--task-manifest 和 --task-id 要一起给。", file=sys.stderr)
+                return 2
+            task = load_training_task(args.task_manifest, args.task_id)
+            kw = training_task_kwargs(task, seed)
+            level, deck = kw["level"], kw["deck"]
+            seed = kw["seed"]
+            task_extra = dict(kw["task_extra"])
+            print(f"按任务清单复现 {args.task_id}：level={level} seed={seed} "
+                  f"deck={deck} cap={task_extra.get('wave_cap')} "
+                  f"mult={task_extra.get('zombie_count_multiplier')} "
+                  f"预种={len(task_extra.get('preplanted') or ())} 株")
+        if seed is None:
+            print("要给 --seed，或者用 --task-manifest + --task-id。", file=sys.stderr)
+            return 2
+        res = capture(args.resource_dir, seed, level, args.policy, deck,
                       Path(args.out), args.max_actions, checkpoint=args.checkpoint,
                       deterministic=not args.sampled, task_extra=task_extra)
         print(f"已存档到 {args.out}：{res['meta']['frame_count']} 帧，"
               f"{res['meta']['outcome']['reason']}")
+        sb = res["meta"].get("simulator_build") or {}
+        if sb.get("status") == "mismatch":
+            print("")
+            print("⚠ 这一局用的模拟器 build 与检查点训练时的**不是同一个**：")
+            print(f"    训练时 {sb['trained']}…   本机 {sb['local']}…")
+            print("  跨平台编译同一份源码字节就不同，所以这不等于行为变了；")
+            print("  但这一局里 whatif 算出的结果属于**本机 build**，"
+                  "要拿它跟训练时的成绩直接比就得先说明这一点。")
+        elif sb.get("status") == "unknown":
+            print("（模拟器 build 对不上号：本机没有 build/pvz-portable，"
+                  "或检查点没记 fingerprints.simulator）")
         return
 
     if args.cmd == "vocabulary":

@@ -229,7 +229,75 @@ def _frame(obs: dict) -> dict:
     }
 
 
+def load_training_task(manifest_path: str | Path, task_id: str) -> dict:
+    """从任务清单里取出一个任务的定义。
+
+    这是**复现训练任务**的唯一权威来源：`train_pvz_ppo.py:64` 用的就是
+    `task["deck"]` 和 `_task_spec(task, seed)`。把 level / deck / 上限 / 倍率
+    手抄到命令行上必然漂移 —— 第 49 关的卡组就是这么漂的（脚本 [0,1,2,3,4,5,33]
+    vs 任务清单 [0,1,3,4,7,33]）。
+    """
+    doc = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    for task in doc.get("tasks") or []:
+        if task.get("task_id") == task_id:
+            return task
+    ids = [t.get("task_id") for t in doc.get("tasks") or []]
+    raise ValueError(f"任务清单 {manifest_path} 里没有任务 {task_id!r}。可用：{ids}")
+
+
+def training_task_kwargs(task: dict, seed: int | None = None) -> dict:
+    """任务定义 → `collect()` 的参数（level / deck / task_extra / seed）。"""
+    extra = {"wave_cap": task.get("wave_cap"),
+             "zombie_count_multiplier": task.get("zombie_count_multiplier")}
+    preplanted = tuple(tuple(p) for p in (task.get("preplanted") or ()))
+    if preplanted:
+        extra["preplanted"] = preplanted
+    seeds = task.get("seeds") or []
+    return {"level": task["level"], "deck": list(task["deck"]),
+            "seed": seed if seed is not None else (seeds[0] if seeds else 0),
+            "task_extra": extra}
+
+
 _POLICY_CACHE: dict = {}
+
+
+def local_simulator_fingerprint() -> str | None:
+    """本机模拟器构建的 sha256。取的是 `build/pvz-portable` —— 与
+    `pvz_research.py` 写 provenance、`evaluate_full_acceptance.py` 做门禁时
+    取的是**同一个文件**。三处取不同的东西就会各说各话。
+    """
+    exe = ROOT / "build" / "pvz-portable"
+    if not exe.exists():
+        return None
+    import hashlib
+    return hashlib.sha256(exe.read_bytes()).hexdigest()
+
+
+def simulator_build(checkpoint: dict) -> dict:
+    """检查点训练时用的模拟器 build，跟本机 build 是不是同一个。
+
+    ⚠ 跨平台比对**没有意义**：Mac 和 Linux 编译同一份源码，二进制字节也不同。
+    所以 "mismatch" 只说明"不是同一个二进制"，**不说明行为一定变了**。
+    措辞按这个来，别把它说成"这个结论不可信"。
+
+    为什么要记它：项目里 `evaluate_full_acceptance.py` 拿这个做**硬门禁**
+    （不一致直接 raise "Checkpoint and evaluation native builds differ;
+    preserve and report"）。回放这条路径不拒绝 —— 诊断本身有价值 —— 但必须
+    **记录并告知**：换 build 回放，whatif 算出来的"+2 波"是**这个** build 上的
+    结果，未必等于训练时那个 build 上的结果。
+    """
+    trained = ((checkpoint.get("provenance") or {}).get("fingerprints")
+               or {}).get("simulator")
+    local = local_simulator_fingerprint()
+    if trained is None or local is None:
+        status = "unknown"
+    elif trained == local:
+        status = "match"
+    else:
+        status = "mismatch"
+    return {"status": status,
+            "trained": (trained or "")[:16],
+            "local": (local or "")[:16]}
 
 
 def load_checkpoint_policy(path: str) -> tuple:
@@ -303,6 +371,21 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     if policy == "ppo":
         if not checkpoint:
             raise ValueError("policy=ppo 需要 checkpoint=<检查点路径>")
+        if not deck:
+            # 卡组必须显式给。理由（2026-10-04 实测）：训练用的是**任务清单里的
+            # deck**（`train_pvz_ppo.py:64` 是 `env.reset(deck=task["deck"], ...)`），
+            # 而 `deck_for_level()` 那套是**脚本基线**的卡组 —— 两者不一样：
+            # 第 49 关脚本给 [0,1,2,3,4,5,33]，T7 任务清单给 [0,1,3,4,7,33]。
+            # 卡槽对不上时，模型说"用第 2 槽"，本机就种出另一个植物，而且它
+            # 看到的观测本身就是另一副卡槽（分布外的输入）—— 这一局整个没意义，
+            # 但表面上会正常跑完并给出一个"结果"。宁可报错。
+            raise ValueError(
+                "policy=ppo 必须显式给 deck —— 训练用的卡组来自任务清单"
+                "（experiments/.../train.json 的 deck 字段），不是 deck_for_level() "
+                "那套脚本卡组。两者在第 49 关就不同（脚本 [0,1,2,3,4,5,33] "
+                "vs 任务清单 [0,1,3,4,7,33]），卡槽错位会让模型种出别的植物，"
+                "而这一局还会照常跑完并给出一个结果。用 --deck a,b,c 或 "
+                "--task-manifest/--task-id 指定训练任务。")
         model, _loaded = load_checkpoint_policy(checkpoint)
         # 事件等待型策略发的动作只有对应的 env 子类接得住，所以 env 由模型
         # 自己的 config 决定（wait_mode），不能写死 PvZEnv。
@@ -321,6 +404,9 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
                                     .get("observation_version")),
             # 透明记录：哪些训练专用头被丢掉了（不影响选动作，但要看得见）。
             "dropped_aux_heads": _loaded.get("_dropped_aux_heads") or [],
+            # 这一局是在哪个模拟器 build 上跑的、和训练时那个是不是同一个。
+            # 见 simulator_build() 的说明：跨平台比对没有意义，但必须可见。
+            "simulator_build": simulator_build(_loaded),
         }
         import torch
         torch.manual_seed(seed)

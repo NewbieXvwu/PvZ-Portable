@@ -448,14 +448,27 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                                "description": "policy=ppo 时的检查点 .pt 路径。只做推理，不训练。"},
                 "sampled": {"type": "boolean",
                             "description": "policy=ppo 时按概率采样；默认贪心（可复现）。"},
-                "deck": {"type": "string", "description": "卡组，逗号分隔的卡片 id。不给就用该关默认卡组。"},
+                "deck": {"type": "string",
+                         "description": "卡组，逗号分隔的卡片 id。**policy=ppo 时必给** —— "
+                                        "RL 模型是按训练任务清单的卡组训的，卡槽对不上"
+                                        "它就会种出别的植物（而且这一局还会照常跑完）。"
+                                        "scripted/donothing 不给就用该关默认卡组。"},
+                "task_manifest": {"type": "string",
+                                  "description": "复现训练任务：任务清单 json 路径，如 "
+                                                 "experiments/t7/bridge_level7_v1/train.json。"
+                                                 "给了它就用清单里的 level / deck / 波数上限 / "
+                                                 "僵尸倍率 / 预种植物 —— 这些是训练时真正用的值。"
+                                                 "和 task_id 一起用。"},
+                "task_id": {"type": "string",
+                            "description": "清单里的任务 id，如 train_roof_4。"
+                                           "给了它就自动带上正确的卡组，不用手抄。"},
                 "wave_cap": {"type": "integer",
                              "description": "只打前 N 波。复现训练任务族时常用（它们多半设了上限）。"},
                 "zombie_mult": {"type": "number", "description": "僵尸数量倍率（复现训练任务）。"},
                 "max_actions": {"type": "integer", "description": "动作数上限，默认 4000。"},
                 "out": {"type": "string", "description": "存档写到哪个目录（必需）。"},
             },
-            ["seed", "out"],
+            ["out"],
         ),
         _make_cli_handler(
             "capture",
@@ -466,6 +479,8 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                 ("checkpoint", "--checkpoint", "str"),
                 ("sampled", "--sampled", "flag"),
                 ("deck", "--deck", "str"),
+                ("task_manifest", "--task-manifest", "str"),
+                ("task_id", "--task-id", "str"),
                 ("wave_cap", "--wave-cap", "int"),
                 ("zombie_mult", "--zombie-mult", "float"),
                 ("max_actions", "--max-actions", "int"),
@@ -824,6 +839,11 @@ server: Server = Server(
         "那时别拿 `pvz://scripted-policy` 里的规则去解释它的每一步，那套规则描述的"
         "是另一个策略。想弄清它某一步为什么这么选，用 `whatif --enumerate` 把它当时"
         "所有合法动作的结果都算出来。\n"
+        "**用 policy=ppo 抓一局时必须给对卡组**：RL 模型是按训练任务清单的卡组训的，"
+        "capture 的默认卡组是**脚本基线**的卡组，两者不一样（第 49 关就不同）。"
+        "卡槽错位时模型会种出别的植物，而且这一局还会照常跑完 —— 所以不带 deck 会被"
+        "直接拒绝。要复现某个训练任务就用 `task_manifest` + `task_id`，"
+        "卡组 / 波数上限 / 僵尸倍率 / 预种植物会从清单里自动取。\n"
         "**场景与地形**（这一关是白天/夜间/泳池/屋顶、哪几路种不下）在每个 "
         "`frame` / `index` / `narrative` 输出的「场景：…」那一行，不用另外查；"
         "棋盘上 `~` = 水路。要查规则本身看 `constants` 的 terrain 一节。\n"
