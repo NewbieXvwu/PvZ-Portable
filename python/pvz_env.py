@@ -347,8 +347,8 @@ class PvZEnv:
         if task.loadout_mode != "fixed":
             raise ValueError("only fixed loadouts are supported")
         if (type(task.zombie_count_multiplier) not in (int, float) or
-                not 1.0 <= task.zombie_count_multiplier <= 10.0):
-            raise ValueError("zombie_count_multiplier must be from 1 to 10")
+                not 0.1 <= task.zombie_count_multiplier <= 10.0):
+            raise ValueError("zombie_count_multiplier must be from 0.1 to 10")
         if task.wave_cap is not None and (type(task.wave_cap) is not int or not 1 <= task.wave_cap <= 50):
             raise ValueError("wave_cap must be None or an integer from 1 to 50")
         if not isinstance(task.preplanted, tuple) or any(type(plant) is not tuple or len(plant) != 3

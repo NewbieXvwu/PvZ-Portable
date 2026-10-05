@@ -36,7 +36,8 @@ RESERVED_SEED_RANGES = (
 )
 
 TRAIN_BASES = {
-    "day": {"levels": [1, 2, 3, 4], "decks": [[0, 1, 2, 3, 4, 5], [0, 1, 3, 4, 7, 9]]},
+    "day": {"levels": [1, 2, 3, 4], "decks": [[0, 1, 2, 3, 4, 5], [0, 1, 3, 4, 7, 9],
+                                              [0, 1, 2, 3, 4, 5, 7]]},
     "night": {"levels": [11, 13, 14, 16], "decks": [[8, 9, 10, 12, 14, 15], [8, 9, 10, 12, 13, 14]]},
     "pool": {"levels": [21, 22, 23, 24], "decks": [[0, 1, 2, 3, 4, 16], [0, 1, 3, 4, 16, 19]]},
     "fog": {"levels": [32, 33, 34, 36], "decks": [[8, 9, 10, 14, 15, 16], [8, 9, 10, 13, 14, 16]]},
@@ -170,9 +171,11 @@ def _validate_task(task: dict[str, Any]) -> None:
         raise AssertionError(f"{task.get('task_id')}: incomplete task fields")
     if terrain_for_level(task["level"]) != task["terrain"]:
         raise AssertionError(f"{task['task_id']}: terrain does not match level")
-    if task["playthrough"] != 2 or task["sun_start"] != 50:
+    if task["playthrough"] != 2 or not 1 <= task["sun_start"] <= 10000:
         raise AssertionError(f"{task['task_id']}: unsupported playthrough or sun_start")
-    if not task["deck"] or len(task["deck"]) > 6 or len(set(task["deck"])) != len(task["deck"]):
+    # 上限 12 = 模型的 packet 头容量（见 pvz_agent_model 的 previous_packet_embedding(12, 64)）。
+    # 早先写死 6，挡住了"加一张牌"这类实验（实测加双发射手 +5 个百分点）。
+    if not task["deck"] or len(task["deck"]) > 12 or len(set(task["deck"])) != len(task["deck"]):
         raise AssertionError(f"{task['task_id']}: invalid deck")
     if any(type(seed) is not int or not 0 <= seed <= 48 for seed in task["deck"]):
         raise AssertionError(f"{task['task_id']}: invalid deck seed type")

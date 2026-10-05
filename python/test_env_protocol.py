@@ -104,7 +104,9 @@ class ResetValidationTests(unittest.TestCase):
     def test_task_options_are_validated(self) -> None:
         cases = [
             (TaskSpec(level=1, seed=0, loadout_mode="random"), "only fixed loadouts"),
-            (TaskSpec(level=1, seed=0, zombie_count_multiplier=0.5), "zombie_count_multiplier"),
+            # 2026-10-05：下限从 1.0 放宽到 0.1（"先把题目变简单让它能赢"是一条正当的路）。
+            # 这条断言改成仍然越界的值，保住下界检查。
+            (TaskSpec(level=1, seed=0, zombie_count_multiplier=0.05), "zombie_count_multiplier"),
             (TaskSpec(level=1, seed=0, zombie_count_multiplier=11.0), "zombie_count_multiplier"),
             (TaskSpec(level=1, seed=0, wave_cap=0), "wave_cap"),
             (TaskSpec(level=1, seed=0, wave_cap=51), "wave_cap"),
