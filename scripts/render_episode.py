@@ -345,7 +345,8 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             capture_legal_at: int | None = None,
             prefix_actions: list | None = None,
             checkpoint: str | None = None, deterministic: bool = True,
-            task_extra: dict | None = None) -> dict:
+            task_extra: dict | None = None,
+            policy_rng_seed: int | None = None) -> dict:
     """跑一局，记录每一帧的紧凑状态、**这一步的决策**、以及事件增量。
 
     frames[i] = 做完第 i 次决策之后的局面（frames[0] 是开局）。
@@ -360,9 +361,10 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     环境是确定性的（同 task+seed+动作序列 → 逐位相同的结果），所以这是精确的
     反事实重放，不是近似。
 
-    prefix_actions = 前缀动作表（第 1..N 步）：提供时这些步**照抄给定动作**、
-    不问策略。whatif 重放旧存档用：把存档里第 1..N-1 步的真实动作作为前缀，
-    第 N 步 override，之后让策略接管 —— 这样重放对**任何历史版本的策略**
+    prefix_actions = 前缀动作表（第 1..N 步）：提供时环境**照抄给定动作**。
+    PPO 仍会逐步前向计算以推进隐状态和采样随机数。whatif 重放旧存档用：
+    把存档里第 1..N-1 步的真实动作作为前缀，第 N 步 override，之后让策略接管 ——
+    这样重放对**任何历史版本的策略**
     都忠实到分叉点为止，策略行为修订（见 scripted_baseline.POLICY_REVISION）
     不会让旧存档的 whatif 静默分叉。
     """
@@ -409,7 +411,8 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             "simulator_build": simulator_build(_loaded),
         }
         import torch
-        torch.manual_seed(seed)
+        policy_rng_seed = seed if policy_rng_seed is None else policy_rng_seed
+        torch.manual_seed(policy_rng_seed)
     else:
         env = PvZEnv(resource_dir, headless=True)
     # 卡组按关卡地形定（AGENTS.md「任务与卡组」）；显式传 deck 的调用方
@@ -440,10 +443,13 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     while not obs["terminal"] and actions < max_actions:
         if capture_legal_at is not None and actions == capture_legal_at - 1:
             legal_at = obs.get("legal_actions")
-        if prefix_actions is not None and actions < len(prefix_actions):
+        if policy == "ppo":
+            policy_action = _ppo_action(model, obs, ppo_state, deterministic)
+            action = (prefix_actions[actions]
+                      if prefix_actions is not None and actions < len(prefix_actions)
+                      else policy_action)
+        elif prefix_actions is not None and actions < len(prefix_actions):
             action = prefix_actions[actions]
-        elif policy == "ppo":
-            action = _ppo_action(model, obs, ppo_state, deterministic)
         else:
             action = scripted_choose(obs) if policy == "scripted" else {"type": "wait", "ticks": 60}
         if override and (actions + 1) in override:
@@ -507,8 +513,11 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
                  **({"wave_cap": task.wave_cap,
                      "zombie_count_multiplier": task.zombie_count_multiplier}
                     if (task.wave_cap or task.zombie_count_multiplier != 1.0) else {}),
+                 **({"preplanted": [list(p) for p in task.preplanted]}
+                    if task.preplanted else {}),
                  # RL 回放必须记下"是哪个检查点打的"，否则证据无法复现。
-                 **(checkpoint_meta or {})},
+                 **(checkpoint_meta or {}),
+                 **({"policy_rng_seed": policy_rng_seed} if policy == "ppo" else {})},
         "legal_at": legal_at,
         "outcome": {
             "result": result,

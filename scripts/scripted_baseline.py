@@ -294,8 +294,9 @@ def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000,
     initial_plants = observation["plants"]
     initial_sun = observation["sun"]
     initial_off_board_zombies = sum(not zombie["on_board"] for zombie in observation["zombies"])
-    if initial_off_board_zombies == 0 or observation["enemy_zombies_on_screen"]:
-        raise AssertionError("preview zombies must be observed but excluded from enemy presence")
+    initial_enemy_zombies_on_screen = bool(observation["enemy_zombies_on_screen"])
+    if initial_enemy_zombies_on_screen:
+        raise AssertionError("a new game must not report preview zombies as on-screen enemies")
     actions = 0
     mower_triggered = 0
     while not observation["terminal"] and actions < max_actions:
@@ -336,7 +337,7 @@ def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000,
         "initial_plants": initial_plants,
         "initial_sun": initial_sun,
         "initial_off_board_zombies": initial_off_board_zombies,
-        "initial_enemy_zombies_on_screen": False,
+        "initial_enemy_zombies_on_screen": initial_enemy_zombies_on_screen,
         "final_enemy_zombies_on_screen": bool(observation["enemy_zombies_on_screen"]),
         "level_lost_event": level_lost,
         "mower_triggered": mower_triggered,

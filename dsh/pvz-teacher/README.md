@@ -474,6 +474,36 @@ DEEPSEEK_API_KEY=sk-... \
   dsh --profile pvz-teacher "调用一下 mcp__pvz__ping，把返回的 JSON 原样告诉我"
 ```
 
+### 起一次真实会话（2026-10-04 实测，gemini 路由）
+
+现主用 google 路由，命令是：
+
+```sh
+mkdir -p /tmp/pvz-sN/.dsh/skills /tmp/pvz-sN/run
+cp -r <上一轮沙箱>/.dsh/skills/. /tmp/pvz-sN/.dsh/skills/   # 先验 skill 按需带
+cd /tmp/pvz-sN
+export PATH="$HOME/.local/share/mise/installs/node/24/bin:$PATH"
+export DSH_HOME="$HOME/.local/share/pvz-agent/dsh-home"
+export GEMINI_API_KEY=sk-...
+nohup dsh --profile pvz-teacher "$(cat prompt.md)" > run/sN-session.log 2>&1 &
+```
+
+- **cwd 决定会话 id**：`$DSH_HOME/sessions/--private-tmp-pvz-sN--`。
+- 长任务书放文件里用 `"$(cat prompt.md)"`；也可以传 `-` 从 stdin 读。
+- 续跑：`dsh --profile pvz-teacher --session-id session-xxxx "继续"`。
+- 会话日志（stdout）是推理流 + 最终回答；工具调用轨迹用
+  `tools/trace_session.py` 从会话记录还原（调了什么、参数、结果、token）。
+- **起之前自检三件事**：① `dsh` 在 PATH（`~/.local/share/mise/installs/node/24/bin`）；
+  ② `$DSH_HOME/profiles/pvz-teacher/node_modules/@local/pvz-teacher/cordis.patch.yml`
+  里 `PVZ_PYTHON` 指向 mise python（有 torch，否则 RL 存档的 capture/whatif 全报
+  `ModuleNotFoundError`）；③ `curl -H "x-goog-api-key: $GEMINI_API_KEY"
+  http://localhost:8317/v1beta/models` 返回 200。
+
+**`whatif` 不需要传 `prefix_actions`**：前缀由存档自动生成
+（`scripts/episode_query.py:766`，`prefix = [f["action"] for f in frames[1:decision]]`），
+`--try` / `--enumerate` / `--save-best` 三路都走。MCP 工具的 `inputSchema` 里没有这个参数
+是**正常的**，不是缺口 —— 模型为此困惑过一次，别被它带偏。
+
 **跑 RL 存档（`policy=ppo`）需要 torch，而两个解释器是分开的**：
 
 | 谁 | 用什么解释器 | 需要什么包 |

@@ -39,6 +39,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import secrets
 import sys
 from pathlib import Path
 
@@ -68,10 +69,11 @@ SCHEMA = "episode_archive_v1"
 
 def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
             out_dir: Path, max_actions: int, checkpoint: str | None = None,
-            deterministic: bool = True, task_extra: dict | None = None) -> dict:
+            deterministic: bool = True, task_extra: dict | None = None,
+            policy_rng_seed: int | None = None) -> dict:
     rec = collect(resource_dir, seed, level, policy, max_actions, deck,
                   checkpoint=checkpoint, deterministic=deterministic,
-                  task_extra=task_extra)
+                  task_extra=task_extra, policy_rng_seed=policy_rng_seed)
     out_dir.mkdir(parents=True, exist_ok=True)
     meta = {
         "schema": SCHEMA,
@@ -739,24 +741,44 @@ def _fmt_actions(frames: list, deck: list, lo: int, hi: int | None,
 # 任何硬编码规则都替代不了它。
 
 
+def _replay_task_extra(task: dict) -> dict:
+    return {"wave_cap": task.get("wave_cap"),
+            "zombie_count_multiplier": task.get("zombie_count_multiplier"),
+            "preplanted": tuple(tuple(p) for p in task.get("preplanted") or ())}
+
+
 def _run_variant(meta: dict, override: dict, resource_dir: str,
-                 prefix: list | None = None) -> dict:
+                 prefix: list | None = None, *, deterministic: bool | None = None,
+                 policy_rng_seed: int | None = None) -> dict:
     t = meta["task"]
     rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
                   4000, t.get("deck"), override=override, prefix_actions=prefix,
                   # RL 存档的反事实重放必须用**同一个检查点**，否则"改一步之后
                   # 会怎样"问的是另一个模型。
                   checkpoint=t.get("checkpoint"),
-                  deterministic=t.get("deterministic", True),
-                  task_extra={"wave_cap": t.get("wave_cap"),
-                              "zombie_count_multiplier": t.get("zombie_count_multiplier")})
+                  deterministic=(t.get("deterministic", True)
+                                 if deterministic is None else deterministic),
+                  task_extra=_replay_task_extra(t),
+                  policy_rng_seed=(t.get("policy_rng_seed", t["seed"])
+                                   if policy_rng_seed is None else policy_rng_seed))
     return rec["outcome"]
 
 
 def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             raw_actions: list, resource_dir: str, enumerate_: bool,
-            row_filter: int | None, limit: int, save_best: str | None) -> str:
+            row_filter: int | None, limit: int, save_best: str | None,
+            sampled: bool = False, policy_rng_seed: int | None = None) -> str:
     deck = meta["task"].get("deck") or []
+    task = meta["task"]
+    t = task
+    deterministic = False if sampled else task.get("deterministic", True)
+    if task.get("policy") == "ppo":
+        if sampled and policy_rng_seed is None:
+            policy_rng_seed = secrets.randbits(63)
+        elif policy_rng_seed is None:
+            policy_rng_seed = task.get("policy_rng_seed", task["seed"])
+    elif sampled:
+        return "--sampled 只适用于 PPO 存档。"
     if decision < 1 or decision >= len(frames):
         return f"（决策序号要在 1–{len(frames) - 1} 之间）"
 
@@ -791,6 +813,9 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
          ""]
     if revision_note:
         L.append(revision_note)
+    if task.get("policy") == "ppo":
+        L.extend([f"选动作方式：{'贪心' if deterministic else '按概率采样'}",
+                  f"策略随机种子：{policy_rng_seed}", ""])
 
     cands: list[dict] = []
     for raw in raw_actions:
@@ -812,10 +837,9 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
                         meta["task"]["policy"], 4000, deck,
                         capture_legal_at=decision, prefix_actions=prefix,
                         checkpoint=meta["task"].get("checkpoint"),
-                        deterministic=meta["task"].get("deterministic", True),
-                        task_extra={"wave_cap": meta["task"].get("wave_cap"),
-                                    "zombie_count_multiplier":
-                                        meta["task"].get("zombie_count_multiplier")})
+                        deterministic=deterministic,
+                        task_extra=_replay_task_extra(task),
+                        policy_rng_seed=policy_rng_seed)
         legal = probe.get("legal_at") or {}
         for p in (legal.get("plants") or []):
             if row_filter is not None and p["row"] != row_filter:
@@ -828,6 +852,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     if not cands:
         return "\n".join(L + ["（没有候选动作。用 --try 给一个，或 --enumerate 枚举）"])
 
+    L.append("排序口径：末波增量从高到低；并列时最终 tick 较早者优先。")
     L.append(f"试 {len(cands)} 个候选（每次都要从头重放，约 1–3 秒/个）：")
     L.append("")
     L.append("  左列**可以直接复制**当作 --try 用，不用自己翻译成数字。")
@@ -835,7 +860,9 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     results = []
     for cand in cands:
         try:
-            o = _run_variant(meta, {decision: cand}, resource_dir, prefix=prefix)
+            o = _run_variant(meta, {decision: cand}, resource_dir, prefix=prefix,
+                             deterministic=deterministic,
+                             policy_rng_seed=policy_rng_seed)
         except Exception as exc:  # noqa: BLE001 - 单个候选失败不该打断整批
             L.append(f"  {_action_text(cand, deck):<34} 重放失败：{exc}")
             continue
@@ -857,14 +884,12 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         if save_best and results:
             top = results[0]
             out = Path(save_best)
-            t = meta["task"]
             rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
                           4000, deck, override={decision: top[1]}, prefix_actions=prefix,
                           checkpoint=t.get("checkpoint"),
-                          deterministic=t.get("deterministic", True),
-                          task_extra={"wave_cap": t.get("wave_cap"),
-                                      "zombie_count_multiplier":
-                                          t.get("zombie_count_multiplier")})
+                          deterministic=deterministic,
+                          task_extra=_replay_task_extra(t),
+                          policy_rng_seed=policy_rng_seed)
             out.mkdir(parents=True, exist_ok=True)
             (out / "meta.json").write_text(json.dumps(
                 {"schema": SCHEMA,
@@ -1049,6 +1074,8 @@ def main() -> None:
                    help="--policy ppo 时用：训练出来的检查点 .pt 路径。只做推理，不训练。")
     c.add_argument("--sampled", action="store_true",
                    help="--policy ppo 时用：按概率采样（默认贪心，可复现）。")
+    c.add_argument("--policy-rng-seed", type=int,
+                   help="PPO 动作采样随机种子，默认等于 --seed。")
     c.add_argument("--deck", default=None)
     c.add_argument("--task-manifest", default=None,
                    help="复现训练任务：任务清单 json（如 "
@@ -1129,6 +1156,10 @@ def main() -> None:
                            help="把最好的那个反事实整局存成新存档，"
                                 "之后可以用 lane / narrative / frame 复查它")
             p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
+            p.add_argument("--sampled", action="store_true",
+                           help="PPO 反事实后续按概率采样，每次默认生成新随机种子。")
+            p.add_argument("--policy-rng-seed", type=int,
+                           help="指定 PPO 动作采样种子，便于重放同一份采样结果。")
 
     args = ap.parse_args()
 
@@ -1163,7 +1194,8 @@ def main() -> None:
             return 2
         res = capture(args.resource_dir, seed, level, args.policy, deck,
                       Path(args.out), args.max_actions, checkpoint=args.checkpoint,
-                      deterministic=not args.sampled, task_extra=task_extra)
+                      deterministic=not args.sampled, task_extra=task_extra,
+                      policy_rng_seed=args.policy_rng_seed)
         print(f"已存档到 {args.out}：{res['meta']['frame_count']} 帧，"
               f"{res['meta']['outcome']['reason']}")
         sb = res["meta"].get("simulator_build") or {}
@@ -1263,7 +1295,8 @@ def main() -> None:
     elif args.cmd == "whatif":
         print(_whatif(Path(args.archive), meta, frames, args.decision, args.raw,
                       args.resource_dir, args.enumerate, args.row, args.limit,
-                      args.save_best))
+                      args.save_best, sampled=args.sampled,
+                      policy_rng_seed=args.policy_rng_seed))
 
 
 if __name__ == "__main__":
