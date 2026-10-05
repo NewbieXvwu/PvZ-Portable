@@ -1,0 +1,110 @@
+{
+ "schema_version": 1,
+ "purpose": "消融 scripted_baseline 的三个硬上限，判定\"38% 是公式的天花板还是参数没调好\"",
+ "scope": "关卡 7 白天草地，种子 30000-30255（256 个），任务定义与 experiments/t7/full_level7_v1/acceptance.json 的 level7_development 一致；无神经网络、无训练",
+ "simulator_sha256": "2056e13ef46c9820bd6ad5a9e14b25b20f9b28ce400ac02799099a4b6390fe01",
+ "seed_range": [
+  30000,
+  30255
+ ],
+ "workers": 8,
+ "variants": [
+  {
+   "variant": "base",
+   "shooter_cap": 14,
+   "wins": 101,
+   "n": 256,
+   "win_rate": 0.3945,
+   "note": "原始脚本（生产者<10 射手<14 寒冰<4）"
+  },
+  {
+   "variant": "s15",
+   "shooter_cap": 15,
+   "wins": 120,
+   "n": 256,
+   "win_rate": 0.4688,
+   "note": ""
+  },
+  {
+   "variant": "s16",
+   "shooter_cap": 16,
+   "wins": 150,
+   "n": 256,
+   "win_rate": 0.5859,
+   "note": ""
+  },
+  {
+   "variant": "s17",
+   "shooter_cap": 17,
+   "wins": 161,
+   "n": 256,
+   "win_rate": 0.6289,
+   "note": ""
+  },
+  {
+   "variant": "s18",
+   "shooter_cap": 18,
+   "wins": 188,
+   "n": 256,
+   "win_rate": 0.7344,
+   "note": ""
+  },
+  {
+   "variant": "s19",
+   "shooter_cap": 19,
+   "wins": 198,
+   "n": 256,
+   "win_rate": 0.7734,
+   "note": ""
+  },
+  {
+   "variant": "shooters20",
+   "shooter_cap": 20,
+   "wins": 206,
+   "n": 256,
+   "win_rate": 0.8047,
+   "note": "只放宽射手到 20"
+  },
+  {
+   "variant": "shooters24",
+   "shooter_cap": 24,
+   "wins": 206,
+   "n": 256,
+   "win_rate": 0.8047,
+   "note": "放宽到 24（超出可种范围，与 20 同）"
+  },
+  {
+   "variant": "s20_snow10",
+   "shooter_cap": 20,
+   "wins": 207,
+   "n": 256,
+   "win_rate": 0.8086,
+   "note": "射手20 + 寒冰10"
+  },
+  {
+   "variant": "fill",
+   "shooter_cap": 20,
+   "wins": 134,
+   "n": 256,
+   "win_rate": 0.5234,
+   "note": "生产者<14 + 射手<20 + 寒冰<6（生产者放宽后反而变差）"
+  }
+ ],
+ "conclusion": {
+  "main": "射手上限 14→20 把胜率从 39.5% 抬到 80.5%（+41 个百分点）。单调、无悬崖。20 是摆放范围（col 2-5 共 20 格）的上限，24 与 20 逐位相同。",
+  "negative": "放宽生产者上限（10→14）反而变差：52.3%。所以不是\"多花钱\"，是\"花在火力上\"。",
+  "control": "base 复现 101/256=39.5%，与已入库的 scripted_acceptance_v1.json 的 97/256=37.9% 一致（差 4 局，可由 2026-10-04 rule ① 几何修复解释）。",
+  "implication": "先前被当作\"公式能达到的水平\"的 37.9%，实际是\"一个没调好的参数\"的成绩。调好后是 80.5%。"
+ },
+ "caveat": [
+  "只测了关卡 7 白天草地；该脚本在夜/泳池/雾/屋顶仍是 0%（规则是白天专用的）",
+  "20 是摆放范围的上限，放宽摆放范围（col 1 或 col 6-8）或主动放坚果可能还能涨，未测",
+  "终局仍留 ~2500 阳光花不掉（棋盘种满了）"
+ ],
+ "artifacts": [
+  "/tmp/pvz-ablation/run.log",
+  "/tmp/pvz-ablation/run2.log",
+  "/tmp/pvz-ablation/run3.log",
+  "/tmp/pvz-ablation/result.json"
+ ]
+}

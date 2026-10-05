@@ -1,0 +1,399 @@
+{
+  "schema_version": 1,
+  "created_date": "2026-10-05",
+  "purpose": "Unblock behavior cloning after E0/E1/E2 wait-semantics comparison; collect, train, and evaluate branch A.",
+  "simulator_sha256": "2056e13ef46c9820bd6ad5a9e14b25b20f9b28ce400ac02799099a4b6390fe01",
+  "eligibility_comparison": {
+    "scope": {
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "policy_revision": "v4-2026-10-05-double-pea",
+      "seeds": [
+        30000,
+        30255
+      ],
+      "episodes_per_variant": 256,
+      "headless": true
+    },
+    "semantics": {
+      "E2": "PvZEnv with raw {type:wait,ticks:60}",
+      "E0": "EventWaitEnv with raw {type:wait,ticks:60}",
+      "E1": "EventWaitEnv with {type:wait,until:timeout}"
+    },
+    "variants": {
+      "E2": {
+        "wins": 219,
+        "episodes": 256,
+        "win_rate": 0.85546875,
+        "rejected": 0
+      },
+      "E0": {
+        "wins": 219,
+        "episodes": 256,
+        "win_rate": 0.85546875,
+        "rejected": 0
+      },
+      "E1": {
+        "wins": 223,
+        "episodes": 256,
+        "win_rate": 0.87109375,
+        "rejected": 0
+      }
+    },
+    "paired_exact_mcnemar": {
+      "E0_vs_E2": {
+        "only_first_won": 0,
+        "only_second_won": 0,
+        "discordant_pairs": 0,
+        "two_sided_exact_p": 1.0,
+        "first": "E0",
+        "second": "E2"
+      },
+      "E1_vs_E2": {
+        "only_first_won": 19,
+        "only_second_won": 15,
+        "discordant_pairs": 34,
+        "two_sided_exact_p": 0.6075913612730801,
+        "first": "E1",
+        "second": "E2"
+      }
+    },
+    "branch_selected": "A",
+    "branch_reason": "E1 was not clearly worse than E2: +4/256 wins and exact paired McNemar p=0.6076. The observed difference is not significant."
+  },
+  "collection": {
+    "teacher": "scripted D1, revision v4-2026-10-05-double-pea",
+    "level": 7,
+    "deck": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      7
+    ],
+    "seed_range": [
+      1400000,
+      1404999
+    ],
+    "episodes": 5000,
+    "wins": 4205,
+    "win_rate": 0.841,
+    "truncated": 0,
+    "decisions": 4642393,
+    "action_distribution": {
+      "counts": {
+        "plant": 266330,
+        "wait": 4376063,
+        "shovel": 0
+      },
+      "fraction_of_decisions": {
+        "plant": 0.057369119762157146,
+        "wait": 0.9426308802378428,
+        "shovel": 0.0
+      },
+      "decisions": 4642393
+    },
+    "plant_packet_distribution": {
+      "counts_by_packet": {
+        "0": 120356,
+        "1": 72012,
+        "2": 115,
+        "3": 18276,
+        "4": 16336,
+        "5": 23659,
+        "6": 15576
+      },
+      "fraction_of_plant_actions": {
+        "0": 0.45190553073254985,
+        "1": 0.27038636278301353,
+        "2": 0.00043179514136597454,
+        "3": 0.06862163481395261,
+        "4": 0.06133743851612661,
+        "5": 0.08883340217023993,
+        "6": 0.05848383584275147
+      },
+      "plant_actions": 266330
+    },
+    "plant_type_counts": {
+      "0": 120356,
+      "1": 72012,
+      "2": 115,
+      "3": 18276,
+      "4": 16336,
+      "5": 23659,
+      "7": 15576
+    },
+    "legal_actions": {
+      "valid": 4642393,
+      "invalid": 0,
+      "rejected": 0
+    }
+  },
+  "dataset": {
+    "path": "/tmp/pvz_bc_2b/scripted_level7_bc_samples_v2.sqlite",
+    "total": 1000000,
+    "train": 980000,
+    "validation": 20000,
+    "teacher_plant_actions": 266330,
+    "teacher_shovel_actions": 0,
+    "sampled_wait_actions": 733670,
+    "wait_to_plant_ratio": 2.7547403597041265,
+    "wait_reservoir_candidates": 1200000,
+    "retained_all_nonwait": true
+  },
+  "model": {
+    "initialization": "random",
+    "device": "mps",
+    "configuration": {
+      "layers": 6,
+      "width": 256,
+      "heads": 8,
+      "ff_width": 1024,
+      "gru_layers": 2,
+      "gru_width": 256,
+      "critic_width": 256,
+      "critic_layers": 1,
+      "input_flags": 7,
+      "wait_mode": "events",
+      "wait_mask": "progress_v1"
+    },
+    "checkpoint_path": "/tmp/pvz_bc_2b/best_model.pt",
+    "training": {
+      "epochs_run": 3,
+      "best_epoch": 1,
+      "best_validation_loss": 0.031887520563602445,
+      "loss_curve": [
+        {
+          "epoch": 1,
+          "train_loss": 0.128318,
+          "validation_loss": 0.031888
+        },
+        {
+          "epoch": 2,
+          "train_loss": 0.035969,
+          "validation_loss": 0.034579
+        },
+        {
+          "epoch": 3,
+          "train_loss": 0.029916,
+          "validation_loss": 0.037817
+        }
+      ],
+      "batch_size": 128,
+      "optimizer": "Adam",
+      "learning_rate": 0.0003,
+      "early_stop": "two consecutive epochs without validation-loss decrease or 50 epochs",
+      "sequence_mode": "independent one-transition sequences; recurrent hidden reset per decision"
+    },
+    "validation_metrics": {
+      "exact_action_by_teacher_type": {
+        "plant": {
+          "correct": 5096,
+          "total": 5342,
+          "accuracy": 0.9539498315237739
+        },
+        "wait": {
+          "correct": 14623,
+          "total": 14658,
+          "accuracy": 0.9976122254059216
+        },
+        "shovel": {
+          "correct": 0,
+          "total": 0,
+          "accuracy": null
+        }
+      },
+      "plant_packet_conditional_accuracy": {
+        "correct": 5288,
+        "total": 5342,
+        "accuracy": 0.989891426432048
+      }
+    }
+  },
+  "evaluation": {
+    "sample_mode": "stochastic policy sampling; 256 seeds per split",
+    "sampled_seen": {
+      "episodes": 256,
+      "wins": 215,
+      "win_rate": 0.83984375,
+      "truncated": 0,
+      "decisions": 252490,
+      "action_distribution": {
+        "counts": {
+          "plant": 14197,
+          "wait": 238292,
+          "shovel": 1
+        },
+        "fraction_of_decisions": {
+          "plant": 0.05622796942453166,
+          "wait": 0.9437680700225751,
+          "shovel": 3.960552893183888e-06
+        },
+        "decisions": 252490
+      },
+      "plant_packet_distribution": {
+        "counts_by_packet": {
+          "0": 6142,
+          "1": 3808,
+          "2": 20,
+          "3": 1228,
+          "4": 873,
+          "5": 1321,
+          "6": 805
+        },
+        "fraction_of_plant_actions": {
+          "0": 0.43262661125589913,
+          "1": 0.26822568148200326,
+          "2": 0.0014087483271113615,
+          "3": 0.0864971472846376,
+          "4": 0.06149186447841093,
+          "5": 0.09304782700570544,
+          "6": 0.0567021201662323
+        },
+        "plant_actions": 14197
+      },
+      "plant_type_counts": {
+        "0": 6142,
+        "1": 3808,
+        "2": 20,
+        "3": 1228,
+        "4": 873,
+        "5": 1321,
+        "7": 805
+      }
+    },
+    "sampled_unseen": {
+      "episodes": 256,
+      "wins": 207,
+      "win_rate": 0.80859375,
+      "truncated": 0,
+      "decisions": 256585,
+      "action_distribution": {
+        "counts": {
+          "plant": 14484,
+          "wait": 242100,
+          "shovel": 1
+        },
+        "fraction_of_decisions": {
+          "plant": 0.05644912991796091,
+          "wait": 0.943546972738079,
+          "shovel": 3.897343960091198e-06
+        },
+        "decisions": 256585
+      },
+      "plant_packet_distribution": {
+        "counts_by_packet": {
+          "0": 6273,
+          "1": 3915,
+          "2": 29,
+          "3": 1310,
+          "4": 864,
+          "5": 1295,
+          "6": 798
+        },
+        "fraction_of_plant_actions": {
+          "0": 0.43309859154929575,
+          "1": 0.27029826014913005,
+          "2": 0.0020022093344380008,
+          "3": 0.09044462855564761,
+          "4": 0.05965202982601491,
+          "5": 0.08940900303783485,
+          "6": 0.05509527754763877
+        },
+        "plant_actions": 14484
+      },
+      "plant_type_counts": {
+        "0": 6273,
+        "1": 3915,
+        "2": 29,
+        "3": 1310,
+        "4": 864,
+        "5": 1295,
+        "7": 798
+      }
+    },
+    "teacher_E1_unseen_baseline": {
+      "wins": 223,
+      "episodes": 256,
+      "win_rate": 0.87109375
+    },
+    "sampled_unseen_delta_vs_teacher_E1": -0.0625,
+    "greedy_unseen": {
+      "episodes": 256,
+      "wins": 206,
+      "win_rate": 0.8046875,
+      "truncated": 0,
+      "decisions": 259491,
+      "action_distribution": {
+        "counts": {
+          "plant": 14169,
+          "wait": 245322,
+          "shovel": 0
+        },
+        "fraction_of_decisions": {
+          "plant": 0.05460304981675665,
+          "wait": 0.9453969501832433,
+          "shovel": 0.0
+        },
+        "decisions": 259491
+      },
+      "plant_packet_distribution": {
+        "counts_by_packet": {
+          "0": 6238,
+          "1": 3732,
+          "3": 1409,
+          "4": 796,
+          "5": 1244,
+          "6": 750
+        },
+        "fraction_of_plant_actions": {
+          "0": 0.44025689886371655,
+          "1": 0.2633919119203896,
+          "3": 0.09944244477380196,
+          "4": 0.056178982285270664,
+          "5": 0.08779730397346319,
+          "6": 0.05293245818335803
+        },
+        "plant_actions": 14169
+      },
+      "plant_type_counts": {
+        "0": 6238,
+        "1": 3732,
+        "3": 1409,
+        "4": 796,
+        "5": 1244,
+        "7": 750
+      }
+    },
+    "greedy_caveat": "structurally invalid: factored action argmax favors wait; do not interpret this win rate as a strategy result.",
+    "plant_accuracy_gate": {
+      "threshold": 0.5,
+      "observed": 0.9539498315237739,
+      "passed": true,
+      "meaning": "sampled win rates are interpretable as BC progress"
+    }
+  },
+  "interpretation": {
+    "result": "The branch-A student reproduces legal sampled play but trails the D1 teacher on unseen seeds by 4.69 percentage points; seen-seed performance is 83.98%.",
+    "deck_limit": "D1 at level 7 includes Double Pea (plant type 7), which is not unlocked at that level; this is an unrealistic strategy-ceiling deck, so the result diagnoses BC on the specified deck rather than a feasible level-7 progression policy.",
+    "training_limit": "The full mainline architecture was used, but each BC example was a one-transition sequence and recurrent hidden state was reset for every decision during training and evaluation.",
+    "optional_E3": "Not run; optional in the handoff."
+  },
+  "source_artifacts": {
+    "eligibility_raw": "/tmp/pvz_unblock_bc_2b/eligibility_results.json",
+    "collection_manifest": "/tmp/pvz_bc_2b/collection_manifest.json",
+    "dataset_sqlite": "/tmp/pvz_bc_2b/scripted_level7_bc_samples_v2.sqlite",
+    "best_checkpoint": "/tmp/pvz_bc_2b/best_model.pt",
+    "training_results": "/tmp/pvz_bc_2b/training_results.json",
+    "evaluation_results": "/tmp/pvz_bc_2b/evaluation_results.json"
+  }
+}
