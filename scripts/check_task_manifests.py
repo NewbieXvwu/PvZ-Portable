@@ -173,9 +173,7 @@ def _validate_task(task: dict[str, Any]) -> None:
         raise AssertionError(f"{task['task_id']}: terrain does not match level")
     if task["playthrough"] != 2 or not 1 <= task["sun_start"] <= 10000:
         raise AssertionError(f"{task['task_id']}: unsupported playthrough or sun_start")
-    # 上限 12 = 模型的 packet 头容量（见 pvz_agent_model 的 previous_packet_embedding(12, 64)）。
-    # 早先写死 6，挡住了"加一张牌"这类实验（实测加双发射手 +5 个百分点）。
-    if not task["deck"] or len(task["deck"]) > 12 or len(set(task["deck"])) != len(task["deck"]):
+    if not task["deck"] or len(task["deck"]) > 10 or len(set(task["deck"])) != len(task["deck"]):
         raise AssertionError(f"{task['task_id']}: invalid deck")
     if any(type(seed) is not int or not 0 <= seed <= 48 for seed in task["deck"]):
         raise AssertionError(f"{task['task_id']}: invalid deck seed type")
@@ -262,13 +260,14 @@ def _load(path: Path) -> dict[str, Any]:
 
 def _validate_environment(train: dict[str, Any], heldout: dict[str, Any], resource_dir: str) -> None:
     sys.path.insert(0, str(ROOT / "python"))
-    from pvz_env import PvZEnv, TaskSpec
+    from pvz_env import PvZEnv, TaskSpec, profile_for_deck
 
     failures = []
     with PvZEnv(resource_dir) as env:
         for task in train["tasks"] + heldout["tasks"]:
             spec = TaskSpec(
                 level=task["level"], seed=task["seeds"][0], playthrough=2,
+                profile=profile_for_deck(task["deck"]),
                 zombie_count_multiplier=task["zombie_count_multiplier"],
                 wave_cap=task["wave_cap"], preplanted=tuple(tuple(item) for item in task["preplanted"]),
             )

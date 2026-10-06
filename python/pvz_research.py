@@ -402,8 +402,12 @@ def run_experiment(args: Any) -> None:
     import train_pvz_ppo_task_family as family
     import t4_capability_profile as profile
     config, tasks, eval_tasks = load_config(args.experiment_config.resolve())
-    if args.init_checkpoint or args.ignore_stage0_gate:
-        raise ValueError("research uses independent initialization or complete --resume; no legacy overrides")
+    if args.ignore_stage0_gate:
+        raise ValueError("research configs do not support legacy stage-0 gate overrides")
+    if args.init_checkpoint:
+        configured_source = config.get("initialization", {}).get("source_checkpoint")
+        if configured_source is None or _path(configured_source) != args.init_checkpoint.expanduser().resolve():
+            raise ValueError("--init-checkpoint must match the source frozen in the research config")
     if any(value is not None for value in (args.workers, args.rollout_threads, args.rollout_device)):
         raise ValueError("research runtime settings come from the frozen experiment config")
     output = args.output_dir.resolve()

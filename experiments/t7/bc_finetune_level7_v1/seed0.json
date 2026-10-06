@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "experiment_id": "bc_finetune_level7_v1_seed0",
+  "purpose": "Fine-tune the explicitly provenance-marked d1 behavior-cloning checkpoint with the existing R0 objective and PPO recipe. Only rollout batch size and decision budget change; the task distribution is the single d1 level-7 task.",
+  "initialization_seed": 0,
+  "sampling_seed": 1701,
+  "model": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7,
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
+  },
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 1.0,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "sampling": {
+    "manifest": "experiments/t7/bc_finetune_level7_v1/train.json",
+    "task_ids": [
+      "train_full_level7_v1_d1"
+    ],
+    "method": "frontier_v1",
+    "rollout_episodes": 16,
+    "curriculum": {
+      "window_episodes": 8,
+      "minimum_window_episodes": 2,
+      "uniform_fraction": 0.25,
+      "coverage": "terrain_wave_cap",
+      "frontier_pass_range": [
+        0.2,
+        0.8
+      ],
+      "initial_focus_task_ids": [
+        "train_full_level7_v1_d1"
+      ],
+      "initial_focus_completed_episodes": 64
+    }
+  },
+  "budget": {
+    "decisions": 1000000,
+    "max_episodes": null,
+    "boundary_mode": "exact_decisions_v1"
+  },
+  "evaluation": {
+    "manifest": "experiments/t7/bc_finetune_level7_v1/progress_evaluation.json",
+    "modes": [
+      "greedy",
+      "sampled"
+    ],
+    "decision_nodes": [
+      100000,
+      200000,
+      300000,
+      400000,
+      500000,
+      600000,
+      700000,
+      800000,
+      900000,
+      1000000
+    ],
+    "idle_baseline": true
+  },
+  "runtime": {
+    "workers": 2,
+    "worker_threads": 1,
+    "worker_device": "cpu",
+    "update_device": "cuda",
+    "max_actions": 4000,
+    "cudnn_tf32": false,
+    "matmul_precision": "highest",
+    "deterministic_algorithms": true,
+    "cublas_workspace_config": ":4096:8"
+  },
+  "prerequisites": [],
+  "initialization": {
+    "method": "weights_transfer_v1",
+    "source_checkpoint": "/home/newbiexvwu/PvZAgent-bc-handoff/best_model_pipeline.pt",
+    "source_sha256": "99bfbeaad47ad2d1a3ba4ede063c83e06327c4e5beed454e862c1b9bedc14a56",
+    "note": "Initialize all same-configuration model weights from the supervised d1 BC artifact; provenance identifies it as behavior cloning (not PPO). Start a new AdamW optimizer and declared RNG, with zero stage counters; BC plant-action validation accuracy is 0.9539498."
+  }
+}

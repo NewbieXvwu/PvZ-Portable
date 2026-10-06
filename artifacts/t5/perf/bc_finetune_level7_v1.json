@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "experiment_id": "bc_finetune_level7_v1",
+  "completed_at_utc": "2026-10-05T09:59:50Z",
+  "self_check": {
+    "head": "bf9b02e94a82bf71c7886b9db6c7f300d20629c4",
+    "worktree_clean_at_start": true,
+    "torch": "2.14.0+cu132",
+    "cuda_available": true,
+    "simulator": "build/pvz-portable",
+    "simulator_sha256": "dc8747f45a5a0d8a233239920ef9e0a5b62e366b847123e4aaf051de7db32428",
+    "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources"
+  },
+  "bc_source": {
+    "hub_repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "hub_path": "bc-scripted-level7-v2/",
+    "download_dir": "/home/newbiexvwu/PvZAgent-bc-handoff",
+    "checkpoint": "/home/newbiexvwu/PvZAgent-bc-handoff/best_model.pt",
+    "checkpoint_sha256": "0ada5314fa0579d2e54f3e62c03d648c891c1e46bedb81160bf692902d58fc1b",
+    "official_unseen": {
+      "seeds": [
+        30000,
+        30255
+      ],
+      "wins": 207,
+      "episodes": 256,
+      "pass_rate": 0.80859375
+    },
+    "plant_action_validation_accuracy": 0.9539498315237739,
+    "result_files": {
+      "training": "/home/newbiexvwu/PvZAgent-bc-handoff/training_results.json",
+      "evaluation": "/home/newbiexvwu/PvZAgent-bc-handoff/evaluation_results.json",
+      "collection_manifest": "/home/newbiexvwu/PvZAgent-bc-handoff/collection_manifest.json"
+    }
+  },
+  "local_reproduction_gate": {
+    "result_file": "artifacts/research/bc_finetune_level7_v1/bc_gate.log",
+    "raw_evaluation": "artifacts/research/bc_finetune_level7_v1/gate_evaluation/evaluations/update_000000.json.gz",
+    "seeds": [
+      30000,
+      30255
+    ],
+    "wins": 206,
+    "episodes": 256,
+    "pass_rate": 0.8046875,
+    "truncated": 0,
+    "difference_from_official_percentage_points": -0.390625,
+    "allowed_difference_percentage_points": 5,
+    "passed": true
+  },
+  "init_checkpoint_compatibility": {
+    "guard_change": "python/train_pvz_ppo_task_family.py adds --accept-init-checkpoint; version mismatches warn by default and require explicit acceptance; model architecture version is derived from checkpoint config; missing search_label_version is allowed for declared behavior_cloning sources.",
+    "research_explicit_return_v1_mapped_to_discounted_terminal_v1": false,
+    "bc_converted_checkpoint": "/home/newbiexvwu/PvZAgent-bc-handoff/best_model_pipeline.pt",
+    "bc_converted_sha256": "99bfbeaad47ad2d1a3ba4ede063c83e06327c4e5beed454e862c1b9bedc14a56",
+    "bc_checkpoint_provenance": "source_kind=behavior_cloning; source path and SHA256, training/collection hashes, validation accuracies, best epoch, validation loss, sequence mode, and simulator hash recorded.",
+    "mainline_checkpoint": "artifacts/research/mainline_full_level7_v1_seed0/runs/run_1/update_000013_boundary_1790946288957446067.pt",
+    "mainline_checkpoint_sha256": "c400115918066625c2f1ca8bae1c1120cdeb5f37c00a6ff6a35194cc171d791c",
+    "mainline_header": {
+      "model_architecture_version": 13,
+      "value_semantics": "research_explicit_return_v1",
+      "protocol_version": 4,
+      "search_label_version": null,
+      "observation_version": 4,
+      "task_version": 2
+    },
+    "current_semantics": {
+      "model_architecture_version": 13,
+      "value_semantics": "discounted_terminal_v1",
+      "protocol_version": 4,
+      "search_label_version": 3,
+      "observation_version": 4,
+      "task_version": 2
+    },
+    "mainline_validator_differences": [
+      "value_semantics differs; not mapped as equivalent",
+      "search_label_version is absent"
+    ],
+    "mainline_explicit_accept_and_strict_state_load": "passed",
+    "mainline_verification_method": "Called the exact compatibility helper with explicit acceptance; loaded its checkpoint config/state_dict with strict=True. This validated the guard and state compatibility without starting a second training run."
+  },
+  "implementation": {
+    "modified": [
+      "DESIGN.md",
+      "python/pvz_env.py",
+      "python/pvz_initialization.py",
+      "python/pvz_research.py",
+      "python/train_pvz_ppo.py",
+      "python/train_pvz_ppo_task_family.py",
+      "scripts/check_task_manifests.py",
+      "scripts/t4_capability_profile.py"
+    ],
+    "added": [
+      "scripts/convert_bc_checkpoint.py",
+      "experiments/t7/bc_finetune_level7_v1/train.json",
+      "experiments/t7/bc_finetune_level7_v1/progress_evaluation.json",
+      "experiments/t7/bc_finetune_level7_v1/seed0.json"
+    ],
+    "deck_compatibility_fix": "Derive profile seed slots and upgrade ownership from each deck; d1 seven-card reset now passes its real seven-slot profile. Manifest max deck length follows AGENTS.md and is 10.",
+    "validation": [
+      "python -m py_compile passed for edited Python files",
+      "BC conversion strict state load passed",
+      "BC transfer and d1 task configuration loaded by the completed training run",
+      "no full test suite run"
+    ]
+  },
+  "configuration": {
+    "directory": "experiments/t7/bc_finetune_level7_v1/",
+    "training_manifest": "experiments/t7/bc_finetune_level7_v1/train.json",
+    "evaluation_manifest": "experiments/t7/bc_finetune_level7_v1/progress_evaluation.json",
+    "training_config": "experiments/t7/bc_finetune_level7_v1/seed0.json",
+    "task_id": "train_full_level7_v1_d1",
+    "terrain": "day",
+    "level": 7,
+    "deck": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      7
+    ],
+    "training_seed_range": [
+      1400000,
+      1400255
+    ],
+    "evaluation_seed_range": [
+      30000,
+      30255
+    ],
+    "rollout_episodes": 64,
+    "decision_budget": 50000,
+    "evaluation_decision_nodes": [
+      10000,
+      25000,
+      50000
+    ]
+  },
+  "training": {
+    "status": "budget_complete",
+    "state_file": "artifacts/research/bc_finetune_level7_v1/output/training_state.json",
+    "learning_curve_file": "artifacts/research/bc_finetune_level7_v1/output/learning_curve.json",
+    "log_file": "artifacts/research/bc_finetune_level7_v1/training.log",
+    "run_dir": "artifacts/research/bc_finetune_level7_v1/output/runs/run_1/",
+    "counters": {
+      "episodes": 192,
+      "decisions": 50000,
+      "ticks": 2719774
+    },
+    "nodes": [
+      {
+        "decisions": 0,
+        "sampled_wins": 206,
+        "sampled_episodes": 256,
+        "sampled_rate": 0.8046875,
+        "sampled_wilson_95": [
+          0.75177,
+          0.848596
+        ],
+        "greedy_wins": 210,
+        "greedy_episodes": 256,
+        "greedy_rate": 0.8203125
+      },
+      {
+        "decisions": 10000,
+        "sampled_wins": 196,
+        "sampled_episodes": 256,
+        "sampled_rate": 0.765625,
+        "sampled_wilson_95": [
+          0.710043,
+          0.813353
+        ],
+        "greedy_wins": 217,
+        "greedy_episodes": 256,
+        "greedy_rate": 0.84765625
+      },
+      {
+        "decisions": 25000,
+        "sampled_wins": 203,
+        "sampled_episodes": 256,
+        "sampled_rate": 0.79296875,
+        "sampled_wilson_95": [
+          0.739182,
+          0.838093
+        ],
+        "greedy_wins": 214,
+        "greedy_episodes": 256,
+        "greedy_rate": 0.8359375
+      },
+      {
+        "decisions": 50000,
+        "sampled_wins": 193,
+        "sampled_episodes": 256,
+        "sampled_rate": 0.75390625,
+        "sampled_wilson_95": [
+          0.697646,
+          0.802659
+        ],
+        "greedy_wins": 165,
+        "greedy_episodes": 256,
+        "greedy_rate": 0.64453125
+      }
+    ],
+    "first_point_estimate_regression_at_decisions": 10000,
+    "final_difference_from_local_start_percentage_points": -5.078125,
+    "rollout_episodes_truncated_each_update": [
+      64,
+      64,
+      64
+    ],
+    "interpretation": "Sampled point estimates decline overall, with a partial recovery at 25k and another decline by 50k. The final point estimate is 5.08 percentage points below the local start; 95% Wilson intervals overlap, so this run shows observed degradation rather than a statistically settled mechanism-level claim. Greedy results are reported only and not interpreted.",
+    "evaluated_checkpoints": [
+      "artifacts/research/bc_finetune_level7_v1/output/runs/run_1/update_000001_evaluated_1791185074690746765.pt",
+      "artifacts/research/bc_finetune_level7_v1/output/runs/run_1/update_000002_evaluated_1791189654775282253.pt",
+      "artifacts/research/bc_finetune_level7_v1/output/runs/run_1/update_000003_evaluated_1791194027758957623.pt"
+    ],
+    "final_boundary_checkpoint": "artifacts/research/bc_finetune_level7_v1/output/runs/run_1/update_000003_boundary_1791194027940772718.pt",
+    "final_boundary_sha256": "bb4b5ea7c9dd5ef83bd758e823cc5b164fe143f166aa1456c2d7b83296133551",
+    "process_exit_code": 0,
+    "raw_evaluation_files": [
+      "artifacts/research/bc_finetune_level7_v1/output/evaluations/update_000000.json.gz",
+      "artifacts/research/bc_finetune_level7_v1/output/evaluations/update_000001.json.gz",
+      "artifacts/research/bc_finetune_level7_v1/output/evaluations/update_000002.json.gz",
+      "artifacts/research/bc_finetune_level7_v1/output/evaluations/update_000003.json.gz"
+    ],
+    "raw_evaluations_verified": {
+      "task_id": "validation_full_level7_v1_d1",
+      "seeds": [
+        30000,
+        30255
+      ],
+      "sample_count_per_mode_per_node": 256,
+      "truncated_per_mode_per_node": 0
+    }
+  },
+  "gru_bc_followup": {
+    "status": "not_run_optional_non_blocking",
+    "reason": "The local BC handoff contains only model/results/manifest files; /tmp/pvz_bc_2b and its referenced SQLite dataset are absent, and this repository has no sequence-BC training or dataset collection entry point. No GRU-BC unseen-seed accuracy was produced."
+  },
+  "git_delivery": {
+    "staged": false,
+    "large_runtime_artifacts_staged": false,
+    "checkpoints_and_logs_remain_in_ignored_artifacts_research": true,
+    "evidence_report": "artifacts/t5/perf/bc_finetune_level7_v1.json"
+  }
+}

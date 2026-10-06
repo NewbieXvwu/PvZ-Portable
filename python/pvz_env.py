@@ -170,6 +170,27 @@ class SeedCard:
     imitater_type: int | None = None
 
 
+def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]]) -> PlayerProfileContext:
+    """Match seed-bank capacity and upgrade ownership to a fixed task deck."""
+    seed_types = []
+    imitater_owned = False
+    for card in deck:
+        if type(card) is int:
+            seed_type = card
+        elif isinstance(card, SeedCard):
+            seed_type = card.seed_type
+            imitater_owned |= seed_type == 48
+        elif isinstance(card, tuple) and len(card) == 2 and all(type(value) is int for value in card):
+            seed_type = card[0]
+            imitater_owned |= seed_type == 48
+        else:
+            raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
+        seed_types.append(seed_type)
+    upgrades = tuple(sorted(seed_type for seed_type in set(seed_types) if 40 <= seed_type <= 47))
+    return PlayerProfileContext(seed_slot_count=len(deck), owned_upgrade_plants=upgrades,
+                                imitater_owned=imitater_owned)
+
+
 class PvZEnv:
     def __init__(
         self,

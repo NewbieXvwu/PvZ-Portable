@@ -3,12 +3,12 @@ import json, math, pickle, random, sqlite3, sys, time
 from collections import Counter
 from pathlib import Path
 
-ROOT=Path('/Users/newbiexvwu/PvZAgent')
-OUT=Path('/tmp/pvz_bc_2b')
+ROOT=Path(__file__).resolve().parents[2]
+OUT=Path.home()/'PvZAgent-gru-bc-level7-v1'
 DATA=OUT/'scripted_level7_bc_samples_v2.sqlite'
-CHECKPOINT=Path('/tmp/pvz-mainline/seed0_update328_boundary.pt')
-TEACHER=Path('/tmp/pvz_deck_v2/scripted_baseline_d1.py')
-RESOURCE='/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'
+CHECKPOINT=Path.home()/'PvZAgent-bc-handoff/best_model_pipeline.pt'
+TEACHER=ROOT/'scripts/bc_pipeline/scripted_baseline_d1.py'
+RESOURCE=str(Path.home()/'.cache/pvz-research-resources')
 TRAIN_FIRST=1_400_000
 SEEN_COUNT=256
 UNSEEN_FIRST=30_000

@@ -1,10 +1,10 @@
 import json,sys,torch
 from pathlib import Path
-sys.path.insert(0,'/tmp')
-sys.path[:0]=['/Users/newbiexvwu/PvZAgent/python','/Users/newbiexvwu/PvZAgent/scripts']
-import pvz_bc_train_eval as trainer
+ROOT=Path(__file__).resolve().parents[2]
+sys.path[:0]=[str(ROOT/'python'),str(ROOT/'scripts'),str(Path(__file__).resolve().parent)]
+import train_bc as trainer
 from pvz_agent_model import GameplayModelV1
-out=Path('/tmp/pvz_bc_2b')
+out=Path.home()/'PvZAgent-gru-bc-level7-v1'
 checkpoint=torch.load(out/'best_model.pt',map_location='cpu',weights_only=False)
 model=GameplayModelV1(checkpoint['config'])
 model.load_state_dict(checkpoint['model_state_dict'])

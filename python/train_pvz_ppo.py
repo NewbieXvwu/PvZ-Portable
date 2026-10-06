@@ -21,7 +21,7 @@ from torch.nn import functional as F
 from pvz_agent_model import (FLEX_ATTENTION_AVAILABLE, GameplayModelV1, policy_legal_summary,
                              observation_tokens, pack_tokens, replay_log_probs, select_action)
 from pvz_common import canonical_digest
-from pvz_env import PvZEnv, TaskSpec
+from pvz_env import PvZEnv, TaskSpec, profile_for_deck
 from pvz_event_env import require_policy_env
 from pvz_dual_memory import gradient_start as slow_gradient_start
 from pvz_wait_events import validate_wait_result
@@ -31,6 +31,7 @@ from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 def _task_spec(task: dict[str, Any], seed: int) -> TaskSpec:
     return TaskSpec(
         level=task["level"], seed=seed, playthrough=task["playthrough"],
+        profile=(profile_for_deck(task["deck"]) if task.get("deck") is not None else None),
         zombie_count_multiplier=task["zombie_count_multiplier"], wave_cap=task["wave_cap"],
         preplanted=tuple(tuple(plant) for plant in task["preplanted"]),
     )

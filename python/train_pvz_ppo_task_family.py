@@ -728,6 +728,8 @@ def _parse_args() -> argparse.Namespace:
                         help="override the measured rollout worker device")
     parser.add_argument("--run-number", type=int)
     parser.add_argument("--init-checkpoint", type=Path)
+    parser.add_argument("--accept-init-checkpoint", action="store_true",
+                        help="accept explicitly reviewed checkpoint provenance/version differences")
     parser.add_argument("--motivation")
     parser.add_argument("--ignore-stage0-gate", action="store_true",
                         help="explicitly override the stage 0 block; requires --motivation")
@@ -763,8 +765,49 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _init_checkpoint_version_differences(initial: dict[str, Any]) -> list[str]:
+    """Describe header/provenance differences without conflating them with shape checks."""
+    provenance = initial.get("provenance", {})
+    initial_config = initial.get("config")
+    expected_architecture = (model_architecture_version(initial_config) if initial_config
+                             else MODEL_ARCHITECTURE_VERSION)
+    differences = []
+    if initial.get("model_architecture_version") != expected_architecture:
+        differences.append(
+            f"model_architecture_version={initial.get('model_architecture_version')} "
+            f"(checkpoint config expects {expected_architecture})")
+    if initial.get("value_semantics") != VALUE_SEMANTICS:
+        differences.append(
+            f"value_semantics={initial.get('value_semantics')!r} (current {VALUE_SEMANTICS!r})")
+    for key, expected in (("protocol_version", ENV_PROTOCOL_VERSION),
+                          ("observation_version", OBSERVATION_VERSION),
+                          ("task_version", TASK_VERSION)):
+        if provenance.get(key) != expected:
+            differences.append(f"provenance.{key}={provenance.get(key)!r} (current {expected})")
+    source_kind = provenance.get("source_kind")
+    search_label = provenance.get("search_label_version")
+    if search_label != SEARCH_LABEL_VERSION and not (source_kind == "behavior_cloning" and search_label is None):
+        differences.append(
+            f"provenance.search_label_version={search_label!r} (current {SEARCH_LABEL_VERSION})")
+    return differences
+
+
+def _check_init_checkpoint_versions(initial: dict[str, Any], accept: bool) -> list[str]:
+    differences = _init_checkpoint_version_differences(initial)
+    if differences:
+        message = "initial checkpoint compatibility differences: " + "; ".join(differences)
+        print(f"WARNING: {message}", file=sys.stderr)
+        if not accept:
+            raise ValueError(message + "; review and pass --accept-init-checkpoint to continue")
+    elif accept:
+        print("NOTE: --accept-init-checkpoint supplied; checkpoint versions match", file=sys.stderr)
+    return differences
+
+
 def main() -> None:
     args = _parse_args()
+    if args.accept_init_checkpoint and not args.init_checkpoint:
+        raise SystemExit("--accept-init-checkpoint requires --init-checkpoint")
     if args.experiment_config is not None:
         from pvz_research import run_experiment
         run_experiment(args)
@@ -865,15 +908,9 @@ def main() -> None:
     initialization_baseline = None
     if init_checkpoint:
         initial = torch.load(init_checkpoint, map_location="cpu", weights_only=False)
-        provenance = initial["provenance"]
-        if (initial["model_architecture_version"] != MODEL_ARCHITECTURE_VERSION
-                or initial.get("value_semantics") != VALUE_SEMANTICS
-                or provenance.get("protocol_version") != ENV_PROTOCOL_VERSION
-                or provenance.get("search_label_version") != SEARCH_LABEL_VERSION
-                or provenance["observation_version"] != OBSERVATION_VERSION
-                or provenance["task_version"] != TASK_VERSION):
-            raise ValueError("initial checkpoint does not match current model/search semantics")
-        model = GameplayModelV1().to(device)
+        _check_init_checkpoint_versions(initial, args.accept_init_checkpoint)
+        initial_config = initial.get("config")
+        model = GameplayModelV1(initial_config).to(device) if initial_config else GameplayModelV1().to(device)
         model.load_state_dict(initial["state_dict"])
         initial_sha = sha256_file(init_checkpoint)
         initial_kind = "checkpoint_file"

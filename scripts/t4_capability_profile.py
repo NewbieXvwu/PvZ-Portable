@@ -26,7 +26,7 @@ from pvz_agent_model import (  # noqa: E402
     select_action,
 )
 from pvz_common import ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION, sha256_file  # noqa: E402
-from pvz_env import PvZEnv, TaskSpec  # noqa: E402
+from pvz_env import PvZEnv, TaskSpec, profile_for_deck  # noqa: E402
 from pvz_event_env import policy_env, require_policy_env  # noqa: E402
 from pvz_wait_events import summarize_wait_records, validate_wait_result  # noqa: E402
 from pvz_seed_jobs import atomic_json  # noqa: E402
@@ -83,6 +83,7 @@ def random_action(observation: dict[str, Any], rng: random.Random) -> dict[str, 
 def _task_spec(task: dict[str, Any], seed: int) -> TaskSpec:
     return TaskSpec(
         level=task["level"], seed=seed, playthrough=task["playthrough"],
+        profile=profile_for_deck(task["deck"]),
         zombie_count_multiplier=task["zombie_count_multiplier"], wave_cap=task["wave_cap"],
         preplanted=tuple(tuple(item) for item in task["preplanted"]),
     )

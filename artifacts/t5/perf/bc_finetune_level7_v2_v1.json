@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "experiment_id": "bc_finetune_level7_v2",
+  "updated_at_utc": "2026-10-05T17:42:24.907807+00:00",
+  "git": {
+    "head": "496d0db01075dff89e8bbd3734cdd47ec463784a",
+    "pull": "git pull --ff-only succeeded",
+    "worktree_was_dirty_at_start": true
+  },
+  "configuration": {
+    "path": "experiments/t7/bc_finetune_level7_v1/seed0.json",
+    "rollout_episodes": 16,
+    "decision_budget": 1000000,
+    "decision_nodes": [
+      100000,
+      200000,
+      300000,
+      400000,
+      500000,
+      600000,
+      700000,
+      800000,
+      900000,
+      1000000
+    ],
+    "task_count": 1,
+    "evaluation_seeds": [
+      30000,
+      30255
+    ]
+  },
+  "unittest": {
+    "command": "cd python && ~/.venvs/ml/bin/python -m unittest discover -s . -p \"test_*.py\"",
+    "tests_run": 429,
+    "baseline_failures": 2,
+    "baseline_errors": 2,
+    "new_failures_or_errors": 0,
+    "details": [
+      "test_dual_memory: import error, t4_capability_profile is not on sys.path",
+      "test_reference_model_and_source_are_frozen: legacy fixture lacks budget key",
+      "test_version_constants_are_the_documented_values: stale assertion expects observation version 3, current is 4",
+      "test_t4_cap1_baseline_covers_all_320_frozen_seeds: training manifest differs from mutation generator"
+    ],
+    "baseline_confirmed_on_clean_496d0db": true
+  },
+  "gru_bc": {
+    "status": "paused_for_primary_rl_gpu_run",
+    "collection": {
+      "episodes": 5000,
+      "wins": 4209,
+      "decisions": 4639901,
+      "legal_actions": {
+        "valid": 4639901
+      },
+      "samples": 1000000,
+      "train": 980000,
+      "validation": 20000,
+      "wait_to_plant_ratio": 2.7559108647233583,
+      "manifest": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/collection_manifest.json",
+      "database": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/scripted_level7_bc_samples_v2.sqlite"
+    },
+    "training_log": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/gru_training.log",
+    "sequence_length": 32,
+    "episodes_per_batch": 8,
+    "last_progress": "800/5000 episodes, 155724 training samples; sequence training interrupted with exit 143 before an epoch checkpoint to release 15.9 GiB CUDA memory for PPO. Dataset and script are intact; retrain after primary RL run."
+  },
+  "rl_finetuning": {
+    "status": "running_initial_evaluation",
+    "run_dir": "artifacts/research/bc_finetune_level7_v2/output",
+    "log": "artifacts/research/bc_finetune_level7_v2/diagnostic.log",
+    "evaluation_progress": "384/512 mode-seed evaluations at node 0",
+    "updates": 0,
+    "signal": "SIGINT requested update-boundary stop after node 0; then run 2-update quota probe and full budget. GRU training was stopped before first PPO update to free CUDA."
+  },
+  "evidence_status": "in_progress"
+}

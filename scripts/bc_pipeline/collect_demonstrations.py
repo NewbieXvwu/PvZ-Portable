@@ -12,12 +12,12 @@ import time
 from collections import Counter
 from pathlib import Path
 
-ROOT=Path('/Users/newbiexvwu/PvZAgent')
+ROOT=Path(__file__).resolve().parents[2]
 sys.path[:0]=[str(ROOT/'python'),str(ROOT/'scripts')]
-OUT=Path('/tmp/pvz_bc_2b')
-TEACHER=Path('/tmp/pvz_deck_v2/scripted_baseline_d1.py')
-RESOURCE='/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'
-CHECKPOINT=Path('/tmp/pvz-mainline/seed0_update328_boundary.pt')
+OUT=Path.home()/'PvZAgent-gru-bc-level7-v1'
+TEACHER=ROOT/'scripts/bc_pipeline/scripted_baseline_d1.py'
+RESOURCE=str(Path.home()/'.cache/pvz-research-resources')
+CHECKPOINT=Path.home()/'PvZAgent-bc-handoff/best_model_pipeline.pt'
 TRAIN_FIRST=1_400_000
 EPISODES=5_000
 WORKERS=8
@@ -97,8 +97,8 @@ def run_shard(index):
     db=sqlite3.connect(db_path)
     db.execute('PRAGMA journal_mode=OFF')
     db.execute('PRAGMA synchronous=OFF')
-    db.execute('CREATE TABLE nonwait (id INTEGER PRIMARY KEY, kind TEXT, packet INTEGER, plant_type INTEGER, payload BLOB)')
-    db.execute('CREATE TABLE waits (id INTEGER PRIMARY KEY, payload BLOB)')
+    db.execute('CREATE TABLE nonwait (id INTEGER PRIMARY KEY, episode_id INTEGER, step_id INTEGER, kind TEXT, packet INTEGER, plant_type INTEGER, payload BLOB)')
+    db.execute('CREATE TABLE waits (id INTEGER PRIMARY KEY, episode_id INTEGER, step_id INTEGER, payload BLOB)')
     db.execute('BEGIN')
     rng=random.Random(42_000+first)
     counts=Counter()
@@ -151,20 +151,25 @@ def run_shard(index):
             if keep:
                 item=transition(obs_before,action,previous_action,elapsed,events,
                                 previous_wait_result,info,model_api,CONFIG)
+                item['episode_id']=seed
+                item['step_id']=episode_actions
                 payload=pickle.dumps(item,protocol=5)
                 if kind=='wait':
                     if wait_slot<=wait_kept and wait_slot==wait_kept and wait_kept<=WAIT_CAP_PER_SHARD:
                         # New reservoir entry; a replacement uses an already occupied slot.
                         occupied=db.execute('SELECT 1 FROM waits WHERE id=?',(wait_slot,)).fetchone()
                         if occupied is None:
-                            db.execute('INSERT INTO waits(id,payload) VALUES(?,?)',(wait_slot,payload))
+                            db.execute('INSERT INTO waits(id,episode_id,step_id,payload) VALUES(?,?,?,?)',
+                                       (wait_slot,seed,episode_actions,payload))
                         else:
-                            db.execute('UPDATE waits SET payload=? WHERE id=?',(payload,wait_slot))
+                            db.execute('UPDATE waits SET episode_id=?,step_id=?,payload=? WHERE id=?',
+                                       (seed,episode_actions,payload,wait_slot))
                     else:
-                        db.execute('UPDATE waits SET payload=? WHERE id=?',(payload,wait_slot))
+                        db.execute('UPDATE waits SET episode_id=?,step_id=?,payload=? WHERE id=?',
+                                   (seed,episode_actions,payload,wait_slot))
                 else:
-                    db.execute('INSERT INTO nonwait(kind,packet,plant_type,payload) VALUES(?,?,?,?)',
-                               (kind,packet,ptype,payload))
+                    db.execute('INSERT INTO nonwait(episode_id,step_id,kind,packet,plant_type,payload) VALUES(?,?,?,?,?,?)',
+                               (seed,episode_actions,kind,packet,ptype,payload))
                     nonwait_kept+=1
                 if (nonwait_kept+wait_kept)%5_000==0:
                     db.commit(); db.execute('BEGIN')
@@ -219,39 +224,56 @@ def build_dataset(shards, config):
     if final_path.exists(): final_path.unlink()
     out=sqlite3.connect(final_path)
     out.execute('PRAGMA journal_mode=OFF'); out.execute('PRAGMA synchronous=OFF')
-    out.execute('CREATE TABLE samples (id INTEGER PRIMARY KEY, split INTEGER, kind TEXT, packet INTEGER, plant_type INTEGER, payload BLOB)')
+    out.execute('CREATE TABLE samples (id INTEGER PRIMARY KEY, split INTEGER, episode_id INTEGER, step_id INTEGER, kind TEXT, packet INTEGER, plant_type INTEGER, payload BLOB)')
     sample_id=0
     dataset_counts=Counter(); dataset_packets=Counter(); dataset_plant_types=Counter()
     for shard,n,w in per_shard:
         src=sqlite3.connect(shard['db_path'])
-        queries=[('SELECT kind,packet,plant_type,payload FROM nonwait ORDER BY id',None)]
+        queries=[('SELECT episode_id,step_id,kind,packet,plant_type,payload FROM nonwait ORDER BY id',None)]
         wait_ids=sorted(i for si,i in selected if si==shard['shard'])
         for start in range(0,len(wait_ids),800):
             ids=wait_ids[start:start+800]
             if ids:
                 q=','.join('?' for _ in ids)
-                queries.append((f'SELECT "wait",NULL,NULL,payload FROM waits WHERE id IN ({q})',ids))
+                queries.append((f'SELECT episode_id,step_id,"wait",NULL,NULL,payload FROM waits WHERE id IN ({q})',ids))
         batch=[]
         for sql,args in queries:
             cursor=src.execute(sql,args or ())
-            for kind,packet,plant_type,payload in cursor:
+            for episode_id,step_id,kind,packet,plant_type,payload in cursor:
                 sample_id+=1
                 split=int(sample_id in val_ids)
-                batch.append((sample_id,split,kind,packet,plant_type,payload))
+                batch.append((sample_id,split,episode_id,step_id,kind,packet,plant_type,payload))
                 dataset_counts[kind]+=1
                 if kind=='plant':
                     dataset_packets[str(packet)]+=1
                     dataset_plant_types[str(plant_type)]+=1
                 if len(batch)>=2_000:
-                    out.executemany('INSERT INTO samples VALUES(?,?,?,?,?,?)',batch)
+                    out.executemany('INSERT INTO samples VALUES(?,?,?,?,?,?,?,?)',batch)
                     batch.clear()
         if batch:
-            out.executemany('INSERT INTO samples VALUES(?,?,?,?,?,?)',batch)
+            out.executemany('INSERT INTO samples VALUES(?,?,?,?,?,?,?,?)',batch)
         src.close()
     out.commit()
     out.execute('CREATE INDEX split_id ON samples(split,id)')
+    out.execute('CREATE INDEX sequence_order ON samples(split,episode_id,step_id)')
     out.commit()
     actual=out.execute('SELECT COUNT(*) FROM samples').fetchone()[0]
+    # Sequence training must hold out complete episodes. A row-wise split would
+    # place adjacent steps from the same episode in both train and validation.
+    episode_counts=out.execute(
+        'SELECT episode_id,COUNT(*) FROM samples GROUP BY episode_id ORDER BY episode_id'
+    ).fetchall()
+    random.Random(81_023).shuffle(episode_counts)
+    validation_episode_ids=[]
+    validation_count=0
+    for episode_id,count in episode_counts:
+        if validation_count >= VALIDATION_SAMPLES:
+            break
+        validation_episode_ids.append((episode_id,))
+        validation_count+=count
+    out.execute('UPDATE samples SET split=0')
+    out.executemany('UPDATE samples SET split=1 WHERE episode_id=?',validation_episode_ids)
+    out.commit()
     train_n=out.execute('SELECT COUNT(*) FROM samples WHERE split=0').fetchone()[0]
     val_n=out.execute('SELECT COUNT(*) FROM samples WHERE split=1').fetchone()[0]
     out.close()
@@ -284,6 +306,13 @@ def main():
                   f'decisions={result["decisions"]} legal={result["legal_actions"]}',flush=True)
     shards.sort(key=lambda x:x['shard'])
     dataset=build_dataset(shards,CONFIG)
+    for shard in shards:
+        shard_path=Path(shard['db_path']).resolve()
+        if shard_path.parent != OUT.resolve() or not shard_path.name.startswith('shard_'):
+            raise RuntimeError(f'refusing to remove non-shard path: {shard_path}')
+        shard_bytes=shard_path.stat().st_size
+        shard_path.unlink()
+        print(f"removed merged shard={shard_path.name} bytes={shard_bytes}",flush=True)
     payload={'schema_version':1,'simulator_sha256':hashlib.sha256((ROOT/'build/pvz-portable').read_bytes()).hexdigest(),
              'configuration':CONFIG,'episodes':sum(s['episodes'] for s in shards),
              'wins':sum(s['wins'] for s in shards),'truncated':sum(s['truncated'] for s in shards),
@@ -302,4 +331,3 @@ def main():
 
 
 if __name__=='__main__': main()
-

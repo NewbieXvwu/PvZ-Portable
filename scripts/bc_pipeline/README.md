@@ -32,19 +32,19 @@ python scripts/bc_pipeline/train_bc.py
 python scripts/bc_pipeline/evaluate_bc_cpu.py
 ```
 
-## ⚠️ 跑之前必须改的硬编码路径
+## 本机路径
 
-每个脚本顶部都有这几行，**换机器必须改**：
+归档脚本最初使用 macOS 和 `/tmp` 硬编码路径。本机采集、前馈训练、CPU 评估和序列训练入口已改为从仓库位置和 `$HOME` 推导路径：
 
 ```python
-ROOT      = Path('/Users/newbiexvwu/PvZAgent')                    # 仓库根
-OUT       = Path('/tmp/pvz_bc_2b')                                # 输出目录
-TEACHER   = Path('/tmp/pvz_deck_v2/scripted_baseline_d1.py')      # → 本目录的 scripted_baseline_d1.py
-RESOURCE  = '/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'
-CHECKPOINT= Path('/tmp/pvz-mainline/seed0_update328_boundary.pt') # 只用它的 config（建模型用）
+ROOT       = Path(__file__).resolve().parents[2]
+OUT        = Path.home() / 'PvZAgent-gru-bc-level7-v1'
+TEACHER    = ROOT / 'scripts/bc_pipeline/scripted_baseline_d1.py'
+RESOURCE   = Path.home() / '.cache/pvz-research-resources'
+CHECKPOINT = Path.home() / 'PvZAgent-bc-handoff/best_model_pipeline.pt'
 ```
 
-**`TEACHER` 那条直接改成本目录里的 `scripted_baseline_d1.py`。**
+其余历史对照脚本仍可能含归档时的旧路径，运行前需检查。
 
 ## 各文件是什么
 
@@ -58,6 +58,7 @@ CHECKPOINT= Path('/tmp/pvz-mainline/seed0_update328_boundary.pt') # 只用它的
 | `eligibility_check.py` | `/tmp/pvz_unblock_bc_2b.py` | E0/E1/E2 等待语义对照（`PvZEnv` vs `EventWaitEnv`）|
 | `stop_after_training.py` | `/tmp/pvz_bc_2b/stop_after_training.py` | 训练早停钩子 |
 | `scripted_baseline_d1.py` | `/tmp/pvz_deck_v2/scripted_baseline_d1.py` | **d1 教师**。与 `scripts/scripted_baseline.py` 的差异只有：射手上限 14→20、加 `DOUBLEPEA=7` 的规则 ⑤b、`POLICY_REVISION` 改名 |
+| `train_bc_gru_sequence.py` | 本轮新增 | 按 episode/step 顺序训练，在 32 步分块间传递 GRU 隐状态 |
 
 ## 不要提交的东西
 
@@ -66,9 +67,12 @@ CHECKPOINT= Path('/tmp/pvz-mainline/seed0_update328_boundary.pt') # 只用它的
 - 训练出的 `.pt` 按项目约定走 Hugging Face（`realnewbiexvwu/pvz-agent-artifacts`，
   当前在 `bc-scripted-level7-v2/`）。
 
-## 已知缺口
+## GRU 序列对照
 
-- **没有"序列版"BC 入口**（隐状态跨步传递的那种）。当前所有脚本都是
-  **每个决策重置隐状态** → 训出来的是**前馈**策略，GRU 没被用上。
-  要跑 GRU 对照得另外写。
-- 脚本里没有任何单元测试。
+采集器保留每条样本的 `episode_id` 和 `step_id`，序列训练入口按它们排序，跨决策和 32 步分块传递隐状态。采集完成后运行：
+
+```bash
+python scripts/bc_pipeline/train_bc_gru_sequence.py
+```
+
+历史脚本没有单元测试。
