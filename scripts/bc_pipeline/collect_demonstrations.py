@@ -323,7 +323,7 @@ def main():
              'dataset':dataset,'shards':shards,
              'collection_seconds':round(time.time()-started,1)}
     report=OUT/'collection_manifest.json'
-    report.write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':'))+'\\n')
+    report.write_text(json.dumps(payload,ensure_ascii=False,separators=(',',':'))+'\n')
     print(json.dumps({'phase':'collection_done','report':str(report),'episodes':payload['episodes'],
                       'wins':payload['wins'],'decisions':payload['decisions'],
                       'teacher_action_counts':payload['teacher_action_counts'],'dataset':dataset,

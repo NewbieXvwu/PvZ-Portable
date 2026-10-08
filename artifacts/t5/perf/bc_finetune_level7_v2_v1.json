@@ -1,11 +1,15 @@
 {
   "schema_version": 1,
   "experiment_id": "bc_finetune_level7_v2",
-  "updated_at_utc": "2026-10-05T17:42:24.907807+00:00",
+  "updated_at_utc": "2026-10-07T07:04:06.445442+00:00",
   "git": {
-    "head": "496d0db01075dff89e8bbd3734cdd47ec463784a",
-    "pull": "git pull --ff-only succeeded",
+    "head": "9a30ed79dd662191180cc728600159281cf87b7c",
+    "pull_ff_only": "succeeded",
     "worktree_was_dirty_at_start": true
+  },
+  "preflight": {
+    "tmp_2g_write": "passed; test file removed",
+    "workspace_2g_write": "passed; test file removed"
   },
   "configuration": {
     "path": "experiments/t7/bc_finetune_level7_v1/seed0.json",
@@ -23,28 +27,442 @@
       900000,
       1000000
     ],
-    "task_count": 1,
     "evaluation_seeds": [
       30000,
       30255
     ]
   },
+  "baseline_node_0": {
+    "greedy": {
+      "wins": 210,
+      "episodes": 256,
+      "win_rate": 0.8203125,
+      "truncated": 0
+    },
+    "sampled": {
+      "wins": 206,
+      "episodes": 256,
+      "win_rate": 0.8046875,
+      "truncated": 0
+    }
+  },
+  "rl_finetuning": {
+    "status": "update_boundary_stop",
+    "phase": "ready",
+    "run_dir": "artifacts/research/bc_finetune_level7_v2/output",
+    "current_updates": 28,
+    "current_decisions": 307668,
+    "evaluation_cursor": 3,
+    "learning_curve": [
+      {
+        "decision_node": 0,
+        "updates": 0,
+        "modes": {
+          "greedy": {
+            "wins": 210,
+            "episodes": 256,
+            "win_rate": 0.8203125,
+            "truncated": 0
+          },
+          "sampled": {
+            "wins": 206,
+            "episodes": 256,
+            "win_rate": 0.8046875,
+            "truncated": 0
+          }
+        },
+        "source": "artifacts/research/bc_finetune_level7_v2/output/evaluations/update_000000.json.gz"
+      },
+      {
+        "decision_node": 100000,
+        "updates": 8,
+        "modes": {
+          "greedy": {
+            "wins": 178,
+            "episodes": 256,
+            "win_rate": 0.6953125,
+            "truncated": 0
+          },
+          "sampled": {
+            "wins": 174,
+            "episodes": 256,
+            "win_rate": 0.6796875,
+            "truncated": 0
+          }
+        },
+        "source": "artifacts/research/bc_finetune_level7_v2/output/evaluations/update_000008.json.gz"
+      },
+      {
+        "decision_node": 200000,
+        "updates": 16,
+        "modes": {
+          "greedy": {
+            "wins": 221,
+            "episodes": 256,
+            "win_rate": 0.86328125,
+            "truncated": 0
+          },
+          "sampled": {
+            "wins": 176,
+            "episodes": 256,
+            "win_rate": 0.6875,
+            "truncated": 0
+          }
+        },
+        "source": "artifacts/research/bc_finetune_level7_v2/output/evaluations/update_000016.json.gz"
+      },
+      {
+        "decision_node": 300000,
+        "updates": 27,
+        "modes": {
+          "greedy": {
+            "wins": 0,
+            "episodes": 256,
+            "win_rate": 0.0,
+            "truncated": 0
+          },
+          "sampled": {
+            "wins": 2,
+            "episodes": 256,
+            "win_rate": 0.0078125,
+            "truncated": 0
+          }
+        },
+        "source": "artifacts/research/bc_finetune_level7_v2/output/evaluations/update_000027.json.gz"
+      }
+    ],
+    "updates": [
+      {
+        "update": 1,
+        "cumulative_decisions": 14857,
+        "episodes": 16,
+        "won": 16,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14857,
+        "rollout_seconds": 163.88937944799545,
+        "ppo_seconds": 213.37290539199603
+      },
+      {
+        "update": 2,
+        "cumulative_decisions": 29743,
+        "episodes": 32,
+        "won": 10,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14886,
+        "rollout_seconds": 171.90800531499997,
+        "ppo_seconds": 392.51869791
+      },
+      {
+        "update": 3,
+        "cumulative_decisions": 43895,
+        "episodes": 48,
+        "won": 13,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14152,
+        "rollout_seconds": 164.14333336699997,
+        "ppo_seconds": 282.0227672980001
+      },
+      {
+        "update": 4,
+        "cumulative_decisions": 58341,
+        "episodes": 64,
+        "won": 12,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14446,
+        "rollout_seconds": 173.65342791600006,
+        "ppo_seconds": 269.0990297399999
+      },
+      {
+        "update": 5,
+        "cumulative_decisions": 73505,
+        "episodes": 80,
+        "won": 14,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 15164,
+        "rollout_seconds": 224.1029125330001,
+        "ppo_seconds": 102.69249884600003
+      },
+      {
+        "update": 6,
+        "cumulative_decisions": 88201,
+        "episodes": 96,
+        "won": 10,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14696,
+        "rollout_seconds": 209.84653195700002,
+        "ppo_seconds": 428.2450756029998
+      },
+      {
+        "update": 7,
+        "cumulative_decisions": 99651,
+        "episodes": 109,
+        "won": 9,
+        "truncated": 4,
+        "budget_boundary_truncations": 4,
+        "actual_decisions": 11450,
+        "rollout_seconds": 145.15437762200008,
+        "ppo_seconds": 171.67624003799983
+      },
+      {
+        "update": 8,
+        "cumulative_decisions": 100000,
+        "episodes": 110,
+        "won": 0,
+        "truncated": 1,
+        "budget_boundary_truncations": 1,
+        "actual_decisions": 349,
+        "rollout_seconds": 10.640576475999751,
+        "ppo_seconds": 16.706169056999897
+      },
+      {
+        "update": 9,
+        "cumulative_decisions": 114618,
+        "episodes": 126,
+        "won": 11,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14618,
+        "rollout_seconds": 190.68846419300007,
+        "ppo_seconds": 346.80544984399967
+      },
+      {
+        "update": 10,
+        "cumulative_decisions": 127332,
+        "episodes": 142,
+        "won": 4,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 12714,
+        "rollout_seconds": 155.95737659600127,
+        "ppo_seconds": 106.27386530500007
+      },
+      {
+        "update": 11,
+        "cumulative_decisions": 140746,
+        "episodes": 158,
+        "won": 6,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 13414,
+        "rollout_seconds": 172.23983435400078,
+        "ppo_seconds": 28.328551996999522
+      },
+      {
+        "update": 12,
+        "cumulative_decisions": 155075,
+        "episodes": 174,
+        "won": 8,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14329,
+        "rollout_seconds": 182.12646356999903,
+        "ppo_seconds": 16.87986360299874
+      },
+      {
+        "update": 13,
+        "cumulative_decisions": 169984,
+        "episodes": 190,
+        "won": 7,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14909,
+        "rollout_seconds": 187.63345446199855,
+        "ppo_seconds": 247.2851700079991
+      },
+      {
+        "update": 14,
+        "cumulative_decisions": 182282,
+        "episodes": 206,
+        "won": 5,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 12298,
+        "rollout_seconds": 149.403978362001,
+        "ppo_seconds": 103.03824949699992
+      },
+      {
+        "update": 15,
+        "cumulative_decisions": 196252,
+        "episodes": 222,
+        "won": 8,
+        "truncated": 4,
+        "budget_boundary_truncations": 4,
+        "actual_decisions": 13970,
+        "rollout_seconds": 177.53538390799986,
+        "ppo_seconds": 45.24461324500044
+      },
+      {
+        "update": 16,
+        "cumulative_decisions": 200000,
+        "episodes": 227,
+        "won": 0,
+        "truncated": 5,
+        "budget_boundary_truncations": 5,
+        "actual_decisions": 3748,
+        "rollout_seconds": 57.69613474400103,
+        "ppo_seconds": 59.94243266400008
+      },
+      {
+        "update": 17,
+        "cumulative_decisions": 213299,
+        "episodes": 243,
+        "won": 11,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 13299,
+        "rollout_seconds": 161.80339569699936,
+        "ppo_seconds": 34.22202128999925
+      },
+      {
+        "update": 18,
+        "cumulative_decisions": 227859,
+        "episodes": 259,
+        "won": 7,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 14560,
+        "rollout_seconds": 186.19649985199976,
+        "ppo_seconds": 5.823002719000215
+      },
+      {
+        "update": 19,
+        "cumulative_decisions": 241632,
+        "episodes": 275,
+        "won": 11,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 13773,
+        "rollout_seconds": 168.73714573699908,
+        "ppo_seconds": 5.590210565000234
+      },
+      {
+        "update": 20,
+        "cumulative_decisions": 253437,
+        "episodes": 291,
+        "won": 4,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 11805,
+        "rollout_seconds": 130.6636330600013,
+        "ppo_seconds": 5.497268634000648
+      },
+      {
+        "update": 21,
+        "cumulative_decisions": 264840,
+        "episodes": 307,
+        "won": 0,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 11403,
+        "rollout_seconds": 123.12966361299914,
+        "ppo_seconds": 5.214018988999669
+      },
+      {
+        "update": 22,
+        "cumulative_decisions": 275949,
+        "episodes": 323,
+        "won": 1,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 11109,
+        "rollout_seconds": 123.28521132999958,
+        "ppo_seconds": 20.915941576000478
+      },
+      {
+        "update": 23,
+        "cumulative_decisions": 285111,
+        "episodes": 339,
+        "won": 0,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 9162,
+        "rollout_seconds": 92.4678707160001,
+        "ppo_seconds": 70.54669913500038
+      },
+      {
+        "update": 24,
+        "cumulative_decisions": 294596,
+        "episodes": 355,
+        "won": 0,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 9485,
+        "rollout_seconds": 102.3265090570003,
+        "ppo_seconds": 5.287130058999537
+      },
+      {
+        "update": 25,
+        "cumulative_decisions": 298486,
+        "episodes": 362,
+        "won": 0,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 3890,
+        "rollout_seconds": 51.046115432998704,
+        "ppo_seconds": 35.9390081319998
+      },
+      {
+        "update": 26,
+        "cumulative_decisions": 299508,
+        "episodes": 364,
+        "won": 0,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 1022,
+        "rollout_seconds": 17.185105984000984,
+        "ppo_seconds": 51.26294608799981
+      },
+      {
+        "update": 27,
+        "cumulative_decisions": 300000,
+        "episodes": 365,
+        "won": 0,
+        "truncated": 1,
+        "budget_boundary_truncations": 1,
+        "actual_decisions": 492,
+        "rollout_seconds": 13.800184204001198,
+        "ppo_seconds": 21.711669485999664
+      },
+      {
+        "update": 28,
+        "cumulative_decisions": 307668,
+        "episodes": 381,
+        "won": 0,
+        "truncated": 0,
+        "budget_boundary_truncations": 0,
+        "actual_decisions": 7668,
+        "rollout_seconds": 81.74250278399995,
+        "ppo_seconds": 69.52179741299915
+      }
+    ],
+    "state": "artifacts/research/bc_finetune_level7_v2/output/training_state.json",
+    "log": "/tmp/bc_finetune_level7_v2_full.log",
+    "diagnostic_log": "/tmp/bc_finetune_level7_v2_shard_cleanup.jsonl",
+    "stop_reason": "clear_policy_failure_at_300k_evaluation; all 512 evals terminated without truncation, greedy 0/256, sampled 2/256; graceful stop at update 28 boundary"
+  },
   "unittest": {
     "command": "cd python && ~/.venvs/ml/bin/python -m unittest discover -s . -p \"test_*.py\"",
     "tests_run": 429,
-    "baseline_failures": 2,
-    "baseline_errors": 2,
+    "known_baseline_failures": 2,
+    "known_baseline_errors": 2,
     "new_failures_or_errors": 0,
     "details": [
       "test_dual_memory: import error, t4_capability_profile is not on sys.path",
-      "test_reference_model_and_source_are_frozen: legacy fixture lacks budget key",
+      "test_reference_model_and_source_are_frozen: fixture lacks budget key",
       "test_version_constants_are_the_documented_values: stale assertion expects observation version 3, current is 4",
       "test_t4_cap1_baseline_covers_all_320_frozen_seeds: training manifest differs from mutation generator"
     ],
-    "baseline_confirmed_on_clean_496d0db": true
+    "baseline_confirmed_on_clean_496d0db": true,
+    "log": "/tmp/bc_finetune_level7_v2_unittest_final.log"
   },
   "gru_bc": {
-    "status": "paused_for_primary_rl_gpu_run",
+    "status": "complete",
     "collection": {
       "episodes": 5000,
       "wins": 4209,
@@ -52,25 +470,212 @@
       "legal_actions": {
         "valid": 4639901
       },
-      "samples": 1000000,
-      "train": 980000,
-      "validation": 20000,
-      "wait_to_plant_ratio": 2.7559108647233583,
+      "dataset": {
+        "path": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/scripted_level7_bc_samples_v2.sqlite",
+        "total": 1000000,
+        "train": 979820,
+        "validation": 20180,
+        "teacher_plant_actions": 266247,
+        "teacher_shovel_actions": 0,
+        "sampled_wait_actions": 733753,
+        "wait_to_plant_ratio": 2.7559108647233583,
+        "action_counts": {
+          "plant": 266247,
+          "wait": 733753
+        },
+        "plant_packet_counts": {
+          "1": 71993,
+          "4": 16336,
+          "0": 120322,
+          "3": 18220,
+          "5": 23674,
+          "6": 15589,
+          "2": 113
+        },
+        "plant_type_counts": {
+          "1": 71993,
+          "4": 16336,
+          "0": 120322,
+          "3": 18220,
+          "5": 23674,
+          "7": 15589,
+          "2": 113
+        },
+        "retained_all_nonwait": true,
+        "wait_reservoir_candidates": 1200000
+      },
       "manifest": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/collection_manifest.json",
-      "database": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/scripted_level7_bc_samples_v2.sqlite"
+      "database": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/scripted_level7_bc_samples_v2.sqlite",
+      "shard_files_remaining": 0
     },
-    "training_log": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/gru_training.log",
     "sequence_length": 32,
     "episodes_per_batch": 8,
-    "last_progress": "800/5000 episodes, 155724 training samples; sequence training interrupted with exit 143 before an epoch checkpoint to release 15.9 GiB CUDA memory for PPO. Dataset and script are intact; retrain after primary RL run."
+    "script": "scripts/bc_pipeline/train_bc_gru_sequence.py",
+    "training_log": "/tmp/bc_gru_training.log",
+    "training_device": "cuda",
+    "cpu_attempt": {
+      "duration_seconds_before_restart": 10863,
+      "log": "/tmp/bc_gru_training_cpu.log",
+      "checkpoint_written": false,
+      "reason": "single-thread CPU throughput was too low; restarted after RL failure released GPU"
+    },
+    "training": {
+      "epochs_run": 14,
+      "best_epoch": 12,
+      "best_validation_loss": 0.014323202908275386,
+      "final_validation_loss": 0.015480915564818473,
+      "seconds": 43486.1,
+      "optimizer": "Adam",
+      "learning_rate": 0.0003,
+      "early_stop": "2 consecutive epochs without validation-loss decrease",
+      "sequence_mode": "rows ordered by episode_id/step_id; hidden carried across 32-step chunks",
+      "loss_curve": [
+        {
+          "epoch": 1,
+          "train_loss": 0.21240392508737568,
+          "validation_loss": 0.04309075460635399,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 2,
+          "train_loss": 0.04336580882314805,
+          "validation_loss": 0.031854228049191774,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 3,
+          "train_loss": 0.03394666505746002,
+          "validation_loss": 0.031572008020695895,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 4,
+          "train_loss": 0.030225276874099267,
+          "validation_loss": 0.031425972440906745,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 5,
+          "train_loss": 0.02517449435503556,
+          "validation_loss": 0.021322367643813785,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 6,
+          "train_loss": 0.024487169667914796,
+          "validation_loss": 0.024144501182942018,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 7,
+          "train_loss": 0.021295180156547404,
+          "validation_loss": 0.019954136758304326,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 8,
+          "train_loss": 0.019783696701483448,
+          "validation_loss": 0.01947758367914629,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 9,
+          "train_loss": 0.019024903502171755,
+          "validation_loss": 0.020063437271874297,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 10,
+          "train_loss": 0.017672664158981947,
+          "validation_loss": 0.016787003778194413,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 11,
+          "train_loss": 0.018889142054473958,
+          "validation_loss": 0.01637071706170015,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 12,
+          "train_loss": 0.01720695244447063,
+          "validation_loss": 0.014323202908275386,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 13,
+          "train_loss": 0.017678470886291837,
+          "validation_loss": 0.016066178871084254,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        },
+        {
+          "epoch": 14,
+          "train_loss": 0.015793928036374784,
+          "validation_loss": 0.015480915564818473,
+          "train_samples": 979820,
+          "validation_samples": 20180
+        }
+      ],
+      "recovered_cuda_oom_warnings": 1,
+      "cuda_oom_warning_log": "one transient allocation warning; training continued through epoch 14 and evaluation"
+    },
+    "unseen_sampled_evaluation": {
+      "seeds": [
+        30000,
+        30255
+      ],
+      "episodes": 256,
+      "wins": 222,
+      "win_rate": 0.8671875,
+      "truncated": 0,
+      "decisions": 240525,
+      "action_counts": {
+        "plant": 13968,
+        "wait": 226557
+      },
+      "per_episode_results": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/gru_sequence_results.json"
+    },
+    "model": {
+      "path": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/gru_sequence_best_model.pt",
+      "bytes": 31554349,
+      "sha256": "f4303a9ca2f0e076e18b8f1bd24233dff258f7a571b3097c573fe14266f67f03"
+    },
+    "results": {
+      "path": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/gru_sequence_results.json",
+      "bytes": 26830,
+      "sha256": "fb667730922898ee0151e470b03862513c9a737f1ede6d77f022690fdef5f81f"
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZAgent-gru-bc-level7-v1/collection_manifest.json",
+      "bytes": 4593,
+      "sha256": "89513ae31c32648adc3eb1596c2bb42821e8e5587aeaeab73b055f693acc4ef3"
+    },
+    "dataset_deleted": true,
+    "dataset_bytes_deleted": 10378051584
   },
-  "rl_finetuning": {
-    "status": "running_initial_evaluation",
-    "run_dir": "artifacts/research/bc_finetune_level7_v2/output",
-    "log": "artifacts/research/bc_finetune_level7_v2/diagnostic.log",
-    "evaluation_progress": "384/512 mode-seed evaluations at node 0",
-    "updates": 0,
-    "signal": "SIGINT requested update-boundary stop after node 0; then run 2-update quota probe and full budget. GRU training was stopped before first PPO update to free CUDA."
+  "disk_hygiene": {
+    "completed_research_shards_removed_bytes": 682731354,
+    "bc_collection_shard_bytes_removed": 16014036992,
+    "worktree_or_historical_artifacts_deleted": false,
+    "bc_dataset_deleted_after_training": true,
+    "bc_dataset_bytes_removed_after_training": 10378051584,
+    "completed_research_seed_job_cache_bytes_removed": 682731354,
+    "intermediate_bytes_freed_total": 27074819930,
+    "retained_gru_model_bytes": 31554349,
+    "research_run_output_final_bytes": 1615156518
   },
-  "evidence_status": "in_progress"
+  "evidence_status": "complete"
 }
