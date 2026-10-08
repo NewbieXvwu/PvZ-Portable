@@ -35,6 +35,7 @@ def main() -> None:
     from pvz_agent_model import configure_torch_threads, model_architecture_version
     from pvz_common import ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION, sha256_file
     from pvz_research import ResourceMonitor
+    from pvz_value import VALUE_SEMANTICS
     from pvz_seed_jobs import atomic_json, run_seed_jobs, seed_job_directory
     from pvz_progress_metrics import paired_idle_summary
     from evaluate_full_acceptance import _worker
@@ -73,7 +74,8 @@ def main() -> None:
             state, provenance = checkpoint['training_state'], checkpoint['provenance']
             if (checkpoint.get('research_version') != 1
                     or checkpoint['experiment_config'] != config
-                    or checkpoint.get('value_semantics') != 'research_explicit_return_v1'
+                    or checkpoint.get('value_semantics') not in {
+                        'research_explicit_return_v1', VALUE_SEMANTICS}
                     or checkpoint['model_architecture_version'] != model_architecture_version(checkpoint['config'])
                     or provenance['protocol_version'] != ENV_PROTOCOL_VERSION
                     or provenance['observation_version'] != OBSERVATION_VERSION

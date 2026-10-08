@@ -38,12 +38,19 @@ def main() -> None:
     training_path = (args.training_results or source.with_name("training_results.json")).expanduser().resolve()
     collection_path = (args.collection_manifest or source.with_name("collection_manifest.json")).expanduser().resolve()
     source_checkpoint = torch.load(source, map_location="cpu", weights_only=False)
-    if set(source_checkpoint) != {"config", "model_state_dict", "epoch", "validation_loss"}:
+    required_keys = {"config", "model_state_dict", "epoch", "validation_loss"}
+    optional_gru_keys = {"state_dict", "sequence_mode", "sequence_length"}
+    if (not required_keys <= set(source_checkpoint)
+            or set(source_checkpoint) - required_keys - optional_gru_keys):
         raise ValueError("input is not the declared behavior-cloning checkpoint format")
     results = json.loads(training_path.read_text(encoding="utf-8"))
     collection = json.loads(collection_path.read_text(encoding="utf-8"))
     metrics = results["validation_metrics"]["exact_action_by_teacher_type"]
     plant_accuracy = metrics["plant"]["accuracy"]
+    sequence_mode = (results["training"].get("sequence_mode")
+                     or source_checkpoint.get("sequence_mode"))
+    if not sequence_mode:
+        raise ValueError("BC checkpoint provenance requires an explicit sequence_mode")
     config = source_checkpoint["config"]
     model = GameplayModelV1(config)
     model.load_state_dict(source_checkpoint["model_state_dict"], strict=True)
@@ -70,8 +77,8 @@ def main() -> None:
             },
             "validation_loss": source_checkpoint["validation_loss"],
             "best_epoch": source_checkpoint["epoch"],
-            "sequence_mode": results["training"]["sequence_mode"],
-            "source_training_device": results["device"],
+            "sequence_mode": sequence_mode,
+            "source_training_device": results.get("device", results["training"].get("device")),
             "collection_simulator_sha256": collection["simulator_sha256"],
         },
     }

@@ -12,7 +12,7 @@ import unittest
 from pathlib import Path
 
 from pvz_seed_sets import read_seed_set
-from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
+from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA, VALUE_SEMANTICS
 from train_pvz_ppo import add_advantages
 
 
@@ -43,6 +43,17 @@ class AdvantageEstimationTests(unittest.TestCase):
         first, second = episodes[0]["transitions"]
         self.assertAlmostEqual(second["advantage"], 1.0)
         self.assertAlmostEqual(first["advantage"], VALUE_GAMMA * 0.5)
+
+    def test_terminal_outcome_is_undiscounted_for_every_state(self) -> None:
+        """The outcome target must not shrink with elapsed ticks or GAE propagation."""
+        episodes = _episode([_transition(300, 0.0, 0.0), _transition(900, 0.0, 0.0)])
+        episodes[0]["transitions"][-1]["terminal_outcome"] = -1.0
+
+        add_advantages(episodes, gae_lambda=1.0)
+
+        for transition in episodes[0]["transitions"]:
+            self.assertAlmostEqual(transition["advantage"], -1.0)
+            self.assertAlmostEqual(transition["return"], -1.0)
 
     def test_bootstrapped_values_enter_the_advantage(self) -> None:
         """With lambda=1 the recurrence is closed form, so the numbers are hand-derivable.
@@ -104,6 +115,7 @@ class DiscountConstantTests(unittest.TestCase):
     def test_reference_span_and_gamma_are_the_documented_values(self) -> None:
         self.assertEqual(DISCOUNT_REFERENCE_TICKS, 300)
         self.assertAlmostEqual(VALUE_GAMMA ** (DISCOUNT_REFERENCE_TICKS / DISCOUNT_REFERENCE_TICKS), VALUE_GAMMA)
+        self.assertEqual(VALUE_SEMANTICS, "undiscounted_terminal_v1")
 
 
 if __name__ == "__main__":

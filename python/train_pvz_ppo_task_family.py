@@ -954,7 +954,7 @@ def main() -> None:
         "gae_discount": "VALUE_GAMMA ** (action_duration_ticks / DISCOUNT_REFERENCE_TICKS)",
         "potential": "terminal=0; otherwise (clip(sun/1000,0,1) + clip(wave/wave_count,0,1) + mean active-plant health/max_health)/3",
         "adaptive_task_weight": "2 - recent_pass_rate; last 64 completed rollouts per task; unseen task rate=0",
-        "reward": "terminal result +/-1 + discount*Phi(next)-Phi(current); no fixed penalties",
+        "reward": "discounted potential shaping; undiscounted terminal result added to every state target; no fixed penalties",
         "initialization": {"kind": initial_kind, "seed": args.initialization_seed,
                            "checkpoint": None if init_checkpoint is None else str(init_checkpoint),
                            "checkpoint_sha256": initial_sha,

@@ -30,6 +30,7 @@ import pvz_task_mutation as mutation
 from pvz_initialization import transfer_weights, validate_transfer
 from pvz_seed_jobs import atomic_json, atomic_write, run_seed_jobs, seed_job_directory
 from train_pvz_ppo import add_advantages, episode_digest, train_update
+from pvz_value import VALUE_SEMANTICS
 from pvz_wait_events import summarize_wait_records
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -366,9 +367,11 @@ def _trajectory_stats(episodes: list[dict[str, Any]]) -> dict[str, Any]:
     for episode in episodes:
         previous_plant = None
         mc = float(episode.get("bootstrap_value", 0.0))
+        terminal_outcome = (episode["transitions"][-1].get("terminal_outcome", 0.0)
+                            if episode["transitions"] else 0.0)
         for step in reversed(episode["transitions"]):
             mc = step["reward"] + step["discount"] * mc
-            returns.append(mc)
+            returns.append(mc + terminal_outcome)
             values.append(step["value"])
         for step in episode["transitions"]:
             action = step["action"]
@@ -551,7 +554,7 @@ def run_experiment(args: Any) -> None:
                       "model_architecture_version": model_architecture_version(model.config),
                       "config": model.config, "experiment_config": config,
                       "experiment_identity": identity, "training_state": state,
-                      "value_semantics": "research_explicit_return_v1", "research_version": RESEARCH_VERSION,
+                      "value_semantics": VALUE_SEMANTICS, "research_version": RESEARCH_VERSION,
                       "provenance": {"protocol_version": ENV_PROTOCOL_VERSION,
                                      "observation_version": OBSERVATION_VERSION, "task_version": TASK_VERSION,
                                      "commit": revision, "fingerprints": fingerprints}}

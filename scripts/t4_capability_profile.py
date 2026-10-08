@@ -56,7 +56,8 @@ def load_checkpoint(path: Path) -> tuple[GameplayModelV1, dict[str, Any]]:
     research = checkpoint.get("research_version") == 1
     if (checkpoint["model_architecture_version"] != model_architecture_version(checkpoint["config"])
             or (not research and checkpoint.get("value_semantics") != VALUE_SEMANTICS)
-            or (research and checkpoint.get("value_semantics") != "research_explicit_return_v1")
+            or (research and checkpoint.get("value_semantics") not in {
+                "research_explicit_return_v1", VALUE_SEMANTICS})
             or (not research and provenance.get("search_label_version") != SEARCH_LABEL_VERSION)
             or provenance.get("protocol_version") != ENV_PROTOCOL_VERSION
             or provenance["observation_version"] != OBSERVATION_VERSION

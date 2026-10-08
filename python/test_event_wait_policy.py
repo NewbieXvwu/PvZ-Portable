@@ -20,6 +20,7 @@ from pvz_env import PvZEnv
 from pvz_event_env import EventWaitEnv, policy_env
 from pvz_research import capture_rng, load_config, restore_rng
 from pvz_seed_jobs import atomic_numpy, read_numpy
+from pvz_value import VALUE_SEMANTICS
 from pvz_wait_events import CONDITIONS, summarize_wait_records
 from test_observation_context import SMALL, source
 from train_pvz_ppo import add_advantages, collect_task_episode, episode_digest, episode_hash, train_update
@@ -380,7 +381,8 @@ class EventWaitPolicyTests(unittest.TestCase):
             self.assertEqual(tr['discount'], .99**(tr['action_duration_ticks']/300))
             if index:
                 self.assertEqual(tr['previous_wait_result'], transitions[index-1]['wait_result'])
-        self.assertAlmostEqual(transitions[-1]['reward'], 1.-transitions[-1]['potential'])
+        self.assertAlmostEqual(transitions[-1]['reward'], transitions[-1]['shaping_reward'])
+        self.assertEqual(transitions[-1]['terminal_outcome'], 1.0)
 
     def test_collector_checks_final_wait_metadata_and_truncation_bootstrap(self):
         with self.assertRaisesRegex(ValueError, 'duration/reason'):
@@ -408,7 +410,7 @@ class EventWaitPolicyTests(unittest.TestCase):
                 model = GameplayModelV1({**SMALL, **({'wait_mode': mode} if mode else {})})
                 checkpoint = dict(state_dict=model.state_dict(), config=model.config, research_version=1,
                     model_architecture_version=model_architecture_version(model.config),
-                    value_semantics='research_explicit_return_v1',
+                    value_semantics=VALUE_SEMANTICS,
                     provenance=dict(protocol_version=ENV_PROTOCOL_VERSION, observation_version=OBSERVATION_VERSION,
                                     task_version=TASK_VERSION))
                 torch.save(checkpoint, path)

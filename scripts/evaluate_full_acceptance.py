@@ -158,6 +158,7 @@ def main() -> None:
     from pvz_common import ENV_PROTOCOL_VERSION, OBSERVATION_VERSION, TASK_VERSION, sha256_file
     from pvz_research import ResourceMonitor
     from pvz_seed_jobs import atomic_json
+    from pvz_value import VALUE_SEMANTICS
     import t4_capability_profile as profile
     configure_torch_threads(1)
     output = args.output_dir.resolve(); output.mkdir(parents=True,exist_ok=True)
@@ -182,7 +183,8 @@ def main() -> None:
             checkpoint = torch.load(args.checkpoint,map_location='cpu',weights_only=False,mmap=True)
             if (checkpoint.get('research_version') != 1
                     or checkpoint['model_architecture_version'] != model_architecture_version(checkpoint['config'])
-                    or checkpoint.get('value_semantics') != 'research_explicit_return_v1'
+                    or checkpoint.get('value_semantics') not in {
+                        'research_explicit_return_v1', VALUE_SEMANTICS}
                     or checkpoint['provenance']['protocol_version'] != ENV_PROTOCOL_VERSION
                     or checkpoint['provenance']['observation_version'] != OBSERVATION_VERSION
                     or checkpoint['provenance']['task_version'] != TASK_VERSION):

@@ -155,7 +155,6 @@ def collect_task_episode(model: GameplayModelV1, env: PvZEnv, task: dict[str, An
         transition["terminal_outcome"] = 0.0
         if done:
             transition["terminal_outcome"] = 1.0 if observation["result"] == 1 else -1.0
-            transition["reward"] += transition["terminal_outcome"]
             break
     truncated = not observation["terminal"]
     if truncated and not allow_truncation:
@@ -210,6 +209,14 @@ def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float,
             advantage = delta + trace_discount * advantage
             transition["advantage"] = advantage
             transition["return"] = advantage + transition["value"]
+        # Keep the terminal objective separate from the time-discounted shaping
+        # recurrence. Adding it only to the final TD delta would still discount it
+        # as that advantage propagates backward, so give every state the same outcome.
+        terminal_outcome = (transitions[-1].get("terminal_outcome", 0.0)
+                            if transitions else 0.0)
+        for transition in transitions:
+            transition["advantage"] += terminal_outcome
+            transition["return"] += terminal_outcome
 
 
 
