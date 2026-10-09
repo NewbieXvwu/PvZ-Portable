@@ -1,0 +1,1267 @@
+{
+  "schema_version": 1,
+  "experiment_id": "bc_finetune_level7_v3_seed0",
+  "purpose": "Verify the terminal-outcome discount hypothesis using the GRU sequence d1 behavior-cloning checkpoint; keep the v1 task distribution and PPO recipe unchanged, with the same 16-episode rollouts and 1M-decision budget.",
+  "run_dir": "artifacts/research/bc_finetune_level7_v3/output",
+  "source_head_at_run_start": "3936add",
+  "training_status": "budget_complete",
+  "training_decisions": 1000000,
+  "training_updates": 84,
+  "wall_hours": 11.178,
+  "runtime": {
+    "workers": 16,
+    "worker_threads": 1,
+    "max_actions": 4000
+  },
+  "initialization": {
+    "checkpoint": "artifacts/research/bc_finetune_level7_v3/gru_bc_converted.pt",
+    "sha256": "e83e71460c6356493e6632abde8ca6facfae78223386231fb368dc8103ea5c9c",
+    "local_reproduction": {
+      "wins": 222,
+      "episodes": 256,
+      "win_rate": 0.8671875
+    },
+    "plant_action_validation_accuracy": "0.9539498",
+    "node_0_sampled": {
+      "wins": 218,
+      "episodes": 256,
+      "win_rate": 0.851562,
+      "wilson_95": [
+        0.802825,
+        0.889905
+      ],
+      "mean_survival_ticks": 52845.629
+    }
+  },
+  "evaluation_curve": [
+    {
+      "decisions": 0,
+      "updates": 0,
+      "evaluation_seconds": 1396.628,
+      "greedy": {
+        "wins": 216,
+        "episodes": 256,
+        "win_rate": 0.84375,
+        "wilson_95": [
+          0.794229,
+          0.883108
+        ],
+        "mean_survival_ticks": 55794.246
+      },
+      "sampled": {
+        "wins": 218,
+        "episodes": 256,
+        "win_rate": 0.851562,
+        "wilson_95": [
+          0.802825,
+          0.889905
+        ],
+        "mean_survival_ticks": 52845.629
+      }
+    },
+    {
+      "decisions": 100000,
+      "updates": 8,
+      "evaluation_seconds": 1321.443,
+      "greedy": {
+        "wins": 217,
+        "episodes": 256,
+        "win_rate": 0.847656,
+        "wilson_95": [
+          0.798522,
+          0.886511
+        ],
+        "mean_survival_ticks": 53106.715
+      },
+      "sampled": {
+        "wins": 209,
+        "episodes": 256,
+        "win_rate": 0.816406,
+        "wilson_95": [
+          0.764423,
+          0.859034
+        ],
+        "mean_survival_ticks": 50763.469
+      }
+    },
+    {
+      "decisions": 200000,
+      "updates": 16,
+      "evaluation_seconds": 1285.969,
+      "greedy": {
+        "wins": 208,
+        "episodes": 256,
+        "win_rate": 0.8125,
+        "wilson_95": [
+          0.760198,
+          0.855562
+        ],
+        "mean_survival_ticks": 50555.172
+      },
+      "sampled": {
+        "wins": 215,
+        "episodes": 256,
+        "win_rate": 0.839844,
+        "wilson_95": [
+          0.789945,
+          0.879695
+        ],
+        "mean_survival_ticks": 49630.059
+      }
+    },
+    {
+      "decisions": 300000,
+      "updates": 25,
+      "evaluation_seconds": 1219.546,
+      "greedy": {
+        "wins": 198,
+        "episodes": 256,
+        "win_rate": 0.773438,
+        "wilson_95": [
+          0.718337,
+          0.820453
+        ],
+        "mean_survival_ticks": 51025.316
+      },
+      "sampled": {
+        "wins": 198,
+        "episodes": 256,
+        "win_rate": 0.773438,
+        "wilson_95": [
+          0.718337,
+          0.820453
+        ],
+        "mean_survival_ticks": 46243.562
+      }
+    },
+    {
+      "decisions": 400000,
+      "updates": 34,
+      "evaluation_seconds": 1271.84,
+      "greedy": {
+        "wins": 175,
+        "episodes": 256,
+        "win_rate": 0.683594,
+        "wilson_95": [
+          0.624267,
+          0.737492
+        ],
+        "mean_survival_ticks": 50180.07
+      },
+      "sampled": {
+        "wins": 182,
+        "episodes": 256,
+        "win_rate": 0.710938,
+        "wilson_95": [
+          0.652611,
+          0.763027
+        ],
+        "mean_survival_ticks": 50067.816
+      }
+    },
+    {
+      "decisions": 500000,
+      "updates": 42,
+      "evaluation_seconds": 1285.116,
+      "greedy": {
+        "wins": 219,
+        "episodes": 256,
+        "win_rate": 0.855469,
+        "wilson_95": [
+          0.807138,
+          0.893289
+        ],
+        "mean_survival_ticks": 51437.645
+      },
+      "sampled": {
+        "wins": 228,
+        "episodes": 256,
+        "win_rate": 0.890625,
+        "wilson_95": [
+          0.846464,
+          0.923236
+        ],
+        "mean_survival_ticks": 50275.988
+      }
+    },
+    {
+      "decisions": 600000,
+      "updates": 51,
+      "evaluation_seconds": 1245.723,
+      "greedy": {
+        "wins": 228,
+        "episodes": 256,
+        "win_rate": 0.890625,
+        "wilson_95": [
+          0.846464,
+          0.923236
+        ],
+        "mean_survival_ticks": 49561.98
+      },
+      "sampled": {
+        "wins": 213,
+        "episodes": 256,
+        "win_rate": 0.832031,
+        "wilson_95": [
+          0.781404,
+          0.872841
+        ],
+        "mean_survival_ticks": 48765.371
+      }
+    },
+    {
+      "decisions": 700000,
+      "updates": 60,
+      "evaluation_seconds": 1208.773,
+      "greedy": {
+        "wins": 233,
+        "episodes": 256,
+        "win_rate": 0.910156,
+        "wilson_95": [
+          0.868798,
+          0.939387
+        ],
+        "mean_survival_ticks": 48342.734
+      },
+      "sampled": {
+        "wins": 226,
+        "episodes": 256,
+        "win_rate": 0.882812,
+        "wilson_95": [
+          0.837637,
+          0.916669
+        ],
+        "mean_survival_ticks": 47872.953
+      }
+    },
+    {
+      "decisions": 800000,
+      "updates": 68,
+      "evaluation_seconds": 1223.924,
+      "greedy": {
+        "wins": 230,
+        "episodes": 256,
+        "win_rate": 0.898438,
+        "wilson_95": [
+          0.855349,
+          0.929745
+        ],
+        "mean_survival_ticks": 48509.559
+      },
+      "sampled": {
+        "wins": 222,
+        "episodes": 256,
+        "win_rate": 0.867188,
+        "wilson_95": [
+          0.82014,
+          0.903378
+        ],
+        "mean_survival_ticks": 48490.137
+      }
+    },
+    {
+      "decisions": 900000,
+      "updates": 76,
+      "evaluation_seconds": 1221.704,
+      "greedy": {
+        "wins": 232,
+        "episodes": 256,
+        "win_rate": 0.90625,
+        "wilson_95": [
+          0.864298,
+          0.93619
+        ],
+        "mean_survival_ticks": 49143.969
+      },
+      "sampled": {
+        "wins": 225,
+        "episodes": 256,
+        "win_rate": 0.878906,
+        "wilson_95": [
+          0.833244,
+          0.913365
+        ],
+        "mean_survival_ticks": 48706.023
+      }
+    },
+    {
+      "decisions": 1000000,
+      "updates": 84,
+      "evaluation_seconds": 1240.342,
+      "greedy": {
+        "wins": 237,
+        "episodes": 256,
+        "win_rate": 0.925781,
+        "wilson_95": [
+          0.886999,
+          0.951974
+        ],
+        "mean_survival_ticks": 49150.707
+      },
+      "sampled": {
+        "wins": 232,
+        "episodes": 256,
+        "win_rate": 0.90625,
+        "wilson_95": [
+          0.864298,
+          0.93619
+        ],
+        "mean_survival_ticks": 48607.199
+      }
+    }
+  ],
+  "updates": [
+    {
+      "update": 1,
+      "decisions_end": 14786,
+      "batch_decisions": 14786,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 837929,
+      "mean_episode_ticks": 52370.6
+    },
+    {
+      "update": 2,
+      "decisions_end": 30589,
+      "batch_decisions": 15803,
+      "episodes": 16,
+      "won": 16,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 893478,
+      "mean_episode_ticks": 55842.4
+    },
+    {
+      "update": 3,
+      "decisions_end": 45800,
+      "batch_decisions": 15211,
+      "episodes": 16,
+      "won": 16,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 862948,
+      "mean_episode_ticks": 53934.2
+    },
+    {
+      "update": 4,
+      "decisions_end": 60570,
+      "batch_decisions": 14770,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 833676,
+      "mean_episode_ticks": 52104.8
+    },
+    {
+      "update": 5,
+      "decisions_end": 75106,
+      "batch_decisions": 14536,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 818323,
+      "mean_episode_ticks": 51145.2
+    },
+    {
+      "update": 6,
+      "decisions_end": 89869,
+      "batch_decisions": 14763,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 835139,
+      "mean_episode_ticks": 52196.2
+    },
+    {
+      "update": 7,
+      "decisions_end": 99525,
+      "batch_decisions": 9656,
+      "episodes": 11,
+      "won": 8,
+      "truncated": 2,
+      "budget_boundary_truncations": 2,
+      "tick_total": 545047,
+      "mean_episode_ticks": 49549.7
+    },
+    {
+      "update": 8,
+      "decisions_end": 100000,
+      "batch_decisions": 475,
+      "episodes": 1,
+      "won": 0,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 26101,
+      "mean_episode_ticks": 26101.0
+    },
+    {
+      "update": 9,
+      "decisions_end": 114270,
+      "batch_decisions": 14270,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 800391,
+      "mean_episode_ticks": 50024.4
+    },
+    {
+      "update": 10,
+      "decisions_end": 128055,
+      "batch_decisions": 13785,
+      "episodes": 16,
+      "won": 9,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 769230,
+      "mean_episode_ticks": 48076.9
+    },
+    {
+      "update": 11,
+      "decisions_end": 141940,
+      "batch_decisions": 13885,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 786108,
+      "mean_episode_ticks": 49131.8
+    },
+    {
+      "update": 12,
+      "decisions_end": 154812,
+      "batch_decisions": 12872,
+      "episodes": 16,
+      "won": 11,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 720984,
+      "mean_episode_ticks": 45061.5
+    },
+    {
+      "update": 13,
+      "decisions_end": 169094,
+      "batch_decisions": 14282,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 798641,
+      "mean_episode_ticks": 49915.1
+    },
+    {
+      "update": 14,
+      "decisions_end": 184269,
+      "batch_decisions": 15175,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 846863,
+      "mean_episode_ticks": 52928.9
+    },
+    {
+      "update": 15,
+      "decisions_end": 197922,
+      "batch_decisions": 13653,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 770022,
+      "mean_episode_ticks": 48126.4
+    },
+    {
+      "update": 16,
+      "decisions_end": 200000,
+      "batch_decisions": 2078,
+      "episodes": 3,
+      "won": 0,
+      "truncated": 3,
+      "budget_boundary_truncations": 3,
+      "tick_total": 116828,
+      "mean_episode_ticks": 38942.7
+    },
+    {
+      "update": 17,
+      "decisions_end": 212802,
+      "batch_decisions": 12802,
+      "episodes": 16,
+      "won": 9,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 711386,
+      "mean_episode_ticks": 44461.6
+    },
+    {
+      "update": 18,
+      "decisions_end": 226031,
+      "batch_decisions": 13229,
+      "episodes": 16,
+      "won": 10,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 733882,
+      "mean_episode_ticks": 45867.6
+    },
+    {
+      "update": 19,
+      "decisions_end": 240056,
+      "batch_decisions": 14025,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 786933,
+      "mean_episode_ticks": 49183.3
+    },
+    {
+      "update": 20,
+      "decisions_end": 253675,
+      "batch_decisions": 13619,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 761681,
+      "mean_episode_ticks": 47605.1
+    },
+    {
+      "update": 21,
+      "decisions_end": 267289,
+      "batch_decisions": 13614,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 766649,
+      "mean_episode_ticks": 47915.6
+    },
+    {
+      "update": 22,
+      "decisions_end": 281474,
+      "batch_decisions": 14185,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 795862,
+      "mean_episode_ticks": 49741.4
+    },
+    {
+      "update": 23,
+      "decisions_end": 295066,
+      "batch_decisions": 13592,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 763718,
+      "mean_episode_ticks": 47732.4
+    },
+    {
+      "update": 24,
+      "decisions_end": 299646,
+      "batch_decisions": 4580,
+      "episodes": 6,
+      "won": 0,
+      "truncated": 5,
+      "budget_boundary_truncations": 5,
+      "tick_total": 256445,
+      "mean_episode_ticks": 42740.8
+    },
+    {
+      "update": 25,
+      "decisions_end": 300000,
+      "batch_decisions": 354,
+      "episodes": 1,
+      "won": 0,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 19296,
+      "mean_episode_ticks": 19296.0
+    },
+    {
+      "update": 26,
+      "decisions_end": 312427,
+      "batch_decisions": 12427,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 703484,
+      "mean_episode_ticks": 43967.8
+    },
+    {
+      "update": 27,
+      "decisions_end": 326305,
+      "batch_decisions": 13878,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 778245,
+      "mean_episode_ticks": 48640.3
+    },
+    {
+      "update": 28,
+      "decisions_end": 339883,
+      "batch_decisions": 13578,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 763616,
+      "mean_episode_ticks": 47726.0
+    },
+    {
+      "update": 29,
+      "decisions_end": 354434,
+      "batch_decisions": 14551,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 813370,
+      "mean_episode_ticks": 50835.6
+    },
+    {
+      "update": 30,
+      "decisions_end": 368770,
+      "batch_decisions": 14336,
+      "episodes": 16,
+      "won": 7,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 783743,
+      "mean_episode_ticks": 48983.9
+    },
+    {
+      "update": 31,
+      "decisions_end": 384305,
+      "batch_decisions": 15535,
+      "episodes": 16,
+      "won": 10,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 855008,
+      "mean_episode_ticks": 53438.0
+    },
+    {
+      "update": 32,
+      "decisions_end": 398087,
+      "batch_decisions": 13782,
+      "episodes": 16,
+      "won": 7,
+      "truncated": 3,
+      "budget_boundary_truncations": 3,
+      "tick_total": 760688,
+      "mean_episode_ticks": 47543.0
+    },
+    {
+      "update": 33,
+      "decisions_end": 399756,
+      "batch_decisions": 1669,
+      "episodes": 3,
+      "won": 0,
+      "truncated": 2,
+      "budget_boundary_truncations": 2,
+      "tick_total": 90059,
+      "mean_episode_ticks": 30019.7
+    },
+    {
+      "update": 34,
+      "decisions_end": 400000,
+      "batch_decisions": 244,
+      "episodes": 1,
+      "won": 0,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 12992,
+      "mean_episode_ticks": 12992.0
+    },
+    {
+      "update": 35,
+      "decisions_end": 413291,
+      "batch_decisions": 13291,
+      "episodes": 16,
+      "won": 10,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 732135,
+      "mean_episode_ticks": 45758.4
+    },
+    {
+      "update": 36,
+      "decisions_end": 428175,
+      "batch_decisions": 14884,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 832636,
+      "mean_episode_ticks": 52039.8
+    },
+    {
+      "update": 37,
+      "decisions_end": 443978,
+      "batch_decisions": 15803,
+      "episodes": 16,
+      "won": 12,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 884039,
+      "mean_episode_ticks": 55252.4
+    },
+    {
+      "update": 38,
+      "decisions_end": 458841,
+      "batch_decisions": 14863,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 838100,
+      "mean_episode_ticks": 52381.2
+    },
+    {
+      "update": 39,
+      "decisions_end": 473029,
+      "batch_decisions": 14188,
+      "episodes": 16,
+      "won": 9,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 788301,
+      "mean_episode_ticks": 49268.8
+    },
+    {
+      "update": 40,
+      "decisions_end": 487372,
+      "batch_decisions": 14343,
+      "episodes": 16,
+      "won": 12,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 801227,
+      "mean_episode_ticks": 50076.7
+    },
+    {
+      "update": 41,
+      "decisions_end": 499192,
+      "batch_decisions": 11820,
+      "episodes": 15,
+      "won": 0,
+      "truncated": 11,
+      "budget_boundary_truncations": 11,
+      "tick_total": 658302,
+      "mean_episode_ticks": 43886.8
+    },
+    {
+      "update": 42,
+      "decisions_end": 500000,
+      "batch_decisions": 808,
+      "episodes": 1,
+      "won": 0,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 45220,
+      "mean_episode_ticks": 45220.0
+    },
+    {
+      "update": 43,
+      "decisions_end": 514221,
+      "batch_decisions": 14221,
+      "episodes": 16,
+      "won": 16,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 802148,
+      "mean_episode_ticks": 50134.2
+    },
+    {
+      "update": 44,
+      "decisions_end": 527578,
+      "batch_decisions": 13357,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 752507,
+      "mean_episode_ticks": 47031.7
+    },
+    {
+      "update": 45,
+      "decisions_end": 541265,
+      "batch_decisions": 13687,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 767574,
+      "mean_episode_ticks": 47973.4
+    },
+    {
+      "update": 46,
+      "decisions_end": 555574,
+      "batch_decisions": 14309,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 800790,
+      "mean_episode_ticks": 50049.4
+    },
+    {
+      "update": 47,
+      "decisions_end": 568521,
+      "batch_decisions": 12947,
+      "episodes": 16,
+      "won": 11,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 720679,
+      "mean_episode_ticks": 45042.4
+    },
+    {
+      "update": 48,
+      "decisions_end": 582979,
+      "batch_decisions": 14458,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 813501,
+      "mean_episode_ticks": 50843.8
+    },
+    {
+      "update": 49,
+      "decisions_end": 596632,
+      "batch_decisions": 13653,
+      "episodes": 16,
+      "won": 12,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 765775,
+      "mean_episode_ticks": 47860.9
+    },
+    {
+      "update": 50,
+      "decisions_end": 599712,
+      "batch_decisions": 3080,
+      "episodes": 4,
+      "won": 0,
+      "truncated": 2,
+      "budget_boundary_truncations": 2,
+      "tick_total": 171019,
+      "mean_episode_ticks": 42754.8
+    },
+    {
+      "update": 51,
+      "decisions_end": 600000,
+      "batch_decisions": 288,
+      "episodes": 1,
+      "won": 0,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 15480,
+      "mean_episode_ticks": 15480.0
+    },
+    {
+      "update": 52,
+      "decisions_end": 614067,
+      "batch_decisions": 14067,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 788415,
+      "mean_episode_ticks": 49275.9
+    },
+    {
+      "update": 53,
+      "decisions_end": 628011,
+      "batch_decisions": 13944,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 785102,
+      "mean_episode_ticks": 49068.9
+    },
+    {
+      "update": 54,
+      "decisions_end": 641885,
+      "batch_decisions": 13874,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 778773,
+      "mean_episode_ticks": 48673.3
+    },
+    {
+      "update": 55,
+      "decisions_end": 655127,
+      "batch_decisions": 13242,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 748480,
+      "mean_episode_ticks": 46780.0
+    },
+    {
+      "update": 56,
+      "decisions_end": 667369,
+      "batch_decisions": 12242,
+      "episodes": 16,
+      "won": 11,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 687785,
+      "mean_episode_ticks": 42986.6
+    },
+    {
+      "update": 57,
+      "decisions_end": 678983,
+      "batch_decisions": 11614,
+      "episodes": 16,
+      "won": 9,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 649646,
+      "mean_episode_ticks": 40602.9
+    },
+    {
+      "update": 58,
+      "decisions_end": 692806,
+      "batch_decisions": 13823,
+      "episodes": 16,
+      "won": 16,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 783517,
+      "mean_episode_ticks": 48969.8
+    },
+    {
+      "update": 59,
+      "decisions_end": 699605,
+      "batch_decisions": 6799,
+      "episodes": 9,
+      "won": 0,
+      "truncated": 8,
+      "budget_boundary_truncations": 8,
+      "tick_total": 382321,
+      "mean_episode_ticks": 42480.1
+    },
+    {
+      "update": 60,
+      "decisions_end": 700000,
+      "batch_decisions": 395,
+      "episodes": 1,
+      "won": 0,
+      "truncated": 1,
+      "budget_boundary_truncations": 1,
+      "tick_total": 21840,
+      "mean_episode_ticks": 21840.0
+    },
+    {
+      "update": 61,
+      "decisions_end": 713796,
+      "batch_decisions": 13796,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 776084,
+      "mean_episode_ticks": 48505.2
+    },
+    {
+      "update": 62,
+      "decisions_end": 727969,
+      "batch_decisions": 14173,
+      "episodes": 16,
+      "won": 16,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 801230,
+      "mean_episode_ticks": 50076.9
+    },
+    {
+      "update": 63,
+      "decisions_end": 741561,
+      "batch_decisions": 13592,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 763398,
+      "mean_episode_ticks": 47712.4
+    },
+    {
+      "update": 64,
+      "decisions_end": 755326,
+      "batch_decisions": 13765,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 777179,
+      "mean_episode_ticks": 48573.7
+    },
+    {
+      "update": 65,
+      "decisions_end": 769188,
+      "batch_decisions": 13862,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 782855,
+      "mean_episode_ticks": 48928.4
+    },
+    {
+      "update": 66,
+      "decisions_end": 783400,
+      "batch_decisions": 14212,
+      "episodes": 16,
+      "won": 11,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 797176,
+      "mean_episode_ticks": 49823.5
+    },
+    {
+      "update": 67,
+      "decisions_end": 796632,
+      "batch_decisions": 13232,
+      "episodes": 16,
+      "won": 12,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 740560,
+      "mean_episode_ticks": 46285.0
+    },
+    {
+      "update": 68,
+      "decisions_end": 800000,
+      "batch_decisions": 3368,
+      "episodes": 4,
+      "won": 0,
+      "truncated": 4,
+      "budget_boundary_truncations": 4,
+      "tick_total": 191142,
+      "mean_episode_ticks": 47785.5
+    },
+    {
+      "update": 69,
+      "decisions_end": 814341,
+      "batch_decisions": 14341,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 806846,
+      "mean_episode_ticks": 50427.9
+    },
+    {
+      "update": 70,
+      "decisions_end": 828125,
+      "batch_decisions": 13784,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 778700,
+      "mean_episode_ticks": 48668.8
+    },
+    {
+      "update": 71,
+      "decisions_end": 841674,
+      "batch_decisions": 13549,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 762043,
+      "mean_episode_ticks": 47627.7
+    },
+    {
+      "update": 72,
+      "decisions_end": 855360,
+      "batch_decisions": 13686,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 769540,
+      "mean_episode_ticks": 48096.2
+    },
+    {
+      "update": 73,
+      "decisions_end": 869089,
+      "batch_decisions": 13729,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 775382,
+      "mean_episode_ticks": 48461.4
+    },
+    {
+      "update": 74,
+      "decisions_end": 882625,
+      "batch_decisions": 13536,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 761289,
+      "mean_episode_ticks": 47580.6
+    },
+    {
+      "update": 75,
+      "decisions_end": 896378,
+      "batch_decisions": 13753,
+      "episodes": 16,
+      "won": 14,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 774027,
+      "mean_episode_ticks": 48376.7
+    },
+    {
+      "update": 76,
+      "decisions_end": 900000,
+      "batch_decisions": 3622,
+      "episodes": 5,
+      "won": 0,
+      "truncated": 5,
+      "budget_boundary_truncations": 5,
+      "tick_total": 204400,
+      "mean_episode_ticks": 40880.0
+    },
+    {
+      "update": 77,
+      "decisions_end": 914145,
+      "batch_decisions": 14145,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 796605,
+      "mean_episode_ticks": 49787.8
+    },
+    {
+      "update": 78,
+      "decisions_end": 927927,
+      "batch_decisions": 13782,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 779385,
+      "mean_episode_ticks": 48711.6
+    },
+    {
+      "update": 79,
+      "decisions_end": 941257,
+      "batch_decisions": 13330,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 750542,
+      "mean_episode_ticks": 46908.9
+    },
+    {
+      "update": 80,
+      "decisions_end": 954715,
+      "batch_decisions": 13458,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 757699,
+      "mean_episode_ticks": 47356.2
+    },
+    {
+      "update": 81,
+      "decisions_end": 968234,
+      "batch_decisions": 13519,
+      "episodes": 16,
+      "won": 13,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 760202,
+      "mean_episode_ticks": 47512.6
+    },
+    {
+      "update": 82,
+      "decisions_end": 981954,
+      "batch_decisions": 13720,
+      "episodes": 16,
+      "won": 15,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 773479,
+      "mean_episode_ticks": 48342.4
+    },
+    {
+      "update": 83,
+      "decisions_end": 996108,
+      "batch_decisions": 14154,
+      "episodes": 16,
+      "won": 16,
+      "truncated": 0,
+      "budget_boundary_truncations": 0,
+      "tick_total": 799577,
+      "mean_episode_ticks": 49973.6
+    },
+    {
+      "update": 84,
+      "decisions_end": 1000000,
+      "batch_decisions": 3892,
+      "episodes": 5,
+      "won": 0,
+      "truncated": 5,
+      "budget_boundary_truncations": 5,
+      "tick_total": 221048,
+      "mean_episode_ticks": 44209.6
+    }
+  ],
+  "diagnosis": {
+    "criterion": "start near 86.7%, then maintain or improve supports the terminal-discount hypothesis",
+    "result": "supported_by_observed_curve",
+    "node_0_greedy_win_rate": 0.84375,
+    "final_greedy_win_rate": 0.925781,
+    "greedy_change_percentage_points": 8.203,
+    "node_0_sampled_win_rate": 0.851562,
+    "final_sampled_win_rate": 0.90625,
+    "sampled_change_percentage_points": 5.469,
+    "midrun_dip_nodes": [
+      300000,
+      400000
+    ],
+    "recovered_at_500k_and_later": true,
+    "collapse_stop_condition_observed": false
+  },
+  "hf_sync": {
+    "dry_run_command": "python3 scripts/hf_sync.py push bc_finetune_level7_v3/output --dry-run",
+    "remote_run_key": "bc_finetune_level7_v3/output",
+    "upload_status": "blocked_missing_credentials",
+    "hf_token_present": false,
+    "hf_repo_present": false,
+    "checkpoint_files": 14,
+    "checkpoint_bytes": 1196999110,
+    "conclusion_files": 17,
+    "conclusion_bytes": 37520043,
+    "warnings": []
+  }
+}
