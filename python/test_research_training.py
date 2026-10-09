@@ -14,7 +14,8 @@ import torch
 
 from pvz_agent_model import (GameplayModelV1, MODEL_CONFIG, configure_torch_threads,
                              legal_summary, observation_tokens, pack_tokens, select_action)
-from pvz_research import ROOT, capture_rng, restore_rng, load_config
+from pvz_research import (ROOT, capture_rng, restore_rng, load_config,
+                          experiment_identity_digest)
 from pvz_common import sha256_file
 from train_pvz_ppo import add_advantages, train_update
 from test_agent_model import observation
@@ -141,6 +142,30 @@ class RecurrentReplayTests(unittest.TestCase):
 
 
 class ExplicitConfigurationTests(unittest.TestCase):
+    def test_resume_identity_ignores_only_worker_sizing(self):
+        config = {
+            "runtime": {
+                "workers": 2,
+                "worker_threads": 1,
+                "worker_device": "cpu",
+                "update_device": "cuda",
+                "max_actions": 4000,
+            },
+            "reward": {"gamma": 0.99},
+        }
+        fingerprints = {"python/pvz_research.py": "source-hash"}
+        baseline = experiment_identity_digest(config, fingerprints)
+
+        resized = copy.deepcopy(config)
+        resized["runtime"].update(workers=16, worker_threads=2)
+        self.assertEqual(experiment_identity_digest(resized, fingerprints), baseline)
+
+        for key, value in (("max_actions", 4001), ("worker_device", "cuda")):
+            changed = copy.deepcopy(config)
+            changed["runtime"][key] = value
+            with self.subTest(key=key):
+                self.assertNotEqual(experiment_identity_digest(changed, fingerprints), baseline)
+
     def test_stale_pass_gate_rejects_changed_simulator_or_source(self):
         config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
         config["model"]["input_flags"] = 0

@@ -275,6 +275,21 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
     return config, train, eval_tasks
 
 
+def experiment_identity_digest(config: dict[str, Any], fingerprints: dict[str, str]) -> str:
+    """Hash semantic experiment settings, excluding only worker sizing knobs.
+
+    Worker count and per-worker thread count affect throughput, not the data
+    collected. Keep every other runtime field in the identity: in particular,
+    ``max_actions`` changes where an episode is truncated.
+    """
+    identity_config = dict(config)
+    identity_config["runtime"] = {
+        key: value for key, value in config["runtime"].items()
+        if key not in {"workers", "worker_threads"}
+    }
+    return canonical_digest({"config": identity_config, "fingerprints": fingerprints})
+
+
 def evaluate(model: GameplayModelV1, tasks: list[dict[str, Any]], config: dict[str, Any],
              resource_dir: Path, output: Path, state: dict[str, Any]) -> dict[str, Any]:
     import train_pvz_ppo_task_family as family
@@ -458,7 +473,7 @@ def run_experiment(args: Any) -> None:
         # A complete stage resume needs only its own checkpoint, even when the
         # parent file lives on another machine or has not been downloaded.
         fingerprints["weight_transfer_source_checkpoint"] = config["initialization"]["source_sha256"]
-    identity = canonical_digest({"config": config, "fingerprints": fingerprints})
+    identity = experiment_identity_digest(config, fingerprints)
     seed = config["initialization_seed"]
     random.seed(seed)
     np.random.seed(seed)
