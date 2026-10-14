@@ -177,7 +177,7 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
     expected_ppo = {"learning_rate", "ppo_epochs", "sequence_length", "minibatch_chunks",
                     "clip_epsilon", "gae_lambda", "value_coefficient", "entropy_coefficient",
                     "attention_backend", "target_kl"}
-    if set(config["ppo"]) != expected_ppo:
+    if not expected_ppo <= set(config["ppo"]) <= expected_ppo | {"entropy_guard"}:
         raise ValueError("all PPO settings must be explicit")
     ppo = config["ppo"]
     if (ppo["learning_rate"] <= 0 or ppo["ppo_epochs"] < 1 or ppo["sequence_length"] < 0
@@ -185,6 +185,13 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
             or not 0 < ppo["clip_epsilon"] < 1 or ppo["value_coefficient"] < 0
             or ppo["entropy_coefficient"] < 0 or ppo["target_kl"] <= 0):
         raise ValueError("invalid PPO settings")
+    if "entropy_guard" in ppo:
+        guard = ppo["entropy_guard"]
+        if (not isinstance(guard, dict) or set(guard) != {"enabled", "max_entropy"}
+                or type(guard["enabled"]) is not bool
+                or not isinstance(guard["max_entropy"], (int, float))
+                or not math.isfinite(guard["max_entropy"]) or guard["max_entropy"] <= 0):
+            raise ValueError("entropy_guard must define enabled:boolean and max_entropy:positive finite number")
     sampling = config["sampling"]
     sampling_fields = {"manifest", "task_ids", "method", "rollout_episodes"}
     if sampling.get("method") in course.COURSE_METHODS:
@@ -685,7 +692,8 @@ def run_experiment(args: Any) -> None:
             losses = train_update(model, episodes, optimizer, device, ppo["ppo_epochs"],
                                   ppo["sequence_length"], ppo["clip_epsilon"], ppo["value_coefficient"],
                                   ppo["entropy_coefficient"], ppo["minibatch_chunks"],
-                                  ppo["attention_backend"], label, ppo["target_kl"])
+                                  ppo["attention_backend"], label, ppo["target_kl"],
+                                  ppo.get("entropy_guard"))
             update_seconds = time.monotonic() - started
             counters["episodes"] += len(episodes)
             counters["decisions"] += sum(len(episode["transitions"]) for episode in episodes)

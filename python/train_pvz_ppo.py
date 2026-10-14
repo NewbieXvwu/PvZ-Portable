@@ -9,6 +9,8 @@ that fed it; both went away with the rest of the T4 search-teacher pipeline.
 from __future__ import annotations
 
 import hashlib
+import copy
+import math
 import random
 import struct
 import time
@@ -220,13 +222,42 @@ def add_advantages(episodes: list[dict[str, Any]], gae_lambda: float,
 
 
 
+@torch.no_grad()
+def _current_policy_batch_entropy(model: GameplayModelV1,
+                                  batch: list[tuple[dict[str, Any], int, int]],
+                                  sequences: list[list[dict[str, Any]]],
+                                  gradient_starts: list[int],
+                                  flat_transitions: list[dict[str, Any]],
+                                  sequence_length: int) -> float:
+    """Measure entropy on the just-updated policy using the current minibatch."""
+    hiddens = []
+    for (episode, _, _), start in zip(batch, gradient_starts, strict=True):
+        hidden = None
+        prefix_length = 0 if "short_history" in model.config else start
+        for prefix_start in range(0, prefix_length, sequence_length or 256):
+            prefix_end = min(start, prefix_start + (sequence_length or 256))
+            _, hidden_out = model.forward_sequences(
+                [episode["transitions"][prefix_start:prefix_end]], [hidden])
+            hidden = hidden_out[:, 0, :]
+        hiddens.append(hidden)
+
+    outputs, _ = model.forward_sequences(sequences, hiddens)
+    core_outputs, offset = [], 0
+    for (_, start, end), origin, sequence in zip(batch, gradient_starts, sequences, strict=True):
+        core_outputs.extend(outputs[offset + start-origin:offset + len(sequence)])
+        offset += len(sequence)
+    _, entropies = replay_log_probs(model, core_outputs, flat_transitions)
+    return float(entropies.mean().item())
+
+
 def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimizer: torch.optim.Optimizer,
                  device: torch.device, ppo_epochs: int, sequence_length: int,
                  clip_epsilon: float, value_coefficient: float, entropy_coefficient: float,
                  minibatch_chunks: int = 1,
                  attention_backend: str = "auto",
                  label: str | None = None,
-                 target_kl: float | None = None) -> dict[str, Any]:
+                 target_kl: float | None = None,
+                 entropy_guard: dict[str, Any] | None = None) -> dict[str, Any]:
     """PPO over complete episodes (sequence_length=0) or truncated sequences.
 
     Every truncated minibatch rebuilds its prefix without gradients using the
@@ -235,6 +266,17 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
     """
     if sequence_length < 0 or minibatch_chunks < 1 or ppo_epochs < 1:
         raise ValueError("invalid PPO sequence length, minibatch size or epoch count")
+    guard_enabled = False
+    guard_limit = None
+    if entropy_guard is not None:
+        if (set(entropy_guard) != {"enabled", "max_entropy"}
+                or type(entropy_guard["enabled"]) is not bool
+                or not isinstance(entropy_guard["max_entropy"], (int, float))
+                or not math.isfinite(entropy_guard["max_entropy"])
+                or entropy_guard["max_entropy"] <= 0):
+            raise ValueError("entropy_guard must define enabled:boolean and max_entropy:positive finite number")
+        guard_enabled = entropy_guard["enabled"]
+        guard_limit = float(entropy_guard["max_entropy"])
     advantages = torch.tensor([
         transition["advantage"] for episode in episodes for transition in episode["transitions"]
     ], dtype=torch.float32, device=device)
@@ -280,8 +322,18 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
             layers[position].append((episode, start, end))
 
     policy_losses, value_losses, entropies = [], [], []
+    plant_entropy_sum = wait_entropy_sum = 0.0
+    plant_entropy_count = wait_entropy_count = 0
     kls, clips, replay_errors = [], [], []
     stop_for_kl = False
+    stop_for_entropy = False
+    post_step_entropy = None
+    guard_optimizer_steps = 0
+    model_before_update = ({key: value.detach().clone()
+                            for key, value in model.state_dict().items()}
+                           if guard_enabled else None)
+    optimizer_before_update = (copy.deepcopy(optimizer.state_dict())
+                               if guard_enabled else None)
     slow_windows = []
     last_progress = time.monotonic()
     model.train()
@@ -369,6 +421,7 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                 if not torch.isfinite(gradient_norm):
                     raise FloatingPointError("PPO gradient norm became non-finite")
                 optimizer.step()
+                guard_optimizer_steps += 1
                 if "slow_memory" in model.config:
                     for (episode, start, end), origin in zip(batch, gradient_starts, strict=True):
                         frames = episode["transitions"][origin:end]
@@ -381,13 +434,42 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
                 policy_losses.append(float(policy_loss.detach().item()))
                 value_losses.append(float(value_loss.detach().item()))
                 entropies.append(float(entropy.detach().item()))
+                # Report entropy by the two environment action families without
+                # changing the PPO loss or the update path.
+                action_types = [transition["action"]["type"] for transition in flat_transitions]
+                detached_entropies = entropies_for_chunk.detach()
+                plant_indices = [i for i, action_type in enumerate(action_types)
+                                 if action_type == "plant"]
+                wait_indices = [i for i, action_type in enumerate(action_types)
+                                if action_type == "wait"]
+                if plant_indices:
+                    plant_index = torch.tensor(plant_indices, dtype=torch.long,
+                                               device=detached_entropies.device)
+                    plant_entropy_sum += float(detached_entropies.index_select(0, plant_index).sum().item())
+                    plant_entropy_count += len(plant_indices)
+                if wait_indices:
+                    wait_index = torch.tensor(wait_indices, dtype=torch.long,
+                                              device=detached_entropies.device)
+                    wait_entropy_sum += float(detached_entropies.index_select(0, wait_index).sum().item())
+                    wait_entropy_count += len(wait_indices)
+                if guard_enabled:
+                    post_step_entropy = _current_policy_batch_entropy(
+                        model, batch, sequences, gradient_starts, flat_transitions,
+                        sequence_length)
+                    if post_step_entropy > guard_limit:
+                        # Discard every parameter and AdamW change made by this
+                        # train_update call, including earlier minibatches.
+                        model.load_state_dict(model_before_update)
+                        optimizer.load_state_dict(optimizer_before_update)
+                        stop_for_entropy = True
+                        break
                 if label is not None and time.monotonic() - last_progress >= 60:
                     print(f"{label} optimizer_steps={len(policy_losses)} "
                           f"policy_loss={policy_losses[-1]:.6f} value_loss={value_losses[-1]:.6f}", flush=True)
                     last_progress = time.monotonic()
-            if stop_for_kl:
+            if stop_for_kl or stop_for_entropy:
                 break
-        if stop_for_kl:
+        if stop_for_kl or stop_for_entropy:
             break
     model.eval()
     if not policy_losses:
@@ -396,6 +478,10 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         "policy_loss": sum(policy_losses) / len(policy_losses),
         "value_loss": sum(value_losses) / len(value_losses),
         "entropy": sum(entropies) / len(entropies),
+        "entropy_on_plant": (plant_entropy_sum / plant_entropy_count
+                             if plant_entropy_count else None),
+        "entropy_on_wait": (wait_entropy_sum / wait_entropy_count
+                            if wait_entropy_count else None),
         "advantage_mean": advantage_mean,
         "advantage_std": advantage_std,
         "gradient_norm": float(gradient_norm.detach().item()),
@@ -406,6 +492,15 @@ def train_update(model: GameplayModelV1, episodes: list[dict[str, Any]], optimiz
         "optimizer_steps": len(policy_losses),
         "stopped_for_kl": stop_for_kl,
     }
+    if entropy_guard is not None:
+        result["entropy_guard"] = {
+            "enabled": guard_enabled,
+            "max_entropy": guard_limit,
+            "triggered": stop_for_entropy,
+            "post_step_entropy": post_step_entropy,
+            "attempted_optimizer_steps": guard_optimizer_steps,
+            "rollback_scope": "whole_train_update" if stop_for_entropy else None,
+        }
     if slow_windows:
         result["slow_gradient_coverage"] = {
             "scope": "Forward/backward windows include producing event; losses only core. Earlier slow history remains truncated.",
