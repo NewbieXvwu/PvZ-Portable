@@ -247,7 +247,7 @@ Directory: `MEMORY/` | Scope: current project only
 
 Files:
 - `MEMORY/YYYY-MM-DD.md` — daily work log. **Append-only**, never overwrite.
-- `MEMORY/MEMORY.md` — curated long-term project notes. Limit: 3,000 chars/session.
+- `MEMORY/MEMORY.md` — index of curated long-term project notes (**links only, no summaries** — open the linked file for content). Limit: 3,000 chars/session.
 - If today's log does not exist, create the directory and dated file first.
 
 Retrieving historical context: choose the right source as needed — no need to read everything.
@@ -272,8 +272,10 @@ Maintenance: Distill daily logs older than 30 days into `MEMORY/MEMORY.md` by to
 
 **本项目补充（不属于原提示词）：**
 
+- `MEMORY/MEMORY.md` 是**纯索引**：只放目录与链接，**不放任何摘要**（放了摘要，模型就不肯去读正文了）。
+  长期笔记的正文在 `MEMORY/notes/*.md`，按主题拆分。
 - `MEMORY/docs/` 放历史报告与一次性分析（codex 任务书/报告、失败模式分析等），**不属于"记忆"**，
-  不受 append-only 约束；`MEMORY/MEMORY.md` 顶部已声明它是 curated 结论层。
+  不受 append-only 约束。
 - **密钥一律不写字面值**：文档里用环境变量引用（如 `$GEMINI_API_KEY`），值只放在
   本机 `~/.zshrc` 与台式机 WSL 的 `~/.profile` / `~/.bashrc` / `~/.pvz-teacher-env.sh`。
 
