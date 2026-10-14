@@ -47,7 +47,44 @@ from pvz_agent_model import GameplayModelV1, replay_log_probs, select_action  # 
 
 
 def load_games(data: Path) -> list[dict]:
-    return [pickle.loads(zlib.decompress(path.read_bytes())) for path in sorted(data.glob("*.pkl.z"))]
+    games = []
+    for path in sorted(data.glob("*.pkl.z")):
+        game = pickle.loads(zlib.decompress(path.read_bytes()))
+        game["path"] = str(path)
+        games.append(game)
+    return games
+
+
+_CACHE_MODEL = None
+
+
+def _cache_init(policy: str) -> None:
+    global _CACHE_MODEL
+    torch.set_num_threads(1)
+    checkpoint = torch.load(policy, map_location="cpu", weights_only=False)
+    _CACHE_MODEL = GameplayModelV1(checkpoint["config"])
+    _CACHE_MODEL.load_state_dict(checkpoint["state_dict"], strict=False)
+
+
+def _cache_job(job: tuple[list[str], int]) -> list[list]:
+    paths, window = job
+    games = [pickle.loads(zlib.decompress(Path(p).read_bytes())) for p in paths]
+    cache_hidden(_CACHE_MODEL, games, window, batch=len(games))
+    return [g["hidden"] for g in games]
+
+
+def cache_hidden_parallel(policy: str, games: list[dict], window: int, workers: int) -> None:
+    """Same as ``cache_hidden`` with the original weights, split over CPU processes.
+
+    Building token batches row by row is Python-bound (~3 ms/row on CPU or MPS alike), so
+    processes, not a faster device, are what shortens this pass.
+    """
+    import multiprocessing as mp
+    jobs = [([g["path"] for g in games[i:i + 4]], window) for i in range(0, len(games), 4)]
+    with mp.get_context("spawn").Pool(workers, initializer=_cache_init, initargs=(policy,)) as pool:
+        for start, hiddens in zip(range(0, len(games), 4), pool.imap(_cache_job, jobs)):
+            for g, hidden in zip(games[start:start + 4], hiddens):
+                g["hidden"] = hidden
 
 
 @torch.inference_mode()
@@ -69,12 +106,16 @@ def cache_hidden(model, games: list[dict], window: int, batch: int = 32) -> None
                 g["hidden"].append(state[id(g)].cpu())
 
 
-def windows(games: list[dict], window: int, rng: random.Random, regular_ratio: float) -> list[tuple[int, int]]:
+def windows(games: list[dict], window: int, rng: random.Random, regular_ratio: float,
+            plain_needs_plant: bool = True) -> list[tuple[int, int]]:
     changed, plain = [], []
     for gi, g in enumerate(games):
         for k in range((len(g["rows"]) + window - 1) // window):
             rows = g["rows"][k * window:(k + 1) * window]
-            (changed if any(r.get("search_override") for r in rows) else plain).append((gi, k))
+            if any(r.get("search_override") for r in rows):
+                changed.append((gi, k))
+            elif not plain_needs_plant or any(r["action"]["type"] == "plant" for r in rows):
+                plain.append((gi, k))
     extra = rng.sample(plain, min(len(plain), int(len(changed) * regular_ratio)))
     return changed + extra
 
@@ -102,7 +143,9 @@ def run(model, games, picks, args, device, optimizer=None, rng=None) -> dict:
             outputs, _ = model.forward_sequences(sequences, hiddens)
             flat = [row for sequence in sequences for row in sequence]
             logp, _ = replay_log_probs(model, outputs, flat)
-            loss = -logp.float().mean()
+            weights = torch.tensor([args.override_weight if r.get("search_override") else 1.0 for r in flat],
+                                   device=logp.device)
+            loss = -(logp.float() * weights).sum() / weights.sum()
         if train:
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -136,9 +179,13 @@ def main() -> None:
     p.add_argument("--lr", type=float, default=3e-5)
     p.add_argument("--window", type=int, default=8)
     p.add_argument("--batch-windows", type=int, default=64)
-    p.add_argument("--regular-ratio", type=float, default=1.0)
+    p.add_argument("--regular-ratio", type=float, default=3.0)
+    p.add_argument("--override-weight", type=float, default=0.3)
     p.add_argument("--val-fraction", type=float, default=0.1)
-    p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
+    p.add_argument("--cache-workers", type=int, default=14)
+    p.add_argument("--device", default="cpu",
+                   help="cpu by default: the pass is Python-bound, and MPS leaked memory here (50 GB by epoch 2)")
+    p.add_argument("--threads", type=int, default=14)
     args = p.parse_args()
     started = time.time()
 
@@ -155,8 +202,16 @@ def main() -> None:
     missing, _unexpected = model.load_state_dict(checkpoint["state_dict"], strict=False)
     if missing:
         raise RuntimeError(f"checkpoint is missing {len(missing)} parameters")
+    torch.set_num_threads(args.threads)
     model.to(args.device)
-    cache_hidden(model, games, args.window)
+    cache_path = args.data.with_name(args.data.name + f".hidden_w{args.window}.pt")
+    cache = torch.load(cache_path, weights_only=False) if cache_path.exists() else None
+    if cache and cache.get("policy") == str(args.policy) and set(cache["hidden"]) >= {g["path"] for g in games}:
+        for g in games:
+            g["hidden"] = cache["hidden"][g["path"]]
+    else:
+        cache_hidden_parallel(args.policy, games, args.window, args.cache_workers)
+        torch.save({"policy": str(args.policy), "hidden": {g["path"]: g["hidden"] for g in games}}, cache_path)
     print(f"cached GRU states ({time.time() - started:.0f}s)", flush=True)
 
     rng = random.Random(1)
@@ -179,6 +234,10 @@ def main() -> None:
         print(json.dumps(history[-1]), flush=True)
         if val["loss"] < best_loss:
             best_loss, best_state = val["loss"], cpu_state()
+        epoch_out = dict(checkpoint)
+        epoch_out["state_dict"] = cpu_state()
+        epoch_out["distillation"] = {"epoch": epoch, "val": val, "from": str(args.policy)}
+        torch.save(epoch_out, args.out.with_name(f"{args.out.stem}_epoch{epoch}.pt"))
 
     out = dict(checkpoint)
     out["state_dict"] = best_state
