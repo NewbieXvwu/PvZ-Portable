@@ -1,6 +1,6 @@
 # 通宵任务 v6：熵守卫与崩溃率
 
-更新：2026-10-13（Asia/Shanghai）。本报告按阶段追加；原始源码、配置与结果路径均列于各节。
+更新：2026-10-14（Asia/Shanghai）。本报告按阶段追加；原始源码、配置与结果路径均列于各节。
 
 ## §A1 全部可用 run 的熵复核与分类器
 
@@ -61,7 +61,7 @@ C2 前三次训练更新的数值独立读取 `artifacts/research/bc_seed1_v1/ou
 
 首次熵尖峰所在的第二次训练更新，`gradient_norm` 约为前一更新的 8.8 倍、`clip_fraction` 约为 5 倍，`advantage_std` 也升高；但 `max_log_prob_change` 并非三次中最大。之后 KL 提前停止使更新步数骤减。该异常与熵尖峰同时出现，仍不足以区分共同梯度噪声与熵的因果作用。
 
-## §A2 熵守卫实现与身份影响（G1 待跑）
+## §A2 熵守卫实现、身份影响与运行记录
 
 ### 实现记录
 
@@ -80,7 +80,7 @@ C2 前三次训练更新的数值独立读取 `artifacts/research/bc_seed1_v1/ou
 - **G2 显著优于 v3 seed0**：守卫在好种子上也有增益；若 G2 未跑则明确写“未估计”。
 - **G2 显著差于 v3 seed0**：守卫妨碍正常学习；结论指向阈值限制过强，应按 A3 已列阈值扫描解释，不外推成熵假设整体无效。
 
-G1 使用 experiments/t7/bc_seed1_guard002_v1/seed1.json，初始化/采样种子均为 1，训练预算 100k，评估节点 50k/100k；唯一策略干预是 ppo.entropy_guard={"enabled":true,"max_entropy":0.02}。输出隔离在 artifacts/research/bc_seed1_guard002_v1/output/。参考 C2 为 artifacts/research/bc_seed1_v1/output/evaluations/update_000009.json.gz；v3 100k 为 artifacts/research/bc_finetune_level7_v3/output/evaluations/update_000008.json.gz。G1 100k 按 256 个相同 validation seed 做 greedy/sampled 精确 McNemar，并对两个 G1 模式统一 Holm 校正。结果待 G1 完成。
+G1 使用 experiments/t7/bc_seed1_guard002_v1/seed1.json，初始化/采样种子均为 1，训练预算 100k，评估节点 50k/100k；唯一策略干预是 ppo.entropy_guard={"enabled":true,"max_entropy":0.02}。输出隔离在 artifacts/research/bc_seed1_guard002_v1/output/。参考 C2 为 artifacts/research/bc_seed1_v1/output/evaluations/update_000009.json.gz；v3 100k 为 artifacts/research/bc_finetune_level7_v3/output/evaluations/update_000008.json.gz。G1 100k 按 256 个相同 validation seed 做 greedy/sampled 精确 McNemar，并对两个 G1 模式统一 Holm 校正；训练和检验结果见下方“§A2 熵守卫因果判定”。
 
 
 ### G1 运行进度（首次更新）
@@ -276,3 +276,130 @@ G1 greedy 达到 A2 预设显著性门槛后启动扫描。下表是各守卫阈
 ### §B 阶段记录：bc_seed3_v1 的 50k 节点
 
 50,000 决策配对评估已完成：greedy 194/256 (75.78%)、sampled 158/256 (61.72%)。评估源 `artifacts/research/bc_seed3_v1/output/evaluations/update_000005.json.gz`；训练节点为 `artifacts/research/bc_seed3_v1/output/training_state.json` 的 `learning_curve` 项（`counters.decisions=50000`）。截至此节点训练熵首/末/最大/中位=0.00543/0.04179/0.04179/0.01052，来源 `update_history[*].losses.entropy`。100k 未完成，不在此节点判断崩溃。
+
+
+### 队列执行记录：bc_seed3_v1
+
+时间：2026-10-14T09:32:44.085578+08:00；状态：complete；exit=0；耗时=7637 秒。详细进度见 /tmp/n6_progress.txt，训练日志为 /tmp/n6_<run>.log 或对应干预日志。
+
+### §B 阶段记录：bc_seed4_v1 的 50k 节点
+
+50,000 决策评估已完成：greedy 220/256 (85.94%)、sampled 214/256 (83.59%)；评估源 `artifacts/research/bc_seed4_v1/output/evaluations/update_000005.json.gz`，字段 `seed_results[mode].validation_full_level7_v1_d1[*].won`。训练状态 `artifacts/research/bc_seed4_v1/output/training_state.json` 的 `learning_curve[*].counters.decisions=50000`。当前 5 次训练更新的熵首/末/最大/中位=0.00443/0.0000746/0.00743/0.00443，取自 `update_history[*].losses.entropy`；100k 节点尚未完成。
+
+Update 1 曾出现一次 157,286,400-byte CUDA allocator 告警（free=0），之后更新仍提交并继续训练。队列日志 `/tmp/n6_bc_seed4_v1.log` 的 `CUDACachingAllocator` 行有原始记录；不将其当作种子崩溃证据。
+
+
+### 队列执行记录：bc_seed4_v1
+
+时间：2026-10-14T12:09:52.931353+08:00；状态：complete；exit=0；耗时=9414 秒。详细进度见 /tmp/n6_progress.txt，训练日志为 /tmp/n6_<run>.log 或对应干预日志。
+
+## §B 多训练种子分布与崩溃率
+
+seed0 是 v3 既有对照；seed1 是 C2 已完成 run；seed2/3/4 是本任务新跑的唯一变量多种子基线。所有 100k 对 v3 100k 的比较均按同一 256 validation seed 配对，双侧精确 McNemar；本 B 家族对所有完整 seed×mode 检验统一 Holm。崩溃定义为 greedy 或 sampled 至少一个模式在 Holm 后显著低于 v3；不显著表示“未检出差异”，不是证明安全。
+
+| seed | initialization/sampling | 决策数 | H首/100k末/100k最大/100k中位 | 50k greedy/sampled | 100k greedy/sampled | 100k pHolm greedy/sampled | 崩溃判定 |
+|---:|---|---:|---|---|---|---|---|
+| 0 | 0/1701 | 1000000 | 0.00470/0.00248/0.00470/0.00311 | — | 84.77% / 81.64% | 基线 | 基准 |
+| 1 | 1/1 | 100000 | 0.00679/0.11318/0.11318/0.02184 | 72.66% / 71.48% | 50.78% / 39.06% | 1.385e-15 / 3.866e-20 | 显著崩溃 |
+| 2 | 2/2 | 100000 | 0.00387/0.03240/0.07304/0.03015 | 67.19% / 60.16% | 63.67% / 50.00% | 5.27e-07 / 2.729e-12 | 显著崩溃 |
+| 3 | 3/3 | 100000 | 0.00543/0.02381/0.04179/0.01135 | 75.78% / 61.72% | 82.42% / 82.81% | 0.8101 / 0.8101 | 不显著/未检出 |
+| 4 | 4/4 | 100000 | 0.00443/0.00342/0.00914/0.00663 | 85.94% / 83.59% | 87.89% / 85.94% | 0.646 / 0.3955 | 不显著/未检出 |
+
+四个非基线种子中，按上述预设统计判据 2/4 个被识别为崩溃，点估计 50.0%；Clopper–Pearson 95% 区间 [6.8%, 93.2%]。样本很小，区间保留了很大不确定性。
+
+逐节点曲线取各 run training_state.json:learning_curve[].summary.{greedy,sampled}.overall；熵取同文件 update_history[*].losses.entropy。seed0 100k 基线路径为 artifacts/research/bc_finetune_level7_v3/output/evaluations/update_000008.json.gz。B 配对与 Holm 的机器可读数值见 /tmp/n6_B_summary.json 和 /tmp/n6_B_results.json。
+
+## §A1 前瞻检验补记：新增多种子结果
+
+A1 的 12/12 是在历史 run 上回顾性选定/检查阈值后的样本内准确率，不能视为外推准确率。B 阶段新跑的 seed2/3/4 现提供 3 个后续样本；结局标签按 `/tmp/n6_B_summary.json` 中同一 B 家族（8 个 seed×mode 检验统一 Holm）定义：seed2 显著更差；seed3 与 seed4 均未检出显著变差。训练熵仍来自各 `training_state.json:update_history[*].losses.entropy`：
+
+| seed | 100k 末熵 | 100k 中位熵 | 最大熵 | 连续≥2次熵≥0.015 | B 结局标签 |
+|---:|---:|---:|---:|---|---|
+| 2 | 0.03240 | 0.03015 | 0.07304 | 是 | 显著更差（两模式） |
+| 3 | 0.02381 | 0.01135 | 0.04179 | 是 | 不显著；成绩接近基线 |
+| 4 | 0.00342 | 0.00663 | 0.00914 | 否 | 不显著；点估计高于基线 |
+
+固定阈值 0.015 的前瞻分类混淆矩阵（预测“熵指标越阈”对照 B 的“至少一模式显著更差”）为：末次熵 TP=1、FP=1、TN=1、FN=0，准确率 2/3；中位熵 TP=1、FP=0、TN=2、FN=0，准确率 3/3；最大熵 TP=1、FP=1、TN=1、FN=0，准确率 2/3；连续至少 2 次超阈 TP=1、FP=1、TN=1、FN=0，准确率 2/3。seed3 是末次熵/最大熵/连续越阈的假阳性：末熵 0.02381，却在 100k greedy 211/256、sampled 212/256，和 v3 的 217/256、209/256 配对差异均不显著（B 家族 Holm p=0.8101）。
+
+因此将末次熵≥0.015保留为**待验证的预警候选**，不把它解释成崩溃概率，也不单凭它判定 run 失败。样本内 12/12 不能推广；目前 3 个新 seed 的前瞻结果只有 2/3。中位熵在这 3 个新 seed 恰好 3/3，但样本太小，而且历史 12-run 的中位熵准确率仅 8/12；尚不能改称更优规则。seed 间不稳定性仍比熵单阈值更突出。
+
+### §B seed4 完整 100k 节点
+
+`bc_seed4_v1` exit=0，用时 9,414 秒；训练决策数 100,000、9 次更新。100k 配对评估 `artifacts/research/bc_seed4_v1/output/evaluations/update_000009.json.gz` 的 greedy=225/256 (87.89%)、sampled=220/256 (85.94%)，对应 `/tmp/n6_B_results.json` 同一 B 家族检验：相对 v3 100k 的 217/256、209/256，greedy +3.13 pp（discordant 基线胜/seed4败 12、基线败/seed4胜 20，精确 p=0.2153、Holm p=0.6460），sampled +4.30 pp（13/24，精确 p=0.09887、Holm p=0.3955）；两项均不显著。100k 熵首/末/最大/中位=0.00443/0.00342/0.00914/0.00663；完整轨迹取 `artifacts/research/bc_seed4_v1/output/training_state.json:update_history[*].losses.entropy`。
+
+
+### 队列执行记录：C I7 trigger-corrected interventions
+
+时间：2026-10-14T12:25:11.490789+08:00；状态：all scheduled cases finished; inspect result summary；exit=0；耗时=0 秒。详细进度见 /tmp/n6_progress.txt，训练日志为 /tmp/n6_<run>.log 或对应干预日志。
+
+## §C 修正触发点后的 I7 / I7b / I7c
+
+统计审计更正：初版汇总把 McNemar 的二项分布总数传成了较小一侧 discordant 数，导致通关 raw p/Holm p 错误。此处用 `n = left_win_right_loss + left_loss_right_win` 重算；下表数字与修正后的 `/tmp/n6_C_results.json`、`/tmp/pvz-v6/interventions/C_summary.json` 一致。波数符号检验原始数值与其 Holm 校正未受影响。
+
+触发定义为首次同时满足：承压路有僵尸且 reachable shooter count=0；当前合法豌豆落点在 front_col 前后两侧都至少一个；sun≥100。触发通过真实模拟器 `observation.legal_actions` 检查，不用空格近似。每臂原计划 15×10 个决策；送达率低于50%按预设标注意向处理、剂量不足。I0 为相同15个冻结 seed 的 v5 基线。结果文件在 `/tmp/pvz-v6/interventions/<arm>_seed_<seed>.json`，字段 `trigger` / `treatments` / `delivered_placements` / `outcome`；归档帧留在 `/tmp/pvz-v6/interventions/episodes/`，未推 HF。
+
+| arm | 完成局数 | 触发局数 | 通关 | 终局波均值 | 已送达 / 尝试决策 | 送达 / 150计划决策 | 判定 |
+|---|---:|---:|---:|---:|---:|---:|---|
+| I7 | 15/15 | 15/15 | 9/15 | 22.80 | 15/150 (10.0%) | 15/150 (10.0%) | 意向处理、剂量不足 |
+| I7b | 15/15 | 15/15 | 7/15 | 20.60 | 15/150 (10.0%) | 15/150 (10.0%) | 意向处理、剂量不足 |
+| I7c | 15/15 | 15/15 | 11/15 | 24.93 | 14/150 (9.3%) | 14/150 (9.3%) | 意向处理、剂量不足 |
+
+I0：0/15 通关，终局波均值 13.67（`/tmp/n4_A1_summary.json` 中 I0 summary）。6 个预定配对比较均用双侧精确 McNemar；通关与终局波两类分别对六项做 Holm 校正。波数列按“右侧波数高/低/平”给出：
+
+| 比较 | 通关 wins 左→右 | McNemar raw p / Holm p | 波数更高/更低/平 | 波数符号 raw p / Holm p |
+|---|---:|---:|---:|---:|
+| I7 vs I0 | 9→0 | 0.00390625 / 0.0195312 | 2/10/3 | 0.0385742 / 0.192871 |
+| I7b vs I0 | 7→0 | 0.015625 / 0.0625 | 4/10/1 | 0.179565 / 0.718262 |
+| I7c vs I0 | 11→0 | 0.000976562 / 0.00585938 | 1/13/1 | 0.00183105 / 0.0109863 |
+| I7 vs I7b | 9→7 | 0.625 / 1 | 4/5/6 | 1 / 1 |
+| I7 vs I7c | 9→11 | 0.6875 / 1 | 6/2/7 | 0.289062 / 0.867188 |
+| I7b vs I7c | 7→11 | 0.34375 / 1 | 7/4/4 | 0.548828 / 1 |
+
+四种结果的解释：
+1. I7 与 I7b 通关差异不显著（Holm p=1）；落点 ahead/behind 效应未证实。两臂均只有15/150计划投放成功，剂量不足。
+2. I7 对 I0 的通关率显著更好（Holm p=0.0195312）；剂量不足，按意向处理解释，不能归因于足量豌豆投放。
+3. I7b 对 I0 的通关率不显著（Holm p=0.0625）；剂量不足，按意向处理解释，不能归因于足量豌豆投放。
+4. I7c 对 I0 的通关率显著更好（Holm p=0.00585938）；终局波数显著更高（符号检验 Holm p=0.0109863）。但 I7c 对 I7/I7b 的通关比较均不显著，且只送达14/150，不能识别向日葵相对豌豆的植物特异效果。
+
+整体看，这次触发规则让每臂 15/15 局都触发，但每臂仅送达 14–15 株/150 计划决策，仍是意向处理、剂量不足。I7、I7c 相对 I0 的通关结果达到 Holm 显著，I7c 的终局波也显著改善；但 I7 vs I7b 与各植物 arm 之间均未检出显著差异，所以落点和植物特异因果问题仍未识别。送达率只统计合法动作实际落地且下一帧能看到的植物；拒绝动作、等待和无触发窗口不计送达。
+
+## §A1 熵轨迹补表：守卫与扫描 runs
+
+为了让 A1 熵复核覆盖本轮新增训练状态，以下四条 seed=1 熵守卫/阈值扫描 run、seed=0 G2，以及 D 的部分训练状态均按 `update_history[*].losses.entropy` 重算。守卫 run 的因果比较已分别列在 A2/A3；D 未完成 100k，因此只报告其最后已提交训练状态与 50k 描述性评估。
+
+| run | 更新数 | 熵首/末/最大/中位 | 可用结局/节点 |
+|---|---:|---|---|
+| `bc_seed1_guard001_v1`（max_entropy=.01） | 10 | 0.00280/0.00352/0.00692/0.00358 | 对 C2 两模式显著更好；A3 Holm p=6.81e-16 / 4.97e-24 |
+| `bc_seed1_guard002_v1`（max_entropy=.02，G1） | 10 | 0.00519/0.00523/0.00609/0.00521 | 对 C2 两模式显著更好；A2 Holm p=3.92e-15 / 1.07e-23 |
+| `bc_seed1_guard005_v1`（max_entropy=.05） | 9 | 0.00519/0.00172/0.00926/0.00519 | 对 C2 两模式显著更好；A3 Holm p=2.73e-16 / 3.37e-20 |
+| `bc_seed0_guard002_v1`（max_entropy=.02，G2） | 9 | 0.00384/0.00376/0.00620/0.00391 | 对 v3 两模式均不显著；A2 Holm p=0.8555 / 0.4220 |
+| `bc_mb8_retry_v1`（D，最后已提交 94,785 决策） | 8 | 0.005479/0.006660/0.016180/0.005511 | 50k greedy 203/256、sampled 210/256；100k 未完成 |
+
+每行 state 文件均为 `artifacts/research/<run>/output/training_state.json`；扫描 run 的配对比较和 Holm 数值见 `/tmp/n6_A3_results.json`，G1/G2 见 `/tmp/n6_A2_results.json`。四条守卫轨迹都没有达到 0.015，说明守卫回滚后策略熵保持低值；D 的未守卫轨迹最大值 0.01618，末值 0.00666，但因 100k 未完成，不能作为同预算分类结果。上述信息不能替代 B 中无守卫 seed 的前瞻预测检验。
+
+
+### 队列执行记录：bc_mb8_retry_v1
+
+时间：2026-10-14T16:26:05.418889+08:00；状态：timeout；exit=137；耗时=14443 秒。详细进度见 /tmp/n6_progress.txt，训练日志为 /tmp/n6_<run>.log 或对应干预日志。
+
+
+### 队列执行记录：v6 queue
+
+时间：2026-10-14T16:26:16.975382+08:00；状态：complete; see training status and analysis JSONs；exit=0；耗时=0 秒。详细进度见 /tmp/n6_progress.txt，训练日志为 /tmp/n6_<run>.log 或对应干预日志。
+
+## §D `bc_mb8_v1` 重试
+
+按预案仅重试一次，配置为 `experiments/t7/bc_mb8_retry_v1/seed0.json`：`ppo.minibatch_chunks=4`，`max_actions=4000` 保持不变。训练从初始化开始（未续跑旧的 OOM run）；运行日志 `/tmp/n6_bc_mb8_retry_v1.log`，队列状态 `/tmp/n6_progress.txt` 与 `/tmp/n6_training_status.txt`。
+
+重试出现两次 CUDA caching allocator 分配失败警告：12:53:38 请求 255,852,544 bytes、12:57:52 请求 375,390,208 bytes（日志行 14490、14495），但进程随后继续完成多个更新；没有因此产生训练退出或 traceback。实际结束原因是 4 小时限时：队列记录 `timeout bc_mb8_retry_v1 exit=137 elapsed=14443s`，其中包括 TERM 后的 30 秒 kill-after 清理时间。
+
+| 节点 | 结果 | 可复现来源 |
+|---|---|---|
+| 50k | greedy 203/256 = 79.30%；sampled 210/256 = 82.03% | `artifacts/research/bc_mb8_retry_v1/output/evaluations/update_000005.json.gz`；字段 `seed_results[mode].validation_full_level7_v1_d1[*].won` |
+| 100k | 未完成评估；没有可比较的 100k 评估文件或 McNemar/Holm 检验 | `training_state.json:learning_curve` 只有 0 与 50,000 节点；`evaluations/` 仅有 `update_000000.json.gz` 和 `update_000005.json.gz` |
+
+超时前最后持久化状态为 `training_state.json:counters.decisions=94785`、`update_history` 8 项；最后已提交熵首/末/最大/中位为 0.005479/0.006660/0.016180/0.005511。日志显示 update 9 已收集 6 个 episode，进入 epoch 1/2 并完成 9 个 optimizer steps，但该更新未提交；`resume.json` 仍指向 update 8 检查点。按用户预设，D 记为**未达到 100k 评估目标的 timeout**，而不是“minibatch=4 仍 OOM”或策略假设被否。
+
+## §E 一句话总结
+
+按证据强弱，首要根因是训练对初始化/采样种子与个别 PPO 更新高度敏感（新种子中 2/4 显著变差，崩溃率 95% Clopper–Pearson 区间仍宽至 6.8%–93.2%）；其次，seed1 上 0.02 熵阈值整次更新回滚显著改善两种评估模式、而 seed0 未见显著损害，支持“阻断危险更新”具有保护因果效应但不能证明熵值是唯一中介，熵阈值前瞻分类仍只有 2/3；下一步优先在更多独立种子复制 0.02 守卫并扩大基线种子数收窄崩溃率区间，同时把末次熵阈值保留为预警指标而非单独的失败判据。
