@@ -35,6 +35,7 @@ training project has its own documents (all in the repository root):
 | [CLAUDE.md](CLAUDE.md) | symlink → `AGENTS.md` (so Claude Code reads the same rules) |
 | [MEMORY/](MEMORY/) | platform-neutral agent memory: curated notes + daily logs, plus historical reports under `MEMORY/docs/` |
 | [TODO.md](TODO.md) | the single task list and experiment order — **start here** |
+| [learn/](learn/) | plain-language notes, one per stage of the expert-iteration plan (DESIGN.md §13): what was built, why it works or not |
 | [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md) | how to run on the desktop machine (WSL2 + RTX 5080) |
 | [TRAINING_DESIGN_PROPOSAL.md](TRAINING_DESIGN_PROPOSAL.md) | implementation review and proposed training comparisons |
 | [RESEARCH_EXECUTION.md](RESEARCH_EXECUTION.md) | active T5–T7 acceptance criteria and experiment protocol |

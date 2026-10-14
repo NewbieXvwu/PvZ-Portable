@@ -66,11 +66,39 @@ def _score_terminal_or_value(obs: dict) -> float | None:
     return None
 
 
-def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
+def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -> dict:
+    """Play ``first`` and then let pi continue (greedy) until ``until_tick`` or the end."""
+    from render_episode import _ppo_action
+    rs = dict(state)
+    action = first
+    while True:
+        obs, _r, done, _t, info = env.step(action)
+        if not info.get("ok"):
+            action = {"type": "wait", "ticks": 60}
+            obs, _r, done, _t, info = env.step(action)
+        rs.update(previous_action=action, delta_ticks=info.get("ticks_advanced") or 0,
+                  events=info.get("events"), previous_wait_result=info.get("wait_result"))
+        if done or obs.get("terminal") or obs["tick"] >= until_tick:
+            return obs
+        action = _ppo_action(_W["model"], obs, rs, deterministic=True)
+
+
+def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict,
+            state: dict | None = None) -> dict:
     from render_episode import _frame
     legal = (obs.get("legal_actions") or {}).get("plants") or []
+    if args.scope == "placement":
+        # Only *where* to put the card pi chose: same card, same cost, so a short horizon
+        # cannot bias the comparison toward "keep the sun" (see learn/02-search.md).
+        if policy_action["type"] != "plant":
+            return policy_action
+        legal = [a for a in legal if a["packet"] == policy_action["packet"]]
     if not legal:
         return policy_action
+    if (args.min_gap and policy_action["type"] != "plant"
+            and obs["tick"] - stats.get("last_search_tick", -10 ** 9) < args.min_gap):
+        return policy_action
+    stats["last_search_tick"] = obs["tick"]
     stats["searched"] += 1
     root = env.snapshot()
     income = obs.get("sun_income_rate")
@@ -88,7 +116,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                     static.append((action, frame))
         scored = sorted(zip(_values([f for _a, f in static]), [a for a, _f in static]),
                         key=lambda item: -item[0]) if static else []
-        candidates = [a for _v, a in scored[: args.top_k]] + [NOOP]
+        candidates = [a for _v, a in scored[: args.top_k]] + ([] if args.scope == "placement" else [NOOP])
         policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
@@ -99,9 +127,12 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             for k in range(args.samples):
                 env.restore(root)
                 env.reseed((decision_seed * 1000 + k) % 2 ** 32)
-                if cand["type"] == "plant":
-                    env.step(cand)
-                leaf, *_ = env.step({"type": "wait", "ticks": args.horizon})
+                if args.continuation == "policy":
+                    leaf = _rollout_policy(env, obs, state, cand, obs["tick"] + args.horizon)
+                else:
+                    if cand["type"] == "plant":
+                        env.step(cand)
+                    leaf, *_ = env.step({"type": "wait", "ticks": args.horizon})
                 terminal = _score_terminal_or_value(leaf)
                 if terminal is None:
                     leaf_frames.append(_frame(leaf))
@@ -147,7 +178,7 @@ def _play(job: dict) -> dict:
         while not obs["terminal"] and decisions < args.max_actions:
             action = _ppo_action(model, obs, state, deterministic=True)
             if job["arm"] == "search":
-                action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
+                action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
             obs, _r, done, _t, info = env.step(action)
             if not info.get("ok"):
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
@@ -179,6 +210,12 @@ def main() -> None:
     p.add_argument("--samples", type=int, default=4)
     p.add_argument("--horizon", type=int, default=400)
     p.add_argument("--margin", type=float, default=0.02)
+    p.add_argument("--continuation", choices=("passive", "policy"), default="passive",
+                   help="passive: no actions for --horizon ticks (v0); policy: pi keeps playing (v1)")
+    p.add_argument("--scope", choices=("all", "placement"), default="all",
+                   help="all: plant/wait/where (v0); placement: only re-place the card pi chose (v0b)")
+    p.add_argument("--min-gap", type=int, default=0,
+                   help="ticks between searches unless pi itself wants to plant (0 = search every time)")
     p.add_argument("--max-actions", type=int, default=3000)
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     args = p.parse_args()
