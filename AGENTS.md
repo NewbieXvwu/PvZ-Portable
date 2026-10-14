@@ -4,6 +4,8 @@
 它与 `TODO.md`（执行任务书）、`DESKTOP_HANDOFF.md`（两台机器交接）并列，但优先级最高的是**本文件里的体积与交付规则** ——
 因为这些规则被违反过，代价是可测量的。
 
+> `CLAUDE.md` 是本文件的**软链**（Claude Code 读它即读本文件），不要单独维护一份内容。
+
 规则不是建议。`artifacts/.gitignore` 就是规则本身；**`git add -f` 绕过它等于违反本文件**。
 
 ---
@@ -227,3 +229,51 @@ git ls-files -z artifacts logs | git check-ignore -z --stdin --no-index
 场景文字渲染在 `scripts/episode_query.py` 的 `_fmt_scene`；规则描述
 `DECISION_RULES` 与 `choose()` 同文件同居（描述里的数字会被
 `decision_rules_text()` 校验）。
+
+---
+
+## 9. 项目记忆（跨平台）
+
+记忆文件在仓库的 **`MEMORY/`**（随 git 同步），**任何 Agent 平台都可直接读写**。
+WorkBuddy 侧另有软链 `.workbuddy-ai/memory → ../MEMORY`，所以两条路径指向同一批文件。
+
+下面这段是 **WorkBuddy 记忆系统「工作区记忆层」的原文**，只做了去平台化微调
+（路径改成仓库相对的 `MEMORY/`、`Edit tool` 改成"你的文件编辑工具"、删掉平台专有的跨会话检索那条）。
+**不要再改写成自己的话** —— 保持与各平台记忆协议可对齐。
+
+### Workspace Memory (read/write)
+
+Directory: `MEMORY/` | Scope: current project only
+
+Files:
+- `MEMORY/YYYY-MM-DD.md` — daily work log. **Append-only**, never overwrite.
+- `MEMORY/MEMORY.md` — curated long-term project notes. Limit: 3,000 chars/session.
+- If today's log does not exist, create the directory and dated file first.
+
+Retrieving historical context: choose the right source as needed — no need to read everything.
+- This project's past work → read local daily logs (most recent first) or `MEMORY/MEMORY.md`.
+- Both sources can be used together if local logs are incomplete.
+
+No historical dependency → skip reading memory files.
+
+Role boundary: Workspace memory is supplemental only. It does NOT replace the assistant's normal reply, final answer, or any user-requested deliverable.
+
+**When to write (MUST follow):** Immediately after completing substantive work, append a brief note to `MEMORY/YYYY-MM-DD.md` using your file-editing tool. Substantive work includes:
+- Built or modified a website/application
+- Fixed a bug
+- Wrote or generated a report or document
+- Completed code refactoring or architecture changes
+- Chose a technical approach (framework, design pattern, etc.)
+- User shared project conventions or preferences → also update `MEMORY/MEMORY.md` in place
+
+Daily logs are append-only. Do NOT record transient information (search results, temporary paths, tool errors). Only persist what has lasting value across sessions.
+
+Maintenance: Distill daily logs older than 30 days into `MEMORY/MEMORY.md` by topic, then delete the old files. Do not store secrets unless the user explicitly asks.
+
+**本项目补充（不属于原提示词）：**
+
+- `MEMORY/docs/` 放历史报告与一次性分析（codex 任务书/报告、失败模式分析等），**不属于"记忆"**，
+  不受 append-only 约束；`MEMORY/MEMORY.md` 顶部已声明它是 curated 结论层。
+- **密钥一律不写字面值**：文档里用环境变量引用（如 `$GEMINI_API_KEY`），值只放在
+  本机 `~/.zshrc` 与台式机 WSL 的 `~/.profile` / `~/.bashrc` / `~/.pvz-teacher-env.sh`。
+

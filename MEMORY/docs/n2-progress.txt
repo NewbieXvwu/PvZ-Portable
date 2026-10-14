@@ -1,0 +1,706 @@
+2026-10-10 23:51:06 CST BEGIN capture_stage seed_selection=20261010 sampled_rng_seed=seed+170000
+2026-10-10 23:51:27 CST END capture_stage
+2026-10-10 23:51:27 CST SAMPLE_STORAGE used=45M
+2026-10-10 23:51:58 CST BEGIN capture_stage seed_selection=20261010 sampled_rng_seed=seed+170000
+2026-10-10 23:52:18 CST START_CAPTURE seed=30003 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30003/initial
+2026-10-10 23:52:37 CST END_CAPTURE seed=30003 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30003/initial log=/tmp/n2_capture_30003_initial.log
+2026-10-10 23:52:37 CST START_CAPTURE seed=30003 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30003/v3_1m
+2026-10-10 23:52:55 CST END_CAPTURE seed=30003 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30003/v3_1m log=/tmp/n2_capture_30003_v3_1m.log
+2026-10-10 23:52:55 CST START_CAPTURE seed=30003 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30003/bc_seq32_100k
+2026-10-10 23:53:13 CST END_CAPTURE seed=30003 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30003/bc_seq32_100k log=/tmp/n2_capture_30003_bc_seq32_100k.log
+2026-10-10 23:53:13 CST START_CAPTURE seed=30014 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30014/initial
+2026-10-10 23:53:32 CST END_CAPTURE seed=30014 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30014/initial log=/tmp/n2_capture_30014_initial.log
+2026-10-10 23:53:32 CST START_CAPTURE seed=30014 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30014/v3_1m
+2026-10-10 23:53:52 CST END_CAPTURE seed=30014 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30014/v3_1m log=/tmp/n2_capture_30014_v3_1m.log
+2026-10-10 23:53:52 CST START_CAPTURE seed=30014 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30014/bc_seq32_100k
+2026-10-10 23:54:13 CST END_CAPTURE seed=30014 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30014/bc_seq32_100k log=/tmp/n2_capture_30014_bc_seq32_100k.log
+2026-10-10 23:54:13 CST SKIP_CAPTURE seed=30029 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30029/initial
+2026-10-10 23:54:13 CST START_CAPTURE seed=30029 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30029/v3_1m
+2026-10-10 23:54:24 CST END_CAPTURE seed=30029 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30029/v3_1m log=/tmp/n2_capture_30029_v3_1m.log
+2026-10-10 23:54:24 CST START_CAPTURE seed=30029 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30029/bc_seq32_100k
+2026-10-10 23:54:37 CST END_CAPTURE seed=30029 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30029/bc_seq32_100k log=/tmp/n2_capture_30029_bc_seq32_100k.log
+2026-10-10 23:54:37 CST START_CAPTURE seed=30030 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30030/initial
+2026-10-10 23:54:56 CST END_CAPTURE seed=30030 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30030/initial log=/tmp/n2_capture_30030_initial.log
+2026-10-10 23:54:57 CST START_CAPTURE seed=30030 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30030/v3_1m
+2026-10-10 23:55:15 CST END_CAPTURE seed=30030 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30030/v3_1m log=/tmp/n2_capture_30030_v3_1m.log
+2026-10-10 23:55:15 CST START_CAPTURE seed=30030 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30030/bc_seq32_100k
+2026-10-10 23:55:37 CST END_CAPTURE seed=30030 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30030/bc_seq32_100k log=/tmp/n2_capture_30030_bc_seq32_100k.log
+2026-10-10 23:55:37 CST START_CAPTURE seed=30033 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30033/initial
+2026-10-10 23:55:57 CST END_CAPTURE seed=30033 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30033/initial log=/tmp/n2_capture_30033_initial.log
+2026-10-10 23:55:57 CST START_CAPTURE seed=30033 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30033/v3_1m
+2026-10-10 23:56:09 CST END_CAPTURE seed=30033 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30033/v3_1m log=/tmp/n2_capture_30033_v3_1m.log
+2026-10-10 23:56:09 CST START_CAPTURE seed=30033 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30033/bc_seq32_100k
+2026-10-10 23:56:29 CST END_CAPTURE seed=30033 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30033/bc_seq32_100k log=/tmp/n2_capture_30033_bc_seq32_100k.log
+2026-10-10 23:56:29 CST START_CAPTURE seed=30036 roles=B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30036/initial
+2026-10-10 23:56:49 CST END_CAPTURE seed=30036 roles=B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30036/initial log=/tmp/n2_capture_30036_initial.log
+2026-10-10 23:56:49 CST START_CAPTURE seed=30036 roles=B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30036/v3_1m
+2026-10-10 23:57:09 CST END_CAPTURE seed=30036 roles=B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30036/v3_1m log=/tmp/n2_capture_30036_v3_1m.log
+2026-10-10 23:57:09 CST START_CAPTURE seed=30036 roles=B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30036/bc_seq32_100k
+2026-10-10 23:57:29 CST END_CAPTURE seed=30036 roles=B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30036/bc_seq32_100k log=/tmp/n2_capture_30036_bc_seq32_100k.log
+2026-10-10 23:57:29 CST START_CAPTURE seed=30044 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30044/initial
+2026-10-10 23:57:46 CST END_CAPTURE seed=30044 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30044/initial log=/tmp/n2_capture_30044_initial.log
+2026-10-10 23:57:46 CST START_CAPTURE seed=30044 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30044/v3_1m
+2026-10-10 23:58:06 CST END_CAPTURE seed=30044 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30044/v3_1m log=/tmp/n2_capture_30044_v3_1m.log
+2026-10-10 23:58:06 CST START_CAPTURE seed=30044 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30044/bc_seq32_100k
+2026-10-10 23:58:23 CST END_CAPTURE seed=30044 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30044/bc_seq32_100k log=/tmp/n2_capture_30044_bc_seq32_100k.log
+2026-10-10 23:58:23 CST START_CAPTURE seed=30046 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30046/initial
+2026-10-10 23:58:41 CST END_CAPTURE seed=30046 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30046/initial log=/tmp/n2_capture_30046_initial.log
+2026-10-10 23:58:41 CST START_CAPTURE seed=30046 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30046/v3_1m
+2026-10-10 23:58:59 CST END_CAPTURE seed=30046 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30046/v3_1m log=/tmp/n2_capture_30046_v3_1m.log
+2026-10-10 23:58:59 CST START_CAPTURE seed=30046 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30046/bc_seq32_100k
+2026-10-10 23:59:17 CST END_CAPTURE seed=30046 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30046/bc_seq32_100k log=/tmp/n2_capture_30046_bc_seq32_100k.log
+2026-10-10 23:59:17 CST START_CAPTURE seed=30053 roles=B2_regressed,C_early checkpoint=initial path=artifacts/episode_samples/seed_30053/initial
+2026-10-10 23:59:37 CST END_CAPTURE seed=30053 roles=B2_regressed,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30053/initial log=/tmp/n2_capture_30053_initial.log
+2026-10-10 23:59:37 CST START_CAPTURE seed=30053 roles=B2_regressed,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30053/v3_1m
+2026-10-10 23:59:46 CST END_CAPTURE seed=30053 roles=B2_regressed,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30053/v3_1m log=/tmp/n2_capture_30053_v3_1m.log
+2026-10-10 23:59:46 CST START_CAPTURE seed=30053 roles=B2_regressed,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30053/bc_seq32_100k
+2026-10-11 00:00:05 CST END_CAPTURE seed=30053 roles=B2_regressed,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30053/bc_seq32_100k log=/tmp/n2_capture_30053_bc_seq32_100k.log
+2026-10-11 00:00:05 CST START_CAPTURE seed=30057 roles=C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30057/initial
+2026-10-11 00:00:24 CST END_CAPTURE seed=30057 roles=C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30057/initial log=/tmp/n2_capture_30057_initial.log
+2026-10-11 00:00:24 CST START_CAPTURE seed=30057 roles=C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30057/v3_1m
+2026-10-11 00:00:42 CST END_CAPTURE seed=30057 roles=C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30057/v3_1m log=/tmp/n2_capture_30057_v3_1m.log
+2026-10-11 00:00:42 CST START_CAPTURE seed=30057 roles=C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30057/bc_seq32_100k
+2026-10-11 00:01:00 CST END_CAPTURE seed=30057 roles=C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30057/bc_seq32_100k log=/tmp/n2_capture_30057_bc_seq32_100k.log
+2026-10-11 00:01:00 CST START_CAPTURE seed=30059 roles=B2_regressed,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30059/initial
+2026-10-11 00:01:20 CST END_CAPTURE seed=30059 roles=B2_regressed,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30059/initial log=/tmp/n2_capture_30059_initial.log
+2026-10-11 00:01:20 CST START_CAPTURE seed=30059 roles=B2_regressed,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30059/v3_1m
+2026-10-11 00:01:30 CST END_CAPTURE seed=30059 roles=B2_regressed,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30059/v3_1m log=/tmp/n2_capture_30059_v3_1m.log
+2026-10-11 00:01:30 CST START_CAPTURE seed=30059 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30059/bc_seq32_100k
+2026-10-11 00:01:42 CST END_CAPTURE seed=30059 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30059/bc_seq32_100k log=/tmp/n2_capture_30059_bc_seq32_100k.log
+2026-10-11 00:01:42 CST START_CAPTURE seed=30061 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30061/initial
+2026-10-11 00:01:53 CST END_CAPTURE seed=30061 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30061/initial log=/tmp/n2_capture_30061_initial.log
+2026-10-11 00:01:53 CST START_CAPTURE seed=30061 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30061/v3_1m
+2026-10-11 00:02:04 CST END_CAPTURE seed=30061 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30061/v3_1m log=/tmp/n2_capture_30061_v3_1m.log
+2026-10-11 00:02:04 CST START_CAPTURE seed=30061 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30061/bc_seq32_100k
+2026-10-11 00:02:17 CST END_CAPTURE seed=30061 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30061/bc_seq32_100k log=/tmp/n2_capture_30061_bc_seq32_100k.log
+2026-10-11 00:02:17 CST START_CAPTURE seed=30070 roles=B3_alwayslose,C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30070/initial
+2026-10-11 00:02:30 CST END_CAPTURE seed=30070 roles=B3_alwayslose,C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30070/initial log=/tmp/n2_capture_30070_initial.log
+2026-10-11 00:02:31 CST START_CAPTURE seed=30070 roles=B3_alwayslose,C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30070/v3_1m
+2026-10-11 00:02:49 CST END_CAPTURE seed=30070 roles=B3_alwayslose,C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30070/v3_1m log=/tmp/n2_capture_30070_v3_1m.log
+2026-10-11 00:02:49 CST START_CAPTURE seed=30070 roles=B3_alwayslose,C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30070/bc_seq32_100k
+2026-10-11 00:03:03 CST END_CAPTURE seed=30070 roles=B3_alwayslose,C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30070/bc_seq32_100k log=/tmp/n2_capture_30070_bc_seq32_100k.log
+2026-10-11 00:03:03 CST START_CAPTURE seed=30077 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30077/initial
+2026-10-11 00:03:22 CST END_CAPTURE seed=30077 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30077/initial log=/tmp/n2_capture_30077_initial.log
+2026-10-11 00:03:22 CST START_CAPTURE seed=30077 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30077/v3_1m
+2026-10-11 00:03:41 CST END_CAPTURE seed=30077 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30077/v3_1m log=/tmp/n2_capture_30077_v3_1m.log
+2026-10-11 00:03:42 CST START_CAPTURE seed=30077 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30077/bc_seq32_100k
+2026-10-11 00:04:01 CST END_CAPTURE seed=30077 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30077/bc_seq32_100k log=/tmp/n2_capture_30077_bc_seq32_100k.log
+2026-10-11 00:04:01 CST START_CAPTURE seed=30078 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30078/initial
+2026-10-11 00:04:22 CST END_CAPTURE seed=30078 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30078/initial log=/tmp/n2_capture_30078_initial.log
+2026-10-11 00:04:22 CST START_CAPTURE seed=30078 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30078/v3_1m
+2026-10-11 00:04:33 CST END_CAPTURE seed=30078 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30078/v3_1m log=/tmp/n2_capture_30078_v3_1m.log
+2026-10-11 00:04:33 CST START_CAPTURE seed=30078 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30078/bc_seq32_100k
+2026-10-11 00:04:53 CST END_CAPTURE seed=30078 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30078/bc_seq32_100k log=/tmp/n2_capture_30078_bc_seq32_100k.log
+2026-10-11 00:04:53 CST START_CAPTURE seed=30094 roles=C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30094/initial
+2026-10-11 00:05:14 CST END_CAPTURE seed=30094 roles=C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30094/initial log=/tmp/n2_capture_30094_initial.log
+2026-10-11 00:05:14 CST START_CAPTURE seed=30094 roles=C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30094/v3_1m
+2026-10-11 00:05:33 CST END_CAPTURE seed=30094 roles=C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30094/v3_1m log=/tmp/n2_capture_30094_v3_1m.log
+2026-10-11 00:05:34 CST START_CAPTURE seed=30094 roles=C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30094/bc_seq32_100k
+2026-10-11 00:05:53 CST END_CAPTURE seed=30094 roles=C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30094/bc_seq32_100k log=/tmp/n2_capture_30094_bc_seq32_100k.log
+2026-10-11 00:05:53 CST START_CAPTURE seed=30097 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30097/initial
+2026-10-11 00:06:11 CST END_CAPTURE seed=30097 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30097/initial log=/tmp/n2_capture_30097_initial.log
+2026-10-11 00:06:11 CST START_CAPTURE seed=30097 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30097/v3_1m
+2026-10-11 00:06:30 CST END_CAPTURE seed=30097 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30097/v3_1m log=/tmp/n2_capture_30097_v3_1m.log
+2026-10-11 00:06:30 CST START_CAPTURE seed=30097 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30097/bc_seq32_100k
+2026-10-11 00:06:49 CST END_CAPTURE seed=30097 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30097/bc_seq32_100k log=/tmp/n2_capture_30097_bc_seq32_100k.log
+2026-10-11 00:06:49 CST START_CAPTURE seed=30101 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30101/initial
+2026-10-11 00:07:07 CST END_CAPTURE seed=30101 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30101/initial log=/tmp/n2_capture_30101_initial.log
+2026-10-11 00:07:07 CST START_CAPTURE seed=30101 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30101/v3_1m
+2026-10-11 00:07:16 CST END_CAPTURE seed=30101 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30101/v3_1m log=/tmp/n2_capture_30101_v3_1m.log
+2026-10-11 00:07:17 CST START_CAPTURE seed=30101 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30101/bc_seq32_100k
+2026-10-11 00:07:35 CST END_CAPTURE seed=30101 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30101/bc_seq32_100k log=/tmp/n2_capture_30101_bc_seq32_100k.log
+2026-10-11 00:07:35 CST START_CAPTURE seed=30108 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30108/initial
+2026-10-11 00:07:53 CST END_CAPTURE seed=30108 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30108/initial log=/tmp/n2_capture_30108_initial.log
+2026-10-11 00:07:53 CST START_CAPTURE seed=30108 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30108/v3_1m
+2026-10-11 00:08:12 CST END_CAPTURE seed=30108 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30108/v3_1m log=/tmp/n2_capture_30108_v3_1m.log
+2026-10-11 00:08:12 CST START_CAPTURE seed=30108 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30108/bc_seq32_100k
+2026-10-11 00:08:31 CST END_CAPTURE seed=30108 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30108/bc_seq32_100k log=/tmp/n2_capture_30108_bc_seq32_100k.log
+2026-10-11 00:08:31 CST START_CAPTURE seed=30115 roles=B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30115/initial
+2026-10-11 00:08:51 CST END_CAPTURE seed=30115 roles=B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30115/initial log=/tmp/n2_capture_30115_initial.log
+2026-10-11 00:08:51 CST START_CAPTURE seed=30115 roles=B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30115/v3_1m
+2026-10-11 00:09:10 CST END_CAPTURE seed=30115 roles=B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30115/v3_1m log=/tmp/n2_capture_30115_v3_1m.log
+2026-10-11 00:09:10 CST START_CAPTURE seed=30115 roles=B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30115/bc_seq32_100k
+2026-10-11 00:09:31 CST END_CAPTURE seed=30115 roles=B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30115/bc_seq32_100k log=/tmp/n2_capture_30115_bc_seq32_100k.log
+2026-10-11 00:09:31 CST START_CAPTURE seed=30135 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30135/initial
+2026-10-11 00:09:42 CST END_CAPTURE seed=30135 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30135/initial log=/tmp/n2_capture_30135_initial.log
+2026-10-11 00:09:43 CST START_CAPTURE seed=30135 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30135/v3_1m
+2026-10-11 00:09:55 CST END_CAPTURE seed=30135 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30135/v3_1m log=/tmp/n2_capture_30135_v3_1m.log
+2026-10-11 00:09:55 CST START_CAPTURE seed=30135 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30135/bc_seq32_100k
+2026-10-11 00:10:06 CST END_CAPTURE seed=30135 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30135/bc_seq32_100k log=/tmp/n2_capture_30135_bc_seq32_100k.log
+2026-10-11 00:10:07 CST START_CAPTURE seed=30136 roles=B2_regressed,C_early checkpoint=initial path=artifacts/episode_samples/seed_30136/initial
+2026-10-11 00:10:26 CST END_CAPTURE seed=30136 roles=B2_regressed,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30136/initial log=/tmp/n2_capture_30136_initial.log
+2026-10-11 00:10:26 CST START_CAPTURE seed=30136 roles=B2_regressed,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30136/v3_1m
+2026-10-11 00:10:35 CST END_CAPTURE seed=30136 roles=B2_regressed,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30136/v3_1m log=/tmp/n2_capture_30136_v3_1m.log
+2026-10-11 00:10:35 CST START_CAPTURE seed=30136 roles=B2_regressed,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30136/bc_seq32_100k
+2026-10-11 00:10:54 CST END_CAPTURE seed=30136 roles=B2_regressed,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30136/bc_seq32_100k log=/tmp/n2_capture_30136_bc_seq32_100k.log
+2026-10-11 00:10:54 CST START_CAPTURE seed=30141 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30141/initial
+2026-10-11 00:11:14 CST END_CAPTURE seed=30141 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30141/initial log=/tmp/n2_capture_30141_initial.log
+2026-10-11 00:11:14 CST START_CAPTURE seed=30141 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30141/v3_1m
+2026-10-11 00:11:32 CST END_CAPTURE seed=30141 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30141/v3_1m log=/tmp/n2_capture_30141_v3_1m.log
+2026-10-11 00:11:32 CST START_CAPTURE seed=30141 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30141/bc_seq32_100k
+2026-10-11 00:11:50 CST END_CAPTURE seed=30141 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30141/bc_seq32_100k log=/tmp/n2_capture_30141_bc_seq32_100k.log
+2026-10-11 00:11:50 CST START_CAPTURE seed=30144 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30144/initial
+2026-10-11 00:12:11 CST END_CAPTURE seed=30144 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30144/initial log=/tmp/n2_capture_30144_initial.log
+2026-10-11 00:12:11 CST START_CAPTURE seed=30144 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30144/v3_1m
+2026-10-11 00:12:29 CST END_CAPTURE seed=30144 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30144/v3_1m log=/tmp/n2_capture_30144_v3_1m.log
+2026-10-11 00:12:30 CST START_CAPTURE seed=30144 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30144/bc_seq32_100k
+2026-10-11 00:12:52 CST END_CAPTURE seed=30144 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30144/bc_seq32_100k log=/tmp/n2_capture_30144_bc_seq32_100k.log
+2026-10-11 00:12:53 CST START_CAPTURE seed=30151 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30151/initial
+2026-10-11 00:13:11 CST END_CAPTURE seed=30151 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30151/initial log=/tmp/n2_capture_30151_initial.log
+2026-10-11 00:13:11 CST START_CAPTURE seed=30151 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30151/v3_1m
+2026-10-11 00:13:30 CST END_CAPTURE seed=30151 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30151/v3_1m log=/tmp/n2_capture_30151_v3_1m.log
+2026-10-11 00:13:30 CST START_CAPTURE seed=30151 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30151/bc_seq32_100k
+2026-10-11 00:13:47 CST END_CAPTURE seed=30151 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30151/bc_seq32_100k log=/tmp/n2_capture_30151_bc_seq32_100k.log
+2026-10-11 00:13:47 CST START_CAPTURE seed=30152 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30152/initial
+2026-10-11 00:14:07 CST END_CAPTURE seed=30152 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30152/initial log=/tmp/n2_capture_30152_initial.log
+2026-10-11 00:14:08 CST START_CAPTURE seed=30152 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30152/v3_1m
+2026-10-11 00:14:18 CST END_CAPTURE seed=30152 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30152/v3_1m log=/tmp/n2_capture_30152_v3_1m.log
+2026-10-11 00:14:19 CST START_CAPTURE seed=30152 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30152/bc_seq32_100k
+2026-10-11 00:14:39 CST END_CAPTURE seed=30152 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30152/bc_seq32_100k log=/tmp/n2_capture_30152_bc_seq32_100k.log
+2026-10-11 00:14:39 CST START_CAPTURE seed=30167 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30167/initial
+2026-10-11 00:14:57 CST END_CAPTURE seed=30167 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30167/initial log=/tmp/n2_capture_30167_initial.log
+2026-10-11 00:14:57 CST START_CAPTURE seed=30167 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30167/v3_1m
+2026-10-11 00:15:15 CST END_CAPTURE seed=30167 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30167/v3_1m log=/tmp/n2_capture_30167_v3_1m.log
+2026-10-11 00:15:15 CST START_CAPTURE seed=30167 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30167/bc_seq32_100k
+2026-10-11 00:15:34 CST END_CAPTURE seed=30167 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30167/bc_seq32_100k log=/tmp/n2_capture_30167_bc_seq32_100k.log
+2026-10-11 00:15:34 CST START_CAPTURE seed=30169 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30169/initial
+2026-10-11 00:15:48 CST END_CAPTURE seed=30169 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30169/initial log=/tmp/n2_capture_30169_initial.log
+2026-10-11 00:15:48 CST START_CAPTURE seed=30169 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30169/v3_1m
+2026-10-11 00:15:59 CST END_CAPTURE seed=30169 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30169/v3_1m log=/tmp/n2_capture_30169_v3_1m.log
+2026-10-11 00:15:59 CST START_CAPTURE seed=30169 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30169/bc_seq32_100k
+2026-10-11 00:16:15 CST END_CAPTURE seed=30169 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30169/bc_seq32_100k log=/tmp/n2_capture_30169_bc_seq32_100k.log
+2026-10-11 00:16:15 CST START_CAPTURE seed=30171 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30171/initial
+2026-10-11 00:16:33 CST END_CAPTURE seed=30171 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30171/initial log=/tmp/n2_capture_30171_initial.log
+2026-10-11 00:16:34 CST START_CAPTURE seed=30171 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30171/v3_1m
+2026-10-11 00:16:47 CST END_CAPTURE seed=30171 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30171/v3_1m log=/tmp/n2_capture_30171_v3_1m.log
+2026-10-11 00:16:47 CST START_CAPTURE seed=30171 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30171/bc_seq32_100k
+2026-10-11 00:17:06 CST END_CAPTURE seed=30171 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30171/bc_seq32_100k log=/tmp/n2_capture_30171_bc_seq32_100k.log
+2026-10-11 00:17:06 CST START_CAPTURE seed=30177 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30177/initial
+2026-10-11 00:17:24 CST END_CAPTURE seed=30177 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30177/initial log=/tmp/n2_capture_30177_initial.log
+2026-10-11 00:17:24 CST START_CAPTURE seed=30177 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30177/v3_1m
+2026-10-11 00:17:43 CST END_CAPTURE seed=30177 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30177/v3_1m log=/tmp/n2_capture_30177_v3_1m.log
+2026-10-11 00:17:43 CST START_CAPTURE seed=30177 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30177/bc_seq32_100k
+2026-10-11 00:18:00 CST END_CAPTURE seed=30177 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30177/bc_seq32_100k log=/tmp/n2_capture_30177_bc_seq32_100k.log
+2026-10-11 00:18:01 CST START_CAPTURE seed=30180 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30180/initial
+2026-10-11 00:18:19 CST END_CAPTURE seed=30180 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30180/initial log=/tmp/n2_capture_30180_initial.log
+2026-10-11 00:18:19 CST START_CAPTURE seed=30180 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30180/v3_1m
+2026-10-11 00:18:37 CST END_CAPTURE seed=30180 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30180/v3_1m log=/tmp/n2_capture_30180_v3_1m.log
+2026-10-11 00:18:37 CST START_CAPTURE seed=30180 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30180/bc_seq32_100k
+2026-10-11 00:18:55 CST END_CAPTURE seed=30180 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30180/bc_seq32_100k log=/tmp/n2_capture_30180_bc_seq32_100k.log
+2026-10-11 00:18:55 CST START_CAPTURE seed=30183 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30183/initial
+2026-10-11 00:19:11 CST END_CAPTURE seed=30183 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30183/initial log=/tmp/n2_capture_30183_initial.log
+2026-10-11 00:19:11 CST START_CAPTURE seed=30183 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30183/v3_1m
+2026-10-11 00:19:29 CST END_CAPTURE seed=30183 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30183/v3_1m log=/tmp/n2_capture_30183_v3_1m.log
+2026-10-11 00:19:29 CST START_CAPTURE seed=30183 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30183/bc_seq32_100k
+2026-10-11 00:19:44 CST END_CAPTURE seed=30183 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30183/bc_seq32_100k log=/tmp/n2_capture_30183_bc_seq32_100k.log
+2026-10-11 00:19:44 CST START_CAPTURE seed=30188 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30188/initial
+2026-10-11 00:20:03 CST END_CAPTURE seed=30188 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30188/initial log=/tmp/n2_capture_30188_initial.log
+2026-10-11 00:20:03 CST START_CAPTURE seed=30188 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30188/v3_1m
+2026-10-11 00:20:21 CST END_CAPTURE seed=30188 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30188/v3_1m log=/tmp/n2_capture_30188_v3_1m.log
+2026-10-11 00:20:21 CST START_CAPTURE seed=30188 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30188/bc_seq32_100k
+2026-10-11 00:20:38 CST END_CAPTURE seed=30188 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30188/bc_seq32_100k log=/tmp/n2_capture_30188_bc_seq32_100k.log
+2026-10-11 00:20:39 CST START_CAPTURE seed=30191 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30191/initial
+2026-10-11 00:20:56 CST END_CAPTURE seed=30191 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30191/initial log=/tmp/n2_capture_30191_initial.log
+2026-10-11 00:20:57 CST START_CAPTURE seed=30191 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30191/v3_1m
+2026-10-11 00:21:08 CST END_CAPTURE seed=30191 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30191/v3_1m log=/tmp/n2_capture_30191_v3_1m.log
+2026-10-11 00:21:08 CST START_CAPTURE seed=30191 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30191/bc_seq32_100k
+2026-10-11 00:21:20 CST END_CAPTURE seed=30191 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30191/bc_seq32_100k log=/tmp/n2_capture_30191_bc_seq32_100k.log
+2026-10-11 00:21:20 CST START_CAPTURE seed=30193 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30193/initial
+2026-10-11 00:21:37 CST END_CAPTURE seed=30193 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30193/initial log=/tmp/n2_capture_30193_initial.log
+2026-10-11 00:21:37 CST START_CAPTURE seed=30193 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30193/v3_1m
+2026-10-11 00:21:56 CST END_CAPTURE seed=30193 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30193/v3_1m log=/tmp/n2_capture_30193_v3_1m.log
+2026-10-11 00:21:56 CST START_CAPTURE seed=30193 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30193/bc_seq32_100k
+2026-10-11 00:22:13 CST END_CAPTURE seed=30193 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30193/bc_seq32_100k log=/tmp/n2_capture_30193_bc_seq32_100k.log
+2026-10-11 00:22:13 CST START_CAPTURE seed=30203 roles=C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30203/initial
+2026-10-11 00:22:32 CST END_CAPTURE seed=30203 roles=C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30203/initial log=/tmp/n2_capture_30203_initial.log
+2026-10-11 00:22:33 CST START_CAPTURE seed=30203 roles=C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30203/v3_1m
+2026-10-11 00:22:54 CST END_CAPTURE seed=30203 roles=C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30203/v3_1m log=/tmp/n2_capture_30203_v3_1m.log
+2026-10-11 00:22:54 CST START_CAPTURE seed=30203 roles=C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30203/bc_seq32_100k
+2026-10-11 00:23:14 CST END_CAPTURE seed=30203 roles=C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30203/bc_seq32_100k log=/tmp/n2_capture_30203_bc_seq32_100k.log
+2026-10-11 00:23:14 CST START_CAPTURE seed=30216 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30216/initial
+2026-10-11 00:23:33 CST END_CAPTURE seed=30216 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30216/initial log=/tmp/n2_capture_30216_initial.log
+2026-10-11 00:23:33 CST START_CAPTURE seed=30216 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30216/v3_1m
+2026-10-11 00:23:50 CST END_CAPTURE seed=30216 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30216/v3_1m log=/tmp/n2_capture_30216_v3_1m.log
+2026-10-11 00:23:51 CST START_CAPTURE seed=30216 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30216/bc_seq32_100k
+2026-10-11 00:24:18 CST END_CAPTURE seed=30216 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30216/bc_seq32_100k log=/tmp/n2_capture_30216_bc_seq32_100k.log
+2026-10-11 00:24:19 CST START_CAPTURE seed=30227 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30227/initial
+2026-10-11 00:24:31 CST END_CAPTURE seed=30227 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30227/initial log=/tmp/n2_capture_30227_initial.log
+2026-10-11 00:24:31 CST START_CAPTURE seed=30227 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30227/v3_1m
+2026-10-11 00:24:41 CST END_CAPTURE seed=30227 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30227/v3_1m log=/tmp/n2_capture_30227_v3_1m.log
+2026-10-11 00:24:41 CST START_CAPTURE seed=30227 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30227/bc_seq32_100k
+2026-10-11 00:24:52 CST END_CAPTURE seed=30227 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30227/bc_seq32_100k log=/tmp/n2_capture_30227_bc_seq32_100k.log
+2026-10-11 00:24:52 CST START_CAPTURE seed=30238 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30238/initial
+2026-10-11 00:25:12 CST END_CAPTURE seed=30238 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30238/initial log=/tmp/n2_capture_30238_initial.log
+2026-10-11 00:25:12 CST START_CAPTURE seed=30238 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30238/v3_1m
+2026-10-11 00:25:24 CST END_CAPTURE seed=30238 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30238/v3_1m log=/tmp/n2_capture_30238_v3_1m.log
+2026-10-11 00:25:24 CST START_CAPTURE seed=30238 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30238/bc_seq32_100k
+2026-10-11 00:25:44 CST END_CAPTURE seed=30238 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30238/bc_seq32_100k log=/tmp/n2_capture_30238_bc_seq32_100k.log
+2026-10-11 00:25:44 CST START_CAPTURE seed=30252 roles=C_stablewin15,B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30252/initial
+2026-10-11 00:26:04 CST END_CAPTURE seed=30252 roles=C_stablewin15,B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30252/initial log=/tmp/n2_capture_30252_initial.log
+2026-10-11 00:26:04 CST START_CAPTURE seed=30252 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30252/v3_1m
+2026-10-11 00:26:22 CST END_CAPTURE seed=30252 roles=C_stablewin15,B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30252/v3_1m log=/tmp/n2_capture_30252_v3_1m.log
+2026-10-11 00:26:22 CST START_CAPTURE seed=30252 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30252/bc_seq32_100k
+2026-10-11 00:26:41 CST END_CAPTURE seed=30252 roles=C_stablewin15,B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30252/bc_seq32_100k log=/tmp/n2_capture_30252_bc_seq32_100k.log
+2026-10-11 00:26:41 CST START_CAPTURE seed=30253 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30253/initial
+2026-10-11 00:27:00 CST END_CAPTURE seed=30253 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30253/initial log=/tmp/n2_capture_30253_initial.log
+2026-10-11 00:27:00 CST START_CAPTURE seed=30253 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30253/v3_1m
+2026-10-11 00:27:19 CST END_CAPTURE seed=30253 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30253/v3_1m log=/tmp/n2_capture_30253_v3_1m.log
+2026-10-11 00:27:19 CST START_CAPTURE seed=30253 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30253/bc_seq32_100k
+2026-10-11 00:27:37 CST END_CAPTURE seed=30253 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30253/bc_seq32_100k log=/tmp/n2_capture_30253_bc_seq32_100k.log
+2026-10-11 00:27:37 CST START_CAPTURE seed=30259 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30259/initial
+2026-10-11 00:27:54 CST END_CAPTURE seed=30259 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30259/initial log=/tmp/n2_capture_30259_initial.log
+2026-10-11 00:27:54 CST START_CAPTURE seed=30259 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30259/v3_1m
+2026-10-11 00:28:07 CST END_CAPTURE seed=30259 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30259/v3_1m log=/tmp/n2_capture_30259_v3_1m.log
+2026-10-11 00:28:07 CST START_CAPTURE seed=30259 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30259/bc_seq32_100k
+2026-10-11 00:28:27 CST END_CAPTURE seed=30259 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30259/bc_seq32_100k log=/tmp/n2_capture_30259_bc_seq32_100k.log
+2026-10-11 00:28:27 CST START_CAPTURE seed=30266 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30266/initial
+2026-10-11 00:28:46 CST END_CAPTURE seed=30266 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30266/initial log=/tmp/n2_capture_30266_initial.log
+2026-10-11 00:28:46 CST START_CAPTURE seed=30266 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30266/v3_1m
+2026-10-11 00:28:58 CST END_CAPTURE seed=30266 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30266/v3_1m log=/tmp/n2_capture_30266_v3_1m.log
+2026-10-11 00:28:58 CST START_CAPTURE seed=30266 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30266/bc_seq32_100k
+2026-10-11 00:29:17 CST END_CAPTURE seed=30266 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30266/bc_seq32_100k log=/tmp/n2_capture_30266_bc_seq32_100k.log
+2026-10-11 00:29:17 CST START_CAPTURE seed=30272 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30272/initial
+2026-10-11 00:29:51 CST END_CAPTURE seed=30272 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30272/initial log=/tmp/n2_capture_30272_initial.log
+2026-10-11 00:29:51 CST START_CAPTURE seed=30272 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30272/v3_1m
+2026-10-11 00:30:09 CST END_CAPTURE seed=30272 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30272/v3_1m log=/tmp/n2_capture_30272_v3_1m.log
+2026-10-11 00:30:09 CST START_CAPTURE seed=30272 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30272/bc_seq32_100k
+2026-10-11 00:30:30 CST END_CAPTURE seed=30272 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30272/bc_seq32_100k log=/tmp/n2_capture_30272_bc_seq32_100k.log
+2026-10-11 00:30:30 CST START_CAPTURE seed=30302 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30302/initial
+2026-10-11 00:30:43 CST END_CAPTURE seed=30302 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30302/initial log=/tmp/n2_capture_30302_initial.log
+2026-10-11 00:30:43 CST START_CAPTURE seed=30302 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30302/v3_1m
+2026-10-11 00:30:54 CST END_CAPTURE seed=30302 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30302/v3_1m log=/tmp/n2_capture_30302_v3_1m.log
+2026-10-11 00:30:54 CST START_CAPTURE seed=30302 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30302/bc_seq32_100k
+2026-10-11 00:31:05 CST END_CAPTURE seed=30302 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30302/bc_seq32_100k log=/tmp/n2_capture_30302_bc_seq32_100k.log
+2026-10-11 00:31:05 CST START_CAPTURE seed=30306 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30306/initial
+2026-10-11 00:31:25 CST END_CAPTURE seed=30306 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30306/initial log=/tmp/n2_capture_30306_initial.log
+2026-10-11 00:31:25 CST START_CAPTURE seed=30306 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30306/v3_1m
+2026-10-11 00:31:40 CST END_CAPTURE seed=30306 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30306/v3_1m log=/tmp/n2_capture_30306_v3_1m.log
+2026-10-11 00:31:40 CST START_CAPTURE seed=30306 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30306/bc_seq32_100k
+2026-10-11 00:31:58 CST END_CAPTURE seed=30306 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30306/bc_seq32_100k log=/tmp/n2_capture_30306_bc_seq32_100k.log
+2026-10-11 00:31:58 CST START_CAPTURE seed=30316 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30316/initial
+2026-10-11 00:32:08 CST END_CAPTURE seed=30316 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30316/initial log=/tmp/n2_capture_30316_initial.log
+2026-10-11 00:32:08 CST START_CAPTURE seed=30316 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30316/v3_1m
+2026-10-11 00:32:20 CST END_CAPTURE seed=30316 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30316/v3_1m log=/tmp/n2_capture_30316_v3_1m.log
+2026-10-11 00:32:20 CST START_CAPTURE seed=30316 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30316/bc_seq32_100k
+2026-10-11 00:32:30 CST END_CAPTURE seed=30316 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30316/bc_seq32_100k log=/tmp/n2_capture_30316_bc_seq32_100k.log
+2026-10-11 00:32:30 CST START_CAPTURE seed=30319 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30319/initial
+2026-10-11 00:32:48 CST END_CAPTURE seed=30319 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30319/initial log=/tmp/n2_capture_30319_initial.log
+2026-10-11 00:32:48 CST START_CAPTURE seed=30319 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30319/v3_1m
+2026-10-11 00:33:00 CST END_CAPTURE seed=30319 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30319/v3_1m log=/tmp/n2_capture_30319_v3_1m.log
+2026-10-11 00:33:00 CST START_CAPTURE seed=30319 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30319/bc_seq32_100k
+2026-10-11 00:33:18 CST END_CAPTURE seed=30319 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30319/bc_seq32_100k log=/tmp/n2_capture_30319_bc_seq32_100k.log
+2026-10-11 00:33:19 CST START_CAPTURE seed=30320 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30320/initial
+2026-10-11 00:33:30 CST END_CAPTURE seed=30320 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30320/initial log=/tmp/n2_capture_30320_initial.log
+2026-10-11 00:33:30 CST START_CAPTURE seed=30320 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30320/v3_1m
+2026-10-11 00:33:41 CST END_CAPTURE seed=30320 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30320/v3_1m log=/tmp/n2_capture_30320_v3_1m.log
+2026-10-11 00:33:41 CST START_CAPTURE seed=30320 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30320/bc_seq32_100k
+2026-10-11 00:33:54 CST END_CAPTURE seed=30320 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30320/bc_seq32_100k log=/tmp/n2_capture_30320_bc_seq32_100k.log
+2026-10-11 00:33:54 CST START_CAPTURE seed=30327 roles=B2_regressed,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30327/initial
+2026-10-11 00:34:14 CST END_CAPTURE seed=30327 roles=B2_regressed,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30327/initial log=/tmp/n2_capture_30327_initial.log
+2026-10-11 00:34:14 CST START_CAPTURE seed=30327 roles=B2_regressed,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30327/v3_1m
+2026-10-11 00:34:27 CST END_CAPTURE seed=30327 roles=B2_regressed,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30327/v3_1m log=/tmp/n2_capture_30327_v3_1m.log
+2026-10-11 00:34:27 CST START_CAPTURE seed=30327 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30327/bc_seq32_100k
+2026-10-11 00:34:47 CST END_CAPTURE seed=30327 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30327/bc_seq32_100k log=/tmp/n2_capture_30327_bc_seq32_100k.log
+2026-10-11 00:34:47 CST START_CAPTURE seed=30329 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30329/initial
+2026-10-11 00:35:06 CST END_CAPTURE seed=30329 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30329/initial log=/tmp/n2_capture_30329_initial.log
+2026-10-11 00:35:06 CST START_CAPTURE seed=30329 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30329/v3_1m
+2026-10-11 00:35:23 CST END_CAPTURE seed=30329 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30329/v3_1m log=/tmp/n2_capture_30329_v3_1m.log
+2026-10-11 00:35:23 CST START_CAPTURE seed=30329 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30329/bc_seq32_100k
+2026-10-11 00:35:35 CST END_CAPTURE seed=30329 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30329/bc_seq32_100k log=/tmp/n2_capture_30329_bc_seq32_100k.log
+2026-10-11 00:35:35 CST START_CAPTURE seed=30347 roles=B2_regressed,C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30347/initial
+2026-10-11 00:35:53 CST END_CAPTURE seed=30347 roles=B2_regressed,C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30347/initial log=/tmp/n2_capture_30347_initial.log
+2026-10-11 00:35:53 CST START_CAPTURE seed=30347 roles=B2_regressed,C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30347/v3_1m
+2026-10-11 00:36:11 CST END_CAPTURE seed=30347 roles=B2_regressed,C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30347/v3_1m log=/tmp/n2_capture_30347_v3_1m.log
+2026-10-11 00:36:11 CST START_CAPTURE seed=30347 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30347/bc_seq32_100k
+2026-10-11 00:36:30 CST END_CAPTURE seed=30347 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30347/bc_seq32_100k log=/tmp/n2_capture_30347_bc_seq32_100k.log
+2026-10-11 00:36:30 CST START_CAPTURE seed=30353 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30353/initial
+2026-10-11 00:36:50 CST END_CAPTURE seed=30353 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30353/initial log=/tmp/n2_capture_30353_initial.log
+2026-10-11 00:36:50 CST START_CAPTURE seed=30353 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30353/v3_1m
+2026-10-11 00:37:01 CST END_CAPTURE seed=30353 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30353/v3_1m log=/tmp/n2_capture_30353_v3_1m.log
+2026-10-11 00:37:01 CST START_CAPTURE seed=30353 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30353/bc_seq32_100k
+2026-10-11 00:37:20 CST END_CAPTURE seed=30353 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30353/bc_seq32_100k log=/tmp/n2_capture_30353_bc_seq32_100k.log
+2026-10-11 00:37:20 CST START_CAPTURE seed=30358 roles=B2_regressed,C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30358/initial
+2026-10-11 00:37:38 CST END_CAPTURE seed=30358 roles=B2_regressed,C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30358/initial log=/tmp/n2_capture_30358_initial.log
+2026-10-11 00:37:38 CST START_CAPTURE seed=30358 roles=B2_regressed,C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30358/v3_1m
+2026-10-11 00:37:57 CST END_CAPTURE seed=30358 roles=B2_regressed,C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30358/v3_1m log=/tmp/n2_capture_30358_v3_1m.log
+2026-10-11 00:37:57 CST START_CAPTURE seed=30358 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30358/bc_seq32_100k
+2026-10-11 00:38:15 CST END_CAPTURE seed=30358 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30358/bc_seq32_100k log=/tmp/n2_capture_30358_bc_seq32_100k.log
+2026-10-11 00:38:15 CST START_CAPTURE seed=30361 roles=C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30361/initial
+2026-10-11 00:38:34 CST END_CAPTURE seed=30361 roles=C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30361/initial log=/tmp/n2_capture_30361_initial.log
+2026-10-11 00:38:34 CST START_CAPTURE seed=30361 roles=C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30361/v3_1m
+2026-10-11 00:38:54 CST END_CAPTURE seed=30361 roles=C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30361/v3_1m log=/tmp/n2_capture_30361_v3_1m.log
+2026-10-11 00:38:54 CST START_CAPTURE seed=30361 roles=C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30361/bc_seq32_100k
+2026-10-11 00:39:12 CST END_CAPTURE seed=30361 roles=C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30361/bc_seq32_100k log=/tmp/n2_capture_30361_bc_seq32_100k.log
+2026-10-11 00:39:12 CST START_CAPTURE seed=30381 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30381/initial
+2026-10-11 00:39:31 CST END_CAPTURE seed=30381 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30381/initial log=/tmp/n2_capture_30381_initial.log
+2026-10-11 00:39:31 CST START_CAPTURE seed=30381 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30381/v3_1m
+2026-10-11 00:39:50 CST END_CAPTURE seed=30381 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30381/v3_1m log=/tmp/n2_capture_30381_v3_1m.log
+2026-10-11 00:39:50 CST START_CAPTURE seed=30381 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30381/bc_seq32_100k
+2026-10-11 00:40:08 CST END_CAPTURE seed=30381 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30381/bc_seq32_100k log=/tmp/n2_capture_30381_bc_seq32_100k.log
+2026-10-11 00:40:08 CST START_CAPTURE seed=30395 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30395/initial
+2026-10-11 00:40:19 CST END_CAPTURE seed=30395 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30395/initial log=/tmp/n2_capture_30395_initial.log
+2026-10-11 00:40:19 CST START_CAPTURE seed=30395 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30395/v3_1m
+2026-10-11 00:40:30 CST END_CAPTURE seed=30395 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30395/v3_1m log=/tmp/n2_capture_30395_v3_1m.log
+2026-10-11 00:40:30 CST START_CAPTURE seed=30395 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30395/bc_seq32_100k
+2026-10-11 00:40:42 CST END_CAPTURE seed=30395 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30395/bc_seq32_100k log=/tmp/n2_capture_30395_bc_seq32_100k.log
+2026-10-11 00:40:42 CST START_CAPTURE seed=30405 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30405/initial
+2026-10-11 00:40:56 CST END_CAPTURE seed=30405 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30405/initial log=/tmp/n2_capture_30405_initial.log
+2026-10-11 00:40:56 CST START_CAPTURE seed=30405 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30405/v3_1m
+2026-10-11 00:41:14 CST END_CAPTURE seed=30405 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30405/v3_1m log=/tmp/n2_capture_30405_v3_1m.log
+2026-10-11 00:41:14 CST START_CAPTURE seed=30405 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30405/bc_seq32_100k
+2026-10-11 00:41:34 CST END_CAPTURE seed=30405 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30405/bc_seq32_100k log=/tmp/n2_capture_30405_bc_seq32_100k.log
+2026-10-11 00:41:34 CST START_CAPTURE seed=30421 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30421/initial
+2026-10-11 00:41:46 CST END_CAPTURE seed=30421 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30421/initial log=/tmp/n2_capture_30421_initial.log
+2026-10-11 00:41:46 CST START_CAPTURE seed=30421 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30421/v3_1m
+2026-10-11 00:42:04 CST END_CAPTURE seed=30421 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30421/v3_1m log=/tmp/n2_capture_30421_v3_1m.log
+2026-10-11 00:42:04 CST START_CAPTURE seed=30421 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30421/bc_seq32_100k
+2026-10-11 00:42:17 CST END_CAPTURE seed=30421 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30421/bc_seq32_100k log=/tmp/n2_capture_30421_bc_seq32_100k.log
+2026-10-11 00:42:17 CST START_CAPTURE seed=30430 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30430/initial
+2026-10-11 00:42:31 CST END_CAPTURE seed=30430 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30430/initial log=/tmp/n2_capture_30430_initial.log
+2026-10-11 00:42:31 CST START_CAPTURE seed=30430 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30430/v3_1m
+2026-10-11 00:42:50 CST END_CAPTURE seed=30430 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30430/v3_1m log=/tmp/n2_capture_30430_v3_1m.log
+2026-10-11 00:42:50 CST START_CAPTURE seed=30430 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30430/bc_seq32_100k
+2026-10-11 00:43:01 CST END_CAPTURE seed=30430 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30430/bc_seq32_100k log=/tmp/n2_capture_30430_bc_seq32_100k.log
+2026-10-11 00:43:01 CST START_CAPTURE seed=30447 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30447/initial
+2026-10-11 00:43:13 CST END_CAPTURE seed=30447 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30447/initial log=/tmp/n2_capture_30447_initial.log
+2026-10-11 00:43:13 CST START_CAPTURE seed=30447 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30447/v3_1m
+2026-10-11 00:43:25 CST END_CAPTURE seed=30447 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30447/v3_1m log=/tmp/n2_capture_30447_v3_1m.log
+2026-10-11 00:43:25 CST START_CAPTURE seed=30447 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30447/bc_seq32_100k
+2026-10-11 00:43:37 CST END_CAPTURE seed=30447 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30447/bc_seq32_100k log=/tmp/n2_capture_30447_bc_seq32_100k.log
+2026-10-11 00:43:37 CST START_CAPTURE seed=30458 roles=B2_regressed,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30458/initial
+2026-10-11 00:43:55 CST END_CAPTURE seed=30458 roles=B2_regressed,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30458/initial log=/tmp/n2_capture_30458_initial.log
+2026-10-11 00:43:55 CST START_CAPTURE seed=30458 roles=B2_regressed,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30458/v3_1m
+2026-10-11 00:44:08 CST END_CAPTURE seed=30458 roles=B2_regressed,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30458/v3_1m log=/tmp/n2_capture_30458_v3_1m.log
+2026-10-11 00:44:08 CST START_CAPTURE seed=30458 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30458/bc_seq32_100k
+2026-10-11 00:44:26 CST END_CAPTURE seed=30458 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30458/bc_seq32_100k log=/tmp/n2_capture_30458_bc_seq32_100k.log
+2026-10-11 00:44:27 CST START_CAPTURE seed=30478 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30478/initial
+2026-10-11 00:44:46 CST END_CAPTURE seed=30478 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30478/initial log=/tmp/n2_capture_30478_initial.log
+2026-10-11 00:44:46 CST START_CAPTURE seed=30478 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30478/v3_1m
+2026-10-11 00:44:58 CST END_CAPTURE seed=30478 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30478/v3_1m log=/tmp/n2_capture_30478_v3_1m.log
+2026-10-11 00:44:58 CST START_CAPTURE seed=30478 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30478/bc_seq32_100k
+2026-10-11 00:45:18 CST END_CAPTURE seed=30478 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30478/bc_seq32_100k log=/tmp/n2_capture_30478_bc_seq32_100k.log
+2026-10-11 00:45:18 CST START_CAPTURE seed=30490 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30490/initial
+2026-10-11 00:45:37 CST END_CAPTURE seed=30490 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30490/initial log=/tmp/n2_capture_30490_initial.log
+2026-10-11 00:45:37 CST START_CAPTURE seed=30490 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30490/v3_1m
+2026-10-11 00:45:55 CST END_CAPTURE seed=30490 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30490/v3_1m log=/tmp/n2_capture_30490_v3_1m.log
+2026-10-11 00:45:56 CST START_CAPTURE seed=30490 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30490/bc_seq32_100k
+2026-10-11 00:46:14 CST END_CAPTURE seed=30490 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30490/bc_seq32_100k log=/tmp/n2_capture_30490_bc_seq32_100k.log
+2026-10-11 00:46:14 CST START_CAPTURE seed=30491 roles=B2_regressed,C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30491/initial
+2026-10-11 00:46:33 CST END_CAPTURE seed=30491 roles=B2_regressed,C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30491/initial log=/tmp/n2_capture_30491_initial.log
+2026-10-11 00:46:33 CST START_CAPTURE seed=30491 roles=B2_regressed,C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30491/v3_1m
+2026-10-11 00:46:51 CST END_CAPTURE seed=30491 roles=B2_regressed,C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30491/v3_1m log=/tmp/n2_capture_30491_v3_1m.log
+2026-10-11 00:46:51 CST START_CAPTURE seed=30491 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30491/bc_seq32_100k
+2026-10-11 00:47:09 CST END_CAPTURE seed=30491 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30491/bc_seq32_100k log=/tmp/n2_capture_30491_bc_seq32_100k.log
+2026-10-11 00:47:09 CST START_CAPTURE seed=30494 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30494/initial
+2026-10-11 00:47:23 CST END_CAPTURE seed=30494 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30494/initial log=/tmp/n2_capture_30494_initial.log
+2026-10-11 00:47:23 CST START_CAPTURE seed=30494 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30494/v3_1m
+2026-10-11 00:47:41 CST END_CAPTURE seed=30494 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30494/v3_1m log=/tmp/n2_capture_30494_v3_1m.log
+2026-10-11 00:47:41 CST START_CAPTURE seed=30494 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30494/bc_seq32_100k
+2026-10-11 00:47:59 CST END_CAPTURE seed=30494 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30494/bc_seq32_100k log=/tmp/n2_capture_30494_bc_seq32_100k.log
+2026-10-11 00:47:59 CST START_CAPTURE seed=30496 roles=B3_alwayslose,C_early checkpoint=initial path=artifacts/episode_samples/seed_30496/initial
+2026-10-11 00:48:10 CST END_CAPTURE seed=30496 roles=B3_alwayslose,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30496/initial log=/tmp/n2_capture_30496_initial.log
+2026-10-11 00:48:10 CST START_CAPTURE seed=30496 roles=B3_alwayslose,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30496/v3_1m
+2026-10-11 00:48:19 CST END_CAPTURE seed=30496 roles=B3_alwayslose,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30496/v3_1m log=/tmp/n2_capture_30496_v3_1m.log
+2026-10-11 00:48:19 CST START_CAPTURE seed=30496 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30496/bc_seq32_100k
+2026-10-11 00:48:29 CST END_CAPTURE seed=30496 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30496/bc_seq32_100k log=/tmp/n2_capture_30496_bc_seq32_100k.log
+2026-10-11 00:48:29 CST START_CAPTURE seed=30516 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30516/initial
+2026-10-11 00:48:48 CST END_CAPTURE seed=30516 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30516/initial log=/tmp/n2_capture_30516_initial.log
+2026-10-11 00:48:48 CST START_CAPTURE seed=30516 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30516/v3_1m
+2026-10-11 00:49:01 CST END_CAPTURE seed=30516 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30516/v3_1m log=/tmp/n2_capture_30516_v3_1m.log
+2026-10-11 00:49:01 CST START_CAPTURE seed=30516 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30516/bc_seq32_100k
+2026-10-11 00:49:19 CST END_CAPTURE seed=30516 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30516/bc_seq32_100k log=/tmp/n2_capture_30516_bc_seq32_100k.log
+2026-10-11 00:49:19 CST START_CAPTURE seed=30537 roles=B2_regressed,C_early checkpoint=initial path=artifacts/episode_samples/seed_30537/initial
+2026-10-11 00:49:44 CST END_CAPTURE seed=30537 roles=B2_regressed,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30537/initial log=/tmp/n2_capture_30537_initial.log
+2026-10-11 00:49:44 CST START_CAPTURE seed=30537 roles=B2_regressed,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30537/v3_1m
+2026-10-11 00:49:55 CST END_CAPTURE seed=30537 roles=B2_regressed,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30537/v3_1m log=/tmp/n2_capture_30537_v3_1m.log
+2026-10-11 00:49:55 CST START_CAPTURE seed=30537 roles=B2_regressed,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30537/bc_seq32_100k
+2026-10-11 00:50:08 CST END_CAPTURE seed=30537 roles=B2_regressed,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30537/bc_seq32_100k log=/tmp/n2_capture_30537_bc_seq32_100k.log
+2026-10-11 00:50:08 CST START_CAPTURE seed=30538 roles=B3_alwayslose,C_early checkpoint=initial path=artifacts/episode_samples/seed_30538/initial
+2026-10-11 00:50:20 CST END_CAPTURE seed=30538 roles=B3_alwayslose,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30538/initial log=/tmp/n2_capture_30538_initial.log
+2026-10-11 00:50:20 CST START_CAPTURE seed=30538 roles=B3_alwayslose,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30538/v3_1m
+2026-10-11 00:50:29 CST END_CAPTURE seed=30538 roles=B3_alwayslose,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30538/v3_1m log=/tmp/n2_capture_30538_v3_1m.log
+2026-10-11 00:50:29 CST START_CAPTURE seed=30538 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30538/bc_seq32_100k
+2026-10-11 00:50:39 CST END_CAPTURE seed=30538 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30538/bc_seq32_100k log=/tmp/n2_capture_30538_bc_seq32_100k.log
+2026-10-11 00:50:39 CST START_CAPTURE seed=30544 roles=B3_alwayslose checkpoint=initial path=artifacts/episode_samples/seed_30544/initial
+2026-10-11 00:50:52 CST END_CAPTURE seed=30544 roles=B3_alwayslose checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30544/initial log=/tmp/n2_capture_30544_initial.log
+2026-10-11 00:50:52 CST START_CAPTURE seed=30544 roles=B3_alwayslose checkpoint=v3_1m path=artifacts/episode_samples/seed_30544/v3_1m
+2026-10-11 00:51:04 CST END_CAPTURE seed=30544 roles=B3_alwayslose checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30544/v3_1m log=/tmp/n2_capture_30544_v3_1m.log
+2026-10-11 00:51:04 CST START_CAPTURE seed=30544 roles=B3_alwayslose checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30544/bc_seq32_100k
+2026-10-11 00:51:15 CST END_CAPTURE seed=30544 roles=B3_alwayslose checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30544/bc_seq32_100k log=/tmp/n2_capture_30544_bc_seq32_100k.log
+2026-10-11 00:51:15 CST START_CAPTURE seed=30557 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30557/initial
+2026-10-11 00:51:36 CST END_CAPTURE seed=30557 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30557/initial log=/tmp/n2_capture_30557_initial.log
+2026-10-11 00:51:36 CST START_CAPTURE seed=30557 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30557/v3_1m
+2026-10-11 00:51:49 CST END_CAPTURE seed=30557 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30557/v3_1m log=/tmp/n2_capture_30557_v3_1m.log
+2026-10-11 00:51:50 CST START_CAPTURE seed=30557 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30557/bc_seq32_100k
+2026-10-11 00:52:02 CST END_CAPTURE seed=30557 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30557/bc_seq32_100k log=/tmp/n2_capture_30557_bc_seq32_100k.log
+2026-10-11 00:52:02 CST START_CAPTURE seed=30561 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30561/initial
+2026-10-11 00:52:13 CST END_CAPTURE seed=30561 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30561/initial log=/tmp/n2_capture_30561_initial.log
+2026-10-11 00:52:13 CST START_CAPTURE seed=30561 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30561/v3_1m
+2026-10-11 00:52:23 CST END_CAPTURE seed=30561 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30561/v3_1m log=/tmp/n2_capture_30561_v3_1m.log
+2026-10-11 00:52:23 CST START_CAPTURE seed=30561 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30561/bc_seq32_100k
+2026-10-11 00:52:43 CST END_CAPTURE seed=30561 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30561/bc_seq32_100k log=/tmp/n2_capture_30561_bc_seq32_100k.log
+2026-10-11 00:52:43 CST START_CAPTURE seed=30567 roles=C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30567/initial
+2026-10-11 00:53:02 CST END_CAPTURE seed=30567 roles=C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30567/initial log=/tmp/n2_capture_30567_initial.log
+2026-10-11 00:53:02 CST START_CAPTURE seed=30567 roles=C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30567/v3_1m
+2026-10-11 00:53:20 CST END_CAPTURE seed=30567 roles=C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30567/v3_1m log=/tmp/n2_capture_30567_v3_1m.log
+2026-10-11 00:53:20 CST START_CAPTURE seed=30567 roles=C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30567/bc_seq32_100k
+2026-10-11 00:53:39 CST END_CAPTURE seed=30567 roles=C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30567/bc_seq32_100k log=/tmp/n2_capture_30567_bc_seq32_100k.log
+2026-10-11 00:53:39 CST START_CAPTURE seed=30584 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30584/initial
+2026-10-11 00:53:53 CST END_CAPTURE seed=30584 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30584/initial log=/tmp/n2_capture_30584_initial.log
+2026-10-11 00:53:53 CST START_CAPTURE seed=30584 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30584/v3_1m
+2026-10-11 00:54:03 CST END_CAPTURE seed=30584 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30584/v3_1m log=/tmp/n2_capture_30584_v3_1m.log
+2026-10-11 00:54:03 CST START_CAPTURE seed=30584 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30584/bc_seq32_100k
+2026-10-11 00:54:17 CST END_CAPTURE seed=30584 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30584/bc_seq32_100k log=/tmp/n2_capture_30584_bc_seq32_100k.log
+2026-10-11 00:54:17 CST START_CAPTURE seed=30590 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30590/initial
+2026-10-11 00:54:30 CST END_CAPTURE seed=30590 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30590/initial log=/tmp/n2_capture_30590_initial.log
+2026-10-11 00:54:30 CST START_CAPTURE seed=30590 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30590/v3_1m
+2026-10-11 00:54:49 CST END_CAPTURE seed=30590 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30590/v3_1m log=/tmp/n2_capture_30590_v3_1m.log
+2026-10-11 00:54:49 CST START_CAPTURE seed=30590 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30590/bc_seq32_100k
+2026-10-11 00:55:03 CST END_CAPTURE seed=30590 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30590/bc_seq32_100k log=/tmp/n2_capture_30590_bc_seq32_100k.log
+2026-10-11 00:55:03 CST START_CAPTURE seed=30618 roles=B2_regressed,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30618/initial
+2026-10-11 00:55:22 CST END_CAPTURE seed=30618 roles=B2_regressed,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30618/initial log=/tmp/n2_capture_30618_initial.log
+2026-10-11 00:55:22 CST START_CAPTURE seed=30618 roles=B2_regressed,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30618/v3_1m
+2026-10-11 00:55:33 CST END_CAPTURE seed=30618 roles=B2_regressed,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30618/v3_1m log=/tmp/n2_capture_30618_v3_1m.log
+2026-10-11 00:55:33 CST START_CAPTURE seed=30618 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30618/bc_seq32_100k
+2026-10-11 00:55:52 CST END_CAPTURE seed=30618 roles=B2_regressed,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30618/bc_seq32_100k log=/tmp/n2_capture_30618_bc_seq32_100k.log
+2026-10-11 00:55:52 CST START_CAPTURE seed=30626 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30626/initial
+2026-10-11 00:56:05 CST END_CAPTURE seed=30626 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30626/initial log=/tmp/n2_capture_30626_initial.log
+2026-10-11 00:56:05 CST START_CAPTURE seed=30626 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30626/v3_1m
+2026-10-11 00:56:16 CST END_CAPTURE seed=30626 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30626/v3_1m log=/tmp/n2_capture_30626_v3_1m.log
+2026-10-11 00:56:16 CST START_CAPTURE seed=30626 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30626/bc_seq32_100k
+2026-10-11 00:56:27 CST END_CAPTURE seed=30626 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30626/bc_seq32_100k log=/tmp/n2_capture_30626_bc_seq32_100k.log
+2026-10-11 00:56:27 CST START_CAPTURE seed=30656 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30656/initial
+2026-10-11 00:56:46 CST END_CAPTURE seed=30656 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30656/initial log=/tmp/n2_capture_30656_initial.log
+2026-10-11 00:56:46 CST START_CAPTURE seed=30656 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30656/v3_1m
+2026-10-11 00:56:58 CST END_CAPTURE seed=30656 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30656/v3_1m log=/tmp/n2_capture_30656_v3_1m.log
+2026-10-11 00:56:58 CST START_CAPTURE seed=30656 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30656/bc_seq32_100k
+2026-10-11 00:57:17 CST END_CAPTURE seed=30656 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30656/bc_seq32_100k log=/tmp/n2_capture_30656_bc_seq32_100k.log
+2026-10-11 00:57:17 CST START_CAPTURE seed=30662 roles=C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30662/initial
+2026-10-11 00:57:40 CST END_CAPTURE seed=30662 roles=C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30662/initial log=/tmp/n2_capture_30662_initial.log
+2026-10-11 00:57:40 CST START_CAPTURE seed=30662 roles=C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30662/v3_1m
+2026-10-11 00:57:59 CST END_CAPTURE seed=30662 roles=C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30662/v3_1m log=/tmp/n2_capture_30662_v3_1m.log
+2026-10-11 00:57:59 CST START_CAPTURE seed=30662 roles=C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30662/bc_seq32_100k
+2026-10-11 00:58:22 CST END_CAPTURE seed=30662 roles=C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30662/bc_seq32_100k log=/tmp/n2_capture_30662_bc_seq32_100k.log
+2026-10-11 00:58:22 CST START_CAPTURE seed=30663 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30663/initial
+2026-10-11 00:58:43 CST END_CAPTURE seed=30663 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30663/initial log=/tmp/n2_capture_30663_initial.log
+2026-10-11 00:58:43 CST START_CAPTURE seed=30663 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30663/v3_1m
+2026-10-11 00:58:55 CST END_CAPTURE seed=30663 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30663/v3_1m log=/tmp/n2_capture_30663_v3_1m.log
+2026-10-11 00:58:55 CST START_CAPTURE seed=30663 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30663/bc_seq32_100k
+2026-10-11 00:59:09 CST END_CAPTURE seed=30663 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30663/bc_seq32_100k log=/tmp/n2_capture_30663_bc_seq32_100k.log
+2026-10-11 00:59:09 CST START_CAPTURE seed=30664 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30664/initial
+2026-10-11 00:59:38 CST END_CAPTURE seed=30664 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30664/initial log=/tmp/n2_capture_30664_initial.log
+2026-10-11 00:59:38 CST START_CAPTURE seed=30664 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30664/v3_1m
+2026-10-11 00:59:47 CST END_CAPTURE seed=30664 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30664/v3_1m log=/tmp/n2_capture_30664_v3_1m.log
+2026-10-11 00:59:47 CST START_CAPTURE seed=30664 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30664/bc_seq32_100k
+2026-10-11 01:00:15 CST END_CAPTURE seed=30664 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30664/bc_seq32_100k log=/tmp/n2_capture_30664_bc_seq32_100k.log
+2026-10-11 01:00:15 CST START_CAPTURE seed=30684 roles=B2_regressed,C_early checkpoint=initial path=artifacts/episode_samples/seed_30684/initial
+2026-10-11 01:00:34 CST END_CAPTURE seed=30684 roles=B2_regressed,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30684/initial log=/tmp/n2_capture_30684_initial.log
+2026-10-11 01:00:34 CST START_CAPTURE seed=30684 roles=B2_regressed,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30684/v3_1m
+2026-10-11 01:00:43 CST END_CAPTURE seed=30684 roles=B2_regressed,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30684/v3_1m log=/tmp/n2_capture_30684_v3_1m.log
+2026-10-11 01:00:43 CST START_CAPTURE seed=30684 roles=B2_regressed,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30684/bc_seq32_100k
+2026-10-11 01:01:02 CST END_CAPTURE seed=30684 roles=B2_regressed,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30684/bc_seq32_100k log=/tmp/n2_capture_30684_bc_seq32_100k.log
+2026-10-11 01:01:02 CST START_CAPTURE seed=30693 roles=B3_alwayslose,C_early checkpoint=initial path=artifacts/episode_samples/seed_30693/initial
+2026-10-11 01:01:14 CST END_CAPTURE seed=30693 roles=B3_alwayslose,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30693/initial log=/tmp/n2_capture_30693_initial.log
+2026-10-11 01:01:14 CST START_CAPTURE seed=30693 roles=B3_alwayslose,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30693/v3_1m
+2026-10-11 01:01:24 CST END_CAPTURE seed=30693 roles=B3_alwayslose,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30693/v3_1m log=/tmp/n2_capture_30693_v3_1m.log
+2026-10-11 01:01:24 CST START_CAPTURE seed=30693 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30693/bc_seq32_100k
+2026-10-11 01:01:37 CST END_CAPTURE seed=30693 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30693/bc_seq32_100k log=/tmp/n2_capture_30693_bc_seq32_100k.log
+2026-10-11 01:01:37 CST START_CAPTURE seed=30696 roles=B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30696/initial
+2026-10-11 01:01:55 CST END_CAPTURE seed=30696 roles=B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30696/initial log=/tmp/n2_capture_30696_initial.log
+2026-10-11 01:01:55 CST START_CAPTURE seed=30696 roles=B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30696/v3_1m
+2026-10-11 01:02:13 CST END_CAPTURE seed=30696 roles=B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30696/v3_1m log=/tmp/n2_capture_30696_v3_1m.log
+2026-10-11 01:02:14 CST START_CAPTURE seed=30696 roles=B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30696/bc_seq32_100k
+2026-10-11 01:02:31 CST END_CAPTURE seed=30696 roles=B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30696/bc_seq32_100k log=/tmp/n2_capture_30696_bc_seq32_100k.log
+2026-10-11 01:02:31 CST START_CAPTURE seed=30718 roles=B3_alwayslose checkpoint=initial path=artifacts/episode_samples/seed_30718/initial
+2026-10-11 01:02:42 CST END_CAPTURE seed=30718 roles=B3_alwayslose checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30718/initial log=/tmp/n2_capture_30718_initial.log
+2026-10-11 01:02:42 CST START_CAPTURE seed=30718 roles=B3_alwayslose checkpoint=v3_1m path=artifacts/episode_samples/seed_30718/v3_1m
+2026-10-11 01:02:55 CST END_CAPTURE seed=30718 roles=B3_alwayslose checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30718/v3_1m log=/tmp/n2_capture_30718_v3_1m.log
+2026-10-11 01:02:55 CST START_CAPTURE seed=30718 roles=B3_alwayslose checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30718/bc_seq32_100k
+2026-10-11 01:03:05 CST END_CAPTURE seed=30718 roles=B3_alwayslose checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30718/bc_seq32_100k log=/tmp/n2_capture_30718_bc_seq32_100k.log
+2026-10-11 01:03:05 CST START_CAPTURE seed=30722 roles=B3_alwayslose checkpoint=initial path=artifacts/episode_samples/seed_30722/initial
+2026-10-11 01:03:17 CST END_CAPTURE seed=30722 roles=B3_alwayslose checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30722/initial log=/tmp/n2_capture_30722_initial.log
+2026-10-11 01:03:17 CST START_CAPTURE seed=30722 roles=B3_alwayslose checkpoint=v3_1m path=artifacts/episode_samples/seed_30722/v3_1m
+2026-10-11 01:03:28 CST END_CAPTURE seed=30722 roles=B3_alwayslose checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30722/v3_1m log=/tmp/n2_capture_30722_v3_1m.log
+2026-10-11 01:03:28 CST START_CAPTURE seed=30722 roles=B3_alwayslose checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30722/bc_seq32_100k
+2026-10-11 01:03:41 CST END_CAPTURE seed=30722 roles=B3_alwayslose checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30722/bc_seq32_100k log=/tmp/n2_capture_30722_bc_seq32_100k.log
+2026-10-11 01:03:41 CST START_CAPTURE seed=30731 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30731/initial
+2026-10-11 01:04:00 CST END_CAPTURE seed=30731 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30731/initial log=/tmp/n2_capture_30731_initial.log
+2026-10-11 01:04:00 CST START_CAPTURE seed=30731 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30731/v3_1m
+2026-10-11 01:04:17 CST END_CAPTURE seed=30731 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30731/v3_1m log=/tmp/n2_capture_30731_v3_1m.log
+2026-10-11 01:04:17 CST START_CAPTURE seed=30731 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30731/bc_seq32_100k
+2026-10-11 01:04:35 CST END_CAPTURE seed=30731 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30731/bc_seq32_100k log=/tmp/n2_capture_30731_bc_seq32_100k.log
+2026-10-11 01:04:35 CST START_CAPTURE seed=30745 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30745/initial
+2026-10-11 01:04:49 CST END_CAPTURE seed=30745 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30745/initial log=/tmp/n2_capture_30745_initial.log
+2026-10-11 01:04:49 CST START_CAPTURE seed=30745 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30745/v3_1m
+2026-10-11 01:05:07 CST END_CAPTURE seed=30745 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30745/v3_1m log=/tmp/n2_capture_30745_v3_1m.log
+2026-10-11 01:05:07 CST START_CAPTURE seed=30745 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30745/bc_seq32_100k
+2026-10-11 01:05:27 CST END_CAPTURE seed=30745 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30745/bc_seq32_100k log=/tmp/n2_capture_30745_bc_seq32_100k.log
+2026-10-11 01:05:27 CST START_CAPTURE seed=30747 roles=B3_alwayslose,C_early checkpoint=initial path=artifacts/episode_samples/seed_30747/initial
+2026-10-11 01:05:37 CST END_CAPTURE seed=30747 roles=B3_alwayslose,C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30747/initial log=/tmp/n2_capture_30747_initial.log
+2026-10-11 01:05:37 CST START_CAPTURE seed=30747 roles=B3_alwayslose,C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30747/v3_1m
+2026-10-11 01:05:47 CST END_CAPTURE seed=30747 roles=B3_alwayslose,C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30747/v3_1m log=/tmp/n2_capture_30747_v3_1m.log
+2026-10-11 01:05:47 CST START_CAPTURE seed=30747 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30747/bc_seq32_100k
+2026-10-11 01:05:57 CST END_CAPTURE seed=30747 roles=B3_alwayslose,C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30747/bc_seq32_100k log=/tmp/n2_capture_30747_bc_seq32_100k.log
+2026-10-11 01:05:57 CST START_CAPTURE seed=30749 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30749/initial
+2026-10-11 01:06:10 CST END_CAPTURE seed=30749 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30749/initial log=/tmp/n2_capture_30749_initial.log
+2026-10-11 01:06:10 CST START_CAPTURE seed=30749 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30749/v3_1m
+2026-10-11 01:06:19 CST END_CAPTURE seed=30749 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30749/v3_1m log=/tmp/n2_capture_30749_v3_1m.log
+2026-10-11 01:06:19 CST START_CAPTURE seed=30749 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30749/bc_seq32_100k
+2026-10-11 01:06:34 CST END_CAPTURE seed=30749 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30749/bc_seq32_100k log=/tmp/n2_capture_30749_bc_seq32_100k.log
+2026-10-11 01:06:34 CST START_CAPTURE seed=30759 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30759/initial
+2026-10-11 01:06:48 CST END_CAPTURE seed=30759 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30759/initial log=/tmp/n2_capture_30759_initial.log
+2026-10-11 01:06:48 CST START_CAPTURE seed=30759 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30759/v3_1m
+2026-10-11 01:07:00 CST END_CAPTURE seed=30759 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30759/v3_1m log=/tmp/n2_capture_30759_v3_1m.log
+2026-10-11 01:07:00 CST START_CAPTURE seed=30759 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30759/bc_seq32_100k
+2026-10-11 01:07:12 CST END_CAPTURE seed=30759 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30759/bc_seq32_100k log=/tmp/n2_capture_30759_bc_seq32_100k.log
+2026-10-11 01:07:12 CST START_CAPTURE seed=30762 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30762/initial
+2026-10-11 01:07:29 CST END_CAPTURE seed=30762 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30762/initial log=/tmp/n2_capture_30762_initial.log
+2026-10-11 01:07:29 CST START_CAPTURE seed=30762 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30762/v3_1m
+2026-10-11 01:07:48 CST END_CAPTURE seed=30762 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30762/v3_1m log=/tmp/n2_capture_30762_v3_1m.log
+2026-10-11 01:07:48 CST START_CAPTURE seed=30762 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30762/bc_seq32_100k
+2026-10-11 01:08:03 CST END_CAPTURE seed=30762 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30762/bc_seq32_100k log=/tmp/n2_capture_30762_bc_seq32_100k.log
+2026-10-11 01:08:03 CST START_CAPTURE seed=30812 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30812/initial
+2026-10-11 01:08:17 CST END_CAPTURE seed=30812 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30812/initial log=/tmp/n2_capture_30812_initial.log
+2026-10-11 01:08:17 CST START_CAPTURE seed=30812 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30812/v3_1m
+2026-10-11 01:08:27 CST END_CAPTURE seed=30812 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30812/v3_1m log=/tmp/n2_capture_30812_v3_1m.log
+2026-10-11 01:08:27 CST START_CAPTURE seed=30812 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30812/bc_seq32_100k
+2026-10-11 01:08:41 CST END_CAPTURE seed=30812 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30812/bc_seq32_100k log=/tmp/n2_capture_30812_bc_seq32_100k.log
+2026-10-11 01:08:41 CST START_CAPTURE seed=30820 roles=B3_alwayslose checkpoint=initial path=artifacts/episode_samples/seed_30820/initial
+2026-10-11 01:08:54 CST END_CAPTURE seed=30820 roles=B3_alwayslose checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30820/initial log=/tmp/n2_capture_30820_initial.log
+2026-10-11 01:08:55 CST START_CAPTURE seed=30820 roles=B3_alwayslose checkpoint=v3_1m path=artifacts/episode_samples/seed_30820/v3_1m
+2026-10-11 01:09:07 CST END_CAPTURE seed=30820 roles=B3_alwayslose checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30820/v3_1m log=/tmp/n2_capture_30820_v3_1m.log
+2026-10-11 01:09:08 CST START_CAPTURE seed=30820 roles=B3_alwayslose checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30820/bc_seq32_100k
+2026-10-11 01:09:20 CST END_CAPTURE seed=30820 roles=B3_alwayslose checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30820/bc_seq32_100k log=/tmp/n2_capture_30820_bc_seq32_100k.log
+2026-10-11 01:09:20 CST START_CAPTURE seed=30828 roles=B2_regressed,C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30828/initial
+2026-10-11 01:09:48 CST END_CAPTURE seed=30828 roles=B2_regressed,C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30828/initial log=/tmp/n2_capture_30828_initial.log
+2026-10-11 01:09:48 CST START_CAPTURE seed=30828 roles=B2_regressed,C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30828/v3_1m
+2026-10-11 01:10:08 CST END_CAPTURE seed=30828 roles=B2_regressed,C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30828/v3_1m log=/tmp/n2_capture_30828_v3_1m.log
+2026-10-11 01:10:08 CST START_CAPTURE seed=30828 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30828/bc_seq32_100k
+2026-10-11 01:10:26 CST END_CAPTURE seed=30828 roles=B2_regressed,C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30828/bc_seq32_100k log=/tmp/n2_capture_30828_bc_seq32_100k.log
+2026-10-11 01:10:27 CST START_CAPTURE seed=30831 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30831/initial
+2026-10-11 01:10:45 CST END_CAPTURE seed=30831 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30831/initial log=/tmp/n2_capture_30831_initial.log
+2026-10-11 01:10:45 CST START_CAPTURE seed=30831 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30831/v3_1m
+2026-10-11 01:10:57 CST END_CAPTURE seed=30831 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30831/v3_1m log=/tmp/n2_capture_30831_v3_1m.log
+2026-10-11 01:10:57 CST START_CAPTURE seed=30831 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30831/bc_seq32_100k
+2026-10-11 01:11:14 CST END_CAPTURE seed=30831 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30831/bc_seq32_100k log=/tmp/n2_capture_30831_bc_seq32_100k.log
+2026-10-11 01:11:14 CST START_CAPTURE seed=30834 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30834/initial
+2026-10-11 01:11:27 CST END_CAPTURE seed=30834 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30834/initial log=/tmp/n2_capture_30834_initial.log
+2026-10-11 01:11:27 CST START_CAPTURE seed=30834 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30834/v3_1m
+2026-10-11 01:11:45 CST END_CAPTURE seed=30834 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30834/v3_1m log=/tmp/n2_capture_30834_v3_1m.log
+2026-10-11 01:11:45 CST START_CAPTURE seed=30834 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30834/bc_seq32_100k
+2026-10-11 01:12:04 CST END_CAPTURE seed=30834 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30834/bc_seq32_100k log=/tmp/n2_capture_30834_bc_seq32_100k.log
+2026-10-11 01:12:04 CST START_CAPTURE seed=30843 roles=B3_alwayslose checkpoint=initial path=artifacts/episode_samples/seed_30843/initial
+2026-10-11 01:12:16 CST END_CAPTURE seed=30843 roles=B3_alwayslose checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30843/initial log=/tmp/n2_capture_30843_initial.log
+2026-10-11 01:12:16 CST START_CAPTURE seed=30843 roles=B3_alwayslose checkpoint=v3_1m path=artifacts/episode_samples/seed_30843/v3_1m
+2026-10-11 01:12:27 CST END_CAPTURE seed=30843 roles=B3_alwayslose checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30843/v3_1m log=/tmp/n2_capture_30843_v3_1m.log
+2026-10-11 01:12:27 CST START_CAPTURE seed=30843 roles=B3_alwayslose checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30843/bc_seq32_100k
+2026-10-11 01:12:39 CST END_CAPTURE seed=30843 roles=B3_alwayslose checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30843/bc_seq32_100k log=/tmp/n2_capture_30843_bc_seq32_100k.log
+2026-10-11 01:12:39 CST START_CAPTURE seed=30847 roles=B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30847/initial
+2026-10-11 01:13:00 CST END_CAPTURE seed=30847 roles=B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30847/initial log=/tmp/n2_capture_30847_initial.log
+2026-10-11 01:13:00 CST START_CAPTURE seed=30847 roles=B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30847/v3_1m
+2026-10-11 01:13:19 CST END_CAPTURE seed=30847 roles=B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30847/v3_1m log=/tmp/n2_capture_30847_v3_1m.log
+2026-10-11 01:13:19 CST START_CAPTURE seed=30847 roles=B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30847/bc_seq32_100k
+2026-10-11 01:13:32 CST END_CAPTURE seed=30847 roles=B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30847/bc_seq32_100k log=/tmp/n2_capture_30847_bc_seq32_100k.log
+2026-10-11 01:13:32 CST START_CAPTURE seed=30860 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30860/initial
+2026-10-11 01:13:44 CST END_CAPTURE seed=30860 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30860/initial log=/tmp/n2_capture_30860_initial.log
+2026-10-11 01:13:44 CST START_CAPTURE seed=30860 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30860/v3_1m
+2026-10-11 01:14:02 CST END_CAPTURE seed=30860 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30860/v3_1m log=/tmp/n2_capture_30860_v3_1m.log
+2026-10-11 01:14:02 CST START_CAPTURE seed=30860 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30860/bc_seq32_100k
+2026-10-11 01:14:16 CST END_CAPTURE seed=30860 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30860/bc_seq32_100k log=/tmp/n2_capture_30860_bc_seq32_100k.log
+2026-10-11 01:14:16 CST START_CAPTURE seed=30869 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30869/initial
+2026-10-11 01:14:35 CST END_CAPTURE seed=30869 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30869/initial log=/tmp/n2_capture_30869_initial.log
+2026-10-11 01:14:35 CST START_CAPTURE seed=30869 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30869/v3_1m
+2026-10-11 01:14:47 CST END_CAPTURE seed=30869 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30869/v3_1m log=/tmp/n2_capture_30869_v3_1m.log
+2026-10-11 01:14:47 CST START_CAPTURE seed=30869 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30869/bc_seq32_100k
+2026-10-11 01:15:05 CST END_CAPTURE seed=30869 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30869/bc_seq32_100k log=/tmp/n2_capture_30869_bc_seq32_100k.log
+2026-10-11 01:15:05 CST START_CAPTURE seed=30882 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30882/initial
+2026-10-11 01:15:23 CST END_CAPTURE seed=30882 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30882/initial log=/tmp/n2_capture_30882_initial.log
+2026-10-11 01:15:23 CST START_CAPTURE seed=30882 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30882/v3_1m
+2026-10-11 01:15:35 CST END_CAPTURE seed=30882 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30882/v3_1m log=/tmp/n2_capture_30882_v3_1m.log
+2026-10-11 01:15:35 CST START_CAPTURE seed=30882 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30882/bc_seq32_100k
+2026-10-11 01:15:53 CST END_CAPTURE seed=30882 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30882/bc_seq32_100k log=/tmp/n2_capture_30882_bc_seq32_100k.log
+2026-10-11 01:15:53 CST START_CAPTURE seed=30887 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30887/initial
+2026-10-11 01:16:11 CST END_CAPTURE seed=30887 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30887/initial log=/tmp/n2_capture_30887_initial.log
+2026-10-11 01:16:11 CST START_CAPTURE seed=30887 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30887/v3_1m
+2026-10-11 01:16:31 CST END_CAPTURE seed=30887 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30887/v3_1m log=/tmp/n2_capture_30887_v3_1m.log
+2026-10-11 01:16:31 CST START_CAPTURE seed=30887 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30887/bc_seq32_100k
+2026-10-11 01:16:45 CST END_CAPTURE seed=30887 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30887/bc_seq32_100k log=/tmp/n2_capture_30887_bc_seq32_100k.log
+2026-10-11 01:16:45 CST START_CAPTURE seed=30888 roles=B3_alwayslose checkpoint=initial path=artifacts/episode_samples/seed_30888/initial
+2026-10-11 01:16:58 CST END_CAPTURE seed=30888 roles=B3_alwayslose checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30888/initial log=/tmp/n2_capture_30888_initial.log
+2026-10-11 01:16:58 CST START_CAPTURE seed=30888 roles=B3_alwayslose checkpoint=v3_1m path=artifacts/episode_samples/seed_30888/v3_1m
+2026-10-11 01:17:09 CST END_CAPTURE seed=30888 roles=B3_alwayslose checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30888/v3_1m log=/tmp/n2_capture_30888_v3_1m.log
+2026-10-11 01:17:09 CST START_CAPTURE seed=30888 roles=B3_alwayslose checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30888/bc_seq32_100k
+2026-10-11 01:17:28 CST END_CAPTURE seed=30888 roles=B3_alwayslose checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30888/bc_seq32_100k log=/tmp/n2_capture_30888_bc_seq32_100k.log
+2026-10-11 01:17:28 CST START_CAPTURE seed=30902 roles=B3_alwayslose checkpoint=initial path=artifacts/episode_samples/seed_30902/initial
+2026-10-11 01:17:40 CST END_CAPTURE seed=30902 roles=B3_alwayslose checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30902/initial log=/tmp/n2_capture_30902_initial.log
+2026-10-11 01:17:40 CST START_CAPTURE seed=30902 roles=B3_alwayslose checkpoint=v3_1m path=artifacts/episode_samples/seed_30902/v3_1m
+2026-10-11 01:17:54 CST END_CAPTURE seed=30902 roles=B3_alwayslose checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30902/v3_1m log=/tmp/n2_capture_30902_v3_1m.log
+2026-10-11 01:17:54 CST START_CAPTURE seed=30902 roles=B3_alwayslose checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30902/bc_seq32_100k
+2026-10-11 01:18:12 CST END_CAPTURE seed=30902 roles=B3_alwayslose checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30902/bc_seq32_100k log=/tmp/n2_capture_30902_bc_seq32_100k.log
+2026-10-11 01:18:12 CST START_CAPTURE seed=30913 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30913/initial
+2026-10-11 01:18:33 CST END_CAPTURE seed=30913 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30913/initial log=/tmp/n2_capture_30913_initial.log
+2026-10-11 01:18:33 CST START_CAPTURE seed=30913 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30913/v3_1m
+2026-10-11 01:18:51 CST END_CAPTURE seed=30913 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30913/v3_1m log=/tmp/n2_capture_30913_v3_1m.log
+2026-10-11 01:18:51 CST START_CAPTURE seed=30913 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30913/bc_seq32_100k
+2026-10-11 01:19:12 CST END_CAPTURE seed=30913 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30913/bc_seq32_100k log=/tmp/n2_capture_30913_bc_seq32_100k.log
+2026-10-11 01:19:12 CST START_CAPTURE seed=30938 roles=B1_learned checkpoint=initial path=artifacts/episode_samples/seed_30938/initial
+2026-10-11 01:19:25 CST END_CAPTURE seed=30938 roles=B1_learned checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30938/initial log=/tmp/n2_capture_30938_initial.log
+2026-10-11 01:19:25 CST START_CAPTURE seed=30938 roles=B1_learned checkpoint=v3_1m path=artifacts/episode_samples/seed_30938/v3_1m
+2026-10-11 01:19:44 CST END_CAPTURE seed=30938 roles=B1_learned checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30938/v3_1m log=/tmp/n2_capture_30938_v3_1m.log
+2026-10-11 01:19:44 CST START_CAPTURE seed=30938 roles=B1_learned checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30938/bc_seq32_100k
+2026-10-11 01:20:07 CST END_CAPTURE seed=30938 roles=B1_learned checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30938/bc_seq32_100k log=/tmp/n2_capture_30938_bc_seq32_100k.log
+2026-10-11 01:20:07 CST START_CAPTURE seed=30946 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30946/initial
+2026-10-11 01:20:31 CST END_CAPTURE seed=30946 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30946/initial log=/tmp/n2_capture_30946_initial.log
+2026-10-11 01:20:31 CST START_CAPTURE seed=30946 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30946/v3_1m
+2026-10-11 01:20:41 CST END_CAPTURE seed=30946 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30946/v3_1m log=/tmp/n2_capture_30946_v3_1m.log
+2026-10-11 01:20:41 CST START_CAPTURE seed=30946 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30946/bc_seq32_100k
+2026-10-11 01:21:01 CST END_CAPTURE seed=30946 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30946/bc_seq32_100k log=/tmp/n2_capture_30946_bc_seq32_100k.log
+2026-10-11 01:21:01 CST START_CAPTURE seed=30949 roles=B4_alwayswin checkpoint=initial path=artifacts/episode_samples/seed_30949/initial
+2026-10-11 01:21:20 CST END_CAPTURE seed=30949 roles=B4_alwayswin checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30949/initial log=/tmp/n2_capture_30949_initial.log
+2026-10-11 01:21:20 CST START_CAPTURE seed=30949 roles=B4_alwayswin checkpoint=v3_1m path=artifacts/episode_samples/seed_30949/v3_1m
+2026-10-11 01:21:39 CST END_CAPTURE seed=30949 roles=B4_alwayswin checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30949/v3_1m log=/tmp/n2_capture_30949_v3_1m.log
+2026-10-11 01:21:39 CST START_CAPTURE seed=30949 roles=B4_alwayswin checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30949/bc_seq32_100k
+2026-10-11 01:21:59 CST END_CAPTURE seed=30949 roles=B4_alwayswin checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30949/bc_seq32_100k log=/tmp/n2_capture_30949_bc_seq32_100k.log
+2026-10-11 01:21:59 CST START_CAPTURE seed=30953 roles=C_early checkpoint=initial path=artifacts/episode_samples/seed_30953/initial
+2026-10-11 01:22:15 CST END_CAPTURE seed=30953 roles=C_early checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30953/initial log=/tmp/n2_capture_30953_initial.log
+2026-10-11 01:22:15 CST START_CAPTURE seed=30953 roles=C_early checkpoint=v3_1m path=artifacts/episode_samples/seed_30953/v3_1m
+2026-10-11 01:22:25 CST END_CAPTURE seed=30953 roles=C_early checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30953/v3_1m log=/tmp/n2_capture_30953_v3_1m.log
+2026-10-11 01:22:25 CST START_CAPTURE seed=30953 roles=C_early checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30953/bc_seq32_100k
+2026-10-11 01:22:43 CST END_CAPTURE seed=30953 roles=C_early checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30953/bc_seq32_100k log=/tmp/n2_capture_30953_bc_seq32_100k.log
+2026-10-11 01:22:43 CST START_CAPTURE seed=30971 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30971/initial
+2026-10-11 01:23:01 CST END_CAPTURE seed=30971 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30971/initial log=/tmp/n2_capture_30971_initial.log
+2026-10-11 01:23:01 CST START_CAPTURE seed=30971 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30971/v3_1m
+2026-10-11 01:23:18 CST END_CAPTURE seed=30971 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30971/v3_1m log=/tmp/n2_capture_30971_v3_1m.log
+2026-10-11 01:23:18 CST START_CAPTURE seed=30971 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30971/bc_seq32_100k
+2026-10-11 01:23:36 CST END_CAPTURE seed=30971 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30971/bc_seq32_100k log=/tmp/n2_capture_30971_bc_seq32_100k.log
+2026-10-11 01:23:36 CST START_CAPTURE seed=30974 roles=B2_regressed checkpoint=initial path=artifacts/episode_samples/seed_30974/initial
+2026-10-11 01:23:54 CST END_CAPTURE seed=30974 roles=B2_regressed checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30974/initial log=/tmp/n2_capture_30974_initial.log
+2026-10-11 01:23:54 CST START_CAPTURE seed=30974 roles=B2_regressed checkpoint=v3_1m path=artifacts/episode_samples/seed_30974/v3_1m
+2026-10-11 01:24:11 CST END_CAPTURE seed=30974 roles=B2_regressed checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30974/v3_1m log=/tmp/n2_capture_30974_v3_1m.log
+2026-10-11 01:24:11 CST START_CAPTURE seed=30974 roles=B2_regressed checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30974/bc_seq32_100k
+2026-10-11 01:24:29 CST END_CAPTURE seed=30974 roles=B2_regressed checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30974/bc_seq32_100k log=/tmp/n2_capture_30974_bc_seq32_100k.log
+2026-10-11 01:24:29 CST START_CAPTURE seed=30981 roles=C_last30 checkpoint=initial path=artifacts/episode_samples/seed_30981/initial
+2026-10-11 01:24:52 CST END_CAPTURE seed=30981 roles=C_last30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30981/initial log=/tmp/n2_capture_30981_initial.log
+2026-10-11 01:24:52 CST START_CAPTURE seed=30981 roles=C_last30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30981/v3_1m
+2026-10-11 01:25:13 CST END_CAPTURE seed=30981 roles=C_last30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30981/v3_1m log=/tmp/n2_capture_30981_v3_1m.log
+2026-10-11 01:25:13 CST START_CAPTURE seed=30981 roles=C_last30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30981/bc_seq32_100k
+2026-10-11 01:25:33 CST END_CAPTURE seed=30981 roles=C_last30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30981/bc_seq32_100k log=/tmp/n2_capture_30981_bc_seq32_100k.log
+2026-10-11 01:25:33 CST START_CAPTURE seed=30991 roles=C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_30991/initial
+2026-10-11 01:25:52 CST END_CAPTURE seed=30991 roles=C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_30991/initial log=/tmp/n2_capture_30991_initial.log
+2026-10-11 01:25:52 CST START_CAPTURE seed=30991 roles=C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_30991/v3_1m
+2026-10-11 01:26:03 CST END_CAPTURE seed=30991 roles=C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_30991/v3_1m log=/tmp/n2_capture_30991_v3_1m.log
+2026-10-11 01:26:03 CST START_CAPTURE seed=30991 roles=C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_30991/bc_seq32_100k
+2026-10-11 01:26:21 CST END_CAPTURE seed=30991 roles=C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_30991/bc_seq32_100k log=/tmp/n2_capture_30991_bc_seq32_100k.log
+2026-10-11 01:26:22 CST START_CAPTURE seed=31002 roles=B3_alwayslose,C_mid30 checkpoint=initial path=artifacts/episode_samples/seed_31002/initial
+2026-10-11 01:26:33 CST END_CAPTURE seed=31002 roles=B3_alwayslose,C_mid30 checkpoint=initial rc=0 path=artifacts/episode_samples/seed_31002/initial log=/tmp/n2_capture_31002_initial.log
+2026-10-11 01:26:33 CST START_CAPTURE seed=31002 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m path=artifacts/episode_samples/seed_31002/v3_1m
+2026-10-11 01:26:44 CST END_CAPTURE seed=31002 roles=B3_alwayslose,C_mid30 checkpoint=v3_1m rc=0 path=artifacts/episode_samples/seed_31002/v3_1m log=/tmp/n2_capture_31002_v3_1m.log
+2026-10-11 01:26:44 CST START_CAPTURE seed=31002 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k path=artifacts/episode_samples/seed_31002/bc_seq32_100k
+2026-10-11 01:26:56 CST END_CAPTURE seed=31002 roles=B3_alwayslose,C_mid30 checkpoint=bc_seq32_100k rc=0 path=artifacts/episode_samples/seed_31002/bc_seq32_100k log=/tmp/n2_capture_31002_bc_seq32_100k.log
+2026-10-11 01:26:56 CST END capture_stage
+2026-10-11 01:26:56 CST SAMPLE_STORAGE used=374M
+2026-10-11 01:35:20 CST BEGIN training_stage D1-D6 then E1-E2; no worker CLI overrides
+2026-10-11 01:35:20 CST START_TRAIN run=bc_kl001_night2 budget=300000 timeout=8h config=/tmp/night2_configs/bc_kl001_night2.json output=artifacts/research/bc_kl001_night2/output log=/tmp/n2_bc_kl001_night2.log
+2026-10-11 05:33:21 CST END_TRAIN run=bc_kl001_night2 status=completed rc=0 budget=300000 output=artifacts/research/bc_kl001_night2/output log=/tmp/n2_bc_kl001_night2.log
+2026-10-11 05:33:21 CST START_TRAIN run=bc_lr10_night2 budget=300000 timeout=8h config=/tmp/night2_configs/bc_lr10_night2.json output=artifacts/research/bc_lr10_night2/output log=/tmp/n2_bc_lr10_night2.log
+2026-10-11 05:59:00 CST END_TRAIN run=bc_lr10_night2 status=stopped_at_dawn_after_initial_evaluation rc=0 budget=300000 output=artifacts/research/bc_lr10_night2/output log=/tmp/n2_bc_lr10_night2.log

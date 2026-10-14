@@ -31,7 +31,9 @@ training project has its own documents (all in the repository root):
 
 | Document | What it is |
 |---|---|
-| [AGENTS.md](AGENTS.md) | hard rules for AI agents: size budget, delivery channels — **read before committing** |
+| [AGENTS.md](AGENTS.md) | hard rules for AI agents: size budget, delivery channels, **project memory protocol (§9)** — **read before committing** |
+| [CLAUDE.md](CLAUDE.md) | symlink → `AGENTS.md` (so Claude Code reads the same rules) |
+| [MEMORY/](MEMORY/) | platform-neutral agent memory: curated notes + daily logs, plus historical reports under `MEMORY/docs/` |
 | [TODO.md](TODO.md) | the single task list and experiment order — **start here** |
 | [DESKTOP_HANDOFF.md](DESKTOP_HANDOFF.md) | how to run on the desktop machine (WSL2 + RTX 5080) |
 | [TRAINING_DESIGN_PROPOSAL.md](TRAINING_DESIGN_PROPOSAL.md) | implementation review and proposed training comparisons |
