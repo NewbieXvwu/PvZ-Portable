@@ -572,6 +572,20 @@ class PvZEnv:
             raise ValueError(f"environment could not release snapshot {snapshot_id}: {response}")
         self._sun_history_snapshots.pop(snapshot_id, None)
 
+    def reseed(self, seed: int) -> None:
+        """Draw a fresh, equally plausible future from the current state.
+
+        A restored snapshot replays the true future exactly (same RNG, same wave table), so a
+        search that rolls out from it would be clairvoyant. ``RESEED`` re-picks the zombies of
+        every wave that has not started yet and reseeds in-play randomness; waves already sent
+        and the wave count are unchanged. Call it right after :meth:`restore` in each rollout.
+        """
+        if type(seed) is not int or not 0 <= seed < 2 ** 32:
+            raise ValueError("seed must be an unsigned 32-bit integer")
+        response = self._command(f"RESEED {seed}")
+        if not response.get("ok"):
+            raise ValueError(f"environment could not reseed: {response}")
+
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Expand several actions from one parent snapshot in a single command.
 

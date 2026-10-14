@@ -254,6 +254,26 @@ static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& 
 	return true;
 }
 
+// Search must not peek at the real future (DESIGN.md §13.3).  A restored snapshot carries the
+// exact RNG state *and* the whole wave table drawn at level start, so every rollout from it
+// would replay the true spawns.  Reseeding draws a fresh, equally plausible future instead:
+// waves that have not started yet are re-picked from the level's own rules, waves already
+// sent keep their zombies, and the wave count (including a task's wave cap) is unchanged.
+// In-play randomness (rows, timings, sky sun) then continues on an independent stream.
+static void ReseedEnvironment(LawnApp* app, uint32_t seed)
+{
+	Board* board = app->mBoard;
+	const int numWaves = board->mNumWaves;
+	const int sent = std::clamp(board->mCurrentWave, 0, static_cast<int>(MAX_ZOMBIE_WAVES));
+	std::vector<ZombieType> kept(&board->mZombiesInWave[0][0],
+		&board->mZombiesInWave[0][0] + static_cast<size_t>(sent) * MAX_ZOMBIES_IN_WAVE);
+	SRand(seed);
+	board->PickZombieWaves();
+	board->mNumWaves = numWaves;
+	std::copy(kept.begin(), kept.end(), &board->mZombiesInWave[0][0]);
+	SRand(seed ^ 0x9E3779B9u);
+}
+
 static bool ExecuteEnvironmentAction(LawnApp* app, const std::string& command,
 	std::istringstream& input)
 {
@@ -531,6 +551,15 @@ static void RunEnvironment(LawnApp* app)
 				if (ok)
 					before = ReadCounters(app);
 			}
+		}
+		else if (command == "RESEED")
+		{
+			uint32_t seed = 0;
+			std::string extra;
+			input >> seed;
+			ok = !input.fail() && !(input >> extra) && app->mBoard != nullptr;
+			if (ok)
+				ReseedEnvironment(app, seed);
 		}
 		else if (command == "DROP_SNAPSHOT" || command == "DROP_SNAPSHOT_FAST")
 		{
