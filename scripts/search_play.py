@@ -29,7 +29,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MANIFEST = ROOT / "experiments/t7/bc_finetune_level7_v1/progress_evaluation.json"
+MANIFEST = ROOT / "experiments/t7/bc_finetune_level7_v1/progress_evaluation_1024.json"  # first 256 seeds = the 256-seed set
 TASK_ID = "validation_full_level7_v1_d1"
 DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
 NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
@@ -153,6 +153,30 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         env.release_snapshot(root)
 
 
+def _transition(obs: dict, action: dict, state: dict, info: dict, config: dict, overridden: bool) -> dict:
+    """One behaviour-cloning row in the format of scripts/bc_pipeline (train_bc_gru_sequence.py).
+
+    ``state`` still holds the step *before* this action (previous action, elapsed ticks, events),
+    which is exactly what the policy conditioned on when it chose.
+    """
+    import pvz_agent_model as api
+    tensors, metadata = api.observation_tokens(obs, config["input_flags"])
+    clean = {k: action[k] for k in ("type", "packet", "row", "col", "ticks", "until") if k in action}
+    return {
+        "tokens": api.pack_tokens(tensors, metadata),
+        "wave": int(obs["wave"]),
+        "legal": api.policy_legal_summary(obs, config),
+        "previous_action": state["previous_action"],
+        "elapsed_since_previous_observation": int(state["delta_ticks"] or 0),
+        "events": state["events"] or {},
+        "previous_wait_result": state["previous_wait_result"],
+        "action": clean,
+        "wait_result": info.get("wait_result"),
+        "action_duration_ticks": int(info.get("ticks_advanced", 0)),
+        "search_override": overridden,
+    }
+
+
 def _play(job: dict) -> dict:
     from collections import Counter
     import torch
@@ -161,7 +185,8 @@ def _play(job: dict) -> dict:
     from scripted_baseline import profile_for_deck
     from pvz_env import TaskSpec
     args = job["args"]
-    kw = training_task_kwargs(load_training_task(MANIFEST, TASK_ID), job["seed"])
+    manifest = Path(args.manifest) if args.manifest else MANIFEST
+    kw = training_task_kwargs(load_training_task(manifest, args.task_id or TASK_ID), job["seed"])
     model = _W["model"]
     env = policy_env(model.config, args.resource_dir, headless=True)
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
@@ -175,13 +200,19 @@ def _play(job: dict) -> dict:
         state = {"hidden": None, "previous_action": None, "delta_ticks": 0, "events": None,
                  "previous_wait_result": None}
         decisions = 0
+        rows = [] if args.record else None
         while not obs["terminal"] and decisions < args.max_actions:
-            action = _ppo_action(model, obs, state, deterministic=True)
+            action = _ppo_action(model, obs, state, deterministic=args.policy_mode == "greedy")
+            policy_choice = action
             if job["arm"] == "search":
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
+            obs_before = obs
             obs, _r, done, _t, info = env.step(action)
             if not info.get("ok"):
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
+            elif rows is not None:
+                rows.append(_transition(obs_before, action, state, info, model.config,
+                                        overridden=action is not policy_choice))
             state["previous_action"] = action
             state["delta_ticks"] = info.get("ticks_advanced") or 0
             state["events"] = info.get("events")
@@ -191,6 +222,12 @@ def _play(job: dict) -> dict:
                 break
     finally:
         env.close()
+    if rows is not None:
+        import pickle, zlib
+        path = Path(args.record) / f"{job['arm']}_{job['seed']}.pkl.z"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(zlib.compress(pickle.dumps({"seed": job["seed"], "won": obs.get("result") == 1,
+                                                      "rows": rows}, protocol=5), 3))
     return {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "searched": stats["searched"], "overrides": stats["overrides"],
@@ -217,12 +254,19 @@ def main() -> None:
     p.add_argument("--min-gap", type=int, default=0,
                    help="ticks between searches unless pi itself wants to plant (0 = search every time)")
     p.add_argument("--max-actions", type=int, default=3000)
+    p.add_argument("--record", help="write per-game behaviour-cloning rows here (for distillation)")
+    p.add_argument("--policy-mode", choices=("greedy", "sampled"), default="greedy")
+    p.add_argument("--manifest", default=None, help="task manifest (default: 1024-seed validation)")
+    p.add_argument("--task-id", default=None)
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     args = p.parse_args()
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
+    global MANIFEST, TASK_ID
+    MANIFEST = Path(args.manifest) if args.manifest else MANIFEST
+    TASK_ID = args.task_id or TASK_ID
     seeds = load_training_task(MANIFEST, TASK_ID)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
     args.out.mkdir(parents=True, exist_ok=True)
     results_path = args.out / "games.jsonl"
