@@ -228,3 +228,73 @@ I7/I7b/I7c 使用修正后触发条件（承压路有僵尸、reachable shooter 
 ### 队列记录：n7_E2_update3_s41001
 
 时间：2026-10-14T20:49:06.084994+08:00；状态：complete；exit=0；耗时=215 秒。配置：`experiments/t7/n7_e2/update3/sampling_41001.json`；日志：`/tmp/n7_n7_E2_update3_s41001.log`。
+
+
+### 队列记录：n7_E2_update3_s41002
+
+时间：2026-10-14T21:01:37.996886+08:00；状态：complete；exit=0；耗时=725 秒。配置：`experiments/t7/n7_e2/update3/sampling_41002.json`；日志：`/tmp/n7_n7_E2_update3_s41002.log`。
+
+
+### 队列记录：n7_E2_update3_s41003
+
+时间：2026-10-14T21:11:51.385212+08:00；状态：complete；exit=0；耗时=585 秒。配置：`experiments/t7/n7_e2/update3/sampling_41003.json`；日志：`/tmp/n7_n7_E2_update3_s41003.log`。
+
+
+### 队列记录：n7_E2_update3_s41004
+
+时间：2026-10-14T21:24:58.088240+08:00；状态：complete；exit=0；耗时=756 秒。配置：`experiments/t7/n7_e2/update3/sampling_41004.json`；日志：`/tmp/n7_n7_E2_update3_s41004.log`。
+
+
+### 队列记录：n7_E2_update3_s41005
+
+时间：2026-10-14T21:36:11.548890+08:00；状态：complete；exit=0；耗时=643 秒。配置：`experiments/t7/n7_e2/update3/sampling_41005.json`；日志：`/tmp/n7_n7_E2_update3_s41005.log`。
+
+
+### 队列记录：n7_E2_update3_s41006
+
+时间：2026-10-14T21:44:46.492106+08:00；状态：complete；exit=0；耗时=485 秒。配置：`experiments/t7/n7_e2/update3/sampling_41006.json`；日志：`/tmp/n7_n7_E2_update3_s41006.log`。
+
+
+### 队列记录：n7_E2_update3_s41007
+
+时间：2026-10-14T21:54:50.375233+08:00；状态：complete；exit=0；耗时=575 秒。配置：`experiments/t7/n7_e2/update3/sampling_41007.json`；日志：`/tmp/n7_n7_E2_update3_s41007.log`。
+
+
+### 队列记录：n7_E2_update3_s41008
+
+时间：2026-10-14T22:04:32.369243+08:00；状态：complete；exit=0；耗时=555 秒。配置：`experiments/t7/n7_e2/update3/sampling_41008.json`；日志：`/tmp/n7_n7_E2_update3_s41008.log`。
+
+
+### 队列记录：n7_E2_update3_s41009
+
+时间：2026-10-14T22:17:03.219431+08:00；状态：complete；exit=0；耗时=725 秒。配置：`experiments/t7/n7_e2/update3/sampling_41009.json`；日志：`/tmp/n7_n7_E2_update3_s41009.log`。
+
+
+### 队列记录：n7_E2_update3_s41010
+
+时间：2026-10-14T22:25:09.400974+08:00；状态：complete；exit=0；耗时=455 秒。配置：`experiments/t7/n7_e2/update3/sampling_41010.json`；日志：`/tmp/n7_n7_E2_update3_s41010.log`。
+
+
+### 队列记录：n7_E2_update3_s41011
+
+时间：2026-10-14T22:34:50.704861+08:00；状态：complete；exit=0；耗时=555 秒。配置：`experiments/t7/n7_e2/update3/sampling_41011.json`；日志：`/tmp/n7_n7_E2_update3_s41011.log`。
+
+
+### 队列记录：n7_E2_update3_s41012
+
+时间：2026-10-14T22:45:26.594499+08:00；状态：complete；exit=0；耗时=605 秒。配置：`experiments/t7/n7_e2/update3/sampling_41012.json`；日志：`/tmp/n7_n7_E2_update3_s41012.log`。
+
+
+### 队列记录：n7_E2_update3_s41013
+
+时间：2026-10-14T22:55:33.598858+08:00；状态：complete；exit=0；耗时=575 秒。配置：`experiments/t7/n7_e2/update3/sampling_41013.json`；日志：`/tmp/n7_n7_E2_update3_s41013.log`。
+
+
+### 队列记录：n7_E2_update3_s41014
+
+时间：2026-10-14T23:03:14.641216+08:00；状态：complete；exit=0；耗时=425 秒。配置：`experiments/t7/n7_e2/update3/sampling_41014.json`；日志：`/tmp/n7_n7_E2_update3_s41014.log`。
+
+
+### 队列记录：n7_E2_update3_s41015
+
+时间：2026-10-14T23:14:04.856132+08:00；状态：complete；exit=0；耗时=617 秒。配置：`experiments/t7/n7_e2/update3/sampling_41015.json`；日志：`/tmp/n7_n7_E2_update3_s41015.log`。
