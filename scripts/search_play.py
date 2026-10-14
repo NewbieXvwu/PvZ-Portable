@@ -141,6 +141,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             values = fixed + (_values(leaf_frames) if leaf_frames else [])
             totals.append(sum(values) / len(values))
         keys = [json.dumps(c, sort_keys=True) for c in candidates]
+        stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
         policy_value = totals[keys.index(policy_key)]
         best = max(range(len(candidates)), key=lambda i: totals[i])
         if totals[best] - policy_value > args.margin and keys[best] != policy_key:
@@ -205,6 +206,7 @@ def _play(job: dict) -> dict:
             action = _ppo_action(model, obs, state, deterministic=args.policy_mode == "greedy")
             policy_choice = action
             if job["arm"] == "search":
+                stats["last_targets"] = None
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
             obs_before = obs
             obs, _r, done, _t, info = env.step(action)
@@ -213,6 +215,8 @@ def _play(job: dict) -> dict:
             elif rows is not None:
                 rows.append(_transition(obs_before, action, state, info, model.config,
                                         overridden=action is not policy_choice))
+                if stats.get("last_targets"):
+                    rows[-1]["search_targets"] = stats["last_targets"]
             state["previous_action"] = action
             state["delta_ticks"] = info.get("ticks_advanced") or 0
             state["events"] = info.get("events")

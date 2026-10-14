@@ -106,18 +106,52 @@ def cache_hidden(model, games: list[dict], window: int, batch: int = 32) -> None
                 g["hidden"].append(state[id(g)].cpu())
 
 
+def _is_signal(row: dict, soft: bool) -> bool:
+    return bool(row.get("search_targets")) if soft else bool(row.get("search_override"))
+
+
 def windows(games: list[dict], window: int, rng: random.Random, regular_ratio: float,
-            plain_needs_plant: bool = True) -> list[tuple[int, int]]:
+            plain_needs_plant: bool = True, soft: bool = False) -> list[tuple[int, int]]:
     changed, plain = [], []
     for gi, g in enumerate(games):
         for k in range((len(g["rows"]) + window - 1) // window):
             rows = g["rows"][k * window:(k + 1) * window]
-            if any(r.get("search_override") for r in rows):
+            if any(_is_signal(r, soft) for r in rows):
                 changed.append((gi, k))
             elif not plain_needs_plant or any(r["action"]["type"] == "plant" for r in rows):
                 plain.append((gi, k))
     extra = rng.sample(plain, min(len(plain), int(len(changed) * regular_ratio)))
     return changed + extra
+
+
+def _soft_loss(model, outputs, flat, logp, args):
+    """-sum_c q_c log pi(c) on searched steps, q = softmax(search value / tau); -log pi(a) elsewhere.
+
+    AlphaZero distils the search's preference distribution, not its single argmax: when two cells
+    are nearly tied, pi is asked to spread probability between them instead of copying a noisy pick.
+    Every candidate's log-probability reuses the same forward output, so this costs no extra forward.
+    """
+    alt_rows, alt_outputs, owners, q_values = [], [], [], []
+    for index, (row, output) in enumerate(zip(flat, outputs)):
+        targets = row.get("search_targets")
+        if not targets:
+            continue
+        values = torch.tensor([v for _c, v in targets], dtype=torch.float32)
+        q = torch.softmax(values / args.tau, dim=0)
+        for (cand, _v), weight in zip(targets, q.tolist()):
+            alt_rows.append(dict(row, action={k: cand[k] for k in ("type", "packet", "row", "col") if k in cand}))
+            alt_outputs.append(output)
+            owners.append(index)
+            q_values.append(weight)
+    own = torch.tensor([0.0 if row.get("search_targets") else 1.0 for row in flat], device=logp.device)
+    total = -(logp.float() * own).sum()
+    count = own.sum()
+    if alt_rows:
+        alt_logp, _ = replay_log_probs(model, alt_outputs, alt_rows)
+        q = torch.tensor(q_values, device=alt_logp.device)
+        total = total - args.soft_weight * (alt_logp.float() * q).sum()
+        count = count + args.soft_weight * len(set(owners))
+    return total / count
 
 
 def same_action(pred: dict, target: dict) -> bool:
@@ -143,9 +177,12 @@ def run(model, games, picks, args, device, optimizer=None, rng=None) -> dict:
             outputs, _ = model.forward_sequences(sequences, hiddens)
             flat = [row for sequence in sequences for row in sequence]
             logp, _ = replay_log_probs(model, outputs, flat)
-            weights = torch.tensor([args.override_weight if r.get("search_override") else 1.0 for r in flat],
-                                   device=logp.device)
-            loss = -(logp.float() * weights).sum() / weights.sum()
+            if args.target == "soft":
+                loss = _soft_loss(model, outputs, flat, logp, args)
+            else:
+                weights = torch.tensor([args.override_weight if r.get("search_override") else 1.0 for r in flat],
+                                       device=logp.device)
+                loss = -(logp.float() * weights).sum() / weights.sum()
         if train:
             optimizer.zero_grad(set_to_none=True)
             loss.backward()
@@ -157,6 +194,11 @@ def run(model, games, picks, args, device, optimizer=None, rng=None) -> dict:
                     if row["action"]["type"] != "plant":
                         continue
                     pred, _, _ = select_action(model, output, row["legal"], deterministic=True)
+                    if args.target == "soft" and row.get("search_targets"):
+                        best = max(row["search_targets"], key=lambda cv: cv[1])[0]
+                        totals["changed_rows"] += 1
+                        totals["changed_match"] += int(same_action(pred, best))
+                        continue
                     hit = same_action(pred, row["action"])
                     key = "changed" if row.get("search_override") else "own"
                     totals[f"{key}_rows" if key == "changed" else "own_plants"] += 1
@@ -181,11 +223,19 @@ def main() -> None:
     p.add_argument("--batch-windows", type=int, default=64)
     p.add_argument("--regular-ratio", type=float, default=3.0)
     p.add_argument("--override-weight", type=float, default=0.3)
+    p.add_argument("--target", choices=("hard", "soft"), default="hard",
+                   help="hard: imitate the executed action; soft: match softmax(search values / tau) on searched steps")
+    p.add_argument("--tau", type=float, default=0.02)
+    p.add_argument("--seed", type=int, default=1, help="window sampling / shuffling seed (vary per round)")
+    p.add_argument("--soft-weight", type=float, default=1.0)
+    p.add_argument("--max-windows", type=int, default=0, help="sample at most this many signal windows per run (0 = all)")
     p.add_argument("--val-fraction", type=float, default=0.1)
     p.add_argument("--cache-workers", type=int, default=14)
     p.add_argument("--device", default="cpu",
                    help="cpu by default: the pass is Python-bound, and MPS leaked memory here (50 GB by epoch 2)")
     p.add_argument("--threads", type=int, default=14)
+    p.add_argument("--hidden-cache", type=Path,
+                   help="reuse this GRU-state cache even if --policy differs (continue from an epoch checkpoint)")
     args = p.parse_args()
     started = time.time()
 
@@ -194,7 +244,9 @@ def main() -> None:
     random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: max(1, int(len(seeds) * args.val_fraction))])
     changed = sum(r.get("search_override", False) for g in games for r in g["rows"])
+    searched = sum(bool(r.get("search_targets")) for g in games for r in g["rows"])
     print(f"{len(games)} games, {sum(len(g['rows']) for g in games)} rows, {changed} search changes, "
+          f"{searched} searched steps, "
           f"{len(val_seeds)} validation seeds", flush=True)
 
     checkpoint = torch.load(args.policy, map_location="cpu", weights_only=False)
@@ -204,9 +256,10 @@ def main() -> None:
         raise RuntimeError(f"checkpoint is missing {len(missing)} parameters")
     torch.set_num_threads(args.threads)
     model.to(args.device)
-    cache_path = args.data.with_name(args.data.name + f".hidden_w{args.window}.pt")
+    cache_path = args.hidden_cache or args.data.with_name(args.data.name + f".hidden_w{args.window}.pt")
     cache = torch.load(cache_path, weights_only=False) if cache_path.exists() else None
-    if cache and cache.get("policy") == str(args.policy) and set(cache["hidden"]) >= {g["path"] for g in games}:
+    if cache and (args.hidden_cache or cache.get("policy") == str(args.policy)) \
+            and set(cache["hidden"]) >= {g["path"] for g in games}:
         for g in games:
             g["hidden"] = cache["hidden"][g["path"]]
     else:
@@ -214,10 +267,12 @@ def main() -> None:
         torch.save({"policy": str(args.policy), "hidden": {g["path"]: g["hidden"] for g in games}}, cache_path)
     print(f"cached GRU states ({time.time() - started:.0f}s)", flush=True)
 
-    rng = random.Random(1)
+    rng = random.Random(args.seed)
     train_ids = [i for i, g in enumerate(games) if g["seed"] not in val_seeds]
     val_ids = set(range(len(games))) - set(train_ids)
-    all_windows = windows(games, args.window, rng, args.regular_ratio)
+    all_windows = windows(games, args.window, rng, args.regular_ratio, soft=args.target == "soft")
+    if args.max_windows and len(all_windows) > args.max_windows:
+        all_windows = rng.sample(all_windows, args.max_windows)
     train_picks = [w for w in all_windows if w[0] in set(train_ids)]
     val_picks = [w for w in all_windows if w[0] in val_ids]
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.0)
