@@ -21,3 +21,10 @@ PVZ_DESKTOP_PORT=22222`，用 `scripts/win_ssh.py ps|wsl`；或 `ssh -p 22222 ..
 - **PowerShell 经 SSH 调用**：多层引号必炸 → `powershell.exe -NoProfile -EncodedCommand <base64(UTF-16LE)>`；
   **反引号会被远端 bash 吃掉**；**`Register-ScheduledTask` 曾静默失败，`schtasks` 才可靠**；
   **`AllowStartIfOnBatteries` 不是真实属性名**（真的是 `DisallowStartIfOnBatteries`）。
+- **★★ 台式机 C 盘满 → WSL 崩溃（10-15 凌晨实测）**：C 盘剩 0 字节时，WSL 的 VHDX（`C:\Users\NewbieXvwu\AppData\Local\Packages\CanonicalGroupLimited.Ubuntu_79rhkp1fndgsc\LocalState\ext4.vhdx`，
+  当时 124 GB）无法增长 → WSL 虚拟机重启（02:35，Windows 本身没重启）→ 之后 ext4 报 `Errno 5 I/O error`、`uptime` 段错误、`wc` 总线错误。
+  **WSL 里 `df` 显示还有 840 GB 可用是假象，那是虚拟盘的容量；真正要看的是 `df -h /mnt/c`。**
+  处置：删掉旧 WSL 实例遗留在 `%TEMP%\<GUID>\swap.vhdx` 的交换文件（8 GB；当前实例的 GUID 可以从 Hyper-V-VmSwitch 事件里对出来）→ `wsl --shutdown` → ext4 自动 recovery 后恢复正常。
+  **WSL 重启会清空 `/tmp`**（这次 A1 的队列脚本就丢了）→ 长跑的脚本和日志放 `~/pvz-logs/`。
+  已加看门狗 `~/pvz-logs/cdrive_guard.sh`：C 盘剩余低于 3 GB 就停掉训练和搜索。
+  **C 盘本身被用户文件占满（约 820 GB）是根因，需要用户处理**（例如 `wsl --manage Ubuntu --move E:\WSL\Ubuntu`，E 盘当时还有 142 GB 可用）。
