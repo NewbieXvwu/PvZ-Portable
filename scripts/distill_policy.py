@@ -124,25 +124,37 @@ def windows(games: list[dict], window: int, rng: random.Random, regular_ratio: f
     return changed + extra
 
 
-def _soft_loss(model, outputs, flat, logp, args):
+def _soft_loss(model, outputs, flat, logp, args, prior_outputs=None):
     """-sum_c q_c log pi(c) on searched steps, q = softmax(search value / tau); -log pi(a) elsewhere.
 
     AlphaZero distils the search's preference distribution, not its single argmax: when two cells
     are nearly tied, pi is asked to spread probability between them instead of copying a noisy pick.
     Every candidate's log-probability reuses the same forward output, so this costs no extra forward.
     """
-    alt_rows, alt_outputs, owners, q_values = [], [], [], []
+    alt_rows, alt_outputs, alt_prior, owners, q_values, groups = [], [], [], [], [], []
     for index, (row, output) in enumerate(zip(flat, outputs)):
         targets = row.get("search_targets")
         if not targets:
             continue
-        values = torch.tensor([v for _c, v in targets], dtype=torch.float32)
-        q = torch.softmax(values / args.tau, dim=0)
-        for (cand, _v), weight in zip(targets, q.tolist()):
+        groups.append((len(alt_rows), len(targets), [v for _c, v in targets]))
+        for cand, _v in targets:
             alt_rows.append(dict(row, action={k: cand[k] for k in ("type", "packet", "row", "col") if k in cand}))
             alt_outputs.append(output)
+            if prior_outputs is not None:
+                alt_prior.append(prior_outputs[index])
             owners.append(index)
-            q_values.append(weight)
+    if prior_outputs is not None and alt_rows:
+        # q(c) ~ pi_old(c) * exp((value_c - max value) / tau): the search re-weights what pi already
+        # considers plausible. A plain softmax over values gave ~6% to a sunflower in column 8
+        # (log pi_old = -186), which the short look-ahead could not tell was absurd, and pi collapsed.
+        with torch.inference_mode():
+            prior_logp, _ = replay_log_probs(args.prior_model, alt_prior, alt_rows)
+        prior_logp = prior_logp.float().cpu()
+    for start, count, values in groups:
+        scores = torch.tensor(values, dtype=torch.float32) / args.tau
+        if prior_outputs is not None:
+            scores = scores + prior_logp[start:start + count]
+        q_values.extend(torch.softmax(scores, dim=0).tolist())
     own = torch.tensor([0.0 if row.get("search_targets") else 1.0 for row in flat], device=logp.device)
     total = -(logp.float() * own).sum()
     count = own.sum()
@@ -177,8 +189,12 @@ def run(model, games, picks, args, device, optimizer=None, rng=None) -> dict:
             outputs, _ = model.forward_sequences(sequences, hiddens)
             flat = [row for sequence in sequences for row in sequence]
             logp, _ = replay_log_probs(model, outputs, flat)
-            if args.target == "soft":
-                loss = _soft_loss(model, outputs, flat, logp, args)
+            if args.target in ("soft", "prior"):
+                prior = None
+                if args.target == "prior":
+                    with torch.inference_mode():
+                        prior, _ = args.prior_model.forward_sequences(sequences, hiddens)
+                loss = _soft_loss(model, outputs, flat, logp, args, prior)
             else:
                 weights = torch.tensor([args.override_weight if r.get("search_override") else 1.0 for r in flat],
                                        device=logp.device)
@@ -223,10 +239,12 @@ def main() -> None:
     p.add_argument("--batch-windows", type=int, default=64)
     p.add_argument("--regular-ratio", type=float, default=3.0)
     p.add_argument("--override-weight", type=float, default=0.3)
-    p.add_argument("--target", choices=("hard", "soft"), default="hard",
+    p.add_argument("--target", choices=("hard", "soft", "prior"), default="hard",
                    help="hard: imitate the executed action; soft: match softmax(search values / tau) on searched steps")
     p.add_argument("--tau", type=float, default=0.02)
     p.add_argument("--seed", type=int, default=1, help="window sampling / shuffling seed (vary per round)")
+    p.add_argument("--trainable", default="",
+                   help="comma-separated parameter-name prefixes to train (others frozen), e.g. plant_cell_query,cell_key")
     p.add_argument("--soft-weight", type=float, default=1.0)
     p.add_argument("--max-windows", type=int, default=0, help="sample at most this many signal windows per run (0 = all)")
     p.add_argument("--val-fraction", type=float, default=0.1)
@@ -275,7 +293,20 @@ def main() -> None:
         all_windows = rng.sample(all_windows, args.max_windows)
     train_picks = [w for w in all_windows if w[0] in set(train_ids)]
     val_picks = [w for w in all_windows if w[0] in val_ids]
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.0)
+    if args.trainable:
+        # Train only these parameter groups. Freezing the trunk and the GRU keeps the cached
+        # hidden states exact: when the GRU itself changes, window training (which starts every
+        # window from the *original* pi's state) teaches the model for states it never reaches in
+        # play, and soft-target round 1 collapsed to 17/256 that way.
+        prefixes = tuple(args.trainable.split(","))
+        for name, parameter in model.named_parameters():
+            parameter.requires_grad = name.startswith(prefixes)
+        print("trainable:", sum(p.numel() for p in model.parameters() if p.requires_grad), "parameters", flush=True)
+    optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad], lr=args.lr, weight_decay=0.0)
+    if args.target == "prior":
+        args.prior_model = GameplayModelV1(checkpoint["config"])
+        args.prior_model.load_state_dict(checkpoint["state_dict"], strict=False)
+        args.prior_model.to(args.device).eval()
     cpu_state = lambda: {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
 
     history = [{"epoch": 0, "val": run(model, games, val_picks, args, args.device)}]
@@ -297,7 +328,7 @@ def main() -> None:
     out = dict(checkpoint)
     out["state_dict"] = best_state
     out["distillation"] = {"from": str(args.policy), "data": str(args.data),
-                           "args": {k: str(v) for k, v in vars(args).items()},
+                           "args": {k: str(v) for k, v in vars(args).items() if k != "prior_model"},
                            "history": history, "val_seeds": sorted(val_seeds), "best_val_loss": best_loss,
                            "train_windows": len(train_picks), "val_windows": len(val_picks)}
     args.out.parent.mkdir(parents=True, exist_ok=True)
