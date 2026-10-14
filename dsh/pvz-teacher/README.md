@@ -237,6 +237,12 @@ S4（2026-10-03）换了场景（L21 泳池关）重跑，验证 skill 判据与
 | `verify_s2.sh` | S2 端到端验收（**资源通道**：`list_mcp_resources` 不再返回空），**不需要 API key**。 |
 | `prompts/diagnose_and_teach.md` | **任务模板**：诊断一局 + 把判断写成 skill。判据就写在这份模板里 —— 模型读不到这个 README。 |
 | `skills/pvz-episode-diagnosis/` | **种子 skill**（`kind: procedure`）。每次实验开始前拷进沙箱的 `.dsh/skills/`，让模型有个可参照的骨架。 |
+| `skills/avoid-rear-shooters-blind-spot/` | v5 教师诊断新增机制 skill；3 个 what-if 证据点、2 个 counterpoint，`lint_skills` 与 `probe` 均通过；适用边界见 skill 的 falsifier。 |
+| `skills/threatened-lane-priority/` | v5 诊断 skill；3 个 what-if 证据点，`lint_skills` 通过；与旧 `match-lane-threat` 重叠，单局验证。 |
+| `skills/avoid-economic-expansion-under-threat/` | v5 诊断 skill；2 个 what-if 证据点，`lint_skills` 通过；限定在承压裸路下的经济扩产，单局验证。 |
+| `skills/emergency-cherry-bomb-clearance/` | v5 诊断 skill；4 个 what-if 证据点，`lint_skills` 通过；限定为满足阳光、冷却与突破状态时的范围清场，单局验证。 |
+| `skills/emergency-wallnut-containment/` | v5 诊断 skill；4 个 what-if 证据点，`lint_skills` 与 probe 均通过；僵尸深入时用坚果墙阻挡，单局验证。 |
+| `skills/prioritize-effective-firepower-placement/` | v5 救回局诊断 skill；2 个 what-if 点均由 wave 19 进屋改为 wave 30 通关；综合有效射程与承压路优先，单局验证，和既有两条机制有重叠。 |
 | `patches/isolate.yml` | 实验隔离叠加层：关掉"能读到仓库"的工具，把观测面收敛到我们的工具面上。 |
 | `tools/logging_proxy.py` | 记录型反向代理：看到 DSH 实际发出的请求体。可选修复 `thinking.budget_tokens`。 |
 | `tools/test_repair.py` | 上面那个修复的回归测试（离线可跑）。 |

@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "experiment_id": "bc_seed1_e2_update0",
+  "purpose": "E2 update0: fixed initial weights from update0_reconstructed.pt; one 20k-decision update; sampling_seed is the only varied setting across this timepoint.",
+  "initialization_seed": 1,
+  "sampling_seed": 41002,
+  "model": {
+    "layers": 6,
+    "width": 256,
+    "heads": 8,
+    "ff_width": 1024,
+    "gru_layers": 2,
+    "gru_width": 256,
+    "critic_width": 256,
+    "critic_layers": 1,
+    "input_flags": 7,
+    "wait_mode": "events",
+    "wait_mask": "progress_v1"
+  },
+  "reward": {
+    "name": "R0",
+    "gamma": 0.99,
+    "shaping_weight": 1
+  },
+  "ppo": {
+    "learning_rate": 0.0001,
+    "ppo_epochs": 2,
+    "sequence_length": 128,
+    "minibatch_chunks": 2,
+    "clip_epsilon": 0.2,
+    "gae_lambda": 1.0,
+    "value_coefficient": 0.5,
+    "entropy_coefficient": 0.01,
+    "attention_backend": "dense",
+    "target_kl": 0.03
+  },
+  "sampling": {
+    "manifest": "experiments/t7/bc_finetune_level7_v1/train.json",
+    "task_ids": [
+      "train_full_level7_v1_d1"
+    ],
+    "method": "frontier_v1",
+    "rollout_episodes": 16,
+    "curriculum": {
+      "window_episodes": 8,
+      "minimum_window_episodes": 2,
+      "uniform_fraction": 0.25,
+      "coverage": "terrain_wave_cap",
+      "frontier_pass_range": [
+        0.2,
+        0.8
+      ],
+      "initial_focus_task_ids": [
+        "train_full_level7_v1_d1"
+      ],
+      "initial_focus_completed_episodes": 64
+    }
+  },
+  "budget": {
+    "decisions": 20000,
+    "max_episodes": 16,
+    "boundary_mode": "exact_decisions_v1"
+  },
+  "evaluation": {
+    "manifest": "experiments/t7/n7_e2_eval_single_seed.json",
+    "modes": [
+      "greedy"
+    ],
+    "decision_nodes": [],
+    "idle_baseline": false
+  },
+  "runtime": {
+    "workers": 16,
+    "worker_threads": 1,
+    "worker_device": "cpu",
+    "update_device": "cuda",
+    "max_actions": 4000,
+    "cudnn_tf32": false,
+    "matmul_precision": "highest",
+    "deterministic_algorithms": true,
+    "cublas_workspace_config": ":4096:8"
+  },
+  "prerequisites": [],
+  "initialization": {
+    "method": "weights_transfer_v1",
+    "source_checkpoint": "/tmp/n7_E2/checkpoints/update0_reconstructed.pt",
+    "source_sha256": "c2a7dcde3f28567420cf134bd6bd458aee2b58678a32f4c43bcffdea59f1d2ea",
+    "note": "E2 starts from the same policy weights for all arms at this timepoint; a new AdamW optimizer and the declared sampling_seed are used. This is weight initialization, not a full optimizer/RNG resume."
+  }
+}

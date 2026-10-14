@@ -29,6 +29,7 @@ from pvz_agent_model import (  # noqa: E402
     MODEL_CONFIG,
     configure_torch_threads,
     resolve_device,
+    set_relation_bias_fusion,
 )
 from pvz_common import (  # noqa: E402
     ENV_PROTOCOL_VERSION,
@@ -194,6 +195,8 @@ def _init_worker(resource_dir: str, state_dict: dict[str, torch.Tensor],
     global WORKER_MODEL, WORKER_ENV, WORKER_ASSIGNMENTS, WORKER_MAX_ACTIONS
     global WORKER_REWARD_CONFIG, WORKER_ALLOW_TRUNCATION
     configure_torch_threads(worker_threads)
+    if worker_device == "cpu":
+        set_relation_bias_fusion(False)
     WORKER_MODEL = GameplayModelV1(model_config).eval().to(resolve_device(worker_device))
     WORKER_MODEL.load_state_dict(state_dict)
     WORKER_ENV = policy_env(WORKER_MODEL.config, resource_dir=resource_dir)
@@ -236,6 +239,8 @@ def _init_evaluation_worker(resource_dir: str, state_dict: dict[str, torch.Tenso
                             model_config: dict[str, Any] | None = None) -> None:
     global WORKER_MODEL, WORKER_ENV, WORKER_EVAL_JOBS
     configure_torch_threads(worker_threads)
+    if worker_device == "cpu":
+        set_relation_bias_fusion(False)
     WORKER_MODEL = GameplayModelV1(model_config).eval().to(resolve_device(worker_device))
     WORKER_MODEL.load_state_dict(state_dict)
     WORKER_ENV = policy_env(WORKER_MODEL.config, resource_dir=resource_dir)
