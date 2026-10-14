@@ -202,6 +202,8 @@ def _play(job: dict) -> dict:
                  "previous_wait_result": None}
         decisions = 0
         rows = [] if args.record else None
+        from render_episode import _frame
+        frames = [_frame(obs)] if args.frames else None
         while not obs["terminal"] and decisions < args.max_actions:
             action = _ppo_action(model, obs, state, deterministic=args.policy_mode == "greedy")
             policy_choice = action
@@ -217,6 +219,8 @@ def _play(job: dict) -> dict:
                                         overridden=action is not policy_choice))
                 if stats.get("last_targets"):
                     rows[-1]["search_targets"] = stats["last_targets"]
+            if frames is not None:
+                frames.append(_frame(obs))
             state["previous_action"] = action
             state["delta_ticks"] = info.get("ticks_advanced") or 0
             state["events"] = info.get("events")
@@ -226,6 +230,14 @@ def _play(job: dict) -> dict:
                 break
     finally:
         env.close()
+    if frames is not None:
+        # Same layout as episode_query archives, so scripts/train_value_net.py reads it directly.
+        archive = Path(args.frames) / f"seed_{job['seed']}" / f"{args.frames_label}_{job['arm']}"
+        archive.mkdir(parents=True, exist_ok=True)
+        (archive / "frames.jsonl").write_text("".join(json.dumps(f, separators=(",", ":")) + "\n" for f in frames))
+        (archive / "meta.json").write_text(json.dumps({
+            "task": {"seed": job["seed"], "policy": str(args.policy), "arm": job["arm"]},
+            "outcome": {"won": obs.get("result") == 1, "final_wave": obs["wave"]}}))
     if rows is not None:
         import pickle, zlib
         path = Path(args.record) / f"{job['arm']}_{job['seed']}.pkl.z"
@@ -259,6 +271,8 @@ def main() -> None:
                    help="ticks between searches unless pi itself wants to plant (0 = search every time)")
     p.add_argument("--max-actions", type=int, default=3000)
     p.add_argument("--record", help="write per-game behaviour-cloning rows here (for distillation)")
+    p.add_argument("--frames", help="write per-game frame archives here (for value-network training)")
+    p.add_argument("--frames-label", default="play")
     p.add_argument("--policy-mode", choices=("greedy", "sampled"), default="greedy")
     p.add_argument("--manifest", default=None, help="task manifest (default: 1024-seed validation)")
     p.add_argument("--task-id", default=None)
