@@ -28,3 +28,14 @@ PVZ_DESKTOP_PORT=22222`，用 `scripts/win_ssh.py ps|wsl`；或 `ssh -p 22222 ..
   **WSL 重启会清空 `/tmp`**（这次 A1 的队列脚本就丢了）→ 长跑的脚本和日志放 `~/pvz-logs/`。
   已加看门狗 `~/pvz-logs/cdrive_guard.sh`：C 盘剩余低于 3 GB 就停掉训练和搜索。
   **C 盘本身被用户文件占满（约 820 GB）是根因，需要用户处理**（例如 `wsl --manage Ubuntu --move E:\WSL\Ubuntu`，E 盘当时还有 142 GB 可用）。
+- **★★ `git clean -X` 加路径参数会按「字符串前缀」匹配（10-15 实测，误删了整个 `artifacts/research/`）**：
+  `git clean -fdX artifacts/research_evidence` 会把 `artifacts/research/` 也删掉，因为后者是前者的字符串前缀，
+  再加上 `artifacts/` 下默认全部忽略。**删东西只用对明确路径的 `rm`，删之前一律先 dry-run（`-n` / 列出清单）。**
+  损失：A1（bc_seed0_guard002_1m_v1）的续跑状态（结论 json 在 HF 存档里，.pt 没了，A1 已放弃）；
+  v3 的 4 个检查点已从 HF 恢复到 `artifacts/research/bc_finetune_level7_v3/output/runs/run_1/`；
+  `gru_bc_converted.pt` 没有恢复（需要时从 `~/PvZAgent-gru-bc-level7-v1/` 用 `scripts/convert_bc_checkpoint.py` 转换）。
+- **10-15 C 盘清理**：WSL 内从 117 GB 降到 31 GB；结论层（25.8 万个文件，2.45 GB）存档在 HF
+  `archive/desktop_cleanup_20261015/conclusions.tar.gz`；旧 worktree 的代码都在 GitHub（`archive/worktrees/*`）；
+  diskpart 压缩后 VHDX 从 126.4 GB 降到 34.2 GB，**C 盘可用 5.4 GB → 97.6 GB**。
+  压缩前要先停用 PvZWSLKeeper 计划任务（`schtasks /Change /TN PvZWSLKeeper /DISABLE`，结束后再 `/ENABLE`），
+  否则它每 5 分钟会把 WSL 拉起来，和 diskpart 冲突。
