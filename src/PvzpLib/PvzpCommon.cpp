@@ -378,6 +378,8 @@ int PvzpAnimateCurve(int theTimeStart, int theTimeEnd, int theTimeAge, int thePo
 	return FloatRoundToInt(PvzpAnimateCurveFloat(theTimeStart, theTimeEnd, theTimeAge, thePositionStart, thePositionEnd, theCurve));
 }
 
+int gEnvSimSkip = 0;
+
 int RandRangeInt(int theMin, int theMax)
 {
 	PVZP_ASSERT(theMin <= theMax);

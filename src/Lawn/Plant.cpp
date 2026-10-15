@@ -2742,10 +2742,11 @@ void Plant::UpdateReanim()
 	if (aBodyReanim == nullptr)
 		return;
 
-	UpdateReanimColor();
+	if (!(gEnvSimSkip & ENV_SKIP_COLOR))
+		UpdateReanimColor();
 
 	float aOffsetX = mShakeOffsetX;
-	float aOffsetY = PlantDrawHeightOffset(mBoard, this, mSeedType, mPlantCol, mRow);
+	float aOffsetY = (gEnvSimSkip & ENV_SKIP_HEIGHT) ? 0.0f : PlantDrawHeightOffset(mBoard, this, mSeedType, mPlantCol, mRow);
 	float aScaleX = 1.0f, aScaleY = 1.0f;
 	if ((mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_BIG_TIME) &&
 		(mSeedType == SeedType::SEED_WALLNUT || mSeedType == SeedType::SEED_SUNFLOWER || mSeedType == SeedType::SEED_MARIGOLD))

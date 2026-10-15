@@ -38,9 +38,9 @@ _W: dict = {}
 
 
 def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None,
-                 lean_rollouts: bool = False) -> None:
+                 lean_rollouts: bool = False, rollout_sim_skip: int = 0) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
-    _W.update(lean_rollouts=lean_rollouts)
+    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
@@ -99,8 +99,11 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
     # Rollouts by the fast policy only read what render_episode._frame keeps, so they can ask for
     # the compact observation (identical frames, ~1/4 of the bytes). pi reads the full one.
     lean = fast_state is not None and _W.get("lean_rollouts", False)
+    sim_skip = _W.get("rollout_sim_skip", 0)
     if lean:
         env.set_lean_observation(True)
+    if sim_skip:
+        env.set_sim_skip(sim_skip)
     try:
         while True:
             obs, _r, done, _t, info = env.step(action)
@@ -116,6 +119,8 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
             else:
                 action = _ppo_action(_W["model"], obs, rs, deterministic=True)
     finally:
+        if sim_skip:
+            env.set_sim_skip(0)
         if lean:
             env.set_lean_observation(False)
 
@@ -389,6 +394,8 @@ def main() -> None:
                    "used for look-ahead instead of pi, and by the 'fast' arm")
     p.add_argument("--no-lean-rollouts", dest="lean_rollouts", action="store_false",
                    help="fast-policy rollouts read full observations instead of OBS_LEAN (same frames, slower)")
+    p.add_argument("--rollout-sim-skip", type=int, default=0,
+                   help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
     p.add_argument("--timing-horizon", type=int, default=1500, help="ticks of look-ahead (0 = to the end of the game)")
     p.add_argument("--timing-sun", type=int, default=300)
     p.add_argument("--timing-gap", type=int, default=1500)
@@ -425,7 +432,7 @@ def main() -> None:
     started = time.time()
     with results_path.open("a") as out, mp.get_context("spawn").Pool(
             args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy,
-                                                     args.lean_rollouts)) as pool:
+                                                     args.lean_rollouts, args.rollout_sim_skip)) as pool:
         for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
             out.write(json.dumps(res) + "\n"); out.flush()
             if i % 10 == 0 or i == len(jobs):

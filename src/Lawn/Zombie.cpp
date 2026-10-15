@@ -5380,7 +5380,8 @@ void Zombie::UpdateReanim()
 	}
 
 	aBodyReanim->Update();
-	aBodyReanim->PropogateColorToAttachments();
+	if (!(gEnvSimSkip & ENV_SKIP_COLOR))
+		aBodyReanim->PropogateColorToAttachments();
 }
 
 void Zombie::DrawBobsledReanim(Graphics* g, const ZombieDrawPosition& theDrawPos, bool theBeforeZombie)

@@ -552,6 +552,18 @@ static void RunEnvironment(LawnApp* app)
 					before = ReadCounters(app);
 			}
 		}
+		else if (command == "SIM_SKIP")
+		{
+			// Approximate simulation for search rollouts (EnvSimSkip in PvzpCommon.h); 0 = exact.
+			// Process-wide and sticky until changed, so callers set it around rollouts only.
+			int mask = -1;
+			std::string extra;
+			input >> mask;
+			ok = !input.fail() && !(input >> extra) && mask >= 0 && (mask & ~ENV_SKIP_ALLOWED) == 0;
+			if (ok)
+				gEnvSimSkip = mask;
+			minimalResponse = true;
+		}
 		else if (command == "OBS_LEAN")
 		{
 			// Compact observations (LawnApp::EnvironmentLeanObservation) for search rollouts.
