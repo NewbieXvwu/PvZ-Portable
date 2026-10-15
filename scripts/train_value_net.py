@@ -43,11 +43,16 @@ def load_games(data_dir: Path) -> list[dict]:
     for meta_path in sorted(data_dir.glob("*/*/meta.json")):
         meta = json.loads(meta_path.read_text())
         frames = [json.loads(line) for line in (meta_path.parent / "frames.jsonl").open()]
+        starts = wave_starts(frames)
+        # Keep only the frames that become samples; whole games as dicts do not fit in memory
+        # (2048 night games are ~4 GB of JSON).
+        needed = set(range(0, len(frames) - 1, FRAME_STRIDE)) | set(starts.values())
         games.append({
             "seed": meta["task"]["seed"],
             "checkpoint": meta_path.parent.name,
             "won": bool(meta["outcome"]["won"]),
-            "frames": frames,
+            "frames": [f if i in needed else None for i, f in enumerate(frames)],
+            "wave_starts": starts,
         })
     return games
 
@@ -73,7 +78,7 @@ def build_tensors(games: list[dict]) -> dict:
             b, s = featurize(frames[i])
             boards.append(b.half()); scalars.append(s); labels.append(float(game["won"]))
             weights.append(1.0 / len(picked)); game_of.append(g_idx)
-        for wave, i in wave_starts(frames).items():
+        for wave, i in game["wave_starts"].items():
             b, s = featurize(frames[i])
             eval_boards.append(b); eval_scalars.append(s)
             eval_rows.append((g_idx, wave, i))
@@ -243,7 +248,7 @@ def main() -> None:
         test_games = load_games(args.test_data)
         test_rows, test_boards, test_scalars = [], [], []
         for g_idx, game in enumerate(test_games):
-            for wave, i in wave_starts(game["frames"]).items():
+            for wave, i in game["wave_starts"].items():
                 b, s = featurize(game["frames"][i])
                 test_rows.append((g_idx, wave, i)); test_boards.append(b); test_scalars.append(s)
         test_value = predict(final, torch.stack(test_boards), torch.stack(test_scalars), args.device)
