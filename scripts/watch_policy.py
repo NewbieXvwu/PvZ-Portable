@@ -88,12 +88,9 @@ def _model_actions(model, cfg, deterministic: bool):
 def _student_actions(path: str):
     """The small no-memory student (python/pvz_rollout_policy.py, DESIGN §13), greedy."""
     sys.path.insert(0, str(ROOT / "scripts"))
-    from pvz_rollout_policy import RolloutNet, act
+    from pvz_rollout_policy import act, load_student
     from render_episode import _frame
-    net = RolloutNet()
-    weights = torch.load(path, map_location="cpu", weights_only=False)["state_dict"]
-    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
-    net.eval()
+    net = load_student(path)
     memo = {"frame": None, "action": None}
 
     def next_action(observation, _info=None):

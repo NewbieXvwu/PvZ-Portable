@@ -53,12 +53,8 @@ def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = N
     vnet.eval()
     _W.update(model=model, vnet=vnet)
     if rollout_path:
-        from pvz_rollout_policy import RolloutNet
-        fast = RolloutNet()
-        weights = torch.load(rollout_path, map_location="cpu", weights_only=False)["state_dict"]
-        # fast_ppo.py checkpoints are the same net plus a value head; the policy ignores it.
-        fast.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
-        fast.eval()
+        from pvz_rollout_policy import load_student
+        fast = load_student(rollout_path)
         _W["fast"] = fast
 
 

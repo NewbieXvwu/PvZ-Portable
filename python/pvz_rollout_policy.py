@@ -84,3 +84,12 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
     cells = net.cell_logits(h, g, torch.tensor([packet]))[0].tolist()
     best = max(by_packet[packet], key=lambda a: cells[a["row"] * LAWN_COLS + a["col"]])
     return {"type": "plant", "packet": packet, "col": best["col"], "row": best["row"]}
+
+
+def load_student(path) -> RolloutNet:
+    """A student or fast_ppo checkpoint as a RolloutNet in eval mode (width read from the weights;
+    fast_ppo's value head is dropped)."""
+    weights = torch.load(path, map_location="cpu", weights_only=False)["state_dict"]
+    net = RolloutNet(weights["trunk.0.weight"].shape[0])
+    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
+    return net.eval()
