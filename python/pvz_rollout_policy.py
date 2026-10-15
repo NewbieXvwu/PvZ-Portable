@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from torch import nn
 
 from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS, featurize_numpy
@@ -54,10 +55,27 @@ class RolloutNet(nn.Module):
             out["cell"] = self.cell_logits(h, g, packet)
         return out
 
-    def encode(self, board: torch.Tensor, scalars: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        h = self.trunk(board)                                   # [B, W, 6, 10]
+    def encode(self, board: torch.Tensor, scalars: torch.Tensor,
+               sparse_input: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
+        if sparse_input:
+            h = self._trunk_sparse(board)
+        else:
+            h = self.trunk(board)                               # [B, W, 6, 10]
         s = self.scalar(scalars)                                # [B, W]
         return h, torch.cat([h.mean(dim=(2, 3)), s], dim=1)
+
+    def _trunk_sparse(self, board: torch.Tensor) -> torch.Tensor:
+        """The trunk with the first convolution restricted to input channels that are non-zero
+        somewhere in the batch. A board has ~7 of 117 channels in use (one per plant/zombie type on
+        the lawn, plus lanes/mowers), and an all-zero channel adds exactly 0 to every output, so the
+        result is the same convolution; scripts/perf_rollout_check.py checks it bitwise."""
+        conv = self.trunk[0]
+        active = board.flatten(2).any(2).any(0).nonzero().squeeze(1)
+        if active.numel() == 0:
+            return self.trunk(board)
+        x = F.conv2d(board.index_select(1, active), conv.weight.index_select(1, active), conv.bias,
+                     padding=conv.padding)
+        return self.trunk[1:](x)
 
     def cell_logits(self, h: torch.Tensor, g: torch.Tensor, packet: torch.Tensor) -> torch.Tensor:
         e = self.packet_embedding(packet)[:, :, None, None].expand(-1, -1, ROWS, COLS)
@@ -66,14 +84,15 @@ class RolloutNet(nn.Module):
 
 
 @torch.inference_mode()
-def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict]) -> dict:
+def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
+        sparse_input: bool = True) -> dict:
     """Greedy action restricted to the simulator's legal plants; otherwise wait like pi does."""
     if not legal_plants:
         return dict(WAIT)
     board, scalars = features(frame, previous)
     # The trunk is computed once and shared by the three heads: the cell head used to rerun the
     # whole network on the same input, which gives the same numbers at twice the cost.
-    h, g = net.encode(board[None], scalars[None])
+    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input)
     if float(net.plant(g)[0, 0]) <= 0.0:
         return dict(WAIT)
     by_packet: dict[int, list[dict]] = {}

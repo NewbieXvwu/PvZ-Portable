@@ -8429,6 +8429,29 @@ bool Zombie::IsTangleKelpTarget()
 	if (mZombieHeight == ZombieHeight::HEIGHT_DRAGGED_UNDER)
 		return true;
 
+	// Asked for every zombie by every shooter and mower on every tick, and the answer needs a walk
+	// over all plants.  Almost always there is no tangle kelp at all, so remember "this board has
+	// none".  That can only become false when a plant is allocated (mPlants.mNextKey moves) or the
+	// arrays are replaced (gBoardContentEpoch); a kelp that dies merely makes the memo pessimistic.
+	static const Board* sBoard = nullptr;
+	static unsigned int sEpoch = 0, sNextKey = 0;
+	static bool sNoKelp = false;
+	if (sBoard != mBoard || sEpoch != gBoardContentEpoch || sNextKey != mBoard->mPlants.mNextKey)
+	{
+		sBoard = mBoard;
+		sEpoch = gBoardContentEpoch;
+		sNextKey = mBoard->mPlants.mNextKey;
+		sNoKelp = true;
+		for (Plant* aPlant : mBoard->mPlants)
+			if (!aPlant->mDead && aPlant->mSeedType == SeedType::SEED_TANGLEKELP)
+			{
+				sNoKelp = false;
+				break;
+			}
+	}
+	if (sNoKelp)
+		return false;
+
 	for (Plant* aPlant : mBoard->mPlants)
 	{
 		if (aPlant->mDead)

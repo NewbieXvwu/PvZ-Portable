@@ -38,9 +38,9 @@ _W: dict = {}
 
 
 def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None,
-                 lean_rollouts: bool = False, rollout_sim_skip: int = 0) -> None:
+                 lean_rollouts: bool = False, rollout_sim_skip: int = 0, batch_waits: bool = False) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
-    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip)
+    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip, batch_waits=batch_waits)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
@@ -99,6 +99,7 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
     # Rollouts by the fast policy only read what render_episode._frame keeps, so they can ask for
     # the compact observation (identical frames, ~1/4 of the bytes). pi reads the full one.
     lean = fast_state is not None and _W.get("lean_rollouts", False)
+    batch_waits = fast_state is not None and _W.get("batch_waits", False) and hasattr(env, "wait_until_legal")
     sim_skip = _W.get("rollout_sim_skip", 0)
     if lean:
         env.set_lean_observation(True)
@@ -114,6 +115,14 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
                       events=info.get("events"), previous_wait_result=info.get("wait_result"))
             if done or obs.get("terminal") or obs["tick"] >= until_tick:
                 return obs
+            if batch_waits and not (obs.get("legal_actions") or {}).get("plants"):
+                # With no legal plant the fast policy can only wait 60 ticks, again and again: let
+                # the simulator repeat that itself. Its features only read the previous frame's
+                # tick and whether the previous action was a plant, so this state is exact.
+                obs, _r, done, _t, info = env.wait_until_legal(until_tick)
+                fast_state["frame"], fast_state["action"] = {"tick": info["previous_tick"]}, dict(NOOP)
+                if done or obs.get("terminal") or obs["tick"] >= until_tick:
+                    return obs
             if fast_state is not None:
                 action = _fast_action(obs, fast_state)
             else:
@@ -414,6 +423,8 @@ def main() -> None:
                    "used for look-ahead instead of pi, and by the 'fast' arm")
     p.add_argument("--no-lean-rollouts", dest="lean_rollouts", action="store_false",
                    help="fast-policy rollouts read full observations instead of OBS_LEAN (same frames, slower)")
+    p.add_argument("--no-batch-waits", dest="batch_waits", action="store_false",
+                   help="fast-policy rollouts send every no-legal-plant wait separately (same result, slower)")
     p.add_argument("--rollout-sim-skip", type=int, default=0,
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
     p.add_argument("--timing-horizon", type=int, default=1500, help="ticks of look-ahead (0 = to the end of the game)")
@@ -452,7 +463,8 @@ def main() -> None:
     started = time.time()
     with results_path.open("a") as out, mp.get_context("spawn").Pool(
             args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy,
-                                                     args.lean_rollouts, args.rollout_sim_skip)) as pool:
+                                                     args.lean_rollouts, args.rollout_sim_skip,
+                                                     args.batch_waits)) as pool:
         for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
             out.write(json.dumps(res) + "\n"); out.flush()
             if i % 10 == 0 or i == len(jobs):

@@ -1701,6 +1701,25 @@ std::string LawnApp::EnvironmentLeanObservation()
 	return out.str();
 }
 
+// Whether the observation's legal_actions.plants list would be non-empty: the same loop, stopped
+// at the first legal (packet, cell).  Used by WAIT_UNTIL_LEGAL (src/main.cpp).
+bool LawnApp::EnvironmentAnyLegalPlant()
+{
+	if (!mBoard)
+		return false;
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		if (!packet.CanPickUp()) continue;
+		SeedType seed = packet.mPacketType == SeedType::SEED_IMITATER && packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
+		for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+			for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+				if (mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
+					return true;
+	}
+	return false;
+}
+
 std::string LawnApp::EnvironmentObservation(bool privileged)
 {
 	if (!mBoard)

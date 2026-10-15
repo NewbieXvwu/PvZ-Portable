@@ -72,6 +72,7 @@ bool gShownMoreSunTutorial = false;
 
 Board::Board(LawnApp* theApp)
 {
+	++gBoardContentEpoch;  // see PvzpCommon.h
 	mApp = theApp;
 	mApp->mBoard = this;
 

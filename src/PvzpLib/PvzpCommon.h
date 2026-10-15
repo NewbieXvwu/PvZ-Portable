@@ -191,6 +191,11 @@ enum EnvSimSkip : int
 	ENV_SKIP_ALLOWED = ENV_SKIP_COLOR | ENV_SKIP_HEIGHT | ENV_SKIP_MESSAGE,
 };
 extern int gEnvSimSkip;
+
+// Bumped whenever a board's object arrays may have been replaced wholesale (new board, load from
+// a save/snapshot, DataArrayFreeAll).  Memos of "what objects exist" (Zombie::IsTangleKelpTarget)
+// key on it together with the array's allocation counter, so they stay exact across RESTORE.
+extern unsigned int gBoardContentEpoch;
 inline float			Distance2D(float x1, float y1, float x2, float y2)			{ return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)); }
 inline float			FloatLerp(float theStart, float theEnd, float theFactor)	{ return theStart + theFactor * (theEnd - theStart); }
 inline int				FloatRoundToInt(float theFloatValue)						{ return theFloatValue > 0 ? theFloatValue + 0.5f : theFloatValue - 0.5f; }

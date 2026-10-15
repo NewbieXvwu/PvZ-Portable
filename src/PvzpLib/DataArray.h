@@ -100,6 +100,7 @@ public:
 
 	void DataArrayFreeAll()
 	{
+		++gBoardContentEpoch;
 		for (T* aItem : *this)
 			DataArrayFree(aItem);
 
