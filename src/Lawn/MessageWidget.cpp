@@ -256,7 +256,7 @@ void MessageWidget::Update()
 	}
 
 	// Iterate reanimated glyphs by code-point index.
-	for (int aCharIdx = 0; aCharIdx < mTextReanimCount; aCharIdx++)
+	for (int aCharIdx = 0; aCharIdx < mTextReanimCount && !(gEnvSimSkip & ENV_SKIP_MESSAGE); aCharIdx++)
 	{
 		Reanimation* aTextReanim = mApp->ReanimationTryToGet(mTextReanimID[aCharIdx]);
 		if (aTextReanim == nullptr)

@@ -37,8 +37,10 @@ NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 _W: dict = {}
 
 
-def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None) -> None:
+def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None,
+                 lean_rollouts: bool = False, rollout_sim_skip: int = 0) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
+    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
@@ -94,19 +96,33 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
     fast_state = {"frame": _frame(obs), "action": first} if "fast" in _W else None
     until_tick = until_tick if until_tick > obs["tick"] else 10 ** 9
     action = first
-    while True:
-        obs, _r, done, _t, info = env.step(action)
-        if not info.get("ok"):
-            action = {"type": "wait", "ticks": 60}
+    # Rollouts by the fast policy only read what render_episode._frame keeps, so they can ask for
+    # the compact observation (identical frames, ~1/4 of the bytes). pi reads the full one.
+    lean = fast_state is not None and _W.get("lean_rollouts", False)
+    sim_skip = _W.get("rollout_sim_skip", 0)
+    if lean:
+        env.set_lean_observation(True)
+    if sim_skip:
+        env.set_sim_skip(sim_skip)
+    try:
+        while True:
             obs, _r, done, _t, info = env.step(action)
-        rs.update(previous_action=action, delta_ticks=info.get("ticks_advanced") or 0,
-                  events=info.get("events"), previous_wait_result=info.get("wait_result"))
-        if done or obs.get("terminal") or obs["tick"] >= until_tick:
-            return obs
-        if fast_state is not None:
-            action = _fast_action(obs, fast_state)
-        else:
-            action = _ppo_action(_W["model"], obs, rs, deterministic=True)
+            if not info.get("ok"):
+                action = {"type": "wait", "ticks": 60}
+                obs, _r, done, _t, info = env.step(action)
+            rs.update(previous_action=action, delta_ticks=info.get("ticks_advanced") or 0,
+                      events=info.get("events"), previous_wait_result=info.get("wait_result"))
+            if done or obs.get("terminal") or obs["tick"] >= until_tick:
+                return obs
+            if fast_state is not None:
+                action = _fast_action(obs, fast_state)
+            else:
+                action = _ppo_action(_W["model"], obs, rs, deterministic=True)
+    finally:
+        if sim_skip:
+            env.set_sim_skip(0)
+        if lean:
+            env.set_lean_observation(False)
 
 
 def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict,
@@ -289,7 +305,12 @@ def _play(job: dict) -> dict:
     manifest = Path(args.manifest) if args.manifest else MANIFEST
     kw = training_task_kwargs(load_training_task(manifest, args.task_id or TASK_ID), job["seed"])
     model = _W["model"]
-    env = policy_env(model.config, args.resource_dir, headless=True)
+    # One simulator process per worker, reset for every game: starting the process and loading
+    # resources costs ~0.7 s, as much as a whole student-only game. RESET_V2 rebuilds the board
+    # from the seed, so a reused process plays the same game (scripts/perf_rollout_check.py).
+    env = _W.get("env")
+    if env is None:
+        env = _W["env"] = policy_env(model.config, args.resource_dir, headless=True)
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"])),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
@@ -345,8 +366,10 @@ def _play(job: dict) -> dict:
                 mowers_left = ready_mowers(obs)
             if done:
                 break
-    finally:
+    except BaseException:
+        _W.pop("env", None)
         env.close()
+        raise
     if frames is not None:
         # Same layout as episode_query archives, so scripts/train_value_net.py reads it directly.
         archive = Path(args.frames) / f"seed_{job['seed']}" / f"{args.frames_label}_{job['arm']}"
@@ -389,6 +412,10 @@ def main() -> None:
                    help="all: plant/wait/where (v0); placement: only re-place the card pi chose (v0b)")
     p.add_argument("--rollout-policy", help="fast rollout policy (scripts/train_rollout_policy.py); "
                    "used for look-ahead instead of pi, and by the 'fast' arm")
+    p.add_argument("--no-lean-rollouts", dest="lean_rollouts", action="store_false",
+                   help="fast-policy rollouts read full observations instead of OBS_LEAN (same frames, slower)")
+    p.add_argument("--rollout-sim-skip", type=int, default=0,
+                   help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
     p.add_argument("--timing-horizon", type=int, default=1500, help="ticks of look-ahead (0 = to the end of the game)")
     p.add_argument("--timing-sun", type=int, default=300)
     p.add_argument("--timing-gap", type=int, default=1500)
@@ -424,7 +451,8 @@ def main() -> None:
     print(f"{len(jobs)} games on {args.workers} workers", flush=True)
     started = time.time()
     with results_path.open("a") as out, mp.get_context("spawn").Pool(
-            args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy)) as pool:
+            args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy,
+                                                     args.lean_rollouts, args.rollout_sim_skip)) as pool:
         for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
             out.write(json.dumps(res) + "\n"); out.flush()
             if i % 10 == 0 or i == len(jobs):

@@ -1594,10 +1594,119 @@ bool LawnApp::EnvironmentTerminal() const
 		mBoardResult == BoardResult::BOARDRESULT_LOST || mGameScene == GameScenes::SCENE_ZOMBIES_WON;
 }
 
+// OBS_LEAN 1 (src/main.cpp): only what a search rollout reads -- render_episode._frame, the
+// value/rollout encoders and the legal plant list -- with packets, plants, zombies, mowers and
+// grid items as positional arrays.  Every number is printed exactly as in the full observation,
+// so render_episode._frame gives the identical frame from either form (scripts/perf_rollout_check.py
+// compares the two on live states).  About a quarter of the bytes, and no shovel hit tests.
+std::string LawnApp::EnvironmentLeanObservation()
+{
+	std::ostringstream out;
+	out << "{\"lean\":1,\"level\":" << mBoard->mLevel
+		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
+		<< ",\"night\":" << (mBoard->StageIsNight() ? "true" : "false")
+		<< ",\"pool\":" << (mBoard->StageHasPool() ? "true" : "false")
+		<< ",\"fog\":" << (mBoard->StageHasFog() ? "true" : "false")
+		<< ",\"roof\":" << (mBoard->StageHasRoof() ? "true" : "false")
+		<< ",\"tick\":" << mBoard->mMainCounter
+		<< ",\"sun\":" << mBoard->mSunMoney << ",\"wave\":" << mBoard->mCurrentWave
+		<< ",\"wave_count\":" << mBoard->mNumWaves
+		<< ",\"wave_timer\":" << mBoard->mZombieCountDown
+		<< ",\"terminal\":" << (EnvironmentTerminal() ? "true" : "false")
+		<< ",\"result\":" << static_cast<int>(mBoardResult)
+		<< ",\"enemy_zombies_on_screen\":" << (mBoard->AreEnemyZombiesOnScreen() ? "true" : "false") << ",\"grid\":[";
+	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+	{
+		if (row) out << ',';
+		out << '[';
+		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+		{
+			if (col) out << ',';
+			out << static_cast<int>(mBoard->mGridSquareType[col][row]);
+		}
+		out << ']';
+	}
+	// [index, type, active, cooldown, refresh_time, cost]
+	out << "],\"packets\":[";
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		if (i) out << ',';
+		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
+		out << '[' << i << ',' << static_cast<int>(packet.mPacketType) << ',' << (packet.mActive ? 1 : 0)
+			<< ',' << packet.mRefreshCounter << ',' << packet.mRefreshTime << ',' << cost << ']';
+	}
+	// [row, col, type, health, max_health, squished]
+	out << "],\"plants\":[";
+	bool first = true;
+	for (const Plant* plant : mBoard->mPlants)
+	{
+		if (plant->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
+			<< ',' << plant->mPlantHealth << ',' << plant->mPlantMaxHealth << ',' << (plant->mSquished ? 1 : 0) << ']';
+	}
+	// [row, type, x, velocity_x, body+helm+shield health, on_board, is_eating, chilled, ice_trap, id]
+	out << "],\"zombies\":[";
+	first = true;
+	for (Zombie* zombie : mBoard->mZombies)
+	{
+		if (zombie->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << zombie->mRow << ',' << static_cast<int>(zombie->mZombieType) << ',' << zombie->mPosX
+			<< ',' << zombie->mVelX << ',' << zombie->mBodyHealth + zombie->mHelmHealth + zombie->mShieldHealth
+			<< ',' << (zombie->IsOnBoard() ? 1 : 0) << ',' << (zombie->mIsEating ? 1 : 0)
+			<< ',' << zombie->mChilledCounter << ',' << zombie->mIceTrapCounter
+			<< ',' << static_cast<int>(mBoard->ZombieGetID(zombie)) << ']';
+	}
+	// [row, state]
+	out << "],\"defenses\":[";
+	first = true;
+	for (const LawnMower* mower : mBoard->mLawnMowers)
+	{
+		if (mower->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << mower->mRow << ',' << static_cast<int>(mower->mMowerState) << ']';
+	}
+	// [row, col, type]
+	out << "],\"grid_items\":[";
+	first = true;
+	for (const GridItem* item : mBoard->mGridItems)
+	{
+		if (item->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << item->mGridY << ',' << item->mGridX << ',' << static_cast<int>(item->mGridItemType) << ']';
+	}
+	out << "],\"legal_actions\":{\"plants\":[";
+	bool firstAction = true;
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	{
+		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+		if (!packet.CanPickUp()) continue;
+		SeedType seed = packet.mPacketType == SeedType::SEED_IMITATER && packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
+		for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+			for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+				if (mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
+				{
+					if (!firstAction) out << ',';
+					firstAction = false;
+					out << "{\"packet\":" << i << ",\"col\":" << col << ",\"row\":" << row << '}';
+				}
+	}
+	out << "]}}";
+	return out.str();
+}
+
 std::string LawnApp::EnvironmentObservation(bool privileged)
 {
 	if (!mBoard)
 		return "null";
+	if (mEnvironmentLeanObservation && !privileged)
+		return EnvironmentLeanObservation();
 
 	std::ostringstream out;
 	out << "{\"protocol_version\":4,\"observation_version\":3,\"task_version\":2,\"level\":" << mBoard->mLevel

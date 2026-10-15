@@ -173,6 +173,24 @@ void                    FreeGlobalAllocators();
 
 int			RandRangeInt(int theMin, int theMax);
 float		RandRangeFloat(float theMin, float theMax);
+
+// Environment-only approximation switches, set by the ``SIM_SKIP <mask>`` protocol command
+// (src/main.cpp).  0 -- the default -- is the exact game.  Each bit skips one piece of per-tick
+// presentation work, for search rollouts.  None of them is assumed to be cosmetic: PvZ drives a
+// lot of logic from animation, so every bit was measured against the exact simulator with
+// scripts/sim_skip_agreement.py (2026-10-15: masks 1, 4, 16 and 21 left 224/224 games on days,
+// night, pool, fog and roof action-for-action identical).  Two more bits were tried and dropped:
+// skipping free-standing particles/trails (2) changes the shared RNG stream -- no game stayed
+// identical, 16/64 night outcomes flipped -- for no measurable speed; skipping attachment
+// updates (8) crashes the simulator.  The command rejects both.
+enum EnvSimSkip : int
+{
+	ENV_SKIP_COLOR = 1,         // Plant::UpdateReanimColor + colour propagation to attachments
+	ENV_SKIP_HEIGHT = 4,        // PlantDrawHeightOffset (pot / water bobbing) in Plant::UpdateReanim
+	ENV_SKIP_MESSAGE = 16,      // per-glyph text reanimations of on-screen messages
+	ENV_SKIP_ALLOWED = ENV_SKIP_COLOR | ENV_SKIP_HEIGHT | ENV_SKIP_MESSAGE,
+};
+extern int gEnvSimSkip;
 inline float			Distance2D(float x1, float y1, float x2, float y2)			{ return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)); }
 inline float			FloatLerp(float theStart, float theEnd, float theFactor)	{ return theStart + theFactor * (theEnd - theStart); }
 inline int				FloatRoundToInt(float theFloatValue)						{ return theFloatValue > 0 ? theFloatValue + 0.5f : theFloatValue - 0.5f; }

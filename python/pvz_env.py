@@ -586,6 +586,28 @@ class PvZEnv:
         if not response.get("ok"):
             raise ValueError(f"environment could not reseed: {response}")
 
+    def set_sim_skip(self, mask: int) -> None:
+        """Approximate simulation (``SIM_SKIP``, bits in ``EnvSimSkip`` of src/PvzpLib/PvzpCommon.h).
+
+        0 is the exact game. The setting is process-wide and survives RESET/RESTORE, so search
+        code sets it around its rollouts and puts it back to 0 afterwards. Any non-zero mask is an
+        approximation whose effect must be measured (scripts/sim_skip_agreement.py), not assumed.
+        """
+        if type(mask) is not int or mask < 0 or mask & ~21:
+            raise ValueError("sim skip mask must combine the bits 1, 4 and 16")
+        if not self._command(f"SIM_SKIP {mask}").get("ok"):
+            raise RuntimeError("simulator rejected SIM_SKIP (binary older than this wrapper?)")
+
+    def set_lean_observation(self, lean: bool) -> None:
+        """``OBS_LEAN``: compact observations (``"lean": 1``) until switched off again.
+
+        Only for search rollouts: the lean form carries exactly what ``render_episode._frame``
+        and the legal plant list need (positional arrays, no cells/projectiles/coins/shovels),
+        so ``_frame`` of either form is identical but most other consumers would break.
+        """
+        if not self._command(f"OBS_LEAN {1 if lean else 0}").get("ok"):
+            raise RuntimeError("simulator rejected OBS_LEAN (binary older than this wrapper?)")
+
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Expand several actions from one parent snapshot in a single command.
 

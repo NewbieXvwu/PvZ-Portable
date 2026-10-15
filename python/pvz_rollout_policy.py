@@ -12,10 +12,11 @@ imitate the search's counter-intuitive choices.
 """
 from __future__ import annotations
 
+import numpy as np
 import torch
 from torch import nn
 
-from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS, featurize
+from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS, featurize_numpy
 
 PACKETS = 10            # seed-bank slots (SEEDBANK_MAX)
 LAWN_COLS = 9
@@ -24,11 +25,11 @@ WAIT = {"type": "wait", "ticks": 60, "until": "timeout"}
 
 
 def features(frame: dict, previous: dict | None) -> tuple[torch.Tensor, torch.Tensor]:
-    board, scalars = featurize(frame)
+    board, scalars = featurize_numpy(frame)
     action = frame.get("action") if previous is not None else None
-    extra = torch.tensor([float(bool(action) and action.get("type") == "plant"),
-                          ((frame["tick"] - previous["tick"]) / 300.0) if previous else 0.0])
-    return board, torch.cat([scalars, extra])
+    extra = np.array([float(bool(action) and action.get("type") == "plant"),
+                      ((frame["tick"] - previous["tick"]) / 300.0) if previous else 0.0], dtype=np.float32)
+    return torch.from_numpy(board), torch.from_numpy(np.concatenate([scalars, extra]))
 
 
 class RolloutNet(nn.Module):
@@ -47,15 +48,21 @@ class RolloutNet(nn.Module):
         self.cell = nn.Sequential(nn.Conv2d(4 * width, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
 
     def forward(self, board: torch.Tensor, scalars: torch.Tensor, packet: torch.Tensor | None = None):
-        h = self.trunk(board)                                   # [B, W, 6, 10]
-        s = self.scalar(scalars)                                # [B, W]
-        g = torch.cat([h.mean(dim=(2, 3)), s], dim=1)
+        h, g = self.encode(board, scalars)
         out = {"plant": self.plant(g).squeeze(1), "packet": self.packet(g)}
         if packet is not None:
-            e = self.packet_embedding(packet)[:, :, None, None].expand(-1, -1, ROWS, COLS)
-            ctx = g[:, :, None, None].expand(-1, -1, ROWS, COLS)
-            out["cell"] = self.cell(torch.cat([h, e, ctx], dim=1))[:, 0, :, :LAWN_COLS].flatten(1)  # [B, 54]
+            out["cell"] = self.cell_logits(h, g, packet)
         return out
+
+    def encode(self, board: torch.Tensor, scalars: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        h = self.trunk(board)                                   # [B, W, 6, 10]
+        s = self.scalar(scalars)                                # [B, W]
+        return h, torch.cat([h.mean(dim=(2, 3)), s], dim=1)
+
+    def cell_logits(self, h: torch.Tensor, g: torch.Tensor, packet: torch.Tensor) -> torch.Tensor:
+        e = self.packet_embedding(packet)[:, :, None, None].expand(-1, -1, ROWS, COLS)
+        ctx = g[:, :, None, None].expand(-1, -1, ROWS, COLS)
+        return self.cell(torch.cat([h, e, ctx], dim=1))[:, 0, :, :LAWN_COLS].flatten(1)  # [B, 54]
 
 
 @torch.inference_mode()
@@ -64,13 +71,16 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
     if not legal_plants:
         return dict(WAIT)
     board, scalars = features(frame, previous)
-    out = net(board[None], scalars[None])
-    if float(out["plant"][0]) <= 0.0:
+    # The trunk is computed once and shared by the three heads: the cell head used to rerun the
+    # whole network on the same input, which gives the same numbers at twice the cost.
+    h, g = net.encode(board[None], scalars[None])
+    if float(net.plant(g)[0, 0]) <= 0.0:
         return dict(WAIT)
     by_packet: dict[int, list[dict]] = {}
     for a in legal_plants:
         by_packet.setdefault(a["packet"], []).append(a)
-    packet = max(by_packet, key=lambda p: float(out["packet"][0, p]) if p < PACKETS else -1e9)
-    cells = net(board[None], scalars[None], torch.tensor([packet]))["cell"][0]
-    best = max(by_packet[packet], key=lambda a: float(cells[a["row"] * LAWN_COLS + a["col"]]))
+    packet_logits = net.packet(g)[0].tolist()
+    packet = max(by_packet, key=lambda p: packet_logits[p] if p < PACKETS else -1e9)
+    cells = net.cell_logits(h, g, torch.tensor([packet]))[0].tolist()
+    best = max(by_packet[packet], key=lambda a: cells[a["row"] * LAWN_COLS + a["col"]])
     return {"type": "plant", "packet": packet, "col": best["col"], "row": best["row"]}

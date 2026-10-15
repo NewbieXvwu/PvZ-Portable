@@ -510,7 +510,13 @@ void Reanimation::Update()
 			aTrack->mShakeY = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
 		}
 
-		if (strncasecmp(mDefinition->mTracks.tracks[aTrackIndex].mName, "attacher__", 10) == 0)  // IsAttacher
+		// IsAttacher.  This runs for every track of every live reanimation on every tick, and the
+		// library call was ~27% of all simulation time in a headless search profile.  Almost every
+		// track name fails on its first two letters ("anim_*", "Zombie_*", ...), so test those
+		// inline first; ``strncasecmp`` still makes the decision, the result is unchanged.
+		const char* aTrackName = mDefinition->mTracks.tracks[aTrackIndex].mName;
+		if ((aTrackName[0] | 0x20) == 'a' && (aTrackName[1] | 0x20) == 't' &&
+			strncasecmp(aTrackName, "attacher__", 10) == 0)
 			UpdateAttacherTrack(aTrackIndex);
 
 		if (aTrack->mAttachmentID != AttachmentID::ATTACHMENTID_NULL)
