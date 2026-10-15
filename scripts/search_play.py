@@ -307,7 +307,8 @@ def _play(job: dict) -> dict:
                     action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
             obs_before = obs
             obs, _r, done, _t, info = env.step(action)
-            if not info.get("ok"):
+            rejected = not info.get("ok")
+            if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
             elif rows is not None:
                 rows.append(_transition(obs_before, action, state, info, model.config,
@@ -316,6 +317,8 @@ def _play(job: dict) -> dict:
                     rows[-1]["search_targets"] = stats["last_targets"]
             if frames is not None:
                 frames.append(_frame(obs))
+                frames[-1]["action"] = action          # what was executed (after the search), like render_episode
+                frames[-1]["action_rejected"] = rejected
             state["previous_action"] = action
             state["delta_ticks"] = info.get("ticks_advanced") or 0
             state["events"] = info.get("events")
