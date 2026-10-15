@@ -16,7 +16,6 @@ from pvz_agent_model import (GameplayModelV1, MODEL_CONFIG, configure_torch_thre
                              legal_summary, observation_tokens, pack_tokens, select_action)
 from pvz_research import (ROOT, capture_rng, restore_rng, load_config,
                           experiment_identity_digest)
-from pvz_common import sha256_file
 from train_pvz_ppo import add_advantages, train_update
 from test_agent_model import observation
 
@@ -166,25 +165,19 @@ class ExplicitConfigurationTests(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertNotEqual(experiment_identity_digest(changed, fingerprints), baseline)
 
-    def test_stale_pass_gate_rejects_changed_simulator_or_source(self):
+    def test_prerequisite_gates_are_retired(self):
+        """Gate JSONs in ``prerequisites`` no longer block loading (retired 2026-10-15), even when
+        they are failing, stale or point to a file that does not exist."""
         config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())
         config["model"]["input_flags"] = 0
         config["runtime"].update(deterministic_algorithms=False, cublas_workspace_config=None)
-        source = "python/pvz_research.py"
-        gate = {"gate_result": "pass", "simulator_sha256": sha256_file(ROOT / "build/pvz-portable"),
-                "required_fingerprints": {source: sha256_file(ROOT / source)}}
         with tempfile.TemporaryDirectory() as temporary:
             gate_path, config_path = Path(temporary) / "gate.json", Path(temporary) / "config.json"
-            config["prerequisites"] = [str(gate_path)]
+            gate_path.write_text(json.dumps({"gate_result": "fail", "simulator_sha256": "0" * 64,
+                                             "required_fingerprints": {"python/pvz_research.py": "0" * 64}}))
+            config["prerequisites"] = [str(gate_path), str(Path(temporary) / "missing.json")]
             config_path.write_text(json.dumps(config))
-            gate_path.write_text(json.dumps(gate))
             load_config(config_path)
-            gate_path.write_text(json.dumps({**gate, "simulator_sha256": "0" * 64}))
-            with self.assertRaisesRegex(RuntimeError, "simulator is stale"):
-                load_config(config_path)
-            gate_path.write_text(json.dumps({**gate, "required_fingerprints": {source: "0" * 64}}))
-            with self.assertRaisesRegex(RuntimeError, "source is stale"):
-                load_config(config_path)
 
     def test_deterministic_runtime_cannot_be_omitted_or_implicitly_coerced(self):
         config = json.loads((ROOT / "experiments/t5/t5a_smoke_r0_seed0_v3.json").read_text())

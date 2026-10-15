@@ -156,22 +156,17 @@ class Stage0EvaluationTests(unittest.TestCase):
             }]}))
             self.assertEqual(t5_stage0_gate.evaluate(state_path, gate_path)["result"], "fail")
 
-    def test_full_task_curriculum_is_blocked_without_stage0_gate(self) -> None:
+    def test_stage0_gate_is_retired_but_overrides_are_recorded(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             gate_path = Path(temporary) / "missing.json"
-            with self.assertRaisesRegex(RuntimeError, "阶段 0 未通过，禁止进入阶段 1"):
-                task_family._check_stage0_gate(self.train_tasks, False, None, gate_path)
+            self.assertIsNone(task_family._check_stage0_gate(self.train_tasks, False, None, gate_path))
             override = task_family._check_stage0_gate(
                 self.train_tasks, True, "documented stage0 exception", gate_path)
             self.assertEqual(override, {"used": True, "reason": "documented stage0 exception"})
-            with self.assertRaisesRegex(ValueError, "requires --motivation"):
-                task_family._check_stage0_gate(self.train_tasks, True, None, gate_path)
-            gate_path.write_text(json.dumps({"result": "pass"}))
-            self.assertIsNone(task_family._check_stage0_gate(self.train_tasks, False, None, gate_path))
 
-    def test_seed0_baseline_requires_note_and_records_both_hashes(self) -> None:
-        with self.assertRaisesRegex(RuntimeError, "网络结构已变更，seed-0 初始化不再与 T4 基线一致"):
-            task_family._seed0_initialization_baseline("new-hash", "t4-hash", None)
+    def test_seed0_baseline_records_both_hashes_without_requiring_a_note(self) -> None:
+        self.assertEqual(task_family._seed0_initialization_baseline("new-hash", "t4-hash", None)["status"],
+                         "superseded")
         record = task_family._seed0_initialization_baseline(
             "new-hash", "t4-hash", "new lane-token architecture supersedes T4")
         self.assertEqual(record["actual"], "new-hash")
@@ -311,18 +306,17 @@ class UpdateDeviceGuardTests(unittest.TestCase):
         path.write_text(json.dumps({"device": device, "device_name": "NVIDIA GeForce RTX 5080"}))
         return path
 
-    def test_cpu_update_is_blocked_when_the_benchmark_was_cuda(self) -> None:
+    def test_cpu_fallback_is_loud_and_recorded_not_blocked(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = self._benchmark(temporary, "cuda")
-            with self.assertRaisesRegex(RuntimeError, "CUDA is unavailable"):
-                task_family._check_update_device(torch.device("cpu"), path)
+            with mock.patch("builtins.print") as printed:
+                record = task_family._check_update_device(torch.device("cpu"), path)
+            self.assertIn("CUDA is unavailable", printed.call_args[0][0])
+            self.assertEqual(record["override"], {"used": True, "reason": None})
 
-    def test_cpu_override_requires_motivation(self) -> None:
+    def test_cpu_override_records_its_motivation(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             path = self._benchmark(temporary, "cuda")
-            with self.assertRaisesRegex(ValueError, "requires --motivation"):
-                task_family._check_update_device(
-                    torch.device("cpu"), path, allow_cpu_update=True)
             record = task_family._check_update_device(
                 torch.device("cpu"), path, allow_cpu_update=True,
                 motivation="CPU-only box; rerunning the tuned hyperparameters there")

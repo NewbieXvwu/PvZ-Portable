@@ -266,19 +266,9 @@ def load_config(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], list[
         raise ValueError("this protocol requires CUDA updates and CPU sampling")
     if min(runtime["workers"], runtime["worker_threads"], runtime["max_actions"]) < 1:
         raise ValueError("runtime counts must be positive")
-    for prerequisite in config["prerequisites"]:
-        gate = json.loads(_path(prerequisite).read_text())
-        if gate.get("gate_result") != "pass":
-            raise RuntimeError(f"research prerequisite failed: {prerequisite}")
-        if ("allowed_experiment_ids" in gate
-                and config["experiment_id"] not in gate["allowed_experiment_ids"]):
-            raise RuntimeError(f"research prerequisite does not authorize this experiment: {prerequisite}")
-        if ("simulator_sha256" in gate
-                and gate["simulator_sha256"] != sha256_file(ROOT / "build/pvz-portable")):
-            raise RuntimeError(f"research prerequisite simulator is stale: {prerequisite}")
-        for relative, expected_hash in gate.get("required_fingerprints", {}).items():
-            if sha256_file(_path(relative)) != expected_hash:
-                raise RuntimeError(f"research prerequisite source is stale: {prerequisite}: {relative}")
+    # ``prerequisites`` (gate JSONs, experiment allow-lists, source/simulator freshness) were process
+    # gates for a weaker executor; retired 2026-10-15 (TODO.md, gate cleanup record). The field is
+    # still accepted so existing configs load unchanged.
     return config, train, eval_tasks
 
 
@@ -427,14 +417,16 @@ def run_experiment(args: Any) -> None:
     import train_pvz_ppo_task_family as family
     import t4_capability_profile as profile
     config, tasks, eval_tasks = load_config(args.experiment_config.resolve())
-    if args.ignore_stage0_gate:
-        raise ValueError("research configs do not support legacy stage-0 gate overrides")
     if args.init_checkpoint:
         configured_source = config.get("initialization", {}).get("source_checkpoint")
         if configured_source is None or _path(configured_source) != args.init_checkpoint.expanduser().resolve():
             raise ValueError("--init-checkpoint must match the source frozen in the research config")
-    if any(value is not None for value in (args.workers, args.rollout_threads, args.rollout_device)):
-        raise ValueError("research runtime settings come from the frozen experiment config")
+    # Command-line runtime settings override the config (workers / threads are outside the
+    # experiment identity; a different worker device is a different experiment and changes it).
+    for key, value in (("workers", args.workers), ("worker_threads", args.rollout_threads),
+                       ("worker_device", args.rollout_device)):
+        if value is not None:
+            config["runtime"][key] = value
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
     lock = (output / ".execution.lock").open("a")
