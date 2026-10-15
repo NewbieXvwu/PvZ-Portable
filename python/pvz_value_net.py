@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import math
 
+import numpy as np
+
 import torch
 from torch import nn
 
@@ -42,6 +44,56 @@ def _col_of(x: float) -> int:
 
 def featurize(frame: dict) -> tuple[torch.Tensor, torch.Tensor]:
     """Return ``(board[C,6,10], scalars[S])`` for one frame."""
+    board, scalars = featurize_numpy(frame)
+    return torch.from_numpy(board), torch.from_numpy(scalars)
+
+
+def featurize_numpy(frame: dict) -> tuple[np.ndarray, np.ndarray]:
+    """:func:`featurize` as float32 numpy arrays.
+
+    Same arithmetic as :func:`_featurize_reference` (float32 cells, the same additions in the
+    same order), but written into numpy arrays: one ``tensor[i, j, k] += x`` costs a full torch
+    dispatch, which made this function ~9% of a search game's wall time. The outputs are bitwise
+    equal (``scripts/perf_rollout_check.py`` checks this on real frames).
+    """
+    board = np.zeros((BOARD_CHANNELS, ROWS, COLS), dtype=np.float32)
+    for row, col, kind, health, max_health in frame["plants"]:
+        if 0 <= row < ROWS and 0 <= col < COLS - 1:
+            board[CH_PLANT + min(kind, PLANT_TYPES - 1), row, col] += health / max(1, max_health)
+    for z in frame["zombies"]:
+        row, kind, x, _vx, health, on_board, eating, chilled = z[:8]
+        if not on_board or not 0 <= row < ROWS:
+            continue
+        col = _col_of(x)
+        board[CH_ZOMBIE + min(kind, ZOMBIE_TYPES - 1), row, col] += health / 200.0
+        board[CH_EATING, row, col] += float(eating)
+        board[CH_CHILLED, row, col] += float(chilled > 0)
+    for row, state in frame["mowers"]:
+        if 0 <= row < ROWS:
+            board[CH_MOWER, row, 0] = float(state == 1)
+    for row in frame.get("lanes", []):
+        if 0 <= row < ROWS:
+            board[CH_LANE, row, :] = 1.0
+
+    scalars = np.zeros(SCALARS, dtype=np.float32)
+    wave_count = max(1, frame["scene"].get("wave_count") or 1)
+    sun = frame["sun"]
+    scalars[0] = min(sun, 2000) / 1000.0
+    scalars[1] = frame["wave"] / wave_count
+    scalars[2] = frame["tick"] / 60000.0
+    scalars[3] = (frame.get("sun_income_rate") or 0.0) / 100.0
+    scalars[4] = math.log1p(wave_count) / math.log1p(50)
+    for _index, kind, active, cooldown, refresh, cost in frame["packets"]:
+        kind = min(kind, PLANT_TYPES - 1)
+        ready = bool(active) and sun >= cost
+        scalars[SCALAR_BASE + kind] = float(ready)
+        progress = 1.0 if active else (cooldown / refresh if refresh else 1.0)
+        scalars[SCALAR_BASE + PLANT_TYPES + kind] = min(1.0, progress)
+    return board, scalars
+
+
+def _featurize_reference(frame: dict) -> tuple[torch.Tensor, torch.Tensor]:
+    """The original torch-indexing encoder, kept as the oracle for :func:`featurize`."""
     board = torch.zeros(BOARD_CHANNELS, ROWS, COLS)
     for row, col, kind, health, max_health in frame["plants"]:
         if 0 <= row < ROWS and 0 <= col < COLS - 1:

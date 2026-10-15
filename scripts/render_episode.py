@@ -129,7 +129,21 @@ def _col_of(x: float) -> int:
 
 
 def _frame(obs: dict) -> dict:
-    """把一帧观测压成紧凑记录。只留渲染要用的字段。"""
+    """把一帧观测压成紧凑记录。只留渲染要用的字段。
+
+    也接受搜索推演用的精简观测（``OBS_LEAN``，带 ``"lean": 1``，字段是定长数组，
+    见 LawnApp::EnvironmentLeanObservation）：两种输入得到**完全相同**的帧。
+    """
+    if obs.get("lean"):
+        return _frame_from(
+            obs,
+            plants=[tuple(p[:5]) for p in obs["plants"] if not p[5]],
+            zombies=[(z[0], z[1], z[2], z[3], z[4], bool(z[5]), bool(z[6]), int(z[7]), int(z[8]), int(z[9]))
+                     for z in obs["zombies"]],
+            mowers=[[d[0], d[1]] for d in obs["defenses"]],
+            packets=[[p[0], p[1], bool(p[2]), int(p[3]), int(p[4]), int(p[5])] for p in obs["packets"]],
+            graves=[[g[0], g[1], g[2]] for g in obs["grid_items"]],
+        )
     plants = [
         (p["row"], p["col"], p["type"], p["health"], p["max_health"])
         for p in obs.get("plants") or []
@@ -163,6 +177,12 @@ def _frame(obs: dict) -> dict:
         ]
         for p in obs.get("packets") or []
     ]
+    graves = [[g["row"], g["col"], g["type"]] for g in (obs.get("grid_items") or [])]
+    return _frame_from(obs, plants=plants, zombies=zombies, mowers=mowers, packets=packets, graves=graves)
+
+
+def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets: list, graves: list) -> dict:
+    """`_frame` 的公共部分：场景、路、计数。两种观测格式共用这一份。"""
     # 场景（关卡背景 + 每格地形）。原生观测一直发 `terrain` / `night` / `pool` /
     # `fog` / `roof` / `grid`（`pvz_agent_model.py` 就在读它们），是这个压缩函数
     # 原先把它们丢了。
@@ -222,7 +242,7 @@ def _frame(obs: dict) -> dict:
         # 坟墓/花瓶等占位物（夜间草地关与 ScaryPotter 关）：这些格子**种不了**，
         # 模型看不到它们会把"策略没往那格种"误读成决策错误。只存位置，
         # 翻译成人话在 episode_query._fmt_scene。大多数关没有 → 存 []。
-        "graves": [[g["row"], g["col"], g["type"]] for g in (obs.get("grid_items") or [])],
+        "graves": graves,
         "result": obs.get("result"),
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),

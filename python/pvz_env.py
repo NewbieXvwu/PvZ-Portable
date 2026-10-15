@@ -586,6 +586,16 @@ class PvZEnv:
         if not response.get("ok"):
             raise ValueError(f"environment could not reseed: {response}")
 
+    def set_lean_observation(self, lean: bool) -> None:
+        """``OBS_LEAN``: compact observations (``"lean": 1``) until switched off again.
+
+        Only for search rollouts: the lean form carries exactly what ``render_episode._frame``
+        and the legal plant list need (positional arrays, no cells/projectiles/coins/shovels),
+        so ``_frame`` of either form is identical but most other consumers would break.
+        """
+        if not self._command(f"OBS_LEAN {1 if lean else 0}").get("ok"):
+            raise RuntimeError("simulator rejected OBS_LEAN (binary older than this wrapper?)")
+
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Expand several actions from one parent snapshot in a single command.
 

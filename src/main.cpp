@@ -552,6 +552,18 @@ static void RunEnvironment(LawnApp* app)
 					before = ReadCounters(app);
 			}
 		}
+		else if (command == "OBS_LEAN")
+		{
+			// Compact observations (LawnApp::EnvironmentLeanObservation) for search rollouts.
+			// Sticky until changed; PRIV and every caller that does not opt in see the full form.
+			int lean = -1;
+			std::string extra;
+			input >> lean;
+			ok = !input.fail() && !(input >> extra) && (lean == 0 || lean == 1);
+			if (ok)
+				app->mEnvironmentLeanObservation = lean == 1;
+			minimalResponse = true;
+		}
 		else if (command == "RESEED")
 		{
 			uint32_t seed = 0;

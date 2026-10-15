@@ -172,6 +172,7 @@ public:
 	bool							mDebugTrialLocked;
 	bool							mMuteSoundsForCutscene;
 	bool							mEnvironmentMode;
+	bool							mEnvironmentLeanObservation = false;  // OBS_LEAN: compact rollout observations
 	double							mZombieMultiplier;
 	int								mPlayLevel;
 	std::string						mRecordOutputPath;
@@ -252,6 +253,7 @@ public:
 	EnvironmentWaitEvents::Result EnvironmentWaitUntil(int ticks, int condition);
 	bool							EnvironmentTerminal() const;
 	std::string					EnvironmentObservation(bool privileged = false);
+	std::string					EnvironmentLeanObservation();
 	void							Start() override;
 	Dialog*							NewDialog(int theDialogId, bool isModal, const std::string& theDialogHeader, const std::string& theDialogLines, const std::string& theDialogFooter, int theButtonMode) override;
 	bool							KillDialog(int theDialogId) override;
