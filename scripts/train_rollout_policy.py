@@ -25,20 +25,30 @@ import torch.nn.functional as F  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
 
 
-def load(data: Path, labels: set[str]):
+def load(data: Path, labels: set[str], wait_keep: float = 1.0):
+    """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
+    (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory."""
     paths = [p for p in sorted(data.glob("*/*/frames.jsonl")) if p.parent.name in labels]
-    # Preallocate from a line count: a list of per-row tensors plus torch.stack needs twice the memory,
-    # which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
-    capacity = sum(sum(1 for _ in p.open()) for p in paths)
+    # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
+    # twice the memory, which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
+    rng = random.Random(0)
+    keep = {}
+    for path in paths:
+        mask = []
+        for line in path.open():
+            tail = line[line.rfind('"action":'):]          # the executed action is the last field
+            mask.append('"type":"plant"' in tail or rng.random() < wait_keep)
+        keep[path] = mask
+    capacity = sum(map(sum, keep.values()))
     boards = scalars = None
-    plant, packet, cell, seed_of = [], [], [], []
+    plant, packet, cell, weight, seed_of = [], [], [], [], []
     n = 0
     for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
         frames = [json.loads(line) for line in path.open()]
         for i in range(1, len(frames)):
             action = frames[i].get("action")
-            if not action or frames[i].get("action_rejected"):
+            if not action or frames[i].get("action_rejected") or not keep[path][i]:
                 continue
             b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None)
             if boards is None:
@@ -48,9 +58,11 @@ def load(data: Path, labels: set[str]):
             seed_of.append(seed)
             is_plant = action["type"] == "plant"
             plant.append(float(is_plant))
+            weight.append(1.0 if is_plant else 1.0 / wait_keep)
             packet.append(action["packet"] if is_plant else -1)
             cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
-    return (boards[:n], scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell), seed_of)
+    return (boards[:n], scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
+            torch.tensor(weight), seed_of)
 
 
 def main() -> None:
@@ -60,9 +72,14 @@ def main() -> None:
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--epochs", type=int, default=12)
     p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
+    p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
+    p.add_argument("--seed", type=int, default=None, help="torch seed for init and shuffling")
     args = p.parse_args()
+    if args.seed is not None:
+        torch.manual_seed(args.seed)
     started = time.time()
-    boards, scalars, plant, packet, cell, seed_of = load(args.data, set(args.labels.split(",")))
+    boards, scalars, plant, packet, cell, weight, seed_of = load(args.data, set(args.labels.split(",")),
+                                                                 args.wait_keep)
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
     is_val = torch.tensor([s in val_seeds for s in seed_of])
@@ -71,14 +88,17 @@ def main() -> None:
 
     net = RolloutNet().to(args.device)
     opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
-    pos_weight = torch.tensor([(len(plant) - plant.sum()) / max(1.0, plant.sum())], device=args.device).sqrt()
+    waits = float(weight[plant < 0.5].sum())
+    pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
 
     def batch_loss(idx, train):
         b = boards[idx].float().to(args.device); s = scalars[idx].to(args.device)
         y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
+        w = weight[idx].to(args.device)
         planted = y > 0.5
         out = net(b, s, pk.clamp(min=0))
-        loss = F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight)
+        loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
+                ).sum() / w.sum()
         if planted.any():
             loss = loss + F.cross_entropy(out["packet"][planted], pk[planted]) + \
                 F.cross_entropy(out["cell"][planted], c[planted])
@@ -86,7 +106,7 @@ def main() -> None:
         if not train:
             with torch.no_grad():
                 pred_plant = out["plant"] > 0
-                stats = {"type_acc": float((pred_plant == planted).float().mean()),
+                stats = {"type_acc": float(((pred_plant == planted).float() * w).sum() / w.sum()),
                          "plant_recall": float(pred_plant[planted].float().mean()) if planted.any() else 0.0,
                          "packet_acc": float((out["packet"][planted].argmax(1) == pk[planted]).float().mean()) if planted.any() else 0.0,
                          "cell_acc": float((out["cell"][planted].argmax(1) == c[planted]).float().mean()) if planted.any() else 0.0}
