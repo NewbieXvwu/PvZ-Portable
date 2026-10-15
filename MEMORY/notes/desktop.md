@@ -39,3 +39,8 @@ PVZ_DESKTOP_PORT=22222`，用 `scripts/win_ssh.py ps|wsl`；或 `ssh -p 22222 ..
   diskpart 压缩后 VHDX 从 126.4 GB 降到 34.2 GB，**C 盘可用 5.4 GB → 97.6 GB**。
   压缩前要先停用 PvZWSLKeeper 计划任务（`schtasks /Change /TN PvZWSLKeeper /DISABLE`，结束后再 `/ENABLE`），
   否则它每 5 分钟会把 WSL 拉起来，和 diskpart 冲突。
+
+## WSL 的“空闲关机”（2026-10-15 下午）
+- 15:13:55 和 17:28:11 两次 WSL 停机，journal 里都是 systemd **正常 poweroff**，不是崩溃。当时都有进程把 WSL 内存吃满（17:23 还有一次 OOM kill，16.6 GB 的价值网络训练）。推测内存打满时 `wsl.exe` 会话（守护任务 PvZWSLKeeper、ssh 进来的命令）连不上（报 `Wsl/Service/0x8007274c`），WSL 认为没人在用，就自动关机；setsid 起的后台任务不算“在用”。
+- 已在 `C:\Users\newbiexvwu\.wslconfig` 加 `[wsl2] vmIdleTimeout=-1` 和 `[general] instanceIdleTimeout=-1`（备份为 `.wslconfig.bak_20261015`）。
+- 教训：WSL 只有 24 GB，**同一时间只跑一个吃内存的任务**；队列脚本一律串行（`~/pvz-logs/queue3.sh`）。
