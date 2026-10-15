@@ -68,22 +68,30 @@ def wave_starts(frames: list[dict]) -> dict[int, int]:
 
 
 def build_tensors(games: list[dict]) -> dict:
-    boards, scalars, labels, weights, game_of = [], [], [], [], []
+    # Preallocated: a list of per-row tensors plus torch.stack would need twice the memory.
+    capacity = sum(len(range(0, len(g["frames"]) - 1, FRAME_STRIDE)) for g in games)
+    boards = scalars = None
+    labels, weights, game_of = [], [], []
     eval_rows = []  # (game index, wave, row in eval tensors)
     eval_boards, eval_scalars = [], []
+    n = 0
     for g_idx, game in enumerate(games):
         frames = game["frames"]
         picked = list(range(0, len(frames) - 1, FRAME_STRIDE))  # drop the terminal frame
         for i in picked:
             b, s = featurize(frames[i])
-            boards.append(b.half()); scalars.append(s); labels.append(float(game["won"]))
+            if boards is None:
+                boards = torch.empty((capacity, *b.shape), dtype=torch.half)
+                scalars = torch.empty((capacity, *s.shape), dtype=s.dtype)
+            boards[n] = b; scalars[n] = s; n += 1
+            labels.append(float(game["won"]))
             weights.append(1.0 / len(picked)); game_of.append(g_idx)
         for wave, i in game["wave_starts"].items():
             b, s = featurize(frames[i])
             eval_boards.append(b); eval_scalars.append(s)
             eval_rows.append((g_idx, wave, i))
     return {
-        "boards": torch.stack(boards), "scalars": torch.stack(scalars),
+        "boards": boards[:n], "scalars": scalars[:n],
         "labels": torch.tensor(labels), "weights": torch.tensor(weights),
         "game_of": torch.tensor(game_of),
         "eval_boards": torch.stack(eval_boards), "eval_scalars": torch.stack(eval_scalars),
