@@ -87,15 +87,17 @@ def _choose(net: ActorCritic, board, scalars, packet_mask, cell_mask, greedy: bo
 
 _NET: ActorCritic | None = None
 _ENV = None
+_FAST = (False, 0)       # (OBS_LEAN, SIM_SKIP mask), applied after every reset
 
 
-def _worker_init(resource_dir: str) -> None:
-    global _NET, _ENV
+def _worker_init(resource_dir: str, lean: bool = False, sim_skip: int = 0) -> None:
+    global _NET, _ENV, _FAST
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     torch.set_num_threads(1)
     _NET = ActorCritic().eval()
     from pvz_event_env import EventWaitEnv
     _ENV = EventWaitEnv(resource_dir, headless=True)
+    _FAST = (lean, sim_skip)
 
 
 def _play(job: dict) -> dict:
@@ -107,7 +109,16 @@ def _play(job: dict) -> dict:
     kw = training_task_kwargs(load_training_task(job["manifest"], job["task_id"]), job["seed"])
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
+    if _FAST[0]:
+        _ENV.set_lean_observation(False)
     obs, _ = _ENV.reset(deck=tuple(kw["deck"]), task=task)
+    # Both measured exact for this loop's needs (render_episode._frame + legal plants; SIM_SKIP 21 left
+    # 224/224 games action-for-action identical, scripts/sim_skip_agreement.py). Set after reset so the
+    # reset observation itself is the full one.
+    if _FAST[0]:
+        _ENV.set_lean_observation(True)
+    if _FAST[1]:
+        _ENV.set_sim_skip(_FAST[1])
     rng = np.random.default_rng(job["seed"] * 7919 + job.get("iteration", 0))
     steps, previous, last_action = [], None, None
     planted: dict[int, int] = {}
@@ -181,6 +192,8 @@ def main() -> None:
     p.add_argument("--max-actions", type=int, default=3000)
     p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
+    p.add_argument("--no-lean", dest="lean", action="store_false", help="full observations (same frames, slower)")
+    p.add_argument("--sim-skip", type=int, default=21, help="SIM_SKIP mask (0 = exact game)")
     args = p.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     from render_episode import load_training_task
@@ -201,7 +214,8 @@ def main() -> None:
         torch.save({k: v.detach().cpu() for k, v in net.state_dict().items()}, buffer)
         return buffer.getvalue()
 
-    with mp.get_context("spawn").Pool(args.workers, initializer=_worker_init, initargs=(args.resource_dir,)) as pool:
+    with mp.get_context("spawn").Pool(args.workers, initializer=_worker_init,
+                                         initargs=(args.resource_dir, args.lean, args.sim_skip)) as pool:
         def evaluate(iteration: int) -> dict:
             w = weights()
             res = list(pool.imap_unordered(_play, [{"seed": s, "manifest": args.eval_manifest, "task_id": args.eval_task_id,
