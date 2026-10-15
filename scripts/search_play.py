@@ -142,7 +142,17 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                     static.append((action, frame))
         scored = sorted(zip(_values([f for _a, f in static]), [a for a, _f in static]),
                         key=lambda item: -item[0]) if static else []
-        candidates = [a for _v, a in scored[: args.top_k]] + ([] if args.scope == "placement" else [NOOP])
+        if args.per_card:
+            # The best cells of *every* card, not the overall top-k: the static value net was trained on
+            # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
+            # against shooters right after planting -- only the rollout can show what they are worth.
+            by_card: dict[int, list] = {}
+            for v, a in scored:
+                by_card.setdefault(a["packet"], []).append(a)
+            candidates = [a for cells in by_card.values() for a in cells[: args.per_card]]
+        else:
+            candidates = [a for _v, a in scored[: args.top_k]]
+        candidates += [] if args.scope == "placement" else [NOOP]
         policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
@@ -297,6 +307,7 @@ def _play(job: dict) -> dict:
         fast_state = {}
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
+        planted: dict[int, int] = {}
         while not obs["terminal"] and decisions < args.max_actions:
             if job["arm"] in ("fast", "fast_search"):
                 action = _fast_action(obs, fast_state)
@@ -312,6 +323,8 @@ def _play(job: dict) -> dict:
             obs_before = obs
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
+            if not rejected and action["type"] == "plant":
+                planted[action["packet"]] = planted.get(action["packet"], 0) + 1
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
             elif rows is not None:
@@ -350,7 +363,7 @@ def _play(job: dict) -> dict:
                                                       "rows": rows}, protocol=5), 3))
     return {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
-            "mowers_used": mowers_start - mowers_left,
+            "mowers_used": mowers_start - mowers_left, "planted": planted,
             "searched": stats["searched"], "timing_searched": stats.get("timing_searched", 0), "overrides": stats["overrides"],
             "override_kinds": dict(stats["override_kinds"])}
 
@@ -365,6 +378,8 @@ def main() -> None:
     p.add_argument("--arms", default="baseline,search")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--top-k", type=int, default=8)
+    p.add_argument("--per-card", type=int, default=0,
+                   help="instead of the overall top-k, keep the best N cells of each card (scope all)")
     p.add_argument("--samples", type=int, default=4)
     p.add_argument("--horizon", type=int, default=400)
     p.add_argument("--margin", type=float, default=0.02)
