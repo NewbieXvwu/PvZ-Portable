@@ -37,7 +37,7 @@ NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 _W: dict = {}
 
 
-def _init_worker(policy_path: str, value_path: str) -> None:
+def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -50,6 +50,24 @@ def _init_worker(policy_path: str, value_path: str) -> None:
     vnet.load_state_dict(torch.load(value_path, map_location="cpu", weights_only=False)["state_dict"])
     vnet.eval()
     _W.update(model=model, vnet=vnet)
+    if rollout_path:
+        from pvz_rollout_policy import RolloutNet
+        fast = RolloutNet()
+        fast.load_state_dict(torch.load(rollout_path, map_location="cpu", weights_only=False)["state_dict"])
+        fast.eval()
+        _W["fast"] = fast
+
+
+def _fast_action(obs: dict, fast_state: dict) -> dict:
+    """The fast rollout policy's action; ``fast_state`` carries the previous frame and action."""
+    from pvz_rollout_policy import act
+    from render_episode import _frame
+    frame = _frame(obs)
+    frame["action"] = fast_state.get("action")
+    action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [])
+    fast_state["frame"] = frame
+    fast_state["action"] = action
+    return action
 
 
 def _values(frames: list[dict]) -> list[float]:
@@ -67,9 +85,12 @@ def _score_terminal_or_value(obs: dict) -> float | None:
 
 
 def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -> dict:
-    """Play ``first`` and then let pi continue (greedy) until ``until_tick`` or the end."""
-    from render_episode import _ppo_action
+    """Play ``first`` and then let pi -- or the fast rollout policy, if loaded -- continue until
+    ``until_tick`` (0 = to the end of the game)."""
+    from render_episode import _ppo_action, _frame
     rs = dict(state)
+    fast_state = {"frame": _frame(obs), "action": first} if "fast" in _W else None
+    until_tick = until_tick if until_tick > obs["tick"] else 10 ** 9
     action = first
     while True:
         obs, _r, done, _t, info = env.step(action)
@@ -80,7 +101,10 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
                   events=info.get("events"), previous_wait_result=info.get("wait_result"))
         if done or obs.get("terminal") or obs["tick"] >= until_tick:
             return obs
-        action = _ppo_action(_W["model"], obs, rs, deterministic=True)
+        if fast_state is not None:
+            action = _fast_action(obs, fast_state)
+        else:
+            action = _ppo_action(_W["model"], obs, rs, deterministic=True)
 
 
 def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict,
@@ -268,8 +292,12 @@ def _play(job: dict) -> dict:
         rows = [] if args.record else None
         from render_episode import _frame
         frames = [_frame(obs)] if args.frames else None
+        fast_state = {}
         while not obs["terminal"] and decisions < args.max_actions:
-            action = _ppo_action(model, obs, state, deterministic=args.policy_mode == "greedy")
+            if job["arm"] == "fast":
+                action = _fast_action(obs, fast_state)
+            else:
+                action = _ppo_action(model, obs, state, deterministic=args.policy_mode == "greedy")
             policy_choice = action
             if job["arm"] == "search":
                 stats["last_targets"] = None
@@ -334,7 +362,9 @@ def main() -> None:
                    help="passive: no actions for --horizon ticks (v0); policy: pi keeps playing (v1)")
     p.add_argument("--scope", choices=("all", "placement", "timing"), default="all",
                    help="all: plant/wait/where (v0); placement: only re-place the card pi chose (v0b)")
-    p.add_argument("--timing-horizon", type=int, default=1500)
+    p.add_argument("--rollout-policy", help="fast rollout policy (scripts/train_rollout_policy.py); "
+                   "used for look-ahead instead of pi, and by the 'fast' arm")
+    p.add_argument("--timing-horizon", type=int, default=1500, help="ticks of look-ahead (0 = to the end of the game)")
     p.add_argument("--timing-sun", type=int, default=300)
     p.add_argument("--timing-gap", type=int, default=1500)
     p.add_argument("--timing-margin", type=float, default=0.02)
@@ -369,7 +399,7 @@ def main() -> None:
     print(f"{len(jobs)} games on {args.workers} workers", flush=True)
     started = time.time()
     with results_path.open("a") as out, mp.get_context("spawn").Pool(
-            args.workers, initializer=_init_worker, initargs=(args.policy, args.value)) as pool:
+            args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy)) as pool:
         for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
             out.write(json.dumps(res) + "\n"); out.flush()
             if i % 10 == 0 or i == len(jobs):
