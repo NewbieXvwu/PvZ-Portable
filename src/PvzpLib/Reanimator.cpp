@@ -967,11 +967,64 @@ void Reanimation::DrawAllRenderGroups(Graphics* g)
 		DrawRenderGroup(g, aRenderGroup);
 }
 
+namespace
+{
+// Game logic asks reanimations for tracks by name every tick (Zombie::UpdateDeath ->
+// IsAnimPlaying -> GetFramesForLayer, for instance), and each ask was a strcasecmp over every
+// track plus a scan over every frame of the found track: ~5% of headless simulation time.  The
+// answer depends only on the (immutable, loaded once) definition and the name's characters, so
+// remember it.  A hit needs the same track array, the same name pointer *and* the same
+// characters, so a reused buffer holding another name can never be served a stale answer.
+// Names that are not found are not remembered, so they keep their log line.
+struct TrackNameMemo
+{
+	const ReanimatorTrack*	mTracks = nullptr;
+	int						mCount = -1;
+	const char*				mNamePtr = nullptr;
+	char					mName[48] = {};
+	int						mIndex = -1;
+	int						mFrameStart = 0;
+	int						mFrameCount = 0;
+	bool					mHasFrames = false;
+};
+TrackNameMemo gTrackNameMemo[512];
+
+TrackNameMemo& TrackMemoSlot(const ReanimatorDefinition* theDefinition, const char* theTrackName)
+{
+	uint64_t aKey = reinterpret_cast<uintptr_t>(theDefinition->mTracks.tracks) * 0x9E3779B97F4A7C15ULL
+		^ reinterpret_cast<uintptr_t>(theTrackName);
+	aKey ^= aKey >> 29;
+	aKey *= 0xBF58476D1CE4E5B9ULL;
+	aKey ^= aKey >> 32;
+	return gTrackNameMemo[aKey & 511];
+}
+
+bool TrackMemoHit(const TrackNameMemo& theMemo, const ReanimatorDefinition* theDefinition, const char* theTrackName)
+{
+	return theMemo.mTracks == theDefinition->mTracks.tracks && theMemo.mCount == theDefinition->mTracks.count &&
+		theMemo.mNamePtr == theTrackName && strcmp(theMemo.mName, theTrackName) == 0;
+}
+}
+
 int Reanimation::FindTrackIndex(const char* theTrackName)
 {
+	TrackNameMemo& aMemo = TrackMemoSlot(mDefinition, theTrackName);
+	if (TrackMemoHit(aMemo, mDefinition, theTrackName))
+		return aMemo.mIndex;
 	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
 		if (strcasecmp(mDefinition->mTracks.tracks[aTrackIndex].mName, theTrackName) == 0)
+		{
+			if (strlen(theTrackName) < sizeof(aMemo.mName))
+			{
+				aMemo.mTracks = mDefinition->mTracks.tracks;
+				aMemo.mCount = mDefinition->mTracks.count;
+				aMemo.mNamePtr = theTrackName;
+				strcpy(aMemo.mName, theTrackName);
+				aMemo.mIndex = aTrackIndex;
+				aMemo.mHasFrames = false;
+			}
 			return aTrackIndex;
+		}
 
 	PvzpLogLn("Can't find track '{}'", theTrackName);
 	return 0;
@@ -1048,6 +1101,13 @@ void Reanimation::GetFramesForLayer(const char* theTrackName, int& theFrameStart
 		return;
 	}
 
+	TrackNameMemo& aMemo = TrackMemoSlot(mDefinition, theTrackName);
+	if (aMemo.mHasFrames && TrackMemoHit(aMemo, mDefinition, theTrackName))
+	{
+		theFrameStart = aMemo.mFrameStart;
+		theFrameCount = aMemo.mFrameCount;
+		return;
+	}
 	int aTrackIndex = FindTrackIndex(theTrackName);
 	PVZP_ASSERT(aTrackIndex >= 0 && aTrackIndex < mDefinition->mTracks.count);
 	ReanimatorTrack* aTrack = &mDefinition->mTracks.tracks[aTrackIndex];
@@ -1062,6 +1122,12 @@ void Reanimation::GetFramesForLayer(const char* theTrackName, int& theFrameStart
 	for (int j = theFrameStart; j < aTrack->mTransforms.count; j++)
 		if (aTrack->mTransforms.mTransforms[j].mFrame >= 0.0f)
 			theFrameCount = j - theFrameStart + 1;  // span from start to the last non-blank frame
+	if (TrackMemoHit(aMemo, mDefinition, theTrackName))  // FindTrackIndex just remembered this name
+	{
+		aMemo.mFrameStart = theFrameStart;
+		aMemo.mFrameCount = theFrameCount;
+		aMemo.mHasFrames = true;
+	}
 }
 
 void Reanimation::SetFramesForLayer(const char* theTrackName)
@@ -1076,6 +1142,8 @@ void Reanimation::SetFramesForLayer(const char* theTrackName)
 
 bool Reanimation::TrackExists(const char* theTrackName)
 {
+	if (TrackMemoHit(TrackMemoSlot(mDefinition, theTrackName), mDefinition, theTrackName))
+		return true;
 	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
 		if (strcasecmp(mDefinition->mTracks.tracks[aTrackIndex].mName, theTrackName) == 0)
 			return true;

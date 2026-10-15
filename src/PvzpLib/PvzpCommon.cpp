@@ -379,6 +379,7 @@ int PvzpAnimateCurve(int theTimeStart, int theTimeEnd, int theTimeAge, int thePo
 }
 
 int gEnvSimSkip = 0;
+unsigned int gBoardContentEpoch = 0;
 
 int RandRangeInt(int theMin, int theMax)
 {

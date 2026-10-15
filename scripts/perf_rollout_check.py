@@ -6,7 +6,10 @@ On live states of real student games it verifies that
      and ``pvz_rollout_policy.features`` to the original concatenation;
   2. ``render_episode._frame`` of the compact ``OBS_LEAN`` observation equals ``_frame`` of the
      full observation of the same state, and the legal plant lists are equal;
-  3. a simulator process reused across games (RESET_V2) plays the same game as a fresh one.
+  3. a simulator process reused across games (RESET_V2) plays the same game as a fresh one;
+  4. the first trunk convolution restricted to non-zero input channels equals the dense one;
+  5. a search rollout gives the same leaf (tick, frame, sun-income history) with and without
+     ``WAIT_UNTIL_LEGAL`` + ``OBS_LEAN``.
 
 Usage: python3 scripts/perf_rollout_check.py --seeds 4
 """
@@ -40,6 +43,26 @@ def _reference_features(frame: dict, previous: dict | None):
     return board, torch.cat([scalars, extra])
 
 
+def _rollout_pair(env, obs: dict, first: dict, seed: int, counters: dict) -> None:
+    """The same search rollout with and without WAIT_UNTIL_LEGAL / OBS_LEAN must end identically."""
+    import search_play
+    leaves = []
+    root = env.snapshot()
+    try:
+        for batch, lean in ((False, False), (True, True)):
+            env.restore(root)
+            env.reseed(seed)
+            search_play._W.update(batch_waits=batch, lean_rollouts=lean)
+            leaf = search_play._rollout_policy(env, obs, {}, first, obs["tick"] + 3000)
+            leaves.append((leaf["tick"], _frame(leaf), env._sun_production_history.copy()))
+    finally:
+        env.restore(root)
+        env.release_snapshot(root)
+    if leaves[0] != leaves[1]:
+        raise SystemExit(f"batched-wait rollout differs at seed {seed} tick {obs['tick']}")
+    counters["rollouts"] += 1
+
+
 def play(env, net, manifest, task_id, seed, check_lean: bool, counters: dict) -> list:
     kw = training_task_kwargs(load_training_task(manifest, task_id), seed)
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
@@ -57,6 +80,16 @@ def play(env, net, manifest, task_id, seed, check_lean: bool, counters: dict) ->
         if not (torch.equal(b, rb) and torch.equal(s, rs) and torch.equal(fb, rfb) and torch.equal(fs, rfs)):
             raise SystemExit(f"featurize differs from the reference at seed {seed} tick {obs['tick']}")
         counters["frames"] += 1
+        with torch.inference_mode():
+            dense_h, dense_g = net.encode(fb[None], fs[None])
+            sparse_h, sparse_g = net.encode(fb[None], fs[None], sparse_input=True)
+        if not (torch.equal(dense_h, sparse_h) and torch.equal(dense_g, sparse_g)):
+            counters["sparse_mismatch"] += 1
+            counters["sparse_max_diff"] = max(counters["sparse_max_diff"], float((dense_h - sparse_h).abs().max()),
+                                              float((dense_g - sparse_g).abs().max()))
+            legal = (obs.get("legal_actions") or {}).get("plants") or []
+            if act(net, frame, memo["frame"], legal, sparse_input=False) != act(net, frame, memo["frame"], legal):
+                raise SystemExit(f"channel-pruned trunk changes the action at seed {seed} tick {obs['tick']}")
         if check_lean:
             env.set_lean_observation(True)
             lean = env.observe()
@@ -66,6 +99,8 @@ def play(env, net, manifest, task_id, seed, check_lean: bool, counters: dict) ->
                 raise SystemExit(f"lean observation differs at seed {seed} tick {obs['tick']}")
             counters["lean_states"] += 1
         action = act(net, frame, memo["frame"], (obs.get("legal_actions") or {}).get("plants") or [])
+        if check_lean and len(trace) % 40 == 0:
+            _rollout_pair(env, obs, action, seed * 1000 + len(trace), counters)
         memo["frame"], memo["action"] = frame, action
         obs, _r, done, _t, info = env.step(action)
         if not info.get("ok"):
@@ -91,7 +126,9 @@ def main() -> None:
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
     net.eval()
     seeds = load_training_task(args.manifest, args.task_id)["seeds"][: args.seeds]
-    counters = {"frames": 0, "lean_states": 0}
+    counters = {"frames": 0, "lean_states": 0, "sparse_mismatch": 0, "sparse_max_diff": 0.0, "rollouts": 0}
+    import search_play
+    search_play._W["fast"] = net
     reused = EventWaitEnv(args.resource_dir, executable=args.executable)
     traces = {s: play(reused, net, args.manifest, args.task_id, s, True, counters) for s in seeds}
     for s in reversed(seeds):              # every game now runs in a process that already played others
@@ -104,7 +141,10 @@ def main() -> None:
             raise SystemExit(f"seed {s}: reused process and fresh process played different games")
     reused.close()
     print(f"ok: {counters['frames']} frames bitwise-equal features, {counters['lean_states']} states with "
-          f"identical lean/full frames, {len(seeds)} seeds identical in reused vs fresh processes")
+          f"identical lean/full frames, {len(seeds)} seeds identical in reused vs fresh processes; "
+          f"channel-pruned trunk differs from the dense one on {counters['sparse_mismatch']} frames "
+          f"(max |diff| {counters['sparse_max_diff']:.3g}, no action changed); {counters['rollouts']} "
+          f"3000-tick rollouts identical with and without WAIT_UNTIL_LEGAL + OBS_LEAN")
 
 
 if __name__ == "__main__":

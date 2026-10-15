@@ -335,6 +335,9 @@ static void RunEnvironment(LawnApp* app)
 		bool hasWaitResult = false;
 		EnvironmentWaitEvents::Result waitResult;
 		int snapshotId = 0;
+		bool hasSubsteps = false;
+		int previousTick = 0;
+		std::vector<std::pair<int, uint32_t>> substeps;
 		if (command == "RESET_V2")
 		{
 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
@@ -394,6 +397,33 @@ static void RunEnvironment(LawnApp* app)
 			{
 				waitResult = app->EnvironmentWaitUntil(ticks, condition);
 				hasWaitResult = ok = true;
+			}
+		}
+		else if (command == "WAIT_UNTIL_LEGAL")
+		{
+			// A search rollout's student can only wait while no plant is legal, so instead of one
+			// round trip per ``WAIT_EVENT_V1 60 0`` this repeats exactly that command here until a
+			// plant becomes legal, the level ends, or the board clock reaches ``untilTick``.  The
+			// response is the last sub-step's, plus every sub-step's (end tick, sun produced) so the
+			// caller's sun-income history is the same as after the individual commands, and the
+			// tick the last sub-step started from (the caller's "previous observation").
+			int untilTick = 0;
+			std::string extra;
+			input >> untilTick;
+			ok = !input.fail() && !(input >> extra) && app->mBoard != nullptr;
+			if (ok)
+			{
+				hasSubsteps = hasWaitResult = true;
+				do
+				{
+					previousTick = app->mBoard->mMainCounter;
+					const uint32_t producedBefore = ReadCounters(app).sunProduced;
+					waitResult = app->EnvironmentWaitUntil(60, 0);
+					if (!app->mBoard)
+						break;
+					substeps.emplace_back(app->mBoard->mMainCounter, ReadCounters(app).sunProduced - producedBefore);
+				} while (!app->EnvironmentTerminal() && app->mBoard->mMainCounter < untilTick &&
+					!app->EnvironmentAnyLegalPlant());
 			}
 		}
 		else if (command == "BENCH_SNAPSHOT")
@@ -651,6 +681,13 @@ static void RunEnvironment(LawnApp* app)
 				std::cout << '"' << waitResult.triggered[i] << '"';
 			}
 			std::cout << "]}";
+		}
+		if (hasSubsteps)
+		{
+			std::cout << ",\"previous_tick\":" << previousTick << ",\"substeps\":[";
+			for (size_t i = 0; i < substeps.size(); ++i)
+				std::cout << (i ? ",[" : "[") << substeps[i].first << ',' << substeps[i].second << ']';
+			std::cout << ']';
 		}
 		if (hasSnapshotId)
 			std::cout << ",\"snapshot_id\":" << snapshotId;

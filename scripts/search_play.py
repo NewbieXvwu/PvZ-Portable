@@ -38,9 +38,9 @@ _W: dict = {}
 
 
 def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None,
-                 lean_rollouts: bool = False, rollout_sim_skip: int = 0) -> None:
+                 lean_rollouts: bool = False, rollout_sim_skip: int = 0, batch_waits: bool = False) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
-    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip)
+    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip, batch_waits=batch_waits)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
@@ -95,6 +95,7 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
     # Rollouts by the fast policy only read what render_episode._frame keeps, so they can ask for
     # the compact observation (identical frames, ~1/4 of the bytes). pi reads the full one.
     lean = fast_state is not None and _W.get("lean_rollouts", False)
+    batch_waits = fast_state is not None and _W.get("batch_waits", False) and hasattr(env, "wait_until_legal")
     sim_skip = _W.get("rollout_sim_skip", 0)
     if lean:
         env.set_lean_observation(True)
@@ -110,6 +111,14 @@ def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -
                       events=info.get("events"), previous_wait_result=info.get("wait_result"))
             if done or obs.get("terminal") or obs["tick"] >= until_tick:
                 return obs
+            if batch_waits and not (obs.get("legal_actions") or {}).get("plants"):
+                # With no legal plant the fast policy can only wait 60 ticks, again and again: let
+                # the simulator repeat that itself. Its features only read the previous frame's
+                # tick and whether the previous action was a plant, so this state is exact.
+                obs, _r, done, _t, info = env.wait_until_legal(until_tick)
+                fast_state["frame"], fast_state["action"] = {"tick": info["previous_tick"]}, dict(NOOP)
+                if done or obs.get("terminal") or obs["tick"] >= until_tick:
+                    return obs
             if fast_state is not None:
                 action = _fast_action(obs, fast_state)
             else:
@@ -169,6 +178,9 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
 
+        if getattr(args, "halving", False) and args.continuation == "policy":
+            return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed,
+                                   stats, state)
         totals = []
         for cand in candidates:
             leaf_frames, fixed = [], []
@@ -200,6 +212,66 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     finally:
         env.restore(root)
         env.release_snapshot(root)
+
+
+def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_action: dict, policy_key: str,
+                    args, decision_seed: int, stats: dict, state: dict | None) -> dict:
+    """``--halving``: successive halving over the same resampled futures as the full search.
+
+    Round 1 rolls every candidate out once (future k = 0). Each later round keeps the better half
+    (never fewer than two, and always pi's own choice, because the override rule compares against
+    it) and doubles their futures (k = 1, then k = 2..3, ... up to ``--samples``). Survivors have
+    always been scored on exactly the same futures, so comparing them stays a common-random-numbers
+    comparison. With ``--halving-gap G`` the search also stops as soon as the leader is more than G
+    ahead of every other survivor. The decision rule (override pi only by more than ``--margin``)
+    is unchanged. With 8 candidates and 4 futures this is 8 + 4 + 2x2 = 16 rollouts instead of 32.
+    """
+    from render_episode import _frame
+    keys = [json.dumps(c, sort_keys=True) for c in candidates]
+    policy_index = keys.index(policy_key)
+    values: list[list[float]] = [[] for _ in candidates]
+    alive = list(range(len(candidates)))
+    done = 0                                 # futures every survivor has been scored on
+    target = 1
+    gap = getattr(args, "halving_gap", 0.0) or 0.0
+    while True:
+        target = min(target, args.samples)
+        leaves: list[tuple[int, dict]] = []
+        for i in alive:
+            for k in range(done, target):
+                env.restore(root)
+                env.reseed((decision_seed * 1000 + k) % 2 ** 32)
+                leaf = _rollout_policy(env, obs, state, candidates[i], obs["tick"] + args.horizon)
+                terminal = _score_terminal_or_value(leaf)
+                if terminal is None:
+                    leaves.append((i, _frame(leaf)))
+                else:
+                    values[i].append(terminal)
+        if leaves:
+            for (i, _f), v in zip(leaves, _values([f for _i, f in leaves])):
+                values[i].append(v)
+        done = target
+        mean = {i: sum(values[i]) / len(values[i]) for i in alive}
+        ranked = sorted(alive, key=lambda i: -mean[i])
+        if done >= args.samples:
+            break
+        if gap and len(ranked) > 1 and mean[ranked[0]] - mean[ranked[1]] > gap:
+            stats["halving_early_stops"] = stats.get("halving_early_stops", 0) + 1
+            break
+        keep = ranked[: max(2, (len(ranked) + 1) // 2)]
+        if policy_index not in keep:
+            keep.append(policy_index)
+        alive = sorted(keep)
+        target = done * 2
+    stats["halving_rollouts"] = stats.get("halving_rollouts", 0) + sum(len(v) for v in values)
+    totals = [sum(v) / len(v) if v else float("-inf") for v in values]
+    stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
+    best = max(alive, key=lambda i: totals[i])
+    if totals[best] - totals[policy_index] > args.margin and best != policy_index:
+        stats["overrides"] += 1
+        stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
+        return candidates[best]
+    return policy_action
 
 
 DELAY = {"type": "wait", "ticks": 300, "until": "timeout"}
@@ -400,6 +472,10 @@ def main() -> None:
     p.add_argument("--per-card", type=int, default=0,
                    help="instead of the overall top-k, keep the best N cells of each card (scope all)")
     p.add_argument("--samples", type=int, default=4)
+    p.add_argument("--halving", action="store_true",
+                   help="successive halving over the candidates (1, 2, 4.. futures; needs --continuation policy)")
+    p.add_argument("--halving-gap", type=float, default=0.0,
+                   help="with --halving, stop once the leader is this far ahead of every other survivor")
     p.add_argument("--horizon", type=int, default=400)
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--continuation", choices=("passive", "policy"), default="passive",
@@ -410,6 +486,8 @@ def main() -> None:
                    "used for look-ahead instead of pi, and by the 'fast' arm")
     p.add_argument("--no-lean-rollouts", dest="lean_rollouts", action="store_false",
                    help="fast-policy rollouts read full observations instead of OBS_LEAN (same frames, slower)")
+    p.add_argument("--no-batch-waits", dest="batch_waits", action="store_false",
+                   help="fast-policy rollouts send every no-legal-plant wait separately (same result, slower)")
     p.add_argument("--rollout-sim-skip", type=int, default=0,
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
     p.add_argument("--timing-horizon", type=int, default=1500, help="ticks of look-ahead (0 = to the end of the game)")
@@ -448,7 +526,8 @@ def main() -> None:
     started = time.time()
     with results_path.open("a") as out, mp.get_context("spawn").Pool(
             args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy,
-                                                     args.lean_rollouts, args.rollout_sim_skip)) as pool:
+                                                     args.lean_rollouts, args.rollout_sim_skip,
+                                                     args.batch_waits)) as pool:
         for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
             out.write(json.dumps(res) + "\n"); out.flush()
             if i % 10 == 0 or i == len(jobs):

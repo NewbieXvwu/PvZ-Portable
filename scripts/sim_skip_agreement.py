@@ -119,12 +119,16 @@ def _search_decisions(seed: int) -> list[dict]:
     torch.manual_seed(seed)
     obs = _reset(seed)
     env.set_sim_skip(0)
-    sargs = ap.Namespace(scope="placement", continuation="policy", top_k=args.top_k, samples=args.samples,
-                         horizon=args.horizon, margin=0.02, min_gap=0)
+    # min_gap is applied here, once, so all three arms search at exactly the same decisions.
+    sargs = ap.Namespace(scope=args.scope, continuation="policy", top_k=args.top_k, samples=args.samples,
+                         horizon=args.horizon, margin=0.02, min_gap=0, per_card=args.per_card, halving=False,
+                         halving_gap=0.0)
     # The approximate arm: SIM_SKIP during rollouts and/or a cheaper search configuration.
     approx_sargs = ap.Namespace(**{**vars(sargs), **{k: v for k, v in (
-        ("top_k", args.approx_top_k), ("samples", args.approx_samples), ("horizon", args.approx_horizon))
+        ("top_k", args.approx_top_k), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
+        ("halving", args.approx_halving or None), ("halving_gap", args.approx_halving_gap))
         if v is not None}})
+    last_search_tick = -10 ** 9
     fast_state: dict = {}
     rows, decisions = [], 0
 
@@ -141,7 +145,11 @@ def _search_decisions(seed: int) -> list[dict]:
 
     while not obs["terminal"] and decisions < args.max_actions:
         action = search_play._fast_action(obs, fast_state)
-        if action["type"] == "plant":
+        legal = (obs.get("legal_actions") or {}).get("plants") or []
+        searches = bool(legal) and (action["type"] == "plant" or (
+            args.scope != "placement" and obs["tick"] - last_search_tick >= args.min_gap))
+        if searches:
+            last_search_tick = obs["tick"]
             decision_seed = seed * 10000 + decisions
             exact, exact_totals, t_exact = run(decision_seed, 0, action, sargs)
             approx, approx_totals, t_approx = run(decision_seed, args.mask, action, approx_sargs)
@@ -198,6 +206,9 @@ def summarize_search(rows: list[dict], mask: int) -> dict:
     def regret(row: dict, mode: str) -> float:
         totals = dict(row["exact_totals"])
         return max(totals.values()) - totals.get(key(row[mode]), max(totals.values()))
+    def independent(row: dict, mode: str) -> float:
+        totals = dict(row["other_totals"])
+        return max(totals.values()) - totals.get(key(row[mode]), max(totals.values()))
     n = len(rows)
     t_exact = sum(r["seconds_exact"] for r in rows)
     t_approx = sum(r["seconds_approx"] for r in rows)
@@ -208,6 +219,9 @@ def summarize_search(rows: list[dict], mask: int) -> dict:
             sum(key(r["exact"]) == key(r["exact_other_futures"]) for r in rows) / n, 4),
         "mean_value_regret_approx": round(sum(regret(r, "approx") for r in rows) / n, 5),
         "mean_value_regret_other_futures": round(sum(regret(r, "exact_other_futures") for r in rows) / n, 5),
+        # Fair to both arms: judged on the third, independent set of futures.
+        "independent_regret_exact": round(sum(independent(r, "exact") for r in rows) / n, 5),
+        "independent_regret_approx": round(sum(independent(r, "approx") for r in rows) / n, 5),
         "search_seconds_exact": round(t_exact, 2), "search_seconds_approx": round(t_approx, 2),
         "search_speedup": round(t_exact / max(1e-9, t_approx), 3),
     }
@@ -233,6 +247,12 @@ def main() -> None:
     p.add_argument("--approx-top-k", type=int, help="search mode: cheaper configuration for the approximate arm")
     p.add_argument("--approx-samples", type=int)
     p.add_argument("--approx-horizon", type=int)
+    p.add_argument("--approx-halving", action="store_true", help="search mode: successive halving (search_play --halving)")
+    p.add_argument("--approx-halving-gap", type=float)
+    p.add_argument("--scope", choices=("placement", "all"), default="placement",
+                   help="search mode: placement = re-place pi's card; all = wide search incl. wait")
+    p.add_argument("--per-card", type=int, default=0, help="search mode: search_play --per-card")
+    p.add_argument("--min-gap", type=int, default=0, help="search mode: search_play --min-gap (scope all)")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -247,6 +267,8 @@ def main() -> None:
             results = [row for rows in pool.imap_unordered(_search_decisions, seeds) for row in rows]
             summary = summarize_search(results, args.mask)
     summary.update(task_id=args.task_id, policy=str(args.policy), approx_top_k=args.approx_top_k,
+                   approx_halving=args.approx_halving, approx_halving_gap=args.approx_halving_gap,
+                   scope=args.scope, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
     print(json.dumps(summary, indent=1))

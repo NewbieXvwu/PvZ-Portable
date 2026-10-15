@@ -45,6 +45,43 @@ class EventWaitEnv(PvZEnv):
         return observation, 0.0, bool(observation.get('terminal')), False, info
 
 
+    def wait_until_legal(self, until_tick: int):
+        """Repeat ``wait 60 / timeout`` in the simulator until a plant is legal, the level ends, or
+        the clock reaches ``until_tick`` (``WAIT_UNTIL_LEGAL``): one round trip instead of one per
+        wait. For search rollouts, where a policy without a legal plant can only wait.
+
+        The sun-income history gets every sub-step's (tick, sun produced), exactly as if each wait
+        had been its own ``step``, so ``sun_income_rate`` is identical. ``info["previous_tick"]``
+        is the tick of the observation the last sub-step started from. Like ``branch_snapshot`` this
+        bypasses the episode record (search code restores its root afterwards anyway).
+        """
+        if not self._reset_done:
+            raise RuntimeError('call reset() before wait_until_legal()')
+        if type(until_tick) is not int:
+            raise ValueError('until_tick must be an integer')
+        response = self._command(f'WAIT_UNTIL_LEGAL {until_tick}')
+        observation, result = response.get('observation'), response.get('wait_result')
+        substeps = response.get('substeps')
+        if (not response.get('ok') or not isinstance(observation, dict) or not isinstance(result, dict)
+                or not substeps or type(response.get('previous_tick')) is not int):
+            raise RuntimeError('native WAIT_UNTIL_LEGAL rejected or omitted its observation/result')
+        previous_tick = response['previous_tick']
+        try:
+            validate_wait_result({'ticks': 60, 'until': 'timeout'}, result, int(observation['tick']) - previous_tick)
+        except ValueError as exc:
+            raise RuntimeError(str(exc)) from exc
+        for tick, produced in substeps:
+            if produced > 0:
+                self._sun_production_history.append((tick, produced))
+        events = response.get('events', {})
+        self._annotate_observation(observation)       # history already has every sub-step
+        actual = int(observation['tick']) - self._tick
+        self._adopt_tick(observation)
+        info = {'ok': True, 'events': events, 'ticks_advanced': actual, 'wait_result': result,
+                'previous_tick': previous_tick, 'substeps': len(substeps)}
+        return observation, 0.0, bool(observation.get('terminal')), False, info
+
+
 def policy_env(model_config: dict, *args, **kwargs) -> PvZEnv:
     """Training/evaluation select the native interface from saved model config."""
     mode = model_config.get('wait_mode', 'fixed')

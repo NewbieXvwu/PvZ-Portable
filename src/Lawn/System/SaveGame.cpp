@@ -2248,6 +2248,7 @@ static void FixBoardAfterLoad(Board* theBoard)
 
 static bool LawnLoadGameV4(Board* theBoard, Buffer& aBuffer)
 {
+	++gBoardContentEpoch;  // see PvzpCommon.h
 	if (static_cast<uint32_t>(aBuffer.GetDataLen()) < sizeof(SaveFileHeaderV4))
 		return false;
 
