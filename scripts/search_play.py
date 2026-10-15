@@ -154,6 +154,70 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         env.release_snapshot(root)
 
 
+DELAY = {"type": "wait", "ticks": 300, "until": "timeout"}
+
+
+def _timing_search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict,
+                   state: dict) -> dict:
+    """Non-myopic "plant or not now", then (if planting) v0b's placement search.
+
+    Two candidates only, each rolled out ``--timing-horizon`` ticks with pi itself playing on
+    (so an investment's payback is inside the horizon), after RESEED, common random numbers:
+      * pi wants to plant  -> plant now  vs  wait 300 ticks and let pi decide again;
+      * pi wants to wait and has >= ``--timing-sun`` sun -> pi's wait  vs  the best plant by static V.
+    Everything after that one decision is pi's own play, so the comparison is fair to both.
+    """
+    from render_episode import _frame
+    legal = (obs.get("legal_actions") or {}).get("plants") or []
+    decision = policy_action
+    if legal and (policy_action["type"] == "plant" or (
+            obs["sun"] >= args.timing_sun
+            and obs["tick"] - stats.get("last_timing_tick", -10 ** 9) >= args.timing_gap)):
+        stats["last_timing_tick"] = obs["tick"]
+        stats["timing_searched"] = stats.get("timing_searched", 0) + 1
+        root = env.snapshot()
+        try:
+            if policy_action["type"] == "plant":
+                alternative = DELAY
+            else:
+                plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
+                frames, acts = [], []
+                for start in range(0, len(plants), 128):
+                    chunk = plants[start:start + 128]
+                    for action, record in zip(chunk, env.branch_snapshot(root, chunk)):
+                        if record.get("snapshot_id"):
+                            env.release_snapshot(record["snapshot_id"])
+                        if record.get("ok") and record.get("observation"):
+                            frame = _frame(record["observation"])
+                            frame["sun_income_rate"] = obs.get("sun_income_rate")
+                            frames.append(frame); acts.append(action)
+                alternative = acts[max(range(len(acts)), key=_values(frames).__getitem__)] if acts else None
+            if alternative is not None:
+                totals = []
+                for cand in (policy_action, alternative):
+                    leaves, fixed = [], []
+                    for k in range(args.samples):
+                        env.restore(root)
+                        env.reseed((decision_seed * 1000 + 500 + k) % 2 ** 32)
+                        leaf = _rollout_policy(env, obs, state, cand, obs["tick"] + args.timing_horizon)
+                        terminal = _score_terminal_or_value(leaf)
+                        (fixed.append(terminal) if terminal is not None else leaves.append(_frame(leaf)))
+                    values = fixed + (_values(leaves) if leaves else [])
+                    totals.append(sum(values) / len(values))
+                if totals[1] - totals[0] > args.timing_margin:
+                    decision = alternative
+                    stats["overrides"] += 1
+                    stats["override_kinds"][f"timing_{alternative['type']}_over_{policy_action['type']}"] += 1
+        finally:
+            env.restore(root)
+            env.release_snapshot(root)
+    if decision["type"] == "plant":
+        placement = argparse.Namespace(**{**vars(args), "scope": "placement", "continuation": "passive",
+                                          "min_gap": 0})
+        decision = _search(env, obs, decision, placement, decision_seed, stats, state)
+    return decision
+
+
 def _transition(obs: dict, action: dict, state: dict, info: dict, config: dict, overridden: bool) -> dict:
     """One behaviour-cloning row in the format of scripts/bc_pipeline (train_bc_gru_sequence.py).
 
@@ -209,7 +273,10 @@ def _play(job: dict) -> dict:
             policy_choice = action
             if job["arm"] == "search":
                 stats["last_targets"] = None
-                action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
+                if args.scope == "timing":
+                    action = _timing_search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
+                else:
+                    action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
             obs_before = obs
             obs, _r, done, _t, info = env.step(action)
             if not info.get("ok"):
@@ -246,7 +313,7 @@ def _play(job: dict) -> dict:
                                                       "rows": rows}, protocol=5), 3))
     return {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
-            "searched": stats["searched"], "overrides": stats["overrides"],
+            "searched": stats["searched"], "timing_searched": stats.get("timing_searched", 0), "overrides": stats["overrides"],
             "override_kinds": dict(stats["override_kinds"])}
 
 
@@ -265,8 +332,12 @@ def main() -> None:
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--continuation", choices=("passive", "policy"), default="passive",
                    help="passive: no actions for --horizon ticks (v0); policy: pi keeps playing (v1)")
-    p.add_argument("--scope", choices=("all", "placement"), default="all",
+    p.add_argument("--scope", choices=("all", "placement", "timing"), default="all",
                    help="all: plant/wait/where (v0); placement: only re-place the card pi chose (v0b)")
+    p.add_argument("--timing-horizon", type=int, default=1500)
+    p.add_argument("--timing-sun", type=int, default=300)
+    p.add_argument("--timing-gap", type=int, default=1500)
+    p.add_argument("--timing-margin", type=float, default=0.02)
     p.add_argument("--min-gap", type=int, default=0,
                    help="ticks between searches unless pi itself wants to plant (0 = search every time)")
     p.add_argument("--max-actions", type=int, default=3000)
