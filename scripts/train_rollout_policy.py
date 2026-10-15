@@ -26,10 +26,14 @@ from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa:
 
 
 def load(data: Path, labels: set[str]):
-    boards, scalars, plant, packet, cell, seed_of = [], [], [], [], [], []
-    for path in sorted(data.glob("*/*/frames.jsonl")):
-        if path.parent.name not in labels:
-            continue
+    paths = [p for p in sorted(data.glob("*/*/frames.jsonl")) if p.parent.name in labels]
+    # Preallocate from a line count: a list of per-row tensors plus torch.stack needs twice the memory,
+    # which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
+    capacity = sum(sum(1 for _ in p.open()) for p in paths)
+    boards = scalars = None
+    plant, packet, cell, seed_of = [], [], [], []
+    n = 0
+    for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
         frames = [json.loads(line) for line in path.open()]
         for i in range(1, len(frames)):
@@ -37,13 +41,16 @@ def load(data: Path, labels: set[str]):
             if not action or frames[i].get("action_rejected"):
                 continue
             b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None)
-            boards.append(b.half()); scalars.append(s); seed_of.append(seed)
+            if boards is None:
+                boards = torch.empty((capacity, *b.shape), dtype=torch.half)
+                scalars = torch.empty((capacity, *s.shape), dtype=s.dtype)
+            boards[n] = b; scalars[n] = s; n += 1
+            seed_of.append(seed)
             is_plant = action["type"] == "plant"
             plant.append(float(is_plant))
             packet.append(action["packet"] if is_plant else -1)
             cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
-    return (torch.stack(boards), torch.stack(scalars), torch.tensor(plant), torch.tensor(packet),
-            torch.tensor(cell), seed_of)
+    return (boards[:n], scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell), seed_of)
 
 
 def main() -> None:
