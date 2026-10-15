@@ -85,6 +85,27 @@ def _model_actions(model, cfg, deterministic: bool):
     return next_action
 
 
+def _student_actions(path: str):
+    """The small no-memory student (python/pvz_rollout_policy.py, DESIGN §13), greedy."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from pvz_rollout_policy import RolloutNet, act
+    from render_episode import _frame
+    net = RolloutNet()
+    weights = torch.load(path, map_location="cpu", weights_only=False)["state_dict"]
+    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
+    net.eval()
+    memo = {"frame": None, "action": None}
+
+    def next_action(observation, _info=None):
+        frame = _frame(observation)
+        frame["action"] = memo["action"]
+        with torch.no_grad():
+            action = act(net, frame, memo["frame"], (observation.get("legal_actions") or {}).get("plants") or [])
+        memo["frame"], memo["action"] = frame, action
+        return action
+    return next_action
+
+
 def _donothing_actions():
     def next_action(_observation, _info=None):
         return {"type": "wait", "ticks": 300, "until": "timeout"}
@@ -102,8 +123,12 @@ def _load_checkpoint(path: str):
 
 def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: int | None,
         visible: bool, delay: float, max_actions: int, deterministic: bool,
-        resource_dir: str, deck, quiet: bool) -> dict:
-    if policy == "donothing":
+        resource_dir: str, deck, quiet: bool, student: str | None = None) -> dict:
+    if student:
+        cfg = {"wait_mode": "events", "wait_mask": "progress_v1", "input_flags": 7}
+        next_action = _student_actions(student)
+        state = {}
+    elif policy == "donothing":
         cfg = {"wait_mode": "events", "wait_mask": "progress_v1", "input_flags": 7}
         next_action = _donothing_actions()
         state = {}
@@ -114,7 +139,8 @@ def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: in
         next_action = _model_actions(model, cfg, deterministic)
 
     env = policy_env(cfg, resource_dir=resource_dir, headless=not visible)
-    spec = TaskSpec(level=level, seed=seed, playthrough=2,
+    from scripted_baseline import profile_for_deck
+    spec = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(tuple(deck)),
                     zombie_count_multiplier=1.0, wave_cap=wave_cap, preplanted=())
     observation, _ = env.reset(deck=deck, task=spec)
 
@@ -150,6 +176,7 @@ def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: in
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     p.add_argument("--checkpoint", help="local .pt path (not in git; fetch from HF)")
+    p.add_argument("--student", help="small student / fast_ppo .pt instead of a GameplayModelV1 checkpoint")
     p.add_argument("--policy", choices=("model", "donothing"), default="model")
     p.add_argument("--level", type=int, default=7)
     p.add_argument("--seed", type=int, default=1330000)
@@ -169,7 +196,7 @@ def main() -> None:
     deck = [int(c) for c in args.deck.split(",") if c.strip()]
     result = run(args.checkpoint, args.policy, args.level, args.seed, args.wave_cap,
                  args.visible, args.delay, args.max_actions, not args.sampled,
-                 args.resource_dir, deck, args.quiet)
+                 args.resource_dir, deck, args.quiet, args.student)
     print(json.dumps(result, ensure_ascii=False), flush=True)
     if args.hold_seconds:
         time.sleep(args.hold_seconds)

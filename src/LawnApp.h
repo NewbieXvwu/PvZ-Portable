@@ -247,6 +247,7 @@ public:
 	bool							EnvironmentPlant(int packet, int col, int row);
 	bool							EnvironmentShovel(int col, int row);
 	void							EnvironmentWait(int ticks);
+	void							EnvironmentPresent();
 	EnvironmentWaitEvents::PublicState EnvironmentPublicWaitState();
 	EnvironmentWaitEvents::Result EnvironmentWaitUntil(int ticks, int condition);
 	bool							EnvironmentTerminal() const;

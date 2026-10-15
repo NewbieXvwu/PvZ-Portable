@@ -1513,7 +1513,25 @@ void LawnApp::EnvironmentWait(int ticks)
 				coin->ScoreCoin();
 		}
 		AdvanceLogicTick();
+		if (!mHeadlessMode)
+			EnvironmentPresent();
 	}
+}
+
+// -env-visible only: draw the board so a human can watch the policy play. Headless runs never get here.
+// PVZ_ENV_RENDER_EVERY = logic ticks per drawn frame (default 1), PVZ_ENV_RENDER_MS = pause per frame
+// (default 10 ms, i.e. normal game speed at 1 tick per frame).
+void LawnApp::EnvironmentPresent()
+{
+	static const int every = std::max(1, std::atoi(std::getenv("PVZ_ENV_RENDER_EVERY") ? std::getenv("PVZ_ENV_RENDER_EVERY") : "1"));
+	static const int pauseMs = std::max(0, std::atoi(std::getenv("PVZ_ENV_RENDER_MS") ? std::getenv("PVZ_ENV_RENDER_MS") : "10"));
+	static int counter = 0;
+	if (++counter % every != 0)
+		return;
+	SDL_PumpEvents();   // keep the window responsive; input is never dispatched to the game
+	DrawDirtyStuff();
+	if (pauseMs > 0)
+		SDL_Delay(pauseMs);
 }
 
 EnvironmentWaitEvents::PublicState LawnApp::EnvironmentPublicWaitState()
