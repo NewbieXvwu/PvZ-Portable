@@ -203,6 +203,7 @@ def per_wave_report(games, rows, scores_by_name: dict[str, np.ndarray], boot: in
 
 
 def main() -> None:
+    global FRAME_STRIDE
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
@@ -214,7 +215,6 @@ def main() -> None:
     p.add_argument("--frame-stride", type=int, default=FRAME_STRIDE,
                    help="every Nth frame is a training sample (night games are ~3x longer)")
     args = p.parse_args()
-    global FRAME_STRIDE
     FRAME_STRIDE = args.frame_stride
     started = time.time()
 
