@@ -294,12 +294,12 @@ def _play(job: dict) -> dict:
         frames = [_frame(obs)] if args.frames else None
         fast_state = {}
         while not obs["terminal"] and decisions < args.max_actions:
-            if job["arm"] == "fast":
+            if job["arm"] in ("fast", "fast_search"):
                 action = _fast_action(obs, fast_state)
             else:
                 action = _ppo_action(model, obs, state, deterministic=args.policy_mode == "greedy")
             policy_choice = action
-            if job["arm"] == "search":
+            if job["arm"] in ("search", "fast_search"):
                 stats["last_targets"] = None
                 if args.scope == "timing":
                     action = _timing_search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)

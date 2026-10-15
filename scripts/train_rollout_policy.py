@@ -94,8 +94,13 @@ def main() -> None:
             loss, _ = batch_loss(perm[start:start + 2048], True)
             opt.zero_grad(); loss.backward(); opt.step()
         net.eval()
+        # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
+        # (2026-10-15: garbage val metrics while the model itself was fine on the CPU).
         with torch.no_grad():
-            vl, vs = batch_loss(val_idx, False)
+            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(4096)]
+        total = sum(n for n, _l, _s in parts)
+        vl = sum(float(l) * n for n, l, _s in parts) / total
+        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
         history.append({"epoch": epoch, "val_loss": float(vl), **vs})
         print(json.dumps(history[-1]), flush=True)
     args.out.mkdir(parents=True, exist_ok=True)
