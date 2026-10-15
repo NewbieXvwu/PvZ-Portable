@@ -38,23 +38,46 @@ SHOOTER_TYPES = {0, 5, 7, 40}
 FRAME_STRIDE = 3
 
 
-def load_games(data_dir: Path) -> list[dict]:
-    games = []
-    for meta_path in sorted(data_dir.glob("*/*/meta.json")):
+def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict | None]:
+    """Games with only their wave-start frames kept as dicts; with ``training`` the every-FRAME_STRIDE
+    training samples are featurized straight into preallocated tensors. Keeping the frames themselves
+    does not fit: 2048 night games held as dicts went past 16 GB and got OOM-killed (2026-10-15)."""
+    paths = sorted(data_dir.glob("*/*/meta.json"))
+    train = None
+    if training:
+        capacity = 0
+        for meta_path in paths:
+            lines = sum(1 for _ in (meta_path.parent / "frames.jsonl").open())
+            capacity += len(range(0, lines - 1, FRAME_STRIDE))
+        train = {"boards": None, "scalars": None, "labels": [], "weights": [], "game_of": []}
+    games, n = [], 0
+    for meta_path in paths:
         meta = json.loads(meta_path.read_text())
+        won = bool(meta["outcome"]["won"])
         frames = [json.loads(line) for line in (meta_path.parent / "frames.jsonl").open()]
         starts = wave_starts(frames)
-        # Keep only the frames that become samples; whole games as dicts do not fit in memory
-        # (2048 night games are ~4 GB of JSON).
-        needed = set(range(0, len(frames) - 1, FRAME_STRIDE)) | set(starts.values())
+        if training:
+            picked = range(0, len(frames) - 1, FRAME_STRIDE)  # drop the terminal frame
+            for i in picked:
+                b, sc = featurize(frames[i])
+                if train["boards"] is None:
+                    train["boards"] = torch.empty((capacity, *b.shape), dtype=torch.half)
+                    train["scalars"] = torch.empty((capacity, *sc.shape), dtype=sc.dtype)
+                train["boards"][n] = b; train["scalars"][n] = sc; n += 1
+                train["labels"].append(float(won)); train["weights"].append(1.0 / len(picked))
+                train["game_of"].append(len(games))
         games.append({
             "seed": meta["task"]["seed"],
             "checkpoint": meta_path.parent.name,
-            "won": bool(meta["outcome"]["won"]),
-            "frames": [f if i in needed else None for i, f in enumerate(frames)],
+            "won": won,
+            "frames": {i: frames[i] for i in starts.values()},
             "wave_starts": starts,
         })
-    return games
+    if training:
+        train["boards"] = train["boards"][:n]; train["scalars"] = train["scalars"][:n]
+        for k in ("labels", "weights", "game_of"):
+            train[k] = torch.tensor(train[k])
+    return games, train
 
 
 def wave_starts(frames: list[dict]) -> dict[int, int]:
@@ -67,36 +90,16 @@ def wave_starts(frames: list[dict]) -> dict[int, int]:
     return first
 
 
-def build_tensors(games: list[dict]) -> dict:
-    # Preallocated: a list of per-row tensors plus torch.stack would need twice the memory.
-    capacity = sum(len(range(0, len(g["frames"]) - 1, FRAME_STRIDE)) for g in games)
-    boards = scalars = None
-    labels, weights, game_of = [], [], []
-    eval_rows = []  # (game index, wave, row in eval tensors)
+def build_tensors(games: list[dict], train: dict) -> dict:
+    eval_rows = []  # (game index, wave, frame index)
     eval_boards, eval_scalars = [], []
-    n = 0
     for g_idx, game in enumerate(games):
-        frames = game["frames"]
-        picked = list(range(0, len(frames) - 1, FRAME_STRIDE))  # drop the terminal frame
-        for i in picked:
-            b, s = featurize(frames[i])
-            if boards is None:
-                boards = torch.empty((capacity, *b.shape), dtype=torch.half)
-                scalars = torch.empty((capacity, *s.shape), dtype=s.dtype)
-            boards[n] = b; scalars[n] = s; n += 1
-            labels.append(float(game["won"]))
-            weights.append(1.0 / len(picked)); game_of.append(g_idx)
         for wave, i in game["wave_starts"].items():
-            b, s = featurize(frames[i])
+            b, s = featurize(game["frames"][i])
             eval_boards.append(b); eval_scalars.append(s)
             eval_rows.append((g_idx, wave, i))
-    return {
-        "boards": boards[:n], "scalars": scalars[:n],
-        "labels": torch.tensor(labels), "weights": torch.tensor(weights),
-        "game_of": torch.tensor(game_of),
-        "eval_boards": torch.stack(eval_boards), "eval_scalars": torch.stack(eval_scalars),
-        "eval_rows": eval_rows,
-    }
+    return {**train, "eval_boards": torch.stack(eval_boards), "eval_scalars": torch.stack(eval_scalars),
+            "eval_rows": eval_rows}
 
 
 def auc(scores: np.ndarray, labels: np.ndarray) -> float | None:
@@ -211,8 +214,8 @@ def main() -> None:
     args = p.parse_args()
     started = time.time()
 
-    games = load_games(args.data)
-    t = build_tensors(games)
+    games, train = load_games(args.data)
+    t = build_tensors(games, train)
     t["seed_of_game"] = [g["seed"] for g in games]
     print(f"{len(games)} games, {len(t['labels'])} training frames, {len(t['eval_rows'])} wave-start samples", flush=True)
 
@@ -253,7 +256,7 @@ def main() -> None:
 
     external = None
     if args.test_data:
-        test_games = load_games(args.test_data)
+        test_games, _ = load_games(args.test_data, training=False)
         test_rows, test_boards, test_scalars = [], [], []
         for g_idx, game in enumerate(test_games):
             for wave, i in game["wave_starts"].items():
