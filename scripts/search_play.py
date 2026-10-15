@@ -295,6 +295,8 @@ def _play(job: dict) -> dict:
         from render_episode import _frame
         frames = [_frame(obs)] if args.frames else None
         fast_state = {}
+        ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
+        mowers_start = mowers_left = ready_mowers(obs)
         while not obs["terminal"] and decisions < args.max_actions:
             if job["arm"] in ("fast", "fast_search"):
                 action = _fast_action(obs, fast_state)
@@ -326,6 +328,8 @@ def _play(job: dict) -> dict:
             state["events"] = info.get("events")
             state["previous_wait_result"] = info.get("wait_result")
             decisions += 1
+            if not obs["terminal"]:      # a won level fires the remaining mowers; count before that
+                mowers_left = ready_mowers(obs)
             if done:
                 break
     finally:
@@ -346,6 +350,7 @@ def _play(job: dict) -> dict:
                                                       "rows": rows}, protocol=5), 3))
     return {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
+            "mowers_used": mowers_start - mowers_left,
             "searched": stats["searched"], "timing_searched": stats.get("timing_searched", 0), "overrides": stats["overrides"],
             "override_kinds": dict(stats["override_kinds"])}
 
@@ -422,7 +427,8 @@ def summarize(results_path: Path) -> dict:
                      "mean_final_wave": round(sum(r["final_wave"] for r in v.values()) / len(v), 2),
                      "mean_seconds": round(sum(r["seconds"] for r in v.values()) / len(v), 1),
                      "overrides_per_game": round(sum(r["overrides"] for r in v.values()) / len(v), 1),
-                     "searched_per_game": round(sum(r["searched"] for r in v.values()) / len(v), 1)}
+                     "searched_per_game": round(sum(r["searched"] for r in v.values()) / len(v), 1),
+                     "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2)}
                for arm, v in by.items()}
     if "baseline" in by and "search" in by:
         common = sorted(set(by["baseline"]) & set(by["search"]))
