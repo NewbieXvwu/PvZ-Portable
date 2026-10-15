@@ -211,7 +211,11 @@ def main() -> None:
     p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
     p.add_argument("--bootstrap", type=int, default=1000)
     p.add_argument("--test-data", type=Path, help="external test archives (unseen seeds)")
+    p.add_argument("--frame-stride", type=int, default=FRAME_STRIDE,
+                   help="every Nth frame is a training sample (night games are ~3x longer)")
     args = p.parse_args()
+    global FRAME_STRIDE
+    FRAME_STRIDE = args.frame_stride
     started = time.time()
 
     games, train = load_games(args.data)
