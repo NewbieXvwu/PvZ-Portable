@@ -37,9 +37,31 @@ BOARD_CHANNELS = CH_LANE + 1
 SCALAR_BASE = 5
 SCALARS = SCALAR_BASE + 2 * PLANT_TYPES
 
+# Optional task context, appended to the scalars by the caller: the zombie-count multiplier and the
+# level's zombie roster. A player sees both before the level starts. Without them a net trained on
+# mixed difficulties learns "which difficulty is this" (high AUC, useless for comparing two moves in
+# one position: value_hard1, 2026-10-16). The roster, unlike a level number, means something on an
+# unseen level.
+CONTEXT = 1 + ZOMBIE_TYPES
+
 
 def _col_of(x: float) -> int:
     return min(COLS - 1, max(0, int((x - LAWN_XMIN) // CELL_PX)))
+
+
+def context_vector(multiplier: float, roster) -> np.ndarray:
+    """``CONTEXT`` floats: multiplier / 3, then a multi-hot of the zombie types the level can send."""
+    context = np.zeros(CONTEXT, dtype=np.float32)
+    context[0] = multiplier / 3.0
+    for kind in roster:
+        context[1 + min(int(kind), ZOMBIE_TYPES - 1)] = 1.0
+    return context
+
+
+def observation_context(obs: dict) -> np.ndarray:
+    """The context of a live game, from a full (not OBS_LEAN) observation."""
+    return context_vector(obs.get("zombie_count_multiplier", 1.0),
+                          (obs.get("loadout_context") or {}).get("zombie_roster") or [])
 
 
 def featurize(frame: dict) -> tuple[torch.Tensor, torch.Tensor]:
@@ -145,14 +167,15 @@ class ValueNet(nn.Module):
     a per-row max pool keeps "which lane is in trouble" before everything is averaged.
     """
 
-    def __init__(self, width: int = 64):
+    def __init__(self, width: int = 64, context: bool = False):
         super().__init__()
+        self.context = context        # scalars then carry SCALARS + CONTEXT values
         self.conv = nn.Sequential(
             nn.Conv2d(BOARD_CHANNELS, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 3), padding=(0, 1)), nn.ReLU(),
         )
-        self.scalar = nn.Sequential(nn.Linear(SCALARS, width), nn.ReLU())
+        self.scalar = nn.Sequential(nn.Linear(SCALARS + (CONTEXT if context else 0), width), nn.ReLU())
         self.head = nn.Sequential(
             nn.Linear(width * (2 + ROWS), width), nn.ReLU(),
             nn.Linear(width, 1),
@@ -164,3 +187,11 @@ class ValueNet(nn.Module):
         pooled = h.mean(dim=(2, 3))                     # [B, W]
         x = torch.cat([pooled, rows, self.scalar(scalars)], dim=1)
         return self.head(x).squeeze(1)                  # logit of P(win)
+
+
+def load_value_net(path) -> ValueNet:
+    """A value checkpoint in eval mode; ``net.context`` says whether it expects the task context."""
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    net = ValueNet(context=bool(checkpoint.get("context", False)))
+    net.load_state_dict(checkpoint["state_dict"])
+    return net.eval()

@@ -34,19 +34,23 @@ def features(frame: dict, previous: dict | None) -> tuple[torch.Tensor, torch.Te
 
 
 class RolloutNet(nn.Module):
-    def __init__(self, width: int = 64):
+    def __init__(self, width: int = 64, pool: str = "mean"):
         super().__init__()
+        # "meanmax" adds a max over the board to the global context: the mean dilutes one lane's
+        # threat over 54 cells, which a cherry-bomb or wall-nut decision is about (2026-10-16).
+        self.pool = pool
+        g = (3 if pool == "meanmax" else 2) * width
         self.trunk = nn.Sequential(
             nn.Conv2d(BOARD_CHANNELS, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 5), padding=(0, 2)), nn.ReLU(),
         )
         self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA, width), nn.ReLU())
-        self.plant = nn.Linear(2 * width, 1)
-        self.packet = nn.Linear(2 * width, PACKETS)
+        self.plant = nn.Linear(g, 1)
+        self.packet = nn.Linear(g, PACKETS)
         self.packet_embedding = nn.Embedding(PACKETS, width)
         # Each cell sees its own features, the chosen packet and the global context.
-        self.cell = nn.Sequential(nn.Conv2d(4 * width, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
+        self.cell = nn.Sequential(nn.Conv2d(2 * width + g, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
 
     def forward(self, board: torch.Tensor, scalars: torch.Tensor, packet: torch.Tensor | None = None):
         h, g = self.encode(board, scalars)
@@ -62,6 +66,8 @@ class RolloutNet(nn.Module):
         else:
             h = self.trunk(board)                               # [B, W, 6, 10]
         s = self.scalar(scalars)                                # [B, W]
+        if self.pool == "meanmax":
+            return h, torch.cat([h.mean(dim=(2, 3)), h.amax(dim=(2, 3)), s], dim=1)
         return h, torch.cat([h.mean(dim=(2, 3)), s], dim=1)
 
     def _trunk_sparse(self, board: torch.Tensor) -> torch.Tensor:
@@ -108,8 +114,9 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
 def load_student(path) -> RolloutNet:
     """A student or fast_ppo checkpoint as a RolloutNet in eval mode (width read from the weights;
     fast_ppo's value head is dropped)."""
-    weights = torch.load(path, map_location="cpu", weights_only=False)["state_dict"]
-    net = RolloutNet(weights["trunk.0.weight"].shape[0])
+    checkpoint = torch.load(path, map_location="cpu", weights_only=False)
+    weights = checkpoint["state_dict"]
+    net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
     return net.eval()
 
