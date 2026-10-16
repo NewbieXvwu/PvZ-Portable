@@ -73,7 +73,7 @@ def _candidates(net, frame, previous, legal, cells_per_card: int, random_cells: 
     return out
 
 
-def _game(seed_task) -> tuple[list[dict], list[tuple]]:
+def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     import torch
     from pvz_env import TaskSpec
     from pvz_rollout_policy import act
@@ -105,7 +105,24 @@ def _game(seed_task) -> tuple[list[dict], list[tuple]]:
             previous_action = {"type": "wait", "ticks": 60}
         if done:
             break
+    if args.dump_shards:
+        if dumped:
+            _save_dump(dumped, args.dump_shards / f"seed_{seed}.pt", vars(args))
+        return positions, len(dumped)
     return positions, dumped
+
+
+def _save_dump(rows, path: Path, config: dict) -> None:
+    import numpy as np
+    import torch
+    path.parent.mkdir(parents=True, exist_ok=True)
+    b, s, won, seed, pos, cand, packet, kind = zip(*rows)
+    temporary = path.with_suffix(".tmp")
+    torch.save({"boards": torch.from_numpy(np.stack(b)), "scalars": torch.from_numpy(np.stack(s)), "won": torch.tensor(won),
+                "seed": torch.tensor(seed), "position": torch.tensor(pos), "candidate": torch.tensor(cand),
+                "packet": torch.tensor(packet), "kind": torch.tensor(kind),
+                "config": {k: str(v) for k, v in config.items()}}, temporary)
+    temporary.replace(path)
 
 
 def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, context) -> tuple[dict, list[tuple]]:
@@ -121,9 +138,7 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
     planted = [None] * len(cands)          # the board right after planting, as the search's static scoring sees it
     try:
         plants = [i for i, c in enumerate(cands) if c["type"] == "plant"]
-        for i, record in zip(plants, env.branch_snapshot(root, [cands[i] for i in plants]) if plants else []):
-            if record.get("snapshot_id"):
-                env.release_snapshot(record["snapshot_id"])
+        for i, record in zip(plants, env.branch_snapshot(root, [cands[i] for i in plants], retain_snapshots=False) if plants else []):
             if record.get("ok") and record.get("observation"):
                 planted[i] = _frame(record["observation"])
                 planted[i]["sun_income_rate"] = obs.get("sun_income_rate")
@@ -144,7 +159,7 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
         env.restore(root)
         env.release_snapshot(root)
     dumped = []
-    if args.dump:   # (board, scalars + context, won, seed, position, candidate, packet, kind) per row; numpy, because
+    if args.dump or args.dump_shards:   # (board, scalars + context, won, seed, position, candidate, packet, kind) per row; numpy, because
                     # thousands of tensors sent back through the pool run out of file descriptors
         for c, (wins, frames) in enumerate(zip(outcomes, leaves)):
             for f, w in zip(frames, wins):
@@ -262,29 +277,33 @@ def main() -> None:
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--resource-dir", default="/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")
     p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--dump", type=Path, help="also save every live leaf with its result here (torch file)")
+    dump = p.add_mutually_exclusive_group()
+    dump.add_argument("--dump", type=Path, help="also save every live leaf with its result here (torch file)")
+    dump.add_argument("--dump-shards", type=Path, help="write one torch file per seed in this directory, without sending leaves to the parent")
     args = p.parse_args()
+    if args.dump_shards:
+        args.dump_shards.mkdir(parents=True, exist_ok=False)
     args.value_map = {} if args.values == "none" else dict((kv.split("=", 1) if "=" in kv else (Path(kv).parent.name, kv)) for kv in args.values.split(","))
     from render_episode import load_training_task, training_task_kwargs
     task = load_training_task(Path(args.manifest), args.task_id)
     jobs = [(s, training_task_kwargs(task, s)) for s in task["seeds"][args.seed_offset:args.seed_offset + args.seeds]]
     with mp.get_context("spawn").Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
-        positions, dumped = [], []
+        positions, dumped, leaf_count = [], [], 0
         for done, (game, leaves) in enumerate(pool.imap_unordered(_game, jobs), 1):
-            positions += game; dumped += leaves
+            positions += game
+            if args.dump_shards:
+                leaf_count += leaves
+            else:
+                dumped += leaves
+                leaf_count += len(leaves)
             if done % 16 == 0:
-                print(f"{done}/{len(jobs)} games, {len(positions)} positions, {len(dumped)} leaves", flush=True)
+                print(f"{done}/{len(jobs)} games, {len(positions)} positions, {leaf_count} leaves", flush=True)
     result = {"config": {k: str(v) for k, v in vars(args).items()}, "summary": report(positions, args.min_gap, args.margin),
               "positions": positions}
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result))
     if args.dump:
-        import numpy as np
-        import torch
-        b, s, won, seed, pos, cand, packet, kind = zip(*dumped)
-        torch.save({"boards": torch.from_numpy(np.stack(b)), "scalars": torch.from_numpy(np.stack(s)), "won": torch.tensor(won),
-                    "seed": torch.tensor(seed), "position": torch.tensor(pos), "candidate": torch.tensor(cand),
-                    "packet": torch.tensor(packet), "kind": torch.tensor(kind), "config": result["config"]}, args.dump)
+        _save_dump(dumped, args.dump, result["config"])
     print(json.dumps(result["summary"], indent=1))
 
 

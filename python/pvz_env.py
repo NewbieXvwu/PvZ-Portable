@@ -685,7 +685,8 @@ class PvZEnv:
         self._adopt_tick(observation)
         return observation
 
-    def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]], *,
+                        retain_snapshots: bool = True) -> list[dict[str, Any]]:
         """Expand several actions from one parent snapshot in a single command.
 
         ``BRANCH_SNAPSHOT_FAST`` is *defined* as, per branch, "restore the parent,
@@ -699,6 +700,8 @@ class PvZEnv:
         valid.  Second, the simulator is left at the *last* branch's state, so the caller
         has to restore whatever state it wants next.  Like the search teacher, this
         bypasses the episode bookkeeping, so do not mix it with :meth:`save_replay`.
+
+        With retain_snapshots=False, return compact observations without saving children or hashing them.
         """
         if type(snapshot_id) is not int or snapshot_id < 1:
             raise ValueError("snapshot_id must be a positive integer")
@@ -710,7 +713,8 @@ class PvZEnv:
                 f"got {len(actions)}"
             )
         tokens = " ".join(branch_action_token(action) for action in actions)
-        response = self._command(f"BRANCH_SNAPSHOT_FAST {snapshot_id} {len(actions)} {tokens}")
+        command = "BRANCH_SNAPSHOT_FAST" if retain_snapshots else "BRANCH_OBSERVE"
+        response = self._command(f"{command} {snapshot_id} {len(actions)} {tokens}")
         branches = response.get("branches")
         if not response.get("ok") or not isinstance(branches, list) or len(branches) != len(actions):
             raise ValueError(f"environment could not branch snapshot {snapshot_id}: {response}")

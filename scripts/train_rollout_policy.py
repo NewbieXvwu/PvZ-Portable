@@ -10,11 +10,15 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import sys
+import tempfile
 import time
 from pathlib import Path
+
+import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
@@ -25,7 +29,49 @@ import torch.nn.functional as F  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
 
 
-def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None):
+def _cache_episode(path: Path, directory: Path, encoder: bytes) -> Path:
+    source = path.read_bytes()
+    digest = hashlib.sha256(encoder + source).hexdigest()
+    target = directory / (hashlib.sha256(str(path.resolve()).encode()).hexdigest() + ".npz")
+    if target.exists():
+        with np.load(target, allow_pickle=False) as stored:
+            if str(stored["digest"]) == digest:
+                return target
+    lines = source.splitlines()
+    hints = [b'"type":"plant"' in line[max(line.rfind(b'"label":'), line.rfind(b'"action":')):] for line in lines]
+    frames = [json.loads(line) for line in lines]
+    rows, boards, scalars, plant, packet, cell = [], [], [], [], [], []
+    for index in range(1, len(frames)):
+        action = frames[index].get("label") or frames[index].get("action")
+        if not action or frames[index].get("action_rejected"):
+            continue
+        board, scalar = features(frames[index - 1], frames[index - 2] if index >= 2 else None)
+        rows.append(index)
+        boards.append(board.numpy().astype(np.float16))
+        scalars.append(scalar.numpy())
+        is_plant = action["type"] == "plant"
+        plant.append(float(is_plant))
+        packet.append(action["packet"] if is_plant else -1)
+        cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
+    from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS
+    directory.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=directory, suffix=".npz", delete=False) as temporary:
+        temporary_path = Path(temporary.name)
+        try:
+            np.savez_compressed(temporary, digest=digest, hints=hints, rows=np.array(rows, dtype=np.int64),
+                                boards=np.array(boards, dtype=np.float16).reshape(-1, BOARD_CHANNELS, ROWS, COLS),
+                                scalars=np.array(scalars, dtype=np.float32).reshape(-1, SCALARS + 2),
+                                plant=np.array(plant, dtype=np.float32), packet=np.array(packet, dtype=np.int64),
+                                cell=np.array(cell, dtype=np.int64))
+            temporary.close()
+            temporary_path.replace(target)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+    return target
+
+
+def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
+         cache_dir: Path | None = None):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -34,8 +80,20 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     # twice the memory, which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
     rng = random.Random(0)
     keep = {}
+    cached = {}
+    if cache_dir is not None:
+        import pvz_rollout_policy
+        import pvz_value_net
+        encoder = b"".join(Path(module.__file__).read_bytes() for module in (pvz_rollout_policy, pvz_value_net))
+        encoder += Path(__file__).read_bytes()
     for path in paths:
         mask = []
+        if cache_dir is not None:
+            cached[path] = _cache_episode(path, cache_dir, encoder)
+            with np.load(cached[path], allow_pickle=False) as stored:
+                mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
+            keep[path] = mask
+            continue
         for line in path.open():
             # The target is the last field: the DAgger label if there is one, else the executed action.
             tail = line[max(line.rfind('"label":'), line.rfind('"action":')):]
@@ -48,6 +106,23 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
         scale = (label_weight or {}).get(path.parent.name, 1.0)
+        if path in cached:
+            with np.load(cached[path], allow_pickle=False) as stored:
+                selected = np.flatnonzero(np.asarray(keep[path])[stored["rows"]])
+                count = len(selected)
+                if boards is None:
+                    boards = torch.empty((capacity, *stored["boards"].shape[1:]), dtype=torch.half)
+                    scalars = torch.empty((capacity, *stored["scalars"].shape[1:]), dtype=torch.float32)
+                boards[n:n + count] = torch.from_numpy(stored["boards"][selected])
+                scalars[n:n + count] = torch.from_numpy(stored["scalars"][selected])
+                types = stored["plant"][selected].tolist()
+                plant.extend(types)
+                packet.extend(stored["packet"][selected].tolist())
+                cell.extend(stored["cell"][selected].tolist())
+                weight.extend(scale * (1.0 if kind else 1.0 / wait_keep) for kind in types)
+                seed_of.extend([seed] * count)
+                n += count
+            continue
         frames = [json.loads(line) for line in path.open()]
         for i in range(1, len(frames)):
             action = frames[i].get("label") or frames[i].get("action")
@@ -83,13 +158,17 @@ def main() -> None:
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
+    p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
+    p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
     args = p.parse_args()
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     boards, scalars, plant, packet, cell, weight, seed_of = load(args.data, set(args.labels.split(",")),
-                                                                 args.wait_keep, label_weight)
+                                                                 args.wait_keep, label_weight,
+                                                                 (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None)
+    load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
     is_val = torch.tensor([s in val_seeds for s in seed_of])
@@ -156,7 +235,8 @@ def main() -> None:
     torch.save({"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "history": history}, args.out / "model.pt")
-    (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started}, indent=1))
+    (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
+                                                       "load_seconds": load_seconds}, indent=1))
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
 
 

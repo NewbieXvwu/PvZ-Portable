@@ -629,8 +629,9 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << '}' << std::endl;
 			continue;
 		}
-		else if (command == "BRANCH_SNAPSHOT_FAST")
+		else if (command == "BRANCH_SNAPSHOT_FAST" || command == "BRANCH_OBSERVE")
 		{
+			const bool observeOnly = command == "BRANCH_OBSERVE";
 			int branchCount = 0;
 			input >> snapshotId >> branchCount;
 			std::vector<std::string> specs;
@@ -673,8 +674,8 @@ static void RunEnvironment(LawnApp* app)
 					EnvCounters branchAfter = ReadCounters(app);
 					if (branchOk)
 					{
-						observation = app->EnvironmentObservation(false);
-						if (!app->EnvironmentTerminal())
+						observation = observeOnly ? app->EnvironmentLeanObservation() : app->EnvironmentObservation(false);
+						if (!observeOnly && !app->EnvironmentTerminal())
 						{
 							EnvironmentSnapshot child{};
 							branchOk = SaveEnvironmentSnapshot(app, child);

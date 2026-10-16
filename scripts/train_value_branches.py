@@ -68,7 +68,7 @@ def pair_accuracy(pred, d, idx, min_gap: float, by_packet: bool = False) -> dict
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--data", required=True, help="dumps of value_ranking_check.py, comma separated")
+    p.add_argument("--data", required=True, help="torch dumps or shard directories of value_ranking_check.py, comma separated")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--compare", default="", help="name=path,... value nets scored on the same held-out leaves")
     p.add_argument("--init", help="start from this value checkpoint (must take the task context)")
@@ -78,16 +78,22 @@ def main() -> None:
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
     args = p.parse_args()
     torch.manual_seed(args.seed)
-    parts = [torch.load(path, weights_only=False) for path in args.data.split(",")]
+    paths = [file for path in map(Path, args.data.split(","))
+             for file in (sorted(path.glob("*.pt")) if path.is_dir() else [path])]
+    if not paths:
+        p.error("--data contains no torch dumps")
+    parts = [torch.load(path, weights_only=False, mmap=True) for path in paths]
     for part in parts:                      # dumps from before kind 1 existed: leaves only, packet unknown
         part.setdefault("kind", torch.zeros(len(part["won"]), dtype=torch.long))
         part.setdefault("packet", torch.full((len(part["won"]),), -2, dtype=torch.long))
     keys = ("boards", "scalars", "won", "seed", "position", "candidate", "packet", "kind")
-    d = {k: torch.cat([part[k] for part in parts]) for k in keys}
+    d = {k: torch.cat([part[k] for part in parts]) if len(parts) > 1 else parts[0][k] for k in keys}
+    del parts
     d["won"] = d["won"].float()
     seeds = sorted(set(d["seed"].tolist()))
     random.Random(0).shuffle(seeds)
-    held = torch.tensor([s in set(seeds[: max(1, len(seeds) // 10)]) for s in d["seed"].tolist()])
+    held_seeds = set(seeds[: max(1, len(seeds) // 10)])
+    held = torch.tensor([s in held_seeds for s in d["seed"].tolist()])
     fit_idx, val_idx = torch.nonzero(~held).squeeze(1), torch.nonzero(held).squeeze(1)
     print(f"{len(d['won'])} rows ({int((d['kind'] == 1).sum())} right after planting) from {len(seeds)} seeds; "
           f"fit {len(fit_idx)}, held out {len(val_idx)}; win rate {float(d['won'].mean()):.3f}", flush=True)

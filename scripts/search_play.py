@@ -164,9 +164,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         static = []
         for start in range(0, len(plants), 128):
             chunk = plants[start:start + 128]
-            for action, record in zip(chunk, env.branch_snapshot(root, chunk)):
-                if record.get("snapshot_id"):
-                    env.release_snapshot(record["snapshot_id"])
+            for action, record in zip(chunk, env.branch_snapshot(root, chunk, retain_snapshots=False)):
                 if record.get("ok") and record.get("observation"):
                     frame = _frame(record["observation"])
                     frame["sun_income_rate"] = income
