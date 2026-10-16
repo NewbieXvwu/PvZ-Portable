@@ -390,7 +390,21 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     """
     model = None
     checkpoint_meta = None
-    if policy == "ppo":
+    student = None
+    if policy == "student":
+        # 专家迭代里的学生（python/pvz_rollout_policy.py，DESIGN §13–§14）：没有记忆，
+        # 只看这一帧、上一帧和上一步实际执行的动作，贪心。卡组同样必须显式给。
+        if not checkpoint or not deck:
+            raise ValueError("policy=student 需要 checkpoint=<学生 model.pt> 和训练任务的 deck")
+        import hashlib
+        from pvz_event_env import EventWaitEnv
+        from pvz_rollout_policy import load_student
+        student = load_student(checkpoint)
+        env = EventWaitEnv(resource_dir, headless=True)
+        checkpoint_meta = {"checkpoint": str(checkpoint),
+                           "checkpoint_sha256": hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()[:16],
+                           "deterministic": True}
+    elif policy == "ppo":
         if not checkpoint:
             raise ValueError("policy=ppo 需要 checkpoint=<检查点路径>")
         if not deck:
@@ -459,6 +473,7 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     # 训练出来的策略是有记忆的（GRU + 上一步动作/事件），跨步状态必须自己带着走。
     ppo_state = {"hidden": None, "previous_action": None, "delta_ticks": 0,
                  "events": None, "previous_wait_result": None}
+    student_memo = {"frame": None, "action": None}   # 学生的输入：上一帧 + 上一步实际执行的动作
 
     while not obs["terminal"] and actions < max_actions:
         if capture_legal_at is not None and actions == capture_legal_at - 1:
@@ -468,12 +483,22 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             action = (prefix_actions[actions]
                       if prefix_actions is not None and actions < len(prefix_actions)
                       else policy_action)
+        elif policy == "student":
+            from pvz_rollout_policy import act
+            frame_now = _frame(obs)
+            frame_now["action"] = student_memo["action"]
+            action = (prefix_actions[actions]
+                      if prefix_actions is not None and actions < len(prefix_actions)
+                      else act(student, frame_now, student_memo["frame"],
+                               (obs.get("legal_actions") or {}).get("plants") or []))
         elif prefix_actions is not None and actions < len(prefix_actions):
             action = prefix_actions[actions]
         else:
             action = scripted_choose(obs) if policy == "scripted" else {"type": "wait", "ticks": 60}
         if override and (actions + 1) in override:
             action = override[actions + 1]
+        if policy == "student":
+            student_memo["frame"], student_memo["action"] = frame_now, action
         obs, _, done, _, info = env.step(action)
         was_rejected = not info.get("ok")
         if was_rejected:
@@ -550,6 +575,10 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             "final_tick": final["tick"],
             "actions": actions,
             "rejected_actions": rejected,
+            # 赢下来的那一帧会把剩下的割草机全放出去（游戏的通关动画），那些不算“丢车”
+            "mowers_used": len({r for i in range(1, len(frames) - (1 if result == 1 else 0))
+                                for r in _mower_fired(frames[i - 1], frames[i])}),
+            "plants_eaten": events_total["plants_eaten"],
         },
         "totals": events_total,
         "frames": frames,

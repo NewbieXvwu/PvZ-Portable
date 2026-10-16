@@ -440,9 +440,11 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                 "level": {"type": "integer", "description": "关卡号，默认 7。"},
                 "policy": {
                     "type": "string",
-                    "enum": ["scripted", "donothing", "ppo"],
+                    "enum": ["scripted", "donothing", "ppo", "student"],
                     "description": "用哪套策略打这一局：scripted（默认）、donothing（对照用）、"
-                                   "ppo（训练出来的 RL 模型，必须同时给 checkpoint）。",
+                                   "ppo（训练出来的 RL 模型，必须同时给 checkpoint）、"
+                                   "student（专家迭代的学生网络，checkpoint 给 model.pt，"
+                                   "卡组用 task_manifest + task_id）。",
                 },
                 "checkpoint": {"type": "string",
                                "description": "policy=ppo 时的检查点 .pt 路径。只做推理，不训练。"},

@@ -83,7 +83,7 @@ def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
         "policy_revision": rec["task"].get("policy_revision"),
         "frame_count": len(rec["frames"]),
     }
-    if policy == "ppo":
+    if policy in ("ppo", "student"):
         meta["checkpoint"] = rec["task"].get("checkpoint")
         meta["checkpoint_sha256"] = rec["task"].get("checkpoint_sha256")
         # 这一局是在哪个模拟器 build 上跑的。见 render_episode.simulator_build()：
@@ -761,7 +761,10 @@ def _run_variant(meta: dict, override: dict, resource_dir: str,
                   task_extra=_replay_task_extra(t),
                   policy_rng_seed=(t.get("policy_rng_seed", t["seed"])
                                    if policy_rng_seed is None else policy_rng_seed))
-    return rec["outcome"]
+    # 换上去的动作当时到底执行没有：阳光不够 / 冷却中 / 格子被占时环境会拒绝，补成等待 ——
+    # 不标出来的话，几个“种不了”的候选会给出一模一样的结果，看起来像真有差别。
+    rejected = [d for d in override if d < len(rec["frames"]) and rec["frames"][d].get("action_rejected")]
+    return {**rec["outcome"], "override_rejected": bool(rejected)}
 
 
 def _whatif(archive: Path, meta: dict, frames: list, decision: int,
@@ -820,7 +823,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     cands: list[dict] = []
     for raw in raw_actions:
         try:
-            cands.append(_parse_action(raw))
+            cands.append(_parse_action(raw, deck))
         except Exception as exc:  # noqa: BLE001 - 参数写错要给可读提示，不是 traceback
             # 之前这里直接抛，模型看到的是一坨 Python 栈 —— 它据此改不出对的东西。
             # 现在把"哪里错了 + 正确写法"直接回给它。
@@ -852,7 +855,8 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     if not cands:
         return "\n".join(L + ["（没有候选动作。用 --try 给一个，或 --enumerate 枚举）"])
 
-    L.append("排序口径：末波增量从高到低；并列时最终 tick 较早者优先。")
+    L.append("排序口径：先看输赢和末波（推得越远越好）；都赢 / 同一波时，丢车（割草机用掉的台数）越少越好，"
+             "再看植物被吃的株数。")
     L.append(f"试 {len(cands)} 个候选（每次都要从头重放，约 1–3 秒/个）：")
     L.append("")
     L.append("  左列**可以直接复制**当作 --try 用，不用自己翻译成数字。")
@@ -869,18 +873,30 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         delta = o["final_wave"] - base["final_wave"]
         results.append((delta, cand, o))
 
-    results.sort(key=lambda x: (-x[0], x[2]["final_tick"]))
+    # 旧存档的 outcome 没有丢车 / 被吃（2026-10-16 之前），那时只比末波
+    has_losses = "mowers_used" in base
+    rank = lambda o: (-o["final_wave"], o.get("mowers_used", 0) if has_losses else 0,
+                      o.get("plants_eaten", 0) if has_losses else 0)
+    results.sort(key=lambda x: (rank(x[2]), x[2]["final_tick"]))
+    if has_losses:
+        L.append(f"  基线：丢车 {base['mowers_used']}，植物被吃 {base['plants_eaten']} 株")
     for delta, cand, o in results:
-        mark = "★" if delta > 0 else ("·" if delta == 0 else "↓")
+        mark = "★" if rank(o) < rank(base) else ("·" if rank(o) == rank(base) else "↓")
         sign = f"+{delta}" if delta > 0 else str(delta)
-        L.append(f"  {mark} {_action_cli(cand):<15} {_action_text(cand, deck):<28}"
+        losses = (f"  丢车 {o['mowers_used']}  被吃 {o['plants_eaten']:>2}" if has_losses else "")
+        if o.get("override_rejected"):
+            losses += "  ⚠ 这一步当时执行不了（阳光 / 冷却 / 格子），环境改成了等待"
+        L.append(f"  {mark} {_action_cli(cand, deck):<15} {_action_text(cand, deck):<28}"
                  f" → 第 {o['final_wave']:>2}/{o['wave_count']} 波  "
-                 f"{sign:>4} 波  {o['reason']}")
+                 f"{sign:>4} 波  {o['reason']}{losses}")
     best = max((r[0] for r in results), default=0)
+    improved = bool(results) and rank(results[0][2]) < rank(base)
     L.append("")
-    if best > 0:
-        L.append(f"  最好的一步能多推 {best} 波。说明第 {decision} 步附近**确实有**"
-                 f"可以改善的选择。")
+    if best > 0 or improved:
+        L.append(f"  最好的一步：第 {results[0][2]['final_wave']} 波"
+                 + (f"，丢车 {base['mowers_used']} → {results[0][2]['mowers_used']}，"
+                    f"被吃 {base['plants_eaten']} → {results[0][2]['plants_eaten']}" if has_losses else "")
+                 + f"。说明第 {decision} 步附近**确实有**可以改善的选择。")
         if save_best and results:
             top = results[0]
             out = Path(save_best)
@@ -1020,17 +1036,28 @@ def _vocabulary() -> str:
     return "\n".join(L)
 
 
-def _parse_action(raw: str) -> dict:
+def _parse_action(raw: str, deck: list | None = None) -> dict:
     """支持简写 plant:packet:row:col / wait:ticks / shovel:row:col，也支持原始 JSON。
 
-    `packet` 可以是数字 id、中文名（豌豆射手）或英文别名（peashooter）。
+    `packet` 可以是数字 id、中文名（豌豆射手）或英文别名（peashooter）——都是**植物 id**，
+    这里换算成这局卡组里的**卡槽号**（环境的动作认卡槽）。原始 JSON 照原样，packet 是卡槽号。
+
+    2026-10-16 修：原来直接把植物 id 当卡槽号用。卡组 [0..5] 时两者恰好相同，
+    但学生的卡组是 [0,1,2,3,4,5,7]：`plant:双发射手:…` 变成卡槽 7（不存在），
+    被拒、补成等待，结果看起来正常——静默错误。
     """
     raw = raw.strip()
     if raw.startswith("{"):
         return json.loads(raw)
     parts = raw.split(":")
     if parts[0] == "plant" and len(parts) == 4:
-        return {"type": "plant", "packet": _plant_id(parts[1]),
+        pid = _plant_id(parts[1])
+        if deck:
+            if pid not in deck:
+                names = "、".join(f"{d}={PLANT_NAME.get(d, d)}" for d in deck)
+                raise ValueError(f"植物 {pid}={PLANT_NAME.get(pid, pid)} 不在这局的卡组里（卡组：{names}）")
+            pid = list(deck).index(pid)
+        return {"type": "plant", "packet": pid,
                 "row": int(parts[2]), "col": int(parts[3])}
     if parts[0] == "wait":
         return {"type": "wait", "ticks": int(parts[1]) if len(parts) > 1 else 60}
@@ -1040,7 +1067,7 @@ def _parse_action(raw: str) -> dict:
                      f"wait:ticks / shovel:row:col，或原始 JSON）")
 
 
-def _action_cli(cand: dict) -> str:
+def _action_cli(cand: dict, deck: list | None = None) -> str:
     """把一个候选动作渲染成**可以直接粘回去**的 `--try` 字符串。
 
     这是修"输出用名字、输入要数字"那个坑的关键：模型不用再做任何翻译，
@@ -1048,7 +1075,9 @@ def _action_cli(cand: dict) -> str:
     """
     t = cand.get("type")
     if t == "plant":
-        return f"plant:{cand['packet']}:{cand['row']}:{cand['col']}"
+        pk = cand["packet"]
+        pid = deck[pk] if deck and isinstance(pk, int) and 0 <= pk < len(deck) else pk   # 卡槽号 → 植物 id
+        return f"plant:{pid}:{cand['row']}:{cand['col']}"
     if t == "wait":
         return f"wait:{cand.get('ticks', 60)}"
     if t == "shovel":
@@ -1069,7 +1098,8 @@ def main() -> None:
     c.add_argument("--seed", type=int, default=None,
                    help="不给就取 --task-manifest 里该任务的第一个种子。")
     c.add_argument("--level", type=int, default=7)
-    c.add_argument("--policy", choices=["scripted", "donothing", "ppo"], default="scripted")
+    c.add_argument("--policy", choices=["scripted", "donothing", "ppo", "student"], default="scripted",
+                   help="student = 专家迭代的学生网络（--checkpoint 给 model.pt，卡组用 --task-manifest/--task-id）")
     c.add_argument("--checkpoint", default=None,
                    help="--policy ppo 时用：训练出来的检查点 .pt 路径。只做推理，不训练。")
     c.add_argument("--sampled", action="store_true",
@@ -1220,6 +1250,21 @@ def main() -> None:
         if args.archive:
             meta, _ = load(Path(args.archive))
             t = meta["task"]
+            if t.get("policy") == "student":
+                print("\n".join([
+                    "这一局是**专家迭代的学生网络**打的（DESIGN.md §13–§14），不是规则脚本，也不是 PPO。",
+                    "",
+                    f"  检查点：{t.get('checkpoint')}（指纹 {t.get('checkpoint_sha256')}）",
+                    "  怎么来的：模仿“学生 + 搜索”这位老师在每个局面的选择（搜索 = 每张卡挑一个格子、"
+                    "再加“先不种”，各自往后模拟 3000 tick 比输赢）。老师自己也只考虑每张卡一个格子。",
+                    "  它看什么：这一帧的棋盘与卡槽、上一帧、上一步实际执行的动作。**没有更长的记忆**。",
+                    "  它怎么选：先判断“种还是等”（等 = 60 tick），种的话选哪张卡、哪个格子，全部贪心。",
+                    "",
+                    "它没有可以读的规则表 —— 想知道某一步为什么这么选，只能看当时局面（frame / lane）",
+                    "和试别的动作会怎样（whatif；--enumerate 会把当时所有合法动作都试一遍）。",
+                    "whatif 换掉一步之后，后面仍由同一个学生网络接着打。",
+                ]))
+                return
             if t.get("policy") == "ppo":
                 # 这条分支存在的理由：脚本规则那份文档描述的是 if-else 链，
                 # 而 RL 存档里打棋的是**训练出来的网络**。如果把那份规则发给
