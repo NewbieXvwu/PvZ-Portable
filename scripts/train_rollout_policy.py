@@ -157,6 +157,8 @@ def main() -> None:
     p.add_argument("--packet-balance", type=float, default=0.0,
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
+    p.add_argument("--save-epochs", type=int, default=0,
+                   help="also keep the last N epochs as epoch_XX.pt (candidates for scripts/select_student.py)")
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
     p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
@@ -215,6 +217,12 @@ def main() -> None:
 
     train_idx = torch.nonzero(~is_val).squeeze(1); val_idx = torch.nonzero(is_val).squeeze(1)
     history = []
+
+    def checkpoint() -> dict:
+        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+                "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
+                "history": list(history)}
+
     for epoch in range(1, args.epochs + 1):
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
@@ -231,10 +239,11 @@ def main() -> None:
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
         history.append({"epoch": epoch, "val_loss": float(vl), **vs})
         print(json.dumps(history[-1]), flush=True)
+        if args.save_epochs and epoch > args.epochs - args.save_epochs:
+            args.out.mkdir(parents=True, exist_ok=True)
+            torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
     args.out.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
-                "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
-                "history": history}, args.out / "model.pt")
+    torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
                                                        "load_seconds": load_seconds}, indent=1))
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
