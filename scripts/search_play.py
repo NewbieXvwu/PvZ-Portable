@@ -40,7 +40,7 @@ _W: dict = {}
 
 def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None,
                  lean_rollouts: bool = False, rollout_sim_skip: int = 0, batch_waits: bool = False,
-                 cpp_rollouts: bool | None = None) -> None:
+                 cpp_rollouts: bool | None = None, static_value_path: str | None = None) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip, batch_waits=batch_waits,
@@ -53,6 +53,7 @@ def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = N
     from render_episode import load_checkpoint_policy
     model, _ = load_checkpoint_policy(policy_path)
     _W.update(model=model, vnet=load_value_net(value_path))
+    _W["static_vnet"] = load_value_net(static_value_path) if static_value_path else _W["vnet"]
     if rollout_path:
         from pvz_rollout_policy import load_student
         fast = load_student(rollout_path)
@@ -77,15 +78,15 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     return action
 
 
-def _values(frames: list[dict]) -> list[float]:
+def _values(frames: list[dict], net: str = "vnet") -> list[float]:
     import torch
     from pvz_value_net import featurize
     boards, scalars = zip(*(featurize(f) for f in frames))
     scalars = torch.stack(scalars)
-    if _W["vnet"].context:          # the game's multiplier and zombie roster, set by _play at reset
+    if _W[net].context:          # the game's multiplier and zombie roster, set by _play at reset
         scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(frames), -1)], dim=1)
     with torch.inference_mode():
-        return torch.sigmoid(_W["vnet"](torch.stack(boards), scalars)).tolist()
+        return torch.sigmoid(_W[net](torch.stack(boards), scalars)).tolist()
 
 
 def _score_terminal_or_value(obs: dict) -> float | None:
@@ -182,7 +183,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                     frame = _frame(record["observation"])
                     frame["sun_income_rate"] = income
                     static.append((action, frame))
-        scored = sorted(zip(_values([f for _a, f in static]), [a for a, _f in static]),
+        scored = sorted(zip(_values([f for _a, f in static], "static_vnet"), [a for a, _f in static]),
                         key=lambda item: -item[0]) if static else []
         if args.per_card:
             # The best cells of *every* card, not the overall top-k: the static value net was trained on
@@ -507,6 +508,8 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--policy", required=True)
     p.add_argument("--value", required=True)
+    p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
+                   "(default --value); the leaves are always scored by --value")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--seeds", type=int, default=64, help="first N validation seeds")
     p.add_argument("--seed-offset", type=int, default=0)
@@ -580,7 +583,7 @@ def main() -> None:
     with results_path.open("a") as out, mp.get_context("spawn").Pool(
             args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy,
                                                      args.lean_rollouts, args.rollout_sim_skip,
-                                                     args.batch_waits, args.cpp_rollouts)) as pool:
+                                                     args.batch_waits, args.cpp_rollouts, args.static_value)) as pool:
         for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
             out.write(json.dumps(res) + "\n"); out.flush()
             if i % 10 == 0 or i == len(jobs):
