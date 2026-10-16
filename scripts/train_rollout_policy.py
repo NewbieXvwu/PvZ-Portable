@@ -25,9 +25,10 @@ import torch.nn.functional as F  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
 
 
-def load(data: Path, labels: set[str], wait_keep: float = 1.0):
+def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
-    (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory."""
+    (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
+    ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
     paths = [p for p in sorted(data.glob("*/*/frames.jsonl")) if p.parent.name in labels]
     # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
     # twice the memory, which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
@@ -45,6 +46,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0):
     n = 0
     for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
+        scale = (label_weight or {}).get(path.parent.name, 1.0)
         frames = [json.loads(line) for line in path.open()]
         for i in range(1, len(frames)):
             action = frames[i].get("action")
@@ -58,7 +60,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0):
             seed_of.append(seed)
             is_plant = action["type"] == "plant"
             plant.append(float(is_plant))
-            weight.append(1.0 if is_plant else 1.0 / wait_keep)
+            weight.append(scale * (1.0 if is_plant else 1.0 / wait_keep))
             packet.append(action["packet"] if is_plant else -1)
             cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
     return (boards[:n], scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
@@ -75,12 +77,14 @@ def main() -> None:
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
     p.add_argument("--seed", type=int, default=None, help="torch seed for init and shuffling")
     p.add_argument("--width", type=int, default=64, help="channels of the net (smaller = faster rollouts)")
+    p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
     args = p.parse_args()
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
+    label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     boards, scalars, plant, packet, cell, weight, seed_of = load(args.data, set(args.labels.split(",")),
-                                                                 args.wait_keep)
+                                                                 args.wait_keep, label_weight)
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
     is_val = torch.tensor([s in val_seeds for s in seed_of])
@@ -101,8 +105,9 @@ def main() -> None:
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / w.sum()
         if planted.any():
-            loss = loss + F.cross_entropy(out["packet"][planted], pk[planted]) + \
-                F.cross_entropy(out["cell"][planted], c[planted])
+            wp = w[planted]                               # all 1 unless --label-weight is used
+            loss = loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +
+                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / wp.sum()
         stats = {}
         if not train:
             with torch.no_grad():
@@ -133,6 +138,7 @@ def main() -> None:
         print(json.dumps(history[-1]), flush=True)
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+                "label_weight": label_weight,
                 "history": history}, args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started}, indent=1))
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
