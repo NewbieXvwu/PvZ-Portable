@@ -521,6 +521,7 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
         cur = _frame(obs)
         cur["action"] = action
         cur["action_rejected"] = was_rejected
+        cur["eaten"] = int(ev.get("plants_eaten") or 0)   # 这一步里被僵尸吃掉的植物数（游戏自己的计数）
 
         # ---- 事件：从事件计数器和帧间差里还原"发生了什么"。
         # 逐只僵尸的死亡日志太吵，改成并进"开波"那一行（上一波清掉几只）。

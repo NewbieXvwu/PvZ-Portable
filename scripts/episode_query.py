@@ -689,7 +689,13 @@ def _action_consequence(frames: list, i: int, act: dict | None) -> str:
         for j in range(i + 1, len(frames)):
             if not any(p[0] == r and p[1] == c for p in frames[j]["plants"]):
                 dur = frames[j]["tick"] - frames[i]["tick"]
-                return f"这株只活了 {dur:,} tick 就被吃掉"
+                # 消失不等于被吃：土豆雷、樱桃炸弹引爆后也会消失（2026-10-16 教师会话里被当成“被吃”）。
+                # 游戏自己的“被吃”计数逐步记在 eaten 里；旧存档没有这一项，只能说“消失”。
+                if "eaten" not in frames[j]:
+                    return f"这株活了 {dur:,} tick 后消失（被吃或引爆；这份存档分不出，看 frame）"
+                if frames[j]["eaten"]:
+                    return f"这株只活了 {dur:,} tick 就被吃掉"
+                return f"这株活了 {dur:,} tick 后消失（那一步没有植物被吃：引爆 / 被碾 / 其他）"
         return "这株活到了终局"
     if act.get("type") == "wait":
         return ""
