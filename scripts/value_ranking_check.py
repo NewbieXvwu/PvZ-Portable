@@ -125,12 +125,13 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
         env.restore(root)
         env.release_snapshot(root)
     dumped = []
-    if args.dump:   # (board, scalars + context, won, seed, position, candidate) for every live leaf
+    if args.dump:   # (board, scalars + context, won, seed, position, candidate) for every live leaf; numpy, because
+                    # thousands of tensors sent back through the pool run out of file descriptors
         for c, (wins, frames) in enumerate(zip(outcomes, leaves)):
             for f, w in zip(frames, wins):
                 if f is not None:
                     b, s = featurize(f)
-                    dumped.append((b.half(), torch.cat([s, context]), w, seed, index, c))
+                    dumped.append((b.half().numpy(), torch.cat([s, context]).numpy(), w, seed, index, c))
     values = {}
     for name, vnet in _W["values"].items():
         per_cand = []
@@ -223,9 +224,10 @@ def main() -> None:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result))
     if args.dump:
+        import numpy as np
         import torch
         b, s, won, seed, pos, cand = zip(*dumped)
-        torch.save({"boards": torch.stack(b), "scalars": torch.stack(s), "won": torch.tensor(won),
+        torch.save({"boards": torch.from_numpy(np.stack(b)), "scalars": torch.from_numpy(np.stack(s)), "won": torch.tensor(won),
                     "seed": torch.tensor(seed), "position": torch.tensor(pos), "candidate": torch.tensor(cand),
                     "config": result["config"]}, args.dump)
     print(json.dumps(result["summary"], indent=1))
