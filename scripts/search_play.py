@@ -418,7 +418,8 @@ def _play(job: dict) -> dict:
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
         planted: dict[int, int] = {}
-        if job["arm"] == "fast" and _W.get("cpp_rollouts"):
+        # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
+        if job["arm"] == "fast" and _W.get("cpp_rollouts") and not (args.frames or args.record):
             obs = env.rollout(None, 0, max_actions=args.max_actions)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
@@ -537,8 +538,6 @@ def main() -> None:
         p.error("--cpp-rollouts requires --rollout-policy")
     if args.cpp_rollouts and args.continuation != "policy" and any(arm in ("search", "fast_search") for arm in args.arms.split(",")):
         p.error("--cpp-rollouts requires --continuation policy for search arms")
-    if args.cpp_rollouts is not False and args.rollout_policy and "fast" in args.arms.split(",") and (args.frames or args.record):
-        p.error("C++ fast games do not emit per-decision archives; use --no-cpp-rollouts with --frames/--record")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
