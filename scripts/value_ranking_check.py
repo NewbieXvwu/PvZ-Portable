@@ -9,8 +9,14 @@ Per value net it reports how often the net orders two candidates the way their t
 (pairs that differ by at least ``--min-gap``), and the true win rate lost by picking the net's favourite
 instead of the truly best candidate (regret), next to the regret of the student's own choice.
 
+The search also uses a value net right after planting, to pick each card's cell (search_play.py --static-value).
+``--cells K`` / ``--random-cells R`` add more cells per card (the student's K best, R random legal ones), and every
+plant candidate's board right after planting is scored too: ``static`` in the report compares cells of one card.
+
 With ``--dump`` the leaves themselves (features, task context, the result of that run) are also saved, as
-training data where the only difference between neighbouring samples is the move (scripts/train_value_branches.py).
+training data where the only difference between neighbouring samples is the move (scripts/train_value_branches.py),
+plus, per plant candidate, the board right after planting with the mean result of all its runs (kind 1; leaves are
+kind 0).
 
 Usage:
   python scripts/value_ranking_check.py --manifest artifacts/stage4/day_l7_hard.json --task-id day_l7_z15_eval \
@@ -48,8 +54,9 @@ def _init(args) -> None:
     _W["weights"] = weights
 
 
-def _candidates(net, frame, previous, legal) -> list[dict]:
-    """Wait, plus the student's favourite legal cell for every card that can be planted."""
+def _candidates(net, frame, previous, legal, cells_per_card: int, random_cells: int, rng) -> list[dict]:
+    """Wait, plus for every card that can be planted the student's ``cells_per_card`` favourite legal cells
+    and ``random_cells`` other legal cells drawn at random."""
     import torch
     from pvz_rollout_policy import LAWN_COLS, WAIT, features
     board, scalars = features(frame, previous)
@@ -57,9 +64,12 @@ def _candidates(net, frame, previous, legal) -> list[dict]:
         h, g = net.encode(board[None], scalars[None])
         out = [dict(WAIT)]
         for packet in sorted({a["packet"] for a in legal}):
-            cells = net.cell_logits(h, g, torch.tensor([packet]))[0].tolist()
-            best = max((a for a in legal if a["packet"] == packet), key=lambda a: cells[a["row"] * LAWN_COLS + a["col"]])
-            out.append({"type": "plant", "packet": packet, "row": best["row"], "col": best["col"]})
+            logits = net.cell_logits(h, g, torch.tensor([packet]))[0].tolist()
+            ranked = sorted((a for a in legal if a["packet"] == packet), key=lambda a: -logits[a["row"] * LAWN_COLS + a["col"]])
+            chosen = ranked[:cells_per_card]
+            rest = ranked[cells_per_card:]
+            chosen += rng.sample(rest, min(random_cells, len(rest)))
+            out += [{"type": "plant", "packet": packet, "row": a["row"], "col": a["col"]} for a in chosen]
     return out
 
 
@@ -103,11 +113,20 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
     from pvz_value_net import featurize
     from render_episode import _frame
     args = _W["args"]
-    cands = _candidates(_W["student"], frame, previous, legal)
+    cands = _candidates(_W["student"], frame, previous, legal, args.cells, args.random_cells,
+                        random.Random(seed * 1000 + index))
     student_key = json.dumps(student_action, sort_keys=True)
     root = env.snapshot()
     outcomes, leaves, waves = [], [], []
+    planted = [None] * len(cands)          # the board right after planting, as the search's static scoring sees it
     try:
+        plants = [i for i, c in enumerate(cands) if c["type"] == "plant"]
+        for i, record in zip(plants, env.branch_snapshot(root, [cands[i] for i in plants]) if plants else []):
+            if record.get("snapshot_id"):
+                env.release_snapshot(record["snapshot_id"])
+            if record.get("ok") and record.get("observation"):
+                planted[i] = _frame(record["observation"])
+                planted[i]["sun_income_rate"] = obs.get("sun_income_rate")
         for cand in cands:
             wins, frames, reached = [], [], []
             for k in range(args.samples):
@@ -125,32 +144,44 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
         env.restore(root)
         env.release_snapshot(root)
     dumped = []
-    if args.dump:   # (board, scalars + context, won, seed, position, candidate) for every live leaf; numpy, because
+    if args.dump:   # (board, scalars + context, won, seed, position, candidate, packet, kind) per row; numpy, because
                     # thousands of tensors sent back through the pool run out of file descriptors
         for c, (wins, frames) in enumerate(zip(outcomes, leaves)):
             for f, w in zip(frames, wins):
                 if f is not None:
                     b, s = featurize(f)
-                    dumped.append((b.half().numpy(), torch.cat([s, context]).numpy(), w, seed, index, c))
-    values = {}
+                    dumped.append((b.half().numpy(), torch.cat([s, context]).numpy(), w, seed, index, c,
+                                   cands[c].get("packet", -1), 0))
+        for c, (wins, f) in enumerate(zip(outcomes, planted)):
+            if f is not None:
+                b, s = featurize(f)
+                dumped.append((b.half().numpy(), torch.cat([s, context]).numpy(), sum(wins) / len(wins), seed, index, c,
+                               cands[c]["packet"], 1))
+    values, static = {}, {}
     for name, vnet in _W["values"].items():
+        frames = [f for f in planted if f is not None]
+        scores = iter(_score(vnet, frames, context) if frames else [])
+        static[name] = [next(scores) if f is not None else None for f in planted]
         per_cand = []
         for wins, frames in zip(outcomes, leaves):
             live = [f for f in frames if f is not None]
-            scores = []
-            if live:
-                b, s = zip(*(featurize(f) for f in live))
-                s = torch.stack(s)
-                if vnet.context:
-                    s = torch.cat([s, context.expand(len(live), -1)], dim=1)
-                with torch.inference_mode():
-                    scores = torch.sigmoid(vnet(torch.stack(b), s)).tolist()
-            it = iter(scores)
+            it = iter(_score(vnet, live, context) if live else [])
             per_cand.append(sum(next(it) if f is not None else w for f, w in zip(frames, wins)) / len(wins))
         values[name] = per_cand
     return {"seed": seed, "tick": obs["tick"], "wave": obs["wave"],
             "candidates": [json.dumps(c, sort_keys=True) for c in cands], "student": student_key,
-            "true": [sum(w) / len(w) for w in outcomes], "true_wave": waves, "values": values}, dumped
+            "true": [sum(w) / len(w) for w in outcomes], "true_wave": waves, "values": values, "static": static}, dumped
+
+
+def _score(vnet, frames, context) -> list[float]:
+    import torch
+    from pvz_value_net import featurize
+    b, s = zip(*(featurize(f) for f in frames))
+    s = torch.stack(s)
+    if vnet.context:
+        s = torch.cat([s, context.expand(len(frames), -1)], dim=1)
+    with torch.inference_mode():
+        return torch.sigmoid(vnet(torch.stack(b), s)).tolist()
 
 
 def report(positions: list[dict], min_gap: float, margin: float) -> dict:
@@ -184,7 +215,27 @@ def report(positions: list[dict], min_gap: float, margin: float) -> dict:
             s = p["candidates"].index(p["student"]) if p["student"] in p["candidates"] else 0
             pick = best if v[best] > v[s] + margin else s
             search_regret.append(max(q) - q[pick])
-        out[name] = {"pair_accuracy": agree / max(1, pairs), "pairs": pairs,
+        # the static scoring as the search uses it: cells of one card right after planting
+        s_agree = s_pairs = 0
+        s_regret = []
+        for p in positions:
+            q, v = p["true"], p.get("static", {}).get(name)
+            if not v:
+                continue
+            packets = [json.loads(c).get("packet") for c in p["candidates"]]
+            for packet in {k for k in packets if k is not None}:
+                idx = [i for i, k in enumerate(packets) if k == packet and v[i] is not None]
+                for a in range(len(idx)):
+                    for b in range(a + 1, len(idx)):
+                        i, j = idx[a], idx[b]
+                        if abs(q[i] - q[j]) >= min_gap:
+                            s_pairs += 1
+                            s_agree += (q[i] - q[j]) * (v[i] - v[j]) > 0
+                if len(idx) > 1:
+                    s_regret.append(max(q[i] for i in idx) - q[max(idx, key=v.__getitem__)])
+        out[name] = {"static_pair_accuracy": s_agree / max(1, s_pairs), "static_pairs": s_pairs,
+                     "static_cell_regret": sum(s_regret) / max(1, len(s_regret)),
+                     "pair_accuracy": agree / max(1, pairs), "pairs": pairs,
                      "wave_pair_accuracy": wave_agree / max(1, wave_pairs), "wave_pairs": wave_pairs,
                      "argmax_regret": sum(regret) / max(1, len(regret)),
                      "anchored_search_regret": sum(search_regret) / max(1, len(search_regret))}
@@ -204,6 +255,8 @@ def main() -> None:
     p.add_argument("--sim-skip", type=int, default=21)
     p.add_argument("--min-wave", type=int, default=3)
     p.add_argument("--position-rate", type=float, default=0.03, help="chance that a decision with legal plants is evaluated")
+    p.add_argument("--cells", type=int, default=1, help="the student's best N cells of every card")
+    p.add_argument("--random-cells", type=int, default=0, help="plus N random legal cells of every card")
     p.add_argument("--min-gap", type=float, default=0.25)
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--workers", type=int, default=8)
@@ -228,10 +281,10 @@ def main() -> None:
     if args.dump:
         import numpy as np
         import torch
-        b, s, won, seed, pos, cand = zip(*dumped)
+        b, s, won, seed, pos, cand, packet, kind = zip(*dumped)
         torch.save({"boards": torch.from_numpy(np.stack(b)), "scalars": torch.from_numpy(np.stack(s)), "won": torch.tensor(won),
                     "seed": torch.tensor(seed), "position": torch.tensor(pos), "candidate": torch.tensor(cand),
-                    "config": result["config"]}, args.dump)
+                    "packet": torch.tensor(packet), "kind": torch.tensor(kind), "config": result["config"]}, args.dump)
     print(json.dumps(result["summary"], indent=1))
 
 

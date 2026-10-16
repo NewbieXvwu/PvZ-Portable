@@ -6,10 +6,15 @@ position little better than chance (scripts/value_ranking_check.py, 2026-10-16: 
 is played and continued by the student several times, so samples next to each other differ by the move and
 by the random future, and the label is how that very run ended. That is the question search asks the net.
 
+Dumps made with ``--cells`` / ``--random-cells`` also hold, per plant candidate, the board right after planting
+(kind 1, labelled with the mean result of all its runs) -- what the search's static scoring sees when it picks a
+card's cell. Older dumps only have leaves (kind 0).
+
 Split by game seed (10% held out). Reported on the held-out seeds, per value net: pair accuracy over the
 candidates of one position (true win rates at least ``--min-gap`` apart), the same number the ranking check
-reports. Leaves whose run ended before the horizon are not in the dump, so a candidate's true win rate here
-is over its live leaves only.
+reports -- for leaves over all candidates, for boards right after planting over the cells of one card. Leaves
+whose run ended before the horizon are not in the dump, so a candidate's true win rate there is over its live
+leaves only.
 
 Usage:
   python scripts/train_value_branches.py --data a.pt,b.pt --out artifacts/value_net/branch1 \
@@ -43,11 +48,13 @@ def predict(net: ValueNet, boards, scalars, device: str) -> torch.Tensor:
     return torch.cat(out)
 
 
-def pair_accuracy(pred, d, idx, min_gap: float) -> dict:
-    """Mean prediction vs mean result per (seed, position, candidate), compared within each position."""
+def pair_accuracy(pred, d, idx, min_gap: float, by_packet: bool = False) -> dict:
+    """Mean prediction vs mean result per (seed, position, candidate), compared within each position
+    (``by_packet``: within the cells of one card)."""
     groups = defaultdict(lambda: defaultdict(list))
     for k in idx.tolist():
-        groups[(int(d["seed"][k]), int(d["position"][k]))][int(d["candidate"][k])].append(k)
+        key = (int(d["seed"][k]), int(d["position"][k])) + ((int(d["packet"][k]),) if by_packet else ())
+        groups[key][int(d["candidate"][k])].append(k)
     agree = pairs = 0
     for cands in groups.values():
         stats = [(float(d["won"][ks].mean()), float(pred[ks].mean())) for ks in map(torch.tensor, cands.values())]
@@ -72,20 +79,25 @@ def main() -> None:
     args = p.parse_args()
     torch.manual_seed(args.seed)
     parts = [torch.load(path, weights_only=False) for path in args.data.split(",")]
-    d = {k: torch.cat([part[k] for part in parts]) for k in ("boards", "scalars", "won", "seed", "position", "candidate")}
+    for part in parts:                      # dumps from before kind 1 existed: leaves only, packet unknown
+        part.setdefault("kind", torch.zeros(len(part["won"]), dtype=torch.long))
+        part.setdefault("packet", torch.full((len(part["won"]),), -2, dtype=torch.long))
+    keys = ("boards", "scalars", "won", "seed", "position", "candidate", "packet", "kind")
+    d = {k: torch.cat([part[k] for part in parts]) for k in keys}
+    d["won"] = d["won"].float()
     seeds = sorted(set(d["seed"].tolist()))
     random.Random(0).shuffle(seeds)
     held = torch.tensor([s in set(seeds[: max(1, len(seeds) // 10)]) for s in d["seed"].tolist()])
     fit_idx, val_idx = torch.nonzero(~held).squeeze(1), torch.nonzero(held).squeeze(1)
-    print(f"{len(d['won'])} leaves from {len(seeds)} seeds; fit {len(fit_idx)}, held out {len(val_idx)}; "
-          f"win rate {float(d['won'].float().mean()):.3f}", flush=True)
+    print(f"{len(d['won'])} rows ({int((d['kind'] == 1).sum())} right after planting) from {len(seeds)} seeds; "
+          f"fit {len(fit_idx)}, held out {len(val_idx)}; win rate {float(d['won'].mean()):.3f}", flush=True)
 
     net = ValueNet(context=True)
     if args.init:
         net.load_state_dict(load_value_net(args.init).state_dict())
     net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), lr=1e-3, weight_decay=1e-4)
-    won = d["won"].float()
+    won = d["won"]
 
     def run(idx, train: bool) -> float:
         net.train(train)
@@ -117,13 +129,21 @@ def main() -> None:
     net.load_state_dict(best_state)
     net.eval()
 
-    report = {"new": pair_accuracy(predict(net, d["boards"][val_idx], d["scalars"][val_idx], args.device),
-                                   {k: v[val_idx] for k, v in d.items()}, torch.arange(len(val_idx)), args.min_gap)}
+    held_d = {k: v[val_idx] for k, v in d.items()}
+    leaf_idx = torch.nonzero(held_d["kind"] == 0).squeeze(1)
+    static_idx = torch.nonzero(held_d["kind"] == 1).squeeze(1)
+
+    def score(model) -> dict:
+        pred = predict(model, held_d["boards"], held_d["scalars"], args.device)
+        out = {"leaves": pair_accuracy(pred, held_d, leaf_idx, args.min_gap)}
+        if len(static_idx):
+            out["cells"] = pair_accuracy(pred, held_d, static_idx, args.min_gap, by_packet=True)
+        return out
+
+    report = {"new": score(net)}
     for kv in filter(None, args.compare.split(",")):
         name, path = kv.split("=", 1)
-        other = load_value_net(path).to(args.device)
-        report[name] = pair_accuracy(predict(other, d["boards"][val_idx], d["scalars"][val_idx], args.device),
-                                     {k: v[val_idx] for k, v in d.items()}, torch.arange(len(val_idx)), args.min_gap)
+        report[name] = score(load_value_net(path).to(args.device))
     print(json.dumps(report, indent=1))
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": net.cpu().state_dict(), "encoder": "pvz_value_net.featurize v1", "context": True,
