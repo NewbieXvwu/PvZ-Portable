@@ -42,7 +42,7 @@ def main() -> None:
         part = "val" if int(path.parent.parent.name.split("_")[-1]) in val_seeds else "train"
         frames = [json.loads(line) for line in path.open()]
         for i in range(1, len(frames)):
-            a = frames[i].get("action")
+            a = frames[i].get("label") or frames[i].get("action")
             if a and a.get("type") == "plant" and not frames[i].get("action_rejected"):
                 rows[part].append((*features(frames[i - 1], frames[i - 2] if i >= 2 else None), a["packet"]))
     for model in args.models.split(","):

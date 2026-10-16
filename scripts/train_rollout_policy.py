@@ -37,7 +37,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     for path in paths:
         mask = []
         for line in path.open():
-            tail = line[line.rfind('"action":'):]          # the executed action is the last field
+            # The target is the last field: the DAgger label if there is one, else the executed action.
+            tail = line[max(line.rfind('"label":'), line.rfind('"action":')):]
             mask.append('"type":"plant"' in tail or rng.random() < wait_keep)
         keep[path] = mask
     capacity = sum(map(sum, keep.values()))
@@ -49,7 +50,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
         scale = (label_weight or {}).get(path.parent.name, 1.0)
         frames = [json.loads(line) for line in path.open()]
         for i in range(1, len(frames)):
-            action = frames[i].get("action")
+            action = frames[i].get("label") or frames[i].get("action")
             if not action or frames[i].get("action_rejected") or not keep[path][i]:
                 continue
             b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None)

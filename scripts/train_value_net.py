@@ -32,10 +32,26 @@ import torch.nn.functional as F
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
-from pvz_value_net import ValueNet, featurize, potential_phi  # noqa: E402
+from pvz_value_net import ValueNet, context_vector, featurize, potential_phi  # noqa: E402
 
 SHOOTER_TYPES = {0, 5, 7, 40}
 FRAME_STRIDE = 3
+CONTEXT = False           # --context: append each game's multiplier + zombie roster (meta.json "context")
+
+
+def _features(frame: dict, game_context) -> tuple[torch.Tensor, torch.Tensor]:
+    b, s = featurize(frame)
+    if game_context is not None:
+        s = torch.cat([s, torch.from_numpy(game_context)])
+    return b, s
+
+
+def _game_context(meta: dict, meta_path: Path):
+    if not CONTEXT:
+        return None
+    if "context" not in meta:
+        raise SystemExit(f"{meta_path}: no task context (scripts/backfill_frame_context.py adds it)")
+    return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
 
 
 def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict | None]:
@@ -54,12 +70,13 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
     for meta_path in paths:
         meta = json.loads(meta_path.read_text())
         won = bool(meta["outcome"]["won"])
+        context = _game_context(meta, meta_path)
         frames = [json.loads(line) for line in (meta_path.parent / "frames.jsonl").open()]
         starts = wave_starts(frames)
         if training:
             picked = range(0, len(frames) - 1, FRAME_STRIDE)  # drop the terminal frame
             for i in picked:
-                b, sc = featurize(frames[i])
+                b, sc = _features(frames[i], context)
                 if train["boards"] is None:
                     train["boards"] = torch.empty((capacity, *b.shape), dtype=torch.half)
                     train["scalars"] = torch.empty((capacity, *sc.shape), dtype=sc.dtype)
@@ -72,6 +89,7 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
             "won": won,
             "frames": {i: frames[i] for i in starts.values()},
             "wave_starts": starts,
+            "context": context,
         })
     if training:
         train["boards"] = train["boards"][:n]; train["scalars"] = train["scalars"][:n]
@@ -95,7 +113,7 @@ def build_tensors(games: list[dict], train: dict) -> dict:
     eval_boards, eval_scalars = [], []
     for g_idx, game in enumerate(games):
         for wave, i in game["wave_starts"].items():
-            b, s = featurize(game["frames"][i])
+            b, s = _features(game["frames"][i], game["context"])
             eval_boards.append(b); eval_scalars.append(s)
             eval_rows.append((g_idx, wave, i))
     return {**train, "eval_boards": torch.stack(eval_boards), "eval_scalars": torch.stack(eval_scalars),
@@ -132,7 +150,7 @@ def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: 
     stop_mask = np.array([g in train_games and seeds_of_game[g] in stop_seeds for g in game_of])
     fit_idx, stop_idx = np.nonzero(fit_mask)[0], np.nonzero(stop_mask)[0]
 
-    model = ValueNet().to(device)
+    model = ValueNet(context=CONTEXT).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     best, best_state, patience = float("inf"), None, 0
 
@@ -203,7 +221,7 @@ def per_wave_report(games, rows, scores_by_name: dict[str, np.ndarray], boot: in
 
 
 def main() -> None:
-    global FRAME_STRIDE
+    global FRAME_STRIDE, CONTEXT
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
@@ -214,8 +232,11 @@ def main() -> None:
     p.add_argument("--test-data", type=Path, help="external test archives (unseen seeds)")
     p.add_argument("--frame-stride", type=int, default=FRAME_STRIDE,
                    help="every Nth frame is a training sample (night games are ~3x longer)")
+    p.add_argument("--context", action="store_true",
+                   help="also feed the zombie-count multiplier and the level's zombie roster (DESIGN.md §14.3)")
     args = p.parse_args()
     FRAME_STRIDE = args.frame_stride
+    CONTEXT = args.context
     started = time.time()
 
     games, train = load_games(args.data)
@@ -250,7 +271,7 @@ def main() -> None:
     # Final model on every seed, for later use by search.
     final = train_model(t, set(range(len(games))), args.device, args.epochs, seed=99)
     args.out.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": final.state_dict(), "encoder": "pvz_value_net.featurize v1",
+    torch.save({"state_dict": final.state_dict(), "encoder": "pvz_value_net.featurize v1", "context": CONTEXT,
                 "trained_on": sorted({g["seed"] for g in games}), "games": len(games)},
                args.out / "model.pt")
     oof_rows = [{"seed": games[g]["seed"], "checkpoint": games[g]["checkpoint"], "won": games[g]["won"],
@@ -264,7 +285,7 @@ def main() -> None:
         test_rows, test_boards, test_scalars = [], [], []
         for g_idx, game in enumerate(test_games):
             for wave, i in game["wave_starts"].items():
-                b, s = featurize(game["frames"][i])
+                b, s = _features(game["frames"][i], game["context"])
                 test_rows.append((g_idx, wave, i)); test_boards.append(b); test_scalars.append(s)
         test_value = predict(final, torch.stack(test_boards), torch.stack(test_scalars), args.device)
         test_scores = {

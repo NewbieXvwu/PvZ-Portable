@@ -21,6 +21,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import random
 import json
 import multiprocessing as mp
 import os
@@ -45,13 +46,10 @@ def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = N
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
     torch.set_num_threads(1)
-    from pvz_value_net import ValueNet
+    from pvz_value_net import load_value_net
     from render_episode import load_checkpoint_policy
     model, _ = load_checkpoint_policy(policy_path)
-    vnet = ValueNet()
-    vnet.load_state_dict(torch.load(value_path, map_location="cpu", weights_only=False)["state_dict"])
-    vnet.eval()
-    _W.update(model=model, vnet=vnet)
+    _W.update(model=model, vnet=load_value_net(value_path))
     if rollout_path:
         from pvz_rollout_policy import load_student
         fast = load_student(rollout_path)
@@ -74,8 +72,11 @@ def _values(frames: list[dict]) -> list[float]:
     import torch
     from pvz_value_net import featurize
     boards, scalars = zip(*(featurize(f) for f in frames))
+    scalars = torch.stack(scalars)
+    if _W["vnet"].context:          # the game's multiplier and zombie roster, set by _play at reset
+        scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(frames), -1)], dim=1)
     with torch.inference_mode():
-        return torch.sigmoid(_W["vnet"](torch.stack(boards), torch.stack(scalars))).tolist()
+        return torch.sigmoid(_W["vnet"](torch.stack(boards), scalars)).tolist()
 
 
 def _score_terminal_or_value(obs: dict) -> float | None:
@@ -387,6 +388,10 @@ def _play(job: dict) -> dict:
     stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+        from pvz_value_net import observation_context
+        _W["context"] = observation_context(obs)
+        task_context = {"level": kw["level"], "multiplier": obs.get("zombie_count_multiplier", 1.0),
+                        "roster": (obs.get("loadout_context") or {}).get("zombie_roster") or []}
         state = {"hidden": None, "previous_action": None, "delta_ticks": 0, "events": None,
                  "previous_wait_result": None}
         decisions = 0
@@ -394,6 +399,10 @@ def _play(job: dict) -> dict:
         from render_episode import _frame
         frames = [_frame(obs)] if args.frames else None
         fast_state = {}
+        # DAgger (DESIGN.md §14.6): the search still labels every decision, but with probability
+        # 1 - dagger_beta the student's own action is executed, so the archive covers the positions the
+        # student itself gets into. The label is the anchored search decision (overrides only past --margin).
+        dagger = random.Random(kw["seed"]) if args.dagger_beta < 1.0 else None
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
         planted: dict[int, int] = {}
@@ -409,6 +418,11 @@ def _play(job: dict) -> dict:
                     action = _timing_search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
                 else:
                     action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats, state)
+            label = action
+            if dagger is not None and dagger.random() >= args.dagger_beta:
+                action = policy_choice
+            if job["arm"] in ("fast", "fast_search"):
+                fast_state["action"] = action    # the student's next features read the executed action
             obs_before = obs
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
@@ -425,6 +439,8 @@ def _play(job: dict) -> dict:
                 frames.append(_frame(obs))
                 frames[-1]["action"] = action          # what was executed (after the search), like render_episode
                 frames[-1]["action_rejected"] = rejected
+                if dagger is not None:
+                    frames[-1]["label"] = label        # last field: train_rollout_policy scans for it
             state["previous_action"] = action
             state["delta_ticks"] = info.get("ticks_advanced") or 0
             state["events"] = info.get("events")
@@ -445,6 +461,7 @@ def _play(job: dict) -> dict:
         (archive / "frames.jsonl").write_text("".join(json.dumps(f, separators=(",", ":")) + "\n" for f in frames))
         (archive / "meta.json").write_text(json.dumps({
             "task": {"seed": job["seed"], "policy": str(args.policy), "arm": job["arm"]},
+            "context": task_context,
             "outcome": {"won": obs.get("result") == 1, "final_wave": obs["wave"]}}))
     if rows is not None:
         import pickle, zlib
@@ -500,6 +517,9 @@ def main() -> None:
     p.add_argument("--record", help="write per-game behaviour-cloning rows here (for distillation)")
     p.add_argument("--frames", help="write per-game frame archives here (for value-network training)")
     p.add_argument("--frames-label", default="play")
+    p.add_argument("--dagger-beta", type=float, default=1.0,
+                   help="probability of executing the search's decision (1 = the teacher plays; < 1 = DAgger: "
+                        "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--policy-mode", choices=("greedy", "sampled"), default="greedy")
     p.add_argument("--manifest", default=None, help="task manifest (default: 1024-seed validation)")
     p.add_argument("--task-id", default=None)
