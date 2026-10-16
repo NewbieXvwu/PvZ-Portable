@@ -8,9 +8,9 @@ measures it, two ways:
             once with ``--mask``. Reports outcome / final-wave agreement, how many games stay
             action-for-action identical, where the first divergence happens, and the speed.
 
-``search``  at every decision where the deep placement search runs (student plays the real game),
+``search``  at every decision where the teacher's search runs (student plays the real game),
             the search is run three times from the same root: exact, approximate (``--mask``
-            during the rollouts only, and/or a cheaper ``--approx-top-k/-samples/-horizon``)
+            during the rollouts only, and/or a cheaper ``--approx-per-card/-samples/-horizon``)
             and exact with a different set of resampled futures. The last one is the noise
             floor: if exact-vs-approximate disagree no more often than exact-vs-exact with other
             futures, the approximation costs nothing the search could have noticed.
@@ -146,13 +146,12 @@ def _search_decisions(seed: int) -> list[dict]:
     obs = _reset(seed)
     env.set_sim_skip(0)
     # min_gap is applied here, once, so all three arms search at exactly the same decisions.
-    sargs = ap.Namespace(scope=args.scope, continuation="policy", top_k=args.top_k, samples=args.samples,
-                         horizon=args.horizon, margin=0.02, min_gap=0, per_card=args.per_card, halving=False,
-                         halving_gap=0.0)
+    sargs = ap.Namespace(samples=args.samples, horizon=args.horizon, margin=0.02, min_gap=0, per_card=args.per_card,
+                         halving=False)
     # The approximate arm: SIM_SKIP during rollouts and/or a cheaper search configuration.
     approx_sargs = ap.Namespace(**{**vars(sargs), **{k: v for k, v in (
-        ("top_k", args.approx_top_k), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
-        ("halving", args.approx_halving or None), ("halving_gap", args.approx_halving_gap))
+        ("per_card", args.approx_per_card), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
+        ("halving", args.approx_halving or None))
         if v is not None}})
     last_search_tick = -10 ** 9
     fast_state: dict = {}
@@ -164,7 +163,7 @@ def _search_decisions(seed: int) -> list[dict]:
         search_play._W["cpp_rollouts"] = cpp
         started = time.perf_counter()
         try:
-            chosen = search_play._search(env, obs, policy_action, config, decision_seed, stats, {})
+            chosen = search_play._search(env, obs, policy_action, config, decision_seed, stats)
         finally:
             search_play._W["rollout_sim_skip"] = 0
         return chosen, [(json.dumps(c, sort_keys=True), v) for c, v in (stats.get("last_targets") or [])], \
@@ -173,8 +172,7 @@ def _search_decisions(seed: int) -> list[dict]:
     while not obs["terminal"] and decisions < args.max_actions:
         action = search_play._fast_action(obs, fast_state)
         legal = (obs.get("legal_actions") or {}).get("plants") or []
-        searches = bool(legal) and (action["type"] == "plant" or (
-            args.scope != "placement" and obs["tick"] - last_search_tick >= args.min_gap))
+        searches = bool(legal) and (action["type"] == "plant" or obs["tick"] - last_search_tick >= args.min_gap)
         if searches:
             last_search_tick = obs["tick"]
             decision_seed = seed * 10000 + decisions
@@ -280,18 +278,14 @@ def main() -> None:
     p.add_argument("--executable", default=str(ROOT / "build" / "pvz-portable"))
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     p.add_argument("--max-actions", type=int, default=3000)
-    p.add_argument("--top-k", type=int, default=8)
     p.add_argument("--samples", type=int, default=4)
     p.add_argument("--horizon", type=int, default=3000)
-    p.add_argument("--approx-top-k", type=int, help="search mode: cheaper configuration for the approximate arm")
+    p.add_argument("--approx-per-card", type=int, help="search mode: cheaper configuration for the approximate arm")
     p.add_argument("--approx-samples", type=int)
     p.add_argument("--approx-horizon", type=int)
     p.add_argument("--approx-halving", action="store_true", help="search mode: successive halving (search_play --halving)")
-    p.add_argument("--approx-halving-gap", type=float)
-    p.add_argument("--scope", choices=("placement", "all"), default="placement",
-                   help="search mode: placement = re-place pi's card; all = wide search incl. wait")
-    p.add_argument("--per-card", type=int, default=0, help="search mode: search_play --per-card")
-    p.add_argument("--min-gap", type=int, default=0, help="search mode: search_play --min-gap (scope all)")
+    p.add_argument("--per-card", type=int, default=1, help="search mode: search_play --per-card")
+    p.add_argument("--min-gap", type=int, default=300, help="search mode: search_play --min-gap")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -305,10 +299,9 @@ def main() -> None:
         else:
             results = [row for rows in pool.imap_unordered(_search_decisions, seeds) for row in rows]
             summary = summarize_search(results, args.mask)
-    summary.update(task_id=args.task_id, policy=str(args.policy), approx_top_k=args.approx_top_k,
+    summary.update(task_id=args.task_id, policy=str(args.policy), approx_per_card=args.approx_per_card,
                    cpp_rollouts=args.cpp_rollouts, base_mask=args.base_mask,
-                   approx_halving=args.approx_halving, approx_halving_gap=args.approx_halving_gap,
-                   scope=args.scope, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
+                   approx_halving=args.approx_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
     print(json.dumps(summary, indent=1))

@@ -100,7 +100,7 @@ def check_cpp(args) -> None:
                         for repeat in range(args.repeats):
                             env.restore(root)
                             env.reseed(seed * 1000 + repeat)
-                            search_play._rollout_policy(env, obs, {}, action, obs["tick"] + 3000)
+                            search_play._rollout_policy(env, obs, action, obs["tick"] + 3000)
                         times["cpp" if cpp else "python"] = time.perf_counter() - started
                         if cpp: print(json.dumps(search_play._W["rollout_metrics"]), flush=True)
                     env.restore(root)
@@ -109,7 +109,7 @@ def check_cpp(args) -> None:
                                       "speedup": times["python"] / times["cpp"]}), flush=True)
                     break
                 elif args.cpp_mode == "search":
-                    action = search_play._search(env, obs, action, args, seed * 10000 + decision, stats, {})
+                    action = search_play._search(env, obs, action, args, seed * 10000 + decision, stats)
                 memo = {"frame": frame, "action": action}
                 obs, *_rest, info = env.step(action)
                 if not info.get("ok"): obs, *_rest, info = env.step({"type": "wait", "ticks": 60})
@@ -149,7 +149,7 @@ def _rollout_pair(env, obs: dict, first: dict, seed: int, counters: dict) -> Non
             env.restore(root)
             env.reseed(seed)
             search_play._W.update(batch_waits=batch, lean_rollouts=lean)
-            leaf = search_play._rollout_policy(env, obs, {}, first, obs["tick"] + 3000)
+            leaf = search_play._rollout_policy(env, obs, first, obs["tick"] + 3000)
             leaves.append((leaf["tick"], _frame(leaf), env._sun_production_history.copy()))
     finally:
         env.restore(root)
@@ -222,13 +222,12 @@ def main() -> None:
     p.add_argument("--repeats", type=int, default=100)
     p.add_argument("--profile", type=Path)
     p.add_argument("--out", type=Path)
-    p.add_argument("--scope", choices=("placement", "all"), default="placement")
-    p.add_argument("--per-card", type=int, default=0)
-    p.add_argument("--min-gap", type=int, default=0)
-    p.add_argument("--halving", action="store_true")
+    p.add_argument("--per-card", type=int, default=1)
+    p.add_argument("--min-gap", type=int, default=300)
+    p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--samples", type=int, default=4)
     p.add_argument("--horizon", type=int, default=3000)
-    p.set_defaults(continuation="policy", top_k=8, margin=.02, halving_gap=0)
+    p.set_defaults(margin=.02)
     args = p.parse_args()
     torch.set_num_threads(1)
     if args.cpp_mode:
