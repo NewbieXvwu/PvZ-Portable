@@ -378,7 +378,7 @@ def main() -> None:
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--min-gap", type=int, default=300,
                    help="ticks between searches unless the student itself wants to plant (0 = search every time)")
-    p.add_argument("--rollout-sim-skip", type=int, default=21,
+    p.add_argument("--rollout-sim-skip", type=int, default=29,
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
     p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=True,
                    help="run student continuations in C++ (--no-cpp-rollouts: the Python reference loop)")

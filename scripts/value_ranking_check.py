@@ -267,7 +267,7 @@ def main() -> None:
     p.add_argument("--values", required=True, help="name=path,... or path,... (name = parent directory); none = only --dump")
     p.add_argument("--samples", type=int, default=16)
     p.add_argument("--horizon", type=int, default=3000)
-    p.add_argument("--sim-skip", type=int, default=21)
+    p.add_argument("--sim-skip", type=int, default=29)
     p.add_argument("--min-wave", type=int, default=3)
     p.add_argument("--position-rate", type=float, default=0.03, help="chance that a decision with legal plants is evaluated")
     p.add_argument("--cells", type=int, default=1, help="the student's best N cells of every card")
