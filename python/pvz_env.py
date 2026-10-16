@@ -212,6 +212,7 @@ class PvZEnv:
         self._process: subprocess.Popen[str] | None = None
         self._reset_done = False
         self._last_response: dict[str, Any] = {}
+        self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
         # Resource hashes and git metadata are computed on first use: hashing main.pak
         # eagerly here would raise a bare FileNotFoundError before ``_start`` can report
@@ -702,6 +703,7 @@ class PvZEnv:
         bypasses the episode bookkeeping, so do not mix it with :meth:`save_replay`.
 
         With retain_snapshots=False, return compact observations without saving children or hashing them.
+        Older binaries use the original command and release its child snapshots immediately.
         """
         if type(snapshot_id) is not int or snapshot_id < 1:
             raise ValueError("snapshot_id must be a positive integer")
@@ -713,8 +715,20 @@ class PvZEnv:
                 f"got {len(actions)}"
             )
         tokens = " ".join(branch_action_token(action) for action in actions)
+        if not retain_snapshots and self._branch_observe_supported is False:
+            branches = self.branch_snapshot(snapshot_id, actions)
+            for branch in branches:
+                child = branch.pop("snapshot_id", None)
+                branch.pop("state_hash", None)
+                if child is not None:
+                    self.release_snapshot(child)
+            return branches
         command = "BRANCH_SNAPSHOT_FAST" if retain_snapshots else "BRANCH_OBSERVE"
         response = self._command(f"{command} {snapshot_id} {len(actions)} {tokens}")
+        if not retain_snapshots and self._branch_observe_supported is None:
+            self._branch_observe_supported = "branches" in response
+            if not self._branch_observe_supported:
+                return self.branch_snapshot(snapshot_id, actions, retain_snapshots=False)
         branches = response.get("branches")
         if not response.get("ok") or not isinstance(branches, list) or len(branches) != len(actions):
             raise ValueError(f"environment could not branch snapshot {snapshot_id}: {response}")

@@ -67,6 +67,7 @@ class ReanimatorTrack
 public:
 	const char*                     mName;                          //+0x0: track name
 	ReanimatorTransformArray        mTransforms;                    //+0x4: anim transforms for each frame
+	bool                            mIsAttacher = false;
 
 public:
 	ReanimatorTrack() : mName(""), mTransforms({nullptr,0}) { }

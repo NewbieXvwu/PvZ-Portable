@@ -226,6 +226,7 @@ bool ReanimationLoadDefinition(const std::string& theFileName, ReanimatorDefinit
 	for (int aTrackIndex = 0; aTrackIndex < theDefinition->mTracks.count; aTrackIndex++)
 	{
 		ReanimatorTrack* aTrack = &theDefinition->mTracks.tracks[aTrackIndex];
+		aTrack->mIsAttacher = strncasecmp(aTrack->mName, "attacher__", 10) == 0;
 		float aPrevTransX = 0.0f;
 		float aPrevTransY = 0.0f;
 		float aPrevSkewX = 0.0f;
@@ -510,13 +511,7 @@ void Reanimation::Update()
 			aTrack->mShakeY = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
 		}
 
-		// IsAttacher.  This runs for every track of every live reanimation on every tick, and the
-		// library call was ~27% of all simulation time in a headless search profile.  Almost every
-		// track name fails on its first two letters ("anim_*", "Zombie_*", ...), so test those
-		// inline first; ``strncasecmp`` still makes the decision, the result is unchanged.
-		const char* aTrackName = mDefinition->mTracks.tracks[aTrackIndex].mName;
-		if ((aTrackName[0] | 0x20) == 'a' && (aTrackName[1] | 0x20) == 't' &&
-			strncasecmp(aTrackName, "attacher__", 10) == 0)
+		if (mDefinition->mTracks.tracks[aTrackIndex].mIsAttacher)
 			UpdateAttacherTrack(aTrackIndex);
 
 		if (aTrack->mAttachmentID != AttachmentID::ATTACHMENTID_NULL)

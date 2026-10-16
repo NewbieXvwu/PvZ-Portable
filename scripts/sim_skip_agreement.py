@@ -54,7 +54,7 @@ def _init(args) -> None:
     from pvz_rollout_policy import load_student, export_student
     net = load_student(args.policy)
     _W.update(net=net, args=args, env=EventWaitEnv(args.resource_dir, executable=args.executable, headless=True))
-    if args.cpp_rollouts:
+    if args.cpp_rollouts or args.base_cpp_rollouts:
         import tempfile
         _W["temporary"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-agreement-")
         binary = Path(_W["temporary"].name) / "student.bin"
@@ -64,6 +64,8 @@ def _init(args) -> None:
         import search_play
         from pvz_value_net import load_value_net
         search_play._W.update(fast=net, vnet=load_value_net(args.value), lean_rollouts=True, batch_waits=True)
+        if args.static_value:
+            search_play._W['static_vnet'] = load_value_net(args.static_value)
 
 
 def _reset(seed: int):
@@ -147,7 +149,7 @@ def _search_decisions(seed: int) -> list[dict]:
     env.set_sim_skip(0)
     # min_gap is applied here, once, so all three arms search at exactly the same decisions.
     sargs = ap.Namespace(samples=args.samples, horizon=args.horizon, margin=0.02, min_gap=0, per_card=args.per_card,
-                         halving=False)
+                         halving=args.base_halving)
     # The approximate arm: SIM_SKIP during rollouts and/or a cheaper search configuration.
     approx_sargs = ap.Namespace(**{**vars(sargs), **{k: v for k, v in (
         ("per_card", args.approx_per_card), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
@@ -176,9 +178,15 @@ def _search_decisions(seed: int) -> list[dict]:
         if searches:
             last_search_tick = obs["tick"]
             decision_seed = seed * 10000 + decisions
-            exact, exact_totals, t_exact = run(decision_seed, args.base_mask, action, sargs)
-            approx, approx_totals, t_approx = run(decision_seed, args.mask, action, approx_sargs, args.cpp_rollouts)
-            other, other_totals, _t = run(decision_seed + 7_777_777, args.base_mask, action, sargs)
+            runs = [(args.base_mask, sargs, args.base_cpp_rollouts),
+                    (args.mask, approx_sargs, args.cpp_rollouts)]
+            order = (0, 1) if len(rows) % 2 == 0 else (1, 0)
+            results = {index: run(decision_seed, runs[index][0], action, runs[index][1], runs[index][2])
+                       for index in order}
+            exact, exact_totals, t_exact = results[0]
+            approx, approx_totals, t_approx = results[1]
+            other, other_totals, _t = run(decision_seed + 7_777_777, args.base_mask, action, sargs,
+                                         args.base_cpp_rollouts)
             if exact_totals:
                 rows.append({"seed": seed, "decision": decisions, "tick": obs["tick"],
                              "exact": exact, "approx": approx, "exact_other_futures": other,
@@ -267,6 +275,8 @@ def main() -> None:
     p.add_argument("mode", choices=("games", "search"))
     p.add_argument("--mask", type=int, required=True)
     p.add_argument("--base-mask", type=int, default=0)
+    p.add_argument("--base-halving", action="store_true", help="search mode: reference teacher uses halving")
+    p.add_argument("--base-cpp-rollouts", action="store_true", help="reference teacher also uses native rollouts")
     p.add_argument("--cpp-rollouts", action="store_true", help="compare Python against native student rollouts")
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
@@ -275,6 +285,7 @@ def main() -> None:
     p.add_argument("--task-id", default=DEFAULT_TASK)
     p.add_argument("--policy", default=DEFAULT_POLICY, help="RolloutNet / fast_ppo checkpoint, played greedily")
     p.add_argument("--value", default=DEFAULT_VALUE)
+    p.add_argument("--static-value", help="search mode: separate net for choosing cells")
     p.add_argument("--executable", default=str(ROOT / "build" / "pvz-portable"))
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     p.add_argument("--max-actions", type=int, default=3000)
@@ -300,7 +311,8 @@ def main() -> None:
             results = [row for rows in pool.imap_unordered(_search_decisions, seeds) for row in rows]
             summary = summarize_search(results, args.mask)
     summary.update(task_id=args.task_id, policy=str(args.policy), approx_per_card=args.approx_per_card,
-                   cpp_rollouts=args.cpp_rollouts, base_mask=args.base_mask,
+                   cpp_rollouts=args.cpp_rollouts, base_cpp_rollouts=args.base_cpp_rollouts,
+                   base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
                    approx_halving=args.approx_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
