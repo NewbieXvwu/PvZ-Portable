@@ -94,6 +94,9 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     started = time.perf_counter()
     memo = {"frame": None, "action": None}
     actions = []
+    ready_mowers = lambda o: sum(d["state"] == 1 for d in o.get("defenses") or [])
+    mowers_start = mowers_left = ready_mowers(obs)
+    planted = {}
     if approximate and _W["args"].cpp_rollouts:
         obs = env.rollout(None, 0, sim_skip=mask, max_actions=_W["args"].max_actions)
         details = env._last_response
@@ -101,6 +104,8 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
         return {"seed": seed, "mask": mask, "approximate": approximate, "backend": "cpp",
                 "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
                 "decisions": details["decisions"], "seconds": time.perf_counter() - started, "actions": None,
+                "mowers_used": mowers_start - details["mowers_left"],
+                "planted": {index: count for index, count in enumerate(details["planted"]) if count},
                 "simulation_seconds": details["simulation_seconds"], "network_seconds": details["network_seconds"]}
     while not obs["terminal"] and len(actions) < _W["args"].max_actions:
         frame = _frame(obs)
@@ -108,17 +113,22 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
         action = act(_W["net"], frame, memo["frame"], (obs.get("legal_actions") or {}).get("plants") or [])
         memo["frame"], memo["action"] = frame, action
         obs, _r, done, _t, info = env.step(action)
+        if info.get("ok") and action["type"] == "plant":
+            planted[action["packet"]] = planted.get(action["packet"], 0) + 1
         if not info.get("ok"):
             obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
         actions.append(f"{obs['tick']}:{action['type'][0]}{action.get('packet', '')}"
                        f"{action.get('row', '')}{action.get('col', '')}")
+        if not obs["terminal"]:
+            mowers_left = ready_mowers(obs)
         if done:
             break
     seconds = time.perf_counter() - started
     env.set_sim_skip(0)
     return {"seed": seed, "mask": mask, "approximate": approximate, "backend": "python",
             "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
-            "decisions": len(actions), "seconds": round(seconds, 3), "actions": actions}
+            "decisions": len(actions), "seconds": round(seconds, 3), "actions": actions,
+            "mowers_used": mowers_start - mowers_left, "planted": planted}
 
 
 def _search_decisions(seed: int) -> list[dict]:
@@ -208,6 +218,8 @@ def summarize_games(results: list[dict], mask: int) -> dict:
         "approx_only_wins": sum(a["won"] and not e["won"] for e, a in pairs),
         "mcnemar_exact_p": min(1.0, 2 * sum(comb(discordant, index) for index in range(min(exact_only, approx_only) + 1)) / 2 ** discordant),
         "final_wave_agreement": round(sum(e["wave"] == a["wave"] for e, a in pairs) / n, 4),
+        "mowers_used_agreement": sum(e["mowers_used"] == a["mowers_used"] for e, a in pairs) / n,
+        "planted_agreement": sum(e["planted"] == a["planted"] for e, a in pairs) / n,
         "mean_wave_exact": round(sum(e["wave"] for e, _a in pairs) / n, 3),
         "mean_wave_approx": round(sum(a["wave"] for _e, a in pairs) / n, 3),
         "identical_trajectories": sum(d is None for d in diverged) if len(diverged) == n else None,

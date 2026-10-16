@@ -469,6 +469,7 @@ static void RunEnvironment(LawnApp* app)
 					substeps.emplace_back(now, produced);
 					simulationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
 					++decisions;
+					// 胜利会放出剩余小推车，与 Python 一样保留最后非终局观测的数量。
 					if (!app->EnvironmentTerminal()) mowersLeft = readyMowers();
 					if (now >= untilTick) break;
 				}
