@@ -78,6 +78,9 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=None, help="torch seed for init and shuffling")
     p.add_argument("--width", type=int, default=64, help="channels of the net (smaller = faster rollouts)")
     p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
+    p.add_argument("--packet-balance", type=float, default=0.0,
+                   help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
+    p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
     args = p.parse_args()
     if args.seed is not None:
         torch.manual_seed(args.seed)
@@ -91,7 +94,14 @@ def main() -> None:
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
 
-    net = RolloutNet(args.width).to(args.device)
+    if args.packet_balance:
+        planted_rows = packet >= 0
+        freq = torch.bincount(packet[planted_rows], minlength=PACKETS).float() / int(planted_rows.sum())
+        scale = freq.clamp(min=1e-6) ** -args.packet_balance
+        scale = (scale / scale[packet[planted_rows]].mean()).clamp(max=20.0)  # mean plant-row weight ~1
+        weight[planted_rows] *= scale[packet[planted_rows]]
+        print("packet weights", {k: round(float(scale[k]), 2) for k in range(PACKETS) if freq[k] > 0}, flush=True)
+    net = RolloutNet(args.width, args.pool).to(args.device)
     opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
     waits = float(weight[plant < 0.5].sum())
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
@@ -138,7 +148,7 @@ def main() -> None:
         print(json.dumps(history[-1]), flush=True)
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
-                "label_weight": label_weight,
+                "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "history": history}, args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started}, indent=1))
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
