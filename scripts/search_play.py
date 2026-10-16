@@ -38,9 +38,12 @@ _W: dict = {}
 
 
 def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = None,
-                 lean_rollouts: bool = False, rollout_sim_skip: int = 0, batch_waits: bool = False) -> None:
+                 lean_rollouts: bool = False, rollout_sim_skip: int = 0, batch_waits: bool = False,
+                 cpp_rollouts: bool | None = None) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
-    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip, batch_waits=batch_waits)
+    os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+    _W.update(lean_rollouts=lean_rollouts, rollout_sim_skip=rollout_sim_skip, batch_waits=batch_waits,
+              cpp_rollouts=bool(rollout_path) if cpp_rollouts is None else cpp_rollouts)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
@@ -56,6 +59,12 @@ def _init_worker(policy_path: str, value_path: str, rollout_path: str | None = N
         from pvz_rollout_policy import load_student
         fast = load_student(rollout_path)
         _W["fast"] = fast
+        if _W["cpp_rollouts"]:
+            import tempfile
+            from pvz_rollout_policy import export_student
+            _W["rollout_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-")
+            _W["rollout_file"] = str(Path(_W["rollout_tmp"].name) / "student.bin")
+            export_student(fast, _W["rollout_file"])
 
 
 def _fast_action(obs: dict, fast_state: dict) -> dict:
@@ -84,9 +93,20 @@ def _score_terminal_or_value(obs: dict) -> float | None:
     return None
 
 
-def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int) -> dict:
+def _rollout_policy(env, obs: dict, state: dict, first: dict, until_tick: int,
+                    root: int | None = None, seed: int | None = None) -> dict:
     """Play ``first`` and then let pi -- or the fast rollout policy, if loaded -- continue until
     ``until_tick`` (0 = to the end of the game)."""
+    if _W.get("cpp_rollouts"):
+        leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed)
+        metrics = _W.setdefault("rollout_metrics", {})
+        for key in ("decisions", "simulation_seconds", "network_seconds"):
+            metrics[key] = metrics.get(key, 0) + env._last_response[key]
+        return leaf
+    if root is not None:
+        env.restore(root)
+    if seed is not None:
+        env.reseed(seed)
     from render_episode import _ppo_action, _frame
     rs = dict(state)
     fast_state = {"frame": _frame(obs), "action": first} if "fast" in _W else None
@@ -185,11 +205,12 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         for cand in candidates:
             leaf_frames, fixed = [], []
             for k in range(args.samples):
-                env.restore(root)
-                env.reseed((decision_seed * 1000 + k) % 2 ** 32)
+                future = (decision_seed * 1000 + k) % 2 ** 32
                 if args.continuation == "policy":
-                    leaf = _rollout_policy(env, obs, state, cand, obs["tick"] + args.horizon)
+                    leaf = _rollout_policy(env, obs, state, cand, obs["tick"] + args.horizon, root, future)
                 else:
+                    env.restore(root)
+                    env.reseed(future)
                     if cand["type"] == "plant":
                         env.step(cand)
                     leaf, *_ = env.step({"type": "wait", "ticks": args.horizon})
@@ -239,9 +260,8 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
         leaves: list[tuple[int, dict]] = []
         for i in alive:
             for k in range(done, target):
-                env.restore(root)
-                env.reseed((decision_seed * 1000 + k) % 2 ** 32)
-                leaf = _rollout_policy(env, obs, state, candidates[i], obs["tick"] + args.horizon)
+                leaf = _rollout_policy(env, obs, state, candidates[i], obs["tick"] + args.horizon,
+                                       root, (decision_seed * 1000 + k) % 2 ** 32)
                 terminal = _score_terminal_or_value(leaf)
                 if terminal is None:
                     leaves.append((i, _frame(leaf)))
@@ -317,9 +337,8 @@ def _timing_search(env, obs: dict, policy_action: dict, args, decision_seed: int
                 for cand in (policy_action, alternative):
                     leaves, fixed = [], []
                     for k in range(args.samples):
-                        env.restore(root)
-                        env.reseed((decision_seed * 1000 + 500 + k) % 2 ** 32)
-                        leaf = _rollout_policy(env, obs, state, cand, obs["tick"] + args.timing_horizon)
+                        leaf = _rollout_policy(env, obs, state, cand, obs["tick"] + args.timing_horizon,
+                                               root, (decision_seed * 1000 + 500 + k) % 2 ** 32)
                         terminal = _score_terminal_or_value(leaf)
                         (fixed.append(terminal) if terminal is not None else leaves.append(_frame(leaf)))
                     values = fixed + (_values(leaves) if leaves else [])
@@ -379,6 +398,8 @@ def _play(job: dict) -> dict:
     env = _W.get("env")
     if env is None:
         env = _W["env"] = policy_env(model.config, args.resource_dir, headless=True)
+        if _W.get("cpp_rollouts"):
+            env.load_rollout_net(_W["rollout_file"])
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"])),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
@@ -397,6 +418,11 @@ def _play(job: dict) -> dict:
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
         planted: dict[int, int] = {}
+        if job["arm"] == "fast" and _W.get("cpp_rollouts"):
+            obs = env.rollout(None, 0, max_actions=args.max_actions)
+            details = env._last_response
+            decisions, mowers_left = details["decisions"], details["mowers_left"]
+            planted = {index: count for index, count in enumerate(details["planted"]) if count}
         while not obs["terminal"] and decisions < args.max_actions:
             if job["arm"] in ("fast", "fast_search"):
                 action = _fast_action(obs, fast_state)
@@ -490,6 +516,8 @@ def main() -> None:
                    help="fast-policy rollouts send every no-legal-plant wait separately (same result, slower)")
     p.add_argument("--rollout-sim-skip", type=int, default=0,
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
+    p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=None,
+                   help="run student continuations in C++ (default when --rollout-policy is supplied)")
     p.add_argument("--timing-horizon", type=int, default=1500, help="ticks of look-ahead (0 = to the end of the game)")
     p.add_argument("--timing-sun", type=int, default=300)
     p.add_argument("--timing-gap", type=int, default=1500)
@@ -505,6 +533,12 @@ def main() -> None:
     p.add_argument("--task-id", default=None)
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     args = p.parse_args()
+    if args.cpp_rollouts and not args.rollout_policy:
+        p.error("--cpp-rollouts requires --rollout-policy")
+    if args.cpp_rollouts and args.continuation != "policy" and any(arm in ("search", "fast_search") for arm in args.arms.split(",")):
+        p.error("--cpp-rollouts requires --continuation policy for search arms")
+    if args.cpp_rollouts is not False and args.rollout_policy and "fast" in args.arms.split(",") and (args.frames or args.record):
+        p.error("C++ fast games do not emit per-decision archives; use --no-cpp-rollouts with --frames/--record")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
@@ -527,7 +561,7 @@ def main() -> None:
     with results_path.open("a") as out, mp.get_context("spawn").Pool(
             args.workers, initializer=_init_worker, initargs=(args.policy, args.value, args.rollout_policy,
                                                      args.lean_rollouts, args.rollout_sim_skip,
-                                                     args.batch_waits)) as pool:
+                                                     args.batch_waits, args.cpp_rollouts)) as pool:
         for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
             out.write(json.dumps(res) + "\n"); out.flush()
             if i % 10 == 0 or i == len(jobs):

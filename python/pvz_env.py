@@ -567,7 +567,7 @@ class PvZEnv:
     def release_snapshot(self, snapshot_id: int) -> None:
         if type(snapshot_id) is not int or snapshot_id < 1:
             raise ValueError("snapshot_id must be a positive integer")
-        response = self._command(f"DROP_SNAPSHOT {snapshot_id}")
+        response = self._command(f"DROP_SNAPSHOT_FAST {snapshot_id}")
         if not response.get("ok"):
             raise ValueError(f"environment could not release snapshot {snapshot_id}: {response}")
         self._sun_history_snapshots.pop(snapshot_id, None)
@@ -607,6 +607,83 @@ class PvZEnv:
         """
         if not self._command(f"OBS_LEAN {1 if lean else 0}").get("ok"):
             raise RuntimeError("simulator rejected OBS_LEAN (binary older than this wrapper?)")
+
+    def load_rollout_net(self, path: str | os.PathLike[str]) -> None:
+        """Load weights exported by pvz_rollout_policy.export_student in this simulator process."""
+        filename = str(Path(path).expanduser().resolve())
+        if any(char in filename for char in ('\n', '\r')):
+            raise ValueError("rollout network path must not contain newlines")
+        quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
+            raise RuntimeError(f"simulator rejected rollout network: {filename}")
+
+    def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False) -> dict:
+        """Diagnostic logits and greedy action on the current public board, without advancing it."""
+        if not self._reset_done:
+            raise RuntimeError("call reset() before rollout_predict()")
+        income = self._annotate_observation({"tick": self._tick, "wave_timer": 0})["sun_income_rate"]
+        response = self._command(f"ROLLOUT_PREDICT {previous_tick if previous_tick is not None else -1} "
+                                 f"{int(previous_plant)} {income:.17g}")
+        if not response.get("ok"):
+            raise RuntimeError("simulator rejected ROLLOUT_PREDICT")
+        return response
+
+    def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
+                sim_skip: int = 0, max_actions: int = 1000000,
+                snapshot_id: int | None = None, seed: int | None = None) -> dict[str, Any]:
+        """Run the greedy student entirely in C++ and return its leaf (0 = whole game).
+
+        None selects the first action with the student, with fresh previous-action context.
+        Like branch_snapshot, this bypasses replay bookkeeping. Income samples retain every
+        decision boundary so subsequent Python features and snapshot restores stay consistent.
+        """
+        if not self._reset_done:
+            raise RuntimeError("call reset() before rollout()")
+        if type(until_tick) is not int or not 0 <= until_tick <= 2 ** 31 - 1:
+            raise ValueError("until_tick must be a non-negative signed 32-bit integer")
+        if type(max_actions) is not int or not 1 <= max_actions <= 1000000:
+            raise ValueError("max_actions must be from 1 to 1000000")
+        if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~21:
+            raise ValueError("sim skip mask must combine the bits 1, 4 and 16")
+        event_wait = False
+        if first_action is None:
+            token = "A"
+        else:
+            action = dict(first_action)
+            condition = action.pop("until", None)
+            if condition is not None and (action.get("type") != "wait" or condition != "timeout"):
+                raise ValueError("rollout first action only supports fixed or timeout waits")
+            if action.get("type") not in ("plant", "wait"):
+                raise ValueError("rollout first action must be plant or wait")
+            if action["type"] == "wait" and (type(action.get("ticks")) is not int or not 0 <= action["ticks"] <= 1000000):
+                raise ValueError("wait ticks must be from 0 to 1000000")
+            if action["type"] == "plant":
+                self._coordinates(action, ("packet", "row", "col"))
+            event_wait = condition is not None
+            token = branch_action_token(action)
+        if seed is not None and (type(seed) is not int or not 0 <= seed < 2 ** 32):
+            raise ValueError("seed must be an unsigned 32-bit integer")
+        if snapshot_id is not None and (type(snapshot_id) is not int or snapshot_id not in self._sun_history_snapshots):
+            raise ValueError("snapshot_id must refer to a live snapshot of this environment")
+        history, history_start = (list(self._sun_production_history), self._sun_history_start_tick)
+        if snapshot_id is not None:
+            saved = self._sun_history_snapshots[snapshot_id]
+            history, history_start = saved[0], saved[1]
+        samples = " ".join(f"{tick} {amount}" for tick, amount in history)
+        response = self._command(f"ROLLOUT {snapshot_id or 0} {seed if seed is not None else -1} "
+                                 f"{until_tick} {sim_skip} {max_actions} {int(event_wait)} {token} "
+                                 f"{history_start} {len(history)} {samples}".rstrip())
+        observation = response.get("observation")
+        if not response.get("ok") or not isinstance(observation, dict):
+            raise RuntimeError(f"simulator rejected ROLLOUT: {response}")
+        self._sun_production_history = deque(history)
+        self._sun_history_start_tick = history_start
+        for tick, produced in response["substeps"]:
+            if produced > 0:
+                self._sun_production_history.append((tick, produced))
+        self._annotate_observation(observation)
+        self._adopt_tick(observation)
+        return observation
 
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Expand several actions from one parent snapshot in a single command.

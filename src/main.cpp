@@ -26,16 +26,21 @@
 #include "Lawn/SeedPacket.h"
 #include "Lawn/System/SaveGame.h"
 #include "Lawn/Zombie.h"
+#include "Lawn/LawnMower.h"
+#include "EnvironmentRollout.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
 #include <bit>
 #include <charconv>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <iostream>
+#include <iomanip>
+#include <deque>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -320,10 +325,13 @@ static void RunEnvironment(LawnApp* app)
 	std::string line;
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
+	EnvironmentRollout rollout;
+	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
-		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << '}' << std::endl;
+		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
+		const auto commandStart = std::chrono::steady_clock::now();
 		std::istringstream input(line);
 		std::string command;
 		input >> command;
@@ -338,7 +346,149 @@ static void RunEnvironment(LawnApp* app)
 		bool hasSubsteps = false;
 		int previousTick = 0;
 		std::vector<std::pair<int, uint32_t>> substeps;
-		if (command == "RESET_V2")
+		if (command == "ENV_PROFILE")
+		{
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true"
+				<< ",\"action_seconds\":" << actionSeconds << ",\"observation_seconds\":" << observationSeconds
+				<< ",\"control_seconds\":" << controlSeconds << '}' << std::endl;
+			continue;
+		}
+		else if (command == "LOAD_ROLLOUT_NET")
+		{
+			std::string path, extra;
+			if (input >> std::quoted(path) && !(input >> extra))
+			{
+				try { rollout.Load(path); ok = true; }
+				catch (const std::exception& error) { std::cerr << error.what() << std::endl; }
+			}
+			minimalResponse = true;
+		}
+		else if (command == "ROLLOUT_PREDICT")
+		{
+			int priorTick = -1, priorPlant = 0;
+			double income = 0;
+			std::string extra;
+			ok = static_cast<bool>(input >> priorTick >> priorPlant >> income) && !(input >> extra) &&
+				rollout.Loaded() && app->mBoard && std::isfinite(income) && (priorPlant == 0 || priorPlant == 1);
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false");
+			if (ok)
+			{
+				auto prediction = rollout.Predict(app, income, priorTick, priorPlant, true);
+				std::cout << std::setprecision(9) << ",\"plant\":" << prediction.plant << ",\"packet\":[";
+				for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << prediction.packets[index];
+				std::cout << "],\"cell_packet\":" << prediction.cellPacket << ",\"cell\":[";
+				for (int index = 0; index < 54; ++index) std::cout << (index ? "," : "") << prediction.cells[index];
+				std::cout << "],\"action\":{";
+				if (prediction.action.packet < 0) std::cout << "\"type\":\"wait\",\"ticks\":60,\"until\":\"timeout\"";
+				else std::cout << "\"type\":\"plant\",\"packet\":" << prediction.action.packet << ",\"row\":" << prediction.action.row << ",\"col\":" << prediction.action.col;
+				std::cout << '}';
+			}
+			std::cout << '}' << std::endl << std::setprecision(6);
+			continue;
+		}
+		else if (command == "ROLLOUT")
+		{
+			int untilTick = 0, mask = 0, maxActions = 0, eventWait = 0, historyStart = 0, historyCount = 0;
+			int rootId = 0;
+			int64_t seed = -1;
+			std::string first, extra;
+			std::deque<std::pair<int, uint32_t>> history;
+			ok = static_cast<bool>(input >> rootId >> seed >> untilTick >> mask >> maxActions >> eventWait >> first >> historyStart >> historyCount) &&
+				rollout.Loaded() && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
+				maxActions > 0 && maxActions <= 1000000 && (eventWait == 0 || eventWait == 1) && historyCount >= 0 && historyCount <= 100000 &&
+				rootId >= 0 && (rootId == 0 || snapshots.contains(rootId)) && seed >= -1 && seed <= UINT32_MAX;
+			if (ok && rootId) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
+			if (ok && seed >= 0) ReseedEnvironment(app, static_cast<uint32_t>(seed));
+			for (int index = 0; ok && index < historyCount; ++index)
+			{
+				int tick = 0;
+				uint32_t produced = 0;
+				ok = static_cast<bool>(input >> tick >> produced) && tick >= historyStart && tick <= app->mBoard->mMainCounter &&
+					(history.empty() || tick >= history.back().first);
+				if (ok) history.emplace_back(tick, produced);
+			}
+			std::string actionCommand, actionArguments;
+			ok = ok && !(input >> extra) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
+				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments));
+			int decisions = 0, mowersLeft = 0;
+			std::array<int, 10> planted{};
+			double simulationSeconds = 0, networkSeconds = 0;
+			if (ok)
+			{
+				const int savedMask = gEnvSimSkip;
+				gEnvSimSkip = mask;
+				if (untilTick <= app->mBoard->mMainCounter) untilTick = std::numeric_limits<int>::max();
+				int priorTick = -1;
+				bool priorPlant = false;
+				auto readyMowers = [&] { int count = 0; for (const LawnMower* mower : app->mBoard->mLawnMowers)
+					if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY) ++count; return count; };
+				mowersLeft = readyMowers();
+				while (!app->EnvironmentTerminal() && decisions < maxActions)
+				{
+					const int tick = app->mBoard->mMainCounter;
+					const uint32_t producedBefore = app->mBoard->mSunMoneyProduced;
+					EnvironmentRollout::Action action;
+					bool isFirst = decisions == 0 && first != "A";
+					if (!isFirst)
+					{
+						const auto start = std::chrono::steady_clock::now();
+						while (!history.empty() && history.front().first < tick - 6000) history.pop_front();
+						double produced = 0;
+						for (auto entry : history) produced += entry.second;
+						const int elapsed = std::max(0, std::min(6000, tick - historyStart));
+						action = rollout.Predict(app, elapsed ? produced * 1000.0 / elapsed : 0, priorTick, priorPlant).action;
+						networkSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+					}
+					const auto start = std::chrono::steady_clock::now();
+					bool accepted = true;
+					if (isFirst)
+					{
+						std::istringstream arguments(actionArguments);
+						if (actionCommand == "WAIT" && eventWait)
+						{
+							int ticks = -1;
+							accepted = static_cast<bool>(arguments >> ticks) && ticks >= 0 && ticks <= 1000000;
+							if (accepted) app->EnvironmentWaitUntil(ticks, 0);
+						}
+						else accepted = ExecuteEnvironmentAction(app, actionCommand, arguments);
+						priorPlant = actionCommand == "PLANT" && accepted;
+						if (priorPlant) { arguments.clear(); arguments.str(actionArguments); arguments >> action.packet; }
+					}
+					else
+					{
+						priorPlant = action.packet >= 0;
+						if (priorPlant) accepted = app->EnvironmentPlant(action.packet, action.col, action.row);
+						else app->EnvironmentWaitUntil(60, 0);
+					}
+					if (!accepted) { app->EnvironmentWait(60); priorPlant = false; }
+					if (priorPlant) ++planted[action.packet];
+					priorTick = tick;
+					const int now = app->mBoard->mMainCounter;
+					const uint32_t produced = app->mBoard->mSunMoneyProduced - producedBefore;
+					if (produced) history.emplace_back(now, produced);
+					substeps.emplace_back(now, produced);
+					simulationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+					++decisions;
+					if (!app->EnvironmentTerminal()) mowersLeft = readyMowers();
+					if (now >= untilTick) break;
+				}
+				gEnvSimSkip = savedMask;
+			}
+			actionSeconds += simulationSeconds;
+			const auto observationStart = std::chrono::steady_clock::now();
+			const std::string observation = app->mBoard ? app->EnvironmentLeanObservation() : "null";
+			observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
+				<< ",\"observation\":" << observation
+				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted\":[";
+			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << planted[index];
+			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds << ",\"substeps\":[";
+			for (size_t index = 0; index < substeps.size(); ++index)
+				std::cout << (index ? ",[" : "[") << substeps[index].first << ',' << substeps[index].second << ']';
+			std::cout << "]}" << std::endl;
+			continue;
+		}
+		else if (command == "RESET_V2")
 		{
 			int level = 0, playthrough = 0, slots = 0, imitater = 0, firstAid = 0, poolCleaner = 0, roofCleaner = 0, rake = 0;
 			uint32_t seed = 0;
@@ -664,7 +814,14 @@ static void RunEnvironment(LawnApp* app)
 			continue;
 		}
 
-		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << app->EnvironmentObservation(privileged);
+		const auto observationStart = std::chrono::steady_clock::now();
+		const double executionSeconds = std::chrono::duration<double>(observationStart - commandStart).count();
+		if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "WAIT_EVENT_V1" || command == "WAIT_UNTIL_LEGAL")
+			actionSeconds += executionSeconds;
+		else controlSeconds += executionSeconds;
+		const std::string observation = app->EnvironmentObservation(privileged);
+		observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
+		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << observation;
 		if (hasWaitResult)
 		{
 			std::cout << ",\"wait_result\":{\"version\":" << EnvironmentWaitEvents::Version
