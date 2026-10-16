@@ -16,7 +16,10 @@ Usage: python3 scripts/perf_rollout_check.py --seeds 4
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,12 +30,105 @@ import torch  # noqa: E402
 
 from pvz_env import TaskSpec  # noqa: E402
 from pvz_event_env import EventWaitEnv  # noqa: E402
-from pvz_rollout_policy import RolloutNet, act, features  # noqa: E402
+from pvz_rollout_policy import RolloutNet, act, features, load_student, export_student  # noqa: E402
 from pvz_value_net import _featurize_reference, featurize  # noqa: E402
 from render_episode import _frame, load_training_task, training_task_kwargs  # noqa: E402
 from scripted_baseline import profile_for_deck  # noqa: E402
 
 DEFAULT_MANIFEST = ROOT / "experiments/t7/bc_finetune_level7_v1/progress_evaluation_1024.json"
+
+
+def check_cpp(args) -> None:
+    import cProfile
+    import pstats
+    import search_play
+    from collections import Counter
+    net = load_student(args.policy)
+    task_data = load_training_task(args.manifest, args.task_id)
+    counters = {"frames": 0, "same_actions": 0, "max_logit_error": 0.0}
+    with tempfile.TemporaryDirectory(prefix="pvz-rollout-check-") as directory, EventWaitEnv(
+            args.resource_dir, executable=args.executable) as env:
+        path = Path(directory) / "student.bin"
+        export_student(net, path)
+        env.load_rollout_net(path)
+        search_play._W.update(fast=net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=args.mask)
+        if args.cpp_mode == "search":
+            from pvz_value_net import load_value_net
+            search_play._W["vnet"] = load_value_net(args.value)
+        for seed in task_data["seeds"][: args.seeds]:
+            kw = training_task_kwargs(task_data, seed)
+            task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+                            **{k: v for k, v in kw["task_extra"].items() if v is not None})
+            obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+            if args.cpp_mode == "search":
+                from pvz_value_net import observation_context
+                search_play._W["context"] = observation_context(obs)
+            memo = {}
+            if args.cpp_mode == "search":
+                stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
+                search_play._W["cpp_rollouts"] = args.cpp_rollouts
+                profile = cProfile.Profile() if args.profile else None
+                if profile: profile.enable()
+                started = time.perf_counter()
+            for decision in range(3000):
+                if obs["terminal"]: break
+                frame = _frame(obs)
+                frame["action"] = memo.get("action")
+                action = act(net, frame, memo.get("frame"), obs["legal_actions"]["plants"])
+                if args.cpp_mode == "frames":
+                    previous = memo.get("frame")
+                    native = env.rollout_predict(previous["tick"] if previous else None,
+                                                 memo.get("action", {}).get("type") == "plant")
+                    board, scalars = features(frame, previous)
+                    with torch.inference_mode():
+                        hidden, context = net.encode(board[None], scalars[None], sparse_input=True)
+                        errors = [(net.plant(context).flatten() - torch.tensor([native["plant"]])).abs().max(),
+                                  (net.packet(context)[0] - torch.tensor(native["packet"])).abs().max()]
+                        if native["cell_packet"] >= 0:
+                            cells = net.cell_logits(hidden, context, torch.tensor([native["cell_packet"]]))[0]
+                            errors.append((cells - torch.tensor(native["cell"])).abs().max())
+                    counters["max_logit_error"] = max(counters["max_logit_error"], max(float(error) for error in errors))
+                    counters["frames"] += 1
+                    counters["same_actions"] += action == native["action"]
+                elif args.cpp_mode == "throughput" and decision == 200:
+                    root = env.snapshot()
+                    times = {}
+                    for cpp in (False, True):
+                        search_play._W["cpp_rollouts"] = cpp
+                        search_play._W["rollout_metrics"] = {}
+                        started = time.perf_counter()
+                        for repeat in range(args.repeats):
+                            env.restore(root)
+                            env.reseed(seed * 1000 + repeat)
+                            search_play._rollout_policy(env, obs, {}, action, obs["tick"] + 3000)
+                        times["cpp" if cpp else "python"] = time.perf_counter() - started
+                        if cpp: print(json.dumps(search_play._W["rollout_metrics"]), flush=True)
+                    env.restore(root)
+                    env.release_snapshot(root)
+                    print(json.dumps({"seed": seed, "repeats": args.repeats, "seconds": times,
+                                      "speedup": times["python"] / times["cpp"]}), flush=True)
+                    break
+                elif args.cpp_mode == "search":
+                    action = search_play._search(env, obs, action, args, seed * 10000 + decision, stats, {})
+                memo = {"frame": frame, "action": action}
+                obs, *_rest, info = env.step(action)
+                if not info.get("ok"): obs, *_rest, info = env.step({"type": "wait", "ticks": 60})
+            if args.cpp_mode == "search":
+                seconds = time.perf_counter() - started
+                if profile:
+                    profile.disable()
+                    profile.dump_stats(str(args.profile))
+                    pstats.Stats(profile).strip_dirs().sort_stats("cumulative").print_stats(35)
+                print(json.dumps({"environment_profile": env._command("ENV_PROFILE")}), flush=True)
+                print(json.dumps({"seed": seed, "cpp": args.cpp_rollouts, "seconds": seconds, "won": obs["result"] == 1,
+                                  "decisions": decision, "searched": stats["searched"], "overrides": stats["overrides"],
+                                  "rollout_metrics": search_play._W.get("rollout_metrics")}), flush=True)
+        if args.cpp_mode == "frames":
+            counters["action_agreement"] = counters["same_actions"] / counters["frames"]
+            print(json.dumps(counters), flush=True)
+            if args.out: args.out.write_text(json.dumps(counters, indent=2) + "\n")
+            if counters["frames"] < 2000 or counters["action_agreement"] < 1 or counters["max_logit_error"] > 1e-4:
+                raise SystemExit("C++ frame equivalence threshold failed")
 
 
 def _reference_features(frame: dict, previous: dict | None):
@@ -119,12 +215,26 @@ def main() -> None:
     p.add_argument("--policy", default="/Users/newbiexvwu/PvZAgent/artifacts/student/v3all/model.pt")
     p.add_argument("--executable", default=str(ROOT / "build" / "pvz-portable"))
     p.add_argument("--resource-dir", default="/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")
+    p.add_argument("--cpp-mode", choices=("frames", "throughput", "search"))
+    p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=True)
+    p.add_argument("--value", default="/Users/newbiexvwu/PvZAgent/artifacts/value_net/v2/model.pt")
+    p.add_argument("--mask", type=int, default=21)
+    p.add_argument("--repeats", type=int, default=100)
+    p.add_argument("--profile", type=Path)
+    p.add_argument("--out", type=Path)
+    p.add_argument("--scope", choices=("placement", "all"), default="placement")
+    p.add_argument("--per-card", type=int, default=0)
+    p.add_argument("--min-gap", type=int, default=0)
+    p.add_argument("--halving", action="store_true")
+    p.add_argument("--samples", type=int, default=4)
+    p.add_argument("--horizon", type=int, default=3000)
+    p.set_defaults(continuation="policy", top_k=8, margin=.02, halving_gap=0)
     args = p.parse_args()
     torch.set_num_threads(1)
-    net = RolloutNet()
-    weights = torch.load(args.policy, map_location="cpu", weights_only=False)["state_dict"]
-    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
-    net.eval()
+    if args.cpp_mode:
+        check_cpp(args)
+        return
+    net = load_student(args.policy)
     seeds = load_training_task(args.manifest, args.task_id)["seeds"][: args.seeds]
     counters = {"frames": 0, "lean_states": 0, "sparse_mismatch": 0, "sparse_max_diff": 0.0, "rollouts": 0}
     import search_play

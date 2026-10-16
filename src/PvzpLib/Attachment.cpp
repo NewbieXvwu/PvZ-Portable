@@ -718,7 +718,8 @@ void AttachmentUpdateAndSetMatrix(AttachmentID& theAttachmentID, SexyTransform2D
 	if (aAttachment)
 	{
 		aAttachment->Update();
-		aAttachment->SetMatrix(theMatrix);
+		if (!(gEnvSimSkip & ENV_SKIP_ATTACHMENT_MATRIX))
+			aAttachment->SetMatrix(theMatrix);
 	}
 	else
 	{

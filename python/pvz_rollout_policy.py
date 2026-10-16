@@ -119,3 +119,26 @@ def load_student(path) -> RolloutNet:
     net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
     return net.eval()
+
+
+def export_student(net: RolloutNet, path) -> None:
+    """Write v2 little-endian weights with a pooling flag; v1 files must be re-exported."""
+    import struct
+    names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
+             "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
+             "plant.weight", "plant.bias", "packet.weight", "packet.bias", "packet_embedding.weight",
+             "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
+    weights = net.state_dict()
+    with open(path, "wb") as stream:
+        stream.write(b"PVZRN002" + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
+        for name in names:
+            stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Export student / fast_ppo weights for the C++ simulator")
+    parser.add_argument("checkpoint")
+    parser.add_argument("output")
+    options = parser.parse_args()
+    export_student(load_student(options.checkpoint), options.output)

@@ -45,24 +45,25 @@ _W: dict = {}
 
 def _init(args) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
     torch.set_num_threads(1)
     from pvz_event_env import EventWaitEnv
-    from pvz_rollout_policy import RolloutNet
-    net = RolloutNet()
-    weights = torch.load(args.policy, map_location="cpu", weights_only=False)["state_dict"]
-    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
-    net.eval()
+    from pvz_rollout_policy import load_student, export_student
+    net = load_student(args.policy)
     _W.update(net=net, args=args, env=EventWaitEnv(args.resource_dir, executable=args.executable, headless=True))
+    if args.cpp_rollouts:
+        import tempfile
+        _W["temporary"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-agreement-")
+        binary = Path(_W["temporary"].name) / "student.bin"
+        export_student(net, binary)
+        _W["env"].load_rollout_net(binary)
     if args.mode == "search":
         import search_play
-        from pvz_value_net import ValueNet
-        vnet = ValueNet()
-        vnet.load_state_dict(torch.load(args.value, map_location="cpu", weights_only=False)["state_dict"])
-        vnet.eval()
-        search_play._W.update(fast=net, vnet=vnet, lean_rollouts=True)
+        from pvz_value_net import load_value_net
+        search_play._W.update(fast=net, vnet=load_value_net(args.value), lean_rollouts=True, batch_waits=True)
 
 
 def _reset(seed: int):
@@ -74,15 +75,19 @@ def _reset(seed: int):
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = _W["env"].reset(deck=tuple(kw["deck"]), task=task)
+    if args.mode == "search":
+        import search_play
+        from pvz_value_net import observation_context
+        search_play._W["context"] = observation_context(obs)
     return obs
 
 
-def _play_game(job: tuple[int, int]) -> dict:
+def _play_game(job: tuple[int, int, bool]) -> dict:
     """One greedy game with the whole game on ``mask``; the env process is reused across games."""
     import torch
     from pvz_rollout_policy import act
     from render_episode import _frame
-    seed, mask = job
+    seed, mask, approximate = job
     env = _W["env"]
     torch.manual_seed(seed)
     obs = _reset(seed)
@@ -90,22 +95,43 @@ def _play_game(job: tuple[int, int]) -> dict:
     started = time.perf_counter()
     memo = {"frame": None, "action": None}
     actions = []
+    ready_mowers = lambda o: sum(d["state"] == 1 for d in o.get("defenses") or [])
+    mowers_start = mowers_left = ready_mowers(obs)
+    planted = {}
+    if approximate and _W["args"].cpp_rollouts:
+        obs = env.rollout(None, 0, sim_skip=mask, max_actions=_W["args"].max_actions)
+        details = env._last_response
+        env.set_sim_skip(0)
+        return {"seed": seed, "mask": mask, "approximate": approximate, "backend": "cpp",
+                "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
+                "decisions": details["decisions"], "seconds": time.perf_counter() - started, "actions": None,
+                "mowers_used": mowers_start - details["mowers_left"],
+                "planted": {index: count for index, count in enumerate(details["planted"]) if count},
+                "rng_state_sha256": hashlib.sha256(bytes.fromhex(env.privileged_state()["hidden"]["rand_state_hex"])).hexdigest(),
+                "simulation_seconds": details["simulation_seconds"], "network_seconds": details["network_seconds"]}
     while not obs["terminal"] and len(actions) < _W["args"].max_actions:
         frame = _frame(obs)
         frame["action"] = memo["action"]
         action = act(_W["net"], frame, memo["frame"], (obs.get("legal_actions") or {}).get("plants") or [])
         memo["frame"], memo["action"] = frame, action
         obs, _r, done, _t, info = env.step(action)
+        if info.get("ok") and action["type"] == "plant":
+            planted[action["packet"]] = planted.get(action["packet"], 0) + 1
         if not info.get("ok"):
             obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
         actions.append(f"{obs['tick']}:{action['type'][0]}{action.get('packet', '')}"
                        f"{action.get('row', '')}{action.get('col', '')}")
+        if not obs["terminal"]:
+            mowers_left = ready_mowers(obs)
         if done:
             break
     seconds = time.perf_counter() - started
     env.set_sim_skip(0)
-    return {"seed": seed, "mask": mask, "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
-            "decisions": len(actions), "seconds": round(seconds, 3), "actions": actions}
+    return {"seed": seed, "mask": mask, "approximate": approximate, "backend": "python",
+            "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
+            "decisions": len(actions), "seconds": round(seconds, 3), "actions": actions,
+            "mowers_used": mowers_start - mowers_left, "planted": planted,
+            "rng_state_sha256": hashlib.sha256(bytes.fromhex(env.privileged_state()["hidden"]["rand_state_hex"])).hexdigest()}
 
 
 def _search_decisions(seed: int) -> list[dict]:
@@ -132,9 +158,10 @@ def _search_decisions(seed: int) -> list[dict]:
     fast_state: dict = {}
     rows, decisions = [], 0
 
-    def run(decision_seed: int, mask: int, policy_action: dict, config) -> tuple[dict, list, float]:
+    def run(decision_seed: int, mask: int, policy_action: dict, config, cpp=False) -> tuple[dict, list, float]:
         stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
         search_play._W["rollout_sim_skip"] = mask
+        search_play._W["cpp_rollouts"] = cpp
         started = time.perf_counter()
         try:
             chosen = search_play._search(env, obs, policy_action, config, decision_seed, stats, {})
@@ -151,9 +178,9 @@ def _search_decisions(seed: int) -> list[dict]:
         if searches:
             last_search_tick = obs["tick"]
             decision_seed = seed * 10000 + decisions
-            exact, exact_totals, t_exact = run(decision_seed, 0, action, sargs)
-            approx, approx_totals, t_approx = run(decision_seed, args.mask, action, approx_sargs)
-            other, other_totals, _t = run(decision_seed + 7_777_777, 0, action, sargs)
+            exact, exact_totals, t_exact = run(decision_seed, args.base_mask, action, sargs)
+            approx, approx_totals, t_approx = run(decision_seed, args.mask, action, approx_sargs, args.cpp_rollouts)
+            other, other_totals, _t = run(decision_seed + 7_777_777, args.base_mask, action, sargs)
             if exact_totals:
                 rows.append({"seed": seed, "decision": decisions, "tick": obs["tick"],
                              "exact": exact, "approx": approx, "exact_other_futures": other,
@@ -177,25 +204,35 @@ def _first_divergence(a: list[str], b: list[str]) -> int | None:
 
 
 def summarize_games(results: list[dict], mask: int) -> dict:
-    by = {(r["seed"], r["mask"]): r for r in results}
+    from math import comb
+    by = {(r["seed"], r["approximate"]): r for r in results}
     seeds = sorted({r["seed"] for r in results})
-    pairs = [(by[(s, 0)], by[(s, mask)]) for s in seeds]
-    diverged = [_first_divergence(e["actions"], a["actions"]) for e, a in pairs]
+    pairs = [(by[(s, False)], by[(s, True)]) for s in seeds]
+    diverged = [_first_divergence(e["actions"], a["actions"]) for e, a in pairs if a["actions"] is not None]
     n = len(pairs)
+    exact_only = sum(e["won"] and not a["won"] for e, a in pairs)
+    approx_only = sum(a["won"] and not e["won"] for e, a in pairs)
+    discordant = exact_only + approx_only
     return {
         "mask": mask, "games": n,
         "wins_exact": sum(e["won"] for e, _a in pairs), "wins_approx": sum(a["won"] for _e, a in pairs),
         "outcome_agreement": round(sum(e["won"] == a["won"] for e, a in pairs) / n, 4),
         "exact_only_wins": sum(e["won"] and not a["won"] for e, a in pairs),
         "approx_only_wins": sum(a["won"] and not e["won"] for e, a in pairs),
+        "mcnemar_exact_p": min(1.0, 2 * sum(comb(discordant, index) for index in range(min(exact_only, approx_only) + 1)) / 2 ** discordant),
         "final_wave_agreement": round(sum(e["wave"] == a["wave"] for e, a in pairs) / n, 4),
+        "mowers_used_agreement": sum(e["mowers_used"] == a["mowers_used"] for e, a in pairs) / n,
+        "planted_agreement": sum(e["planted"] == a["planted"] for e, a in pairs) / n,
+        "rng_state_agreement": sum(e["rng_state_sha256"] == a["rng_state_sha256"] for e, a in pairs) / n,
         "mean_wave_exact": round(sum(e["wave"] for e, _a in pairs) / n, 3),
         "mean_wave_approx": round(sum(a["wave"] for _e, a in pairs) / n, 3),
-        "identical_trajectories": sum(d is None for d in diverged),
+        "identical_trajectories": sum(d is None for d in diverged) if len(diverged) == n else None,
         "first_divergence_decisions": sorted(d for d in diverged if d is not None),
         "seconds_exact": round(sum(e["seconds"] for e, _a in pairs), 2),
         "seconds_approx": round(sum(a["seconds"] for _e, a in pairs), 2),
         "speedup": round(sum(e["seconds"] for e, _a in pairs) / max(1e-9, sum(a["seconds"] for _e, a in pairs)), 3),
+        "steps_per_second_exact": sum(e["decisions"] for e, _a in pairs) / sum(e["seconds"] for e, _a in pairs),
+        "steps_per_second_approx": sum(a["decisions"] for _e, a in pairs) / sum(a["seconds"] for _e, a in pairs),
     }
 
 
@@ -231,6 +268,8 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("mode", choices=("games", "search"))
     p.add_argument("--mask", type=int, required=True)
+    p.add_argument("--base-mask", type=int, default=0)
+    p.add_argument("--cpp-rollouts", action="store_true", help="compare Python against native student rollouts")
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
     p.add_argument("--workers", type=int, default=3)
@@ -260,13 +299,14 @@ def main() -> None:
     seeds = load_training_task(args.manifest, args.task_id)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
     with mp.get_context("spawn").Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
         if args.mode == "games":
-            jobs = [(s, m) for s in seeds for m in (0, args.mask)]
+            jobs = [(s, m, approximate) for s in seeds for m, approximate in ((args.base_mask, False), (args.mask, True))]
             results = list(pool.imap_unordered(_play_game, jobs))
             summary = summarize_games(results, args.mask)
         else:
             results = [row for rows in pool.imap_unordered(_search_decisions, seeds) for row in rows]
             summary = summarize_search(results, args.mask)
     summary.update(task_id=args.task_id, policy=str(args.policy), approx_top_k=args.approx_top_k,
+                   cpp_rollouts=args.cpp_rollouts, base_mask=args.base_mask,
                    approx_halving=args.approx_halving, approx_halving_gap=args.approx_halving_gap,
                    scope=args.scope, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
