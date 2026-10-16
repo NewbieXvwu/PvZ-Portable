@@ -217,8 +217,10 @@ def main() -> None:
     jobs = [(s, training_task_kwargs(task, s)) for s in task["seeds"][args.seed_offset:args.seed_offset + args.seeds]]
     with mp.get_context("spawn").Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
         positions, dumped = [], []
-        for game, leaves in pool.imap_unordered(_game, jobs):
+        for done, (game, leaves) in enumerate(pool.imap_unordered(_game, jobs), 1):
             positions += game; dumped += leaves
+            if done % 16 == 0:
+                print(f"{done}/{len(jobs)} games, {len(positions)} positions, {len(dumped)} leaves", flush=True)
     result = {"config": {k: str(v) for k, v in vars(args).items()}, "summary": report(positions, args.min_gap, args.margin),
               "positions": positions}
     args.out.parent.mkdir(parents=True, exist_ok=True)
