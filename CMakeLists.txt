@@ -200,7 +200,7 @@ target_compile_definitions(pvz-portable PRIVATE
 target_compile_features(pvz-portable PRIVATE cxx_std_20)
 set_target_properties(pvz-portable PROPERTIES CXX_EXTENSIONS OFF)
 
-option(PVZ_ROLLOUT_BLAS "Use native/system BLAS for student convolutions when available" ON)
+option(PVZ_ROLLOUT_BLAS "Use native/system BLAS for student convolutions when available" ${APPLE})
 if(PVZ_ROLLOUT_BLAS)
 	if(APPLE)
 		find_library(ROLLOUT_BLAS Accelerate REQUIRED)
