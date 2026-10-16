@@ -17,6 +17,54 @@ extern "C" void sgemm_(const char*, const char*, const int*, const int*, const i
 	const float*, const int*, const float*, const int*, const float*, float*, const int*);
 #endif
 
+#ifndef PVZ_ROLLOUT_BLAS
+static void MultiplyRows(const float* matrix, const float* input, float* output, int rows, int count, int stride)
+{
+	constexpr int cells = EnvironmentRollout::Cells;
+#if defined(__aarch64__)
+	constexpr int block = 20;
+#else
+	constexpr int block = 4;
+#endif
+	int target = 0;
+	for (; target + 4 <= rows; target += 4)
+		for (int cell = 0; cell < cells; cell += block)
+		{
+			float first[block], second[block], third[block], fourth[block];
+			std::copy_n(output + target * cells + cell, block, first);
+			std::copy_n(output + (target + 1) * cells + cell, block, second);
+			std::copy_n(output + (target + 2) * cells + cell, block, third);
+			std::copy_n(output + (target + 3) * cells + cell, block, fourth);
+			for (int index = 0; index < count; ++index)
+			{
+				const float* source = input + index * cells + cell;
+				const float weight0 = matrix[target * stride + index];
+				const float weight1 = matrix[(target + 1) * stride + index];
+				const float weight2 = matrix[(target + 2) * stride + index];
+				const float weight3 = matrix[(target + 3) * stride + index];
+				for (int offset = 0; offset < block; ++offset)
+				{
+					first[offset] += weight0 * source[offset];
+					second[offset] += weight1 * source[offset];
+					third[offset] += weight2 * source[offset];
+					fourth[offset] += weight3 * source[offset];
+				}
+			}
+			std::copy_n(first, block, output + target * cells + cell);
+			std::copy_n(second, block, output + (target + 1) * cells + cell);
+			std::copy_n(third, block, output + (target + 2) * cells + cell);
+			std::copy_n(fourth, block, output + (target + 3) * cells + cell);
+		}
+	for (; target < rows; ++target)
+		for (int index = 0; index < count; ++index)
+		{
+			const float factor = matrix[target * stride + index];
+			for (int cell = 0; cell < cells; ++cell)
+				output[target * cells + cell] += factor * input[index * cells + cell];
+		}
+}
+#endif
+
 void EnvironmentRollout::Load(const std::string& path)
 {
 	std::ifstream input(path, std::ios::binary);
@@ -148,16 +196,7 @@ void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels,
 			&one, output.data(), &cells);
 	}
 #else
-	for (int target = 0; target < width; ++target)
-	{
-		float* dest = output.data() + target * Cells;
-		for (int index = 0; index < count; ++index)
-		{
-			const float factor = matrix[target * count + index];
-			const float* source = columns.data() + index * Cells;
-			for (int cell = 0; cell < Cells; ++cell) dest[cell] += factor * source[cell];
-		}
-	}
+	MultiplyRows(matrix, columns.data(), output.data(), width, count, count);
 #endif
 	for (float& value : output) value = std::max(0.0f, value);
 }
@@ -208,13 +247,7 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 	sgemm_(&normal, &normal, &cells, &width, &width, &one, hidden.data(), &cells, weights[13].data(), &stride,
 		&one, scratch.data(), &cells);
 #else
-	for (int channel = 0; channel < width; ++channel)
-		for (int index = 0; index < width; ++index)
-		{
-			const float factor = weights[13][channel * stride + index];
-			for (int cell = 0; cell < Cells; ++cell)
-				scratch[channel * Cells + cell] += hidden[index * Cells + cell] * factor;
-		}
+	MultiplyRows(weights[13].data(), hidden.data(), scratch.data(), width, width, stride);
 #endif
 	for (int channel = 0; channel < width; ++channel)
 		for (int cell = 0; cell < 54; ++cell)
