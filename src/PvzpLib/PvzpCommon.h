@@ -179,16 +179,18 @@ float		RandRangeFloat(float theMin, float theMax);
 // presentation work, for search rollouts.  None of them is assumed to be cosmetic: PvZ drives a
 // lot of logic from animation, so every bit was measured against the exact simulator with
 // scripts/sim_skip_agreement.py (2026-10-15: masks 1, 4, 16 and 21 left 224/224 games on days,
-// night, pool, fog and roof action-for-action identical).  Two more bits were tried and dropped:
-// skipping free-standing particles/trails (2) changes the shared RNG stream -- no game stayed
-// identical, 16/64 night outcomes flipped -- for no measurable speed; skipping attachment
-// updates (8) crashes the simulator.  The command rejects both.
+// night, pool, fog and roof action-for-action identical).  Mask 29 also retained every action and
+// the final RNG state in 224 games across those five terrains.  Bit 8 skips only attachment
+// matrices: attachment updates still run for lifecycle and RNG.  Skipping them entirely crashed
+// in the earlier experiment.  Free-standing particles/trails (2) remain rejected: skipping them
+// changes the shared RNG stream -- no game stayed identical, 16/64 night outcomes flipped.
 enum EnvSimSkip : int
 {
 	ENV_SKIP_COLOR = 1,         // Plant::UpdateReanimColor + colour propagation to attachments
 	ENV_SKIP_HEIGHT = 4,        // PlantDrawHeightOffset (pot / water bobbing) in Plant::UpdateReanim
+	ENV_SKIP_ATTACHMENT_MATRIX = 8, // attachment overlay calculation and matrix propagation only
 	ENV_SKIP_MESSAGE = 16,      // per-glyph text reanimations of on-screen messages
-	ENV_SKIP_ALLOWED = ENV_SKIP_COLOR | ENV_SKIP_HEIGHT | ENV_SKIP_MESSAGE,
+	ENV_SKIP_ALLOWED = ENV_SKIP_COLOR | ENV_SKIP_HEIGHT | ENV_SKIP_ATTACHMENT_MATRIX | ENV_SKIP_MESSAGE,
 };
 extern int gEnvSimSkip;
 

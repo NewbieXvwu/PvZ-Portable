@@ -106,6 +106,7 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
                 "decisions": details["decisions"], "seconds": time.perf_counter() - started, "actions": None,
                 "mowers_used": mowers_start - details["mowers_left"],
                 "planted": {index: count for index, count in enumerate(details["planted"]) if count},
+                "rng_state_sha256": hashlib.sha256(bytes.fromhex(env.privileged_state()["hidden"]["rand_state_hex"])).hexdigest(),
                 "simulation_seconds": details["simulation_seconds"], "network_seconds": details["network_seconds"]}
     while not obs["terminal"] and len(actions) < _W["args"].max_actions:
         frame = _frame(obs)
@@ -128,7 +129,8 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     return {"seed": seed, "mask": mask, "approximate": approximate, "backend": "python",
             "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
             "decisions": len(actions), "seconds": round(seconds, 3), "actions": actions,
-            "mowers_used": mowers_start - mowers_left, "planted": planted}
+            "mowers_used": mowers_start - mowers_left, "planted": planted,
+            "rng_state_sha256": hashlib.sha256(bytes.fromhex(env.privileged_state()["hidden"]["rand_state_hex"])).hexdigest()}
 
 
 def _search_decisions(seed: int) -> list[dict]:
@@ -220,6 +222,7 @@ def summarize_games(results: list[dict], mask: int) -> dict:
         "final_wave_agreement": round(sum(e["wave"] == a["wave"] for e, a in pairs) / n, 4),
         "mowers_used_agreement": sum(e["mowers_used"] == a["mowers_used"] for e, a in pairs) / n,
         "planted_agreement": sum(e["planted"] == a["planted"] for e, a in pairs) / n,
+        "rng_state_agreement": sum(e["rng_state_sha256"] == a["rng_state_sha256"] for e, a in pairs) / n,
         "mean_wave_exact": round(sum(e["wave"] for e, _a in pairs) / n, 3),
         "mean_wave_approx": round(sum(a["wave"] for _e, a in pairs) / n, 3),
         "identical_trajectories": sum(d is None for d in diverged) if len(diverged) == n else None,

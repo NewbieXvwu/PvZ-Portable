@@ -522,7 +522,8 @@ void Reanimation::Update()
 		if (aTrack->mAttachmentID != AttachmentID::ATTACHMENTID_NULL)
 		{
 			SexyTransform2D aOverlayMatrix;
-			GetAttachmentOverlayMatrix(aTrackIndex, aOverlayMatrix);
+			if (!(gEnvSimSkip & ENV_SKIP_ATTACHMENT_MATRIX))
+				GetAttachmentOverlayMatrix(aTrackIndex, aOverlayMatrix);
 			AttachmentUpdateAndSetMatrix(aTrack->mAttachmentID, aOverlayMatrix);
 		}
 	}
