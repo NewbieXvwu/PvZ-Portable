@@ -122,7 +122,7 @@ def load_student(path) -> RolloutNet:
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """Write the versioned little-endian float32 weights read by EnvironmentRollout."""
+    """Write v2 little-endian weights with a pooling flag; v1 files must be re-exported."""
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
@@ -130,7 +130,7 @@ def export_student(net: RolloutNet, path) -> None:
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
     with open(path, "wb") as stream:
-        stream.write(b"PVZRN001" + struct.pack("<I", net.trunk[0].out_channels))
+        stream.write(b"PVZRN002" + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 

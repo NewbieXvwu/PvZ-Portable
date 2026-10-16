@@ -62,11 +62,8 @@ def _init(args) -> None:
         _W["env"].load_rollout_net(binary)
     if args.mode == "search":
         import search_play
-        from pvz_value_net import ValueNet
-        vnet = ValueNet()
-        vnet.load_state_dict(torch.load(args.value, map_location="cpu", weights_only=False)["state_dict"])
-        vnet.eval()
-        search_play._W.update(fast=net, vnet=vnet, lean_rollouts=True, batch_waits=True)
+        from pvz_value_net import load_value_net
+        search_play._W.update(fast=net, vnet=load_value_net(args.value), lean_rollouts=True, batch_waits=True)
 
 
 def _reset(seed: int):
@@ -78,6 +75,10 @@ def _reset(seed: int):
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = _W["env"].reset(deck=tuple(kw["deck"]), task=task)
+    if args.mode == "search":
+        import search_play
+        from pvz_value_net import observation_context
+        search_play._W["context"] = observation_context(obs)
     return obs
 
 

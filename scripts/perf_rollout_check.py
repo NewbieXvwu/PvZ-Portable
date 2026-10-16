@@ -53,15 +53,16 @@ def check_cpp(args) -> None:
         env.load_rollout_net(path)
         search_play._W.update(fast=net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=args.mask)
         if args.cpp_mode == "search":
-            from pvz_value_net import ValueNet
-            vnet = ValueNet()
-            vnet.load_state_dict(torch.load(args.value, map_location="cpu", weights_only=False)["state_dict"])
-            search_play._W["vnet"] = vnet.eval()
+            from pvz_value_net import load_value_net
+            search_play._W["vnet"] = load_value_net(args.value)
         for seed in task_data["seeds"][: args.seeds]:
             kw = training_task_kwargs(task_data, seed)
             task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
                             **{k: v for k, v in kw["task_extra"].items() if v is not None})
             obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+            if args.cpp_mode == "search":
+                from pvz_value_net import observation_context
+                search_play._W["context"] = observation_context(obs)
             memo = {}
             if args.cpp_mode == "search":
                 stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
@@ -126,7 +127,7 @@ def check_cpp(args) -> None:
             counters["action_agreement"] = counters["same_actions"] / counters["frames"]
             print(json.dumps(counters), flush=True)
             if args.out: args.out.write_text(json.dumps(counters, indent=2) + "\n")
-            if counters["frames"] < 2000 or counters["action_agreement"] < .995 or counters["max_logit_error"] > .001:
+            if counters["frames"] < 2000 or counters["action_agreement"] < 1 or counters["max_logit_error"] > 1e-4:
                 raise SystemExit("C++ frame equivalence threshold failed")
 
 
@@ -233,10 +234,7 @@ def main() -> None:
     if args.cpp_mode:
         check_cpp(args)
         return
-    net = RolloutNet()
-    weights = torch.load(args.policy, map_location="cpu", weights_only=False)["state_dict"]
-    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
-    net.eval()
+    net = load_student(args.policy)
     seeds = load_training_task(args.manifest, args.task_id)["seeds"][: args.seeds]
     counters = {"frames": 0, "lean_states": 0, "sparse_mismatch": 0, "sparse_max_diff": 0.0, "rollouts": 0}
     import search_play

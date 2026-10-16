@@ -34,31 +34,35 @@ class CppRolloutTest(unittest.TestCase):
         self.obs, _ = self.env.reset(task=TaskSpec(level=7, seed=30000))
 
     def test_logits_width_and_checkpoint_export(self):
-        weights = dict(self.net.state_dict())
-        weights["value.weight"] = torch.zeros(1, 26)
-        checkpoint = Path(self.directory.name) / "fast.pt"
-        torch.save({"state_dict": weights}, checkpoint)
-        export_student(load_student(checkpoint), self.path)
-        self.env.load_rollout_net(self.path)
-        previous = None
-        previous_action = None
-        for _ in range(8):
-            frame = _frame(self.obs)
-            frame["action"] = previous_action
-            native = self.env.rollout_predict(previous["tick"] if previous else None,
-                                               bool(previous_action and previous_action["type"] == "plant"))
-            board, scalars = features(frame, previous)
-            with torch.inference_mode():
-                hidden, context = self.net.encode(board[None], scalars[None])
-                torch.testing.assert_close(self.net.plant(context).flatten(), torch.tensor([native["plant"]]), rtol=0, atol=1e-5)
-                torch.testing.assert_close(self.net.packet(context)[0], torch.tensor(native["packet"]), rtol=0, atol=1e-5)
-                if native["cell_packet"] >= 0:
-                    cells = self.net.cell_logits(hidden, context, torch.tensor([native["cell_packet"]]))[0]
-                    torch.testing.assert_close(cells, torch.tensor(native["cell"]), rtol=0, atol=1e-5)
-            action = act(self.net, frame, previous, self.obs["legal_actions"]["plants"])
-            self.assertEqual(action, native["action"])
-            previous, previous_action = frame, action
-            self.obs, *_ = self.env.step(action)
+        for pool in ("mean", "meanmax"):
+            with self.subTest(pool=pool):
+                self.net = RolloutNet(width=13, pool=pool).eval()
+                weights = dict(self.net.state_dict())
+                weights["value.weight"] = torch.zeros(1, self.net.plant.in_features)
+                checkpoint = Path(self.directory.name) / "fast.pt"
+                torch.save({"state_dict": weights, "pool": pool}, checkpoint)
+                export_student(load_student(checkpoint), self.path)
+                self.env.load_rollout_net(self.path)
+                self.obs, _ = self.env.reset(task=TaskSpec(level=7, seed=30000))
+                previous = None
+                previous_action = None
+                for _ in range(8):
+                    frame = _frame(self.obs)
+                    frame["action"] = previous_action
+                    native = self.env.rollout_predict(previous["tick"] if previous else None,
+                                                       bool(previous_action and previous_action["type"] == "plant"))
+                    board, scalars = features(frame, previous)
+                    with torch.inference_mode():
+                        hidden, context = self.net.encode(board[None], scalars[None])
+                        torch.testing.assert_close(self.net.plant(context).flatten(), torch.tensor([native["plant"]]), rtol=0, atol=1e-5)
+                        torch.testing.assert_close(self.net.packet(context)[0], torch.tensor(native["packet"]), rtol=0, atol=1e-5)
+                        if native["cell_packet"] >= 0:
+                            cells = self.net.cell_logits(hidden, context, torch.tensor([native["cell_packet"]]))[0]
+                            torch.testing.assert_close(cells, torch.tensor(native["cell"]), rtol=0, atol=1e-5)
+                    action = act(self.net, frame, previous, self.obs["legal_actions"]["plants"])
+                    self.assertEqual(action, native["action"])
+                    previous, previous_action = frame, action
+                    self.obs, *_ = self.env.step(action)
 
     def test_rollout_leaf_income_restore_and_rng(self):
         self.obs, *_ = self.env.step({"type": "wait", "ticks": 6000})

@@ -28,6 +28,7 @@ public:
 
 private:
 	int width = 0;
+	bool meanmax = false;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer;
 	void Encode(const std::vector<float>& board, const std::vector<float>& scalars);

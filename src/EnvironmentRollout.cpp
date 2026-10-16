@@ -21,17 +21,19 @@ void EnvironmentRollout::Load(const std::string& path)
 {
 	std::ifstream input(path, std::ios::binary);
 	char magic[8];
-	uint32_t size = 0;
+	uint32_t size = 0, pool = 0;
 	input.read(magic, 8);
 	input.read(reinterpret_cast<char*>(&size), 4);
-	if (!input || std::string(magic, 8) != "PVZRN001" || std::endian::native != std::endian::little || size < 1 || size > 512)
+	input.read(reinterpret_cast<char*>(&pool), 4);
+	if (!input || std::string(magic, 8) != "PVZRN002" || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1)
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
+	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	const std::vector<size_t> counts = {
 		nextWidth * Channels * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
 		nextWidth * nextWidth * 5, nextWidth, nextWidth * Scalars, nextWidth,
-		2 * nextWidth, 1, 20 * nextWidth, 10, 10 * nextWidth,
-		4 * nextWidth * nextWidth, nextWidth, nextWidth, 1};
+		nextContext, 1, 10 * nextContext, 10, 10 * nextWidth,
+		nextWidth * (2 * nextWidth + nextContext), nextWidth, nextWidth, 1};
 	std::vector<std::vector<float>> loaded;
 	for (size_t count : counts)
 	{
@@ -43,10 +45,11 @@ void EnvironmentRollout::Load(const std::string& path)
 	if (input.peek() != std::char_traits<char>::eof())
 		throw std::runtime_error("unexpected rollout network data");
 	width = size;
+	meanmax = pool != 0;
 	weights = std::move(loaded);
 	hidden.resize(Cells * width);
 	scratch.resize(Cells * width);
-	context.resize(2 * width);
+	context.resize(nextContext);
 }
 
 void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick, bool previousPlant,
@@ -175,37 +178,40 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 		float total = 0;
 		for (int cell = 0; cell < Cells; ++cell) total += hidden[channel * Cells + cell];
 		context[channel] = total / Cells;
-		context[width + channel] = std::max(0.0f, Linear(scalars.data(), weights[6].data() + channel * Scalars, Scalars, weights[7][channel]));
+		if (meanmax)
+			context[width + channel] = *std::max_element(hidden.data() + channel * Cells, hidden.data() + (channel + 1) * Cells);
+		context[context.size() - width + channel] = std::max(0.0f, Linear(scalars.data(), weights[6].data() + channel * Scalars, Scalars, weights[7][channel]));
 	}
 }
 
 EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 {
 	Prediction result{};
+	const int global = context.size(), stride = 2 * width + global;
 	result.cellPacket = packet;
-	result.plant = Linear(context.data(), weights[8].data(), 2 * width, weights[9][0]);
+	result.plant = Linear(context.data(), weights[8].data(), global, weights[9][0]);
 	for (int index = 0; index < 10; ++index)
-		result.packets[index] = Linear(context.data(), weights[10].data() + index * 2 * width, 2 * width, weights[11][index]);
+		result.packets[index] = Linear(context.data(), weights[10].data() + index * global, global, weights[11][index]);
 	if (packet < 0) return result;
 	result.cells.fill(weights[16][0]);
 	for (int channel = 0; channel < width; ++channel)
 	{
-		const float* kernel = weights[13].data() + channel * 4 * width;
+		const float* kernel = weights[13].data() + channel * stride;
 		float base = Linear(weights[12].data() + packet * width, kernel + width, width, weights[14][channel]);
-		base = Linear(context.data(), kernel + 2 * width, 2 * width, base);
+		base = Linear(context.data(), kernel + 2 * width, global, base);
 		std::fill_n(scratch.data() + channel * Cells, Cells, base);
 	}
 #ifdef PVZ_ROLLOUT_BLAS
 	const char normal = 'N';
 	const float one = 1.0f;
-	const int cells = Cells, stride = 4 * width;
+	const int cells = Cells;
 	sgemm_(&normal, &normal, &cells, &width, &width, &one, hidden.data(), &cells, weights[13].data(), &stride,
 		&one, scratch.data(), &cells);
 #else
 	for (int channel = 0; channel < width; ++channel)
 		for (int index = 0; index < width; ++index)
 		{
-			const float factor = weights[13][channel * 4 * width + index];
+			const float factor = weights[13][channel * stride + index];
 			for (int cell = 0; cell < Cells; ++cell)
 				scratch[channel * Cells + cell] += hidden[index * Cells + cell] * factor;
 		}
