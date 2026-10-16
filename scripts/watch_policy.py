@@ -23,6 +23,10 @@ Usage::
     # same, but with the do-nothing baseline
     python scripts/watch_policy.py --visible --wave-cap 5 --policy donothing
 
+    # the current best student on a 1.5x-zombie game of level 7, its own deck
+    python scripts/watch_policy.py --visible --student artifacts/student/v10/model.pt --deck 0,1,2,3,4,5,7 \
+        --multiplier 1.5 --seed 30000 --max-actions 3000 --hold-seconds 10
+
     # headless, print the action mix only
     python scripts/watch_policy.py --wave-cap 5 --seed 1330000 --quiet
 
@@ -120,7 +124,7 @@ def _load_checkpoint(path: str):
 
 def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: int | None,
         visible: bool, delay: float, max_actions: int, deterministic: bool,
-        resource_dir: str, deck, quiet: bool, student: str | None = None) -> dict:
+        resource_dir: str, deck, quiet: bool, student: str | None = None, multiplier: float = 1.0) -> dict:
     if student:
         cfg = {"wait_mode": "events", "wait_mask": "progress_v1", "input_flags": 7}
         next_action = _student_actions(student)
@@ -138,7 +142,7 @@ def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: in
     env = policy_env(cfg, resource_dir=resource_dir, headless=not visible)
     from scripted_baseline import profile_for_deck
     spec = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(tuple(deck)),
-                    zombie_count_multiplier=1.0, wave_cap=wave_cap, preplanted=())
+                    zombie_count_multiplier=multiplier, wave_cap=wave_cap, preplanted=())
     observation, _ = env.reset(deck=deck, task=spec)
 
     counts = {"plant": 0, "shovel": 0, "wait": 0}
@@ -177,6 +181,7 @@ def main() -> None:
     p.add_argument("--policy", choices=("model", "donothing"), default="model")
     p.add_argument("--level", type=int, default=7)
     p.add_argument("--seed", type=int, default=1330000)
+    p.add_argument("--multiplier", type=float, default=1.0, help="zombie-count multiplier (1.3 / 1.5 = the hard tasks)")
     p.add_argument("--wave-cap", type=int, default=None,
                    help="truncate to N waves; omit for the complete level")
     p.add_argument("--visible", action="store_true", help="open the real game window")
@@ -193,7 +198,7 @@ def main() -> None:
     deck = [int(c) for c in args.deck.split(",") if c.strip()]
     result = run(args.checkpoint, args.policy, args.level, args.seed, args.wave_cap,
                  args.visible, args.delay, args.max_actions, not args.sampled,
-                 args.resource_dir, deck, args.quiet, args.student)
+                 args.resource_dir, deck, args.quiet, args.student, args.multiplier)
     print(json.dumps(result, ensure_ascii=False), flush=True)
     if args.hold_seconds:
         time.sleep(args.hold_seconds)
