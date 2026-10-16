@@ -82,6 +82,7 @@ def main() -> None:
     p.add_argument("--packet-balance", type=float, default=0.0,
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
+    p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
     args = p.parse_args()
     if args.seed is not None:
         torch.manual_seed(args.seed)
@@ -102,7 +103,11 @@ def main() -> None:
         scale = (scale / scale[packet[planted_rows]].mean()).clamp(max=20.0)  # mean plant-row weight ~1
         weight[planted_rows] *= scale[packet[planted_rows]]
         print("packet weights", {k: round(float(scale[k]), 2) for k in range(PACKETS) if freq[k] > 0}, flush=True)
-    net = RolloutNet(args.width, args.pool).to(args.device)
+    net = RolloutNet(args.width, args.pool)
+    if args.init:
+        from pvz_rollout_policy import load_student
+        net.load_state_dict(load_student(args.init).state_dict())
+    net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
     waits = float(weight[plant < 0.5].sum())
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
