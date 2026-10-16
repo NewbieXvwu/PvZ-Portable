@@ -277,7 +277,7 @@ def main() -> None:
     p.add_argument("--base-mask", type=int, default=0)
     p.add_argument("--base-halving", action="store_true", help="search mode: reference teacher uses halving")
     p.add_argument("--base-cpp-rollouts", action="store_true", help="reference teacher also uses native rollouts")
-    p.add_argument("--cpp-rollouts", action="store_true", help="compare Python against native student rollouts")
+    p.add_argument("--cpp-rollouts", action="store_true", help="approximate arm uses native student rollouts")
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
     p.add_argument("--workers", type=int, default=3)
@@ -313,7 +313,7 @@ def main() -> None:
     summary.update(task_id=args.task_id, policy=str(args.policy), approx_per_card=args.approx_per_card,
                    cpp_rollouts=args.cpp_rollouts, base_cpp_rollouts=args.base_cpp_rollouts,
                    base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
-                   approx_halving=args.approx_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
+                   approx_halving=args.approx_halving or args.base_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
     print(json.dumps(summary, indent=1))
