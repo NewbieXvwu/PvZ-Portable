@@ -216,8 +216,9 @@ def main() -> None:
                         "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")
     p.add_argument("--soft-temperature", type=float, default=0.05, help="in win-probability units")
     p.add_argument("--spread-weight", type=float, default=0.0,
-                   help="cost-weighted imitation: a searched row (>= 2 candidates) weighs (1 + x * spread / mean spread) / (1 + x) (at most 5), "
+                   help="cost-weighted imitation: a searched row (>= 2 candidates) weighs (1 + x * spread / mean spread) / (1 + x) (at most --spread-cap), "
                         "spread = best minus worst candidate value, so decisions where the choice matters count more")
+    p.add_argument("--spread-cap", type=float, default=5.0, help="upper bound of the --spread-weight factor")
     p.add_argument("--save-epochs", type=int, default=0,
                    help="also keep the last N epochs as epoch_XX.pt (candidates for scripts/select_student.py)")
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
@@ -255,7 +256,7 @@ def main() -> None:
         compared = known.sum(1) >= 2
         spread = (values.nan_to_num(-1e9).amax(1) - values.nan_to_num(1e9).amin(1))[compared]
         # capped: a few spreads near 1 are games decided inside the horizon, not choices 30x more important
-        weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=5.0)
+        weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
         print(f"spread weights: {int(compared.sum())} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
     net = RolloutNet(args.width, args.pool, args.context, args.obs)
@@ -311,7 +312,7 @@ def main() -> None:
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
-                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "history": list(history)}
+                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "history": list(history)}
 
     for epoch in range(1, args.epochs + 1):
         epoch_started = time.perf_counter()
