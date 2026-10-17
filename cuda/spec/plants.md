@@ -1033,3 +1033,797 @@ All of them are aggregate-visible.
   question refers to is `mDisappearCountdown` (§5.3).
 * `NOT FOUND:` `Board::PlantSeed`, `Zombie::CheckEatingPlant`, `mPlantsPlanted`, `Plant::mProductCounter`,
   `Board::CheckWinLose` (also recorded in `board.md` §4.1).
+
+---
+
+## 勘误确认（2026-10-18）
+
+外部审计就第 7 关 + `[PEASHOOTER, SUNFLOWER, CHERRYBOMB, WALLNUT, POTATOMINE, SNOWPEA, REPEATER]` 卡组提出 7 条
+疑似勘误。逐条回到 `src/` 复核，判决汇总如下（**CONFIRMED** = 断言成立；**WRONG** = 断言不成立，给出正确值）：
+
+| # | 审计断言 | 判决 |
+|---|---|---|
+| 1 | 土豆雷 1500 tick 武装；转移写作 `STATE_NOTREADY → STATE_READY` | 数值 **CONFIRMED**（1500）；状态机 **WRONG**（三段，且终点不是 `STATE_READY`） |
+| 2 | 触发矩形 `Rect(mX, mY, mWidth-25, mHeight)` | **CONFIRMED**；但"门控 = 矩形"不完整（另有 4 条 `continue` 与 ±30/−40 容差） |
+| 3 | 樱桃：引信长度 / 半径 / 伤害 / 邻行取舍 | 引信 **CONFIRMED**（100）；半径 **CONFIRMED**（115）；邻行 **CONFIRMED 含入**（rowRange=1）；"伤害 1800" **WRONG**（`ApplyBurn()`，只有 `mBodyHealth >= 1800` 才是 1800） |
+| 4 | 太阳花首次 `RandRangeInt(300,1250)`、其后 `RandRangeInt(2350,2500)`、值 25、产物是 Coin | **全部 CONFIRMED** |
+| 5 | `mLaunchCounter--` / 重置 `mLaunchRate - Rand(15)` / `==25` 第二发；`mLaunchRate`；`gPlantDefs.mDamage`；chill 1000 + 行走减半 | 时钟 **CONFIRMED**；`mLaunchRate` **CONFIRMED**（150/150/150）；**`PlantDefinition` 没有 `mDamage` 字段**；chill 1000 **CONFIRMED**；**"行走减半" WRONG**（×0.4，减半的是动画速率） |
+| 6 | 种植血量 / 延迟击发 +34 与 +25 / 死亡判定 / `mPlantsEaten` | **全部 CONFIRMED**；死亡判定是**两套**（植物侧 `< 0`，僵尸侧 `<= 0`） |
+| 7 | 必须携带的 tick 状态 | **CONFIRMED**；但"纯装饰所以可跳"只对**位置与伤害**成立，对 **RNG 流不成立**（见 §7.2） |
+
+顺带发现本文件已有的一处笔误（不是审计提出的，但同属伤害标志位，一并订正）：
+**§5.2 末行** 把 `TakeDamage` 的 flag `18U` 写成 `DAMAGE_BYPASSES_SHIELD(0) | DAMAGE_DOESNT_LEAVE_BODY(4)`，
+**正确解码是 `DAMAGE_HITS_SHIELD_AND_BODY(1) | DAMAGE_DOESNT_LEAVE_BODY(4)`**（`ConstEnums.h:248-256`，
+`18 = 0b010010`，bit0 并**未**置位）。语义差别很大：`DAMAGE_BYPASSES_SHIELD` 才会在
+`Zombie::TakeDamage` `Zombie.cpp:7984` 处跳过盾牌，而 18 没有它，于是盾牌先受击、再由
+`DAMAGE_HITS_SHIELD_AND_BODY` 在 `:7987-7990` 把 `aDamageRemaining` 重新设为完整的 `theDamage`
+—— 即"盾牌挨一遍、甲与身体再挨全额 1800"，**不是**"无视桶/门"。
+同一段里 §5.5 把 77 解码成"bits 0,2,3,**5**,6"也是错的：`77 = 0b1001101` ⇒ bits **0,2,3,6**，
+**不含 `DAMAGES_DYING(5)`**（含它的话应为 109）。这条对土豆雷是实质结论：`Zombie::EffectedByDamage`
+的第一道测试就是 `DAMAGES_DYING`（`Zombie.cpp:8086-8089`），77 没有该位 ⇒ **土豆雷打不到濒死僵尸**，
+而樱桃的 127 有该位 ⇒ 打得到。§5.2 正文"127 ⇒ 不过滤任何东西"仍然对。
+
+### 1. 土豆雷武装时长与状态机
+
+**数值 CONFIRMED，状态机 WRONG。**
+
+字面量确实 1500，且它在 `PlantInitialize` 里、被 `IsInPlay()` 门控：
+
+```cpp
+// src/Lawn/Plant.cpp:337-347
+	case SeedType::SEED_POTATOMINE:
+	{
+		PVZP_ASSERT(aBodyReanim);
+
+		aBodyReanim->mAnimRate = 12.0f;
+
+		if (IsInPlay())
+		{
+			aBodyReanim->AssignRenderGroupToTrack("anim_glow", RENDER_GROUP_HIDDEN);
+			mStateCountdown = 1500;
+		}
+```
+
+`Plant.cpp:346` 就是那个 1500。默认 `mState` 是 `STATE_NOTREADY`（`Plant.cpp:128`），
+`mStateCountdown` 每 tick 在 `Plant::UpdateAbilities` **step 6**（种子分派之前）减一
+（`Plant.cpp:2546-2547`）。审计写的 `500` 是 `cuda/SimTick.inc:43` 的 `cPotatoArmTicks`（已登记在 §8 行 1）。
+
+**状态机不是 `NOTREADY → READY`。** 完整转移在 `Plant::UpdatePotato`：
+
+```cpp
+// src/Lawn/Plant.cpp:1145-1195（逐字全文）
+void Plant::UpdatePotato()
+{
+	Reanimation* aBodyReanim = mApp->ReanimationGet(mBodyReanimID);
+
+	if (mState == PlantState::STATE_NOTREADY)
+	{
+		if (mStateCountdown == 0)
+		{
+			mApp->AddPvzpParticle(mX + mWidth / 2, mY + mHeight / 2, mRenderOrder, ParticleEffect::PARTICLE_POTATO_MINE_RISE);
+			PlayBodyReanim("anim_rise", ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD, 20, 18.0f);
+			mState = PlantState::STATE_POTATO_RISING;
+			mApp->PlayFoley(FoleyType::FOLEY_DIRT_RISE);
+		}
+	}
+	else if (mState == PlantState::STATE_POTATO_RISING)
+	{
+		if (aBodyReanim->mLoopCount > 0)
+		{
+			float aRate = RandRangeFloat(12.0f, 15.0f);
+			PlayBodyReanim("anim_armed", ReanimLoopType::REANIM_LOOP, 0, aRate);
+
+			Reanimation* aLightReanim = mApp->AddReanimation(0.0f, 0.0f, mRenderOrder + 2, GetPlantDefinition(mSeedType).mReanimationType);
+			aLightReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
+			aLightReanim->mAnimRate = aRate - 2.0f;
+			aLightReanim->SetFramesForLayer("anim_glow");
+			aLightReanim->mFrameCount = 10;
+			aLightReanim->ShowOnlyTrack("anim_glow");
+			aLightReanim->SetTruncateDisappearingFrames("anim_glow", false);
+			mLightReanimID = mApp->ReanimationGetID(aLightReanim);
+			aLightReanim->AttachToAnotherReanimation(aBodyReanim, "anim_light");
+
+			mState = PlantState::STATE_POTATO_ARMED;
+			mBlinkCountdown = 400 + Sexy::Rand(4000);
+		}
+	}
+	else if (mState == PlantState::STATE_POTATO_ARMED)
+	{
+		if (FindTargetZombie(mRow, PlantWeapon::WEAPON_PRIMARY))
+		{
+			DoSpecial();
+		}
+		else
+		{
+			Reanimation* aLightReanim = mApp->ReanimationTryToGet(mLightReanimID);
+			if (aLightReanim)
+			{
+				aLightReanim->mFrameCount = PvzpAnimateCurve(200, 50, DistanceToClosestZombie(), 10, 3, PvzpCurves::CURVE_LINEAR);
+			}
+		}
+	}
+}
+```
+
+三个必须记住的点：
+
+1. `STATE_READY` 对本卡组的**任何**植物都不会被写入。全 `src/Lawn/Plant.cpp` 里
+   `mState = PlantState::STATE_READY` 共 **6 处**：`:410`（chomper 初值）、`:440`（scaredy shroom 初值）、
+   `:1364`（scaredy）、`:1835`（chomper）、`:2027`（magnet）、`:2282`（gold magnet）。
+   土豆雷的终点是 `STATE_POTATO_ARMED`（枚举 `Plant.h:66-67`，排在 `STATE_READY` `Plant.h:52` 之后）。
+2. **1500 tick 只是"出土"，不是"武装"**。`NOTREADY → RISING` 在 `:1149-1158`（`Plant.cpp:1155` 写状态），
+   `RISING → ARMED` 的闸门是 `aBodyReanim->mLoopCount > 0`（`Plant.cpp:1161`）——
+   这是动画数据（`anim_rise` @ rate 18.0f，`:1154`），不是计数器，时长无法从源码读出（见 §9 `UNKNOWN` 第 1 条）。
+   内核里"1500 tick 后可爆"是**偏早**的，真实值 = `1500 + anim_rise 一整轮`。
+3. 只有 `STATE_POTATO_ARMED` 才每 tick 调 `FindTargetZombie` 并 `DoSpecial()`（`Plant.cpp:1182-1184`）。
+   `STATE_NOTREADY` 期间的雷**可以被僵尸吃掉**，一旦离开 `NOTREADY` 就吃不动：
+   ```cpp
+   // src/Lawn/Zombie.cpp:7067-7070（Zombie::EatPlant 内）
+   if (thePlant->mSeedType == SeedType::SEED_POTATOMINE && thePlant->mState != PlantState::STATE_NOTREADY)
+   {
+       return;
+   }
+   ```
+   另有 `Zombie.cpp:6357` 的负面测试（掘土地雷只吃 `NOTREADY` 的雷）。
+
+### 2. 土豆雷的触发门控、伤害与自毁
+
+**矩形 CONFIRMED（`Plant.cpp:5193`），但"唯一矩形测试"这个描述 WRONG。**
+
+触发矩形字面量：
+
+```cpp
+// src/Lawn/Plant.cpp:5175-5205（GetPlantAttackRect 的相关分支）
+Rect Plant::GetPlantAttackRect(PlantWeapon thePlantWeapon)
+{
+	Rect aRect;
+	if (mApp->IsWallnutBowlingLevel())            // 第 7 关死分支
+	{
+		aRect = Rect(mX, mY, mWidth - 20, mHeight);
+	}
+	else if (thePlantWeapon == PlantWeapon::WEAPON_SECONDARY && mSeedType == SeedType::SEED_SPLITPEA)
+	{
+		aRect = Rect(0, mY, mX + 16, mHeight);   // 死分支
+	}
+	else switch (mSeedType)
+	{
+	...
+	case SeedType::SEED_POTATOMINE:     aRect = Rect(mX,            mY,             mWidth - 25,        mHeight);               break;
+```
+
+`mWidth == mHeight == 80`（`Plant.cpp:149-150`），所以是 `Rect(mX, mY, 55, 80)` ⇒
+**世界 x 区间 `[mX, mX+55]`**，比格子（80 px）窄 25 px、且**不**像 `GetPlantRect()` 那样右移 10
+（`Plant.cpp:5169` 的通用格是 `Rect(mX+10, mY, mWidth-20, mHeight)`）。审计写的 `mWidth-25` 是对的。
+
+完整门控在 `Plant::FindTargetZombie`（`Plant.cpp:4785-4920`），土豆雷相关的判定顺序如下（逐字）：
+
+```cpp
+// src/Lawn/Plant.cpp:4787-4788   先取 flags 与矩形
+	int aDamageRangeFlags = GetDamageRangeFlags(thePlantWeapon);   // ⇒ 77，Plant.cpp:620-621
+	Rect aAttackRect = GetPlantAttackRect(thePlantWeapon);         // ⇒ Rect(mX, mY, 55, 80)
+// :4794-4795   if (aZombie->mDead) continue;
+// :4802-4808   if (!aZombie->mHasHead || aZombie->IsTangleKelpTarget())
+//                  if (mSeedType == SEED_POTATOMINE || CHOMPER || TANGLEKELP) continue;   // 无头/海带目标不触雷
+// :4835-4838   else if (aRowDeviation) continue;                                          // 严格同行
+// :4841        if (aZombie->EffectedByDamage(aDamageRangeFlags))                          // 77 的解码见本节末
+// :4864-4887   土豆雷专属：
+			if (mSeedType == SeedType::SEED_POTATOMINE)
+			{
+				if ((aZombie->mZombieType == ZombieType::ZOMBIE_POGO && aZombie->mHasObject) ||
+					aZombie->mZombiePhase == ZombiePhase::PHASE_POLEVAULTER_IN_VAULT || aZombie->mZombiePhase == ZombiePhase::PHASE_POLEVAULTER_PRE_VAULT)
+				{
+					continue;
+				}
+
+				if (aZombie->mZombieType == ZombieType::ZOMBIE_POLEVAULTER)
+				{
+					aAttackRect.mX += 40;
+					aAttackRect.mWidth -= 40;  // classic potato mine quirk; lets pole-vaulters set off the mine ("four pole-vaulters" trick)
+				}
+
+				if (aZombie->mZombieType == ZombieType::ZOMBIE_BUNGEE && aZombie->mTargetCol != mPlantCol)
+				{
+					continue;
+				}
+
+				if (aZombie->mIsEating)
+				{
+					aExtraRange = 30;
+				}
+			}
+// :4895-4899   几何比较（注意是「小于 -aExtraRange 才排除」）：
+			Rect aZombieRect = aZombie->GetZombieRect();
+			if (!needPortalCheck && GetRectOverlap(aAttackRect, aZombieRect) < -aExtraRange)
+			{
+				continue;
+			}
+```
+
+`GetRectOverlap` 是**带符号**的一维重叠量（`Board.cpp:8969-8972`）：
+`min(r1.right, r2.right) - max(r1.left, r2.left)`。所以触发条件是
+
+* 一般僵尸：`overlap >= 0` —— 矩形必须真的重叠（差 1 px 都不炸）。
+* **正在啃食的僵尸**（`mIsEating`）：`overlap >= -30` —— 允许 30 px 的间隙。
+* **撑杆僵尸**：矩形被就地收窄成 `Rect(mX+40, mY, 15, 80)`（`:4874-4875`），再套上面的规则。
+
+默认碰撞盒 `Rect(36, 0, 42, 115)`（`Zombie.cpp:201`，NORMAL / FLAG / CONE / POLEVAULTER 都用它），
+经 `GetZombieRect()` 平移 `+mX, +mY`（`Zombie.cpp:8311`），所以这是纯 x 区间算术，没有圆。
+
+关于审计列的三个谓词：
+
+* `EffectedByDamage` **有**，flag = **77**（`Plant.cpp:620-621`）。
+* `IsDeadOrDying` **不是显式调用**，而是经由 77 缺少 `DAMAGES_DYING(5)` 位间接生效
+  （`Zombie.cpp:8086-8089`：没有该位就先 `IsDeadOrDying()` 早退）。另外 `:4802` 的 `!mHasHead`
+  显式排除掉无头目标，`Zombie.cpp:8138-8152` 还要求非离地相位（撑杆在空中、蹦床、跳跃等）除非有
+  `DAMAGES_OFF_GROUND(4)` —— 77 也没有该位。
+* `IsOnBoard` **不被检查**（`FindTargetZombie` 与 `KillAllZombiesInRadius` 都不调它）。
+  越界过滤来自 `Zombie::EffectedByDamage` 的另一条：`Zombie.cpp:8154-8157`
+  `if (mZombieType != ZOMBIE_BOBSLED && GetZombieRect().mX > WIDE_BOARD_WIDTH) return false;`
+  （`WIDE_BOARD_WIDTH = 800`，`GameConstants.h:30`）。
+
+伤害与半径（`Plant::DoSpecial` 逐字）：
+
+```cpp
+// src/Lawn/Plant.cpp:4386-4401
+	case SeedType::SEED_POTATOMINE:
+	{
+		aPosX = mX + mWidth / 2 - 20;
+		aPosY = mY + mHeight / 2;
+
+		mApp->PlaySample(SOUND_POTATO_MINE);
+		if (mBoard->KillAllZombiesInRadius(mRow, aPosX, aPosY, 60, 0, false, aDamageRangeFlags) >= 1)
+			ReportAchievement::GiveAchievement(mApp, Spudow, true);
+
+		int aRenderPosition = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_PARTICLE, mRow, 0);
+		mApp->AddPvzpParticle(aPosX + 20.0f, aPosY, aRenderPosition, ParticleEffect::PARTICLE_POTATO_MINE);
+		mBoard->ShakeBoard(3, -4);
+
+		Die();
+		break;
+	}
+```
+
+⇒ 圆心 `(mX+20, mY+40)`（**比格子中心偏左 20 px**）、半径 **60**、`theRowRange = 0`（**只本行**）、
+`theBurn = false`，于是走 `Board.cpp:9344-9347` 的 `aZombie->TakeDamage(1800, 18U)`。
+**是的，它一定自毁**：`Die()` 在 `Plant.cpp:4399`，无条件、在同 tick（`Plant::Die` 只写 `mDead = true`，
+`:4957`，没有淡出，§5.3 / §6.2）。
+
+⚠ **触发几何 ≠ 杀伤几何**：触发用 x 区间 `[mX, mX+55]`（撑杆时 `[mX+40, mX+55]`），
+杀伤用 `(mX+20, mY+40)` 半径 60 的**圆-矩形**测试（`Board.cpp:9338` + `:8975-8982`）。
+两者都各自遍历整行的僵尸，**引爆的那只可能超出 60 px 而不受伤，另一只没引爆但进了圆也会受 1800**。
+
+### 3. 樱桃炸弹：引信、伤害、爆炸几何
+
+**引信 CONFIRMED = 100 tick；半径 CONFIRMED = 115 px；邻行 CONFIRMED = 含入；伤害 WRONG。**
+
+字面量（`PlantInitialize`，与土豆雷同一个 `switch`）：
+
+```cpp
+// src/Lawn/Plant.cpp:320-336
+	case SeedType::SEED_CHERRYBOMB:
+	case SeedType::SEED_JALAPENO:
+	{
+		PVZP_ASSERT(aBodyReanim);
+
+		if (IsInPlay())
+		{
+			mDoSpecialCountdown = 100;
+
+			aBodyReanim->SetFramesForLayer("anim_explode");
+			aBodyReanim->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+
+			mApp->PlayFoley(FoleyType::FOLEY_REVERSE_EXPLOSION);
+		}
+
+		break;
+	}
+```
+
+引信**没有** `Plant::UpdateCherryBomb` 这样的函数（`NOT FOUND`；`grep "UpdateCherryBomb" src/` 为空）。
+它由 `Plant::UpdateAbilities` 的最后一步驱动（逐字）：
+
+```cpp
+// src/Lawn/Plant.cpp:2582-2589
+	if (mDoSpecialCountdown > 0)
+	{
+		mDoSpecialCountdown--;
+		if (mDoSpecialCountdown == 0)
+		{
+			DoSpecial();
+		}
+	}
+```
+
+⇒ 种植后第 **100** tick 起爆（tick1 `100→99` … tick100 `1→0` 并立刻 `DoSpecial`）。
+`Plant::DoSpecial`（`Plant.cpp:4306-4336`，樱桃分支逐字）：
+
+```cpp
+// src/Lawn/Plant.cpp:4308-4310（函数头，对樱桃生效）
+	int aPosX = mX + mWidth / 2;      // ⇒ mX + 40
+	int aPosY = mY + mHeight / 2;     // ⇒ mY + 40
+	int aDamageRangeFlags = GetDamageRangeFlags(PlantWeapon::WEAPON_PRIMARY);
+// :4323-4335
+	case SeedType::SEED_CHERRYBOMB:
+	{
+		mApp->PlayFoley(FoleyType::FOLEY_CHERRYBOMB);
+		mApp->PlayFoley(FoleyType::FOLEY_JUICY);
+
+		if (mBoard->KillAllZombiesInRadius(mRow, aPosX, aPosY, 115, 1, true, aDamageRangeFlags) >= 10)
+			ReportAchievement::GiveAchievement(mApp, Explodonator, true);
+
+		mApp->AddPvzpParticle(aPosX, aPosY, static_cast<int>(RenderLayer::RENDER_LAYER_TOP), ParticleEffect::PARTICLE_POWIE);
+		mBoard->ShakeBoard(3, -4);
+
+		Die();
+		break;
+	}
+```
+
+四个参数：半径 **115**、`theRowRange = 1`、`theBurn = true`、`aDamageRangeFlags = 127`
+（`Plant.cpp:610-614`：CHERRYBOMB / JALAPENO / COBCANNON / DOOMSHROOM 共用 127）。
+
+**邻行规则（这是审计最关心的一条）**：几何测试在 `Board::KillAllZombiesInRadius`，逐字：
+
+```cpp
+// src/Lawn/Board.cpp:9325-9352
+	for (Zombie* aZombie : mZombies)
+	{
+		if (aZombie->mDead)
+			continue;
+		if (aZombie->EffectedByDamage(theDamageRangeFlags))
+		{
+			Rect aZombieRect = aZombie->GetZombieRect();
+			int aRowDist = aZombie->mRow - theRow;
+			if (aZombie->mZombieType == ZombieType::ZOMBIE_BOSS)
+			{
+				aRowDist = 0;
+			}
+
+			if (aRowDist <= theRowRange && aRowDist >= -theRowRange && GetCircleRectOverlap(theX, theY, theRadius, aZombieRect))
+			{
+				if (theBurn)
+				{
+					aZombie->ApplyBurn();
+				}
+				else
+				{
+					aZombie->TakeDamage(1800, 18U);
+				}
+
+				aKilledZombies++;
+			}
+		}
+	}
+```
+
+所以**邻行是"含入"而不是"排除"**：`rowDist ∈ [-1, +1]`（`mRow-1 / mRow / mRow+1` 三行都算），
+并且这个行号条件与圆测试是 **AND** 关系。圆测试是 clamp 最近点法（逐字）：
+
+```cpp
+// src/Lawn/Board.cpp:8975-8982
+bool GetCircleRectOverlap(int theCircleX, int theCircleY, int theRadius, const Rect& theRect)
+{
+	int aNearX = std::clamp(theCircleX, theRect.mX, theRect.mX + theRect.mWidth);
+	int aNearY = std::clamp(theCircleY, theRect.mY, theRect.mY + theRect.mHeight);
+	int dx = theCircleX - aNearX;
+	int dy = theCircleY - aNearY;
+	return dx * dx + dy * dy <= theRadius * theRadius;
+}
+```
+
+`theRect` 就是 `Zombie::GetZombieRect()`（**不是** `GetZombieAttackRect()`、**不是**植物的矩形），
+整数算术、`<=` 闭区间 ⇒ 恰在边界上**算命中**。行间距 100 px（`GridToPixelY`），
+圆心 `(mX+40, mY+40)` 在上/下邻行的 rect 带上至少留 `115-60=55` px 的纵向余量，
+所以"邻行能不能炸到"实际取决于邻行僵尸 **x** 是否落进圆 —— 不是无条件命中邻行整行。
+被命中的**清单** = `EffectedByDamage(127)` ∧ 行差 ∈ [-1,1] ∧ 圆内；`127 = 0b01111111`
+（bit0..bit6，只缺 `DAMAGES_ONLY_MINDCONTROLLED(7)`，`ConstEnums.h:257-267`）⇒ 地面 / 飞行 /
+潜水 / 狗 / 离地 / **濒死** / 地下全都在内， practically 只剩"被洗脑的僵尸"和"不在场上的"被排除
+（`Zombie.cpp:8091-8101` 与 `:8154-8157`）。
+
+**WRONG 的一条：伤害不是平摊 1800。** `theBurn = true` ⇒ 走 `Zombie::ApplyBurn()`（`Zombie.cpp:8687-8695`）：
+
+```cpp
+void Zombie::ApplyBurn()
+{
+	if (mDead || mZombiePhase == ZombiePhase::PHASE_ZOMBIE_BURNED)
+		return;
+
+	if (mBodyHealth >= 1800 || mZombieType == ZombieType::ZOMBIE_BOSS)
+	{
+		TakeDamage(1800, 18U);
+		return;
+	}
+```
+
+只有 `mBodyHealth >= 1800` 或 Boss 才是那一下 1800（第 7 关卡组的四只都没到：默认 `mBodyHealth = 270`
+`Zombie.cpp:238`，POLEVAULTER 500 `:378`）。其余全部落到"烧死"路径：普通地面僵尸直接
+`DieWithLoot()` + `REANIM_ZOMBIE_CHARRED`，并且**每次这样杀掉一只会从全局 MT 流抽 1 个 float**
+（`Zombie.cpp:8792`，已在 §5.2 / §8 行 3 记录）；飞行 / 无头 / bungee / yeti / 僵尸草 / 雪橇队
+才吃 `PHASE_ZOMBIE_BURNED` + `mPhaseCounter = 300`（`:8740-8741`）。
+`flag 18` 的正确解码见本节引言的更正框。
+
+自毁：`Die()`（`Plant.cpp:4334`），同 tick `mDead = true`，**没有淡出**（§5.3）。
+
+### 4. 产阳光：首/后续延迟、数值、Coin 与 headless 收取
+
+**全部 CONFIRMED**，含审计给的三个数字与"是 Coin 对象"。
+
+构造函数里的**首次**延迟（`Plant.cpp:189-197`，逐字）：
+
+```cpp
+	if (mLaunchRate > 0)
+	{
+		if (MakesSun())
+			mLaunchCounter = RandRangeInt(300, mLaunchRate / 2);
+		else
+			mLaunchCounter = RandRangeInt(0, mLaunchRate);
+	}
+	else
+		mLaunchCounter = 0;
+```
+
+`SEED_SUNFLOWER` 行 `mLaunchRate = 2500`（`Plant.cpp:50`），`MakesSun()` 只对 SUNFLOWER /
+TWINSUNFLOWER / SUNSHROOM 为真（`Plant.cpp:999-1002`）⇒ 首次 = `RandRangeInt(300, 1250)`，
+两端闭（`RandRangeInt(a,b) = a + Rand(b-a+1)`）。审计写的 `[300, 1250]` **CONFIRMED**。
+
+**后续**延迟在 `Plant::UpdateProductionPlant`（不是 `Plant::UpdateProduce` ——
+`NOT FOUND`，正确函数名是 `UpdateProductionPlant`，`Plant.cpp:1004-1074`）：
+
+```cpp
+// src/Lawn/Plant.cpp:1026-1034 与 :1048-1051（逐字节选）
+	mLaunchCounter--;
+	if (mLaunchCounter <= 100)
+	{
+		int aFlashCountdown = PvzpAnimateCurve(100, 0, mLaunchCounter, 0, 100, PvzpCurves::CURVE_LINEAR);
+		mEatenFlashCountdown = std::max(mEatenFlashCountdown, aFlashCountdown);
+	}
+	if (mLaunchCounter <= 0)
+	{
+		mLaunchCounter = RandRangeInt(mLaunchRate - 150, mLaunchRate);
+		mApp->PlayFoley(FoleyType::FOLEY_SPAWN_SUN);
+	...
+	else if (mSeedType == SeedType::SEED_SUNFLOWER)
+	{
+		mBoard->AddCoin(mX, mY, CoinType::COIN_SUN, CoinMotion::COIN_MOTION_FROM_PLANT);
+	}
+```
+
+`RandRangeInt(2500-150, 2500)` ⇒ **[2350, 2500]** 闭区间，**CONFIRMED**。
+`mLaunchCounter <= 100` 那段只写 `mEatenFlashCountdown`（§7 归为装饰），**不**延迟产出。
+
+* **值 25 CONFIRMED**：`Coin::GetSunValue()` `Coin.cpp:1299`
+  `return mType == CoinType::COIN_SUN ? 25 : mType == COIN_SMALLSUN ? 15 : mType == COIN_LARGESUN ? 50 : 0;`
+* **确实是 Coin 对象 CONFIRMED**：`Board::AddCoin`（`Board.cpp:1971-1982`）从 `mCoins` 数组分配一个
+  `Coin` 并 `CoinInitialize(...)`；同处 `:1975-1976` 在**创建那一刻**把
+  `mSunMoneyProduced += aCoin->GetSunValue()`（所以"产量"统计与"入账"统计是两个不同的量）。
+* **headless 自动收取**：`LawnApp::EnvironmentWait`（`src/LawnApp.cpp:1504-1519`，逐字）：
+
+  ```cpp
+  void LawnApp::EnvironmentWait(int ticks)
+  {
+      if (!mBoard || ticks < 0 || ticks > 1000000)
+          return;
+      for (int i = 0; i < ticks && !EnvironmentTerminal(); ++i)
+      {
+          for (Coin* coin : mBoard->mCoins)
+          {
+              if (!coin->mDead && coin->IsSun())
+                  coin->ScoreCoin();
+          }
+          AdvanceLogicTick();
+          if (!mHeadlessMode)
+              EnvironmentPresent();
+      }
+  }
+  ```
+
+  即**每 tick 在推进逻辑之前**把场上所有还活着的阳光 Coin 结算掉；`Coin::ScoreCoin()`
+  （`Coin.cpp:433-448`）第一句就是 `Die()`，然后 `mBoard->AddSunMoney(GetSunValue())`
+  ⇒ `Board::AddSunMoney`（`Board.cpp:8463-8466`）`mSunMoney += 25; mSunMoney = std::min(mSunMoney, 9990);`。
+  **可观测后果**：产出 tick `T` 的太阳花，其阳光在 tick `T+1` 才进 `mSunMoney`（收取循环在 tick 头部），
+  但 `mSunMoneyProduced` 在 `T` 就已经加了 —— 两个量的口径差 1 tick，`src/CudaExport.cpp:289-297`
+  给导入的根局面 Sun 一律写 `ticksToCollect = 1` 就是在对齐这条。
+  交互式游戏的正常收取路径（鼠标点击 → `mIsBeingCollected` → `Coin.cpp:712-723` 的
+  `mCollectionDistance < 8.0f` 才 `ScoreCoin()`）在 rollout 里被上面这个循环短路，内核**不需要**建模飞行轨迹。
+
+### 5. 射击者：时钟、`mLaunchRate`、伤害来源、雪豌豆 chill
+
+**时钟 CONFIRMED，`mLaunchRate` CONFIRMED；两处 WRONG：`gPlantDefs` 里没有 `mDamage`；chill 的"行走减半"。**
+
+`Plant::UpdateShooter`（`Plant.cpp:945-997`）——审计描述的三件事全在，逐字（去掉与本卡组无关的分支）：
+
+```cpp
+void Plant::UpdateShooter()
+{
+	mLaunchCounter--;                                              // :947
+	if (mLaunchCounter <= 0)
+	{
+		mLaunchCounter = mLaunchRate - Sexy::Rand(15);             // :950  ⇒ [136, 150]
+		...
+		else
+		{
+			FindTargetAndFire(mRow, PlantWeapon::WEAPON_PRIMARY);   // :978  PEASHOOTER/SNOWPEA/REPEATER 都走这里
+		}
+	}
+	...
+	if (mLaunchCounter == 25)                                       // :986
+	{
+		if (mSeedType == SeedType::SEED_REPEATER || mSeedType == SeedType::SEED_LEFTPEATER)
+		{
+			FindTargetAndFire(mRow, PlantWeapon::WEAPON_PRIMARY);   // :990
+		}
+		else if (mSeedType == SeedType::SEED_SPLITPEA) { ... }      // 死分支
+	}
+}
+```
+
+`mLaunchCounter--` 在**函数第一句**、重置写在**同一 tick**、第二发用 `== 25` 精确相等 ⇒ 三条 **CONFIRMED**。
+`mLaunchRate - Sexy::Rand(15)` ⇒ `Rand(15) ∈ [0,14]` ⇒ 重置值 `R ∈ [136, 150]`。
+它由 `Plant::UpdateAbilities` 的 `if (mSubclass == SUBCLASS_SHOOTER)` 调用（`Plant.cpp:2578-2581`），
+`SUBCLASS_SHOOTER` 来自 `gPlantDefs` 行本身。
+
+`gPlantDefs` 的 `mLaunchRate`（逐行）：
+
+| 行 | file:line | `mLaunchRate` | `mSubClass` |
+|---|---|---|---|
+| PEASHOOTER | `src/Lawn/Plant.cpp:49` | **150** | `SUBCLASS_SHOOTER` |
+| SUNFLOWER | `src/Lawn/Plant.cpp:50` | 2500 | `SUBCLASS_NORMAL` |
+| SNOWPEA | `src/Lawn/Plant.cpp:54` | **150** | `SUBCLASS_SHOOTER` |
+| REPEATER | `src/Lawn/Plant.cpp:56` | **150** | `SUBCLASS_SHOOTER` |
+
+**WRONG（前提不成立）：`PlantDefinition` 没有 `mDamage` 成员。** 全类只有 9 个字段
+（`src/Lawn/Plant.h:324-336`）：`mSeedType, mPlantImage, mReanimationType, mPacketIndex, mSeedCost,
+mRefreshTime, mSubClass, mLaunchRate, mPlantName`。伤害在弹道上，与发弹的植物无关：
+
+```cpp
+// src/Lawn/Projectile.cpp:38-39
+	{ .mProjectileType = ProjectileType::PROJECTILE_PEA,     .mImageRow = 0, .mDamage = 20 },
+	{ .mProjectileType = ProjectileType::PROJECTILE_SNOWPEA, .mImageRow = 0, .mDamage = 20 },
+```
+
+⇒ **PEASHOOTER / REPEATER / SNOWPEA 的单发伤害都是 20**（`Plant::Fire` 只决定弹型：
+`SEED_SNOWPEA → PROJECTILE_SNOWPEA` `Plant.cpp:4521-4523`，其余 peashooter 家族 `→ PROJECTILE_PEA`
+`:4513-4520`）。REPEATER 的"DPS 翻倍"完全来自每周期发两发（§2.6），不是来自更大的 `mDamage`。
+
+雪豌豆的 chill 与"谁写 flag"：
+
+```cpp
+// src/Lawn/Projectile.cpp:418-421（Projectile::GetDamageFlags）
+	if (mProjectileType == ProjectileType::PROJECTILE_SNOWPEA || mProjectileType == ProjectileType::PROJECTILE_WINTERMELON)
+	{
+		SetBit(aDamageFlags, static_cast<int>(DamageFlags::DAMAGE_FREEZE), true);   // bit 2，ConstEnums.h:252
+	}
+```
+
+落地时 `GetDamageFlags` 的结果随伤害一起传下去（`Projectile.cpp:496`、`:838`），chill 在**受击方**结算，
+`Zombie::TakeHelmDamage` 与 `Zombie::TakeBodyDamage` 各有一份同样的检查：
+
+```cpp
+// src/Lawn/Zombie.cpp:7731-7734（护甲路径）与 :7831-7834（身体路径）—— 两处逐字相同
+	if (TestBit(theDamageFlags, static_cast<int>(DamageFlags::DAMAGE_FREEZE)))
+	{
+		ApplyChill(false);
+	}
+```
+
+```cpp
+// src/Lawn/Zombie.cpp:7522-7540
+void Zombie::ApplyChill(bool theIsIceTrap)
+{
+	if (!CanBeChilled())
+		return;
+
+	if (mChilledCounter == 0)
+	{
+		mApp->PlayFoley(FoleyType::FOLEY_FROZEN);
+	}
+
+	int aChillTime = 1000;
+	if (theIsIceTrap)
+	{
+		aChillTime = 2000;
+	}
+	mChilledCounter = std::max(aChillTime, mChilledCounter);
+
+	UpdateAnimSpeed();
+}
+```
+
+**chill = 1000 tick CONFIRMED**（`Zombie.cpp:7532`；冰蘑菇陷阱是 2000 `:7535`；写入是 `max`
+`zombie.cpp:7537` ⇒ **不叠加、只刷新**）。`CanBeChilled()`（`:8035-8059`）排除压路机 / 有雪橇的雪橇队 /
+濒死 / 掘地隧道与出土相位 / 被洗脑的。每 tick 递减在 `:4619-4626`。
+
+**WRONG：chill 下行走速度不是"减半"，是 ×0.4。**
+
+```cpp
+// src/Lawn/Zombie.cpp:70
+constexpr const float CHILLED_SPEED_FACTOR = 0.4f;
+// 应用于 Zombie::UpdateZombieWalking（:4104 起）的 :4117-4120 与 :4134-4137（以及 :4202-4205）
+			if (IsMovingAtChilledSpeed())
+			{
+				aSpeed *= CHILLED_SPEED_FACTOR;
+			}
+```
+
+被**减半**的是**动画速率**，不是位移速率：`Zombie::ApplyAnimRate` `:6639`
+`aBodyReanim->mAnimRate = IsMovingAtChilledSpeed() ? theAnimRate * 0.5f : theAnimRate;`。
+（`cuda/SimTick.inc` 里若按 0.5 建模位移，位移会比 CPU 参照**快 25%**。）
+第三条 chill 后果别漏：啃食变慢有两道闸，`Zombie::CheckIfPreyCaught` `:6860-6864`
+把 `aTicksBetweenEats = TICKS_BETWEEN_EATS(4)` **翻倍成 8**，`Zombie::EatPlant` `:7087-7088`
+又额外只放行 `mZombieAge` 为偶数的 tick；前者是决定性的 ⇒ 被 chill 的僵尸每 **8** tick 才咬一口。
+
+### 6. 种植血量、延迟击发 +34/+25、死亡判定、`mPlantsEaten`
+
+**四项全部 CONFIRMED。**
+
+种植血量：默认 300，本卡组只有 WALLNUT 改。
+
+```cpp
+// src/Lawn/Plant.cpp:133（PlantInitialize 通用段）
+	mPlantHealth = 300;
+// src/Lawn/Plant.cpp:288-291
+	case SeedType::SEED_WALLNUT:
+		mPlantHealth = 4000;
+		mBlinkCountdown = 1000 + Sexy::Rand(1000);
+		break;
+// src/Lawn/Plant.cpp:487-492
+	if ((mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_BIG_TIME) && ...)   // 第 7 关死分支
+		mPlantHealth *= 2;
+	mPlantMaxHealth = mPlantHealth;
+```
+
+⇒ PEASHOOTER / SUNFLOWER / CHERRYBOMB / POTATOMINE / SNOWPEA / REPEATER = **300**，WALLNUT = **4000**；
+`mPlantMaxHealth` 在 `PlantInitialize` 末尾一次性抄写（`:492`），之后只有碎裂贴图分档读它
+（`Plant.cpp:3122`、`:3130`），不改变伤害。`Plant::Die()`（`:4946-4958`）**不**碰血量，只 `mDead = true`。
+
+**延迟击发 +34 / +25 CONFIRMED。** 机制是：`FindTargetAndFire` 在有 `anim_shooting` 头轨的射手上
+**不发弹**，只写动画与 `mShootingCounter`；真正的 `Fire()` 在 `UpdateShooting` 里计数器读到 1 时发生。
+
+```cpp
+// src/Lawn/Plant.cpp:751-769（FindTargetAndFire 内）
+	else if (aHeadReanim && aHeadReanim->TrackExists("anim_shooting"))
+	{
+		aHeadReanim->StartBlend(20);
+		...
+		mShootingCounter = 35;                                      // :758  PEASHOOTER / SNOWPEA
+		if (mSeedType == SeedType::SEED_REPEATER || mSeedType == SeedType::SEED_SPLITPEA || mSeedType == SeedType::SEED_LEFTPEATER)
+		{
+			aHeadReanim->mAnimRate = 45.0f;
+			mShootingCounter = 26;                                  // :762  REPEATER / LEFTPEATER
+		}
+		...
+	}
+...
+	else
+		Fire(aZombie, theRow, thePlantWeapon);                     // :815 只有「没有射击动画」的类型才当场发
+```
+
+```cpp
+// src/Lawn/Plant.cpp:3205-3210 与 :3248-3309（UpdateShooting）
+	if (NotOnGround() || mShootingCounter == 0)
+		return;
+	mShootingCounter--;
+	...
+	else if (mShootingCounter == 1)                                 // :3248
+	{
+		if (THREEPEATER) {...} else if (SPLITPEA) {...} ...
+		else
+		{
+			Fire(nullptr, mRow, PlantWeapon::WEAPON_PRIMARY);       // :3305
+		}
+		return;
+	}
+```
+
+⇒ 从 35 起跳的（PEASHOOTER / SNOWPEA）在**决策 tick 之后第 34 tick** 出现弹；
+从 26 起跳的（REPEATER / LEFTPEATER）在第 **25** tick。审计的 `+34/+25` **CONFIRMED**
+（§8 行 7 同一条）。两个必须一起带的细节：
+
+* `Fire()` 收到的是 `theTargetZombie = nullptr`（`:3305`）—— 目标只在决策 tick 起作用，
+  34/25 tick 后**不重新选靶**，弹道行号也固定为 `mRow`。
+* `UpdateShooting` 尾部 `Plant.cpp:3417` 有 `mShootingCounter = 1;`，把头动画还没循环完的射手钉在 1，
+  这**不会**多发一弹（`== 1` 的判定在递减**之后**，钉成 1 的下一 tick 递减到 0 就跳过了 `:3248`），
+  只是让动画保持在射击姿态。
+
+死亡判定：`Plant::Update()` 里是**严格 `< 0`**（逐字）：
+
+```cpp
+// src/Lawn/Plant.cpp:2868-2877
+	if (doUpdate)
+	{
+		UpdateAbilities();
+		Animate();
+
+		if (mPlantHealth < 0)
+			Die();
+
+		UpdateReanim();
+	}
+```
+
+⇒ `mPlantHealth == 0` 的植物在**植物循环里不自杀**。把 0 或负数变成尸体的是僵尸那条路：
+
+```cpp
+// src/Lawn/Zombie.cpp:7100-7115（Zombie::EatPlant 尾部）
+	thePlant->mPlantHealth -= DAMAGE_PER_EAT;                       // DAMAGE_PER_EAT = 4，Zombie.cpp:67-68
+	thePlant->mRecentlyEatenCountdown = 50;
+	...
+	if (thePlant->mPlantHealth <= 0)                                // :7110  ← 这里是 <= 0
+	{
+		mApp->PlaySample(SOUND_GULP);
+
+		mBoard->mPlantsEaten++;                                     // :7114
+		thePlant->Die();                                            // :7115
+		mBoard->mChallenge->ZombieAtePlant(thePlant);
+		...
+	}
+```
+
+`mPlantsEaten` 全部写入点（`uint32_t`，`Board.h:239`，init `Board.cpp:156`）与本关可达性：
+
+| file:line | 所在函数 | 第 7 关 + 本卡组 |
+|---|---|---|
+| `src/Lawn/Zombie.cpp:7114` | `Zombie::EatPlant`，由 `mPlantHealth <= 0` 门控 | **唯一常态路径**（啃死植物） |
+| `src/Lawn/Board.cpp:8992` | `Board::KillAllPlantsInRadius`（Gargantuar / imp 砸） | 不可达（无巨人） |
+| `src/Lawn/Zombie.cpp:2417` / `:2430` | `Zombie::UpdateZombieJalapenoHead` 的死亡扫行（`#ifdef DO_FIX_BUGS` 两份） | 不可达 |
+| `src/Lawn/Zombie.cpp:6492` | `Zombie::SquishAllInSquare`（压路机/投石车 `ATTACKTYPE_DRIVE_OVER`）—— 注意调 `Squish()` 不是 `Die()` | 不可达 |
+| `src/Lawn/Zombie.cpp:7408` | `Zombie::BungeeDie` | 不可达（第 7 关无 bungee） |
+
+⇒ 内核只需要实现 `:7114` 一处；`<= 0` 与 `< 0` 的差异在血量恰好被咬到 0 时可观测
+（植物 tick 先跑、僵尸 tick 后跑，见 §6.1 的顺序结论）。
+
+### 7. 内核必须携带的 tick 状态：逐项（伤害/位置 vs 装饰）
+
+按 `Plant.h:164-213` 的字段清单逐个判定。**"装饰"只对位置与伤害成立**——见 §7.3 的 RNG 例外。
+
+| 字段 | file:line（写入 / 递减） | PEASHOOTER / SNOWPEA / REPEATER | SUNFLOWER | WALLNUT | CHERRYBOMB | POTATOMINE | 判定 |
+|---|---|---|---|---|---|---|---|
+| `mLaunchCounter` | 初值 `Plant.cpp:192`/`:194`；递减 `:947`（射手）/ `:1026`（产阳）；重置 `:950` / `:1034` | 发弹时钟（`R=150-Rand(15)`），且 `==25` 是第二发决策 | 产阳时钟 | — | — | — | **改变伤害**：必带 |
+| `mShootingCounter` | `:758`/`:762` 写入；`:3210` 递减；`:3248` 命中；`:3417` 钉 1 | 决定弹在哪一 tick 出现（+34/+25） | — | — | — | — | **改变伤害与弹的初始位置**：必带 |
+| `mStateCountdown` | `:346` 写 1500；`:2546-2547` 递减 | — | — | — | — | 出土时刻 | **改变伤害**（土豆雷唯一计时闸门）：必带 |
+| `mState`（土豆雷三段） | `:128`、`:1155`、`:1176` | — | — | — | — | `NOTREADY` 时可被啃（`Zombie.cpp:7067`），之后不能 | **改变存活/伤害**：必带；`RISING → ARMED` 依赖动画，见 §9 |
+| `mDoSpecialCountdown` | `:327` 写 100；`:2582-2588` 递减并触发 | — | — | — | 引信 | — | **改变伤害**：必带 |
+| `mPlantHealth` | `:133`/`:289`；`Zombie.cpp:7100`；`Projectile.cpp:315`/`:617`（本关只从啃食来） | — | — | 300→4000 决定还能被啃多久 | — | — | **改变存活**：必带（`mPlantMaxHealth` 只用于贴图分档，可只存初值常量） |
+| `mDisappearCountdown` | `:135` 写 200；`:2518-2526` 递减 | 只在 `STATE_DOINGSPECIAL \|\| mSquished` 才动 | 同左 | 同左 | 樱桃不进 `DOINGSPECIAL` | 不进 | **本卡组全程恒为 200**：可不带（除非实现巨人砸） |
+| `mBlinkCountdown` | `:183`、`:290`、`:1177`；`:3081-3088` 递减并调 `DoBlink()` | ✔ | ✔ | ✔ | ✔ | ✔（`:3022` 未武装时早退） | 视觉**装饰**，但 `DoBlink` `:3017` 每次抽 **1 int**（wallnut 再 +2：`:3041` 与 `AttachBlinkAnim` 的 `:2902`） ⇒ **RNG 上不可跳** |
+| `mRecentlyEatenCountdown` | `Zombie.cpp:7101` 写 50；`Plant.cpp:3428-3431` 递减 | 无消费者（`FindStarFruitTarget` `:860` 是星星果） | 无 | `AnimateNuts` `:3145-3149` 把身体动画压到 0.1f | 无 | 无 | **装饰**：不改变伤害/位置，且**不抽 RNG** ⇒ 可跳 |
+| `mEatenFlashCountdown` | `Plant.cpp:1030`（产阳前 100 tick 的灰色渐显）；`:3432-3435` 递减 | — | 只喂 `UpdateReanimColor` `:2700-2702` | — | — | — | **装饰**，不抽 RNG ⇒ 可跳 |
+| `mAnimCounter` / `mFrame` / `mFrameLength` / `mAnimPing` / `mNumFrames` | `:117-127`、`Animate` 步骤 8 `:3462-3483` | 只产出 `mFrame` | 同左 | 同左 | 同左 | 同左 | **纯装饰**：`mFrame` 唯一读者是 `Plant::Draw` `:3961` 的旧图集索引；本卡组全用 reanim。**但 `mFrameLength = RandRangeInt(12,18)`（`:123`）种植时抽 1 int**，该 draw 不可跳 |
+| `mShakeOffsetX/Y` | `Animate` 步骤 1 `:3422-3426`（只 CHERRYBOMB/JALAPENO）；`UpdateReanim` `:2747-2749` 用作 reanim 偏移 | — | — | — | **每 tick 2 个 float RNG**，共 100 tick ⇒ 200 draw | — | 位置是**装饰**（不改 `mX/mY`），**RNG 不可跳**（§1.4 / §8 行 10） |
+| `mIsAsleep` / `mWakeUpCounter` | 初值 `Plant.cpp:153-154`；入睡 `Plant.cpp:186-187`（`IsNocturnal && !StageIsNight()`）；递减 `Plant.cpp:2528-2539` | — | — | — | — | — | **第 7 关白天 + 全日行卡组：恒 false / 恒 0** ⇒ 整块可跳 |
+| `mSquished` / `mOnBungeeState` / `mTargetZombieID` / `mPottedPlantIndex` / `mImitaterType` / `mTargetX/Y` / `mStartRow` | 声明 `Plant.h:184-186`、`:203-210`；初值 `Plant.cpp:124-131`、`:155-156`；写入者只出现在 squash `:1532-1544` / gravebuster / 巨人砸 `Squish()` `:2320-2360` / bungee / 屋顶花盆 / imitater 路径 | — | — | — | — | — | **本卡组本关全程不变** ⇒ 可不带（`mSquished` 一旦为真会改变行为，但没有写入者） |
+| `mLightReanimID` / `mBodyReanimID` / `mHeadReanimID(2/3)` / `mBlinkReanimID` / `mSleepingReanimID` / `mParticleID` | 初值 `Plant.cpp:137-144`；土豆雷 `anim_glow` 建在 `:1166-1173` | 头 reanim 的 transform 会喂 `GetPeaHeadOffset` ⇒ **弹的初始位置**取自动画数据 | 无 | 无 | 无 | `anim_glow` 只改 `mFrameCount` | 位置类：源码读不出数值（§9 `UNKNOWN` 第 3 条）；`mParticleID` 本身装饰，但**发射粒子抽 RNG**（§1.6） |
+
+#### 7.1 明确可以跳过的装饰（前提：不碰 RNG）
+
+* 旧 sprite 帧动画的**递推本身**：`mAnimCounter` 的 ping-pong 与 `mFrame`（`Plant.cpp:3462-3483`）
+  —— 种植时的 `RandRangeInt(12,18)` 那一次 draw 仍要保留。
+* `mEatenFlashCountdown`（`Plant.cpp:1029-1030`、`:2700-2702`、`:3432-3435`）。
+* `mRecentlyEatenCountdown` 对 wallnut 的 `mAnimRate = 0.1f`（`Plant.cpp:3145-3149`）。
+  坚果没有任何依赖自身动画速率的游戏逻辑（`GetPlantRect` 用 `mX/mY`，恒定）。
+* wallnut 三段裂纹贴图（`AnimateNuts` `Plant.cpp:3122-3142`）与 `Plant::DrawShadow`、`Draw`。
+* `aLightReanim->mFrameCount` 随最近僵尸距离变化（`Plant.cpp:1188-1193`）——土豆雷指示器，纯视觉。
+
+#### 7.2 装饰但**不能**跳的（因为消耗全局 MT 流）
+
+审计若按"装饰"把这些删掉，CPU 参照与内核会在第一次 blink / 樱桃种植之后错开，与 §1.5、§1.6 的账目一致：
+
+1. 每次 blink 1 int（`DoBlink` `Plant.cpp:3017` 在**所有**早退 return 之前），wallnut 同一事件再 2 int（`:3041`、`:2902`）。
+2. 樱桃炸弹存活期间每 tick 2 float（`Animate` `Plant.cpp:3424-3425`），共 200。
+3. 土豆雷 `RISING → ARMED` 那一刻 1 int + 1 float：`Plant.cpp:1163` 的 `RandRangeFloat(12.0f, 15.0f)`
+   （**1 次** draw —— `RandRangeFloat(a,b) = Rand(b-a) + a`，`PvzpCommon.cpp:390-394`，与 int 版
+   `Rand(max-min+1)` 的闭区间约定**不同**）与 `:1177` 的 `400 + Rand(4000)`。
+   两者都只决定动画速率 ⇒ 数值上装饰，但 **draw 本身不可跳**。
+4. 每一次粒子发射（§1.6）：种植 `PARTICLE_PLANTING`（`Board.cpp:2084`）、土豆出土
+   `PARTICLE_POTATO_MINE_RISE`（`Plant.cpp:1153`）、雪豌豆 `PARTICLE_SNOWPEA_PUFF`（`Plant.cpp:4680`）、
+   樱桃 `PARTICLE_POWIE`（`:4331`）、土豆雷 `PARTICLE_POTATO_MINE`（`:4396`）、
+   wallnut 裂纹换档 `PARTICLE_WALLNUT_EAT_LARGE`（`:3127`/`:3135`）。
+   Foley 相反，**在 rollout 里 0 draw**（`LawnApp.cpp:2734-2748` 的 `mEnvironmentMode || mHeadlessMode` 早退）。
+5. 樱桃烧死一只 `mBodyHealth < 1800` 的普通僵尸时，`Zombie.cpp:8792` 抽 1 float（charred 动画速率抖动）。
+
+#### 7.3 一句话清单（内核 SoA 需要的植物 tick 状态）
+
+`mSeedType, mPlantCol/mRow(→mX/mY 常量), mPlantHealth, mState(土豆雷三段), mStateCountdown,
+mDoSpecialCountdown, mLaunchCounter, mShootingCounter, mBlinkCountdown, mFrameLength(为复现 draw),
+mShakeOffset 的 2 draw/tick 计数`。其余字段在"第 7 关 + 这副卡组 + NORMAL/FLAG/CONE/POLEVAULTER"
+的乘积下要么恒为初值，要么只走视觉。
