@@ -56,6 +56,8 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
     if static_value_path:
         _W["static_vnet"] = load_value_net(static_value_path)
     _W["fast"] = load_student(rollout_path)
+    if _W["fast"].obs == "v2lite":
+        cpp_rollouts = _W["cpp_rollouts"] = False
     if cpp_rollouts:
         import tempfile
         from pvz_rollout_policy import export_student
@@ -70,8 +72,11 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     from render_episode import _frame
     frame = _frame(obs)
     frame["action"] = fast_state.get("action")
+    if _W["fast"].obs == "v2lite" and "history" not in fast_state:
+        from pvz_student_observation import StudentHistory
+        fast_state["history"] = StudentHistory()
     action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
-                 context=_W.get("context"))
+                 context=_W.get("context"), history=fast_state.get("history"))
     fast_state["frame"] = frame
     fast_state["action"] = action
     return action
@@ -103,6 +108,8 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 
     In C++ by default; the Python loop below is the reference the C++ path is checked against
     (scripts/perf_rollout_check.py)."""
+    if _W["fast"].obs == "v2lite":
+        raise ValueError("v2lite teacher continuations are unsupported. Use --arms fast.")
     if _W.get("cpp_rollouts"):
         leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed)
         metrics = _W.setdefault("rollout_metrics", {})
@@ -276,6 +283,8 @@ def _play(job: dict) -> dict:
     from scripted_baseline import profile_for_deck
     from pvz_env import TaskSpec
     args = job["args"]
+    if job["arm"] != "fast" and _W["fast"].obs == "v2lite":
+        raise ValueError("v2lite supports only --arms fast. Teacher continuations are unsupported.")
     kw = training_task_kwargs(load_training_task(Path(args.manifest), args.task_id), job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading
     # resources costs ~0.7 s, as much as a whole student-only game. RESET_V2 rebuilds the board
@@ -406,6 +415,9 @@ def main() -> None:
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
+    from pvz_rollout_policy import load_student
+    if "fast_search" in args.arms.split(",") and load_student(args.rollout_policy).obs == "v2lite":
+        p.error("v2lite supports only --arms fast. Teacher continuations are unsupported.")
     seeds = load_training_task(Path(args.manifest), args.task_id)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
     args.out.mkdir(parents=True, exist_ok=True)
     results_path = args.out / "games.jsonl"

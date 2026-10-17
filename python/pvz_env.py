@@ -616,6 +616,9 @@ class PvZEnv:
         filename = str(Path(path).expanduser().resolve())
         if any(char in filename for char in ('\n', '\r')):
             raise ValueError("rollout network path must not contain newlines")
+        with open(filename, "rb") as stream:
+            if stream.read(8) not in (b"PVZRN002", b"PVZRN003"):
+                raise ValueError("load_rollout_net requires an exported v1 C++ network. v2lite is Python-only and cannot be loaded here.")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")

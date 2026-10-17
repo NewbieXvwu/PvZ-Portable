@@ -51,7 +51,7 @@ def _board_store(shape, cache_dir: Path) -> torch.Tensor:
 
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
-         cache_dir: Path | None = None, with_context: bool = False):
+         cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -61,10 +61,17 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     rng = random.Random(0)
     keep = {}
     cached = {}
+    if cache_dir is not None and precompute_workers > 1:
+        from concurrent.futures import ProcessPoolExecutor
+        from functools import partial
+        import multiprocessing as mp
+        with ProcessPoolExecutor(max_workers=precompute_workers, mp_context=mp.get_context("spawn")) as pool:
+            cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs), paths, chunksize=8)))
     for path in paths:
         mask = []
         if cache_dir is not None:
-            cached[path] = cache_episode(path, cache_dir)
+            if path not in cached:
+                cached[path] = cache_episode(path, cache_dir, obs)
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             keep[path] = mask
@@ -88,7 +95,9 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 rows_scalars = stored["scalars"][selected]
                 if with_context:
                     ctx = _episode_context(path)
-                    rows_scalars = np.concatenate([rows_scalars, np.broadcast_to(ctx, (count, len(ctx)))], axis=1)
+                    context_rows = np.broadcast_to(ctx, (count, len(ctx)))
+                    rows_scalars = (np.concatenate([rows_scalars[:, :-1], context_rows, rows_scalars[:, -1:]], axis=1)
+                                    if obs == "v2lite" else np.concatenate([rows_scalars, context_rows], axis=1))
                 rows_boards = stored["boards"]
                 if boards is None:
                     boards = _board_store((capacity, *rows_boards.shape[1:]), cache_dir)
@@ -108,11 +117,17 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             continue
         frames = read_frames(path)
         ctx = _episode_context(path) if with_context else None
+        if obs == "v2lite":
+            from pvz_student_observation import StudentHistory
+            history = StudentHistory()
         for i in range(1, len(frames)):
+            if obs == "v2lite":
+                b, s = history.features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             action = frames[i].get("label") or frames[i].get("action")
             if not action or frames[i].get("action_rejected") or not keep[path][i]:
                 continue
-            b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
+            if obs == "v1":
+                b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             if boards is None:
                 boards = torch.empty((capacity, *b.shape), dtype=torch.half)
                 scalars = torch.empty((capacity, *s.shape), dtype=s.dtype)
@@ -144,6 +159,7 @@ def main() -> None:
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
     p.add_argument("--context", action="store_true",
                    help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
+    p.add_argument("--obs", choices=["v1", "v2lite"], default="v1", help="student feature version")
     p.add_argument("--soft-weight", type=float, default=0.0,
                    help="also match the search's preference over its candidates (wait / each card): "
                         "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")
@@ -156,6 +172,7 @@ def main() -> None:
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
     p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
+    p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
     args = p.parse_args()
     if args.seed is not None:
         torch.manual_seed(args.seed)
@@ -164,7 +181,7 @@ def main() -> None:
     boards, scalars, plant, packet, cell, weight, seed_of, values = load(args.data, set(args.labels.split(",")),
                                                                  args.wait_keep, label_weight,
                                                                  (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None,
-                                                                 args.context)
+                                                                 args.context, args.obs, args.precompute_workers)
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
@@ -189,7 +206,7 @@ def main() -> None:
         weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=5.0)
         print(f"spread weights: {int(compared.sum())} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
-    net = RolloutNet(args.width, args.pool, args.context)
+    net = RolloutNet(args.width, args.pool, args.context, args.obs)
     if args.init:
         from pvz_rollout_policy import load_student
         net.load_state_dict(load_student(args.init).state_dict())
@@ -241,7 +258,7 @@ def main() -> None:
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
-                "context": args.context, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "history": list(history)}
+                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "history": list(history)}
 
     for epoch in range(1, args.epochs + 1):
         net.train()

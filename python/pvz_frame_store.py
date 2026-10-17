@@ -67,8 +67,27 @@ def encode_frames(frames: list[dict], source: bytes) -> dict:
                 values=np.array(values, dtype=np.float32).reshape(-1, PACKETS + 1))
 
 
-@lru_cache(maxsize=1)
-def encoder_signature() -> str:
+def encode_v2lite_frames(frames: list[dict], source: bytes) -> dict:
+    from pvz_student_observation import StudentHistory
+    encoded = encode_frames(frames, source)
+    history = StudentHistory()
+    boards, scalars = [], []
+    rows = iter(encoded["rows"])
+    wanted = next(rows, None)
+    for index, frame in enumerate(frames[:-1], 1):
+        board, scalar = history.extra(frame)
+        if index == wanted:
+            boards.append(board)
+            scalars.append(scalar)
+            wanted = next(rows, None)
+    count = len(encoded["rows"])
+    encoded["boards"] = np.concatenate([encoded["boards"], np.asarray(boards, dtype=np.float16).reshape(count, 4, 6, 10)], axis=1)
+    encoded["scalars"] = np.concatenate([encoded["scalars"], np.asarray(scalars, dtype=np.float32).reshape(count, 1)], axis=1)
+    return encoded
+
+
+@lru_cache(maxsize=2)
+def encoder_signature(obs: str = "v1") -> str:
     import pvz_rollout_policy
     import pvz_value_net
     functions = (pvz_rollout_policy.features, pvz_value_net.featurize_numpy, pvz_value_net._col_of,
@@ -77,7 +96,14 @@ def encoder_signature() -> str:
                                   if name.isupper() and isinstance(value, (int, float))}
                  for module in (pvz_rollout_policy, pvz_value_net)}
     source = "".join(inspect.getsource(function) for function in functions)
-    return hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
+    signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
+    if obs == "v1":
+        return signature
+    if obs != "v2lite":
+        raise ValueError(f"unknown student observation version: {obs}")
+    from pvz_student_observation import SPEED_SCALE, StudentHistory
+    return hashlib.sha256((signature + inspect.getsource(StudentHistory) + str(SPEED_SCALE)
+                           + inspect.getsource(encode_v2lite_frames)).encode()).hexdigest()
 
 
 def _save(path: Path, **arrays):
@@ -102,11 +128,13 @@ def write_frames(path: Path, frames: list[dict]):
           **encode_frames(frames, source))
 
 
-def cache_episode(path: Path, directory: Path) -> Path:
-    signature = encoder_signature()
+def cache_episode(path: Path, directory: Path, obs: str = "v1") -> Path:
+    signature = encoder_signature(obs)
+    if obs != "v1":
+        directory = directory / obs
     if path.suffix == ".npz":
         with np.load(path, allow_pickle=False) as stored:
-            if str(stored["encoder"]) == signature:
+            if "encoder" in stored and str(stored["encoder"]) == signature:
                 return path
     source = frame_bytes(path)
     digest = hashlib.sha256(signature.encode() + source).hexdigest()
@@ -116,5 +144,6 @@ def cache_episode(path: Path, directory: Path) -> Path:
             if str(stored["digest"]) == digest:
                 return target
     frames = [json.loads(line) for line in source.splitlines()]
-    _save(target, digest=digest, **encode_frames(frames, source))
+    encode = encode_frames if obs == "v1" else encode_v2lite_frames
+    _save(target, digest=digest, **encode(frames, source))
     return target
