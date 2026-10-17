@@ -410,19 +410,21 @@ static void RunEnvironment(LawnApp* app)
 			std::string actionCommand, actionArguments;
 			ok = ok && !(input >> extra) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
 				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments));
-			int decisions = 0, mowersLeft = 0;
+			int decisions = 0, mowersLeft = 0, startTick = 0;
 			std::array<int, 10> planted{};
 			double simulationSeconds = 0, networkSeconds = 0;
 			if (ok)
 			{
 				const int savedMask = gEnvSimSkip;
 				gEnvSimSkip = mask;
+				startTick = app->mBoard->mMainCounter;
 				if (untilTick <= app->mBoard->mMainCounter) untilTick = std::numeric_limits<int>::max();
 				int priorTick = -1;
 				bool priorPlant = false;
 				auto readyMowers = [&] { int count = 0; for (const LawnMower* mower : app->mBoard->mLawnMowers)
 					if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY) ++count; return count; };
 				mowersLeft = readyMowers();
+				rollout.ResetNetworkCalls();
 				while (!app->EnvironmentTerminal() && decisions < maxActions)
 				{
 					const int tick = app->mBoard->mMainCounter;
@@ -483,7 +485,8 @@ static void RunEnvironment(LawnApp* app)
 				<< ",\"observation\":" << observation
 				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted\":[";
 			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << planted[index];
-			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds << ",\"substeps\":[";
+			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds
+				<< ",\"net_calls\":" << rollout.NetworkCalls() << ",\"ticks\":" << app->mBoard->mMainCounter - startTick << ",\"substeps\":[";
 			for (size_t index = 0; index < substeps.size(); ++index)
 				std::cout << (index ? ",[" : "[") << substeps[index].first << ',' << substeps[index].second << ']';
 			std::cout << "]}" << std::endl;

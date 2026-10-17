@@ -268,6 +268,7 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 {
 	Prediction result{};
 	if (!diagnostics && !app->EnvironmentAnyLegalPlant()) return result;
+	++networkCalls;
 	std::vector<float> board, scalars;
 	Features(app, income, previousTick, previousPlant, board, scalars);
 	Encode(board, scalars);

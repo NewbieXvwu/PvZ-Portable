@@ -25,11 +25,16 @@ public:
 	void Features(LawnApp* app, double income, int previousTick, bool previousPlant,
 		std::vector<float>& board, std::vector<float>& scalars);
 	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant, bool diagnostics = false);
+	// Number of Predict calls that actually ran the network (the ones that return early because
+	// nothing is plantable cost nothing).  Reset by the caller around a batch of rollouts.
+	int NetworkCalls() const { return networkCalls; }
+	void ResetNetworkCalls() { networkCalls = 0; }
 
 private:
 	int width = 0;
 	bool meanmax = false;
 	bool taskContext = false;
+	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer;
 	void Encode(const std::vector<float>& board, const std::vector<float>& scalars);
