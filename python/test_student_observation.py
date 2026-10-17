@@ -106,13 +106,13 @@ class StudentObservationTest(unittest.TestCase):
                         for name in encoded:
                             np.testing.assert_array_equal(cached[name], encoded[name])
                     for context in (False, True):
-                        expected = load(directory / version, {"test_fast"}, .1, with_context=context, obs=version)
+                        expected = load(directory / version, {"test_fast"}, .1, with_context=context, obs=version,
+                                        dense_boards=True)
                         actual = load(directory / version, {"test_fast"}, .1, cache_dir=directory / "cache",
                                       with_context=context, obs=version, precompute_workers=2)
                         for left, right in zip(expected, actual):
-                            if hasattr(left, "batch"):
-                                left = left.batch(torch.arange(left.shape[0]), "cpu")
-                                right = right.batch(torch.arange(right.shape[0]), "cpu")
+                            if hasattr(right, "batch"):
+                                right = right.batch(torch.arange(right.shape[0]), "cpu").half()
                             if isinstance(left, torch.Tensor):
                                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
                             else:

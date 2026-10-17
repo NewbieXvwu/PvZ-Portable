@@ -55,8 +55,9 @@ class PipelinePerfTest(unittest.TestCase):
     def assert_rows_equal(self, expected, actual):
         for left, right in zip(expected, actual):
             if isinstance(left, CompactBoards):
-                left = left.batch(torch.arange(left.shape[0]), "cpu")
-                right = right.batch(torch.arange(right.shape[0]), "cpu")
+                left = left.batch(torch.arange(left.shape[0]), "cpu").half()
+            if isinstance(right, CompactBoards):
+                right = right.batch(torch.arange(right.shape[0]), "cpu").half()
             if isinstance(left, torch.Tensor):
                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
             else:
@@ -77,7 +78,7 @@ class PipelinePerfTest(unittest.TestCase):
         source.write_text("".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames))
         cache = self.directory / "cache"
         for fraction in (.1, .5, 1.0):
-            expected = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5})
+            expected = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5}, dense_boards=True)
             for _ in range(2):
                 actual = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5}, cache)
                 self.assert_rows_equal(expected, actual)
