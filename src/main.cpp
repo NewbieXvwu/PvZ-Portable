@@ -410,13 +410,15 @@ static void RunEnvironment(LawnApp* app)
 			std::string actionCommand, actionArguments;
 			ok = ok && !(input >> extra) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
 				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments));
-			int decisions = 0, mowersLeft = 0;
+			int decisions = 0, mowersLeft = 0, estimatedResult = -1;
 			std::array<int, 10> planted{};
 			double simulationSeconds = 0, networkSeconds = 0;
 			if (ok)
 			{
 				const int savedMask = gEnvSimSkip;
 				gEnvSimSkip = mask;
+				const int startTick = app->mBoard->mMainCounter;
+				const bool finiteHorizon = untilTick > startTick;
 				if (untilTick <= app->mBoard->mMainCounter) untilTick = std::numeric_limits<int>::max();
 				int priorTick = -1;
 				bool priorPlant = false;
@@ -472,6 +474,38 @@ static void RunEnvironment(LawnApp* app)
 					// 胜利会放出剩余小推车，与 Python 一样保留最后非终局观测的数量。
 					if (!app->EnvironmentTerminal()) mowersLeft = readyMowers();
 					if (now >= untilTick) break;
+					if (!app->EnvironmentTerminal() && (mask & ENV_EARLY_RESULT) && app->mBoard->mLevel == 7)
+					{
+						bool protectedRows[6]{};
+						for (const LawnMower* mower : app->mBoard->mLawnMowers)
+							if (!mower->mDead && mower->mRow >= 0 && mower->mRow < 6 && mower->mMowerState == LawnMowerState::MOWER_READY)
+								protectedRows[mower->mRow] = true;
+						bool safe = app->mBoard->mCurrentWave == app->mBoard->mNumWaves && app->mBoard->mRiseFromGraveCounter == 0;
+						for (Zombie* zombie : app->mBoard->mZombies)
+						{
+							if (zombie->mDead || zombie->IsDeadOrDying() || zombie->mMindControlled) continue;
+							const bool protectedRow = zombie->mRow >= 0 && zombie->mRow < 6 && protectedRows[zombie->mRow];
+							safe = safe && protectedRow;
+							if (!protectedRow && zombie->mPosX < 80.0f && zombie->mHasHead)
+							{
+								estimatedResult = 0;
+								break;
+							}
+						}
+						if (safe) estimatedResult = 1;
+						if (estimatedResult >= 0) break;
+					}
+					if (finiteHorizon && (mask & ENV_ADAPTIVE_HORIZON) && now - startTick >= 600)
+					{
+						bool threatened = false;
+						for (Zombie* zombie : app->mBoard->mZombies)
+							if (!zombie->mDead && !zombie->IsDeadOrDying() && !zombie->mMindControlled && zombie->mPosX < 400.0f)
+							{
+								threatened = true;
+								break;
+							}
+						if (!threatened) break;
+					}
 				}
 				gEnvSimSkip = savedMask;
 			}
@@ -481,6 +515,7 @@ static void RunEnvironment(LawnApp* app)
 			observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
 				<< ",\"observation\":" << observation
+				<< ",\"estimated_result\":" << estimatedResult
 				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted\":[";
 			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << planted[index];
 			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds << ",\"substeps\":[";

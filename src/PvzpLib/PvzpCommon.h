@@ -190,7 +190,11 @@ enum EnvSimSkip : int
 	ENV_SKIP_HEIGHT = 4,        // PlantDrawHeightOffset (pot / water bobbing) in Plant::UpdateReanim
 	ENV_SKIP_ATTACHMENT_MATRIX = 8, // attachment overlay calculation and matrix propagation only
 	ENV_SKIP_MESSAGE = 16,      // per-glyph text reanimations of on-screen messages
-	ENV_SKIP_ALLOWED = ENV_SKIP_COLOR | ENV_SKIP_HEIGHT | ENV_SKIP_ATTACHMENT_MATRIX | ENV_SKIP_MESSAGE,
+	ENV_LIGHT_ANIMATION = 32,
+	ENV_ADAPTIVE_HORIZON = 64,
+	ENV_EARLY_RESULT = 128,
+	ENV_SKIP_ALLOWED = ENV_SKIP_COLOR | ENV_SKIP_HEIGHT | ENV_SKIP_ATTACHMENT_MATRIX | ENV_SKIP_MESSAGE |
+		ENV_LIGHT_ANIMATION | ENV_ADAPTIVE_HORIZON | ENV_EARLY_RESULT,
 };
 extern int gEnvSimSkip;
 

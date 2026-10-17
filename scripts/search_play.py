@@ -90,6 +90,8 @@ def _values(frames: list[dict], static: bool = False) -> list[float]:
 
 
 def _score_terminal_or_value(obs: dict) -> float | None:
+    if "rollout_result" in obs:
+        return float(obs["rollout_result"])
     if obs.get("terminal"):
         return 1.0 if obs.get("result") == 1 else 0.0
     return None

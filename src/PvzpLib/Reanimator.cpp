@@ -505,7 +505,7 @@ void Reanimation::Update()
 		if (aTrack->mBlendCounter > 0)
 			aTrack->mBlendCounter--;
 
-		if (aTrack->mShakeOverride != 0.0f)
+		if (aTrack->mShakeOverride != 0.0f && !(gEnvSimSkip & ENV_LIGHT_ANIMATION))
 		{
 			aTrack->mShakeX = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
 			aTrack->mShakeY = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
@@ -1148,6 +1148,8 @@ bool Reanimation::TrackExists(const char* theTrackName)
 
 void Reanimation::StartBlend(int theBlendTime)
 {
+	if (gEnvSimSkip & ENV_LIGHT_ANIMATION)
+		return;
 	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
 	{
 		ReanimatorTransform aTransform;
@@ -1555,7 +1557,8 @@ void Reanimation::UpdateAttacherTrack(int theTrackIndex)
 
 	Color aColor = ColorsMultiply(mColorOverride, aTrackInstance->mTrackColor);
 	aColor.mAlpha = std::clamp(FloatRoundToInt(aTransform.mAlpha * aColor.mAlpha), 0, 255);
-	AttachmentPropogateColor(aTrackInstance->mAttachmentID, aColor, mEnableExtraAdditiveDraw, mExtraAdditiveColor, mEnableExtraOverlayDraw, mExtraOverlayColor);
+	if (!(gEnvSimSkip & ENV_LIGHT_ANIMATION))
+		AttachmentPropogateColor(aTrackInstance->mAttachmentID, aColor, mEnableExtraAdditiveDraw, mExtraAdditiveColor, mEnableExtraOverlayDraw, mExtraOverlayColor);
 }
 
 bool Reanimation::IsAnimPlaying(const char* theTrackName)

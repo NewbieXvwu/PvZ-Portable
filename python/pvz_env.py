@@ -596,8 +596,8 @@ class PvZEnv:
         code sets it around its rollouts and puts it back to 0 afterwards. Any non-zero mask is an
         approximation whose effect must be measured (scripts/sim_skip_agreement.py), not assumed.
         """
-        if type(mask) is not int or mask < 0 or mask & ~29:
-            raise ValueError("sim skip mask must combine the bits 1, 4, 8 and 16")
+        if type(mask) is not int or mask < 0 or mask & ~61:
+            raise ValueError("SIM_SKIP only accepts presentation bits 1, 4, 8, 16 and 32")
         if not self._command(f"SIM_SKIP {mask}").get("ok"):
             raise RuntimeError("simulator rejected SIM_SKIP (binary older than this wrapper?)")
 
@@ -646,8 +646,8 @@ class PvZEnv:
             raise ValueError("until_tick must be a non-negative signed 32-bit integer")
         if type(max_actions) is not int or not 1 <= max_actions <= 1000000:
             raise ValueError("max_actions must be from 1 to 1000000")
-        if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~29:
-            raise ValueError("sim skip mask must combine the bits 1, 4, 8 and 16")
+        if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~253:
+            raise ValueError("rollout sim skip mask must combine the bits 1, 4, 8, 16, 32, 64 and 128")
         event_wait = False
         if first_action is None:
             token = "A"
@@ -678,7 +678,9 @@ class PvZEnv:
                                  f"{history_start} {len(history)} {samples}".rstrip())
         observation = response.get("observation")
         if not response.get("ok") or not isinstance(observation, dict):
-            raise RuntimeError(f"simulator rejected ROLLOUT: {response}")
+            raise RuntimeError(f"simulator rejected ROLLOUT (binary older than this wrapper?): {response}")
+        if response.get("estimated_result", -1) >= 0:
+            observation["rollout_result"] = response["estimated_result"]
         self._sun_production_history = deque(history)
         self._sun_history_start_tick = history_start
         for tick, produced in response["substeps"]:
