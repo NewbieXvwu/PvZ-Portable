@@ -76,7 +76,7 @@ def main() -> None:
     p.add_argument("--epochs", type=int, default=40)
     p.add_argument("--min-gap", type=float, default=0.25)
     p.add_argument("--seed", type=int, default=0)
-    p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+    p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     args = p.parse_args()
     torch.manual_seed(args.seed)
     paths = [file for path in map(Path, args.data.split(","))
