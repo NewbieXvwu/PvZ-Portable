@@ -85,6 +85,7 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.i(F_PROJ_ROW, slot) = 0;
 		lane.i(F_PROJ_AGE, slot) = 0;
 		lane.i(F_PROJ_DAMAGE, slot) = 0;
+		lane.i(F_PROJ_CHILL, slot) = 0;
 		lane.f(F_PROJ_X, slot) = 0.0f;
 		lane.f(F_PROJ_Y, slot) = 0.0f;
 		lane.f(F_PROJ_VELX, slot) = 0.0f;
@@ -188,6 +189,9 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.i(F_ZOMBIE_TYPE, slot) = src.type;
 		lane.i(F_ZOMBIE_ROW, slot) = src.row;
 		lane.i(F_ZOMBIE_BODY, slot) = src.body;
+		// The head/arm loss thresholds are fractions of the *starting* health (Zombie::UpdateDamageStates,
+		// Zombie.cpp:3904-3930), so the import has to carry it; an older record leaves it zero.
+		lane.i(F_ZOMBIE_BODY_MAX, slot) = src.bodyMax ? src.bodyMax : (src.body > 0 ? src.body : 1);
 		lane.i(F_ZOMBIE_HELM, slot) = src.helm;
 		lane.i(F_ZOMBIE_SHIELD, slot) = src.shield;
 		lane.i(F_ZOMBIE_FLYING, slot) = src.flying;
@@ -197,7 +201,10 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.i(F_ZOMBIE_CHILLED, slot) = src.chilled;
 		lane.i(F_ZOMBIE_AGE, slot) = src.age;
 		lane.i(F_ZOMBIE_FROM_WAVE, slot) = src.fromWave;
-		lane.i(F_ZOMBIE_TARGET, slot) = src.targetCell;
+		// The engine has no target latch on the chew path (FindPlantTarget re-runs every 4 ticks,
+		// Zombie.cpp:6879) and the exporter cannot read mTargetPlantID, so the imported cell is always -1
+		// (cuda/spec/host.md, corpus finding 3).  The tick re-derives it from the mouth rectangle.
+		lane.i(F_ZOMBIE_TARGET, slot) = -1;
 		lane.f(F_ZOMBIE_X, slot) = src.posX;
 		lane.f(F_ZOMBIE_Y, slot) = src.posY;
 		lane.f(F_ZOMBIE_VELX, slot) = src.velX;
@@ -215,9 +222,14 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.i(F_PROJ_ROW, slot) = src.row;
 		lane.i(F_PROJ_AGE, slot) = src.age;
 		lane.i(F_PROJ_DAMAGE, slot) = src.damage;
+		lane.i(F_PROJ_CHILL, slot) = src.chill;
 		lane.f(F_PROJ_X, slot) = src.posX;
 		lane.f(F_PROJ_Y, slot) = src.posY;
-		lane.f(F_PROJ_VELX, slot) = src.velX;
+		// RootProjectile::velX is structurally 0 (the exporter does not read the field: straight peas are
+		// advanced by the literal `mPosX += mVelX` where mVelX came from the projectile definition,
+		// cuda/spec/projectiles.md).  3.33 is that definition value and must stay in step with
+		// SimTick.inc's cPeaSpeed.
+		lane.f(F_PROJ_VELX, slot) = src.velX ? src.velX : 3.33f;
 		lane.f(F_PROJ_VELY, slot) = src.velY;
 	}
 	// Sun coins carry no position: LawnApp::EnvironmentWait banks every live sun at the top of the
@@ -284,10 +296,13 @@ PVZ_SIM void StoreResult(Lane lane, RolloutResult& out)
 	{
 		if (lane.i(F_ZOMBIE_TYPE, slot) < 0) continue;
 		const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
-		// The corpus takes the original's IsOnBoard() zombies only, and "closest to the house" is the
-		// smallest x, which is why this is a min rather than a max.
-		if ((flags & (ZB_DEAD | ZB_DYING | ZB_ON_BOARD)) != ZB_ON_BOARD) continue;
+		// EnvironmentLeanObservation lists a zombie iff `!mDead` (LawnApp.cpp:1655), so a fading corpse
+		// (DYING/MOWERED/BURNED, all still on the list until the slot frees) counts as present and reports
+		// health 0 -- matching what the CPU rollout exports.  Filtering on DYING here would undercount
+		// every board the moment a zombie is shot.
+		if (flags & ZB_DEAD) continue;
 		++zombiesAlive;
+		if (!(flags & ZB_ON_BOARD)) continue;
 		const int32_t row = lane.i(F_ZOMBIE_ROW, slot);
 		if (row < 0 || row >= kRows) continue;
 		const int32_t scaled = static_cast<int32_t>(lane.f(F_ZOMBIE_X, slot) * 4.0f);
@@ -325,6 +340,12 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 	for (int32_t channel = 0; channel < kBoardChannels; ++channel)
 		for (int32_t cell = 0; cell < kCells; ++cell)
 			CellChannel(lane, buffers.board, channel, cell) = 0.0f;
+	// The scalar vector is cleared too, not only filled: the original does
+	// `scalars.assign(kScalarFeatures, 0.0f)` before writing the deck-dependent entries, and an
+	// activation slot is reused by whichever lane reaches a decision next, so an uncleared tail would
+	// make a lane's decision depend on which lane ran last (cuda/spec/host.md finding 3).
+	for (int32_t index = 0; index < kScalarFeatures; ++index)
+		ScalarChannel(lane, buffers.scalars, index) = 0.0f;
 
 	// Plants: health ratio in the channel of its seed type (EnvironmentRollout.cpp:112).  The original
 	// skips dead and squished plants; a squished plant leaves the slot immediately here, so the type

@@ -290,14 +290,20 @@ struct Arguments
 	int32_t bench;                    // BenchMode
 };
 
-// rollout -> (root, future).  The modulo is what lets --repeat replay the same workload through a
-// buffer that only holds one batch of lanes.
+// rollout -> (root, future).  The workload holds `perGame = rootCount * perRoot` lanes and a benchmark
+// may run several batches of them, but a phase-0 gate has to measure *distinct* continuations: keying
+// the seed off `slot % perRoot` would replay the identical future on every repeat (the old 21,504
+// rollouts were 96 distinct positions times 224 identical replays).  The root rotates over the corpus as
+// before, while the future seed advances with the global rollout index, so pass k of a root continues it
+// down a different RNG stream than pass k-1.
 PVZ_SIM void RolloutOf(const Arguments& arguments, int32_t index, int32_t& rootIndex,
 	int32_t& futureSeed)
 {
-	const int32_t slot = (arguments.firstRollout + index) % arguments.perGame;
-	rootIndex = slot / arguments.perRoot;
-	futureSeed = arguments.seedBase + slot % arguments.perRoot;
+	const int32_t global = arguments.firstRollout + index;
+	const int32_t slot = global % arguments.perGame;
+	const int32_t rootCount = arguments.perRoot > 0 ? arguments.perGame / arguments.perRoot : 1;
+	rootIndex = rootCount > 0 ? slot / arguments.perRoot : 0;
+	futureSeed = arguments.seedBase + global / (rootCount > 0 ? rootCount : 1);
 }
 
 // The plant and zombie tables are scanned on the hot path (TickPlantDef runs for every live plant every

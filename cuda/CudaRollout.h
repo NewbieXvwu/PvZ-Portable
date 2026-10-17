@@ -136,9 +136,10 @@ enum
 	ZB_MIND_CONTROLLED = 1 << 5,
 	ZB_SHIELD_DIED = 1 << 6,
 	ZB_VAULTED = 1 << 7,          // the pole vaulter has already jumped
-	ZB_ON_BOARD = 1 << 8,         // Zombie::IsOnBoard() at export time
+	ZB_ON_BOARD = 1 << 8,         // Zombie::IsOnBoard(): provenance, not position (mFromWave is a real wave)
 	ZB_BURNED = 1 << 9,
 	ZB_ENTERING = 1 << 10,        // still walking in from off the right edge, not yet playable
+	ZB_MOWERED = 1 << 11,         // PHASE_ZOMBIE_MOWERED: run over, waiting for the mowed reanim to loop
 };
 
 enum
@@ -327,7 +328,8 @@ enum IntField {
 	F_PLANT_TYPE, F_PLANT_HP, F_PLANT_HP_MAX, F_PLANT_STATE, F_PLANT_STATE_COUNTDOWN,
 	F_PLANT_LAUNCH, F_PLANT_LAUNCH_RATE, F_PLANT_SPECIAL, F_PLANT_SHOOTING, F_PLANT_ANIM,
 	F_PLANT_ONBOARD,
-	F_ZOMBIE_TYPE, F_ZOMBIE_ROW, F_ZOMBIE_BODY, F_ZOMBIE_HELM, F_ZOMBIE_SHIELD, F_ZOMBIE_FLYING,
+	F_ZOMBIE_TYPE, F_ZOMBIE_ROW, F_ZOMBIE_BODY, F_ZOMBIE_BODY_MAX, F_ZOMBIE_HELM, F_ZOMBIE_SHIELD,
+	F_ZOMBIE_FLYING,
 	F_ZOMBIE_PHASE, F_ZOMBIE_PHASE_COUNTER, F_ZOMBIE_FLAGS, F_ZOMBIE_CHILLED,
 	F_ZOMBIE_AGE, F_ZOMBIE_FROM_WAVE, F_ZOMBIE_TARGET,
 	F_PROJ_TYPE, F_PROJ_ROW, F_PROJ_AGE, F_PROJ_DAMAGE, F_PROJ_CHILL,
@@ -388,7 +390,8 @@ constexpr int IntSlotCount(IntField field)
 	case F_PLANT_STATE_COUNTDOWN: case F_PLANT_LAUNCH: case F_PLANT_LAUNCH_RATE:
 	case F_PLANT_SPECIAL: case F_PLANT_SHOOTING: case F_PLANT_ANIM: case F_PLANT_ONBOARD:
 		return kPlantSlots;
-	case F_ZOMBIE_TYPE: case F_ZOMBIE_ROW: case F_ZOMBIE_BODY: case F_ZOMBIE_HELM:
+	case F_ZOMBIE_TYPE: case F_ZOMBIE_ROW: case F_ZOMBIE_BODY: case F_ZOMBIE_BODY_MAX:
+	case F_ZOMBIE_HELM:
 	case F_ZOMBIE_SHIELD: case F_ZOMBIE_FLYING: case F_ZOMBIE_PHASE: case F_ZOMBIE_PHASE_COUNTER:
 	case F_ZOMBIE_FLAGS: case F_ZOMBIE_CHILLED: case F_ZOMBIE_AGE: case F_ZOMBIE_FROM_WAVE:
 	case F_ZOMBIE_TARGET:
