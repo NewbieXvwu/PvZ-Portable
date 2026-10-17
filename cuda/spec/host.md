@@ -51,6 +51,9 @@ g++ -fsanitize=address -g -O1 -std=c++17 -I. -o build/sim_host cuda/SimHost.cpp
 | `--bench full\|sim` | full | `sim` = 完全不前向，只跑 tick 与等待回合，与设备驱动同名参数同义 |
 | `--root-limit` | 0（全部） | 只用前 M 个根，做小样本排查用 |
 | `--poison <float>` | 0 | 诊断开关：把**标量激活向量**预置成该值（board/平面 halo 保持 0），用来证明 `BuildFeatures` 没清零（勘误 3） |
+| `--pairs FILE` | 空 | 显式工作负载，一行一条泳道，行序即泳道序：`<root> <future>`，可再接老师的候选着法 `<kind> <packet> <row> <col> [ticks]`（kind 0=学生立刻决定、1=种这张牌、2=等待 ticks）。只有两个数时语义与阶段 1 的语料文件完全相同，所以旧 pairs 照读。解析在 `cuda/PairList.h`（设备与主机同一份） |
+| `--leaf-out FILE` | 空 | 每条泳道一个 `PVZLEAF1` 块（5668 float：board 92×60 + 113 标量 + 35 上下文），与 `RolloutCuda.cu --leaf-out` 同格式，因此两个文件可逐块对照 |
+| `--root-features FILE` | 空 | 只导入不推演：把每个根**在第一个 tick 之前**的编码写出来就退出，`scripts/cuda_leaf_compare.py --root-features` 的靶子 |
 
 退出码：跑完且没有根被 `LoadRoot` 拒收 = 0，否则 1。所有文件与参数错误都走 `Fail`，
 打印 `sim-host: <原因>` 后退 1，不会崩。
@@ -158,6 +161,14 @@ ALL             96    2523.8     49.5     18.5      5.1      5.8      3.4      3
    教师评分候选着法要的正是"从指定着法出发续走"。现在的两条路径都是"学生立刻决定"，
    所以**当前所有叶子统计测的是学生的策略，不是候选着法的价值**。阶段 1 之前必须补，
    而且补进 `RolloutBegin` / `RoundTop`（设备与主机共用），不是补进某一个驱动。
+   **已修（2026-10-18 第 8 轮）**：`Rollout.inc::RolloutBegin` 消费 `S_FIRST_KIND/PACKET/ROW/COL/TICKS`
+   五个泳道标量，并且**绕不开 `RoundTop`** —— 首着的成本、决策计数、`S_PRIOR_*`、以及"本轮新产量"
+   的基准都必须是观测过的时钟与已入库产量；跳过 `RoundTop` 会把整局累计阳光当成本轮新产记进
+   6000-tick 窗口（实测 income 特征最多翻倍），这是补这条勘误时顺手抓到、也一并记在这里的教训。
+   `--pairs` 的行因此扩成 `<root> <future> [kind packet row col [ticks]]`，两侧驱动都在 `LoadRoot`
+   **之前**写这五个槽（kind=0 也显式写 0：标量块跨批复用）。
+   验证工具 `scripts/cuda_first_action_check.py`：强制种植 + 0 tick 推进是确定性的，
+   96 个候选逐 float 与原版 `BRANCH_OBSERVE` 子观测相同、device 与 host 逐字节相同。
 
 2. **`LoadRoot` 漏掉 `F_PROJ_CHILL`，且完全忽略导出的 `RootProjectile::chill`。**
    弹清理循环（`cuda/SimImpl.inc:82-92`）只写了 `F_PROJ_TYPE / _ROW / _AGE / _DAMAGE` 四个，
@@ -168,6 +179,7 @@ ALL             96    2523.8     49.5     18.5      5.1      5.8      3.4      3
    主机上是我每次续走整体清零所以看不见。**后果**：(a) 从在飞的雪豌豆导入的局面丢掉减速标记，
    (b) 减速可能从上一局串到这一局。修法两行，且顺手把弹的清理改成和植物/僵尸一样的字段区间循环，
    再加一条"RootRecord 每个字段都必须被 `LoadRoot` 覆盖"的自检（这是本类漏洞的通用防线）。
+   **已修**：清理在 `SimImpl.inc:88`，导入 `src.chill` 在 `:225`。
 
 3. **`BuildFeatures` 清 board 不清 scalars，前向读 115 个标量里的 94 个从未被写过的值。**
    `cuda/SimImpl.inc:325-327` 把 92 个 board 通道清干净，随后 `:375-414` 只写：
@@ -180,6 +192,9 @@ ALL             96    2523.8     49.5     18.5      5.1      5.8      3.4      3
    今天 GPU 与主机对得上，是因为两件事同时成立：驱动给了零页，且一批只有一个卡组（每道写的
    是同一批索引）。一旦混卡组、混任务族，或激活缓冲跨批复用，它就翻脸。
    （这条已在 `~/pvz-logs/cuda_status.md` 末尾列了；现在有了一个能复现它的开关和一组数字。）
+   **已修**：`BuildFeatures` 现在先把 `kScalarFeatures` 个标量全清零再写（`SimImpl.inc:446`），
+   `--poison` 保留作回归探针 —— 它清的是标量向量本身，与"没清"的那个版本对同一工作负载会给出的
+   叶子统计不同，所以要用它验证"改了也没用"才说明清零真的生效了。
 
 4. **`S_STOP_REASON` 是死字段。** 同样只在 `CudaRollout.h:372` 的枚举里出现一次，
    没有写入点，`RolloutResult` 里也没有对应列。于是"这条泳道是被 horizon 停的、

@@ -385,6 +385,11 @@ enum ScalarField {
 	// are per-lane state for the duration of one round, so they live in the scalar block rather than in
 	// registers the second kernel cannot see.
 	S_ROUND_TICK, S_ROUND_PRODUCED, S_ROUNDS,
+	// The teacher's forced first action (Rollout.inc's RolloutBegin).  Kind 0 = the student decides at
+	// once, 1 = plant this packet at (row, col), 2 = wait `ticks`.  Written by whoever builds the lane's
+	// workload, before RolloutBegin; a lane that runs no forced action still has to be written, because
+	// the device's scalar block is reused across batches and repeats.
+	S_FIRST_KIND, S_FIRST_PACKET, S_FIRST_ROW, S_FIRST_COL, S_FIRST_TICKS,
 	S_SCALAR_COUNT
 };
 

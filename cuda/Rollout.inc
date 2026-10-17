@@ -32,8 +32,23 @@ PVZ_SIM void WaitFixed(Lane lane, const LevelInfo& level, const WaveTable& waves
 	}
 }
 
+// Defined below, but the forced first action is applied before the loop that would otherwise be its only
+// caller.
+PVZ_SIM int32_t RoundTop(Lane lane);
+PVZ_SIM void RoundApply(Lane lane, const LevelInfo& level, const WaveTable& waves, Rand& rand,
+	const Choice& choice);
+
 // The prelude: one independent future per rollout, and the counters the leaf reports.
-PVZ_SIM void RolloutBegin(Lane lane, int32_t futureSeed, int32_t maxActions)
+//
+// `first` is the teacher's candidate action (cuda/spec/host.md finding 1).  The protocol's own words are
+// `isFirst = decisions == 0 && first != "A"` (src/main.cpp:437): the candidate runs *before* the student
+// is asked, without a forward, but it still counts as a decision, still sets the previous-action context
+// the next forward reads, and is still tested against the horizon (main.cpp:480).  Without it a leaf
+// measures the student's policy rather than the value of the action being scored, which is the whole
+// point of a search continuation.  The fields live in the lane, written by whoever builds the workload
+// (InitKernel on the device, the host driver's setup) before this runs.
+PVZ_SIM void RolloutBegin(Lane lane, int32_t futureSeed, int32_t maxActions, const LevelInfo& level,
+	const WaveTable& waves)
 {
 	Rand rand;
 	// RESEED: an independent future per rollout, seeded from the request's counter.  The original's own
@@ -51,6 +66,26 @@ PVZ_SIM void RolloutBegin(Lane lane, int32_t futureSeed, int32_t maxActions)
 	// main.cpp:425: an `until` the position has already passed means "play to the end".  Idempotent, so
 	// the device can leave the value alone for the rounds that follow.
 	if (lane.s(S_UNTIL_TICK) <= lane.s(S_TICK)) lane.s(S_UNTIL_TICK) = 0x7FFFFFFF;
+
+	const int32_t kind = lane.s(S_FIRST_KIND);
+	if (kind == 0) return;
+	const Choice choice = kind == 1
+		? Choice{lane.s(S_FIRST_PACKET), lane.s(S_FIRST_ROW), lane.s(S_FIRST_COL), 0, 0}
+		: Choice{-1, 0, 0, 0, lane.s(S_FIRST_TICKS)};
+	// Consumed here, so a second RolloutBegin over the same lane -- the `--bench sim` path runs the whole
+	// rollout from inside RolloutKernel, after InitKernel already began it -- cannot plant the candidate
+	// twice.
+	lane.s(S_FIRST_KIND) = 0;
+	// The original applies `first` *inside* the same while loop as any other decision (main.cpp:422-437):
+	// after the two tests, and after the round's observation of the clock and the banked production.
+	// Going around RoundTop here is not ceremony -- without it `S_ROUND_PRODUCED` still holds what
+	// LoadRoot left in it, so the forced round books `S_SUN_PRODUCED - 0`, the whole game's cumulative
+	// production, as if the candidate had just made it.  The income window doubles and the leaf's
+	// `sun income rate` feature is wrong by up to a factor of two (scripts/cuda_first_action_check.py
+	// is what caught it: every other float of the child agreed with the original exactly).
+	if (!RoundTop(lane)) return;
+	RoundApply(lane, level, waves, rand, choice);
+	StoreRandState(lane, rand);
 }
 
 // The loop top: the two tests of the original's while condition, then the observation the student is
@@ -84,7 +119,7 @@ PVZ_SIM void RoundApply(Lane lane, const LevelInfo& level, const WaveTable& wave
 		priorPlant = ActionPlant(lane, level, choice.packet, choice.row, choice.col, rand);
 		accepted = priorPlant;
 	}
-	else WaitRound(lane, level, waves, rand, 60);
+	else WaitRound(lane, level, waves, rand, choice.waitTicks > 0 ? choice.waitTicks : 60);
 	if (!accepted)
 	{
 		WaitFixed(lane, level, waves, rand, 60);
@@ -136,7 +171,7 @@ PVZ_SIM void RoundPost(Lane lane, const LevelInfo& level, const WaveTable& waves
 PVZ_SIM void RunRollout(Lane lane, const LevelInfo& level, const WaveTable& waves, const NetParams& net,
 	const NetState& state, const float* waveLog, int32_t futureSeed, int32_t maxActions, int32_t useNet)
 {
-	RolloutBegin(lane, futureSeed, maxActions);
+	RolloutBegin(lane, futureSeed, maxActions, level, waves);
 	Rand rand = LoadRandState(lane);
 	while (lane.s(S_STATE) != LANE_DONE)
 	{

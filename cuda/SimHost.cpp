@@ -453,10 +453,11 @@ int main(int argc, char** argv)
 	}
 	const int32_t used = static_cast<int32_t>(corpus.roots.size());
 	std::vector<int32_t> pairRoot, pairSeed;
+	std::vector<pvzhost::FirstAction> pairFirst;
 	if (!options.pairs.empty())
 	{
 		std::string error;
-		if (!ReadPairList(options.pairs, pairRoot, pairSeed, error)) Fail(error);
+		if (!ReadPairList(options.pairs, pairRoot, pairSeed, pairFirst, error)) Fail(error);
 		for (size_t index = 0; index < pairRoot.size(); ++index)
 			if (pairRoot[index] >= used)
 				Fail("pair " + std::to_string(index) + " names root " + std::to_string(pairRoot[index])
@@ -568,6 +569,18 @@ int main(int argc, char** argv)
 			}
 			lane.s(S_ROOT_INDEX) = rootIndex;
 			lane.s(S_UNTIL_TICK) = root.tick + options.horizon;
+			// The teacher's candidate, if this line named one.  The SoA was zeroed above, so an
+			// enumerated workload without actions is already "kind 0 = the student decides"; with actions it
+			// is the same five writes cuda/RolloutCuda.cu's InitKernel makes from the uploaded array.
+			if (!pairFirst.empty())
+			{
+				const pvzhost::FirstAction& action = pairFirst[static_cast<size_t>(slot)];
+				lane.s(S_FIRST_KIND) = action.kind;
+				lane.s(S_FIRST_PACKET) = action.packet;
+				lane.s(S_FIRST_ROW) = action.row;
+				lane.s(S_FIRST_COL) = action.col;
+				lane.s(S_FIRST_TICKS) = action.ticks;
+			}
 			RunRollout(lane, corpus.level, waves[static_cast<size_t>(rootIndex)], image.params,
 				activations.state, waveLog.data(), futureSeed, options.maxActions, options.useNet);
 

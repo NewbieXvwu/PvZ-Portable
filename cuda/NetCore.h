@@ -133,6 +133,10 @@ struct Choice
 	int32_t packet;               // -1 = wait
 	int32_t row, col;
 	int32_t forwarded;            // 1 = the network ran; net_calls counts these, not decisions
+	// How long a wait waits.  Zero means the student's own cadence (60 ticks, EnvironmentRollout's wait);
+	// only the teacher's forced first action ever names another number (src/main.cpp:453-457 reads the
+	// ticks out of the request instead of assuming 60).
+	int32_t waitTicks;
 };
 
 }  // namespace pvzc

@@ -300,6 +300,10 @@ struct Arguments
 	// run *the same* continuation the CPU reference ran.
 	const int32_t* pairRoot;
 	const int32_t* pairSeed;
+	// Five int32 per pair -- kind, packet, row, col, ticks -- the teacher's candidate action for that
+	// lane (cuda/spec/host.md finding 1).  Null when the workload names no actions, which is what the
+	// phase-1 corpus files are.
+	const int32_t* pairFirst;
 	int32_t pairCount;
 };
 
@@ -310,13 +314,15 @@ struct Arguments
 // before, while the future seed advances with the global rollout index, so pass k of a root continues it
 // down a different RNG stream than pass k-1.
 PVZ_SIM void RolloutOf(const Arguments& arguments, int32_t index, int32_t& rootIndex,
-	int32_t& futureSeed)
+	int32_t& futureSeed, int32_t& pairSlot)
 {
+	pairSlot = -1;
 	if (arguments.pairCount > 0)
 	{
 		const int32_t slot = (arguments.firstRollout + index) % arguments.pairCount;
 		rootIndex = arguments.pairRoot[slot];
 		futureSeed = arguments.pairSeed[slot];
+		pairSlot = slot;
 		return;
 	}
 	const int32_t global = arguments.firstRollout + index;
@@ -347,12 +353,26 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) InitKernel(Argument
 	const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
 	if (index >= arguments.lanes) return;
 
-	int32_t rootIndex = 0, futureSeed = 0;
-	RolloutOf(arguments, index, rootIndex, futureSeed);
+	int32_t rootIndex = 0, futureSeed = 0, pairSlot = 0;
+	RolloutOf(arguments, index, rootIndex, futureSeed, pairSlot);
 
 	Lane lane{arguments.ints, arguments.floats, index, arguments.lanes, 0};
 	arguments.results[index] = RolloutResult{};
 	arguments.results[index].rootIndex = rootIndex;
+	// Written for every lane, before LoadRoot can fail and before RolloutBegin reads them: the scalar
+	// block is reused across batches and --repeat, so a lane that inherits the previous batch's action
+	// would plant the previous candidate.
+	if (pairSlot >= 0 && arguments.pairFirst != nullptr)
+	{
+		const int32_t* words = arguments.pairFirst
+			+ static_cast<size_t>(pairSlot) * pvzhost::kFirstActionWords;
+		lane.s(S_FIRST_KIND) = words[0];
+		lane.s(S_FIRST_PACKET) = words[1];
+		lane.s(S_FIRST_ROW) = words[2];
+		lane.s(S_FIRST_COL) = words[3];
+		lane.s(S_FIRST_TICKS) = words[4];
+	}
+	else lane.s(S_FIRST_KIND) = 0;
 	if (!LoadRoot(lane, arguments.roots[rootIndex], level))
 	{
 		// A lane that never started is not simulated and not stored; dropping it out of `running` is what
@@ -363,7 +383,7 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) InitKernel(Argument
 	}
 	lane.s(S_ROOT_INDEX) = rootIndex;
 	lane.s(S_UNTIL_TICK) = arguments.roots[rootIndex].tick + arguments.horizon;
-	RolloutBegin(lane, futureSeed, arguments.maxActions);
+	RolloutBegin(lane, futureSeed, arguments.maxActions, level, arguments.waves[rootIndex]);
 }
 
 // The head of one round for every lane still in flight.
@@ -448,8 +468,8 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) RolloutKernel(Argum
 	const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
 	if (index >= arguments.lanes) return;
 
-	int32_t rootIndex = 0, futureSeed = 0;
-	RolloutOf(arguments, index, rootIndex, futureSeed);
+	int32_t rootIndex = 0, futureSeed = 0, pairSlot = 0;
+	RolloutOf(arguments, index, rootIndex, futureSeed, pairSlot);
 	Lane lane{arguments.ints, arguments.floats, index, arguments.lanes, 0};
 	if (lane.s(S_STATE) == LANE_DONE) return;
 	const WaveTable& waves = arguments.waves[rootIndex];
@@ -658,11 +678,13 @@ int main(int argc, char** argv)
 	const int32_t rootCount = static_cast<int32_t>(corpus.roots.size());
 	// The explicit workload, if asked for: one lane per line of the pair file, so a GPU continuation is
 	// the same (root, future) as the CPU reference row it is compared against.
-	std::vector<int32_t> pairRoot, pairSeed;
+	std::vector<int32_t> pairRoot, pairSeed, pairFirstFlat;
 	if (!options.pairs.empty())
 	{
+		std::vector<pvzhost::FirstAction> pairFirst;
 		std::string error;
-		if (!pvzhost::ReadPairList(options.pairs, pairRoot, pairSeed, error)) Fail(error);
+		if (!pvzhost::ReadPairList(options.pairs, pairRoot, pairSeed, pairFirst, error)) Fail(error);
+		pvzhost::FlattenFirstActions(pairFirst, pairFirstFlat);
 		for (size_t index = 0; index < pairRoot.size(); ++index)
 			if (pairRoot[index] >= rootCount)
 				Fail("pair " + std::to_string(index) + " names root " + std::to_string(pairRoot[index])
@@ -739,6 +761,7 @@ int main(int argc, char** argv)
 	float* leafFeatures = nullptr;
 	int32_t* pairRootDevice = nullptr;
 	int32_t* pairSeedDevice = nullptr;
+	int32_t* pairFirstDevice = nullptr;
 	CALL(cudaMalloc(&ints, intBytes));
 	CALL(cudaMalloc(&floats, floatBytes));
 	CALL(cudaMalloc(&level, sizeof(LevelInfo)));
@@ -770,6 +793,9 @@ int main(int argc, char** argv)
 		CALL(cudaMalloc(&pairSeedDevice, bytes));
 		CALL(cudaMemcpy(pairRootDevice, pairRoot.data(), bytes, cudaMemcpyHostToDevice));
 		CALL(cudaMemcpy(pairSeedDevice, pairSeed.data(), bytes, cudaMemcpyHostToDevice));
+		const size_t actionBytes = pairFirstFlat.size() * sizeof(int32_t);
+		CALL(cudaMalloc(&pairFirstDevice, actionBytes));
+		CALL(cudaMemcpy(pairFirstDevice, pairFirstFlat.data(), actionBytes, cudaMemcpyHostToDevice));
 	}
 	CALL(cudaMemcpy(level, &corpus.level, sizeof(LevelInfo), cudaMemcpyHostToDevice));
 	CALL(cudaMemcpy(roots, corpus.roots.data(), static_cast<size_t>(rootCount) * sizeof(RootRecord),
@@ -867,6 +893,7 @@ int main(int argc, char** argv)
 	arguments.leafFeatures = leafFeatures;
 	arguments.pairRoot = pairRootDevice;
 	arguments.pairSeed = pairSeedDevice;
+	arguments.pairFirst = pairFirstDevice;
 	arguments.pairCount = static_cast<int32_t>(pairRoot.size());
 	arguments.lanes = lanes;
 	arguments.firstRollout = 0;
