@@ -56,6 +56,8 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
     if static_value_path:
         _W["static_vnet"] = load_value_net(static_value_path)
     _W["fast"] = load_student(rollout_path)
+    if cpp_rollouts and _W["fast"].context:     # the C++ rollout has no task context yet
+        _W["cpp_rollouts"] = cpp_rollouts = False
     if cpp_rollouts:
         import tempfile
         from pvz_rollout_policy import export_student
@@ -70,7 +72,8 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     from render_episode import _frame
     frame = _frame(obs)
     frame["action"] = fast_state.get("action")
-    action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [])
+    action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
+                 context=_W.get("context"))
     fast_state["frame"] = frame
     fast_state["action"] = action
     return action

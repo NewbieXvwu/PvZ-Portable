@@ -17,7 +17,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS, featurize_numpy
+from pvz_value_net import BOARD_CHANNELS, COLS, CONTEXT, ROWS, SCALARS, featurize_numpy
 
 PACKETS = 10            # seed-bank slots (SEEDBANK_MAX)
 LAWN_COLS = 9
@@ -25,17 +25,24 @@ EXTRA = 2               # previous action was a plant; ticks since the previous 
 WAIT = {"type": "wait", "ticks": 60, "until": "timeout"}
 
 
-def features(frame: dict, previous: dict | None) -> tuple[torch.Tensor, torch.Tensor]:
+def features(frame: dict, previous: dict | None, context: np.ndarray | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+    """Board and scalars; with ``context`` (``pvz_value_net.observation_context``: zombie-count multiplier and
+    the level's zombie roster) appended for students trained with ``--context``."""
     board, scalars = featurize_numpy(frame)
     action = frame.get("action") if previous is not None else None
     extra = np.array([float(bool(action) and action.get("type") == "plant"),
                       ((frame["tick"] - previous["tick"]) / 300.0) if previous else 0.0], dtype=np.float32)
-    return torch.from_numpy(board), torch.from_numpy(np.concatenate([scalars, extra]))
+    parts = [scalars, extra] if context is None else [scalars, extra, np.asarray(context, dtype=np.float32)]
+    return torch.from_numpy(board), torch.from_numpy(np.concatenate(parts))
 
 
 class RolloutNet(nn.Module):
-    def __init__(self, width: int = 64, pool: str = "mean"):
+    def __init__(self, width: int = 64, pool: str = "mean", context: bool = False):
         super().__init__()
+        # With context the student also reads the task (zombie-count multiplier, zombie roster): early in a
+        # 1.5x game the board looks like a 1.0x game, but the teacher already plays differently (2026-10-16:
+        # v12 copies the teacher's early wall-nuts 13% of the time).
+        self.context = context
         # "meanmax" adds a max over the board to the global context: the mean dilutes one lane's
         # threat over 54 cells, which a cherry-bomb or wall-nut decision is about (2026-10-16).
         self.pool = pool
@@ -45,7 +52,7 @@ class RolloutNet(nn.Module):
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 5), padding=(0, 2)), nn.ReLU(),
         )
-        self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA, width), nn.ReLU())
+        self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA + (CONTEXT if context else 0), width), nn.ReLU())
         self.plant = nn.Linear(g, 1)
         self.packet = nn.Linear(g, PACKETS)
         self.packet_embedding = nn.Embedding(PACKETS, width)
@@ -91,11 +98,13 @@ class RolloutNet(nn.Module):
 
 @torch.inference_mode()
 def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
-        sparse_input: bool = True) -> dict:
+        sparse_input: bool = True, context: np.ndarray | None = None) -> dict:
     """Greedy action restricted to the simulator's legal plants; otherwise wait like pi does."""
     if not legal_plants:
         return dict(WAIT)
-    board, scalars = features(frame, previous)
+    if net.context and context is None:
+        raise ValueError("this student reads the task context: pass act(..., context=observation_context(obs))")
+    board, scalars = features(frame, previous, context if net.context else None)
     # The trunk is computed once and shared by the three heads: the cell head used to rerun the
     # whole network on the same input, which gives the same numbers at twice the cost.
     h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input)
@@ -116,7 +125,7 @@ def load_student(path) -> RolloutNet:
     fast_ppo's value head is dropped)."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     weights = checkpoint["state_dict"]
-    net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"))
+    net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"), bool(checkpoint.get("context", False)))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
     return net.eval()
 
@@ -124,6 +133,8 @@ def load_student(path) -> RolloutNet:
 def export_student(net: RolloutNet, path) -> None:
     """Write v2 little-endian weights with a pooling flag; v1 files must be re-exported."""
     import struct
+    if net.context:
+        raise NotImplementedError("the C++ rollout does not compute the task context yet; use --no-cpp-rollouts")
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
              "plant.weight", "plant.bias", "packet.weight", "packet.bias", "packet_embedding.weight",

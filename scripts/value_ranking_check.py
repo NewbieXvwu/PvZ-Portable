@@ -54,12 +54,12 @@ def _init(args) -> None:
     _W["weights"] = weights
 
 
-def _candidates(net, frame, previous, legal, cells_per_card: int, random_cells: int, rng) -> list[dict]:
+def _candidates(net, frame, previous, legal, cells_per_card: int, random_cells: int, rng, context=None) -> list[dict]:
     """Wait, plus for every card that can be planted the student's ``cells_per_card`` favourite legal cells
     and ``random_cells`` other legal cells drawn at random."""
     import torch
     from pvz_rollout_policy import LAWN_COLS, WAIT, features
-    board, scalars = features(frame, previous)
+    board, scalars = features(frame, previous, context if net.context else None)
     with torch.inference_mode():
         h, g = net.encode(board[None], scalars[None])
         out = [dict(WAIT)]
@@ -93,7 +93,7 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
         frame = _frame(obs)
         frame["action"] = previous_action
         legal = (obs.get("legal_actions") or {}).get("plants") or []
-        action = act(net, frame, previous, legal)
+        action = act(net, frame, previous, legal, context=context.numpy())
         if legal and obs["wave"] >= args.min_wave and rng.random() < args.position_rate:
             position, leaves = _evaluate(env, obs, frame, previous, legal, action, seed, len(positions), context)
             positions.append(position)
@@ -131,7 +131,7 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
     from render_episode import _frame
     args = _W["args"]
     cands = _candidates(_W["student"], frame, previous, legal, args.cells, args.random_cells,
-                        random.Random(seed * 1000 + index))
+                        random.Random(seed * 1000 + index), context.numpy())
     student_key = json.dumps(student_action, sort_keys=True)
     root = env.snapshot()
     outcomes, leaves, waves = [], [], []

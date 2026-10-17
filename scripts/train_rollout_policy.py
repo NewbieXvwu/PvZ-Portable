@@ -85,8 +85,17 @@ def _cache_episode(path: Path, directory: Path, encoder: bytes) -> Path:
     return target
 
 
+def _episode_context(path: Path) -> np.ndarray:
+    """The task context of one archive (meta.json, written by search_play or scripts/backfill_frame_context.py)."""
+    from pvz_value_net import context_vector
+    meta = json.loads((path.parent / "meta.json").read_text())
+    if "context" not in meta:
+        raise SystemExit(f"{path.parent} has no task context: run scripts/backfill_frame_context.py first")
+    return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
+
+
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
-         cache_dir: Path | None = None):
+         cache_dir: Path | None = None, with_context: bool = False):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -125,11 +134,15 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             with np.load(cached[path], allow_pickle=False) as stored:
                 selected = np.flatnonzero(np.asarray(keep[path])[stored["rows"]])
                 count = len(selected)
+                rows_scalars = stored["scalars"][selected]
+                if with_context:
+                    ctx = _episode_context(path)
+                    rows_scalars = np.concatenate([rows_scalars, np.broadcast_to(ctx, (count, len(ctx)))], axis=1)
                 if boards is None:
                     boards = torch.empty((capacity, *stored["boards"].shape[1:]), dtype=torch.half)
-                    scalars = torch.empty((capacity, *stored["scalars"].shape[1:]), dtype=torch.float32)
+                    scalars = torch.empty((capacity, rows_scalars.shape[1]), dtype=torch.float32)
                 boards[n:n + count] = torch.from_numpy(stored["boards"][selected])
-                scalars[n:n + count] = torch.from_numpy(stored["scalars"][selected])
+                scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
                 types = stored["plant"][selected].tolist()
                 plant.extend(types)
                 packet.extend(stored["packet"][selected].tolist())
@@ -142,11 +155,12 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 n += count
             continue
         frames = [json.loads(line) for line in path.open()]
+        ctx = _episode_context(path) if with_context else None
         for i in range(1, len(frames)):
             action = frames[i].get("label") or frames[i].get("action")
             if not action or frames[i].get("action_rejected") or not keep[path][i]:
                 continue
-            b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None)
+            b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             if boards is None:
                 boards = torch.empty((capacity, *b.shape), dtype=torch.half)
                 scalars = torch.empty((capacity, *s.shape), dtype=s.dtype)
@@ -176,6 +190,8 @@ def main() -> None:
     p.add_argument("--packet-balance", type=float, default=0.0,
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
+    p.add_argument("--context", action="store_true",
+                   help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
     p.add_argument("--soft-weight", type=float, default=0.0,
                    help="also match the search's preference over its candidates (wait / each card): "
                         "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")
@@ -192,7 +208,8 @@ def main() -> None:
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     boards, scalars, plant, packet, cell, weight, seed_of, values = load(args.data, set(args.labels.split(",")),
                                                                  args.wait_keep, label_weight,
-                                                                 (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None)
+                                                                 (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None,
+                                                                 args.context)
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
@@ -207,7 +224,7 @@ def main() -> None:
         scale = (scale / scale[packet[planted_rows]].mean()).clamp(max=20.0)  # mean plant-row weight ~1
         weight[planted_rows] *= scale[packet[planted_rows]]
         print("packet weights", {k: round(float(scale[k]), 2) for k in range(PACKETS) if freq[k] > 0}, flush=True)
-    net = RolloutNet(args.width, args.pool)
+    net = RolloutNet(args.width, args.pool, args.context)
     if args.init:
         from pvz_rollout_policy import load_student
         net.load_state_dict(load_student(args.init).state_dict())
@@ -259,7 +276,7 @@ def main() -> None:
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
-                "history": list(history)}
+                "context": args.context, "soft_weight": args.soft_weight, "history": list(history)}
 
     for epoch in range(1, args.epochs + 1):
         net.train()

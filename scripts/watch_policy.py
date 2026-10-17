@@ -101,7 +101,11 @@ def _student_actions(path: str):
         frame = _frame(observation)
         frame["action"] = memo["action"]
         with torch.no_grad():
-            action = act(net, frame, memo["frame"], (observation.get("legal_actions") or {}).get("plants") or [])
+            if "context" not in memo:      # the task is fixed for the whole game; read it from the first observation
+                from pvz_value_net import observation_context
+                memo["context"] = observation_context(observation)
+            action = act(net, frame, memo["frame"], (observation.get("legal_actions") or {}).get("plants") or [],
+                         context=memo["context"])
         memo["frame"], memo["action"] = frame, action
         return action
     return next_action
