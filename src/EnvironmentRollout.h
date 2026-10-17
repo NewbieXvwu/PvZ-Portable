@@ -2,7 +2,9 @@
 #define PVZ_ENVIRONMENT_ROLLOUT_H
 
 #include <array>
+#include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 class LawnApp;
@@ -20,16 +22,24 @@ public:
 		int cellPacket = -1;
 		Action action;
 	};
+	struct History
+	{
+		std::map<std::tuple<int, int, int>, int> plants;
+		int wave = -1, waveTick = 0;
+		void Update(LawnApp* app);
+	};
 	void Load(const std::string& path);
 	bool Loaded() const { return width != 0; }
+	bool V2Lite() const { return v2lite; }
 	void Features(LawnApp* app, double income, int previousTick, bool previousPlant,
-		std::vector<float>& board, std::vector<float>& scalars);
-	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant, bool diagnostics = false);
+		std::vector<float>& board, std::vector<float>& scalars, History& history);
+	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant, History& history, bool diagnostics = false);
 
 private:
 	int width = 0;
 	bool meanmax = false;
 	bool taskContext = false;
+	bool v2lite = false;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer;
 	void Encode(const std::vector<float>& board, const std::vector<float>& scalars);

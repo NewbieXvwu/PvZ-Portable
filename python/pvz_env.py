@@ -301,6 +301,7 @@ class PvZEnv:
             env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1")},
         )
         ready = self._read_message()
+        self._rollout_version = ready.get("rollout_version", 0)
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
             self._abort_process()
             raise RuntimeError(f"PvZ-Portable did not enter protocol-v{ENV_PROTOCOL_VERSION} environment mode: {ready}")
@@ -617,26 +618,51 @@ class PvZEnv:
         if any(char in filename for char in ('\n', '\r')):
             raise ValueError("rollout network path must not contain newlines")
         with open(filename, "rb") as stream:
-            if stream.read(8) not in (b"PVZRN002", b"PVZRN003"):
-                raise ValueError("load_rollout_net requires an exported v1 C++ network. v2lite is Python-only and cannot be loaded here.")
+            version = stream.read(8)
+            if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004"):
+                raise ValueError("load_rollout_net requires an exported C++ network")
+        if self._process is None:
+            self._start()
+        if version == b"PVZRN004" and self._rollout_version < 2:
+            raise RuntimeError("v2lite requires a rebuilt simulator with rollout_version >= 2")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")
 
-    def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False) -> dict:
+    def _student_options(self, student_history, trace_path) -> str:
+        suffix = ""
+        if student_history is not None:
+            plants = student_history.plants
+            entries = " ".join(f"{int(row)} {int(col)} {int(kind)} {int(born)}"
+                               for (row, col, kind), born in plants.items())
+            wave = student_history.wave if student_history.wave is not None else -1
+            suffix += f" V2H {int(wave)} {int(student_history.wave_tick)} {len(plants)} {entries}".rstrip()
+        if trace_path is not None:
+            filename = str(Path(trace_path).expanduser().resolve())
+            if any(char in filename for char in ('\n', '\r')):
+                raise ValueError("trace path must not contain newlines")
+            suffix += ' TRACE "' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        if suffix and self._rollout_version < 2:
+            raise RuntimeError("student history and tracing require rollout_version >= 2")
+        return suffix
+
+    def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False, *,
+                        student_history=None, trace_path=None) -> dict:
         """Diagnostic logits and greedy action on the current public board, without advancing it."""
         if not self._reset_done:
             raise RuntimeError("call reset() before rollout_predict()")
         income = self._annotate_observation({"tick": self._tick, "wave_timer": 0})["sun_income_rate"]
         response = self._command(f"ROLLOUT_PREDICT {previous_tick if previous_tick is not None else -1} "
-                                 f"{int(previous_plant)} {income:.17g}")
+                                 f"{int(previous_plant)} {income:.17g}"
+                                 + self._student_options(student_history, trace_path))
         if not response.get("ok"):
             raise RuntimeError("simulator rejected ROLLOUT_PREDICT")
         return response
 
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
                 sim_skip: int = 0, max_actions: int = 1000000,
-                snapshot_id: int | None = None, seed: int | None = None) -> dict[str, Any]:
+                snapshot_id: int | None = None, seed: int | None = None,
+                student_history=None, trace_path=None) -> dict[str, Any]:
         """Run the greedy student entirely in C++ and return its leaf (0 = whole game).
 
         None selects the first action with the student, with fresh previous-action context.
@@ -678,7 +704,8 @@ class PvZEnv:
         samples = " ".join(f"{tick} {amount}" for tick, amount in history)
         response = self._command(f"ROLLOUT {snapshot_id or 0} {seed if seed is not None else -1} "
                                  f"{until_tick} {sim_skip} {max_actions} {int(event_wait)} {token} "
-                                 f"{history_start} {len(history)} {samples}".rstrip())
+                                 f"{history_start} {len(history)} {samples}".rstrip()
+                                 + self._student_options(student_history, trace_path))
         observation = response.get("observation")
         if not response.get("ok") or not isinstance(observation, dict):
             raise RuntimeError(f"simulator rejected ROLLOUT (binary older than this wrapper?): {response}")

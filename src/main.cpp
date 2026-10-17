@@ -41,6 +41,7 @@
 #include <iostream>
 #include <iomanip>
 #include <deque>
+#include <fstream>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -320,6 +321,38 @@ static bool DecodeBranchAction(const std::string& spec, std::string& command, st
 	return true;
 }
 
+static bool ReadStudentOptions(std::istream& input, int tick, EnvironmentRollout::History& history, std::string& tracePath)
+{
+	std::string token;
+	if (!(input >> token)) return input.eof();
+	if (token == "V2H")
+	{
+		int count = 0;
+		if (!(input >> history.wave >> history.waveTick >> count) || history.wave < -1 || history.waveTick < 0 || history.waveTick > tick || count < 0 || count > 6 * 9 * 54) return false;
+		for (int index = 0; index < count; ++index)
+		{
+			int row, col, kind, born;
+			if (!(input >> row >> col >> kind >> born) || row < 0 || row >= 6 || col < 0 || col >= 9 || kind < 0 || kind >= 54 || born < 0 || born > tick ||
+				!history.plants.emplace(std::make_tuple(row, col, kind), born).second) return false;
+		}
+		if (!(input >> token)) return input.eof();
+	}
+	return token == "TRACE" && static_cast<bool>(input >> std::quoted(tracePath)) && !tracePath.empty() && !(input >> token);
+}
+
+static void TraceStudent(std::ostream& output, EnvironmentRollout& rollout, LawnApp* app, double income,
+	int priorTick, bool priorPlant, EnvironmentRollout::History& history)
+{
+	std::vector<float> board, scalars;
+	rollout.Features(app, income, priorTick, priorPlant, board, scalars, history);
+	output << std::setprecision(17) << "{\"observation\":" << app->EnvironmentLeanObservation()
+		<< ",\"income\":" << income << ",\"previous_tick\":" << priorTick << ",\"previous_plant\":" << priorPlant << ",\"board\":[";
+	for (size_t index = 0; index < board.size(); ++index) output << (index ? "," : "") << board[index];
+	output << "],\"scalars\":[";
+	for (size_t index = 0; index < scalars.size(); ++index) output << (index ? "," : "") << scalars[index];
+	output << "]}\n";
+}
+
 static void RunEnvironment(LawnApp* app)
 {
 	std::string line;
@@ -328,7 +361,7 @@ static void RunEnvironment(LawnApp* app)
 	EnvironmentRollout rollout;
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
-		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":1}" << std::endl;
+		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":2}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -367,13 +400,18 @@ static void RunEnvironment(LawnApp* app)
 		{
 			int priorTick = -1, priorPlant = 0;
 			double income = 0;
-			std::string extra;
-			ok = static_cast<bool>(input >> priorTick >> priorPlant >> income) && !(input >> extra) &&
+			std::string tracePath;
+			EnvironmentRollout::History studentHistory;
+			ok = static_cast<bool>(input >> priorTick >> priorPlant >> income) &&
 				rollout.Loaded() && app->mBoard && std::isfinite(income) && (priorPlant == 0 || priorPlant == 1);
+			ok = ok && ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath);
+			std::ofstream trace;
+			if (ok && !tracePath.empty()) { trace.open(tracePath); ok = trace.good(); }
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false");
 			if (ok)
 			{
-				auto prediction = rollout.Predict(app, income, priorTick, priorPlant, true);
+				if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
+				auto prediction = rollout.Predict(app, income, priorTick, priorPlant, studentHistory, true);
 				std::cout << std::setprecision(9) << ",\"plant\":" << prediction.plant << ",\"packet\":[";
 				for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << prediction.packets[index];
 				std::cout << "],\"cell_packet\":" << prediction.cellPacket << ",\"cell\":[";
@@ -391,7 +429,9 @@ static void RunEnvironment(LawnApp* app)
 			int untilTick = 0, mask = 0, maxActions = 0, eventWait = 0, historyStart = 0, historyCount = 0;
 			int rootId = 0;
 			int64_t seed = -1;
-			std::string first, extra;
+			std::string first, tracePath;
+			EnvironmentRollout::History studentHistory;
+			std::ofstream trace;
 			std::deque<std::pair<int, uint32_t>> history;
 			ok = static_cast<bool>(input >> rootId >> seed >> untilTick >> mask >> maxActions >> eventWait >> first >> historyStart >> historyCount) &&
 				rollout.Loaded() && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
@@ -408,8 +448,9 @@ static void RunEnvironment(LawnApp* app)
 				if (ok) history.emplace_back(tick, produced);
 			}
 			std::string actionCommand, actionArguments;
-			ok = ok && !(input >> extra) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
+			ok = ok && ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
 				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments));
+			if (ok && !tracePath.empty()) { trace.open(tracePath); ok = trace.good(); }
 			int decisions = 0, mowersLeft = 0, estimatedResult = -1;
 			std::array<int, 10> planted{};
 			double simulationSeconds = 0, networkSeconds = 0;
@@ -431,14 +472,17 @@ static void RunEnvironment(LawnApp* app)
 					const uint32_t producedBefore = app->mBoard->mSunMoneyProduced;
 					EnvironmentRollout::Action action;
 					bool isFirst = decisions == 0 && first != "A";
+					while (!history.empty() && history.front().first < tick - 6000) history.pop_front();
+					double totalProduced = 0;
+					for (auto entry : history) totalProduced += entry.second;
+					const int elapsed = std::max(0, std::min(6000, tick - historyStart));
+					const double income = elapsed ? totalProduced * 1000.0 / elapsed : 0;
+					if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
+					if (isFirst && rollout.V2Lite()) studentHistory.Update(app);
 					if (!isFirst)
 					{
 						const auto start = std::chrono::steady_clock::now();
-						while (!history.empty() && history.front().first < tick - 6000) history.pop_front();
-						double produced = 0;
-						for (auto entry : history) produced += entry.second;
-						const int elapsed = std::max(0, std::min(6000, tick - historyStart));
-						action = rollout.Predict(app, elapsed ? produced * 1000.0 / elapsed : 0, priorTick, priorPlant).action;
+						action = rollout.Predict(app, income, priorTick, priorPlant, studentHistory).action;
 						networkSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
 					}
 					const auto start = std::chrono::steady_clock::now();
@@ -508,6 +552,7 @@ static void RunEnvironment(LawnApp* app)
 					}
 				}
 				gEnvSimSkip = savedMask;
+				if (trace.is_open()) { trace.flush(); ok = trace.good(); }
 			}
 			actionSeconds += simulationSeconds;
 			const auto observationStart = std::chrono::steady_clock::now();

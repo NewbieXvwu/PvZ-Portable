@@ -141,9 +141,7 @@ def load_student(path) -> RolloutNet:
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """Write little-endian v2 weights, or v3 with an additional task-context flag."""
-    if net.obs != "v1":
-        raise ValueError("v2lite cannot be exported to C++ or used for teacher continuations. Use search_play.py --arms fast (Python).")
+    """Keep v1 exports byte-compatible; v4 adds an explicit observation version for v2lite."""
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
@@ -151,10 +149,12 @@ def export_student(net: RolloutNet, path) -> None:
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
     with open(path, "wb") as stream:
-        stream.write((b"PVZRN003" if net.context else b"PVZRN002")
+        stream.write((b"PVZRN004" if net.obs == "v2lite" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
-        if net.context:
-            stream.write(struct.pack("<I", 1))
+        if net.context or net.obs == "v2lite":
+            stream.write(struct.pack("<I", int(net.context)))
+        if net.obs == "v2lite":
+            stream.write(struct.pack("<I", 2))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 

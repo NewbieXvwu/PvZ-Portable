@@ -69,19 +69,20 @@ void EnvironmentRollout::Load(const std::string& path)
 {
 	std::ifstream input(path, std::ios::binary);
 	char magic[8]{};
-	uint32_t size = 0, pool = 0, withContext = 0;
+	uint32_t size = 0, pool = 0, withContext = 0, observation = 1;
 	input.read(magic, 8);
 	input.read(reinterpret_cast<char*>(&size), 4);
 	input.read(reinterpret_cast<char*>(&pool), 4);
 	const std::string version(magic, 8);
-	if (version == "PVZRN003") input.read(reinterpret_cast<char*>(&withContext), 4);
-	if (!input || (version != "PVZRN002" && version != "PVZRN003") || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1)
+	if (version == "PVZRN003" || version == "PVZRN004") input.read(reinterpret_cast<char*>(&withContext), 4);
+	if (version == "PVZRN004") input.read(reinterpret_cast<char*>(&observation), 4);
+	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004") || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 2)
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	const std::vector<size_t> counts = {
-		nextWidth * Channels * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
-		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0)), nextWidth,
+		nextWidth * (Channels + (observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
+		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation == 2)), nextWidth,
 		nextContext, 1, 10 * nextContext, 10, 10 * nextWidth,
 		nextWidth * (2 * nextWidth + nextContext), nextWidth, nextWidth, 1};
 	std::vector<std::vector<float>> loaded;
@@ -97,18 +98,34 @@ void EnvironmentRollout::Load(const std::string& path)
 	width = size;
 	meanmax = pool != 0;
 	taskContext = withContext != 0;
+	v2lite = observation == 2;
 	weights = std::move(loaded);
 	hidden.resize(Cells * width);
 	scratch.resize(Cells * width);
 	context.resize(nextContext);
 }
 
+void EnvironmentRollout::History::Update(LawnApp* app)
+{
+	const Board* state = app->mBoard;
+	if (wave != state->mCurrentWave) { wave = state->mCurrentWave; waveTick = state->mMainCounter; }
+	decltype(plants) current;
+	for (const Plant* plant : state->mPlants)
+		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
+		{
+			const auto key = std::make_tuple(plant->mRow, plant->mPlantCol, static_cast<int>(plant->mSeedType));
+			const auto found = plants.find(key);
+			current[key] = found == plants.end() ? state->mMainCounter : found->second;
+		}
+	plants = std::move(current);
+}
+
 void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick, bool previousPlant,
-	std::vector<float>& board, std::vector<float>& scalars)
+	std::vector<float>& board, std::vector<float>& scalars, History& history)
 {
 	Board* state = app->mBoard;
-	board.assign(Channels * Cells, 0.0f);
-	scalars.assign(Scalars + (taskContext ? TaskContext : 0), 0.0f);
+	board.assign((Channels + (v2lite ? 4 : 0)) * Cells, 0.0f);
+	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + v2lite, 0.0f);
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 			board[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] +=
@@ -164,6 +181,39 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		for (int type = 0; type < NUM_ZOMBIE_TYPES && type < 100; ++type)
 			if (state->mZombieAllowed[type]) scalars[Scalars + 1 + std::min(type, ZombieTypes - 1)] = 1.0f;
 	}
+	if (v2lite)
+	{
+		history.Update(app);
+		std::array<double, Cells> ages, health{}, positions{}, speeds{};
+		ages.fill(1.0);
+		for (const auto& [key, born] : history.plants)
+		{
+			const auto [row, col, kind] = key;
+			const int cell = row * 10 + col;
+			ages[cell] = std::min(ages[cell], (state->mMainCounter - born) / 1500.0);
+			board[95 * Cells + cell] = ages[cell];
+		}
+		for (Zombie* zombie : state->mZombies)
+		{
+			if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6) continue;
+			const double position = EnvironmentWaitEvents::RenderedPublicCoordinate(zombie->mPosX);
+			const double velocity = EnvironmentWaitEvents::RenderedPublicCoordinate(zombie->mVelX);
+			const int col = std::clamp(static_cast<int>(std::floor((position - 40.0) / 80.0)), 0, 9);
+			const int cell = zombie->mRow * 10 + col;
+			const double amount = zombie->mBodyHealth + zombie->mHelmHealth + zombie->mShieldHealth;
+			positions[cell] += amount * std::clamp((position - 40.0 - col * 80.0) / 80.0, 0.0, 1.0);
+			speeds[cell] += amount * velocity;
+			health[cell] += amount;
+			board[94 * Cells + cell] = std::max(static_cast<double>(board[94 * Cells + cell]), velocity);
+		}
+		for (int cell = 0; cell < Cells; ++cell)
+			if (health[cell] > 0)
+			{
+				board[92 * Cells + cell] = positions[cell] / health[cell];
+				board[93 * Cells + cell] = speeds[cell] / health[cell];
+			}
+		scalars.back() = std::min(1.0, (state->mMainCounter - history.waveTick) / 3000.0);
+	}
 }
 
 void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels, int kernelRows, int kernelCols,
@@ -218,7 +268,7 @@ static float Linear(const float* input, const float* weight, int count, float bi
 
 void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vector<float>& scalars)
 {
-	Convolve(board, Channels, 3, 3, 0, hidden, true);
+	Convolve(board, Channels + (v2lite ? 4 : 0), 3, 3, 0, hidden, true);
 	Convolve(hidden, width, 3, 3, 2, scratch, false);
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
 	for (int channel = 0; channel < width; ++channel)
@@ -264,12 +314,16 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 	return result;
 }
 
-EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double income, int previousTick, bool previousPlant, bool diagnostics)
+EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double income, int previousTick, bool previousPlant, History& history, bool diagnostics)
 {
 	Prediction result{};
-	if (!diagnostics && !app->EnvironmentAnyLegalPlant()) return result;
+	if (!diagnostics && !app->EnvironmentAnyLegalPlant())
+	{
+		if (v2lite) history.Update(app);
+		return result;
+	}
 	std::vector<float> board, scalars;
-	Features(app, income, previousTick, previousPlant, board, scalars);
+	Features(app, income, previousTick, previousPlant, board, scalars, history);
 	Encode(board, scalars);
 	result = Heads(-1);
 	if (result.plant <= 0 && !diagnostics) return result;

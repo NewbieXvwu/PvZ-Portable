@@ -117,20 +117,15 @@ class StudentObservationTest(unittest.TestCase):
                                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
                             else:
                                 self.assertEqual(left, right)
-                    with self.assertRaisesRegex(ValueError, "v2lite"):
-                        policy.export_student(search_play._W["fast"], directory / "bad.bin")
+                    policy.export_student(search_play._W["fast"], directory / "student.bin")
                     from pvz_event_env import EventWaitEnv
-                    with self.assertRaisesRegex(ValueError, "v2lite"):
+                    with self.assertRaisesRegex(ValueError, "exported C\\+\\+"):
                         EventWaitEnv(RESOURCE).load_rollout_net(checkpoint)
-                    with self.assertRaisesRegex(ValueError, "v2lite"):
-                        search_play._play({"seed": 30000, "arm": "fast_search", "args": args})
-                    with self.assertRaisesRegex(ValueError, "v2lite"):
-                        search_play._rollout_policy(None, {}, {}, 0)
                     value = directory / "value.pt"
                     from pvz_value_net import ValueNet
                     torch.save({"state_dict": ValueNet().state_dict()}, value)
                     search_play._init_worker(str(value), str(checkpoint))
-                    self.assertFalse(search_play._W["cpp_rollouts"])
+                    self.assertTrue(search_play._W["cpp_rollouts"])
             print(json.dumps(recorded_count), flush=True)
 
 

@@ -57,8 +57,6 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
     if static_value_path:
         _W["static_vnet"] = load_value_net(static_value_path)
     _W["fast"] = load_student(rollout_path)
-    if _W["fast"].obs == "v2lite":
-        cpp_rollouts = _W["cpp_rollouts"] = False
     if cpp_rollouts:
         import tempfile
         from pvz_rollout_policy import export_student
@@ -109,10 +107,10 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 
     In C++ by default; the Python loop below is the reference the C++ path is checked against
     (scripts/perf_rollout_check.py)."""
-    if _W["fast"].obs == "v2lite":
-        raise ValueError("v2lite teacher continuations are unsupported. Use --arms fast.")
+    student_history = _W.get("student_history") if _W["fast"].obs == "v2lite" else None
     if _W.get("cpp_rollouts"):
-        leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed)
+        leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed,
+                           student_history=student_history)
         metrics = _W.setdefault("rollout_metrics", {})
         for key in ("decisions", "simulation_seconds", "network_seconds"):
             metrics[key] = metrics.get(key, 0) + env._last_response[key]
@@ -123,12 +121,17 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
         env.reseed(seed)
     from render_episode import _frame
     fast_state = {"frame": _frame(obs), "action": first}
+    if _W["fast"].obs == "v2lite":
+        from copy import deepcopy
+        from pvz_student_observation import StudentHistory
+        fast_state["history"] = deepcopy(student_history) if student_history is not None else StudentHistory()
+        fast_state["history"].extra(fast_state["frame"])
     until_tick = until_tick if until_tick > obs["tick"] else 10 ** 9
     action = first
     # The student only reads what render_episode._frame keeps, so rollouts can ask for the compact
     # observation (identical frames, ~1/4 of the bytes).
     lean = _W.get("lean_rollouts", False)
-    batch_waits = _W.get("batch_waits", False) and hasattr(env, "wait_until_legal")
+    batch_waits = _W.get("batch_waits", False) and hasattr(env, "wait_until_legal") and _W["fast"].obs == "v1"
     sim_skip = _W.get("rollout_sim_skip", 0)
     if lean:
         env.set_lean_observation(True)
@@ -314,8 +317,6 @@ def _play(job: dict) -> dict:
     from scripted_baseline import profile_for_deck
     from pvz_env import TaskSpec
     args = job["args"]
-    if job["arm"] != "fast" and _W["fast"].obs == "v2lite":
-        raise ValueError("v2lite supports only --arms fast. Teacher continuations are unsupported.")
     kw = training_task_kwargs(load_training_task(Path(args.manifest), args.task_id), job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading
     # resources costs ~0.7 s, as much as a whole student-only game. RESET_V2 rebuilds the board
@@ -340,6 +341,7 @@ def _play(job: dict) -> dict:
         decisions = 0
         frames = [_frame(obs)] if args.frames else None
         fast_state = {}
+        _W["student_history"] = None
         # DAgger (DESIGN.md §14.6): the search still labels every decision, but with probability
         # 1 - dagger_beta the student's own action is executed, so the archive covers the positions the
         # student itself gets into. The label is the anchored search decision (overrides only past --margin).
@@ -355,6 +357,7 @@ def _play(job: dict) -> dict:
             planted = {index: count for index, count in enumerate(details["planted"]) if count}
         while not obs["terminal"] and decisions < args.max_actions:
             action = policy_choice = _fast_action(obs, fast_state)
+            _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
@@ -453,9 +456,6 @@ def main() -> None:
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
-    from pvz_rollout_policy import load_student
-    if "fast_search" in args.arms.split(",") and load_student(args.rollout_policy).obs == "v2lite":
-        p.error("v2lite supports only --arms fast. Teacher continuations are unsupported.")
     seeds = load_training_task(Path(args.manifest), args.task_id)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
     args.out.mkdir(parents=True, exist_ok=True)
     results_path = args.out / "games.jsonl"
