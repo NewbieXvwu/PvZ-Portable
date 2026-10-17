@@ -5,18 +5,45 @@ the teacher would search).  Two things come out:
 
   roots.cudaroot  -- LevelInfo followed by one RootRecord per root, the layout in cuda/CudaRollout.h.
                      This is what the GPU simulator starts from; nothing about the level is
-                     re-implemented for it.
+                     re-implemented for it.  One file holds the roots of *one* task, because the
+                     single LevelInfo carries the level / deck / zombie_count_multiplier.
   corpus.jsonl    -- one line per (root, random future): the leaf statistics the *original* simulator
-                     produced for that exact start (result, waves, kills, plant losses, zombie
-                     advance, income) plus the value net's score of the leaf.  The GPU runs the same
-                     (root, future) pairs and the phase-1 gate compares the two distributions.
+                     produced for that exact start, plus the value net's score of the leaf.  The GPU
+                     runs the same (root, future) pairs and the phase-1 gate compares the two
+                     distributions.
+
+corpus.jsonl keys, named after the cuda/CudaRollout.h RolloutResult they line up with:
+
+  join      -- root, seed, future (the RESEED argument, `seed * 1000 + future`)
+  clocks    -- ticks (RolloutResult::ticks), end_tick (::endTick), decisions (::decisions),
+               net_calls (::netCalls)
+  outcome   -- terminal, result (0 / 1 / -1, normalised the way CudaExport.cpp normalises it)
+  leaf body -- sun, wave, plants (::plantsAlive), zombies (::zombiesAlive), mowers_left (::mowersLeft),
+               mowers_alive (mowers still present, not the same number), planted_by_type (::plantedByType),
+               plants_planted (::plantsPlanted), row_min_zombie_x (::rowMinZombieX)
+  features  -- income (the 6000-tick sun income rate the student saw at the leaf), leaf_value
+               (sigmoid V(leaf) from --value, 1/0 once terminal)
+
+  Deliberately absent, because the CPU path does not report them: RolloutResult::zombiesKilled,
+  ::plantsEaten, ::mowersTriggered, ::sunProduced are *deltas over the continuation*, and the ROLLOUT
+  response never emits the "events" block that carries them -- src/main.cpp:403-405 reads the counters
+  at the root for exactly that purpose, then src/main.cpp:487-496 prints its own JSON and `continue`s
+  before the shared tail at src/main.cpp:910-916 that would have subtracted them.  The "events" key is
+  written as an empty object and will start filling up on its own once that is fixed; do not treat the
+  empty object as a measured zero.
 
 Usage:
   python3 scripts/cuda_root_corpus.py --manifest ~/PvZ-search/artifacts/stage4/day_l7_hard.json \
-      --task-id day_l7_z15_train --seeds 12 --roots-per-game 18 --rollouts-per-root 8 \
+      --task-id day_l7_z15_train --seeds 24 --roots-per-game 18 --rollouts-per-root 8 \
       --rollout-policy ~/PvZ-search/artifacts/student/v14/model.pt \
-      --static-value ~/PvZ-search/artifacts/hard/value_branch1/model.pt \
-      --value ~/PvZ-search/artifacts/value_net/v2/model.pt --out-dir ~/pvz-cuda/artifacts/cuda
+      --value ~/PvZ-search/artifacts/value_net/v2/model.pt --out-dir ~/pvz-cuda/artifacts/cuda/corpus_l7_z15
+
+`--seeds N` takes the first N of the task's own seed list (add `--seed-offset` to move along it).
+Roughly 16 roots per game survive the "something is plantable" filter, so N games give about 16N
+roots; run it on one core (the script pins torch and the simulator subprocess to 1 thread).
+`--rollout-max-actions` must equal the lane cap the GPU host uses (cuda/SimHost.cpp Options::maxActions).
+The `future` column is per root (`seed * 1000 + index`), so the GPU side has to read the pairs from
+corpus.jsonl rather than counting up from one `--seed-base`.
 """
 from __future__ import annotations
 
@@ -25,6 +52,7 @@ import json
 import os
 import sys
 import time
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -42,6 +70,18 @@ def _leaf_value(vnet, leaf: dict, context) -> float:
         scalars = torch.cat([scalars, context])
     with torch.inference_mode():
         return float(torch.sigmoid(vnet(board[None], scalars[None]))[0])
+
+
+def _leaf_result(leaf: dict) -> int:
+    """RolloutResult::result encoding: 0 ongoing, 1 won, -1 lost.
+
+    The observation writes `mBoardResult` straight out (src/LawnApp.cpp EnvironmentLeanObservation),
+    so a loss arrives as BOARDRESULT_LOST = 2 (src/ConstEnums.h:128) while the GPU reports -1.
+    CudaExport.cpp normalises the same way for RootRecord::result; without doing it here the two
+    sides of the phase-1 comparison would disagree on every lost leaf.
+    """
+    raw = leaf.get("result")
+    return 1 if raw == 1 else (-1 if raw == 2 else 0)
 
 
 def _row_min_zombie_x(leaf: dict) -> list[int]:
@@ -115,17 +155,22 @@ def build(env, vnet, args, out_dir: Path) -> tuple[list[dict], dict]:
                 for future in range(args.rollouts_per_root):
                     seed_value = (seed * 1000 + future) % 2 ** 32
                     leaf = env.rollout(None, obs["tick"] + args.horizon, sim_skip=args.sim_skip,
+                                       max_actions=args.rollout_max_actions,
                                        snapshot_id=root, seed=seed_value)
                     details = env._last_response
                     record = {"root": len(roots) - 1, "seed": seed, "future": seed_value,
                               "ticks": details["ticks"], "decisions": details["decisions"],
-                              "tick": leaf["tick"], "terminal": bool(leaf.get("terminal")),
-                              "result": leaf.get("result"), "sun": leaf.get("sun"),
+                              "net_calls": details.get("net_calls"),
+                              "end_tick": leaf["tick"], "terminal": bool(leaf.get("terminal")),
+                              "result": _leaf_result(leaf), "sun": leaf.get("sun"),
                               "wave": leaf.get("wave"), "income": leaf.get("sun_income_rate"),
                               "events": details.get("events") or {},
                               "plants": len(leaf.get("plants") or []),
                               "zombies": len(leaf.get("zombies") or []),
-                              "mowers": len(leaf.get("defenses") or []),
+                              "mowers_left": details.get("mowers_left"),
+                              "mowers_alive": len(leaf.get("defenses") or []),
+                              "planted_by_type": details.get("planted"),
+                              "plants_planted": sum(details.get("planted") or []),
                               "row_min_zombie_x": _row_min_zombie_x(leaf),
                               "leaf_value": _leaf_value(vnet, leaf, context)}
                     rollouts += 1
@@ -134,10 +179,19 @@ def build(env, vnet, args, out_dir: Path) -> tuple[list[dict], dict]:
                 env.release_snapshot(root)
             env.set_sim_skip(0)
             env.set_lean_observation(False)
-    return roots, {"roots": len(roots), "rollouts": rollouts, "seeds": len(seeds),
+    return roots, {"task_id": args.task_id, "manifest": args.manifest,
+                   "level": kw["level"], "deck": list(deck), "terrain": kw.get("terrain"),
+                   "zombie_count_multiplier": kw.get("zombie_count_multiplier"),
+                   "wave_cap": kw.get("wave_cap"), "horizon": args.horizon,
+                   "sim_skip": args.sim_skip, "rollouts_per_root": args.rollouts_per_root,
+                   "roots": len(roots), "rollouts": rollouts, "seeds": len(seeds),
+                   "supported": sum(1 for record in roots if record["supported"]),
                    "unsupported": sum(1 for record in roots if not record["supported"]),
                    "reasons": sorted({record["reason"] for record in roots if not record["supported"]}),
+                   "reason_histogram": dict(sorted(Counter(
+                       record["reason"] for record in roots if not record["supported"]).items())),
                    "max_income_events": max_events,
+                   "min_root_tick": min((record["tick"] for record in roots), default=0),
                    "max_root_tick": max((record["tick"] for record in roots), default=0),
                    "seconds": round(time.time() - started, 1)}
 
@@ -155,6 +209,10 @@ def main() -> None:
     p.add_argument("--horizon", type=int, default=2500)
     p.add_argument("--sim-skip", type=int, default=29)
     p.add_argument("--max-actions", type=int, default=3000)
+    # cuda/SimHost.cpp stops its lanes at the same cap (Options::maxActions = 3000); if the two sides
+    # stop for different reasons the agreement rate measures the stopping rule instead of the sim.
+    # 2500 ticks of this task's game never reaches it (max 52 decisions observed), but make it explicit.
+    p.add_argument("--rollout-max-actions", type=int, default=3000)
     p.add_argument("--rollouts-per-root", type=int, default=8)
     p.add_argument("--rollout-policy", required=True)
     p.add_argument("--value", required=True)
