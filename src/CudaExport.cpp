@@ -120,11 +120,34 @@ void FillLevelInfo(LawnApp* app, LevelInfo& info)
 		def.health = PlantBaseHealth(seed);
 		def.refreshTime = Plant::GetRefreshTime(seed, SeedType::SEED_NONE);
 		def.launchRate = source.mLaunchRate;
-		// Shooters create a pea (peashooter/snowpea) or two peas (repeater, the second one 25 ticks
-		// later -- Plant::UpdateShooter); snow peas carry the chill on the same 20 damage.
+		// Behaviour class the kernel branches on, so it never has to re-derive "is this a shooter" from
+		// a subclass enum.  Plant::Update dispatches on exactly these five cases for this deck.
+		switch (source.mSubClass)
+		{
+		case PlantSubClass::SUBCLASS_SHOOTER:  def.behavior = PB_SHOOTER; break;
+		default:                               def.behavior = PB_NONE; break;
+		}
+		switch (seed)
+		{
+		case SeedType::SEED_SUNFLOWER:   def.behavior = PB_SUNPRODUCER;
+			// Plant.cpp:192 -- the first delay is RandRangeInt(300, mLaunchRate/2), later ones redraw
+			// from [mLaunchRate-150, mLaunchRate] in the kernel.
+			def.prodMin = 300; def.prodMax = source.mLaunchRate / 2; def.prodValue = 25; break;
+		case SeedType::SEED_CHERRYBOMB:  def.behavior = PB_CHERRY; break;
+		case SeedType::SEED_POTATOMINE:  def.behavior = PB_POTATO; break;
+		case SeedType::SEED_WALLNUT:     def.behavior = PB_WALL; break;
+		default: break;
+		}
+		// Shooters create a pea (peashooter/snowpea) or two peas (repeater, the second one at
+		// mLaunchCounter == 25 -- Plant::UpdateShooter); snow peas carry the chill on the same 20 damage.
 		if (source.mSubClass == PlantSubClass::SUBCLASS_SHOOTER)
-			def.damage = gProjectileDefinition[seed == SeedType::SEED_SNOWPEA
-				? ProjectileType::PROJECTILE_SNOWPEA : ProjectileType::PROJECTILE_PEA].mDamage;
+		{
+			const bool snow = seed == SeedType::SEED_SNOWPEA;
+			def.damage = gProjectileDefinition[snow ? ProjectileType::PROJECTILE_SNOWPEA
+				: ProjectileType::PROJECTILE_PEA].mDamage;
+			def.chills = snow ? 1 : 0;
+			def.shots = seed == SeedType::SEED_REPEATER ? 2 : 1;
+		}
 	}
 }
 
@@ -202,6 +225,13 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 		out.launchCounter = plant->mLaunchCounter;
 		out.launchRate = plant->mLaunchRate;
 		out.special = plant->mDoSpecialCountdown;
+		out.extraA = plant->mShootingCounter;
+		out.extraB = plant->mAnimCounter;
+		out.onBoard = plant->mIsOnBoard ? 1 : 0;
+		// GameObject::mX/mY are int32_t (a plant sits on a grid cell and never moves), unlike a zombie's
+		// float mPosX; the record keeps one float type for all positions and the integers survive exactly.
+		out.posX = static_cast<float>(plant->mX);
+		out.posY = static_cast<float>(plant->mY);
 		if (!KernelSupportsPlant(plant->mSeedType) || plant->mSquished ||
 			plant->mImitaterType != SeedType::SEED_NONE)
 		{
@@ -249,6 +279,9 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 		out.row = projectile->mRow;
 		// Projectiles do not carry damage as state: Projectile::GetProjectileDef() looks it up by type.
 		out.damage = gProjectileDefinition[projectile->mProjectileType].mDamage;
+		// Whether this projectile chills what it hits, resolved here so the kernel never needs the
+		// ProjectileType enum: the only chilling projectile in this deck's rows is the snow pea's.
+		out.chill = projectile->mProjectileType == ProjectileType::PROJECTILE_SNOWPEA ? 1 : 0;
 		out.age = projectile->mProjectileAge;
 		out.posX = projectile->mPosX; out.posY = projectile->mPosY;
 		out.velX = projectile->mVelX; out.velY = projectile->mVelY;
@@ -292,6 +325,32 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 				record.unsupportedReason = 20000 + out.type;
 			}
 		}
+	// The wave future the original already committed to.  RESEED re-seeds only the draws made from
+	// here on (rows, spawn jitter, sun timing) and never redraws this table, so a continuation that
+	// re-drew it would be measuring a different game than the one the teacher sampled.
+	record.waveCount = 0;
+	{
+		const int waves = board->mNumWaves < kMaxWaves ? board->mNumWaves : kMaxWaves;
+		for (int wave = 0; wave < waves; ++wave)
+		{
+			const int count = board->NumberZombiesInWave(wave);
+			if (count > kWaveZombieSlots)
+			{
+				record.supported = 0;
+				record.unsupportedReason = 6000 + wave;
+				break;
+			}
+			record.waveZombieCount[wave] = count;
+			for (int index = 0; index < count; ++index)
+				record.waveTable[wave][index] = static_cast<int>(board->mZombiesInWave[wave][index]);
+			record.waveCount = wave + 1;
+		}
+		if (board->mNumWaves > kMaxWaves)
+		{
+			record.supported = 0;
+			record.unsupportedReason = 6100;
+		}
+	}
 	return true;
 }
 

@@ -45,14 +45,19 @@ def _leaf_value(vnet, leaf: dict, context) -> float:
 
 
 def _row_min_zombie_x(leaf: dict) -> list[int]:
-    """Nearest-to-the-house zombie x per row, fixed point x4 -- what RolloutResult reports."""
+    """Nearest-to-the-house zombie x per row, fixed point x4 -- what RolloutResult reports.
+
+    Zombies walk *leftward* (mPosX falls from ~780 toward the house at -100), so the most advanced
+    zombie of a row is the one with the smallest x.  Keep the minimum, which is what StoreResult
+    writes into RolloutResult::rowMinZombieX.
+    """
     best = [None] * 6
     for zombie in leaf.get("zombies") or []:
         row, x, on_board = int(zombie[0]), float(zombie[2]), bool(zombie[5])
         if not on_board or not 0 <= row < 6:
             continue
         value = int(round(x * 4))
-        if best[row] is None or value > best[row]:
+        if best[row] is None or value < best[row]:
             best[row] = value
     return [-2 ** 31 if item is None else item for item in best]
 

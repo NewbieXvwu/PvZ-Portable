@@ -11,24 +11,31 @@ import struct
 from pathlib import Path
 from typing import Any
 
-MAGIC = 0x50564333            # "PVC3"
-VERSION = 3
+MAGIC = 0x50564334            # "PVC4"
+VERSION = 4
 RECORD_LEVEL, RECORD_ROOT = 1, 2
 
 INCOME_EVENTS = 160
 PLANT_SLOTS, ZOMBIE_SLOTS, PROJECTILE_SLOTS = 60, 64, 96
 COIN_SLOTS, MOWER_SLOTS, PACKET_SLOTS = 24, 6, 10
 ROWS = 6
+MAX_WAVES = 30
+WAVE_ZOMBIE_SLOTS = 32
 
 PLANT_FIELDS = ("cell", "type", "health", "max_health", "state", "state_countdown",
-                "launch_counter", "launch_rate", "special")
+                "launch_counter", "launch_rate", "special", "extra_a", "extra_b", "on_board",
+                "pos_x", "pos_y")
 ZOMBIE_FIELDS = ("type", "row", "body", "body_max", "helm", "helm_max", "shield", "shield_max",
                  "flying", "phase", "phase_counter", "state_bits", "chilled", "age", "from_wave",
                  "target_cell", "pos_x", "pos_y", "vel_x")
-PROJECTILE_FIELDS = ("type", "row", "damage", "age", "pos_x", "pos_y", "vel_x", "vel_y")
+PROJECTILE_FIELDS = ("type", "row", "damage", "chill", "age", "pos_x", "pos_y", "vel_x", "vel_y")
 COIN_FIELDS = ("value", "ticks_to_collect")
 MOWER_FIELDS = ("row", "state", "timer", "flags", "chomp_counter", "pos_x")
 PACKET_FIELDS = ("type", "active", "refresh_counter", "refresh_time", "cost")
+PLANT_DEF_FIELDS = ("seed_type", "cost", "refresh_time", "health", "launch_rate", "damage",
+                    "behavior", "shots", "prod_min", "prod_max", "prod_value", "chills")
+ZOMBIE_DEF_FIELDS = ("type", "value", "first_allowed_wave", "pick_weight", "body_health",
+                     "helm_health", "shield_health", "variant_count", "vel_x", "vel_min", "vel_max")
 
 SCALAR_FIELDS = ("tick", "sun", "wave", "num_waves", "zombie_count_down", "zombie_count_down_start",
                  "zombie_health_wave_start", "zombie_health_to_next_wave", "huge_wave_count_down",
@@ -42,19 +49,24 @@ RECORD_TAG = struct.Struct("<iii")
 ROOT_HEAD = struct.Struct("<ii" + "i" * 17 + "i" * ROWS + "f" * ROWS + "f" * ROWS
                           + "i" * 3 + "ii" * INCOME_EVENTS + "i" * 6)
 ROOT_TAIL = struct.Struct("<ii")          # supported, unsupported reason
+# Board::mZombiesInWave, imported rather than re-drawn: RESEED changes the draws made from now on,
+# never the future the original already committed to.  It trails the entity arrays and precedes the
+# supported flag, exactly as in the C++ struct.
+WAVE_BLOCK = struct.Struct("<i" + "i" * MAX_WAVES + "i" * (MAX_WAVES * WAVE_ZOMBIE_SLOTS))
 ZOMBIE_RECORD = struct.Struct("16i3f")
-PLANT_RECORD = struct.Struct("9i")
-PROJECTILE_RECORD = struct.Struct("4i4f")
+PLANT_RECORD = struct.Struct("12i2f")
+PROJECTILE_RECORD = struct.Struct("5i4f")
 COIN_RECORD = struct.Struct("2i")
 MOWER_RECORD = struct.Struct("5if")
 PACKET_RECORD = struct.Struct("5i")
 ROOT_SIZE = ROOT_HEAD.size \
     + PLANT_SLOTS * PLANT_RECORD.size + ZOMBIE_SLOTS * ZOMBIE_RECORD.size \
     + PROJECTILE_SLOTS * PROJECTILE_RECORD.size + COIN_SLOTS * COIN_RECORD.size \
-    + MOWER_SLOTS * MOWER_RECORD.size + PACKET_SLOTS * PACKET_RECORD.size + ROOT_TAIL.size
+    + MOWER_SLOTS * MOWER_RECORD.size + PACKET_SLOTS * PACKET_RECORD.size \
+    + WAVE_BLOCK.size + ROOT_TAIL.size
 LEVEL_HEAD = struct.Struct("3i" + "i" * 34)
 ZOMBIE_DEF = struct.Struct("9i2f")
-LEVEL_PLANT_DEF = struct.Struct("6i")
+LEVEL_PLANT_DEF = struct.Struct("12i")
 LEVEL_SIZE = LEVEL_HEAD.size + 34 * ZOMBIE_DEF.size + 4 + 16 * LEVEL_PLANT_DEF.size + 4
 
 
@@ -115,6 +127,16 @@ def parse_root(payload: bytes) -> dict[str, Any]:
     offset += MOWER_SLOTS * MOWER_RECORD.size
     record["packets"] = _entities(payload, offset, record["packet_count"], PACKET_FIELDS, PACKET_RECORD)
     offset += PACKET_SLOTS * PACKET_RECORD.size
+    wave = WAVE_BLOCK.unpack_from(payload, offset)
+    offset += WAVE_BLOCK.size
+    wave_count = min(wave[0], MAX_WAVES)
+    record["wave_count"] = wave[0]
+    record["wave_zombie_count"] = list(wave[1:1 + MAX_WAVES])
+    table = wave[1 + MAX_WAVES:]
+    record["wave_table"] = [
+        list(table[row * WAVE_ZOMBIE_SLOTS:row * WAVE_ZOMBIE_SLOTS
+                    + min(record["wave_zombie_count"][row], WAVE_ZOMBIE_SLOTS)])
+        for row in range(wave_count)]
     record["supported"], record["unsupported_reason"] = ROOT_TAIL.unpack_from(payload, offset)
     return record
 
@@ -124,14 +146,13 @@ def parse_level(payload: bytes) -> dict[str, Any]:
     info: dict[str, Any] = {"level": head[0], "num_waves": head[1], "playable_rows": head[2],
                             "allowed": list(head[3:])}
     offset = LEVEL_HEAD.size
-    info["zombies"] = [dict(zip(("type", "value", "first_allowed_wave", "pick_weight", "body_health",
-                                 "helm_health", "shield_health", "variant_count", "vel_x",
-                                 "vel_min", "vel_max"), ZOMBIE_DEF.unpack_from(payload, offset + index * ZOMBIE_DEF.size)))
+    info["zombies"] = [dict(zip(ZOMBIE_DEF_FIELDS,
+                                ZOMBIE_DEF.unpack_from(payload, offset + index * ZOMBIE_DEF.size)))
                        for index in range(34)]
     offset += 34 * ZOMBIE_DEF.size
     info["plant_count"] = struct.unpack_from("i", payload, offset)[0]
     offset += 4
-    info["plants"] = [dict(zip(("seed_type", "cost", "refresh_time", "health", "launch_rate", "damage"),
+    info["plants"] = [dict(zip(PLANT_DEF_FIELDS,
                                LEVEL_PLANT_DEF.unpack_from(payload, offset + index * LEVEL_PLANT_DEF.size)))
                       for index in range(info["plant_count"])]
     offset += 16 * LEVEL_PLANT_DEF.size
