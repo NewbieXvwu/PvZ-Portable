@@ -258,11 +258,29 @@ void RepackConv(float* destination, const float* source, int32_t inChannels, int
 // of a continuation produced it: `sim` runs the same rounds with no forward at all.
 //
 // `lane` is a second schedule for the whole rollout, not a diagnostic split of the first one: one kernel
-// launch, every lane running its own forward through NetForward.inc's per-lane loops.  It exists because
-// a round of the batched schedule costs ~12 ms of pure launch latency at 1 lane (24 cuBLAS calls plus
-// the readback), so the batched trunk only pays off once a batch is wide enough to amortize it.  Which
-// schedule wins is a measured crossover, and the server picks per request.
+// launch, every lane running its own forward through NetForward.inc's per-lane loops.  It was written
+// against the worry that a round of the batched schedule costs ~12 ms of pure launch latency at 1 lane
+// (24 cuBLAS calls plus the readback), so a narrow batch might not amortize it.  Measured (rollouts/s,
+// z13 corpus, post-fix binary): `full` 29/56/124/316 versus `lane` 1/2/3/8 at 10/30/100/300 lanes, i.e.
+// the per-lane forward is 10x to 30x slower across the whole range the server sees -- one thread doing
+// 64x64 convolutions cannot beat 84 SMs doing them in batches, whatever the launch latency.  There is no
+// crossover to pick at: the serve path always uses the batched schedule, and `lane` is kept only to
+// answer "what would it cost if the trunk were not batched".
 enum BenchMode { kBenchFull = 0, kBenchSim = 1, kBenchLane = 2 };
+
+// Per-lane state is ~17 KB, so a lane's kernels are limited by how many independent load chains the
+// machine can keep in flight, not by arithmetic.  At 256 threads a block already fills an SM's register
+// file (see kBlockThreads), so a wave of fewer than ~21,500 lanes leaves most of the 84 SMs idle: 1,000
+// lanes is four blocks, and `heads+apply` over those four blocks costs 14.7 ms a round -- more than the
+// same kernel over 27,200 lanes (9.2 ms).  Splitting the same lanes across narrow blocks puts them on
+// more SMs.  Measured (rollouts/s, z13 corpus, `--bench full`):
+//   lanes    10    50   100   150   256   512   1000  3000  8192  27200
+//   256      26    80    116   153   236   463   831   2221  4514  15518
+//   64       26    78    113   164   304   594   1123  2959  5558  15259
+// The narrow block wins from ~150 lanes up (+7% .. +33%) and costs ~3% below it (a tiny wave pays the
+// level-table staging per block, and 3% of nothing is nothing), so the wave size picks the block.
+enum { kNarrowWaveLanes = 128 };
+constexpr int32_t kNarrowBlock = 64;
 
 // Occupancy control.  At 248 registers a thread the SM fits exactly one 256-thread block, i.e. 8 warps
 // to cover a ~700-cycle global load; building with -DPVZ_MIN_BLOCKS=2 caps the budget at 128 registers
@@ -648,7 +666,7 @@ struct Options
 	int32_t horizon = 2500;
 	int32_t maxActions = 3000;
 	int32_t lanes = 8192;             // batch capacity, in lanes
-	int32_t block = 256;
+	int32_t block = 0;                // 0 = choose from the wave size (see kNarrowWaveLanes)
 	int32_t repeat = 1;
 	int32_t seedBase = 1600000000;
 	int32_t warm = 1;
@@ -707,10 +725,10 @@ Options Parse(int argc, char** argv)
 	}
 	if (options.net.empty() || (!options.serve && options.roots.empty()))
 		Fail("usage: --net FILE (--roots FILE [--per-root 8] [--horizon 2500] [--lanes 8192] "
-			"[--block 256] [--repeat 1] [--max-actions 3000] [--seed-base N] [--bench full|sim|lane] "
+			"[--block 0] [--repeat 1] [--max-actions 3000] [--seed-base N] [--bench full|sim|lane] "
 			"[--pairs FILE] [--out results.bin] [--leaf-out leaves.bin]) | (--serve --socket PATH)");
-	if (options.lanes < 1 || options.block < 32 || options.block > kBlockThreads || options.perRoot < 1)
-		Fail("lanes and per-root must be positive, block in [32, 256] (launch bounds)");
+	if (options.lanes < 1 || options.block < 0 || options.block > kBlockThreads || options.perRoot < 1)
+		Fail("lanes and per-root must be positive, --block in [0, 256] (0 picks the wave size)");
 	// A leaf feature block is meaningless without the record it pairs with (the result and error flags
 	// say which lanes never started), and --out is what carries them.
 	if (!options.leafOut.empty() && options.out.empty()) Fail("--leaf-out needs --out");
@@ -738,7 +756,7 @@ struct Device
 	int32_t lanes = 0;                       // capacity, in lanes
 	int32_t blocks = 0;                       // NetBlocks(capacity)
 	int32_t width = 0;
-	int32_t options_block = 256;
+	int32_t options_block = 0;                // 0 = pick per wave (RunBatch)
 	int32_t bench = kBenchFull;
 	int32_t horizon = 2500;
 	int32_t maxActions = 3000;
@@ -1067,16 +1085,22 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 	CALL(cudaMemcpy(dev.counters, &initial, sizeof(Counters), cudaMemcpyHostToDevice));
 	CALL(cudaEventRecord(dev.start));
 
-	const int32_t grid = (batchLanes + dev.options_block - 1) / dev.options_block;
-	InitKernel<<<grid, dev.options_block>>>(arguments);
+	// The block is chosen from the wave that is about to run, not from the capacity the device was opened
+	// with: a served wave of 300 lanes and a benchmark wave of 27,200 share this code path and want
+	// opposite settings (see kNarrowWaveLanes).  It only moves threads between launches -- the lane-to-
+	// thread map is `blockIdx * blockDim + threadIdx` either way, so no decision changes.
+	const int32_t block = dev.options_block > 0 ? dev.options_block
+		: static_cast<int32_t>(batchLanes >= kNarrowWaveLanes ? kNarrowBlock : kBlockThreads);
+	const int32_t grid = (batchLanes + block - 1) / block;
+	InitKernel<<<grid, block>>>(arguments);
 	CHECK_LAUNCH();
 	if (dev.bench != kBenchFull)
 	{
-		RolloutKernel<<<grid, dev.options_block>>>(arguments);
+		RolloutKernel<<<grid, block>>>(arguments);
 		CHECK_LAUNCH();
 		if (dev.bench == kBenchLane)
 		{
-			StoreKernel<<<grid, dev.options_block>>>(arguments);
+			StoreKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 		}
 	}
@@ -1091,7 +1115,7 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 		{
 			CALL(cudaEventRecord(dev.phaseStart[0]));
 			CALL(cudaMemsetAsync(dev.counters, 0, sizeof(int32_t)));     // netCount; running carries over
-			PreKernel<<<grid, dev.options_block>>>(arguments);
+			PreKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 			CALL(cudaEventRecord(dev.phaseStop[0]));
 			// One 8-byte readback per round, and the only host/device synchronisation the loop needs
@@ -1114,7 +1138,7 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 			// Over all lanes, not over the compacted ones: a round that needs a forward for 7,500 of
 			// 21,504 lanes would otherwise launch 30 blocks into 84 SMs, and heads+apply was then the
 			// most expensive third of the round.  The threads that find -1 retire immediately.
-			PostKernel<<<grid, dev.options_block>>>(arguments);
+			PostKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 			CALL(cudaEventRecord(dev.phaseStop[2]));
 			if (phaseTiming)
@@ -1132,7 +1156,7 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 		}
 		if (round >= roundGuard) Fail("round guard hit: lanes are not draining");
 		stats.rounds = round;
-		StoreKernel<<<grid, dev.options_block>>>(arguments);
+		StoreKernel<<<grid, block>>>(arguments);
 		CHECK_LAUNCH();
 	}
 	CALL(cudaEventRecord(dev.stop));
