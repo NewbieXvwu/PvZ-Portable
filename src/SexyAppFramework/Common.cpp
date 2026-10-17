@@ -94,18 +94,31 @@ void Sexy::DispatchLogLn(SexyLogPriority thePriority, std::string_view theText)
 	}
 }
 
+// Diagnostic: PVZ_RNG_JITTER=N burns one extra draw every N draws, so every later random event gets a different
+// (still uniform) number -- the same game with its random results reshuffled. Off (0) by default.
+static void RandJitter()
+{
+	static const long sEvery = [] { const char* v = std::getenv("PVZ_RNG_JITTER"); return v ? std::atol(v) : 0L; }();
+	static unsigned long sCalls = 0;
+	if (sEvery > 0 && ++sCalls % sEvery == 0)
+		gMTRand.Next();
+}
+
 int Sexy::Rand()
 {
+	RandJitter();
 	return gMTRand.Next();
 }
 
 int Sexy::Rand(int range)
 {
+	RandJitter();
 	return gMTRand.Next((unsigned long)range);
 }
 
 float Sexy::Rand(float range)
 {
+	RandJitter();
 	return gMTRand.Next(range);
 }
 
