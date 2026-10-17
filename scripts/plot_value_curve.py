@@ -29,8 +29,9 @@ PAD_L, PAD_R, PAD_T, PAD_B = 44, 16, 14, 30
 
 
 def load(archive: Path) -> tuple[dict, list[dict]]:
+    from pvz_frame_store import frame_path, read_frames
     meta = json.loads((archive / "meta.json").read_text())
-    frames = [json.loads(line) for line in (archive / "frames.jsonl").open()]
+    frames = read_frames(frame_path(archive))
     return meta, frames
 
 

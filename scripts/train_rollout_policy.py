@@ -10,11 +10,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import random
 import sys
-import tempfile
 import time
 from pathlib import Path
 
@@ -27,62 +25,7 @@ import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
-
-
-def _target_values(targets) -> list[float]:
-    """The search's value for each card (best cell) and for waiting, NaN where it was not a candidate.
-    Index PACKETS = wait. Frames without a search (or written before 2026-10-16) are all NaN."""
-    out = [float("nan")] * (PACKETS + 1)
-    for packet, _row, _col, value in targets or []:
-        k = PACKETS if packet < 0 else packet
-        if not out[k] >= value:              # NaN or smaller: keep the best cell of a card
-            out[k] = value
-    return out
-
-
-def _cache_episode(path: Path, directory: Path, encoder: bytes) -> Path:
-    source = path.read_bytes()
-    digest = hashlib.sha256(encoder + source).hexdigest()
-    target = directory / (hashlib.sha256(str(path.resolve()).encode()).hexdigest() + ".npz")
-    if target.exists():
-        with np.load(target, allow_pickle=False) as stored:
-            if str(stored["digest"]) == digest:
-                return target
-    lines = source.splitlines()
-    # rows always kept: plants, and decisions the search scored (their soft targets are the point of --soft-weight)
-    hints = [b'"type":"plant"' in line[max(line.rfind(b'"label":'), line.rfind(b'"action":')):] or b'"targets":' in line
-             for line in lines]
-    frames = [json.loads(line) for line in lines]
-    rows, boards, scalars, plant, packet, cell, values = [], [], [], [], [], [], []
-    for index in range(1, len(frames)):
-        action = frames[index].get("label") or frames[index].get("action")
-        if not action or frames[index].get("action_rejected"):
-            continue
-        values.append(_target_values(frames[index].get("targets")))
-        board, scalar = features(frames[index - 1], frames[index - 2] if index >= 2 else None)
-        rows.append(index)
-        boards.append(board.numpy().astype(np.float16))
-        scalars.append(scalar.numpy())
-        is_plant = action["type"] == "plant"
-        plant.append(float(is_plant))
-        packet.append(action["packet"] if is_plant else -1)
-        cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
-    from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS
-    directory.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile(dir=directory, suffix=".npz", delete=False) as temporary:
-        temporary_path = Path(temporary.name)
-        try:
-            np.savez_compressed(temporary, digest=digest, hints=hints, rows=np.array(rows, dtype=np.int64),
-                                boards=np.array(boards, dtype=np.float16).reshape(-1, BOARD_CHANNELS, ROWS, COLS),
-                                scalars=np.array(scalars, dtype=np.float32).reshape(-1, SCALARS + 2),
-                                plant=np.array(plant, dtype=np.float32), packet=np.array(packet, dtype=np.int64),
-                                cell=np.array(cell, dtype=np.int64),
-                                values=np.array(values, dtype=np.float32).reshape(-1, PACKETS + 1))
-            temporary.close()
-            temporary_path.replace(target)
-        finally:
-            temporary_path.unlink(missing_ok=True)
-    return target
+from pvz_frame_store import cache_episode, frame_bytes, frame_paths, read_frames, target_values  # noqa: E402
 
 
 def _episode_context(path: Path) -> np.ndarray:
@@ -99,26 +42,21 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
-    paths = [p for p in sorted(data.glob("*/*/frames.jsonl")) if p.parent.name in labels]
+    paths = [p for p in frame_paths(data) if p.parent.name in labels]
     # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
     # twice the memory, which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
     rng = random.Random(0)
     keep = {}
     cached = {}
-    if cache_dir is not None:
-        import pvz_rollout_policy
-        import pvz_value_net
-        encoder = b"".join(Path(module.__file__).read_bytes() for module in (pvz_rollout_policy, pvz_value_net))
-        encoder += Path(__file__).read_bytes()
     for path in paths:
         mask = []
         if cache_dir is not None:
-            cached[path] = _cache_episode(path, cache_dir, encoder)
+            cached[path] = cache_episode(path, cache_dir)
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             keep[path] = mask
             continue
-        for line in path.open():
+        for line in frame_bytes(path).decode().splitlines():
             # The target is the last field: the DAgger label if there is one, else the executed action.
             tail = line[max(line.rfind('"label":'), line.rfind('"action":')):]
             mask.append('"type":"plant"' in tail or '"targets":' in line or rng.random() < wait_keep)
@@ -138,10 +76,11 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 if with_context:
                     ctx = _episode_context(path)
                     rows_scalars = np.concatenate([rows_scalars, np.broadcast_to(ctx, (count, len(ctx)))], axis=1)
+                rows_boards = stored["boards"]
                 if boards is None:
-                    boards = torch.empty((capacity, *stored["boards"].shape[1:]), dtype=torch.half)
+                    boards = torch.empty((capacity, *rows_boards.shape[1:]), dtype=torch.half)
                     scalars = torch.empty((capacity, rows_scalars.shape[1]), dtype=torch.float32)
-                boards[n:n + count] = torch.from_numpy(stored["boards"][selected])
+                boards[n:n + count] = torch.from_numpy(rows_boards[selected])
                 scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
                 types = stored["plant"][selected].tolist()
                 plant.extend(types)
@@ -154,7 +93,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 seed_of.extend([seed] * count)
                 n += count
             continue
-        frames = [json.loads(line) for line in path.open()]
+        frames = read_frames(path)
         ctx = _episode_context(path) if with_context else None
         for i in range(1, len(frames)):
             action = frames[i].get("label") or frames[i].get("action")
@@ -171,7 +110,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             weight.append(scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep))
             packet.append(action["packet"] if is_plant else -1)
             cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
-            values.append(_target_values(frames[i].get("targets")))
+            values.append(target_values(frames[i].get("targets")))
     return (boards[:n], scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
             torch.tensor(weight), seed_of, torch.tensor(values, dtype=torch.float32).reshape(-1, PACKETS + 1))
 

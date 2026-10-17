@@ -82,6 +82,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
 
 # 动作写法**复用** episode_query 的解析器。曾经在别处重写过一份类似的裁剪逻辑，
 # 结果和策略漂移、差点删掉续跑要用的检查点（见 AGENTS.md §3）——
@@ -192,17 +193,11 @@ def _parse_point(raw: str, where: str) -> dict[str, str]:
 
 def _load_actions(archive: Path) -> list:
     """读存档，返回每个决策点当时**真实做出**的动作（第 0 项是初始帧，动作为 null）。"""
-    frames = archive / "frames.jsonl"
+    from pvz_frame_store import frame_path, read_frames
+    frames = frame_path(archive)
     if not frames.is_file():
-        raise BadEvidence(f"{archive} 下没有 frames.jsonl —— 这不是一个 capture 出来的存档")
-    actions = []
-    with frames.open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            actions.append(json.loads(line).get("action"))
-    return actions
+        raise BadEvidence(f"{archive} 下没有 frames.jsonl 或 frames.npz")
+    return [frame.get("action") for frame in read_frames(frames)]
 
 
 def _norm(action) -> tuple | None:

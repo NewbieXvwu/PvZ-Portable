@@ -351,7 +351,8 @@ def _play(job: dict) -> dict:
         # Same layout as episode_query archives, so scripts/train_value_net.py reads it directly.
         archive = Path(args.frames) / f"seed_{job['seed']}" / f"{args.frames_label}_{job['arm']}"
         archive.mkdir(parents=True, exist_ok=True)
-        (archive / "frames.jsonl").write_text("".join(json.dumps(f, separators=(",", ":")) + "\n" for f in frames))
+        from pvz_frame_store import write_frames
+        write_frames(archive / f"frames.{getattr(args, 'frames_format', 'npz')}", frames)
         (archive / "meta.json").write_text(json.dumps({
             "task": {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]},
             "context": task_context,
@@ -392,6 +393,8 @@ def main() -> None:
     p.add_argument("--max-actions", type=int, default=3000)
     p.add_argument("--frames", help="write per-game frame archives here (for training)")
     p.add_argument("--frames-label", default="play")
+    p.add_argument("--frames-format", choices=["npz", "jsonl"], default="npz",
+                   help="lossless archive with cached training features (jsonl: legacy text)")
     p.add_argument("--dagger-beta", type=float, default=1.0,
                    help="probability of executing the search's decision (1 = the teacher plays; < 1 = DAgger: "
                         "the student plays the rest, every frame still records the search's label)")

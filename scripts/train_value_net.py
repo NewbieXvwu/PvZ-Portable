@@ -58,12 +58,13 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
     """Games with only their wave-start frames kept as dicts; with ``training`` the every-FRAME_STRIDE
     training samples are featurized straight into preallocated tensors. Keeping the frames themselves
     does not fit: 2048 night games held as dicts went past 16 GB and got OOM-killed (2026-10-15)."""
+    from pvz_frame_store import frame_bytes, frame_path, read_frames
     paths = sorted(data_dir.glob("*/*/meta.json"))
     train = None
     if training:
         capacity = 0
         for meta_path in paths:
-            lines = sum(1 for _ in (meta_path.parent / "frames.jsonl").open())
+            lines = len(frame_bytes(frame_path(meta_path.parent)).splitlines())
             capacity += len(range(0, lines - 1, FRAME_STRIDE))
         train = {"boards": None, "scalars": None, "labels": [], "weights": [], "game_of": []}
     games, n = [], 0
@@ -71,7 +72,7 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
         meta = json.loads(meta_path.read_text())
         won = bool(meta["outcome"]["won"])
         context = _game_context(meta, meta_path)
-        frames = [json.loads(line) for line in (meta_path.parent / "frames.jsonl").open()]
+        frames = read_frames(frame_path(meta_path.parent))
         starts = wave_starts(frames)
         if training:
             picked = range(0, len(frames) - 1, FRAME_STRIDE)  # drop the terminal frame

@@ -98,9 +98,9 @@ def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
 
 
 def load(archive: Path) -> tuple[dict, list]:
+    from pvz_frame_store import frame_path, read_frames
     meta = json.loads((archive / "meta.json").read_text(encoding="utf-8"))
-    frames = [json.loads(line) for line in
-              (archive / "frames.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    frames = read_frames(frame_path(archive))
     return meta, frames
 
 

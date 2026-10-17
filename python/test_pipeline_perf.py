@@ -13,6 +13,7 @@ from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from render_episode import _frame
 from train_rollout_policy import load
+from pvz_frame_store import cache_episode, frame_paths, read_frames, write_frames
 from value_ranking_check import _save_dump
 
 RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"))
@@ -52,9 +53,11 @@ class PipelinePerfTest(unittest.TestCase):
         self.env.release_snapshot(root)
 
     def assert_rows_equal(self, expected, actual):
-        for left, right in zip(expected[:-1], actual[:-1]):
-            self.assertTrue(torch.equal(left, right))
-        self.assertEqual(expected[-1], actual[-1])
+        for left, right in zip(expected, actual):
+            if isinstance(left, torch.Tensor):
+                torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
+            else:
+                self.assertEqual(left, right)
 
     def test_incremental_cache_and_dump(self):
         frames = [_frame(self.obs)]
@@ -88,6 +91,23 @@ class PipelinePerfTest(unittest.TestCase):
         self.assert_rows_equal(load(self.directory / "data", {"teacher"}),
                                load(self.directory / "data", {"teacher"}, cache_dir=cache))
         self.assertNotEqual(modified, cached.stat().st_mtime_ns)
+        frames[-2]["targets"] = [[-1, -1, -1, .25], [0, 0, 0, .5], [0, 1, 1, .4]]
+        source.write_text("".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames))
+        expected = load(self.directory / "data", {"teacher"}, .3)
+        binary = source.with_suffix(".npz")
+        write_frames(binary, frames)
+        self.assertEqual(read_frames(source), read_frames(binary))
+        self.assertEqual(2, len(frame_paths(self.directory / "data")))
+        self.assertEqual(binary, cache_episode(binary, cache))
+        self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3, cache_dir=cache))
+        self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3))
+        import numpy as np
+        with np.load(binary, allow_pickle=False) as stored:
+            arrays = dict(stored)
+        arrays["encoder"] = "old encoder"
+        np.savez_compressed(binary, **arrays)
+        self.assertNotEqual(binary, cache_episode(binary, cache))
+        self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3, cache_dir=cache))
         boards, scalars = actual[:2]
         rows = [(board.numpy(), scalar.numpy(), float(index % 2), 30000, index // 4, index % 4, 0, index % 2)
                 for index, (board, scalar) in enumerate(zip(boards, scalars))]
@@ -97,6 +117,9 @@ class PipelinePerfTest(unittest.TestCase):
         self.assertTrue(torch.equal(boards, stored["boards"]))
         self.assertTrue(torch.equal(scalars, stored["scalars"]))
         self.assertEqual([row[2] for row in rows], stored["won"].tolist())
+        write_frames(source, frames[:3])
+        self.assertFalse(binary.exists())
+        self.assertEqual(json.loads(json.dumps(frames[:3])), read_frames(source))
 
 
 if __name__ == "__main__":

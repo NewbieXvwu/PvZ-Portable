@@ -293,9 +293,9 @@ _EVIDENCE_BLOCK = re.compile(r"```pvz-evidence[ \t]*\n(.*?)```", re.S)
 
 
 def load_archive(path: str | Path) -> tuple[dict, list]:
+    from pvz_frame_store import frame_path, read_frames
     meta = json.loads((Path(path) / "meta.json").read_text(encoding="utf-8"))
-    frames = [json.loads(line) for line in
-              (Path(path) / "frames.jsonl").read_text(encoding="utf-8").splitlines() if line]
+    frames = read_frames(frame_path(Path(path)))
     return meta, frames
 
 
