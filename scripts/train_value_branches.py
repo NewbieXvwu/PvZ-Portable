@@ -72,6 +72,7 @@ def main() -> None:
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--compare", default="", help="name=path,... value nets scored on the same held-out leaves")
     p.add_argument("--init", help="start from this value checkpoint (must take the task context)")
+    p.add_argument("--width", type=int, default=64, help="channels of the value net (checkpoints record it)")
     p.add_argument("--epochs", type=int, default=40)
     p.add_argument("--min-gap", type=float, default=0.25)
     p.add_argument("--seed", type=int, default=0)
@@ -98,7 +99,7 @@ def main() -> None:
     print(f"{len(d['won'])} rows ({int((d['kind'] == 1).sum())} right after planting) from {len(seeds)} seeds; "
           f"fit {len(fit_idx)}, held out {len(val_idx)}; win rate {float(d['won'].mean()):.3f}", flush=True)
 
-    net = ValueNet(context=True)
+    net = ValueNet(width=args.width, context=True)
     if args.init:
         net.load_state_dict(load_value_net(args.init).state_dict())
     net.to(args.device)
@@ -152,7 +153,7 @@ def main() -> None:
         report[name] = score(load_value_net(path).to(args.device))
     print(json.dumps(report, indent=1))
     args.out.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": net.cpu().state_dict(), "encoder": "pvz_value_net.featurize v1", "context": True,
+    torch.save({"state_dict": net.cpu().state_dict(), "encoder": "pvz_value_net.featurize v1", "context": True, "width": args.width,
                 "trained_on": seeds, "source": "branches", "data": args.data}, args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"held_out": report, "history": history,
                                                        "leaves": len(d["won"]), "seeds": len(seeds)}, indent=1))

@@ -192,6 +192,6 @@ class ValueNet(nn.Module):
 def load_value_net(path) -> ValueNet:
     """A value checkpoint in eval mode; ``net.context`` says whether it expects the task context."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
-    net = ValueNet(context=bool(checkpoint.get("context", False)))
+    net = ValueNet(width=int(checkpoint.get("width", 64)), context=bool(checkpoint.get("context", False)))
     net.load_state_dict(checkpoint["state_dict"])
     return net.eval()
