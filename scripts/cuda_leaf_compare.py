@@ -93,6 +93,11 @@ def read_cpu(path: Path) -> list[dict]:
             "mowersLeft": row["mowers_left"],
             "plantedByType": row["planted_by_type"],
             "rowMinZombieX": row["row_min_zombie_x"],
+            # Not statistics columns but the two things the later stages need: --pairs-out has to name
+            # the future so the GPU replays exactly this continuation, and the leaf-value check reads
+            # the value net's own score of this leaf.
+            "future": row["future"],
+            "leaf_value": row.get("leaf_value"),
         })
     return records
 
@@ -250,22 +255,30 @@ def score_gpu_leaves(cpu: list[dict], gpu: list[dict], features_path: Path, net_
     from pvz_value_net import load_value_net
 
     net = load_value_net(net_path)
-    if not net.context:
-        raise SystemExit(f"{net_path}: this value net takes no task context; the exported vector "
-                         "carries 35 context floats the net would read as scalars")
+    # The exported vector is [92*60 board][113 scalars][35 task context].  A net trained without the
+    # context (value_net/v2) reads only the 113 scalars, which is exactly what the corpus exporter's
+    # _leaf_value appends -- so both sides of the comparison feed the tensor width the net was built for.
+    scalars_wanted = VALUE_SCALARS + (VALUE_CONTEXT if net.context else 0)
     blocks = read_features(features_path)
     if len(blocks) != len(gpu):
         raise SystemExit(f"{features_path}: {len(blocks)} blocks for {len(gpu)} result records")
-    scored = []
-    for record, block in zip(gpu, blocks):
+    scored = [0.0] * len(gpu)
+    pending, boards, rests = [], [], []
+    for index, (record, block) in enumerate(zip(gpu, blocks)):
         if record["result"] != 0:
-            scored.append(1.0 if record["result"] > 0 else 0.0)
+            scored[index] = 1.0 if record["result"] > 0 else 0.0
             continue
-        board = torch.from_numpy(np.asarray(block[:BOARD_CELLS], dtype=np.float32).reshape(92, ROWS, 10))
-        rest = torch.from_numpy(np.asarray(block[BOARD_CELLS:], dtype=np.float32))
+        pending.append(index)
+        boards.append(block[:BOARD_CELLS].reshape(92, ROWS, 10))
+        rests.append(block[BOARD_CELLS:BOARD_CELLS + scalars_wanted])
+    if pending:
+        board = torch.from_numpy(np.stack(boards).astype(np.float32, copy=False))
+        rest = torch.from_numpy(np.stack(rests).astype(np.float32, copy=False))
         with torch.inference_mode():
-            scored.append(float(torch.sigmoid(net(board[None], rest[None]))[0]))
-    want = [r["leaf_value"] for r in cpu if "leaf_value" in r]
+            values = torch.sigmoid(net(board, rest)).tolist()
+        for index, value in zip(pending, values):
+            scored[index] = float(value)
+    want = [r["leaf_value"] for r in cpu if r["leaf_value"] is not None]
     print(f"leaf value: scored {len(scored)} GPU leaves with {net_path}")
     print(f"  GPU  {_summary(scored)}")
     print(f"  CPU  {_summary(want)}")
@@ -301,11 +314,15 @@ def main() -> None:
         if not (args.cpu and args.gpu):
             return
     if args.pairs_out:
+        if not args.cpu:
+            raise SystemExit("--pairs-out needs --cpu FILE.jsonl to take the futures from")
         write_pairs(read_cpu(args.cpu), args.pairs_out)
+        if not args.gpu:
+            return
     if args.gpu_features:
         if not (args.cpu and args.gpu):
             raise SystemExit("--gpu-features needs --cpu and --gpu to name the leaf each block belongs to")
-        score_gpu_leaves(args.cpu, args.gpu, args.gpu_features, args.value_net)
+        score_gpu_leaves(read_cpu(args.cpu), read_gpu(args.gpu), args.gpu_features, args.value_net)
         return
     if not (args.cpu and args.gpu):
         raise SystemExit("needs --cpu and --gpu (or --root-features with --roots)")
