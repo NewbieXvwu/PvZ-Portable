@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from render_episode import _frame
-from train_rollout_policy import load
+from train_rollout_policy import CompactBoards, load
 from pvz_frame_store import cache_episode, frame_paths, read_frames, write_frames
 from value_ranking_check import _save_dump
 
@@ -54,6 +54,9 @@ class PipelinePerfTest(unittest.TestCase):
 
     def assert_rows_equal(self, expected, actual):
         for left, right in zip(expected, actual):
+            if isinstance(left, CompactBoards):
+                left = left.batch(torch.arange(left.shape[0]), "cpu")
+                right = right.batch(torch.arange(right.shape[0]), "cpu")
             if isinstance(left, torch.Tensor):
                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
             else:
@@ -109,6 +112,7 @@ class PipelinePerfTest(unittest.TestCase):
         self.assertNotEqual(binary, cache_episode(binary, cache))
         self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3, cache_dir=cache))
         boards, scalars = actual[:2]
+        boards = boards.batch(torch.arange(boards.shape[0]), "cpu").half()
         rows = [(board.numpy(), scalar.numpy(), float(index % 2), 30000, index // 4, index % 4, 0, index % 2)
                 for index, (board, scalar) in enumerate(zip(boards, scalars))]
         shard = self.directory / "dump/seed_30000.pt"

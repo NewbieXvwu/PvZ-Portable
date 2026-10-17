@@ -110,6 +110,9 @@ class StudentObservationTest(unittest.TestCase):
                         actual = load(directory / version, {"test_fast"}, .1, cache_dir=directory / "cache",
                                       with_context=context, obs=version, precompute_workers=2)
                         for left, right in zip(expected, actual):
+                            if hasattr(left, "batch"):
+                                left = left.batch(torch.arange(left.shape[0]), "cpu")
+                                right = right.batch(torch.arange(right.shape[0]), "cpu")
                             if isinstance(left, torch.Tensor):
                                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
                             else:

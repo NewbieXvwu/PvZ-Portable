@@ -39,10 +39,7 @@ def _episode_context(path: Path) -> np.ndarray:
 
 
 def _board_store(shape, cache_dir: Path) -> torch.Tensor:
-    """The boards of all kept rows (float16, ~11 KB a row) in a file-backed map beside the feature cache, not in
-    process memory: D15 held 17.4 GB of boards in RAM and three trainings side by side ran the 23 GB WSL VM out of
-    memory (2026-10-17). The kernel keeps what fits in its page cache and drops the rest, so a big data set costs
-    disk reads instead of a crash. Same values as an in-memory tensor; the file is unlinked at once and freed on exit."""
+    """Legacy float16 file-backed boards for --dense-boards; unlinked at once and freed on exit."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = cache_dir / f"boards_{os.getpid()}.npy"
     store = np.lib.format.open_memmap(path, mode="w+", dtype=np.float16, shape=shape)
@@ -50,8 +47,53 @@ def _board_store(shape, cache_dir: Path) -> torch.Tensor:
     return torch.from_numpy(store)
 
 
+class CompactBoards:
+    """CSR boards: uint16 cell indices, float16 values, int64 row offsets."""
+
+    def __init__(self, shape):
+        self.shape = (0, *shape)
+        self.indices = bytearray()
+        self.values = bytearray()
+        self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
+        self.nnz = 0
+
+    def append(self, boards):
+        flat = np.asarray(boards, dtype=np.float16).reshape(len(boards), -1)
+        rows, columns = np.nonzero(flat.view(np.uint16))
+        counts = np.bincount(rows, minlength=len(boards))
+        self.indices.extend(columns.astype(np.uint16).tobytes())
+        self.values.extend(flat[rows, columns].tobytes())
+        self.offsets.extend((counts.cumsum(dtype=np.int64) + self.nnz).tobytes())
+        self.nnz += len(columns)
+        self.shape = (self.shape[0] + len(boards), *self.shape[1:])
+
+    def finish(self):
+        self.indices = np.frombuffer(self.indices, dtype=np.uint16)
+        self.values = np.frombuffer(self.values, dtype=np.float16)
+        self.offsets = np.frombuffer(self.offsets, dtype=np.int64)
+        return self
+
+    @property
+    def nbytes(self):
+        return self.indices.nbytes + self.values.nbytes + self.offsets.nbytes
+
+    def batch(self, idx, device):
+        selected = np.asarray(idx)
+        starts = self.offsets[selected]
+        counts = self.offsets[selected + 1] - starts
+        ends = counts.cumsum()
+        positions = np.arange(ends[-1] if len(ends) else 0) + np.repeat(starts - (ends - counts), counts)
+        size = int(np.prod(self.shape[1:]))
+        destinations = np.repeat(np.arange(len(selected)) * size, counts) + self.indices[positions]
+        output = torch.zeros(len(selected) * size, dtype=torch.float32, device=device)
+        output.index_put_((torch.from_numpy(destinations).to(device),),
+                          torch.from_numpy(self.values[positions]).to(device=device, dtype=torch.float32))
+        return output.reshape(len(selected), *self.shape[1:])
+
+
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
-         cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1):
+         cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
+         dense_boards: bool = False):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -100,9 +142,13 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                                     if obs == "v2lite" else np.concatenate([rows_scalars, context_rows], axis=1))
                 rows_boards = stored["boards"]
                 if boards is None:
-                    boards = _board_store((capacity, *rows_boards.shape[1:]), cache_dir)
+                    boards = (_board_store((capacity, *rows_boards.shape[1:]), cache_dir) if dense_boards
+                              else CompactBoards(rows_boards.shape[1:]))
                     scalars = torch.empty((capacity, rows_scalars.shape[1]), dtype=torch.float32)
-                boards[n:n + count] = torch.from_numpy(rows_boards[selected])
+                if dense_boards:
+                    boards[n:n + count] = torch.from_numpy(rows_boards[selected])
+                elif count:
+                    boards.append(rows_boards[selected])
                 scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
                 types = stored["plant"][selected].tolist()
                 plant.extend(types)
@@ -129,9 +175,14 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             if obs == "v1":
                 b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             if boards is None:
-                boards = torch.empty((capacity, *b.shape), dtype=torch.half)
+                boards = (torch.empty((capacity, *b.shape), dtype=torch.half) if dense_boards
+                          else CompactBoards(b.shape))
                 scalars = torch.empty((capacity, *s.shape), dtype=s.dtype)
-            boards[n] = b; scalars[n] = s; n += 1
+            if dense_boards:
+                boards[n] = b
+            else:
+                boards.append(b.numpy()[None])
+            scalars[n] = s; n += 1
             seed_of.append(seed)
             is_plant = action["type"] == "plant"
             plant.append(float(is_plant))
@@ -139,7 +190,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             packet.append(action["packet"] if is_plant else -1)
             cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
             values.append(target_values(frames[i].get("targets")))
-    return (boards[:n], scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
+    return (boards[:n] if dense_boards else boards.finish(), scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
             torch.tensor(weight), seed_of, torch.tensor(values, dtype=torch.float32).reshape(-1, PACKETS + 1))
 
 
@@ -173,6 +224,7 @@ def main() -> None:
     p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
+    p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
     args = p.parse_args()
     if args.seed is not None:
         torch.manual_seed(args.seed)
@@ -181,7 +233,7 @@ def main() -> None:
     boards, scalars, plant, packet, cell, weight, seed_of, values = load(args.data, set(args.labels.split(",")),
                                                                  args.wait_keep, label_weight,
                                                                  (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None,
-                                                                 args.context, args.obs, args.precompute_workers)
+                                                                 args.context, args.obs, args.precompute_workers, args.dense_boards)
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
@@ -216,7 +268,8 @@ def main() -> None:
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
 
     def batch_loss(idx, train):
-        b = boards[idx].float().to(args.device); s = scalars[idx].to(args.device)
+        b = boards[idx].float().to(args.device) if args.dense_boards else boards.batch(idx, args.device)
+        s = scalars[idx].to(args.device)
         y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
         w = weight[idx].to(args.device)
         planted = y > 0.5
@@ -261,6 +314,7 @@ def main() -> None:
                 "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "history": list(history)}
 
     for epoch in range(1, args.epochs + 1):
+        epoch_started = time.perf_counter()
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
         for start in range(0, len(perm), 2048):
@@ -274,7 +328,7 @@ def main() -> None:
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "val_loss": float(vl), **vs})
+        history.append({"epoch": epoch, "val_loss": float(vl), **vs, "seconds": time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:
             args.out.mkdir(parents=True, exist_ok=True)
