@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import sys
 import time
@@ -35,6 +36,18 @@ def _episode_context(path: Path) -> np.ndarray:
     if "context" not in meta:
         raise SystemExit(f"{path.parent} has no task context: run scripts/backfill_frame_context.py first")
     return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
+
+
+def _board_store(shape, cache_dir: Path) -> torch.Tensor:
+    """The boards of all kept rows (float16, ~11 KB a row) in a file-backed map beside the feature cache, not in
+    process memory: D15 held 17.4 GB of boards in RAM and three trainings side by side ran the 23 GB WSL VM out of
+    memory (2026-10-17). The kernel keeps what fits in its page cache and drops the rest, so a big data set costs
+    disk reads instead of a crash. Same values as an in-memory tensor; the file is unlinked at once and freed on exit."""
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    path = cache_dir / f"boards_{os.getpid()}.npy"
+    store = np.lib.format.open_memmap(path, mode="w+", dtype=np.float16, shape=shape)
+    path.unlink()
+    return torch.from_numpy(store)
 
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
@@ -78,7 +91,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                     rows_scalars = np.concatenate([rows_scalars, np.broadcast_to(ctx, (count, len(ctx)))], axis=1)
                 rows_boards = stored["boards"]
                 if boards is None:
-                    boards = torch.empty((capacity, *rows_boards.shape[1:]), dtype=torch.half)
+                    boards = _board_store((capacity, *rows_boards.shape[1:]), cache_dir)
                     scalars = torch.empty((capacity, rows_scalars.shape[1]), dtype=torch.float32)
                 boards[n:n + count] = torch.from_numpy(rows_boards[selected])
                 scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
