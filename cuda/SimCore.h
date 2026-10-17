@@ -35,6 +35,11 @@ struct Lane
 	float* floats;
 	int32_t lane;
 	int32_t stride;      // padded lane count; 1 in the single-lane host build
+	// Which activation slot this lane writes.  It is *not* the simulation index: the batched trunk only
+	// runs over the lanes that reached a decision this round, so RoundPre compacts them into slots
+	// 0..netCount-1 and RoundPost works under those slots.  The host build has one lane and one slot, so
+	// both are 0.
+	int32_t netSlot;
 
 #ifdef PVZ_LANE_CHECK
 	// Opt-in so an out-of-range slot or a lane/stride mismatch names itself instead of showing up as
@@ -169,6 +174,15 @@ PVZ_SIM void StoreRandState(Lane lane, const Rand& rand)
 	lane.s(S_RNG_LOW) = static_cast<int32_t>(static_cast<uint32_t>(rand.state & 0xFFFFFFFFu));
 }
 
+// The round split hands the stream from one kernel to the next through the two slots above, which is
+// only equivalent to keeping it in a register because every kernel stores it on the way out.
+PVZ_SIM Rand LoadRandState(Lane lane)
+{
+	Rand rand;
+	rand.state = RandState(lane);
+	return rand;
+}
+
 // ---------------------------------------------------------------------------
 // Six significant decimal digits, matching what std::ostream writes for a double.  The original
 // observation path renders zombie coordinates that way, and EnvironmentRollout::Features applies the
@@ -261,12 +275,6 @@ PVZ_SIM void StoreResult(Lane lane, RolloutResult& out);
 // ---------------------------------------------------------------------------
 // One tick of the game, and the decision step around it (cuda/SimTick.inc)
 // ---------------------------------------------------------------------------
-
-struct Decision
-{
-	int32_t packet;               // -1 = wait
-	int32_t row, col;
-};
 
 // Advance exactly one tick, in the original's order (see cuda/spec/board.md).  `waves` is the root's
 // imported wave table, which the spawn cursor walks but never rewrites.

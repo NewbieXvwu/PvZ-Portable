@@ -307,15 +307,16 @@ PVZ_SIM void StoreResult(Lane lane, RolloutResult& out)
 // Features
 // ---------------------------------------------------------------------------
 
-// (channel * kCells + cell) * stride + lane, the layout the convolutions read without transposing.
+// Padded plane element, and per-lane vector element, of this lane's activation slot -- the same
+// formulas the batched GEMMs address by, and the same ones NetForward.inc's PVZ_PLANE/PVZ_VECTOR use.
 PVZ_SIM float& CellChannel(Lane lane, float* board, int32_t channel, int32_t cell)
 {
-	return board[(channel * kCells + cell) * lane.stride + lane.lane];
+	return board[PlaneIndex(kBoardChannels, lane.netSlot, channel, PaddedCell(cell))];
 }
 
 PVZ_SIM float& ScalarChannel(Lane lane, float* scalars, int32_t index)
 {
-	return scalars[index * lane.stride + lane.lane];
+	return scalars[VectorIndex(kScalarFeatures, lane.netSlot, index)];
 }
 
 PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& buffers, const float* waveLog,

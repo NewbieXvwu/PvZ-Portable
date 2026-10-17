@@ -25,8 +25,32 @@ enum {
 	kCols = 10,                   // 9 lawn columns + column 9 = "beyond the lawn"
 	kCells = kRows * kCols,
 	kGridCols = 9,                // lawn columns
+
+	// Activations live in a *padded* grid: valid cell (row, col) sits at (row + kPadRow, col + kPadCol)
+	// of a kRowsP x kColsP plane, and the halo stays zero forever.  Padding 1 row / 2 columns is what
+	// both a 3x3 with padding 1 and a 1x5 with padding (0, 2) need to read only in-bounds cells, and it
+	// is what makes a convolution a batched GEMM: with the halo present, each filter tap is a constant
+	// pointer offset -- no bounds test, no gather.  The host build uses the same layout, so the two
+	// builds differ only in who does the multiply-accumulate.
+	kPadRow = 1,
+	kPadCol = 2,
+	kRowsP = kRows + 2 * kPadRow,     // 8
+	kColsP = kCols + 2 * kPadCol,     // 14
+	kPlaneCells = kRowsP * kColsP,    // 112 cells per channel, halo included
+	kValidOrigin = kPadRow * kColsP + kPadCol,
 	kBoardChannels = 92,
 	kScalars = 115,
+
+	// Activations are chunked along lanes.  A batch is ceil(lanes / kNetChunk) blocks, and inside a
+	// block the lane index is innermost, so one padded grid row of one channel is kColsP * kNetChunk
+	// contiguous floats of which the first kCols * kNetChunk (from kPadCol on) are the valid columns.
+	// That contiguous run is what makes a filter tap a single strided-batched GEMM with
+	// M = kCols * kNetChunk and kRows batches (cuda/BlasProbe.cu measures this shape).  The host build
+	// has one lane and passes netSlot = 0, so it uses block 0 of a one-block buffer: same layout, same
+	// semantics, only the multiply-accumulate differs.
+	kNetChunk = 1024,
+	kNetChunkBits = 10,
+	kNetChunkMask = kNetChunk - 1,
 	kPlantTypes = 54,
 	kZombieTypes = 34,
 	kMaxWaves = 30,
@@ -346,6 +370,11 @@ enum ScalarField {
 	// while the sim kernel may still advance it, LANE_DECIDING when it stopped at a decision point, and
 	// LANE_DONE once it hit the horizon, the action cap or a terminal result.
 	S_STATE, S_UNTIL_TICK, S_MAX_ACTIONS, S_STOP_REASON,
+	// A decision round is split across two kernels when the trunk runs batched: RoundPre observes the
+	// clock and the sun produced so far, RoundPost finishes the round with them two ticks later.  They
+	// are per-lane state for the duration of one round, so they live in the scalar block rather than in
+	// registers the second kernel cannot see.
+	S_ROUND_TICK, S_ROUND_PRODUCED, S_ROUNDS,
 	S_SCALAR_COUNT
 };
 

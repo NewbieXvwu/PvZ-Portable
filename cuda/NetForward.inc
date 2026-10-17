@@ -17,6 +17,13 @@
 // The weights arrive as the PVZRN dump of python/pvz_rollout_policy.py::export_student; the element
 // counts below are the ones EnvironmentRollout::Load reads, so a dump that loads on the CPU loads
 // here too.
+//
+// Two ways to run the trunk read this file.  The device driver replaces NetTrunk with strided-batched
+// GEMMs over one chunk of lanes (cuda/RolloutCuda.cu), which is why the planes are padded and chunked
+// (cuda/CudaRollout.h) and why every access goes through PlaneIndex/VectorIndex: the GEMMs and these
+// loops then address the same float.  NetContext and the heads stay per-lane in both builds except for
+// one piece: the cell head's 1x1 convolution is 93% of the head's arithmetic and does not depend on the
+// chosen packet, so the device batches it too (CellPre) while the host build runs the loop below.
 #ifndef PVZ_NET_FORWARD_INC
 #define PVZ_NET_FORWARD_INC
 
@@ -26,11 +33,14 @@
 namespace pvzc
 {
 
-// Element of a [channel][cell] plane for this lane.  `stride` and `self` are the two locals every
-// routine below carries: stride is the batch's lane count (1 in the single-lane host build), self is
-// the lane index, so a warp touching one channel of one cell reads 32 consecutive floats.
-#define PVZ_PLANE(plane, channel, cell) ((plane)[((channel) * kCells + (cell)) * stride + self])
-#define PVZ_VECTOR(vector, index) ((vector)[(index) * stride + self])
+// Element of a [channel][cell] plane and of a per-lane vector, for this lane's *activation* slot.
+// `channels` / `width` are the buffer's declared capacity and have to be the same at every access to
+// that buffer, because the chunk a lane lives in is derived from the capacity.
+#define PVZ_PLANE(plane, channels, channel, cell) \
+	((plane)[PlaneIndex((channels), lane.netSlot, (channel), PaddedCell(cell))])
+#define PVZ_POS(plane, channels, channel, pos) \
+	((plane)[PlaneIndex((channels), lane.netSlot, (channel), (pos))])
+#define PVZ_VECTOR(vector, width, index) ((vector)[VectorIndex((width), lane.netSlot, (index))])
 
 PVZ_SIM float Relu(float value) { return value > 0.0f ? value : 0.0f; }
 
@@ -38,81 +48,72 @@ PVZ_SIM float Relu(float value) { return value > 0.0f ? value : 0.0f; }
 // computes.  trunk[0] runs it with 92 input channels, trunk[1] with `width`; the original's sparse
 // first layer skips input channels whose whole plane is zero, and an all-zero plane adds exactly 0 to
 // every accumulator, so computing it costs time and changes nothing.
+//
+// The padded grid is what removes the bounds tests: a source cell off the lawn is a halo cell, the halo
+// is never written by anything, and a tap shift of -1..+1 rows and -2..+2 columns from a valid cell
+// provably stays inside the kRowsP x kColsP plane.
 PVZ_SIM void Conv3x3(Lane lane, const float* input, int32_t channels, int32_t outChannels,
 	const float* kernel, const float* bias, float* output)
 {
-	const int32_t stride = lane.stride;
-	const int32_t self = lane.lane;
 	for (int32_t oc = 0; oc < outChannels; ++oc)
 	{
 		const float* weight = kernel + oc * (channels * 9);
 		for (int32_t cell = 0; cell < kCells; ++cell)
 		{
-			const int32_t row = cell / kCols, col = cell % kCols;
+			const int32_t origin = PaddedCell(cell);
 			float acc = bias[oc];
 			for (int32_t ic = 0; ic < channels; ++ic)
 			{
-				const float* plane = input + ic * kCells * stride + self;
 				const float* tap = weight + ic * 9;
 				for (int32_t kr = 0; kr < 3; ++kr)
-				{
-					const int32_t sourceRow = row + kr - 1;
-					if (sourceRow < 0 || sourceRow >= kRows) continue;
 					for (int32_t kc = 0; kc < 3; ++kc)
-					{
-						const int32_t sourceColumn = col + kc - 1;
-						if (sourceColumn < 0 || sourceColumn >= kCols) continue;
-						acc += tap[kr * 3 + kc] * plane[sourceRow * kCols + sourceColumn];
-					}
-				}
+						acc += tap[kr * 3 + kc]
+							* PVZ_POS(input, channels, ic, origin + (kr - 1) * kColsP + (kc - 1));
 			}
-			output[(oc * kCells + cell) * stride + self] = Relu(acc);
+			PVZ_PLANE(output, outChannels, oc, cell) = Relu(acc);
 		}
 	}
 }
 
-// trunk[2]: kernel (1, 5), padding (0, 2) -- rows never move, so only the column needs a bounds test.
+// trunk[2]: kernel (1, 5), padding (0, 2) -- rows never move.
 PVZ_SIM void Conv1x5(Lane lane, const float* input, int32_t channels, int32_t outChannels,
 	const float* kernel, const float* bias, float* output)
 {
-	const int32_t stride = lane.stride;
-	const int32_t self = lane.lane;
 	for (int32_t oc = 0; oc < outChannels; ++oc)
 	{
 		const float* weight = kernel + oc * (channels * 5);
 		for (int32_t cell = 0; cell < kCells; ++cell)
 		{
-			const int32_t row = cell / kCols, col = cell % kCols;
+			const int32_t origin = PaddedCell(cell);
 			float acc = bias[oc];
 			for (int32_t ic = 0; ic < channels; ++ic)
 			{
-				const float* plane = input + ic * kCells * stride + self;
 				const float* tap = weight + ic * 5;
 				for (int32_t kc = 0; kc < 5; ++kc)
-				{
-					const int32_t sourceColumn = col + kc - 2;
-					if (sourceColumn < 0 || sourceColumn >= kCols) continue;
-					acc += tap[kc] * plane[row * kCols + sourceColumn];
-				}
+					acc += tap[kc] * PVZ_POS(input, channels, ic, origin + (kc - 2));
 			}
-			output[(oc * kCells + cell) * stride + self] = Relu(acc);
+			PVZ_PLANE(output, outChannels, oc, cell) = Relu(acc);
 		}
 	}
 }
 
-// Encode: the three convolutions and the global context.  `hidden` and `scratch` ping-pong, so two
-// [width][kCells] planes are live at a time -- the same buffers EnvironmentRollout reuses.
-PVZ_SIM void NetEncode(Lane lane, const NetParams& net, const NetState& state)
+// The trunk by itself: the part the device runs as batched GEMMs instead of as the loops above.
+// `hidden` and `scratch` ping-pong, so two width-plane buffers are live at a time -- the same buffers
+// EnvironmentRollout reuses.
+PVZ_SIM void NetTrunk(Lane lane, const NetParams& net, const NetState& state)
 {
-	const int32_t stride = lane.stride;
-	const int32_t self = lane.lane;
 	const int32_t width = net.width;
-	const int32_t context = net.contextSize;
-
 	Conv3x3(lane, state.board, kBoardChannels, width, net.conv1, net.bias1, state.hidden);
 	Conv3x3(lane, state.hidden, width, width, net.conv2, net.bias2, state.scratch);
 	Conv1x5(lane, state.scratch, width, width, net.conv3, net.bias3, state.hidden);
+}
 
+// The global context: mean and max over the grid plus the scalar branch.  It reads the trunk's last
+// result out of `hidden`, so it runs after NetTrunk (host) or after the batched GEMMs (device).
+PVZ_SIM void NetContext(Lane lane, const NetParams& net, const NetState& state)
+{
+	const int32_t width = net.width;
+	const int32_t context = net.contextSize;
 	for (int32_t oc = 0; oc < width; ++oc)
 	{
 		// The plane is post-ReLU, so a 0 start for the max matches std::max_element over non-negative
@@ -121,52 +122,77 @@ PVZ_SIM void NetEncode(Lane lane, const NetParams& net, const NetState& state)
 		float largest = 0.0f;
 		for (int32_t cell = 0; cell < kCells; ++cell)
 		{
-			const float value = PVZ_PLANE(state.hidden, oc, cell);
+			const float value = PVZ_PLANE(state.hidden, width, oc, cell);
 			total += value;
 			if (value > largest) largest = value;
 		}
-		PVZ_VECTOR(state.context, oc) = total / static_cast<float>(kCells);
-		if (net.meanmax) PVZ_VECTOR(state.context, width + oc) = largest;
+		PVZ_VECTOR(state.context, context, oc) = total / static_cast<float>(kCells);
+		if (net.meanmax) PVZ_VECTOR(state.context, context, width + oc) = largest;
 	}
 	for (int32_t oc = 0; oc < width; ++oc)
 	{
 		const float* weight = net.scalarWeight + oc * net.scalarCount;
 		float acc = net.scalarBias[oc];
 		for (int32_t index = 0; index < net.scalarCount; ++index)
-			acc += PVZ_VECTOR(state.scalars, index) * weight[index];
-		PVZ_VECTOR(state.context, context - width + oc) = Relu(acc);
+			acc += PVZ_VECTOR(state.scalars, kScalarFeatures, index) * weight[index];
+		PVZ_VECTOR(state.context, context, context - width + oc) = Relu(acc);
 	}
+}
+
+PVZ_SIM void NetEncode(Lane lane, const NetParams& net, const NetState& state)
+{
+	NetTrunk(lane, net, state);
+	NetContext(lane, net, state);
 }
 
 PVZ_SIM float PlantLogit(Lane lane, const NetParams& net, const NetState& state)
 {
-	const int32_t stride = lane.stride;
-	const int32_t self = lane.lane;
 	float acc = net.plantBias[0];
 	for (int32_t index = 0; index < net.contextSize; ++index)
-		acc += PVZ_VECTOR(state.context, index) * net.plantWeight[index];
+		acc += PVZ_VECTOR(state.context, net.contextSize, index) * net.plantWeight[index];
 	return acc;
 }
 
 PVZ_SIM float PacketLogit(Lane lane, const NetParams& net, const NetState& state, int32_t packet)
 {
-	const int32_t stride = lane.stride;
-	const int32_t self = lane.lane;
 	const float* weight = net.packetWeight + packet * net.contextSize;
 	float acc = net.packetBias[packet];
 	for (int32_t index = 0; index < net.contextSize; ++index)
-		acc += PVZ_VECTOR(state.context, index) * weight[index];
+		acc += PVZ_VECTOR(state.context, net.contextSize, index) * weight[index];
 	return acc;
 }
 
-// Heads(packet).  `scratch` holds the 1x1 convolution's pre-activation (its conv2 result is spent by
-// now), which is what the CPU path does too, so the final combine reads it instead of keeping kCells
-// accumulators live across the channel loop.
-PVZ_SIM void CellLogits(Lane lane, const NetParams& net, const NetState& state, int32_t packet,
-	float* logits)
+// The cell head's 1x1 convolution, which does not depend on the chosen packet: the same 64x64 kernel
+// applies whichever seed card the plant head picks.  That is what lets the device run it as a batched
+// GEMM over the whole forward (cuda/RolloutCuda.cu's RunCellPre, the same m=10240 shape as a trunk tap)
+// instead of here -- measured on its own, this loop was 1954 ns per lane-forward against the trunk's
+// 1024 ns for 24 times the arithmetic, because one thread per lane cannot hide a dependent chain of
+// 64 FMAs.  The host build runs it, so the reference path is complete.
+PVZ_SIM void CellPre(Lane lane, const NetParams& net, const NetState& state)
 {
-	const int32_t stride = lane.stride;
-	const int32_t self = lane.lane;
+	const int32_t width = net.width;
+	const int32_t step = 2 * width + net.contextSize;
+	for (int32_t oc = 0; oc < width; ++oc)
+	{
+		const float* kernel = net.cellWeight + oc * step;
+		for (int32_t cell = 0; cell < kCells; ++cell)
+		{
+			float acc = 0.0f;
+			for (int32_t ic = 0; ic < width; ++ic)
+				acc += kernel[ic] * PVZ_PLANE(state.hidden, width, ic, cell);
+			PVZ_PLANE(state.scratch, width, oc, cell) = acc;
+		}
+	}
+}
+
+// The rest of Heads(packet): add the packet-dependent base (bias + embedding + context, EnvironmentRollout
+// pre-fills its scratch with exactly this before accumulating the convolution into it), take the ReLU in
+// place, then the 1x1 output over the lawn.  `scratch` holds the pre-activation from CellPre or from the
+// batched GEMM; base is folded in at the end of the sum rather than the start, which is the one place the
+// device and host orders differ by rounding -- and the CPU original gets it from a BLAS accumulation
+// anyway, so neither side is bitwise against the other here.
+PVZ_SIM void CellLogits(Lane lane, const NetParams& net, const NetState& state, int32_t packet)
+{
 	const int32_t width = net.width;
 	const int32_t context = net.contextSize;
 	const int32_t step = 2 * width + context;
@@ -178,50 +204,33 @@ PVZ_SIM void CellLogits(Lane lane, const NetParams& net, const NetState& state, 
 		float base = net.cellBias[oc];
 		for (int32_t index = 0; index < width; ++index) base += embedding[index] * kernel[width + index];
 		for (int32_t index = 0; index < context; ++index)
-			base += PVZ_VECTOR(state.context, index) * kernel[2 * width + index];
+			base += PVZ_VECTOR(state.context, context, index) * kernel[2 * width + index];
 		for (int32_t cell = 0; cell < kCells; ++cell)
 		{
-			// One accumulator in a register per (oc, cell), one store per pair: the alternative of
-			// filling the plane with `base` and then read-modify-writing it per input channel would put
-			// every one of these FMAs behind a global load-store pair.
-			float acc = base;
-			for (int32_t ic = 0; ic < width; ++ic)
-				acc += kernel[ic] * PVZ_PLANE(state.hidden, ic, cell);
-			PVZ_PLANE(state.scratch, oc, cell) = acc;
+			float& value = PVZ_PLANE(state.scratch, width, oc, cell);
+			value = Relu(value + base);
 		}
 	}
-	for (int32_t cell = 0; cell < kRows * kGridCols; ++cell)
+	for (int32_t cell = 0; cell < kLogitCells; ++cell)
 	{
 		// The lawn is 5x9 of the 6x10 feature grid and column 9 (beyond the lawn) is never an option:
 		// EnvironmentRollout.cpp:341 reads cell / 9 * 10 + cell % 9.
 		const int32_t gridCell = (cell / kGridCols) * kCols + cell % kGridCols;
 		float acc = net.cellOutBias[0];
 		for (int32_t oc = 0; oc < width; ++oc)
-			acc += Relu(PVZ_PLANE(state.scratch, oc, gridCell)) * net.cellOut[oc];
-		logits[cell] = acc;
+			acc += PVZ_PLANE(state.scratch, width, oc, gridCell) * net.cellOut[oc];
+		// Strided by the activation slot like every other per-lane array: a flat `logits[cell]` would put
+		// every lane of the batch on top of the same 54 floats.
+		state.logits[VectorIndex(kLogitCells, lane.netSlot, cell)] = acc;
 	}
 }
 
-struct Choice
+// The plant gate and the packet pick -- everything up to the cell head.  Split out of NetChoose because
+// the device runs the cell head's convolution over the whole batch between the two halves.
+PVZ_SIM Choice NetPickPacket(Lane lane, const LevelInfo& level, const NetParams& net,
+	const NetState& state)
 {
-	int32_t packet;               // -1 = wait
-	int32_t row;
-	int32_t col;
-	int32_t forwarded;            // 1 = the network ran; net_calls counts these, not decisions
-};
-
-// The whole decision, in Predict's order.  `logits` is the lane's own 54-float row-major cell array.
-PVZ_SIM Choice NetDecide(Lane lane, const LevelInfo& level, const NetParams& net, const NetState& state,
-	const float* waveLog, float* logits)
-{
-	Choice choice = {-1, 0, 0, 0};
-	// The short circuit has to come first: Predict returns before ++networkCalls when nothing can be
-	// planted anywhere, so net_calls <= decisions holds on both sides only if the device skips too.
-	if (!AnyLegalPlant(lane, level)) return choice;
-	choice.forwarded = 1;
-
-	BuildFeatures(lane, level, state, waveLog, lane.s(S_PRIOR_TICK) >= 0);
-	NetEncode(lane, net, state);
+	Choice choice = {-1, 0, 0, 1};
 	if (!(PlantLogit(lane, net, state) > 0.0f)) return choice;
 
 	const int32_t rows = Maximum(level.playableRows, 1);
@@ -244,16 +253,22 @@ PVZ_SIM Choice NetDecide(Lane lane, const LevelInfo& level, const NetParams& net
 		havePacket = 1;
 		choice.packet = packet;
 	}
-	if (!havePacket) return choice;
+	return choice;
+}
 
-	CellLogits(lane, net, state, choice.packet, logits);
+// The cell argmax of Heads(packet)'s logits, Predict's last step.  Ties go to the first cell in
+// row-major order because a strictly-greater value is what replaces the incumbent.
+PVZ_SIM Choice NetPickCell(Lane lane, const LevelInfo& level, const NetState& state, Choice choice)
+{
+	const int32_t rows = Maximum(level.playableRows, 1);
 	float best = 0.0f;
 	int32_t haveCell = 0;
 	for (int32_t row = 0; row < rows; ++row)
 		for (int32_t col = 0; col < kGridCols; ++col)
 		{
 			if (lane.i(F_PLANT_TYPE, row * kCols + col) >= 0) continue;
-			const float value = logits[row * kGridCols + col];
+			const float value = state.logits[VectorIndex(kLogitCells, lane.netSlot,
+				row * kGridCols + col)];
 			if (haveCell && !(value > best)) continue;
 			best = value;
 			haveCell = 1;
@@ -263,7 +278,34 @@ PVZ_SIM Choice NetDecide(Lane lane, const LevelInfo& level, const NetParams& net
 	return choice;
 }
 
+// The decision once the trunk has run, in Predict's order: the plant gate, the packet pick, the cell
+// head, the cell argmax.  The device's RoundPost runs the same pieces with CellPre taken out and
+// batched, and NetDecide / RunRollout keep this one for the host build.
+PVZ_SIM Choice NetChoose(Lane lane, const LevelInfo& level, const NetParams& net, const NetState& state)
+{
+	const Choice choice = NetPickPacket(lane, level, net, state);
+	if (choice.packet < 0) return choice;
+	CellPre(lane, net, state);
+	CellLogits(lane, net, state, choice.packet);
+	return NetPickCell(lane, level, state, choice);
+}
+
+// The whole decision for one lane, features included: what the host rollout calls, and the same steps
+// RoundPre and RoundPost perform on the device with the trunk taken out and batched.
+PVZ_SIM Choice NetDecide(Lane lane, const LevelInfo& level, const NetParams& net, const NetState& state,
+	const float* waveLog)
+{
+	Choice choice = {-1, 0, 0, 0};
+	// The short circuit has to come first: Predict returns before ++networkCalls when nothing can be
+	// planted anywhere, so net_calls <= decisions holds on both sides only if the device skips too.
+	if (!AnyLegalPlant(lane, level)) return choice;
+	BuildFeatures(lane, level, state, waveLog, lane.s(S_PRIOR_TICK) >= 0);
+	NetEncode(lane, net, state);
+	return NetChoose(lane, level, net, state);
+}
+
 #undef PVZ_PLANE
+#undef PVZ_POS
 #undef PVZ_VECTOR
 
 }  // namespace pvzc
