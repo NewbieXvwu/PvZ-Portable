@@ -66,6 +66,9 @@ def _init(args) -> None:
         search_play._W.update(fast=net, vnet=load_value_net(args.value), lean_rollouts=True, batch_waits=True)
         if args.static_value:
             search_play._W['static_vnet'] = load_value_net(args.static_value)
+        if args.approx_static_value:
+            _W['reference_static_vnet'] = search_play._W.get('static_vnet', search_play._W['vnet'])
+            _W['approx_static_vnet'] = load_value_net(args.approx_static_value)
 
 
 def _reset(seed: int):
@@ -163,6 +166,8 @@ def _search_decisions(seed: int) -> list[dict]:
         stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
         search_play._W["rollout_sim_skip"] = mask
         search_play._W["cpp_rollouts"] = cpp
+        if args.approx_static_value:
+            search_play._W['static_vnet'] = _W['approx_static_vnet'] if config is approx_sargs else _W['reference_static_vnet']
         started = time.perf_counter()
         try:
             chosen = search_play._search(env, obs, policy_action, config, decision_seed, stats)
@@ -286,6 +291,7 @@ def main() -> None:
     p.add_argument("--policy", default=DEFAULT_POLICY, help="RolloutNet / fast_ppo checkpoint, played greedily")
     p.add_argument("--value", default=DEFAULT_VALUE)
     p.add_argument("--static-value", help="search mode: separate net for choosing cells")
+    p.add_argument("--approx-static-value", help="search mode: compare another cell-scoring checkpoint")
     p.add_argument("--executable", default=str(ROOT / "build" / "pvz-portable"))
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     p.add_argument("--max-actions", type=int, default=3000)
@@ -313,6 +319,7 @@ def main() -> None:
     summary.update(task_id=args.task_id, policy=str(args.policy), approx_per_card=args.approx_per_card,
                    cpp_rollouts=args.cpp_rollouts, base_cpp_rollouts=args.base_cpp_rollouts,
                    base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
+                   approx_static_value=args.approx_static_value,
                    approx_halving=args.approx_halving or args.base_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
