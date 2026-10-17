@@ -29,6 +29,17 @@ import torch.nn.functional as F  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
 
 
+def _target_values(targets) -> list[float]:
+    """The search's value for each card (best cell) and for waiting, NaN where it was not a candidate.
+    Index PACKETS = wait. Frames without a search (or written before 2026-10-16) are all NaN."""
+    out = [float("nan")] * (PACKETS + 1)
+    for packet, _row, _col, value in targets or []:
+        k = PACKETS if packet < 0 else packet
+        if not out[k] >= value:              # NaN or smaller: keep the best cell of a card
+            out[k] = value
+    return out
+
+
 def _cache_episode(path: Path, directory: Path, encoder: bytes) -> Path:
     source = path.read_bytes()
     digest = hashlib.sha256(encoder + source).hexdigest()
@@ -38,13 +49,16 @@ def _cache_episode(path: Path, directory: Path, encoder: bytes) -> Path:
             if str(stored["digest"]) == digest:
                 return target
     lines = source.splitlines()
-    hints = [b'"type":"plant"' in line[max(line.rfind(b'"label":'), line.rfind(b'"action":')):] for line in lines]
+    # rows always kept: plants, and decisions the search scored (their soft targets are the point of --soft-weight)
+    hints = [b'"type":"plant"' in line[max(line.rfind(b'"label":'), line.rfind(b'"action":')):] or b'"targets":' in line
+             for line in lines]
     frames = [json.loads(line) for line in lines]
-    rows, boards, scalars, plant, packet, cell = [], [], [], [], [], []
+    rows, boards, scalars, plant, packet, cell, values = [], [], [], [], [], [], []
     for index in range(1, len(frames)):
         action = frames[index].get("label") or frames[index].get("action")
         if not action or frames[index].get("action_rejected"):
             continue
+        values.append(_target_values(frames[index].get("targets")))
         board, scalar = features(frames[index - 1], frames[index - 2] if index >= 2 else None)
         rows.append(index)
         boards.append(board.numpy().astype(np.float16))
@@ -62,7 +76,8 @@ def _cache_episode(path: Path, directory: Path, encoder: bytes) -> Path:
                                 boards=np.array(boards, dtype=np.float16).reshape(-1, BOARD_CHANNELS, ROWS, COLS),
                                 scalars=np.array(scalars, dtype=np.float32).reshape(-1, SCALARS + 2),
                                 plant=np.array(plant, dtype=np.float32), packet=np.array(packet, dtype=np.int64),
-                                cell=np.array(cell, dtype=np.int64))
+                                cell=np.array(cell, dtype=np.int64),
+                                values=np.array(values, dtype=np.float32).reshape(-1, PACKETS + 1))
             temporary.close()
             temporary_path.replace(target)
         finally:
@@ -97,11 +112,11 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
         for line in path.open():
             # The target is the last field: the DAgger label if there is one, else the executed action.
             tail = line[max(line.rfind('"label":'), line.rfind('"action":')):]
-            mask.append('"type":"plant"' in tail or rng.random() < wait_keep)
+            mask.append('"type":"plant"' in tail or '"targets":' in line or rng.random() < wait_keep)
         keep[path] = mask
     capacity = sum(map(sum, keep.values()))
     boards = scalars = None
-    plant, packet, cell, weight, seed_of = [], [], [], [], []
+    plant, packet, cell, weight, seed_of, values = [], [], [], [], [], []
     n = 0
     for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
@@ -119,7 +134,10 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 plant.extend(types)
                 packet.extend(stored["packet"][selected].tolist())
                 cell.extend(stored["cell"][selected].tolist())
-                weight.extend(scale * (1.0 if kind else 1.0 / wait_keep) for kind in types)
+                vals = stored["values"][selected]
+                values.extend(vals.tolist())
+                searched = (~np.isnan(vals)).any(1).tolist()
+                weight.extend(scale * (1.0 if kind or done else 1.0 / wait_keep) for kind, done in zip(types, searched))
                 seed_of.extend([seed] * count)
                 n += count
             continue
@@ -136,11 +154,12 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             seed_of.append(seed)
             is_plant = action["type"] == "plant"
             plant.append(float(is_plant))
-            weight.append(scale * (1.0 if is_plant else 1.0 / wait_keep))
+            weight.append(scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep))
             packet.append(action["packet"] if is_plant else -1)
             cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
+            values.append(_target_values(frames[i].get("targets")))
     return (boards[:n], scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
-            torch.tensor(weight), seed_of)
+            torch.tensor(weight), seed_of, torch.tensor(values, dtype=torch.float32).reshape(-1, PACKETS + 1))
 
 
 def main() -> None:
@@ -157,6 +176,10 @@ def main() -> None:
     p.add_argument("--packet-balance", type=float, default=0.0,
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
+    p.add_argument("--soft-weight", type=float, default=0.0,
+                   help="also match the search's preference over its candidates (wait / each card): "
+                        "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")
+    p.add_argument("--soft-temperature", type=float, default=0.05, help="in win-probability units")
     p.add_argument("--save-epochs", type=int, default=0,
                    help="also keep the last N epochs as epoch_XX.pt (candidates for scripts/select_student.py)")
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
@@ -167,7 +190,7 @@ def main() -> None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    boards, scalars, plant, packet, cell, weight, seed_of = load(args.data, set(args.labels.split(",")),
+    boards, scalars, plant, packet, cell, weight, seed_of, values = load(args.data, set(args.labels.split(",")),
                                                                  args.wait_keep, label_weight,
                                                                  (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None)
     load_seconds = time.time() - started
@@ -201,6 +224,21 @@ def main() -> None:
         out = net(b, s, pk.clamp(min=0))
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / w.sum()
+        if args.soft_weight:
+            v = values[idx].to(args.device)
+            known = ~torch.isnan(v)
+            soft = known.sum(1) >= 2                     # a preference needs at least two candidates
+            if soft.any():
+                vk, kk = v[soft], known[soft]
+                # student: log p(wait) = log sigmoid(-plant), log p(card k) = log sigmoid(plant) + log softmax(packet)_k,
+                # renormalised over the candidates the search compared
+                student = torch.cat([F.logsigmoid(out["plant"][soft])[:, None] + F.log_softmax(out["packet"][soft], 1),
+                                     F.logsigmoid(-out["plant"][soft])[:, None]], dim=1)
+                student = torch.log_softmax(student.masked_fill(~kk, -1e9), 1)
+                teacher = torch.softmax((vk / args.soft_temperature).masked_fill(~kk, -1e9), 1)
+                kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~kk, 0).sum(1)
+                ws = w[soft]
+                loss = loss + args.soft_weight * (kl * ws).sum() / ws.sum()
         if planted.any():
             wp = w[planted]                               # all 1 unless --label-weight is used
             loss = loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +

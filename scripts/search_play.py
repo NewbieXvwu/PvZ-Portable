@@ -327,6 +327,12 @@ def _play(job: dict) -> dict:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
             if frames is not None:
                 frames.append(_frame(obs))
+                if stats.get("last_targets"):
+                    # the search's estimate for every candidate it compared: [packet (-1 = wait), row, col, value];
+                    # a soft target for the student (train_rollout_policy --soft-weight). Before "action" and
+                    # "label", because the trainer finds the target by scanning for the last of those.
+                    frames[-1]["targets"] = [[c.get("packet", -1), c.get("row", -1), c.get("col", -1), round(v, 4)]
+                                             for c, v in stats["last_targets"] if abs(v) != float("inf")]
                 frames[-1]["action"] = action          # what was executed (after the search), like render_episode
                 frames[-1]["action_rejected"] = rejected
                 if dagger is not None:
