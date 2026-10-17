@@ -4,7 +4,7 @@ Use --check-only to measure candidate reproduction without writing archives.
 New archives live under OUT/frames/seed_N/NEW_LABEL;
 train_rollout_policy.py reads them with --data OUT/frames --labels NEW_LABEL.
 The collecting student and all original search settings must be supplied unchanged.
-Original means are recovered in a separate replay before any added verification futures.
+Original means and snapshots are recovered before any added verification futures.
 --on-mismatch fresh discards those means and resamples only the student/original-label pair.
 """
 from __future__ import annotations
@@ -64,81 +64,83 @@ def _relabel(path: Path):
                     **{key: value for key, value in kw["task_extra"].items() if value is not None})
     env = search_play._W["env"]
     originals = {}
+    roots = {}
     mismatches = []
     counts = Counter(searches=0, searches_checked=0, overrides=0, reproduced=0, fresh=0, cancelled=0)
     search_args = argparse.Namespace(**{**vars(args), "verify_samples": 0})
     search_seconds = verification_seconds = 0.0
-    for verifying in ([False] if args.check_only else [False, True]):
-        torch.manual_seed(seed)
-        obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
-        search_play._W["context"] = observation_context(obs)
-        _check_frame(obs, frames[0], path, 0)
-        state = {}
-        for index in range(1, len(frames)):
-            record = frames[index]
-            student = search_play._fast_action(obs, state)
-            label = record.get("label", record["action"])
-            override = action_key(label) != action_key(student)
-            if record.get("targets"):
-                if not verifying:
-                    counts["searches"] += 1
-                    counts["overrides"] += override
-                if not verifying and (override or args.check_only):
-                    counts["searches_checked"] += 1
-                    stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
-                    before_search = time.perf_counter()
-                    chosen = search_play._search(env, obs, student, search_args, seed * 10000 + index - 1, stats)
-                    search_seconds += time.perf_counter() - before_search
-                    targets = [[action.get("packet", -1), action.get("row", -1), action.get("col", -1),
-                                round(value, 4)]
-                               for action, value in stats["last_targets"] if abs(value) != float("inf")]
-                    reason = ("override" if action_key(chosen) != action_key(label) else
-                              "candidate_values" if targets != record["targets"] else None)
-                    if reason:
-                        mismatches.append({"frame": index, "reason": reason,
-                                           "expected": record["targets"], "actual": targets})
-                        if args.on_mismatch == "fail" and not args.check_only:
-                            raise ValueError(f"{path}: frame {index}, original {reason} did not reproduce")
-                    else:
-                        counts["reproduced"] += 1
-                    if override:
-                        originals[index] = None if reason else stats["last_targets"]
-                if verifying and override:
-                    fresh = originals[index] is None
-                    if fresh:
-                        candidates = [student if student["type"] == "plant" else search_play.NOOP, label]
-                        totals = [0.0, 0.0]
-                    else:
-                        candidates, totals = map(list, zip(*originals[index]))
-                    keys = [action_key(action) for action in candidates]
-                    stats = {"overrides": 0, "override_kinds": Counter()}
-                    root = env.snapshot()
-                    try:
-                        chosen = search_play._verified_choice(
-                            env, obs, root, candidates, totals, [args.samples] * len(candidates),
-                            keys.index(action_key(label)), keys.index(action_key(student)), student,
-                            args, seed * 10000 + index - 1, stats, fresh=fresh)
-                    finally:
-                        env.restore(root)
-                        env.release_snapshot(root)
-                    verification = stats["last_verification"]
-                    counts["fresh"] += fresh
-                    counts["cancelled"] += action_key(chosen) == action_key(student)
-                    verification_seconds += verification["seconds"]
-                    record["verification"] = verification
-                    record["targets"] = [[action.get("packet", -1), action.get("row", -1), action.get("col", -1),
-                                          round(value, 4)] for action, value in stats["last_targets"]
-                                         if abs(value) != float("inf")]
-                    record["label"] = chosen
-            executed = record["action"]
-            state["action"] = executed
-            obs, _reward, _done, _truncated, info = env.step(executed)
-            rejected = not info.get("ok")
-            if rejected != record.get("action_rejected", False):
-                raise ValueError(f"{path}: frame {index}, action rejection differs from replay")
-            if rejected:
-                obs, _reward, _done, _truncated, _info = env.step({"type": "wait", "ticks": 60})
-            _check_frame(obs, record, path, index)
+    torch.manual_seed(seed)
+    obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+    search_play._W["context"] = observation_context(obs)
+    _check_frame(obs, frames[0], path, 0)
+    state = {}
+    for index in range(1, len(frames)):
+        record = frames[index]
+        student = search_play._fast_action(obs, state)
+        label = record.get("label", record["action"])
+        override = action_key(label) != action_key(student)
+        if record.get("targets"):
+            counts["searches"] += 1
+            counts["overrides"] += override
+            if override or args.check_only:
+                counts["searches_checked"] += 1
+                stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
+                before_search = time.perf_counter()
+                chosen = search_play._search(env, obs, student, search_args, seed * 10000 + index - 1, stats)
+                search_seconds += time.perf_counter() - before_search
+                targets = [[action.get("packet", -1), action.get("row", -1), action.get("col", -1),
+                            round(value, 4)]
+                           for action, value in stats["last_targets"] if abs(value) != float("inf")]
+                reason = ("override" if action_key(chosen) != action_key(label) else
+                          "candidate_values" if targets != record["targets"] else None)
+                if reason:
+                    mismatches.append({"frame": index, "reason": reason,
+                                       "expected": record["targets"], "actual": targets})
+                    if args.on_mismatch == "fail" and not args.check_only:
+                        raise ValueError(f"{path}: frame {index}, original {reason} did not reproduce")
+                else:
+                    counts["reproduced"] += 1
+                if override:
+                    originals[index] = None if reason else stats["last_targets"]
+                if not args.check_only:
+                    roots[index] = (env.snapshot(), obs, student)
+        executed = record["action"]
+        state["action"] = executed
+        obs, _reward, _done, _truncated, info = env.step(executed)
+        rejected = not info.get("ok")
+        if rejected != record.get("action_rejected", False):
+            raise ValueError(f"{path}: frame {index}, action rejection differs from replay")
+        if rejected:
+            obs, _reward, _done, _truncated, _info = env.step({"type": "wait", "ticks": 60})
+        _check_frame(obs, record, path, index)
+    for index, (root, obs, student) in roots.items():
+        record = frames[index]
+        label = record.get("label", record["action"])
+        fresh = originals[index] is None
+        if fresh:
+            candidates = [student if student["type"] == "plant" else search_play.NOOP, label]
+            totals = [0.0, 0.0]
+        else:
+            candidates, totals = map(list, zip(*originals[index]))
+        keys = [action_key(action) for action in candidates]
+        stats = {"overrides": 0, "override_kinds": Counter()}
+        env.restore(root)
+        try:
+            chosen = search_play._verified_choice(
+                env, obs, root, candidates, totals, [args.samples] * len(candidates),
+                keys.index(action_key(label)), keys.index(action_key(student)), student,
+                args, seed * 10000 + index - 1, stats, fresh=fresh)
+        finally:
+            env.release_snapshot(root)
+        verification = stats["last_verification"]
+        counts["fresh"] += fresh
+        counts["cancelled"] += action_key(chosen) == action_key(student)
+        verification_seconds += verification["seconds"]
+        record["verification"] = verification
+        record["targets"] = [[action.get("packet", -1), action.get("row", -1), action.get("col", -1),
+                              round(value, 4)] for action, value in stats["last_targets"]
+                             if abs(value) != float("inf")]
+        record["label"] = chosen
     counts.update(mismatches=len(mismatches), mismatch_games=int(bool(mismatches)),
                   mismatch_values=sum(item["reason"] == "candidate_values" for item in mismatches),
                   mismatch_override=sum(item["reason"] == "override" for item in mismatches),
