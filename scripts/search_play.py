@@ -14,6 +14,11 @@ Between searches at least ``--min-gap`` ticks pass unless the student itself wan
 Arms: ``fast`` = the student alone, ``fast_search`` = the teacher. ``--frames`` writes per-decision archives
 for training (with ``--dagger-beta`` < 1 the student executes part of the moves, the search still labels all).
 
+Continuations run in the original C++ simulator by default. ``--rollout-backend cuda`` sends them to
+``build/rollout_cuda --serve`` (python/pvz_cuda_rollout.py) instead, which gathers the decisions of several
+workers into one GPU wave and returns the leaves as the value net's own features -- and simulates *every*
+tick, so ``--rollout-sim-skip`` does not describe that path (the CPU rollout it replaces skips 29 of 30).
+
 Removed 2026-10-16 (results in DESIGN.md / learn/, code in git history): pi (the PPO policy) as the player and
 its arms ``baseline`` / ``search``; passive continuation (no actions during the look-ahead); ``--scope
 placement`` and ``--scope timing`` (timing search: no gain, learn/05); ``--top-k`` (replaced by ``--per-card``);
@@ -30,6 +35,7 @@ import random
 import json
 import multiprocessing as mp
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -42,10 +48,11 @@ _W: dict = {}
 
 
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
-                 static_value_path: str | None = None) -> None:
+                 static_value_path: str | None = None, cuda_socket: str | None = None) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
-    _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True, cpp_rollouts=cpp_rollouts)
+    _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True, cpp_rollouts=cpp_rollouts,
+              cuda_socket=cuda_socket)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
     import torch
@@ -62,6 +69,17 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
         _W["rollout_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-")
         _W["rollout_file"] = str(Path(_W["rollout_tmp"].name) / "student.bin")
         export_student(_W["fast"], _W["rollout_file"])
+    if cuda_socket:
+        # One connection per worker; the *server* is what turns the workers' separate decisions into one
+        # GPU wave.  The dump file is this worker's only channel of positions to it, and a worker is single
+        # threaded, so rewriting it between requests cannot race with a wave still reading it -- the server
+        # parses (and copies) a request before it answers it, and the client does not touch the file again
+        # until the answer arrives.
+        import tempfile
+        from pvz_cuda_rollout import CudaRolloutClient
+        _W["cuda_dump_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-cuda-dump-")
+        _W["cuda_dump"] = str(Path(_W["cuda_dump_tmp"].name) / "root.cudaroot")
+        _W["cuda"] = CudaRolloutClient(cuda_socket)
 
 
 def _fast_action(obs: dict, fast_state: dict) -> dict:
@@ -148,6 +166,105 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
             env.set_lean_observation(False)
 
 
+def _cuda_continuations(env, root: int, jobs: list[tuple[dict, int]], client, args) -> list | None:
+    """Every continuation of one decision as a single request to the GPU server.
+
+    Returns one handle per job, or ``None`` when this position cannot go to the GPU at all -- a root the
+    shared core does not cover, or a server that went away -- and the caller runs the C++ rollout instead.
+    A decision is 10-40 lanes and a GPU round costs the same at 10 lanes as at 1000, so sending the whole
+    batch in one request (and letting the server merge the other workers' batches into the same wave) is
+    the only way this path can ever be cheaper than the CPU it replaces.
+
+    ``max_actions`` is the original's own default, which the C++ path gets by not passing one: the horizon
+    is what stops a search continuation, not the action budget.
+    """
+    from pvz_cuda_rollout import CudaServerError, leaf_tensors
+    import numpy as np
+
+    dump_path = _W["cuda_dump"]
+    env.restore(root)
+    try:
+        response = env.cuda_dump(dump_path, write_level=True)
+    except (RuntimeError, OSError):
+        return None
+    if not response.get("supported"):
+        _W["cuda_unsupported"] = _W.get("cuda_unsupported", 0) + 1
+        return None
+    pairs = [(0, seed % 2 ** 32, candidate) for candidate, seed in jobs]
+    try:
+        records, leaves = client.run(dump_path, pairs, horizon=args.horizon, max_actions=10 ** 6)
+    except CudaServerError as error:
+        _W["cuda"] = None
+        _W["cuda_failed"] = str(error)
+        print(f"cuda rollout unavailable, falling back to C++: {error}", flush=True)
+        return None
+    boards, scalars, context = leaf_tensors(leaves)
+    return [(record, (boards[index], scalars[index], context[index]))
+            for index, record in enumerate(records)]
+
+
+def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args,
+                   stats: dict) -> list:
+    """Play each candidate and continue with the student for ``--horizon`` ticks; one handle per job.
+
+    A handle is either the leaf observation (the C++/Python rollout) or a ``(record, features)`` pair from
+    the GPU.  ``_leaf_values`` scores both the same way, so the search logic does not care which backend ran.
+    """
+    client = _W.get("cuda")
+    if client is not None:
+        handles = _cuda_continuations(env, root, jobs, client, args)
+        if handles is not None:
+            stats["cuda_batches"] = stats.get("cuda_batches", 0) + 1
+            stats["cuda_lanes"] = stats.get("cuda_lanes", 0) + len(jobs)
+            return handles
+    return [_rollout_policy(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32)
+            for candidate, seed in jobs]
+
+
+def _leaf_values(handles: list) -> list[float | None]:
+    """Terminal results and value-net scores, in job order; ``None`` for a lane that never ran.
+
+    Dropping those matters: a false 0.0 for a lane whose root would not import would be read by the search
+    as "this candidate loses", which is the opposite of what an unusable position means.
+    """
+    from render_episode import _frame
+    values: list[float | None] = [None] * len(handles)
+    frames, frame_slots, rows, row_slots = [], [], [], []
+    for slot, handle in enumerate(handles):
+        if isinstance(handle, tuple):
+            record, features = handle
+            if record["errorFlags"]:
+                continue
+            if record["result"]:
+                values[slot] = 1.0 if record["result"] > 0 else 0.0
+            else:
+                rows.append(features)
+                row_slots.append(slot)
+        else:
+            terminal = _score_terminal_or_value(handle)
+            if terminal is None:
+                frames.append(_frame(handle))
+                frame_slots.append(slot)
+            else:
+                values[slot] = terminal
+    if frames:
+        for slot, value in zip(frame_slots, _values(frames)):
+            values[slot] = value
+    if rows:
+        import torch
+        net = _W["vnet"]
+        boards = torch.stack([row[0] for row in rows])
+        scalars = torch.stack([row[1] for row in rows])
+        context = torch.stack([row[2] for row in rows])
+        if net.context and context.shape[1]:
+            scalars = torch.cat([scalars, context], dim=1)
+        with torch.inference_mode():
+            scored = torch.sigmoid(net(boards, scalars)).tolist()
+        for slot, value in zip(row_slots, scored):
+            values[slot] = value
+    return values
+
+
 def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
     from render_episode import _frame
     legal = (obs.get("legal_actions") or {}).get("plants") or []
@@ -183,21 +300,19 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
 
-        if args.halving:
+        # Halving exists to cut the number of rollouts.  On the GPU it cuts the wrong thing: a wave costs
+        # its rounds, not its lanes (~/pvz-logs/cuda_status.md round 9), so three halving rounds are three
+        # waves where the full search is one.  With the CUDA backend every candidate gets every future in a
+        # single request -- which is exactly the --no-halving estimate, so nothing about the decision rule
+        # changes, only how the work is packed.
+        if args.halving and _W.get("cuda") is None:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
+        jobs = [(cand, decision_seed * 1000 + k) for cand in candidates for k in range(args.samples)]
+        scores = _leaf_values(_continuations(env, obs, root, jobs, args, stats))
         totals = []
-        for cand in candidates:
-            leaf_frames, fixed = [], []
-            for k in range(args.samples):
-                leaf = _rollout_policy(env, obs, cand, obs["tick"] + args.horizon, root,
-                                       (decision_seed * 1000 + k) % 2 ** 32)
-                terminal = _score_terminal_or_value(leaf)
-                if terminal is None:
-                    leaf_frames.append(_frame(leaf))
-                else:
-                    fixed.append(terminal)
-            values = fixed + (_values(leaf_frames) if leaf_frames else [])
-            totals.append(sum(values) / len(values))
+        for index in range(len(candidates)):
+            scored = [v for v in scores[index * args.samples:(index + 1) * args.samples] if v is not None]
+            totals.append(sum(scored) / len(scored) if scored else float("-inf"))
         keys = [json.dumps(c, sort_keys=True) for c in candidates]
         stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
         policy_value = totals[keys.index(policy_key)]
@@ -223,7 +338,6 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     comparison. The decision rule (override only by more than ``--margin``) is unchanged. With 8
     candidates and 4 futures this is 8 + 4 + 2x2 = 16 rollouts instead of 32.
     """
-    from render_episode import _frame
     keys = [json.dumps(c, sort_keys=True) for c in candidates]
     policy_index = keys.index(policy_key)
     values: list[list[float]] = [[] for _ in candidates]
@@ -232,21 +346,13 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     target = 1
     while True:
         target = min(target, args.samples)
-        leaves: list[tuple[int, dict]] = []
-        for i in alive:
-            for k in range(done, target):
-                leaf = _rollout_policy(env, obs, candidates[i], obs["tick"] + args.horizon,
-                                       root, (decision_seed * 1000 + k) % 2 ** 32)
-                terminal = _score_terminal_or_value(leaf)
-                if terminal is None:
-                    leaves.append((i, _frame(leaf)))
-                else:
-                    values[i].append(terminal)
-        if leaves:
-            for (i, _f), v in zip(leaves, _values([f for _i, f in leaves])):
-                values[i].append(v)
+        order = [(i, k) for i in alive for k in range(done, target)]
+        jobs = [(candidates[i], decision_seed * 1000 + k) for i, k in order]
+        for (i, _k), value in zip(order, _leaf_values(_continuations(env, obs, root, jobs, args, stats))):
+            if value is not None:
+                values[i].append(value)
         done = target
-        mean = {i: sum(values[i]) / len(values[i]) for i in alive}
+        mean = {i: sum(values[i]) / max(1, len(values[i])) for i in alive}
         ranked = sorted(alive, key=lambda i: -mean[i])
         if done >= args.samples:
             break
@@ -289,6 +395,10 @@ def _play(job: dict) -> dict:
     torch.manual_seed(kw["seed"])
     started = time.time()
     stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
+    # The client counts per worker, not per game, so a game reports the delta it caused.
+    cuda_start = None
+    if _W.get("cuda") is not None:
+        cuda_start = (_W["cuda"].batches, _W["cuda"].lanes, _W["cuda"].seconds)
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         from pvz_value_net import observation_context
@@ -361,6 +471,9 @@ def _play(job: dict) -> dict:
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted": planted,
             "searched": stats["searched"], "overrides": stats["overrides"],
+            "cuda_batches": (_W["cuda"].batches - cuda_start[0]) if cuda_start else 0,
+            "cuda_lanes": (_W["cuda"].lanes - cuda_start[1]) if cuda_start else 0,
+            "cuda_seconds": round(_W["cuda"].seconds - cuda_start[2], 2) if cuda_start else 0.0,
             "override_kinds": dict(stats["override_kinds"])}
 
 
@@ -390,6 +503,16 @@ def main() -> None:
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
     p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=True,
                    help="run student continuations in C++ (--no-cpp-rollouts: the Python reference loop)")
+    p.add_argument("--rollout-backend", choices=["cpp", "cuda"], default="cpp",
+                   help="where the search's continuations run: cpp = the original simulator (default, and the "
+                        "reference the GPU is checked against), cuda = build/rollout_cuda --serve")
+    p.add_argument("--cuda-binary", default=str(ROOT / "build/rollout_cuda"))
+    p.add_argument("--cuda-socket", default=None, help="an already-running server; by default start one here")
+    p.add_argument("--cuda-lanes", type=int, default=2048,
+                   help="the server's lane capacity (about 113 MB of VRAM per 1024 lanes)")
+    p.add_argument("--cuda-gather-ms", type=int, default=80,
+                   help="how long the server holds a wave open for other workers before running it; a wave "
+                        "costs its rounds, not its lanes, so merging is what pays (0 = no waiting)")
     p.add_argument("--max-actions", type=int, default=3000)
     p.add_argument("--frames", help="write per-game frame archives here (for training)")
     p.add_argument("--frames-label", default="play")
@@ -415,15 +538,41 @@ def main() -> None:
             if (arm, s) not in done_keys]
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
     print(f"{len(jobs)} games on {args.workers} workers", flush=True)
+    cuda_socket, cuda_server, cuda_keep = args.cuda_socket, None, None
+    if args.rollout_backend == "cuda" and cuda_socket is None:
+        # The server is the parent's child so it outlives every worker and dies with the run; the workers
+        # hold nothing but a socket to it.  Its own stderr goes to a file because the lanes-per-wave it
+        # achieved is the number this seam exists for.
+        import tempfile
+        from pvz_cuda_rollout import serve_policy
+        cuda_keep = tempfile.TemporaryDirectory(prefix="pvz-cuda-")
+        with (args.out / "cuda_server.log").open("wb") as log:
+            cuda_server, cuda_socket = serve_policy(args.cuda_binary, args.rollout_policy, cuda_keep.name,
+                                                    lanes=args.cuda_lanes, gather_ms=args.cuda_gather_ms,
+                                                    start_timeout_ms=600000, log=log)
+        print(f"cuda rollout server: {cuda_socket}, {args.cuda_lanes} lanes", flush=True)
     started = time.time()
-    with results_path.open("a") as out, mp.get_context("spawn").Pool(
-            args.workers, initializer=_init_worker,
-            initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.cpp_rollouts,
-                      args.static_value)) as pool:
-        for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
-            out.write(json.dumps(res) + "\n"); out.flush()
-            if i % 10 == 0 or i == len(jobs):
-                print(f"{i}/{len(jobs)} ({time.time() - started:.0f}s)", flush=True)
+    try:
+        with results_path.open("a") as out, mp.get_context("spawn").Pool(
+                args.workers, initializer=_init_worker,
+                initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.cpp_rollouts,
+                          args.static_value, cuda_socket)) as pool:
+            for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
+                out.write(json.dumps(res) + "\n"); out.flush()
+                if i % 10 == 0 or i == len(jobs):
+                    print(f"{i}/{len(jobs)} ({time.time() - started:.0f}s)", flush=True)
+    finally:
+        if cuda_server is not None:
+            try:
+                # The workers closing their sockets is what shuts it down; only wait for that before
+                # stopping it ourselves, because a server that outlives the run holds its VRAM.
+                cuda_server.wait(timeout=30)
+            except subprocess.TimeoutExpired:
+                cuda_server.terminate()
+            print("cuda server: " + (args.out / "cuda_server.log").read_text(errors="replace").strip(),
+                  flush=True)
+        if cuda_keep is not None:
+            cuda_keep.cleanup()
     summarize(results_path)
 
 
@@ -437,7 +586,13 @@ def summarize(results_path: Path) -> dict:
                      "mean_seconds": round(sum(r["seconds"] for r in v.values()) / len(v), 1),
                      "overrides_per_game": round(sum(r["overrides"] for r in v.values()) / len(v), 1),
                      "searched_per_game": round(sum(r["searched"] for r in v.values()) / len(v), 1),
-                     "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2)}
+                     "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2),
+                     # With --rollout-backend cuda these say what the GPU actually got to chew on: lanes per
+                     # request is the batching, and cuda_seconds/seconds is how much of the game was waiting
+                     # for it.
+                     "cuda_lanes_per_game": round(sum(r.get("cuda_lanes", 0) for r in v.values()) / len(v), 1),
+                     "cuda_batches_per_game": round(sum(r.get("cuda_batches", 0) for r in v.values()) / len(v), 1),
+                     "cuda_seconds_per_game": round(sum(r.get("cuda_seconds", 0.0) for r in v.values()) / len(v), 1)}
                for arm, v in by.items()}
     (results_path.parent / "summary.json").write_text(json.dumps(summary, indent=1))
     print(json.dumps(summary, indent=1))
