@@ -297,6 +297,8 @@ class PvZEnv:
             encoding="utf-8",
             errors="replace",
             bufsize=1,
+            # one simulator per worker process: a threaded BLAS would oversubscribe the cores
+            env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1")},
         )
         ready = self._read_message()
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:

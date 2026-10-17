@@ -200,11 +200,16 @@ target_compile_definitions(pvz-portable PRIVATE
 target_compile_features(pvz-portable PRIVATE cxx_std_20)
 set_target_properties(pvz-portable PROPERTIES CXX_EXTENSIONS OFF)
 
-option(PVZ_ROLLOUT_BLAS "Use native/system BLAS for student convolutions when available" ${APPLE})
+# Desktop (Linux, OpenBLAS) 2026-10-17: teacher 98.3 -> 72.4 s/game with identical games; without an OpenBLAS the
+# hand-written kernels are used (the reference BLAS is not faster than them).
+option(PVZ_ROLLOUT_BLAS "Use native/system BLAS for student convolutions when available" ON)
 if(PVZ_ROLLOUT_BLAS)
 	if(APPLE)
 		find_library(ROLLOUT_BLAS Accelerate REQUIRED)
 	else()
+		if(NOT DEFINED BLA_VENDOR)
+			set(BLA_VENDOR OpenBLAS)
+		endif()
 		find_package(BLAS QUIET)
 		set(ROLLOUT_BLAS ${BLAS_LIBRARIES})
 	endif()
