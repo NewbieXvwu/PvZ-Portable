@@ -211,6 +211,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
         policy_value = totals[keys.index(policy_key)]
         best = max(range(len(candidates)), key=lambda i: totals[i])
+        stats["last_best"] = candidates[best]
         if totals[best] - policy_value > args.margin and keys[best] != policy_key:
             stats["overrides"] += 1
             stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
@@ -268,6 +269,7 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     totals = [sum(v) / len(v) if v else float("-inf") for v in values]
     stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
     best = max(alive, key=lambda i: totals[i])
+    stats["last_best"] = candidates[best]
     if totals[best] - totals[policy_index] > args.margin and best != policy_index:
         stats["overrides"] += 1
         stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1

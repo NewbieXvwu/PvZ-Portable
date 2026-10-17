@@ -29,6 +29,7 @@ import hashlib
 import json
 import multiprocessing as mp
 import os
+import random
 import sys
 import time
 from pathlib import Path
@@ -151,18 +152,22 @@ def _search_decisions(seed: int) -> list[dict]:
     obs = _reset(seed)
     env.set_sim_skip(0)
     # min_gap is applied here, once, so all three arms search at exactly the same decisions.
-    sargs = ap.Namespace(samples=args.samples, horizon=args.horizon, margin=0.02, min_gap=0, per_card=args.per_card,
+    sargs = ap.Namespace(samples=args.samples, horizon=args.horizon, margin=args.margin, min_gap=0, per_card=args.per_card,
                          halving=args.base_halving)
     # The approximate arm: SIM_SKIP during rollouts and/or a cheaper search configuration.
     approx_sargs = ap.Namespace(**{**vars(sargs), **{k: v for k, v in (
         ("per_card", args.approx_per_card), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
         ("halving", args.approx_halving or None))
         if v is not None}})
+    if args.label_noise:
+        approx_sargs = ap.Namespace(**{**vars(sargs), "samples": args.high_samples, "halving": False})
     last_search_tick = -10 ** 9
     fast_state: dict = {}
     rows, decisions = [], 0
+    dagger = random.Random(seed) if args.dagger_beta else None
+    stream = (args.jsonl_dir / f"seed_{seed}.jsonl").open("x", buffering=1) if args.jsonl_dir else None
 
-    def run(decision_seed: int, mask: int, policy_action: dict, config, cpp=False) -> tuple[dict, list, float]:
+    def run(decision_seed: int, mask: int, policy_action: dict, config, cpp=False) -> tuple[dict, list, float, dict | None]:
         stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
         search_play._W["rollout_sim_skip"] = mask
         search_play._W["cpp_rollouts"] = cpp
@@ -174,7 +179,7 @@ def _search_decisions(seed: int) -> list[dict]:
         finally:
             search_play._W["rollout_sim_skip"] = 0
         return chosen, [(json.dumps(c, sort_keys=True), v) for c, v in (stats.get("last_targets") or [])], \
-            time.perf_counter() - started
+            time.perf_counter() - started, stats.get("last_best")
 
     while not obs["terminal"] and decisions < args.max_actions:
         action = search_play._fast_action(obs, fast_state)
@@ -185,25 +190,45 @@ def _search_decisions(seed: int) -> list[dict]:
             decision_seed = seed * 10000 + decisions
             runs = [(args.base_mask, sargs, args.base_cpp_rollouts),
                     (args.mask, approx_sargs, args.cpp_rollouts)]
-            order = (0, 1) if len(rows) % 2 == 0 else (1, 0)
-            results = {index: run(decision_seed, runs[index][0], action, runs[index][1], runs[index][2])
+            runs.append((args.base_mask, sargs, args.base_cpp_rollouts))
+            order = [0, 1, 2] if args.label_noise else ([0, 1, 2] if len(rows) % 2 == 0 else [1, 0, 2])
+            if args.label_noise:
+                rotation = len(rows) % 3
+                order = order[rotation:] + order[:rotation]
+                runs[1] = (args.base_mask, approx_sargs, args.base_cpp_rollouts)
+            offsets = [0, 15_555_557 if args.label_noise else 0, 7_777_777]
+            results = {index: run(decision_seed + offsets[index], runs[index][0], action, runs[index][1], runs[index][2])
                        for index in order}
-            exact, exact_totals, t_exact = results[0]
-            approx, approx_totals, t_approx = results[1]
-            other, other_totals, _t = run(decision_seed + 7_777_777, args.base_mask, action, sargs,
-                                         args.base_cpp_rollouts)
+            exact, exact_totals, t_exact, _best = results[0]
+            approx, approx_totals, t_approx, _best = results[1]
+            other, other_totals, _t, _best = results[2]
             if exact_totals:
                 rows.append({"seed": seed, "decision": decisions, "tick": obs["tick"],
                              "exact": exact, "approx": approx, "exact_other_futures": other,
                              "exact_totals": exact_totals, "approx_totals": approx_totals,
                              "other_totals": other_totals, "seconds_exact": round(t_exact, 3),
                              "seconds_approx": round(t_approx, 3)})
-        obs, _r, done, _t, info = env.step(action)
+                if args.label_noise:
+                    rows[-1] = {"seed": seed, "decision": decisions, "tick": obs["tick"], "wave": obs["wave"],
+                                "student": action, "margin": args.margin,
+                                "arms": {name: {"label": results[index][0], "values": results[index][1],
+                                                "seconds": results[index][2], "best": results[index][3],
+                                                "decision_seed": decision_seed + offsets[index]}
+                                         for name, index in (("A", 0), ("B", 2), ("H", 1))}}
+                if stream:
+                    stream.write(json.dumps(rows[-1], allow_nan=False) + "\n")
+        executed = exact if searches and dagger is not None else action
+        if dagger is not None and dagger.random() >= args.dagger_beta:
+            executed = action
+        fast_state["action"] = executed
+        obs, _r, done, _t, info = env.step(executed)
         if not info.get("ok"):
             obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
         decisions += 1
         if done:
             break
+    if stream:
+        stream.close()
     return rows
 
 
@@ -303,11 +328,24 @@ def main() -> None:
     p.add_argument("--approx-halving", action="store_true", help="search mode: successive halving (search_play --halving)")
     p.add_argument("--per-card", type=int, default=1, help="search mode: search_play --per-card")
     p.add_argument("--min-gap", type=int, default=300, help="search mode: search_play --min-gap")
+    p.add_argument("--margin", type=float, default=0.02)
+    p.add_argument("--dagger-beta", type=float, default=0.0, help="search mode: probability of executing reference teacher")
+    p.add_argument("--label-noise", action="store_true", help="search mode: independent A/B teachers and full-sample H")
+    p.add_argument("--high-samples", type=int, default=12, help="label noise: futures for every H candidate, no halving")
+    p.add_argument("--jsonl-dir", type=Path, help="search mode: stream each search point to a per-seed JSONL")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
+    if not 0 <= args.dagger_beta <= 1:
+        p.error("--dagger-beta must be between 0 and 1")
+    if args.label_noise and (args.mode != "search" or args.jsonl_dir is None):
+        p.error("--label-noise requires search mode and --jsonl-dir")
+    if args.jsonl_dir:
+        args.jsonl_dir.mkdir(parents=True, exist_ok=True)
     sys.path.insert(0, str(ROOT / "scripts"))
     from render_episode import load_training_task
     seeds = load_training_task(args.manifest, args.task_id)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
+    if len(seeds) != args.seeds:
+        p.error("requested seed range exceeds the manifest")
     with mp.get_context("spawn").Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
         if args.mode == "games":
             jobs = [(s, m, approximate) for s in seeds for m, approximate in ((args.base_mask, False), (args.mask, True))]
@@ -315,13 +353,19 @@ def main() -> None:
             summary = summarize_games(results, args.mask)
         else:
             results = [row for rows in pool.imap_unordered(_search_decisions, seeds) for row in rows]
-            summary = summarize_search(results, args.mask)
+            if args.label_noise:
+                from label_noise import read_rows, summarize
+                summary = summarize(read_rows(sorted(args.jsonl_dir.glob("seed_*.jsonl"))))
+            else:
+                summary = summarize_search(results, args.mask)
     summary.update(task_id=args.task_id, policy=str(args.policy), approx_per_card=args.approx_per_card,
                    cpp_rollouts=args.cpp_rollouts, base_cpp_rollouts=args.base_cpp_rollouts,
                    base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
                    approx_static_value=args.approx_static_value,
                    approx_halving=args.approx_halving or args.base_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
+                   margin=args.margin, dagger_beta=args.dagger_beta, label_noise=args.label_noise,
+                   high_samples=args.high_samples, horizon=args.horizon, seed_offset=args.seed_offset,
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
     print(json.dumps(summary, indent=1))
     if args.out:
