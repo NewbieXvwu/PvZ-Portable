@@ -8151,7 +8151,8 @@ bool Zombie::EffectedByDamage(unsigned int theDamageRangeFlags)
 		return TestBit(theDamageRangeFlags, static_cast<int>(DamageRangeFlags::DAMAGES_OFF_GROUND));
 	}
 
-	if (mZombieType != ZombieType::ZOMBIE_BOBSLED && GetZombieRect().mX > WIDE_BOARD_WIDTH)
+	const int aRectX = IsWalkingBackwards() ? mWidth - mZombieRect.mX - mZombieRect.mWidth : mZombieRect.mX;
+	if (mZombieType != ZombieType::ZOMBIE_BOBSLED && mX + aRectX > WIDE_BOARD_WIDTH)
 	{
 		return false;  // off-board zombies cannot be hit, except the bobsled team
 	}

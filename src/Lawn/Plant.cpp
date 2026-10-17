@@ -4799,9 +4799,9 @@ Zombie* Plant::FindTargetZombie(int theRow, PlantWeapon thePlantWeapon)
 			aRowDeviation = 0;
 		}
 
-		if (!aZombie->mHasHead || aZombie->IsTangleKelpTarget())
+		if (mSeedType == SeedType::SEED_POTATOMINE || mSeedType == SeedType::SEED_CHOMPER || mSeedType == SeedType::SEED_TANGLEKELP)
 		{
-			if (mSeedType == SeedType::SEED_POTATOMINE || mSeedType == SeedType::SEED_CHOMPER || mSeedType == SeedType::SEED_TANGLEKELP)
+			if (!aZombie->mHasHead || aZombie->IsTangleKelpTarget())
 			{
 				continue;
 			}
@@ -4936,6 +4936,8 @@ int Plant::DistanceToClosestZombie()
 			if (aDistance < aClosestDistance)
 			{
 				aClosestDistance = std::max(aDistance, 0);
+				if (aClosestDistance == 0)
+					break;
 			}
 		}
 	}
