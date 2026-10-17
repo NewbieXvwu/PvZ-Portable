@@ -54,6 +54,32 @@ class VerifyOverrideTest(unittest.TestCase):
         self.assertEqual(action, WAIT)
         self.assertFalse(calls)
 
+    def test_fresh_discards_prior_means_and_uses_twelve_new_futures(self):
+        args = SimpleNamespace(samples=3, horizon=2500, margin=.02, verify_samples=9)
+        stats = {"overrides": 0, "override_kinds": Counter()}
+        leaves = [{"rollout_result": .8}] * 12 + [{"rollout_result": .2}] * 12
+        with patch.object(search_play, "_rollout_policy", side_effect=leaves) as rollout:
+            action = search_play._verified_choice(None, {"tick": 60}, 7, [WAIT, PLANT],
+                [.01, .99], [3, 3], 1, 0, WAIT, args, 123, stats, fresh=True)
+        self.assertEqual(action, WAIT)
+        self.assertEqual([call.args[-1] for call in rollout.call_args_list], list(range(123003, 123015)) * 2)
+        self.assertEqual([call.args[2] for call in rollout.call_args_list], [WAIT] * 12 + [PLANT] * 12)
+        self.assertAlmostEqual(stats["last_targets"][0][1], .8)
+        self.assertAlmostEqual(stats["last_targets"][1][1], .2)
+        self.assertEqual(stats["last_verification"]["original_samples"], [0, 0])
+        self.assertIsNone(stats["last_verification"]["before_values"])
+        self.assertEqual(stats["last_verification"]["mode"], "fresh")
+
+    def test_fresh_can_keep_original_label_when_replayed_ranking_reversed(self):
+        args = SimpleNamespace(samples=1, horizon=2500, margin=.02, verify_samples=1)
+        stats = {"overrides": 0, "override_kinds": Counter()}
+        with patch.object(search_play, "_rollout_policy", side_effect=[{"rollout_result": 0}] * 2 +
+                          [{"rollout_result": 1}] * 2):
+            action = search_play._verified_choice(None, {"tick": 60}, 7, [WAIT, PLANT],
+                [.9, .1], [1, 1], 1, 0, WAIT, args, 123, stats, fresh=True)
+        self.assertEqual(action, PLANT)
+        self.assertEqual(stats["overrides"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()

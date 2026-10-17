@@ -269,12 +269,14 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
 
 def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: list[float],
                      counts: list[int], best: int, policy_index: int, policy_action: dict,
-                     args, decision_seed: int, stats: dict) -> dict:
+                     args, decision_seed: int, stats: dict, *, fresh: bool = False) -> dict:
     from render_episode import _frame
-    before = best != policy_index and totals[best] - totals[policy_index] > args.margin
-    samples = getattr(args, "verify_samples", 0)
+    before = fresh or (best != policy_index and totals[best] - totals[policy_index] > args.margin)
+    samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
+    if fresh:
+        counts = [0] * len(candidates)
     if samples and before:
-        prior = [totals[policy_index], totals[best]]
+        prior = None if fresh else [totals[policy_index], totals[best]]
         started = time.perf_counter()
         for index in (policy_index, best):
             fixed, leaves = [], []
@@ -293,6 +295,7 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
             "before_values": prior, "after_values": [totals[policy_index], totals[best]],
             "before_override": True, "after_override": totals[best] - totals[policy_index] > args.margin,
             "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
+            "mode": "fresh" if fresh else "reproduced",
             "seconds": time.perf_counter() - started}
     stats["last_targets"] = list(zip(candidates, totals))
     stats["last_best"] = candidates[best]
