@@ -362,8 +362,10 @@ def main() -> None:
                    cpp_rollouts=args.cpp_rollouts, base_cpp_rollouts=args.base_cpp_rollouts,
                    base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
                    approx_static_value=args.approx_static_value,
-                   approx_halving=args.approx_halving or args.base_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
-                   approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
+                   approx_halving=False if args.label_noise else args.approx_halving or args.base_halving,
+                   per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
+                   approx_samples=args.high_samples if args.label_noise else args.approx_samples,
+                   approx_horizon=args.horizon if args.label_noise else args.approx_horizon,
                    margin=args.margin, dagger_beta=args.dagger_beta, label_noise=args.label_noise,
                    high_samples=args.high_samples, horizon=args.horizon, seed_offset=args.seed_offset,
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
