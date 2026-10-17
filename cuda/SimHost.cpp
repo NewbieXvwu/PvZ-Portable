@@ -16,6 +16,8 @@
 // build: g++ -fsanitize=address -g -O1 -std=c++17 -I. -o build/sim_host cuda/SimHost.cpp
 // run:   ./build/sim_host --roots artifacts/cuda/corpus_smoke/roots.cudaroot
 //        --net artifacts/cuda/student/v14.pvzrn --per-root 8 --horizon 2500
+//        --pairs pairs.txt --leaf-out host_leaf.bin    (the device's workload, then its leaf encoding)
+//        --root-features host_root.bin                 (encode every root and stop: the encoder check)
 //
 // The activations use the device's chunked, padded layout (cuda/CudaRollout.h), so the host allocates
 // one whole chunk of kNetChunk lanes to run a single lane.  That is deliberate: the layout is what
@@ -39,6 +41,7 @@
 #include "cuda/SimTick.inc"
 #include "cuda/NetForward.inc"
 #include "cuda/Rollout.inc"
+#include "cuda/PairList.h"
 
 namespace pvzhost
 {
@@ -335,6 +338,15 @@ struct Options
 	int32_t seedBase = 1600000000;
 	int32_t useNet = 1;
 	int32_t rootLimit = 0;          // 0 = every supported root
+	// The explicit workload and the leaf feature dump, both shared with cuda/RolloutCuda.cu: run the same
+	// (root, future) pairs through this build and through the device, then diff the two dumps.  A
+	// difference is a GPU bug, because it is the same code compiled twice.
+	std::string pairs, leafOut;
+	// Dump the value net's encoding of every root as the core holds it, before a single tick runs, and
+	// exit.  This is the encoder check: python/pvz_cuda_root.py builds the same frame straight from the
+	// .cudaroot and feeds it to pvz_value_net.featurize_numpy, so a differing block is a bug in one of the
+	// two encoders with no random stream left to blame it on.
+	std::string rootFeatures;
 	// Fill the scalar activation vector with this value before the first forward.  BuildFeatures writes
 	// only the indices its deck and its scalars cover; everything it never writes but NetContext still
 	// reads keeps this value instead of 0.  Left at 0 it is a no-op; see cuda/spec/host.md item 3.
@@ -361,6 +373,9 @@ Options Parse(int argc, char** argv)
 		else if (flag == "--repeat") options.repeat = std::atoi(Value(argc, argv, index).c_str());
 		else if (flag == "--seed-base") options.seedBase = std::atoi(Value(argc, argv, index).c_str());
 		else if (flag == "--root-limit") options.rootLimit = std::atoi(Value(argc, argv, index).c_str());
+		else if (flag == "--pairs") options.pairs = Value(argc, argv, index);
+		else if (flag == "--leaf-out") options.leafOut = Value(argc, argv, index);
+		else if (flag == "--root-features") options.rootFeatures = Value(argc, argv, index);
 		else if (flag == "--poison") options.poison = std::strtof(Value(argc, argv, index).c_str(), nullptr);
 		else if (flag == "--bench")
 		{
@@ -384,6 +399,41 @@ double Seconds(const std::chrono::steady_clock::time_point& from,
 	return std::chrono::duration<double, std::ratio<1>>(to - from).count();
 }
 
+// One PVZLEAF1 block per root, in root order: the value net's encoding of the position as the core
+// holds it the instant it imported it.  An unsupported root still gets a block (all zeroes) because the
+// reader pairs blocks with root indices -- dropping one would shift every later root onto the wrong
+// frame, which is the exact failure mode this check exists to catch.
+int WriteRootFeatures(const Options& options, const Corpus& corpus, Lane lane,
+	std::vector<int32_t>& ints, std::vector<float>& floats, const std::vector<float>& waveLog)
+{
+	const int32_t used = static_cast<int32_t>(corpus.roots.size());
+	std::FILE* stream = std::fopen(options.rootFeatures.c_str(), "wb");
+	if (!stream) Fail("cannot write " + options.rootFeatures);
+	const char magic[8] = { 'P', 'V', 'Z', 'L', 'E', 'A', 'F', '1' };
+	const int32_t counts[2] = { used, kValueFloats };
+	std::fwrite(magic, 1, sizeof(magic), stream);
+	std::fwrite(counts, sizeof(int32_t), 2, stream);
+	std::vector<float> block(static_cast<size_t>(kValueFloats), 0.0f);
+	int32_t encoded = 0;
+	for (int32_t index = 0; index < used; ++index)
+	{
+		std::fill(ints.begin(), ints.end(), 0);
+		std::fill(floats.begin(), floats.end(), 0.0f);
+		std::fill(block.begin(), block.end(), 0.0f);
+		if (LoadRoot(lane, corpus.roots[static_cast<size_t>(index)], corpus.level))
+		{
+			StoreLeafValueFeatures(lane, corpus.level, waveLog.data(), block.data());
+			++encoded;
+		}
+		std::fwrite(block.data(), sizeof(float), block.size(), stream);
+	}
+	if (std::fclose(stream) != 0) Fail("write failed: " + options.rootFeatures);
+	std::printf("root features: %d of %d roots encoded into %s (%.1f MB, %d floats each)\n",
+		encoded, used, options.rootFeatures.c_str(),
+		(static_cast<double>(kValueFloats) * 4.0 * used + 16.0) / 1048576.0, kValueFloats);
+	return encoded == used ? 0 : 1;
+}
+
 }  // namespace
 
 // ---------------------------------------------------------------------------
@@ -402,8 +452,19 @@ int main(int argc, char** argv)
 		corpus.roots.resize(static_cast<size_t>(options.rootLimit));
 	}
 	const int32_t used = static_cast<int32_t>(corpus.roots.size());
-	const int32_t distinct = used * options.perRoot;
-	const int32_t total = distinct * options.repeat;
+	std::vector<int32_t> pairRoot, pairSeed;
+	if (!options.pairs.empty())
+	{
+		std::string error;
+		if (!ReadPairList(options.pairs, pairRoot, pairSeed, error)) Fail(error);
+		for (size_t index = 0; index < pairRoot.size(); ++index)
+			if (pairRoot[index] >= used)
+				Fail("pair " + std::to_string(index) + " names root " + std::to_string(pairRoot[index])
+					+ " but this run uses " + std::to_string(used) + " (see --root-limit)");
+	}
+	// Same rule as the device driver: an enumerated workload is one rollout per line.
+	const int32_t distinct = pairRoot.empty() ? used * options.perRoot : static_cast<int32_t>(pairRoot.size());
+	const int32_t total = pairRoot.empty() ? distinct * options.repeat : distinct;
 
 	Activations activations;
 	activations.Build(image.params.width, image.params.contextSize);
@@ -453,20 +514,42 @@ int main(int argc, char** argv)
 		used, options.perRoot, options.repeat, total, options.horizon, options.maxActions,
 		options.seedBase, options.seedBase + options.perRoot - 1, options.useNet ? "full" : "sim");
 
+	// The encoder check says nothing about the tick loop and the ASan batch costs seconds per rollout, so
+	// it runs alone and returns.
+	if (!options.rootFeatures.empty())
+		return WriteRootFeatures(options, corpus, lane, ints, floats, waveLog);
+
 	Leaf aggregate;
 	std::vector<Leaf> perRoot(static_cast<size_t>(used));
 	int32_t rejected = 0;
+
+	// The same "PVZLEAF1" dump cuda/RolloutCuda.cu writes, so the two files can be diffed block by block.
+	std::FILE* leafStream = nullptr;
+	std::vector<float> leafBlock;
+	if (!options.leafOut.empty())
+	{
+		leafBlock.assign(static_cast<size_t>(kValueFloats), 0.0f);
+		leafStream = std::fopen(options.leafOut.c_str(), "wb");
+		if (!leafStream) Fail("cannot write " + options.leafOut);
+		const char magic[8] = { 'P', 'V', 'Z', 'L', 'E', 'A', 'F', '1' };
+		const int32_t counts[2] = { total, kValueFloats };
+		std::fwrite(magic, 1, sizeof(magic), leafStream);
+		std::fwrite(counts, sizeof(int32_t), 2, leafStream);
+	}
 
 	const auto startTime = std::chrono::steady_clock::now();
 	for (int32_t repeat = 0; repeat < options.repeat; ++repeat)
 	{
 		// rollout -> (root, future), the same walk cuda/RolloutCuda.cu's RolloutOf does.  Repeats replay
 		// the identical (root, seed) pair, and a continuation is deterministic, so they measure throughput
-		// only -- see cuda/spec/host.md.
+		// only -- see cuda/spec/host.md.  With --pairs the pair comes from the file, lane by lane, which is
+		// how a GPU continuation gets compared against the CPU reference row that ran the same future.
 		for (int32_t slot = 0; slot < distinct; ++slot)
 		{
-			const int32_t rootIndex = slot / options.perRoot;
-			const int32_t futureSeed = options.seedBase + slot % options.perRoot;
+			const int32_t rootIndex = pairRoot.empty() ? slot / options.perRoot
+				: pairRoot[static_cast<size_t>(slot)];
+			const int32_t futureSeed = pairRoot.empty() ? options.seedBase + slot % options.perRoot
+				: pairSeed[static_cast<size_t>(slot)];
 			const RootRecord& root = corpus.roots[static_cast<size_t>(rootIndex)];
 
 			// The SoA is reset wholesale rather than relying on LoadRoot to clear every field it writes:
@@ -478,6 +561,9 @@ int main(int argc, char** argv)
 			{
 				++rejected;
 				std::fprintf(stderr, "root %d rejected by LoadRoot\n", rootIndex);
+				// A zero block keeps this dump lane-aligned with the device's, which also emits a block for
+				// a lane whose root never loaded.
+				if (leafStream) std::fwrite(leafBlock.data(), sizeof(float), leafBlock.size(), leafStream);
 				continue;
 			}
 			lane.s(S_ROOT_INDEX) = rootIndex;
@@ -487,12 +573,23 @@ int main(int argc, char** argv)
 
 			RolloutResult result{};
 			StoreResult(lane, result);
+			if (leafStream)
+			{
+				StoreLeafValueFeatures(lane, corpus.level, waveLog.data(), leafBlock.data());
+				std::fwrite(leafBlock.data(), sizeof(float), leafBlock.size(), leafStream);
+			}
 			perRoot[static_cast<size_t>(rootIndex)].Add(result);
 			aggregate.Add(result);
 		}
 	}
 	const auto stopTime = std::chrono::steady_clock::now();
 	const double elapsed = Seconds(startTime, stopTime);
+	if (leafStream)
+	{
+		std::fclose(leafStream);
+		std::printf("wrote %d leaf feature blocks of %d floats to %s\n", total, kValueFloats,
+			options.leafOut.c_str());
+	}
 
 	PrintHeader();
 	for (int32_t index = 0; index < used; ++index)
@@ -501,7 +598,10 @@ int main(int argc, char** argv)
 		// The tick the position arrived at goes in the label, so a row whose mean ticks is nowhere near
 		// the horizon can be read against a root that was already past it.
 		std::snprintf(label, sizeof(label), "root%d@%d", index, corpus.roots[static_cast<size_t>(index)].tick);
-		perRoot[static_cast<size_t>(index)].Print(label, static_cast<double>(options.perRoot * options.repeat));
+		Leaf& bucket = perRoot[static_cast<size_t>(index)];
+		// The divisor is what this bucket actually holds: with --pairs a root is not necessarily visited
+		// perRoot times.
+		bucket.Print(label, static_cast<double>(bucket.rollouts ? bucket.rollouts : 1));
 	}
 	aggregate.Print("ALL", static_cast<double>(total));
 

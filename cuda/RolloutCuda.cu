@@ -26,6 +26,8 @@
 // Run:
 //   ./build/rollout_cuda --roots artifacts/cuda/corpus_smoke/roots.cudaroot \
 //                        --net artifacts/cuda/student/v14.pvzrn --lanes 21504 --repeat 224
+//   ./build/rollout_cuda --roots ... --net ... --pairs pairs.txt --out leaves.bin --leaf-out leaves_feat.bin
+//                        (the explicit workload: one lane per corpus line, for the phase-1 comparison)
 #ifndef PVZ_ROLLOUT_CUDA_CU
 #define PVZ_ROLLOUT_CUDA_CU
 
@@ -34,6 +36,7 @@
 #include "SimTick.inc"
 #include "NetForward.inc"
 #include "Rollout.inc"
+#include "PairList.h"
 
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
@@ -280,6 +283,10 @@ struct Arguments
 	// compacted ones left 30 blocks for 84 SMs, and that phase was the most expensive half of a round.
 	int32_t* laneSlot;
 	Counters* counters;
+	// The value net's encoding of each leaf (kValueFloats contiguous floats per lane), or null when
+	// --leaf-out was not asked for.  Sized to one batch, not to the whole workload: it is written back
+	// and streamed to the file batch by batch.
+	float* leafFeatures;
 	int32_t lanes;
 	int32_t firstRollout;
 	int32_t perRoot;
@@ -288,6 +295,12 @@ struct Arguments
 	int32_t maxActions;
 	int32_t seedBase;
 	int32_t bench;                    // BenchMode
+	// The explicit workload (cuda/PairList.h): when pairCount > 0 every lane takes its root and its
+	// future from these arrays instead of from RolloutOf's formula, because a phase-1 comparison has to
+	// run *the same* continuation the CPU reference ran.
+	const int32_t* pairRoot;
+	const int32_t* pairSeed;
+	int32_t pairCount;
 };
 
 // rollout -> (root, future).  The workload holds `perGame = rootCount * perRoot` lanes and a benchmark
@@ -299,6 +312,13 @@ struct Arguments
 PVZ_SIM void RolloutOf(const Arguments& arguments, int32_t index, int32_t& rootIndex,
 	int32_t& futureSeed)
 {
+	if (arguments.pairCount > 0)
+	{
+		const int32_t slot = (arguments.firstRollout + index) % arguments.pairCount;
+		rootIndex = arguments.pairRoot[slot];
+		futureSeed = arguments.pairSeed[slot];
+		return;
+	}
 	const int32_t global = arguments.firstRollout + index;
 	const int32_t slot = global % arguments.perGame;
 	const int32_t rootCount = arguments.perRoot > 0 ? arguments.perGame / arguments.perRoot : 1;
@@ -441,10 +461,25 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) RolloutKernel(Argum
 __global__ void StoreKernel(Arguments arguments)
 {
 	const int32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+	__shared__ int32_t levelRaw[sizeof(LevelInfo) / sizeof(int32_t)];
+	StageLevel(arguments.level, levelRaw);
+	const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
 	if (index >= arguments.lanes) return;
-	if (arguments.results[index].errorFlags & ERR_BAD_ROOT) return;
 	Lane lane{arguments.ints, arguments.floats, index, arguments.lanes, 0};
+	float* leaf = arguments.leafFeatures ? arguments.leafFeatures + static_cast<size_t>(index) * kValueFloats
+		: nullptr;
+	if (arguments.results[index].errorFlags & ERR_BAD_ROOT)
+	{
+		// Zeroed rather than skipped: the buffer is reused by the next batch, so leaving the previous
+		// batch's block here would put real features under a lane that never ran.
+		if (leaf) for (int32_t place = 0; place < kValueFloats; ++place) leaf[place] = 0.0f;
+		return;
+	}
 	StoreResult(lane, arguments.results[index]);
+	// Written after StoreResult so a lane's aggregates and its features describe the same leaf.  The
+	// per-lane block is contiguous (these are never read by a GEMM), and the reader pairs block i with
+	// record i of --out.
+	if (leaf) StoreLeafValueFeatures(lane, level, arguments.waveLog, leaf);
 }
 
 // ---------------------------------------------------------------------------
@@ -546,6 +581,11 @@ void RunCellPre(cublasHandle_t handle, const NetState& state, const NetParams& n
 struct Options
 {
 	std::string roots, net, out;
+	// Value-net features for every leaf, in the same lane order as --out.  22.7 KB per lane, so it is
+	// opt-in and streamed batch by batch rather than held for the whole workload.
+	std::string leafOut;
+	// One line per lane: `<rootIndex> <futureSeed>` (cuda/PairList.h).  Replaces the derived pairing.
+	std::string pairs;
 	int32_t perRoot = 8;
 	int32_t horizon = 2500;
 	int32_t maxActions = 3000;
@@ -572,6 +612,8 @@ Options Parse(int argc, char** argv)
 		if (flag == "--roots") options.roots = Value(argc, argv, index);
 		else if (flag == "--net") options.net = Value(argc, argv, index);
 		else if (flag == "--out") options.out = Value(argc, argv, index);
+		else if (flag == "--leaf-out") options.leafOut = Value(argc, argv, index);
+		else if (flag == "--pairs") options.pairs = Value(argc, argv, index);
 		else if (flag == "--bench")
 		{
 			const std::string mode = Value(argc, argv, index);
@@ -592,9 +634,13 @@ Options Parse(int argc, char** argv)
 	if (options.roots.empty() || options.net.empty())
 		Fail("usage: --roots FILE --net FILE [--per-root 8] [--horizon 2500] [--lanes 8192] "
 			"[--block 256] [--repeat 1] [--max-actions 3000] [--seed-base N] [--bench full|sim] "
-			"[--out results.bin]");
+			"[--out results.bin] [--leaf-out leaves.bin]");
 	if (options.lanes < 1 || options.block < 32 || options.block > kBlockThreads || options.perRoot < 1)
 		Fail("lanes and per-root must be positive, block in [32, 256] (launch bounds)");
+	// A leaf feature block is meaningless without the record it pairs with (the result and error flags
+	// say which lanes never started), and --out is what carries them.
+	if (!options.leafOut.empty() && options.out.empty()) Fail("--leaf-out needs --out");
+	if (!options.leafOut.empty() && options.bench != kBenchFull) Fail("--leaf-out needs --bench full");
 	return options;
 }
 
@@ -610,8 +656,23 @@ int main(int argc, char** argv)
 	NetImage image = ReadNet(options.net);
 
 	const int32_t rootCount = static_cast<int32_t>(corpus.roots.size());
-	const int32_t perGame = rootCount * options.perRoot;
-	const int32_t total = perGame * options.repeat;
+	// The explicit workload, if asked for: one lane per line of the pair file, so a GPU continuation is
+	// the same (root, future) as the CPU reference row it is compared against.
+	std::vector<int32_t> pairRoot, pairSeed;
+	if (!options.pairs.empty())
+	{
+		std::string error;
+		if (!pvzhost::ReadPairList(options.pairs, pairRoot, pairSeed, error)) Fail(error);
+		for (size_t index = 0; index < pairRoot.size(); ++index)
+			if (pairRoot[index] >= rootCount)
+				Fail("pair " + std::to_string(index) + " names root " + std::to_string(pairRoot[index])
+					+ " but the corpus holds " + std::to_string(rootCount));
+	}
+	// --per-root and --repeat describe the *derived* pairing; an enumerated corpus already says which
+	// future belongs to which root, so the workload is exactly its line count.
+	const int32_t perGame = pairRoot.empty() ? rootCount * options.perRoot
+		: static_cast<int32_t>(pairRoot.size());
+	const int32_t total = pairRoot.empty() ? perGame * options.repeat : perGame;
 
 	// The SoA is sized by the batch, not by the rollout count: every batch reuses the same buffers, so
 	// the working set stays under the 8 GB budget the task sets for this machine.  Activations are sized
@@ -645,9 +706,14 @@ int main(int argc, char** argv)
 			Fail("packed trunk size does not add up");
 	}
 	const size_t weightsBytes = image.values.size() * sizeof(float);
+	// One batch's worth of leaf features, not one per rollout: the round loop reuses the SoA buffers for
+	// every batch, and this follows them.
+	const size_t leafBytes = options.leafOut.empty() ? 0u
+		: static_cast<size_t>(lanes) * kValueFloats * sizeof(float);
 	const size_t total_bytes = intBytes + floatBytes + activationBytes + weightsBytes + packedCount * 4
 		+ static_cast<size_t>(rootCount) * (sizeof(RootRecord) + sizeof(WaveTable))
-		+ static_cast<size_t>(lanes) * (sizeof(RolloutResult) + sizeof(int32_t));
+		+ static_cast<size_t>(lanes) * (sizeof(RolloutResult) + sizeof(int32_t))
+		+ leafBytes;
 	std::printf("batch lanes %d in %d chunks of %d, device working set %.0f MB (limit 8192 MB)\n",
 		lanes, blocks, kNetChunk, static_cast<double>(total_bytes) / 1048576.0);
 	if (total_bytes > 8ull * 1024 * 1024 * 1024) Fail("device working set above the 8 GB budget");
@@ -670,6 +736,9 @@ int main(int argc, char** argv)
 	int32_t* laneSlot = nullptr;
 	Counters* counters = nullptr;
 	RolloutResult* results = nullptr;
+	float* leafFeatures = nullptr;
+	int32_t* pairRootDevice = nullptr;
+	int32_t* pairSeedDevice = nullptr;
 	CALL(cudaMalloc(&ints, intBytes));
 	CALL(cudaMalloc(&floats, floatBytes));
 	CALL(cudaMalloc(&level, sizeof(LevelInfo)));
@@ -687,6 +756,21 @@ int main(int argc, char** argv)
 	CALL(cudaMalloc(&laneSlot, static_cast<size_t>(lanes) * sizeof(int32_t)));
 	CALL(cudaMalloc(&counters, sizeof(Counters)));
 	CALL(cudaMalloc(&results, static_cast<size_t>(lanes) * sizeof(RolloutResult)));
+	if (leafBytes)
+	{
+		CALL(cudaMalloc(&leafFeatures, leafBytes));
+		// Zeroed once: a lane that failed its root import is skipped by StoreKernel, and a dump whose
+		// untouched blocks held whatever malloc returned would not be comparable between runs.
+		CALL(cudaMemset(leafFeatures, 0, leafBytes));
+	}
+	if (!pairRoot.empty())
+	{
+		const size_t bytes = pairRoot.size() * sizeof(int32_t);
+		CALL(cudaMalloc(&pairRootDevice, bytes));
+		CALL(cudaMalloc(&pairSeedDevice, bytes));
+		CALL(cudaMemcpy(pairRootDevice, pairRoot.data(), bytes, cudaMemcpyHostToDevice));
+		CALL(cudaMemcpy(pairSeedDevice, pairSeed.data(), bytes, cudaMemcpyHostToDevice));
+	}
 	CALL(cudaMemcpy(level, &corpus.level, sizeof(LevelInfo), cudaMemcpyHostToDevice));
 	CALL(cudaMemcpy(roots, corpus.roots.data(), static_cast<size_t>(rootCount) * sizeof(RootRecord),
 		cudaMemcpyHostToDevice));
@@ -780,6 +864,10 @@ int main(int argc, char** argv)
 	arguments.results = results;
 	arguments.laneSlot = laneSlot;
 	arguments.counters = counters;
+	arguments.leafFeatures = leafFeatures;
+	arguments.pairRoot = pairRootDevice;
+	arguments.pairSeed = pairSeedDevice;
+	arguments.pairCount = static_cast<int32_t>(pairRoot.size());
 	arguments.lanes = lanes;
 	arguments.firstRollout = 0;
 	arguments.perRoot = options.perRoot;
@@ -802,6 +890,23 @@ int main(int argc, char** argv)
 	std::vector<RolloutResult> hostResults(static_cast<size_t>(lanes));
 	std::vector<RolloutResult> collected;
 	if (!options.out.empty()) collected.resize(static_cast<size_t>(total));
+	// The leaf features are streamed batch by batch (a batch is 22.7 KB per lane) rather than collected,
+	// because the host is also holding the results of every rollout.
+	std::vector<float> hostLeaf;
+	std::FILE* leafStream = nullptr;
+	if (leafBytes)
+	{
+		hostLeaf.resize(static_cast<size_t>(lanes) * kValueFloats);
+		leafStream = std::fopen(options.leafOut.c_str(), "wb");
+		if (!leafStream) Fail("cannot write " + options.leafOut);
+		// "PVZLEAF1", int32 lane count, int32 floats per lane, then one block per lane in the same order
+		// as --out.  Which blocks are real is only readable from those records: a lane that failed its
+		// root import is skipped by StoreKernel and stays all zero here.
+		const char magic[8] = { 'P', 'V', 'Z', 'L', 'E', 'A', 'F', '1' };
+		const int32_t counts[2] = { total, kValueFloats };
+		std::fwrite(magic, 1, sizeof(magic), leafStream);
+		std::fwrite(counts, sizeof(int32_t), 2, leafStream);
+	}
 
 	cudaEvent_t start, stop;
 	CALL(cudaEventCreate(&start));
@@ -932,12 +1037,24 @@ int main(int argc, char** argv)
 			else ++ongoing;
 			if (!options.out.empty()) collected[static_cast<size_t>(first + index)] = result;
 		}
+		if (leafStream)
+		{
+			CALL(cudaMemcpy(hostLeaf.data(), leafFeatures,
+				static_cast<size_t>(inBatch) * kValueFloats * sizeof(float), cudaMemcpyDeviceToHost));
+			const size_t floats = static_cast<size_t>(inBatch) * kValueFloats;
+			if (std::fwrite(hostLeaf.data(), sizeof(float), floats, leafStream) != floats)
+				Fail("short write to " + options.leafOut);
+		}
 		completed += inBatch;
 		if (batchCount > 1) std::printf("  batch %d/%d done\n", batch + 1, batchCount);
 	}
 
-	std::printf("\nroots %d x %d futures x %d repeats = %d rollouts, horizon %d ticks, max-actions %d\n",
-		rootCount, options.perRoot, options.repeat, total, options.horizon, options.maxActions);
+	if (!pairRoot.empty())
+		std::printf("\n%d rollouts from %s (explicit root/future pairs), horizon %d ticks, max-actions %d\n",
+			total, options.pairs.c_str(), options.horizon, options.maxActions);
+	else
+		std::printf("\nroots %d x %d futures x %d repeats = %d rollouts, horizon %d ticks, max-actions %d\n",
+			rootCount, options.perRoot, options.repeat, total, options.horizon, options.maxActions);
 	std::printf("student %s: width %d, %s, %s context, %zu weights\n", image.params.version == 3 ? "003" : "002",
 		image.params.width, image.params.meanmax ? "meanmax" : "mean",
 		image.params.taskContext ? "with" : "without", image.values.size());
@@ -975,6 +1092,12 @@ int main(int argc, char** argv)
 		std::fwrite(collected.data(), sizeof(RolloutResult), collected.size(), stream);
 		std::fclose(stream);
 		std::printf("wrote %zu leaf records to %s\n", collected.size(), options.out.c_str());
+	}
+	if (leafStream)
+	{
+		std::fclose(leafStream);
+		std::printf("wrote %d leaf feature blocks of %d floats (%.1f MB) to %s\n", total, kValueFloats,
+			static_cast<double>(leafBytes) / 1048576.0, options.leafOut.c_str());
 	}
 	cublasDestroy(handle);
 	return 0;

@@ -7,6 +7,7 @@ GPU uploads is what the original simulator held.
 """
 from __future__ import annotations
 
+import math
 import struct
 from pathlib import Path
 from typing import Any
@@ -162,7 +163,7 @@ def parse_level(payload: bytes) -> dict[str, Any]:
 
 def read_cudaroot(path: str | Path) -> dict[str, Any]:
     blob = Path(path).read_bytes()
-    level: dict[str, Any] | None = None
+    level: dict[str, Any] = None
     roots: list[dict[str, Any]] = []
     for kind, payload in _records(blob):
         if kind == RECORD_LEVEL:
@@ -170,3 +171,93 @@ def read_cudaroot(path: str | Path) -> dict[str, Any]:
         else:
             roots.append(parse_root(payload))
     return {"level": level, "roots": roots}
+
+
+# ---------------------------------------------------------------------------
+# Rebuilding the *observation* a frame encoder would have seen
+# ---------------------------------------------------------------------------
+#
+# The exporter copies the engine's fields; the value net never sees those, it sees the JSON the
+# environment printed.  Feeding a record straight to ``pvz_value_net.featurize_numpy`` therefore only
+# proves something when this translation is done in the open: every field below is what
+# ``LawnApp::EnvironmentLeanObservation`` put in the array at the same position, and
+# ``scripts/cuda_leaf_compare.py`` uses it to hold the CUDA core's own encoding against the Python one
+# on the identical position.
+
+ZB_EATING = 1 << 1            # cuda/CudaRollout.h:139; src/CudaExport.cpp:262 sets both of these
+ZB_ON_BOARD = 1 << 8
+
+INCOME_WINDOW_TICKS = 6000    # python/pvz_env.py's ``_sun_income_window_ticks``
+CELL_PX = 80                  # Board::GridToPixelX(col) == col * 80 + 40
+LAWN_XMIN = 40
+
+
+def rendered_public_coordinate(value: float) -> float:
+    """Round to six significant digits, half away from zero.
+
+    ``std::ostringstream`` prints a double at its default precision of six significant digits, and
+    that text is what the agent's JSON parses back -- so the value net was trained on the rounded
+    number, not the engine's float.  ``cuda/SimCore.h``'s ``RenderedPublicCoordinate`` is the same
+    function written for the device.  A tie between the two is unreachable in practice: the exact
+    binary value of a float32 position is never precisely halfway at the seventh digit, so the
+    rounding-mode difference (half away from zero here, half to even in ``printf``) never shows.
+    """
+    magnitude = abs(value)
+    if magnitude <= 0.0:
+        return value
+    exponent = 0
+    while exponent < 8 and magnitude >= 10.0 ** (exponent + 1):
+        exponent += 1
+    keep = exponent - 5
+    scale = 10.0 ** keep if keep >= 0 else 1.0 / 10.0 ** (-keep)
+    rounded = math.floor(magnitude / scale + 0.5) * scale
+    return -rounded if value < 0.0 else rounded
+
+
+def income_rate(record: dict[str, Any]) -> float:
+    """``sun_income_rate`` as ``pvz_env`` annotated the observation with it: sun produced inside the
+    last 6000 ticks, scaled to a per-1000-tick rate over the elapsed part of the episode."""
+    tick = record["tick"]
+    produced = sum(value for event_tick, value in record["income_events"]
+                   if event_tick >= tick - INCOME_WINDOW_TICKS)
+    elapsed = max(0, min(INCOME_WINDOW_TICKS, tick - record["income_window_start"]))
+    return produced * 1000.0 / elapsed if elapsed else 0.0
+
+
+def value_frame(record: dict[str, Any], level: dict[str, Any]) -> dict[str, Any]:
+    """The ``render_episode._frame`` dict for one root, in the value net's encoding."""
+    plants = [(entry["cell"] // 10, entry["cell"] % 10, entry["type"], entry["health"],
+               entry["max_health"]) for entry in record["plants"]]   # cell = row * kCols(10) + col
+    zombies = []
+    for entry in record["zombies"]:
+        bits = entry["state_bits"]
+        zombies.append((entry["row"], entry["type"], rendered_public_coordinate(entry["pos_x"]),
+                        entry["vel_x"], entry["body"] + entry["helm"] + entry["shield"],
+                        bool(bits & ZB_ON_BOARD), bool(bits & ZB_EATING), entry["chilled"],
+                        0, 0))
+    # The exporter already dropped dead plants and out-of-range rows (src/CudaExport.cpp:213, :243) and
+    # marks a squished plant's root unsupported, so what is here is what the observation listed.
+    return {
+        "tick": record["tick"],
+        "wave": record["wave"],
+        "sun": record["sun"],
+        "sun_income_rate": income_rate(record),
+        "plants": plants,
+        "zombies": zombies,
+        "mowers": [[entry["row"], entry["state"]] for entry in record["mowers"]],
+        "packets": [[index, entry["type"], bool(entry["active"]), entry["refresh_counter"],
+                     entry["refresh_time"], entry["cost"]]
+                    for index, entry in enumerate(record["packets"])],
+        # The Python derives lanes from the terrain grid; the record has no grid, and every terrain this
+        # corpus uses has its playable rows as rows 0..n-1 (5 day-grass, 6 pool).
+        "lanes": list(range(level["playable_rows"])),
+        "scene": {"level": level["level"], "wave_count": record["num_waves"]},
+        "result": record["result"],
+        "terminal": record["result"] != 0,
+    }
+
+
+def value_context(level: dict[str, Any]) -> tuple[float, list[int]]:
+    """``(zombie_count_multiplier, zombie roster)`` for ``pvz_value_net.context_vector``."""
+    return level["zombie_count_multiplier"], [kind for kind, allowed in enumerate(level["allowed"])
+                                             if allowed]

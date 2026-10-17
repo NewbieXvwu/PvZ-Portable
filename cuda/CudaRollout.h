@@ -55,6 +55,14 @@ enum {
 	kZombieTypes = 34,
 	kMaxWaves = 30,
 	kIncomeWindowTicks = 6000,
+
+	// The value net's encoding (python/pvz_value_net.py::featurize_numpy) is a *different* vector from
+	// the student's above: 113 scalars instead of 115 (no prior-action pair) and the task context is a
+	// separate 35 floats the caller appends rather than part of the scalar branch.  The leaf exports it
+	// so a GPU continuation can be scored by the same net the teacher uses.
+	kValueScalars = 5 + 2 * kPlantTypes,                    // 113
+	kValueContext = 1 + kZombieTypes,                       // 35
+	kValueFloats = kBoardChannels * kCells + kValueScalars + kValueContext,   // 5668
 };
 
 // Fixed capacity per lane.  Everything is a bounded slot sweep: no allocation, no linked lists, and

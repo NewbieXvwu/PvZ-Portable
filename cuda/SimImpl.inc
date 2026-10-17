@@ -319,6 +319,105 @@ PVZ_SIM void StoreResult(Lane lane, RolloutResult& out)
 }
 
 // ---------------------------------------------------------------------------
+// Leaf features for the value net
+// ---------------------------------------------------------------------------
+
+// board[CHANNEL][ROW][COL] in numpy's C order: the exported block is reshaped to (92, 6, 10) by the
+// reader, so this is the layout python/pvz_value_net.py writes.
+PVZ_SIM int32_t ValueBoardIndex(int32_t channel, int32_t row, int32_t col)
+{
+	return (channel * kRows + row) * kCols + col;
+}
+
+// python/pvz_value_net.py::featurize_numpy + observation_context, element for element.  It is *not*
+// BuildFeatures: the value net was trained on its own encoder, and the two differ in three ways that
+// each change a score.
+//   * the zombie column is floor((x - 40) / 80) of the coordinate as the observation printed it
+//     (six significant digits, LawnApp.cpp:1658) with no snap to a cell boundary -- that snap is part
+//     of EnvironmentRollout::Features (cuda/SimImpl.inc, BuildFeatures) and not of this encoder;
+//   * there is no prior-action pair, so the scalar vector is 113 long instead of 115;
+//   * the task context is a separate 35-vector the caller concatenates, not part of the scalars.
+// Runs once per lane at the leaf, so its cost is not on the tick path.
+PVZ_SIM void StoreLeafValueFeatures(Lane lane, const LevelInfo& level, const float* waveLog, float* out)
+{
+	for (int32_t index = 0; index < kBoardChannels * kCells; ++index) out[index] = 0.0f;
+
+	// Plants: health ratio in the channel of its seed type, columns 0..8 only (pvz_value_net.py:83).
+	// The observation already dropped dead and squished plants (LawnApp.cpp:1644, :1648), which here is
+	// the slot-emptiness test; a plant leaves the slot when it dies.
+	for (int32_t slot = 0; slot < kPlantSlots; ++slot)
+	{
+		const int32_t type = lane.i(F_PLANT_TYPE, slot);
+		if (type < 0) continue;
+		const int32_t row = slot / kCols;
+		const int32_t col = slot - row * kCols;
+		if (col >= kCols - 1) continue;
+		const int32_t maxHealth = Maximum(lane.i(F_PLANT_HP_MAX, slot), 1);
+		out[ValueBoardIndex(Minimum(type, kPlantTypes - 1), row, col)] +=
+			static_cast<float>(static_cast<double>(lane.i(F_PLANT_HP, slot)) / static_cast<double>(maxHealth));
+	}
+
+	// Zombies: health sum / 200, eating, chilled -- channels 54..89, the same four the student encodes,
+	// filtered the same way (the lean observation lists a zombie iff !mDead, LawnApp.cpp:1655).
+	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	{
+		const int32_t type = lane.i(F_ZOMBIE_TYPE, slot);
+		if (type < 0) continue;
+		const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
+		const int32_t row = lane.i(F_ZOMBIE_ROW, slot);
+		if ((flags & ZB_DEAD) || !(flags & ZB_ON_BOARD) || row < 0 || row >= kRows) continue;
+		const int32_t col =
+			FeatureColumn(RenderedPublicCoordinate(static_cast<double>(lane.f(F_ZOMBIE_X, slot))));
+		const double health = static_cast<double>(lane.i(F_ZOMBIE_BODY, slot))
+			+ static_cast<double>(lane.i(F_ZOMBIE_HELM, slot)) + static_cast<double>(lane.i(F_ZOMBIE_SHIELD, slot));
+		const int32_t channel = kPlantTypes + Minimum(type, kZombieTypes - 1);
+		out[ValueBoardIndex(channel, row, col)] += static_cast<float>(health / 200.0);
+		out[ValueBoardIndex(kPlantTypes + kZombieTypes, row, col)] += (flags & ZB_EATING) ? 1.0f : 0.0f;
+		out[ValueBoardIndex(kPlantTypes + kZombieTypes + 1, row, col)] +=
+			lane.i(F_ZOMBIE_CHILLED, slot) > 0 ? 1.0f : 0.0f;
+	}
+
+	// Mowers: a READY mower (LawnMowerState 1) marks column 0 of its row; anything else leaves 0.
+	for (int32_t row = 0; row < kRows && row < kMowerSlots; ++row)
+		out[ValueBoardIndex(90, row, 0)] = lane.i(F_MOWER_STATE, row) == kMowerReady ? 1.0f : 0.0f;
+
+	// Channel 91: whole playable rows.  The Python derives the row list from the terrain grid (a row
+	// counts when its 9 lawn cells are all grass or all pool); the kernel takes it from the level, which
+	// is the same set on the day-grass tasks this corpus comes from.
+	for (int32_t row = 0; row < level.playableRows; ++row)
+		for (int32_t col = 0; col < kCols; ++col) out[ValueBoardIndex(91, row, col)] = 1.0f;
+
+	float* scalars = out + kBoardChannels * kCells;
+	for (int32_t index = 0; index < kValueScalars; ++index) scalars[index] = 0.0f;
+	const int32_t sun = lane.s(S_SUN);
+	const int32_t waves = Maximum(lane.s(S_NUM_WAVES), 1);
+	scalars[0] = static_cast<float>(static_cast<double>(Minimum(sun, 2000)) / 1000.0);
+	scalars[1] = static_cast<float>(static_cast<double>(lane.s(S_WAVE)) / static_cast<double>(waves));
+	scalars[2] = static_cast<float>(static_cast<double>(lane.s(S_TICK)) / 60000.0);
+	scalars[3] = static_cast<float>(IncomeRate(lane) / 100.0);
+	scalars[4] = waveLog[Minimum(waves, kMaxWaves)];
+	for (int32_t index = 0; index < kPacketSlots; ++index)
+	{
+		const int32_t type = lane.i(F_PACKET_TYPE, index);
+		if (type < 0) continue;
+		const int32_t kind = Minimum(type, kPlantTypes - 1);
+		const int32_t active = lane.i(F_PACKET_ACTIVE, index);
+		const int32_t refresh = lane.i(F_PACKET_REFRESH, index);
+		const int32_t counter = lane.i(F_PACKET_COUNTER, index);
+		scalars[5 + kind] = (active && sun >= lane.i(F_PACKET_COST, index)) ? 1.0f : 0.0f;
+		scalars[5 + kPlantTypes + kind] = static_cast<float>(MinimumDouble(1.0,
+			active || !refresh ? 1.0 : static_cast<double>(counter) / static_cast<double>(refresh)));
+	}
+
+	// observation_context: the wave-size multiplier and the zombie roster, constant for the task, so the
+	// reader can take it from the level instead of the frame.
+	float* context = scalars + kValueScalars;
+	context[0] = static_cast<float>(static_cast<double>(level.zombieCountMultiplier) / 3.0);
+	for (int32_t type = 0; type < kZombieTypes; ++type)
+		context[1 + type] = level.allowed[type] ? 1.0f : 0.0f;
+}
+
+// ---------------------------------------------------------------------------
 // Features
 // ---------------------------------------------------------------------------
 
@@ -396,8 +495,8 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 	float* scalars = buffers.scalars;
 	const int32_t sun = lane.s(S_SUN);
 	const int32_t waves = Maximum(lane.s(S_NUM_WAVES), 1);
-	// scalars[0] is int division in the original (mSunMoney is an int, 1000 an int literal), so the
-	// truncation has to be reproduced rather than written as a float divide.
+	// EnvironmentRollout.cpp:141 divides by the double literal 1000.0, so this is a real quotient and not
+	// the int truncation the mSunMoney type might suggest.
 	ScalarChannel(lane, scalars, 0) = static_cast<float>(Minimum(sun, 2000) / 1000.0);
 	ScalarChannel(lane, scalars, 1) = static_cast<float>(static_cast<double>(lane.s(S_WAVE)) / static_cast<double>(waves));
 	ScalarChannel(lane, scalars, 2) = static_cast<float>(static_cast<double>(lane.s(S_TICK)) / 60000.0);
@@ -415,7 +514,8 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 		const int32_t counter = lane.i(F_PACKET_COUNTER, index);
 		ScalarChannel(lane, scalars, 5 + kind) = (active && sun >= lane.i(F_PACKET_COST, index)) ? 1.0f : 0.0f;
 		ScalarChannel(lane, scalars, 59 + kind) = static_cast<float>(
-			Minimum(1.0, active || !refresh ? 1.0 : static_cast<double>(counter) / static_cast<double>(refresh)));
+			MinimumDouble(1.0, active || !refresh ? 1.0 :
+				static_cast<double>(counter) / static_cast<double>(refresh)));
 	}
 	if (previousValid)
 	{

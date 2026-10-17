@@ -87,6 +87,13 @@ struct Lane
 
 PVZ_SIM int32_t Minimum(int32_t a, int32_t b) { return a < b ? a : b; }
 PVZ_SIM int32_t Maximum(int32_t a, int32_t b) { return a > b ? a : b; }
+// The double forms of the same two, spelled differently on purpose: `Minimum(1.0, ratio)` compiles
+// against the int pair and silently truncates the fraction to 0, which is exactly what happened to the
+// cooldown-progress feature channel in both encoders until the root feature check (scripts/
+// cuda_leaf_compare.py --root-features) caught it on 406 of 425 roots.
+PVZ_SIM double MinimumDouble(double a, double b) { return a < b ? a : b; }
+double Minimum(double, double) = delete;      // so the truncation above cannot be written again
+double Maximum(double, double) = delete;
 PVZ_SIM int32_t ClampInt(int32_t value, int32_t lo, int32_t hi)
 {
 	return value < lo ? lo : (value > hi ? hi : value);
@@ -271,6 +278,11 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 
 // Leaf statistics in the same units as the ROLLOUT response's "events" block.
 PVZ_SIM void StoreResult(Lane lane, RolloutResult& out);
+
+// The value net's encoding of the leaf: kValueFloats contiguous floats, board[92][6][10] then
+// scalars[113] then the task context[35] (python/pvz_value_net.py::featurize_numpy and
+// observation_context).  `waveLog` is the uploaded log1p table, read exactly as BuildFeatures reads it.
+PVZ_SIM void StoreLeafValueFeatures(Lane lane, const LevelInfo& level, const float* waveLog, float* out);
 
 // ---------------------------------------------------------------------------
 // One tick of the game, and the decision step around it (cuda/SimTick.inc)
