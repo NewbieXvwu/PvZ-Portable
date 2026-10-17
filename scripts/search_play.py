@@ -9,6 +9,7 @@ At a decision where some plant is legal (packet ready, sun enough, free cell):
      ``--value`` (a game that ended inside the horizon scores its result). ``--halving`` (default) rolls out
      the weaker half fewer times.
   3. The student's choice is overridden only when the best candidate beats it by ``--margin``.
+     ``--verify-samples`` adds independent futures for just that pair before accepting an override.
 Between searches at least ``--min-gap`` ticks pass unless the student itself wants to plant.
 
 Arms: ``fast`` = the student alone, ``fast_search`` = the teacher. ``--frames`` writes per-decision archives
@@ -208,15 +209,9 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             values = fixed + (_values(leaf_frames) if leaf_frames else [])
             totals.append(sum(values) / len(values))
         keys = [json.dumps(c, sort_keys=True) for c in candidates]
-        stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
-        policy_value = totals[keys.index(policy_key)]
         best = max(range(len(candidates)), key=lambda i: totals[i])
-        stats["last_best"] = candidates[best]
-        if totals[best] - policy_value > args.margin and keys[best] != policy_key:
-            stats["overrides"] += 1
-            stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
-            return candidates[best]
-        return policy_action
+        return _verified_choice(env, obs, root, candidates, totals, [args.samples] * len(candidates),
+                                best, keys.index(policy_key), policy_action, args, decision_seed, stats)
     finally:
         env.restore(root)
         env.release_snapshot(root)
@@ -267,8 +262,39 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
         target = done * 2
     stats["halving_rollouts"] = stats.get("halving_rollouts", 0) + sum(len(v) for v in values)
     totals = [sum(v) / len(v) if v else float("-inf") for v in values]
-    stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
     best = max(alive, key=lambda i: totals[i])
+    return _verified_choice(env, obs, root, candidates, totals, [len(v) for v in values], best,
+                            policy_index, policy_action, args, decision_seed, stats)
+
+
+def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: list[float],
+                     counts: list[int], best: int, policy_index: int, policy_action: dict,
+                     args, decision_seed: int, stats: dict) -> dict:
+    from render_episode import _frame
+    before = best != policy_index and totals[best] - totals[policy_index] > args.margin
+    samples = getattr(args, "verify_samples", 0)
+    if samples and before:
+        prior = [totals[policy_index], totals[best]]
+        started = time.perf_counter()
+        for index in (policy_index, best):
+            fixed, leaves = [], []
+            for future in range(args.samples, args.samples + samples):
+                leaf = _rollout_policy(env, obs, candidates[index], obs["tick"] + args.horizon,
+                                       root, (decision_seed * 1000 + future) % 2 ** 32)
+                terminal = _score_terminal_or_value(leaf)
+                if terminal is None:
+                    leaves.append(_frame(leaf))
+                else:
+                    fixed.append(terminal)
+            added = fixed + (_values(leaves) if leaves else [])
+            totals[index] = (totals[index] * counts[index] + sum(added)) / (counts[index] + samples)
+        stats["last_verification"] = {
+            "samples": samples, "student": policy_action, "challenger": candidates[best],
+            "before_values": prior, "after_values": [totals[policy_index], totals[best]],
+            "before_override": True, "after_override": totals[best] - totals[policy_index] > args.margin,
+            "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
+            "seconds": time.perf_counter() - started}
+    stats["last_targets"] = list(zip(candidates, totals))
     stats["last_best"] = candidates[best]
     if totals[best] - totals[policy_index] > args.margin and best != policy_index:
         stats["overrides"] += 1
@@ -328,6 +354,7 @@ def _play(job: dict) -> dict:
             action = policy_choice = _fast_action(obs, fast_state)
             if job["arm"] == "fast_search":
                 stats["last_targets"] = None
+                stats.pop("last_verification", None)
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
             label = action
             if dagger is not None and dagger.random() >= args.dagger_beta:
@@ -349,6 +376,8 @@ def _play(job: dict) -> dict:
                                              for c, v in stats["last_targets"] if abs(v) != float("inf")]
                 frames[-1]["action"] = action          # what was executed (after the search), like render_episode
                 frames[-1]["action_rejected"] = rejected
+                if stats.get("last_verification"):
+                    frames[-1]["verification"] = stats["last_verification"]
                 if dagger is not None:
                     frames[-1]["label"] = label        # last field: train_rollout_policy scans for it
             decisions += 1
@@ -397,6 +426,8 @@ def main() -> None:
                         "candidate gets all --samples")
     p.add_argument("--horizon", type=int, default=2500)
     p.add_argument("--margin", type=float, default=0.02)
+    p.add_argument("--verify-samples", type=int, default=0,
+                   help="extra independent futures for student and challenger before an override (0 = disabled)")
     p.add_argument("--min-gap", type=int, default=300,
                    help="ticks between searches unless the student itself wants to plant (0 = search every time)")
     p.add_argument("--rollout-sim-skip", type=int, default=61,
@@ -413,6 +444,8 @@ def main() -> None:
                         "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     args = p.parse_args()
+    if args.verify_samples < 0:
+        p.error("--verify-samples must be nonnegative")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))

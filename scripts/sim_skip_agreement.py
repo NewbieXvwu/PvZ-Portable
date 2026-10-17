@@ -197,6 +197,14 @@ def _search_decisions(seed: int) -> list[dict]:
                 order = order[rotation:] + order[:rotation]
                 runs[1] = (args.base_mask, approx_sargs, args.base_cpp_rollouts)
             offsets = [0, 15_555_557 if args.label_noise else 0, 7_777_777]
+            if args.label_noise:
+                for samples in args.verify_samples:
+                    runs.append((args.base_mask, ap.Namespace(**vars(sargs), verify_samples=samples),
+                                 args.base_cpp_rollouts))
+                    offsets.append(0)
+                order = list(range(len(runs)))
+                rotation = len(rows) % len(runs)
+                order = order[rotation:] + order[:rotation]
             results = {index: run(decision_seed + offsets[index], runs[index][0], action, runs[index][1], runs[index][2])
                        for index in order}
             exact, exact_totals, t_exact, _best = results[0]
@@ -214,7 +222,8 @@ def _search_decisions(seed: int) -> list[dict]:
                                 "arms": {name: {"label": results[index][0], "values": results[index][1],
                                                 "seconds": results[index][2], "best": results[index][3],
                                                 "decision_seed": decision_seed + offsets[index]}
-                                         for name, index in (("A", 0), ("B", 2), ("H", 1))}}
+                                         for name, index in [("A", 0), ("B", 2), ("H", 1)] +
+                                         [(f"V{samples}", index + 3) for index, samples in enumerate(args.verify_samples)]}}
                 if stream:
                     stream.write(json.dumps(rows[-1], allow_nan=False) + "\n")
         executed = exact if searches and dagger is not None else action
@@ -332,6 +341,8 @@ def main() -> None:
     p.add_argument("--dagger-beta", type=float, default=0.0, help="search mode: probability of executing reference teacher")
     p.add_argument("--label-noise", action="store_true", help="search mode: independent A/B teachers and full-sample H")
     p.add_argument("--high-samples", type=int, default=12, help="label noise: futures for every H candidate, no halving")
+    p.add_argument("--verify-samples", nargs="+", type=int, default=[],
+                   help="label noise: compare A with these extra pairwise verification counts")
     p.add_argument("--jsonl-dir", type=Path, help="search mode: stream each search point to a per-seed JSONL")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
@@ -339,6 +350,9 @@ def main() -> None:
         p.error("--dagger-beta must be between 0 and 1")
     if args.label_noise and (args.mode != "search" or args.jsonl_dir is None):
         p.error("--label-noise requires search mode and --jsonl-dir")
+    if args.verify_samples and (not args.label_noise or min(args.verify_samples) <= 0
+                                or len(set(args.verify_samples)) != len(args.verify_samples)):
+        p.error("--verify-samples requires --label-noise and distinct positive counts")
     if args.jsonl_dir:
         args.jsonl_dir.mkdir(parents=True, exist_ok=True)
     sys.path.insert(0, str(ROOT / "scripts"))

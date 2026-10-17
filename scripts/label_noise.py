@@ -121,12 +121,37 @@ def summarize(rows: list[dict]) -> dict:
         groups[wave] = [row for row in rows if wave_group(row) == wave]
         for kind in ("wait", "plant"):
             groups[f"{kind}/{wave}"] = [row for row in groups[wave] if row["student"]["type"] == kind]
-    return {"games": len({row["seed"] for row in rows}),
+    result = {"games": len({row["seed"] for row in rows}),
             "seeds": sorted({row["seed"] for row in rows}),
             "intervals": "pointwise Wilson 95%; means: point bootstrap 2000, seed 0; within-game dependence not adjusted",
             "split": "student action; wave 0 (opening) included in 1-9",
             "h_reference": "independent finite-horizon value estimates, not terminal ground truth; H margin fixed at recorded value",
             "groups": {name: summarize_group(group) for name, group in groups.items()}}
+    if any(name.startswith("V") for name in rows[0]["arms"]):
+        baseline_agreed = sum(action_key(row["arms"]["A"]["label"]) != action_key(row["student"])
+                              and action_key(row["arms"]["A"]["label"]) == action_key(row["arms"]["H"]["label"])
+                              for row in rows)
+        baseline_seconds = sum(row["arms"]["A"]["seconds"] for row in rows)
+        result["verification"] = {}
+        for name in ["A"] + [name for name in rows[0]["arms"] if name.startswith("V")]:
+            overrides = agreed = missed = 0
+            for row in rows:
+                student = action_key(row["student"])
+                label = action_key(row["arms"][name]["label"])
+                original = action_key(row["arms"]["A"]["label"])
+                reference = action_key(row["arms"]["H"]["label"])
+                overrides += label != student
+                agreed += label != student and label == reference
+                missed += original != student and original == reference and label == student
+            seconds = sum(row["arms"][name]["seconds"] for row in rows)
+            result["verification"][name] = {
+                "overrides": overrides, "h_agrees": fraction(agreed, overrides),
+                "missed_h_agreed": fraction(missed, baseline_agreed),
+                "search_seconds_per_game": seconds / result["games"],
+                "search_seconds_by_seed": {str(seed): sum(row["arms"][name]["seconds"] for row in rows
+                                                          if row["seed"] == seed) for seed in result["seeds"]},
+                "time_increase": seconds / baseline_seconds - 1}
+    return result
 
 
 def main() -> None:
