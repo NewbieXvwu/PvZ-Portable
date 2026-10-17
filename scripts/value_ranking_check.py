@@ -94,7 +94,9 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
         frame["action"] = previous_action
         legal = (obs.get("legal_actions") or {}).get("plants") or []
         action = act(net, frame, previous, legal, context=context.numpy())
-        if legal and obs["wave"] >= args.min_wave and rng.random() < args.position_rate:
+        chosen = (legal and obs["wave"] >= args.min_wave and obs["sun"] >= args.min_sun
+                  and (not args.student_waits or action["type"] != "plant"))
+        if chosen and rng.random() < args.position_rate:
             position, leaves = _evaluate(env, obs, frame, previous, legal, action, seed, len(positions), context)
             positions.append(position)
             dumped += leaves
@@ -270,6 +272,8 @@ def main() -> None:
     p.add_argument("--sim-skip", type=int, default=29)
     p.add_argument("--min-wave", type=int, default=3)
     p.add_argument("--position-rate", type=float, default=0.03, help="chance that a decision with legal plants is evaluated")
+    p.add_argument("--min-sun", type=int, default=0, help="only positions with at least this much sun")
+    p.add_argument("--student-waits", action="store_true", help="only positions where the student chose to wait")
     p.add_argument("--cells", type=int, default=1, help="the student's best N cells of every card")
     p.add_argument("--random-cells", type=int, default=0, help="plus N random legal cells of every card")
     p.add_argument("--min-gap", type=float, default=0.25)
