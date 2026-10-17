@@ -60,7 +60,16 @@ struct PlantDef
 	int32_t health;               // mPlantHealth at planting time (Plant constructor)
 	int32_t launchRate;           // gPlantDefs mLaunchRate: the shooters' shot clock, 0 = never fires
 	int32_t damage;               // per projectile
+	int32_t behavior;             // PB_*: which tick branch the kernel runs for this plant
+	int32_t shots;                // projectiles per launch (repeater fires two)
+	int32_t prodMin, prodMax;     // sun producer: the steady-state delay range in ticks
+	int32_t prodValue;            // sun producer: the coin's value
+	int32_t chills;               // its projectile applies the chill (snow pea)
 };
+
+// Which per-tick branch a plant runs.  Chosen by the exporter from PlantDefinition::mSubClass plus the
+// few types whose behaviour is special-cased in Plant::Update, so the kernel never has to know seed ids.
+enum { PB_NONE = 0, PB_SHOOTER = 1, PB_SUNPRODUCER = 2, PB_CHERRY = 3, PB_POTATO = 4, PB_WALL = 5 };
 
 struct ZombieDef
 {
@@ -154,6 +163,7 @@ struct RootProjectile
 {
 	int32_t type, row;            // ProjectileType
 	int32_t damage;               // gProjectileDefinition[type].mDamage
+	int32_t chill;                // 1 = this projectile applies the slow (the kernel must not need the enum)
 	int32_t age;                  // mProjectileAge (snow/pea decoy shot gate at 55)
 	float posX, posY, velX, velY;
 };
@@ -229,6 +239,16 @@ struct RootRecord
 // Device side request / result
 // ---------------------------------------------------------------------------
 
+// The committed wave future, indexed by root rather than by lane.  A continuation never rewrites it
+// (only the per-lane spawn cursor advances), so 200 roots cost 200 tables instead of one per lane --
+// at 64 lanes per block that saves about 250 KB of the working set.
+struct WaveTable
+{
+	int32_t waveCount;
+	int32_t zombieCount[kMaxWaves];
+	int32_t type[kMaxWaves][kWaveZombieSlots];
+};
+
 // One rollout = (root, first action, random future, horizon).  Mirrors what python/pvz_env.py sends
 // with ROLLOUT: kind 0 = the student decides at once, otherwise the encoded action runs first.
 struct RolloutRequest
@@ -249,7 +269,8 @@ struct RolloutRequest
 struct RolloutResult
 {
 	int32_t rootIndex;
-	int32_t decisions;            // student forwards actually run
+	int32_t decisions;            // student decision points reached
+	int32_t netCalls;             // the ones that actually ran the network, the CPU's networkCalls
 	int32_t ticks;                // ticks simulated
 	int32_t endTick;
 	int32_t result;               // 0 ongoing, 1 won, -1 lost
@@ -285,7 +306,7 @@ enum IntField {
 	F_ZOMBIE_TYPE, F_ZOMBIE_ROW, F_ZOMBIE_BODY, F_ZOMBIE_HELM, F_ZOMBIE_SHIELD, F_ZOMBIE_FLYING,
 	F_ZOMBIE_PHASE, F_ZOMBIE_PHASE_COUNTER, F_ZOMBIE_FLAGS, F_ZOMBIE_CHILLED,
 	F_ZOMBIE_AGE, F_ZOMBIE_FROM_WAVE, F_ZOMBIE_TARGET,
-	F_PROJ_TYPE, F_PROJ_ROW, F_PROJ_AGE, F_PROJ_DAMAGE,
+	F_PROJ_TYPE, F_PROJ_ROW, F_PROJ_AGE, F_PROJ_DAMAGE, F_PROJ_CHILL,
 	F_COIN_ACTIVE, F_COIN_VALUE, F_COIN_TICKS,
 	F_MOWER_STATE, F_MOWER_TIMER, F_MOWER_FLAGS, F_MOWER_CHOMP,
 	F_PACKET_TYPE, F_PACKET_ACTIVE, F_PACKET_COUNTER, F_PACKET_REFRESH, F_PACKET_COST,
@@ -300,7 +321,6 @@ enum FloatField {
 	F_PLANT_X, F_PLANT_Y,
 	F_ZOMBIE_X, F_ZOMBIE_Y, F_ZOMBIE_VELX, F_ZOMBIE_VELY,
 	F_PROJ_X, F_PROJ_Y, F_PROJ_VELX, F_PROJ_VELY,
-	F_COIN_X, F_COIN_Y,
 	F_MOWER_X,
 	F_ROW_LAST_PICKED, F_ROW_SECOND_LAST_PICKED,
 	F_FLOAT_FIELD_COUNT
@@ -319,10 +339,17 @@ enum ScalarField {
 	S_INCOME_HEAD, S_INCOME_COUNT, S_FIRST_ACTION, S_ERROR, S_WAVE_SPAWN_CURSOR,
 	S_ROOT_TICK, S_ROOT_SUN_PRODUCED, S_ROOT_ZOMBIES_KILLED, S_ROOT_PLANTS_EATEN,
 	S_ROOT_TRIGGERED_MOWERS, S_TICKS_SINCE_EVENT,
+	S_NET_CALLS,                    // forwards that actually ran the net, the CPU path's networkCalls
 	S_ROOT_INDEX,                   // which RootRecord this lane loaded, for indexing the wave table
 	S_RNG_HIGH, S_RNG_LOW,
+	// Lane lifecycle for the three-kernel round (sim → net+choose → apply).  A lane is LANE_RUNNING
+	// while the sim kernel may still advance it, LANE_DECIDING when it stopped at a decision point, and
+	// LANE_DONE once it hit the horizon, the action cap or a terminal result.
+	S_STATE, S_UNTIL_TICK, S_MAX_ACTIONS, S_STOP_REASON,
 	S_SCALAR_COUNT
 };
+
+enum { LANE_RUNNING = 0, LANE_DECIDING = 1, LANE_DONE = 2 };
 
 constexpr int IntSlotCount(IntField field)
 {
@@ -337,7 +364,7 @@ constexpr int IntSlotCount(IntField field)
 	case F_ZOMBIE_FLAGS: case F_ZOMBIE_CHILLED: case F_ZOMBIE_AGE: case F_ZOMBIE_FROM_WAVE:
 	case F_ZOMBIE_TARGET:
 		return kZombieSlots;
-	case F_PROJ_TYPE: case F_PROJ_ROW: case F_PROJ_AGE: case F_PROJ_DAMAGE:
+	case F_PROJ_TYPE: case F_PROJ_ROW: case F_PROJ_AGE: case F_PROJ_DAMAGE: case F_PROJ_CHILL:
 		return kProjectileSlots;
 	case F_COIN_ACTIVE: case F_COIN_VALUE: case F_COIN_TICKS:
 		return kCoinSlots;
@@ -361,12 +388,12 @@ constexpr int FloatSlotCount(FloatField field)
 {
 	switch (field)
 	{
-	case F_PLANT_X: case F_PLANT_Y: case F_ZOMBIE_X: case F_ZOMBIE_Y: case F_ZOMBIE_VELX: case F_ZOMBIE_VELY:
+	case F_PLANT_X: case F_PLANT_Y:
+		return kPlantSlots;
+	case F_ZOMBIE_X: case F_ZOMBIE_Y: case F_ZOMBIE_VELX: case F_ZOMBIE_VELY:
 		return kZombieSlots;
 	case F_PROJ_X: case F_PROJ_Y: case F_PROJ_VELX: case F_PROJ_VELY:
 		return kProjectileSlots;
-	case F_COIN_X: case F_COIN_Y:
-		return kCoinSlots;
 	case F_MOWER_X:
 		return kMowerSlots;
 	case F_ROW_LAST_PICKED: case F_ROW_SECOND_LAST_PICKED:

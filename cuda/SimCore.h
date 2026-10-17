@@ -10,8 +10,13 @@
 #define PVZ_SIM_CORE_H
 
 #include "CudaRollout.h"
+#include "NetCore.h"
 
 #include <cstdint>
+
+#ifdef PVZ_LANE_CHECK
+#include <cstdio>
+#endif
 
 #ifdef __CUDACC__
 #define PVZ_SIM __host__ __device__ inline
@@ -31,11 +36,43 @@ struct Lane
 	int32_t lane;
 	int32_t stride;      // padded lane count; 1 in the single-lane host build
 
+#ifdef PVZ_LANE_CHECK
+	// Opt-in so an out-of-range slot or a lane/stride mismatch names itself instead of showing up as
+	// an "illegal memory access" several calls later.  Costs a comparison per access: debug builds only.
+	template <typename T>
+	PVZ_SIM void probe(const char* what, T field, int32_t slot, int32_t capacity)
+	{
+		if (slot >= 0 && slot < capacity && lane >= 0 && lane < stride) return;
+		printf("lane check: lane %d of stride %d, %s field %d slot %d (capacity %d)\n", lane, stride,
+			what, static_cast<int>(field), slot, capacity);
+	}
+#endif
+
 	PVZ_SIM int32_t* base(IntField field) { return ints + IntFieldOffset(field) * stride + lane; }
 	PVZ_SIM float* base(FloatField field) { return floats + FloatFieldOffset(field) * stride + lane; }
-	PVZ_SIM int32_t& i(IntField field, int slot) { return base(field)[slot * stride]; }
-	PVZ_SIM float& f(FloatField field, int slot) { return base(field)[slot * stride]; }
-	PVZ_SIM int32_t& s(ScalarField which) { return base(F_SCALAR)[which]; }
+	PVZ_SIM int32_t& i(IntField field, int slot)
+	{
+#ifdef PVZ_LANE_CHECK
+		probe("int", field, slot, IntSlotCount(field));
+#endif
+		return base(field)[slot * stride];
+	}
+	PVZ_SIM float& f(FloatField field, int slot)
+	{
+#ifdef PVZ_LANE_CHECK
+		probe("float", field, slot, FloatSlotCount(field));
+#endif
+		return base(field)[slot * stride];
+	}
+	PVZ_SIM int32_t& s(ScalarField which)
+	{
+#ifdef PVZ_LANE_CHECK
+		probe("scalar", which, 0, kScalarSlots);
+#endif
+		// The scalar block is a field like any other, so its slots are lane-strided too: `which` without
+		// the stride would put lane L's scalars on top of lane L+1's (64 slots per lane, 32 lanes apart).
+		return base(F_SCALAR)[which * stride];
+	}
 };
 
 // ---------------------------------------------------------------------------
@@ -118,12 +155,18 @@ struct Rand
 };
 
 // The lane's own stream, kept in the scalar block so the tick logic needs no extra pointer.  Two
-// uint32 halves live in two int slots; the RNG advances a fixed number of times per decision, not per
-// tick, so it does not have to be reloaded from disk.
+// uint32 halves live in two int slots; the state is loaded once per tick and stored once per tick, so
+// a lane that draws nothing still costs two memory ops.
 PVZ_SIM uint64_t RandState(Lane lane)
 {
 	return (static_cast<uint64_t>(static_cast<uint32_t>(lane.s(S_RNG_HIGH))) << 32)
-		| static_cast<uint32_t>(lane.s(S_RNG_LOW));
+		| static_cast<uint32_t>(static_cast<uint32_t>(lane.s(S_RNG_LOW)));
+}
+
+PVZ_SIM void StoreRandState(Lane lane, const Rand& rand)
+{
+	lane.s(S_RNG_HIGH) = static_cast<int32_t>(static_cast<uint32_t>(rand.state >> 32));
+	lane.s(S_RNG_LOW) = static_cast<int32_t>(static_cast<uint32_t>(rand.state & 0xFFFFFFFFu));
 }
 
 // ---------------------------------------------------------------------------
@@ -198,14 +241,9 @@ PVZ_SIM double IncomeRate(Lane lane)
 // ---------------------------------------------------------------------------
 
 // Activation layout for the batched network: index = (channel * kCells + cell) * stride + lane, so
-// one warp reading one channel of one cell touches 128 contiguous bytes.
-struct NetBuffers
-{
-	float* board;      // kBoardChannels * kCells * stride
-	float* scalars;    // (kScalars + 1 + kZombieTypes) * stride
-};
-
-void BuildFeatures(Lane lane, const LevelInfo& level, const NetBuffers& buffers, const float* waveLog,
+// one warp reading one channel of one cell touches 128 contiguous bytes.  The buffers themselves are
+// cuda/NetCore.h's NetState, shared with the forward.
+PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& buffers, const float* waveLog,
 	bool previousValid);
 
 // ---------------------------------------------------------------------------
@@ -215,10 +253,10 @@ void BuildFeatures(Lane lane, const LevelInfo& level, const NetBuffers& buffers,
 // Transpose one exported position into this lane's SoA slots and reset the rollout bookkeeping.
 // Returns 0 when the record holds something outside the kernel's coverage (the exporter marks those,
 // and a batch built from a stale file is rejected lane by lane rather than silently mis-simulated).
-int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& level);
+PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& level);
 
 // Leaf statistics in the same units as the ROLLOUT response's "events" block.
-void StoreResult(Lane lane, RolloutResult& out);
+PVZ_SIM void StoreResult(Lane lane, RolloutResult& out);
 
 // ---------------------------------------------------------------------------
 // One tick of the game, and the decision step around it (cuda/SimTick.inc)
@@ -230,16 +268,24 @@ struct Decision
 	int32_t row, col;
 };
 
-// Advance exactly one tick, in the original's order (see cuda/spec/protocol.md).
-void UpdateTick(Lane lane, const LevelInfo& level, Rand& rand);
+// Advance exactly one tick, in the original's order (see cuda/spec/board.md).  `waves` is the root's
+// imported wave table, which the spawn cursor walks but never rewrites.
+PVZ_SIM void UpdateTick(Lane lane, const LevelInfo& level, const WaveTable& waves, Rand& rand);
 
 // Whether any card can be picked up and planted somewhere right now.  The rollout loop uses this to
 // skip the network entirely when the answer is no, so it has to match EnvironmentAnyLegalPlant.
-bool AnyLegalPlant(Lane lane, const LevelInfo& level);
+PVZ_SIM int32_t AnyLegalPlant(Lane lane, const LevelInfo& level);
 
 // Planting, exactly as EnvironmentPlant does it: legality re-check, sun deduction, AddPlant state,
-// card deactivated into its refresh clock.  Returns false when the action would have been rejected.
-bool ActionPlant(Lane lane, const LevelInfo& level, int32_t packet, int32_t row, int32_t col, Rand& rand);
+// card deactivated into its refresh clock.  Returns 0 when the action would have been rejected.
+PVZ_SIM int32_t ActionPlant(Lane lane, const LevelInfo& level, int32_t packet, int32_t row, int32_t col,
+	Rand& rand);
+
+// The wait round: EnvironmentWaitUntil(60, 0) as a tick loop that ends early on one of the three
+// events the original watches (terminal, a mower leaving READY, a zombie newly entering the left
+// zone) -- cuda/spec/protocol.md 1.5.  Returns the ticks actually advanced.
+PVZ_SIM int32_t WaitRound(Lane lane, const LevelInfo& level, const WaveTable& waves, Rand& rand,
+	int32_t requested);
 
 }  // namespace pvzc
 
