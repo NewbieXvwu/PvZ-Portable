@@ -1,117 +1,535 @@
 // Single-lane host build of the re-implemented core: one lane, stride 1, the SoA in a heap block.
 //
-// Its purpose is diagnosis.  The same SimImpl.inc / SimTick.inc the device runs is compiled here by
-// plain g++, so an out-of-bounds slot index, a wrong loop bound or a bad constant shows up under
-// -fsanitize=address with a source line, without a GPU round trip and without nvcc's inlining making
-// the attribution ambiguous.  It is also the reference the phase-1 agreement test compares the GPU
-// against when a disagreement must be split into "GPU bug" vs "mechanics bug".
+// Its purpose is diagnosis.  The same SimImpl.inc / SimTick.inc / NetForward.inc / Rollout.inc the
+// device runs is compiled here by plain g++, so an out-of-bounds slot index, a wrong loop bound or a
+// bad constant shows up under -fsanitize=address with a source line, without a GPU round trip and
+// without nvcc's inlining making the attribution ambiguous.  It is also the reference the phase-1
+// agreement test compares the GPU against when a disagreement must be split into "GPU bug" vs
+// "mechanics bug": host build disagrees with the GPU -> GPU bug; host build disagrees with the
+// original simulator -> mechanics bug.
+//
+// It runs the whole rollout, not just the tick: it reads a .cudaroot corpus and a .pvzrn student dump,
+// transposes one RootRecord into the SoA (pvzc::LoadRoot, the same function the device's InitKernel
+// calls), then calls pvzc::RunRollout(...) with useNet = 1, which is the single-threaded stringing
+// together of the same RoundTop / NetDecide / RoundApply pieces the device splits across kernels.
 //
 // build: g++ -fsanitize=address -g -O1 -std=c++17 -I. -o build/sim_host cuda/SimHost.cpp
-#include "cuda/SimTick.inc"
+// run:   ./build/sim_host --roots artifacts/cuda/corpus_smoke/roots.cudaroot
+//        --net artifacts/cuda/student/v14.pvzrn --per-root 8 --horizon 2500
+//
+// The activations use the device's chunked, padded layout (cuda/CudaRollout.h), so the host allocates
+// one whole chunk of kNetChunk lanes to run a single lane.  That is deliberate: the layout is what
+// makes the batched GEMMs and these per-lane loops address the same float, and the phase-1 test is
+// about the mechanics, not about the host build being fast.  See cuda/spec/host.md.
 
+// Before the .inc chain: cuda/NetCore.h names `size_t` unqualified but only includes <cstdint>, which
+// libstdc++ does not have to define at global scope.  nvcc gets it for free from its own preincludes,
+// plain g++ does not, so the host build pulls it in first rather than editing the shared header.
+#include <cstddef>
+
+#include <chrono>
+#include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string>
 #include <vector>
+
+#include "cuda/SimTick.inc"
+#include "cuda/NetForward.inc"
+#include "cuda/Rollout.inc"
 
 namespace pvzhost
 {
 
+using namespace pvzc;
+
+enum { kRecordLevel = 1, kRecordRoot = 2 };
+
+[[noreturn]] void Fail(const std::string& message)
+{
+	std::fprintf(stderr, "sim-host: %s\n", message.c_str());
+	std::exit(1);
+}
+
+// ---------------------------------------------------------------------------
+// The corpus: one LEVEL record and N ROOT records, each written as the raw struct it mirrors
+// ---------------------------------------------------------------------------
+
 struct Corpus
 {
-	pvzc::LevelInfo level{};
-	std::vector<pvzc::RootRecord> roots;
+	LevelInfo level{};
+	std::vector<RootRecord> roots;
+	bool haveLevel = false;
 };
 
-Corpus Read(const char* path)
+Corpus ReadCorpus(const std::string& path)
 {
-	FILE* file = std::fopen(path, "rb");
-	if (!file) { std::perror("open"); std::exit(2); }
-	std::fseek(file, 0, SEEK_END);
-	const long size = std::ftell(file);
-	std::fseek(file, 0, SEEK_SET);
-	std::vector<char> raw(static_cast<size_t>(size));
-	if (std::fread(raw.data(), 1, raw.size(), file) != raw.size()) { std::fprintf(stderr, "short\n"); std::exit(2); }
-	std::fclose(file);
+	std::FILE* stream = std::fopen(path.c_str(), "rb");
+	if (!stream) Fail("cannot open " + path);
 	Corpus corpus;
-	size_t off = 0;
-	while (off + 12 <= raw.size())
+	int32_t tag[3];
+	while (std::fread(tag, sizeof(tag), 1, stream) == 1)
 	{
-		int32_t magic = 0, version = 0, kind = 0;
-		std::memcpy(&magic, raw.data() + off, 4);
-		std::memcpy(&version, raw.data() + off + 4, 4);
-		std::memcpy(&kind, raw.data() + off + 8, 4);
-		if (magic != pvzc::kMagic || version != pvzc::kVersion) { std::fprintf(stderr, "bad tag\n"); std::exit(2); }
-		off += 12;
-		if (kind == 1) { std::memcpy(&corpus.level, raw.data() + off, sizeof(pvzc::LevelInfo)); off += sizeof(pvzc::LevelInfo); continue; }
-		if (kind != 2) { std::fprintf(stderr, "unknown kind %d\n", kind); std::exit(2); }
-		pvzc::RootRecord root;
-		std::memcpy(&root, raw.data() + off, sizeof(pvzc::RootRecord));
-		off += sizeof(pvzc::RootRecord);
-		if (root.supported) corpus.roots.push_back(root);
+		if (tag[0] != kMagic || tag[1] != kVersion)
+			Fail("record tag " + std::to_string(tag[0]) + "/" + std::to_string(tag[1]) + " is not PVC"
+				+ std::to_string(kVersion) + " in " + path);
+		if (tag[2] == kRecordLevel)
+		{
+			if (std::fread(&corpus.level, sizeof(LevelInfo), 1, stream) != 1) Fail("short level record");
+			corpus.haveLevel = true;
+		}
+		else if (tag[2] == kRecordRoot)
+		{
+			RootRecord root;
+			if (std::fread(&root, sizeof(RootRecord), 1, stream) != 1) Fail("short root record");
+			// The exporter marks positions it cannot represent; they are dropped here exactly as the
+			// device driver drops them, so both sides index roots the same way.
+			if (root.supported) corpus.roots.push_back(root);
+		}
+		else Fail("unknown record kind " + std::to_string(tag[2]));
 	}
+	// A trailing partial record means a truncated transfer, and the loop above would have stopped
+	// mid-tag: say so rather than reporting a corpus that silently lost its last root.
+	const long here = std::ftell(stream);
+	std::fseek(stream, 0, SEEK_END);
+	if (std::ftell(stream) != here) Fail(path + " ends with a partial record");
+	std::fclose(stream);
+	if (!corpus.haveLevel) Fail(path + " holds no level record");
+	if (corpus.roots.empty()) Fail(path + " holds no supported roots");
 	return corpus;
 }
 
-pvzc::WaveTable WaveOf(const pvzc::RootRecord& root)
+// ---------------------------------------------------------------------------
+// The student dump, in EnvironmentRollout::Load's order (the device driver's ReadNet, same counts)
+// ---------------------------------------------------------------------------
+
+std::vector<size_t> WeightCounts(int32_t width, int32_t meanmax, int32_t withContext)
 {
-	pvzc::WaveTable table{};
-	table.waveCount = root.waveCount;
-	for (int32_t wave = 0; wave < pvzc::kMaxWaves; ++wave)
+	const size_t w = static_cast<size_t>(width);
+	const size_t context = (meanmax ? 3 : 2) * w;
+	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0);
+	return {w * kBoardChannels * 9, w, w * w * 9, w, w * w * 5, w, w * scalars, w,
+		context, 1, 10 * context, 10, 10 * w, w * (2 * w + context), w, w, 1};
+}
+
+struct NetImage
+{
+	std::vector<float> values;
+	NetParams params{};
+};
+
+NetImage ReadNet(const std::string& path)
+{
+	std::FILE* stream = std::fopen(path.c_str(), "rb");
+	if (!stream) Fail("cannot open " + path);
+	char magic[9] = {0};
+	uint32_t width = 0, pool = 0, withContext = 0;
+	if (std::fread(magic, 8, 1, stream) != 1) Fail(path + " is too short");
+	const std::string version(magic, 8);
+	if (version != "PVZRN002" && version != "PVZRN003") Fail("unsupported network dump " + version);
+	if (std::fread(&width, 4, 1, stream) != 1 || std::fread(&pool, 4, 1, stream) != 1) Fail("short header");
+	if (version == "PVZRN003" && std::fread(&withContext, 4, 1, stream) != 1) Fail("short header");
+	if (width < 1 || width > kMaxNetWidth) Fail("network width " + std::to_string(width) + " out of range");
+
+	NetImage image;
+	const std::vector<size_t> counts = WeightCounts(static_cast<int32_t>(width), pool ? 1 : 0,
+		withContext ? 1 : 0);
+	size_t total = 0;
+	for (size_t count : counts) total += count;
+	image.values.resize(total);
+	size_t offset = 0;
+	for (size_t count : counts)
 	{
-		table.zombieCount[wave] = root.waveZombieCount[wave];
-		for (int32_t slot = 0; slot < pvzc::kWaveZombieSlots; ++slot)
-			table.type[wave][slot] = root.waveTable[wave][slot];
+		if (std::fread(image.values.data() + offset, sizeof(float), count, stream) != count)
+			Fail(path + " holds fewer weights than the header promises");
+		offset += count;
 	}
+	if (std::fgetc(stream) != EOF) Fail(path + " holds trailing data");
+	std::fclose(stream);
+
+	// File order = Load order = conv1, bias1, conv2, bias2, conv3, bias3, scalar, scalarBias, plant,
+	// plantBias, packet, packetBias, embedding, cell, cellBias, cellOut, cellOutBias.  Unlike the
+	// device, these pointers are the real ones the per-lane loops dereference, and they stay in dump
+	// order: cuda/RolloutCuda.cu repacks the trunk for cuBLAS, the host build never does.
+	const float* base = image.values.data();
+	size_t cursor = 0;
+	auto take = [base, &cursor](size_t count)
+	{
+		const float* pointer = base + cursor;
+		cursor += count;
+		return pointer;
+	};
+	NetParams& params = image.params;
+	params.width = static_cast<int32_t>(width);
+	params.meanmax = pool ? 1 : 0;
+	params.taskContext = withContext ? 1 : 0;
+	params.version = version == "PVZRN003" ? 3 : 2;
+	params.contextSize = (params.meanmax ? 3 : 2) * params.width;
+	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0);
+	params.conv1 = take(counts[0]);
+	params.bias1 = take(counts[1]);
+	params.conv2 = take(counts[2]);
+	params.bias2 = take(counts[3]);
+	params.conv3 = take(counts[4]);
+	params.bias3 = take(counts[5]);
+	params.scalarWeight = take(counts[6]);
+	params.scalarBias = take(counts[7]);
+	params.plantWeight = take(counts[8]);
+	params.plantBias = take(counts[9]);
+	params.packetWeight = take(counts[10]);
+	params.packetBias = take(counts[11]);
+	params.packetEmbedding = take(counts[12]);
+	params.cellWeight = take(counts[13]);
+	params.cellBias = take(counts[14]);
+	params.cellOut = take(counts[15]);
+	params.cellOutBias = take(counts[16]);
+	if (cursor != total) Fail("weight counts do not add up");
+	return image;
+}
+
+// ---------------------------------------------------------------------------
+// Activations: one chunk of kNetChunk lanes, padded grid, zero halo, exactly as the device allocates
+// ---------------------------------------------------------------------------
+
+// The largest index each buffer is addressed by, derived from the very formulas NetForward.inc and
+// SimImpl.inc use, so a layout change makes the allocation check below fail loudly instead of turning
+// into an out-of-bounds write that ASan attributes to the wrong line.
+size_t PlaneCapacity(int32_t channels)
+{
+	return PlaneIndex(channels, kNetChunk - 1, channels - 1, kPlaneCells - 1) + 1;
+}
+
+size_t VectorCapacity(int32_t width)
+{
+	return VectorIndex(width, kNetChunk - 1, width - 1) + 1;
+}
+
+struct Activations
+{
+	std::vector<float> board, scalars, hidden, scratch, context, logits;
+	NetState state{};
+
+	void Build(int32_t width, int32_t contextSize)
+	{
+		board.assign(PlaneCapacity(kBoardChannels), 0.0f);
+		scalars.assign(VectorCapacity(kScalarFeatures), 0.0f);
+		hidden.assign(PlaneCapacity(width), 0.0f);
+		scratch.assign(PlaneCapacity(width), 0.0f);
+		context.assign(VectorCapacity(contextSize), 0.0f);
+		logits.assign(VectorCapacity(kLogitCells), 0.0f);
+		state.board = board.data();
+		state.scalars = scalars.data();
+		state.hidden = hidden.data();
+		state.scratch = scratch.data();
+		state.context = context.data();
+		state.logits = logits.data();
+	}
+
+	size_t bytes() const
+	{
+		return (board.size() + scalars.size() + hidden.size() + scratch.size() + context.size()
+			+ logits.size()) * sizeof(float);
+	}
+};
+
+// log1p(waves)/log1p(50), uploaded by the device driver and read here: same table, same bits.
+std::vector<float> WaveLogTable()
+{
+	std::vector<float> table(kMaxWaves + 1);
+	for (int32_t index = 0; index <= kMaxWaves; ++index)
+		table[index] = static_cast<float>(std::log1p(static_cast<double>(index)) / std::log1p(50.0));
 	return table;
+}
+
+// ---------------------------------------------------------------------------
+// Leaf statistics, aggregated the way the device driver aggregates them
+// ---------------------------------------------------------------------------
+
+struct Leaf
+{
+	int64_t rollouts = 0;
+	int64_t ticks = 0, decisions = 0, netCalls = 0, planted = 0, eaten = 0, killed = 0;
+	int64_t sun = 0, wave = 0, mowers = 0, zombiesAlive = 0, plantsAlive = 0, sunProduced = 0;
+	int64_t won = 0, lost = 0, ongoing = 0, errors = 0;
+
+	void Add(const RolloutResult& result)
+	{
+		++rollouts;
+		ticks += result.ticks;
+		decisions += result.decisions;
+		netCalls += result.netCalls;
+		planted += result.plantsPlanted;
+		eaten += result.plantsEaten;
+		killed += result.zombiesKilled;
+		sun += result.sun;
+		wave += result.wave;
+		mowers += result.mowersLeft;
+		zombiesAlive += result.zombiesAlive;
+		plantsAlive += result.plantsAlive;
+		sunProduced += result.sunProduced;
+		if (result.result > 0) ++won;
+		else if (result.result < 0) ++lost;
+		else ++ongoing;
+		if (result.errorFlags != 0) ++errors;
+	}
+
+	void Merge(const Leaf& other)
+	{
+		rollouts += other.rollouts; ticks += other.ticks; decisions += other.decisions;
+		netCalls += other.netCalls; planted += other.planted; eaten += other.eaten;
+		killed += other.killed; sun += other.sun; wave += other.wave; mowers += other.mowers;
+		zombiesAlive += other.zombiesAlive; plantsAlive += other.plantsAlive;
+		sunProduced += other.sunProduced; won += other.won; lost += other.lost;
+		ongoing += other.ongoing; errors += other.errors;
+	}
+
+	// One row of the table.  `scale` divides the sums, so a row can be printed as a mean per rollout.
+	// The last two live-entity counts are not in cuda/RolloutCuda.cu's printed set, but they are in the
+	// original simulator's reference dump (artifacts/cuda/corpus_smoke/corpus.jsonl), which is the other
+	// half of the agreement test.
+	void Print(const char* label, double scale) const
+	{
+		if (!rollouts) { std::printf("%-11s %6d  (no rollouts)\n", label, 0); return; }
+		const double n = scale > 0.0 ? scale : 1.0;
+		std::printf("%-11s %6lld  %8.1f  %7.1f  %7.1f  %7.1f  %7.1f  %7.1f  %8.1f  %6.2f  %5.2f"
+			"  %6.2f  %6.2f   %5lld/%5lld/%6lld  %4lld\n",
+			label, static_cast<long long>(rollouts), static_cast<double>(ticks) / n,
+			static_cast<double>(decisions) / n, static_cast<double>(netCalls) / n,
+			static_cast<double>(planted) / n, static_cast<double>(eaten) / n,
+			static_cast<double>(killed) / n, static_cast<double>(sun) / n,
+			static_cast<double>(wave) / n, static_cast<double>(mowers) / n,
+			static_cast<double>(plantsAlive) / n, static_cast<double>(zombiesAlive) / n,
+			static_cast<long long>(won), static_cast<long long>(lost),
+			static_cast<long long>(ongoing), static_cast<long long>(errors));
+	}
+};
+
+void PrintHeader()
+{
+	std::printf("%-11s %6s  %8s  %7s  %7s  %7s  %7s  %7s  %8s  %6s  %5s  %6s  %6s   %19s  %4s\n",
+		"scope", "rolls", "ticks", "decis", "net", "plant", "eaten", "kill", "sun", "wave", "mower",
+		"palive", "zalive", "w/lost/ongoing", "err");
 }
 
 }  // namespace pvzhost
 
-static int32_t Live(pvzc::Lane lane, pvzc::IntField typeField, int32_t slots)
+// ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
+
+namespace
 {
-	int32_t count = 0;
-	for (int32_t slot = 0; slot < slots; ++slot)
-		if (lane.i(typeField, slot) >= 0) ++count;
-	return count;
+
+using namespace pvzhost;
+
+struct Options
+{
+	std::string roots = "artifacts/cuda/corpus_smoke/roots.cudaroot";
+	std::string net = "artifacts/cuda/student/v14.pvzrn";
+	int32_t perRoot = 8;
+	int32_t horizon = 2500;
+	int32_t maxActions = 3000;
+	int32_t repeat = 1;
+	int32_t seedBase = 1600000000;
+	int32_t useNet = 1;
+	int32_t rootLimit = 0;          // 0 = every supported root
+	// Fill the scalar activation vector with this value before the first forward.  BuildFeatures writes
+	// only the indices its deck and its scalars cover; everything it never writes but NetContext still
+	// reads keeps this value instead of 0.  Left at 0 it is a no-op; see cuda/spec/host.md item 3.
+	float poison = 0.0f;
+};
+
+std::string Value(int argc, char** argv, int& index)
+{
+	if (++index >= argc) Fail("missing value for " + std::string(argv[index - 1]));
+	return argv[index];
 }
+
+Options Parse(int argc, char** argv)
+{
+	Options options;
+	for (int index = 1; index < argc; ++index)
+	{
+		const std::string flag = argv[index];
+		if (flag == "--roots") options.roots = Value(argc, argv, index);
+		else if (flag == "--net") options.net = Value(argc, argv, index);
+		else if (flag == "--per-root") options.perRoot = std::atoi(Value(argc, argv, index).c_str());
+		else if (flag == "--horizon") options.horizon = std::atoi(Value(argc, argv, index).c_str());
+		else if (flag == "--max-actions") options.maxActions = std::atoi(Value(argc, argv, index).c_str());
+		else if (flag == "--repeat") options.repeat = std::atoi(Value(argc, argv, index).c_str());
+		else if (flag == "--seed-base") options.seedBase = std::atoi(Value(argc, argv, index).c_str());
+		else if (flag == "--root-limit") options.rootLimit = std::atoi(Value(argc, argv, index).c_str());
+		else if (flag == "--poison") options.poison = std::strtof(Value(argc, argv, index).c_str(), nullptr);
+		else if (flag == "--bench")
+		{
+			const std::string mode = Value(argc, argv, index);
+			// Same meaning as cuda/RolloutCuda.cu's --bench sim: the tick loop and the wait rounds, no
+			// forward at all.  Isolates the mechanics from the network when a number looks wrong.
+			if (mode == "full") options.useNet = 1;
+			else if (mode == "sim") options.useNet = 0;
+			else Fail("--bench takes full|sim");
+		}
+		else Fail("unknown flag " + flag);
+	}
+	if (options.perRoot < 1 || options.repeat < 1 || options.horizon < 1 || options.maxActions < 1)
+		Fail("--per-root, --repeat, --horizon and --max-actions must all be positive");
+	return options;
+}
+
+double Seconds(const std::chrono::steady_clock::time_point& from,
+	const std::chrono::steady_clock::time_point& to)
+{
+	return std::chrono::duration<double, std::ratio<1>>(to - from).count();
+}
+
+}  // namespace
+
+// ---------------------------------------------------------------------------
+// main
+// ---------------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
-	const char* path = argc > 1 ? argv[1] : "artifacts/cuda/corpus_smoke/roots.cudaroot";
-	const int32_t ticks = argc > 2 ? std::atoi(argv[2]) : 300;
-	pvzhost::Corpus corpus = pvzhost::Read(path);
-	std::printf("host core: %zu supported roots, IntSlotsTotal %d, FloatSlotsTotal %d\n",
-		corpus.roots.size(), pvzc::IntSlotsTotal(), pvzc::FloatSlotsTotal());
+	const Options options = Parse(argc, argv);
+	Corpus corpus = ReadCorpus(options.roots);
+	NetImage image = ReadNet(options.net);
+
+	const int32_t rootCount = static_cast<int32_t>(corpus.roots.size());
+	if (options.rootLimit > 0 && options.rootLimit < rootCount)
+	{
+		corpus.roots.resize(static_cast<size_t>(options.rootLimit));
+	}
+	const int32_t used = static_cast<int32_t>(corpus.roots.size());
+	const int32_t distinct = used * options.perRoot;
+	const int32_t total = distinct * options.repeat;
+
+	Activations activations;
+	activations.Build(image.params.width, image.params.contextSize);
+	// Only the scalar vector is poisoned: the board's halo and the planes' halo must stay zero forever or
+	// the padded-grid trick that makes a tap a constant offset stops being equivalent to zero padding.
+	if (options.poison != 0.0f)
+	{
+		std::fill(activations.scalars.begin(), activations.scalars.end(), options.poison);
+		std::printf("diagnostic: scalars pre-filled with %.6g (board/plane halo left at 0)\n",
+			static_cast<double>(options.poison));
+	}
+	const std::vector<float> waveLog = WaveLogTable();
+
+	// The wave table is the future the original already committed to; it is indexed by root, so the host
+	// keeps the same array the device uploads.
+	std::vector<WaveTable> waves(static_cast<size_t>(used));
+	for (int32_t index = 0; index < used; ++index)
+	{
+		const RootRecord& root = corpus.roots[index];
+		WaveTable& table = waves[index];
+		table.waveCount = root.waveCount;
+		for (int32_t wave = 0; wave < kMaxWaves; ++wave)
+		{
+			table.zombieCount[wave] = root.waveZombieCount[wave];
+			for (int32_t slot = 0; slot < kWaveZombieSlots; ++slot)
+				table.type[wave][slot] = root.waveTable[wave][slot];
+		}
+	}
 
 	// ASan needs red zones around the SoA, so the arrays are heap allocated at exactly their declared
 	// size rather than padded: an out-of-range slot index then lands in a red zone.
-	int32_t* ints = static_cast<int32_t*>(std::calloc(pvzc::IntSlotsTotal(), sizeof(int32_t)));
-	float* floats = static_cast<float*>(std::calloc(pvzc::FloatSlotsTotal(), sizeof(float)));
+	std::vector<int32_t> ints(static_cast<size_t>(IntSlotsTotal()), 0);
+	std::vector<float> floats(static_cast<size_t>(FloatSlotsTotal()), 0.0f);
+	// One lane, stride 1, and the activation slot is 0 too: the batched trunk never runs here, so the
+	// single lane always writes chunk 0, local lane 0.
+	Lane lane{ints.data(), floats.data(), 0, 1, 0};
 
-	for (size_t index = 0; index < corpus.roots.size(); ++index)
+	std::printf("host core: %d supported roots used of %d, IntSlotsTotal %d, FloatSlotsTotal %d\n",
+		used, rootCount, IntSlotsTotal(), FloatSlotsTotal());
+	std::printf("student %s: width %d, %s, %s context, %zu weights; activations %.1f MB (one chunk of %d lanes)\n",
+		image.params.version == 3 ? "PVZRN003" : "PVZRN002", image.params.width,
+		image.params.meanmax ? "meanmax" : "mean", image.params.taskContext ? "with" : "without",
+		image.values.size(), static_cast<double>(activations.bytes()) / 1048576.0, kNetChunk);
+	std::printf("level %d, %d waves, %d playable rows, %d deck cards; workload %d roots x %d futures"
+		" x %d repeats = %d rollouts, horizon %d ticks, max-actions %d, seeds %d..%d, bench %s\n",
+		corpus.level.level, corpus.level.numWaves, corpus.level.playableRows, corpus.level.plantCount,
+		used, options.perRoot, options.repeat, total, options.horizon, options.maxActions,
+		options.seedBase, options.seedBase + options.perRoot - 1, options.useNet ? "full" : "sim");
+
+	Leaf aggregate;
+	std::vector<Leaf> perRoot(static_cast<size_t>(used));
+	int32_t rejected = 0;
+
+	const auto startTime = std::chrono::steady_clock::now();
+	for (int32_t repeat = 0; repeat < options.repeat; ++repeat)
 	{
-		const pvzc::RootRecord& root = corpus.roots[index];
-		const pvzc::WaveTable waves = pvzhost::WaveOf(root);
-		std::memset(ints, 0, static_cast<size_t>(pvzc::IntSlotsTotal()) * sizeof(int32_t));
-		std::memset(floats, 0, static_cast<size_t>(pvzc::FloatSlotsTotal()) * sizeof(float));
-		pvzc::Lane lane{ints, floats, 0, 1};
-		if (!pvzc::LoadRoot(lane, root, corpus.level))
+		// rollout -> (root, future), the same walk cuda/RolloutCuda.cu's RolloutOf does.  Repeats replay
+		// the identical (root, seed) pair, and a continuation is deterministic, so they measure throughput
+		// only -- see cuda/spec/host.md.
+		for (int32_t slot = 0; slot < distinct; ++slot)
 		{
-			std::printf("root %zu rejected by LoadRoot\n", index);
-			continue;
+			const int32_t rootIndex = slot / options.perRoot;
+			const int32_t futureSeed = options.seedBase + slot % options.perRoot;
+			const RootRecord& root = corpus.roots[static_cast<size_t>(rootIndex)];
+
+			// The SoA is reset wholesale rather than relying on LoadRoot to clear every field it writes:
+			// a field LoadRoot forgets would otherwise carry the previous rollout's value into this one,
+			// which is exactly the class of bug this build exists to catch.
+			std::fill(ints.begin(), ints.end(), 0);
+			std::fill(floats.begin(), floats.end(), 0.0f);
+			if (!LoadRoot(lane, root, corpus.level))
+			{
+				++rejected;
+				std::fprintf(stderr, "root %d rejected by LoadRoot\n", rootIndex);
+				continue;
+			}
+			lane.s(S_ROOT_INDEX) = rootIndex;
+			lane.s(S_UNTIL_TICK) = root.tick + options.horizon;
+			RunRollout(lane, corpus.level, waves[static_cast<size_t>(rootIndex)], image.params,
+				activations.state, waveLog.data(), futureSeed, options.maxActions, options.useNet);
+
+			RolloutResult result{};
+			StoreResult(lane, result);
+			perRoot[static_cast<size_t>(rootIndex)].Add(result);
+			aggregate.Add(result);
 		}
-		lane.s(pvzc::S_ROOT_INDEX) = static_cast<int32_t>(index);
-		pvzc::Rand rand;
-		rand.Seed(1600000 + static_cast<int32_t>(index), 7);
-		for (int32_t step = 0; step < ticks && lane.s(pvzc::S_RESULT) == 0; ++step)
-			pvzc::UpdateTick(lane, corpus.level, waves, rand);
-		std::printf("root %zu tick %d -> %d plants %d zombies %d result %d errors %d\n", index,
-			root.tick, lane.s(pvzc::S_TICK), Live(lane, pvzc::F_PLANT_TYPE, pvzc::kPlantSlots),
-			Live(lane, pvzc::F_ZOMBIE_TYPE, pvzc::kZombieSlots),
-			lane.s(pvzc::S_RESULT), lane.s(pvzc::S_ERROR));
 	}
-	std::free(ints);
-	std::free(floats);
-	return 0;
+	const auto stopTime = std::chrono::steady_clock::now();
+	const double elapsed = Seconds(startTime, stopTime);
+
+	PrintHeader();
+	for (int32_t index = 0; index < used; ++index)
+	{
+		char label[32];
+		// The tick the position arrived at goes in the label, so a row whose mean ticks is nowhere near
+		// the horizon can be read against a root that was already past it.
+		std::snprintf(label, sizeof(label), "root%d@%d", index, corpus.roots[static_cast<size_t>(index)].tick);
+		perRoot[static_cast<size_t>(index)].Print(label, static_cast<double>(options.perRoot * options.repeat));
+	}
+	aggregate.Print("ALL", static_cast<double>(total));
+
+	const int32_t completed = static_cast<int32_t>(aggregate.rollouts);
+	if (completed > 0)
+	{
+		const double perSecond = completed / (elapsed > 0.0 ? elapsed : 1e-9);
+		std::printf("\nwall %.1f s for %d rollouts -> %.2f rollouts/s, %.3f Mticks/s (one thread)\n",
+			elapsed, completed, perSecond,
+			static_cast<double>(aggregate.ticks) / elapsed / 1.0e6);
+		std::printf("per rollout: %.1f ticks, %.1f decisions, %.1f net forwards, %.1f planted, %.1f eaten,"
+			" %.1f killed, %.1f sun, %.2f wave, %.2f mowers left, %.1f zombies alive, %.1f plants alive\n",
+			static_cast<double>(aggregate.ticks) / completed,
+			static_cast<double>(aggregate.decisions) / completed,
+			static_cast<double>(aggregate.netCalls) / completed,
+			static_cast<double>(aggregate.planted) / completed,
+			static_cast<double>(aggregate.eaten) / completed,
+			static_cast<double>(aggregate.killed) / completed,
+			static_cast<double>(aggregate.sun) / completed,
+			static_cast<double>(aggregate.wave) / completed,
+			static_cast<double>(aggregate.mowers) / completed,
+			static_cast<double>(aggregate.zombiesAlive) / completed,
+			static_cast<double>(aggregate.plantsAlive) / completed);
+		std::printf("leaf results: won %lld, lost %lld, ongoing %lld; rollouts with an error flag %lld;"
+			" rejected roots %d\n",
+			static_cast<long long>(aggregate.won), static_cast<long long>(aggregate.lost),
+			static_cast<long long>(aggregate.ongoing), static_cast<long long>(aggregate.errors), rejected);
+		std::printf("reference: CPU baseline 90.18 rollouts/s/thread (original simulator + OpenBLAS)\n");
+	}
+	return completed > 0 && rejected == 0 ? 0 : 1;
 }
