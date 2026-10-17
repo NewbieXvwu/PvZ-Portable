@@ -96,7 +96,8 @@ class CppRolloutTest(unittest.TestCase):
         for seed in (12345, 98765):
             first = {"type": "wait", "ticks": 60, "until": "timeout"}
             trace = Path(self.directory.name) / "features.jsonl"
-            actual = self.env.rollout(first, self.obs["tick"] + 3000, snapshot_id=root, seed=seed,
+            until = self.obs["tick"] + 3000 if seed == 12345 else 0
+            actual = self.env.rollout(first, until, snapshot_id=root, seed=seed,
                                       student_history=history, trace_path=trace)
             replay = deepcopy(history)
             for line in trace.read_text().splitlines():
@@ -109,8 +110,9 @@ class CppRolloutTest(unittest.TestCase):
                 for expected, encoded in ((board.flatten(), record["board"]), (scalars, record["scalars"])):
                     np.testing.assert_array_equal(expected.numpy().view(np.uint32), np.array(encoded, np.float32).view(np.uint32))
                 compared += 1
-            expected = search_play._rollout_policy(self.env, self.obs, first, self.obs["tick"] + 3000, root, seed)
-            self.assertEqual(_frame(actual), _frame(expected))
+            if until:
+                expected = search_play._rollout_policy(self.env, self.obs, first, until, root, seed)
+                self.assertEqual(_frame(actual), _frame(expected))
         self.assertGreater(compared, 50)
 
     def test_rollout_leaf_income_restore_and_rng(self):

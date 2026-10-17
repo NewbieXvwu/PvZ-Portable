@@ -128,8 +128,10 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + v2lite, 0.0f);
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
-			board[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] +=
-				static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth);
+		{
+			const double health = static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth);
+			board[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] += v2lite ? static_cast<float>(health) : health;
+		}
 	for (Zombie* zombie : state->mZombies)
 	{
 		if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6) continue;
@@ -138,8 +140,8 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		if (std::abs(position - boundary) < 0.001)
 			position = EnvironmentWaitEvents::RenderedPublicCoordinate(position);
 		const int cell = zombie->mRow * 10 + std::clamp(static_cast<int>(std::floor((position - 40.0) / 80.0)), 0, 9);
-		board[(54 + std::min(static_cast<int>(zombie->mZombieType), 33)) * Cells + cell] +=
-			(zombie->mBodyHealth + zombie->mHelmHealth + zombie->mShieldHealth) / 200.0;
+		const double health = (zombie->mBodyHealth + zombie->mHelmHealth + zombie->mShieldHealth) / 200.0;
+		board[(54 + std::min(static_cast<int>(zombie->mZombieType), 33)) * Cells + cell] += v2lite ? static_cast<float>(health) : health;
 		board[88 * Cells + cell] += zombie->mIsEating;
 		board[89 * Cells + cell] += zombie->mChilledCounter > 0;
 	}
