@@ -16,6 +16,20 @@ Cross-references (do not duplicate): `waves.md` (spawn cadence / flag waves),
 
 ## 1. Constants the CUDA core needs
 
+> **Citation verification status.**  Line numbers in the tables below (§1.1, §1.2, §1.3, §1.4's
+> speed table, §3, §4) were checked with `grep -n` and are exact.  Line numbers *inside* a quoted
+> code block in §2 and §5 are anchored on the enclosing function's verified start line and may be
+> off by ≤ 5; re-`grep -n` the literal before acting on one of those.  Verified function anchors
+> (`src/Lawn/Zombie.cpp`): `ZombieInitialize` 143, `PickRandomSpeed` 1165, `PlayZombieReanim` 2893,
+> `UpdateDamageStates` 3904, `ZombieNotWalking` 3954, `UpdateZombieWalking` 4104, `Update` 4304,
+> `UpdateZombiePosition` 4251, `IsOnBoard` 4284, `UpdateActions` 4428, `CheckForBoardEdge` 4537,
+> `UpdatePlaying` 4576, `CanTargetPlant` 6344, `FindPlantTarget` 6423, `IsMovingAtChilledSpeed` 6590,
+> `SetAnimRate` 6628, `ApplyAnimRate` 6634, `UpdateAnimSpeed` 6643, `StartEating` 6716,
+> `StartWalkAnim` 6748, `StopEating` 6794, `CheckIfPreyCaught` 6818, `EatPlant` 7027,
+> `DieNoLoot` 7420, `ApplyChill` 7522, `TakeHelmDamage` 7720, `TakeBodyDamage` 7824,
+> `TakeDamage` 7973, `CanBeChilled` 8035, `EffectedByDamage` 8084, `GetZombieRect` 8301,
+> `MowDown` 8584, `PlayDeathAnim` 8926, `UpdateDeath` 9095, `IsDeadOrDying` 9643.
+
 ### 1.1 Level-7 type table
 
 Which types exist at level 7 is decided by `ZombieDefinition::mStartingLevel` in the
@@ -23,30 +37,30 @@ Which types exist at level 7 is decided by `ZombieDefinition::mStartingLevel` in
 
 | type (enum id) | starting level | appears at 7? | body | helm | shield | flying | `mScaleZombie` | `mVelX` (px/update) |
 |---|---|---|---|---|---|---|---|---|
-| `ZOMBIE_NORMAL` (0) | 1 (`:81`) | yes | 270 (`:241`) | 0 | 0 | 0 | 1.0 (`:206`) | `RandRangeFloat(0.23,0.37)` (`:1215`) |
-| `ZOMBIE_FLAG` (1) | 1 (`:82`) | yes, but `mPickWeight = 0` (`:82`) → only spawned by flag waves | 270 (`:241`) | 0 | 0 | 0 | 1.0 (`:206`) | **0.45 fixed** (`:1193-1196`) |
-| `ZOMBIE_TRAFFIC_CONE` (2) | 3 (`:83`) | yes | 270 (`:241`) | **370** (`:264`) `HELMTYPE_TRAFFIC_CONE` (`:263`) | 0 | 0 | 1.0 | `0.23-0.37` |
-| `ZOMBIE_POLEVAULTER` (3) | 6 (`:84`) | yes | **500** (`:378`) | 0 | 0 | 0 | 1.0 | `RandRangeFloat(0.66,0.68)` (`:1202-1204`) |
-| `ZOMBIE_PAIL` (4) | **8** (`:85`) | **no** — first appears at level 8 | (1100 helm, `:272`) | — | — | — | — | — |
+| `ZOMBIE_NORMAL` (0) | 1 (`:81`) | yes | 270 (`:238`) | 0 | 0 | 0 | 1.0 (`:206`) | `RandRangeFloat(0.23f,0.37f)` (`:1215-1218`) |
+| `ZOMBIE_FLAG` (1) | 1 (`:82`) | yes, but `mPickWeight = 0` (`:82`) → only spawned by flag waves | 270 (`:238`) | 0 | 0 | 0 | 1.0 (`:206`) | **0.45f fixed** (`:1193-1197`) |
+| `ZOMBIE_TRAFFIC_CONE` (2) | 3 (`:83`) | yes | 270 (`:238`) | **370** (`:263`), `HELMTYPE_TRAFFIC_CONE` (`:262`) | 0 | 0 | 1.0 | `0.23–0.37` |
+| `ZOMBIE_POLEVAULTER` (3) | 6 (`:84`) | yes | **500** (`:378`) | 0 | 0 | 0 | 1.0 (`:206`) | `RandRangeFloat(0.66f,0.68f)` (`:1198-1205`) |
+| `ZOMBIE_PAIL` (4) | **8** (`:85`) | **no** — first appears at level 8 | (1100 helm, `:271`) | — | — | — | — | — |
 
 Notes on how the table was evaluated:
 
 * `mBodyHealth = 270` is the **default for every zombie**, set before the type switch at
-  `Zombie.cpp:241` (`mBodyHealth = 270;`).  Types override it in their `case`; NORMAL and
-  TRAFFIC_CONE do not, so their body is 270 and their `mBodyMaxHealth` is 270
-  (`Zombie.cpp:886`: `mBodyMaxHealth = mBodyHealth;`).
-* `mHelmHealth` defaults to 0 (`:210`); `mHelmType` defaults to `HELMTYPE_NONE` (`:187`).
-  Only the `case` sets them.  Cone = 370 (`:264`), pail = 1100 (`:272`), football = 1400 (`:365`),
-  digger = 100 (`:346`).  Nothing at level 7 other than the cone has a helmet.
-* `mShieldHealth` defaults to 0 (`:215`).  **No level-7 type has a shield** (door is level 13,
-  ladder 43).  `mShieldType` defaults to `SHIELDTYPE_NONE` (`:188`).
-* `mFlyingHealth` defaults to 0 (`:217`); only the balloon sets it (`:641`, 20).  Irrelevant at 7.
+  `Zombie.cpp:238` (`mBodyHealth = 270;`, right after the `PickRandomSpeed()` at `:237`).
+  Types override it in their `case`; NORMAL and TRAFFIC_CONE do not, so their body is 270 and
+  their `mBodyMaxHealth` is 270 (`Zombie.cpp:886`: `mBodyMaxHealth = mBodyHealth;`).
+* `mHelmHealth` defaults to 0 (`:209`); `mHelmType` defaults to `HELMTYPE_NONE` (`:185`).
+  Only the `case` sets them.  Cone = 370 (`:263`), pail = 1100 (`:271`), football = 1400 (`:345`),
+  digger = 100 (`:353`).  Nothing at level 7 other than the cone has a helmet.
+* `mShieldHealth` defaults to 0 (`:208`).  **No level-7 type has a shield** (door is level 13,
+  ladder 43).  `mShieldType` defaults to `SHIELDTYPE_NONE` (`:186`).
+* `mFlyingHealth` defaults to 0 (`:211`); only the balloon sets it (20).  Irrelevant at 7.
 * `mScaleZombie = 1.0f` for all four level-7 types (`:206`).  Only dancer/backup-dancer (0.8,
   `:649`/`:666`) and the "Little Trouble" challenge flag (0.5, `:873`) change it, and neither
   applies to adventure 7.  **So the CUDA core may treat `mScaleZombie` as the literal 1.0.**
 * `mVariant` (the tongue anim, `:881-884`) is cosmetic for the state machine but is drawn from
   the spawner; `ZOMBIE_POLEVAULTER` forces `mVariant = false` (`:382`).
-* `mAnimTicksPerFrame = 12` (`:192`) and `mAnimFrames = 12` (`:193`) for normal/cone/flag;
+* `mAnimTicksPerFrame = 12` (`:191`) and `mAnimFrames = 12` (`:192`) for normal/cone/flag;
   the pole vaulter overrides only `mAnimTicksPerFrame = 6` (`:379`).  These drive the *legacy*
   frame counter, not the reanim, and are not used by the position update.
 * There is **no separate "brain" health**.  `Zombie.h:128-136` declares exactly
@@ -58,27 +72,27 @@ Notes on how the table was evaluated:
 
 | name | value | file:line |
 |---|---|---|
-| `mPosX` at spawn | `780 + Rand(40)` → `[780, 819]` | `Zombie.cpp:24-25,161` (`ZOMBIE_START_RANDOM_OFFSET = 40`) |
-| flag-zombie extra | `mPosX += 40` if `mBoard->IsFlagWave(mFromWave)` | `Zombie.cpp:236-239` |
+| `mPosX` at spawn | `780 + Rand(40)` → `[780, 819]` | `Zombie.cpp:48,161` (`ZOMBIE_START_RANDOM_OFFSET = 40`) |
+| flag-zombie extra | `mPosX += 40` if `mBoard->IsFlagWave(mFromWave)` | `Zombie.cpp:233-235` |
 | flag-zombie overwrite | `mPosX = WIDE_BOARD_WIDTH` (= 800) | `Zombie.cpp:595` |
 | pole-vaulter overwrite | `mPosX = WIDE_BOARD_WIDTH + 70 + Rand(10)` → `[870, 879]` | `Zombie.cpp:383` |
 | `WIDE_BOARD_WIDTH` / `BOARD_WIDTH` | 800 | `GameConstants.h:28,30` |
 | house line (`BOARD_EDGE`) | **-100** | `GameConstants.h:32` |
-| per-type house-line override | gargantuar/redeye/pole-vaulter `-150`; catapult/football/zamboni `-175`; dancer/backup/snorkel `-130` | `Zombie.cpp:4545-4554` |
-| the loss test uses the **truncated int** x | `mX = static_cast<int>(mPosX)`; test is `mX <= aEdgeX` | `Zombie.cpp:4384`, `:4556` |
-| headless auto-kill line | `mX <= aEdgeX + 70 && !mHasHead` → `TakeDamage(1800, 9U)` | `Zombie.cpp:4566-4569` |
-| walk-off-board edge | `IsWalkingBackwards() && mPosX > 850.0f` → `DieNoLoot()` | `Zombie.cpp:4539-4542` |
+| per-type house-line override | gargantuar/redeye/pole-vaulter `-150`; catapult/football/zamboni `-175`; dancer/backup/snorkel `-130` | `Zombie.cpp:4546-4555` |
+| the loss test uses the **truncated int** x | `mX = static_cast<int>(mPosX)`; test is `mX <= aEdgeX` | `Zombie.cpp:4389`, `:4559` |
+| headless auto-kill line | `mX <= aEdgeX + 70 && !mHasHead` → `TakeDamage(1800, 9U)` | `Zombie.cpp:4570-4573` |
+| walk-off-board edge | `IsWalkingBackwards() && mPosX > 850.0f` → `DieNoLoot()` | `Zombie.cpp:4539-4543` |
 | left-zone threshold (event) | `LeftZoneMaxX = 160.0` | `EnvironmentWaitEvents.h:16` |
 | LAWN_XMIN (col 0 left pixel) | 40 | `GameConstants.h:35` |
 | `GridToPixelX(col)` | `col * 80 + 40` | `Board.cpp:8874` |
 | grid columns | `MAX_GRID_SIZE_X = 9` | `Board.h:42` |
 | `PixelToGridX(x)` | `-1` if `x < 40`, else `clamp((x-40)/80, 0, 8)` | `Board.cpp:8812-8827` |
 | plant pixel x | `mX = GridToPixelX(col, row)` = `80*col + 40` | `Plant.cpp:114` |
-| plant `GetPlantRect()` (generic) | `Rect(mX + 10, mY, mWidth - 20, mHeight)`, `mWidth = mHeight = 80` | `Plant.cpp:149-150`, `Plant.cpp` `GetPlantRect` → `[80c+50, 80c+110]` |
-| `mZombieRect` (hurt box) | `Rect(36, 0, 42, 115)` → x span `[mX+36, mX+78]` | `Zombie.cpp:199` |
-| `mZombieAttackRect` (mouth) normal/cone/flag | `Rect(50, 0, 20, 115)` → x span `[mX+50, mX+70]` | `Zombie.cpp:200` |
-| `mZombieAttackRect` pole vaulter | `Rect(-29, 0, 70, 115)` → x span `[mX-29, mX+41]` | `Zombie.cpp:390` |
-| zombie `mWidth`/`mHeight` | 120 / 120 (`:166-167`); used by the backwards mirror `mX = mWidth - mX - mWidth` | `Zombie.cpp:8332-8335` |
+| plant `GetPlantRect()` (generic) | `Rect(mX + 10, mY, mWidth - 20, mHeight)` (default arm of the `if`, `Plant.cpp:5152+`), `mWidth = mHeight = 80` (`Plant.cpp:149-150`) → `[80c+50, 80c+110]`. **Exception:** TALLNUT uses `mWidth` (no −20) → `[80c+50, 80c+130]`; PUMPKINSHELL/others have their own arms — re-read `Plant.cpp:5152-5190` per seed type |
+| `mZombieRect` (hurt box) | `Rect(36, 0, 42, 115)` → x span `[mX+36, mX+78]` | `Zombie.cpp:201` |
+| `mZombieAttackRect` (mouth) normal/cone/flag | `Rect(50, 0, 20, 115)` → x span `[mX+50, mX+70]` | `Zombie.cpp:202` |
+| `mZombieAttackRect` pole vaulter | `Rect(-29, 0, 70, 115)` → x span `[mX-29, mX+41]` | `Zombie.cpp:395` |
+| zombie `mWidth`/`mHeight` | 120 / 120 (`:165-166`); used by the backwards mirror `mX = mWidth - mX - mWidth` | `Zombie.cpp:8305-8308`, `:8326-8329` |
 | `GetRectOverlap` | **1-D, x only**: `min(r1.x+r1.w, r2.x+r2.w) - max(r1.x, r2.x)` | `Board.cpp:8969-8973` |
 
 Unit convention: `mPosX` is **pixels** in board/screen space (0 = left of the lawn strip,
@@ -169,8 +183,8 @@ TakeDamage(dmg, flags):
 | `PHASE_NEWSPAPER_MAD`, `PHASE_DOLPHIN_WALKING*` | `RandRangeFloat(0.89f,0.91f)` | `:1210-1214` |
 | **else (NORMAL, TRAFFIC_CONE, PAIL, …)** | **`RandRangeFloat(0.23f, 0.37f)`** | `:1215-1218` |
 
-Level 7 therefore needs: normal/cone `0.23..0.37` (uniform draw), flag `0.45` exact,
-pole vaulter `0.66..0.68` (drawn at spawn *and* re-drawn on `StartWalkAnim`).
+Level-7 walk rates: normal/cone `0.23–0.37` (uniform draw), flag `0.45` exact,
+pole vaulter `0.66–0.68` (drawn at spawn *and* re-drawn on `StartWalkAnim`).
 
 **`mVelX` is re-randomised every time a zombie resumes walking.**  `StopEating()`
 (`:6794-6811`) calls `StartWalkAnim(20)` (`:6806`), and `StartWalkAnim` calls
@@ -211,9 +225,17 @@ return aDis * SECONDS_PER_UPDATE * mAnimRate                        # SECONDS_PE
 and `Zombie::UpdateAnimSpeed` (`Zombie.cpp:6685-6694`) sets, for a walking zombie:
 
 ```
-aDistance    = TransX[frameStart + frameCount - 1] - TransX[frameStart]   # total loop displacement
+aDistance     = TransX[frameStart + frameCount - 1] - TransX[frameStart]   # total loop displacement
 aOneOverSpeed = mFrameCount / aDistance
-mAnimRate     = mVelX * aOneOverSpeed * 47.0f / mScaleZombie
+aAnimRate     = mVelX * aOneOverSpeed * 47.0f / mScaleZombie               # :6690-6691
+ApplyAnimRate(aAnimRate)                                                   # :6692
+```
+
+but `ApplyAnimRate` (`Zombie.cpp:6634-6642`) is **not** a plain store — it bakes in a chill
+factor of its own:
+
+```
+aBodyReanim->mAnimRate = IsMovingAtChilledSpeed() ? theAnimRate * 0.5f : theAnimRate;   # :6640
 ```
 
 Substituting (with `aDis ≈ aDistance/mFrameCount`, the mean over the loop, and
@@ -221,29 +243,50 @@ Substituting (with `aDis ≈ aDistance/mFrameCount`, the mean over the loop, and
 
 ```
 aSpeed ≈ (aDistance/mFrameCount) * 0.01 * (mVelX * mFrameCount/aDistance * 47)
-       = 0.47 * mVelX          px per update
+       = 0.47 * mVelX            px per update      (not chilled)
+       = 0.47 * mVelX * 0.5      px per update      (chilled animated walk)
 ```
 
-**So the mean walk advance is `0.47 * mVelX` px per update, i.e. ≈ 0.108–0.174 px/update for a
-normal zombie (`mVelX = 0.23–0.37`) and ≈ 0.11 px/update for the flag zombie (`mVelX = 0.45`,
-so `0.47*0.45 = 0.2115`).**  It is *not* constant across a stride: `aDis` is the displacement
-between two integer animation frames of the `_ground` track and varies within the cycle, so the
-true advance pulses around that mean; only the mean is derivable from source.
+**So the mean walk advance is `0.47 · mVelX` px per update**: normal/cone `0.108–0.174`
+(`mVelX = 0.23–0.37`), flag `0.2115` (`0.47 × 0.45`), pole vaulter `0.310–0.320`.
+It is *not* constant across a stride: `aDis` is the displacement between two integer animation
+frames of the `_ground` track and varies within the cycle, so the true advance pulses around that
+mean; only the mean is derivable from source.
 **The per-frame `_ground` deltas are in the `.reanim` data, not in this repo's C++ — not
 determined here.**  If the acceptance test needs bit-exact x, that table has to be extracted.
-`UpdateAnimSpeed` is called from `ZombieInitialize` (`:880`), `ApplyChill` (`:7539`),
-`RemoveIceTrap` (`:6604`), and when `mChilledCounter` expires (`:4622-4626`).
+`UpdateAnimSpeed` is called from `ZombieInitialize` (`:880`), the tail of `PlayZombieReanim`
+(`:2893-2905`, so on every anim change), `ApplyChill` (`:7539`), `RemoveIceTrap` (`:6604`), and when
+`mChilledCounter` expires (`:4622-4626`).  `PlayZombieReanim(track, loop, blend, rate)` records
+`mOriginalAnimRate = theAnimRate` **only when `theAnimRate != 0.0f`** (`:2900-2903`); a rate of
+`0.0f` means "keep the current anim rate" (`Reanimator.cpp:1385-1390`) and lets the `_ground`
+formula own it.
+
+**Two different chill factors exist and must not be conflated.**  A chilled *animated* walk is
+slowed by `ApplyAnimRate`'s `× 0.5` (`Zombie.cpp:6640`).  `CHILLED_SPEED_FACTOR = 0.4f`
+(`Zombie.cpp:70`) is applied only in the three `UpdateZombieWalking` branches that use raw
+`mVelX` (`:4119`, `:4136`, `:4204`) and in `ZombieTargetLeadX` (`:3937`).
+For a level-7 zombie walking normally the `_ground` branch wins, so **a snow-pea-chilled zombie
+moves at 50 % speed, not 40 %.**  `IsMovingAtChilledSpeed()` (`:6590-6612`) is `mChilledCounter > 0`
+for our types (the dancer-leader clause is not level 7).
+
+Sanity check that `SECONDS_PER_UPDATE = 0.01` really is the logic tick: `DAMAGE_PER_EAT = 4`
+every `TICKS_BETWEEN_EATS = 4` updates (`Zombie.cpp:67-68`) is exactly **1 damage per update**; at
+100 updates/s that is **100 DPS**, and this repo's default plant health is 300 (`Plant.cpp:133`),
+so a zombie eats a fresh peashooter in 300 updates = 3 s — the original game's figure.
+`Reanimation::Update` (`Reanimator.cpp:431`) advances `mAnimTime += SECONDS_PER_UPDATE * mAnimRate
+/ mFrameCount`, i.e. **`mAnimRate` is frames/second** and one anim loop costs
+`mFrameCount / mAnimRate * 100` updates — the same expression `Zombie.cpp:1730` uses inline.
+
+Chill duration: `ApplyChill(theIsIceTrap)` sets `mChilledCounter = max(aChillTime, current)` with
+`aChillTime = 1000`, or `2000` for an ice trap (`Zombie.cpp:7534-7539`); it is **not** 400, and it
+only applies if `CanBeChilled()` (`:8040-8062`, true for all four level-7 types while walking).
+`mChilledCounter` decrements once per update in `UpdatePlaying` (`:4621-4626`), and on reaching 0
+it calls `UpdateAnimSpeed()` so the `× 0.5` is removed.
 
 Eating freezes x: `ZombieNotWalking()` returns true when `mIsEating || IsImmobilizied()`
 (`:3956-3959`), and `UpdateZombieWalking` returns at `:4106-4109`.  So **the chew step is
 exactly 0 px** (`cChewStepX = 0.0f` is right, but for this reason, not the one in the comment
 at `SimTick.inc:72-74` — there is no step-forward/step-back pair in the position code).
-
-Chill: `CHILLED_SPEED_FACTOR = 0.4f` (`Zombie.cpp:69`), applied either through
-`IsMovingAtChilledSpeed()` (`:4121,4140,4191`) or by having been baked into `mAnimRate`
-when `UpdateAnimSpeed` re-ran.  `ApplyChill` sets `mChilledCounter = max(1000, current)`,
-or `2000` for an ice trap (`Zombie.cpp:7534-7539`).  `mChilledCounter` decrements once per
-update inside `UpdatePlaying` (`:4620-4627`).
 
 ---
 
