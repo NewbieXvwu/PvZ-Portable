@@ -82,12 +82,17 @@
 | 僵尸矩形（普通/路障/旗帜的默认值） | `Rect(36, 0, 42, 115)`，按 `(mX, mY+bodyY)` 平移，`mX = (int)mPosX` | src/Lawn/Zombie.cpp:201、8301-8319、4389-4390 |
 | 僵尸矩形（撑杆跳） | 未覆盖 → 沿用默认 `Rect(36,0,42,115)`（落地瞬间另有 `Rect(20,0,42,115)`） | src/Lawn/Zombie.cpp:1913 |
 | 气球僵尸门槛 | 需要 `overlap > 20`，其他 `> 0` | src/Lawn/LawnMower.cpp:225 |
-| 循环门控 | `!mDead`；跳过 `ZOMBIE_BOSS`；`mRow == 本车行`；相位 ≠ `PHASE_ZOMBIE_MOWERED`；非 `IsTangleKelpTarget()`；`EffectedByDamage(127U)` | src/Lawn/LawnMower.cpp:207-222；`EffectedByDamage` 8084-8124（127 不含 `DAMAGES_DYING`，故 `IsDeadOrDying()` 直接为假） |
+| 循环门控 | `!mDead`；跳过 `ZOMBIE_BOSS`；`mRow == 本车行`；相位 ≠ `PHASE_ZOMBIE_MOWERED`；非 `IsTangleKelpTarget()`；`EffectedByDamage(127U)` | src/Lawn/LawnMower.cpp:207-222 |
+| `127U` 的位含义 | `127 = 0b1111111` = bit0..bit6 = GROUND \| FLYING \| SUBMERGED \| DOG \| OFF_GROUND \| **DYING** \| **UNDERGROUND**；只**没**有 bit7 `DAMAGES_ONLY_MINDCONTROLLED`。∴ `Zombie.cpp:8086` 的 `!TestBit(…, DAMAGES_DYING) && IsDeadOrDying()` 早退**对车永远不触发** —— 濒死僵尸照样能被车碾 | src/ConstEnums.h:257-266；src/Lawn/Zombie.cpp:8084-8089 |
+| `EffectedByDamage(127U)` 为 **false** 的只有两种 | ① 雪橇队里非领头（`mZombieType == ZOMBIE_BOBSLED && GetBobsledPosition() > 0`）；② 非雪橇僵尸已经离场 `GetZombieRect().mX > WIDE_BOARD_WIDTH(800)` | src/Lawn/Zombie.cpp:8133-8135、8154-8157 |
+| `EffectedByDamage(127U)` 为 **true** 的相位 | 腾空/特殊相位表（`PHASE_POLEVAULTER_IN_VAULT`、`PHASE_RISING_FROM_GRAVE`、`PHASE_DANCER_RISING`、`PHASE_SNORKEL_INTO_POOL`、`PHASE_DOLPHIN_IN_JUMP`、`PHASE_BALLOON_POPPING`…）→ `return TestBit(127, DAMAGES_OFF_GROUND)` = **true**；另外 SUBMERGED / UNDERGROUND（`PHASE_DIGGER_TUNNELING`）/ FLYING / GROUND 分支各自命中 | src/Lawn/Zombie.cpp:8138-8151、8159-8176 |
 | READY 触发附加条件 | `mMowerState != MOWER_READY \|\| (type != ZOMBIE_BUNGEE && aZombie->mHasHead)` | src/Lawn/LawnMower.cpp:228 |
 | 首次触发 | `MowZombie()`: READY → `StartMower(); mChompCounter = 25;` | src/Lawn/LawnMower.cpp:143-149 |
 | 后续每杀 | 已是 TRIGGERED → `mChompCounter = 50`（**每次新杀都重置**） | src/Lawn/LawnMower.cpp:150-153 |
 | `StartMower()` | 已 TRIGGERED 直接 return；`mWaveRowGotLawnMowered[mRow] = mCurrentWave`；`mTriggeredLawnMowers++`；`mMowerState = MOWER_TRIGGERED` | src/Lawn/LawnMower.cpp:382-404 |
 | 击杀方式 | 草地车 → `theZombie->MowDown()`（泳池车 → `DieWithLoot()`），**不是**扣固定伤害 | src/Lawn/LawnMower.cpp:155-175；`MowDown` src/Lawn/Zombie.cpp:8584+ |
+| `MowDown()` 早退 | `mDead \|\| mZombiePhase == PHASE_ZOMBIE_MOWERED \|\| mZombieType == ZOMBIE_BOSS` → return（所以同一 tick 车可以扫到多个僵尸，但已被本车碾过的不会重复计数） | src/Lawn/Zombie.cpp:8586-8587 |
+| `MowDown()` 的两条死路 | ① 清单命中 → 冒烟 + （非泳池行）掉头/臂/盔/盾 → `DieWithLoot()`：相位 `PHASE_ZOMBIE_DYING`/`PHASE_ZOMBIE_BURNED`/`PHASE_POLEVAULTER_IN_VAULT`/`PHASE_RISING_FROM_GRAVE`/`PHASE_DANCER_RISING`/`PHASE_SNORKEL_INTO_POOL`，类型 `GARGANTUAR`/`REDEYE_GARGANTUAR`/`BUNGEE`/`DIGGER`/`IMP`/`YETI`/`DOLPHIN_RIDER`/`CATAPULT`/`ZAMBONI`，或 `IsBobsledTeamWithSled()`/`IsFlying()`/`mInPool`；② 其余（正常走路的僵尸）→ 掉防具后 `mZombiePhase = PHASE_ZOMBIE_MOWERED; DropLoot();`（**不立即 `mDead`**：`UpdateMowered()` 要等 `REANIM_LAWN_MOWERED_ZOMBIE` 播完一圈（`mLoopCount > 0`）才 `DieWithLoot()`） | src/Lawn/Zombie.cpp:8588-8603（catapult/zamboni）、8605-8637（清单 → `DieWithLoot` 8634）、8664-8670（`PHASE_ZOMBIE_MOWERED`）、4329-4332 + 9312-9321（`UpdateMowered`） |
 | 滚动速度 | `aSpeed = 3.33f`（泳池车 2.5f），但 `mChompCounter > 0` 时改为曲线 `PvzpAnimateCurveFloat(50, 0, mChompCounter, aSpeed, 1.0f, CURVE_BOUNCE_SLOW_MIDDLE)` 并被减 1 | src/Lawn/LawnMower.cpp:241-251 |
 | 位移 | `mPosX += aSpeed`（仅 TRIGGERED / SQUISHED 会走到这里） | src/Lawn/LawnMower.cpp:236-251 |
 | 离场 | `mPosX > WIDE_BOARD_WIDTH` → `Die()`；`WIDE_BOARD_WIDTH = 800` | src/Lawn/LawnMower.cpp:267-270；src/GameConstants.h:28-30 |
@@ -295,7 +300,9 @@ Update():
       if zombie->mRow != mRow: continue                // 只有行号相等
       if zombie->mZombiePhase != PHASE_ZOMBIE_MOWERED
          and !zombie->IsTangleKelpTarget()
-         and zombie->EffectedByDamage(127U):
+         and zombie->EffectedByDamage(127U):        // 127 = bit0..6，含 DAMAGES_DYING
+          #   ⇒ 8086 的"濒死免疫"对车**不生效**；只有雪橇非领头(8133)与
+          #     离场 zombie rect.mX > 800(8154) 会返回 false；腾空相位表(8138-8151)返回 true
           overlap = GetRectOverlap(attackRect, zombie->GetZombieRect())   // 只算 x 轴！
           if overlap > (type == ZOMBIE_BALLOON ? 20 : 0):                 // 225
              if state != MOWER_READY or (type != ZOMBIE_BUNGEE and zombie->mHasHead):  // 228
@@ -537,13 +544,25 @@ CanTakeSunMoney(n) = n <= mSunMoney + CountSunBeingCollected()    // Board.cpp:8
     一辆正在吃僵尸的车最慢只有 1.0 px/tick，于是"一车杀几个"和"几个 tick 后 `mPosX > 800` 离场"都变了。
     `SimImpl.inc:240-242` 已经把 `mChompCounter` 导成 `F_MOWER_TIMER`/`F_MOWER_CHOMP`，字段够用，
     SimTick.inc:411-431 没读它。
-11. **击杀窗口口径不同**。SimTick.inc:418-419 用 `|zx - mx| > cHitWindow(20)`；
-    引擎是 §3.2 的矩形相交（车 `[mx, mx+50]` vs 僵尸 `[mX+36, mX+78]`，只算 x，且 `mX` 是**截断成 int 的**）。
+11. **击杀窗口、门控、死法三处都不同**。
+    (a) 几何：SimTick.inc:418-419 用 `|zx - mx| > cHitWindow(20)`；
+    引擎是 §3.2 的矩形相交（车 `[mx, mx+50]` vs 僵尸 `[mX+36, mX+78]`，只算 x，且 `mX = (int)mPosX` 是**截断成 int 的**）。
     两者既不是同一个中心、也不是同一个宽度；正确写法：
-    `overlap = min(mx+50, (int)zx+78) - max(mx, (int)zx+36) > 0`（草地车 `overlap > 0`，气球 `> 20`）。
-    还有：`ZombieLive()` 过滤掉了 `ZB_DYING`，而引擎的门控是 `EffectedByDamage(127U)`（不含
-    `DAMAGES_DYING` ⇒ `IsDeadOrDying()` 为假就跳过，src/Lawn/Zombie.cpp:8086-8089）+
-    相位 ≠ `PHASE_ZOMBIE_MOWERED`（LawnMower.cpp:219），这一点口径是一致的，可以摘掉 PROVISIONAL。
+    `overlap = min(mx+50, (int)zx+78) - max(mx, (int)zx+36) > 0`（草地车 `overlap > 0`，气球 `> 20`，LawnMower.cpp:222-225）。
+    (b) 过滤条件：`ZombieLive()`（SimTick.inc:94-97）把 `ZB_DYING` 排除掉了，但引擎传的是
+    `EffectedByDamage(127U)`，而 `127 = bit0..6` **包含** `DAMAGES_DYING`（bit5，src/ConstEnums.h:257-266），
+    于是 src/Lawn/Zombie.cpp:8086-8089 的 `!TestBit(DYING) && IsDeadOrDying()` 早退**永远不成立**：
+    一个已经被豌豆打死、正在 `PHASE_ZOMBIE_DYING` 的僵尸照样会被车碾。
+    引擎真正会跳过的只有：相位已是 `PHASE_ZOMBIE_MOWERED`（LawnMower.cpp:219）、`IsTangleKelpTarget()`、
+    雪橇队非领头（Zombie.cpp:8133-8135）、已离场的 `GetZombieRect().mX > 800`（8154-8157）。
+    反过来，`PHASE_POLEVAULTER_IN_VAULT` 这类腾空相位经 8138-8151 返回 `TestBit(127, OFF_GROUND)` = **true**，
+    是**可以**被车打中的（`MowDown()` 再把它送去 `DieWithLoot()`，8605-8634）。
+    正确写法：CUDA 应把 `ZombieLive()` 换成"`!ZB_DEAD && phase != MOWERED && rect.x <= 800`（+ 雪橇领头）"。
+    (c) 死法：SimTick.inc:421-425 无条件 `body/helm/shield = 0; flags |= ZB_DYING; phase_counter = cDeathFadeTicks`，
+    对应引擎 `MowDown()` 的**冒烟直接 `DieWithLoot()` 分支**（Zombie.cpp:8605-8637）；
+    而"正常走路的僵尸"走的是另一条：`mZombiePhase = PHASE_ZOMBIE_MOWERED; DropLoot();`（8664-8670），
+    要等 `UpdateMowered()`（4329-4332 调用，实现 9312-9321，reanim `mAnimRate = 8.0f`，8665）播完一圈才 `DieWithLoot()`。
+    也就是说：普通僵尸被碾后**还挂着若干 tick**（不计入 `mZombiesKilled`、但已不再啃食、也不再被车重复计数）。
 12. **`state = kMowerSquished; flags = MB_GONE` 用错状态**。SimTick.inc:427-431 在 `mx > 800` 时置
     `MOWER_SQUISHED`；引擎是 `Die()`（`mDead = true`，src/Lawn/LawnMower.cpp:267-270 / 369-371），
     `MOWER_SQUISHED` 是**被巨人/保龄球压扁**那条路（`SquishMower()` 置 500 tick 才 `Die()`，406-415）。
