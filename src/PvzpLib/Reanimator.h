@@ -210,6 +210,7 @@ public:
 	bool                            mEnableExtraOverlayDraw;
 	float                           mLastFrameTime;
 	FilterEffect                    mFilterEffect;
+	bool                            mNeedsTrackUpdates = false;
 
 public:
 	Reanimation();
