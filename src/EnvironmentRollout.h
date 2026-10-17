@@ -10,7 +10,7 @@ class LawnApp;
 class EnvironmentRollout
 {
 public:
-	static constexpr int Channels = 92, Cells = 60, Scalars = 115;
+	static constexpr int Channels = 92, Cells = 60, Scalars = 115, ZombieTypes = 34, TaskContext = 1 + ZombieTypes;
 	struct Action { int packet = -1, col = 0, row = 0; };
 	struct Prediction
 	{
@@ -29,6 +29,7 @@ public:
 private:
 	int width = 0;
 	bool meanmax = false;
+	bool taskContext = false;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer;
 	void Encode(const std::vector<float>& board, const std::vector<float>& scalars);

@@ -56,8 +56,6 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
     if static_value_path:
         _W["static_vnet"] = load_value_net(static_value_path)
     _W["fast"] = load_student(rollout_path)
-    if cpp_rollouts and _W["fast"].context:     # the C++ rollout has no task context yet
-        _W["cpp_rollouts"] = cpp_rollouts = False
     if cpp_rollouts:
         import tempfile
         from pvz_rollout_policy import export_student

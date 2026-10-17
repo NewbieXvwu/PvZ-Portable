@@ -131,17 +131,18 @@ def load_student(path) -> RolloutNet:
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """Write v2 little-endian weights with a pooling flag; v1 files must be re-exported."""
+    """Write little-endian v2 weights, or v3 with an additional task-context flag."""
     import struct
-    if net.context:
-        raise NotImplementedError("the C++ rollout does not compute the task context yet; use --no-cpp-rollouts")
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
              "plant.weight", "plant.bias", "packet.weight", "packet.bias", "packet_embedding.weight",
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
     with open(path, "wb") as stream:
-        stream.write(b"PVZRN002" + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
+        stream.write((b"PVZRN003" if net.context else b"PVZRN002")
+                     + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
+        if net.context:
+            stream.write(struct.pack("<I", 1))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 

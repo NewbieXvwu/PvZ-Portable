@@ -31,7 +31,7 @@ import torch  # noqa: E402
 from pvz_env import TaskSpec  # noqa: E402
 from pvz_event_env import EventWaitEnv  # noqa: E402
 from pvz_rollout_policy import RolloutNet, act, features, load_student, export_student  # noqa: E402
-from pvz_value_net import _featurize_reference, featurize  # noqa: E402
+from pvz_value_net import _featurize_reference, featurize, observation_context  # noqa: E402
 from render_episode import _frame, load_training_task, training_task_kwargs  # noqa: E402
 from scripted_baseline import profile_for_deck  # noqa: E402
 
@@ -60,9 +60,8 @@ def check_cpp(args) -> None:
             task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
                             **{k: v for k, v in kw["task_extra"].items() if v is not None})
             obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
-            if args.cpp_mode == "search":
-                from pvz_value_net import observation_context
-                search_play._W["context"] = observation_context(obs)
+            task_context = observation_context(obs)
+            search_play._W["context"] = task_context
             memo = {}
             if args.cpp_mode == "search":
                 stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
@@ -74,12 +73,12 @@ def check_cpp(args) -> None:
                 if obs["terminal"]: break
                 frame = _frame(obs)
                 frame["action"] = memo.get("action")
-                action = act(net, frame, memo.get("frame"), obs["legal_actions"]["plants"])
+                action = act(net, frame, memo.get("frame"), obs["legal_actions"]["plants"], context=task_context)
                 if args.cpp_mode == "frames":
                     previous = memo.get("frame")
                     native = env.rollout_predict(previous["tick"] if previous else None,
                                                  memo.get("action", {}).get("type") == "plant")
-                    board, scalars = features(frame, previous)
+                    board, scalars = features(frame, previous, task_context if net.context else None)
                     with torch.inference_mode():
                         hidden, context = net.encode(board[None], scalars[None], sparse_input=True)
                         errors = [(net.plant(context).flatten() - torch.tensor([native["plant"]])).abs().max(),

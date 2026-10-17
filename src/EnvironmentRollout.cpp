@@ -68,18 +68,20 @@ static void MultiplyRows(const float* matrix, const float* input, float* output,
 void EnvironmentRollout::Load(const std::string& path)
 {
 	std::ifstream input(path, std::ios::binary);
-	char magic[8];
-	uint32_t size = 0, pool = 0;
+	char magic[8]{};
+	uint32_t size = 0, pool = 0, withContext = 0;
 	input.read(magic, 8);
 	input.read(reinterpret_cast<char*>(&size), 4);
 	input.read(reinterpret_cast<char*>(&pool), 4);
-	if (!input || std::string(magic, 8) != "PVZRN002" || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1)
+	const std::string version(magic, 8);
+	if (version == "PVZRN003") input.read(reinterpret_cast<char*>(&withContext), 4);
+	if (!input || (version != "PVZRN002" && version != "PVZRN003") || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1)
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	const std::vector<size_t> counts = {
 		nextWidth * Channels * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
-		nextWidth * nextWidth * 5, nextWidth, nextWidth * Scalars, nextWidth,
+		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0)), nextWidth,
 		nextContext, 1, 10 * nextContext, 10, 10 * nextWidth,
 		nextWidth * (2 * nextWidth + nextContext), nextWidth, nextWidth, 1};
 	std::vector<std::vector<float>> loaded;
@@ -94,6 +96,7 @@ void EnvironmentRollout::Load(const std::string& path)
 		throw std::runtime_error("unexpected rollout network data");
 	width = size;
 	meanmax = pool != 0;
+	taskContext = withContext != 0;
 	weights = std::move(loaded);
 	hidden.resize(Cells * width);
 	scratch.resize(Cells * width);
@@ -105,7 +108,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 {
 	Board* state = app->mBoard;
 	board.assign(Channels * Cells, 0.0f);
-	scalars.assign(Scalars, 0.0f);
+	scalars.assign(Scalars + (taskContext ? TaskContext : 0), 0.0f);
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 			board[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] +=
@@ -154,6 +157,12 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	{
 		scalars[113] = previousPlant;
 		scalars[114] = (state->mMainCounter - previousTick) / 300.0;
+	}
+	if (taskContext)
+	{
+		scalars[Scalars] = app->mEnvironmentTaskSpec.zombieCountMultiplier / 3.0;
+		for (int type = 0; type < NUM_ZOMBIE_TYPES && type < 100; ++type)
+			if (state->mZombieAllowed[type]) scalars[Scalars + 1 + std::min(type, ZombieTypes - 1)] = 1.0f;
 	}
 }
 
@@ -219,7 +228,7 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 		context[channel] = total / Cells;
 		if (meanmax)
 			context[width + channel] = *std::max_element(hidden.data() + channel * Cells, hidden.data() + (channel + 1) * Cells);
-		context[context.size() - width + channel] = std::max(0.0f, Linear(scalars.data(), weights[6].data() + channel * Scalars, Scalars, weights[7][channel]));
+		context[context.size() - width + channel] = std::max(0.0f, Linear(scalars.data(), weights[6].data() + channel * scalars.size(), scalars.size(), weights[7][channel]));
 	}
 }
 
