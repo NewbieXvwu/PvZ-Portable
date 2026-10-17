@@ -379,11 +379,11 @@ def main() -> None:
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
-    p.add_argument("--samples", type=int, default=4)
+    p.add_argument("--samples", type=int, default=3)
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
-    p.add_argument("--horizon", type=int, default=3000)
+    p.add_argument("--horizon", type=int, default=2500)
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--min-gap", type=int, default=300,
                    help="ticks between searches unless the student itself wants to plant (0 = search every time)")
