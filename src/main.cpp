@@ -28,6 +28,7 @@
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
 #include "EnvironmentRollout.h"
+#include "CudaExport.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
@@ -399,6 +400,9 @@ static void RunEnvironment(LawnApp* app)
 				rootId >= 0 && (rootId == 0 || snapshots.contains(rootId)) && seed >= -1 && seed <= UINT32_MAX;
 			if (ok && rootId) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
 			if (ok && seed >= 0) ReseedEnvironment(app, static_cast<uint32_t>(seed));
+			// The events block must describe the rollout, not the board the previous command left
+			// behind: re-read the counters from the restored root, so the deltas are per-rollout.
+			if (ok) before = ReadCounters(app);
 			for (int index = 0; ok && index < historyCount; ++index)
 			{
 				int tick = 0;
@@ -775,6 +779,54 @@ static void RunEnvironment(LawnApp* app)
 			minimalResponse = command == "DROP_SNAPSHOT_FAST";
 			input >> snapshotId;
 			ok = snapshots.erase(snapshotId) > 0;
+		}
+		else if (command == "CUDA_DUMP")
+		{
+			// Export the current board into the layout cuda/CudaRollout.h defines, for the GPU
+			// simulator.  CUDA_DUMP "<path>" <write_level:0|1> <window_start> <count> <tick> <produced>...
+			// The sun income history lives in Python (pvz_env.py::_annotate_observation), so the
+			// caller passes the (tick, produced) events that the 6000-tick window still covers.
+			std::string path;
+			int writeLevel = 0, windowStart = 0, eventCount = 0;
+			std::vector<std::pair<int, uint32_t>> incomeEvents;
+			if (input >> std::quoted(path) >> writeLevel >> windowStart >> eventCount &&
+				eventCount >= 0 && eventCount <= 100000)
+			{
+				incomeEvents.reserve(eventCount);
+				for (int index = 0; index < eventCount && input; ++index)
+				{
+					int tick = 0; uint32_t produced = 0;
+					input >> tick >> produced;
+					if (input) incomeEvents.emplace_back(tick, produced);
+				}
+				ok = !input.fail() && app->mBoard != nullptr;
+			}
+			pvzc::RootRecord record{};
+			if (ok)
+				ok = pvzc::BuildCudaRoot(app, incomeEvents, windowStart, record);
+			if (ok)
+			{
+				std::FILE* out = std::fopen(path.c_str(), writeLevel ? "wb" : "ab");
+				ok = out != nullptr;
+				if (ok && writeLevel) ok = pvzc::WriteCudaLevel(out, app);
+				if (ok) ok = pvzc::WriteCudaRoot(out, app, incomeEvents, windowStart);
+				const long bytes = ok ? std::ftell(out) : -1L;
+				if (out) std::fclose(out);
+				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+					<< ",\"ok\":" << (ok ? "true" : "false")
+					<< ",\"tick\":" << record.tick << ",\"wave\":" << record.wave
+					<< ",\"supported\":" << record.supported
+					<< ",\"reason\":" << record.unsupportedReason
+					<< ",\"plants\":" << record.plantCount << ",\"zombies\":" << record.zombieCount
+					<< ",\"projectiles\":" << record.projectileCount << ",\"coins\":" << record.coinCount
+					<< ",\"bytes\":" << bytes << '}' << std::endl;
+			}
+			else
+			{
+				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+					<< ",\"ok\":false}" << std::endl;
+			}
+			continue;
 		}
 		else if (command == "CRITIC_INPUTS")
 		{

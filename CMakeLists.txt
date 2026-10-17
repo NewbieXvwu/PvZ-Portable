@@ -189,6 +189,7 @@ target_include_directories(pvz-portable PRIVATE
 	${PLAT_INCLUDES}
 	${PROJECT_BINARY_DIR}
 	${PROJECT_SOURCE_DIR}/src
+	${PROJECT_SOURCE_DIR}/cuda
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework/sound/SDL-Mixer-X/include
 	${SDL2_INCLUDE_DIRS}
