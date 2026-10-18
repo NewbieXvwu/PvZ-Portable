@@ -128,3 +128,6 @@
   注意：Mac 主工作区 build 是旧的，`test_student_observation` 的 live 回放测试在重编前会失败（obs-v2 worktree 里通过）；等 Mac 队列空了再重编。
   Codex 额度 04:40 再次用完（两台共用账号），08:14 重置：台式机 /goal resume 与 Mac 铲子任务（第 11 项第一阶段，worktree shovel）都已定时 08:16 启动。
   铲子第一阶段改由用户在另一渠道（GUI 版 Codex）用 /goal 执行，交接书 MEMORY/docs/codex-shovel-handoff.md；已撤销 Mac 08:16 的定时启动。
+- 2026-10-18 05:20 用户改用 CodeBuddy（台式机 WSL，`deepseek-v4.1-flash`，满 YOLO：`--dangerously-skip-permissions` + `CODEBUDDY_IS_SANDBOX=1`）接手 Codex 剩下的活：
+  tmux `cb-cuda`（~/pvz-cuda，交接书 `~/pvz-logs/codebuddy_cuda_task.md`，屏幕记录 `cb_cuda_tui.log`）与 tmux `cb-shovel`（~/PvZ-search，铲子第一阶段，`~/pvz-logs/shovel_handoff.md`，屏幕记录 `cb_shovel_tui.log`），都用 `/goal`。
+  凭据从 Windows `.codebuddy/local_storage` 拷入 WSL（原目录已备份）；模型接口要绕过本地代理（NO_PROXY 加 codebuddy.ai），启动脚本 `~/pvz-logs/cb_launch.sh <目录> [会话 id]`。Codex 在台式机的 08:16 自动续上已取消。
