@@ -37,8 +37,11 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
 
 
 class RolloutNet(nn.Module):
-    def __init__(self, width: int = 64, pool: str = "mean", context: bool = False):
+    def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1"):
         super().__init__()
+        if obs not in ("v1", "v2lite"):
+            raise ValueError(f"unknown student observation version: {obs}")
+        self.obs = obs
         # With context the student also reads the task (zombie-count multiplier, zombie roster): early in a
         # 1.5x game the board looks like a 1.0x game, but the teacher already plays differently (2026-10-16:
         # v12 copies the teacher's early wall-nuts 13% of the time).
@@ -48,11 +51,12 @@ class RolloutNet(nn.Module):
         self.pool = pool
         g = (3 if pool == "meanmax" else 2) * width
         self.trunk = nn.Sequential(
-            nn.Conv2d(BOARD_CHANNELS, width, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(BOARD_CHANNELS + (4 if obs == "v2lite" else 0), width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 5), padding=(0, 2)), nn.ReLU(),
         )
-        self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA + (CONTEXT if context else 0), width), nn.ReLU())
+        self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA + (CONTEXT if context else 0)
+                                             + (1 if obs == "v2lite" else 0), width), nn.ReLU())
         self.plant = nn.Linear(g, 1)
         self.packet = nn.Linear(g, PACKETS)
         self.packet_embedding = nn.Embedding(PACKETS, width)
@@ -98,13 +102,18 @@ class RolloutNet(nn.Module):
 
 @torch.inference_mode()
 def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
-        sparse_input: bool = True, context: np.ndarray | None = None) -> dict:
+        sparse_input: bool = True, context: np.ndarray | None = None, history=None) -> dict:
     """Greedy action restricted to the simulator's legal plants; otherwise wait like pi does."""
+    if net.obs == "v2lite":
+        if history is None:
+            raise ValueError("v2lite requires per-episode StudentHistory, updated at every decision")
+        board, scalars = history.features(frame, previous, context if net.context else None)
     if not legal_plants:
         return dict(WAIT)
     if net.context and context is None:
         raise ValueError("this student reads the task context: pass act(..., context=observation_context(obs))")
-    board, scalars = features(frame, previous, context if net.context else None)
+    if net.obs == "v1":
+        board, scalars = features(frame, previous, context if net.context else None)
     # The trunk is computed once and shared by the three heads: the cell head used to rerun the
     # whole network on the same input, which gives the same numbers at twice the cost.
     h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input)
@@ -125,13 +134,14 @@ def load_student(path) -> RolloutNet:
     fast_ppo's value head is dropped)."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     weights = checkpoint["state_dict"]
-    net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"), bool(checkpoint.get("context", False)))
+    net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),
+                     bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
     return net.eval()
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """Write little-endian v2 weights, or v3 with an additional task-context flag."""
+    """Keep v1 exports byte-compatible; v4 adds an explicit observation version for v2lite."""
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
@@ -139,10 +149,12 @@ def export_student(net: RolloutNet, path) -> None:
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
     with open(path, "wb") as stream:
-        stream.write((b"PVZRN003" if net.context else b"PVZRN002")
+        stream.write((b"PVZRN004" if net.obs == "v2lite" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
-        if net.context:
-            stream.write(struct.pack("<I", 1))
+        if net.context or net.obs == "v2lite":
+            stream.write(struct.pack("<I", int(net.context)))
+        if net.obs == "v2lite":
+            stream.write(struct.pack("<I", 2))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 

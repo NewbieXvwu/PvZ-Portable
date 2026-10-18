@@ -103,7 +103,7 @@ PVZ_SIM void Conv1x5(Lane lane, const float* input, int32_t channels, int32_t ou
 PVZ_SIM void NetTrunk(Lane lane, const NetParams& net, const NetState& state)
 {
 	const int32_t width = net.width;
-	Conv3x3(lane, state.board, kBoardChannels, width, net.conv1, net.bias1, state.hidden);
+	Conv3x3(lane, state.board, net.boardChannels, width, net.conv1, net.bias1, state.hidden);
 	Conv3x3(lane, state.hidden, width, width, net.conv2, net.bias2, state.scratch);
 	Conv1x5(lane, state.scratch, width, width, net.conv3, net.bias3, state.hidden);
 }
@@ -306,7 +306,8 @@ PVZ_SIM Choice NetDecide(Lane lane, const LevelInfo& level, const NetParams& net
 	// The short circuit has to come first: Predict returns before ++networkCalls when nothing can be
 	// planted anywhere, so net_calls <= decisions holds on both sides only if the device skips too.
 	if (!AnyLegalPlant(lane, level)) return choice;
-	BuildFeatures(lane, level, state, waveLog, lane.s(S_PRIOR_TICK) >= 0);
+	BuildFeatures(lane, level, state, waveLog, lane.s(S_PRIOR_TICK) >= 0, net.boardChannels,
+		net.scalarCount, net.version == 4);
 	NetEncode(lane, net, state);
 	return NetChoose(lane, level, net, state);
 }

@@ -38,7 +38,9 @@ enum { kTaskContext = 1 + kZombieTypes };
 // The scalars buffer is *addressed* by this capacity on both sides, whether or not the loaded network
 // reads the task-context tail: chunked addressing needs a width that every accessor agrees on, and
 // net.scalarCount (115 or 150) is only the loop bound of the scalar linear.
-enum { kScalarFeatures = kScalars + kTaskContext };
+// + 1: a v2lite student appends its wave-age scalar after the task context, exactly like the
+// original's `scalars.assign(Scalars + taskContext + v2lite)`.  The extra slot is zero for v1.
+enum { kScalarFeatures = kScalars + kTaskContext + 1 };
 enum { kLogitCells = kRows * kGridCols };
 
 // ---------------------------------------------------------------------------
@@ -91,7 +93,8 @@ struct NetParams
 	int32_t taskContext;
 	int32_t scalarCount;                  // kScalars or kScalars + kTaskContext
 	int32_t contextSize;                  // (meanmax ? 3 : 2) * width
-	int32_t version;                      // 2 = PVZRN002, 3 = PVZRN003
+	int32_t version;                      // 2 = PVZRN002, 3 = PVZRN003, 4 = PVZRN004 (v2lite)
+	int32_t boardChannels;                // 92 for v1, 96 for v2lite (the buffer is kStudentBoardChannels wide)
 
 	const float* conv1;                   // [width][92][3][3]
 	const float* bias1;

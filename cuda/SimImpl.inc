@@ -67,6 +67,9 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		for (int32_t field = F_PLANT_TYPE; field <= F_PLANT_ONBOARD; ++field)
 			lane.i(static_cast<IntField>(field), slot) = 0;
 		lane.i(F_PLANT_TYPE, slot) = -1;
+		// v2lite history: no plant has been seen yet, so the first feature build assigns the birth tick.
+		lane.i(F_PLANT_BORN, slot) = -1;
+		lane.i(F_PLANT_HIST_KIND, slot) = -1;
 		lane.f(F_PLANT_X, slot) = 0.0f;
 		lane.f(F_PLANT_Y, slot) = 0.0f;
 		lane.f(F_PLANT_ANIM_TIME, slot) = lane.f(F_PLANT_ANIM_RATE, slot) = 0.0f;
@@ -150,6 +153,8 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 	lane.s(S_ROOT_TRIGGERED_MOWERS) = root.triggeredLawnMowers;
 	lane.s(S_ROOT_TICK) = root.tick;
 	lane.s(S_ROOT_INDEX) = 0;
+	lane.s(S_HIST_WAVE) = root.historyWave;
+	lane.s(S_WAVE_TICK) = root.historyWaveTick;
 	for (int32_t row = 0; row < kRows; ++row)
 	{
 		lane.f(F_ROW_LAST_PICKED, row) = root.rowLastPicked[row];
@@ -186,6 +191,12 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.f(F_PLANT_ANIM_RATE, slot) = src.animRate;
 		lane.i(F_PLANT_ANIM_FRAMES, slot) = src.animFrames;
 		lane.i(F_PLANT_ANIM_LOOPS, slot) = src.animLoops;
+		// The student's history is imported, not rebuilt: `born` is when the *student* first saw this
+		// (cell, kind) at a decision, which the exporter copies from the caller's history.  -1 means
+		// "new at this root", so the first feature build stamps it with the current tick -- the same
+		// branch EnvironmentRollout::History::Update takes for a key it has not seen.
+		lane.i(F_PLANT_BORN, slot) = src.born;
+		lane.i(F_PLANT_HIST_KIND, slot) = src.born >= 0 ? src.type : -1;
 	}
 	for (int32_t index = 0; index < root.zombieCount; ++index)
 	{
@@ -442,9 +453,9 @@ PVZ_SIM void StoreLeafValueFeatures(Lane lane, const LevelInfo& level, const flo
 
 // Padded plane element, and per-lane vector element, of this lane's activation slot -- the same
 // formulas the batched GEMMs address by, and the same ones NetForward.inc's PVZ_PLANE/PVZ_VECTOR use.
-PVZ_SIM float& CellChannel(Lane lane, float* board, int32_t channel, int32_t cell)
+PVZ_SIM float& CellChannel(Lane lane, float* board, int32_t channels, int32_t channel, int32_t cell)
 {
-	return board[PlaneIndex(kBoardChannels, lane.netSlot, channel, PaddedCell(cell))];
+	return board[PlaneIndex(channels, lane.netSlot, channel, PaddedCell(cell))];
 }
 
 PVZ_SIM float& ScalarChannel(Lane lane, float* scalars, int32_t index)
@@ -453,11 +464,11 @@ PVZ_SIM float& ScalarChannel(Lane lane, float* scalars, int32_t index)
 }
 
 PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& buffers, const float* waveLog,
-	bool previousValid)
+	bool previousValid, int32_t boardChannels, int32_t scalarCount, bool v2lite)
 {
-	for (int32_t channel = 0; channel < kBoardChannels; ++channel)
+	for (int32_t channel = 0; channel < boardChannels; ++channel)
 		for (int32_t cell = 0; cell < kCells; ++cell)
-			CellChannel(lane, buffers.board, channel, cell) = 0.0f;
+			CellChannel(lane, buffers.board, boardChannels, channel, cell) = 0.0f;
 	// The scalar vector is cleared too, not only filled: the original does
 	// `scalars.assign(kScalarFeatures, 0.0f)` before writing the deck-dependent entries, and an
 	// activation slot is reused by whichever lane reaches a decision next, so an uncleared tail would
@@ -476,7 +487,7 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 		if (col >= kGridCols) continue;
 		const int32_t channel = Minimum(type, kPlantTypes - 1);
 		const int32_t maxHealth = Maximum(lane.i(F_PLANT_HP_MAX, slot), 1);
-		CellChannel(lane, buffers.board, channel, slot) +=
+		CellChannel(lane, buffers.board, boardChannels, channel, slot) +=
 			static_cast<float>(static_cast<double>(lane.i(F_PLANT_HP, slot)) / static_cast<double>(maxHealth));
 	}
 
@@ -494,22 +505,22 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 		const int32_t cell = row * kCols + FeatureColumn(position);
 		const double health = static_cast<double>(lane.i(F_ZOMBIE_BODY, slot))
 			+ static_cast<double>(lane.i(F_ZOMBIE_HELM, slot)) + static_cast<double>(lane.i(F_ZOMBIE_SHIELD, slot));
-		CellChannel(lane, buffers.board, kPlantTypes + Minimum(type, kZombieTypes - 1), cell) +=
+		CellChannel(lane, buffers.board, boardChannels, kPlantTypes + Minimum(type, kZombieTypes - 1), cell) +=
 			static_cast<float>(health / 200.0);
-		CellChannel(lane, buffers.board, 88, cell) += (flags & ZB_EATING) ? 1.0f : 0.0f;
-		CellChannel(lane, buffers.board, 89, cell) += lane.i(F_ZOMBIE_CHILLED, slot) > 0 ? 1.0f : 0.0f;
+		CellChannel(lane, buffers.board, boardChannels, 88, cell) += (flags & ZB_EATING) ? 1.0f : 0.0f;
+		CellChannel(lane, buffers.board, boardChannels, 89, cell) += lane.i(F_ZOMBIE_CHILLED, slot) > 0 ? 1.0f : 0.0f;
 	}
 
 	// Mowers: channel 90, ready mowers only, always column 0 (EnvironmentRollout.cpp:129).
 	for (int32_t row = 0; row < kRows && row < kMowerSlots; ++row)
-		CellChannel(lane, buffers.board, 90, row * kCols) =
+		CellChannel(lane, buffers.board, boardChannels, 90, row * kCols) =
 			lane.i(F_MOWER_STATE, row) == kMowerReady ? 1.0f : 0.0f;
 
 	// Channel 91: a row whose 9 lawn cells are all the same playable terrain.  On day grass that is
 	// every playable row, decided by the level rather than by the position.
 	for (int32_t row = 0; row < level.playableRows; ++row)
 		for (int32_t col = 0; col < kCols; ++col)
-			CellChannel(lane, buffers.board, 91, row * kCols + col) = 1.0f;
+			CellChannel(lane, buffers.board, boardChannels, 91, row * kCols + col) = 1.0f;
 
 	float* scalars = buffers.scalars;
 	const int32_t sun = lane.s(S_SUN);
@@ -552,6 +563,91 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 	ScalarChannel(lane, scalars, kScalars) = static_cast<float>(static_cast<double>(level.zombieCountMultiplier) / 3.0);
 	for (int32_t type = 0; type < kZombieTypes; ++type)
 		ScalarChannel(lane, scalars, kScalars + 1 + type) = level.allowed[type] ? 1.0f : 0.0f;
+
+	// ---------------------------------------------------------------------------------------------
+	// v2lite (PVZRN004).  Four board channels and one scalar that depend on history, computed exactly
+	// as EnvironmentRollout::Features does: the same Update, the same double accumulators, the same
+	// division only for cells that have a zombie.
+	// ---------------------------------------------------------------------------------------------
+	if (boardChannels > kBoardChannels)
+	{
+		// History::Update.  A wave change restarts the wave clock at this decision's tick; a plant is
+		// born at the first decision that sees it, and keeps that tick for as long as its (cell, kind)
+		// stays live -- the key the original's map uses.
+		if (lane.s(S_WAVE) != lane.s(S_HIST_WAVE))
+		{
+			lane.s(S_HIST_WAVE) = lane.s(S_WAVE);
+			lane.s(S_WAVE_TICK) = lane.s(S_TICK);
+		}
+		const int32_t tick = lane.s(S_TICK);
+		for (int32_t slot = 0; slot < kPlantSlots; ++slot)
+		{
+			const int32_t type = lane.i(F_PLANT_TYPE, slot);
+			if (type >= 0)
+			{
+				if (lane.i(F_PLANT_HIST_KIND, slot) != type || lane.i(F_PLANT_BORN, slot) < 0)
+					lane.i(F_PLANT_BORN, slot) = tick;
+			}
+			else
+				lane.i(F_PLANT_BORN, slot) = -1;
+			lane.i(F_PLANT_HIST_KIND, slot) = type;
+		}
+
+		// Channel 95: the plant's age, min over the cell (one plant per cell).
+		for (int32_t slot = 0; slot < kPlantSlots; ++slot)
+		{
+			if (lane.i(F_PLANT_TYPE, slot) < 0 || slot % kCols >= kGridCols) continue;
+			// The original starts the per-cell minimum at 1.0 (StudentHistory.extra's `ages`), so an age
+			// never exceeds one; the min is what that clamp is.
+			const float age = static_cast<float>(MinimumDouble(1.0,
+				static_cast<double>(tick - lane.i(F_PLANT_BORN, slot)) / 1500.0));
+			CellChannel(lane, buffers.board, boardChannels, 95, slot) = age;
+		}
+
+		// Channels 92-94: health-weighted position and velocity, and the cell's fastest zombie.
+		double positions[kCells], speeds[kCells], health[kCells];
+		for (int32_t cell = 0; cell < kCells; ++cell)
+		{
+			positions[cell] = 0.0;
+			speeds[cell] = 0.0;
+			health[cell] = 0.0;
+		}
+		for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
+		{
+			const int32_t type = lane.i(F_ZOMBIE_TYPE, slot);
+			if (type < 0) continue;
+			const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
+			const int32_t row = lane.i(F_ZOMBIE_ROW, slot);
+			if ((flags & ZB_DEAD) || !(flags & ZB_ON_BOARD) || row < 0 || row >= kRows) continue;
+			const double position = RenderedPublicCoordinate(static_cast<double>(lane.f(F_ZOMBIE_X, slot)));
+			const double velocity = RenderedPublicCoordinate(static_cast<double>(lane.f(F_ZOMBIE_VELX, slot)));
+			// FeatureColumn clamps to COLS-1 = 9, exactly like pvz_value_net._col_of; clamping to the
+			// lawn (8) would drop a zombie that has walked past the last lawn column into column 9.
+			const int32_t col = FeatureColumn(position);
+			const int32_t cell = row * kCols + col;
+			const double amount = static_cast<double>(lane.i(F_ZOMBIE_BODY, slot))
+				+ static_cast<double>(lane.i(F_ZOMBIE_HELM, slot)) + static_cast<double>(lane.i(F_ZOMBIE_SHIELD, slot));
+			const double fraction = MinimumDouble(1.0, MaximumDouble(0.0, (position - 40.0 - col * 80.0) / 80.0));
+			positions[cell] += amount * fraction;
+			speeds[cell] += amount * velocity;
+			health[cell] += amount;
+			float& fastest = CellChannel(lane, buffers.board, boardChannels, 94, cell);
+			if (static_cast<float>(velocity) > fastest) fastest = static_cast<float>(velocity);
+		}
+		for (int32_t cell = 0; cell < kCells; ++cell)
+			if (health[cell] > 0.0)
+			{
+				CellChannel(lane, buffers.board, boardChannels, 92, cell) =
+					static_cast<float>(positions[cell] / health[cell]);
+				CellChannel(lane, buffers.board, boardChannels, 93, cell) =
+					static_cast<float>(speeds[cell] / health[cell]);
+			}
+
+		// The wave-age scalar is the last entry the network reads, after the task context when there
+		// is one, which is what the original writes as scalars.back().
+		ScalarChannel(lane, scalars, scalarCount - 1) = static_cast<float>(
+			MinimumDouble(1.0, static_cast<double>(tick - lane.s(S_WAVE_TICK)) / 3000.0));
+	}
 }
 
 }  // namespace pvzc

@@ -2,7 +2,9 @@
 #define PVZ_ENVIRONMENT_ROLLOUT_H
 
 #include <array>
+#include <map>
 #include <string>
+#include <tuple>
 #include <vector>
 
 class LawnApp;
@@ -20,11 +22,22 @@ public:
 		int cellPacket = -1;
 		Action action;
 	};
+	// v2lite's student-visible history: the first tick each (row, col, kind) was observed at a
+	// decision, and the tick the current wave started.  It is advanced by Features, so the object
+	// must live for the whole continuation, exactly like the Python StudentHistory it mirrors.
+	struct History
+	{
+		std::map<std::tuple<int, int, int>, int> plants;
+		int wave = -1, waveTick = 0;
+		void Update(LawnApp* app);
+	};
 	void Load(const std::string& path);
 	bool Loaded() const { return width != 0; }
+	bool V2Lite() const { return v2lite; }
 	void Features(LawnApp* app, double income, int previousTick, bool previousPlant,
-		std::vector<float>& board, std::vector<float>& scalars);
-	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant, bool diagnostics = false);
+		std::vector<float>& board, std::vector<float>& scalars, History& history);
+	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant,
+		History& history, bool diagnostics = false);
 	// Number of Predict calls that actually ran the network (the ones that return early because
 	// nothing is plantable cost nothing).  Reset by the caller around a batch of rollouts.
 	int NetworkCalls() const { return networkCalls; }
@@ -34,6 +47,7 @@ private:
 	int width = 0;
 	bool meanmax = false;
 	bool taskContext = false;
+	bool v2lite = false;
 	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer;

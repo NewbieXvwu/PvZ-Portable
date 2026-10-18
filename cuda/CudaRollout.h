@@ -21,7 +21,7 @@ namespace pvzc
 enum {
 	kMagic = 0x50564334,          // "PVC4" -- the trailing digit is the tag's own literal, not the
 	                              // version below; staleness of a .cudaroot is carried by kVersion.
-	kVersion = 7,                 // import animation progress for rises, vaults, ground motion and corpses
+	kVersion = 8,                 // v2lite history: per-plant first-seen tick and the wave start tick
 	kRows = 6,                    // feature grid rows (only 0..4 are playable on grass)
 	kCols = 10,                   // 9 lawn columns + column 9 = "beyond the lawn"
 	kCells = kRows * kCols,
@@ -39,8 +39,12 @@ enum {
 	kColsP = kCols + 2 * kPadCol,     // 14
 	kPlaneCells = kRowsP * kColsP,    // 112 cells per channel, halo included
 	kValidOrigin = kPadRow * kColsP + kPadCol,
-	kBoardChannels = 92,
-	kScalars = 115,
+	kBoardChannels = 92,          // the value net's board (and a v1 student's)
+	// The student's board buffer is *addressed* by this capacity on both sides, like the scalars
+	// below: a v2lite student reads 96 channels, a v1 student 92, and the trunk's plane stride must
+	// not depend on which one loaded.  The four extra channels stay zero for v1.
+	kStudentBoardChannels = 96,
+	kScalars = 115,               // v1 student scalars; v2lite appends one after the task context
 
 	// Activations are chunked along lanes.  A batch is ceil(lanes / kNetChunk) blocks, and inside a
 	// block the lane index is innermost, so one padded grid row of one channel is kColsP * kNetChunk
@@ -185,6 +189,7 @@ struct RootPlant
 	float posX, posY;             // mPosX/mPosY, so blast and bite rectangles use the original's numbers
 	float animTime, animRate;
 	int32_t animFrames, animLoops;
+	int32_t born;                 // history: tick the student first saw this (row, col, kind)
 };
 
 struct RootZombie
@@ -275,6 +280,10 @@ struct RootRecord
 	int32_t waveCount;              // == numWaves, capped at kMaxWaves
 	int32_t waveZombieCount[kMaxWaves];
 	int32_t waveTable[kMaxWaves][kWaveZombieSlots];
+	// v2lite history: the wave the student last observed and the tick that wave started.  A rollout
+	// that starts mid-wave needs both, or the plant-age and wave-age features restart at the root.
+	int32_t historyWave;
+	int32_t historyWaveTick;
 	int32_t supported;            // exporter's verdict: 1 = the kernel can simulate this position
 	int32_t unsupportedReason;
 };
@@ -358,6 +367,8 @@ enum IntField {
 	F_MOWER_STATE, F_MOWER_TIMER, F_MOWER_FLAGS, F_MOWER_CHOMP,
 	F_PACKET_TYPE, F_PACKET_ACTIVE, F_PACKET_COUNTER, F_PACKET_REFRESH, F_PACKET_COST,
 	F_PLANTED_BY_TYPE,
+	F_PLANT_BORN,                   // history: tick this plant was first seen (-1 unknown)
+	F_PLANT_HIST_KIND,              // history: the kind recorded at the previous decision
 	F_ROW_GOT_MOWERED,
 	F_INCOME_TICK, F_INCOME_VALUE,
 	F_SCALAR,                       // kScalarSlots single-value fields, see ScalarField
@@ -413,6 +424,9 @@ enum ScalarField {
 	S_FIRST_KIND, S_FIRST_PACKET, S_FIRST_ROW, S_FIRST_COL, S_FIRST_TICKS,
 	S_FUTURE_SEED,                // immutable seed for resampling future wave composition
 	S_ZOMBIE_END, S_PROJECTILE_END, // exclusive high-water bounds; holes retain original slot order
+	// v2lite history.  Appended at the end because the .cudaroot payload stores the initial scalars
+	// positionally; nothing before them moves.
+	S_WAVE_TICK, S_HIST_WAVE,
 	S_SCALAR_COUNT
 };
 
@@ -426,6 +440,7 @@ constexpr int IntSlotCount(IntField field)
 	case F_PLANT_STATE_COUNTDOWN: case F_PLANT_LAUNCH: case F_PLANT_LAUNCH_RATE:
 	case F_PLANT_SPECIAL: case F_PLANT_SHOOTING: case F_PLANT_ANIM: case F_PLANT_ONBOARD:
 	case F_PLANT_ANIM_FRAMES: case F_PLANT_ANIM_LOOPS:
+	case F_PLANT_BORN: case F_PLANT_HIST_KIND:
 		return kPlantSlots;
 	case F_ZOMBIE_TYPE: case F_ZOMBIE_ROW: case F_ZOMBIE_BODY: case F_ZOMBIE_BODY_MAX:
 	case F_ZOMBIE_HELM:

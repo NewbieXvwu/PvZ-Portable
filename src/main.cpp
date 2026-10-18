@@ -321,6 +321,28 @@ static bool DecodeBranchAction(const std::string& spec, std::string& command, st
 	return true;
 }
 
+// The student's v2lite history, as ROLLOUT's optional trailing option: "V2H wave waveTick count
+// row col kind born ...".  It describes the state *before* the rollout's first decision, so the first
+// Predict call advances it exactly as the Python StudentHistory does.  No token at all means the
+// network does not read history (a v1 student), and anything else is a protocol error.
+static bool ReadStudentOptions(std::istream& input, int tick, EnvironmentRollout::History& history)
+{
+	std::string token;
+	if (!(input >> token)) return input.eof();
+	if (token != "V2H") return false;
+	int count = 0;
+	if (!(input >> history.wave >> history.waveTick >> count) || history.wave < -1 ||
+		history.waveTick < 0 || history.waveTick > tick || count < 0 || count > 6 * 9 * 54) return false;
+	for (int index = 0; index < count; ++index)
+	{
+		int row, col, kind, born;
+		if (!(input >> row >> col >> kind >> born) || row < 0 || row >= 6 || col < 0 || col >= 9 ||
+			kind < 0 || kind >= 54 || born < 0 || born > tick ||
+			!history.plants.emplace(std::make_tuple(row, col, kind), born).second) return false;
+	}
+	return !(input >> token);
+}
+
 static void RunEnvironment(LawnApp* app)
 {
 	std::string line;
@@ -329,7 +351,7 @@ static void RunEnvironment(LawnApp* app)
 	EnvironmentRollout rollout;
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
-		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":1}" << std::endl;
+		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":2}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -374,7 +396,8 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false");
 			if (ok)
 			{
-				auto prediction = rollout.Predict(app, income, priorTick, priorPlant, true);
+				EnvironmentRollout::History predictHistory;
+				auto prediction = rollout.Predict(app, income, priorTick, priorPlant, predictHistory, true);
 				std::cout << std::setprecision(9) << ",\"plant\":" << prediction.plant << ",\"packet\":[";
 				for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << prediction.packets[index];
 				std::cout << "],\"cell_packet\":" << prediction.cellPacket << ",\"cell\":[";
@@ -392,8 +415,9 @@ static void RunEnvironment(LawnApp* app)
 			int untilTick = 0, mask = 0, maxActions = 0, eventWait = 0, historyStart = 0, historyCount = 0;
 			int rootId = 0;
 			int64_t seed = -1;
-			std::string first, extra;
+			std::string first;
 			std::deque<std::pair<int, uint32_t>> history;
+			EnvironmentRollout::History studentHistory;
 			ok = static_cast<bool>(input >> rootId >> seed >> untilTick >> mask >> maxActions >> eventWait >> first >> historyStart >> historyCount) &&
 				rollout.Loaded() && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
 				maxActions > 0 && maxActions <= 1000000 && (eventWait == 0 || eventWait == 1) && historyCount >= 0 && historyCount <= 100000 &&
@@ -412,8 +436,9 @@ static void RunEnvironment(LawnApp* app)
 				if (ok) history.emplace_back(tick, produced);
 			}
 			std::string actionCommand, actionArguments;
-			ok = ok && !(input >> extra) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
-				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments));
+			ok = ok && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
+				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments)) &&
+				ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory);
 			int decisions = 0, mowersLeft = 0, startTick = 0;
 			std::array<int, 10> planted{};
 			double simulationSeconds = 0, networkSeconds = 0;
@@ -442,7 +467,7 @@ static void RunEnvironment(LawnApp* app)
 						double produced = 0;
 						for (auto entry : history) produced += entry.second;
 						const int elapsed = std::max(0, std::min(6000, tick - historyStart));
-						action = rollout.Predict(app, elapsed ? produced * 1000.0 / elapsed : 0, priorTick, priorPlant).action;
+						action = rollout.Predict(app, elapsed ? produced * 1000.0 / elapsed : 0, priorTick, priorPlant, studentHistory).action;
 						networkSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
 					}
 					const auto start = std::chrono::steady_clock::now();
@@ -789,6 +814,7 @@ static void RunEnvironment(LawnApp* app)
 			std::string path;
 			int writeLevel = 0, windowStart = 0, eventCount = 0;
 			std::vector<std::pair<int, uint32_t>> incomeEvents;
+			pvzc::CudaHistory history;
 			if (input >> std::quoted(path) >> writeLevel >> windowStart >> eventCount &&
 				eventCount >= 0 && eventCount <= 100000)
 			{
@@ -801,15 +827,36 @@ static void RunEnvironment(LawnApp* app)
 				}
 				ok = !input.fail() && app->mBoard != nullptr;
 			}
+			// Optional v2lite history, in the same shape ROLLOUT's V2H option uses.  It trails the
+			// income list, whose length the caller already gave, so the token cannot be confused
+			// with a sample.  A caller that omits it gets the v1 root (history wave -1).
+			if (ok)
+			{
+				std::string token;
+				if (input >> token)
+				{
+					int count = 0;
+					ok = token == "V2H" && static_cast<bool>(input >> history.wave >> history.waveTick >> count) &&
+						history.wave >= -1 && history.waveTick >= 0 && count >= 0 && count <= 6 * 9 * 54;
+					for (int index = 0; ok && index < count; ++index)
+					{
+						pvzc::CudaHistoryPlant entry{};
+						ok = static_cast<bool>(input >> entry.row >> entry.col >> entry.kind >> entry.born) &&
+							entry.row >= 0 && entry.row < 6 && entry.col >= 0 && entry.col < 9 &&
+							entry.kind >= 0 && entry.kind < 54 && entry.born >= 0;
+						if (ok) history.plants.push_back(entry);
+					}
+				}
+			}
 			pvzc::RootRecord record{};
 			if (ok)
-				ok = pvzc::BuildCudaRoot(app, incomeEvents, windowStart, record);
+				ok = pvzc::BuildCudaRoot(app, incomeEvents, windowStart, record, &history);
 			if (ok)
 			{
 				std::FILE* out = std::fopen(path.c_str(), writeLevel ? "wb" : "ab");
 				ok = out != nullptr;
 				if (ok && writeLevel) ok = pvzc::WriteCudaLevel(out, app);
-				if (ok) ok = pvzc::WriteCudaRoot(out, app, incomeEvents, windowStart);
+				if (ok) ok = pvzc::WriteCudaRoot(out, app, incomeEvents, windowStart, &history);
 				const long bytes = ok ? std::ftell(out) : -1L;
 				if (out) std::fclose(out);
 				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion

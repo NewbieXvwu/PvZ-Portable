@@ -144,12 +144,14 @@ Corpus ReadCorpus(const std::string& path)
 // The student dump, in EnvironmentRollout::Load's order
 // ---------------------------------------------------------------------------
 
-std::vector<size_t> WeightCounts(int32_t width, int32_t meanmax, int32_t withContext)
+std::vector<size_t> WeightCounts(int32_t width, int32_t meanmax, int32_t withContext, int32_t observation)
 {
 	const size_t w = static_cast<size_t>(width);
 	const size_t context = (meanmax ? 3 : 2) * w;
-	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0);
-	return {w * kBoardChannels * 9, w, w * w * 9, w, w * w * 5, w, w * scalars, w,
+	const size_t v2lite = observation == 2 ? 1 : 0;
+	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0) + v2lite;
+	const size_t channels = static_cast<size_t>(kBoardChannels) + 4 * v2lite;
+	return {w * channels * 9, w, w * w * 9, w, w * w * 5, w, w * scalars, w,
 		context, 1, 10 * context, 10, 10 * w, w * (2 * w + context), w, w, 1};
 }
 
@@ -164,17 +166,20 @@ NetImage ReadNet(const std::string& path)
 	std::FILE* stream = std::fopen(path.c_str(), "rb");
 	if (!stream) Fail("cannot open " + path);
 	char magic[9] = {0};
-	uint32_t width = 0, pool = 0, withContext = 0;
+	uint32_t width = 0, pool = 0, withContext = 0, observation = 1;
 	if (std::fread(magic, 8, 1, stream) != 1) Fail(path + " is too short");
 	const std::string version(magic, 8);
-	if (version != "PVZRN002" && version != "PVZRN003") Fail("unsupported network dump " + version);
+	if (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004")
+		Fail("unsupported network dump " + version);
 	if (std::fread(&width, 4, 1, stream) != 1 || std::fread(&pool, 4, 1, stream) != 1) Fail("short header");
-	if (version == "PVZRN003" && std::fread(&withContext, 4, 1, stream) != 1) Fail("short header");
+	if (version != "PVZRN002" && std::fread(&withContext, 4, 1, stream) != 1) Fail("short header");
+	if (version == "PVZRN004" && std::fread(&observation, 4, 1, stream) != 1) Fail("short header");
 	if (width < 1 || width > kMaxNetWidth) Fail("network width " + std::to_string(width) + " out of range");
+	if (observation < 1 || observation > 2) Fail("network observation version out of range");
 
 	NetImage image;
 	const std::vector<size_t> counts = WeightCounts(static_cast<int32_t>(width), pool ? 1 : 0,
-		withContext ? 1 : 0);
+		withContext ? 1 : 0, static_cast<int32_t>(observation));
 	size_t total = 0;
 	for (size_t count : counts) total += count;
 	image.values.resize(total);
@@ -204,9 +209,10 @@ NetImage ReadNet(const std::string& path)
 	params.width = static_cast<int32_t>(width);
 	params.meanmax = pool ? 1 : 0;
 	params.taskContext = withContext ? 1 : 0;
-	params.version = version == "PVZRN003" ? 3 : 2;
+	params.version = version == "PVZRN004" ? 4 : (version == "PVZRN003" ? 3 : 2);
 	params.contextSize = (params.meanmax ? 3 : 2) * params.width;
-	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0);
+	params.boardChannels = kBoardChannels + (observation == 2 ? 4 : 0);
+	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0) + (observation == 2 ? 1 : 0);
 	params.conv1 = take(counts[0]);
 	params.bias1 = take(counts[1]);
 	params.conv2 = take(counts[2]);
@@ -442,7 +448,8 @@ __device__ __forceinline__ void PreLane(const Arguments& arguments, Lane lane,
 	{
 		arguments.laneSlot[index] = atomicAdd(&arguments.counters->netCount, 1);
 		lane.netSlot = arguments.laneSlot[index];
-		BuildFeatures(lane, level, arguments.state, arguments.waveLog, lane.s(S_PRIOR_TICK) >= 0);
+		BuildFeatures(lane, level, arguments.state, arguments.waveLog, lane.s(S_PRIOR_TICK) >= 0,
+			arguments.net.boardChannels, arguments.net.scalarCount, arguments.net.version == 4);
 		return;
 	}
 	if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
@@ -925,7 +932,7 @@ void DeviceOpen(Device& dev, const Options& options, const NetImage& image)
 	const size_t vectorFloats = static_cast<size_t>(kNetChunk) * dev.blocks;
 	const size_t intBytes = static_cast<size_t>(IntSlotsTotal()) * lanes * sizeof(int32_t);
 	const size_t floatBytes = static_cast<size_t>(FloatSlotsTotal()) * lanes * sizeof(float);
-	const size_t boardBytes = kBoardChannels * chunkFloats * sizeof(float);
+	const size_t boardBytes = kStudentBoardChannels * chunkFloats * sizeof(float);
 	const size_t planeBytes = static_cast<size_t>(width) * chunkFloats * sizeof(float);
 	const size_t scalarBytes = kScalarFeatures * vectorFloats * sizeof(float);
 	const size_t contextBytes = static_cast<size_t>(image.params.contextSize) * vectorFloats * sizeof(float);
@@ -938,13 +945,14 @@ void DeviceOpen(Device& dev, const Options& options, const NetImage& image)
 		? static_cast<size_t>(lanes) * kValueFloats * sizeof(float) : 0u;
 
 	// Three trunk layers, one after another in the order the shift tables walk their taps.
-	const size_t packedCount = PackedCount(kBoardChannels, width, 9)
+	const int32_t boardChannels = image.params.boardChannels;
+	const size_t packedCount = PackedCount(boardChannels, width, 9)
 		+ PackedCount(width, width, 9) + PackedCount(width, width, 5);
 	std::vector<float> packed(packedCount);
 	{
 		float* cursor = packed.data();
-		RepackConv(cursor, image.params.conv1, kBoardChannels, width, 9);
-		cursor += PackedCount(kBoardChannels, width, 9);
+		RepackConv(cursor, image.params.conv1, boardChannels, width, 9);
+		cursor += PackedCount(boardChannels, width, 9);
 		RepackConv(cursor, image.params.conv2, width, width, 9);
 		cursor += PackedCount(width, width, 9);
 		RepackConv(cursor, image.params.conv3, width, width, 5);
@@ -1009,7 +1017,7 @@ void DeviceOpen(Device& dev, const Options& options, const NetImage& image)
 			return pointer;
 		};
 		const std::vector<size_t> counts = WeightCounts(deviceNet.width, deviceNet.meanmax,
-			deviceNet.taskContext);
+			deviceNet.taskContext, deviceNet.version == 4 ? 2 : 1);
 		deviceNet.conv1 = take(counts[0]);
 		deviceNet.bias1 = take(counts[1]);
 		deviceNet.conv2 = take(counts[2]);
@@ -1032,8 +1040,8 @@ void DeviceOpen(Device& dev, const Options& options, const NetImage& image)
 	// `netLane` is the copy from before the replacement, which is what `--bench lane` runs on.
 	dev.netLane = deviceNet;
 	deviceNet.conv1 = dev.packedBase;
-	deviceNet.conv2 = dev.packedBase + PackedCount(kBoardChannels, width, 9);
-	deviceNet.conv3 = dev.packedBase + PackedCount(kBoardChannels, width, 9) + PackedCount(width, width, 9);
+	deviceNet.conv2 = dev.packedBase + PackedCount(boardChannels, width, 9);
+	deviceNet.conv3 = dev.packedBase + PackedCount(boardChannels, width, 9) + PackedCount(width, width, 9);
 	dev.net = deviceNet;
 	dev.state = NetState{dev.board, dev.scalarPlane, dev.hidden, dev.scratch, dev.context, dev.logits};
 
@@ -1047,8 +1055,8 @@ void DeviceOpen(Device& dev, const Options& options, const NetImage& image)
 			dev.shifts3[dr * 3 + dc] = kValidOrigin + (dr - 1) * kColsP + (dc - 1);
 	for (int32_t dc = 0; dc < 5; ++dc) dev.shifts1x5[dc] = kValidOrigin + (dc - 2);
 	// ConvLayer keeps a pointer to the shift table, so the tables have to live as long as the device.
-	dev.conv1 = ConvLayer{dev.board, dev.hidden, dev.net.conv1, dev.net.bias1, kBoardChannels, width, 9,
-		dev.shifts3};
+	dev.conv1 = ConvLayer{dev.board, dev.hidden, dev.net.conv1, dev.net.bias1, image.params.boardChannels,
+		width, 9, dev.shifts3};
 	dev.conv2 = ConvLayer{dev.hidden, dev.scratch, dev.net.conv2, dev.net.bias2, width, width, 9,
 		dev.shifts3};
 	dev.conv3 = ConvLayer{dev.scratch, dev.hidden, dev.net.conv3, dev.net.bias3, width, width, 5,

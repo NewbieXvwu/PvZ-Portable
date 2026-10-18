@@ -188,11 +188,16 @@ static void FillIncome(const std::vector<std::pair<int, uint32_t>>& events, int 
 }
 
 bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& incomeEvents,
-	int incomeWindowStart, RootRecord& record)
+	int incomeWindowStart, RootRecord& record, const CudaHistory* history)
 {
 	std::memset(&record, 0, sizeof(record));
 	record.magic = kMagic;
 	record.version = kVersion;
+	// memset would leave "wave 0, tick 0", which is a real history state (wave 0 started at tick 0).
+	// -1 is the state StudentHistory starts in, and it makes the first feature build restart the
+	// wave clock at the root's tick.
+	record.historyWave = -1;
+	record.historyWaveTick = 0;
 	Board* board = app->mBoard;
 	if (!board) return false;
 
@@ -223,6 +228,11 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 	}
 	record.supported = 1;
 	record.unsupportedReason = 0;
+	if (history)
+	{
+		record.historyWave = history->wave;
+		record.historyWaveTick = history->waveTick;
+	}
 	if (board->mLevel != 7 || app->IsFirstTimeAdventureMode())
 	{
 		record.supported = 0;
@@ -258,6 +268,17 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 			out.animFrames = animation->mFrameCount;
 			out.animLoops = animation->mLoopCount;
 		}
+		// v2lite history: a plant the caller's map already knows keeps its birth tick; anything else
+		// is new at this root (-1), and the first feature build stamps it with the root's tick.
+		out.born = -1;
+		if (history)
+			for (const CudaHistoryPlant& known : history->plants)
+				if (known.row == plant->mRow && known.col == plant->mPlantCol &&
+					known.kind == static_cast<int>(plant->mSeedType))
+				{
+					out.born = known.born;
+					break;
+				}
 		if (!KernelSupportsPlant(plant->mSeedType) || plant->mSquished ||
 			plant->mImitaterType != SeedType::SEED_NONE)
 		{
@@ -419,10 +440,10 @@ bool WriteCudaLevel(std::FILE* out, LawnApp* app)
 }
 
 bool WriteCudaRoot(std::FILE* out, LawnApp* app, const std::vector<std::pair<int, uint32_t>>& incomeEvents,
-	int incomeWindowStart)
+	int incomeWindowStart, const CudaHistory* history)
 {
 	RootRecord record;
-	if (!BuildCudaRoot(app, incomeEvents, incomeWindowStart, record)) return false;
+	if (!BuildCudaRoot(app, incomeEvents, incomeWindowStart, record, history)) return false;
 	return WriteCudaRecord(out, 2, &record, sizeof(record));
 }
 

@@ -108,12 +108,14 @@ Corpus ReadCorpus(const std::string& path)
 // The student dump, in EnvironmentRollout::Load's order (the device driver's ReadNet, same counts)
 // ---------------------------------------------------------------------------
 
-std::vector<size_t> WeightCounts(int32_t width, int32_t meanmax, int32_t withContext)
+std::vector<size_t> WeightCounts(int32_t width, int32_t meanmax, int32_t withContext, int32_t observation)
 {
 	const size_t w = static_cast<size_t>(width);
 	const size_t context = (meanmax ? 3 : 2) * w;
-	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0);
-	return {w * kBoardChannels * 9, w, w * w * 9, w, w * w * 5, w, w * scalars, w,
+	const size_t v2lite = observation == 2 ? 1 : 0;
+	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0) + v2lite;
+	const size_t channels = static_cast<size_t>(kBoardChannels) + 4 * v2lite;
+	return {w * channels * 9, w, w * w * 9, w, w * w * 5, w, w * scalars, w,
 		context, 1, 10 * context, 10, 10 * w, w * (2 * w + context), w, w, 1};
 }
 
@@ -128,17 +130,21 @@ NetImage ReadNet(const std::string& path)
 	std::FILE* stream = std::fopen(path.c_str(), "rb");
 	if (!stream) Fail("cannot open " + path);
 	char magic[9] = {0};
-	uint32_t width = 0, pool = 0, withContext = 0;
+	uint32_t width = 0, pool = 0, withContext = 0, observation = 1;
 	if (std::fread(magic, 8, 1, stream) != 1) Fail(path + " is too short");
 	const std::string version(magic, 8);
-	if (version != "PVZRN002" && version != "PVZRN003") Fail("unsupported network dump " + version);
+	if (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004")
+		Fail("unsupported network dump " + version);
 	if (std::fread(&width, 4, 1, stream) != 1 || std::fread(&pool, 4, 1, stream) != 1) Fail("short header");
-	if (version == "PVZRN003" && std::fread(&withContext, 4, 1, stream) != 1) Fail("short header");
+	if ((version == "PVZRN003" || version == "PVZRN004") && std::fread(&withContext, 4, 1, stream) != 1)
+		Fail("short header");
+	if (version == "PVZRN004" && std::fread(&observation, 4, 1, stream) != 1) Fail("short header");
+	if (observation < 1 || observation > 2) Fail("bad observation version");
 	if (width < 1 || width > kMaxNetWidth) Fail("network width " + std::to_string(width) + " out of range");
 
 	NetImage image;
 	const std::vector<size_t> counts = WeightCounts(static_cast<int32_t>(width), pool ? 1 : 0,
-		withContext ? 1 : 0);
+		withContext ? 1 : 0, static_cast<int32_t>(observation));
 	size_t total = 0;
 	for (size_t count : counts) total += count;
 	image.values.resize(total);
@@ -168,9 +174,10 @@ NetImage ReadNet(const std::string& path)
 	params.width = static_cast<int32_t>(width);
 	params.meanmax = pool ? 1 : 0;
 	params.taskContext = withContext ? 1 : 0;
-	params.version = version == "PVZRN003" ? 3 : 2;
+	params.version = version == "PVZRN004" ? 4 : (version == "PVZRN003" ? 3 : 2);
 	params.contextSize = (params.meanmax ? 3 : 2) * params.width;
-	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0);
+	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0) + (observation == 2 ? 1 : 0);
+	params.boardChannels = kBoardChannels + (observation == 2 ? 4 : 0);
 	params.conv1 = take(counts[0]);
 	params.bias1 = take(counts[1]);
 	params.conv2 = take(counts[2]);
@@ -216,7 +223,7 @@ struct Activations
 
 	void Build(int32_t width, int32_t contextSize)
 	{
-		board.assign(PlaneCapacity(kBoardChannels), 0.0f);
+		board.assign(PlaneCapacity(kStudentBoardChannels), 0.0f);
 		scalars.assign(VectorCapacity(kScalarFeatures), 0.0f);
 		hidden.assign(PlaneCapacity(width), 0.0f);
 		scratch.assign(PlaneCapacity(width), 0.0f);
@@ -347,6 +354,10 @@ struct Options
 	// .cudaroot and feeds it to pvz_value_net.featurize_numpy, so a differing block is a bug in one of the
 	// two encoders with no random stream left to blame it on.
 	std::string rootFeatures;
+	// The *student's* encoding of every root (v1: 92 channels + 115 scalars; v2lite: 96 + 116), built by
+	// the same BuildFeatures the rollout uses.  Python reconstructs the same vector from the .cudaroot
+	// through StudentHistory, so a differing float is an encoder bug, not a different future.
+	std::string studentFeatures;
 	// Fill the scalar activation vector with this value before the first forward.  BuildFeatures writes
 	// only the indices its deck and its scalars cover; everything it never writes but NetContext still
 	// reads keeps this value instead of 0.  Left at 0 it is a no-op; see cuda/spec/host.md item 3.
@@ -376,6 +387,7 @@ Options Parse(int argc, char** argv)
 		else if (flag == "--pairs") options.pairs = Value(argc, argv, index);
 		else if (flag == "--leaf-out") options.leafOut = Value(argc, argv, index);
 		else if (flag == "--root-features") options.rootFeatures = Value(argc, argv, index);
+		else if (flag == "--student-features") options.studentFeatures = Value(argc, argv, index);
 		else if (flag == "--poison") options.poison = std::strtof(Value(argc, argv, index).c_str(), nullptr);
 		else if (flag == "--bench")
 		{
@@ -403,6 +415,48 @@ double Seconds(const std::chrono::steady_clock::time_point& from,
 // holds it the instant it imported it.  An unsupported root still gets a block (all zeroes) because the
 // reader pairs blocks with root indices -- dropping one would shift every later root onto the wrong
 // frame, which is the exact failure mode this check exists to catch.
+// The student's own encoder at the root: BuildFeatures with the loaded net's widths, then a compact
+// [channels][cells] + [scalars] block per root.  Unlike WriteRootFeatures this reads the history fields
+// the root carries, so a v2lite net sees the birth ticks the exporter copied.
+int WriteStudentFeatures(const Options& options, const Corpus& corpus, Lane lane,
+	std::vector<int32_t>& ints, std::vector<float>& floats, const std::vector<float>& waveLog,
+	Activations& activations, const NetParams& net)
+{
+	const int32_t used = static_cast<int32_t>(corpus.roots.size());
+	const int32_t perRoot = net.boardChannels * kCells + net.scalarCount;
+	std::FILE* stream = std::fopen(options.studentFeatures.c_str(), "wb");
+	if (!stream) Fail("cannot write " + options.studentFeatures);
+	const char magic[8] = { 'P', 'V', 'Z', 'S', 'T', 'U', '0', '1' };
+	const int32_t counts[2] = { used, perRoot };
+	std::fwrite(magic, 1, sizeof(magic), stream);
+	std::fwrite(counts, sizeof(int32_t), 2, stream);
+	std::vector<float> block(static_cast<size_t>(perRoot), 0.0f);
+	int32_t encoded = 0;
+	for (int32_t index = 0; index < used; ++index)
+	{
+		std::fill(ints.begin(), ints.end(), 0);
+		std::fill(floats.begin(), floats.end(), 0.0f);
+		std::fill(block.begin(), block.end(), 0.0f);
+		if (LoadRoot(lane, corpus.roots[static_cast<size_t>(index)], corpus.level))
+		{
+			BuildFeatures(lane, corpus.level, activations.state, waveLog.data(), false,
+				net.boardChannels, net.scalarCount, net.version == 4);
+			for (int32_t channel = 0; channel < net.boardChannels; ++channel)
+				for (int32_t cell = 0; cell < kCells; ++cell)
+					block[static_cast<size_t>(channel) * kCells + cell] =
+						CellChannel(lane, activations.state.board, net.boardChannels, channel, cell);
+			for (int32_t scalar = 0; scalar < net.scalarCount; ++scalar)
+				block[static_cast<size_t>(net.boardChannels) * kCells + scalar] =
+					ScalarChannel(lane, activations.state.scalars, scalar);
+			++encoded;
+		}
+		std::fwrite(block.data(), sizeof(float), block.size(), stream);
+	}
+	if (std::fclose(stream) != 0) Fail("write failed: " + options.studentFeatures);
+	std::printf("student features: %d of %d roots encoded into %s (%d floats each, %d channels)\n",
+		encoded, used, options.studentFeatures.c_str(), perRoot, net.boardChannels);
+	return encoded == used ? 0 : 1;
+}
 int WriteRootFeatures(const Options& options, const Corpus& corpus, Lane lane,
 	std::vector<int32_t>& ints, std::vector<float>& floats, const std::vector<float>& waveLog)
 {
@@ -506,7 +560,8 @@ int main(int argc, char** argv)
 	std::printf("host core: %d supported roots used of %d, IntSlotsTotal %d, FloatSlotsTotal %d\n",
 		used, rootCount, IntSlotsTotal(), FloatSlotsTotal());
 	std::printf("student %s: width %d, %s, %s context, %zu weights; activations %.1f MB (one chunk of %d lanes)\n",
-		image.params.version == 3 ? "PVZRN003" : "PVZRN002", image.params.width,
+		image.params.version == 4 ? "PVZRN004" : (image.params.version == 3 ? "PVZRN003" : "PVZRN002"),
+		image.params.width,
 		image.params.meanmax ? "meanmax" : "mean", image.params.taskContext ? "with" : "without",
 		image.values.size(), static_cast<double>(activations.bytes()) / 1048576.0, kNetChunk);
 	std::printf("level %d, %d waves, %d playable rows, %d deck cards; workload %d roots x %d futures"
@@ -519,6 +574,8 @@ int main(int argc, char** argv)
 	// it runs alone and returns.
 	if (!options.rootFeatures.empty())
 		return WriteRootFeatures(options, corpus, lane, ints, floats, waveLog);
+	if (!options.studentFeatures.empty())
+		return WriteStudentFeatures(options, corpus, lane, ints, floats, waveLog, activations, image.params);
 
 	Leaf aggregate;
 	std::vector<Leaf> perRoot(static_cast<size_t>(used));

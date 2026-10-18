@@ -102,6 +102,7 @@ PVZ_SIM int32_t Maximum(int32_t a, int32_t b) { return a > b ? a : b; }
 // cooldown-progress feature channel in both encoders until the root feature check (scripts/
 // cuda_leaf_compare.py --root-features) caught it on 406 of 425 roots.
 PVZ_SIM double MinimumDouble(double a, double b) { return a < b ? a : b; }
+PVZ_SIM double MaximumDouble(double a, double b) { return a > b ? a : b; }
 double Minimum(double, double) = delete;      // so the truncation above cannot be written again
 double Maximum(double, double) = delete;
 PVZ_SIM int32_t ClampInt(int32_t value, int32_t lo, int32_t hi)
@@ -222,8 +223,14 @@ PVZ_SIM double RenderedPublicCoordinate(double value)
 	// 6 significant digits: the last kept place is 10^(e-5) where 10^e <= |value| < 10^(e+1).
 	static const double kPowers[9] = { 1.0, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0,
 		10000000.0, 100000000.0 };
+	// The exponent is the scientific one (10^e <= |value| < 10^(e+1)), so a value below 1 has a
+	// negative e: 0.322 must keep six digits (0.322228), not five.  The old loop started at e = 0
+	// and silently used 1e-5 for every |value| < 1.
 	int exponent = 0;
-	while (exponent < 8 && magnitude >= kPowers[exponent + 1]) ++exponent;
+	if (magnitude >= 1.0)
+		while (exponent < 8 && magnitude >= kPowers[exponent + 1]) ++exponent;
+	else
+		while (exponent > -8 && magnitude < 1.0 / kPowers[-exponent]) --exponent;
 	const int keep = exponent - 5;
 	const double scale = keep >= 0 ? kPowers[keep] : kPowers[0] / kPowers[0 - keep];
 	const double rounded = RoundHalfAway(magnitude / scale) * scale;
@@ -283,7 +290,7 @@ PVZ_SIM double IncomeRate(Lane lane)
 // one warp reading one channel of one cell touches 128 contiguous bytes.  The buffers themselves are
 // cuda/NetCore.h's NetState, shared with the forward.
 PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& buffers, const float* waveLog,
-	bool previousValid);
+	bool previousValid, int32_t boardChannels, int32_t scalarCount, bool v2lite);
 
 // ---------------------------------------------------------------------------
 // Import / export

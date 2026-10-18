@@ -211,6 +211,7 @@ class PvZEnv:
         self._temporary_save: tempfile.TemporaryDirectory[str] | None = None
         self._process: subprocess.Popen[str] | None = None
         self._reset_done = False
+        self._rollout_version = 1
         self._last_response: dict[str, Any] = {}
         self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
@@ -304,6 +305,7 @@ class PvZEnv:
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
             self._abort_process()
             raise RuntimeError(f"PvZ-Portable did not enter protocol-v{ENV_PROTOCOL_VERSION} environment mode: {ready}")
+        self._rollout_version = int(ready.get("rollout_version", 1))
 
     def _abort_process(self) -> None:
         if self._process is not None:
@@ -620,6 +622,23 @@ class PvZEnv:
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")
 
+    def _student_options(self, student_history) -> str:
+        """The trailing ``V2H`` option: the student's history *before* the rollout's first decision.
+
+        The simulator advances it on the first network call, so the caller passes the state it holds
+        at the parent decision, not a state that already includes the root frame.  Empty for v1.
+        """
+        if student_history is None:
+            return ""
+        plants = student_history.plants
+        entries = " ".join(f"{int(row)} {int(col)} {int(kind)} {int(born)}"
+                           for (row, col, kind), born in plants.items())
+        wave = student_history.wave if student_history.wave is not None else -1
+        suffix = f" V2H {int(wave)} {int(student_history.wave_tick)} {len(plants)} {entries}".rstrip()
+        if self._rollout_version < 2:
+            raise RuntimeError("student history requires rollout_version >= 2")
+        return suffix
+
     def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False) -> dict:
         """Diagnostic logits and greedy action on the current public board, without advancing it."""
         if not self._reset_done:
@@ -633,7 +652,8 @@ class PvZEnv:
 
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
                 sim_skip: int = 0, max_actions: int = 1000000,
-                snapshot_id: int | None = None, seed: int | None = None) -> dict[str, Any]:
+                snapshot_id: int | None = None, seed: int | None = None,
+                student_history=None) -> dict[str, Any]:
         """Run the greedy student entirely in C++ and return its leaf (0 = whole game).
 
         None selects the first action with the student, with fresh previous-action context.
@@ -675,7 +695,8 @@ class PvZEnv:
         samples = " ".join(f"{tick} {amount}" for tick, amount in history)
         response = self._command(f"ROLLOUT {snapshot_id or 0} {seed if seed is not None else -1} "
                                  f"{until_tick} {sim_skip} {max_actions} {int(event_wait)} {token} "
-                                 f"{history_start} {len(history)} {samples}".rstrip())
+                                 f"{history_start} {len(history)} {samples}".rstrip()
+                                 + self._student_options(student_history))
         observation = response.get("observation")
         if not response.get("ok") or not isinstance(observation, dict):
             raise RuntimeError(f"simulator rejected ROLLOUT: {response}")
@@ -688,7 +709,8 @@ class PvZEnv:
         self._adopt_tick(observation)
         return observation
 
-    def cuda_dump(self, path: str | os.PathLike[str], *, write_level: bool = True) -> dict[str, Any]:
+    def cuda_dump(self, path: str | os.PathLike[str], *, write_level: bool = True,
+                  student_history=None) -> dict[str, Any]:
         """``CUDA_DUMP``: export the current board for the GPU rollout simulator.
 
         The file is a tag-prefixed record stream (``cuda/CudaRollout.h``): with write_level the
@@ -707,7 +729,8 @@ class PvZEnv:
         history = list(self._sun_production_history)
         samples = " ".join(f"{tick} {amount}" for tick, amount in history)
         response = self._command(f"CUDA_DUMP {quoted} {1 if write_level else 0} {history_start} "
-                                 f"{len(history)} {samples}".rstrip())
+                                 f"{len(history)} {samples}".rstrip()
+                                 + self._student_options(student_history))
         if not response.get("ok"):
             raise RuntimeError(f"simulator rejected CUDA_DUMP: {response}")
         return response

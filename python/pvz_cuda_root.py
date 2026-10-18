@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 MAGIC = 0x50564334            # "PVC4"
-VERSION = 7
+VERSION = 8                # 8: v2lite history (plant birth ticks, wave start tick)
 RECORD_LEVEL, RECORD_ROOT = 1, 2
 
 INCOME_EVENTS = 160
@@ -25,7 +25,8 @@ WAVE_ZOMBIE_SLOTS = 32
 
 PLANT_FIELDS = ("cell", "type", "health", "max_health", "state", "state_countdown",
                 "launch_counter", "launch_rate", "special", "extra_a", "extra_b", "on_board",
-                "pos_x", "pos_y", "anim_time", "anim_rate", "anim_frames", "anim_loops")
+                "pos_x", "pos_y", "anim_time", "anim_rate", "anim_frames", "anim_loops",
+                "born")
 ZOMBIE_FIELDS = ("type", "row", "body", "body_max", "helm", "helm_max", "shield", "shield_max",
                  "flying", "phase", "phase_counter", "state_bits", "chilled", "age", "from_wave",
                  "target_cell", "pos_x", "pos_y", "vel_x", "anim_time", "anim_rate",
@@ -51,12 +52,12 @@ RECORD_TAG = struct.Struct("<iii")
 # head, the income events (tick/value interleaved so one slice reads one event), the entity counts.
 ROOT_HEAD = struct.Struct("<ii" + "i" * 17 + "i" * ROWS + "f" * ROWS + "f" * ROWS
                           + "i" * 3 + "ii" * INCOME_EVENTS + "i" * 6)
-ROOT_TAIL = struct.Struct("<ii")          # supported, unsupported reason
+ROOT_TAIL = struct.Struct("<iiii")        # history wave, history wave tick, supported, reason
 # Board::mZombiesInWave is kept for corpus inspection. RESEED redraws unsent waves; CUDA continuation
 # must use DrawFutureWave rather than this privileged table. It trails the entity arrays.
 WAVE_BLOCK = struct.Struct("<i" + "i" * MAX_WAVES + "i" * (MAX_WAVES * WAVE_ZOMBIE_SLOTS))
 ZOMBIE_RECORD = struct.Struct("16i5f5i")
-PLANT_RECORD = struct.Struct("12i4f2i")
+PLANT_RECORD = struct.Struct("12i4f3i")   # ... anim_loops, born
 PROJECTILE_RECORD = struct.Struct("5i4f")
 COIN_RECORD = struct.Struct("2i")
 MOWER_RECORD = struct.Struct("5if")
@@ -139,7 +140,8 @@ def parse_root(payload: bytes) -> dict[str, Any]:
         list(table[row * WAVE_ZOMBIE_SLOTS:row * WAVE_ZOMBIE_SLOTS
                     + min(record["wave_zombie_count"][row], WAVE_ZOMBIE_SLOTS)])
         for row in range(wave_count)]
-    record["supported"], record["unsupported_reason"] = ROOT_TAIL.unpack_from(payload, offset)
+    (record["history_wave"], record["history_wave_tick"],
+     record["supported"], record["unsupported_reason"]) = ROOT_TAIL.unpack_from(payload, offset)
     return record
 
 
@@ -206,9 +208,14 @@ def rendered_public_coordinate(value: float) -> float:
     magnitude = abs(value)
     if magnitude <= 0.0:
         return value
+    # Scientific exponent: 10**e <= |value| < 10**(e+1), negative for values below one.
     exponent = 0
-    while exponent < 8 and magnitude >= 10.0 ** (exponent + 1):
-        exponent += 1
+    if magnitude >= 1.0:
+        while exponent < 8 and magnitude >= 10.0 ** (exponent + 1):
+            exponent += 1
+    else:
+        while exponent > -8 and magnitude < 10.0 ** exponent:
+            exponent -= 1
     keep = exponent - 5
     scale = 10.0 ** keep if keep >= 0 else 1.0 / 10.0 ** (-keep)
     rounded = math.floor(magnitude / scale + 0.5) * scale

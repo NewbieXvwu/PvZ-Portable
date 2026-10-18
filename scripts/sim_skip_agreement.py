@@ -108,6 +108,10 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     env.set_sim_skip(mask)
     started = time.perf_counter()
     memo = {"frame": None, "action": None}
+    history = None
+    if _W["net"].obs == "v2lite":
+        from pvz_student_observation import StudentHistory
+        history = StudentHistory()
     actions = []
     ready_mowers = lambda o: sum(d["state"] == 1 for d in o.get("defenses") or [])
     mowers_start = mowers_left = ready_mowers(obs)
@@ -126,7 +130,8 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     while not obs["terminal"] and len(actions) < _W["args"].max_actions:
         frame = _frame(obs)
         frame["action"] = memo["action"]
-        action = act(_W["net"], frame, memo["frame"], (obs.get("legal_actions") or {}).get("plants") or [])
+        action = act(_W["net"], frame, memo["frame"], (obs.get("legal_actions") or {}).get("plants") or [],
+                     history=history)
         memo["frame"], memo["action"] = frame, action
         obs, _r, done, _t, info = env.step(action)
         if info.get("ok") and action["type"] == "plant":
@@ -169,6 +174,7 @@ def _search_decisions(seed: int) -> list[dict]:
         if v is not None}})
     last_search_tick = -10 ** 9
     fast_state: dict = {}
+    search_play._W["student_history"] = None
     rows, decisions = [], 0
 
     def run(decision_seed: int, mask: int, policy_action: dict, config, cpp=False,
@@ -189,6 +195,7 @@ def _search_decisions(seed: int) -> list[dict]:
 
     while not obs["terminal"] and decisions < args.max_actions:
         action = search_play._fast_action(obs, fast_state)
+        search_play._W["student_history"] = fast_state.get("history")
         legal = (obs.get("legal_actions") or {}).get("plants") or []
         searches = bool(legal) and (action["type"] == "plant" or obs["tick"] - last_search_tick >= args.min_gap)
         if searches:

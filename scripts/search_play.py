@@ -88,8 +88,11 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     from render_episode import _frame
     frame = _frame(obs)
     frame["action"] = fast_state.get("action")
+    if _W["fast"].obs == "v2lite" and "history" not in fast_state:
+        from pvz_student_observation import StudentHistory
+        fast_state["history"] = StudentHistory()
     action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
-                 context=_W.get("context"))
+                 context=_W.get("context"), history=fast_state.get("history"))
     fast_state["frame"] = frame
     fast_state["action"] = action
     return action
@@ -119,8 +122,10 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 
     In C++ by default; the Python loop below is the reference the C++ path is checked against
     (scripts/perf_rollout_check.py)."""
+    student_history = _W.get("student_history") if _W["fast"].obs == "v2lite" else None
     if _W.get("cpp_rollouts"):
-        leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed)
+        leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed,
+                           student_history=student_history)
         metrics = _W.setdefault("rollout_metrics", {})
         for key in ("decisions", "simulation_seconds", "network_seconds"):
             metrics[key] = metrics.get(key, 0) + env._last_response[key]
@@ -131,12 +136,17 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
         env.reseed(seed)
     from render_episode import _frame
     fast_state = {"frame": _frame(obs), "action": first}
+    if _W["fast"].obs == "v2lite":
+        from copy import deepcopy
+        from pvz_student_observation import StudentHistory
+        fast_state["history"] = deepcopy(student_history) if student_history is not None else StudentHistory()
+        fast_state["history"].extra(fast_state["frame"])
     until_tick = until_tick if until_tick > obs["tick"] else 10 ** 9
     action = first
     # The student only reads what render_episode._frame keeps, so rollouts can ask for the compact
     # observation (identical frames, ~1/4 of the bytes).
     lean = _W.get("lean_rollouts", False)
-    batch_waits = _W.get("batch_waits", False) and hasattr(env, "wait_until_legal")
+    batch_waits = _W.get("batch_waits", False) and hasattr(env, "wait_until_legal") and _W["fast"].obs == "v1"
     sim_skip = _W.get("rollout_sim_skip", 0)
     if lean:
         env.set_lean_observation(True)
@@ -184,7 +194,7 @@ def _cuda_continuations(env, root: int, jobs: list[tuple[dict, int]], client, ar
     dump_path = _W["cuda_dump"]
     env.restore(root)
     try:
-        response = env.cuda_dump(dump_path, write_level=True)
+        response = env.cuda_dump(dump_path, write_level=True, student_history=_W.get("student_history"))
     except (RuntimeError, OSError):
         return None
     if not response.get("supported"):
@@ -406,6 +416,7 @@ def _play(job: dict) -> dict:
         decisions = 0
         frames = [_frame(obs)] if args.frames else None
         fast_state = {}
+        _W["student_history"] = None
         # DAgger (DESIGN.md §14.6): the search still labels every decision, but with probability
         # 1 - dagger_beta the student's own action is executed, so the archive covers the positions the
         # student itself gets into. The label is the anchored search decision (overrides only past --margin).
@@ -421,6 +432,7 @@ def _play(job: dict) -> dict:
             planted = {index: count for index, count in enumerate(details["planted"]) if count}
         while not obs["terminal"] and decisions < args.max_actions:
             action = policy_choice = _fast_action(obs, fast_state)
+            _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
                 stats["last_targets"] = None
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
