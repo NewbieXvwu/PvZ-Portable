@@ -17,6 +17,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -122,6 +123,17 @@ class CudaServeMergeTest(unittest.TestCase):
         self.assertEqual(records[0]["ticks"], 5)
         self.assertEqual(records[0]["errorFlags"], 0)
         self.assertEqual(leaves.shape, (1, 5668))
+
+    def test_all_connected_workers_waiting_skips_gather_delay(self):
+        client = CudaRolloutClient(self._serve(gather_ms=2000))
+        client.connect()
+        self.addCleanup(client.close)
+        started = time.monotonic()
+        records, _ = client.run(CORPUS, [(0, 123, {"type": "wait", "ticks": 1})],
+                                horizon=1, max_actions=1)
+        self.assertEqual(records[0]["errorFlags"], 0)
+        self.assertLess(time.monotonic() - started, 1.0,
+                        "the only connected worker spent the whole gather window waiting for itself")
 
 
 class RootArrayGrowthTest(unittest.TestCase):

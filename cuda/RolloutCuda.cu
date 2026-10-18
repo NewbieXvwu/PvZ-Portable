@@ -1524,6 +1524,22 @@ int Serve(const Options& options)
 	bool greeted = false;
 	// When the oldest unserved request arrived; see the gather window in the poll timeout.
 	std::chrono::steady_clock::time_point queueSince{};
+	// A blocking worker cannot produce another request until its queued one is answered. Once every
+	// connected worker is waiting, a gather timeout can only add latency; there is nobody left to gather.
+	auto allClientsWaiting = [&clients, &queue]()
+	{
+		bool any = false;
+		for (const Client& client : clients)
+		{
+			if (client.fd < 0) continue;
+			any = true;
+			bool waiting = false;
+			for (const Request& request : queue)
+				if (request.fd == client.fd && request.next < request.pairRoot.size()) { waiting = true; break; }
+			if (!waiting) return false;
+		}
+		return any;
+	};
 
 	while (running)
 	{
@@ -1544,7 +1560,7 @@ int Serve(const Options& options)
 		for (const Request& request : queue)
 			queued += static_cast<int32_t>(request.pairRoot.size()) - static_cast<int32_t>(request.next);
 		// A full house does not need to wait for more.
-		const bool packed = queued * 2 >= dev.lanes;
+		const bool packed = queued * 2 >= dev.lanes || (!queue.empty() && allClientsWaiting());
 		// `--gather-ms 0` means "do not wait", but an empty queue still needs a bounded poll or the server
 		// spins a core between requests.
 		const int32_t idle = options.gatherMs < 1 ? 1 : options.gatherMs;
@@ -1701,7 +1717,7 @@ int Serve(const Options& options)
 			int32_t waiting = 0;
 			for (const Request& request : queue)
 				waiting += static_cast<int32_t>(request.pairRoot.size()) - static_cast<int32_t>(request.next);
-			if (age < options.gatherMs && waiting * 2 < dev.lanes) continue;
+			if (age < options.gatherMs && waiting * 2 < dev.lanes && !allClientsWaiting()) continue;
 		}
 
 		// Serve every queued request in waves of at most the lane capacity.  Requests are only merged when
