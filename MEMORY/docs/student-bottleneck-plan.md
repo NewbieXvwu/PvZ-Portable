@@ -8,7 +8,7 @@
 | 线 | 在哪 | 下一步 |
 |---|---|---|
 | DAgger 流水线 | 台式机 `~/pvz-logs/queue34.log`（D18 → v18 → 第 13 轮偏移 6144–6527）；Mac `artifacts/hard_mac/mac_dagger12b.out` → `mac_teacher_v16.out` → `mac_dagger13b.out`（偏移 6528–7167） | 每代：上限（`$CLAUDE_JOB_DIR/tmp/frontier.py`）、选模、下一轮；z15_train 种子用到偏移 8191 前再登记（DESIGN） |
-| CUDA 续走（10-17 22:20 起 Codex 接手） | 台式机 tmux `codex`（Codex CLI，gpt-6.1-sol high，任务书 `~/pvz-logs/codex_cuda_task.md`，日志 `codex_cuda.log`，问题 `codex_cuda_questions.md`），状态 `~/pvz-logs/cuda_status.md` | 阶段 0 已过 1.72 倍；接着 #9 接入搜索 → 阶段 1 一致率 → 服务形态 → 阶段 2；codex exec 结束就 resume |
+| CUDA 续走（10-17 22:20 起 Codex 接手） | 台式机 tmux `codex`（Codex CLI 交互模式 + `/goal`，gpt-6.1-sol high，会话 01a14cc8，任务书 `~/pvz-logs/codex_cuda_task.md`，屏幕日志 `codex_cuda_tui.log`，问题 `codex_cuda_questions.md`），状态 `~/pvz-logs/cuda_status.md` | 阶段 0 已过 1.72 倍；接着 #9 接入搜索 → 阶段 1 一致率 → 服务形态 → 阶段 2；/goal 模式会自己续；卡住就看 tmux 画面 |
 | Codex | Mac，worktree 各自独立 | 见下面各项 |
 
 ## 1. 诊断事实（2026-10-17 08:30–08:50 实测）
