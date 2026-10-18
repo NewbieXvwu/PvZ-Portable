@@ -434,6 +434,19 @@ def _play(job: dict) -> dict:
             if dagger is not None and dagger.random() >= args.dagger_beta:
                 action = policy_choice
             fast_state["action"] = action    # the student's next features read the executed action
+            # Planting on an occupied cell only became legal with wall-nut first aid (a damaged
+            # wall-nut takes another nut of the same type, Board::CanPlantAt) -- record what stood
+            # there, so the report can say how often the teacher actually used it. Harmless for
+            # ordinary plants: the legal list never offers an occupied cell without first aid.
+            if action["type"] == "plant":
+                occupant = next((p for p in obs.get("plants") or []
+                                 if p["row"] == action["row"] and p["col"] == action["col"]), None)
+                if occupant is not None:
+                    stats.setdefault("replant_events", []).append({
+                        "tick": obs["tick"], "row": action["row"], "col": action["col"],
+                        "packet": action["packet"], "occupant": occupant.get("type"),
+                        "occupant_health": occupant.get("health"),
+                        "same_type": occupant.get("type") == action["packet"]})
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
             if not rejected and action["type"] == "plant":
@@ -484,6 +497,7 @@ def _play(job: dict) -> dict:
             "student_candidate_best": stats["student_candidate_best"],
             "student_candidate_override": stats["student_candidate_override"],
             "shovel_events": stats.get("shovel_events", []),
+            "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
 
 
@@ -576,6 +590,10 @@ def summarize(results_path: Path) -> dict:
                      "searched_per_game": round(sum(r["searched"] for r in v.values()) / len(v), 1),
                      "shovels_per_game": round(sum(r.get("shovels", 0) for r in v.values()) / len(v), 2),
                      "games_with_shovel": sum(1 for r in v.values() if r.get("shovels")),
+                     "replants_per_game": round(sum(len(r.get("replant_events") or []) for r in v.values()) / len(v), 2),
+                     "first_aid_replants_per_game": round(sum(
+                         sum(1 for e in (r.get("replant_events") or []) if e.get("same_type"))
+                         for r in v.values()) / len(v), 2),
                      "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2)}
                for arm, v in by.items()}
     (results_path.parent / "summary.json").write_text(json.dumps(summary, indent=1))
