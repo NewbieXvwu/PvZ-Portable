@@ -21,7 +21,7 @@ namespace pvzc
 enum {
 	kMagic = 0x50564334,          // "PVC4" -- the trailing digit is the tag's own literal, not the
 	                              // version below; staleness of a .cudaroot is carried by kVersion.
-	kVersion = 8,                 // v2lite history: per-plant first-seen tick and the wave start tick
+	kVersion = 9,                 // explicit mHasObject bit for v2; v8 lacked that public field
 	kRows = 6,                    // feature grid rows (only 0..4 are playable on grass)
 	kCols = 10,                   // 9 lawn columns + column 9 = "beyond the lawn"
 	kCells = kRows * kCols,
@@ -40,10 +40,10 @@ enum {
 	kPlaneCells = kRowsP * kColsP,    // 112 cells per channel, halo included
 	kValidOrigin = kPadRow * kColsP + kPadCol,
 	kBoardChannels = 92,          // the value net's board (and a v1 student's)
-	// The student's board buffer is *addressed* by this capacity on both sides, like the scalars
-	// below: a v2lite student reads 96 channels, a v1 student 92, and the trunk's plane stride must
-	// not depend on which one loaded.  The four extra channels stay zero for v1.
-	kStudentBoardChannels = 96,
+	// Allocation capacity; addressing uses the loaded network's actual channel count on both sides.
+	// v1/v2lite/v2 read 92/96/101 channels. A chunk is packed with that actual width, leaving any
+	// unused allocation tail unread.
+	kStudentBoardChannels = 101,
 	kScalars = 115,               // v1 student scalars; v2lite appends one after the task context
 
 	// Activations are chunked along lanes.  A batch is ceil(lanes / kNetChunk) blocks, and inside a
@@ -159,6 +159,7 @@ enum
 	ZB_BURNED = 1 << 9,
 	ZB_ENTERING = 1 << 10,        // still walking in from off the right edge, not yet playable
 	ZB_MOWERED = 1 << 11,         // PHASE_ZOMBIE_MOWERED: run over, waiting for the mowed reanim to loop
+	ZB_HAS_OBJECT = 1 << 12,      // mHasObject, read by the v2 held-pole feature
 };
 
 enum

@@ -148,9 +148,10 @@ std::vector<size_t> WeightCounts(int32_t width, int32_t meanmax, int32_t withCon
 {
 	const size_t w = static_cast<size_t>(width);
 	const size_t context = (meanmax ? 3 : 2) * w;
-	const size_t v2lite = observation == 2 ? 1 : 0;
-	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0) + v2lite;
-	const size_t channels = static_cast<size_t>(kBoardChannels) + 4 * v2lite;
+	const size_t extraScalars = observation == 3 ? 7 : observation == 2 ? 1 : 0;
+	const size_t extraChannels = observation == 3 ? 9 : observation == 2 ? 4 : 0;
+	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0) + extraScalars;
+	const size_t channels = static_cast<size_t>(kBoardChannels) + extraChannels;
 	return {w * channels * 9, w, w * w * 9, w, w * w * 5, w, w * scalars, w,
 		context, 1, 10 * context, 10, 10 * w, w * (2 * w + context), w, w, 1};
 }
@@ -175,7 +176,7 @@ NetImage ReadNet(const std::string& path)
 	if (version != "PVZRN002" && std::fread(&withContext, 4, 1, stream) != 1) Fail("short header");
 	if (version == "PVZRN004" && std::fread(&observation, 4, 1, stream) != 1) Fail("short header");
 	if (width < 1 || width > kMaxNetWidth) Fail("network width " + std::to_string(width) + " out of range");
-	if (observation < 1 || observation > 2) Fail("network observation version out of range");
+	if (observation < 1 || observation > 3) Fail("network observation version out of range");
 
 	NetImage image;
 	const std::vector<size_t> counts = WeightCounts(static_cast<int32_t>(width), pool ? 1 : 0,
@@ -211,8 +212,9 @@ NetImage ReadNet(const std::string& path)
 	params.taskContext = withContext ? 1 : 0;
 	params.version = version == "PVZRN004" ? 4 : (version == "PVZRN003" ? 3 : 2);
 	params.contextSize = (params.meanmax ? 3 : 2) * params.width;
-	params.boardChannels = kBoardChannels + (observation == 2 ? 4 : 0);
-	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0) + (observation == 2 ? 1 : 0);
+	params.observation = observation;
+	params.boardChannels = kBoardChannels + (observation == 3 ? 9 : observation == 2 ? 4 : 0);
+	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0) + (observation == 3 ? 7 : observation == 2 ? 1 : 0);
 	params.conv1 = take(counts[0]);
 	params.bias1 = take(counts[1]);
 	params.conv2 = take(counts[2]);
@@ -442,6 +444,7 @@ __device__ __forceinline__ void PreLane(const Arguments& arguments, Lane lane,
 	if (lane.s(S_STATE) == LANE_DONE) return;
 	const WaveTable& waves = arguments.waves[lane.s(S_ROOT_INDEX)];
 	Rand rand = LoadRandState(lane);
+	if (arguments.net.observation > 1) UpdateStudentHistory(lane);
 	const int32_t stage = RoundPre(lane, level, waves, rand);
 	StoreRandState(lane, rand);
 	if (stage == PRE_NEEDS_NET)
@@ -449,7 +452,7 @@ __device__ __forceinline__ void PreLane(const Arguments& arguments, Lane lane,
 		arguments.laneSlot[index] = atomicAdd(&arguments.counters->netCount, 1);
 		lane.netSlot = arguments.laneSlot[index];
 		BuildFeatures(lane, level, arguments.state, arguments.waveLog, lane.s(S_PRIOR_TICK) >= 0,
-			arguments.net.boardChannels, arguments.net.scalarCount, arguments.net.version == 4);
+			arguments.net.boardChannels, arguments.net.scalarCount, arguments.net.observation);
 		return;
 	}
 	if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
@@ -1017,7 +1020,7 @@ void DeviceOpen(Device& dev, const Options& options, const NetImage& image)
 			return pointer;
 		};
 		const std::vector<size_t> counts = WeightCounts(deviceNet.width, deviceNet.meanmax,
-			deviceNet.taskContext, deviceNet.version == 4 ? 2 : 1);
+			deviceNet.taskContext, deviceNet.observation);
 		deviceNet.conv1 = take(counts[0]);
 		deviceNet.bias1 = take(counts[1]);
 		deviceNet.conv2 = take(counts[2]);

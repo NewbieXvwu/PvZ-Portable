@@ -327,7 +327,7 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 				out.posX, zombie->mX, attack.mX, attack.mWidth, hurt.mX, hurt.mWidth,
 				zombie->mIsEating, zombie->mZombieAge);
 		}
-		out.stateBits = (zombie->mIsEating ? ZB_EATING : 0) | (zombie->mHasHead ? ZB_HAS_HEAD : 0) |
+		out.stateBits = (zombie->mIsEating ? ZB_EATING : 0) | (zombie->mHasObject ? ZB_HAS_OBJECT : 0) | (zombie->mHasHead ? ZB_HAS_HEAD : 0) |
 			(zombie->mHasArm ? ZB_HAS_ARM : 0) |
 			(zombie->mZombiePhase == ZombiePhase::PHASE_ZOMBIE_DYING ? ZB_DYING : 0) |
 			(zombie->mZombiePhase == ZombiePhase::PHASE_ZOMBIE_BURNED ? ZB_BURNED : 0) |

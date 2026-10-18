@@ -1,4 +1,4 @@
-"""Bitwise check of the CUDA core's *student* encoder (v2lite: 96 channels + 116 scalars).
+"""Bitwise check of the CUDA core's history-based student encoders (v2lite and v2).
 
 The value-net encoder check (cuda_leaf_compare.py --root-features) compares 92 channels + 113
 scalars + task context.  A v2lite student reads four more board channels and one more scalar, and
@@ -53,6 +53,9 @@ def main() -> None:
                         default=Path.home() / ".cache" / "pvz-research-resources")
     parser.add_argument("--seeds", type=int, default=4)
     parser.add_argument("--roots-per-game", type=int, default=8)
+    parser.add_argument("--root-start", type=int, default=600)
+    parser.add_argument("--root-stride", type=int, default=4000,
+                        help="spread samples through the game, including armed mines and projectiles")
     parser.add_argument("--out", type=Path, default=ROOT / "artifacts" / "cuda" / "v2lite_check")
     parser.add_argument("--show", type=int, default=12)
     args = parser.parse_args()
@@ -67,8 +70,8 @@ def main() -> None:
     from scripted_baseline import profile_for_deck
 
     net = load_student(args.rollout_policy)
-    if net.obs != "v2lite":
-        raise SystemExit(f"{args.rollout_policy} is a {net.obs} student; this check is v2lite only")
+    if net.obs not in ("v2lite", "v2"):
+        raise SystemExit(f"{args.rollout_policy} is a {net.obs} student; history observation required")
 
     args.out.mkdir(parents=True, exist_ok=True)
     roots_path = args.out / "roots.cudaroot"
@@ -89,7 +92,10 @@ def main() -> None:
                                if v is not None})
             obs, _ = env.reset(deck=deck, task=task)
             env.set_lean_observation(True)
-            history = StudentHistory()
+            history = StudentHistory(net.obs)
+            from pvz_value_net import observation_context
+            context = observation_context(obs) if net.context else None
+            next_root_tick = args.root_start
             previous_frame = None
             previous_action = None
             roots = 0
@@ -97,7 +103,7 @@ def main() -> None:
                 frame = _frame(obs)
                 frame["action"] = previous_action
                 legal = (obs.get("legal_actions") or {}).get("plants") or []
-                if legal:
+                if legal and obs["tick"] >= next_root_tick:
                     # The history as it stands *before* this frame is observed, which is exactly
                     # what search_play passes to CUDA_DUMP (its copy was advanced at the previous
                     # decision, not at this position).
@@ -106,13 +112,14 @@ def main() -> None:
                     if response.get("supported"):
                         # previous=None: the exported root carries no prior action (the GPU's first
                         # decision gets one from the forced first action, not from this position).
-                        board, scalars = copy.deepcopy(history).features(frame, None)
+                        board, scalars = copy.deepcopy(history).features(frame, None, context)
                         expected.append(torch.cat([board.reshape(-1), scalars]).numpy())
                         metadata.append({"seed": seed, "tick": obs["tick"], "wave": obs["wave"],
                                          "plants": len(obs.get("plants") or []),
                                          "zombies": len(obs.get("zombies") or [])})
                         roots += 1
-                action = act(net, frame, previous_frame, legal, history=history)
+                        next_root_tick = obs["tick"] + args.root_stride
+                action = act(net, frame, previous_frame, legal, history=history, context=context)
                 previous_frame, previous_action = frame, action
                 obs, _reward, done, _truncated, info = env.step(action)
                 if not info.get("ok"):
@@ -145,18 +152,19 @@ def main() -> None:
     shown = 0
     for index, (want, block) in enumerate(zip(expected, blocks)):
         got = np.asarray(block, dtype=np.float32)
-        differing = np.nonzero(want != got)[0]
+        differing = np.nonzero(want.view(np.uint32) != got.view(np.uint32))[0]
         if differing.size == 0:
             continue
         bad += 1
         worst = max(worst, int(differing.size))
         if shown < args.show:
             for where in differing[:3]:
-                if where < 96 * 60:
+                channels = net.trunk[0].in_channels
+                if where < channels * 60:
                     channel, cell = divmod(int(where), 60)
                     where_text = f"channel {channel} cell {cell}"
                 else:
-                    where_text = f"scalar {int(where) - 96 * 60}"
+                    where_text = f"scalar {int(where) - channels * 60}"
                 print(f"  root {index} ({metadata[index]}): index {int(where)} {where_text}"
                       f" -- python {float(want[where]):.7g}, core {float(got[where]):.7g}")
                 shown += 1
@@ -165,6 +173,13 @@ def main() -> None:
     if bad:
         print("  -> the two student encoders disagree; this is a bug in one of them")
         raise SystemExit(1)
+    import json
+    channels = net.trunk[0].in_channels
+    values = np.stack(expected)
+    (args.out / "summary.json").write_text(json.dumps({
+        "obs": net.obs, "roots": len(expected), "floats_per_root": width, "bitwise_equal": True,
+        "extra_channel_nonzero": [int(np.count_nonzero(values[:, c * 60:(c + 1) * 60]))
+                                  for c in range(92, channels)], "metadata": metadata}, indent=1) + "\n")
     print("  -> every root encodes identically: the core's BuildFeatures and "
           "StudentHistory.features are the same function")
 

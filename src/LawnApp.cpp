@@ -1599,6 +1599,48 @@ bool LawnApp::EnvironmentTerminal() const
 // grid items as positional arrays.  Every number is printed exactly as in the full observation,
 // so render_episode._frame gives the identical frame from either form (scripts/perf_rollout_check.py
 // compares the two on live states).  About a quarter of the bytes, and no shovel hit tests.
+static void WriteObservationV2(std::ostream& out, Board* board)
+{
+	out << ",\"v2\":{\"wave_timer\":" << board->mZombieCountDown
+		<< ",\"huge_wave_countdown\":" << board->mHugeWaveCountDown
+		<< ",\"wave_health\":" << board->TotalZombiesHealthInWave(board->mCurrentWave - 1)
+		<< ",\"wave_start_health\":" << board->mZombieHealthWaveStart
+		<< ",\"sun_countdown\":" << board->mSunCountDown << ",\"sun_pending\":";
+	int pending = 0;
+	for (Coin* coin : board->mCoins)
+		if (!coin->mDead && coin->IsSun()) pending += coin->GetSunValue();
+	out << pending << ",\"plants\":[";
+	bool first = true;
+	for (const Plant* plant : board->mPlants)
+	{
+		if (plant->mDead || plant->mSquished) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
+			<< ',' << static_cast<int>(plant->mState) << ',' << plant->mStateCountdown
+			<< ',' << plant->mDoSpecialCountdown << ',' << plant->mLaunchCounter << ',' << plant->mLaunchRate << ']';
+	}
+	out << "],\"zombies\":[";
+	first = true;
+	for (const Zombie* zombie : board->mZombies)
+	{
+		if (zombie->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << (zombie->mHasObject ? 1 : 0) << ',' << zombie->mHelmHealth << ',' << zombie->mShieldHealth << ']';
+	}
+	out << "],\"projectiles\":[";
+	first = true;
+	for (Projectile* projectile : board->mProjectiles)
+	{
+		if (projectile->mDead) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << projectile->mRow << ',' << projectile->mPosX << ',' << projectile->GetProjectileDef().mDamage << ']';
+	}
+	out << "]}";
+}
+
 std::string LawnApp::EnvironmentLeanObservation()
 {
 	std::ostringstream out;
@@ -1697,7 +1739,9 @@ std::string LawnApp::EnvironmentLeanObservation()
 					out << "{\"packet\":" << i << ",\"col\":" << col << ",\"row\":" << row << '}';
 				}
 	}
-	out << "]}}";
+	out << "]}";
+	WriteObservationV2(out, mBoard);
+	out << '}';
 	return out.str();
 }
 
@@ -1950,6 +1994,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				out << '[' << col << ',' << row << ']';
 			}
 	out << "],\"wait\":true}";
+	WriteObservationV2(out, mBoard);
 	if (privileged)
 	{
 		const std::string aRandState = GetRandState();

@@ -88,9 +88,9 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     from render_episode import _frame
     frame = _frame(obs)
     frame["action"] = fast_state.get("action")
-    if _W["fast"].obs == "v2lite" and "history" not in fast_state:
+    if _W["fast"].obs != "v1" and "history" not in fast_state:
         from pvz_student_observation import StudentHistory
-        fast_state["history"] = StudentHistory()
+        fast_state["history"] = StudentHistory(_W["fast"].obs)
     action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
                  context=_W.get("context"), history=fast_state.get("history"))
     fast_state["frame"] = frame
@@ -122,7 +122,7 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 
     In C++ by default; the Python loop below is the reference the C++ path is checked against
     (scripts/perf_rollout_check.py)."""
-    student_history = _W.get("student_history") if _W["fast"].obs == "v2lite" else None
+    student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
     if _W.get("cpp_rollouts"):
         leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed,
                            student_history=student_history)
@@ -136,10 +136,10 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
         env.reseed(seed)
     from render_episode import _frame
     fast_state = {"frame": _frame(obs), "action": first}
-    if _W["fast"].obs == "v2lite":
+    if _W["fast"].obs != "v1":
         from copy import deepcopy
         from pvz_student_observation import StudentHistory
-        fast_state["history"] = deepcopy(student_history) if student_history is not None else StudentHistory()
+        fast_state["history"] = deepcopy(student_history) if student_history is not None else StudentHistory(_W["fast"].obs)
         fast_state["history"].extra(fast_state["frame"])
     until_tick = until_tick if until_tick > obs["tick"] else 10 ** 9
     action = first

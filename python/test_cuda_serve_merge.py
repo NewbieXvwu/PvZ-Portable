@@ -29,7 +29,7 @@ from pvz_cuda_root import MAGIC, RECORD_ROOT, RECORD_TAG, VERSION, _records
 
 BINARY = Path(os.environ.get("PVZ_CUDA_BINARY", ROOT / "build/rollout_cuda"))
 CORPUS = Path(os.environ.get("PVZ_CUDA_CORPUS",
-                             ROOT / "artifacts/cuda/corpus_l7_z15_v8/roots.cudaroot"))
+                             ROOT / "artifacts/cuda/corpus_l7_z15_v9/roots.cudaroot"))
 NET = Path(os.environ.get("PVZ_CUDA_NET", ROOT / "artifacts/cuda/student/v14.pvzrn"))
 
 # Distinct roots and distinct future seeds, so a swapped readback cannot look like a matching answer.
@@ -149,7 +149,7 @@ class RootArrayGrowthTest(unittest.TestCase):
     """
 
     LARGE = Path(os.environ.get("PVZ_CUDA_CORPUS_LARGE",
-                                ROOT / "artifacts/cuda/corpus_l7_z15_v8/roots.cudaroot"))
+                                ROOT / "artifacts/cuda/corpus_l7_z15_v9/roots.cudaroot"))
     # Present in both corpora, spread far enough apart that a shifted read cannot hide.
     ROOTS = (0, 35, 200, 255)
 

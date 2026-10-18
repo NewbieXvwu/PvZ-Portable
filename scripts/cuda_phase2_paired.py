@@ -29,7 +29,10 @@ def load_games(path: Path) -> dict[int, dict]:
             if not line:
                 continue
             row = json.loads(line)
-            games[int(row["seed"])] = row
+            seed = int(row["seed"])
+            if seed in games:
+                raise ValueError(f"{path}: duplicate seed {seed}")
+            games[seed] = row
     return games
 
 
@@ -48,12 +51,16 @@ def main() -> None:
     parser.add_argument("gpu", type=Path, help="directory or games.jsonl of the CUDA-backend arm")
     parser.add_argument("--out", type=Path, default=None, help="write the summary JSON here")
     parser.add_argument("--seeds", type=int, default=128, help="how many of the first seeds must be present")
+    parser.add_argument("--seed-start", type=int, default=30000, help="first required evaluation seed")
     args = parser.parse_args()
 
     cpu = load_games(args.cpu)
     gpu = load_games(args.gpu)
     seeds = sorted(set(cpu) & set(gpu))
-    missing = sorted(set(cpu) ^ set(gpu))
+    required = set(range(args.seed_start, args.seed_start + args.seeds))
+    missing = sorted(required - (set(cpu) & set(gpu)))
+    unexpected = sorted((set(cpu) | set(gpu)) - required)
+    complete = set(cpu) == set(gpu) == required
     pairs = [(cpu[seed], gpu[seed]) for seed in seeds]
 
     cpu_only = sum(c["won"] and not g["won"] for c, g in pairs)
@@ -82,6 +89,8 @@ def main() -> None:
         "games_paired": len(pairs),
         "games_required": args.seeds,
         "missing_seeds": missing,
+        "unexpected_seeds": unexpected,
+        "gate_complete_seed_set": complete,
         "wins_cpu": wins_cpu,
         "wins_gpu": wins_gpu,
         "win_rate_cpu": round(wins_cpu / max(1, len(pairs)), 4),
@@ -92,7 +101,7 @@ def main() -> None:
         "win_count_difference": wins_cpu - wins_gpu,
         "gate_mcnemar_p_gt_0_1": p_value > 0.1,
         "gate_win_difference_le_4": abs(wins_cpu - wins_gpu) <= 4,
-        "gate_passed": p_value > 0.1 and abs(wins_cpu - wins_gpu) <= 4,
+        "gate_passed": complete and p_value > 0.1 and abs(wins_cpu - wins_gpu) <= 4,
         "final_wave_mean_cpu": round(sum(c.get("final_wave", 0) for c, _g in pairs) / max(1, len(pairs)), 3),
         "final_wave_mean_gpu": round(sum(g.get("final_wave", 0) for _c, g in pairs) / max(1, len(pairs)), 3),
         "decisions_cpu": sum(c.get("decisions", 0) for c, _g in pairs),

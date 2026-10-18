@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 MAGIC = 0x50564334            # "PVC4"
-VERSION = 8                # 8: v2lite history (plant birth ticks, wave start tick)
+VERSION = 9                # explicit mHasObject bit for v2 (v8 lacked it; layout unchanged)
 RECORD_LEVEL, RECORD_ROOT = 1, 2
 
 INCOME_EVENTS = 160

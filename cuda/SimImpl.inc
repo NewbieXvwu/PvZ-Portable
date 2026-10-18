@@ -14,6 +14,8 @@ namespace pvzc
 
 namespace {
 
+PVZ_SIM float TotalHealthInWave(Lane lane, int32_t wave);
+
 // Deck lookups.  The exporter puts a plant's cost/refresh into the level block, but a record written
 // by an older exporter (or a packet slot the original left blank) can carry zeros, so the tick code
 // falls back to the level table rather than dividing by a zero refresh clock.
@@ -463,8 +465,33 @@ PVZ_SIM float& ScalarChannel(Lane lane, float* scalars, int32_t index)
 	return scalars[VectorIndex(kScalarFeatures, lane.netSlot, index)];
 }
 
+PVZ_SIM void UpdateStudentHistory(Lane lane)
+{
+	// History::Update.  A wave change restarts the wave clock at this decision's tick; a plant is
+	// born at the first decision that sees it, and keeps that tick for as long as its (cell, kind)
+	// stays live -- the key the original's map uses.
+	if (lane.s(S_WAVE) != lane.s(S_HIST_WAVE))
+	{
+		lane.s(S_HIST_WAVE) = lane.s(S_WAVE);
+		lane.s(S_WAVE_TICK) = lane.s(S_TICK);
+	}
+	const int32_t tick = lane.s(S_TICK);
+	for (int32_t slot = 0; slot < kPlantSlots; ++slot)
+	{
+		const int32_t type = lane.i(F_PLANT_TYPE, slot);
+		if (type >= 0)
+		{
+			if (lane.i(F_PLANT_HIST_KIND, slot) != type || lane.i(F_PLANT_BORN, slot) < 0)
+				lane.i(F_PLANT_BORN, slot) = tick;
+		}
+		else
+			lane.i(F_PLANT_BORN, slot) = -1;
+		lane.i(F_PLANT_HIST_KIND, slot) = type;
+	}
+}
+
 PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& buffers, const float* waveLog,
-	bool previousValid, int32_t boardChannels, int32_t scalarCount, bool v2lite)
+	bool previousValid, int32_t boardChannels, int32_t scalarCount, int32_t observation)
 {
 	for (int32_t channel = 0; channel < boardChannels; ++channel)
 		for (int32_t cell = 0; cell < kCells; ++cell)
@@ -569,29 +596,10 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 	// as EnvironmentRollout::Features does: the same Update, the same double accumulators, the same
 	// division only for cells that have a zombie.
 	// ---------------------------------------------------------------------------------------------
-	if (boardChannels > kBoardChannels)
+	if (observation == 2)
 	{
-		// History::Update.  A wave change restarts the wave clock at this decision's tick; a plant is
-		// born at the first decision that sees it, and keeps that tick for as long as its (cell, kind)
-		// stays live -- the key the original's map uses.
-		if (lane.s(S_WAVE) != lane.s(S_HIST_WAVE))
-		{
-			lane.s(S_HIST_WAVE) = lane.s(S_WAVE);
-			lane.s(S_WAVE_TICK) = lane.s(S_TICK);
-		}
+		UpdateStudentHistory(lane);
 		const int32_t tick = lane.s(S_TICK);
-		for (int32_t slot = 0; slot < kPlantSlots; ++slot)
-		{
-			const int32_t type = lane.i(F_PLANT_TYPE, slot);
-			if (type >= 0)
-			{
-				if (lane.i(F_PLANT_HIST_KIND, slot) != type || lane.i(F_PLANT_BORN, slot) < 0)
-					lane.i(F_PLANT_BORN, slot) = tick;
-			}
-			else
-				lane.i(F_PLANT_BORN, slot) = -1;
-			lane.i(F_PLANT_HIST_KIND, slot) = type;
-		}
 
 		// Channel 95: the plant's age, min over the cell (one plant per cell).
 		for (int32_t slot = 0; slot < kPlantSlots; ++slot)
@@ -647,6 +655,80 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 		// is one, which is what the original writes as scalars.back().
 		ScalarChannel(lane, scalars, scalarCount - 1) = static_cast<float>(
 			MinimumDouble(1.0, static_cast<double>(tick - lane.s(S_WAVE_TICK)) / 3000.0));
+	}
+	if (observation == 3)
+	{
+		UpdateStudentHistory(lane);
+		// v2_extra accumulates weighted positions/speeds in float64, then casts to float32.
+		// Maximum starts at -inf: a cell containing only negative velocities must stay negative.
+		double positions[kCells] = {}, speeds[kCells] = {}, health[kCells] = {}, maximum[kCells];
+		for (int32_t cell = 0; cell < kCells; ++cell) maximum[cell] = -1.0e300;
+		for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
+		{
+			const int32_t type = lane.i(F_ZOMBIE_TYPE, slot);
+			const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
+			const int32_t row = lane.i(F_ZOMBIE_ROW, slot);
+			if (type < 0 || (flags & ZB_DEAD) || !(flags & ZB_ON_BOARD) || row < 0 || row >= kRows) continue;
+			const double position = RenderedPublicCoordinate(lane.f(F_ZOMBIE_X, slot));
+			const double velocity = RenderedPublicCoordinate(lane.f(F_ZOMBIE_VELX, slot));
+			const int32_t col = FeatureColumn(position), cell = row * kCols + col;
+			const int32_t armor = lane.i(F_ZOMBIE_HELM, slot) + lane.i(F_ZOMBIE_SHIELD, slot);
+			const double amount = lane.i(F_ZOMBIE_BODY, slot) + armor;
+			positions[cell] += amount * MinimumDouble(1.0, MaximumDouble(0.0, (position - 40.0 - col * 80.0) / 80.0));
+			speeds[cell] += amount * velocity / 0.7;
+			health[cell] += amount;
+			maximum[cell] = MaximumDouble(maximum[cell], velocity / 0.7);
+			if (type == 3 && (flags & ZB_HAS_OBJECT))
+				CellChannel(lane, buffers.board, boardChannels, 95, cell) += static_cast<float>(amount / 200.0);
+			CellChannel(lane, buffers.board, boardChannels, 96, cell) += static_cast<float>(armor / 370.0);
+			float& chill = CellChannel(lane, buffers.board, boardChannels, 97, cell);
+			chill = static_cast<float>(MaximumDouble(chill, lane.i(F_ZOMBIE_CHILLED, slot) / 2000.0));
+		}
+		for (int32_t cell = 0; cell < kCells; ++cell)
+		{
+			if (health[cell] > 0.0)
+			{
+				CellChannel(lane, buffers.board, boardChannels, 92, cell) = static_cast<float>(positions[cell] / health[cell]);
+				CellChannel(lane, buffers.board, boardChannels, 93, cell) = static_cast<float>(speeds[cell] / health[cell]);
+			}
+			if (maximum[cell] > -1.0e300)
+				CellChannel(lane, buffers.board, boardChannels, 94, cell) = static_cast<float>(maximum[cell]);
+		}
+		for (int32_t slot = 0; slot < kPlantSlots; ++slot)
+		{
+			const int32_t type = lane.i(F_PLANT_TYPE, slot);
+			if (type < 0 || slot % kCols >= kGridCols) continue;
+			const int32_t state = lane.i(F_PLANT_STATE, slot);
+			double progress = 0.0;
+			if (type == 4 && (state == 0 || state == 15 || state == 16))
+				progress = state == 0 ? 1.0 - lane.i(F_PLANT_STATE_COUNTDOWN, slot) / 1500.0 : 1.0;
+			else if (type == 2 || type == 20) progress = 1.0 - lane.i(F_PLANT_SPECIAL, slot) / 100.0;
+			CellChannel(lane, buffers.board, boardChannels, 98, slot) = static_cast<float>(MaximumDouble(0.0, progress));
+			const int32_t rate = lane.i(F_PLANT_LAUNCH_RATE, slot);
+			if (rate > 0)
+				CellChannel(lane, buffers.board, boardChannels, 99, slot) = static_cast<float>(
+					MaximumDouble(0.0, 1.0 - static_cast<double>(lane.i(F_PLANT_LAUNCH, slot)) / rate));
+		}
+		for (int32_t slot = 0; slot < lane.s(S_PROJECTILE_END); ++slot)
+		{
+			const int32_t row = lane.i(F_PROJ_ROW, slot);
+			if (lane.i(F_PROJ_TYPE, slot) < 0 || row < 0 || row >= kRows) continue;
+			const int32_t cell = row * kCols + FeatureColumn(RenderedPublicCoordinate(lane.f(F_PROJ_X, slot)));
+			CellChannel(lane, buffers.board, boardChannels, 100, cell) += static_cast<float>(lane.i(F_PROJ_DAMAGE, slot) / 200.0);
+		}
+		int32_t pending = 0;
+		for (int32_t slot = 0; slot < kCoinSlots; ++slot)
+			if (lane.i(F_COIN_ACTIVE, slot)) pending += lane.i(F_COIN_VALUE, slot);
+		const int32_t start = scalarCount - 7;
+		ScalarChannel(lane, scalars, start) = static_cast<float>(lane.s(S_ZOMBIE_COUNT_DOWN) / 4500.0);
+		ScalarChannel(lane, scalars, start + 1) = lane.s(S_HUGE_WAVE_COUNT_DOWN) > 0 ? 1.0f : 0.0f;
+		ScalarChannel(lane, scalars, start + 2) = lane.s(S_HEALTH_WAVE_START) ? static_cast<float>(
+			static_cast<double>(static_cast<int32_t>(TotalHealthInWave(lane, lane.s(S_WAVE) - 1))) / lane.s(S_HEALTH_WAVE_START)) : 0.0f;
+		ScalarChannel(lane, scalars, start + 3) = static_cast<float>(lane.s(S_SUN_COUNT_DOWN) / 1224.0);
+		ScalarChannel(lane, scalars, start + 4) = static_cast<float>(pending / 200.0);
+		ScalarChannel(lane, scalars, start + 5) = static_cast<float>(MinimumDouble(1.0,
+			static_cast<double>(lane.s(S_TICK) - lane.s(S_WAVE_TICK)) / 3000.0));
+		ScalarChannel(lane, scalars, start + 6) = 1.0f;
 	}
 }
 

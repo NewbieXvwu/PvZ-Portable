@@ -33,7 +33,7 @@ public:
 	};
 	void Load(const std::string& path);
 	bool Loaded() const { return width != 0; }
-	bool V2Lite() const { return v2lite; }
+	bool HasHistory() const { return v2lite || v2; }
 	void Features(LawnApp* app, double income, int previousTick, bool previousPlant,
 		std::vector<float>& board, std::vector<float>& scalars, History& history);
 	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant,
@@ -48,6 +48,7 @@ private:
 	bool meanmax = false;
 	bool taskContext = false;
 	bool v2lite = false;
+	bool v2 = false;
 	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer;

@@ -290,11 +290,13 @@ PVZ_SIM double IncomeRate(Lane lane)
 // one warp reading one channel of one cell touches 128 contiguous bytes.  The buffers themselves are
 // cuda/NetCore.h's NetState, shared with the forward.
 PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& buffers, const float* waveLog,
-	bool previousValid, int32_t boardChannels, int32_t scalarCount, bool v2lite);
+	bool previousValid, int32_t boardChannels, int32_t scalarCount, int32_t observation);
 
 // ---------------------------------------------------------------------------
 // Import / export
 // ---------------------------------------------------------------------------
+
+PVZ_SIM void UpdateStudentHistory(Lane lane);
 
 // Transpose one exported position into this lane's SoA slots and reset the rollout bookkeeping.
 // Returns 0 when the record holds something outside the kernel's coverage (the exporter marks those,

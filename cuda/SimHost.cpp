@@ -112,9 +112,10 @@ std::vector<size_t> WeightCounts(int32_t width, int32_t meanmax, int32_t withCon
 {
 	const size_t w = static_cast<size_t>(width);
 	const size_t context = (meanmax ? 3 : 2) * w;
-	const size_t v2lite = observation == 2 ? 1 : 0;
-	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0) + v2lite;
-	const size_t channels = static_cast<size_t>(kBoardChannels) + 4 * v2lite;
+	const size_t extraScalars = observation == 3 ? 7 : observation == 2 ? 1 : 0;
+	const size_t extraChannels = observation == 3 ? 9 : observation == 2 ? 4 : 0;
+	const size_t scalars = static_cast<size_t>(kScalars) + (withContext ? kTaskContext : 0) + extraScalars;
+	const size_t channels = static_cast<size_t>(kBoardChannels) + extraChannels;
 	return {w * channels * 9, w, w * w * 9, w, w * w * 5, w, w * scalars, w,
 		context, 1, 10 * context, 10, 10 * w, w * (2 * w + context), w, w, 1};
 }
@@ -139,7 +140,7 @@ NetImage ReadNet(const std::string& path)
 	if ((version == "PVZRN003" || version == "PVZRN004") && std::fread(&withContext, 4, 1, stream) != 1)
 		Fail("short header");
 	if (version == "PVZRN004" && std::fread(&observation, 4, 1, stream) != 1) Fail("short header");
-	if (observation < 1 || observation > 2) Fail("bad observation version");
+	if (observation < 1 || observation > 3) Fail("bad observation version");
 	if (width < 1 || width > kMaxNetWidth) Fail("network width " + std::to_string(width) + " out of range");
 
 	NetImage image;
@@ -176,8 +177,9 @@ NetImage ReadNet(const std::string& path)
 	params.taskContext = withContext ? 1 : 0;
 	params.version = version == "PVZRN004" ? 4 : (version == "PVZRN003" ? 3 : 2);
 	params.contextSize = (params.meanmax ? 3 : 2) * params.width;
-	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0) + (observation == 2 ? 1 : 0);
-	params.boardChannels = kBoardChannels + (observation == 2 ? 4 : 0);
+	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0) + (observation == 3 ? 7 : observation == 2 ? 1 : 0);
+	params.observation = observation;
+	params.boardChannels = kBoardChannels + (observation == 3 ? 9 : observation == 2 ? 4 : 0);
 	params.conv1 = take(counts[0]);
 	params.bias1 = take(counts[1]);
 	params.conv2 = take(counts[2]);
@@ -440,7 +442,7 @@ int WriteStudentFeatures(const Options& options, const Corpus& corpus, Lane lane
 		if (LoadRoot(lane, corpus.roots[static_cast<size_t>(index)], corpus.level))
 		{
 			BuildFeatures(lane, corpus.level, activations.state, waveLog.data(), false,
-				net.boardChannels, net.scalarCount, net.version == 4);
+				net.boardChannels, net.scalarCount, net.observation);
 			for (int32_t channel = 0; channel < net.boardChannels; ++channel)
 				for (int32_t cell = 0; cell < kCells; ++cell)
 					block[static_cast<size_t>(channel) * kCells + cell] =

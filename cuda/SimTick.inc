@@ -631,6 +631,7 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 		if (target >= 0)
 		{
 			phase = 12;
+			flags &= ~ZB_HAS_OBJECT;
 			PlayZombieAnimation(lane, slot, 50, 43, 24.0f, 3);
 			const float duration = 43.0f / lane.f(F_ZOMBIE_ANIM_RATE, slot) * 100.0f;
 			const int32_t distance = mz - static_cast<int32_t>(lane.f(F_PLANT_X, target)) - 80;
@@ -923,7 +924,8 @@ PVZ_SIM void SpawnZombie(Lane lane, const LevelInfo& level, int32_t zombieType, 
 	lane.i(F_ZOMBIE_PHASE, slot) = IsVaulter(def) ? 11 : 0;
 	lane.i(F_ZOMBIE_PHASE_COUNTER, slot) = 0;
 	lane.i(F_ZOMBIE_FADE, slot) = -1;
-	lane.i(F_ZOMBIE_FLAGS, slot) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
+	lane.i(F_ZOMBIE_FLAGS, slot) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD
+		| (IsVaulter(def) ? ZB_HAS_OBJECT : 0);
 	lane.i(F_ZOMBIE_CHILLED, slot) = 0;
 	lane.i(F_ZOMBIE_AGE, slot) = 0;
 	lane.i(F_ZOMBIE_FROM_WAVE, slot) = wave;

@@ -305,9 +305,10 @@ PVZ_SIM Choice NetDecide(Lane lane, const LevelInfo& level, const NetParams& net
 	Choice choice = {-1, 0, 0, 0};
 	// The short circuit has to come first: Predict returns before ++networkCalls when nothing can be
 	// planted anywhere, so net_calls <= decisions holds on both sides only if the device skips too.
+	if (net.observation > 1) UpdateStudentHistory(lane);
 	if (!AnyLegalPlant(lane, level)) return choice;
 	BuildFeatures(lane, level, state, waveLog, lane.s(S_PRIOR_TICK) >= 0, net.boardChannels,
-		net.scalarCount, net.version == 4);
+		net.scalarCount, net.observation);
 	NetEncode(lane, net, state);
 	return NetChoose(lane, level, net, state);
 }

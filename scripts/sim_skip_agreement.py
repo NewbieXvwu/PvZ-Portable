@@ -109,9 +109,9 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     started = time.perf_counter()
     memo = {"frame": None, "action": None}
     history = None
-    if _W["net"].obs == "v2lite":
+    if _W["net"].obs != "v1":
         from pvz_student_observation import StudentHistory
-        history = StudentHistory()
+        history = StudentHistory(_W["net"].obs)
     actions = []
     ready_mowers = lambda o: sum(d["state"] == 1 for d in o.get("defenses") or [])
     mowers_start = mowers_left = ready_mowers(obs)
