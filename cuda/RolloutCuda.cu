@@ -1128,6 +1128,10 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 	const int32_t privateLimit = privateLimitText ? std::atoi(privateLimitText) : 0;
 	const bool privateWave = batchLanes <= privateLimit;
 	const bool cooperative = std::getenv("PVZ_CUDA_COOPERATIVE_HEADS") != nullptr;
+	const char* privateThreadsText = std::getenv("PVZ_CUDA_PRIVATE_THREADS");
+	const int32_t privateThreads = privateThreadsText ? std::atoi(privateThreadsText) : 128;
+	if (privateThreads != 32 && privateThreads != 64 && privateThreads != 128 && privateThreads != 256)
+		Fail("PVZ_CUDA_PRIVATE_THREADS must be 32, 64, 128, or 256");
 	// The round loop reaches the root, wave-table and pair arrays through `arguments`, and GrowRoots /
 	// GrowPairs move them, so a grow that did not refresh the copy would leave the host writing one
 	// buffer while the kernels read a freed one.  Whether that reads as garbage or as the same bytes
@@ -1179,7 +1183,7 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 		{
 			CALL(cudaEventRecord(dev.phaseStart[0]));
 			CALL(cudaMemsetAsync(dev.counters, 0, sizeof(int32_t)));     // netCount; running carries over
-			if (privateWave) PrivateRoundKernel<false><<<batchLanes, 128>>>(arguments);
+			if (privateWave) PrivateRoundKernel<false><<<batchLanes, privateThreads>>>(arguments);
 			else PreKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 			CALL(cudaEventRecord(dev.phaseStop[0]));
@@ -1203,8 +1207,8 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 			// Over all lanes, not over the compacted ones: a round that needs a forward for 7,500 of
 			// 21,504 lanes would otherwise launch 30 blocks into 84 SMs, and heads+apply was then the
 			// most expensive third of the round.  The threads that find -1 retire immediately.
-			if (privateWave && cooperative) PrivateRoundKernel<true, true><<<batchLanes, 128>>>(arguments);
-			else if (privateWave) PrivateRoundKernel<true><<<batchLanes, 128>>>(arguments);
+			if (privateWave && cooperative) PrivateRoundKernel<true, true><<<batchLanes, privateThreads>>>(arguments);
+			else if (privateWave) PrivateRoundKernel<true><<<batchLanes, privateThreads>>>(arguments);
 			else PostKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 			CALL(cudaEventRecord(dev.phaseStop[2]));
@@ -1576,6 +1580,9 @@ int Serve(const Options& options)
 	std::printf("READY %s %d\n", options.socket.c_str(), dev.lanes);
 	std::fflush(stdout);
 
+	// Per-wave tracing for the service-shape measurements: which requests merged into one wave and
+	// what that wave cost.  Off by default; the numbers only go to stderr when asked for.
+	const bool serveTrace = std::getenv("PVZ_SERVE_TRACE") != nullptr;
 	std::vector<Client> clients;
 	std::vector<Request> queue;
 	int64_t requests = 0, waves = 0, lanesDone = 0;
@@ -1859,6 +1866,9 @@ int Serve(const Options& options)
 			dev.arguments.pairCount = used;
 			const BatchStats stats = RunBatch(dev, 0, used);
 			if (waveLeaf) BatchLeaves(dev, used);
+			if (serveTrace)
+				std::fprintf(stderr, "serve-trace: wave %lld lanes %d requests %zu rounds %d ms %.1f\n",
+					static_cast<long long>(waves), used, slices.size(), stats.rounds, stats.milliseconds);
 			++waves;
 			lanesDone += used;
 			gpuMs += stats.milliseconds;

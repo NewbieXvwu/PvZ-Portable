@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.12...4.0)
 
 project(pvz-portable LANGUAGES C CXX)
 
+# Opt-in: the normal portable build does not inspect or require a CUDA installation.
+option(PVZ_CUDA_ROLLOUT "Build the optional CUDA continuation service" OFF)
+if(PVZ_CUDA_ROLLOUT)
+	include(CMake/CudaRollout.cmake)
+endif()
+
 include(CMake/ProjectVersion.cmake)
 
 option(BUILD_STATIC "Statically link dependencies for a standalone exe (Windows MinGW, Linux)" OFF)
