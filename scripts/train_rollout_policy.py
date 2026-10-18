@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import random
 import sys
@@ -220,6 +221,9 @@ def main() -> None:
     p.add_argument("--spread-cap", type=float, default=5.0, help="upper bound of the --spread-weight factor")
     p.add_argument("--save-epochs", type=int, default=0,
                    help="also keep the last N epochs as epoch_XX.pt (candidates for scripts/select_student.py)")
+    p.add_argument("--lr-schedule", choices=["constant", "cosine"], default="constant",
+                   help="cosine: learning rate falls from 2e-3 to 0 over the run (per batch), so the final weights are not "
+                        "a snapshot of a still-bouncing optimiser; constant = the old behaviour")
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
     p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
@@ -315,12 +319,16 @@ def main() -> None:
         return loss, stats
 
     train_idx = torch.nonzero(~is_val).squeeze(1); val_idx = torch.nonzero(is_val).squeeze(1)
+    steps = args.epochs * -(-len(train_idx) // 2048)
+    schedule = (torch.optim.lr_scheduler.LambdaLR(opt, lambda t: 0.5 * (1 + math.cos(math.pi * min(t, steps) / steps)))
+                if args.lr_schedule == "cosine" else None)
     history = []
 
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
-                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "history": list(history)}
+                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule,
+                "history": list(history)}
 
     for epoch in range(1, args.epochs + 1):
         epoch_started = time.perf_counter()
@@ -329,6 +337,8 @@ def main() -> None:
         for start in range(0, len(perm), 2048):
             loss, _ = batch_loss(perm[start:start + 2048], True)
             opt.zero_grad(); loss.backward(); opt.step()
+            if schedule is not None:
+                schedule.step()
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU).
