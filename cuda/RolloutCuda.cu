@@ -423,6 +423,9 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) InitKernel(Argument
 	lane.s(S_ROOT_INDEX) = rootIndex;
 	lane.s(S_UNTIL_TICK) = arguments.roots[rootIndex].tick + arguments.horizon;
 	RolloutBegin(lane, futureSeed, arguments.maxActions, level, arguments.waves[rootIndex]);
+	// A forced wait can reach the horizon inside InitKernel. PreKernel skips done lanes, so it
+	// cannot retire this one later; leaving it in running would stall the entire batch forever.
+	if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
 }
 
 // The head of one round for every lane still in flight.

@@ -19,6 +19,8 @@
 #include "Lawn/Zombie.h"
 
 #include <cstring>
+#include <cstdio>
+#include <cstdlib>
 
 namespace pvzc
 {
@@ -275,6 +277,15 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 			? zombie->mTargetRow * kCols + zombie->mTargetCol : -1;
 		out.posX = zombie->mPosX; out.posY = zombie->mPosY;
 		out.velX = zombie->mVelX;
+		if (std::getenv("PVZ_CUDA_TRACE"))
+		{
+			const Rect attack = zombie->GetZombieAttackRect();
+			const Rect hurt = zombie->GetZombieRect();
+			std::fprintf(stderr, "cuda-trace tick=%d type=%d row=%d posX=%.9g pixelX=%d "
+				"mouth=%d+%d hurt=%d+%d eating=%d age=%d\n", record.tick, out.type, out.row,
+				out.posX, zombie->mX, attack.mX, attack.mWidth, hurt.mX, hurt.mWidth,
+				zombie->mIsEating, zombie->mZombieAge);
+		}
 		out.stateBits = (zombie->mIsEating ? ZB_EATING : 0) | (zombie->mHasHead ? ZB_HAS_HEAD : 0) |
 			(zombie->mHasArm ? ZB_HAS_ARM : 0) | (zombie->IsDeadOrDying() ? ZB_DYING : 0) |
 			(zombie->mMindControlled ? ZB_MIND_CONTROLLED : 0) |

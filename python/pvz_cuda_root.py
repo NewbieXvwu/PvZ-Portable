@@ -51,9 +51,8 @@ RECORD_TAG = struct.Struct("<iii")
 ROOT_HEAD = struct.Struct("<ii" + "i" * 17 + "i" * ROWS + "f" * ROWS + "f" * ROWS
                           + "i" * 3 + "ii" * INCOME_EVENTS + "i" * 6)
 ROOT_TAIL = struct.Struct("<ii")          # supported, unsupported reason
-# Board::mZombiesInWave, imported rather than re-drawn: RESEED changes the draws made from now on,
-# never the future the original already committed to.  It trails the entity arrays and precedes the
-# supported flag, exactly as in the C++ struct.
+# Board::mZombiesInWave is kept for corpus inspection. RESEED redraws unsent waves; CUDA continuation
+# must use DrawFutureWave rather than this privileged table. It trails the entity arrays.
 WAVE_BLOCK = struct.Struct("<i" + "i" * MAX_WAVES + "i" * (MAX_WAVES * WAVE_ZOMBIE_SLOTS))
 ZOMBIE_RECORD = struct.Struct("16i3f")
 PLANT_RECORD = struct.Struct("12i2f")

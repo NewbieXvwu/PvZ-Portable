@@ -113,6 +113,16 @@ class CudaServeMergeTest(unittest.TestCase):
         with self.assertRaises(CudaServerError):
             client.run(CORPUS, [(9999, 1, None)], horizon=HORIZON, max_actions=3000)
 
+    def test_forced_wait_finishes_in_initialization(self):
+        client = CudaRolloutClient(self._serve(gather_ms=0))
+        self.addCleanup(client.close)
+        records, leaves = client.run(CORPUS, [(0, 123, {"type": "wait", "ticks": 5})],
+                                     horizon=1, max_actions=1)
+        self.assertEqual(records[0]["decisions"], 1)
+        self.assertEqual(records[0]["ticks"], 5)
+        self.assertEqual(records[0]["errorFlags"], 0)
+        self.assertEqual(leaves.shape, (1, 5668))
+
 
 class RootArrayGrowthTest(unittest.TestCase):
     """A root must continue the same whether or not its corpus was big enough to grow the arrays.
