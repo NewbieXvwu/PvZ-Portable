@@ -339,7 +339,10 @@ python3 scripts/search_play.py --rollout-policy artifacts/student/v23/model.pt \
 ded4cdc 铲子第一阶段交付报告与当日记忆
 093fd76 报告补充：逐局耗时中位数与本地原始结果位置
 580f44f 报告补充第三个铲子案例（30021：赢定的局也会白铲）
-<本次提交>  报告提交列表更新
+883865a 报告：更新提交列表
+4bf7332 报告补充：关闭铲子时与旧代码的逐位（逐字节）对照
 ```
+
+以 `git log origin/pvz-env..shovel` 为准。
 
 本文件所在提交之后不再改动代码。
