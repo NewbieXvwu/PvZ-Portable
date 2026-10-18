@@ -3,7 +3,9 @@
 Both arms must have been run with the same seeds and the same search configuration; the only
 intended difference is the rollout backend (original C++ engine vs the CUDA continuation service).
 The gate in the task book is: McNemar exact p > 0.1 and |wins_cpu - wins_gpu| <= 4 over the
-first 128 z15 evaluation seeds.
+first 128 z15 evaluation seeds. A passing gate also requires matching config.json inputs/search
+settings, the CPU/CUDA backend roles, and actual GPU continuations in every GPU game. Without these
+the statistics are still printed, but gate_passed is false.
 
 Usage:
     python3 scripts/cuda_phase2_paired.py artifacts/cuda/codex_phase2_v19_v3_cpu \
@@ -13,9 +15,75 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from math import comb
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SEARCH_FIELDS = ("samples", "per_card", "halving", "horizon", "margin", "min_gap",
+                 "rollout_sim_skip", "cpp_rollouts", "max_actions", "dagger_beta", "arms")
+INPUT_FILES = ("rollout_policy", "value", "static_value", "manifest", "executable")
+
+
+def comparison_evidence(cpu_path: Path, gpu_path: Path, cpu: dict, gpu: dict, task_id: str) -> dict:
+    """Check the experiment being compared, as well as the outcome statistics.
+
+    Matching outcomes from two CPU arms, different students, or DAgger games do not constitute the
+    teacher-strength gate. Worker counts affect speed and are reported, but do not change its semantics.
+    """
+    configs, hashes, errors = {}, {}, []
+    for name, path in (("cpu", cpu_path), ("gpu", gpu_path)):
+        games = cpu if name == "cpu" else gpu
+        if any(game.get("arm") != "fast_search" for game in games.values()):
+            errors.append(f"{name}: game records must belong to fast_search")
+        directory = path if path.is_dir() else path.parent
+        config_path = directory / "config.json"
+        if not config_path.is_file():
+            errors.append(f"{name}: missing config.json")
+            continue
+        config = configs[name] = json.loads(config_path.read_text())
+        hashes[name] = {}
+        expected_backend = "cpp" if name == "cpu" else "cuda"
+        if config.get("rollout_backend") != expected_backend:
+            errors.append(f"{name}: backend must be {expected_backend}")
+        if config.get("task_id") != task_id:
+            errors.append(f"{name}: task must be {task_id}")
+        if str(config.get("dagger_beta")) != "1.0" or config.get("arms") != "fast_search":
+            errors.append(f"{name}: teacher gate requires fast_search with dagger_beta=1.0")
+        for field in SEARCH_FIELDS:
+            if field not in config:
+                errors.append(f"{name}: missing search setting {field}")
+        for field in INPUT_FILES:
+            value = config.get(field)
+            if field == "static_value" and value in (None, "None"):
+                value = config.get("value")
+            path = Path(value) if value not in (None, "None") else None
+            if path is not None and not path.is_absolute():
+                path = ROOT / path
+            if path is None or not path.is_file():
+                errors.append(f"{name}: missing input file {field}")
+                continue
+            hashes[name][field] = hashlib.sha256(path.read_bytes()).hexdigest()
+    if len(configs) == 2:
+        for field in SEARCH_FIELDS:
+            if configs["cpu"].get(field) != configs["gpu"].get(field):
+                errors.append(f"different search setting: {field}")
+        for field in INPUT_FILES:
+            if hashes["cpu"].get(field) != hashes["gpu"].get(field):
+                errors.append(f"different input contents: {field}")
+    uncovered = sorted(seed for seed, game in gpu.items()
+                       if not (game.get("cuda_batches", 0) > 0 and game.get("cuda_lanes", 0) > 0))
+    contaminated = sorted(seed for seed, game in cpu.items()
+                          if game.get("cuda_batches", 0) != 0 or game.get("cuda_lanes", 0) != 0)
+    return {"gate_matching_configuration": not errors,
+            "configuration_errors": errors, "input_sha256": hashes,
+            "workers_cpu": configs.get("cpu", {}).get("workers"),
+            "workers_gpu": configs.get("gpu", {}).get("workers"),
+            "gate_gpu_used_every_game": bool(gpu) and not uncovered,
+            "gpu_uncovered_seeds": uncovered,
+            "gate_cpu_without_cuda": bool(cpu) and not contaminated,
+            "cpu_cuda_seeds": contaminated}
 
 
 def load_games(path: Path) -> dict[int, dict]:
@@ -52,6 +120,7 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=None, help="write the summary JSON here")
     parser.add_argument("--seeds", type=int, default=128, help="how many of the first seeds must be present")
     parser.add_argument("--seed-start", type=int, default=30000, help="first required evaluation seed")
+    parser.add_argument("--task-id", default="day_l7_z15_eval", help="required task in both run configurations")
     args = parser.parse_args()
 
     cpu = load_games(args.cpu)
@@ -61,6 +130,9 @@ def main() -> None:
     missing = sorted(required - (set(cpu) & set(gpu)))
     unexpected = sorted((set(cpu) | set(gpu)) - required)
     complete = set(cpu) == set(gpu) == required
+    evidence = comparison_evidence(args.cpu, args.gpu, cpu, gpu, args.task_id)
+    experiment_valid = (evidence["gate_matching_configuration"] and evidence["gate_gpu_used_every_game"]
+                        and evidence["gate_cpu_without_cuda"])
     pairs = [(cpu[seed], gpu[seed]) for seed in seeds]
 
     cpu_only = sum(c["won"] and not g["won"] for c, g in pairs)
@@ -101,7 +173,7 @@ def main() -> None:
         "win_count_difference": wins_cpu - wins_gpu,
         "gate_mcnemar_p_gt_0_1": p_value > 0.1,
         "gate_win_difference_le_4": abs(wins_cpu - wins_gpu) <= 4,
-        "gate_passed": complete and p_value > 0.1 and abs(wins_cpu - wins_gpu) <= 4,
+        "gate_passed": complete and experiment_valid and p_value > 0.1 and abs(wins_cpu - wins_gpu) <= 4,
         "final_wave_mean_cpu": round(sum(c.get("final_wave", 0) for c, _g in pairs) / max(1, len(pairs)), 3),
         "final_wave_mean_gpu": round(sum(g.get("final_wave", 0) for _c, g in pairs) / max(1, len(pairs)), 3),
         "decisions_cpu": sum(c.get("decisions", 0) for c, _g in pairs),
@@ -113,6 +185,7 @@ def main() -> None:
         "cuda_batches_gpu": sum(g.get("cuda_batches", 0) for _c, g in pairs),
         "cuda_lanes_gpu": sum(g.get("cuda_lanes", 0) for _c, g in pairs),
         "disagreements": disagreements,
+        **evidence,
     }
 
     print(json.dumps({k: v for k, v in summary.items() if k != "disagreements"}, indent=1))

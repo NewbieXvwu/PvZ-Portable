@@ -450,3 +450,12 @@ Graph与并行清零的已测试补丁保存在ignored
 `current_process.json`、`wall_current_process.json`、各臂`command.json`及`driver.txt`。
 这些文件不证明任务仍在运行；续接需核实对应PID/启动时间或工具会话。
 128局配对、实际采集前后速度和帧语义复核均未完成，不可据当前部分结果宣告总目标完成。
+
+## 第38轮：完整配对的证据门禁
+
+`cuda_phase2_paired.py`不能仅凭相同胜局数宣告通过。现在除了完整种子集合、McNemar和胜局差，
+还要求两臂有config.json，角色确为CPU/CUDA，同为z15评估的fast_search教师（beta1.0），
+搜索参数相同，学生/两个价值网络/任务清单/原版二进制内容SHA相同。GPU每局必须有
+CUDA批次与续走，CPU臂不能混入CUDA。不同worker数不改变强度门禁，但在输出中单独报告。
+缺少配置时仍可看统计值，`gate_passed`会为false。7项回归通过；历史v19完整128局
+在新规则下仍通过，p=0.7266。v25正在运行，不能据历史结果代替新验收。
