@@ -48,6 +48,7 @@ def main() -> None:
     parser.add_argument("--counts", type=int, nargs="+", default=[8, 30, 300])
     parser.add_argument("--batches", type=int, default=3)
     parser.add_argument("--status-file", type=Path, help="append each measured result here")
+    parser.add_argument("--label", default="CUDA批次对照", help="experiment label for status entries")
     args = parser.parse_args()
     if args.batches < 1 or not args.counts or min(args.counts) < 1:
         parser.error("counts and batches must be positive")
@@ -61,6 +62,7 @@ def main() -> None:
                   for key, path in (("baseline", args.baseline), ("candidate", args.candidate),
                                     ("roots", args.roots), ("net", args.net))}
     provenance["environment"] = {"PVZ_CUDA_PRIVATE_LIMIT": "1200", "PVZ_CUDA_COOPERATIVE_HEADS": "1"}
+    provenance["label"] = args.label
     rows = []
     for count in args.counts:
         pairs = args.out / f"pairs-{count}.txt"
@@ -107,7 +109,7 @@ def main() -> None:
             if args.status_file:
                 stamp = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
                 with args.status_file.open("a") as handle:
-                    handle.write(f"\n- {stamp}（第36轮最终独占对照）{name}，v25/2500tick，{count}道×"
+                    handle.write(f"\n- {stamp}（{args.label}）{name}，{args.net.stem}/2500tick，{count}道×"
                                  f"{args.batches}真实独立批次，平均{row['wave_ms']:.2f}ms/波；"
                                  f"完整命令/SHA/原始输出见{args.out}。\n")
 

@@ -17,7 +17,8 @@ for training (with ``--dagger-beta`` < 1 the student executes part of the moves,
 Continuations run in the original C++ simulator by default. ``--rollout-backend cuda`` sends them to
 ``build/rollout_cuda --serve`` (python/pvz_cuda_rollout.py) instead, which gathers the decisions of several
 workers into one GPU wave and returns the leaves as the value net's own features -- and simulates *every*
-tick, so ``--rollout-sim-skip`` does not describe that path (the CPU rollout it replaces skips 29 of 30).
+tick. ``--rollout-sim-skip`` is a CPU presentation-work bitmask: mask 29 skips colour, height,
+attachment matrices and messages, while preserving game ticks and animation lifecycle updates.
 
 Removed 2026-10-16 (results in DESIGN.md / learn/, code in git history): pi (the PPO policy) as the player and
 its arms ``baseline`` / ``search``; passive continuation (no actions during the look-ahead); ``--scope
