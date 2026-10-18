@@ -610,3 +610,29 @@ gate.load1（入场负载，让"匹配负载"可核验）。每请求的客户�
 这一条不是"改默认"：no-halving 会改变哪些候选拿到后续 futures，因而可能改变选出的动作
 （`search_play.py:321` 原话），属于换任务语义，采用前须按 AGENTS.md §8 在 DESIGN.md 登记新任务族。
 本轮只做代价与收益的实测登记，默认仍是 halving。
+
+## 第45轮：填满波的实测设计与可比性判据（开跑前登记，2026-10-19）
+
+脚本 `tmp/codex_r45_nohalving.py`，两臂，严格排在第44轮之后（先等 `dagger_inline_comparison.json`，
+再等 C++ 等价回归落盘），同一三重门禁（MemAvailable ≥ 6 GB、无活跃 CUDA 进程、loadavg1 ≤ 0.6×核数），
+同 4 种子 30000–30003、同 4 worker、同 `--dagger-beta 0.5`：
+
+| 臂 | 后端 | 算法 | gather |
+|---|---|---|---|
+| `dagger_gpu_inline_nohalv` | cuda（`build/rollout_cuda_small`，内联） | `--no-halving` | 80 ms |
+| `dagger_cpu_nohalv` | cpp | `--no-halving` | — |
+
+halving 那一行已由第44轮覆盖（同门禁 CPU 基线 + gather 阶梯 0/80/300/1200/4000）。
+
+**可比性判据（先于结果写下）**：墙钟比只有在两臂工作量相同时才有意义，而 CPU 臂的 `cuda_lanes` 恒为 0，
+所以用 `rollout_lanes`（`search_play.py:224-225`，在 cpp/cuda 分叉**之前**累加）核对；除道数外还核对
+决策数与搜索点数的极差比，>1.05 就认定被工作量污染，比值改按"每道墙钟"读。脚本在开跑前预检现行
+`search_play.py` 是否发射该字段——缺字段就拒绝开跑，而不是在几小时实测的末尾才发现。
+
+**读数口径**：同时给三个比值，避免只挑好看的那个——作业墙钟比、每局延迟比、按道归一的墙钟比；
+外加 `break_even_recheck`：把实测的每请求道数代进 `wave_ms ≈ 144.3 + 3.33×道` 得模型速率，与实测流水线
+速率对照，两者的差额就是主机侧（编码/IPC/排队）份额，这正是交接书目标3要归因的东西。
+
+**结论的使用边界**：no-halving 属换任务语义（可能改变选出的动作，`search_play.py:321`），本轮只交
+代价与收益的实测；是否采用、是否按 AGENTS.md §8 在 DESIGN.md 登记新任务族，由主控裁决（已写进
+`~/pvz-logs/codex_cuda_questions.md` Q3）。默认仍是 halving。
