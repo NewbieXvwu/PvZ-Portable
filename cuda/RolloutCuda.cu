@@ -428,29 +428,18 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) InitKernel(Argument
 	if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
 }
 
-// The head of one round for every lane still in flight.
-__global__ void __launch_bounds__(kBlockThreads, kMinBlocks) PreKernel(Arguments arguments)
+// Round semantics are shared by the SoA schedule and the narrow-wave shared-memory schedule.
+__device__ __forceinline__ void PreLane(const Arguments& arguments, Lane lane,
+	const LevelInfo& level, int32_t index)
 {
-	const int32_t index = blockIdx.x * blockDim.x + threadIdx.x;
-	__shared__ int32_t levelRaw[sizeof(LevelInfo) / sizeof(int32_t)];
-	StageLevel(arguments.level, levelRaw);
-	const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
-	if (index >= arguments.lanes) return;
-
-	Lane lane{arguments.ints, arguments.floats, index, arguments.lanes, 0};
-	// Written before any early exit, so a lane that finished cannot leave last round's slot behind.
 	arguments.laneSlot[index] = -1;
 	if (lane.s(S_STATE) == LANE_DONE) return;
 	const WaveTable& waves = arguments.waves[lane.s(S_ROOT_INDEX)];
-
 	Rand rand = LoadRandState(lane);
 	const int32_t stage = RoundPre(lane, level, waves, rand);
 	StoreRandState(lane, rand);
 	if (stage == PRE_NEEDS_NET)
 	{
-		// Compaction: the trunk then runs over slots 0..netCount-1 instead of over all lanes, so a round
-		// in which a third of the batch can plant costs a third of the GEMMs.  The slot is this lane's
-		// activation address for the rest of the round and nothing else; laneSlot hands it back.
 		arguments.laneSlot[index] = atomicAdd(&arguments.counters->netCount, 1);
 		lane.netSlot = arguments.laneSlot[index];
 		BuildFeatures(lane, level, arguments.state, arguments.waveLog, lane.s(S_PRIOR_TICK) >= 0);
@@ -459,26 +448,66 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) PreKernel(Arguments
 	if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
 }
 
-// The tail of one round.  One thread per lane, most of them done with their work in PreKernel: the
-// lanes that reached a forward are spread over the whole machine this way, which is what this phase
-// needed (see Arguments::laneSlot).
+__device__ __forceinline__ void PostLane(const Arguments& arguments, Lane lane,
+	const LevelInfo& level)
+{
+	const WaveTable& waves = arguments.waves[lane.s(S_ROOT_INDEX)];
+	Rand rand = LoadRandState(lane);
+	RoundPost(lane, level, waves, arguments.net, arguments.state, rand);
+	StoreRandState(lane, rand);
+	if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
+}
+
+__global__ void __launch_bounds__(kBlockThreads, kMinBlocks) PreKernel(Arguments arguments)
+{
+	const int32_t index = blockIdx.x * blockDim.x + threadIdx.x;
+	__shared__ int32_t levelRaw[sizeof(LevelInfo) / sizeof(int32_t)];
+	StageLevel(arguments.level, levelRaw);
+	if (index >= arguments.lanes) return;
+	Lane lane{arguments.ints, arguments.floats, index, arguments.lanes, 0};
+	PreLane(arguments, lane, *reinterpret_cast<const LevelInfo*>(levelRaw), index);
+}
+
 __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) PostKernel(Arguments arguments)
 {
 	const int32_t index = blockIdx.x * blockDim.x + threadIdx.x;
 	__shared__ int32_t levelRaw[sizeof(LevelInfo) / sizeof(int32_t)];
 	StageLevel(arguments.level, levelRaw);
-	const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
+	if (index >= arguments.lanes || arguments.laneSlot[index] < 0) return;
+	Lane lane{arguments.ints, arguments.floats, index, arguments.lanes, arguments.laneSlot[index]};
+	PostLane(arguments, lane, *reinterpret_cast<const LevelInfo*>(levelRaw));
+}
+
+// A small SoA wave can occupy only one or two SMs. Give each continuation a block, cooperatively
+// transpose its state to shared memory, and run the identical serial core on thread 0. This changes
+// storage and placement, not mechanics, RNG order, or network arithmetic. Large waves retain SoA.
+template <bool post>
+__global__ void PrivateRoundKernel(Arguments arguments)
+{
+	const int32_t index = blockIdx.x;
 	if (index >= arguments.lanes) return;
-
-	const int32_t slot = arguments.laneSlot[index];
-	if (slot < 0) return;
-	Lane lane{arguments.ints, arguments.floats, index, arguments.lanes, slot};
-	const WaveTable& waves = arguments.waves[lane.s(S_ROOT_INDEX)];
-
-	Rand rand = LoadRandState(lane);
-	RoundPost(lane, level, waves, arguments.net, arguments.state, rand);
-	StoreRandState(lane, rand);
-	if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
+	const int32_t slot = post ? arguments.laneSlot[index] : 0;
+	if (post && slot < 0) return;
+	__shared__ int32_t levelRaw[sizeof(LevelInfo) / sizeof(int32_t)];
+	__shared__ int32_t ints[IntSlotsTotal()];
+	__shared__ float floats[FloatSlotsTotal()];
+	for (int32_t word = threadIdx.x; word < IntSlotsTotal(); word += blockDim.x)
+		ints[word] = arguments.ints[static_cast<size_t>(word) * arguments.lanes + index];
+	for (int32_t word = threadIdx.x; word < FloatSlotsTotal(); word += blockDim.x)
+		floats[word] = arguments.floats[static_cast<size_t>(word) * arguments.lanes + index];
+	StageLevel(arguments.level, levelRaw);
+	if (threadIdx.x == 0)
+	{
+		Lane lane{ints, floats, 0, 1, slot};
+		const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
+		if (post) PostLane(arguments, lane, level);
+		else PreLane(arguments, lane, level, index);
+	}
+	__syncthreads();
+	for (int32_t word = threadIdx.x; word < IntSlotsTotal(); word += blockDim.x)
+		arguments.ints[static_cast<size_t>(word) * arguments.lanes + index] = ints[word];
+	for (int32_t word = threadIdx.x; word < FloatSlotsTotal(); word += blockDim.x)
+		arguments.floats[static_cast<size_t>(word) * arguments.lanes + index] = floats[word];
 }
 
 // Bias and ReLU over the valid cells of one layer's output.  SGEMM has no epilogue, so the bias that
@@ -1068,6 +1097,9 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 	Arguments& arguments = dev.arguments;
 	BatchStats stats;
 	const bool phaseTiming = std::getenv("PHASE") != nullptr;
+	const char* privateLimitText = std::getenv("PVZ_CUDA_PRIVATE_LIMIT");
+	const int32_t privateLimit = privateLimitText ? std::atoi(privateLimitText) : 0;
+	const bool privateWave = batchLanes <= privateLimit;
 	// The round loop reaches the root, wave-table and pair arrays through `arguments`, and GrowRoots /
 	// GrowPairs move them, so a grow that did not refresh the copy would leave the host writing one
 	// buffer while the kernels read a freed one.  Whether that reads as garbage or as the same bytes
@@ -1119,7 +1151,8 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 		{
 			CALL(cudaEventRecord(dev.phaseStart[0]));
 			CALL(cudaMemsetAsync(dev.counters, 0, sizeof(int32_t)));     // netCount; running carries over
-			PreKernel<<<grid, block>>>(arguments);
+			if (privateWave) PrivateRoundKernel<false><<<batchLanes, 128>>>(arguments);
+			else PreKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 			CALL(cudaEventRecord(dev.phaseStop[0]));
 			// One 8-byte readback per round, and the only host/device synchronisation the loop needs
@@ -1142,7 +1175,8 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 			// Over all lanes, not over the compacted ones: a round that needs a forward for 7,500 of
 			// 21,504 lanes would otherwise launch 30 blocks into 84 SMs, and heads+apply was then the
 			// most expensive third of the round.  The threads that find -1 retire immediately.
-			PostKernel<<<grid, block>>>(arguments);
+			if (privateWave) PrivateRoundKernel<true><<<batchLanes, 128>>>(arguments);
+			else PostKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 			CALL(cudaEventRecord(dev.phaseStop[2]));
 			if (phaseTiming)
