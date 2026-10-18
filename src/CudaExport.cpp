@@ -138,8 +138,11 @@ void FillLevelInfo(LawnApp* app, LevelInfo& info)
 		case SeedType::SEED_WALLNUT:     def.behavior = PB_WALL; break;
 		default: break;
 		}
-		// Shooters create a pea (peashooter/snowpea) or two peas (repeater, the second one at
-		// mLaunchCounter == 25 -- Plant::UpdateShooter); snow peas carry the chill on the same 20 damage.
+		// Shooters do not create a pea on the tick their clock runs out: Plant::FindTargetAndFire only
+		// arms mShootingCounter and Plant::UpdateShooting spawns the pea when that countdown decrements
+		// into 1, shootCounter - 1 ticks later.  The repeater arms twice per cycle, the second time when
+		// mLaunchCounter reads 25 (Plant::UpdateShooter:986-991).  Snow peas carry the chill on the same
+		// 20 damage.
 		if (source.mSubClass == PlantSubClass::SUBCLASS_SHOOTER)
 		{
 			const bool snow = seed == SeedType::SEED_SNOWPEA;
@@ -147,6 +150,10 @@ void FillLevelInfo(LawnApp* app, LevelInfo& info)
 				: ProjectileType::PROJECTILE_PEA].mDamage;
 			def.chills = snow ? 1 : 0;
 			def.shots = seed == SeedType::SEED_REPEATER ? 2 : 1;
+			// Plant.cpp:758-768, the head reanim's "anim_shooting" branch.  Only the shooters
+			// KernelSupportsPlant admits reach here; a pult or a fume-shroom takes the body-reanim branch
+			// with its own values and is refused as unsupported, so this table is deliberately short.
+			def.shootCounter = seed == SeedType::SEED_REPEATER ? 26 : 35;
 		}
 	}
 }

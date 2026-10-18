@@ -19,8 +19,9 @@ namespace pvzc
 {
 
 enum {
-	kMagic = 0x50564334,          // "PVC4"
-	kVersion = 4,
+	kMagic = 0x50564334,          // "PVC4" -- the trailing digit is the tag's own literal, not the
+	                              // version below; staleness of a .cudaroot is carried by kVersion.
+	kVersion = 5,
 	kRows = 6,                    // feature grid rows (only 0..4 are playable on grass)
 	kCols = 10,                   // 9 lawn columns + column 9 = "beyond the lawn"
 	kCells = kRows * kCols,
@@ -97,6 +98,12 @@ struct PlantDef
 	int32_t prodMin, prodMax;     // sun producer: the steady-state delay range in ticks
 	int32_t prodValue;            // sun producer: the coin's value
 	int32_t chills;               // its projectile applies the chill (snow pea)
+	// The value Plant::FindTargetAndFire writes to mShootingCounter when it arms a shot (Plant.cpp:751-769:
+	// 26 for the repeater family, 35 for the rest of the head-reanim shooters, 100 for gatling).  The pea
+	// spawns when that countdown decrements into 1 in Plant::UpdateShooting (:3248 -> :3305), i.e.
+	// shootCounter - 1 ticks after the decision tick -- plants.md §2.3/§2.6.  Zero would mean "fire on the
+	// decision tick", which only the :815 branch (a shooter with no anim_shooting track) does.
+	int32_t shootCounter;
 };
 
 // Which per-tick branch a plant runs.  Chosen by the exporter from PlantDefinition::mSubClass plus the
@@ -379,6 +386,12 @@ enum ScalarField {
 	// Lane lifecycle for the three-kernel round (sim → net+choose → apply).  A lane is LANE_RUNNING
 	// while the sim kernel may still advance it, LANE_DECIDING when it stopped at a decision point, and
 	// LANE_DONE once it hit the horizon, the action cap or a terminal result.
+	//
+	// `S_STOP_REASON` is declared and never written.  It is not an oversight to delete: the entries below
+	// it are positional, and a `.cudaroot` payload stores the lane's initial scalars in this order, so
+	// dropping the slot would shift every later index and invalidate every corpus on disk for a field
+	// that says nothing `result`/`ticks`/`decisions` don't already say (ongoing + ticks == horizon is the
+	// horizon cut; ongoing + decisions == max_actions is the cap).  Kept as padding, priced against that.
 	S_STATE, S_UNTIL_TICK, S_MAX_ACTIONS, S_STOP_REASON,
 	// A decision round is split across two kernels when the trunk runs batched: RoundPre observes the
 	// clock and the sun produced so far, RoundPost finishes the round with them two ticks later.  They

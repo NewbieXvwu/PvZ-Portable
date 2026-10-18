@@ -22,6 +22,7 @@ int main()
 	PVZ_FIELD(PlantDef, health); PVZ_FIELD(PlantDef, launchRate); PVZ_FIELD(PlantDef, damage);
 	PVZ_FIELD(PlantDef, behavior); PVZ_FIELD(PlantDef, shots); PVZ_FIELD(PlantDef, prodMin);
 	PVZ_FIELD(PlantDef, prodMax); PVZ_FIELD(PlantDef, prodValue); PVZ_FIELD(PlantDef, chills);
+	PVZ_FIELD(PlantDef, shootCounter);
 
 	PVZ_STRUCT(ZombieDef);
 	PVZ_FIELD(ZombieDef, type); PVZ_FIELD(ZombieDef, value); PVZ_FIELD(ZombieDef, firstAllowedWave);

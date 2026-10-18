@@ -421,6 +421,29 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 	{
 	case PB_SHOOTER:
 	{
+		// Plant::UpdateAbilities runs UpdateShooting (:2544) before UpdateShooter (:2580), so the shot
+		// countdown is stepped -- and the pea spawned -- before this tick's launch clock may arm a new one.
+		//
+		// The pea does not appear on the decision tick.  FindTargetAndFire (Plant.cpp:751-769) writes
+		// mShootingCounter (35, or 26 for the repeater family) and returns without firing; UpdateShooting
+		// fires when the countdown *decrements into* 1 (:3248 -> :3305).  That Fire is called with
+		// theTargetZombie == nullptr, so the target test at the decision tick gates the animation and is
+		// not an aim: a zombie that leaves the row in the meantime does not cancel the shot, and one that
+		// walks in does not create it early.  plants.md §2.3, §2.6, §8 item 7.
+		//
+		// The tail at :3311-3417 may pin the counter back to 1 for the few ticks the head reanim has not
+		// finished looping; §2.3 proves the pin cannot change any firing time and nothing here reads it as
+		// a gate (only ScaredyShroom and Cactus do, both refused by KernelSupportsPlant), so the countdown
+		// simply rests at 0 -- which is also the engine's steady state once the loop completes.
+		int32_t& shooting = lane.i(F_PLANT_SHOOTING, slot);
+		if (shooting != 0)
+		{
+			--shooting;
+			if (shooting == 1)
+				AddProjectile(lane, row, type, def->damage, def->chills, plantX,
+					lane.f(F_PLANT_Y, slot));
+		}
+
 		// Plant::UpdateShooter (Plant.cpp:941): the clock decrements whether or not the plant can see a
 		// zombie, and resets to mLaunchRate - Rand(15) the moment it hits zero.  A row that was empty for
 		// one cycle therefore *costs* that shot -- a kernel that held the clock at zero until a target
@@ -430,13 +453,12 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 		if (launch <= 0)
 		{
 			launch = def->launchRate - rand.Int(15);
-			if (RowHasZombieAhead(lane, row, plantX))
-				AddProjectile(lane, row, type, def->damage, def->chills, plantX, lane.f(F_PLANT_Y, slot));
+			if (RowHasZombieAhead(lane, row, plantX)) shooting = def->shootCounter;
 		}
-		// The repeater's second pea is not a separate countdown: UpdateShooter fires again when the *same*
+		// The repeater's second pea is not a separate countdown: UpdateShooter arms again when the *same*
 		// counter reads exactly 25, so it exists only for a plant that reset to something above 25.
 		if (launch == cSecondPeaCounter && def->shots > 1 && RowHasZombieAhead(lane, row, plantX))
-			AddProjectile(lane, row, type, def->damage, def->chills, plantX, lane.f(F_PLANT_Y, slot));
+			shooting = def->shootCounter;
 		break;
 	}
 	case PB_SUNPRODUCER:

@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 MAGIC = 0x50564334            # "PVC4"
-VERSION = 4
+VERSION = 5
 RECORD_LEVEL, RECORD_ROOT = 1, 2
 
 INCOME_EVENTS = 160
@@ -34,7 +34,8 @@ COIN_FIELDS = ("value", "ticks_to_collect")
 MOWER_FIELDS = ("row", "state", "timer", "flags", "chomp_counter", "pos_x")
 PACKET_FIELDS = ("type", "active", "refresh_counter", "refresh_time", "cost")
 PLANT_DEF_FIELDS = ("seed_type", "cost", "refresh_time", "health", "launch_rate", "damage",
-                    "behavior", "shots", "prod_min", "prod_max", "prod_value", "chills")
+                    "behavior", "shots", "prod_min", "prod_max", "prod_value", "chills",
+                    "shoot_counter")
 ZOMBIE_DEF_FIELDS = ("type", "value", "first_allowed_wave", "pick_weight", "body_health",
                      "helm_health", "shield_health", "variant_count", "vel_x", "vel_min", "vel_max")
 
@@ -67,7 +68,7 @@ ROOT_SIZE = ROOT_HEAD.size \
     + WAVE_BLOCK.size + ROOT_TAIL.size
 LEVEL_HEAD = struct.Struct("3i" + "i" * 34)
 ZOMBIE_DEF = struct.Struct("9i2f")
-LEVEL_PLANT_DEF = struct.Struct("12i")
+LEVEL_PLANT_DEF = struct.Struct("13i")
 LEVEL_SIZE = LEVEL_HEAD.size + 34 * ZOMBIE_DEF.size + 4 + 16 * LEVEL_PLANT_DEF.size + 4
 
 
