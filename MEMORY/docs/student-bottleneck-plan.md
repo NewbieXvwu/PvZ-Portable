@@ -131,3 +131,8 @@
 - 2026-10-18 05:20 用户改用 CodeBuddy（台式机 WSL，`deepseek-v4.1-flash`，满 YOLO：`--dangerously-skip-permissions` + `CODEBUDDY_IS_SANDBOX=1`）接手 Codex 剩下的活：
   tmux `cb-cuda`（~/pvz-cuda，交接书 `~/pvz-logs/codebuddy_cuda_task.md`，屏幕记录 `cb_cuda_tui.log`）与 tmux `cb-shovel`（~/PvZ-search，铲子第一阶段，`~/pvz-logs/shovel_handoff.md`，屏幕记录 `cb_shovel_tui.log`），都用 `/goal`。
   凭据从 Windows `.codebuddy/local_storage` 拷入 WSL（原目录已备份）；模型接口要绕过本地代理（NO_PROXY 加 codebuddy.ai），启动脚本 `~/pvz-logs/cb_launch.sh <目录> [会话 id]`。Codex 在台式机的 08:16 自动续上已取消。
+- 2026-10-18 06:45 **D24（D23 + 第 21 / 21b 轮）v2lite = 1.731 / 1.671 / 1.744**（种子间差得大：s2 在 1.6 / 1.7 倍掉了 80–100 局）。**v24 = d24s3（1014 / 1011 / 851 / 761 / 576）**，1.4–1.7 倍都胜过 v23，已上传。
+  第 22 轮（1.7 倍，v23）：台式机 208 / 384（54%），Mac 22b（v22）289 / 640。第 23 轮用 v24：台式机 queue55（z17 偏移 3072–3455）+ Mac 23b（3456–4095），queue55 之后训 D25 = D24 + 第 22 / 22b 轮（v2lite）。
+  **观测 v2 回填发现跨平台漂移**：台式机重放 Mac 采的档案约 20% 局失配（台式机自己的档案 0 失配；Mac 重放自己的 z13dag4 384 局 0 失配）→ 同一份模拟器在 Mac / Linux 上不逐位一致。queue54 的 D24 v2 照常训（少了 Mac 档案约 14% 的帧，比较时要记住）；Mac 正在本机回填自己的档案并逐标签上传 `transfer/v2fill_<L>.tgz`，以后的 v2 数据集用全量。
+  CodeBuddy 两个会话 17:1x–18:40（台式机时间）在 /goal 仍“active”的情况下停住约 1 小时没干活，手动催一下就继续了；加了 tmux `cb-watch`（`~/pvz-logs/cb_watchdog.sh`，10 分钟屏幕不变就催一次，记录 `cb_watchdog.log`）。
+  主控的 /loop 在 05:20 那轮回复后没有排下一次唤醒，断了约 1 小时；Mac 从 04:53 起空闲到 06:34。
