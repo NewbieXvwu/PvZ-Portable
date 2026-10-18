@@ -1,9 +1,13 @@
 """The teacher of expert iteration: the student plus a value-guided search (DESIGN.md §13–§14).
 
-At a decision where some plant is legal (packet ready, sun enough, free cell):
+At a decision where some plant is legal (packet ready, sun enough, free cell) or, with shovels on, some
+cell can be dug up:
   1. Every legal plant is applied from a snapshot (``branch_snapshot``) and the board right after planting is
      scored by the static value net (``--static-value``, default ``--value``). The best ``--per-card`` cells of
-     every card survive, plus "do nothing now" and the student's own choice.
+     every card survive, plus "do nothing now" and the student's own choice. With ``--shovel-candidates k``
+     the legal shovel actions are scored the same way and the best ``k`` join the candidates; the continuation
+     then decides what the freed cell is worth (the student may replant it). 0 = off, and off is the old
+     candidate set exactly.
   2. Each candidate is played and then continued by the student for ``--horizon`` ticks in C++, ``--samples``
      times with different random futures (the same futures for every candidate). The leaf is scored by
      ``--value`` (a game that ended inside the horizon scores its result). ``--halving`` (default) rolls out
@@ -161,10 +165,28 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
             env.set_lean_observation(False)
 
 
-def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
+def _static_frames(env, root: int, actions: list[dict], income) -> list[tuple[dict, dict]]:
+    """Apply every action from ``root`` and return the frames the static value net scores."""
     from render_episode import _frame
+    out = []
+    for start in range(0, len(actions), 128):
+        chunk = actions[start:start + 128]
+        for action, record in zip(chunk, env.branch_snapshot(root, chunk, retain_snapshots=False)):
+            if record.get("ok") and record.get("observation"):
+                frame = _frame(record["observation"])
+                frame["sun_income_rate"] = income
+                out.append((action, frame))
+    return out
+
+
+def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
     legal = (obs.get("legal_actions") or {}).get("plants") or []
-    if not legal:
+    shovels = ([{"type": "shovel", "col": int(col), "row": int(row)}
+                for col, row in (obs.get("legal_actions") or {}).get("shovels") or []]
+               if getattr(args, "shovel_candidates", 0) > 0 else [])
+    # A full board has no legal plant but does have legal shovels: that is exactly the position where
+    # "shovel the front row and replant it behind" has to be considered, so shovels may trigger a search.
+    if not legal and not shovels:
         return policy_action
     if (args.min_gap and policy_action["type"] != "plant"
             and obs["tick"] - stats.get("last_search_tick", -10 ** 9) < args.min_gap):
@@ -175,23 +197,21 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     income = obs.get("sun_income_rate")
     try:
         plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
-        static = []
-        for start in range(0, len(plants), 128):
-            chunk = plants[start:start + 128]
-            for action, record in zip(chunk, env.branch_snapshot(root, chunk, retain_snapshots=False)):
-                if record.get("ok") and record.get("observation"):
-                    frame = _frame(record["observation"])
-                    frame["sun_income_rate"] = income
-                    static.append((action, frame))
+        static = _static_frames(env, root, plants, income)
+        static_shovels = _static_frames(env, root, shovels, income)
         scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
                         key=lambda item: -item[0]) if static else []
+        scored_shovels = sorted(zip(_values([f for _a, f in static_shovels], static=True),
+                                    [a for a, _f in static_shovels]), key=lambda item: -item[0]) \
+            if static_shovels else []
         # The best cells of *every* card, not the overall top-k: the static value net was trained on
         # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
         # against shooters right after planting -- only the rollout can show what they are worth.
         by_card: dict[int, list] = {}
         for v, a in scored:
             by_card.setdefault(a["packet"], []).append(a)
-        candidates = [a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP]
+        candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]]
+                      + [a for _v, a in scored_shovels[: args.shovel_candidates]] + [NOOP])
         policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
@@ -331,7 +351,7 @@ def _play(job: dict) -> dict:
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     torch.manual_seed(kw["seed"])
     started = time.time()
-    stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
+    stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter()}
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         from pvz_value_net import observation_context
@@ -362,6 +382,15 @@ def _play(job: dict) -> dict:
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
+                if action["type"] == "shovel":
+                    stats["shovels"] += 1
+                    cell = next((p for p in obs.get("plants") or []
+                                 if p["row"] == action["row"] and p["col"] == action["col"]), None)
+                    stats.setdefault("shovel_events", []).append({
+                        "tick": obs["tick"], "row": action["row"], "col": action["col"],
+                        "plant": cell.get("type") if cell else None,
+                        "plant_health": cell.get("health") if cell else None,
+                        "student": policy_choice["type"], "decision": decisions})
             label = action
             if dagger is not None and dagger.random() >= args.dagger_beta:
                 action = policy_choice
@@ -378,8 +407,11 @@ def _play(job: dict) -> dict:
                     # the search's estimate for every candidate it compared: [packet (-1 = wait), row, col, value];
                     # a soft target for the student (train_rollout_policy --soft-weight). Before "action" and
                     # "label", because the trainer finds the target by scanning for the last of those.
+                    # Shovel candidates are left out: the student has no shovel output yet, so a shovel
+                    # row would be read as a wait target by the trainer (phase 2 adds the head).
                     frames[-1]["targets"] = [[c.get("packet", -1), c.get("row", -1), c.get("col", -1), round(v, 4)]
-                                             for c, v in stats["last_targets"] if abs(v) != float("inf")]
+                                             for c, v in stats["last_targets"]
+                                             if abs(v) != float("inf") and c["type"] != "shovel"]
                 frames[-1]["action"] = action          # what was executed (after the search), like render_episode
                 frames[-1]["action_rejected"] = rejected
                 if stats.get("last_verification"):
@@ -408,7 +440,8 @@ def _play(job: dict) -> dict:
     return {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted": planted,
-            "searched": stats["searched"], "overrides": stats["overrides"],
+            "searched": stats["searched"], "overrides": stats["overrides"], "shovels": stats["shovels"],
+            "shovel_events": stats.get("shovel_events", []),
             "override_kinds": dict(stats["override_kinds"])}
 
 
@@ -426,6 +459,9 @@ def main() -> None:
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
+    p.add_argument("--shovel-candidates", type=int, default=0,
+                   help="best legal shovel cells (scored by --static-value right after shovelling) added to "
+                        "the candidates; 0 = off, which is the old candidate set exactly")
     p.add_argument("--samples", type=int, default=3)
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
@@ -452,6 +488,8 @@ def main() -> None:
     args = p.parse_args()
     if args.verify_samples < 0:
         p.error("--verify-samples must be nonnegative")
+    if args.shovel_candidates < 0:
+        p.error("--shovel-candidates must be nonnegative")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
@@ -489,6 +527,8 @@ def summarize(results_path: Path) -> dict:
                      "mean_seconds": round(sum(r["seconds"] for r in v.values()) / len(v), 1),
                      "overrides_per_game": round(sum(r["overrides"] for r in v.values()) / len(v), 1),
                      "searched_per_game": round(sum(r["searched"] for r in v.values()) / len(v), 1),
+                     "shovels_per_game": round(sum(r.get("shovels", 0) for r in v.values()) / len(v), 2),
+                     "games_with_shovel": sum(1 for r in v.values() if r.get("shovels")),
                      "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2)}
                for arm, v in by.items()}
     (results_path.parent / "summary.json").write_text(json.dumps(summary, indent=1))

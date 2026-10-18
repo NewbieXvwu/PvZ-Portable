@@ -142,5 +142,36 @@ class CppRolloutTest(unittest.TestCase):
         self.assertEqual(_frame(restored), _frame(self.obs))
 
 
+    def test_shovel_first_action_matches_the_python_loop(self):
+        """The search may start a continuation with a shovel; C++ and the Python loop must agree."""
+        from scripted_baseline import choose
+        for _ in range(200):
+            if self.obs["legal_actions"]["shovels"]:
+                break
+            self.obs, *_ = self.env.step(choose(self.obs))
+        self.assertTrue(self.obs["legal_actions"]["shovels"], "no plant appeared to shovel")
+        col, row = self.obs["legal_actions"]["shovels"][0]
+        first = {"type": "shovel", "col": int(col), "row": int(row)}
+        root = self.env.snapshot()
+        self.addCleanup(self.env.release_snapshot, root)
+
+        before = {tuple(p[:2]) for p in _frame(self.obs)["plants"]}
+        branch = self.env.branch_snapshot(root, [first], retain_snapshots=False)[0]
+        self.assertTrue(branch["ok"])
+        after = {tuple(p[:2]) for p in _frame(branch["observation"])["plants"]}
+        self.assertIn((row, col), before)
+        self.assertNotIn((row, col), after)
+        self.assertEqual(after, before - {(row, col)})
+
+        search_play._W.clear()
+        search_play._W.update(fast=self.net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=0)
+        self.addCleanup(search_play._W.clear)
+        until = self.obs["tick"] + 1200
+        expected = search_play._rollout_policy(self.env, self.obs, first, until, root, 4242)
+        search_play._W["cpp_rollouts"] = True
+        actual = search_play._rollout_policy(self.env, self.obs, first, until, root, 4242)
+        self.assertEqual(_frame(actual), _frame(expected))
+
+
 if __name__ == "__main__":
     unittest.main()
