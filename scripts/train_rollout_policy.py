@@ -240,6 +240,10 @@ def main() -> None:
     is_val = torch.tensor([s in val_seeds for s in seed_of])
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
+    memory = {"rows": len(plant), "board_bytes": boards.numel() * boards.element_size() if args.dense_boards else boards.nbytes,
+              "tensor_bytes": sum(tensor.numel() * tensor.element_size()
+                                  for tensor in (scalars, plant, packet, cell, weight, values, is_val))}
+    print(json.dumps({"data_memory": memory}), flush=True)
 
     if args.packet_balance:
         planted_rows = packet >= 0
@@ -261,7 +265,12 @@ def main() -> None:
     net = RolloutNet(args.width, args.pool, args.context, args.obs)
     if args.init:
         from pvz_rollout_policy import load_student
-        net.load_state_dict(load_student(args.init).state_dict())
+        initial = load_student(args.init)
+        weights = initial.state_dict()
+        if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
+            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
+            weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
+        net.load_state_dict(weights)
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
     waits = float(weight[plant < 0.5].sum())
@@ -336,7 +345,7 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
-                                                       "load_seconds": load_seconds}, indent=1))
+                                                       "load_seconds": load_seconds, "data_memory": memory}, indent=1))
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
 
 
