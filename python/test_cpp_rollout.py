@@ -40,7 +40,7 @@ class CppRolloutTest(unittest.TestCase):
         self.obs, _ = self.env.reset(task=TaskSpec(level=7, seed=30000))
 
     def test_logits_width_and_checkpoint_export(self):
-        for pool, with_context, multiplier, version in product(("mean", "meanmax"), (False, True), (1.3, 1.5), ("v1", "v2lite")):
+        for pool, with_context, multiplier, version in product(("mean", "meanmax"), (False, True), (1.3, 1.5), ("v1", "v2lite", "v2")):
             with self.subTest(pool=pool, context=with_context, multiplier=multiplier):
                 self.net = RolloutNet(width=13, pool=pool, context=with_context, obs=version).eval()
                 weights = dict(self.net.state_dict())
@@ -53,7 +53,7 @@ class CppRolloutTest(unittest.TestCase):
                 task_context = observation_context(self.obs) if with_context else None
                 previous = None
                 previous_action = None
-                history = StudentHistory() if version == "v2lite" else None
+                history = StudentHistory(version) if version != "v1" else None
                 for _ in range(8):
                     frame = _frame(self.obs)
                     frame["action"] = previous_action
@@ -75,24 +75,30 @@ class CppRolloutTest(unittest.TestCase):
                     self.obs, *_ = self.env.step(action)
 
     def test_v2lite_continuation_features_and_root_history(self):
+        self._continuation_features("v2lite")
+
+    def test_v2_continuation_features_and_root_history(self):
+        self._continuation_features("v2")
+
+    def _continuation_features(self, version):
         from scripted_baseline import choose
         model = ROOT / "artifacts/v2lite_cpp/hf/transfer/d17v2lw2s1_model.pt"
-        net = load_student(model) if model.is_file() else RolloutNet(width=13, obs="v2lite").eval()
+        net = load_student(model) if model.is_file() and version == "v2lite" else RolloutNet(width=13, obs=version).eval()
         export_student(net, self.path)
         self.env.load_rollout_net(self.path)
-        history = StudentHistory()
+        history = StudentHistory(version)
         while self.obs["tick"] < 6000:
             history.extra(_frame(self.obs))
             self.obs, *_ = self.env.step(choose(self.obs))
         history.extra(_frame(self.obs))
-        self.assertTrue(history.plants)
+        self.assertEqual(history.wave, self.obs["wave"])
         context = observation_context(self.obs) if net.context else None
         root = self.env.snapshot()
         self.addCleanup(self.env.release_snapshot, root)
         search_play._W.clear()
         search_play._W.update(fast=net, context=context, student_history=history, batch_waits=True, rollout_sim_skip=0)
         self.addCleanup(search_play._W.clear)
-        compared = 0
+        compared = bits = 0
         for seed in (12345, 98765):
             first = {"type": "wait", "ticks": 60, "until": "timeout"}
             trace = Path(self.directory.name) / "features.jsonl"
@@ -109,11 +115,13 @@ class CppRolloutTest(unittest.TestCase):
                 board, scalars = replay.features(frame, previous, context)
                 for expected, encoded in ((board.flatten(), record["board"]), (scalars, record["scalars"])):
                     np.testing.assert_array_equal(expected.numpy().view(np.uint32), np.array(encoded, np.float32).view(np.uint32))
+                    bits += expected.numel()
                 compared += 1
             if until:
                 expected = search_play._rollout_policy(self.env, self.obs, first, until, root, seed)
                 self.assertEqual(_frame(actual), _frame(expected))
         self.assertGreater(compared, 50)
+        print(json.dumps({"obs": version, "trajectory_decisions": compared, "equal_float32": bits}), flush=True)
 
     def test_rollout_leaf_income_restore_and_rng(self):
         self.obs, *_ = self.env.step({"type": "wait", "ticks": 6000})
