@@ -611,6 +611,7 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 	double aFirstLoopAdvance = 0.0;
 	int aCycles = 0, anUpdates = 0;
 	bool aFirstLoopDone = false;
+	constexpr int theLoops = 64;
 	{
 		const double aStep = static_cast<double>(0.01f) * static_cast<double>(aRate) / static_cast<double>(aCount);
 		float aAnimTime = 0.0f;
@@ -622,8 +623,6 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 			{
 				aAnimTime = static_cast<float>(aAnimTime - 1.0f);
 				++aCycles;
-				if (aCycles >= theLoops)
-					break;								// completed the requested number of loops
 			}
 			const float aPosition = static_cast<float>(static_cast<float>(aAnimTime * aSpan) + aStart);
 			const float aFloor = std::floor(aPosition);
@@ -640,8 +639,7 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 			const float aVelocity = static_cast<float>(static_cast<double>(aDx) * static_cast<double>(0.01f)
 				* static_cast<double>(aRate));
 			const float aSpeed = static_cast<float>(aVelocity * theScale);
-			aPosX = static_cast<float>(aPosX - aSpeed);
-			aVisits[static_cast<size_t>(aBefore - aStart)]++;
+			if (!aFirstLoopDone) aVisits[static_cast<size_t>(aBefore - aStart)]++;
 			aLoopAdvance += -aSpeed;
 			if (!aFirstLoopDone)
 				aFirstLoopAdvance += -aSpeed;
@@ -650,9 +648,8 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 			{
 				aFirstLoopDone = true;
 				anUpdatesInLoop = anUpdates;
-				for (int& aV : aVisits)
-					aV = 0;							// the printed visit column describes loop #1
 			}
+			if (aCycles >= theLoops) break;
 		}
 		if (aCycles == 0)							// never wrapped inside the cap
 		{
@@ -691,9 +688,10 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 		" %d of %d transitions are zero\n", aCount - 1, aSumDx, aDistance, aMinDx, aMaxDx, aZeroDx, aCount - 1);
 	if (anUpdatesInLoop > 0)
 	{
-		const double aMean = aLoopAdvance / anUpdatesInLoop;
-		std::printf("  replay: %d updates per loop, net advance %.9g px, mean %.9g px/update = %.9f * mVelX"
-			"   (spec claim 0.47 * mVelX = %.9g)\n", anUpdatesInLoop, aLoopAdvance, aMean,
+		const double aMean = aLoopAdvance / anUpdates;
+		std::printf("  replay: first loop %d updates / %.9g px, %d loops / %d updates / %.9g px total; "
+			"mean %.9g px/update = %.9f * mVelX (spec claim 0.47 * mVelX = %.9g)\n",
+			anUpdatesInLoop, aFirstLoopAdvance, aCycles, anUpdates, aLoopAdvance, aMean,
 			aMean / theVelX, 0.47 * theVelX);
 		std::printf("  loop length = mFrameCount/(SECONDS_PER_UPDATE*mAnimRate) [Zombie.cpp:1729 formula]"
 			" = %d*100/%.9g = %.6f updates at the rate in force;  raw mFrameCount*100/rate: at rate 24 ->"

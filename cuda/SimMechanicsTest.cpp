@@ -52,6 +52,12 @@ RootRecord Root()
 
 int main()
 {
+	for (int root = 0; root < 425; ++root)
+		for (int future = 0; future < 64; ++future)
+		{
+			const int global = (future / 8) * 425 * 8 + root * 8 + future % 8;
+			assert(RolloutFutureSeed(global, 425, 8, 1600000000) == 1600000000 + future);
+		}
 	auto level = Level();
 	// A real root's stored future table is privileged information.  Mutating it must not affect a
 	// newly resampled future, even when the next tick emits a flag wave.

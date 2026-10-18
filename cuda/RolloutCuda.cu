@@ -367,7 +367,8 @@ PVZ_SIM void RolloutOf(const Arguments& arguments, int32_t index, int32_t& rootI
 	const int32_t slot = global % arguments.perGame;
 	const int32_t rootCount = arguments.perRoot > 0 ? arguments.perGame / arguments.perRoot : 1;
 	rootIndex = rootCount > 0 ? slot / arguments.perRoot : 0;
-	futureSeed = arguments.seedBase + global / (rootCount > 0 ? rootCount : 1);
+	futureSeed = RolloutFutureSeed(global, rootCount > 0 ? rootCount : 1, arguments.perRoot,
+		arguments.seedBase);
 }
 
 // The plant and zombie tables are scanned on the hot path (TickPlantDef runs for every live plant every

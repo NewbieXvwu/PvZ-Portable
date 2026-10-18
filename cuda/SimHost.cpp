@@ -541,15 +541,15 @@ int main(int argc, char** argv)
 	const auto startTime = std::chrono::steady_clock::now();
 	for (int32_t repeat = 0; repeat < options.repeat; ++repeat)
 	{
-		// rollout -> (root, future), the same walk cuda/RolloutCuda.cu's RolloutOf does.  Repeats replay
-		// the identical (root, seed) pair, and a continuation is deterministic, so they measure throughput
-		// only -- see cuda/spec/host.md.  With --pairs the pair comes from the file, lane by lane, which is
+		// Same root-major mapping as RolloutCuda. Derived repeats advance each root's future set;
+		// explicit --pairs repeat the named workload verbatim, which is
 		// how a GPU continuation gets compared against the CPU reference row that ran the same future.
 		for (int32_t slot = 0; slot < distinct; ++slot)
 		{
 			const int32_t rootIndex = pairRoot.empty() ? slot / options.perRoot
 				: pairRoot[static_cast<size_t>(slot)];
-			const int32_t futureSeed = pairRoot.empty() ? options.seedBase + slot % options.perRoot
+			const int32_t futureSeed = pairRoot.empty()
+				? RolloutFutureSeed(repeat * distinct + slot, rootCount, options.perRoot, options.seedBase)
 				: pairSeed[static_cast<size_t>(slot)];
 			const RootRecord& root = corpus.roots[static_cast<size_t>(rootIndex)];
 

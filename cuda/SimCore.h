@@ -27,6 +27,16 @@
 namespace pvzc
 {
 
+// Root-major batches give each root perRoot consecutive lanes. Across repeats, advance by perRoot
+// futures per root; dividing global by rootCount would repeat each future inside those lane groups.
+PVZ_SIM int32_t RolloutFutureSeed(int32_t global, int32_t rootCount, int32_t perRoot, int32_t seedBase)
+{
+	const int32_t perGame = rootCount * perRoot;
+	const uint32_t future = static_cast<uint32_t>(global / perGame) * static_cast<uint32_t>(perRoot)
+		+ static_cast<uint32_t>(global % perRoot);
+	return static_cast<int32_t>(static_cast<uint32_t>(seedBase) + future);
+}
+
 // One lane's view of the batch SoA.  Field arrays are field-major with the lane index innermost, so
 // a warp reading "zombie 7's body health" reads 32 consecutive elements.
 struct Lane
