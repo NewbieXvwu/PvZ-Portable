@@ -92,6 +92,22 @@ class PairedGateTest(unittest.TestCase):
             self.assertTrue(summary["gate_passed"])
             self.assertEqual((summary["workers_cpu"], summary["workers_gpu"]), ("2", "4"))
 
+    def test_partial_cuda_fallback_and_error_lanes_cannot_pass(self):
+        for change, passed in (({}, True), ({"cuda_fallback_lanes": 1}, False),
+                               ({"cuda_error_lanes": 1}, False), ({"rollout_lanes": 4}, False),
+                               ({"cuda_coverage_version": 0}, False)):
+            with self.subTest(change=change), tempfile.TemporaryDirectory() as directory:
+                cpu, gpu = self.make_runs(directory)
+                rows = [json.loads(x) for x in (gpu / "games.jsonl").read_text().splitlines()]
+                for row in rows:
+                    row.update(cuda_coverage_version=1, rollout_batches=1, rollout_lanes=3,
+                               cuda_error_lanes=0, cuda_fallback_batches=0, cuda_fallback_lanes=0)
+                rows[0].update(change)
+                (gpu / "games.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows))
+                result = self.summarize(cpu, gpu)
+                self.assertEqual(result["gate_passed"], passed)
+                self.assertEqual(result["gate_gpu_all_continuations"], passed)
+
     def test_duplicate_seed_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "games.jsonl"

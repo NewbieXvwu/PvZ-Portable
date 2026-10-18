@@ -76,12 +76,23 @@ def comparison_evidence(cpu_path: Path, gpu_path: Path, cpu: dict, gpu: dict, ta
                        if not (game.get("cuda_batches", 0) > 0 and game.get("cuda_lanes", 0) > 0))
     contaminated = sorted(seed for seed, game in cpu.items()
                           if game.get("cuda_batches", 0) != 0 or game.get("cuda_lanes", 0) != 0)
+    # Older evidence only recorded successful CUDA calls. New evidence must also show that no
+    # unsupported root, server failure or failed lane silently replaced part of the GPU arm.
+    coverage_recorded = any("cuda_coverage_version" in game for game in gpu.values())
+    incomplete = sorted(seed for seed, game in gpu.items() if coverage_recorded and (
+        game.get("cuda_coverage_version") != 1
+        or game.get("rollout_batches") != game.get("cuda_batches")
+        or game.get("rollout_lanes") != game.get("cuda_lanes")
+        or any(game.get(key, -1) != 0 for key in (
+            "cuda_error_lanes", "cuda_fallback_batches", "cuda_fallback_lanes"))))
     return {"gate_matching_configuration": not errors,
             "configuration_errors": errors, "input_sha256": hashes,
             "workers_cpu": configs.get("cpu", {}).get("workers"),
             "workers_gpu": configs.get("gpu", {}).get("workers"),
             "gate_gpu_used_every_game": bool(gpu) and not uncovered,
             "gpu_uncovered_seeds": uncovered,
+            "gate_gpu_all_continuations": not incomplete if coverage_recorded else None,
+            "gpu_incomplete_continuation_seeds": incomplete,
             "gate_cpu_without_cuda": bool(cpu) and not contaminated,
             "cpu_cuda_seeds": contaminated}
 
@@ -132,7 +143,8 @@ def main() -> None:
     complete = set(cpu) == set(gpu) == required
     evidence = comparison_evidence(args.cpu, args.gpu, cpu, gpu, args.task_id)
     experiment_valid = (evidence["gate_matching_configuration"] and evidence["gate_gpu_used_every_game"]
-                        and evidence["gate_cpu_without_cuda"])
+                        and evidence["gate_cpu_without_cuda"]
+                        and evidence["gate_gpu_all_continuations"] is not False)
     pairs = [(cpu[seed], gpu[seed]) for seed in seeds]
 
     cpu_only = sum(c["won"] and not g["won"] for c, g in pairs)

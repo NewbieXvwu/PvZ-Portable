@@ -221,13 +221,20 @@ def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args
     A handle is either the leaf observation (the C++/Python rollout) or a ``(record, features)`` pair from
     the GPU.  ``_leaf_values`` scores both the same way, so the search logic does not care which backend ran.
     """
+    stats["rollout_batches"] = stats.get("rollout_batches", 0) + 1
+    stats["rollout_lanes"] = stats.get("rollout_lanes", 0) + len(jobs)
     client = _W.get("cuda")
     if client is not None:
         handles = _cuda_continuations(env, root, jobs, client, args)
         if handles is not None:
             stats["cuda_batches"] = stats.get("cuda_batches", 0) + 1
             stats["cuda_lanes"] = stats.get("cuda_lanes", 0) + len(jobs)
+            stats["cuda_error_lanes"] = stats.get("cuda_error_lanes", 0) + sum(
+                bool(record["errorFlags"]) for record, _features in handles)
             return handles
+    if args.rollout_backend == "cuda":
+        stats["cuda_fallback_batches"] = stats.get("cuda_fallback_batches", 0) + 1
+        stats["cuda_fallback_lanes"] = stats.get("cuda_fallback_lanes", 0) + len(jobs)
     return [_rollout_policy(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32)
             for candidate, seed in jobs]
 
@@ -405,9 +412,8 @@ def _play(job: dict) -> dict:
     started = time.time()
     stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
     # The client counts per worker, not per game, so a game reports the delta it caused.
-    cuda_start = None
-    if _W.get("cuda") is not None:
-        cuda_start = (_W["cuda"].batches, _W["cuda"].lanes, _W["cuda"].seconds)
+    cuda_client = _W.get("cuda")
+    cuda_started_seconds = cuda_client.seconds if cuda_client is not None else 0.0
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         from pvz_value_net import observation_context
@@ -482,9 +488,10 @@ def _play(job: dict) -> dict:
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted": planted,
             "searched": stats["searched"], "overrides": stats["overrides"],
-            "cuda_batches": (_W["cuda"].batches - cuda_start[0]) if cuda_start else 0,
-            "cuda_lanes": (_W["cuda"].lanes - cuda_start[1]) if cuda_start else 0,
-            "cuda_seconds": round(_W["cuda"].seconds - cuda_start[2], 2) if cuda_start else 0.0,
+            "cuda_coverage_version": 1,
+            **{name: stats.get(name, 0) for name in ("rollout_batches", "rollout_lanes", "cuda_batches",
+                "cuda_lanes", "cuda_error_lanes", "cuda_fallback_batches", "cuda_fallback_lanes")},
+            "cuda_seconds": round(cuda_client.seconds - cuda_started_seconds, 2) if cuda_client is not None else 0.0,
             "override_kinds": dict(stats["override_kinds"])}
 
 
