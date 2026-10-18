@@ -20,3 +20,17 @@ set_target_properties(rollout_cuda PROPERTIES
 	CUDA_EXTENSIONS OFF
 	CUDA_RUNTIME_LIBRARY Shared
 )
+
+# Small teacher requests otherwise run the first 1024 activation slots even when only a few are
+# occupied. Keep the large-wave target above, and provide the measured 128-slot layout explicitly.
+add_executable(rollout_cuda_small ${PROJECT_SOURCE_DIR}/cuda/RolloutCuda.cu)
+target_include_directories(rollout_cuda_small PRIVATE ${PROJECT_SOURCE_DIR})
+target_link_libraries(rollout_cuda_small PRIVATE CUDA::cublas CUDA::cudart)
+target_compile_definitions(rollout_cuda_small PRIVATE PVZ_NET_CHUNK_BITS=7)
+target_compile_options(rollout_cuda_small PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+set_target_properties(rollout_cuda_small PROPERTIES
+	CUDA_STANDARD 17
+	CUDA_STANDARD_REQUIRED ON
+	CUDA_EXTENSIONS OFF
+	CUDA_RUNTIME_LIBRARY Shared
+)

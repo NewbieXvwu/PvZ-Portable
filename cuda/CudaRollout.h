@@ -18,6 +18,12 @@
 namespace pvzc
 {
 
+#ifndef PVZ_NET_CHUNK_BITS
+#define PVZ_NET_CHUNK_BITS 10
+#endif
+static_assert(PVZ_NET_CHUNK_BITS >= 5 && PVZ_NET_CHUNK_BITS <= 10,
+	"network activation chunks must contain 32 to 1024 lanes");
+
 enum {
 	kMagic = 0x50564334,          // "PVC4" -- the trailing digit is the tag's own literal, not the
 	                              // version below; staleness of a .cudaroot is carried by kVersion.
@@ -53,8 +59,8 @@ enum {
 	// M = kCols * kNetChunk and kRows batches (cuda/BlasProbe.cu measures this shape).  The host build
 	// has one lane and passes netSlot = 0, so it uses block 0 of a one-block buffer: same layout, same
 	// semantics, only the multiply-accumulate differs.
-	kNetChunk = 1024,
-	kNetChunkBits = 10,
+	kNetChunkBits = PVZ_NET_CHUNK_BITS,
+	kNetChunk = 1 << kNetChunkBits,
 	kNetChunkMask = kNetChunk - 1,
 	kPlantTypes = 54,
 	kZombieTypes = 34,

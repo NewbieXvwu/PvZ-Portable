@@ -1381,8 +1381,8 @@ int RunWorkload(const Options& options)
 	else
 		std::printf("\nroots %d x %d futures x %d repeats = %d rollouts, horizon %d ticks, max-actions %d\n",
 			rootCount, options.perRoot, options.repeat, total, options.horizon, options.maxActions);
-	std::printf("student %s: width %d, %s, %s context, %zu weights\n", image.params.version == 3 ? "003" : "002",
-		image.params.width, image.params.meanmax ? "meanmax" : "mean",
+	std::printf("student PVZRN%03d (obs %d): width %d, %s, %s context, %zu weights\n",
+		image.params.version, image.params.observation, image.params.width, image.params.meanmax ? "meanmax" : "mean",
 		image.params.taskContext ? "with" : "without", image.values.size());
 	std::printf("wall %.0f ms for %d rollouts -> %.0f rollouts/s, %.2f Gticks/s\n", milliseconds, completed,
 		completed * 1000.0 / milliseconds, static_cast<double>(ticks) / milliseconds / 1.0e6);
