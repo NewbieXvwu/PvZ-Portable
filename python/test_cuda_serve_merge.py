@@ -207,5 +207,35 @@ class RootArrayGrowthTest(unittest.TestCase):
             self.assertGreater(fields["ticks"], 0, f"root {root} simulated nothing")
 
 
+@unittest.skipUnless(BINARY.is_file() and CORPUS.is_file() and NET.is_file(),
+                     "requires build/rollout_cuda, a .cudaroot corpus and a .pvzrn student net")
+class PrivatePathTest(unittest.TestCase):
+    """The one-block-per-lane path must be a scheduling change, not a different simulation.
+
+    PVZ_CUDA_PRIVATE_LIMIT switches the wave between the SoA kernels and PrivateRoundKernel
+    (state in shared memory, one block per lane).  The search uses the private path for small
+    waves and the stage-0 benchmark uses SoA, so a divergence here would silently split the two
+    sets of numbers that the gates compare.
+    """
+
+    def test_private_and_soa_paths_agree(self):
+        pairs = FIRST + SECOND
+        with tempfile.TemporaryDirectory(prefix="pvz-cuda-private-") as directory:
+            pair_file = Path(directory) / "pairs.txt"
+            pair_file.write_text("".join(f"{root} {seed}\n" for root, seed in pairs))
+            answers = []
+            for limit in ("0", "4096"):
+                out = Path(directory) / f"results-{limit}.bin"
+                run = subprocess.run(
+                    [str(BINARY), "--net", str(NET), "--roots", str(CORPUS), "--pairs", str(pair_file),
+                     "--horizon", str(HORIZON), "--lanes", str(len(pairs)), "--bench", "full",
+                     "--out", str(out)],
+                    env={**os.environ, "PVZ_CUDA_PRIVATE_LIMIT": limit},
+                    capture_output=True, text=True)
+                self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+                answers.append(out.read_bytes())
+        self.assertEqual(answers[0], answers[1], "the private path changed a continuation")
+
+
 if __name__ == "__main__":
     unittest.main()
