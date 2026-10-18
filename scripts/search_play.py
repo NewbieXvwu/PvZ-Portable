@@ -358,13 +358,30 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     policy_index = keys.index(policy_key)
     values: list[list[float]] = [[] for _ in candidates]
     alive = list(range(len(candidates)))
+    stats["halving_candidates"] = stats.get("halving_candidates", 0) + len(candidates)
+    # Speculate all independent (candidate, future) continuations in one real batch. Later stages
+    # still score only their original survivors, in the original order and batch sizes: unused
+    # futures cannot affect pruning, labels or the anchored override rule. This spends extra GPU
+    # work to remove device-wave dependencies, rather than merely combining protocol messages.
+    speculative = None
+    if getattr(args, "cuda_speculative_halving", False) and _W.get("cuda") is not None:
+        order = [(i, k) for i in alive for k in range(args.samples)]
+        jobs = [(candidates[i], decision_seed * 1000 + k) for i, k in order]
+        speculative = dict(zip(order, _continuations(env, obs, root, jobs, args, stats)))
+        stats["halving_speculative_lanes"] = stats.get("halving_speculative_lanes", 0) + len(order)
+    selected_lanes = 0
     done = 0                                 # futures every survivor has been scored on
     target = 1
     while True:
         target = min(target, args.samples)
         order = [(i, k) for i in alive for k in range(done, target)]
-        jobs = [(candidates[i], decision_seed * 1000 + k) for i, k in order]
-        for (i, _k), value in zip(order, _leaf_values(_continuations(env, obs, root, jobs, args, stats))):
+        selected_lanes += len(order)
+        if speculative is None:
+            jobs = [(candidates[i], decision_seed * 1000 + k) for i, k in order]
+            handles = _continuations(env, obs, root, jobs, args, stats)
+        else:
+            handles = [speculative[key] for key in order]
+        for (i, _k), value in zip(order, _leaf_values(handles)):
             if value is not None:
                 values[i].append(value)
         done = target
@@ -378,6 +395,9 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
         alive = sorted(keep)
         target = done * 2
     stats["halving_rollouts"] = stats.get("halving_rollouts", 0) + sum(len(v) for v in values)
+    stats["halving_selected_lanes"] = stats.get("halving_selected_lanes", 0) + selected_lanes
+    if speculative is not None:
+        stats["halving_discarded_lanes"] = stats.get("halving_discarded_lanes", 0) + len(speculative) - selected_lanes
     totals = [sum(v) / len(v) if v else float("-inf") for v in values]
     stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
     best = max(alive, key=lambda i: totals[i])
@@ -490,7 +510,9 @@ def _play(job: dict) -> dict:
             "searched": stats["searched"], "overrides": stats["overrides"],
             "cuda_coverage_version": 1,
             **{name: stats.get(name, 0) for name in ("rollout_batches", "rollout_lanes", "cuda_batches",
-                "cuda_lanes", "cuda_error_lanes", "cuda_fallback_batches", "cuda_fallback_lanes")},
+                "cuda_lanes", "cuda_error_lanes", "cuda_fallback_batches", "cuda_fallback_lanes",
+                "halving_candidates", "halving_rollouts", "halving_selected_lanes",
+                "halving_speculative_lanes", "halving_discarded_lanes")},
             "cuda_seconds": round(cuda_client.seconds - cuda_started_seconds, 2) if cuda_client is not None else 0.0,
             "override_kinds": dict(stats["override_kinds"])}
 
@@ -513,6 +535,9 @@ def main() -> None:
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
+    p.add_argument("--cuda-speculative-halving", action="store_true",
+                   help="batch all candidate/future continuations once, then use only the original "
+                        "halving survivors for scores and labels; spends extra CUDA work")
     p.add_argument("--horizon", type=int, default=2500)
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--min-gap", type=int, default=300,
@@ -543,6 +568,8 @@ def main() -> None:
                         "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     args = p.parse_args()
+    if args.cuda_speculative_halving and (not args.halving or args.rollout_backend != "cuda"):
+        p.error("--cuda-speculative-halving requires --halving and --rollout-backend cuda")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
