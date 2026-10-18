@@ -150,12 +150,12 @@ int main()
 	assert(pole.i(F_PLANT_HP, 0) == 300 && !(pole.i(F_ZOMBIE_FLAGS, 0) & ZB_EATING));
 	for (int i = 0; i < 179; ++i)
 	{
-		UpdateZombieAnimations(pole);
+		UpdateZombieAnimation(pole, 0);
 		UpdateZombie(pole, level, 0, vaultRand);
 		assert(pole.i(F_ZOMBIE_PHASE, 0) == 12);
 	}
 	const float beforeLanding = pole.f(F_ZOMBIE_X, 0);
-	UpdateZombieAnimations(pole);
+	UpdateZombieAnimation(pole, 0);
 	UpdateZombie(pole, level, 0, vaultRand);
 	assert(pole.i(F_ZOMBIE_PHASE, 0) == 13 && pole.i(F_ZOMBIE_ANIM_START, 0) == 93);
 	assert(pole.f(F_ZOMBIE_X, 0) < beforeLanding - 150.0f);
@@ -229,11 +229,11 @@ int main()
 	assert(mine.i(F_PLANT_STATE, 0) == 15 && mine.i(F_PLANT_STATE_COUNTDOWN, 0) == 0);
 	for (int tick = 0; tick < 105; ++tick)
 	{
-		UpdatePlantAnimations(mine);
+		UpdatePlantAnimation(mine, 0);
 		UpdatePlant(mine, level, 0, projectileRand);
 		assert(mine.i(F_PLANT_STATE, 0) == 15 && mine.i(F_PLANT_TYPE, 0) == 4);
 	}
-	UpdatePlantAnimations(mine);
+	UpdatePlantAnimation(mine, 0);
 	UpdatePlant(mine, level, 0, projectileRand);
 	assert(mine.i(F_PLANT_STATE, 0) == 16 && mine.i(F_PLANT_TYPE, 0) == 4);
 	UpdatePlant(mine, level, 0, projectileRand);

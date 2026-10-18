@@ -7,12 +7,9 @@
 // mine/snow pea/repeater against normal, cone-headed, flag and pole-vaulter zombies.  Anything the
 // exporter marks unsupported never reaches a lane, so this file may assume those types.
 //
-// Every constant and branch below is transcribed from a line reference recorded in cuda/spec/*.md
-// (zombies.md, waves.md, plants.md, projectiles.md, board.md, reanim.md).  The two numbers that were
-// previously wrong by a visible margin and are now load-bearing are the walk advance (K = 0.480217,
-// reanim.md §2) and the dying duration (k + 99, reanim.md §3); everything else was confirmed against
-// the original line by line. Remaining gaps (including pole vault and potato rise timing) are listed
-// in MEMORY/docs/cuda-rollout-report.md; source comments alone are not acceptance evidence.
+// Source references and corrections live in cuda/spec/*.md. Ground movement and corpse lifetime
+// use the imported animation state; earlier averaged movement / guessed lifetime constants were
+// insufficient. MEMORY/docs/cuda-rollout-report.md records remaining gaps and measured evidence.
 #ifndef PVZ_SIM_TICK_INC
 #define PVZ_SIM_TICK_INC
 
@@ -53,9 +50,6 @@ constexpr float cMowerSpeed = 3.33f;
 constexpr float cMowerDespawnX = 800.0f;
 constexpr int cMowerRollInTicks = 100;
 constexpr float cMowerReadyX = -21.0f;
-// A mowed zombie plays the LawnMoweredZombie reanim for a fixed 101 ticks (reanim.md §4) before the
-// slot frees; it is removed by DieWithLoot's bookkeeping, so it counts as killed at that point.
-constexpr int cMowedTicks = 101;
 // Sky sun: Board::CreateCoin schedule -- min(950, 425 + 10n) + Rand(275), value 25.
 constexpr int cSkySunMin = 425;
 constexpr int cSkySunCap = 950;
@@ -231,7 +225,7 @@ PVZ_SIM float TotalHealthInWave(Lane lane, int32_t wave)
 		const int32_t type = lane.i(F_ZOMBIE_TYPE, slot);
 		if (type < 0) continue;
 		const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
-		if (flags & (ZB_DEAD | ZB_DYING | ZB_MIND_CONTROLLED)) continue;
+		if (flags & (ZB_DEAD | ZB_DYING | ZB_BURNED | ZB_MOWERED | ZB_MIND_CONTROLLED)) continue;
 		if (lane.i(F_ZOMBIE_FROM_WAVE, slot) != wave) continue;
 		total += static_cast<float>(lane.i(F_ZOMBIE_BODY, slot))
 			+ static_cast<float>(lane.i(F_ZOMBIE_HELM, slot))
@@ -293,7 +287,7 @@ PVZ_SIM void StartDeathAnimation(Lane lane, int32_t slot, int32_t pole, Rand& ra
 	{
 		int32_t onScreen = 0;
 		for (int32_t z = 0; z < kZombieSlots; ++z)
-			if (lane.i(F_ZOMBIE_TYPE, z) >= 0 && !(lane.i(F_ZOMBIE_FLAGS, z) & ZB_DEAD)) ++onScreen;
+			if (ZombieIsThreat(lane.i(F_ZOMBIE_TYPE, z), lane.i(F_ZOMBIE_FLAGS, z))) ++onScreen;
 		if (onScreen <= 5) { start = 292; frames = 137; rate = 14.0f; }
 		else { start = 217; frames = 33; }
 	}
@@ -597,7 +591,7 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 	const ZombieDef& def = level.zombies[Minimum(type, kZombieTypes - 1)];
 	const int32_t pole = IsVaulter(def);
 	++lane.i(F_ZOMBIE_AGE, slot);
-	// EffectSystem has already advanced animations, including the actual imported death progress.
+	// Body animations advance at the entity tail; imported death progress is checked first.
 	if (flags & ZB_BURNED)
 	{
 		if (--lane.i(F_ZOMBIE_PHASE_COUNTER, slot) == 0) RemoveZombie(lane, slot);
@@ -890,9 +884,8 @@ PVZ_SIM void SpawnZombie(Lane lane, const LevelInfo& level, int32_t zombieType, 
 	const int32_t slot = FindFreeSlot(lane, F_ZOMBIE_TYPE, kZombieSlots);
 	if (slot < 0) { lane.s(S_ERROR) |= ERR_CAPACITY; return; }
 	const ZombieDef& def = level.zombies[Minimum(zombieType, kZombieTypes - 1)];
-	// AddZombie -> PickRowForNewZombie runs *before* any per-entity draw, so the row RNG is consumed first
-	// (waves.md :302).  Not modelling the pole-vault jump means a vaulter here walks at its pre-vault speed
-	// (0.66-0.68) and never leaps -- the single remaining bounded deviation, tracked in cuda_status.md.
+	// AddZombie picks the row before per-entity draws. Type-specific initialization overrides
+	// the generic spawn x for flags and poles; flag-wave bonus must not survive those overrides.
 	lane.i(F_ZOMBIE_ROW, slot) = PickRow(lane, level, rand);
 	lane.i(F_ZOMBIE_TYPE, slot) = zombieType;
 	lane.i(F_ZOMBIE_BODY, slot) = def.bodyHealth;
@@ -916,6 +909,7 @@ PVZ_SIM void SpawnZombie(Lane lane, const LevelInfo& level, int32_t zombieType, 
 	lane.f(F_ZOMBIE_Y, slot) = 0.0f;
 	RedrawZombieSpeed(lane, def, slot, rand);
 	lane.f(F_ZOMBIE_VELY, slot) = 0.0f;
+	UpdateZombieAnimation(lane, slot); // ZombieInitialize calls UpdateReanim once before returning
 }
 
 PVZ_SIM int32_t IsFlagWave(int32_t wave) { return wave >= 0 && wave % cFlagWavesPeriod == cFlagWavesPeriod - 1; }
@@ -1069,10 +1063,17 @@ PVZ_SIM void CheckVictory(Lane lane, const WaveTable& waves)
 PVZ_SIM void UpdateTick(Lane lane, const LevelInfo& level, const WaveTable& waves, Rand& rand)
 {
 	BankCoins(lane);
-	UpdatePlantAnimations(lane); // EffectSystem runs before UpdateGameObjects in the original
-	UpdateZombieAnimations(lane);
-	for (int32_t slot = 0; slot < kPlantSlots; ++slot) UpdatePlant(lane, level, slot, rand);
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot) UpdateZombie(lane, level, slot, rand);
+	UpdateMowedAnimations(lane); // EffectSystem skips attached plant/zombie bodies
+	for (int32_t slot = 0; slot < kPlantSlots; ++slot)
+	{
+		UpdatePlant(lane, level, slot, rand);
+		UpdatePlantAnimation(lane, slot);
+	}
+	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	{
+		UpdateZombie(lane, level, slot, rand);
+		UpdateZombieAnimation(lane, slot);
+	}
 	UpdateProjectiles(lane, level, rand);
 	UpdateMowers(lane);
 	UpdatePackets(lane);

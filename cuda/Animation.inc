@@ -18,25 +18,27 @@ PVZ_SIM void StepAnimation(float& time, float rate, int32_t frames, int32_t loop
 	else if (time >= 1.0f) { time = 1.0f; loops = 1; }
 }
 
-PVZ_SIM void UpdatePlantAnimations(Lane lane)
+PVZ_SIM void UpdatePlantAnimation(Lane lane, int32_t slot)
 {
-	for (int32_t slot = 0; slot < kPlantSlots; ++slot)
-	{
-		if (lane.i(F_PLANT_TYPE, slot) < 0 || lane.i(F_PLANT_STATE, slot) != 15) continue;
+	if (lane.i(F_PLANT_TYPE, slot) >= 0 && lane.i(F_PLANT_STATE, slot) == 15)
 		StepAnimation(lane.f(F_PLANT_ANIM_TIME, slot), lane.f(F_PLANT_ANIM_RATE, slot),
 			lane.i(F_PLANT_ANIM_FRAMES, slot), 3, lane.i(F_PLANT_ANIM_LOOPS, slot));
-	}
 }
 
-PVZ_SIM void UpdateZombieAnimations(Lane lane)
+PVZ_SIM void UpdateZombieAnimation(Lane lane, int32_t slot)
+{
+	if (lane.i(F_ZOMBIE_TYPE, slot) < 0 || (lane.i(F_ZOMBIE_FLAGS, slot) & ZB_DEAD)) return;
+	StepAnimation(lane.f(F_ZOMBIE_ANIM_TIME, slot), lane.f(F_ZOMBIE_ANIM_RATE, slot),
+		lane.i(F_ZOMBIE_ANIM_FRAMES, slot), lane.i(F_ZOMBIE_ANIM_LOOP_TYPE, slot),
+		lane.i(F_ZOMBIE_ANIM_LOOPS, slot));
+}
+
+// Body animations are attachments and advance at each entity's UpdateReanim tail. The separate
+// mower animation is not an attachment: it advances here AND at Zombie::UpdateReanim (5365).
+PVZ_SIM void UpdateMowedAnimations(Lane lane)
 {
 	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
-	{
-		if (lane.i(F_ZOMBIE_TYPE, slot) < 0 || (lane.i(F_ZOMBIE_FLAGS, slot) & ZB_DEAD)) continue;
-		StepAnimation(lane.f(F_ZOMBIE_ANIM_TIME, slot), lane.f(F_ZOMBIE_ANIM_RATE, slot),
-			lane.i(F_ZOMBIE_ANIM_FRAMES, slot), lane.i(F_ZOMBIE_ANIM_LOOP_TYPE, slot),
-			lane.i(F_ZOMBIE_ANIM_LOOPS, slot));
-	}
+		if (lane.i(F_ZOMBIE_FLAGS, slot) & ZB_MOWERED) UpdateZombieAnimation(lane, slot);
 }
 
 PVZ_SIM void PlayZombieAnimation(Lane lane, int32_t slot, int32_t start, int32_t frames,

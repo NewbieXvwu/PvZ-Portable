@@ -103,11 +103,18 @@ Frame position for sampling (`Reanimator.cpp:906-927`):
 **The `frameCount` vs `frameCount − 1` split between the advance and the sampler is the whole
 origin of the K factor in §2.**
 
-Tick ordering inside one update (S): `Board::Update` (`:5722`) runs
+Tick ordering correction (2026-10-18 round 21, traced against real root tick 2400):
+the original paragraph below missed `mIsAttachment=true` on zombie bodies (`Zombie.cpp:1041`).
+`EffectSystem` skips them. `Zombie::UpdateReanim:5385` advances the body at the entity tail,
+after movement and prey checks; `Plant::UpdateReanim:2791` similarly advances plant bodies.
+The old claim that the zombie sees an already advanced body frame is false. Imported animation
+times agree but the wrong ordering changes displacement at every frame boundary.
+
+`Board::Update` (`:5722`) runs
 `mApp->mEffectSystem->Update()` at `:5762` (which advances every non-attachment reanim,
 `EffectSystem.cpp:128-130`) **before** `UpdateGame()` at `:5815` →
 `UpdateGameObjects()` at `:5662`/`:4972`, where `Zombie::Update()` (`:4985`, body `:4304`) reads
-the animation. So a zombie sees the animation state already advanced for that tick.
+the animation. This global phase advances only non-attachments, not the body animation.
 
 ---
 
@@ -444,8 +451,14 @@ adds) ⇒ **k = 101** reanim updates to `mLoopCount = 1` (`Reanimator.cpp:456-45
 	}
 ```
 
-**Ticks from `PHASE_ZOMBIE_MOWERED` to `DieWithLoot` = 101** for NORMAL / TRAFFIC_CONE / FLAG /
-POLEVAULTER — identical for all four, since the clip and rate are type-independent. No fade is
+**Correction (round 21): 101 is animation updates, not simulation ticks.**
+`Zombie::UpdateReanim:5365` also calls `aMoweredReanim->Update()` at the entity tail.
+Because the separate object is not an attachment, it advances globally and at that tail.
+It reaches loop 1 in the global phase of the 51st subsequent tick, and UpdateMowered removes it.
+CUDA now models both updates and the imported progress; instant-removal exceptions remain.
+
+The earlier **101-tick** claim for NORMAL / TRAFFIC_CONE / FLAG /
+POLEVAULTER was incorrect. Clip and rate are type-independent. No fade is
 involved. If the body reanim is missing the first update already kills (`mLoopCount` test passes
 via the `nullptr` branch). Caveat (S): `MowDown` short-circuits for several types/phases
 (`:8589-8641`: CATAPULT, ZAMBONI, DYING, IN_VAULT, flying, `mInPool` ⇒ instant `DieWithLoot`),
@@ -529,9 +542,9 @@ Two plant-side facts the CUDA core needs (S): a plant's body reanim is created w
 (`EffectSystem.cpp:129`); attached reanims tick inside `Attachment::Update`
 (`Attachment.cpp:104`, `:138-141`), reachable only through `AttachmentUpdateAndMove`, whose only
 callers are `Coin.cpp:761`, `Projectile.cpp:972`, `Zombie.cpp:4392` — `Plant` never calls it.
-Whether a planted shooter's idle animation advances at all is therefore **not settled by reading**
-(§8); plant *gameplay* timing (`mLaunchCounter`, `mShootingCounter`, `mDoSpecialCountdown`,
-`mStateCountdown`) is pure tick counters and does not depend on it.
+Correction (round 21): `Plant::UpdateReanim:2791` explicitly calls `aBodyReanim->Update()`.
+The earlier search limited to Attachment callers missed this direct call. Potato RISING does
+depend on loop completion, and must inspect the prior tail's progress before advancing its body.
 
 ---
 
