@@ -8,7 +8,7 @@
 | 线 | 在哪 | 下一步 |
 |---|---|---|
 | DAgger 流水线 | 台式机 `~/pvz-logs/queue34.log`（D18 → v18 → 第 13 轮偏移 6144–6527）；Mac `artifacts/hard_mac/mac_dagger12b.out` → `mac_teacher_v16.out` → `mac_dagger13b.out`（偏移 6528–7167） | 每代：上限（`$CLAUDE_JOB_DIR/tmp/frontier.py`）、选模、下一轮；z15_train 种子用到偏移 8191 前再登记（DESIGN） |
-| Qoder CUDA 续走 | 台式机 tmux `qoder`（/goal，YOLO，新账号），`~/pvz-logs/cuda_status.md`、`qoder_questions.md` / `qoder_answers.md` | 回答问题；额度用完提醒用户切号；阶段 0 门槛 GPU ≥ 9018 条/秒 |
+| CUDA 续走（10-17 22:20 起 Codex 接手） | 台式机 tmux `codex`（Codex CLI，gpt-6.1-sol high，任务书 `~/pvz-logs/codex_cuda_task.md`，日志 `codex_cuda.log`，问题 `codex_cuda_questions.md`），状态 `~/pvz-logs/cuda_status.md` | 阶段 0 已过 1.72 倍；接着 #9 接入搜索 → 阶段 1 一致率 → 服务形态 → 阶段 2；codex exec 结束就 resume |
 | Codex | Mac，worktree 各自独立 | 见下面各项 |
 
 ## 1. 诊断事实（2026-10-17 08:30–08:50 实测）
@@ -98,3 +98,4 @@
   第 17b 轮（v19 学生自己走）380 / 640 胜，每局推翻 79.4 次。第 18 轮：台式机 queue48（v20、β 0、偏移 13312–13695，等 queue46）；Mac `mac_dagger18b.sh`（v20、β 0、偏移 14208–14847，等 mac_value4）。
 - 2026-10-17 22:05 窗口第 2 种子 934 / 919 / 666，三档仍全面输给 D20 → “旧数据拖后腿”主要是上限指标的错觉；在 v2lite + 加权配方下全部数据更好，D 集继续用全部数据。
   Qoder 自约 20:50 起一直显示 “Model request queued”（服务端排队），约 1 小时无新提交，下一次检查若仍卡住就重启或换号。用户 22:00 回来。
+- 2026-10-17 22:20 用户回来：Codex 额度充足、多用 Codex。Qoder 卡在服务端排队约 1.5 小时 → 停掉 Qoder，WIP 提交 f198afa，CUDA 活交给台式机 Codex CLI（gpt-6.1-sol，tmux `codex`）。
