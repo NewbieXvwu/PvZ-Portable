@@ -257,6 +257,26 @@ int main()
 	UpdateProjectiles(pea, level, projectileRand);
 	assert(pea.i(F_PROJ_TYPE, 0) == -1);
 
+	// PeaShooterSingle's first idle stem is (37.6,48.7). Fire truncates offsets to integers,
+	// then adds (24,-33) to the plant origin; firing from the cell origin is ~18 travel ticks late.
+	State muzzleState;
+	auto muzzle = muzzleState.lane();
+	assert(LoadInjectedRoot(muzzle, root, level));
+	level.plantCount = 1;
+	level.plants[0].seedType = 0;
+	level.plants[0].behavior = PB_SHOOTER;
+	level.plants[0].damage = 20;
+	muzzle.i(F_PLANT_TYPE, 0) = 0;
+	muzzle.i(F_PLANT_SHOOTING, 0) = 2;
+	muzzle.i(F_PLANT_LAUNCH, 0) = 100;
+	muzzle.i(F_PLANT_ANIM_FRAMES, 0) = 25;
+	muzzle.f(F_PLANT_X, 0) = 40.0f;
+	muzzle.f(F_PLANT_Y, 0) = 80.0f;
+	UpdatePlant(muzzle, level, 0, projectileRand);
+	assert(muzzle.f(F_PROJ_X, 0) == 101.0f && muzzle.f(F_PROJ_Y, 0) == 95.0f);
+	muzzle.f(F_PLANT_ANIM_TIME, 0) = 0.5f;
+	assert(PeaHeadOffset(muzzle, 0, 0) == 47 && PeaHeadOffset(muzzle, 0, 1) == 46);
+
 	// Plant.cpp uses NOTREADY -> RISING -> ARMED. The 19-frame rise at 18 fps needs 106 updates,
 	// and cannot explode until the armed branch runs on the following update. Its blast hits all
 	// zombies in range, not merely the one that caused the trigger.

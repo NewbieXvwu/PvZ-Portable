@@ -444,8 +444,9 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 		{
 			--shooting;
 			if (shooting == 1)
-				AddProjectile(lane, row, type, def->damage, def->chills, plantX,
-					lane.f(F_PLANT_Y, slot));
+				AddProjectile(lane, row, type == 5 ? 1 : 0, def->damage, def->chills,
+					plantX + static_cast<float>(PeaHeadOffset(lane, slot, 0) + 24),
+					lane.f(F_PLANT_Y, slot) + static_cast<float>(PeaHeadOffset(lane, slot, 1) - 33));
 		}
 
 		// Plant::UpdateShooter (Plant.cpp:941): the clock decrements whether or not the plant can see a
@@ -1206,7 +1207,12 @@ PVZ_SIM int32_t ActionPlant(Lane lane, const LevelInfo& level, int32_t packet, i
 	lane.i(F_PLANT_ONBOARD, slot) = 1;
 	// GridToPixelX(col) = col * 80 + 40 -- the coordinate the eat and hit rects are measured against.
 	lane.f(F_PLANT_X, slot) = cGridOriginX + cGridStepX * static_cast<float>(col);
-	lane.f(F_PLANT_Y, slot) = 80.0f * static_cast<float>(row) + cGridOriginX;
+	lane.f(F_PLANT_Y, slot) = 100.0f * static_cast<float>(row) + 80.0f;
+	// Shooters keep anim_idle (start 4, 25 frames) on their body; only the head switches to shoot.
+	lane.f(F_PLANT_ANIM_TIME, slot) = 0.0f;
+	lane.i(F_PLANT_ANIM_LOOPS, slot) = 0;
+	lane.i(F_PLANT_ANIM_FRAMES, slot) = def->behavior == PB_SHOOTER ? 25 : 0;
+	lane.f(F_PLANT_ANIM_RATE, slot) = def->behavior == PB_SHOOTER ? 15.0f + 5.0f * rand.ZeroToOne() : 0.0f;
 	// Shot clocks (Plant.cpp:188): a plant with mLaunchRate > 0 starts on a *drawn* delay -- a sun
 	// producer a short first one, a shooter anywhere in [0, mLaunchRate].  A draw of 0 means the plant
 	// fires on its first tick, which is why the countdown is allowed to start at zero.

@@ -683,6 +683,9 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 			aX[static_cast<size_t>(i)].mValue[Xform::FRAME], aX[static_cast<size_t>(i)].mValue[Xform::X],
 			aDx, aSpeed, aVisits[static_cast<size_t>(i - aStart)],
 			anAfter == i ? "   <- last frame: after==before, dx==0" : "");
+		// Machine-readable coordinates for gameplay tracks such as a shooter's animated stem.
+		std::printf("xy %d %.9g %.9g\n", i, aX[static_cast<size_t>(i)].mValue[Xform::X],
+			aX[static_cast<size_t>(i)].mValue[Xform::Y]);
 	}
 	std::printf("  sum dx over the %d transitions = %.9g (aDistance %.9g);  dx range [%.9g, %.9g],"
 		" %d of %d transitions are zero\n", aCount - 1, aSumDx, aDistance, aMinDx, aMaxDx, aZeroDx, aCount - 1);

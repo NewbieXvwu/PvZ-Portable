@@ -3,7 +3,30 @@
 #define PVZ_SIM_ANIMATION_INC
 #include "SimCore.h"
 #include "AnimationTables.h"
+#include "MuzzleTables.h"
 namespace pvzc {
+
+PVZ_SIM float RoundedMulAdd(float a, float b, float c)
+{
+#ifdef __CUDA_ARCH__
+	return __fadd_rn(__fmul_rn(a, b), c);
+#else
+	volatile float product = a * b;
+	return product + c;
+#endif
+}
+
+PVZ_SIM int32_t PeaHeadOffset(Lane lane, int32_t slot, int32_t axis)
+{
+	if (lane.i(F_PLANT_ANIM_FRAMES, slot) <= 0) return 0; // original missing-body fallback
+	const float position = RoundedMulAdd(lane.f(F_PLANT_ANIM_TIME, slot), 24.0f, 4.0f);
+	const int32_t frame = ClampInt(static_cast<int32_t>(position) - 4, 0, 24);
+	const float fraction = position - static_cast<float>(frame + 4);
+	const int32_t type = lane.i(F_PLANT_TYPE, slot);
+	const float before = StemCoordinate(type, axis, frame);
+	const float after = StemCoordinate(type, axis, Minimum(frame + 1, 24));
+	return static_cast<int32_t>(RoundedMulAdd(after - before, fraction, before));
+}
 
 PVZ_SIM void StepAnimation(float& time, float rate, int32_t frames, int32_t loopType, int32_t& loops)
 {
@@ -20,9 +43,10 @@ PVZ_SIM void StepAnimation(float& time, float rate, int32_t frames, int32_t loop
 
 PVZ_SIM void UpdatePlantAnimation(Lane lane, int32_t slot)
 {
-	if (lane.i(F_PLANT_TYPE, slot) >= 0 && lane.i(F_PLANT_STATE, slot) == 15)
+	const int32_t type = lane.i(F_PLANT_TYPE, slot);
+	if (type == 0 || type == 5 || type == 7 || (type == 4 && lane.i(F_PLANT_STATE, slot) == 15))
 		StepAnimation(lane.f(F_PLANT_ANIM_TIME, slot), lane.f(F_PLANT_ANIM_RATE, slot),
-			lane.i(F_PLANT_ANIM_FRAMES, slot), 3, lane.i(F_PLANT_ANIM_LOOPS, slot));
+			lane.i(F_PLANT_ANIM_FRAMES, slot), type == 4 ? 3 : 0, lane.i(F_PLANT_ANIM_LOOPS, slot));
 }
 
 PVZ_SIM void UpdateZombieAnimation(Lane lane, int32_t slot)
