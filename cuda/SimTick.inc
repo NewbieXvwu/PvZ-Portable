@@ -752,11 +752,19 @@ PVZ_SIM void UpdatePackets(Lane lane)
 		if (lane.i(F_PACKET_TYPE, slot) < 0) continue;
 		if (lane.i(F_PACKET_ACTIVE, slot)) continue;
 		int32_t& counter = lane.i(F_PACKET_COUNTER, slot);
-		++counter;
 		const int32_t refresh = lane.i(F_PACKET_REFRESH, slot);
-		if (refresh > 0 && counter >= refresh)
+		// SeedPacket::Update() gates on `!mActive && mRefreshing`, and a packet that was picked up but
+		// never planted (or removed by a conveyor) sits at mRefreshTime == 0 with mRefreshing == false
+		// (SeedPacket.cpp:140-146).  refresh == 0 is that flag: counting it down would revive a card the
+		// original has dropped for good.
+		if (refresh <= 0) continue;
+		++counter;
+		// Strictly greater (SeedPacket.cpp:175), so a card is back after refreshTime + 1 ticks, and the
+		// counter is cleared rather than clamped (:177) -- a root exported from the engine carries 0 here
+		// and a clamped value would not round-trip.
+		if (counter > refresh)
 		{
-			counter = refresh;
+			counter = 0;
 			lane.i(F_PACKET_ACTIVE, slot) = 1;
 		}
 	}
@@ -1105,6 +1113,12 @@ PVZ_SIM int32_t ActionPlant(Lane lane, const LevelInfo& level, int32_t packet, i
 	lane.i(F_PLANT_LAUNCH_RATE, slot) = Maximum(def->launchRate, 1);
 	lane.i(F_PACKET_ACTIVE, packet) = 0;
 	lane.i(F_PACKET_COUNTER, packet) = 0;
+	// SeedPacket::WasPlanted() (SeedPacket.cpp:872-894) starts the cooldown by writing
+	// mRefreshTime = Plant::GetRefreshTime(type) right there; a packet dealt at level start carries
+	// mRefreshTime == 0 (SeedBank::SetPacketType, :1111-1113), so this is where the number first exists.
+	// LoadRoot used to guess it from the table on import instead, which is what made the cooldown channel
+	// disagree with the engine's own feature build for a card the original had dropped.
+	lane.i(F_PACKET_REFRESH, packet) = PlantRefresh(level, type);
 	lane.i(F_PLANTED_BY_TYPE, packet) = lane.i(F_PLANTED_BY_TYPE, packet) + 1;
 	lane.s(S_PLANTS_PLANTED) = lane.s(S_PLANTS_PLANTED) + 1;
 	return 1;

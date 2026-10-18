@@ -260,7 +260,11 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.i(F_PACKET_TYPE, index) = src.type;
 		lane.i(F_PACKET_ACTIVE, index) = src.active;
 		lane.i(F_PACKET_COUNTER, index) = src.refreshCounter;
-		lane.i(F_PACKET_REFRESH, index) = src.refreshTime ? src.refreshTime : PlantRefresh(level, src.type);
+		// Import the engine's mRefreshTime verbatim.  Filling a 0 in here invented a cooldown for cards the
+		// original had dropped (SeedPacket.cpp:144) and made the cooldown scalar disagree with the
+		// engine-derived encoder, which reads the raw value (python/pvz_value_net.py:112).  The number a
+		// fresh packet really needs is written by ActionPlant, the way SeedPacket::WasPlanted does it.
+		lane.i(F_PACKET_REFRESH, index) = src.refreshTime;
 		lane.i(F_PACKET_COST, index) = src.cost ? src.cost : PlantCost(level, src.type);
 	}
 	(void)FindPlantDef;
