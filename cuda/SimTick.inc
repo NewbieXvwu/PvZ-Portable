@@ -143,20 +143,18 @@ PVZ_SIM int32_t RectOverlapX(int32_t aLo, int32_t aHi, int32_t bLo, int32_t bHi)
 }
 
 // Board::GetCircleRectOverlap (:8975) specialised to an instant-kill blast (cherry / potato mine).
-// The blast centre is the plant cell's pixel centre; the grass row base (LAWN_YMIN) cancels between
-// the plant and the zombie, so only the row *difference* matters.  Daytime grass rows step 100 px
-// (GridToPixelY non-roof/non-pool branch :8923).  All inputs are integer pixels, matching the original,
-// so the dx*dx+dy*dy <= r*r test is exact -- the only unmodelled term is the per-frame reanim mBodyY
-// wobble the real rect carries, which is a few px and cannot move a zombie in or out of a 115-px blast.
+// Grass plants start at y=80+100r, zombies at y=50+100r; preserve their 30px offset.
+// Normal-height zombies in this scope have mBodyY=0. Other heights need their actual hurt rectangle.
 PVZ_SIM int32_t BlastHit(int32_t centerX, int32_t plantRow, int32_t zombieX, int32_t zombieRow,
 	int32_t radius, int32_t rowRange)
 {
 	const int32_t d = zombieRow - plantRow;
 	if (d > rowRange || d < -rowRange) return 0;
 	// Zombie hurt rect is Rect(mX+36, mY, 42, 115); relative to the blast centre (plant mY + 40) the
-	// vertical span is [d*100 - 40, d*100 + 75], and the centre sits at 0.
-	const int32_t topY = d * 100 - 40;
-	const int32_t botY = d * 100 + 75;
+	// vertical span is [d*100 - 70, d*100 + 45], and the centre sits at 0.
+	// Plants start at y=80+100r, zombies at y=50+100r. Blast center is plant y+40.
+	const int32_t topY = d * 100 - 70;
+	const int32_t botY = d * 100 + 45;
 	const int32_t nearY = topY > 0 ? topY : (botY < 0 ? botY : 0);
 	const int32_t dy = -nearY;
 	const int32_t lo = zombieX + cHurtOffset;
@@ -188,7 +186,7 @@ PVZ_SIM void ApplyBurn(Lane lane, int32_t slot)
 		return;
 	}
 	lane.f(F_ZOMBIE_ANIM_RATE, slot) = 0.0f;
-	lane.i(F_ZOMBIE_FLAGS, slot) = (flags | ZB_BURNED) & ~ZB_EATING;
+	lane.i(F_ZOMBIE_FLAGS, slot) = flags | ZB_BURNED;
 	lane.i(F_ZOMBIE_PHASE, slot) = 2;
 	lane.i(F_ZOMBIE_PHASE_COUNTER, slot) = 300;
 }
@@ -493,6 +491,8 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 			// Cherry skips only mDead (the loop's guard) and an already-burned zombie (ApplyBurn's early
 			// return); a dying or mowed one is burned through to DieWithLoot, which changes nothing on-screen.
 			if (zflags & (ZB_DEAD | ZB_BURNED)) continue;
+			if (static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie)) + cHurtOffset > 800
+				&& lane.i(F_ZOMBIE_PHASE, zombie) != 12) continue; // EffectedByDamage(127)
 			if (!BlastHit(center, row, static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie)),
 				lane.i(F_ZOMBIE_ROW, zombie), cCherryRadius, 1)) continue;
 			ApplyBurn(lane, zombie);
@@ -552,7 +552,12 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 			if (!ZombieLive(lane.i(F_ZOMBIE_TYPE, zombie), lane.i(F_ZOMBIE_FLAGS, zombie))) continue;
 			if (!BlastHit(center, row, static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie)),
 				lane.i(F_ZOMBIE_ROW, zombie), cPotatoRadius, 0)) continue;
-			DamageZombie(lane, level, zombie, cPotatoDamage, rand);
+			if (lane.i(F_ZOMBIE_PHASE, zombie) == 12
+				|| static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie)) + cHurtOffset > 800) continue;
+			// KillAllZombiesInRadius uses TakeDamage(1800,18): DAMAGE_DOESNT_LEAVE_BODY.
+			// Every supported type has at most 870 body+helm, so this removes it immediately.
+			lane.i(F_ZOMBIE_BODY, zombie) = 0;
+			RemoveZombie(lane, zombie);
 		}
 		lane.i(F_PLANT_TYPE, slot) = -1;
 		break;
@@ -746,6 +751,14 @@ PVZ_SIM void UpdateMowers(Lane lane)
 			const int32_t zx = static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie));
 			if (RectOverlapX(mowerX, mowerX + 50, zx + cHurtOffset, zx + cHurtOffset + cHurtWidth) <= 0) continue;
 			if (state == kMowerReady && !(zf & ZB_HAS_HEAD)) continue;   // bungee-style exception, moot here
+			lane.i(F_MOWER_CHOMP, slot) = state == kMowerReady ? 25 : 50;
+			if (state == kMowerReady)
+			{
+				lane.i(F_MOWER_FLAGS, slot) = MB_MOWING;
+				state = kMowerTriggered;
+				++lane.s(S_TRIGGERED_MOWERS);
+				lane.i(F_ROW_GOT_MOWERED, row) = lane.s(S_WAVE);
+			}
 			// Dying/burned/airborne zombies disappear; walking ones use a separate, unchilled
 			// LawnMoweredZombie animation. Imported roots carry that animation's actual progress.
 			if ((zf & (ZB_DYING | ZB_BURNED)) || lane.i(F_ZOMBIE_PHASE, zombie) == 12)
@@ -753,24 +766,32 @@ PVZ_SIM void UpdateMowers(Lane lane)
 				RemoveZombie(lane, zombie);
 				continue;
 			}
-			lane.i(F_ZOMBIE_BODY, zombie) = 0;
 			lane.i(F_ZOMBIE_HELM, zombie) = 0;
 			lane.i(F_ZOMBIE_SHIELD, zombie) = 0;
-			lane.i(F_ZOMBIE_FLAGS, zombie) = (zf | ZB_MOWERED) & ~ZB_EATING;
+			// MowDown drops helm/shield but retains body health and eating state until removal.
+			lane.i(F_ZOMBIE_FLAGS, zombie) = zf | ZB_MOWERED;
 			lane.i(F_ZOMBIE_PHASE, zombie) = 3;
 			PlayZombieAnimation(lane, zombie, 0, 8, 8.0f, 3);
 			lane.f(F_ZOMBIE_ANIM_RATE, zombie) = 8.0f;
-			if (state == kMowerReady)
-			{
-				lane.i(F_MOWER_FLAGS, slot) = MB_MOWING;
-				state = kMowerTriggered;
-				lane.s(S_TRIGGERED_MOWERS) = lane.s(S_TRIGGERED_MOWERS) + 1;
-				lane.i(F_ROW_GOT_MOWERED, row) = lane.s(S_WAVE);   // mWaveRowGotLawnMowered[row] = mCurrentWave
-			}
 		}
 		if (state != kMowerTriggered) continue;
 		float& mx = lane.f(F_MOWER_X, slot);
-		mx += cMowerSpeed;
+		float speed = cMowerSpeed;
+		int32_t& chomp = lane.i(F_MOWER_CHOMP, slot);
+		if (chomp > 0)
+		{
+			--chomp;
+			const float time = static_cast<float>(chomp - 50) / -50.0f;
+			if (time > 0.0f && time < 1.0f)
+			{
+				const float triangle = RoundedMulAdd(2.0f, time, -1.0f);
+				const float bounce = 1.0f - (triangle < 0.0f ? -triangle : triangle);
+				const float square = RoundedMulAdd(bounce, bounce, 0.0f);
+				const float warped = 2.0f * bounce - square;
+				speed = RoundedMulAdd(1.0f - cMowerSpeed, warped, cMowerSpeed);
+			}
+		}
+		mx += speed;
 		if (mx > cMowerDespawnX)
 		{
 			state = kMowerSquished;

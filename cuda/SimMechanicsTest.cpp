@@ -311,6 +311,36 @@ int main()
 	UpdatePlant(mine, level, 0, projectileRand);
 	assert(mine.i(F_PLANT_TYPE, 0) == -1);
 	assert(mine.i(F_ZOMBIE_BODY, 0) == 0 && mine.i(F_ZOMBIE_BODY, 1) == 0);
+	assert(mine.i(F_ZOMBIE_TYPE, 0) == -1 && mine.i(F_ZOMBIE_TYPE, 1) == -1);
+	assert(mine.s(S_ZOMBIES_KILLED) == 2);
+	// Adjacent rows are asymmetric because the plant's blast center is 70px below zombie y.
+	assert(BlastHit(100, 1, 174, 2, 115, 1));
+	assert(!BlastHit(100, 1, 174, 0, 115, 1));
+
+	State mowing;
+	auto mower = mowing.lane();
+	assert(LoadInjectedRoot(mower, root, level));
+	mower.i(F_MOWER_STATE, 0) = kMowerReady;
+	mower.i(F_MOWER_FLAGS, 0) = MB_STATIONARY;
+	mower.f(F_MOWER_X, 0) = -21.0f;
+	mower.i(F_ZOMBIE_TYPE, 0) = 0;
+	mower.i(F_ZOMBIE_FLAGS, 0) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD | ZB_EATING;
+	mower.i(F_ZOMBIE_BODY, 0) = 270;
+	mower.f(F_ZOMBIE_X, 0) = -20.0f;
+	UpdateMowers(mower);
+	assert(mower.i(F_MOWER_STATE, 0) == kMowerTriggered && mower.i(F_MOWER_CHOMP, 0) == 24);
+	assert(mower.f(F_MOWER_X, 0) > -20.0f && mower.f(F_MOWER_X, 0) < -19.99f);
+	assert(mower.i(F_ZOMBIE_BODY, 0) == 270 && (mower.i(F_ZOMBIE_FLAGS, 0) & ZB_EATING));
+	for (int tick = 0; tick < 50; ++tick)
+	{
+		UpdateMowedAnimations(mower);
+		UpdateZombie(mower, level, 0, projectileRand);
+		UpdateZombieAnimation(mower, 0);
+		assert(mower.i(F_ZOMBIE_TYPE, 0) == 0);
+	}
+	UpdateMowedAnimations(mower);
+	UpdateZombie(mower, level, 0, projectileRand);
+	assert(mower.i(F_ZOMBIE_TYPE, 0) == -1 && mower.s(S_ZOMBIES_KILLED) == 1);
 
 	// A sky sun on the last tick contributes to the income feature immediately, even though its
 	// money will only be collected at the next tick's head. Imported pending coins are not produced twice.

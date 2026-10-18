@@ -315,8 +315,8 @@ PVZ_SIM void StoreResult(Lane lane, RolloutResult& out)
 		if (lane.i(F_ZOMBIE_TYPE, slot) < 0) continue;
 		const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
 		// EnvironmentLeanObservation lists a zombie iff `!mDead` (LawnApp.cpp:1655), so a fading corpse
-		// (DYING/MOWERED/BURNED, all still on the list until the slot frees) counts as present and reports
-		// health 0 -- matching what the CPU rollout exports.  Filtering on DYING here would undercount
+		// (DYING/MOWERED/BURNED, all still on the list until the slot frees) counts as present. Mowed and
+		// burned entities can retain positive health. Filtering on DYING here would undercount
 		// every board the moment a zombie is shot.
 		if (flags & ZB_DEAD) continue;
 		++zombiesAlive;
