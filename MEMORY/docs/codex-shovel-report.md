@@ -88,6 +88,20 @@
 差异只有新增的 `shovels` 字段（旧代码没有这个字段）和墙钟耗时。
 **行为层面的失配数：0。**
 
+另做了一次更严格的逐位对照：同一 seed 30004，旧代码与新代码（`--shovel-candidates 0`）各跑一局
+完整帧档案，比较 10 个数组、共 10,364,345 个数值：
+
+| 数组 | 形状 | 类型 | 逐字节相同 |
+|---|---|---|---|
+| `boards` | 1253×92×6×10 | float16 | ✅ |
+| `scalars` | 1253×115 | float32 | ✅ |
+| `plant` / `packet` / `cell` | 1253 | float32 / int64 / int64 | ✅ |
+| `values` | 1253×11 | float32 | ✅ |
+| `rows` / `hints` / `encoder` | — | — | ✅ |
+
+1,254 帧的动作、植物、僵尸、阳光、缓存特征全部逐字节相同；唯一差异是某帧 `verification` 记录里的
+墙钟 `seconds`（0.0954 vs 0.0907），它不是行为。**这就是“关闭时旧行为逐位不变”的直接证据。**
+
 ## 3. 128 局配对（1.7 倍，种子 30000–30127）
 
 参数：`--verify-samples 9 --value artifacts/value_net/v3/model.pt --static-value artifacts/hard/value_branch1/model.pt`，
