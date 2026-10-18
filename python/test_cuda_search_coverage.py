@@ -10,6 +10,17 @@ import search_play
 
 
 class CoverageTest(unittest.TestCase):
+    def test_agreement_caller_without_backend_setting_keeps_cpu_behavior(self):
+        # sim_skip_agreement builds the search namespace itself, without a backend setting.
+        with patch.dict(search_play._W, {}, clear=True), \
+                patch.object(search_play, "_rollout_policy", return_value="CPU"):
+            stats = {}
+            result = search_play._continuations(None, {"tick": 0}, 1,
+                [({"type": "wait"}, 10)], SimpleNamespace(horizon=2500), stats)
+            self.assertEqual(result, ["CPU"])
+            self.assertEqual(stats["rollout_lanes"], 1)
+            self.assertNotIn("cuda_fallback_lanes", stats)
+
     def test_gpu_fallback_and_lane_errors_are_counted_per_game(self):
         jobs = [({"type": "wait"}, 1), ({"type": "wait"}, 2)]
         args = SimpleNamespace(rollout_backend="cuda", horizon=2500)

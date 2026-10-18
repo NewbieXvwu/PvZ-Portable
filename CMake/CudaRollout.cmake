@@ -26,7 +26,9 @@ set_target_properties(rollout_cuda PROPERTIES
 add_executable(rollout_cuda_small ${PROJECT_SOURCE_DIR}/cuda/RolloutCuda.cu)
 target_include_directories(rollout_cuda_small PRIVATE ${PROJECT_SOURCE_DIR})
 target_link_libraries(rollout_cuda_small PRIVATE CUDA::cublas CUDA::cudart)
-target_compile_definitions(rollout_cuda_small PRIVATE PVZ_NET_CHUNK_BITS=7)
+# Keeping the tick inside each private-lane kernel exposes shared-memory addresses and stride=1
+# to the compiler. Preserve the original target above for reproducible large-wave comparisons.
+target_compile_definitions(rollout_cuda_small PRIVATE PVZ_NET_CHUNK_BITS=7 PVZ_CUDA_INLINE_TICK=1)
 target_compile_options(rollout_cuda_small PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 set_target_properties(rollout_cuda_small PROPERTIES
 	CUDA_STANDARD 17

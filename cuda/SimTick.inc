@@ -1089,7 +1089,14 @@ PVZ_SIM void CheckVictory(Lane lane, const WaveTable& waves)
 // The original's order inside one tick, as the environment drives it: coins banked, then plants,
 // zombies, projectiles, mowers and seed packets, then mMainCounter++, then the sky-sun schedule and
 // the wave emitter (cuda/spec/board.md).
-PVZ_SIM void UpdateTick(Lane lane, const LevelInfo& level, const WaveTable& waves, Rand& rand)
+// The opt-in small-wave build keeps shared-memory pointers and stride=1 visible in private kernels.
+// The tick body and the host simulator remain identical; exact result/leaf checks guard this choice.
+#if defined(__CUDACC__) && defined(PVZ_CUDA_INLINE_TICK)
+__host__ __device__ __forceinline__
+#else
+PVZ_SIM
+#endif
+void UpdateTick(Lane lane, const LevelInfo& level, const WaveTable& waves, Rand& rand)
 {
 	BankCoins(lane);
 	UpdateMowedAnimations(lane); // EffectSystem skips attached plant/zombie bodies

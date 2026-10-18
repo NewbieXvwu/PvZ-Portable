@@ -232,7 +232,7 @@ def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args
             stats["cuda_error_lanes"] = stats.get("cuda_error_lanes", 0) + sum(
                 bool(record["errorFlags"]) for record, _features in handles)
             return handles
-    if args.rollout_backend == "cuda":
+    if getattr(args, "rollout_backend", "cpp") == "cuda" or _W.get("cuda_socket"):
         stats["cuda_fallback_batches"] = stats.get("cuda_fallback_batches", 0) + 1
         stats["cuda_fallback_lanes"] = stats.get("cuda_fallback_lanes", 0) + len(jobs)
     return [_rollout_policy(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32)
