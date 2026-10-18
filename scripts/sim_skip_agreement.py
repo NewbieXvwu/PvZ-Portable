@@ -200,7 +200,10 @@ def _search_decisions(seed: int) -> list[dict]:
                     (args.mask, approx_sargs, args.cpp_rollouts, args.cuda_rollouts)]
             order = (0, 1) if len(rows) % 2 == 0 else (1, 0)
             lanes_before = _W["cuda_client"].lanes if args.cuda_rollouts else 0
-            results = {index: run(decision_seed, *runs[index]) for index in order}
+            # run()'s third positional is the policy action the search is allowed to override, and it sits
+            # between the mask and the config -- so `action` cannot be spliced in with a single *.
+            results = {index: run(decision_seed, runs[index][0], action, *runs[index][1:])
+                       for index in order}
             exact, exact_totals, t_exact = results[0]
             approx, approx_totals, t_approx = results[1]
             other, other_totals, _t = run(decision_seed + 7_777_777, args.base_mask, action, sargs,
