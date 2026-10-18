@@ -481,7 +481,7 @@ __global__ void __launch_bounds__(kBlockThreads, kMinBlocks) PostKernel(Argument
 // A small SoA wave can occupy only one or two SMs. Give each continuation a block, cooperatively
 // transpose its state to shared memory, and run the identical serial core on thread 0. This changes
 // storage and placement, not mechanics, RNG order, or network arithmetic. Large waves retain SoA.
-template <bool post>
+template <bool post, bool cooperative = false>
 __global__ void PrivateRoundKernel(Arguments arguments)
 {
 	const int32_t index = blockIdx.x;
@@ -491,15 +491,42 @@ __global__ void PrivateRoundKernel(Arguments arguments)
 	__shared__ int32_t levelRaw[sizeof(LevelInfo) / sizeof(int32_t)];
 	__shared__ int32_t ints[IntSlotsTotal()];
 	__shared__ float floats[FloatSlotsTotal()];
+	__shared__ Choice choice;
 	for (int32_t word = threadIdx.x; word < IntSlotsTotal(); word += blockDim.x)
 		ints[word] = arguments.ints[static_cast<size_t>(word) * arguments.lanes + index];
 	for (int32_t word = threadIdx.x; word < FloatSlotsTotal(); word += blockDim.x)
 		floats[word] = arguments.floats[static_cast<size_t>(word) * arguments.lanes + index];
 	StageLevel(arguments.level, levelRaw);
-	if (threadIdx.x == 0)
+	Lane lane{ints, floats, 0, 1, slot};
+	const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
+	if constexpr (post && cooperative)
 	{
-		Lane lane{ints, floats, 0, 1, slot};
-		const LevelInfo& level = *reinterpret_cast<const LevelInfo*>(levelRaw);
+		// Parallelize independent channels/cells, preserving every sum's original operand order.
+		for (int32_t oc = threadIdx.x; oc < arguments.net.width; oc += blockDim.x)
+			NetContextChannel(lane, arguments.net, arguments.state, oc);
+		__syncthreads();
+		if (threadIdx.x == 0) choice = NetPickPacket(lane, level, arguments.net, arguments.state);
+		__syncthreads();
+		if (choice.packet >= 0)
+		{
+			for (int32_t oc = threadIdx.x; oc < arguments.net.width; oc += blockDim.x)
+				CellLogitsChannel(lane, arguments.net, arguments.state, choice.packet, oc);
+			__syncthreads();
+			for (int32_t cell = threadIdx.x; cell < kLogitCells; cell += blockDim.x)
+				CellLogitCell(lane, arguments.net, arguments.state, cell);
+			__syncthreads();
+			if (threadIdx.x == 0) choice = NetPickCell(lane, level, arguments.state, choice);
+		}
+		if (threadIdx.x == 0)
+		{
+			Rand rand = LoadRandState(lane);
+			RoundApply(lane, level, arguments.waves[lane.s(S_ROOT_INDEX)], rand, choice);
+			StoreRandState(lane, rand);
+			if (lane.s(S_STATE) == LANE_DONE) atomicSub(&arguments.counters->running, 1);
+		}
+	}
+	else if (threadIdx.x == 0)
+	{
 		if (post) PostLane(arguments, lane, level);
 		else PreLane(arguments, lane, level, index);
 	}
@@ -1100,6 +1127,7 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 	const char* privateLimitText = std::getenv("PVZ_CUDA_PRIVATE_LIMIT");
 	const int32_t privateLimit = privateLimitText ? std::atoi(privateLimitText) : 0;
 	const bool privateWave = batchLanes <= privateLimit;
+	const bool cooperative = std::getenv("PVZ_CUDA_COOPERATIVE_HEADS") != nullptr;
 	// The round loop reaches the root, wave-table and pair arrays through `arguments`, and GrowRoots /
 	// GrowPairs move them, so a grow that did not refresh the copy would leave the host writing one
 	// buffer while the kernels read a freed one.  Whether that reads as garbage or as the same bytes
@@ -1175,7 +1203,8 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 			// Over all lanes, not over the compacted ones: a round that needs a forward for 7,500 of
 			// 21,504 lanes would otherwise launch 30 blocks into 84 SMs, and heads+apply was then the
 			// most expensive third of the round.  The threads that find -1 retire immediately.
-			if (privateWave) PrivateRoundKernel<true><<<batchLanes, 128>>>(arguments);
+			if (privateWave && cooperative) PrivateRoundKernel<true, true><<<batchLanes, 128>>>(arguments);
+			else if (privateWave) PrivateRoundKernel<true><<<batchLanes, 128>>>(arguments);
 			else PostKernel<<<grid, block>>>(arguments);
 			CHECK_LAUNCH();
 			CALL(cudaEventRecord(dev.phaseStop[2]));

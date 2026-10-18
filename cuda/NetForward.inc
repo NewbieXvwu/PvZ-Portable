@@ -110,33 +110,34 @@ PVZ_SIM void NetTrunk(Lane lane, const NetParams& net, const NetState& state)
 
 // The global context: mean and max over the grid plus the scalar branch.  It reads the trunk's last
 // result out of `hidden`, so it runs after NetTrunk (host) or after the batched GEMMs (device).
-PVZ_SIM void NetContext(Lane lane, const NetParams& net, const NetState& state)
+PVZ_SIM void NetContextChannel(Lane lane, const NetParams& net, const NetState& state, int32_t oc)
 {
 	const int32_t width = net.width;
 	const int32_t context = net.contextSize;
-	for (int32_t oc = 0; oc < width; ++oc)
+
+	// The plane is post-ReLU, so a 0 start for the max matches std::max_element over non-negative
+	// values without needing a first-element special case.
+	float total = 0.0f;
+	float largest = 0.0f;
+	for (int32_t cell = 0; cell < kCells; ++cell)
 	{
-		// The plane is post-ReLU, so a 0 start for the max matches std::max_element over non-negative
-		// values without needing a first-element special case.
-		float total = 0.0f;
-		float largest = 0.0f;
-		for (int32_t cell = 0; cell < kCells; ++cell)
-		{
-			const float value = PVZ_PLANE(state.hidden, width, oc, cell);
-			total += value;
-			if (value > largest) largest = value;
-		}
-		PVZ_VECTOR(state.context, context, oc) = total / static_cast<float>(kCells);
-		if (net.meanmax) PVZ_VECTOR(state.context, context, width + oc) = largest;
+		const float value = PVZ_PLANE(state.hidden, width, oc, cell);
+		total += value;
+		if (value > largest) largest = value;
 	}
-	for (int32_t oc = 0; oc < width; ++oc)
-	{
-		const float* weight = net.scalarWeight + oc * net.scalarCount;
-		float acc = net.scalarBias[oc];
-		for (int32_t index = 0; index < net.scalarCount; ++index)
-			acc += PVZ_VECTOR(state.scalars, kScalarFeatures, index) * weight[index];
-		PVZ_VECTOR(state.context, context, context - width + oc) = Relu(acc);
-	}
+	PVZ_VECTOR(state.context, context, oc) = total / static_cast<float>(kCells);
+	if (net.meanmax) PVZ_VECTOR(state.context, context, width + oc) = largest;
+
+	const float* weight = net.scalarWeight + oc * net.scalarCount;
+	float acc = net.scalarBias[oc];
+	for (int32_t index = 0; index < net.scalarCount; ++index)
+		acc += PVZ_VECTOR(state.scalars, kScalarFeatures, index) * weight[index];
+	PVZ_VECTOR(state.context, context, context - width + oc) = Relu(acc);
+}
+
+PVZ_SIM void NetContext(Lane lane, const NetParams& net, const NetState& state)
+{
+	for (int32_t oc = 0; oc < net.width; ++oc) NetContextChannel(lane, net, state, oc);
 }
 
 PVZ_SIM void NetEncode(Lane lane, const NetParams& net, const NetState& state)
@@ -191,38 +192,44 @@ PVZ_SIM void CellPre(Lane lane, const NetParams& net, const NetState& state)
 // batched GEMM; base is folded in at the end of the sum rather than the start, which is the one place the
 // device and host orders differ by rounding -- and the CPU original gets it from a BLAS accumulation
 // anyway, so neither side is bitwise against the other here.
-PVZ_SIM void CellLogits(Lane lane, const NetParams& net, const NetState& state, int32_t packet)
+PVZ_SIM void CellLogitsChannel(Lane lane, const NetParams& net, const NetState& state, int32_t packet, int32_t oc)
 {
 	const int32_t width = net.width;
 	const int32_t context = net.contextSize;
 	const int32_t step = 2 * width + context;
 	const float* embedding = net.packetEmbedding + packet * width;
 
+	const float* kernel = net.cellWeight + oc * step;
+	float base = net.cellBias[oc];
+	for (int32_t index = 0; index < width; ++index) base += embedding[index] * kernel[width + index];
+	for (int32_t index = 0; index < context; ++index)
+		base += PVZ_VECTOR(state.context, context, index) * kernel[2 * width + index];
+	for (int32_t cell = 0; cell < kCells; ++cell)
+	{
+		float& value = PVZ_PLANE(state.scratch, width, oc, cell);
+		value = Relu(value + base);
+	}
+}
+
+PVZ_SIM void CellLogitCell(Lane lane, const NetParams& net, const NetState& state, int32_t cell)
+{
+	const int32_t width = net.width;
+
+	// The lawn is 5x9 of the 6x10 feature grid and column 9 (beyond the lawn) is never an option:
+	// EnvironmentRollout.cpp:341 reads cell / 9 * 10 + cell % 9.
+	const int32_t gridCell = (cell / kGridCols) * kCols + cell % kGridCols;
+	float acc = net.cellOutBias[0];
 	for (int32_t oc = 0; oc < width; ++oc)
-	{
-		const float* kernel = net.cellWeight + oc * step;
-		float base = net.cellBias[oc];
-		for (int32_t index = 0; index < width; ++index) base += embedding[index] * kernel[width + index];
-		for (int32_t index = 0; index < context; ++index)
-			base += PVZ_VECTOR(state.context, context, index) * kernel[2 * width + index];
-		for (int32_t cell = 0; cell < kCells; ++cell)
-		{
-			float& value = PVZ_PLANE(state.scratch, width, oc, cell);
-			value = Relu(value + base);
-		}
-	}
-	for (int32_t cell = 0; cell < kLogitCells; ++cell)
-	{
-		// The lawn is 5x9 of the 6x10 feature grid and column 9 (beyond the lawn) is never an option:
-		// EnvironmentRollout.cpp:341 reads cell / 9 * 10 + cell % 9.
-		const int32_t gridCell = (cell / kGridCols) * kCols + cell % kGridCols;
-		float acc = net.cellOutBias[0];
-		for (int32_t oc = 0; oc < width; ++oc)
-			acc += PVZ_PLANE(state.scratch, width, oc, gridCell) * net.cellOut[oc];
-		// Strided by the activation slot like every other per-lane array: a flat `logits[cell]` would put
-		// every lane of the batch on top of the same 54 floats.
-		state.logits[VectorIndex(kLogitCells, lane.netSlot, cell)] = acc;
-	}
+		acc += PVZ_PLANE(state.scratch, width, oc, gridCell) * net.cellOut[oc];
+	// Strided by the activation slot like every other per-lane array: a flat `logits[cell]` would put
+	// every lane of the batch on top of the same 54 floats.
+	state.logits[VectorIndex(kLogitCells, lane.netSlot, cell)] = acc;
+}
+
+PVZ_SIM void CellLogits(Lane lane, const NetParams& net, const NetState& state, int32_t packet)
+{
+	for (int32_t oc = 0; oc < net.width; ++oc) CellLogitsChannel(lane, net, state, packet, oc);
+	for (int32_t cell = 0; cell < kLogitCells; ++cell) CellLogitCell(lane, net, state, cell);
 }
 
 // The plant gate and the packet pick -- everything up to the cell head.  Split out of NetChoose because

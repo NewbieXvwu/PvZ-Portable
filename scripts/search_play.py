@@ -384,7 +384,7 @@ def _play(job: dict) -> dict:
     # from the seed, so a reused process plays the same game (scripts/perf_rollout_check.py).
     env = _W.get("env")
     if env is None:
-        env = _W["env"] = EventWaitEnv(args.resource_dir, headless=True)
+        env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
         if _W.get("cpp_rollouts"):
             env.load_rollout_net(_W["rollout_file"])
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
@@ -504,6 +504,8 @@ def main() -> None:
     p.add_argument("--rollout-backend", choices=["cpp", "cuda"], default="cpp",
                    help="where the search's continuations run: cpp = the original simulator (default, and the "
                         "reference the GPU is checked against), cuda = build/rollout_cuda --serve")
+    p.add_argument("--executable", default=str(ROOT / "build/pvz-portable"),
+                   help="fixed original-simulator binary used for roots and real game decisions")
     p.add_argument("--cuda-binary", default=str(ROOT / "build/rollout_cuda"))
     p.add_argument("--cuda-socket", default=None, help="an already-running server; by default start one here")
     p.add_argument("--cuda-lanes", type=int, default=2048,
