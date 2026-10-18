@@ -50,6 +50,16 @@ RootRecord Root()
 	return root;
 }
 
+// Most small cases below inject entities by writing their fields directly. Keep their scan bounds
+// broad; the dedicated equivalence case below exercises real import/allocation bounds instead.
+int LoadInjectedRoot(Lane lane, const RootRecord& root, const LevelInfo& level)
+{
+    const int result = LoadRoot(lane, root, level);
+    lane.s(S_ZOMBIE_END) = kZombieSlots;
+    lane.s(S_PROJECTILE_END) = kProjectileSlots;
+    return result;
+}
+
 int main()
 {
 	for (int root = 0; root < 425; ++root)
@@ -71,8 +81,8 @@ int main()
 		for (int slot = 0; slot < kWaveZombieSlots; ++slot) second.type[wave][slot] = 3;
 	}
 	State a, b;
-	assert(LoadRoot(a.lane(), root, level) == 1);
-	assert(LoadRoot(b.lane(), root, level) == 1);
+	assert(LoadInjectedRoot(a.lane(), root, level) == 1);
+	assert(LoadInjectedRoot(b.lane(), root, level) == 1);
 	a.lane().s(S_FUTURE_SEED) = b.lane().s(S_FUTURE_SEED) = 12345;
 	Rand ra, rb;
 	ra.Seed(0, 12345);
@@ -118,10 +128,52 @@ int main()
 	}
 	assert(changes);
 
+	// Bounded and full-capacity sweeps must consume the same RNG and produce the same state,
+	// including new wave spawns, removed slots, recycled holes, and projectile allocations.
+	State bounded, full;
+	auto live = Root();
+	live.zombieCount = 1;
+	live.zombies[0].type = 0;
+	live.zombies[0].body = live.zombies[0].bodyMax = 270;
+	live.zombies[0].stateBits = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
+	live.zombies[0].posX = 780.0f;
+	live.zombies[0].velX = 0.3f;
+	live.zombies[0].animStart = 91;
+	live.zombies[0].animFrames = 47;
+	live.zombies[0].animRate = 13.3f;
+	live.zombies[0].fade = -1;
+	assert(LoadRoot(bounded.lane(), live, level));
+	assert(bounded.lane().s(S_ZOMBIE_END) == 1 && bounded.lane().s(S_PROJECTILE_END) == 0);
+	full.ints = bounded.ints;
+	full.floats = bounded.floats;
+	full.lane().s(S_ZOMBIE_END) = kZombieSlots;
+	full.lane().s(S_PROJECTILE_END) = kProjectileSlots;
+	Rand boundedRand, fullRand;
+	boundedRand.Seed(0, 123);
+	fullRand = boundedRand;
+	for (int tick = 0; tick < 300; ++tick)
+	{
+		if (tick % 20 == 0)
+		{
+			AddProjectile(bounded.lane(), 0, 0, 20, 0, 760.0f, 0.0f);
+			AddProjectile(full.lane(), 0, 0, 20, 0, 760.0f, 0.0f);
+		}
+		UpdateTick(bounded.lane(), level, first, boundedRand);
+		UpdateTick(full.lane(), level, first, fullRand);
+		assert(boundedRand.state == fullRand.state && bounded.floats == full.floats);
+		auto comparison = full.ints;
+		Lane comparable{comparison.data(), full.floats.data(), 0, 1, 0};
+		comparable.s(S_ZOMBIE_END) = bounded.lane().s(S_ZOMBIE_END);
+		comparable.s(S_PROJECTILE_END) = bounded.lane().s(S_PROJECTILE_END);
+		assert(comparison == bounded.ints);
+	}
+	assert(bounded.lane().s(S_ZOMBIE_END) < kZombieSlots);
+	assert(bounded.lane().s(S_PROJECTILE_END) < kProjectileSlots);
+
 	// This real failing root has a normal zombie at x=550 and a potato at x=520. The constructor's
 	// [50,70] mouth misses it, but LoadPlainZombieReanim's [20,70] mouth overlaps by exactly 20 px.
 	State mouth;
-	assert(LoadRoot(mouth.lane(), root, level) == 1);
+	assert(LoadInjectedRoot(mouth.lane(), root, level) == 1);
 	mouth.lane().i(F_PLANT_TYPE, 36) = 4;
 	mouth.lane().f(F_PLANT_X, 36) = 520.0f;
 	assert(FindEatTarget(mouth.lane(), level, 3, 550, 0) == 36);
@@ -132,7 +184,7 @@ int main()
 
 	State vaulted;
 	auto pole = vaulted.lane();
-	assert(LoadRoot(pole, root, level) == 1);
+	assert(LoadInjectedRoot(pole, root, level) == 1);
 	pole.i(F_ZOMBIE_TYPE, 0) = 3;
 	pole.i(F_ZOMBIE_FLAGS, 0) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
 	pole.i(F_ZOMBIE_PHASE, 0) = 11;
@@ -164,7 +216,7 @@ int main()
 	// Imported corpses do not restart a guessed duration or disappear at phaseCounter==0.
 	State fading;
 	auto corpse = fading.lane();
-	assert(LoadRoot(corpse, root, level) == 1);
+	assert(LoadInjectedRoot(corpse, root, level) == 1);
 	corpse.i(F_ZOMBIE_TYPE, 0) = 0;
 	corpse.i(F_ZOMBIE_FLAGS, 0) = ZB_DYING | ZB_ON_BOARD;
 	corpse.i(F_ZOMBIE_FADE, 0) = -1;
@@ -178,7 +230,7 @@ int main()
 	assert(corpse.i(F_ZOMBIE_TYPE, 0) == -1 && corpse.s(S_ZOMBIES_KILLED) == 1);
 
 	State shot;
-	assert(LoadRoot(shot.lane(), root, level) == 1);
+	assert(LoadInjectedRoot(shot.lane(), root, level) == 1);
 	Lane pea = shot.lane();
 	pea.i(F_ZOMBIE_TYPE, 0) = 0;
 	pea.i(F_ZOMBIE_FLAGS, 0) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
@@ -210,7 +262,7 @@ int main()
 	// zombies in range, not merely the one that caused the trigger.
 	State potato;
 	auto mine = potato.lane();
-	assert(LoadRoot(mine, root, level) == 1);
+	assert(LoadInjectedRoot(mine, root, level) == 1);
 	level.plantCount = 1;
 	level.plants[0].seedType = 4;
 	level.plants[0].behavior = PB_POTATO;
@@ -244,7 +296,7 @@ int main()
 	// money will only be collected at the next tick's head. Imported pending coins are not produced twice.
 	State sunlight;
 	auto sun = sunlight.lane();
-	assert(LoadRoot(sun, root, level) == 1);
+	assert(LoadInjectedRoot(sun, root, level) == 1);
 	sun.s(S_SUN_COUNT_DOWN) = 1;
 	SpawnSkySun(sun, projectileRand);
 	assert(sun.s(S_SUN_PRODUCED) == 25 && sun.s(S_SUN) == 0);
@@ -257,7 +309,7 @@ int main()
 
 	// SeedPacket::Update activates strictly after the refresh time and clears its counter.
 	State cooldown;
-	assert(LoadRoot(cooldown.lane(), root, level) == 1);
+	assert(LoadInjectedRoot(cooldown.lane(), root, level) == 1);
 	auto lane = cooldown.lane();
 	lane.i(F_PACKET_TYPE, 0) = 0;
 	lane.i(F_PACKET_REFRESH, 0) = 750;

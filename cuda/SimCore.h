@@ -131,8 +131,16 @@ PVZ_SIM int32_t FeatureColumn(double position)
 PVZ_SIM int32_t FindFreeSlot(Lane lane, IntField typeField, int32_t slots)
 {
 	int32_t* column = lane.base(typeField);
-	for (int32_t slot = 0; slot < slots; ++slot)
-		if (column[slot * lane.stride] < 0) return slot;
+	int32_t limit = slots;
+	if (typeField == F_ZOMBIE_TYPE) limit = Minimum(slots, lane.s(S_ZOMBIE_END) + 1);
+	if (typeField == F_PROJ_TYPE) limit = Minimum(slots, lane.s(S_PROJECTILE_END) + 1);
+	for (int32_t slot = 0; slot < limit; ++slot)
+		if (column[slot * lane.stride] < 0)
+		{
+			if (typeField == F_ZOMBIE_TYPE) lane.s(S_ZOMBIE_END) = Maximum(lane.s(S_ZOMBIE_END), slot + 1);
+			if (typeField == F_PROJ_TYPE) lane.s(S_PROJECTILE_END) = Maximum(lane.s(S_PROJECTILE_END), slot + 1);
+			return slot;
+		}
 	return -1;
 }
 

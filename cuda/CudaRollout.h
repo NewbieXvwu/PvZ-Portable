@@ -412,6 +412,7 @@ enum ScalarField {
 	// the device's scalar block is reused across batches and repeats.
 	S_FIRST_KIND, S_FIRST_PACKET, S_FIRST_ROW, S_FIRST_COL, S_FIRST_TICKS,
 	S_FUTURE_SEED,                // immutable seed for resampling future wave composition
+	S_ZOMBIE_END, S_PROJECTILE_END, // exclusive high-water bounds; holes retain original slot order
 	S_SCALAR_COUNT
 };
 

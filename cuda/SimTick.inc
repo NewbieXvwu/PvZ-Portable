@@ -220,7 +220,7 @@ PVZ_SIM float TotalHealthInWave(Lane lane, int32_t wave)
 {
 	if (wave < 0) return 0.0f;
 	float total = 0.0f;
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		const int32_t type = lane.i(F_ZOMBIE_TYPE, slot);
 		if (type < 0) continue;
@@ -286,7 +286,7 @@ PVZ_SIM void StartDeathAnimation(Lane lane, int32_t slot, int32_t pole, Rand& ra
 	if (!pole && hit == 99 && lane.i(F_ZOMBIE_CHILLED, slot) == 0)
 	{
 		int32_t onScreen = 0;
-		for (int32_t z = 0; z < kZombieSlots; ++z)
+		for (int32_t z = 0; z < lane.s(S_ZOMBIE_END); ++z)
 			if (ZombieIsThreat(lane.i(F_ZOMBIE_TYPE, z), lane.i(F_ZOMBIE_FLAGS, z))) ++onScreen;
 		if (onScreen <= 5) { start = 292; frames = 137; rate = 14.0f; }
 		else { start = 217; frames = 33; }
@@ -354,7 +354,7 @@ PVZ_SIM int32_t PeaTarget(Lane lane, int32_t row, int32_t peaX)
 {
 	int32_t best = -1;
 	int32_t bestX = 0x7fffffff;
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		if (lane.i(F_ZOMBIE_TYPE, slot) < 0) continue;
 		if (lane.i(F_ZOMBIE_FLAGS, slot) & (ZB_DEAD | ZB_DYING | ZB_BURNED | ZB_MOWERED)) continue;
@@ -372,7 +372,7 @@ PVZ_SIM int32_t PeaTarget(Lane lane, int32_t row, int32_t peaX)
 
 PVZ_SIM void UpdateProjectiles(Lane lane, const LevelInfo& level, Rand& rand)
 {
-	for (int32_t slot = 0; slot < kProjectileSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_PROJECTILE_END); ++slot)
 	{
 		if (lane.i(F_PROJ_TYPE, slot) < 0) continue;
 		// UpdateNormalMotion moves mPosX then checks collision, but GetProjectileRect still reads mX.
@@ -485,7 +485,7 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 		if (fuse > 0) { --fuse; }
 		if (fuse != 0) break;
 		const int32_t center = static_cast<int32_t>(plantX) + 40;   // DoSpecial aPosX = mX + mWidth/2
-		for (int32_t zombie = 0; zombie < kZombieSlots; ++zombie)
+		for (int32_t zombie = 0; zombie < lane.s(S_ZOMBIE_END); ++zombie)
 		{
 			if (lane.i(F_ZOMBIE_TYPE, zombie) < 0) continue;
 			const int32_t zflags = lane.i(F_ZOMBIE_FLAGS, zombie);
@@ -529,7 +529,7 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 		// Trigger geometry is separate from the explosion circle (Plant.cpp:4864-4896).
 		int32_t trigger = 0;
 		int32_t attackX = static_cast<int32_t>(plantX), attackWidth = 55;
-		for (int32_t zombie = 0; zombie < kZombieSlots; ++zombie)
+		for (int32_t zombie = 0; zombie < lane.s(S_ZOMBIE_END); ++zombie)
 		{
 			const int32_t flags = lane.i(F_ZOMBIE_FLAGS, zombie);
 			if (lane.i(F_ZOMBIE_TYPE, zombie) < 0 || !(flags & ZB_HAS_HEAD)
@@ -546,7 +546,7 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 		}
 		if (!trigger) break;
 		const int32_t center = static_cast<int32_t>(plantX) + 20;
-		for (int32_t zombie = 0; zombie < kZombieSlots; ++zombie)
+		for (int32_t zombie = 0; zombie < lane.s(S_ZOMBIE_END); ++zombie)
 		{
 			if (!ZombieLive(lane.i(F_ZOMBIE_TYPE, zombie), lane.i(F_ZOMBIE_FLAGS, zombie))) continue;
 			if (!BlastHit(center, row, static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie)),
@@ -568,7 +568,7 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 PVZ_SIM int32_t RowHasZombieAhead(Lane lane, int32_t row, float muzzleX)
 {
 	const int32_t from = static_cast<int32_t>(muzzleX);
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		if (lane.i(F_ZOMBIE_TYPE, slot) < 0) continue;
 		const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
@@ -736,7 +736,7 @@ PVZ_SIM void UpdateMowers(Lane lane)
 		const int32_t mowerX = static_cast<int32_t>(lane.f(F_MOWER_X, slot));
 		// The attack-rect sweep runs in every non-squished state, READY included -- that is how a READY
 		// mower is discovered by the zombie standing on it (LawnMower.cpp:207 skips only mDead).
-		for (int32_t zombie = 0; zombie < kZombieSlots; ++zombie)
+		for (int32_t zombie = 0; zombie < lane.s(S_ZOMBIE_END); ++zombie)
 		{
 			if (lane.i(F_ZOMBIE_TYPE, zombie) < 0) continue;
 			const int32_t zf = lane.i(F_ZOMBIE_FLAGS, zombie);
@@ -1048,7 +1048,7 @@ PVZ_SIM void CheckVictory(Lane lane, const WaveTable& waves)
 {
 	if (lane.s(S_RESULT) != 0) return;
 	if (lane.s(S_WAVE) < waves.waveCount) return;
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		if (ZombieIsThreat(lane.i(F_ZOMBIE_TYPE, slot), lane.i(F_ZOMBIE_FLAGS, slot))) return;
 	}
@@ -1069,7 +1069,7 @@ PVZ_SIM void UpdateTick(Lane lane, const LevelInfo& level, const WaveTable& wave
 		UpdatePlant(lane, level, slot, rand);
 		UpdatePlantAnimation(lane, slot);
 	}
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		UpdateZombie(lane, level, slot, rand);
 		UpdateZombieAnimation(lane, slot);
@@ -1115,7 +1115,7 @@ PVZ_SIM int32_t InLeftZone(float position)
 PVZ_SIM uint64_t LeftZoneMask(Lane lane)
 {
 	uint64_t mask = 0;
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		if (lane.i(F_ZOMBIE_TYPE, slot) < 0) continue;
 		const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);

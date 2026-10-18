@@ -37,7 +37,7 @@ PVZ_SIM void UpdateZombieAnimation(Lane lane, int32_t slot)
 // mower animation is not an attachment: it advances here AND at Zombie::UpdateReanim (5365).
 PVZ_SIM void UpdateMowedAnimations(Lane lane)
 {
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 		if (lane.i(F_ZOMBIE_FLAGS, slot) & ZB_MOWERED) UpdateZombieAnimation(lane, slot);
 }
 

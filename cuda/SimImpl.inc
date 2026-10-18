@@ -61,6 +61,7 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.s(S_ERROR) = ERR_BAD_ROOT;
 		return 0;
 	}
+	lane.s(S_ZOMBIE_END) = lane.s(S_PROJECTILE_END) = 0;
 	for (int32_t slot = 0; slot < kPlantSlots; ++slot)
 	{
 		for (int32_t field = F_PLANT_TYPE; field <= F_PLANT_ONBOARD; ++field)
@@ -309,7 +310,7 @@ PVZ_SIM void StoreResult(Lane lane, RolloutResult& out)
 
 	int32_t zombiesAlive = 0, plantsAlive = 0, mowersReady = 0;
 	for (int32_t row = 0; row < kRows; ++row) out.rowMinZombieX[row] = INT32_MIN;
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		if (lane.i(F_ZOMBIE_TYPE, slot) < 0) continue;
 		const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
@@ -376,7 +377,7 @@ PVZ_SIM void StoreLeafValueFeatures(Lane lane, const LevelInfo& level, const flo
 
 	// Zombies: health sum / 200, eating, chilled -- channels 54..89, the same four the student encodes,
 	// filtered the same way (the lean observation lists a zombie iff !mDead, LawnApp.cpp:1655).
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		const int32_t type = lane.i(F_ZOMBIE_TYPE, slot);
 		if (type < 0) continue;
@@ -479,7 +480,7 @@ PVZ_SIM void BuildFeatures(Lane lane, const LevelInfo& level, const NetState& bu
 	}
 
 	// Zombies: health sum / 200, plus the eating and chilled channels (EnvironmentRollout.cpp:116).
-	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
+	for (int32_t slot = 0; slot < lane.s(S_ZOMBIE_END); ++slot)
 	{
 		const int32_t type = lane.i(F_ZOMBIE_TYPE, slot);
 		if (type < 0) continue;
