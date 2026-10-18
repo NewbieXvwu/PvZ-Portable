@@ -36,6 +36,7 @@ def main():
     p.add_argument("--host", default=str(ROOT / "build/sim_host"))
     p.add_argument("--resource-dir", default=os.path.expanduser("~/.cache/pvz-research-resources"))
     p.add_argument("--skip-host", action="store_true")
+    p.add_argument("--dump-leaves", action="store_true", help="save original raw leaf state for mechanics diagnosis")
     args = p.parse_args()
     args.work.mkdir(parents=True, exist_ok=True)
     waits = [int(t) for t in args.waits.split(",")]
@@ -52,6 +53,7 @@ def main():
     from render_episode import load_training_task, training_task_kwargs, _frame
     from scripted_baseline import profile_for_deck
     from cuda_leaf_compare import read_features, describe, read_gpu
+    from cuda_root_corpus import _row_min_zombie_x
 
     net_path = args.work / "student.pvzrn"
     export_student(load_student(args.policy), str(net_path))
@@ -86,11 +88,16 @@ def main():
                         child = env.rollout({"type": "wait", "ticks": ticks, "until": "timeout"},
                                             obs["tick"] + ticks, snapshot_id=root_id, seed=future,
                                             sim_skip=0, max_actions=1)
+                        if args.dump_leaves:
+                            env.cuda_dump(args.work / "cpu_leaves.cudaroot", write_level=not metadata)
                         board, scalars = featurize_numpy(_frame(child))
                         reference.append(np.concatenate([board.reshape(-1), scalars, context]))
                         pairs.append(f"{root_index} {future} 2 -1 0 0 {ticks}\n")
                         metadata.append({"root": root_index, "seed": seed, "tick": obs["tick"],
-                                         "wait": ticks, "end_tick": child["tick"]})
+                                         "wait": ticks, "end_tick": child["tick"],
+                                         "cpu_row_min_x": _row_min_zombie_x(child),
+                                         "cpu_zombies_alive": len(child["zombies"]),
+                                         "cpu_plants_alive": len(_frame(child)["plants"])})
                     env.restore(root_id)
                 finally:
                     env.release_snapshot(root_id)
@@ -133,6 +140,11 @@ def main():
         diff = features["gpu"][indices] != expected[indices]
         row = {"pairs": len(indices), "differing_pairs": int(np.any(diff, axis=1).sum()),
                "differing_floats": int(diff.sum()),
+               "row_position_differing_pairs": sum(metadata[i]["cpu_row_min_x"] != records[i]["rowMinZombieX"]
+                                                    for i in indices),
+               "entity_count_differing_pairs": sum(metadata[i]["cpu_zombies_alive"] != records[i]["zombiesAlive"]
+                                                    or metadata[i]["cpu_plants_alive"] != records[i]["plantsAlive"]
+                                                    for i in indices),
                "channels": dict(Counter(int(i // 60) if i < 5520 else f"scalar{int(i - 5520)}"
                                         for i in np.nonzero(diff)[1]))}
         stable = [i for i in indices if not metadata[i]["root_headless"] and not metadata[i]["may_spawn_wave"]]
@@ -145,9 +157,14 @@ def main():
         report["by_wait"][str(ticks)] = row
     for i, item in enumerate(metadata):
         where = np.flatnonzero(expected[i] != features["gpu"][i])
-        if not len(where):
+        positions_differ = item["cpu_row_min_x"] != records[i]["rowMinZombieX"]
+        counts_differ = (item["cpu_zombies_alive"] != records[i]["zombiesAlive"]
+                         or item["cpu_plants_alive"] != records[i]["plantsAlive"])
+        if not len(where) and not positions_differ and not counts_differ:
             continue
         report["differences"].append({**item, "gpu_end_tick": records[i]["endTick"],
+            "gpu_row_min_x": records[i]["rowMinZombieX"],
+            "gpu_zombies_alive": records[i]["zombiesAlive"], "gpu_plants_alive": records[i]["plantsAlive"],
             "differing_floats": len(where), "features": [
                 {"name": describe(int(index)), "cpu": float(expected[i, index]),
                  "gpu": float(features["gpu"][i, index])} for index in where[:12]]})

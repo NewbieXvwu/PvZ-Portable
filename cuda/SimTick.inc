@@ -32,12 +32,7 @@ namespace {
 // Chilling doubles the interval to 8 (`:6863-6866`); the gate is on the zombie's *own age* (`:6867`).
 constexpr int cEatInterval = 4;
 constexpr int cEatDamage = 4;
-// The animated ground walk advances mPosX by `K * mVelX` per update (reanim.md §2: K = 0.47 *
-// frameCount/(frameCount-1), frameCount 47 on grass -> 0.480217).  Chilling halves it, because
-// ApplyAnimRate stores `rate * 0.5f` for a chilled zombie (Zombie.cpp:6640) -- NOT the 0.4
-// CHILLED_SPEED_FACTOR, which only ever touches the pogo/balloon/dolphin/snorkel non-ground branches.
-constexpr float cWalkFactor = 0.480217f;
-constexpr float cChilledWalkFactor = 0.5f;
+// GroundAdvance uses the current reanimation frame, not a mean walking-speed factor.
 // ApplyChill: mChilledCounter = max(aChillTime, current), aChillTime = 1000 (Zombie.cpp:7534).  Not 400.
 constexpr int cChilledTicks = 1000;
 // A snow pea does its damage plus the chill; the pea's own travel speed (Projectile MOTION_STRAIGHT).
@@ -177,21 +172,31 @@ PVZ_SIM int32_t BlastHit(int32_t centerX, int32_t plantRow, int32_t zombieX, int
 	return dx * dx + dy * dy <= radius * radius ? 1 : 0;
 }
 
-// Cherry's ApplyBurn (Zombie.cpp:8692): a body under 1800 -- every level-7 zombie -- is killed outright
-// regardless of helmet or body, so the kernel does not route it through the damage layers.  A burned
-// corpse is removed like any dying one; the exact burn-anim fade is unmeasured, so it reuses a fixed
-// lingering window rather than the shot-death random (it only delays the slot free, not the kill).
-constexpr int cBurnedTicks = 100;
+// DieWithLoot/DieNoLoot share the board kill counter in this scope. Rendering-only charred
+// animations are not zombie entities and must not occupy a simulation slot.
+PVZ_SIM void RemoveZombie(Lane lane, int32_t slot)
+{
+	if (lane.i(F_ZOMBIE_FLAGS, slot) & ZB_ON_BOARD) ++lane.s(S_ZOMBIES_KILLED);
+	lane.i(F_ZOMBIE_FLAGS, slot) |= ZB_DEAD;
+	lane.i(F_ZOMBIE_TYPE, slot) = -1;
+}
+
 PVZ_SIM void ApplyBurn(Lane lane, int32_t slot)
 {
 	const int32_t flags = lane.i(F_ZOMBIE_FLAGS, slot);
 	if (flags & (ZB_DEAD | ZB_BURNED)) return;
-	lane.i(F_ZOMBIE_BODY, slot) = 0;
-	lane.i(F_ZOMBIE_HELM, slot) = 0;
-	lane.i(F_ZOMBIE_SHIELD, slot) = 0;
-	lane.f(F_ZOMBIE_VELX, slot) = 0.0f;
-	lane.i(F_ZOMBIE_FLAGS, slot) = (flags | ZB_DYING | ZB_BURNED) & ~ZB_EATING;
-	lane.i(F_ZOMBIE_PHASE_COUNTER, slot) = cBurnedTicks;
+	// Zombie.cpp:8720-8830: ordinary headed zombies disappear immediately; headless
+	// zombies stay burned for 300 ticks, while dying/airborne/mowed ones disappear too.
+	if ((flags & (ZB_DYING | ZB_MOWERED)) || lane.i(F_ZOMBIE_PHASE, slot) == 12 || (flags & ZB_HAS_HEAD))
+	{
+		lane.i(F_ZOMBIE_BODY, slot) = 0;
+		RemoveZombie(lane, slot);
+		return;
+	}
+	lane.f(F_ZOMBIE_ANIM_RATE, slot) = 0.0f;
+	lane.i(F_ZOMBIE_FLAGS, slot) = (flags | ZB_BURNED) & ~ZB_EATING;
+	lane.i(F_ZOMBIE_PHASE, slot) = 2;
+	lane.i(F_ZOMBIE_PHASE_COUNTER, slot) = 300;
 }
 
 // A zombie slot holds a live, still-playing zombie: present, not mDead and not in a terminal phase.
@@ -278,34 +283,24 @@ PVZ_SIM void AddProjectile(Lane lane, int32_t row, int32_t type, int32_t damage,
 	lane.f(F_PROJ_VELY, slot) = 0.0f;
 }
 
-// How long a corpse lingers before the slot frees.  reanim.md §3 measured the dying lifetime as
-// `k + 99` on grass, where `k` is the updates for the death clip's loop to reach mAnimTime >= 1
-// (frameCount * 100 / aDeathAnimRate, in float32).  `aDeathAnimRate` is RandRangeFloat(24,30) and the
-// clip is chosen by Rand(100); the table gives the frame count per clip: anim_death is 39 frames for
-// the normal/cone/flag and 27 for the pole vaulter, anim_death2 is 33, anim_superlongdeath is 137 at
-// rate 14.  The spec says to *table* these rather than ceilf them; the exact-integer crossings cost a
-// single tick and cannot move a 2500-tick leaf, so the kernel takes ceil(frameCount*100/rate).
-PVZ_SIM int32_t DeathFadeTicks(Lane lane, int32_t vaulter, int32_t chilledNow, Rand& rand)
+// PlayDeathAnim selects only clips that exist on the zombie's resource.
+PVZ_SIM void StartDeathAnimation(Lane lane, int32_t slot, int32_t pole, Rand& rand)
 {
-	const int32_t hit = rand.Int(100);
 	float rate = 24.0f + 6.0f * rand.ZeroToOne();
-	int32_t frameCount = vaulter ? 27 : 39;                 // anim_death
-	if (hit == 99 && !chilledNow)
+	const int32_t hit = rand.Int(100);
+	int32_t start = pole ? 138 : 178, frames = pole ? 27 : 39;
+	if (!pole && hit == 99 && lane.i(F_ZOMBIE_CHILLED, slot) == 0)
 	{
-		// anim_superlongdeath needs CountZombiesOnScreen() <= 5 as well; the count is cheap to take now.
 		int32_t onScreen = 0;
-		for (int32_t slot = 0; slot < kZombieSlots; ++slot)
-			if (lane.i(F_ZOMBIE_TYPE, slot) >= 0 && !(lane.i(F_ZOMBIE_FLAGS, slot) & ZB_DEAD)) ++onScreen;
-		if (onScreen <= 5) { rate = 14.0f; frameCount = 137; }
-		else if (hit > 50) frameCount = 33;                  // falls through to anim_death2
+		for (int32_t z = 0; z < kZombieSlots; ++z)
+			if (lane.i(F_ZOMBIE_TYPE, z) >= 0 && !(lane.i(F_ZOMBIE_FLAGS, z) & ZB_DEAD)) ++onScreen;
+		if (onScreen <= 5) { start = 292; frames = 137; rate = 14.0f; }
+		else { start = 217; frames = 33; }
 	}
-	else if (hit > 50)
-		frameCount = 33;                                     // anim_death2
-	float loops = static_cast<float>(frameCount) * 100.0f / rate;
-	int32_t k = static_cast<int32_t>(loops);
-	if (static_cast<float>(k) < loops) ++k;                  // ceil without fast-math
-	if (chilledNow) k *= 2;                                  // ApplyAnimRate halves the rate -> doubles k
-	return k + 99;
+	else if (!pole && hit > 50) { start = 217; frames = 33; }
+	lane.i(F_ZOMBIE_PHASE, slot) = 1;
+	lane.i(F_ZOMBIE_FADE, slot) = -1;
+	PlayZombieAnimation(lane, slot, start, frames, rate, 3);
 }
 
 // Zombie::TakeDamage (Zombie.cpp:7973-8002): a flying hit is absorbed first, then the shield (unless it
@@ -345,8 +340,7 @@ PVZ_SIM void ApplyBodyDamage(Lane lane, const LevelInfo& level, int32_t slot, in
 	lane.i(F_ZOMBIE_FLAGS, slot) = (flags | ZB_DYING) & ~ZB_EATING;
 	const int32_t zombieType = lane.i(F_ZOMBIE_TYPE, slot);
 	const ZombieDef& def = level.zombies[Minimum(zombieType, kZombieTypes - 1)];
-	lane.i(F_ZOMBIE_PHASE_COUNTER, slot) = DeathFadeTicks(lane, IsVaulter(def),
-		lane.i(F_ZOMBIE_CHILLED, slot) > 0, rand);
+	StartDeathAnimation(lane, slot, IsVaulter(def), rand);
 }
 
 // Public entry the plant/mower/projectile callers use: it guards on IsDeadOrDying exactly as the
@@ -402,6 +396,7 @@ PVZ_SIM void UpdateProjectiles(Lane lane, const LevelInfo& level, Rand& rand)
 		{
 			// ApplyChill keeps the longer of the two counters, so a re-chill refreshes a fading one.
 			int32_t& chilled = lane.i(F_ZOMBIE_CHILLED, hit);
+			if (chilled == 0) lane.f(F_ZOMBIE_ANIM_RATE, hit) *= 0.5f;
 			if (chilled < cChilledTicks) chilled = cChilledTicks;
 		}
 		lane.i(F_PROJ_TYPE, slot) = -1;
@@ -413,9 +408,15 @@ PVZ_SIM void UpdateProjectiles(Lane lane, const LevelInfo& level, Rand& rand)
 // re-calls this (via StartWalkAnim), so an eating zombie that loses its target gets a fresh speed draw.
 PVZ_SIM void RedrawZombieSpeed(Lane lane, const ZombieDef& def, int32_t slot, Rand& rand)
 {
-	lane.f(F_ZOMBIE_VELX, slot) = def.velMax > def.velMin
-		? def.velMin + (def.velMax - def.velMin) * rand.ZeroToOne()
-		: def.velMax;
+	const int32_t pole = IsVaulter(def);
+	const float low = pole && lane.i(F_ZOMBIE_PHASE, slot) != 11 ? 0.23f : def.velMin;
+	const float high = pole && lane.i(F_ZOMBIE_PHASE, slot) != 11 ? 0.37f : def.velMax;
+	lane.f(F_ZOMBIE_VELX, slot) = high > low ? low + (high - low) * rand.ZeroToOne() : high;
+	// StartWalkAnim: poles have only run/walk; normal/cone choose either walk, flags force walk2.
+	const int32_t variant = rand.Int(2);
+	if (pole && lane.i(F_ZOMBIE_PHASE, slot) == 11) PlayGroundAnimation(lane, slot, 13, 37);
+	else if (pole) PlayGroundAnimation(lane, slot, 93, 45);
+	else PlayGroundAnimation(lane, slot, def.velMin == def.velMax || variant == 0 ? 91 : 44, 47);
 }
 
 PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& rand)
@@ -593,116 +594,96 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 	if (type < 0) return;
 	int32_t& flags = lane.i(F_ZOMBIE_FLAGS, slot);
 	if (flags & ZB_DEAD) return;
-
-	// A fading corpse (shot-death DYING or mower MOWERED) only ticks its countdown; it occupies its row,
-	// counts for the left-zone event and blocks nothing else.  At zero the slot frees and the kill lands.
-	if ((flags & (ZB_DYING | ZB_MOWERED)) && !(flags & ZB_DEAD))
+	const ZombieDef& def = level.zombies[Minimum(type, kZombieTypes - 1)];
+	const int32_t pole = IsVaulter(def);
+	++lane.i(F_ZOMBIE_AGE, slot);
+	// EffectSystem has already advanced animations, including the actual imported death progress.
+	if (flags & ZB_BURNED)
 	{
-		int32_t& counter = lane.i(F_ZOMBIE_PHASE_COUNTER, slot);
-		if (counter > 0) --counter;
-		if (counter != 0) return;
-		if (flags & ZB_ON_BOARD) lane.s(S_ZOMBIES_KILLED) = lane.s(S_ZOMBIES_KILLED) + 1;
-		lane.i(F_ZOMBIE_TYPE, slot) = -1;
-		for (int32_t field = F_ZOMBIE_ROW; field <= F_ZOMBIE_TARGET; ++field)
-			lane.i(static_cast<IntField>(field), slot) = 0;
+		if (--lane.i(F_ZOMBIE_PHASE_COUNTER, slot) == 0) RemoveZombie(lane, slot);
+		return;
+	}
+	if (flags & ZB_MOWERED)
+	{
+		if (lane.i(F_ZOMBIE_ANIM_LOOPS, slot) > 0) RemoveZombie(lane, slot);
+		return;
+	}
+	if (flags & ZB_DYING)
+	{
+		int32_t& fade = lane.i(F_ZOMBIE_FADE, slot);
+		if (fade == -1 && lane.i(F_ZOMBIE_ANIM_LOOPS, slot) > 0) fade = 100;
+		if (fade > 0 && --fade == 0) RemoveZombie(lane, slot);
 		return;
 	}
 
-	const ZombieDef& def = level.zombies[Minimum(type, kZombieTypes - 1)];
+	int32_t& chill = lane.i(F_ZOMBIE_CHILLED, slot);
+	if (chill > 0 && --chill == 0) lane.f(F_ZOMBIE_ANIM_RATE, slot) *= 2.0f;
+	if (lane.i(F_ZOMBIE_PHASE_COUNTER, slot) > 0) --lane.i(F_ZOMBIE_PHASE_COUNTER, slot);
 	const int32_t row = lane.i(F_ZOMBIE_ROW, slot);
 	float& x = lane.f(F_ZOMBIE_X, slot);
-
-	// Step 1: mZombieAge increments every update, unconditionally, even while eating and while dying
-	// (Zombie.cpp:4309).  The eat cadence is phase-locked to this counter, not to when eating began.
-	lane.i(F_ZOMBIE_AGE, slot) = lane.i(F_ZOMBIE_AGE, slot) + 1;
-
-	// Step 3: UpdatePlaying drains the chill counter and restores full speed at 0 (:4621-4626).
-	if (lane.i(F_ZOMBIE_CHILLED, slot) > 0) --lane.i(F_ZOMBIE_CHILLED, slot);
-
-	const int32_t age = lane.i(F_ZOMBIE_AGE, slot);
-	const int32_t eatInterval = (lane.i(F_ZOMBIE_CHILLED, slot) > 0) ? cEatInterval * 2 : cEatInterval;
-	const int32_t chilledWalk = lane.i(F_ZOMBIE_CHILLED, slot) > 0 ? 1 : 0;
-
-	// Eating is decided on age % interval, on the *truncated* integer mX, exactly like CheckIfPreyCaught
-	// (the position update writes mX = int(mPosX) at the tail of the previous update, so the bite uses the
-	// lagged coordinate the original sees).  When a bite finds no plant and the zombie was eating, it
-	// StopEating()-s and redraws its walk speed.
-	const int32_t mz = static_cast<int32_t>(x);
-	const int32_t biting = (age % eatInterval == 0) ? 1 : 0;
-
-	if (flags & ZB_EATING)
+	int32_t mz = static_cast<int32_t>(x); // the previous tick's integer mX
+	int32_t& phase = lane.i(F_ZOMBIE_PHASE, slot);
+	if (pole && phase == 11 && (flags & ZB_HAS_HEAD))
 	{
-		if (!biting) return;                                    // mid-chew: hold position, do nothing else
-		const int32_t target = FindEatTarget(lane, level, row, mz, IsVaulter(def));
-		if (target < 0) { StopEating(lane, def, slot, rand); return; }
-		const PlantDef* prey = TickPlantDef(level, lane.i(F_PLANT_TYPE, target));
-		if (prey && (prey->behavior == PB_CHERRY
-			|| (prey->behavior == PB_POTATO && lane.i(F_PLANT_STATE, target) != 0))) return;
-		int32_t& hp = lane.i(F_PLANT_HP, target);
-		hp -= cEatDamage;
-		if (hp > 0) return;
-		// Plant::mPlantHealth <= 0 -> Die(): the cell empties, mPlantsEaten++, and the zombie re-looks on
-		// its next chew tick (no target latch on the chew path).
-		lane.i(F_PLANT_TYPE, target) = -1;
-		lane.s(S_PLANTS_EATEN) = lane.s(S_PLANTS_EATEN) + 1;
-		lane.i(F_ZOMBIE_TARGET, slot) = -1;
-		StopEating(lane, def, slot, rand);
-		return;
-	}
-
-	// Not eating: walk left by K * mVelX (halved while chilled), then decide whether this tick catches prey.
-	const float advance = def.velMax >= 0.0f
-		? lane.f(F_ZOMBIE_VELX, slot) * cWalkFactor * (chilledWalk ? cChilledWalkFactor : 1.0f)
-		: 0.0f;
-	x -= advance;
-
-	if (biting)
-	{
-		const int32_t target = FindEatTarget(lane, level, row, mz, IsVaulter(def));
+		const int32_t target = FindEatTarget(lane, level, row, mz, 1);
 		if (target >= 0)
 		{
-			lane.i(F_ZOMBIE_TARGET, slot) = target;
-			flags |= ZB_EATING;
-			const PlantDef* prey = TickPlantDef(level, lane.i(F_PLANT_TYPE, target));
-			if (prey && (prey->behavior == PB_CHERRY
-				|| (prey->behavior == PB_POTATO && lane.i(F_PLANT_STATE, target) != 0))) return;
-			int32_t& hp = lane.i(F_PLANT_HP, target);
-			hp -= cEatDamage;
-			if (hp <= 0)
-			{
-				lane.i(F_PLANT_TYPE, target) = -1;
-				lane.s(S_PLANTS_EATEN) = lane.s(S_PLANTS_EATEN) + 1;
-				lane.i(F_ZOMBIE_TARGET, slot) = -1;
-				StopEating(lane, def, slot, rand);
-			}
-			// On the tick it starts eating the zombie has already walked; the next chew tick holds.
-			return;
+			phase = 12;
+			PlayZombieAnimation(lane, slot, 50, 43, 24.0f, 3);
+			const float duration = 43.0f / lane.f(F_ZOMBIE_ANIM_RATE, slot) * 100.0f;
+			const int32_t distance = mz - static_cast<int32_t>(lane.f(F_PLANT_X, target)) - 80;
+			lane.f(F_ZOMBIE_VELX, slot) = static_cast<float>(distance) / duration;
 		}
 	}
-
-	// Headless bleed-out (UpdatePlaying :4654-4677): a zombie whose head is off but body is not yet <= 0
-	// keeps acting and loses 1 (or 3, if max >= 500) HP on a Rand(5) == 0 draw until TakeBodyDamage kills it.
-	if (!(flags & ZB_HAS_HEAD) && !(flags & (ZB_DEAD | ZB_DYING)))
+	else if (pole && phase == 12 && lane.i(F_ZOMBIE_ANIM_LOOPS, slot) > 0)
 	{
-		if (rand.Int(cBleedDraw) == 0)
+		x -= 150.0f;
+		mz = static_cast<int32_t>(x); // landing explicitly writes mX before movement/prey checks
+		phase = 13;
+		RedrawZombieSpeed(lane, def, slot, rand);
+	}
+	if (!(flags & ZB_EATING))
+		x -= phase == 12 ? lane.f(F_ZOMBIE_VELX, slot) : GroundAdvance(lane, slot);
+
+	const int32_t interval = chill > 0 ? cEatInterval * 2 : cEatInterval;
+	if ((flags & ZB_HAS_HEAD) && phase != 11 && phase != 12 && lane.i(F_ZOMBIE_AGE, slot) % interval == 0)
+	{
+		const int32_t target = FindEatTarget(lane, level, row, mz, pole ? 2 : 0);
+		if (target < 0)
 		{
-			const int32_t bleed = Maximum(lane.i(F_ZOMBIE_BODY_MAX, slot), 1) >= 500 ? 3 : 1;
-			ApplyBodyDamage(lane, level, slot, bleed, rand);
+			if (flags & ZB_EATING) StopEating(lane, def, slot, rand);
+		}
+		else
+		{
+			if (!(flags & ZB_EATING))
+			{
+				flags |= ZB_EATING;
+				PlayZombieAnimation(lane, slot, pole ? 165 : 138, pole ? 28 : 40, pole ? 20.0f : 36.0f, 0);
+			}
+			lane.i(F_ZOMBIE_TARGET, slot) = target;
+			const PlantDef* prey = TickPlantDef(level, lane.i(F_PLANT_TYPE, target));
+			if (!(prey && (prey->behavior == PB_CHERRY
+				|| (prey->behavior == PB_POTATO && lane.i(F_PLANT_STATE, target) != 0))))
+			{
+				int32_t& hp = lane.i(F_PLANT_HP, target);
+				hp -= cEatDamage;
+				if (hp <= 0)
+				{
+					lane.i(F_PLANT_TYPE, target) = -1;
+					++lane.s(S_PLANTS_EATEN);
+					// StopEating happens only when a later chew check finds no target.
+				}
+			}
 		}
 	}
-
-	// Step 4: CheckForBoardEdge on the truncated int mX.  A headed zombie reaching the edge ends the board;
-	// a headless one past edge+70 dies instantly (TakeDamage 1800).  Neither is true for a fading corpse.
-	const int32_t edge = IsVaulter(def) ? static_cast<int32_t>(cHouseXVaulter) : static_cast<int32_t>(cHouseX);
-	const int32_t newX = static_cast<int32_t>(x);
-	if (newX <= edge && (flags & ZB_HAS_HEAD))
+	const int32_t edge = pole ? static_cast<int32_t>(cHouseXVaulter) : static_cast<int32_t>(cHouseX);
+	if (mz <= edge && (flags & ZB_HAS_HEAD))
 	{
-		if (flags & ZB_ON_BOARD) lane.s(S_RESULT) = -1;        // ZombiesWon -> BOARDRESULT_LOST
+		if (flags & ZB_ON_BOARD) lane.s(S_RESULT) = -1;
 	}
-	else if (newX <= edge + 70 && !(flags & ZB_HAS_HEAD))
-	{
-		ApplyBodyDamage(lane, level, slot, 1800, rand);
-	}
+	else if (mz <= edge + 70 && !(flags & ZB_HAS_HEAD)) ApplyBodyDamage(lane, level, slot, 1800, rand);
+	if (!(flags & ZB_HAS_HEAD) && ZombieLive(type, flags) && rand.Int(cBleedDraw) == 0)
+		ApplyBodyDamage(lane, level, slot, lane.i(F_ZOMBIE_BODY_MAX, slot) >= 500 ? 3 : 1, rand);
 }
 
 // FindPlantTarget: overlap >=20. LoadPlainZombieReanim overwrites the constructor's 20-wide mouth
@@ -713,8 +694,8 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 PVZ_SIM int32_t FindEatTarget(Lane lane, const LevelInfo& level, int32_t row, int32_t mz, int32_t vaulter)
 {
 	if (row < 0 || row >= level.playableRows) return -1;
-	const int32_t mouthLo = vaulter ? mz - cVaulterMouthBack : mz + cMouthOffset;
-	const int32_t mouthHi = vaulter ? mz + cVaulterMouthFront : mz + cMouthOffset + cMouthWidth;
+	const int32_t mouthLo = vaulter == 1 ? mz - cVaulterMouthBack : mz + (vaulter == 2 ? 50 : cMouthOffset);
+	const int32_t mouthHi = vaulter == 1 ? mz + cVaulterMouthFront : mz + cMouthOffset + cMouthWidth;
 	for (int32_t col = 0; col < kGridCols; ++col)
 	{
 		const int32_t cell = row * kCols + col;
@@ -770,12 +751,20 @@ PVZ_SIM void UpdateMowers(Lane lane)
 			const int32_t zx = static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie));
 			if (RectOverlapX(mowerX, mowerX + 50, zx + cHurtOffset, zx + cHurtOffset + cHurtWidth) <= 0) continue;
 			if (state == kMowerReady && !(zf & ZB_HAS_HEAD)) continue;   // bungee-style exception, moot here
-			// MowDown: a normally walking zombie dies immediately (DieWithLoot) into the 101-tick mowed anim.
+			// Dying/burned/airborne zombies disappear; walking ones use a separate, unchilled
+			// LawnMoweredZombie animation. Imported roots carry that animation's actual progress.
+			if ((zf & (ZB_DYING | ZB_BURNED)) || lane.i(F_ZOMBIE_PHASE, zombie) == 12)
+			{
+				RemoveZombie(lane, zombie);
+				continue;
+			}
 			lane.i(F_ZOMBIE_BODY, zombie) = 0;
 			lane.i(F_ZOMBIE_HELM, zombie) = 0;
 			lane.i(F_ZOMBIE_SHIELD, zombie) = 0;
 			lane.i(F_ZOMBIE_FLAGS, zombie) = (zf | ZB_MOWERED) & ~ZB_EATING;
-			lane.i(F_ZOMBIE_PHASE_COUNTER, zombie) = cMowedTicks;
+			lane.i(F_ZOMBIE_PHASE, zombie) = 3;
+			PlayZombieAnimation(lane, zombie, 0, 8, 8.0f, 3);
+			lane.f(F_ZOMBIE_ANIM_RATE, zombie) = 8.0f;
 			if (state == kMowerReady)
 			{
 				lane.i(F_MOWER_FLAGS, slot) = MB_MOWING;
@@ -911,15 +900,18 @@ PVZ_SIM void SpawnZombie(Lane lane, const LevelInfo& level, int32_t zombieType, 
 	lane.i(F_ZOMBIE_HELM, slot) = def.helmHealth;
 	lane.i(F_ZOMBIE_SHIELD, slot) = def.shieldHealth;
 	lane.i(F_ZOMBIE_FLYING, slot) = 0;
-	lane.i(F_ZOMBIE_PHASE, slot) = 0;
+	lane.i(F_ZOMBIE_PHASE, slot) = IsVaulter(def) ? 11 : 0;
 	lane.i(F_ZOMBIE_PHASE_COUNTER, slot) = 0;
+	lane.i(F_ZOMBIE_FADE, slot) = -1;
 	lane.i(F_ZOMBIE_FLAGS, slot) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
 	lane.i(F_ZOMBIE_CHILLED, slot) = 0;
 	lane.i(F_ZOMBIE_AGE, slot) = 0;
 	lane.i(F_ZOMBIE_FROM_WAVE, slot) = wave;
 	lane.i(F_ZOMBIE_TARGET, slot) = -1;
 	float spawnX = cSpawnX + static_cast<float>(rand.Int(cSpawnJitter));
-	if (flagWave) spawnX += static_cast<float>(cFlagWaveSpawnBonus);   // IsFlagWave spawns 40 px further out
+	if (flagWave) spawnX += static_cast<float>(cFlagWaveSpawnBonus);
+	if (zombieType == 1) spawnX = 800.0f;
+	if (IsVaulter(def)) spawnX = 870.0f + static_cast<float>(rand.Int(10));
 	lane.f(F_ZOMBIE_X, slot) = spawnX;
 	lane.f(F_ZOMBIE_Y, slot) = 0.0f;
 	RedrawZombieSpeed(lane, def, slot, rand);
@@ -1078,6 +1070,7 @@ PVZ_SIM void UpdateTick(Lane lane, const LevelInfo& level, const WaveTable& wave
 {
 	BankCoins(lane);
 	UpdatePlantAnimations(lane); // EffectSystem runs before UpdateGameObjects in the original
+	UpdateZombieAnimations(lane);
 	for (int32_t slot = 0; slot < kPlantSlots; ++slot) UpdatePlant(lane, level, slot, rand);
 	for (int32_t slot = 0; slot < kZombieSlots; ++slot) UpdateZombie(lane, level, slot, rand);
 	UpdateProjectiles(lane, level, rand);

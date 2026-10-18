@@ -96,7 +96,8 @@ def _row_min_zombie_x(leaf: dict) -> list[int]:
         row, x, on_board = int(zombie[0]), float(zombie[2]), bool(zombie[5])
         if not on_board or not 0 <= row < 6:
             continue
-        value = int(round(x * 4))
+        # StoreResult truncates toward zero; rounding would manufacture 0.25 px differences.
+        value = int(x * 4)
         if best[row] is None or value < best[row]:
             best[row] = value
     return [-2 ** 31 if item is None else item for item in best]

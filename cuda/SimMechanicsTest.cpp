@@ -126,6 +126,56 @@ int main()
 	mouth.lane().f(F_PLANT_X, 36) = 520.0f;
 	assert(FindEatTarget(mouth.lane(), level, 3, 550, 0) == 36);
 	assert(FindEatTarget(mouth.lane(), level, 3, 551, 0) == -1);
+	// Post-vault mouth is [50,70], unlike the pre-vault [-29,41] and plain [20,70].
+	assert(FindEatTarget(mouth.lane(), level, 3, 550, 2) == -1);
+	assert(FindEatTarget(mouth.lane(), level, 3, 520, 2) == 36);
+
+	State vaulted;
+	auto pole = vaulted.lane();
+	assert(LoadRoot(pole, root, level) == 1);
+	pole.i(F_ZOMBIE_TYPE, 0) = 3;
+	pole.i(F_ZOMBIE_FLAGS, 0) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
+	pole.i(F_ZOMBIE_PHASE, 0) = 11;
+	pole.i(F_ZOMBIE_BODY, 0) = pole.i(F_ZOMBIE_BODY_MAX, 0) = 500;
+	pole.f(F_ZOMBIE_X, 0) = 100.0f;
+	pole.i(F_PLANT_TYPE, 0) = 0;
+	pole.i(F_PLANT_HP, 0) = 300;
+	pole.f(F_PLANT_X, 0) = 40.0f;
+	Rand vaultRand;
+	vaultRand.Seed(0, 123);
+	RedrawZombieSpeed(pole, level.zombies[3], 0, vaultRand);
+	assert(pole.i(F_ZOMBIE_ANIM_START, 0) == 13);
+	UpdateZombie(pole, level, 0, vaultRand);
+	assert(pole.i(F_ZOMBIE_PHASE, 0) == 12 && pole.i(F_ZOMBIE_ANIM_START, 0) == 50);
+	assert(pole.i(F_PLANT_HP, 0) == 300 && !(pole.i(F_ZOMBIE_FLAGS, 0) & ZB_EATING));
+	for (int i = 0; i < 179; ++i)
+	{
+		UpdateZombieAnimations(pole);
+		UpdateZombie(pole, level, 0, vaultRand);
+		assert(pole.i(F_ZOMBIE_PHASE, 0) == 12);
+	}
+	const float beforeLanding = pole.f(F_ZOMBIE_X, 0);
+	UpdateZombieAnimations(pole);
+	UpdateZombie(pole, level, 0, vaultRand);
+	assert(pole.i(F_ZOMBIE_PHASE, 0) == 13 && pole.i(F_ZOMBIE_ANIM_START, 0) == 93);
+	assert(pole.f(F_ZOMBIE_X, 0) < beforeLanding - 150.0f);
+	assert(pole.f(F_ZOMBIE_VELX, 0) >= 0.23f && pole.f(F_ZOMBIE_VELX, 0) <= 0.37f);
+
+	// Imported corpses do not restart a guessed duration or disappear at phaseCounter==0.
+	State fading;
+	auto corpse = fading.lane();
+	assert(LoadRoot(corpse, root, level) == 1);
+	corpse.i(F_ZOMBIE_TYPE, 0) = 0;
+	corpse.i(F_ZOMBIE_FLAGS, 0) = ZB_DYING | ZB_ON_BOARD;
+	corpse.i(F_ZOMBIE_FADE, 0) = -1;
+	PlayZombieAnimation(corpse, 0, 178, 39, 24.0f, 3);
+	UpdateZombie(corpse, level, 0, vaultRand);
+	assert(corpse.i(F_ZOMBIE_TYPE, 0) == 0 && corpse.i(F_ZOMBIE_FADE, 0) == -1);
+	corpse.i(F_ZOMBIE_ANIM_LOOPS, 0) = 1;
+	UpdateZombie(corpse, level, 0, vaultRand);
+	assert(corpse.i(F_ZOMBIE_FADE, 0) == 99);
+	for (int i = 0; i < 99; ++i) UpdateZombie(corpse, level, 0, vaultRand);
+	assert(corpse.i(F_ZOMBIE_TYPE, 0) == -1 && corpse.s(S_ZOMBIES_KILLED) == 1);
 
 	State shot;
 	assert(LoadRoot(shot.lane(), root, level) == 1);
