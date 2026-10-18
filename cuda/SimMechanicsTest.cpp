@@ -118,6 +118,43 @@ int main()
 	}
 	assert(changes);
 
+	// This real failing root has a normal zombie at x=550 and a potato at x=520. The constructor's
+	// [50,70] mouth misses it, but LoadPlainZombieReanim's [20,70] mouth overlaps by exactly 20 px.
+	State mouth;
+	assert(LoadRoot(mouth.lane(), root, level) == 1);
+	mouth.lane().i(F_PLANT_TYPE, 36) = 4;
+	mouth.lane().f(F_PLANT_X, 36) = 520.0f;
+	assert(FindEatTarget(mouth.lane(), level, 3, 550, 0) == 36);
+	assert(FindEatTarget(mouth.lane(), level, 3, 551, 0) == -1);
+
+	State shot;
+	assert(LoadRoot(shot.lane(), root, level) == 1);
+	Lane pea = shot.lane();
+	pea.i(F_ZOMBIE_TYPE, 0) = 0;
+	pea.i(F_ZOMBIE_FLAGS, 0) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
+	pea.i(F_ZOMBIE_BODY, 0) = 230;
+	pea.i(F_ZOMBIE_BODY_MAX, 0) = 270;
+	pea.f(F_ZOMBIE_X, 0) = 391.53726f;
+	pea.i(F_PROJ_TYPE, 0) = 0;
+	pea.i(F_PROJ_DAMAGE, 0) = 20;
+	pea.f(F_PROJ_X, 0) = 383.87952f;
+	pea.f(F_PROJ_VELX, 0) = 3.33f;
+	Rand projectileRand;
+	projectileRand.Seed(0, 123);
+	UpdateProjectiles(pea, level, projectileRand);
+	assert(pea.i(F_ZOMBIE_BODY, 0) == 230 && pea.i(F_PROJ_TYPE, 0) == 0);
+	UpdateProjectiles(pea, level, projectileRand);
+	assert(pea.i(F_ZOMBIE_BODY, 0) == 210 && pea.i(F_PROJ_TYPE, 0) == -1);
+	pea.i(F_ZOMBIE_FLAGS, 0) |= ZB_DYING;
+	assert(PeaTarget(pea, 0, 400) == -1);
+	pea.i(F_ZOMBIE_FLAGS, 0) &= ~ZB_DYING;
+	pea.i(F_ZOMBIE_PHASE, 0) = 12;
+	assert(PeaTarget(pea, 0, 400) == -1);
+	pea.i(F_PROJ_TYPE, 0) = 0;
+	pea.f(F_PROJ_X, 0) = 799.0f;
+	UpdateProjectiles(pea, level, projectileRand);
+	assert(pea.i(F_PROJ_TYPE, 0) == -1);
+
 	// SeedPacket::Update activates strictly after the refresh time and clears its counter.
 	State cooldown;
 	assert(LoadRoot(cooldown.lane(), root, level) == 1);
@@ -132,5 +169,5 @@ int main()
 	lane.i(F_PACKET_ACTIVE, 0) = lane.i(F_PACKET_REFRESH, 0) = 0;
 	UpdatePackets(lane);
 	assert(!lane.i(F_PACKET_ACTIVE, 0) && lane.i(F_PACKET_COUNTER, 0) == 0);
-	std::puts("mechanics OK: resampled future independence, wave budgets/flags/roster, cooldown boundaries");
+	std::puts("mechanics OK: future independence, waves, cooldown, bite reach, delayed pea collision");
 }

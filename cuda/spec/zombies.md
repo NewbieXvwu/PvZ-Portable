@@ -1,5 +1,18 @@
 # cuda/spec/zombies.md — Zombie mechanics as they actually are in the engine
 
+## 2026-10-18 correction: the effective mouth is not the constructor default
+
+The older normal/cone/flag chew-window derivation below is superseded. `ZombieInitialize` starts
+with `Rect(50,0,20,115)` at Zombie.cpp:202, but each of these types calls `LoadPlainZombieReanim`,
+which **overwrites it with `Rect(20,0,50,115)`** at :1011. Runtime `PVZ_CUDA_TRACE` confirms e.g.
+normal x=550 → mouth x=570,width=50. Against `Plant::GetPlantRect` (+10,width60), overlap>=20
+therefore gives **mX in [80c,80c+70]**, not [80c,80c+40]. The post-vault pole explicitly restores
+the narrower [50,70] mouth at :1783; pre-vault pole has [-29,41]. This is a rectangle change,
+not a 20-pixel teleport on starting to eat. `StartEating` does not change mPosX.
+
+The shared core now uses the plain mouth and keeps the minimum-overlap threshold at 20 separately
+from its width. A failing real one-tick root at x=550, plant x=520, is pinned in SimMechanicsTest.
+
 Scope: the zombie-side facts `cuda/SimCore.h` / `SimImpl.inc` / `SimTick.inc` need for
 **adventure level 7 (`BACKGROUND_1_DAY`, grass, 5 playable rows)**.  Every number is a
 `file:line` from this repo.  Where the CUDA core disagrees with the engine, §5 says so.

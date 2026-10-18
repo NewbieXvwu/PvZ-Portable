@@ -1,5 +1,16 @@
 # Projectiles — flight, collision, impact (PROJECTILE_PEA / PROJECTILE_SNOWPEA)
 
+## 2026-10-18 implementation corrections
+
+`UpdateNormalMotion` moves mPosX and calls CheckForCollision (:735), which uses GetProjectileRect's
+integer **mX from the previous tick**. Only after that return does UpdateMotion set mX=int(mPosX)
+at :773. The CUDA core previously collided at the advanced position, one tick early. It now keeps
+the pre-motion integer for the rectangle, while the off-board test still reads the advanced mPosX.
+The off-board threshold is **800**, not 860 (:274). The hit scan must also honor
+EffectedByDamage(1): skip dying/burned/mowed, off-board hurt rects and airborne pole-vaulters.
+SimMechanicsTest pins a real pea at 383.87952 and zombie at 391.53726: first update cannot hit;
+the second may hit. Short-wait original/host/GPU leaf comparisons verify the causal effect.
+
 All citations are repo-relative to `/home/newbiexvwu/pvz-cuda`. Line numbers are the current working tree.
 Every constant below is copied literally from the source; no value is inferred from commercial PvZ knowledge.
 Where the source is silent, the line reads `NOT FOUND in <file>`.

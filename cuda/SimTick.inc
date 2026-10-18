@@ -11,8 +11,8 @@
 // (zombies.md, waves.md, plants.md, projectiles.md, board.md, reanim.md).  The two numbers that were
 // previously wrong by a visible margin and are now load-bearing are the walk advance (K = 0.480217,
 // reanim.md §2) and the dying duration (k + 99, reanim.md §3); everything else was confirmed against
-// the original line by line.  The only still-unmodelled mechanic is the pole-vault jump itself -- a
-// vaulter here walks at its pre-vault speed and never leaps, a bounded deviation noted on SpawnZombie.
+// the original line by line. Remaining gaps (including pole vault and potato rise timing) are listed
+// in MEMORY/docs/cuda-rollout-report.md; source comments alone are not acceptance evidence.
 #ifndef PVZ_SIM_TICK_INC
 #define PVZ_SIM_TICK_INC
 
@@ -100,13 +100,14 @@ constexpr float cGridOriginX = 40.0f;
 
 // Rect widths of the two attack/hurt rectangles the eat and hit tests intersect, straight from
 // GetZombieAttackRect / GetZombieRect / GetPlantRect / the projectile rect in projectiles.md.
-//   normal/cone/flag mouth  [mX+50, mX+70]        (Zombie.cpp:388, width 20)
+//   normal/cone/flag mouth  [mX+20, mX+70]        (LoadPlainZombieReanim, Zombie.cpp:1011)
 //   pole vaulter mouth      [mX-29, mX+41]        (Zombie.cpp:390, width 70)
 //   zombie hurt rect        [mX+36, mX+78]        (mZombieRect = Rect(36,0,42,115), Zombie.cpp:199)
 //   plant hurt rect         [mX+10, mX+70]        (Rect(mX+10, mY, 80-20, mHeight))
 //   straight pea rect       [mX-15, mX+40]        (Rect(mX-15, mY, 40+15, mHeight), Projectile.cpp:1173)
-constexpr int cMouthOffset = 50;
-constexpr int cMouthWidth = 20;
+constexpr int cMouthOffset = 20;
+constexpr int cMouthWidth = 50;
+constexpr int cEatMinimumOverlap = 20;
 constexpr int cVaulterMouthBack = 29;      // mouth reaches 29 px behind the vaulter
 constexpr int cVaulterMouthFront = 41;     // and 41 px ahead of it
 constexpr int cHurtOffset = 36;
@@ -366,9 +367,12 @@ PVZ_SIM int32_t PeaTarget(Lane lane, int32_t row, int32_t peaX)
 	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
 	{
 		if (lane.i(F_ZOMBIE_TYPE, slot) < 0) continue;
-		if (lane.i(F_ZOMBIE_FLAGS, slot) & ZB_DEAD) continue;      // only mDead is skipped by the hit scan
+		if (lane.i(F_ZOMBIE_FLAGS, slot) & (ZB_DEAD | ZB_DYING | ZB_BURNED | ZB_MOWERED)) continue;
+		// EffectedByDamage(1): ground peas pass over corpses and cannot hit a pole-vaulter in flight.
+		if (lane.i(F_ZOMBIE_PHASE, slot) == 12) continue;
 		if (lane.i(F_ZOMBIE_ROW, slot) != row) continue;
 		const int32_t zx = static_cast<int32_t>(lane.f(F_ZOMBIE_X, slot));
+		if (zx + cHurtOffset > 800) continue;
 		if (RectOverlapX(peaX - cPeaBack, peaX + cPeaWidth, zx + cHurtOffset,
 			zx + cHurtOffset + cHurtWidth) < 0) continue;           // the pea test accepts >= 0
 		if (zx < bestX) { bestX = zx; best = slot; }
@@ -381,12 +385,15 @@ PVZ_SIM void UpdateProjectiles(Lane lane, const LevelInfo& level, Rand& rand)
 	for (int32_t slot = 0; slot < kProjectileSlots; ++slot)
 	{
 		if (lane.i(F_PROJ_TYPE, slot) < 0) continue;
+		// UpdateNormalMotion moves mPosX then checks collision, but GetProjectileRect still reads mX.
+		// UpdateMotion synchronizes mX only after that call returns (Projectile.cpp:735, :773).
+		const int32_t collisionX = static_cast<int32_t>(lane.f(F_PROJ_X, slot));
 		lane.f(F_PROJ_X, slot) = lane.f(F_PROJ_X, slot) + lane.f(F_PROJ_VELX, slot);
 		lane.i(F_PROJ_AGE, slot) = lane.i(F_PROJ_AGE, slot) + 1;
 		// A pea that has flown past the right edge leaves the list (Projectile::Update off-board test).
-		if (lane.f(F_PROJ_X, slot) > cRightEdgeX + 60.0f) { lane.i(F_PROJ_TYPE, slot) = -1; continue; }
+		if (lane.f(F_PROJ_X, slot) > cRightEdgeX) { lane.i(F_PROJ_TYPE, slot) = -1; continue; }
 		const int32_t hit = PeaTarget(lane, lane.i(F_PROJ_ROW, slot),
-			static_cast<int32_t>(lane.f(F_PROJ_X, slot)));
+			collisionX);
 		if (hit < 0) continue;
 		DamageZombie(lane, level, hit, lane.i(F_PROJ_DAMAGE, slot), rand);
 		if (lane.i(F_PROJ_CHILL, slot))
@@ -653,9 +660,9 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 	}
 }
 
-// FindPlantTarget(ATTACKTYPE_CHEW): the first plant in this row whose hurt rect contains the mouth rect
-// by >= 20 px.  With the 60-px plant rect and the 20-px normal mouth that reduces to
-// `mX in [80c, 80c+40]`; the pole vaulter's wider back-reaching mouth is `mX in [80c+29, 80c+119]`.
+// FindPlantTarget: overlap >=20. LoadPlainZombieReanim overwrites the constructor's 20-wide mouth
+// with Rect(20,0,50,115), giving normal/cone/flag a window mX in [80c,80c+70]. A pre-vault pole's
+// mouth is [-29,41]. Post-vault mouth restoration is handled with the vault state machine.
 // Computed with the two rects on GridToPixelX coordinates so a vaulter and a normal zombie share one
 // expression.  Row 5 (DIRT) and the off-lawn columns never have plantable cells, but the sweep is cheap.
 PVZ_SIM int32_t FindEatTarget(Lane lane, const LevelInfo& level, int32_t row, int32_t mz, int32_t vaulter)
@@ -674,7 +681,7 @@ PVZ_SIM int32_t FindEatTarget(Lane lane, const LevelInfo& level, int32_t row, in
 		const int32_t plantX = static_cast<int32_t>(lane.f(F_PLANT_X, cell));
 		const int32_t plantLo = plantX + cPlantRectPad;
 		const int32_t plantHi = plantX + cPlantRectWidth - cPlantRectPad;
-		if (RectOverlapX(mouthLo, mouthHi, plantLo, plantHi) >= cMouthWidth) return cell;
+		if (RectOverlapX(mouthLo, mouthHi, plantLo, plantHi) >= cEatMinimumOverlap) return cell;
 	}
 	return -1;
 }
