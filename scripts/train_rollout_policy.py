@@ -138,8 +138,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 if with_context:
                     ctx = _episode_context(path)
                     context_rows = np.broadcast_to(ctx, (count, len(ctx)))
-                    rows_scalars = (np.concatenate([rows_scalars[:, :-1], context_rows, rows_scalars[:, -1:]], axis=1)
-                                    if obs == "v2lite" else np.concatenate([rows_scalars, context_rows], axis=1))
+                    rows_scalars = np.concatenate([rows_scalars[:, :115], context_rows, rows_scalars[:, 115:]], axis=1)
                 rows_boards = stored["boards"]
                 if boards is None:
                     boards = (_board_store((capacity, *rows_boards.shape[1:]), cache_dir) if dense_boards
@@ -163,11 +162,11 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             continue
         frames = read_frames(path)
         ctx = _episode_context(path) if with_context else None
-        if obs == "v2lite":
+        if obs != "v1":
             from pvz_student_observation import StudentHistory
-            history = StudentHistory()
+            history = StudentHistory(obs)
         for i in range(1, len(frames)):
-            if obs == "v2lite":
+            if obs != "v1":
                 b, s = history.features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             action = frames[i].get("label") or frames[i].get("action")
             if not action or frames[i].get("action_rejected") or not keep[path][i]:
@@ -210,7 +209,7 @@ def main() -> None:
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
     p.add_argument("--context", action="store_true",
                    help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
-    p.add_argument("--obs", choices=["v1", "v2lite"], default="v1", help="student feature version")
+    p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1", help="student feature version")
     p.add_argument("--soft-weight", type=float, default=0.0,
                    help="also match the search's preference over its candidates (wait / each card): "
                         "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")
@@ -241,6 +240,10 @@ def main() -> None:
     is_val = torch.tensor([s in val_seeds for s in seed_of])
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
+    memory = {"rows": len(plant), "board_bytes": boards.numel() * boards.element_size() if args.dense_boards else boards.nbytes,
+              "tensor_bytes": sum(tensor.numel() * tensor.element_size()
+                                  for tensor in (scalars, plant, packet, cell, weight, values, is_val))}
+    print(json.dumps({"data_memory": memory}), flush=True)
 
     if args.packet_balance:
         planted_rows = packet >= 0
@@ -262,7 +265,12 @@ def main() -> None:
     net = RolloutNet(args.width, args.pool, args.context, args.obs)
     if args.init:
         from pvz_rollout_policy import load_student
-        net.load_state_dict(load_student(args.init).state_dict())
+        initial = load_student(args.init)
+        weights = initial.state_dict()
+        if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
+            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
+            weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
+        net.load_state_dict(weights)
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
     waits = float(weight[plant < 0.5].sum())
@@ -337,7 +345,7 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
-                                                       "load_seconds": load_seconds}, indent=1))
+                                                       "load_seconds": load_seconds, "data_memory": memory}, indent=1))
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
 
 

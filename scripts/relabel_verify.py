@@ -41,6 +41,8 @@ def _check_frame(obs, expected, path, index):
     from render_episode import _frame
     actual = json.loads(json.dumps(_frame(obs)))
     for key, value in actual.items():
+        if key == "v2" and key not in expected:
+            continue
         if value != expected.get(key):
             raise ValueError(f"{path}: frame {index}, {key} differs from replay")
 

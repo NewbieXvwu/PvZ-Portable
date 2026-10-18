@@ -14,13 +14,59 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import search_play
 import pvz_rollout_policy as policy
-from pvz_frame_store import cache_episode, encode_v2lite_frames, encoder_signature, read_frames, write_frames
+from pvz_frame_store import cache_episode, encode_student_frames, encoder_signature, read_frames, write_frames
 from pvz_student_observation import StudentHistory
 from pvz_value_net import _featurize_reference
 from train_rollout_policy import load
 
 RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"))
 BINARY = ROOT / "build/pvz-portable"
+
+
+class ObservationEncodingTest(unittest.TestCase):
+    def frame(self):
+        return {"tick": 100, "wave": 1, "sun": 100, "scene": {"wave_count": 30},
+                "plants": [[0, 0, 4, 300, 300], [1, 0, 2, 300, 300], [2, 0, 1, 300, 300]],
+                "zombies": [[0, 3, 80.0, .35, 200, True, False, 1000, 0, 1]],
+                "packets": [], "mowers": [], "lanes": [0, 1, 2, 3, 4]}
+
+    def raw(self):
+        return {"wave_timer": 2250, "huge_wave_countdown": 750, "wave_health": 100,
+                "wave_start_health": 200, "sun_countdown": 612, "sun_pending": 50,
+                "plants": [[0, 0, 4, 0, 750, 0, 0, 0], [1, 0, 2, 0, 0, 50, 0, 0],
+                           [2, 0, 1, 0, 0, 0, 1250, 2500]],
+                "zombies": [[1, 185, 0]], "projectiles": [[0, 80.0, 20], [0, 80.0, 20]]}
+
+    def test_new_fields_leave_v1_and_v2lite_bitwise_unchanged(self):
+        old = self.frame()
+        new = {**old, "v2": self.raw()}
+        for left, right in zip(policy.features(old, None), policy.features(new, None)):
+            torch.testing.assert_close(left, right, rtol=0, atol=0)
+        histories = [StudentHistory(), StudentHistory()]
+        for tick in (100, 250):
+            old["tick"] = new["tick"] = tick
+            left, right = histories[0].extra(old), histories[1].extra(new)
+            expected = np.zeros((4, 6, 10), np.float32)
+            expected[:3, 0, 0] = [.5, .35, .35]
+            expected[3, :3, 0] = (tick - 100) / 1500.0
+            np.testing.assert_array_equal(left[0].view(np.uint32), expected.view(np.uint32))
+            for actual, original in zip(right, left):
+                np.testing.assert_array_equal(actual.view(np.uint32), original.view(np.uint32))
+
+    def test_v2_values_and_old_frame_availability(self):
+        frame = self.frame()
+        missing, scalars = StudentHistory("v2").extra(frame)
+        self.assertFalse(missing[3:].any())
+        self.assertFalse(scalars.any())
+        frame["v2"] = self.raw()
+        board, scalars = StudentHistory("v2").extra(frame)
+        np.testing.assert_array_equal(board[:, 0, 0], np.array([.5, .5, .5, 1, .5, .5, .5, 0, .2], np.float32))
+        self.assertEqual(board[6, 1, 0], .5)
+        self.assertEqual(board[7, 2, 0], .5)
+        np.testing.assert_array_equal(scalars, [.5, 1, .5, .5, .25, 0, 1])
+        frame["zombies"][0][3] = -.35
+        board, _ = StudentHistory("v2").extra(frame)
+        self.assertEqual(board[2, 0, 0], -.5)
 
 
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / "main.pak").is_file(), "requires simulator and game resources")
@@ -41,7 +87,7 @@ class StudentObservationTest(unittest.TestCase):
             self.assertEqual(policy.load_student(checkpoint).obs, "v1")
             self.assertEqual(encoder_signature(), "5c34482620514a7434e638058f9b75d05e51a8aa9c18b634a8f80e4dd424f008")
             recorded_count = {}
-            for version in ("v1", "v2lite"):
+            for version in ("v1", "v2lite", "v2"):
                 search_play._W.clear()
                 torch.set_num_threads(1)
                 torch.manual_seed(0)
@@ -76,12 +122,12 @@ class StudentObservationTest(unittest.TestCase):
                 finally:
                     search_play._W.pop("env").close()
                 archive = directory / version / "seed_30000/test_fast/frames.npz"
-                if version == "v2lite":
+                if version != "v1":
                     with np.load(archive) as stored:
                         raw_frames = stored["frames"]
                     np.savez_compressed(archive, frames=raw_frames)
                 frames = read_frames(archive)
-                history = StudentHistory()
+                history = StudentHistory(version)
                 replay = [history.features(frame, frames[index - 1] if index else None)
                           for index, frame in enumerate(frames[:-1])]
                 for index, board, scalars in recorded:
@@ -93,7 +139,7 @@ class StudentObservationTest(unittest.TestCase):
                     self.assertTrue(torch.equal(scalars[:113], reference_scalars))
                 self.assertGreater(len(recorded), 10)
                 recorded_count[version] = {"decisions": result["decisions"], "compared": len(recorded)}
-                if version == "v2lite":
+                if version != "v1":
                     torch.save({"state_dict": search_play._W["fast"].state_dict(), "pool": "meanmax", "obs": version}, checkpoint)
                     self.assertEqual(policy.load_student(checkpoint).obs, version)
                     self.assertTrue(any(bool(board[95].any()) for _, board, _ in recorded))
@@ -102,7 +148,7 @@ class StudentObservationTest(unittest.TestCase):
                     text = archive.with_suffix(".jsonl")
                     write_frames(text, frames)
                     with np.load(binary_cache) as cached:
-                        encoded = encode_v2lite_frames(read_frames(text), text.read_bytes())
+                        encoded = encode_student_frames(read_frames(text), text.read_bytes(), version)
                         for name in encoded:
                             np.testing.assert_array_equal(cached[name], encoded[name])
                     for context in (False, True):

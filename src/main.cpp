@@ -361,7 +361,7 @@ static void RunEnvironment(LawnApp* app)
 	EnvironmentRollout rollout;
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
-		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":2}" << std::endl;
+		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":3}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -478,7 +478,7 @@ static void RunEnvironment(LawnApp* app)
 					const int elapsed = std::max(0, std::min(6000, tick - historyStart));
 					const double income = elapsed ? totalProduced * 1000.0 / elapsed : 0;
 					if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
-					if (isFirst && rollout.V2Lite()) studentHistory.Update(app);
+					if (isFirst && rollout.HasHistory()) studentHistory.Update(app);
 					if (!isFirst)
 					{
 						const auto start = std::chrono::steady_clock::now();

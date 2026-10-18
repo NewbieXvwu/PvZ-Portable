@@ -621,10 +621,13 @@ class PvZEnv:
             version = stream.read(8)
             if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004"):
                 raise ValueError("load_rollout_net requires an exported C++ network")
+            observation = int.from_bytes(stream.read(16)[12:16], "little") if version == b"PVZRN004" else 1
         if self._process is None:
             self._start()
         if version == b"PVZRN004" and self._rollout_version < 2:
             raise RuntimeError("v2lite requires a rebuilt simulator with rollout_version >= 2")
+        if observation == 3 and self._rollout_version < 3:
+            raise RuntimeError("v2 requires a rebuilt simulator with rollout_version >= 3")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")
