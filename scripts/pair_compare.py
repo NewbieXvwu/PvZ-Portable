@@ -56,7 +56,7 @@ def main() -> None:
     wins_a = sum(r["won"] for r in rows_a)
     wins_b = sum(r["won"] for r in rows_b)
     only_a = sum(r["won"] and not b[s]["won"] for s, r in zip(seeds, rows_a))
-    only_b = sum(b[s]["won"] and not r["won"] for s, r in zip(seeds, rows_b))
+    only_b = sum(r["won"] and not a[s]["won"] for s, r in zip(seeds, rows_b))
 
     def replants(rows: list[dict]) -> tuple[float, float]:
         all_events = [e for r in rows for e in (r.get("replant_events") or [])]
