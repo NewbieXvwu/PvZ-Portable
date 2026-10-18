@@ -488,11 +488,18 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             from pvz_value_net import observation_context   # the task is fixed for the whole game
             frame_now = _frame(obs)
             frame_now["action"] = student_memo["action"]
-            action = (prefix_actions[actions]
-                      if prefix_actions is not None and actions < len(prefix_actions)
-                      else act(student, frame_now, student_memo["frame"],
-                               (obs.get("legal_actions") or {}).get("plants") or [],
-                               context=student_memo.setdefault("context", observation_context(obs))))
+            history = None
+            if student.obs == "v2lite":   # history inputs advance at every decision, prefix steps included
+                from pvz_student_observation import StudentHistory
+                history = student_memo.setdefault("history", StudentHistory())
+            if prefix_actions is not None and actions < len(prefix_actions):
+                action = prefix_actions[actions]
+                if history is not None:
+                    history.extra(frame_now)
+            else:
+                action = act(student, frame_now, student_memo["frame"],
+                             (obs.get("legal_actions") or {}).get("plants") or [],
+                             context=student_memo.setdefault("context", observation_context(obs)), history=history)
         elif prefix_actions is not None and actions < len(prefix_actions):
             action = prefix_actions[actions]
         else:
