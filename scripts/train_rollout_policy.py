@@ -138,8 +138,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 if with_context:
                     ctx = _episode_context(path)
                     context_rows = np.broadcast_to(ctx, (count, len(ctx)))
-                    rows_scalars = (np.concatenate([rows_scalars[:, :-1], context_rows, rows_scalars[:, -1:]], axis=1)
-                                    if obs == "v2lite" else np.concatenate([rows_scalars, context_rows], axis=1))
+                    rows_scalars = np.concatenate([rows_scalars[:, :115], context_rows, rows_scalars[:, 115:]], axis=1)
                 rows_boards = stored["boards"]
                 if boards is None:
                     boards = (_board_store((capacity, *rows_boards.shape[1:]), cache_dir) if dense_boards
@@ -163,11 +162,11 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             continue
         frames = read_frames(path)
         ctx = _episode_context(path) if with_context else None
-        if obs == "v2lite":
+        if obs != "v1":
             from pvz_student_observation import StudentHistory
-            history = StudentHistory()
+            history = StudentHistory(obs)
         for i in range(1, len(frames)):
-            if obs == "v2lite":
+            if obs != "v1":
                 b, s = history.features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             action = frames[i].get("label") or frames[i].get("action")
             if not action or frames[i].get("action_rejected") or not keep[path][i]:
@@ -210,7 +209,7 @@ def main() -> None:
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
     p.add_argument("--context", action="store_true",
                    help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
-    p.add_argument("--obs", choices=["v1", "v2lite"], default="v1", help="student feature version")
+    p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1", help="student feature version")
     p.add_argument("--soft-weight", type=float, default=0.0,
                    help="also match the search's preference over its candidates (wait / each card): "
                         "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")

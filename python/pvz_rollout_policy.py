@@ -18,6 +18,7 @@ import torch.nn.functional as F
 from torch import nn
 
 from pvz_value_net import BOARD_CHANNELS, COLS, CONTEXT, ROWS, SCALARS, featurize_numpy
+from pvz_student_observation import OBS_EXTRA
 
 PACKETS = 10            # seed-bank slots (SEEDBANK_MAX)
 LAWN_COLS = 9
@@ -39,7 +40,7 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
 class RolloutNet(nn.Module):
     def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1"):
         super().__init__()
-        if obs not in ("v1", "v2lite"):
+        if obs not in OBS_EXTRA:
             raise ValueError(f"unknown student observation version: {obs}")
         self.obs = obs
         # With context the student also reads the task (zombie-count multiplier, zombie roster): early in a
@@ -51,12 +52,12 @@ class RolloutNet(nn.Module):
         self.pool = pool
         g = (3 if pool == "meanmax" else 2) * width
         self.trunk = nn.Sequential(
-            nn.Conv2d(BOARD_CHANNELS + (4 if obs == "v2lite" else 0), width, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(BOARD_CHANNELS + OBS_EXTRA[obs][0], width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 5), padding=(0, 2)), nn.ReLU(),
         )
         self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA + (CONTEXT if context else 0)
-                                             + (1 if obs == "v2lite" else 0), width), nn.ReLU())
+                                             + OBS_EXTRA[obs][1], width), nn.ReLU())
         self.plant = nn.Linear(g, 1)
         self.packet = nn.Linear(g, PACKETS)
         self.packet_embedding = nn.Embedding(PACKETS, width)
@@ -104,9 +105,11 @@ class RolloutNet(nn.Module):
 def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
         sparse_input: bool = True, context: np.ndarray | None = None, history=None) -> dict:
     """Greedy action restricted to the simulator's legal plants; otherwise wait like pi does."""
-    if net.obs == "v2lite":
+    if net.obs != "v1":
         if history is None:
-            raise ValueError("v2lite requires per-episode StudentHistory, updated at every decision")
+            raise ValueError(f"{net.obs} requires per-episode StudentHistory, updated at every decision")
+        if history.obs != net.obs:
+            raise ValueError("student history observation version differs from network")
         board, scalars = history.features(frame, previous, context if net.context else None)
     if not legal_plants:
         return dict(WAIT)
@@ -149,12 +152,12 @@ def export_student(net: RolloutNet, path) -> None:
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
     with open(path, "wb") as stream:
-        stream.write((b"PVZRN004" if net.obs == "v2lite" else b"PVZRN003" if net.context else b"PVZRN002")
+        stream.write((b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
-        if net.context or net.obs == "v2lite":
+        if net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))
-        if net.obs == "v2lite":
-            stream.write(struct.pack("<I", 2))
+        if net.obs != "v1":
+            stream.write(struct.pack("<I", 3 if net.obs == "v2" else 2))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 

@@ -68,9 +68,13 @@ def encode_frames(frames: list[dict], source: bytes) -> dict:
 
 
 def encode_v2lite_frames(frames: list[dict], source: bytes) -> dict:
-    from pvz_student_observation import StudentHistory
+    return encode_student_frames(frames, source, "v2lite")
+
+
+def encode_student_frames(frames: list[dict], source: bytes, obs: str) -> dict:
+    from pvz_student_observation import OBS_EXTRA, StudentHistory
     encoded = encode_frames(frames, source)
-    history = StudentHistory()
+    history = StudentHistory(obs)
     boards, scalars = [], []
     rows = iter(encoded["rows"])
     wanted = next(rows, None)
@@ -81,12 +85,13 @@ def encode_v2lite_frames(frames: list[dict], source: bytes) -> dict:
             scalars.append(scalar)
             wanted = next(rows, None)
     count = len(encoded["rows"])
-    encoded["boards"] = np.concatenate([encoded["boards"], np.asarray(boards, dtype=np.float16).reshape(count, 4, 6, 10)], axis=1)
-    encoded["scalars"] = np.concatenate([encoded["scalars"], np.asarray(scalars, dtype=np.float32).reshape(count, 1)], axis=1)
+    channels, extra_scalars = OBS_EXTRA[obs]
+    encoded["boards"] = np.concatenate([encoded["boards"], np.asarray(boards, dtype=np.float16).reshape(count, channels, 6, 10)], axis=1)
+    encoded["scalars"] = np.concatenate([encoded["scalars"], np.asarray(scalars, dtype=np.float32).reshape(count, extra_scalars)], axis=1)
     return encoded
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=3)
 def encoder_signature(obs: str = "v1") -> str:
     import pvz_rollout_policy
     import pvz_value_net
@@ -99,11 +104,11 @@ def encoder_signature(obs: str = "v1") -> str:
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
     if obs == "v1":
         return signature
-    if obs != "v2lite":
+    if obs not in ("v2lite", "v2"):
         raise ValueError(f"unknown student observation version: {obs}")
-    from pvz_student_observation import SPEED_SCALE, StudentHistory
-    return hashlib.sha256((signature + inspect.getsource(StudentHistory) + str(SPEED_SCALE)
-                           + inspect.getsource(encode_v2lite_frames)).encode()).hexdigest()
+    import pvz_student_observation
+    return hashlib.sha256((signature + obs + inspect.getsource(pvz_student_observation)
+                           + inspect.getsource(encode_student_frames)).encode()).hexdigest()
 
 
 def _save(path: Path, **arrays):
@@ -144,6 +149,6 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1") -> Path:
             if str(stored["digest"]) == digest:
                 return target
     frames = [json.loads(line) for line in source.splitlines()]
-    encode = encode_frames if obs == "v1" else encode_v2lite_frames
-    _save(target, digest=digest, **encode(frames, source))
+    encoded = encode_frames(frames, source) if obs == "v1" else encode_student_frames(frames, source, obs)
+    _save(target, digest=digest, **encoded)
     return target
