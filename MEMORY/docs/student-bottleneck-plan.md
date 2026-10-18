@@ -127,3 +127,4 @@
   台式机 queue54：独立 worktree `~/PvZ-v2` 自己编译（正在跑的队列继续用旧二进制），回填 D24 全部档案到 `frames_v2`，等 queue53 让出 GPU 后训 D24 v2 三种子，与 D24 v2lite 同口径对比。
   注意：Mac 主工作区 build 是旧的，`test_student_observation` 的 live 回放测试在重编前会失败（obs-v2 worktree 里通过）；等 Mac 队列空了再重编。
   Codex 额度 04:40 再次用完（两台共用账号），08:14 重置：台式机 /goal resume 与 Mac 铲子任务（第 11 项第一阶段，worktree shovel）都已定时 08:16 启动。
+  铲子第一阶段改由用户在另一渠道（GUI 版 Codex）用 /goal 执行，交接书 MEMORY/docs/codex-shovel-handoff.md；已撤销 Mac 08:16 的定时启动。
