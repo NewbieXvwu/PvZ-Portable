@@ -688,12 +688,14 @@ class PvZEnv:
             condition = action.pop("until", None)
             if condition is not None and (action.get("type") != "wait" or condition != "timeout"):
                 raise ValueError("rollout first action only supports fixed or timeout waits")
-            if action.get("type") not in ("plant", "wait"):
-                raise ValueError("rollout first action must be plant or wait")
+            if action.get("type") not in ("plant", "shovel", "wait"):
+                raise ValueError("rollout first action must be plant, shovel or wait")
             if action["type"] == "wait" and (type(action.get("ticks")) is not int or not 0 <= action["ticks"] <= 1000000):
                 raise ValueError("wait ticks must be from 0 to 1000000")
             if action["type"] == "plant":
                 self._coordinates(action, ("packet", "row", "col"))
+            if action["type"] == "shovel":
+                self._coordinates(action, ("col", "row"))
             event_wait = condition is not None
             token = branch_action_token(action)
         if seed is not None and (type(seed) is not int or not 0 <= seed < 2 ** 32):
