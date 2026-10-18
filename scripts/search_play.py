@@ -300,12 +300,10 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
 
-        # Halving exists to cut the number of rollouts.  On the GPU it cuts the wrong thing: a wave costs
-        # its rounds, not its lanes (~/pvz-logs/cuda_status.md round 9), so three halving rounds are three
-        # waves where the full search is one.  With the CUDA backend every candidate gets every future in a
-        # single request -- which is exactly the --no-halving estimate, so nothing about the decision rule
-        # changes, only how the work is packed.
-        if args.halving and _W.get("cuda") is None:
+        # Halving changes which candidates receive later futures, and can change the selected action.
+        # Preserve the requested search algorithm on either backend; --no-halving explicitly selects
+        # the full grid when measuring the cost of its wider GPU batches.
+        if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
         jobs = [(cand, decision_seed * 1000 + k) for cand in candidates for k in range(args.samples)]
         scores = _leaf_values(_continuations(env, obs, root, jobs, args, stats))

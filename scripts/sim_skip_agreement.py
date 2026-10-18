@@ -177,8 +177,6 @@ def _search_decisions(seed: int) -> list[dict]:
         search_play._W["rollout_sim_skip"] = mask
         search_play._W["cpp_rollouts"] = cpp
         # The GPU arm swaps only the continuation engine: same candidates, same futures, same horizon.
-        # Halving is off in search_play whenever a CUDA client is installed, so the reference arm must run
-        # without it too (`--base-halving` left alone) or the two arms would search different grids.
         search_play._W["cuda"] = _W["cuda_client"] if cuda else None
         started = time.perf_counter()
         try:
@@ -335,10 +333,6 @@ def main() -> None:
     if args.cuda_rollouts:
         if args.mode != "search":
             p.error("--cuda-rollouts is a search-mode arm")
-        if args.base_halving or args.approx_halving:
-            # search_play drops halving whenever a GPU client is installed (a wave costs its rounds, not
-            # its lanes), so a halving reference arm would search a different grid than the GPU arm.
-            p.error("--cuda-rollouts compares full grids: leave --base-halving/--approx-halving off")
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
