@@ -155,6 +155,56 @@ int main()
 	UpdateProjectiles(pea, level, projectileRand);
 	assert(pea.i(F_PROJ_TYPE, 0) == -1);
 
+	// Plant.cpp uses NOTREADY -> RISING -> ARMED. The 19-frame rise at 18 fps needs 106 updates,
+	// and cannot explode until the armed branch runs on the following update. Its blast hits all
+	// zombies in range, not merely the one that caused the trigger.
+	State potato;
+	auto mine = potato.lane();
+	assert(LoadRoot(mine, root, level) == 1);
+	level.plantCount = 1;
+	level.plants[0].seedType = 4;
+	level.plants[0].behavior = PB_POTATO;
+	mine.i(F_PLANT_TYPE, 0) = 4;
+	mine.i(F_PLANT_STATE_COUNTDOWN, 0) = 1;
+	mine.i(F_PLANT_HP, 0) = 300;
+	mine.f(F_PLANT_X, 0) = 40.0f;
+	for (int slot = 0; slot < 2; ++slot)
+	{
+		mine.i(F_ZOMBIE_TYPE, slot) = 0;
+		mine.i(F_ZOMBIE_FLAGS, slot) = ZB_HAS_HEAD | ZB_HAS_ARM | ZB_ON_BOARD;
+		mine.i(F_ZOMBIE_BODY, slot) = mine.i(F_ZOMBIE_BODY_MAX, slot) = 270;
+		mine.f(F_ZOMBIE_X, slot) = 20.0f + slot * 10.0f;
+	}
+	UpdatePlant(mine, level, 0, projectileRand);
+	assert(mine.i(F_PLANT_STATE, 0) == 15 && mine.i(F_PLANT_STATE_COUNTDOWN, 0) == 0);
+	for (int tick = 0; tick < 105; ++tick)
+	{
+		UpdatePlantAnimations(mine);
+		UpdatePlant(mine, level, 0, projectileRand);
+		assert(mine.i(F_PLANT_STATE, 0) == 15 && mine.i(F_PLANT_TYPE, 0) == 4);
+	}
+	UpdatePlantAnimations(mine);
+	UpdatePlant(mine, level, 0, projectileRand);
+	assert(mine.i(F_PLANT_STATE, 0) == 16 && mine.i(F_PLANT_TYPE, 0) == 4);
+	UpdatePlant(mine, level, 0, projectileRand);
+	assert(mine.i(F_PLANT_TYPE, 0) == -1);
+	assert(mine.i(F_ZOMBIE_BODY, 0) == 0 && mine.i(F_ZOMBIE_BODY, 1) == 0);
+
+	// A sky sun on the last tick contributes to the income feature immediately, even though its
+	// money will only be collected at the next tick's head. Imported pending coins are not produced twice.
+	State sunlight;
+	auto sun = sunlight.lane();
+	assert(LoadRoot(sun, root, level) == 1);
+	sun.s(S_SUN_COUNT_DOWN) = 1;
+	SpawnSkySun(sun, projectileRand);
+	assert(sun.s(S_SUN_PRODUCED) == 25 && sun.s(S_SUN) == 0);
+	BankCoins(sun);
+	assert(sun.s(S_SUN_PRODUCED) == 25 && sun.s(S_SUN) == 25);
+	sun.s(S_SUN) = 9980;
+	AddCoin(sun, 25);
+	BankCoins(sun);
+	assert(sun.s(S_SUN) == 9990 && sun.s(S_SUN_PRODUCED) == 50);
+
 	// SeedPacket::Update activates strictly after the refresh time and clears its counter.
 	State cooldown;
 	assert(LoadRoot(cooldown.lane(), root, level) == 1);

@@ -17,6 +17,7 @@
 #include "Lawn/Projectile.h"
 #include "Lawn/SeedPacket.h"
 #include "Lawn/Zombie.h"
+#include "PvzpLib/Reanimator.h"
 
 #include <cstring>
 #include <cstdio>
@@ -250,6 +251,13 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 		// float mPosX; the record keeps one float type for all positions and the integers survive exactly.
 		out.posX = static_cast<float>(plant->mX);
 		out.posY = static_cast<float>(plant->mY);
+		if (const Reanimation* animation = app->ReanimationTryToGet(plant->mBodyReanimID))
+		{
+			out.animTime = animation->mAnimTime;
+			out.animRate = animation->mAnimRate;
+			out.animFrames = animation->mFrameCount;
+			out.animLoops = animation->mLoopCount;
+		}
 		if (!KernelSupportsPlant(plant->mSeedType) || plant->mSquished ||
 			plant->mImitaterType != SeedType::SEED_NONE)
 		{
@@ -277,6 +285,18 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 			? zombie->mTargetRow * kCols + zombie->mTargetCol : -1;
 		out.posX = zombie->mPosX; out.posY = zombie->mPosY;
 		out.velX = zombie->mVelX;
+		out.fade = zombie->mZombieFade;
+		const ReanimationID animationID = zombie->mZombiePhase == ZombiePhase::PHASE_ZOMBIE_MOWERED
+			? zombie->mMoweredReanimID : zombie->mBodyReanimID;
+		if (const Reanimation* animation = app->ReanimationTryToGet(animationID))
+		{
+			out.animTime = animation->mAnimTime;
+			out.animRate = animation->mAnimRate;
+			out.animStart = animation->mFrameStart;
+			out.animFrames = animation->mFrameCount;
+			out.animLoopType = static_cast<int32_t>(animation->mLoopType);
+			out.animLoops = animation->mLoopCount;
+		}
 		if (std::getenv("PVZ_CUDA_TRACE"))
 		{
 			const Rect attack = zombie->GetZombieAttackRect();
@@ -287,7 +307,10 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 				zombie->mIsEating, zombie->mZombieAge);
 		}
 		out.stateBits = (zombie->mIsEating ? ZB_EATING : 0) | (zombie->mHasHead ? ZB_HAS_HEAD : 0) |
-			(zombie->mHasArm ? ZB_HAS_ARM : 0) | (zombie->IsDeadOrDying() ? ZB_DYING : 0) |
+			(zombie->mHasArm ? ZB_HAS_ARM : 0) |
+			(zombie->mZombiePhase == ZombiePhase::PHASE_ZOMBIE_DYING ? ZB_DYING : 0) |
+			(zombie->mZombiePhase == ZombiePhase::PHASE_ZOMBIE_BURNED ? ZB_BURNED : 0) |
+			(zombie->mZombiePhase == ZombiePhase::PHASE_ZOMBIE_MOWERED ? ZB_MOWERED : 0) |
 			(zombie->mMindControlled ? ZB_MIND_CONTROLLED : 0) |
 			(zombie->IsOnBoard() ? ZB_ON_BOARD : 0);
 		if (!KernelSupportsZombie(zombie->mZombieType) || zombie->mMindControlled ||

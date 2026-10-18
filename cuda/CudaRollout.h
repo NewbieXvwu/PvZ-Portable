@@ -21,7 +21,7 @@ namespace pvzc
 enum {
 	kMagic = 0x50564334,          // "PVC4" -- the trailing digit is the tag's own literal, not the
 	                              // version below; staleness of a .cudaroot is carried by kVersion.
-	kVersion = 6,                 // flag definitions populated even though flags have no random weight
+	kVersion = 7,                 // import animation progress for rises, vaults, ground motion and corpses
 	kRows = 6,                    // feature grid rows (only 0..4 are playable on grass)
 	kCols = 10,                   // 9 lawn columns + column 9 = "beyond the lawn"
 	kCells = kRows * kCols,
@@ -175,7 +175,7 @@ struct RootPlant
 	int32_t type;                 // SeedType
 	int32_t health, maxHealth;
 	int32_t state;                // PlantState (potato arming, cherry burn)
-	int32_t stateCountdown;       // mStateCountdown (potato 500-tick arm, invulnerable states)
+	int32_t stateCountdown;       // mStateCountdown (potato 1500-tick delay before its rise animation)
 	int32_t launchCounter;        // mLaunchCounter: counts down to the next shot / sun
 	int32_t launchRate;           // mLaunchRate: the reset value drawn from by the shot clock
 	int32_t special;              // mDoSpecialCountdown (cherry fuse = 100 ticks)
@@ -183,6 +183,8 @@ struct RootPlant
 	int32_t extraB;               // mAnimCounter: the sprout/produce animation clock
 	int32_t onBoard;              // mIsOnBoard: a plant only takes damage once it has landed
 	float posX, posY;             // mPosX/mPosY, so blast and bite rectangles use the original's numbers
+	float animTime, animRate;
+	int32_t animFrames, animLoops;
 };
 
 struct RootZombie
@@ -197,6 +199,8 @@ struct RootZombie
 	int32_t fromWave;             // mFromWave, feeds the 催波 health test
 	int32_t targetCell;           // the plant being eaten, row * 10 + col (-1 none)
 	float posX, posY, velX;
+	float animTime, animRate;
+	int32_t animStart, animFrames, animLoopType, animLoops, fade;
 };
 
 struct RootProjectile
@@ -342,10 +346,12 @@ enum {
 enum IntField {
 	F_PLANT_TYPE, F_PLANT_HP, F_PLANT_HP_MAX, F_PLANT_STATE, F_PLANT_STATE_COUNTDOWN,
 	F_PLANT_LAUNCH, F_PLANT_LAUNCH_RATE, F_PLANT_SPECIAL, F_PLANT_SHOOTING, F_PLANT_ANIM,
+	F_PLANT_ANIM_FRAMES, F_PLANT_ANIM_LOOPS,
 	F_PLANT_ONBOARD,
 	F_ZOMBIE_TYPE, F_ZOMBIE_ROW, F_ZOMBIE_BODY, F_ZOMBIE_BODY_MAX, F_ZOMBIE_HELM, F_ZOMBIE_SHIELD,
 	F_ZOMBIE_FLYING,
 	F_ZOMBIE_PHASE, F_ZOMBIE_PHASE_COUNTER, F_ZOMBIE_FLAGS, F_ZOMBIE_CHILLED,
+	F_ZOMBIE_ANIM_START, F_ZOMBIE_ANIM_FRAMES, F_ZOMBIE_ANIM_LOOP_TYPE, F_ZOMBIE_ANIM_LOOPS, F_ZOMBIE_FADE,
 	F_ZOMBIE_AGE, F_ZOMBIE_FROM_WAVE, F_ZOMBIE_TARGET,
 	F_PROJ_TYPE, F_PROJ_ROW, F_PROJ_AGE, F_PROJ_DAMAGE, F_PROJ_CHILL,
 	F_COIN_ACTIVE, F_COIN_VALUE, F_COIN_TICKS,
@@ -360,7 +366,9 @@ enum IntField {
 
 enum FloatField {
 	F_PLANT_X, F_PLANT_Y,
+	F_PLANT_ANIM_TIME, F_PLANT_ANIM_RATE,
 	F_ZOMBIE_X, F_ZOMBIE_Y, F_ZOMBIE_VELX, F_ZOMBIE_VELY,
+	F_ZOMBIE_ANIM_TIME, F_ZOMBIE_ANIM_RATE,
 	F_PROJ_X, F_PROJ_Y, F_PROJ_VELX, F_PROJ_VELY,
 	F_MOWER_X,
 	F_ROW_LAST_PICKED, F_ROW_SECOND_LAST_PICKED,
@@ -416,11 +424,14 @@ constexpr int IntSlotCount(IntField field)
 	case F_PLANT_TYPE: case F_PLANT_HP: case F_PLANT_HP_MAX: case F_PLANT_STATE:
 	case F_PLANT_STATE_COUNTDOWN: case F_PLANT_LAUNCH: case F_PLANT_LAUNCH_RATE:
 	case F_PLANT_SPECIAL: case F_PLANT_SHOOTING: case F_PLANT_ANIM: case F_PLANT_ONBOARD:
+	case F_PLANT_ANIM_FRAMES: case F_PLANT_ANIM_LOOPS:
 		return kPlantSlots;
 	case F_ZOMBIE_TYPE: case F_ZOMBIE_ROW: case F_ZOMBIE_BODY: case F_ZOMBIE_BODY_MAX:
 	case F_ZOMBIE_HELM:
 	case F_ZOMBIE_SHIELD: case F_ZOMBIE_FLYING: case F_ZOMBIE_PHASE: case F_ZOMBIE_PHASE_COUNTER:
 	case F_ZOMBIE_FLAGS: case F_ZOMBIE_CHILLED: case F_ZOMBIE_AGE: case F_ZOMBIE_FROM_WAVE:
+	case F_ZOMBIE_ANIM_START: case F_ZOMBIE_ANIM_FRAMES: case F_ZOMBIE_ANIM_LOOP_TYPE:
+	case F_ZOMBIE_ANIM_LOOPS: case F_ZOMBIE_FADE:
 	case F_ZOMBIE_TARGET:
 		return kZombieSlots;
 	case F_PROJ_TYPE: case F_PROJ_ROW: case F_PROJ_AGE: case F_PROJ_DAMAGE: case F_PROJ_CHILL:
@@ -447,9 +458,10 @@ constexpr int FloatSlotCount(FloatField field)
 {
 	switch (field)
 	{
-	case F_PLANT_X: case F_PLANT_Y:
+	case F_PLANT_X: case F_PLANT_Y: case F_PLANT_ANIM_TIME: case F_PLANT_ANIM_RATE:
 		return kPlantSlots;
 	case F_ZOMBIE_X: case F_ZOMBIE_Y: case F_ZOMBIE_VELX: case F_ZOMBIE_VELY:
+	case F_ZOMBIE_ANIM_TIME: case F_ZOMBIE_ANIM_RATE:
 		return kZombieSlots;
 	case F_PROJ_X: case F_PROJ_Y: case F_PROJ_VELX: case F_PROJ_VELY:
 		return kProjectileSlots;

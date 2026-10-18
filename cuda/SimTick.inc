@@ -17,6 +17,7 @@
 #define PVZ_SIM_TICK_INC
 
 #include "SimImpl.inc"
+#include "Animation.inc"
 
 namespace pvzc
 {
@@ -243,8 +244,7 @@ PVZ_SIM void BankCoins(Lane lane)
 		if (lane.i(F_COIN_ACTIVE, slot) < 0) continue;
 		const int32_t ticks = lane.i(F_COIN_TICKS, slot) - 1;
 		if (ticks > 0) { lane.i(F_COIN_TICKS, slot) = ticks; continue; }
-		lane.s(S_SUN) += lane.i(F_COIN_VALUE, slot);
-		lane.s(S_SUN_PRODUCED) += lane.i(F_COIN_VALUE, slot);
+		lane.s(S_SUN) = Minimum(lane.s(S_SUN) + lane.i(F_COIN_VALUE, slot), 9990);
 		lane.i(F_COIN_ACTIVE, slot) = -1;
 		lane.i(F_COIN_VALUE, slot) = 0;
 	}
@@ -257,6 +257,8 @@ PVZ_SIM int32_t AddCoin(Lane lane, int32_t value)
 	lane.i(F_COIN_ACTIVE, slot) = 1;
 	lane.i(F_COIN_VALUE, slot) = value;
 	lane.i(F_COIN_TICKS, slot) = 1;
+	// Board::AddCoin counts production at creation. Collection changes money, not production.
+	lane.s(S_SUN_PRODUCED) = lane.s(S_SUN_PRODUCED) + value;
 	return slot;
 }
 
@@ -509,7 +511,45 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 		// rise anim loops; an armed mine that finds a zombie on it detonates.  The kill is a 60-px circle at
 		// mX+20 (aPosX = mX + mWidth/2 - 20, :4388), row range 0, NOT burn -> TakeDamage(1800, 18U).
 		int32_t& arm = lane.i(F_PLANT_STATE_COUNTDOWN, slot);
-		if (arm > 0) { --arm; break; }
+		if (arm > 0) --arm;
+		int32_t& state = lane.i(F_PLANT_STATE, slot);
+		if (state == 0)
+		{
+			if (arm == 0)
+			{
+				state = 15; // STATE_POTATO_RISING, Plant::UpdatePotato :1155
+				lane.f(F_PLANT_ANIM_TIME, slot) = 0.0f;
+				lane.f(F_PLANT_ANIM_RATE, slot) = 18.0f;
+				lane.i(F_PLANT_ANIM_FRAMES, slot) = 19; // measured PotatoMine anim_rise
+				lane.i(F_PLANT_ANIM_LOOPS, slot) = 0;
+			}
+			break;
+		}
+		if (state == 15)
+		{
+			if (lane.i(F_PLANT_ANIM_LOOPS, slot) > 0) state = 16;
+			break; // the armed branch first runs on the following tick
+		}
+		if (state != 16) break;
+		// Trigger geometry is separate from the explosion circle (Plant.cpp:4864-4896).
+		int32_t trigger = 0;
+		int32_t attackX = static_cast<int32_t>(plantX), attackWidth = 55;
+		for (int32_t zombie = 0; zombie < kZombieSlots; ++zombie)
+		{
+			const int32_t flags = lane.i(F_ZOMBIE_FLAGS, zombie);
+			if (lane.i(F_ZOMBIE_TYPE, zombie) < 0 || !(flags & ZB_HAS_HEAD)
+				|| (flags & (ZB_DEAD | ZB_DYING | ZB_BURNED | ZB_MOWERED))) continue;
+			if (lane.i(F_ZOMBIE_ROW, zombie) != row) continue;
+			const int32_t phase = lane.i(F_ZOMBIE_PHASE, zombie);
+			if (phase == 11 || phase == 12) continue;
+			const int32_t zx = static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie));
+			if (zx + cHurtOffset > 800) continue;
+			if (lane.i(F_ZOMBIE_TYPE, zombie) == 3) { attackX += 40; attackWidth -= 40; }
+			const int32_t extra = flags & ZB_EATING ? 30 : 0;
+			if (RectOverlapX(attackX, attackX + attackWidth, zx + cHurtOffset,
+				zx + cHurtOffset + cHurtWidth) >= -extra) { trigger = 1; break; }
+		}
+		if (!trigger) break;
 		const int32_t center = static_cast<int32_t>(plantX) + 20;
 		for (int32_t zombie = 0; zombie < kZombieSlots; ++zombie)
 		{
@@ -517,9 +557,8 @@ PVZ_SIM void UpdatePlant(Lane lane, const LevelInfo& level, int32_t slot, Rand& 
 			if (!BlastHit(center, row, static_cast<int32_t>(lane.f(F_ZOMBIE_X, zombie)),
 				lane.i(F_ZOMBIE_ROW, zombie), cPotatoRadius, 0)) continue;
 			DamageZombie(lane, level, zombie, cPotatoDamage, rand);
-			lane.i(F_PLANT_TYPE, slot) = -1;
-			break;
 		}
+		lane.i(F_PLANT_TYPE, slot) = -1;
 		break;
 	}
 	case PB_WALL:
@@ -596,6 +635,9 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 		if (!biting) return;                                    // mid-chew: hold position, do nothing else
 		const int32_t target = FindEatTarget(lane, level, row, mz, IsVaulter(def));
 		if (target < 0) { StopEating(lane, def, slot, rand); return; }
+		const PlantDef* prey = TickPlantDef(level, lane.i(F_PLANT_TYPE, target));
+		if (prey && (prey->behavior == PB_CHERRY
+			|| (prey->behavior == PB_POTATO && lane.i(F_PLANT_STATE, target) != 0))) return;
 		int32_t& hp = lane.i(F_PLANT_HP, target);
 		hp -= cEatDamage;
 		if (hp > 0) return;
@@ -621,6 +663,9 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 		{
 			lane.i(F_ZOMBIE_TARGET, slot) = target;
 			flags |= ZB_EATING;
+			const PlantDef* prey = TickPlantDef(level, lane.i(F_PLANT_TYPE, target));
+			if (prey && (prey->behavior == PB_CHERRY
+				|| (prey->behavior == PB_POTATO && lane.i(F_PLANT_STATE, target) != 0))) return;
 			int32_t& hp = lane.i(F_PLANT_HP, target);
 			hp -= cEatDamage;
 			if (hp <= 0)
@@ -675,9 +720,7 @@ PVZ_SIM int32_t FindEatTarget(Lane lane, const LevelInfo& level, int32_t row, in
 		const int32_t cell = row * kCols + col;
 		const int32_t plantType = lane.i(F_PLANT_TYPE, cell);
 		if (plantType < 0) continue;
-		// An armed potato mine is not eaten (EatPlant's mState != STATE_NOTREADY guard, :7070).
-		const PlantDef* pd = TickPlantDef(level, plantType);
-		if (pd && pd->behavior == PB_POTATO && lane.i(F_PLANT_STATE_COUNTDOWN, cell) <= 0) continue;
+		// An armed/rising mine can be targeted and starts eating, but EatPlant does no damage to it.
 		const int32_t plantX = static_cast<int32_t>(lane.f(F_PLANT_X, cell));
 		const int32_t plantLo = plantX + cPlantRectPad;
 		const int32_t plantHi = plantX + cPlantRectWidth - cPlantRectPad;
@@ -780,8 +823,8 @@ PVZ_SIM void UpdatePackets(Lane lane)
 PVZ_SIM void SpawnSkySun(Lane lane, Rand& rand)
 {
 	int32_t& countdown = lane.s(S_SUN_COUNT_DOWN);
-	if (countdown > 0) { --countdown; return; }
-	if (lane.s(S_NUM_SUNS_FALLEN) == 0 && countdown == 0 && lane.s(S_TICK) < 100) return;
+	--countdown;
+	if (countdown != 0) return;
 	AddCoin(lane, cSkySunValue);
 	const int32_t fallen = lane.s(S_NUM_SUNS_FALLEN) + 1;
 	lane.s(S_NUM_SUNS_FALLEN) = fallen;
@@ -1034,6 +1077,7 @@ PVZ_SIM void CheckVictory(Lane lane, const WaveTable& waves)
 PVZ_SIM void UpdateTick(Lane lane, const LevelInfo& level, const WaveTable& waves, Rand& rand)
 {
 	BankCoins(lane);
+	UpdatePlantAnimations(lane); // EffectSystem runs before UpdateGameObjects in the original
 	for (int32_t slot = 0; slot < kPlantSlots; ++slot) UpdatePlant(lane, level, slot, rand);
 	for (int32_t slot = 0; slot < kZombieSlots; ++slot) UpdateZombie(lane, level, slot, rand);
 	UpdateProjectiles(lane, level, rand);

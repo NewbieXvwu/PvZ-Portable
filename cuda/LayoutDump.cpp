@@ -36,6 +36,8 @@ int main()
 	PVZ_FIELD(RootPlant, launchCounter); PVZ_FIELD(RootPlant, launchRate); PVZ_FIELD(RootPlant, special);
 	PVZ_FIELD(RootPlant, extraA); PVZ_FIELD(RootPlant, extraB); PVZ_FIELD(RootPlant, onBoard);
 	PVZ_FIELD(RootPlant, posX); PVZ_FIELD(RootPlant, posY);
+	PVZ_FIELD(RootPlant, animTime); PVZ_FIELD(RootPlant, animRate);
+	PVZ_FIELD(RootPlant, animFrames); PVZ_FIELD(RootPlant, animLoops);
 
 	PVZ_STRUCT(RootZombie);
 	PVZ_FIELD(RootZombie, type); PVZ_FIELD(RootZombie, row); PVZ_FIELD(RootZombie, body);
@@ -45,6 +47,9 @@ int main()
 	PVZ_FIELD(RootZombie, chilled); PVZ_FIELD(RootZombie, age); PVZ_FIELD(RootZombie, fromWave);
 	PVZ_FIELD(RootZombie, targetCell); PVZ_FIELD(RootZombie, posX); PVZ_FIELD(RootZombie, posY);
 	PVZ_FIELD(RootZombie, velX);
+	PVZ_FIELD(RootZombie, animTime); PVZ_FIELD(RootZombie, animRate);
+	PVZ_FIELD(RootZombie, animStart); PVZ_FIELD(RootZombie, animFrames);
+	PVZ_FIELD(RootZombie, animLoopType); PVZ_FIELD(RootZombie, animLoops); PVZ_FIELD(RootZombie, fade);
 
 	PVZ_STRUCT(RootProjectile);
 	PVZ_FIELD(RootProjectile, type); PVZ_FIELD(RootProjectile, row); PVZ_FIELD(RootProjectile, damage);

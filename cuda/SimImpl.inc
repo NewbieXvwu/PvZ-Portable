@@ -68,6 +68,7 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.i(F_PLANT_TYPE, slot) = -1;
 		lane.f(F_PLANT_X, slot) = 0.0f;
 		lane.f(F_PLANT_Y, slot) = 0.0f;
+		lane.f(F_PLANT_ANIM_TIME, slot) = lane.f(F_PLANT_ANIM_RATE, slot) = 0.0f;
 	}
 	for (int32_t slot = 0; slot < kZombieSlots; ++slot)
 	{
@@ -78,6 +79,7 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.f(F_ZOMBIE_Y, slot) = 0.0f;
 		lane.f(F_ZOMBIE_VELX, slot) = 0.0f;
 		lane.f(F_ZOMBIE_VELY, slot) = 0.0f;
+		lane.f(F_ZOMBIE_ANIM_TIME, slot) = lane.f(F_ZOMBIE_ANIM_RATE, slot) = 0.0f;
 	}
 	for (int32_t slot = 0; slot < kProjectileSlots; ++slot)
 	{
@@ -179,6 +181,10 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.i(F_PLANT_ONBOARD, slot) = src.onBoard;
 		lane.f(F_PLANT_X, slot) = src.posX;
 		lane.f(F_PLANT_Y, slot) = src.posY;
+		lane.f(F_PLANT_ANIM_TIME, slot) = src.animTime;
+		lane.f(F_PLANT_ANIM_RATE, slot) = src.animRate;
+		lane.i(F_PLANT_ANIM_FRAMES, slot) = src.animFrames;
+		lane.i(F_PLANT_ANIM_LOOPS, slot) = src.animLoops;
 	}
 	for (int32_t index = 0; index < root.zombieCount; ++index)
 	{
@@ -208,6 +214,13 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		lane.f(F_ZOMBIE_X, slot) = src.posX;
 		lane.f(F_ZOMBIE_Y, slot) = src.posY;
 		lane.f(F_ZOMBIE_VELX, slot) = src.velX;
+		lane.f(F_ZOMBIE_ANIM_TIME, slot) = src.animTime;
+		lane.f(F_ZOMBIE_ANIM_RATE, slot) = src.animRate;
+		lane.i(F_ZOMBIE_ANIM_START, slot) = src.animStart;
+		lane.i(F_ZOMBIE_ANIM_FRAMES, slot) = src.animFrames;
+		lane.i(F_ZOMBIE_ANIM_LOOP_TYPE, slot) = src.animLoopType;
+		lane.i(F_ZOMBIE_ANIM_LOOPS, slot) = src.animLoops;
+		lane.i(F_ZOMBIE_FADE, slot) = src.fade;
 		// A zombie imported mid-vault carries no vertical velocity; the arc is recomputed from the
 		// phase countdown, so this only has to be a finite number.
 		lane.f(F_ZOMBIE_VELY, slot) = 0.0f;

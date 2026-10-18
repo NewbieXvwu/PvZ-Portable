@@ -311,7 +311,7 @@ def main() -> None:
         if not args.roots:
             raise SystemExit("--root-features needs --roots FILE.cudaroot")
         check_encoder(args.roots, args.root_features, args.show)
-        if not (args.cpu and args.gpu):
+        if not (args.cpu and args.gpu) and not args.pairs_out:
             return
     if args.pairs_out:
         if not args.cpu:

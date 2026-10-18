@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 MAGIC = 0x50564334            # "PVC4"
-VERSION = 6
+VERSION = 7
 RECORD_LEVEL, RECORD_ROOT = 1, 2
 
 INCOME_EVENTS = 160
@@ -25,10 +25,11 @@ WAVE_ZOMBIE_SLOTS = 32
 
 PLANT_FIELDS = ("cell", "type", "health", "max_health", "state", "state_countdown",
                 "launch_counter", "launch_rate", "special", "extra_a", "extra_b", "on_board",
-                "pos_x", "pos_y")
+                "pos_x", "pos_y", "anim_time", "anim_rate", "anim_frames", "anim_loops")
 ZOMBIE_FIELDS = ("type", "row", "body", "body_max", "helm", "helm_max", "shield", "shield_max",
                  "flying", "phase", "phase_counter", "state_bits", "chilled", "age", "from_wave",
-                 "target_cell", "pos_x", "pos_y", "vel_x")
+                 "target_cell", "pos_x", "pos_y", "vel_x", "anim_time", "anim_rate",
+                 "anim_start", "anim_frames", "anim_loop_type", "anim_loops", "fade")
 PROJECTILE_FIELDS = ("type", "row", "damage", "chill", "age", "pos_x", "pos_y", "vel_x", "vel_y")
 COIN_FIELDS = ("value", "ticks_to_collect")
 MOWER_FIELDS = ("row", "state", "timer", "flags", "chomp_counter", "pos_x")
@@ -54,8 +55,8 @@ ROOT_TAIL = struct.Struct("<ii")          # supported, unsupported reason
 # Board::mZombiesInWave is kept for corpus inspection. RESEED redraws unsent waves; CUDA continuation
 # must use DrawFutureWave rather than this privileged table. It trails the entity arrays.
 WAVE_BLOCK = struct.Struct("<i" + "i" * MAX_WAVES + "i" * (MAX_WAVES * WAVE_ZOMBIE_SLOTS))
-ZOMBIE_RECORD = struct.Struct("16i3f")
-PLANT_RECORD = struct.Struct("12i2f")
+ZOMBIE_RECORD = struct.Struct("16i5f5i")
+PLANT_RECORD = struct.Struct("12i4f2i")
 PROJECTILE_RECORD = struct.Struct("5i4f")
 COIN_RECORD = struct.Struct("2i")
 MOWER_RECORD = struct.Struct("5if")

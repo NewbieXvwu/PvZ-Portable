@@ -1,5 +1,15 @@
 # CUDA 机制规格 07：植物 —— 行为、射击时钟、生产与死亡 (PLANT mechanics)
 
+## 2026-10-18 实现进度：土豆雷三段武装
+
+v7 根局面携带真实 body reanim 的时间、速率、帧数和循环数。SimTick 的土豆雷已按
+NOTREADY(0)→RISING(15)→ARMED(16)推进：先递减1500倒计时；出土播放19帧、rate18；
+循环结束才武装，下一tick才进入触发分支。动画推进发生在实体逻辑之前。
+RISING能让僵尸停下啃，但不受啃食伤害；樱桃同样可以被锁定却不受伤。
+触发用植物55宽攻击矩形（啃食目标附加30距离、撑杆排除及缩窄），爆炸另用半径60圆，
+对范围内全部目标执行伤害。边界及多目标测试由共享核心ASan/UBSan覆盖；真实根1tick
+对照已不再出现提前爆炸差异。规格中旧的“1500后即武装/只打首目标”描述不代表现实现。
+
 Citations are repo-relative to `/home/newbiexvwu/pvz-cuda`. Line numbers are the current working tree
 (branch `cuda-rollout`, commit `cecc87d`). Every constant is copied literally from the source; nothing is
 inferred from commercial PvZ knowledge. Where the source is silent the line reads `NOT FOUND`.
