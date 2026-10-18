@@ -115,6 +115,17 @@ class CudaRolloutClient:
         self._sock.close()
         self._sock = None
 
+    def status(self) -> dict[str, int]:
+        """Server counters, for verifying that concurrent clients actually shared GPU waves."""
+        self.connect()
+        if self._pending:
+            raise CudaServerError("cannot query status while a rollout answer is pending")
+        self._send(b"PING\n")
+        words = self._read_line().split()
+        if len(words) != 4 or words[0] != "PONG":
+            raise CudaServerError(f"unexpected status {words!r}")
+        return dict(zip(("capacity", "lanes", "waves"), map(int, words[1:])))
+
     def run(self, roots_path: str | os.PathLike[str],
             pairs: Sequence[tuple[int, int, dict[str, Any] | None]], *, horizon: int,
             max_actions: int = 10 ** 9, want_leaf: bool = True

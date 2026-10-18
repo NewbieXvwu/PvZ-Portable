@@ -89,9 +89,11 @@ void FillLevelInfo(LawnApp* app, LevelInfo& info)
 	{
 		ZombieDef& def = info.zombies[type];
 		def.type = type;
-		if (!board->mZombieAllowed[type]) continue;
+		// Flags are inserted explicitly by PickZombieWaves and have pickWeight=0, so they are absent
+		// from mZombieAllowed.  Their spawn health/speed table is still required by the CUDA simulator.
+		if (!board->mZombieAllowed[type] && type != ZombieType::ZOMBIE_FLAG) continue;
 		const ZombieDefinition& source = gZombieDefs[type];
-		info.allowed[type] = 1;
+		info.allowed[type] = board->mZombieAllowed[type] ? 1 : 0;
 		def.value = source.mZombieValue;
 		def.firstAllowedWave = source.mFirstAllowedWave;
 		def.pickWeight = source.mPickWeight;
@@ -100,6 +102,8 @@ void FillLevelInfo(LawnApp* app, LevelInfo& info)
 		// PickRandomSpeed(): NORMAL/CONE/FLAG walk in 0.23..0.37 px per tick, the pole vaulter
 		// overrides it with 0.66..0.68 before its first jump (Zombie::PickRandomSpeed).
 		def.velMin = 0.23f; def.velMax = 0.37f;
+		if (static_cast<ZombieType>(type) == ZombieType::ZOMBIE_FLAG)
+			def.velMin = def.velMax = 0.45f;
 		if (static_cast<ZombieType>(type) == ZombieType::ZOMBIE_POLEVAULTER)
 		{
 			def.velMin = 0.66f; def.velMax = 0.68f;
@@ -216,6 +220,11 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 	}
 	record.supported = 1;
 	record.unsupportedReason = 0;
+	if (board->mLevel != 7 || app->IsFirstTimeAdventureMode())
+	{
+		record.supported = 0;
+		record.unsupportedReason = 6200; // DrawFutureWave implements replay-adventure level 7 only
+	}
 	FillIncome(incomeEvents, record.tick, incomeWindowStart, record);
 	for (const Plant* plant : board->mPlants)
 	{
@@ -332,9 +341,9 @@ bool BuildCudaRoot(LawnApp* app, const std::vector<std::pair<int, uint32_t>>& in
 				record.unsupportedReason = 20000 + out.type;
 			}
 		}
-	// The wave future the original already committed to.  RESEED re-seeds only the draws made from
-	// here on (rows, spawn jitter, sun timing) and never redraws this table, so a continuation that
-	// re-drew it would be measuring a different game than the one the teacher sampled.
+	// The real board's committed table is useful for inspection, but must not drive a resampled
+	// continuation: main.cpp::ReseedEnvironment redraws all unsent waves. DrawFutureWave does that on
+	// the CUDA side. Keep this field for corpus inspection and the future-independence regression.
 	record.waveCount = 0;
 	{
 		const int waves = board->mNumWaves < kMaxWaves ? board->mNumWaves : kMaxWaves;

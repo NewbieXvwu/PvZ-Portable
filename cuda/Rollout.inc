@@ -55,6 +55,7 @@ PVZ_SIM void RolloutBegin(Lane lane, int32_t futureSeed, int32_t maxActions, con
 	// stream is not reproducible here (the brief does not ask for it); what matters is that every draw
 	// comes from the same distribution the original draws from.
 	rand.Seed(lane.s(S_TICK), futureSeed);
+	lane.s(S_FUTURE_SEED) = futureSeed;
 	StoreRandState(lane, rand);
 	lane.s(S_DECISIONS) = 0;
 	lane.s(S_NET_CALLS) = 0;

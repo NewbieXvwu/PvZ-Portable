@@ -21,7 +21,7 @@ namespace pvzc
 enum {
 	kMagic = 0x50564334,          // "PVC4" -- the trailing digit is the tag's own literal, not the
 	                              // version below; staleness of a .cudaroot is carried by kVersion.
-	kVersion = 5,
+	kVersion = 6,                 // flag definitions populated even though flags have no random weight
 	kRows = 6,                    // feature grid rows (only 0..4 are playable on grass)
 	kCols = 10,                   // 9 lawn columns + column 9 = "beyond the lawn"
 	kCells = kRows * kCols,
@@ -403,6 +403,7 @@ enum ScalarField {
 	// workload, before RolloutBegin; a lane that runs no forced action still has to be written, because
 	// the device's scalar block is reused across batches and repeats.
 	S_FIRST_KIND, S_FIRST_PACKET, S_FIRST_ROW, S_FIRST_COL, S_FIRST_TICKS,
+	S_FUTURE_SEED,                // immutable seed for resampling future wave composition
 	S_SCALAR_COUNT
 };
 

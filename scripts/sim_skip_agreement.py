@@ -356,7 +356,19 @@ def main() -> None:
                 results = list(pool.imap_unordered(_play_game, jobs))
                 summary = summarize_games(results, args.mask)
             else:
-                results = [row for rows in pool.imap_unordered(_search_decisions, seeds) for row in rows]
+                results = []
+                completed = 0
+                for rows in pool.imap_unordered(_search_decisions, seeds):
+                    results.extend(rows)
+                    completed += 1
+                    partial = summarize_search(results, args.mask) if results else {"searches": 0}
+                    print(json.dumps({"completed_seeds": completed, "total_seeds": len(seeds),
+                                      "partial": partial}), flush=True)
+                    if args.out:
+                        args.out.parent.mkdir(parents=True, exist_ok=True)
+                        args.out.with_suffix(".partial.json").write_text(json.dumps(
+                            {"completed_seeds": completed, "total_seeds": len(seeds),
+                             "summary": partial, "results": results}) + "\n")
                 summary = summarize_search(results, args.mask)
     finally:
         if cuda_server is not None:
@@ -376,6 +388,12 @@ def main() -> None:
                    base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
                    approx_halving=args.approx_halving or args.base_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
                    approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
+                   horizon=args.horizon, workers=args.workers, seed_offset=args.seed_offset,
+                   seeds=seeds, complete=True,
+                   cuda_binary_sha256=(hashlib.sha256(Path(args.cuda_binary).read_bytes()).hexdigest()
+                                       if args.cuda_rollouts else None),
+                   policy_sha256=hashlib.sha256(Path(args.policy).read_bytes()).hexdigest(),
+                   value_sha256=hashlib.sha256(Path(args.value).read_bytes()).hexdigest(),
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])
     print(json.dumps(summary, indent=1))
     if args.out:

@@ -28,7 +28,7 @@ from pvz_cuda_root import MAGIC, RECORD_ROOT, RECORD_TAG, VERSION, _records
 
 BINARY = Path(os.environ.get("PVZ_CUDA_BINARY", ROOT / "build/rollout_cuda"))
 CORPUS = Path(os.environ.get("PVZ_CUDA_CORPUS",
-                             ROOT / "artifacts/cuda/corpus_l7_z15_skip0_v5/roots.cudaroot"))
+                             ROOT / "artifacts/cuda/corpus_l7_z15_reseed_v6/roots.cudaroot"))
 NET = Path(os.environ.get("PVZ_CUDA_NET", ROOT / "artifacts/cuda/student/v14.pvzrn"))
 
 # Distinct roots and distinct future seeds, so a swapped readback cannot look like a matching answer.
@@ -52,13 +52,12 @@ class CudaServeMergeTest(unittest.TestCase):
                 process.terminate()
             process.wait(timeout=30)
 
-    def _serve(self, gather_ms: int) -> str:
-        """Start a server whose lane capacity is smaller than the two requests together, so the first
-        wave must hold a slice of both and the second must finish the rest."""
+    def _serve(self, gather_ms: int, lanes: int = 64) -> str:
+        """Keep each request below the server's half-full dispatch threshold so gathering is exercised."""
         socket_path = str(Path(self.directory.name) / f"serve-{gather_ms}.sock")
         log = open(socket_path + ".log", "w+")
         self.addCleanup(log.close)
-        process = launch_server(BINARY, NET, socket_path, lanes=4, gather_ms=gather_ms,
+        process = launch_server(BINARY, NET, socket_path, lanes=lanes, gather_ms=gather_ms,
                                 start_timeout_ms=60000, log=log)
         self.addCleanup(process.stdout.close)
         self.processes.append(process)
@@ -70,10 +69,11 @@ class CudaServeMergeTest(unittest.TestCase):
             client = CudaRolloutClient(socket_path)
             client.connect()
             self.addCleanup(client.close)
+            clients.append(client)
+        for client, pairs in zip(clients, groups):
             client.begin(CORPUS, [(root, seed, None) for root, seed in pairs], horizon=HORIZON,
                          max_actions=3000)
-            clients.append(client)
-        return [client.answer()[0] for client in clients]
+        return [client.answer() for client in clients]
 
     def test_merge_does_not_move_a_lane(self):
         quiet = self._serve(gather_ms=0)
@@ -82,13 +82,28 @@ class CudaServeMergeTest(unittest.TestCase):
         busy = self._serve(gather_ms=600)
         merged_first, merged_second = self._answer(busy, [FIRST, SECOND])
 
-        for name, alone, merged in (("first", alone_first, merged_first),
+        import numpy as np
+        for name, (alone, alone_leaf), (merged, merged_leaf) in (("first", alone_first, merged_first),
                                     ("second", alone_second, merged_second)):
             self.assertEqual(len(alone), len(merged))
             for index, (reference, packed) in enumerate(zip(alone, merged)):
                 self.assertEqual(reference, packed,
                                  f"lane {index} of the {name} request changed when it shared a wave")
-        self.assertNotEqual(alone_first[0], alone_second[0], "the two requests ran the same continuation")
+            np.testing.assert_array_equal(alone_leaf, merged_leaf)
+        self.assertNotEqual(alone_first[0][0], alone_second[0][0], "the two requests ran the same continuation")
+        # Observe actual merging. A previous lanes=4 fixture dispatched the first 3-lane request
+        # immediately at the half-full threshold, so its green check proved nothing about merging.
+        client = CudaRolloutClient(busy)
+        self.addCleanup(client.close)
+        self.assertEqual(client.status()["waves"], 1)
+
+    def test_a_request_spanning_waves_preserves_every_leaf(self):
+        pairs = FIRST + SECOND + FIRST
+        wide = self._answer(self._serve(gather_ms=0), [pairs])[0]
+        sliced = self._answer(self._serve(gather_ms=0, lanes=4), [pairs])[0]
+        self.assertEqual(wide[0], sliced[0])
+        import numpy as np
+        np.testing.assert_array_equal(wide[1], sliced[1])
 
     def test_empty_request_is_not_sent(self):
         client = CudaRolloutClient(self._serve(gather_ms=0))
@@ -112,7 +127,7 @@ class RootArrayGrowthTest(unittest.TestCase):
     """
 
     LARGE = Path(os.environ.get("PVZ_CUDA_CORPUS_LARGE",
-                                ROOT / "artifacts/cuda/corpus_l7_z15_skip0_v5/roots.cudaroot"))
+                                ROOT / "artifacts/cuda/corpus_l7_z15_reseed_v6/roots.cudaroot"))
     # Present in both corpora, spread far enough apart that a shifted read cannot hide.
     ROOTS = (0, 35, 200, 255)
 

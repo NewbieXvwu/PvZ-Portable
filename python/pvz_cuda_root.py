@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 MAGIC = 0x50564334            # "PVC4"
-VERSION = 5
+VERSION = 6
 RECORD_LEVEL, RECORD_ROOT = 1, 2
 
 INCOME_EVENTS = 160

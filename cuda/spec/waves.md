@@ -1,5 +1,21 @@
 # CUDA 机制规格 03：波次调度与出怪（Wave scheduling & spawning）
 
+## 2026-10-18 实现勘误：未来组成必须重抽
+
+交接实现直到 f198afa 都直接读取 `waves.type[wave]`，**没有**执行下文 §5 对应的
+`ReseedEnvironment → PickZombieWaves`。原先关于“已洗牌/已重抽”的描述不能作为代码证据。
+现在 `DrawFutureWave` 在波次生成时按 `(futureSeed,wave)` 的独立流惰性重抽。
+点数、旗帜波强制普通/旗帜、最后一波补齐 allowed 类型、首次可出波与权重均对应原版。
+第 7 关无新增介绍类型、无生存模式跨波配额，所以不需要生成未用到的 30 波表。
+同一候选未来的组成不受该候选在模拟中消耗的随机数影响，也不读取存档的未来组成。
+`SimMechanicsTest.cpp` 检查改变存档未来表不改变生成结果，并在 30 波×256 种子上验证
+点数、旗帜、首次出波与末波类型覆盖。随机流与 CPU 不同，分布仍须阶段 1 验收。
+
+导出器还曾把 `allowed == false` 的定义整项留零。旗帜的随机权重是零，因此不在 allowed 中，
+但旗帜波仍会强制生成它。现在单独填充旗帜定义：270 HP、速度 0.45、点数 1，
+且保持 allowed=false。`.cudaroot` 升 v6，拒收缺该定义的旧语料。
+波表重抽只实现第二周目第 7 关，导出器明确拒收其他关卡/第一周目（reason=6200）。
+
 适用场景：冒险模式第 7 关（`mLevel == 7`，`BACKGROUND_1_DAY` 草地白天），
 `EnvironmentTaskSpec.playthrough == 2`（⇒ `mFinishedAdventure == 1` ⇒ `IsFirstTimeAdventureMode() == false`），
 `zombieCountMultiplier ∈ [1.3, 1.5]`，`waveCap == 0`（⇒ `mNumWaves == 30`），

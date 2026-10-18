@@ -1785,6 +1785,9 @@ int Serve(const Options& options)
 				Request& request = queue[slice.request];
 				std::memcpy(request.results.data() + request.next, dev.hostResults.data() + slice.lane,
 					static_cast<size_t>(slice.lanes) * sizeof(RolloutResult));
+				// Kernels index the concatenated root buffer; the client names roots in its own corpus.
+				for (int32_t lane = 0; lane < slice.lanes; ++lane)
+					request.results[request.next + lane].rootIndex = request.pairRoot[request.next + lane];
 				if (request.leaf)
 					std::memcpy(request.leaves.data() + request.next * kValueFloats,
 						dev.hostLeaf.data() + static_cast<size_t>(slice.lane) * kValueFloats,

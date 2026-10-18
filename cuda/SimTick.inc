@@ -878,6 +878,66 @@ PVZ_SIM void SpawnZombie(Lane lane, const LevelInfo& level, int32_t zombieType, 
 
 PVZ_SIM int32_t IsFlagWave(int32_t wave) { return wave >= 0 && wave % cFlagWavesPeriod == cFlagWavesPeriod - 1; }
 
+// PickZombieWaves/PickZombieType for replay adventure level 7 (Board.cpp:578-783, :2416-2520).
+// Only future waves reach this function.  Compose the wave from the request's future seed, never
+// from the table saved in the real board.  Per-wave streams have the same sampling distribution,
+// without storing 30 full tables per lane; they also keep candidates on common random futures even
+// when their actions consume different amounts of in-play RNG.  Level 7 introduces no new type and
+// has no survival caps or cross-wave type quotas.
+PVZ_SIM int32_t DrawFutureWave(const LevelInfo& level, int32_t wave, int32_t futureSeed, int32_t* types)
+{
+	Rand waveRand;
+	waveRand.Seed(wave, futureSeed);
+	int32_t points = wave * 2 / 5 + 1;
+	int32_t count = 0;
+	if (IsFlagWave(wave))
+	{
+		const int32_t plain = Minimum(points, 8);
+		points = static_cast<int32_t>(points * 2.5f);
+		for (int32_t index = 0; index < plain; ++index) types[count++] = 0;
+		types[count++] = 1;
+		points -= plain * level.zombies[0].value + level.zombies[1].value;
+	}
+	// The full level's final wave, even when a task caps completion earlier (main.cpp:269-280).
+	if (wave == kMaxWaves - 1)
+	{
+		for (int32_t type = 0; type < kZombieTypes; ++type)
+		{
+			if (!level.allowed[type]) continue;
+			int32_t present = 0;
+			for (int32_t index = 0; index < count; ++index) present |= types[index] == type;
+			if (!present && count < kWaveZombieSlots)
+			{
+				types[count++] = type;
+				points -= level.zombies[type].value;
+			}
+		}
+	}
+	while (points > 0 && count < kWaveZombieSlots)
+	{
+		int32_t total = 0;
+		for (int32_t type = 0; type < kZombieTypes; ++type)
+		{
+			const ZombieDef& def = level.zombies[type];
+			if (level.allowed[type] && wave + 1 >= def.firstAllowedWave && points >= def.value)
+				total += def.pickWeight;
+		}
+		if (total <= 0) break;
+		int32_t draw = waveRand.Int(total);
+		int32_t picked = 0;
+		for (int32_t type = 0; type < kZombieTypes; ++type)
+		{
+			const ZombieDef& def = level.zombies[type];
+			if (!level.allowed[type] || wave + 1 < def.firstAllowedWave || points < def.value) continue;
+			draw -= def.pickWeight;
+			if (draw < 0) { picked = type; break; }
+		}
+		types[count++] = picked;
+		points -= level.zombies[picked].value;
+	}
+	return count;
+}
+
 // Board::UpdateZombieSpawning (waves.md §1.4), the whole per-tick wave state machine: the huge-wave
 // banner gate, the single countdown decrement, the 催波 clamp, the flag-wave banner trigger at 5, and the
 // whole-wave emission at 0.  Emission rewrites mZombieHealthWaveStart / mZombieHealthToNextWave and the
@@ -916,13 +976,14 @@ PVZ_SIM void UpdateWaves(Lane lane, const LevelInfo& level, const WaveTable& wav
 
 	// SpawnZombieWave (waves.md §1.4:4918): lround(base * multiplier) zombies, cycling mZombiesInWave,
 	// all emitted in this single tick.  std::lround rounds halves away from zero, which RoundHalfAway does.
-	const int32_t base = waves.zombieCount[wave];
+	int32_t types[kWaveZombieSlots];
+	const int32_t base = DrawFutureWave(level, wave, lane.s(S_FUTURE_SEED), types);
 	const int32_t spawnCount = base > 0
 		? static_cast<int32_t>(RoundHalfAway(static_cast<double>(base) * static_cast<double>(level.zombieCountMultiplier)))
 		: 0;
 	const int32_t flag = IsFlagWave(wave);
 	for (int32_t index = 0; index < spawnCount; ++index)
-		SpawnZombie(lane, level, waves.type[wave][base > 0 ? index % base : 0], wave, flag, rand);
+		SpawnZombie(lane, level, types[base > 0 ? index % base : 0], wave, flag, rand);
 	lane.s(S_WAVE) = wave + 1;
 
 	// Post-emission timers (Board.cpp:5374-5398).  mZombieHealthWaveStart is the health of the wave that
