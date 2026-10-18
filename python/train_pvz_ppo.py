@@ -33,7 +33,8 @@ from pvz_value import DISCOUNT_REFERENCE_TICKS, VALUE_GAMMA
 def _task_spec(task: dict[str, Any], seed: int) -> TaskSpec:
     return TaskSpec(
         level=task["level"], seed=seed, playthrough=task["playthrough"],
-        profile=(profile_for_deck(task["deck"]) if task.get("deck") is not None else None),
+        profile=(profile_for_deck(task["deck"], task.get("first_aid_owned", False))
+                 if task.get("deck") is not None else None),
         zombie_count_multiplier=task["zombie_count_multiplier"], wave_cap=task["wave_cap"],
         preplanted=tuple(tuple(plant) for plant in task["preplanted"]),
     )

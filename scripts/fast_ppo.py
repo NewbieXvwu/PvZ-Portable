@@ -107,7 +107,7 @@ def _play(job: dict) -> dict:
     if job.get("weights") is not None:
         _NET.load_state_dict(torch.load(io.BytesIO(job["weights"]), weights_only=False))
     kw = training_task_kwargs(load_training_task(job["manifest"], job["task_id"]), job["seed"])
-    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     if _FAST[0]:
         _ENV.set_lean_observation(False)

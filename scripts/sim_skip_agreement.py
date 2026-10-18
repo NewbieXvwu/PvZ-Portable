@@ -78,7 +78,7 @@ def _reset(seed: int):
     from scripted_baseline import profile_for_deck
     args = _W["args"]
     kw = training_task_kwargs(load_training_task(args.manifest, args.task_id), seed)
-    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = _W["env"].reset(deck=tuple(kw["deck"]), task=task)
     if args.mode == "search":

@@ -132,6 +132,48 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
     return {"type": "plant", "packet": packet, "col": best["col"], "row": best["row"]}
 
 
+@torch.inference_mode()
+def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
+                  context: np.ndarray | None = None, history=None, sparse_input: bool = True) -> list[tuple[float, dict]]:
+    """The student's own preference order over the *legal plant actions*, best first.
+
+    Same heads as `act` (plant-or-wait, packet, cell), but every legal action gets a score instead
+    of only the argmax: P(plant) x P(packet | legal packets) x P(cell | legal cells of that packet).
+    `act` is the greedy corner of this distribution, so the first entry is exactly the action `act`
+    returns whenever it plants -- scripts/search_play.py --student-candidates widens the teacher's
+    candidate set with entries 2..k. Without that flag nothing calls this function and the teacher's
+    candidate set is bit-identical to before.
+    """
+    if not legal_plants:
+        return []
+    if net.obs != "v1":
+        if history is None:
+            raise ValueError(f"{net.obs} requires per-episode StudentHistory, updated at every decision")
+        if history.obs != net.obs:
+            raise ValueError("student history observation version differs from network")
+        board, scalars = history.features(frame, previous, context if net.context else None)
+    else:
+        if net.context and context is None:
+            raise ValueError("this student reads the task context: pass context=observation_context(obs)")
+        board, scalars = features(frame, previous, context if net.context else None)
+    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input)
+    plant_p = float(torch.sigmoid(net.plant(g))[0, 0])
+    by_packet: dict[int, list[dict]] = {}
+    for a in legal_plants:
+        by_packet.setdefault(a["packet"], []).append(a)
+    packets = sorted(by_packet)
+    packet_p = torch.softmax(net.packet(g)[0][packets], dim=0).tolist()
+    out: list[tuple[float, dict]] = []
+    for packet, p_packet in zip(packets, packet_p):
+        cells = net.cell_logits(h, g, torch.tensor([packet]))[0]
+        index = torch.tensor([a["row"] * LAWN_COLS + a["col"] for a in by_packet[packet]])
+        cell_p = torch.softmax(cells[index], dim=0).tolist()
+        for a, p_cell in zip(by_packet[packet], cell_p):
+            out.append((plant_p * p_packet * p_cell, a))
+    out.sort(key=lambda item: -item[0])
+    return out
+
+
 def load_student(path) -> RolloutNet:
     """A student or fast_ppo checkpoint as a RolloutNet in eval mode (width read from the weights;
     fast_ppo's value head is dropped)."""

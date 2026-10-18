@@ -6,7 +6,10 @@ cell can be dug up:
      scored by the static value net (``--static-value``, default ``--value``). The best ``--per-card`` cells of
      every card survive, plus "do nothing now" and the student's own choice. With ``--shovel-candidates k``
      the legal shovel actions are scored the same way and the best ``k`` join the candidates; the continuation
-     then decides what the freed cell is worth (the student may replant it). 0 = off, and off is the old
+     then decides what the freed cell is worth (the student may replant it). With ``--student-candidates k``
+     the student's own top-k plants (by its policy probabilities, ``pvz_rollout_policy.ranked_plants``) join
+     the candidates too -- the static net only ever offers one cell per card, so cells the student itself
+     would pick were previously reachable only by shovelling first. 0 = off for both, and off is the old
      candidate set exactly.
   2. Each candidate is played and then continued by the student for ``--horizon`` ticks in C++, ``--samples``
      times with different random futures (the same futures for every candidate). The leaf is scored by
@@ -75,11 +78,14 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     from render_episode import _frame
     frame = _frame(obs)
     frame["action"] = fast_state.get("action")
+    previous = fast_state.get("frame")
     if _W["fast"].obs != "v1" and "history" not in fast_state:
         from pvz_student_observation import StudentHistory
         fast_state["history"] = StudentHistory(_W["fast"].obs)
     action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
                  context=_W.get("context"), history=fast_state.get("history"))
+    # --student-candidates needs exactly the frame / history the student just read, so keep them.
+    _W["student_frame"], _W["student_previous_frame"] = frame, previous
     fast_state["frame"] = frame
     fast_state["action"] = action
     return action
@@ -216,6 +222,32 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
 
+        # --student-candidates k: the student's own top-k plants join the candidates
+        # (pvz_rollout_policy.ranked_plants). The static value net picks one cell per card, so a cell
+        # the student would actually pick -- or its second choice -- never gets compared; the search
+        # could only reach it indirectly by shovelling and letting the student react (learn/06).
+        # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
+        stats["last_student_keys"] = set()
+        if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
+            from pvz_rollout_policy import ranked_plants
+            present = {json.dumps(c, sort_keys=True) for c in candidates}
+            added = 0
+            for _score, entry in ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                               legal, context=_W.get("context"),
+                                               history=_W.get("student_history")):
+                action = {"type": "plant", "packet": int(entry["packet"]),
+                          "col": int(entry["col"]), "row": int(entry["row"])}
+                key = json.dumps(action, sort_keys=True)
+                if key in present:
+                    continue
+                candidates.append(action)
+                present.add(key)
+                stats["last_student_keys"].add(key)
+                added += 1
+                if added >= args.student_candidates:
+                    break
+            stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
+
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
         totals = []
@@ -320,6 +352,12 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
             "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
             "mode": "fresh" if fresh else "reproduced",
             "seconds": time.perf_counter() - started}
+    # Did the winner come from --student-candidates? Counted here so both the halving and the
+    # full search report it; the override counter below is the subset that changed the action.
+    if json.dumps(candidates[best], sort_keys=True) in (stats.get("last_student_keys") or ()):
+        stats["student_candidate_best"] = stats.get("student_candidate_best", 0) + 1
+        if best != policy_index and totals[best] - totals[policy_index] > args.margin:
+            stats["student_candidate_override"] = stats.get("student_candidate_override", 0) + 1
     stats["last_targets"] = list(zip(candidates, totals))
     stats["last_best"] = candidates[best]
     if totals[best] - totals[policy_index] > args.margin and best != policy_index:
@@ -347,11 +385,12 @@ def _play(job: dict) -> dict:
         if _W.get("cpp_rollouts"):
             env.load_rollout_net(_W["rollout_file"])
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
-                    profile=profile_for_deck(tuple(kw["deck"])),
+                    profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     torch.manual_seed(kw["seed"])
     started = time.time()
-    stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter()}
+    stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
+             "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         from pvz_value_net import observation_context
@@ -395,6 +434,19 @@ def _play(job: dict) -> dict:
             if dagger is not None and dagger.random() >= args.dagger_beta:
                 action = policy_choice
             fast_state["action"] = action    # the student's next features read the executed action
+            # Planting on an occupied cell only became legal with wall-nut first aid (a damaged
+            # wall-nut takes another nut of the same type, Board::CanPlantAt) -- record what stood
+            # there, so the report can say how often the teacher actually used it. Harmless for
+            # ordinary plants: the legal list never offers an occupied cell without first aid.
+            if action["type"] == "plant":
+                occupant = next((p for p in obs.get("plants") or []
+                                 if p["row"] == action["row"] and p["col"] == action["col"]), None)
+                if occupant is not None:
+                    stats.setdefault("replant_events", []).append({
+                        "tick": obs["tick"], "row": action["row"], "col": action["col"],
+                        "packet": action["packet"], "occupant": occupant.get("type"),
+                        "occupant_health": occupant.get("health"),
+                        "same_type": occupant.get("type") == action["packet"]})
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
             if not rejected and action["type"] == "plant":
@@ -441,7 +493,11 @@ def _play(job: dict) -> dict:
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted": planted,
             "searched": stats["searched"], "overrides": stats["overrides"], "shovels": stats["shovels"],
+            "student_candidate_added": stats["student_candidate_added"],
+            "student_candidate_best": stats["student_candidate_best"],
+            "student_candidate_override": stats["student_candidate_override"],
             "shovel_events": stats.get("shovel_events", []),
+            "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
 
 
@@ -459,6 +515,9 @@ def main() -> None:
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
+    p.add_argument("--student-candidates", type=int, default=0,
+                   help="the student's own top-k plant actions (its policy probabilities) added to the "
+                        "candidates; 0 = off, which is the old candidate set exactly")
     p.add_argument("--shovel-candidates", type=int, default=0,
                    help="best legal shovel cells (scored by --static-value right after shovelling) added to "
                         "the candidates; 0 = off, which is the old candidate set exactly")
@@ -490,6 +549,8 @@ def main() -> None:
         p.error("--verify-samples must be nonnegative")
     if args.shovel_candidates < 0:
         p.error("--shovel-candidates must be nonnegative")
+    if args.student_candidates < 0:
+        p.error("--student-candidates must be nonnegative")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
@@ -529,6 +590,10 @@ def summarize(results_path: Path) -> dict:
                      "searched_per_game": round(sum(r["searched"] for r in v.values()) / len(v), 1),
                      "shovels_per_game": round(sum(r.get("shovels", 0) for r in v.values()) / len(v), 2),
                      "games_with_shovel": sum(1 for r in v.values() if r.get("shovels")),
+                     "replants_per_game": round(sum(len(r.get("replant_events") or []) for r in v.values()) / len(v), 2),
+                     "first_aid_replants_per_game": round(sum(
+                         sum(1 for e in (r.get("replant_events") or []) if e.get("same_type"))
+                         for r in v.values()) / len(v), 2),
                      "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2)}
                for arm, v in by.items()}
     (results_path.parent / "summary.json").write_text(json.dumps(summary, indent=1))

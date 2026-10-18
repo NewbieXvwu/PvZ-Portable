@@ -62,7 +62,7 @@ def _relabel(path: Path):
     seed = meta["task"]["seed"]
     kw = training_task_kwargs(load_training_task(args.manifest, args.task_id), seed)
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
-                    profile=profile_for_deck(tuple(kw["deck"])),
+                    profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{key: value for key, value in kw["task_extra"].items() if value is not None})
     env = search_play._W["env"]
     originals = {}

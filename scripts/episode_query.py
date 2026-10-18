@@ -1221,6 +1221,8 @@ def main() -> None:
             level, deck = kw["level"], kw["deck"]
             seed = kw["seed"]
             task_extra = dict(kw["task_extra"])
+            if kw.get("first_aid_owned"):        # 坚果包扎术：profile 字段，collect() 会摘出来
+                task_extra["first_aid_owned"] = True
             print(f"按任务清单复现 {args.task_id}：level={level} seed={seed} "
                   f"deck={deck} cap={task_extra.get('wave_cap')} "
                   f"mult={task_extra.get('zombie_count_multiplier')} "

@@ -274,8 +274,12 @@ def training_task_kwargs(task: dict, seed: int | None = None) -> dict:
     if preplanted:
         extra["preplanted"] = preplanted
     seeds = task.get("seeds") or []
+    # 坚果包扎术（first_aid_owned）是 profile 字段，不是 TaskSpec 字段，所以放在
+    # task_extra 外面：调用方用 profile_for_deck(deck, kw["first_aid_owned"]) 带进去。
+    # 缺省 False —— 旧任务不带这个键，reset 报文逐字节不变。
     return {"level": task["level"], "deck": list(task["deck"]),
             "seed": seed if seed is not None else (seeds[0] if seeds else 0),
+            "first_aid_owned": bool(task.get("first_aid_owned", False)),
             "task_extra": extra}
 
 
@@ -455,10 +459,13 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     # 推导 —— 槽位数、升级植物所有权都和卡组一致，旧存档（6 卡、无升级）
     # 重放时行为不变。
     deck = tuple(deck) if deck else deck_for_level(level)
+    # first_aid_owned 是 profile 字段：从 task_extra 里摘出来，别当 TaskSpec 关键字传
+    first_aid = bool((task_extra or {}).get("first_aid_owned", False))
     task_kwargs = {"level": level, "seed": seed, "playthrough": 2,
-                   "profile": profile_for_deck(deck)}
+                   "profile": profile_for_deck(deck, first_aid)}
     if task_extra:  # 复现评估任务：波数上限、僵尸倍率、预种植物……
-        task_kwargs.update({k: v for k, v in task_extra.items() if v is not None})
+        task_kwargs.update({k: v for k, v in task_extra.items()
+                            if v is not None and k != "first_aid_owned"})
     task = TaskSpec(**task_kwargs)
     obs, _ = env.reset(deck=deck, task=task)
 

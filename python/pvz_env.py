@@ -170,8 +170,14 @@ class SeedCard:
     imitater_type: int | None = None
 
 
-def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]]) -> PlayerProfileContext:
-    """Match seed-bank capacity and upgrade ownership to a fixed task deck."""
+def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]],
+                     first_aid_owned: bool = False) -> PlayerProfileContext:
+    """Match seed-bank capacity and upgrade ownership to a fixed task deck.
+
+    first_aid_owned (wall-nut first aid) is a task property, not a deck property: it only
+    widens Board::CanPlantAt (a damaged wall-nut / tall-nut may take another nut of the same
+    type). Default False keeps every historical task's reset message byte-identical.
+    """
     seed_types = []
     imitater_owned = False
     for card in deck:
@@ -188,7 +194,7 @@ def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]]) -> Player
         seed_types.append(seed_type)
     upgrades = tuple(sorted(seed_type for seed_type in set(seed_types) if 40 <= seed_type <= 47))
     return PlayerProfileContext(seed_slot_count=len(deck), owned_upgrade_plants=upgrades,
-                                imitater_owned=imitater_owned)
+                                imitater_owned=imitater_owned, first_aid_owned=bool(first_aid_owned))
 
 
 class PvZEnv:
