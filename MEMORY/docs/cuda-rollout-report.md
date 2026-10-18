@@ -528,3 +528,28 @@ cooperative两模式bin与leaf字节全等（codex_r44/mode_equiv.json），叠�
 （`RolloutCuda.cu:745-751`，0=不合批的诚实基准）。纪律上限≤4游戏，无法靠加worker放大波，故实测取
 gather-ms∈{0,80,300}的DAgger作业墙钟扫描，对照dagger_cpu与非内联小波，量化合并度→墙钟曲线
 （等待器在GPU空闲窗口自动跑，`tmp/codex_r44_inline_wall.py`；结果并入codex_v25_phase2/dagger_inline_comparison.json）。
+
+## 第44轮（接管）目标1验收审计：逐条独立复核盘上证据
+
+不引用记忆、不引用旧结论文件，逐条重开：
+
+- **编码器逐位相同**：`codex_r35/encoder/summary.json` 与 `encoder_late/summary.json` 均为
+  `obs=v2`、`roots=12`、`floats_per_root=6182`、`bitwise_equal=true`。v2lite 的对照是 5876，
+  两个数不同，说明这条确实是 v2 口径而不是 v2lite 复用。12 个根取自 3 个真实种子的第 0/2/4/6 波，
+  植物数 1→19、僵尸数 0→8，开局与晚段都有。
+- **sim_host 与 rollout_cuda 叶子字节相同**：直接对 `.bin` 算 sha256，不看旧 txt 的说法。
+  `host_leaf.bin` = `gpu_leaf.bin`（各 544144 字节，`b25cc68784b7b091`）；
+  `host_late_leaf.bin` = `gpu_late_leaf.bin` = `private_late_leaf.bin`（`7960b7000501bab0`）；
+  `gpu_late_results.bin` = `private_late_results.bin`（`f75b6b05b9fcb129`）。四对全等。
+- **回归**：第35轮 12 项 20.760s 通过；针对本轮已提交的 `SimTick.inc`/`CudaRollout.cmake`/`search_play.py`
+  实跑 21 项通过。**其中 2 项设备级用例（叶子收入与 RNG 恢复）仍是 skip**，因为需要起模拟器而阶段2
+  占满了 4 个游戏槽；已排进墙钟扫描收尾实跑，在此之前不计入"已覆盖"。
+
+顺带修掉一处自己的证据缺陷：`codex_r44/mode_equiv.json` 原先只写 true/false，没记输入指纹，
+无法独立复现。现补上 net（`v25.pvzrn` `a81b913d…`）、roots（`corpus_l7_z15_v9` `bf94fffc…`）、
+基线（r36 冻结小波 `cef25086…`）、候选（内联构建 `f73912a6…`）以及 coop0/coop1 两侧 bin/leaf 的逐文件 sha。
+
+并核实"内联"不是口头假设：`build/build.ninja` 中 `rollout_cuda_small` 的 CUDA 编译规则确实带
+`-DPVZ_CUDA_INLINE_TICK=1 -DPVZ_NET_CHUNK_BITS=7`，且二进制 mtime（01:39:04）晚于 CMake（01:36:14）
+与 `SimTick.inc`（01:36:36），所以扫描用的 `build/rollout_cuda_small` 确为内联构建。
+**负面记录**：`cuobjdump --dump-elf-symbols` 对三个二进制都报 0 个设备函数，静态符号法在这里不能当内联判据。
