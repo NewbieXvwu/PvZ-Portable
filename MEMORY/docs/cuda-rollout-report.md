@@ -511,3 +511,20 @@ CPU128完成后只暂停自有控制器的下一阶段调度，以免旧核GPU12
 
 新增覆盖计数兼容sim_skip_agreement自行构造、没有rollout_backend字段的搜索参数；
 已补旧调用方式回归，10项标准库检查1.043s通过。
+
+## 第44轮（接管）：采用内联单tick + 目标3合批定量方案
+
+强制内联单tick正式采用：`rollout_cuda_small`编译带`PVZ_CUDA_INLINE_TICK`、大波`rollout_cuda`目标不变。
+验收=对已冻结且经r34–36证明与sim_host逐字节相同的r36基线（sha cef25086）逐位等价：pairs-30在private与
+cooperative两模式bin与leaf字节全等（codex_r44/mode_equiv.json），叠加r42 ready_bench的8/30/300道coop1全等
+与每波提速1.73/1.46/1.71倍；serve_merge/search_schedule/mechanics三项回归通过（15.7s rc0）。
+
+目标3（老师DAgger形态下GPU如何快过CPU）的结构化定量方案，全部来自代码与本轮实测、非推测：
+一轮device耗时约7–10ms且几乎与波内道数无关（`RolloutCuda.cu:719`、状态round 9），一条续走约49轮，
+故每波≈350–500ms的“每轮固定成本”主导，与网络无关（round 39：SGEMM仅占核时1.9%）。单个搜索决策仅
+10–40道（`pvz_cuda_rollout.py:3-6`），低于“GPU快过单个CPU线程”的盈亏点；gpu128实测每请求≈3.1道、
+4worker并发→合批波仍远未达≈21500道的SM饱和阈（`RolloutCuda.cu:281-288`）。结论：内联只压缩“计算项”，
+在4worker小波下被固定成本稀释；真正杠杆是跨局合批摊薄每轮固定成本——`--gather-ms`开波窗口即此旋钮
+（`RolloutCuda.cu:745-751`，0=不合批的诚实基准）。纪律上限≤4游戏，无法靠加worker放大波，故实测取
+gather-ms∈{0,80,300}的DAgger作业墙钟扫描，对照dagger_cpu与非内联小波，量化合并度→墙钟曲线
+（等待器在GPU空闲窗口自动跑，`tmp/codex_r44_inline_wall.py`；结果并入codex_v25_phase2/dagger_inline_comparison.json）。
