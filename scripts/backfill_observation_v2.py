@@ -36,7 +36,7 @@ def backfill(path: Path):
     seed = meta["task"]["seed"]
     kw = training_task_kwargs(load_training_task(_ARGS.manifest, _ARGS.task_id), seed)
     task = TaskSpec(level=kw["level"], seed=seed, playthrough=2,
-                    profile=profile_for_deck(tuple(kw["deck"])),
+                    profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{key: value for key, value in kw["task_extra"].items() if value is not None})
     obs, _ = _ENV.reset(deck=tuple(kw["deck"]), task=task)
     index = 0

@@ -52,13 +52,20 @@ def deck_for_level(level: int) -> tuple[int, ...]:
     return DECK                            # 1–10 白天草地：原六卡
 
 
-def profile_for_deck(deck: tuple[int, ...]) -> PlayerProfileContext:
+def profile_for_deck(deck: tuple[int, ...], first_aid_owned: bool = False) -> PlayerProfileContext:
     """卡组 -> PlayerProfileContext。seed 槽位数 = 卡组长度；
     卡组里出现的升级植物必须声明所有权，否则模拟器直接拒绝 reset
-    （LawnApp.cpp:1329 校验；升级植物集合从 Plant::IsUpgrade 解析）。"""
+    （LawnApp.cpp:1329 校验；升级植物集合从 Plant::IsUpgrade 解析）。
+
+    first_aid_owned（坚果包扎术）是**任务属性**，不是卡组属性：打开后
+    Board::CanPlantAt 多允许一种落点（坚果 / 高坚果血量 < 2/3 时可以在它身上
+    再种一个同种坚果），合法动作由模拟器自己给出，这里只负责把所有权传进
+    profile。缺省 False，旧任务的 reset 报文逐字节不变（AGENTS.md §8：
+    改任务 = 换任务族，任务清单里用 "first_aid_owned": true 显式打开）。"""
     upgrades = tuple(sorted(set(deck) & set(pvz_constants.upgrade_plants())))
     return PlayerProfileContext(seed_slot_count=len(deck),
-                                owned_upgrade_plants=upgrades)
+                                owned_upgrade_plants=upgrades,
+                                first_aid_owned=bool(first_aid_owned))
 
 
 def rows_with(plants: list[dict], kind: int) -> Counter:

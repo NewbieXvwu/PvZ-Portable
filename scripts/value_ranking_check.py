@@ -82,7 +82,7 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     from scripted_baseline import profile_for_deck
     args, env, net = _W["args"], _W["env"], _W["student"]
     seed, kw = seed_task
-    task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+    task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
     env.load_rollout_net(_W["weights"])

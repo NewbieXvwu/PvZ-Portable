@@ -76,6 +76,23 @@ class LoadTrainingTask(unittest.TestCase):
     def test_explicit_seed_wins(self) -> None:
         self.assertEqual(render_episode.training_task_kwargs(TASK, seed=99)["seed"], 99)
 
+    def test_first_aid_is_off_by_default_and_carried_when_set(self) -> None:
+        """坚果包扎术是 profile 字段（不是 TaskSpec 字段）：缺省关，清单里写了才开。
+
+        旧任务没有这个键 —— 它必须解析成 False，否则所有历史任务的 reset 报文都会变。
+        """
+        self.assertFalse(render_episode.training_task_kwargs(TASK)["first_aid_owned"])
+        self.assertNotIn("first_aid_owned", render_episode.training_task_kwargs(TASK)["task_extra"])
+        self.assertTrue(render_episode.training_task_kwargs(dict(TASK, first_aid_owned=True))["first_aid_owned"])
+
+    def test_profile_for_deck_carries_first_aid(self) -> None:
+        from scripted_baseline import profile_for_deck
+        self.assertFalse(profile_for_deck((0, 1)).first_aid_owned)
+        self.assertTrue(profile_for_deck((0, 1), True).first_aid_owned)
+        # 打开包扎术不改卡组推导出来的其它东西（槽位数、升级植物所有权）
+        self.assertEqual(profile_for_deck((0, 43), True).owned_upgrade_plants, (43,))
+        self.assertEqual(profile_for_deck((0, 43), True).seed_slot_count, 2)
+
     def test_no_preplanted_means_no_key(self) -> None:
         """预种植物是空的就不传 —— `TaskSpec` 的默认值就是空，传个空元组只是噪音。"""
         task = dict(TASK, preplanted=[])
