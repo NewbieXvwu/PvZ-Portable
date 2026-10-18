@@ -263,7 +263,8 @@ PVZ_SIM int32_t LoadRoot(Lane lane, const RootRecord& root, const LevelInfo& lev
 		const int32_t slot = src.row >= 0 && src.row < kMowerSlots ? src.row : index;
 		if (slot >= kMowerSlots) continue;
 		lane.i(F_MOWER_STATE, slot) = src.state;
-		lane.i(F_MOWER_TIMER, slot) = src.timer;
+		// Exporter stores mRollingInCounter (elapsed), while the tick uses ticks remaining.
+		lane.i(F_MOWER_TIMER, slot) = src.state == kMowerRollingIn ? Maximum(100 - src.timer, 0) : src.timer;
 		lane.i(F_MOWER_FLAGS, slot) = src.flags;
 		lane.i(F_MOWER_CHOMP, slot) = src.chompCounter;
 		lane.f(F_MOWER_X, slot) = src.posX;

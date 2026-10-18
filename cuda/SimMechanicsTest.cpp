@@ -360,6 +360,24 @@ int main()
 	UpdateZombie(mower, level, 0, projectileRand);
 	assert(mower.i(F_ZOMBIE_TYPE, 0) == -1 && mower.s(S_ZOMBIES_KILLED) == 1);
 
+	State rolling;
+	auto rollingRoot = Root();
+	rollingRoot.mowerCount = 1;
+	rollingRoot.mowers[0].row = 0;
+	rollingRoot.mowers[0].state = kMowerRollingIn;
+	rollingRoot.mowers[0].posX = -160.0f;
+	assert(LoadRoot(rolling.lane(), rollingRoot, level));
+	assert(rolling.lane().i(F_MOWER_TIMER, 0) == 100);
+	for (int tick = 1; tick < 100; ++tick)
+	{
+		UpdateMowers(rolling.lane());
+		assert(rolling.lane().i(F_MOWER_STATE, 0) == kMowerRollingIn);
+		if (tick == 50) assert(rolling.lane().f(F_MOWER_X, 0) == -90.5f);
+	}
+	UpdateMowers(rolling.lane());
+	assert(rolling.lane().i(F_MOWER_STATE, 0) == kMowerReady);
+	assert(rolling.lane().f(F_MOWER_X, 0) == -21.0f);
+
 	// A sky sun on the last tick contributes to the income feature immediately, even though its
 	// money will only be collected at the next tick's head. Imported pending coins are not produced twice.
 	State sunlight;

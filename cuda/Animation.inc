@@ -28,6 +28,14 @@ PVZ_SIM int32_t PeaHeadOffset(Lane lane, int32_t slot, int32_t axis)
 	return static_cast<int32_t>(RoundedMulAdd(after - before, fraction, before));
 }
 
+PVZ_SIM float SmoothSCurve(float time)
+{
+	// PvzpCurveS: preserve the original left-to-right float multiplications.
+	const float left = RoundedMulAdd(3.0f * time, time, 0.0f);
+	const float right = RoundedMulAdd(RoundedMulAdd(2.0f * time, time, 0.0f), time, 0.0f);
+	return left - right;
+}
+
 PVZ_SIM void StepAnimation(float& time, float rate, int32_t frames, int32_t loopType, int32_t& loops)
 {
 	if (frames <= 0) return;

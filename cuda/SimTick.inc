@@ -733,6 +733,9 @@ PVZ_SIM void UpdateMowers(Lane lane)
 		{
 			int32_t& timer = lane.i(F_MOWER_TIMER, slot);
 			if (timer > 0) --timer;
+			const float age = static_cast<float>(cMowerRollInTicks - timer) / static_cast<float>(cMowerRollInTicks);
+			const float eased = SmoothSCurve(SmoothSCurve(age));
+			lane.f(F_MOWER_X, slot) = RoundedMulAdd(cMowerReadyX + 160.0f, eased, -160.0f);
 			if (timer == 0)
 			{
 				state = kMowerReady;
