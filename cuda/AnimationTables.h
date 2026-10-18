@@ -17,31 +17,40 @@ inline constexpr float groundHost1[] = PVZ_GROUND_1;
 __device__ __constant__ float groundDevice1[] = PVZ_GROUND_1;
 #endif
 #undef PVZ_GROUND_1
-// Zombie_polevaulter_anim_run: start 13, count 37
-#define PVZ_GROUND_2 { -59.7999992f, -59.0f, -58.2000008f, -57.2999992f, -56.5f, -55.7000008f, -54.7999992f, -54.0f, -53.2000008f, -52.2999992f, -51.5f, -50.7000008f, -49.7999992f, -49.0f, -48.2000008f, -47.2999992f, -46.5f, -45.7000008f, -44.7999992f, -44.0f, -43.2000008f, -42.2999992f, -41.5f, -40.7000008f, -39.7999992f, -39.0f, -38.2000008f, -37.2999992f, -36.5f, -35.7000008f, -34.7999992f, -34.0f, -33.2000008f, -32.2999992f, -31.5f, -30.7000008f, -29.7999992f }
+// Zombie_anim_superlongdeath: start 292, count 137
+#define PVZ_GROUND_2 { -28.5f, -27.7000008f, -26.8999996f, -26.0f, -25.2000008f, -24.3999996f, -23.6000004f, -23.6000004f, -23.6000004f, -23.6000004f, -21.3999996f, -19.2000008f, -16.8999996f, -14.5f, -12.1999998f, -11.3999996f, -10.6999998f, -5.30000019f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.0f, -0.899999976f, -1.70000005f, -2.5999999f, -3.5f, -3.5f, -3.5f, -3.5f, -3.5f, -3.5f, -3.5f, -4.69999981f, -6.0f, -7.30000019f, -8.60000038f, -16.1000004f, -23.6000004f, -24.2999992f, -25.1000004f, -25.1000004f, -25.1000004f, -26.6000004f, -28.1000004f, -29.6000004f, -31.5f, -33.5f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f, -35.4000015f }
 inline constexpr float groundHost2[] = PVZ_GROUND_2;
 #ifdef __CUDACC__
 __device__ __constant__ float groundDevice2[] = PVZ_GROUND_2;
 #endif
 #undef PVZ_GROUND_2
-// Zombie_polevaulter_anim_walk: start 93, count 45
-#define PVZ_GROUND_3 { -59.7999992f, -59.0999985f, -58.2999992f, -57.5999985f, -56.9000015f, -55.0f, -53.0f, -51.0999985f, -49.2000008f, -47.2000008f, -45.0999985f, -43.0999985f, -41.0999985f, -39.0f, -37.0f, -35.0f, -32.9000015f, -30.8999996f, -28.8999996f, -27.0f, -25.0f, -23.0f, -21.0f, -19.0f, -17.0f, -14.6999998f, -12.3000002f, -10.0f, -7.69999981f, -5.80000019f, -3.9000001f, -2.0f, -0.100000001f, 1.60000002f, 3.5f, 5.4000001f, 7.30000019f, 7.5f, 7.80000019f, 8.0f, 8.19999981f, 8.19999981f, 8.10000038f, 8.0f, 8.0f }
+// Zombie_polevaulter_anim_run: start 13, count 37
+#define PVZ_GROUND_3 { -59.7999992f, -59.0f, -58.2000008f, -57.2999992f, -56.5f, -55.7000008f, -54.7999992f, -54.0f, -53.2000008f, -52.2999992f, -51.5f, -50.7000008f, -49.7999992f, -49.0f, -48.2000008f, -47.2999992f, -46.5f, -45.7000008f, -44.7999992f, -44.0f, -43.2000008f, -42.2999992f, -41.5f, -40.7000008f, -39.7999992f, -39.0f, -38.2000008f, -37.2999992f, -36.5f, -35.7000008f, -34.7999992f, -34.0f, -33.2000008f, -32.2999992f, -31.5f, -30.7000008f, -29.7999992f }
 inline constexpr float groundHost3[] = PVZ_GROUND_3;
 #ifdef __CUDACC__
 __device__ __constant__ float groundDevice3[] = PVZ_GROUND_3;
 #endif
 #undef PVZ_GROUND_3
+// Zombie_polevaulter_anim_walk: start 93, count 45
+#define PVZ_GROUND_4 { -59.7999992f, -59.0999985f, -58.2999992f, -57.5999985f, -56.9000015f, -55.0f, -53.0f, -51.0999985f, -49.2000008f, -47.2000008f, -45.0999985f, -43.0999985f, -41.0999985f, -39.0f, -37.0f, -35.0f, -32.9000015f, -30.8999996f, -28.8999996f, -27.0f, -25.0f, -23.0f, -21.0f, -19.0f, -17.0f, -14.6999998f, -12.3000002f, -10.0f, -7.69999981f, -5.80000019f, -3.9000001f, -2.0f, -0.100000001f, 1.60000002f, 3.5f, 5.4000001f, 7.30000019f, 7.5f, 7.80000019f, 8.0f, 8.19999981f, 8.19999981f, 8.10000038f, 8.0f, 8.0f }
+inline constexpr float groundHost4[] = PVZ_GROUND_4;
+#ifdef __CUDACC__
+__device__ __constant__ float groundDevice4[] = PVZ_GROUND_4;
+#endif
+#undef PVZ_GROUND_4
 PVZ_SIM float GroundCoordinate(int type, int start, int frame) {
 #ifdef __CUDA_ARCH__
   if (type != 3 && start == 44 && frame >= 0 && frame < 47) return groundDevice0[frame];
   if (type != 3 && start == 91 && frame >= 0 && frame < 47) return groundDevice1[frame];
-  if (type == 3 && start == 13 && frame >= 0 && frame < 37) return groundDevice2[frame];
-  if (type == 3 && start == 93 && frame >= 0 && frame < 45) return groundDevice3[frame];
+  if (type != 3 && start == 292 && frame >= 0 && frame < 137) return groundDevice2[frame];
+  if (type == 3 && start == 13 && frame >= 0 && frame < 37) return groundDevice3[frame];
+  if (type == 3 && start == 93 && frame >= 0 && frame < 45) return groundDevice4[frame];
 #else
   if (type != 3 && start == 44 && frame >= 0 && frame < 47) return groundHost0[frame];
   if (type != 3 && start == 91 && frame >= 0 && frame < 47) return groundHost1[frame];
-  if (type == 3 && start == 13 && frame >= 0 && frame < 37) return groundHost2[frame];
-  if (type == 3 && start == 93 && frame >= 0 && frame < 45) return groundHost3[frame];
+  if (type != 3 && start == 292 && frame >= 0 && frame < 137) return groundHost2[frame];
+  if (type == 3 && start == 13 && frame >= 0 && frame < 37) return groundHost3[frame];
+  if (type == 3 && start == 93 && frame >= 0 && frame < 45) return groundHost4[frame];
 #endif
   return 0.0f;
 }

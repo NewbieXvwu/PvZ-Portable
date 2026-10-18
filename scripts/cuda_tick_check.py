@@ -110,9 +110,12 @@ def main():
                                                + expected.tobytes())
     (args.work / "pairs.txt").write_text("".join(pairs))
     corpus = read_cudaroot(roots_path)
-    for item in metadata:
+    leaves = read_cudaroot(args.work / "cpu_leaves.cudaroot")["roots"] if args.dump_leaves else None
+    for index, item in enumerate(metadata):
         root = corpus["roots"][item["root"]]
         item["root_headless"] = sum(not(z["state_bits"] & 4) for z in root["zombies"])
+        if leaves is not None:
+            item["cpu_leaf_headless"] = sum(not(z["state_bits"] & 4) for z in leaves[index]["zombies"])
         item["root_zombie_phases"] = dict(Counter(z["phase"] for z in root["zombies"]))
         item["root_plant_states"] = dict(Counter((p["type"], p["state"]) for p in root["plants"]))
         item["may_spawn_wave"] = (0 < root["zombie_count_down"] <= item["wait"] or
@@ -151,6 +154,11 @@ def main():
         row["no_initial_bleed_or_spawn_pairs"] = len(stable)
         row["no_initial_bleed_or_spawn_differing_pairs"] = int(np.any(
             features["gpu"][stable] != expected[stable], axis=1).sum())
+        if leaves is not None:
+            no_bleed = [i for i in stable if not metadata[i]["cpu_leaf_headless"]]
+            row["no_initial_or_leaf_headless_or_spawn_pairs"] = len(no_bleed)
+            row["no_initial_or_leaf_headless_or_spawn_differing_pairs"] = int(np.any(
+                features["gpu"][no_bleed] != expected[no_bleed], axis=1).sum())
         if "host" in features:
             row["host_gpu_differing_floats"] = int(np.count_nonzero(
                 features["host"][indices] != features["gpu"][indices]))

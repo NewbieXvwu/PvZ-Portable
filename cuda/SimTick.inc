@@ -296,8 +296,8 @@ PVZ_SIM void StartDeathAnimation(Lane lane, int32_t slot, int32_t pole, Rand& ra
 }
 
 // Zombie::TakeDamage (Zombie.cpp:7973-8002): a flying hit is absorbed first, then the shield (unless it
-// bypasses it), then the helm, then the body; overkill never leaks into the body on the blow that
-// breaks a layer, and the body subtraction is unclamped with death tested as `<= 0` afterwards.
+// bypasses it), then the helm, then the body; excess damage carries through a broken layer.
+// Body subtraction is unclamped with death tested as `<= 0` afterwards.
 // Level 7 has no shields and no fliers, but the order is written out so a future type does not silently
 // change it.
 PVZ_SIM void ApplyBodyDamage(Lane lane, const LevelInfo& level, int32_t slot, int32_t damage, Rand& rand)
@@ -612,6 +612,8 @@ PVZ_SIM void UpdateZombie(Lane lane, const LevelInfo& level, int32_t slot, Rand&
 	{
 		int32_t& fade = lane.i(F_ZOMBIE_FADE, slot);
 		if (fade == -1 && lane.i(F_ZOMBIE_ANIM_LOOPS, slot) > 0) fade = 100;
+		// Death and death2 have constant ground tracks; superlongdeath can slide in either direction.
+		lane.f(F_ZOMBIE_X, slot) -= GroundAdvance(lane, slot);
 		if (fade > 0 && --fade == 0) RemoveZombie(lane, slot);
 		return;
 	}
@@ -928,7 +930,7 @@ PVZ_SIM void SpawnZombie(Lane lane, const LevelInfo& level, int32_t zombieType, 
 	if (zombieType == 1) spawnX = 800.0f;
 	if (IsVaulter(def)) spawnX = 870.0f + static_cast<float>(rand.Int(10));
 	lane.f(F_ZOMBIE_X, slot) = spawnX;
-	lane.f(F_ZOMBIE_Y, slot) = 0.0f;
+	lane.f(F_ZOMBIE_Y, slot) = 50.0f + 100.0f * static_cast<float>(lane.i(F_ZOMBIE_ROW, slot));
 	RedrawZombieSpeed(lane, def, slot, rand);
 	lane.f(F_ZOMBIE_VELY, slot) = 0.0f;
 	UpdateZombieAnimation(lane, slot); // ZombieInitialize calls UpdateReanim once before returning

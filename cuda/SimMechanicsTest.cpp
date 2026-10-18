@@ -170,6 +170,24 @@ int main()
 	assert(bounded.lane().s(S_ZOMBIE_END) < kZombieSlots);
 	assert(bounded.lane().s(S_PROJECTILE_END) < kProjectileSlots);
 
+	// Captured from original level-7 root tick 2400, seed 1611000. Body reanimation must advance
+	// after movement. Advancing before movement misses the first boundary by 0.0148px and the wrap
+	// by 0.178px, even though animation times themselves still match at the leaf.
+	State boundary;
+	auto boundaryRoot = live;
+	boundaryRoot.zombieCountDown = 1000;
+	boundaryRoot.zombies[0].posX = 691.7450561523438f;
+	boundaryRoot.zombies[0].velX = 0.33439141511917114f;
+	boundaryRoot.zombies[0].animTime = 0.8966953754425049f;
+	boundaryRoot.zombies[0].animRate = 14.832743644714355f;
+	assert(LoadRoot(boundary.lane(), boundaryRoot, level));
+	for (int tick = 1; tick <= 35; ++tick)
+	{
+		UpdateTick(boundary.lane(), level, first, boundedRand);
+		if (tick == 6) assert(boundary.lane().f(F_ZOMBIE_X, 0) == 691.6560668945312f);
+	}
+	assert(boundary.lane().f(F_ZOMBIE_X, 0) == 690.8699951171875f);
+
 	// This real failing root has a normal zombie at x=550 and a potato at x=520. The constructor's
 	// [50,70] mouth misses it, but LoadPlainZombieReanim's [20,70] mouth overlaps by exactly 20 px.
 	State mouth;

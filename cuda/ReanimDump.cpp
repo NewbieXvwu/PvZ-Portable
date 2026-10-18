@@ -529,9 +529,9 @@ namespace
 //   Reanimation::GetTrackVelocity (Reanimator.cpp:1315-1325): returns
 //     (float)((double)(x[after] - x[before]) * (double)SECONDS_PER_UPDATE * (double)mAnimRate).
 //   Zombie::UpdateZombieWalking (:4129, :4146): aSpeed = (float)velocity * mScaleZombie;
-//     mPosX -= aSpeed (float).  Board::Update ticks every Reanimation (:5762) BEFORE
-//     UpdateGame -> UpdateGameObjects -> Zombie::Update (:5815, :4985), so update k of the zombie
-//     uses the mAnimTime that update k's Reanimation::Update just produced.
+//     mPosX -= aSpeed (float). Bodies are attachments: EffectSystem skips them, and
+//     Zombie::UpdateReanim advances them AFTER movement. The loop mean below is only
+//     a diagnostic of the resource recurrence, not a substitute for imported animation phase.
 static void ReportAnim(const Definition& theDef, const char* const theGroundName, const char* theAnimName,
 	float theVelX, float theScale, float theRateOverride)
 {

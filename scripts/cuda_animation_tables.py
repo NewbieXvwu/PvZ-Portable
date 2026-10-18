@@ -17,7 +17,7 @@ def main():
     p.add_argument("--out", type=Path, default=Path("cuda/AnimationTables.h"))
     args = p.parse_args()
     tracks = []
-    for asset, clips in (("Zombie", ("anim_walk", "anim_walk2")),
+    for asset, clips in (("Zombie", ("anim_walk", "anim_walk2", "anim_superlongdeath")),
                          ("Zombie_polevaulter", ("anim_run", "anim_walk"))):
         output = subprocess.run([str(args.dump.resolve()), str(args.pak), asset, *clips],
                                 capture_output=True, text=True, check=True).stdout

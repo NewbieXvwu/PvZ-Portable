@@ -49,7 +49,7 @@ Both were decoded and agree on every number below (`_ground` x[44] = −9.8, x[9
 
 | item | value / rule | cite | status |
 |---|---|---|---|
-| `SECONDS_PER_UPDATE` | `constexpr const double … = 0.01f` → the double `0.010000000298023224` (a float32 0.01 widened, **not** 0.01) | `Reanimator.h:52` | S |
+| `SECONDS_PER_UPDATE` | `constexpr const double … = 0.01f` → the double `0.009999999776482582` (a float32 0.01 widened, **not** 0.01) | `Reanimator.h:52` | S |
 | updates per second | 100 (1 update = 10 ms) | derived | S |
 | `mAnimRate` units | **frames per second**, float. Initialised to the definition's `mFPS` (12.0 for every asset in scope; 30.0 for `CherryBomb.reanim`) | `Reanimator.cpp:405`, `Reanimator.h:84-89` | S/M |
 | loop position | `mAnimTime` (float) ∈ [0,1) — **this fork has no `mFramePos`**; frame indices are derived | `Reanimator.h:192-198` | S |
@@ -463,6 +463,11 @@ involved. If the body reanim is missing the first update already kills (`mLoopCo
 via the `nullptr` branch). Caveat (S): `MowDown` short-circuits for several types/phases
 (`:8589-8641`: CATAPULT, ZAMBONI, DYING, IN_VAULT, flying, `mInPool` ⇒ instant `DieWithLoot`),
 so 101 only applies to a zombie that actually enters `PHASE_ZOMBIE_MOWERED`.
+
+Round 24 correction to the final caveat: 51 subsequent ticks apply to a newly mowed zombie.
+`MowDown` keeps body health and eating status, drops helm/shield, and does not call StopEating.
+Those retained fields remain observable until UpdateMowered removes the entity. The shared core's
+native check covers initial ready-mower chomp=25, the slow-middle speed curve, and removal on tick 51.
 
 ---
 

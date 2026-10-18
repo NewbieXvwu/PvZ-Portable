@@ -136,8 +136,8 @@ TakeDamage(dmg, flags):
 ```
 
 * **Helm**: `aDamageActual = min(mHelmHealth, theDamage)`; `mHelmHealth -= aDamageActual`;
-  return `theDamage - aDamageActual` (`Zombie.cpp:7730-7734`).  Overkill therefore never
-  leaks into the body during the bite that breaks the helmet, and `mHelmHealth` lands
+  return `theDamage - aDamageActual` (`Zombie.cpp:7730-7734`). Excess damage therefore
+  carries into the body during the hit that breaks the helmet, and `mHelmHealth` lands
   **exactly on 0** and is compared with `== 0` (`:7736`), not `<= 0`.
   At 0 → `DropHelm(flags)` and the remainder is returned (`:7736-7740`).
   Level 7: the cone's 370 absorbs exactly 370 damage; the excess carries into the body.
