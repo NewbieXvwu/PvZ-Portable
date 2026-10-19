@@ -74,5 +74,12 @@
       "original label and rounded targets equality"
     ],
     "caveat": "explanatory tracing uses original v29; counterfactual values use requested v30. If reproduction fails, do not attribute exact historical causes."
-  }
+  },
+  "source_archive_manifest": {
+    "archives": 361,
+    "bytes": 123567644,
+    "sha256": "f22b259957d65c84f88f4b7f6f85fe942f1202344ccb40f1b5c12445c6064bf8",
+    "path": "artifacts/cuda/task9/native31_archive_hashes.json"
+  },
+  "secondary_robustness": "Report dependence-robust BY alongside BH; additionally count lower simultaneous CI > existing formal margin0.02. Primary threshold and data remain unchanged."
 }

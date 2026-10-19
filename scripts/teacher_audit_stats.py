@@ -68,6 +68,9 @@ def point_stats(row):
     present=any(tuple(t[:3])==triple for t in recorded)
     return {k:row[k] for k in ('category','archive','decision','seed','gap','wave','tick','label')} | {
         'actions':len(scores),'original_mean':float(scores[0].mean()),
+        'action_statistics':[{'action':action,'mean':float(score.mean()),
+                              'se':float(score.std(ddof=1)/8)}
+                             for action,score in zip(row['actions'],scores)],
         'best_action':action,'best':candidates[best-1],
         'witness_action':row['actions'][witness],'witness':candidates[witness-1],
         'significant_inferiority':significant,
@@ -92,6 +95,8 @@ def group(rows):
     return {'states':n,'games':len({r['seed'] for r in rows}), 'significantly_inferior':k,
             'fraction':p,'wilson_ci95':[center-radius,center+radius],
             'bh_fdr05_count':sum(r.get('bh_fdr05',False) for r in rows),
+            'by_fdr05_count':sum(r.get('by_fdr05',False) for r in rows),
+            'lower_ci_above_formal_margin02':sum(r['witness']['ci95'][0]>.02 for r in rows),
             'holdout_signed_value_loss':bootstrap_mean([r['holdout']['mean'] for r in rows]),
             'all64_best_uplift_optimistic':float(np.mean([r['best']['mean'] for r in rows])),
             'attribution_of_significant':dict(Counter(r['attribution'] for r in rows if r['significant_inferiority'])),
@@ -106,8 +111,13 @@ def summarize(directory,out):
     cutoff=max([i for i,r in enumerate(ordered,1) if r['minimum_adjusted_p']<=.05*i/len(rows)]+[0])
     accepted={id(r) for r in ordered[:cutoff]}
     for r in rows:r['bh_fdr05']=id(r) in accepted
+    harmonic=sum(1/i for i in range(1,len(rows)+1))
+    by_cutoff=max([i for i,r in enumerate(ordered,1)
+                   if r['minimum_adjusted_p']<=.05*i/(len(rows)*harmonic)]+[0])
+    by_accepted={id(r) for r in ordered[:by_cutoff]}
+    for r in rows:r['by_fdr05']=id(r) in by_accepted
     summary={'states':len(rows),'futures_per_action':64,'scores':sum(r['actions']*64 for r in rows),
-             'statistical_scope':'paired Student-t intervals, Bonferroni within state; BH across600 states additionally reported; one independent game per state/class',
+             'statistical_scope':'paired Student-t intervals, Bonferroni within state; BH and dependence-robust BY across600 states additionally reported; one independent game per state/class',
              'A':group([r for r in rows if r['category']=='A']),
              'B':group([r for r in rows if r['category']=='B']),
              'groups':{},'examples':{}}
@@ -115,7 +125,8 @@ def summarize(directory,out):
         cr=[r for r in rows if r['category']==c]
         assert len(cr)==300 and len({r['seed'] for r in cr})==300
         summary['groups'][c]={str(v):group([r for r in cr if r[field]==v]) for v in sorted({r[field] for r in cr})}
-        summary['examples'][c]=sorted(cr,key=lambda r:r['best']['ci95'][0],reverse=True)[:4]
+        summary['examples'][c]=[{k:v for k,v in r.items() if k!='action_statistics'}
+                                for r in sorted(cr,key=lambda r:r['witness']['ci95'][0],reverse=True)[:4]]
     (directory.parent/'point_statistics.json').write_text(json.dumps(rows,indent=2)+'\n')
     out.write_text(json.dumps(summary,indent=2)+'\n')
     print(json.dumps({c:summary[c] for c in ('A','B')},indent=2))
