@@ -75,10 +75,16 @@ function Invoke-Uninstall {
 Require-Admin
 if ($Uninstall) { Invoke-Uninstall }
 
-Say "PvZ worker installer: distro=$Distro ssh-port=$Port stage=$(Get-Stage)"
+$Stage = Get-Stage
+if ($Stage -eq "after-reboot") {
+    # the RunOnce entry brought us back here; features are already enabled
+    Set-Stage "wsl-ready"
+    $Stage = "wsl-ready"
+}
+Say "PvZ worker installer: distro=$Distro ssh-port=$Port stage=$Stage"
 
 # ---------------------------------------------------------------- stage 1: WSL + Ubuntu
-if ((Get-Stage) -eq "start" -and -not $ProvisionOnly) {
+if ($Stage -eq "start" -and -not $ProvisionOnly) {
     Say "Enabling WSL and VirtualMachinePlatform"
     $reboot = $false
     foreach ($feature in @("Microsoft-Windows-Subsystem-Linux", "VirtualMachinePlatform")) {
@@ -107,7 +113,7 @@ if ((Get-Stage) -eq "start" -and -not $ProvisionOnly) {
 }
 
 # ---------------------------------------------------------------- stage 2: install the distro
-if (-not $ProvisionOnly -and ((Get-Stage) -eq "wsl-ready")) {
+if (-not $ProvisionOnly -and $Stage -eq "wsl-ready") {
     & wsl.exe --update 2>$null | Out-Null
     $installed = (& wsl.exe -l -q 2>$null) -join " "
     if ($installed -notmatch [regex]::Escape($Distro)) {
@@ -121,7 +127,7 @@ if (-not $ProvisionOnly -and ((Get-Stage) -eq "wsl-ready")) {
 }
 
 # ---------------------------------------------------------------- stage 3: provision inside WSL
-if ((Get-Stage) -eq "provision" -or $ProvisionOnly) {
+if ($Stage -eq "provision" -or $ProvisionOnly) {
     New-Item -ItemType Directory -Force -Path $StateDir | Out-Null
     $bashPath = Join-Path $StateDir "provision.sh"
     $lines = @(
@@ -151,7 +157,7 @@ if ((Get-Stage) -eq "provision" -or $ProvisionOnly) {
 }
 
 # ---------------------------------------------------------------- stage 4: autostart + shortcut
-if ((Get-Stage) -eq "autostart" -or $ProvisionOnly) {
+if ($Stage -eq "autostart" -or $ProvisionOnly) {
     $cmdBody = @(
         "@echo off",
         'wsl.exe -d ' + $Distro + ' -u root -e bash -lc "cd /root/pvz-worker && mkdir -p logs && setsid nohup ./env/bin/python repo/scripts/dist/worker.py --root /root/pvz-worker run >> logs/worker.out 2>&1 < /dev/null & sleep 1; true"'

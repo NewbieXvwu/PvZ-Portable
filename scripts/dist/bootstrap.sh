@@ -158,6 +158,39 @@ else
   say "self-check skipped: resources not pushed yet (controller push --resources)"
 fi
 
+# ---------------------------------------------------------------- 8. desktop shortcut + autostart (macOS)
+if [ "$PLAT" = osx ] && [ "${PVZ_NO_AUTOSTART:-0}" != "1" ]; then
+  SHORTCUT="$HOME/Desktop/PvZ 采集.command"
+  printf '#!/bin/bash\nopen http://127.0.0.1:8765/\n' > "$SHORTCUT"
+  chmod +x "$SHORTCUT"
+  say "desktop shortcut: $SHORTCUT"
+
+  PLIST="$HOME/Library/LaunchAgents/com.pvz.worker.plist"
+  mkdir -p "$HOME/Library/LaunchAgents"
+  cat > "$PLIST" <<PLIST_EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>Label</key><string>com.pvz.worker</string>
+  <key>ProgramArguments</key><array>
+    <string>/usr/bin/caffeinate</string><string>-i</string>
+    <string>$ENV/bin/python</string>
+    <string>$REPO/scripts/dist/worker.py</string>
+    <string>--root</string><string>$ROOT</string>
+    <string>run</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><false/>
+  <key>WorkingDirectory</key><string>$ROOT</string>
+  <key>StandardOutPath</key><string>$ROOT/logs/worker.out</string>
+  <key>StandardErrorPath</key><string>$ROOT/logs/worker.err</string>
+</dict></plist>
+PLIST_EOF
+  launchctl unload "$PLIST" 2>/dev/null || true
+  launchctl load "$PLIST" 2>/dev/null && say "launchd: com.pvz.worker loaded (starts at login, caffeinate keeps the Mac awake)" \
+    || say "launchd: could not load $PLIST (start the worker by hand)"
+fi
+
 # ---------------------------------------------------------------- summary
 say "disk: $(du -sh "$ROOT" | cut -f1) total; env $(du -sh "$ENV" | cut -f1); repo $(du -sh "$REPO" | cut -f1)"
 say "DONE. run: $ENV/bin/python $ROOT/repo/scripts/dist/worker.py --root $ROOT run"
