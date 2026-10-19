@@ -1,0 +1,60 @@
+{
+  "frozen_before_any_acceptance": "2026-10-20T04:32:49.273407+08:00",
+  "code_revision": "e86358f6c052e87c0107ee427f335aebc4e9659f",
+  "sha256": {
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task11/proposer/model.pt": "b3fe42d9bbd7990f2aad908ebbe16ea6a38ea5b5baed69bcfc2db187f9aaddc2",
+    "artifacts/cuda/task9/native31_selection.json": "b7ae13b4cb2d92e7a0c6d2ffe04d98f49cae4c8269ab57e3f35173a4dbde7558",
+    "artifacts/cuda/task9/point_statistics.json": "0f4c34fc0e90b984afc9241d9e256a96792f3c14e8bcfd160cd182f846063717",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task11/training_selection.json": "155e2bcc1f9783ed011076508f2c583f49150f6b5566d10469958f34625b1b61",
+    "build/pvz-portable": "b999449af20753a1238a3ea22174cbe7472b67ab3579c36323266b6450aa9ad1",
+    "/home/newbiexvwu/PvZ-search/artifacts/student/v29/model.pt": "52dc3f8edd278194d18d75bcada6ef815383b81e5050bb12d958c86c3c9791d8",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+    "python/pvz_candidate_coverage.py": "d63a32fef6218dd75dfbc83eb3dbe39e8ccc68302ca5981afd66ae9142673a17",
+    "scripts/search_play.py": "51b755050fe485b65db1076cf8606ee8705bbf2ca54c007c95deaed17aaf4807",
+    "scripts/train_candidate_coverage.py": "2f73b1c8fa73f8a903e5a224e5942789a18f364de197185b08944630eaaff92c",
+    "scripts/teacher_candidate_coverage.py": "50499020a3570d9679cdacaa4a9bc1faff98b4850646cfca3c1f325c9da3a562"
+  },
+  "training": {
+    "seed": 20261020,
+    "epochs": 80,
+    "train_games": [
+      1725800,
+      1725805,
+      1725815,
+      1725837,
+      1725841,
+      1725850,
+      1725858,
+      1725896,
+      1725925,
+      1725990,
+      1725992,
+      1725993,
+      1725998,
+      1726015,
+      1726032,
+      1726046,
+      1726060,
+      1726078
+    ],
+    "validation_games": [
+      1725874,
+      1725916,
+      1725961,
+      1725973,
+      1726142
+    ],
+    "states": 552,
+    "train_contexts": 1296,
+    "validation_contexts": 360,
+    "best_validation_mse": 7.015914155582929e-05,
+    "zero_validation_mse": 7.151981019617528e-05,
+    "model_sha256": "b3fe42d9bbd7990f2aad908ebbe16ea6a38ea5b5baed69bcfc2db187f9aaddc2",
+    "model_bytes": 1553179,
+    "selection_sha256": "155e2bcc1f9783ed011076508f2c583f49150f6b5566d10469958f34625b1b61"
+  },
+  "primary_budget": 2,
+  "secondary_budget": 4,
+  "no_test_tuning": true
+}
