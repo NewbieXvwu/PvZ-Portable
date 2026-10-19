@@ -284,6 +284,6 @@
   - `search_play.py` 写 `cuda_server.json` 与 `gpu_pause.jsonl`，`task6/check_pause_gate.py` 读文件、不再刮日志；
   - `scripted_baseline.py` 的规则描述改为从阈值常量填数（原来的“描述里的数字能在源码里搜到”校验永远通过，因为源码里就含这段描述）；两局动作序列与改前 md5 相同；`bc_pipeline/scripted_baseline_d1.py` 的同款空校验删掉。
   - 剩下 `cuda_batch_bench.py` 刮 RolloutCuda 打印的 “wall N ms for M rollouts”：要改 CUDA 程序并在台式机 GPU 上验证，交给 Codex。
-- 2026-10-19 12:55（Mac 时间）**旧路线清理**（用户要求）：PPO 全线、规则脚本策略、BC 管线及报告 / 门禁 / 实验清单 / artifacts/t5 共 820 个文件删除（afa21aea，tag `pre-cleanup-20261019` 可取回）。卡组规则搬到 `scripts/pvz_tasks.py`；回放 / 诊断工具只留学生；AGENTS.md §3/§4/§6/§7/§8 改成现状；TODO.md、DESKTOP_HANDOFF.md 删除。178 项单测、DSH 冒烟通过，v30 z20 30005 的 capture / whatif 结果与清理前一致。
+- 2026-10-19 12:18（Mac 时间）**旧路线清理**（用户要求）：PPO 全线、规则脚本策略、BC 管线及报告 / 门禁 / 实验清单 / artifacts/t5 共 820 个文件删除（afa21aea，tag `pre-cleanup-20261019` 可取回）。卡组规则搬到 `scripts/pvz_tasks.py`；回放 / 诊断工具只留学生；AGENTS.md §3/§4/§6/§7/§8 改成现状；TODO.md、DESKTOP_HANDOFF.md 删除。178 项单测、DSH 冒烟通过，v30 z20 30005 的 capture / whatif 结果与清理前一致。
   - 台式机：v31 = d30cs3w8s2（六档 2.000，z20 512/1024）已上传；queue75 训 D32 ×4（权重 3/6 × 种子 1/2），queue76 第 35/36/37 轮（v31，19712–20863），queue77 等 34b 与第 35 轮后训 D35 ×3。d31cs3w8s1 验证损失四个里最好、实战却最差（六档 1.853）：同配方换种子的差距和配方差距一样大，以后每个配置至少两个种子。
   - 成对检验中期（314 局，v30 z20）：开局向日葵 (3,4)→(3,0) 胜率 43.0% vs 原 44.9% vs 安慰剂 (3,7) 39.5%，丢车无差别；前期贴脸雷往前挪到隔 2–3 列：胜率 38.5% vs 原 47.1% vs 安慰剂（等 60 tick）39.7%，丢车反而多 0.35±0.29。**两个“修正”都没有可测的好处**；任何一步扰动平均让胜率降 5–8 个百分点（原动作是学生自己最熟的那条线）。
