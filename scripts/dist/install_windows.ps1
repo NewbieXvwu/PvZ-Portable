@@ -58,6 +58,20 @@ function Set-Stage($value) {
     Set-Content -Path $StageFile -Value $value -Encoding ASCII
 }
 
+function Test-Distro {
+    # authoritative check: does WSL actually start this distro as root?
+    # (parsing "wsl -l -q" is unreliable: the output is UTF-16 and locale dependent)
+    & wsl.exe -d $Distro -u root -e true 2>$null | Out-Null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Restart-Later {
+    Set-Stage "wsl-ready"
+    $cmd = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '" -Distro ' + $Distro + ' -Port ' + $Port
+    New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" -Force | Out-Null
+    Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" -Name "PvZWorkerSetup" -Value $cmd
+}
+
 function Invoke-Uninstall {
     Say "Removing the logon task and the desktop shortcut"
     & schtasks.exe /Delete /TN $TaskName /F 2>$null | Out-Null
@@ -100,9 +114,7 @@ if ($Stage -eq "start" -and -not $ProvisionOnly) {
     if ($reboot) {
         Say "Windows needs a restart to finish enabling WSL."
         Set-Stage "after-reboot"
-        $cmd = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + $PSCommandPath + '" -Distro ' + $Distro + ' -Port ' + $Port
-        New-Item -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" -Force | Out-Null
-        Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" -Name "PvZWorkerSetup" -Value $cmd
+        Restart-Later
         Say "The installer will continue automatically after you log back in."
         Say "Please restart the computer now (Start menu -> Restart)."
         Read-Host "Press Enter to restart now, or close this window to restart later"
@@ -115,20 +127,39 @@ if ($Stage -eq "start" -and -not $ProvisionOnly) {
 # ---------------------------------------------------------------- stage 2: install the distro
 if (-not $ProvisionOnly -and $Stage -eq "wsl-ready") {
     & wsl.exe --update 2>$null | Out-Null
-    $installed = (& wsl.exe -l -q 2>$null) -join " "
-    if ($installed -notmatch [regex]::Escape($Distro)) {
+    & wsl.exe --set-default-version 2 2>$null | Out-Null
+    if (-not (Test-Distro)) {
         Say "Installing $Distro (this downloads a few hundred MB)"
-        & wsl.exe --install -d $Distro --no-launch
+        & wsl.exe --install -d $Distro --no-launch 2>$null
         if ($LASTEXITCODE -ne 0) {
             # older WSL builds do not know --no-launch: install normally, then close its window
             Say "  --no-launch unsupported here, falling back to a plain install"
             & wsl.exe --install -d $Distro
-            if ($LASTEXITCODE -ne 0) { throw "wsl --install -d $Distro failed with exit code $LASTEXITCODE" }
+            if ($LASTEXITCODE -ne 0) {
+                Say "wsl --install failed (exit $LASTEXITCODE)."
+                Say "  - If it mentions virtualization, enable VT-x/SVM in the BIOS and run this script again."
+                Say "  - If it mentions the Store or a download, connect to the internet and run it again."
+                throw "wsl --install -d $Distro failed"
+            }
             Start-Sleep -Seconds 20
             & wsl.exe --terminate $Distro 2>$null | Out-Null
         }
+        $ready = $false
+        for ($i = 0; $i -lt 30; $i++) {
+            if (Test-Distro) { $ready = $true; break }
+            Start-Sleep -Seconds 10
+        }
+        if (-not $ready) {
+            # WSL2 kernel / virtualisation needs a restart before the distro will start
+            Say "The distro is installed but WSL cannot start it yet; a restart is needed."
+            Restart-Later
+            Say "The installer will continue automatically after you log back in."
+            Read-Host "Press Enter to restart now, or close this window to restart later"
+            Restart-Computer -Force
+            exit 0
+        }
     } else {
-        Say "$Distro already installed"
+        Say "$Distro already installed and starts correctly"
     }
     Set-Stage "provision"
 }
@@ -160,7 +191,12 @@ if ($Stage -eq "provision" -or $ProvisionOnly) {
     Say "Provisioning sshd inside $Distro"
     & wsl.exe --terminate $Distro 2>$null | Out-Null
     & wsl.exe -d $Distro -u root -e bash $unixPath
-    if ($LASTEXITCODE -ne 0) { throw "provisioning failed (exit $LASTEXITCODE)" }
+    if ($LASTEXITCODE -ne 0) {
+        Say "Provisioning failed (exit $LASTEXITCODE)."
+        Say "  Check that WSL works:  wsl -d $Distro -u root -e bash -c 'echo ok'"
+        Say "  Then run this script again (it is safe to repeat)."
+        throw "provisioning failed"
+    }
     Set-Stage "autostart"
 }
 

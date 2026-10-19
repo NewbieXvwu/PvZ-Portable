@@ -15,20 +15,21 @@
 
 （第一条看进度；第二条派 320 局并立刻开跑；第三条收回来、校验、上传 HF。）
 
-## 当前状态（2026-10-19 01:55）
+## 当前状态（2026-10-19 07:30）
 
 | 步骤 | 状态 |
 |---|---|
 | 1 bootstrap 在 pvz-f1 跑通 | ✅ 10 分 14 秒，1.3 GB；**自检 1 局通过**（1 个档案、1055 帧） |
 | 2 worker + 网页 | ✅ 32 局原型**已在 pvz-f1 上跑完 32/32**（8 进程、偏移 14736–14767）；暂停/继续/下完这局再停/立即停止+续跑都在 pvz-f1 上实测 |
-| 3 controller | ✅ status/push/assign/collect 全部跑通；`transfer/z17distproto.tgz` 已上传（本机演练版），**pvz-f1 版正在拉回覆盖** |
-| 4 Windows 安装脚本 | ✅ 初版（**未实机验证**，见 §9） |
+| 3 controller | ⏳ status/push/assign/collect 全部跑通；`transfer/z17distproto.tgz` 现有的是**本机演练版**；pvz-f1 的 32 个档案还差最后一段传输（见下） |
+| 4 Windows 安装脚本 | ✅ 初版已加固（**未实机验证**，见 §9） |
 | 5 文档 | ✅ 本文件 |
 | 6 GPU | ✅ 已合并 `origin/pvz-env`（cuda-rollout）+ 代码/文档（`assign --gpu`，默认关，见 §7）；**未实机验证**，等主控安排 |
 
-**当前卡点（2026-10-19 06:30）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
+**当前卡点（2026-10-19 07:30）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
 拉回来。隧道是 **UU 远程（UURemote）的 22223 端口转发**，不是我们起的 ssh，抖动时只能等它恢复
-（详见 `distributed-worker-questions.md` 06:30 那条）。控制端不用守着，一条命令挂着即可：
+（详见 `distributed-worker-questions.md` 06:30 那条）。07:21 起已挂着一个 12 小时窗口的采集进程
+（日志 `~/.pvz-dist/collect.log`），隧道一恢复就会自己跑完；要重新挂就用下面这条：
 
     python3 scripts/dist/controller.py collect --label z17distproto --wait 600 --retry-delay 20
 
@@ -279,6 +280,8 @@
 | 启用 WSL / VirtualMachinePlatform + RunOnce 重启续跑 | 未验证 | 中：RunOnce 以普通权限启动 → 会再弹一次 UAC |
 | `wsl --install -d Ubuntu --no-launch` | 未验证 | 中：旧版 WSL 不认 `--no-launch`，脚本已回退到普通安装 |
 | Ubuntu 首次初始化（`-u root` 跳过建用户） | 未验证 | 中：若发行版要求先建用户，需要朋友点一下 |
+| 发行版就绪探测（`wsl -d X -u root -e true` 退出码，不再解析 `wsl -l -q`） | 未验证 | 低：退出码是 WSL 自己的权威结果，不受 UTF-16 / 语言影响 |
+| WSL2 内核要重启才能起发行版时的自动续跑（30 × 10 秒探测失败 → 写 RunOnce 并重启） | 未验证 | 中：与首次重启续跑同一条路径 |
 | 在 WSL 里装 sshd、改端口 2222、写公钥 | 未验证 | 低：纯 apt + sed |
 | Windows localhost → WSL 的端口转发 | 未验证 | 中：WSL2 默认开 `localhostForwarding`，若被策略关掉需要 portproxy |
 | 计划任务登录自启 | 未验证 | 中：任务在用户登录后跑，WSL 未启动时会拉起 |
