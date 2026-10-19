@@ -731,6 +731,32 @@ class PvZEnv:
         self._adopt_tick(observation)
         return observation
 
+    def cuda_dump(self, path: str | os.PathLike[str], *, write_level: bool = True,
+                  student_history=None) -> dict[str, Any]:
+        """``CUDA_DUMP``: export the current board for the GPU rollout simulator.
+
+        The file is a tag-prefixed record stream (``cuda/CudaRollout.h``): with write_level the
+        record is rewritten, the file is truncated and a ``LevelInfo`` precedes the ``RootRecord``;
+        otherwise the record is appended, so one file holds a whole set of root positions.
+        Call it right after :meth:`restore`, whose snapshot also restores the sun income history
+        that the exported position's features need (the window lives here, not in the board).
+        """
+        if not self._reset_done:
+            raise RuntimeError("call reset() before cuda_dump()")
+        filename = str(Path(path).expanduser().resolve())
+        if any(char in filename for char in ('\n', '\r')):
+            raise ValueError("cuda dump path must not contain newlines")
+        quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        history_start = self._sun_history_start_tick or 0
+        history = list(self._sun_production_history)
+        samples = " ".join(f"{tick} {amount}" for tick, amount in history)
+        response = self._command(f"CUDA_DUMP {quoted} {1 if write_level else 0} {history_start} "
+                                 f"{len(history)} {samples}".rstrip()
+                                 + self._student_options(student_history, None))
+        if not response.get("ok"):
+            raise RuntimeError(f"simulator rejected CUDA_DUMP: {response}")
+        return response
+
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]], *,
                         retain_snapshots: bool = True) -> list[dict[str, Any]]:
         """Expand several actions from one parent snapshot in a single command.

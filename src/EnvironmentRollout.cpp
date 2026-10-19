@@ -393,6 +393,7 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 		if (HasHistory()) history.Update(app);
 		return result;
 	}
+	++networkCalls;
 	std::vector<float> board, scalars;
 	Features(app, income, previousTick, previousPlant, board, scalars, history);
 	Encode(board, scalars);

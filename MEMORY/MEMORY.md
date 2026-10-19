@@ -10,7 +10,7 @@
 - [运行环境 / 测试陷阱](notes/env.md)
 - [文档结构 / 仓库约定](notes/repo.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
-- [分工与 codex](notes/workflow.md)
+- [分工与 codex / CUDA 执行记录约定](notes/workflow.md)
 - [回放 RL 检查点的硬规则 / 任务名陷阱](notes/replay.md)
 - [奖励与训练机制](notes/training.md)
 - [主问题：熵爆炸崩溃](notes/entropy.md)
@@ -43,6 +43,9 @@
 
 - [distributed-worker.md](docs/distributed-worker.md) — 分布式采集运维手册 + 给朋友的一页说明
 
+- [CUDA 续走：设计与实测](docs/cuda-rollout-report.md)
+- [CUDA 合并待审说明](docs/cuda-merge-notes.md)
+- [CUDA 阶段 1 语料](docs/cuda-corpus-phase1.md)
 - [codex-night-plan.md](docs/codex-night-plan.md)
 - [codex-night-plan-v2.md](docs/codex-night-plan-v2.md)
 - [codex-night-plan-v4.md](docs/codex-night-plan-v4.md)

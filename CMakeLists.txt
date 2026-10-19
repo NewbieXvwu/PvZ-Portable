@@ -2,6 +2,12 @@ cmake_minimum_required(VERSION 3.12...4.0)
 
 project(pvz-portable LANGUAGES C CXX)
 
+# Opt-in: the normal portable build does not inspect or require a CUDA installation.
+option(PVZ_CUDA_ROLLOUT "Build the optional CUDA continuation service" OFF)
+if(PVZ_CUDA_ROLLOUT)
+	include(CMake/CudaRollout.cmake)
+endif()
+
 include(CMake/ProjectVersion.cmake)
 
 option(BUILD_STATIC "Statically link dependencies for a standalone exe (Windows MinGW, Linux)" OFF)
@@ -189,6 +195,7 @@ target_include_directories(pvz-portable PRIVATE
 	${PLAT_INCLUDES}
 	${PROJECT_BINARY_DIR}
 	${PROJECT_SOURCE_DIR}/src
+	${PROJECT_SOURCE_DIR}/cuda
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework/sound/SDL-Mixer-X/include
 	${SDL2_INCLUDE_DIRS}

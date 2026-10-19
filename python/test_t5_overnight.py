@@ -118,7 +118,13 @@ class Stage0EvaluationTests(unittest.TestCase):
     def test_t4_cap1_baseline_covers_all_320_frozen_seeds(self) -> None:
         train, heldout = task_family._task_family()
         gate_tasks, reference_tasks = task_family._heldout_tasks(heldout)
-        baseline = task_family._baseline(train["tasks"], gate_tasks, reference_tasks)
+        # The stage0 counts come from the tracked T4 per-task summary. The raw
+        # T0 failure list is unrelated to these assertions and is a local artifact.
+        with tempfile.TemporaryDirectory() as temporary:
+            raw = Path(temporary) / "t0_fixture.json"
+            raw.write_text(json.dumps({"control_seed_results": {"t0_rule_script": []}}))
+            with mock.patch.object(task_family, "T4_RAW_PATH", raw):
+                baseline = task_family._baseline(train["tasks"], gate_tasks, reference_tasks)
         self.assertEqual(baseline["stage0_set"]["sample_count"], 320)
         self.assertEqual(baseline["stage0_set"]["pass_rate"], 0.0)
         self.assertEqual(baseline["stage0_set"]["task_count"], 5)

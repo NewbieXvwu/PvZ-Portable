@@ -29,7 +29,7 @@ Usage::
 
     # playback speed: PVZ_ENV_RENDER_EVERY logic ticks per drawn frame, PVZ_ENV_RENDER_MS pause per frame
     # (defaults 1 / 10 = normal speed); 5x:
-    PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student ... 
+    PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student ...
 
     # headless, print the action mix only
     python scripts/watch_policy.py --wave-cap 5 --seed 1330000 --quiet

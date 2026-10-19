@@ -31,6 +31,26 @@ class VerifyOverrideTest(unittest.TestCase):
         self.assertEqual(stats["last_targets"], [(WAIT, .4), (PLANT, .5), (OTHER, .9)])
         self.assertNotIn("last_verification", stats)
 
+    def test_cpu_terminal_futures_retain_original_value_batches(self):
+        args = SimpleNamespace(samples=3, horizon=2500, margin=.02, verify_samples=3)
+        stats = {"overrides": 0, "override_kinds": Counter()}
+        mixed = [{"value": .2}, {"rollout_result": 1.0}, {"value": .4}] * 2
+        batches = []
+        def values(frames):
+            batches.append(frames)
+            return [frame["value"] for frame in frames]
+        with patch.dict(search_play._W, {}, clear=True), \
+                patch.object(search_play, "_rollout_policy", side_effect=mixed), \
+                patch.object(search_play, "_continuations") as gpu, \
+                patch("render_episode._frame", side_effect=lambda frame: frame.copy()), \
+                patch.object(search_play, "_values", side_effect=values):
+            search_play._verified_choice(None, {"tick": 60}, 7, [WAIT, PLANT],
+                [.4, .8], [3, 3], 1, 0, WAIT, args, 123, stats)
+        self.assertEqual(batches, [[{"value": .2}, {"value": .4}]] * 2)
+        self.assertEqual(stats["last_targets"], [(WAIT, (.4 * 3 + sum([1., .2, .4])) / 6),
+                                                (PLANT, (.8 * 3 + sum([1., .2, .4])) / 6)])
+        gpu.assert_not_called()
+
     def test_new_independent_futures_cancel_override(self):
         action, stats, calls = self.choose(3, [{"rollout_result": .8}] * 3 + [{"rollout_result": .2}] * 3)
         self.assertEqual(action, WAIT)

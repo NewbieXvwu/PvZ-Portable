@@ -22,6 +22,9 @@ public:
 		int cellPacket = -1;
 		Action action;
 	};
+	// v2lite's student-visible history: the first tick each (row, col, kind) was observed at a
+	// decision, and the tick the current wave started.  It is advanced by Features, so the object
+	// must live for the whole continuation, exactly like the Python StudentHistory it mirrors.
 	struct History
 	{
 		std::map<std::tuple<int, int, int>, int> plants;
@@ -33,7 +36,12 @@ public:
 	bool HasHistory() const { return v2lite || v2; }
 	void Features(LawnApp* app, double income, int previousTick, bool previousPlant,
 		std::vector<float>& board, std::vector<float>& scalars, History& history);
-	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant, History& history, bool diagnostics = false);
+	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant,
+		History& history, bool diagnostics = false);
+	// Number of Predict calls that actually ran the network (the ones that return early because
+	// nothing is plantable cost nothing).  Reset by the caller around a batch of rollouts.
+	int NetworkCalls() const { return networkCalls; }
+	void ResetNetworkCalls() { networkCalls = 0; }
 
 private:
 	int width = 0;
@@ -41,6 +49,7 @@ private:
 	bool taskContext = false;
 	bool v2lite = false;
 	bool v2 = false;
+	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer;
 	void Encode(const std::vector<float>& board, const std::vector<float>& scalars);

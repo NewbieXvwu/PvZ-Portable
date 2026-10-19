@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "time": "2026-10-19T18:21:07.996591+08:00",
+  "branch": "cuda-merge",
+  "upstream": "d1cc2ce4a75c8e4d5545f7087ada27c639ba638b",
+  "paired_reference_upstream": "adbbb2f14ffc3b2b0c3a5eea14dce6a559c98f3a",
+  "runtime_validation_head": "1415860ed2703bd04eb8e3afe357c8cb1253ee55",
+  "latest_upstream_runtime_trees_unchanged": {
+    "src": "008ac9cfe8aaca2079a8934d816fd5646db3ec07",
+    "python": "425f9a75e917ac0ce1745452dfed1907738ad82a",
+    "scripts": "4543ff7983fde015cad8792e4739b768ad66a045",
+    "CMakeLists.txt": "123ddc02403eb1b220ea0780f34ae6a4a509c166",
+    "CMake": "352e669426821967a7283ac802c453fcdd06eb5c",
+    "experiments": "82697f8d7446ebd4704c168a1c43fe71a99b4ae3"
+  },
+  "defaults": {
+    "mixed_host_wait_us": 100,
+    "mixed_prefetch_verify": true,
+    "cpu_backend": "cpp",
+    "horizon": 2500,
+    "approximations_enabled": false
+  },
+  "cpu_archives": [
+    {
+      "seed": 30000,
+      "archive_equal": true,
+      "sha256": "c99a537f7b468b950bc2d292b677902c24029a4382389d9ee4161c81f07115e4"
+    },
+    {
+      "seed": 30001,
+      "archive_equal": true,
+      "sha256": "4bf0a6353fe1918e36fd182bcb1f4d74d40fdc3697b96de505dab0d6b375dcad"
+    }
+  ],
+  "cpu_timing_method": "Only search_play diagnostic perf_counter fixed to 0; game clock real. Both independent source worktrees/binaries; 2 games each.",
+  "gpu": {
+    "checks": [
+      {
+        "seed": 30000,
+        "archive_equal": true,
+        "sha256": "420bd6042b8f1e2301d7d7d8abe93f0a5dd126cbfab73184fd4bc12659a9a6ee"
+      },
+      {
+        "seed": 30001,
+        "archive_equal": true,
+        "sha256": "46463182f89ec83f7d7ff399b2d729ca440ad9160b23c372ef2c33c6dc9a7c66"
+      }
+    ],
+    "prefetch_default_on": true,
+    "poll_default_us": 100
+  },
+  "regression": {
+    "modules": 58,
+    "unique_tests": 497,
+    "failures": 0,
+    "skipped": 0,
+    "initial_skip": "One missing large-corpus path; reran entire 9-test CUDA service module with explicit read-only corpus. Initial logs retained.",
+    "after_latest_docs_merge": "35 curriculum/checkpoint/reference-protocol tests passed"
+  },
+  "build": {
+    "directory": "/home/newbiexvwu/pvz-merge/build",
+    "reference_directory": "/home/newbiexvwu/pvz-merge/build/reference",
+    "cuda_binary_sha256": "a9d47dd5b347f3c0506cc8043fdfebfd75e541f1305b5bd719581cf4d54613b6",
+    "cpu_binary_sha256": "969c71d4a17661f33dc97bfb74218cd5c5184735ddbabc7649b72300168f049d",
+    "reference_binary_sha256": "41513796c470b2d2b4fbe65d47f1ab054ce2a6eb1c9edd56a5887fa7b08bd5b3",
+    "nvcc": "13.4.92",
+    "tested_gpu": "RTX 5080",
+    "driver": "617.14"
+  },
+  "runtime_abi": {
+    "binary_sha256": "a9d47dd5b347f3c0506cc8043fdfebfd75e541f1305b5bd719581cf4d54613b6",
+    "glibc": "GLIBC_2.38",
+    "glibcxx": "GLIBCXX_3.4.21",
+    "cxxabi": "CXXABI_1.3.9",
+    "ldd": "\tlinux-vdso.so.1 (0x000070b16fa3c000)\n\tlibcublas.so.13 => /usr/local/cuda/targets/x86_64-linux/lib/libcublas.so.13 (0x000070b16bc00000)\n\tlibcudart.so.13 => /usr/local/cuda/targets/x86_64-linux/lib/libcudart.so.13 (0x000070b16b800000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x000070b16b400000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x000070b16bada000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000070b16f9fa000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x000070b16b000000)\n\tlibcublasLt.so.13 => /usr/local/cuda/targets/x86_64-linux/lib/libcublasLt.so.13 (0x000070b143800000)\n\tlibrt.so.1 => /usr/lib/x86_64-linux-gnu/librt.so.1 (0x000070b16f9f3000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x000070b16f9ee000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x000070b16f9e9000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000070b16fa3e000)\n",
+    "fatbins": "ELF file    1: rollout_cuda_small.1.sm_120.cubin\n"
+  },
+  "resources": {
+    "minimum_available_kib": 2809516,
+    "peak_owned_group_rss_kib": 2681332,
+    "peak_owned_group_swap_kib": 0,
+    "memory_paused_samples": 0,
+    "max_collection_game_processes": 4
+  },
+  "upstream_core_unchanged": {
+    "scripts/train_rollout_policy.py": "c31f5474015ac5b545fce0bc09353401099e102681cbdcda8c205a2be716c898",
+    "python/pvz_rollout_policy.py": "9b966c89c1f2b554ed41a05a02955a97404c0a846e0276dd2ccd7cfbfc179e3d",
+    "python/pvz_student_observation.py": "2555fadf3c63ae97cbefb1301f411f566adae3b9a980e135a9d8a065fc9fb5bd",
+    "python/pvz_frame_store.py": "ebae19469348c3e9a78bfe8de386bb41d36180d0b09df5df705dc7cf5c9013a5"
+  },
+  "formal_worktree": {
+    "head": "3d74462da4bcd6f67a2f9ccc2f1b18237b1a178c",
+    "tracked_files_unchanged": true,
+    "binary_unchanged_since_task6": true
+  },
+  "raw_evidence_local_only": "/home/newbiexvwu/pvz-merge/artifacts/cuda/task7/",
+  "latest_upstream_docs_only": "cd8191f: DESIGN/student plan; d1cc2ce: student plan only; runtime/test/config trees equal to paired reference adbbb2f"
+}

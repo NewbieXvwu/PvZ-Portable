@@ -28,6 +28,7 @@
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
 #include "EnvironmentRollout.h"
+#include "CudaExport.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
@@ -439,6 +440,9 @@ static void RunEnvironment(LawnApp* app)
 				rootId >= 0 && (rootId == 0 || snapshots.contains(rootId)) && seed >= -1 && seed <= UINT32_MAX;
 			if (ok && rootId) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
 			if (ok && seed >= 0) ReseedEnvironment(app, static_cast<uint32_t>(seed));
+			// The events block must describe the rollout, not the board the previous command left
+			// behind: re-read the counters from the restored root, so the deltas are per-rollout.
+			if (ok) before = ReadCounters(app);
 			for (int index = 0; ok && index < historyCount; ++index)
 			{
 				int tick = 0;
@@ -451,14 +455,14 @@ static void RunEnvironment(LawnApp* app)
 			ok = ok && ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
 				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments));
 			if (ok && !tracePath.empty()) { trace.open(tracePath); ok = trace.good(); }
-			int decisions = 0, mowersLeft = 0, estimatedResult = -1;
+			int decisions = 0, mowersLeft = 0, estimatedResult = -1, startTick = 0;
 			std::array<int, 10> planted{};
 			double simulationSeconds = 0, networkSeconds = 0;
 			if (ok)
 			{
 				const int savedMask = gEnvSimSkip;
 				gEnvSimSkip = mask;
-				const int startTick = app->mBoard->mMainCounter;
+				startTick = app->mBoard->mMainCounter;
 				const bool finiteHorizon = untilTick > startTick;
 				if (untilTick <= app->mBoard->mMainCounter) untilTick = std::numeric_limits<int>::max();
 				int priorTick = -1;
@@ -466,6 +470,7 @@ static void RunEnvironment(LawnApp* app)
 				auto readyMowers = [&] { int count = 0; for (const LawnMower* mower : app->mBoard->mLawnMowers)
 					if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY) ++count; return count; };
 				mowersLeft = readyMowers();
+				rollout.ResetNetworkCalls();
 				while (!app->EnvironmentTerminal() && decisions < maxActions)
 				{
 					const int tick = app->mBoard->mMainCounter;
@@ -563,7 +568,8 @@ static void RunEnvironment(LawnApp* app)
 				<< ",\"estimated_result\":" << estimatedResult
 				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted\":[";
 			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << planted[index];
-			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds << ",\"substeps\":[";
+			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds
+				<< ",\"net_calls\":" << rollout.NetworkCalls() << ",\"ticks\":" << app->mBoard->mMainCounter - startTick << ",\"substeps\":[";
 			for (size_t index = 0; index < substeps.size(); ++index)
 				std::cout << (index ? ",[" : "[") << substeps[index].first << ',' << substeps[index].second << ']';
 			std::cout << "]}" << std::endl;
@@ -852,6 +858,76 @@ static void RunEnvironment(LawnApp* app)
 			minimalResponse = command == "DROP_SNAPSHOT_FAST";
 			input >> snapshotId;
 			ok = snapshots.erase(snapshotId) > 0;
+		}
+		else if (command == "CUDA_DUMP")
+		{
+			// Export the current board into the layout cuda/CudaRollout.h defines, for the GPU
+			// simulator.  CUDA_DUMP "<path>" <write_level:0|1> <window_start> <count> <tick> <produced>...
+			// The sun income history lives in Python (pvz_env.py::_annotate_observation), so the
+			// caller passes the (tick, produced) events that the 6000-tick window still covers.
+			std::string path;
+			int writeLevel = 0, windowStart = 0, eventCount = 0;
+			std::vector<std::pair<int, uint32_t>> incomeEvents;
+			pvzc::CudaHistory history;
+			if (input >> std::quoted(path) >> writeLevel >> windowStart >> eventCount &&
+				eventCount >= 0 && eventCount <= 100000)
+			{
+				incomeEvents.reserve(eventCount);
+				for (int index = 0; index < eventCount && input; ++index)
+				{
+					int tick = 0; uint32_t produced = 0;
+					input >> tick >> produced;
+					if (input) incomeEvents.emplace_back(tick, produced);
+				}
+				ok = !input.fail() && app->mBoard != nullptr;
+			}
+			// Optional v2lite history, in the same shape ROLLOUT's V2H option uses.  It trails the
+			// income list, whose length the caller already gave, so the token cannot be confused
+			// with a sample.  A caller that omits it gets the v1 root (history wave -1).
+			if (ok)
+			{
+				std::string token;
+				if (input >> token)
+				{
+					int count = 0;
+					ok = token == "V2H" && static_cast<bool>(input >> history.wave >> history.waveTick >> count) &&
+						history.wave >= -1 && history.waveTick >= 0 && count >= 0 && count <= 6 * 9 * 54;
+					for (int index = 0; ok && index < count; ++index)
+					{
+						pvzc::CudaHistoryPlant entry{};
+						ok = static_cast<bool>(input >> entry.row >> entry.col >> entry.kind >> entry.born) &&
+							entry.row >= 0 && entry.row < 6 && entry.col >= 0 && entry.col < 9 &&
+							entry.kind >= 0 && entry.kind < 54 && entry.born >= 0;
+						if (ok) history.plants.push_back(entry);
+					}
+				}
+			}
+			pvzc::RootRecord record{};
+			if (ok)
+				ok = pvzc::BuildCudaRoot(app, incomeEvents, windowStart, record, &history);
+			if (ok)
+			{
+				std::FILE* out = std::fopen(path.c_str(), writeLevel ? "wb" : "ab");
+				ok = out != nullptr;
+				if (ok && writeLevel) ok = pvzc::WriteCudaLevel(out, app);
+				if (ok) ok = pvzc::WriteCudaRoot(out, app, incomeEvents, windowStart, &history);
+				const long bytes = ok ? std::ftell(out) : -1L;
+				if (out) std::fclose(out);
+				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+					<< ",\"ok\":" << (ok ? "true" : "false")
+					<< ",\"tick\":" << record.tick << ",\"wave\":" << record.wave
+					<< ",\"supported\":" << record.supported
+					<< ",\"reason\":" << record.unsupportedReason
+					<< ",\"plants\":" << record.plantCount << ",\"zombies\":" << record.zombieCount
+					<< ",\"projectiles\":" << record.projectileCount << ",\"coins\":" << record.coinCount
+					<< ",\"bytes\":" << bytes << '}' << std::endl;
+			}
+			else
+			{
+				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+					<< ",\"ok\":false}" << std::endl;
+			}
+			continue;
 		}
 		else if (command == "CRITIC_INPUTS")
 		{
