@@ -26,15 +26,14 @@
 | 5 文档 | ✅ 本文件 |
 | 6 GPU | 等主控通知 |
 
-**卡点（2026-10-19 04:00）**：pvz-f1 的隧道仍然不通 —— 22223 一直停在 banner exchange，
-22222 曾短暂通到一台 Windows OpenSSH（公钥被拒），随后也超时。bootstrap 装完后的自检与
-8 进程复跑要等隧道恢复。恢复后一条命令即可补齐：
+**当前卡点（2026-10-19 06:30）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
+拉回来。隧道是 **UU 远程（UURemote）的 22223 端口转发**，不是我们起的 ssh，抖动时只能等它恢复
+（详见 `distributed-worker-questions.md` 06:30 那条）。控制端不用守着，一条命令挂着即可：
 
-    python3 scripts/dist/controller.py push pvz-f1 --all --student artifacts/student/v29/model.pt \
-      && ssh pvz-f1 "PVZ_COMMIT=$(git rev-parse HEAD) bash ~/bootstrap.sh" \
-      && python3 scripts/dist/controller.py assign pvz-f1 artifacts/student/v29/model.pt 32 \
-           --label z17distproto --offset 14736 --workers 8 --allow-reserved --start \
-      && python3 scripts/dist/controller.py collect --label z17distproto
+    python3 scripts/dist/controller.py collect --label z17distproto --wait 600 --retry-delay 20
+
+它会按 seed 目录分批 rsync，断了只损失一个 seed；收齐后自动校验 → 打包 →
+上传 `transfer/z17distproto.tgz`（覆盖本机演练版）→ 台账写 `status: collected`。
 
 ## 0. 一页纸（发给朋友）
 

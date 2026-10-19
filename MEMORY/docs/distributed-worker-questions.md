@@ -61,3 +61,14 @@ Windows 机器，pvz-f1 那条转发仍然是死的。若 22222 就是新接入�
 → 等 32/32 → collect 上传。每一步都有 20–200 次重试，隧道恢复后会自己跑完。
 
 **需要**：保持隧道在线、机器别合盖（`caffeinate` 只防空闲睡眠，合盖仍会睡）。
+
+## 2026-10-19 06:30 隧道是谁提供的（查清了）
+
+`lsof -nP -iTCP:22223 -sTCP:LISTEN` → **UURemote（UU 远程，PID 可变）**。
+
+- 22223 不是我们起的 `ssh -L`（本机没有任何 ssh 转发进程），是 UU 远程桌面自带的端口转发。
+  所以**隧道断了不能靠重启 ssh 恢复**，只能在 UU 里重连 / 唤醒对面机器；我们这侧只能重试。
+- TCP 握手成功 + banner 超时 = 转发还在、对面不响应（睡眠或 UU 会话失效）。
+- `collect` 现在自带重试与 `--wait <分钟>`，整轮失败不会回滚已收的 seed 目录：
+  `python3 scripts/dist/controller.py collect --label z17distproto --wait 600 --retry-delay 20`
+
