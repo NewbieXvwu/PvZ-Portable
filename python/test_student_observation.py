@@ -158,7 +158,7 @@ class StudentObservationTest(unittest.TestCase):
                                       with_context=context, obs=version, precompute_workers=2)
                         for left, right in zip(expected, actual):
                             if hasattr(right, "batch"):
-                                right = right.batch(torch.arange(right.shape[0]), "cpu").half()
+                                right = right.batch(torch.arange(right.shape[0]), "cpu").to(left.dtype)
                             if isinstance(left, torch.Tensor):
                                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
                             else:

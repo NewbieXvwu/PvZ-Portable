@@ -55,9 +55,9 @@ class PipelinePerfTest(unittest.TestCase):
     def assert_rows_equal(self, expected, actual):
         for left, right in zip(expected, actual):
             if isinstance(left, CompactBoards):
-                left = left.batch(torch.arange(left.shape[0]), "cpu").half()
+                left = left.batch(torch.arange(left.shape[0]), "cpu").to(right.dtype if isinstance(right, torch.Tensor) else torch.half)
             if isinstance(right, CompactBoards):
-                right = right.batch(torch.arange(right.shape[0]), "cpu").half()
+                right = right.batch(torch.arange(right.shape[0]), "cpu").to(left.dtype if isinstance(left, torch.Tensor) else torch.half)
             if isinstance(left, torch.Tensor):
                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
             else:
@@ -114,6 +114,7 @@ class PipelinePerfTest(unittest.TestCase):
         self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3, cache_dir=cache))
         boards, scalars = actual[:2]
         boards = boards.batch(torch.arange(boards.shape[0]), "cpu").half()
+        scalars = scalars.batch(torch.arange(scalars.shape[0]), "cpu")
         rows = [(board.numpy(), scalar.numpy(), float(index % 2), 30000, index // 4, index % 4, 0, index % 2)
                 for index, (board, scalar) in enumerate(zip(boards, scalars))]
         shard = self.directory / "dump/seed_30000.pt"
