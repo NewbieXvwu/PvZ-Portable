@@ -88,11 +88,13 @@ if ! ls "$ENV"/lib/libopenmpt.* >/dev/null 2>&1; then
   tar xzf "$TMP/lom.tar.gz" -C "$TMP"
   SRC=$(find "$TMP" -maxdepth 1 -type d -name 'libopenmpt-*' | head -1)
   ( cd "$SRC" && ./configure --prefix="$ENV" --disable-static --enable-shared \
-      --without-mpg123 --without-ogg --without-vorbis --without-sdl2 --without-flac \
+      --without-mpg123 --without-ogg --without-vorbis --without-vorbisfile --without-sdl2 --without-flac \
+      --without-portaudio --without-portaudiocpp --without-sndfile \
+      --disable-openmpt123 --disable-examples --disable-tests \
       >"$ROOT/logs/libopenmpt-configure.log" 2>&1 \
     && make -j"$JOBS" >"$ROOT/logs/libopenmpt-make.log" 2>&1 \
     && make install >>"$ROOT/logs/libopenmpt-make.log" 2>&1 ) \
-    || { tail -40 "$ROOT/logs/libopenmpt-make.log"; die "libopenmpt build"; }
+    || { tail -25 "$ROOT/logs/libopenmpt-configure.log" 2>/dev/null; tail -25 "$ROOT/logs/libopenmpt-make.log" 2>/dev/null; die "libopenmpt build"; }
   rm -rf "$TMP"; trap - EXIT
 fi
 say "libopenmpt: $(ls "$ENV"/lib/libopenmpt.* | head -2 | tr '\n' ' ')"
