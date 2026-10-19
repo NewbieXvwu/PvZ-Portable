@@ -120,7 +120,13 @@
     # 3) 收回来（校验 → 打包 → 上传 HF transfer/<label>.tgz）
     python3 scripts/dist/controller.py collect --label z17dist16384
 
+    # 隧道在抖？一条命令挂着等它：
+    python3 scripts/dist/controller.py collect --label z17dist16384 --wait 600 --retry-delay 20
+
 - 一个 label = 一段 = 一个 `transfer/<label>.tgz`；台式机按 label 收。
+- `collect` 按 **seed 目录** 逐个 rsync（不是整棵树）：断一次只损失一个 seed 的传输，
+  已到的文件留在本地，重跑只补缺的。每个传输默认重试 3 次；`--wait <分钟>` 让整轮
+  collect 在隧道恢复前一直重试（收下来的东西不会回滚）。
 - 段与段不重叠；台账是唯一权威。机器掉线没跑完的段，**用同一个 label + 同一个 offset
   在另一台机器上再 `assign` 一次**即可改派（同 label 会覆盖台账里那条）。
 - `--start` 会重启该机器上的 worker；不加的话，新任务要等 worker 下一轮启动才会被看到。
@@ -149,6 +155,7 @@
 | 段跑完但 `collect` 报种子缺失 | 有人动过 `out/<label>/games.jsonl`；用同一 label/offset 重新 assign 续跑 |
 | 校验报 unreadable archive | 磁盘满 / 进程被强杀写了一半；删掉该 `seed_<n>` 目录后重跑该段 |
 | 内存不够 | 调小 `--workers`（约 0.5 GB/进程） |
+| `collect` 报 `unexpected end of file` / `Connection timed out during banner exchange` | 隧道断了（不是数据坏了）。直接重跑同一条 `collect`，或加 `--wait 600`；已传的 seed 目录会被 rsync 跳过 |
 | `main.pak` 传到一半断了 / rsync 打印用法 | macOS 自带的是 **openrsync（2.6.9 兼容）**，有 `--partial` 但**没有 `--append-verify`**（用了只会打印用法并失败）。`controller push` 已用 `--partial`；大文件就多跑几次，每次断点保留，直到远端 `stat -f %z main.pak` 等于本地大小 |
 
 ## 5. 实测数字

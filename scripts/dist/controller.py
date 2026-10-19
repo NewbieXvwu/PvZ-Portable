@@ -115,7 +115,7 @@ def ssh(entry: dict, command: str, check: bool = True, stdin: str | None = None)
     return proc
 
 
-def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> None:
+def rsync_try(entry: dict, source: str, target: str, extra: list | None = None) -> bool:
     # macOS ships openrsync (rsync 2.6.9-compatible): --partial/--inplace exist, --append-verify does
     # NOT (it prints the usage text and fails). Large files over a flaky tunnel are therefore sent by
     # repeated --partial runs: whatever arrived stays on the far side and the next run replaces it.
@@ -125,9 +125,28 @@ def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> N
     proc = subprocess.run(cmd, text=True, capture_output=True)
     if proc.returncode != 0:
         sys.stderr.write(proc.stderr)
-        raise SystemExit(f"rsync to {entry['host']} failed")
+        say(f"rsync to {entry['host']} failed")
+        return False
     tail = [line.strip() for line in proc.stdout.splitlines() if line.startswith("Number of")]
     say(f"rsync {source} -> {entry['host']}:{target} ({' '.join(tail)})")
+    return True
+
+
+def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> None:
+    if not rsync_try(entry, source, target, extra):
+        raise SystemExit(f"rsync to {entry['host']} failed")
+
+
+def rsync_retry(entry: dict, source: str, target: str, extra: list | None = None,
+                tries: int = 3, delay: int = 10) -> bool:
+    """The tunnel drops mid-transfer often; retry the same --partial run instead of failing the job."""
+    for attempt in range(1, tries + 1):
+        if rsync_try(entry, source, target, extra):
+            return True
+        if attempt < tries:
+            say(f"retry {attempt}/{tries} in {delay}s")
+            time.sleep(delay)
+    return False
 
 
 # --------------------------------------------------------------------------- push
@@ -147,7 +166,7 @@ def push_code(entry: dict, commit: str | None) -> None:
             raise SystemExit(f"git archive {ref} failed (commit everything first)")
         with tarfile.open(staging / "src.tar") as tar:
             tar.extractall(staging / "tree")
-        rsync(entry, str(staging / "tree") + "/", f"{WORKER_ROOT}/repo/",
+        rsync(entry, str(staging / "tree") + "/", f"~/{WORKER_ROOT}/repo/",
               ["--delete", "--exclude", "build/", "--exclude", ".git/", "--exclude", ".pvz-pushed"])
         # Marker: bootstrap.sh sees this and does not try to reach GitHub (unreachable from China).
         ssh(entry, f"touch {WORKER_ROOT}/repo/.pvz-pushed")
@@ -160,27 +179,27 @@ def push_models(entry: dict, student: Path | None) -> None:
     for path, name in ((VALUE, "value_v3.pt"), (STATIC_VALUE, "value_branch1.pt")):
         if not path.is_file():
             raise SystemExit(f"missing {path}")
-        rsync(entry, str(path), f"{WORKER_ROOT}/models/{name}")
+        rsync(entry, str(path), f"~/{WORKER_ROOT}/models/{name}")
     if student:
         if not student.is_file():
             raise SystemExit(f"missing student {student}")
-        rsync(entry, str(student), f"{WORKER_ROOT}/models/{student.parent.name}.pt")
-        rsync(entry, str(student), f"{WORKER_ROOT}/models/selfcheck.pt")
+        rsync(entry, str(student), f"~/{WORKER_ROOT}/models/{student.parent.name}.pt")
+        rsync(entry, str(student), f"~/{WORKER_ROOT}/models/selfcheck.pt")
 
 
 def push_resources(entry: dict) -> None:
     if not (RESOURCES / "main.pak").is_file():
         raise SystemExit(f"missing {RESOURCES}/main.pak")
     ssh(entry, f"mkdir -p {WORKER_ROOT}/resources")
-    rsync(entry, str(RESOURCES / "main.pak"), f"{WORKER_ROOT}/resources/")
-    rsync(entry, str(RESOURCES / "properties") + "/", f"{WORKER_ROOT}/resources/properties/")
+    rsync(entry, str(RESOURCES / "main.pak"), f"~/{WORKER_ROOT}/resources/")
+    rsync(entry, str(RESOURCES / "properties") + "/", f"~/{WORKER_ROOT}/resources/properties/")
 
 
 def push_manifest(entry: dict) -> None:
     if not DEFAULT_MANIFEST.is_file():
         raise SystemExit(f"missing {DEFAULT_MANIFEST}")
     ssh(entry, f"mkdir -p {WORKER_ROOT}/manifest")
-    rsync(entry, str(DEFAULT_MANIFEST), f"{WORKER_ROOT}/manifest/day_l7_hard.json")
+    rsync(entry, str(DEFAULT_MANIFEST), f"~/{WORKER_ROOT}/manifest/day_l7_hard.json")
 
 
 def rebuild(entry: dict) -> None:
@@ -408,26 +427,57 @@ def validate(label_dir: Path, segment: dict) -> dict:
             "archives": len(archives), "summary": summary}
 
 
+def collect_segment(entry: dict, segment: dict, args) -> dict:
+    label = segment["label"]
+    local = RESULTS / label
+    (local / "out").mkdir(parents=True, exist_ok=True)
+    (local / "frames").mkdir(parents=True, exist_ok=True)
+    say(f"collecting {label} from {segment['machine']}")
+    tries, delay = args.retries, args.retry_delay
+    if not rsync_retry(entry, f"~/{WORKER_ROOT}/out/{label}/", str(local / "out") + "/",
+                       tries=tries, delay=delay):
+        raise SystemExit(f"{label}: could not fetch out/")
+    # Frames are the bulk of the payload. One seed per rsync keeps a dropped tunnel cheap: what
+    # arrived stays, and the next attempt only moves the missing archives.
+    listing = ssh(entry, f"ls -1 {WORKER_ROOT}/frames/{label} 2>/dev/null", check=False).stdout
+    seeds = [line.strip() for line in listing.splitlines() if line.strip().startswith("seed_")]
+    if seeds:
+        say(f"{len(seeds)} seed dirs on {segment['machine']}")
+        for name in sorted(seeds):
+            if not rsync_retry(entry, f"~/{WORKER_ROOT}/frames/{label}/{name}/",
+                               str(local / "frames" / name) + "/", tries=tries, delay=delay):
+                raise SystemExit(f"{label}: could not fetch frames/{name}")
+    elif not rsync_retry(entry, f"~/{WORKER_ROOT}/frames/{label}/", str(local / "frames") + "/",
+                         tries=tries, delay=delay):
+        raise SystemExit(f"{label}: could not fetch frames/")
+    return validate(local, segment)
+
+
 def cmd_collect(args) -> None:
     ledger = load_json(LEDGER, {"segments": []})
     targets = [s for s in ledger["segments"]
                if (not args.label or s["label"] == args.label) and s["status"] in ("assigned", "running", "done", "collected")]
     if not targets:
         raise SystemExit("nothing to collect")
+    deadline = time.time() + args.wait * 60 if args.wait else None
     for segment in targets:
         try:
             entry = machine(segment["machine"])
         except SystemExit:
             say(f"skip {segment['label']}: machine {segment['machine']!r} is not in machines.json")
             continue
+        while True:
+            try:
+                report = collect_segment(entry, segment, args)
+                break
+            except SystemExit as exc:
+                # --wait keeps the job alive across tunnel outages; collected files stay on disk.
+                if deadline is None or time.time() >= deadline:
+                    raise
+                say(f"{exc} — retrying whole collect in {args.retry_delay}s")
+                time.sleep(args.retry_delay)
         label = segment["label"]
         local = RESULTS / label
-        (local / "out").mkdir(parents=True, exist_ok=True)
-        (local / "frames").mkdir(parents=True, exist_ok=True)
-        say(f"collecting {label} from {segment['machine']}")
-        rsync(entry, f"{WORKER_ROOT}/out/{label}/", str(local / "out") + "/")
-        rsync(entry, f"{WORKER_ROOT}/frames/{label}/", str(local / "frames") + "/")
-        report = validate(local, segment)
         say(f"validated: {report['games']} games, {report['archives']} archives, "
             f"won {report['won']} ({report['win_rate']}), {report['mean_seconds']}s/game")
         save_json(local / "validation.json", report)
@@ -534,6 +584,10 @@ def main() -> int:
     q = sub.add_parser("collect", help="pull results back, validate, package, upload to HF")
     q.add_argument("--label")
     q.add_argument("--no-upload", action="store_true")
+    q.add_argument("--retries", type=int, default=3, help="attempts per transfer (default 3)")
+    q.add_argument("--retry-delay", type=int, default=10, help="seconds between attempts (default 10)")
+    q.add_argument("--wait", type=int, default=0,
+                   help="keep retrying the whole collect for this many minutes while the tunnel flaps")
     q.set_defaults(func=cmd_collect)
 
     q = sub.add_parser("web", help="ssh tunnel to a machine's local page")
