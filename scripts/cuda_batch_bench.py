@@ -11,7 +11,6 @@ import hashlib
 import json
 import os
 from pathlib import Path
-import re
 import subprocess
 import struct
 import sys
@@ -24,6 +23,22 @@ from pvz_cuda_root import read_cudaroot
 
 def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def read_batch_summary(path: Path, *, rollouts: int, batches: int) -> dict:
+    """Read the producer's versioned summary; console prose is not a data channel."""
+    with path.open() as stream:
+        data = json.load(stream)
+    if type(data.get('schema_version')) is not int or data['schema_version'] != 1:
+        raise ValueError('unsupported CUDA batch summary schema')
+    for field, expected in [('completed_rollouts', rollouts), ('requested_rollouts', rollouts),
+                            ('batches', batches), ('error_rollouts', 0)]:
+        if type(data.get(field)) is not int or data[field] != expected:
+            raise ValueError(f'invalid CUDA batch summary {field}')
+    wall = data.get('wall_ms')
+    if type(wall) is not int or wall < 0:
+        raise ValueError('invalid CUDA batch summary wall_ms')
+    return data
 
 
 def exclusive_gpu() -> None:
@@ -72,9 +87,11 @@ def main() -> None:
         for name, binary in (("baseline", args.baseline), ("candidate", args.candidate)):
             tag = args.out / f"n{count}-{name}"
             result_path, leaf_path = tag.with_suffix(".bin"), tag.with_suffix(".leaf")
+            timing_path = tag.with_suffix('.timing.json')
             command = [str(binary.resolve()), "--roots", str(args.roots.resolve()), "--net", str(args.net.resolve()),
                        "--pairs", str(pairs.resolve()), "--lanes", str(count), "--horizon", "2500",
-                       "--out", str(result_path.resolve()), "--leaf-out", str(leaf_path.resolve())]
+                       "--out", str(result_path.resolve()), "--leaf-out", str(leaf_path.resolve()),
+                       "--summary-json", str(timing_path.resolve())]
             exclusive_gpu()
             system = subprocess.check_output(["nvidia-smi"], text=True)
             system += Path("/proc/loadavg").read_text() + Path("/proc/meminfo").read_text()
@@ -84,9 +101,7 @@ def main() -> None:
             process_seconds = time.monotonic() - started
             tag.with_suffix(".txt").write_text(run.stdout + run.stderr)
             exclusive_gpu()
-            match = re.search(r"wall (\d+) ms for (\d+) rollouts", run.stdout)
-            if match is None or int(match[2]) != count * args.batches:
-                raise RuntimeError("the binary did not run every requested batch")
+            timing = read_batch_summary(timing_path, rollouts=count * args.batches, batches=args.batches)
             result, leaf = result_path.read_bytes(), leaf_path.read_bytes()
             records = list(struct.iter_unpack("<33i", result))
             if len(records) != count * args.batches or any(record[16] for record in records):
@@ -99,7 +114,7 @@ def main() -> None:
             if (result, leaf) != reference:
                 raise RuntimeError(f"{count} lanes: candidate changed results or leaf bits")
             row = {"lanes": count, "variant": name, "batches": args.batches,
-                   "wave_ms": int(match[1]) / args.batches, "process_seconds": process_seconds,
+                   "wave_ms": timing['wall_ms'] / args.batches, "process_seconds": process_seconds,
                    "result_sha256": sha(result_path), "leaf_sha256": sha(leaf_path), "command": command}
             rows.append(row)
             complete = len(rows) == 2 * len(args.counts)

@@ -757,6 +757,7 @@ struct Options
 	// Value-net features for every leaf, in the same lane order as --out.  22.7 KB per lane, so it is
 	// opt-in and streamed batch by batch rather than held for the whole workload.
 	std::string leafOut;
+	std::string summaryJson;          // batch door: machine-readable counters and timing
 	// One line per lane: `<rootIndex> <futureSeed>` (cuda/PairList.h).  Replaces the derived pairing.
 	std::string pairs;
 	std::string socket;               // --serve: the Unix socket to listen on
@@ -797,6 +798,7 @@ Options Parse(int argc, char** argv)
 		else if (flag == "--net") options.net = Value(argc, argv, index);
 		else if (flag == "--out") options.out = Value(argc, argv, index);
 		else if (flag == "--leaf-out") options.leafOut = Value(argc, argv, index);
+		else if (flag == "--summary-json") options.summaryJson = Value(argc, argv, index);
 		else if (flag == "--pairs") options.pairs = Value(argc, argv, index);
 		else if (flag == "--socket") options.socket = Value(argc, argv, index);
 		else if (flag == "--serve") options.serve = 1;
@@ -824,7 +826,7 @@ Options Parse(int argc, char** argv)
 	if (options.net.empty() || (!options.serve && options.roots.empty()))
 		Fail("usage: --net FILE (--roots FILE [--per-root 8] [--horizon 2500] [--lanes 8192] "
 			"[--block 0] [--repeat 1] [--max-actions 3000] [--seed-base N] [--bench full|sim|lane] "
-			"[--pairs FILE] [--out results.bin] [--leaf-out leaves.bin]) | (--serve --socket PATH)");
+			"[--pairs FILE] [--out results.bin] [--leaf-out leaves.bin] [--summary-json FILE]) | (--serve --socket PATH)");
 	if (options.lanes < 1 || options.block < 0 || options.block > kBlockThreads || options.perRoot < 1)
 		Fail("lanes and per-root must be positive, --block in [0, 256] (0 picks the wave size)");
 	// A leaf feature block is meaningless without the record it pairs with (the result and error flags
@@ -833,6 +835,7 @@ Options Parse(int argc, char** argv)
 	if (!options.leafOut.empty() && options.bench == kBenchSim)
 		Fail("--leaf-out needs a schedule that runs the network (--bench full|lane)");
 	if (options.serve && options.socket.empty()) Fail("--serve needs --socket PATH");
+	if (options.serve && !options.summaryJson.empty()) Fail("--summary-json is only available for batch workloads");
 	return options;
 }
 
@@ -1456,6 +1459,21 @@ int RunWorkload(const Options& options)
 		std::printf("wrote %d leaf feature blocks of %d floats (%.1f MB) to %s\n", total, kValueFloats,
 			static_cast<double>(total) * kValueFloats * sizeof(float) / 1048576.0,
 			options.leafOut.c_str());
+	}
+	if (!options.summaryJson.empty())
+	{
+		std::FILE* summary = std::fopen(options.summaryJson.c_str(), "w");
+		if (!summary) Fail("cannot write " + options.summaryJson);
+		// wall_ms intentionally uses the identical rounding as the legacy console line.
+		// Keep the unrounded float as well, without changing existing bench wave_ms.
+		const int written = std::fprintf(summary,
+			"{\"schema_version\":1,\"wall_ms\":%.0f,\"wall_ms_unrounded\":%.9g,"
+			"\"completed_rollouts\":%d,\"requested_rollouts\":%d,\"batches\":%d,"
+			"\"lanes\":%d,\"horizon_ticks\":%d,\"rounds\":%lld,\"error_rollouts\":%lld}\n",
+			milliseconds, milliseconds, completed, total, batchCount, dev.lanes, options.horizon,
+			static_cast<long long>(rounds), static_cast<long long>(errors));
+		const int closed = std::fclose(summary);
+		if (written < 0 || closed != 0) Fail("short write to " + options.summaryJson);
 	}
 	cublasDestroy(dev.handle);
 	return 0;
