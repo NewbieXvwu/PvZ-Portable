@@ -409,7 +409,11 @@ def cmd_collect(args) -> None:
     if not targets:
         raise SystemExit("nothing to collect")
     for segment in targets:
-        entry = machine(segment["machine"])
+        try:
+            entry = machine(segment["machine"])
+        except SystemExit:
+            say(f"skip {segment['label']}: machine {segment['machine']!r} is not in machines.json")
+            continue
         label = segment["label"]
         local = RESULTS / label
         local.mkdir(parents=True, exist_ok=True)
