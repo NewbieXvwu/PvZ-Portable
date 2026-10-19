@@ -61,6 +61,60 @@ class SpeculativeHalvingTest(unittest.TestCase):
                         with self.subTest(candidates=count, samples=samples, policy=policy, pattern=pattern):
                             self.compare(count, samples, policy, pattern)
 
+    def test_prefetched_verification_retains_scores_batches_and_future_seeds(self):
+        for count in (3, 5, 9):
+            for samples in (1, 3, 5):
+                for verify in (2, 9):
+                    for pattern in ("keep", "cancel", "ties", "missing"):
+                        with self.subTest(count=count, samples=samples, verify=verify, pattern=pattern):
+                            candidates = [{"type": "plant", "packet": i, "row": 0, "col": 0}
+                                          for i in range(count - 1)] + [search_play.NOOP]
+                            keys = [json.dumps(c, sort_keys=True) for c in candidates]
+                            seed = 300000000   # verification wraps the same futures to uint32
+                            table = {}
+                            for i in range(count):
+                                for k in range(samples + verify):
+                                    value = .1 if i == 0 else .8 if i == 1 else .05
+                                    if pattern == "ties": value = .5
+                                    elif k >= samples and pattern == "cancel":
+                                        value = .99 if i == 0 else .01
+                                    elif k >= samples and pattern == "missing" and k % 3 == 0:
+                                        value = None
+                                    table[i, k] = value
+                            results = []
+                            for prefetch in (False, True):
+                                calls, batches = [], []
+                                args = argparse.Namespace(samples=samples, verify_samples=verify, margin=.02,
+                                    cuda_speculative_halving=True, cuda_prefetch_verify=prefetch)
+                                stats = {"overrides": 0, "override_kinds": Counter()}
+                                def continuations(env, obs, root, jobs, config, counters):
+                                    pairs = [(keys.index(json.dumps(c, sort_keys=True)),
+                                              (future - seed * 1000) % 2**32) for c, future in jobs]
+                                    calls.append(pairs)
+                                    return [table[pair] for pair in pairs]
+                                def score(handles):
+                                    batches.append(list(handles))
+                                    return handles
+                                with patch.dict(search_play._W, {"cuda": object()}, clear=True), \
+                                        patch.object(search_play, "_continuations", side_effect=continuations), \
+                                        patch.object(search_play, "_leaf_values", side_effect=score):
+                                    action = search_play._halving_choice(None, {}, 1, candidates, candidates[0],
+                                                                         keys[0], args, seed, stats)
+                                stats.get("last_verification", {}).pop("seconds", None)
+                                results.append((action, stats, calls, batches))
+                            old, new = results
+                            self.assertEqual(old[0], new[0])
+                            self.assertEqual(old[3], new[3], "including separate verification value batches")
+                            for field in ("last_targets", "last_verification", "overrides", "halving_rollouts"):
+                                self.assertEqual(old[1].get(field), new[1].get(field), field)
+                            self.assertEqual(len(new[2]), 1)
+                            used = 0 if pattern == "ties" else 2 * verify
+                            self.assertEqual(new[1].get("cuda_prefetch_verify_used_lanes", 0), used)
+                            self.assertEqual(new[1]["cuda_prefetch_verify_discarded_lanes"], count * verify - used)
+                            self.assertEqual(new[2][0], [(i, k) for i in range(count) for k in range(samples)] +
+                                             [(i, k) for i in range(count) for k in range(samples, samples + verify)])
+                            self.assertNotIn("cuda_prefetch_verify_lanes", old[1])
+
 
 if __name__ == "__main__":
     unittest.main()

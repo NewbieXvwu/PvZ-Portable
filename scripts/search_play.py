@@ -465,10 +465,20 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     # futures cannot affect pruning, labels or the anchored override rule. This spends extra GPU
     # work to remove device-wave dependencies, rather than merely combining protocol messages.
     speculative = None
+    verification_cache = None
     if getattr(args, "cuda_speculative_halving", False) and _W.get("cuda") is not None:
         order = [(i, k) for i in alive for k in range(args.samples)]
-        jobs = [(candidates[i], decision_seed * 1000 + k) for i, k in order]
-        speculative = dict(zip(order, _continuations(env, obs, root, jobs, args, stats)))
+        verification_order = ([(i, k) for i in alive
+                               for k in range(args.samples, args.samples + args.verify_samples)]
+                              if getattr(args, "cuda_prefetch_verify", False) else [])
+        jobs = [(candidates[i], decision_seed * 1000 + k) for i, k in order + verification_order]
+        handles = _continuations(env, obs, root, jobs, args, stats)
+        speculative = dict(zip(order, handles[:len(order)]))
+        if verification_order:
+            # Prefetch futures, never scores: pruning and verification still evaluate
+            # their original subsets, in their original order and value-net batches.
+            verification_cache = dict(zip(verification_order, handles[len(order):]))
+            stats["cuda_prefetch_verify_lanes"] = stats.get("cuda_prefetch_verify_lanes", 0) + len(verification_order)
         stats["halving_speculative_lanes"] = stats.get("halving_speculative_lanes", 0) + len(order)
     selected_lanes = 0
     done = 0                                 # futures every survivor has been scored on
@@ -505,13 +515,19 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
         stats["halving_discarded_lanes"] = stats.get("halving_discarded_lanes", 0) + len(speculative) - selected_lanes
     totals = [sum(v) / len(v) if v else float("-inf") for v in values]
     best = max(alive, key=lambda i: totals[i])
-    return _verified_choice(env, obs, root, candidates, totals, [len(v) for v in values], best,
-                            policy_index, policy_action, args, decision_seed, stats)
+    kwargs = {"prefetched": verification_cache} if verification_cache is not None else {}
+    used_before = stats.get("cuda_prefetch_verify_used_lanes", 0)
+    chosen = _verified_choice(env, obs, root, candidates, totals, [len(v) for v in values], best,
+                              policy_index, policy_action, args, decision_seed, stats, **kwargs)
+    if verification_cache is not None:
+        used = stats.get("cuda_prefetch_verify_used_lanes", 0) - used_before
+        stats["cuda_prefetch_verify_discarded_lanes"] = stats.get("cuda_prefetch_verify_discarded_lanes", 0) + len(verification_cache) - used
+    return chosen
 
 
 def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: list[float],
                      counts: list[int], best: int, policy_index: int, policy_action: dict,
-                     args, decision_seed: int, stats: dict, *, fresh: bool = False) -> dict:
+                     args, decision_seed: int, stats: dict, *, fresh: bool = False, prefetched=None) -> dict:
     before = fresh or (best != policy_index and totals[best] - totals[policy_index] > args.margin)
     samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
     if fresh:
@@ -545,7 +561,12 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
             indexes = (policy_index, best)
             jobs = [(candidates[index], (decision_seed * 1000 + future) % 2 ** 32)
                     for index in indexes for future in range(args.samples, args.samples + samples)]
-            handles = _continuations(env, obs, root, jobs, args, stats)
+            if prefetched is None:
+                handles = _continuations(env, obs, root, jobs, args, stats)
+            else:
+                handles = [prefetched[(index, future)] for index in indexes
+                           for future in range(args.samples, args.samples + samples)]
+                stats["cuda_prefetch_verify_used_lanes"] = stats.get("cuda_prefetch_verify_used_lanes", 0) + len(handles)
             for slot, index in enumerate(indexes):
                 added = [value for value in _leaf_values(handles[slot * samples:(slot + 1) * samples])
                          if value is not None]
@@ -714,6 +735,9 @@ def _play(job: dict) -> dict:
                 "halving_candidates", "halving_rollouts", "halving_selected_lanes",
                 "halving_speculative_lanes", "halving_discarded_lanes")},
             "cuda_seconds": round(cuda_client.seconds - cuda_started_seconds, 2) if cuda_client is not None else 0.0,
+            **({name: stats.get(name, 0) for name in ("cuda_prefetch_verify_lanes",
+                "cuda_prefetch_verify_used_lanes", "cuda_prefetch_verify_discarded_lanes")}
+               if getattr(args, "cuda_prefetch_verify", False) else {}),
             "student_candidate_added": stats["student_candidate_added"],
             "student_candidate_best": stats["student_candidate_best"],
             "student_candidate_override": stats["student_candidate_override"],
@@ -758,6 +782,9 @@ def main() -> None:
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
+    p.add_argument("--cuda-prefetch-verify", action="store_true",
+                   help="prefetch verification futures in the speculative GPU wave; spends extra lanes "
+                        "to avoid a serial verification request, preserving scoring and selection")
     p.add_argument("--cuda-speculative-halving", action="store_true",
                    help="batch all candidate/future continuations once, then use only the original "
                         "halving survivors for scores and labels; spends extra CUDA work")
@@ -797,6 +824,8 @@ def main() -> None:
         args.gpu_pause_file = str(Path(os.environ["PVZ_GPU_PAUSE_FILE"]).expanduser().resolve())
     if args.cuda_speculative_halving and (not args.halving or args.rollout_backend != "cuda"):
         p.error("--cuda-speculative-halving requires --halving and --rollout-backend cuda")
+    if args.cuda_prefetch_verify and (not args.cuda_speculative_halving or args.verify_samples <= 0):
+        p.error("--cuda-prefetch-verify requires --cuda-speculative-halving and positive --verify-samples")
     if args.verify_samples < 0:
         p.error("--verify-samples must be nonnegative")
     if args.shovel_candidates < 0:

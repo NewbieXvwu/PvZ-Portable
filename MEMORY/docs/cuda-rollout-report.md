@@ -7,10 +7,11 @@
 
 ## 当前结论
 
-### task6 采集提速（第68轮复核，2026-10-19，进行中）
+### task6 采集提速（第72轮，2026-10-19，本轮交付）
 
 **推荐配置（正式队列）**：训练期间先用暂停闸门让GPU采集让路；允许同时采集时，
-当前共享负载的小样本建议3+1，主机CPU更省、吞吐与纯CPU4接近。配置如下：
+16:08–16:17双背景作业下的小样本支持3+1，主机CPU更省、吞吐与纯CPU4接近；
+原正式GPU服务在16:33离场，不能把该配比外推到新负载。配置参考如下：
 
 ```bash
 PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause scripts/mixed_dagger_round.sh \
@@ -73,6 +74,28 @@ cb的省CPU实测用的是另一个 `rollout_cuda_poll`。当前已从源码重�
    `cuda_seconds` 272.6 ≈ 343 × 0.795 是请求均值的恒等式，不能证明成本只由轮数决定。
    从完整帧复核：343 次 = 225 次搜索 + **118 次复核**（81接受推翻、37否决），复核占 **34.4%**。
    另四个 z17 种子的复核占比 9.4–24.0%，不能用接受推翻数代替复核请求数。还可减少轮内模拟、启动和同步开销。
+   **第72轮实现精确复核预取**：一次请求运行候选的原搜索未来及可能需要的复核未来，
+   仍按原幸存者和原批次评分，真正复核时取缓存的两腿。默认关闭；直接入口
+   `--cuda-prefetch-verify`（须已有推测减半和正verify-samples），混采入口 `--prefetch-verify` 仅传GPU臂。
+   v28/z20/30000、k2/verify9/beta0、单GPU worker原型ABBA：off194.081/196.073s、on152.059/150.069s，
+   整进程速度 **1.291倍**；主机CPU均值38.068→32.688s，省14.1%。请求343→225、实算道5919→15180，
+   四份完整档案SHA全同420bd6…，零回退/错误；22项回归覆盖原阶段/复核推理批次、种子和取消推翻等边界。
+   多算未用未来以减少串行请求是明确代价：仅高复核率、未饱和批次预期有收益，
+   不外推到z17低复核率、per-card2或任意worker数。
+   **生产开关已验收**：真实混采入口、30000/30001、2个GPU worker，开关前后两份完整档案均逐字节相同，
+   669→444请求、11193→28572道；原225次复核全部保留为缓存复核，零错误/回退。
+   原始墙钟229→121s只作留档：候选第40秒时背景正式GPU服务356666退出，负载不同，
+   **不使用该比值宣称双worker加速**。同负载性能结论仅采用上面的单workerABBA（1.291倍）。
+   正式入口验收自身RSS峰2.63GiB、swap0、可用最低6.07GiB。请求账工具区分复核事件与真正发出的请求，
+   不把缓存复核再次计为请求。直接用 `--cuda-prefetch-verify`，混采用 `--prefetch-verify`，均默认关闭。
+   复现正式入口对照（全新输出目录）：
+   ```bash
+   scripts/task6/compare_worker_mix.py --student ~/PvZ-search/artifacts/student/v28/model.pt \
+     --out artifacts/cuda/prefetch_check --task day_l7_z20_eval --seed-offset 0 --games 2 \
+     --mixes 0:2 --prefetch-modes off on
+   ```
+   原始ABBA/整局SHA在本地 `codex_r72/{results,summary}.json`，生产参数、资源变化、缓存计数与
+   双种子档案对照在 `codex_r72_production/{validation,ledger_off,ledger_on}.json`。
 4. **续走截断（方向 5）CPU 初筛：1800 档有希望、1250 档退后**。同一 1036 个搜索点三臂比较：
    `--approx-horizon 1250` 一致率 74.13% vs 噪声底线 77.99%（−3.86pp，价值 regret +60%）→ 不采用；
    `--approx-horizon 1800` 一致率 **78.76% vs 77.99%（+0.77pp）**、价值 regret +5.5%、搜索时间 552.9→407.5 s
@@ -111,8 +134,9 @@ cb的省CPU实测用的是另一个 `rollout_cuda_poll`。当前已从源码重�
    其中一局很短，共享负载持续变化。训练优先时仍先暂停GPU臂（新队列可用4+0）。
    旧2+2服务CPU共132.126s，新产物18.962s；GPU臂主机CPU79.660→22.991s/局，
    两个GPU完整档案逐字节相同；新3+1的GPU档案也与参照全等。
-   主机CPU账按每个服务统计，不乘worker数。自身swap全零、可用内存最低5.67GiB，未触发暂停；
+   主机CPU账按每个服务统计，不乘worker数。新路径自身swap全零、可用内存最低5.68GiB，未触发暂停；
    WSL每PID显存不可用，表中显存是包含正式作业的全卡峰值，不能冒充自有占用。
+   采集墙钟从学生校验后计，子臂主机CPU按 `--measure-cpu` 计；入口一次性导出/合并另计。
    可复现脚本 `scripts/task6/compare_worker_mix.py --student <model.pt> --out <新目录>`；
    原始命令、各阶段资源采样、二进制SHA、真实等待确认和完整帧对照见本地
    `codex_r69/`、`codex_r71_mix/{comparison,gpu_frame_parity}.json`。

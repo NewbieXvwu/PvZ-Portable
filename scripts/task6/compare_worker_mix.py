@@ -26,11 +26,23 @@ def main():
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--seed-offset", type=int, default=15000)
     p.add_argument("--games", type=int, default=4)
+    p.add_argument("--task", default="day_l7_z17_train")
     p.add_argument("--background-pids", type=int, nargs="*", default=[])
-    p.add_argument("--mixes", nargs="+", choices=("4:0", "2:2", "3:1"),
-                   default=["4:0", "2:2", "3:1", "4:0"])
+    p.add_argument("--mixes", nargs="+", default=["4:0", "2:2", "3:1", "4:0"], help="CPU:GPU workers; at most 4 total")
+    p.add_argument("--prefetch-modes", nargs="+", choices=("off", "on"), default=["off"],
+                   help="run each worker mix in these verification-prefetch modes")
     p.add_argument("--cuda-binary", type=Path, default=ROOT / "build/rollout_cuda_small")
     args = p.parse_args()
+    try:
+        mixes = [tuple(map(int, mix.split(":"))) for mix in args.mixes]
+    except ValueError:
+        p.error("--mixes must use CPU:GPU integers")
+    if any(len(m) != 2 or min(m) < 0 or not 1 <= sum(m) <= 4 for m in mixes):
+        p.error("--mixes requires nonnegative CPU:GPU counts with 1 to 4 total workers")
+    if "on" in args.prefetch_modes and any(gpu == 0 for cpu, gpu in mixes):
+        p.error("prefetch mode on requires at least one GPU worker")
+    if args.games <= 0 or args.seed_offset < 0:
+        p.error("positive --games and nonnegative --seed-offset required")
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     env = {**os.environ, "PVZ_CUDA_POLL_US": "100"}
@@ -40,19 +52,22 @@ def main():
     provenance = {"time": datetime.datetime.now().astimezone().isoformat(),
                   "student": str(student), "student_sha256": hashlib.sha256(student.read_bytes()).hexdigest(),
                   "background_pids": args.background_pids, "games": args.games, "seed_offset": args.seed_offset,
+                  "task": args.task, "prefetch_modes": args.prefetch_modes,
                   "cuda_binary": str(args.cuda_binary.resolve()),
                   "cuda_binary_sha256": hashlib.sha256(args.cuda_binary.read_bytes()).hexdigest()}
     (out / "provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
     results = []
-    for index, mix in enumerate(args.mixes):
-        cpu, gpu = map(int, mix.split(":"))
-        name = f"mix{index}_cpu{cpu}_gpu{gpu}"
+    variants = [(cpu, gpu, mode) for cpu, gpu in mixes for mode in args.prefetch_modes]
+    for index, (cpu, gpu, mode) in enumerate(variants):
+        name = f"mix{index}_cpu{cpu}_gpu{gpu}" + ("_prefetch" if mode == "on" else "")
         directory = out / name
         cmd = [str(ROOT / "scripts/mixed_dagger_round.sh"), "--student", str(student),
-               "--task", "day_l7_z17_train", "--seed-offset", str(args.seed_offset), "--games", str(args.games),
+               "--task", args.task, "--seed-offset", str(args.seed_offset), "--games", str(args.games),
                "--frames", str(directory / "frames"), "--frames-label", "mixcompare", "--out", str(directory),
                "--cpu-workers", str(cpu), "--gpu-workers", str(gpu),
                "--cuda-binary", str(args.cuda_binary.resolve())]
+        if mode == "on":
+            cmd.append("--prefetch-verify")
         print(json.dumps({"event": "start", "name": name, "time": datetime.datetime.now().astimezone().isoformat(),
                           "command": cmd}), flush=True)
         directory.mkdir()
@@ -116,6 +131,7 @@ def main():
         assert len(games) == args.games and len({r["seed"] for r in games}) == args.games
         row = {"name": name, "command": cmd, "time": datetime.datetime.now().astimezone().isoformat(),
                "cpu_workers": cpu, "gpu_workers": gpu, "games": args.games,
+               "prefetch_verify": mode == "on",
                "process_wall_s": time.monotonic() - started, "collection_wall_s": config["elapsed_wall_s"],
                "games_per_hour": args.games * 3600 / config["elapsed_wall_s"],
                "host_cpu_s_per_game": config["host_cpu_s_per_game"],

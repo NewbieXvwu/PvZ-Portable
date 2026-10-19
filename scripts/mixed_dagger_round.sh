@@ -11,7 +11,7 @@
 #     --task day_l7_z17_train --seed-offset 12160 --games 16 \
 #     --frames ~/PvZ-search/artifacts/student/frames --frames-label z17dag28 \
 #     --out ~/PvZ-search/artifacts/hard/z17_dagger28_16 --cpu-workers 2 --gpu-workers 2
-#   # optional: --cuda-binary <path> to test a candidate service build (default build/rollout_cuda_small)
+#   # optional: --cuda-binary <path>; --prefetch-verify to precompute GPU verification futures
 #
 # The student checkpoint is validated/exported up front (OUT/student.pvzrn); the GPU process
 # re-exports into its own temporary directory because that is what the server loads.
@@ -37,6 +37,7 @@ CUDA_BINARY="$ROOT/build/rollout_cuda_small"
 DAGGER_BETA=0
 VERIFY_SAMPLES=9
 SPECULATIVE=1
+PREFETCH_VERIFY=0
 
 usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
@@ -54,11 +55,15 @@ while [ $# -gt 0 ]; do
     --gpu-workers) GPU_WORKERS="$2"; shift 2 ;;
     --manifest) MANIFEST="$2"; shift 2 ;;
     --cuda-binary) CUDA_BINARY="$2"; shift 2 ;;
+    --prefetch-verify) PREFETCH_VERIFY=1; shift ;;
     --no-speculative) SPECULATIVE=0; shift ;;
     -h|--help) usage ;;
     *) echo "unknown argument: $1" >&2; usage ;;
   esac
 done
+if [ "$PREFETCH_VERIFY" -eq 1 ] && [ "$SPECULATIVE" -ne 1 ]; then
+  echo "--prefetch-verify requires speculative halving (remove --no-speculative)" >&2; exit 2
+fi
 [ -n "$STUDENT" ] || { echo "missing --student" >&2; usage; }
 [ -n "$TASK" ] || { echo "missing --task" >&2; usage; }
 [ -n "$SEED_OFFSET" ] || { echo "missing --seed-offset" >&2; usage; }
@@ -142,6 +147,7 @@ if [ "$GPU_GAMES" -gt 0 ]; then
   echo "gpu: $GPU_GAMES games on $GPU_WORKERS workers (seed-offset $GPU_OFFSET)" | tee "$OUT/logs/gpu.log"
   GPU_SPEC=()
   if [ "$SPECULATIVE" -eq 1 ]; then GPU_SPEC=(--cuda-speculative-halving); fi
+  if [ "$PREFETCH_VERIFY" -eq 1 ]; then GPU_SPEC+=(--cuda-prefetch-verify); fi
   setsid "$PYTHON" "${COMMON[@]}" --rollout-backend cuda --workers "$GPU_WORKERS" "${GPU_SPEC[@]}" \
     --seed-offset "$GPU_OFFSET" --seeds "$GPU_GAMES" --out "$OUT/.parts/gpu" >> "$OUT/logs/gpu.log" 2>&1 &
   PIDS+=("$!")

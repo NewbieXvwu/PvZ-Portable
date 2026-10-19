@@ -20,12 +20,20 @@ def ledger(games, frames, label):
         verifications = [frame["verification"] for frame in records if frame.get("verification")]
         attempts = len(verifications)
         accepted = sum(bool(v["after_override"]) for v in verifications)
+        cached = 0
+        if game.get("cuda_prefetch_verify_lanes", 0):
+            expected_used = sum(2 * v["samples"] for v in verifications)
+            if game["cuda_prefetch_verify_used_lanes"] != expected_used:
+                raise ValueError("prefetched verification count does not match archived frames")
+            cached = attempts
+        verification_requests = attempts - cached
         search = game["searched"]
         rows.append({"seed": game["seed"], "archive": str(archive), "cuda_requests": requests,
-                     "searches": search, "verification_requests": attempts,
+                     "searches": search, "verification_events": attempts, "cached_verifications": cached,
+                     "verification_requests": verification_requests,
                      "accepted_verifications": accepted, "rejected_verifications": attempts - accepted,
-                     "other_requests": requests - search - attempts,
-                     "verification_request_fraction": attempts / requests,
+                     "other_requests": requests - search - verification_requests,
+                     "verification_request_fraction": verification_requests / requests,
                      "cuda_seconds": game["cuda_seconds"],
                      "seconds_per_request": game["cuda_seconds"] / requests})
     return rows
