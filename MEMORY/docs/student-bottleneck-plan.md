@@ -261,3 +261,4 @@
   - 05:10–05:30（Mac 时间）分布式：隧道一传大文件就断，main.pak 改由用户私下发给朋友放进 `~/pvz-worker/resources/`（md5 与本机一致）。新坑：朋友机器访问 GitHub 超时（国内网络），bootstrap 的 git fetch 失败；已让 CodeBuddy 改成“代码只由控制端推送、朋友机器不依赖 GitHub”。
   - 17:34（台式机时间）：**第 30 轮 310/384（80.7%）**，第 29 轮 298、第 28 轮 271，学生每代都在涨。D30 s1 训到第 9 轮（val 2.661），s2 接着训。CPU 17:09 起空闲 → queue68：补完软标签权重 3 的评估（续跑），再跑第 31 轮（v29，偏移 15792–16175，已登记 DESIGN）。29g 58/256。Mac 29c 548/640。Codex 第 72 轮：GPU 路径精确复核预取（默认关），单 worker 1.29 倍、帧全同，待合并审查。
   - 用户决定：分布式先不扩，只把 pvz-f1 搞定（CodeBuddy 自己推进），主控精力回到训练。
+  - 17:50（台式机时间）：Codex 周额度剩 5%，派最后一件 task7（`~/pvz-logs/codex_cuda_task7.md`）：在独立 worktree `~/pvz-merge` 把 cuda-rollout 合入最新 pvz-env、精确优化（poll100、复核预取）默认开、验收、推 `cuda-merge` 分支待主控审。Mac 第 31b 轮（v29，偏移 16384–17023，取自分布式段并记入台账）接在 29c 后自动开跑；台式机 queue69 等 29c / 31b 上传后收进 frames_v2，留给 D31。原型 z17distproto 已于 05:36（Mac 时间）派到 pvz-f1。
