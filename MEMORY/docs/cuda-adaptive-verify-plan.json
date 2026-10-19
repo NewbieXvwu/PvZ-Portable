@@ -73,5 +73,20 @@
     "secondary_metric": "actual measured job wall throughput games/hour; report pauses and background load",
     "no_strength_run_if_cost_fails": true,
     "sampling": "Both arms use100Hz ITIMER_PROF saved-PC sampling of C++ processes only; no stacks/allocations/I/O in handler; matching CPU time instrumentation"
+  },
+  "formal_collection_cost": {
+    "registered": "2026-10-19T21:17:38.650370+08:00",
+    "only_after": "z20 cost reduction >=10percent",
+    "task": "day_l7_z17_train",
+    "seed_offsets": [
+      15000,
+      15000,
+      15004,
+      15004
+    ],
+    "seeds": "1725000..1725007 each arm",
+    "method": "ABBA4games/4workers, beta0 with frames, same100Hz native PC sampler",
+    "formal17_adoption_requires": "its own >=10percent CPU reduction; report throughput separately",
+    "strength_gate": "after both cost datasets complete; run256 beta1 pairs if z20 cost gate passes, even if formal17 benefit insufficient; limit recommendation to measured useful scope"
   }
 }

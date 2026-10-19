@@ -1,0 +1,205 @@
+{
+  "updated": "2026-10-19T21:19:21.318657+08:00",
+  "status": "gate1 passed; cost ABBA and strength gate pending; not adopted",
+  "gate1": {
+    "games": 16,
+    "searches": 3335,
+    "approx_agreement": 0.9955022488755623,
+    "noise_agreement": 0.7133433283358321,
+    "approx_wilson_ci95_pooled": [
+      0.9925919507724777,
+      0.9972723601754739
+    ],
+    "noise_wilson_ci95_pooled": [
+      0.6977574888404131,
+      0.7284382492772677
+    ],
+    "approx_cluster_ci95": [
+      0.9935429472168721,
+      0.9974603577471598
+    ],
+    "noise_cluster_ci95": [
+      0.6805807359478155,
+      0.7469927568806008
+    ],
+    "difference": 0.28215892053973013,
+    "difference_cluster_ci95": [
+      0.2498070420882376,
+      0.31344754975451666
+    ],
+    "noninferiority_margin": 0.03,
+    "bootstrap_draws": 20000,
+    "bootstrap_seed": 20261019,
+    "bootstrap_unit": "whole game, ratio of resampled agreement counts to resampled search counts",
+    "gate_passed": true,
+    "minimum_games": 8,
+    "per_game": [
+      {
+        "seed": 30000,
+        "searches": 201,
+        "approx_matches": 201,
+        "noise_matches": 153
+      },
+      {
+        "seed": 30001,
+        "searches": 229,
+        "approx_matches": 229,
+        "noise_matches": 171
+      },
+      {
+        "seed": 30002,
+        "searches": 123,
+        "approx_matches": 122,
+        "noise_matches": 96
+      },
+      {
+        "seed": 30003,
+        "searches": 221,
+        "approx_matches": 219,
+        "noise_matches": 140
+      },
+      {
+        "seed": 30004,
+        "searches": 105,
+        "approx_matches": 105,
+        "noise_matches": 71
+      },
+      {
+        "seed": 30005,
+        "searches": 267,
+        "approx_matches": 265,
+        "noise_matches": 177
+      },
+      {
+        "seed": 30006,
+        "searches": 213,
+        "approx_matches": 212,
+        "noise_matches": 142
+      },
+      {
+        "seed": 30007,
+        "searches": 262,
+        "approx_matches": 262,
+        "noise_matches": 211
+      },
+      {
+        "seed": 30008,
+        "searches": 227,
+        "approx_matches": 225,
+        "noise_matches": 148
+      },
+      {
+        "seed": 30009,
+        "searches": 302,
+        "approx_matches": 300,
+        "noise_matches": 211
+      },
+      {
+        "seed": 30010,
+        "searches": 114,
+        "approx_matches": 114,
+        "noise_matches": 80
+      },
+      {
+        "seed": 30011,
+        "searches": 269,
+        "approx_matches": 269,
+        "noise_matches": 198
+      },
+      {
+        "seed": 30012,
+        "searches": 228,
+        "approx_matches": 226,
+        "noise_matches": 146
+      },
+      {
+        "seed": 30013,
+        "searches": 285,
+        "approx_matches": 284,
+        "noise_matches": 232
+      },
+      {
+        "seed": 30014,
+        "searches": 188,
+        "approx_matches": 186,
+        "noise_matches": 118
+      },
+      {
+        "seed": 30015,
+        "searches": 101,
+        "approx_matches": 101,
+        "noise_matches": 85
+      }
+    ],
+    "budget_counts": {
+      "early": 729,
+      "full": 923,
+      "no_verify": 1683
+    },
+    "search_timing": 1.134,
+    "baseline_versus_frozen_reference": {
+      "points": 3335,
+      "mismatches": 0,
+      "fields": [
+        "tick",
+        "exact",
+        "exact_other_futures",
+        "exact_totals",
+        "other_totals"
+      ]
+    },
+    "all_streams_match_completed_rows": true,
+    "inputs_sha_unchanged": {
+      "student": true,
+      "value": true,
+      "static_value": true,
+      "manifest": true,
+      "executable": true
+    },
+    "raw_sha256": "cf2f040981f0466c74deb03fb74e26cd5b36d8a8eab72f47209a58150c8276b1",
+    "saved_continuations": 8748
+  },
+  "plans": [
+    "cuda-adaptive-verify-plan.json",
+    "cuda-horizon1800-plan.json"
+  ],
+  "resources": {
+    "returncode": 0,
+    "wall_s": 2338.2544548939914,
+    "peak_rss_kib": 3330560,
+    "peak_swap_kib": 0,
+    "minimum_available_kib": 5126512
+  },
+  "provenance": {
+    "created": "2026-10-19T20:47:37.641315+08:00",
+    "revision": "3a541bce530e90e93f2be311b017ca94be61ee80",
+    "source_sha256": {
+      "scripts/search_play.py": "cd91b908c31ee1cb9eebd0cc1bf3f5c750343c95a4ac3228d27f9e90cbf78b21",
+      "scripts/sim_skip_agreement.py": "b42262501b7c3b0847cbf5ba29da22b480283b6c3396ae9f602a2ff0ac347d0b",
+      "scripts/adaptive_verify.py": "172c352f604f1a82fc0cd1756618294f0503f8b1aeeeee3f7ef4b32202964823",
+      "scripts/search_agreement_stats.py": "5353107d891b8701bbef8d25e759bbada755f3fe932016b575db8820ec27a4bb",
+      "python/test_adaptive_verify.py": "731e12f5353e161f707fc6b72db01dc9caeab9b0b888a76704ae32403a61129e"
+    },
+    "inputs_reference": "MEMORY/docs/cuda-horizon1800-plan.json",
+    "new_candidate_plan": "MEMORY/docs/cuda-adaptive-verify-plan.json",
+    "regression_tests": 22,
+    "invalid_cli_rejections": 4,
+    "pilot": {
+      "points": 24,
+      "counts": {
+        "early": 5,
+        "full": 11,
+        "no_verify": 8
+      },
+      "full_budget_or_no_verification_bit_equal": true
+    },
+    "threading": {
+      "OPENBLAS_NUM_THREADS": 1,
+      "OMP_NUM_THREADS": 1,
+      "torch_num_threads": 1
+    },
+    "backend": "new worktree CPU-only build, no original source or build edits",
+    "default": "adaptive-verify-gap0; horizon2500; formal caller stillverify9"
+  },
+  "default": "gap0/off, formal verify9 and horizon2500 unchanged"
+}

@@ -12,6 +12,14 @@
 [cuda-horizon1800-plan.json](cuda-horizon1800-plan.json)。旧简化老师的78.76%初筛不能替代本轮正式验收。
 
 
+**task6 自适应复核：尚未采用（第75轮进行中）。**
+CPU显式 `--adaptive-verify-gap 0.05`，前3新未来足够远离margin就停止，否则补足9。
+同16局3335点，一致率99.55%（整局95%CI[99.35,99.75]%），噪声71.33%；
+729次提前结束、923次补足9，后者及无需复核的2606点全部目标/选择逐比特一致，
+原版两组老师3335点也与冻结参照逐比特一致。搜索计时1.134倍仅供筛选；
+z20/z17存帧CPU成本ABBA和256局beta1强度验收尚未完成，默认关闭。
+细节见[cuda-adaptive-verify-validation.json](cuda-adaptive-verify-validation.json)。
+
 task7 `cuda-merge`：混采入口已改为poll=100及精确复核预取默认开启；直接 `search_play.py` 仍需显式开关。
 下文task6的默认关闭描述是当时测量口径，现行合并说明见 [cuda-merge-notes.md](cuda-merge-notes.md)。
 
