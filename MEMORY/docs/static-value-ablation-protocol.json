@@ -1,0 +1,7 @@
+{
+  "registered_at": "2026-10-20T07:28:40.156858+08:00",
+  "timing": "before any task13 simulator comparisons",
+  "secondary_cached_means": "math.fsum(future_order_scores)/64, canonical action order; primary task12 heavy labels byte-for-byte frozen. Cached source data lacks terminal/nonterminal flags, so correctly-rounded sums are used instead of guessing the old terminal-first accumulation. This affects only expanded reference sensitivity.",
+  "policy_anchor": "ranked_plants joint-probability prefix need not equal act hierarchical argmax; keep mandatory policy even outside B topk. Therefore B has up to k+1 plant actions plus wait.",
+  "implementation": "candidate-generator static default; student-topk/student-per-card optional; nonstatic generators require shovel/coverage off and skip all static branch/value calls"
+}

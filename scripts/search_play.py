@@ -381,8 +381,20 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     income = obs.get("sun_income_rate")
     try:
         plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
-        static = _static_frames(env, root, plants, income)
-        static_shovels = _static_frames(env, root, shovels, income)
+        generator = getattr(args, "candidate_generator", "static")
+        if generator not in ("static", "student-topk", "student-per-card"):
+            raise ValueError("unknown candidate generator")
+        student_ranked = None
+        if generator != "static":
+            if shovels or _W.get("coverage") is not None:
+                raise ValueError("student candidate generators require shovels and coverage off")
+            if _W.get("student_frame") is None:
+                raise ValueError("student candidate generators require the current student frame")
+            from pvz_rollout_policy import ranked_plants
+            student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                          legal, context=_W.get("context"), history=_W.get("student_history"))
+        static = _static_frames(env, root, plants, income) if generator == "static" else []
+        static_shovels = _static_frames(env, root, shovels, income) if generator == "static" else []
         scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
                         key=lambda item: -item[0]) if static else []
         scored_shovels = sorted(zip(_values([f for _a, f in static_shovels], static=True),
@@ -392,9 +404,14 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
         # against shooters right after planting -- only the rollout can show what they are worth.
         by_card: dict[int, list] = {}
-        for v, a in scored:
+        ranking = scored if generator == "static" else [
+            (v, {"type": "plant", **{k: int(a[k]) for k in ("packet", "col", "row")}})
+            for v, a in student_ranked]
+        for v, a in ranking:
             by_card.setdefault(a["packet"], []).append(a)
-        candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]]
+        base_plants = ([a for _v, a in ranking[:args.student_candidates]] if generator == "student-topk"
+                       else [a for cells in by_card.values() for a in cells[: args.per_card]])
+        candidates = (base_plants
                       + [a for _v, a in scored_shovels[: getattr(args, "shovel_candidates", 0)]] + [NOOP])
         policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
@@ -406,13 +423,14 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         # could only reach it indirectly by shovelling and letting the student react (learn/06).
         # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
         stats["last_student_keys"] = set()
-        student_ranked = None
-        if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
+        if (generator != "student-topk" and getattr(args, "student_candidates", 0)
+                and _W.get("student_frame") is not None):
             from pvz_rollout_policy import ranked_plants
             present = {json.dumps(c, sort_keys=True) for c in candidates}
             added = 0
-            student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
-                                          legal, context=_W.get("context"), history=_W.get("student_history"))
+            if student_ranked is None:
+                student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                              legal, context=_W.get("context"), history=_W.get("student_history"))
             for _score, entry in student_ranked:
                 action = {"type": "plant", "packet": int(entry["packet"]),
                           "col": int(entry["col"]), "row": int(entry["row"])}
@@ -812,6 +830,11 @@ def main() -> None:
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
+    p.add_argument("--candidate-generator", choices=["static", "student-topk", "student-per-card"],
+                   default="static", help="candidate ablation, default static (unchanged); student-topk uses "
+                   "--student-candidates as a global prefix, without a per-card floor; student-per-card "
+                   "uses student probabilities for per-card cells plus the usual additional student candidates. "
+                   "Both student modes skip the static net and require shovel/coverage candidates off")
     p.add_argument("--student-candidates", type=int, default=0,
                    help="the student's own top-k plant actions (its policy probabilities) added to the "
                         "candidates; 0 = off, which is the old candidate set exactly")
@@ -885,6 +908,13 @@ def main() -> None:
         p.error("--student-candidates must be nonnegative")
     if args.candidate_coverage_budget < 0:
         p.error("--candidate-coverage-budget must be nonnegative")
+    if args.candidate_generator != "static":
+        if args.shovel_candidates or args.candidate_coverage_model:
+            p.error("student candidate generators require shovel/coverage candidates off")
+        if args.candidate_generator == "student-topk" and args.student_candidates <= 0:
+            p.error("student-topk requires positive --student-candidates")
+        if args.candidate_generator == "student-per-card" and args.per_card <= 0:
+            p.error("student-per-card requires positive --per-card")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))

@@ -177,7 +177,7 @@ def evaluate(env,obs,policy,args,seed,point):
         env.restore(root);env.release_snapshot(root)
 
 
-def compare(meta,args):
+def compare(meta,args,evaluator=None):
     import search_play as t
     from pvz_frame_store import read_frames
     from pvz_student_observation import StudentHistory
@@ -199,7 +199,7 @@ def compare(meta,args):
                     if i:state['frame']=frames[i-1]
                     policy=t._fast_action(obs,state);t._W['student_history']=history
                     assert policy==frames[i+1]['action'],('policy replay',meta['seed'],i)
-                    row=evaluate(env,obs,policy,args,meta['seed'],selected[i+1])
+                    row=(evaluator or evaluate)(env,obs,policy,args,meta['seed'],selected[i+1])
                     tmp=dest.with_suffix('.tmp');tmp.write_text(json.dumps(row)+'\n');tmp.replace(dest)
                     completed+=1
                     print(json.dumps({'point':dest.stem,'done':completed,'pool':len(row['actions'])}),flush=True)
