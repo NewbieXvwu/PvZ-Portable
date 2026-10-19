@@ -36,8 +36,12 @@
 - [2026-10-15](2026-10-15.md)
 - [2026-10-16](2026-10-16.md)
 - [2026-10-17](2026-10-17.md)
+- [2026-10-18](2026-10-18.md)
+- [2026-10-19](2026-10-19.md)
 
 ## 历史报告（`docs/`）
+
+- [distributed-worker.md](docs/distributed-worker.md) — 分布式采集运维手册 + 给朋友的一页说明
 
 - [codex-night-plan.md](docs/codex-night-plan.md)
 - [codex-night-plan-v2.md](docs/codex-night-plan-v2.md)

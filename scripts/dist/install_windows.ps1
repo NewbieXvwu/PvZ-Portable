@@ -119,7 +119,14 @@ if (-not $ProvisionOnly -and $Stage -eq "wsl-ready") {
     if ($installed -notmatch [regex]::Escape($Distro)) {
         Say "Installing $Distro (this downloads a few hundred MB)"
         & wsl.exe --install -d $Distro --no-launch
-        if ($LASTEXITCODE -ne 0) { throw "wsl --install -d $Distro failed with exit code $LASTEXITCODE" }
+        if ($LASTEXITCODE -ne 0) {
+            # older WSL builds do not know --no-launch: install normally, then close its window
+            Say "  --no-launch unsupported here, falling back to a plain install"
+            & wsl.exe --install -d $Distro
+            if ($LASTEXITCODE -ne 0) { throw "wsl --install -d $Distro failed with exit code $LASTEXITCODE" }
+            Start-Sleep -Seconds 20
+            & wsl.exe --terminate $Distro 2>$null | Out-Null
+        }
     } else {
         Say "$Distro already installed"
     }
@@ -151,6 +158,7 @@ if ($Stage -eq "provision" -or $ProvisionOnly) {
     [IO.File]::WriteAllText($bashPath, ($lines -join $NL), (New-Object System.Text.UTF8Encoding($false)))
     $unixPath = "/mnt/" + $bashPath.Substring(0, 1).ToLower() + $bashPath.Substring(2).Replace("\", "/")
     Say "Provisioning sshd inside $Distro"
+    & wsl.exe --terminate $Distro 2>$null | Out-Null
     & wsl.exe -d $Distro -u root -e bash $unixPath
     if ($LASTEXITCODE -ne 0) { throw "provisioning failed (exit $LASTEXITCODE)" }
     Set-Stage "autostart"

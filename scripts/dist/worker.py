@@ -311,6 +311,13 @@ class Worker:
             if self.stop_now or self.stop_after:
                 break
             if self.status == "paused":
+                with self.lock:
+                    if (self.paused_since and time.time() - self.paused_since > PAUSE_AUTO_STOP):
+                        self.message = "暂停超过 30 分钟，自动停止（把内存还给朋友）"
+                        self.stop_now = True
+                        self.status = "stopped"
+                if self.stop_now:
+                    break
                 time.sleep(1)
                 continue
             count = min(task.chunk, task.seeds - index)

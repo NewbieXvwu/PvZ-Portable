@@ -7,9 +7,27 @@
 > 台账：`~/.pvz-dist/ledger.json` —— 偏移 16384–65535 的唯一权威记录
 > 代码：`scripts/dist/{bootstrap.sh,worker.py,controller.py,install_windows.ps1}`
 
-## 当前状态
+## 明天开工的三条命令
 
-（每完成一步更新这里）
+    python3 scripts/dist/controller.py status
+    python3 scripts/dist/controller.py assign pvz-f1 artifacts/student/v29/model.pt 320 --push --start
+    python3 scripts/dist/controller.py collect --label <label>
+
+（第一条看进度；第二条派 320 局并立刻开跑；第三条收回来、校验、上传 HF。）
+
+## 当前状态（2026-10-19 01:55）
+
+| 步骤 | 状态 |
+|---|---|
+| 1 bootstrap 在 pvz-f1 跑通 | ✅ 10 分 14 秒，1.3 GB；**自检 1 局待机器唤醒** |
+| 2 worker + 网页 | ✅ 代码完成，本机 2 进程端到端验证过（暂停/继续/停止/续跑/校验/打包）；朋友机器上的 32 局原型待跑 |
+| 3 controller | ✅ 代码完成，偏移分配与校验在本机验证过；朋友机器上待跑 |
+| 4 Windows 安装脚本 | ✅ 初版（**未实机验证**，见 §8） |
+| 5 文档 | ✅ 本文件 |
+| 6 GPU | 等主控通知 |
+
+**卡点**：pvz-f1 在 bootstrap 装完后进入睡眠，SSH 停在 banner exchange。已加 `caffeinate -i`
+与 keepalive；机器醒来后由一次性脚本自动推送并跑自检。
 
 ## 0. 一页纸（发给朋友）
 
@@ -121,7 +139,31 @@
 
 ## 5. 实测数字
 
-（跑完原型段后填：装机耗时、磁盘、每小时局数、每局 CPU 秒、峰值内存、胜率）
+### 5.1 装机（pvz-f1：Apple M5 / 10 核 / 32 GB / macOS 26.6）
+
+| 项 | 数值 |
+|---|---|
+| 全程（micromamba → 编译 → 自检） | **10 分 14 秒**（13:16:20 → 13:26:34） |
+| 其中 libopenmpt 源码编译 | 约 1 分钟 |
+| 其中 cmake 配置 + 编译（-j10） | **15 秒** |
+| 磁盘 | **1.3 GB**（env 1.0 GB，repo+build 95 MB） |
+| 网络 | 下行约 7 MB/s（torch 127 MB 用 18 秒）；到本机上行只有约 100 KB/s |
+
+### 5.2 采集（本机 2 进程验证，非朋友机器）
+
+| 项 | 数值 |
+|---|---|
+| 每局墙钟 | 85–95 秒（10 核同时在跑正式采集） |
+| 吞吐 | 约 52 局/小时（2 进程） |
+| 单局档案 | 约 210 KB（npz，含逐决策帧） |
+| 3 局胜率 | 1/3（样本太小，只用于确认管线通） |
+
+### 5.3 原型段 z17distproto（朋友机器，8 进程）
+
+（机器醒来后填）
+
+**对照基线**：Mac 自己的第 29b 轮（同学生 v29、同老师参数）截至 01:52 已跑 378 局，
+胜率 **75.7%**，每局 97.1 秒，平均波次 29.5。原型 32 局只看是否落在同一量级，不做显著性。
 
 ## 6. 台式机怎么接收
 
@@ -153,3 +195,24 @@
 
 它会删计划任务、桌面快捷方式、`C:\ProgramData\pvz-worker`，并 `wsl --unregister Ubuntu`
 （**该发行版里的所有东西都会删掉**；WSL 本身还留着）。
+
+## 8. Windows 安装脚本：未实机验证的部分
+
+本机没有 Windows，也没有 PowerShell（`which pwsh` 为空），所以
+`scripts/dist/install_windows.ps1` **一行都没有真正执行过**。逐项列出风险：
+
+| 步骤 | 状态 | 风险 |
+|---|---|---|
+| 提权（UAC 重新启动自己） | 未验证 | 低：标准写法 |
+| 启用 WSL / VirtualMachinePlatform + RunOnce 重启续跑 | 未验证 | 中：RunOnce 以普通权限启动 → 会再弹一次 UAC |
+| `wsl --install -d Ubuntu --no-launch` | 未验证 | 中：旧版 WSL 不认 `--no-launch`，脚本已回退到普通安装 |
+| Ubuntu 首次初始化（`-u root` 跳过建用户） | 未验证 | 中：若发行版要求先建用户，需要朋友点一下 |
+| 在 WSL 里装 sshd、改端口 2222、写公钥 | 未验证 | 低：纯 apt + sed |
+| Windows localhost → WSL 的端口转发 | 未验证 | 中：WSL2 默认开 `localhostForwarding`，若被策略关掉需要 portproxy |
+| 计划任务登录自启 | 未验证 | 中：任务在用户登录后跑，WSL 未启动时会拉起 |
+| 卸载（`wsl --unregister`） | 未验证 | 低，但**会删掉整个发行版**，脚本里已写明 |
+
+第一次在真机上跑时，按这个顺序看：`wsl -l -v`（发行版在不在）→
+`wsl -d Ubuntu -u root -e service ssh status`（sshd 起没起）→
+Windows 上 `ssh -p 2222 root@localhost`（端口通不通）→
+`schtasks /Query /TN "PvZ Worker"`（自启任务）→ 桌面快捷方式。
