@@ -24,7 +24,7 @@
 | 3 controller | ✅ status/push/assign/collect 全部跑通；`transfer/z17distproto.tgz` 已上传（本机演练版），**pvz-f1 版正在拉回覆盖** |
 | 4 Windows 安装脚本 | ✅ 初版（**未实机验证**，见 §9） |
 | 5 文档 | ✅ 本文件 |
-| 6 GPU | ✅ 代码 + 文档（`assign --gpu`，默认关，见 §7）；**未实机验证**，等主控安排 |
+| 6 GPU | ✅ 已合并 `origin/pvz-env`（cuda-rollout）+ 代码/文档（`assign --gpu`，默认关，见 §7）；**未实机验证**，等主控安排 |
 
 **当前卡点（2026-10-19 06:30）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
 拉回来。隧道是 **UU 远程（UURemote）的 22223 端口转发**，不是我们起的 ssh，抖动时只能等它恢复
