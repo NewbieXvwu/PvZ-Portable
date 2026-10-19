@@ -1,0 +1,42 @@
+{
+  "registered": "2026-10-19T21:56:00.712985+08:00",
+  "status": "preregistered before continuation scores; replay20 is mandatory gate",
+  "task": "day_l7_z17_train",
+  "source": "z17dag32b_fast_search from frames_v2; original teacher used d27Ccs3w8s1, audit continuation uses requested v30",
+  "sampling": "300 unique games/class; uniform eligible point per game; sample games without replacement, selection seed20261019",
+  "futures": 64,
+  "horizon": 2500,
+  "sim_skip": 61,
+  "backend": "original frozen h8 CPU-only build",
+  "inputs": {
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
+      "sha256": "601d17c44f261d415aa997621e93b8b298a9bda94c6a0881e2e2d5b4a5136230"
+    },
+    "leaf": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+      "sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a"
+    },
+    "static": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+      "sha256": "8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941"
+    },
+    "executable": {
+      "path": "/home/newbiexvwu/pvz-h8/build/pvz-portable",
+      "sha256": "b999449af20753a1238a3ea22174cbe7472b67ab3579c36323266b6450aa9ad1"
+    }
+  },
+  "primary": "paired alternative-minus-original mean/SE and two-sided Student-t CI, Bonferroni across all alternatives within state (95% simultaneous); report raw and BH FDR across states as well",
+  "loss_estimation": "avoid winner optimism: choose alternative on first32 futures; estimate signed mean uplift/CI using independent last32 futures; game bootstrap for aggregate and subgroup intervals",
+  "groups": [
+    "A zombie gap",
+    "B wave0..3"
+  ],
+  "attribution": "archived targets determine membership; no targets means no recorded search, not evidence of candidate generator failure. Included alternatives can lose at halving, sampling or margin anchoring; do not call all differences verification noise. Original teacher model differs from audit v30.",
+  "limits": "leaf value is not eventual win probability validation; observed sampler/dataset only; one state per game/class",
+  "resources": "at most4 own simulators; pause own descendants when MemAvailable<2GiB, resume>=3GiB; no formal jobs changed; local commits only/no push"
+}
