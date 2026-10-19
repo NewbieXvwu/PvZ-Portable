@@ -41,7 +41,7 @@ def category(state, label):
 
 def select(args):
     from pvz_frame_store import read_frames
-    paths = sorted(Path(args.archives).glob('*/z17dag32b_fast_search/frames.npz'))
+    paths = sorted(Path(args.archives).glob(f'*/{args.label}/frames.npz'))
     pools = defaultdict(list)
     rng = random.Random(args.seed)
     totals = Counter()
@@ -69,7 +69,7 @@ def select(args):
             raise RuntimeError(f'{c}: only {len(pools[c])} eligible games; need {args.points}')
         picked.extend(pools[c][:args.points])
     doc = {'sampling': 'one uniformly chosen eligible point per eligible game; 300 games/class without replacement',
-           'selection_seed': args.seed, 'source_label': 'z17dag32b_fast_search',
+           'selection_seed': args.seed, 'source_label': args.label,
            'source_games': len(paths), 'eligible_points': dict(totals),
            'eligible_games': {c:len(pools[c]) for c in pools}, 'points': picked}
     args.out.write_text(json.dumps(doc, indent=2)+'\n')
@@ -129,10 +129,18 @@ def run_point(point, args, replay_only=False):
             actual = physical(_frame(obs)); expected = physical(frames[i])
             if actual != expected:
                 fields = [k for k in actual.keys()|expected.keys() if actual.get(k)!=expected.get(k)]
+                args.out.mkdir(parents=True,exist_ok=True)
+                (args.out/f"mismatch_{point['category']}_{point['seed']}.failure.json").write_text(
+                    json.dumps({'point':point,'first_mismatch_frame':i,
+                                'actual':actual,'expected':expected},indent=2)+'\n')
                 raise RuntimeError(f'replay mismatch {archive} frame {i}: {fields}')
             checked += 1
             if i == point['decision']-1:
                 break
+            if getattr(args,'replay_search_restores',False) and frames[i+1].get('targets'):
+                saved = env.snapshot()
+                obs = env.restore(saved)
+                env.release_snapshot(saved)
             obs,*_,info = env.step(frames[i+1]['action'])
             assert (not info.get('ok')) == bool(frames[i+1].get('action_rejected'))
             if not info.get('ok'):
@@ -188,7 +196,13 @@ def score(args):
                              initargs=(args,) if args.mode!='replay' else ()) as pool:
         jobs = {pool.submit(run_point,p,args,args.mode=='replay'):p for p in pending}
         for job in as_completed(jobs):
-            result = job.result();p=jobs[job]
+            try:
+                result = job.result()
+            except BaseException:
+                for other in jobs:
+                    other.cancel()
+                raise
+            p=jobs[job]
             dest = args.out/f"{p['category']}_{p['seed']}_{p['decision']}.json"
             temp = dest.with_suffix('.tmp');temp.write_text(json.dumps(result)+'\n');temp.replace(dest)
             print(json.dumps({'done':dest.name,'actions':len(result.get('actions',[]))}),flush=True)
@@ -198,12 +212,15 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('mode',choices=['select','replay','score'])
     p.add_argument('--archives',default=str(Path.home()/'PvZ-search/artifacts/student/frames_v2'))
+    p.add_argument('--label',default='z17dag32b_fast_search')
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--selection',type=Path)
     p.add_argument('--points',type=int,default=300)
     p.add_argument('--seed',type=int,default=20261019)
     p.add_argument('--futures',type=int,default=64)
     p.add_argument('--workers',type=int,default=4)
+    p.add_argument('--replay-search-restores',action='store_true',
+                   help='diagnose physical effects of the original search snapshot restoration')
     p.add_argument('--horizon',type=int,default=2500)
     p.add_argument('--student',default=str(Path.home()/'PvZ-search/artifacts/student/v30/model.pt'))
     p.add_argument('--value',default=str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt'))

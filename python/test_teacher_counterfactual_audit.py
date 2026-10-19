@@ -1,5 +1,7 @@
 import unittest
+import numpy as np
 from teacher_counterfactual_audit import alternatives, category, physical
+from teacher_audit_stats import paired, point_stats, t_critical
 
 
 class AuditTest(unittest.TestCase):
@@ -41,6 +43,26 @@ class AuditTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             alternatives({'legal_actions':{'plants':[]}},
                          {'category':'B','label':{'type':'plant','packet':0,'row':0,'col':4}}, {})
+
+    def test_student_t_quantiles_and_multiplicity(self):
+        self.assertAlmostEqual(t_critical(63),1.9983405425,places=7)
+        self.assertAlmostEqual(t_critical(31),2.0395134464,places=7)
+        self.assertGreater(t_critical(63,20),t_critical(63))
+        self.assertAlmostEqual(paired([.1,-.1]*32)['mean'],0)
+
+    def test_holdout_does_not_reselect_best_action(self):
+        original={'type':'plant','packet':0,'row':0,'col':4}
+        near={'type':'plant','packet':0,'row':0,'col':0}
+        far={'type':'plant','packet':0,'row':0,'col':1}
+        row=dict(category='B',archive='fixture',decision=1,seed=1,gap=None,wave=0,tick=0,
+                 label=original,actions=[original,near,far],scores=[[.5]*64,[.7]*32+[.4]*32,[.6]*64],
+                 archived_targets=[[0,0,4,.5],[0,0,0,.7]])
+        result=point_stats(row)
+        self.assertEqual(result['holdout_selected_action'],near)
+        self.assertAlmostEqual(result['holdout']['mean'],-.1)
+        self.assertEqual(result['best_action'],far)
+        self.assertTrue(result['significant_inferiority'])
+        self.assertEqual(result['attribution'],'absent_from_archived_candidates')
 
 
 if __name__=='__main__':

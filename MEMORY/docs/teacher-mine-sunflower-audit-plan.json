@@ -2,7 +2,7 @@
   "registered": "2026-10-19T21:56:00.712985+08:00",
   "status": "preregistered before continuation scores; replay20 is mandatory gate",
   "task": "day_l7_z17_train",
-  "source": "z17dag32b_fast_search from frames_v2; original teacher used d27Ccs3w8s1, audit continuation uses requested v30",
+  "source": "authorized desktop z17dag31_fast_search, 384 completed games; original teacher continuation v29; audit continuation requested v30",
   "sampling": "300 unique games/class; uniform eligible point per game; sample games without replacement, selection seed20261019",
   "futures": 64,
   "horizon": 2500,
@@ -38,5 +38,25 @@
   ],
   "attribution": "archived targets determine membership; no targets means no recorded search, not evidence of candidate generator failure. Included alternatives can lose at halving, sampling or margin anchoring; do not call all differences verification noise. Original teacher model differs from audit v30.",
   "limits": "leaf value is not eventual win probability validation; observed sampler/dataset only; one state per game/class",
-  "resources": "at most4 own simulators; pause own descendants when MemAvailable<2GiB, resume>=3GiB; no formal jobs changed; local commits only/no push"
+  "resources": "at most4 own simulators; pause own descendants when MemAvailable<2GiB, resume>=3GiB; no formal jobs changed; local commits only/no push",
+  "amended_before_scoring": "2026-10-19T22:00:23.066366+08:00",
+  "source_change_reason": "Mac32b strict replay fails first at seed1727520 frame413: one pole-vault zombie x differs599.843 vs599.882; exact cause unproven. Adding snapshot/restore at searched points does not remove it. Do not relax tolerance or replace individual failing points. Switch entire cohort to allowed desktop31 before any scores.",
+  "replay20": {
+    "points": 20,
+    "all_exact": true,
+    "checked_frames": 8121,
+    "resource": {
+      "returncode": 0,
+      "wall_s": 21.038436164002633,
+      "peak_rss_kib": 3470248,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6936348
+    }
+  },
+  "selection_sha256": "b7ae13b4cb2d92e7a0c6d2ffe04d98f49cae4c8269ab57e3f35173a4dbde7558",
+  "sampling_counts": {
+    "B": 1443,
+    "A": 2720
+  },
+  "source_scope": "does not estimate Mac32b-specific error prevalence; desktop31 cohort only"
 }
