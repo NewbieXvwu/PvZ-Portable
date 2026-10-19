@@ -20,14 +20,37 @@ export PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause   # 训练期间 touch，采集在�
    整局服务 CPU 248.87 s（≈1 个核），改成 `cudaStreamQuery`+100 µs 睡眠后 **26.38 s**（6.1×），
    每局总主机 CPU 267.5 → 43.7 s。两局 `frames.npz` SHA 相同（`420bd6…`），批探针 10 次
    bin/leaf SHA 全同（`a9ac3b…`/`919680…`）——只改主机等待，设备逐字节不变。
-   墙钟代价：18 道/432 续走探针 +0.3–1.5 s（5% 量级，load 17–20）；整局墙钟未做同负载配对，
-   不作为已证收益。默认关（`PVZ_CUDA_POLL_US` 未设 = 旧行为）。
-2. **采集/训练争卡（补充3，已定因）**。同一训练进程逐轮：全开 462.87 s → 停掉同卡 GPU 采集 141.74 s
-   → 8 个 CPU 采集 sim 仍各占一核时 63.10 s（历史无负载 56 s）。主因是**同卡 GPU 采集的时间片**，
-   不是服务自旋（只占 0.85 核）。暂停用 `PVZ_GPU_PAUSE_FILE`：每局开始前检查，存在就每 10 s 重查，
+   墙钟代价：18 道/432 续走探针 +0.3–1.5 s；同负载 4 局配对（种子 1725000–1725003，8 份
+   `frames.npz` 两两 SHA 相同）合计 967.1 → 1001.8 s（+3.6%），差值集中在争卡最重的两局，
+   与"每局约 1.6 万次同步 × 100 µs ≈ 1.6 s"的上界一致。默认关（`PVZ_CUDA_POLL_US` 未设 = 旧行为）。
+2. **采集/训练争卡（补充3，已定因）**。同一训练进程逐轮（12 轮，seed 1）：无 GPU 采集、8 个 CPU
+   采集 sim 各占一核时 **63.10 s**（历史无负载 56 s，CPU 侧只占 12%）；恢复正式 2 个 GPU worker 后
+   **88.72–115.54 s**（1.4–1.8×）；我另加 2 个 GPU worker（共 4 个）时 **548.8 s**（≈10×）。
+   首轮 462.87 s 含 cudnn 预热与 18 GB 首次读盘，不作基线。主因是**同卡 GPU 采集的时间片**，
+   不是服务自旋（只占 0.85 核）；代价随 worker 数强烈非线性，**训练重叠时 M=2 已是上限**。
+   暂停用 `PVZ_GPU_PAUSE_FILE`：每局开始前检查，存在就每 10 s 重查，
    进行中的局照常下完，服务不退出；CPU 臂不等待。验收：touch 后 6 s 日志出现暂停、GPU util 33–38%
    （=只有训练）、服务进程存活；rm 后该局开跑 util 79%，混采 1+1 两局 2 胜、合并输出完整。
    用法：训练队列开始前 `touch`、结束后 `rm`；变量经 `mixed_dagger_round.sh` 透传。
+3. **道数很便宜，轮数是成本（方向 3/4/6 的尺子）**。单请求 horizon 2500、道数 18/36/72/144 各 3 轮，
+   进程内 rollout 墙钟 1159/1362/1752/1953 ms（翻倍 +17.5%/+51%/+68.5%），每道成本 64/38/24/14 ms。
+   所以 `--per-card 2`（道数翻倍）在未饱和时约 +18%，方向 6 值得做但要 256 局配对；
+   反过来，方向 3/4 的"提前停止少走几道"几乎不省时间（少 20% 道 ≈ −3%），
+   而多一次请求要多付一整个 horizon 波（约 0.8 s/请求、每局 225 次搜索），因此**不采用**多轮自适应。
+4. **续走截断（方向 5）第 1 关：1800 档通过、1250 档不通过**。同一 1036 个搜索点三臂比较：
+   `--approx-horizon 1250` 一致率 74.13% vs 噪声底线 77.99%（−3.86pp，价值 regret +60%）→ 不采用；
+   `--approx-horizon 1800` 一致率 **78.76% vs 77.99%（+0.77pp）**、价值 regret +5.5%、搜索时间 552.9→407.5 s
+   （1.36×），但独立 regret 仍 +41%。**未跑第 2 关（256 局胜局配对），因此不改进正式队列。**
+   下一轮命令（z20_eval、30000–30255、2 worker、正式老师参数）：
+   ```bash
+   scripts/search_play.py --rollout-policy ~/PvZ-search/artifacts/student/v28/model.pt \
+     --value ~/PvZ-search/artifacts/value_net/v3/model.pt --static-value ~/PvZ-search/artifacts/hard/value_branch1/model.pt \
+     --manifest ~/PvZ-search/artifacts/stage4/day_l7_hard.json --task-id day_l7_z20_eval \
+     --student-candidates 2 --verify-samples 9 --dagger-beta 0 --horizon 1800 \
+     --seeds 256 --seed-offset 0 --workers 2 --rollout-backend cuda --cuda-speculative-halving \
+     --measure-cpu --frames <dir> --frames-label z20_h1800 --out <out>
+   ```
+   精确臂只把 `--horizon 1800` 换成 2500；两臂按种子配对后比胜局与 McNemar。
 
 ### task5 合并审查清单（第64轮，已验收）
 
