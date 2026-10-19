@@ -40,6 +40,53 @@ def target_values(targets) -> list[float]:
     return out
 
 
+# Per training row, the plant candidates the search compared at cell level: (packet, cell, value), best value per
+# (packet, cell), best first, padded with (-1, -1, nan). `target_values` keeps only the best cell of each card; this
+# keeps the cells, so a student can be taught which of two cells of the same card the search preferred.
+CELL_CANDIDATES = 12
+
+
+def candidate_cells(targets) -> list[list[float]]:
+    from pvz_rollout_policy import LAWN_COLS
+    best: dict[tuple[int, int], float] = {}
+    for packet, row, col, value in targets or []:
+        if packet < 0:
+            continue
+        key = (packet, row * LAWN_COLS + col)
+        if not best.get(key, float("-inf")) >= value:
+            best[key] = value
+    ranked = sorted(((value, packet, cell) for (packet, cell), value in best.items()), reverse=True)[:CELL_CANDIDATES]
+    return [[packet, cell, value] for value, packet, cell in ranked] + [[-1, -1, float("nan")]] * (CELL_CANDIDATES - len(ranked))
+
+
+def encode_candidates(frames: list[dict]) -> dict:
+    """Same rows as `encode_frames` (frame i-1 -> labelled action at frame i), cell-level candidates only."""
+    rows, cands = [], []
+    for index in range(1, len(frames)):
+        action = frames[index].get("label") or frames[index].get("action")
+        if not action or frames[index].get("action_rejected"):
+            continue
+        rows.append(index)
+        cands.append(candidate_cells(frames[index].get("targets")))
+    return dict(rows=np.array(rows, dtype=np.int64),
+                cands=np.array(cands, dtype=np.float32).reshape(-1, CELL_CANDIDATES, 3))
+
+
+def cache_candidates(path: Path, directory: Path) -> Path:
+    """Side cache of `encode_candidates` beside the feature cache (built only when a trainer asks for cell targets)."""
+    signature = hashlib.sha256("".join(inspect.getsource(f) for f in (candidate_cells, encode_candidates)).encode()
+                               + str(CELL_CANDIDATES).encode()).hexdigest()
+    source = frame_bytes(path)
+    digest = hashlib.sha256(signature.encode() + source).hexdigest()
+    target = directory / "cells" / (hashlib.sha256(str(path.resolve()).encode()).hexdigest() + ".npz")
+    if target.exists():
+        with np.load(target, allow_pickle=False) as stored:
+            if str(stored["digest"]) == digest:
+                return target
+    _save(target, digest=digest, **encode_candidates([json.loads(line) for line in source.splitlines() if line.strip()]))
+    return target
+
+
 def encode_frames(frames: list[dict], source: bytes) -> dict:
     from pvz_rollout_policy import LAWN_COLS, PACKETS, features
     from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS
