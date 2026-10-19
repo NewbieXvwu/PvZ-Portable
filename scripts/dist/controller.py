@@ -129,6 +129,12 @@ def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> N
 
 # --------------------------------------------------------------------------- push
 def push_code(entry: dict, commit: str | None) -> None:
+    dirty = subprocess.run(["git", "-C", str(ROOT), "status", "--porcelain", "--untracked-files=no"],
+                           capture_output=True, text=True).stdout.strip()
+    if dirty and not commit:
+        say("WARNING: uncommitted changes are NOT pushed (git archive HEAD):")
+        for line in dirty.splitlines()[:5]:
+            say("  " + line)
     staging = Path(tempfile.mkdtemp(prefix="pvz-dist-push-"))
     try:
         ref = commit or "HEAD"
