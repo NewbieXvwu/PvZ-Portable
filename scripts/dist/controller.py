@@ -6,7 +6,7 @@ Offsets 16384-65535 of day_l7_z17_train belong to this ledger (DESIGN.md); segme
     python scripts/dist/controller.py status
     python scripts/dist/controller.py bootstrap pvz-f1
     python scripts/dist/controller.py push pvz-f1 --all
-    python scripts/dist/controller.py assign pvz-f1 artifacts/student/v29/model.pt 32 \
+    python scripts/dist/controller.py assign pvz-f1 artifacts/student/v29/model.pt 32 \\
         --label z17distproto --offset 14736 --start
     python scripts/dist/controller.py collect --label z17distproto
     python scripts/dist/controller.py web pvz-f1
