@@ -146,6 +146,7 @@
 | 段跑完但 `collect` 报种子缺失 | 有人动过 `out/<label>/games.jsonl`；用同一 label/offset 重新 assign 续跑 |
 | 校验报 unreadable archive | 磁盘满 / 进程被强杀写了一半；删掉该 `seed_<n>` 目录后重跑该段 |
 | 内存不够 | 调小 `--workers`（约 0.5 GB/进程） |
+| `main.pak` 传到一半断了 / rsync 打印用法 | macOS 自带的是 **openrsync（2.6.9 兼容）**，有 `--partial` 但**没有 `--append-verify`**（用了只会打印用法并失败）。`controller push` 已用 `--partial`；大文件就多跑几次，每次断点保留，直到远端 `stat -f %z main.pak` 等于本地大小 |
 
 ## 5. 实测数字
 

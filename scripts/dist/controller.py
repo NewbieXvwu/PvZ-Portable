@@ -116,6 +116,9 @@ def ssh(entry: dict, command: str, check: bool = True, stdin: str | None = None)
 
 
 def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> None:
+    # macOS ships openrsync (rsync 2.6.9-compatible): --partial/--inplace exist, --append-verify does
+    # NOT (it prints the usage text and fails). Large files over a flaky tunnel are therefore sent by
+    # repeated --partial runs: whatever arrived stays on the far side and the next run replaces it.
     cmd = ["rsync", "-az", "--stats", "--partial", "--inplace", "--timeout=180", "-e",
            "ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=30"]
     cmd += (extra or []) + [source, f"{entry['host']}:{target}"]
