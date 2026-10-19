@@ -497,9 +497,9 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             frame_now = _frame(obs)
             frame_now["action"] = student_memo["action"]
             history = None
-            if student.obs == "v2lite":   # history inputs advance at every decision, prefix steps included
+            if student.obs != "v1":   # history inputs advance at every decision, prefix steps included
                 from pvz_student_observation import StudentHistory
-                history = student_memo.setdefault("history", StudentHistory())
+                history = student_memo.setdefault("history", StudentHistory(student.obs))
             if prefix_actions is not None and actions < len(prefix_actions):
                 action = prefix_actions[actions]
                 if history is not None:
