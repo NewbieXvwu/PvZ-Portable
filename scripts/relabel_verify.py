@@ -54,7 +54,7 @@ def _relabel(path: Path):
     from pvz_frame_store import read_frames, write_frames
     from pvz_value_net import observation_context
     from render_episode import load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     args = _ARGS
     started = time.perf_counter()
     frames = read_frames(path)

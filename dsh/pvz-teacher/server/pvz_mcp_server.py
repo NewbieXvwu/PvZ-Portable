@@ -29,7 +29,7 @@ stdio，JSON-RPC。用官方 `mcp` SDK 的低层 `Server`（回调式，不是 F
   可复制的枚举列、自纠正报错），并把 `vocabulary` 发布成资源 `pvz://vocabulary`
   —— 见下面「资源」一节的实测依据。
 - S3（2026-10-03）：常量与规则补全 —— `constants` 工具 + `pvz://constants`、
-  `policy` 工具 + `pvz://scripted-policy`。触发点是 S3 会话的推理轨迹：
+  `policy` 工具 + 当时的脚本策略规则资源（2026-10-19 随规则脚本删除，现为 `pvz://policy`）。触发点是 S3 会话的推理轨迹：
   模型在**猜**游戏常量（土豆雷引爆时间猜了 900 → ~1600，实际是 1500 tick 倒计时
   ＋升起动画），并反复反推脚本策略的规则而反推不出来。它猜错的不是游戏常识，
   而是 tick↔秒 的换算率（60 vs 100）。一个常数错，写下的"可迁移结论"整条跟着错。
@@ -376,11 +376,10 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                                         ("level", "--level", "int")]),
     ),
     "policy": (
-        "**这一局是谁在打、按什么规则。**\n"
-        "给了 --archive 就按那一份存档回答：RL 存档会明确告诉你它是训练出来的模型、"
-        "**没有可读的规则表**（别拿脚本规则去解释它）。不给存档就是脚本策略的规则表。",
-        _schema({"archive": {"type": "string",
-                             "description": "存档目录。强烈建议给：RL 局和脚本局的答案完全不同。"}},
+        "**这一局是谁在打。**\n"
+        "打棋的是专家迭代的学生网络：它看什么、怎么选动作；它**没有可读的规则表**。"
+        "给了 --archive 会带上那一局的检查点与指纹。",
+        _schema({"archive": {"type": "string", "description": "存档目录（可选）。"}},
                 []),
         _make_cli_handler("policy", [("archive", "--archive", "str")]),
     ),
@@ -440,29 +439,22 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                 "level": {"type": "integer", "description": "关卡号，默认 7。"},
                 "policy": {
                     "type": "string",
-                    "enum": ["scripted", "donothing", "ppo", "student"],
-                    "description": "用哪套策略打这一局：scripted（默认）、donothing（对照用）、"
-                                   "ppo（训练出来的 RL 模型，必须同时给 checkpoint）、"
-                                   "student（专家迭代的学生网络，checkpoint 给 model.pt，"
+                    "enum": ["student"],
+                    "description": "只有 student：专家迭代的学生网络（checkpoint 给 model.pt，"
                                    "卡组用 task_manifest + task_id）。",
                 },
-                "checkpoint": {"type": "string",
-                               "description": "policy=ppo 时的检查点 .pt 路径。只做推理，不训练。"},
-                "sampled": {"type": "boolean",
-                            "description": "policy=ppo 时按概率采样；默认贪心（可复现）。"},
+                "checkpoint": {"type": "string", "description": "学生 model.pt 路径（必需）。只做推理，不训练。"},
                 "deck": {"type": "string",
-                         "description": "卡组，逗号分隔的卡片 id。**policy=ppo 时必给** —— "
-                                        "RL 模型是按训练任务清单的卡组训的，卡槽对不上"
-                                        "它就会种出别的植物（而且这一局还会照常跑完）。"
-                                        "scripted/donothing 不给就用该关默认卡组。"},
+                         "description": "卡组，逗号分隔的卡片 id。一般不用给 —— 用 task_manifest + task_id，"
+                                        "卡组从清单里取；卡槽对不上学生就会种出别的植物。"},
                 "task_manifest": {"type": "string",
                                   "description": "复现训练任务：任务清单 json 路径，如 "
-                                                 "experiments/t7/bridge_level7_v1/train.json。"
+                                                 "artifacts/stage4/day_l7_hard.json。"
                                                  "给了它就用清单里的 level / deck / 波数上限 / "
                                                  "僵尸倍率 / 预种植物 —— 这些是训练时真正用的值。"
                                                  "和 task_id 一起用。"},
                 "task_id": {"type": "string",
-                            "description": "清单里的任务 id，如 train_roof_4。"
+                            "description": "清单里的任务 id，如 day_l7_z20_eval。"
                                            "给了它就自动带上正确的卡组，不用手抄。"},
                 "wave_cap": {"type": "integer",
                              "description": "只打前 N 波。复现训练任务族时常用（它们多半设了上限）。"},
@@ -470,7 +462,7 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                 "max_actions": {"type": "integer", "description": "动作数上限，默认 4000。"},
                 "out": {"type": "string", "description": "存档写到哪个目录（必需）。"},
             },
-            ["out"],
+            ["out", "checkpoint"],
         ),
         _make_cli_handler(
             "capture",
@@ -479,7 +471,6 @@ TOOLS: dict[str, tuple[str, dict[str, Any], Handler]] = {
                 ("level", "--level", "int"),
                 ("policy", "--policy", "str"),
                 ("checkpoint", "--checkpoint", "str"),
-                ("sampled", "--sampled", "flag"),
                 ("deck", "--deck", "str"),
                 ("task_manifest", "--task-manifest", "str"),
                 ("task_id", "--task-id", "str"),
@@ -703,11 +694,9 @@ RESOURCES: dict[str, tuple[str, str, str]] = {
         "任何「这个数是多少」的问题都在这里，别用通用 PvZ 常识推。",
         "text/markdown",
     ),
-    "pvz://scripted-policy": (
-        "脚本策略的决策规则（**只适用于 scripted 存档**）",
-        "脚本策略按什么顺序做决策、阈值是多少。想知道「它当时为什么这么走」就读这份。\n"
-        "⚠ 如果手上那局是 RL 模型打的（capture 时 policy=ppo），这份规则描述的"
-        "**不是**它 —— 那时用 policy 工具并带上 --archive，它会告诉你那局是谁在打。",
+    "pvz://policy": (
+        "打这一局的是谁（学生网络）",
+        "学生网络看什么、怎么选动作、为什么没有可读的规则表。带存档的版本用 policy 工具。",
         "text/markdown",
     ),
     "pvz://probe-fields": (
@@ -724,7 +713,7 @@ RESOURCES: dict[str, tuple[str, str, str]] = {
 RESOURCE_COMMANDS: dict[str, list[str]] = {
     "pvz://vocabulary": ["vocabulary"],
     "pvz://constants": ["constants"],
-    "pvz://scripted-policy": ["policy"],
+    "pvz://policy": ["policy"],
     "pvz://probe-fields": ["probe", "fields"],
 }
 
@@ -836,16 +825,11 @@ server: Server = Server(
         "这一关有多少波、会出现哪些僵尸）时，读资源 `pvz://constants`，"
         "或调 `constants` 工具。**这是另一个实现，不要用通用 PvZ 常识替代** —— "
         "实测有模型按 60 tick/s 推算引爆时间，而这里是 100 tick/s。\n"
-        "**想知道打这一局的是谁、按什么规则走**时，调 `policy` 工具并带上存档路径。\n"
-        "注意：如果那局是 RL 模型打的（policy=ppo），它**没有可读的规则表** —— "
-        "那时别拿 `pvz://scripted-policy` 里的规则去解释它的每一步，那套规则描述的"
-        "是另一个策略。想弄清它某一步为什么这么选，用 `whatif --enumerate` 把它当时"
+        "**想知道打这一局的是谁**时，调 `policy` 工具并带上存档路径。打棋的是学生网络，"
+        "**没有可读的规则表** —— 想弄清它某一步为什么这么选，用 `whatif --enumerate` 把它当时"
         "所有合法动作的结果都算出来。\n"
-        "**用 policy=ppo 抓一局时必须给对卡组**：RL 模型是按训练任务清单的卡组训的，"
-        "capture 的默认卡组是**脚本基线**的卡组，两者不一样（第 49 关就不同）。"
-        "卡槽错位时模型会种出别的植物，而且这一局还会照常跑完 —— 所以不带 deck 会被"
-        "直接拒绝。要复现某个训练任务就用 `task_manifest` + `task_id`，"
-        "卡组 / 波数上限 / 僵尸倍率 / 预种植物会从清单里自动取。\n"
+        "**抓一局要复现训练任务**就用 `task_manifest` + `task_id`，"
+        "卡组 / 波数上限 / 僵尸倍率 / 预种植物会从清单里自动取；卡槽错位时学生会种出别的植物。\n"
         "**场景与地形**（这一关是白天/夜间/泳池/屋顶、哪几路种不下）在每个 "
         "`frame` / `index` / `narrative` 输出的「场景：…」那一行，不用另外查；"
         "棋盘上 `~` = 水路。要查规则本身看 `constants` 的 terrain 一节。\n"

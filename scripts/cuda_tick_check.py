@@ -51,7 +51,7 @@ def main():
     from pvz_value_net import featurize_numpy, observation_context
     from pvz_cuda_root import read_cudaroot
     from render_episode import load_training_task, training_task_kwargs, _frame
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     from cuda_leaf_compare import read_features, describe, read_gpu
     from cuda_root_corpus import _row_min_zombie_x
 

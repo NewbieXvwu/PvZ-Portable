@@ -1,13 +1,12 @@
 # 台式机（WSL）连接与运维
 
-连接与日常操作见 `DESKTOP_HANDOFF.md`。速记：`export PVZ_DESKTOP_HOST=newbiexvwu@127.0.0.1
-PVZ_DESKTOP_PORT=22222`，用 `scripts/win_ssh.py ps|wsl`；或 `ssh -p 22222 ... "wsl -d Ubuntu -e bash -s" < 脚本`
-（**取大文件用 base64 走 stdin**）。WSL `Ubuntu`，venv `~/.venvs/ml`（torch 2.14.0+cu132，RTX 5080 16 GB，
+速记：`ssh -p 22222 newbiexvwu@127.0.0.1 wsl -d Ubuntu -e bash -c "'cat > ~/pvz-logs/x.sh'" < 本地脚本`
+先把脚本传上去，再 `... wsl -d Ubuntu -e bash ~/pvz-logs/x.sh`（多层引号直接写命令很容易炸）。WSL `Ubuntu`，venv `~/.venvs/ml`（torch 2.14.0+cu132，RTX 5080 16 GB，
 `nproc=20`）；**venv 参数要加引号**。4 个 worktree（`~/PvZ-Portable` 主 + `-curriculum`/`-observation`/
 `-reset-disposal`），**队列从主 worktree 跑**。远端 wrapper 带 `set -euo pipefail` → **无匹配的 grep 一律加
 `|| true`**，否则吞掉后面所有输出。
 
-**★ 踩过的坑（这些不在 `DESKTOP_HANDOFF.md` 里）：**
+**★ 踩过的坑：**
 
 - **WSL 空闲就会关机，杀掉 tmux 里的长跑**（PID 1 换新 = 重启过；tmux server 一起死，**不留 EXIT 行**）
   → **没有 keeper 的长跑一定活不过一个 SSH 空档**。`PvZWSLKeeper`（Windows 计划任务，每 5 分钟）动作 =

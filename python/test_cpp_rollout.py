@@ -25,6 +25,12 @@ BINARY = Path(os.environ.get("PVZ_EXECUTABLE", ROOT / "build/pvz-portable"))
 
 
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / "main.pak").is_file(), "requires simulator and game resources")
+
+def _build_up(obs: dict) -> dict:
+    """A deterministic action stream that puts plants on the board: the first legal placement, else wait."""
+    legal = obs["legal_actions"]["plants"]
+    return {"type": "plant", **legal[0]} if legal else {"type": "wait", "ticks": 60}
+
 class CppRolloutTest(unittest.TestCase):
     def setUp(self):
         torch.set_num_threads(1)
@@ -81,7 +87,6 @@ class CppRolloutTest(unittest.TestCase):
         self._continuation_features("v2")
 
     def _continuation_features(self, version):
-        from scripted_baseline import choose
         model = ROOT / "artifacts/v2lite_cpp/hf/transfer/d17v2lw2s1_model.pt"
         net = load_student(model) if model.is_file() and version == "v2lite" else RolloutNet(width=13, obs=version).eval()
         export_student(net, self.path)
@@ -89,7 +94,7 @@ class CppRolloutTest(unittest.TestCase):
         history = StudentHistory(version)
         while self.obs["tick"] < 6000:
             history.extra(_frame(self.obs))
-            self.obs, *_ = self.env.step(choose(self.obs))
+            self.obs, *_ = self.env.step(_build_up(self.obs))
         history.extra(_frame(self.obs))
         self.assertEqual(history.wave, self.obs["wave"])
         context = observation_context(self.obs) if net.context else None
@@ -144,11 +149,10 @@ class CppRolloutTest(unittest.TestCase):
 
     def test_shovel_first_action_matches_the_python_loop(self):
         """The search may start a continuation with a shovel; C++ and the Python loop must agree."""
-        from scripted_baseline import choose
         for _ in range(200):
             if self.obs["legal_actions"]["shovels"]:
                 break
-            self.obs, *_ = self.env.step(choose(self.obs))
+            self.obs, *_ = self.env.step(_build_up(self.obs))
         self.assertTrue(self.obs["legal_actions"]["shovels"], "no plant appeared to shovel")
         col, row = self.obs["legal_actions"]["shovels"][0]
         first = {"type": "shovel", "col": int(col), "row": int(row)}

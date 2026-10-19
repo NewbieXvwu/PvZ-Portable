@@ -107,7 +107,7 @@ def build(env, vnet, args, out_dir: Path) -> tuple[list[dict], dict]:
     from pvz_env import TaskSpec
     from pvz_value_net import observation_context
     from render_episode import load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     import torch
 
     kw = load_training_task(Path(args.manifest), args.task_id)

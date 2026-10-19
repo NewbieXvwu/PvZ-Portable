@@ -80,16 +80,3 @@ class EventWaitEnv(PvZEnv):
         info = {'ok': True, 'events': events, 'ticks_advanced': actual, 'wait_result': result,
                 'previous_tick': previous_tick, 'substeps': len(substeps)}
         return observation, 0.0, bool(observation.get('terminal')), False, info
-
-
-def policy_env(model_config: dict, *args, **kwargs) -> PvZEnv:
-    """Training/evaluation select the native interface from saved model config."""
-    mode = model_config.get('wait_mode', 'fixed')
-    if mode not in ('fixed', 'events'):
-        raise ValueError('wait_mode must be fixed or events')
-    return (EventWaitEnv if mode == 'events' else PvZEnv)(*args, **kwargs)
-
-
-def require_policy_env(model_config: dict, env: PvZEnv) -> None:
-    if model_config.get('wait_mode') == 'events' and not isinstance(env, EventWaitEnv):
-        raise ValueError('event policy requires EventWaitEnv')

@@ -155,7 +155,7 @@ def main() -> None:
     from pvz_rollout_policy import export_student, load_student
     from pvz_value_net import load_value_net, observation_context
     from render_episode import load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
 
     kw = load_training_task(Path(args.manifest), args.task_id)
     deck = tuple(kw["deck"])

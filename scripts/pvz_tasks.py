@@ -1,0 +1,57 @@
+"""任务卡组：按关卡地形配卡组（AGENTS.md §8「任务与卡组」），以及对应的玩家存档设定。
+
+卡组规则只改这里。从 scripts/scripted_baseline.py 搬来（规则脚本策略已于 2026-10-19 删除）。
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from pvz_env import PlayerProfileContext  # noqa: E402
+import pvz_constants  # noqa: E402
+
+DECK = (0, 1, 2, 3, 4, 5)
+SUN_SHROOM = 9      # 阳光菇 25☀，夜间经济（夜间天不掉阳光，实测见 pvz_constants terrain 节）
+LILY_PAD = 16       # 睡莲 25☀，水路底座
+CATTAIL = 43        # 香蒲 225☀，睡莲的升级植物（只能种在睡莲上）
+FLOWER_POT = 33     # 花盆 25☀，屋顶底座（本环境屋顶关开局已预置 c0–c4）
+
+
+def deck_for_level(level: int) -> tuple[int, ...]:
+    """按关卡地形排卡组。规则：**卡组必须覆盖这一关的每一格地形**。
+
+    这是 2026-10-03 定下的任务约束（AGENTS.md「任务与卡组」节）：
+    之前全关卡共用 0..5 六张牌，泳池关（21–30）两条水路没有任何植物能种，
+    属于结构性输局 —— 诊断它会得出"卡组×地形不匹配"这种一次性的结论，
+    而不是可教的政策缺陷。场景判定用 `pvz_constants.background_for_level`
+    （从 Board::PickBackground 解析，含第 35 关 ScaryPotter 特例）。
+    """
+    bg = pvz_constants.background_for_level(level)
+    if bg == "BACKGROUND_3_POOL":          # 21–30 白天泳池：水路两张
+        return DECK + (LILY_PAD, CATTAIL)
+    if bg == "BACKGROUND_4_FOG":           # 31–40 夜间泳池有雾：经济换阳光菇
+        return (0, 9, 2, 3, 4, 5, LILY_PAD, CATTAIL)
+    if bg == "BACKGROUND_2_NIGHT":         # 11–20（含 35）夜间草地：加阳光菇
+        return DECK[:2] + (SUN_SHROOM,) + DECK[2:]
+    if bg in ("BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"):   # 41–50：加花盆备用
+        return DECK + (FLOWER_POT,)
+    return DECK                            # 1–10 白天草地：原六卡
+
+
+def profile_for_deck(deck: tuple[int, ...], first_aid_owned: bool = False) -> PlayerProfileContext:
+    """卡组 -> PlayerProfileContext。seed 槽位数 = 卡组长度；
+    卡组里出现的升级植物必须声明所有权，否则模拟器直接拒绝 reset
+    （LawnApp.cpp:1329 校验；升级植物集合从 Plant::IsUpgrade 解析）。
+
+    first_aid_owned（坚果包扎术）是**任务属性**，不是卡组属性：打开后
+    Board::CanPlantAt 多允许一种落点（坚果 / 高坚果血量 < 2/3 时可以在它身上
+    再种一个同种坚果），合法动作由模拟器自己给出，这里只负责把所有权传进
+    profile。缺省 False，旧任务的 reset 报文逐字节不变（AGENTS.md §8：
+    改任务 = 换任务族，任务清单里用 "first_aid_owned": true 显式打开）。"""
+    upgrades = tuple(sorted(set(deck) & set(pvz_constants.upgrade_plants())))
+    return PlayerProfileContext(seed_slot_count=len(deck),
+                                owned_upgrade_plants=upgrades,
+                                first_aid_owned=bool(first_aid_owned))

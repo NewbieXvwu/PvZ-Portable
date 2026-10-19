@@ -609,7 +609,7 @@ def _play(job: dict) -> dict:
     import torch
     from pvz_event_env import EventWaitEnv
     from render_episode import _frame, load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     from pvz_env import TaskSpec
     kw = training_task_kwargs(load_training_task(Path(args.manifest), args.task_id), job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading

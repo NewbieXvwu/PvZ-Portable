@@ -20,7 +20,7 @@ sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
 
 from pvz_env import TaskSpec  # noqa: E402
 from pvz_event_env import EventWaitEnv  # noqa: E402
-from scripted_baseline import profile_for_deck  # noqa: E402
+from pvz_tasks import profile_for_deck  # noqa: E402
 
 
 def main() -> None:
