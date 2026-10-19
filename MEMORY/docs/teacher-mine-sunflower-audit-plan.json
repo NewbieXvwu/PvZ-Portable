@@ -58,5 +58,21 @@
     "B": 1443,
     "A": 2720
   },
-  "source_scope": "does not estimate Mac32b-specific error prevalence; desktop31 cohort only"
+  "source_scope": "does not estimate Mac32b-specific error prevalence; desktop31 cohort only",
+  "attribution_trace_plan": {
+    "registered": "2026-10-19T22:05:11.068741+08:00",
+    "student": "/home/newbiexvwu/PvZ-search/artifacts/student/v29/model.pt",
+    "student_sha256": "52dc3f8edd278194d18d75bcada6ef815383b81e5050bb12d958c86c3c9791d8",
+    "source_command": "~/pvz-logs/queue68.sh:18-22;K2/V9/v3/branch1/defaultsamples3/halving/horizon2500",
+    "run_after": "score600 complete, then2-state label/target reproduction gate, then600 original-search traces",
+    "record": [
+      "original candidate set",
+      "halving counts per candidate",
+      "preverification totals",
+      "policy and challenger",
+      "postverification outcomes",
+      "original label and rounded targets equality"
+    ],
+    "caveat": "explanatory tracing uses original v29; counterfactual values use requested v30. If reproduction fails, do not attribute exact historical causes."
+  }
 }
