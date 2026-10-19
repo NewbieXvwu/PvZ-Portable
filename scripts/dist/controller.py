@@ -38,11 +38,31 @@ WORKER_ROOT = "pvz-worker"
 DIST_FIRST = 16384
 DIST_LAST = 65536
 DEFAULT_TASK = "day_l7_z17_train"
-DEFAULT_MANIFEST = ROOT / "artifacts/stage4/day_l7_hard.json"
-VALUE = ROOT / "artifacts/hard_mac/value_v3/model.pt"
-STATIC_VALUE = ROOT / "artifacts/hard_mac/value_branch1/model.pt"
+def _main_repo() -> Path:
+    """The worktree shares .git with the main checkout, where the untracked artifacts live."""
+    proc = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--path-format=absolute",
+                           "--git-common-dir"], capture_output=True, text=True)
+    if proc.returncode == 0 and proc.stdout.strip():
+        return Path(proc.stdout.strip()).parent
+    return ROOT
+
+
+MAIN = _main_repo()
+
+
+def artifact(relative: str) -> Path:
+    for base in (ROOT, MAIN):
+        path = base / relative
+        if path.exists():
+            return path
+    return ROOT / relative
+
+
+DEFAULT_MANIFEST = artifact("artifacts/stage4/day_l7_hard.json")
+VALUE = artifact("artifacts/hard_mac/value_v3/model.pt")
+STATIC_VALUE = artifact("artifacts/hard_mac/value_branch1/model.pt")
 RESOURCES = Path("/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")
-FLAGS_FILE = ROOT / "artifacts/hard_mac/round15_flags"
+FLAGS_FILE = artifact("artifacts/hard_mac/round15_flags")
 
 
 def now() -> str:
@@ -82,7 +102,8 @@ def machine(name: str) -> dict:
 
 
 def ssh_args(entry: dict) -> list:
-    return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", entry["host"]]
+    return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+            "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=4", entry["host"]]
 
 
 def ssh(entry: dict, command: str, check: bool = True, stdin: str | None = None) -> subprocess.CompletedProcess:
@@ -95,13 +116,14 @@ def ssh(entry: dict, command: str, check: bool = True, stdin: str | None = None)
 
 
 def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> None:
-    cmd = ["rsync", "-az", "--info=stats1", "-e", "ssh -o BatchMode=yes -o ConnectTimeout=15"]
+    cmd = ["rsync", "-az", "--stats", "--timeout=180", "-e",
+           "ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=30"]
     cmd += (extra or []) + [source, f"{entry['host']}:{target}"]
     proc = subprocess.run(cmd, text=True, capture_output=True)
     if proc.returncode != 0:
         sys.stderr.write(proc.stderr)
         raise SystemExit(f"rsync to {entry['host']} failed")
-    tail = [line for line in proc.stdout.splitlines() if line.startswith("Number of")]
+    tail = [line.strip() for line in proc.stdout.splitlines() if line.startswith("Number of")]
     say(f"rsync {source} -> {entry['host']}:{target} ({' '.join(tail)})")
 
 
@@ -277,8 +299,9 @@ def cmd_assign(args) -> None:
 def start_worker(entry: dict, label: str | None) -> None:
     root = f"$HOME/{WORKER_ROOT}"
     label_arg = f" --label {label}" if label else ""
-    cmd = (f"cd {root} && mkdir -p logs && "
-           f"nohup {root}/env/bin/python {root}/repo/scripts/dist/worker.py --root {root} "
+    wake = "caffeinate -i " if entry.get("os", "darwin") == "darwin" else ""
+    cmd = (f"pkill -f 'dist/worker.py --root {root}' 2>/dev/null; sleep 1; cd {root} && mkdir -p logs && "
+           f"nohup {wake}{root}/env/bin/python {root}/repo/scripts/dist/worker.py --root {root} "
            f"run{label_arg} > logs/worker.out 2>&1 & echo started $!")
     proc = ssh(entry, cmd, check=False)
     say(proc.stdout.strip() or proc.stderr.strip())
@@ -351,7 +374,7 @@ def validate(label_dir: Path, segment: dict) -> dict:
         raise SystemExit(f"{label}: {len(stray)} seeds outside the assigned segment, e.g. {sorted(stray)[:3]}")
     missing = expected - set(seeds)
     archives = frame_paths(label_dir / "frames")
-    have = {int(p.parent.name.split("_")[1]) for p in archives}
+    have = {int(p.parent.parent.name.split("_")[1]) for p in archives if p.parent.parent.name.startswith("seed_")}
     if missing - have:
         raise SystemExit(f"{label}: {len(missing - have)} games have no frame archive")
     unreadable = []

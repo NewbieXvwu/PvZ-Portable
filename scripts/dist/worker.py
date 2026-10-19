@@ -124,9 +124,9 @@ class Task:
 
 
 class Worker:
-    def __init__(self, root: Path, port: int, only_label):
+    def __init__(self, root: Path, port: int, only_label, repo: Path | None = None):
         self.root = root
-        self.repo = root / "repo"
+        self.repo = repo or (root / "repo")
         self.env_bin = root / "env" / "bin"
         self.port = port
         self.only_label = only_label
@@ -293,6 +293,7 @@ class Worker:
         return proc.wait()
 
     def _run_task(self, task: Task) -> bool:
+        (self.root / "state" / "_idle.json").unlink(missing_ok=True)
         self.task = task
         self.status = "running"
         self.started_at = time.time()
@@ -374,23 +375,56 @@ class Worker:
         (task.out / "worker_done.json").write_text(json.dumps(summary, indent=1))
         log(f"done: {json.dumps(summary, ensure_ascii=False)}")
 
-    def run(self) -> int:
-        tasks = sorted((self.root / "tasks").glob("*/task.json"))
-        if not tasks:
-            log(f"no tasks under {self.root}/tasks — waiting for the controller to push one")
-            return 2
-        for path in tasks:
-            spec = json.loads(path.read_text())
-            if self.only_label and spec.get("label") != self.only_label:
+    def run(self, stay: bool = True) -> int:
+        """Collect every pending task; with stay=True keep the page up and poll for new ones."""
+        while True:
+            pending = []
+            for path in sorted((self.root / "tasks").glob("*/task.json")):
+                spec = json.loads(path.read_text())
+                if self.only_label and spec.get("label") != self.only_label:
+                    continue
+                task = Task(self.root, spec)
+                if len(task.done_seeds()) + len(task.failed_seeds()) < task.seeds:
+                    pending.append(task)
+            if not pending:
+                if not stay:
+                    log("no pending tasks")
+                    return 0
+                with self.lock:
+                    self.status = "idle"
+                    self.message = "没有待跑的任务，等控制端派活"
+                    self.task = None
+                self.write_idle()
+                time.sleep(30)
                 continue
-            task = Task(self.root, spec)
-            if len(task.done_seeds()) + len(task.failed_seeds()) >= task.seeds:
-                continue
-            self._run_task(task)
-            if self.stop_now:
+            for task in pending:
+                try:
+                    self._run_task(task)
+                except Exception as exc:                   # noqa: BLE001 - keep the page alive
+                    self.status = "error"
+                    self.message = f"{type(exc).__name__}: {exc}"
+                    log("ERROR " + self.message)
+                    self.write_progress()
+                    if not stay:
+                        raise
+                if self.stop_now:
+                    self.write_progress()
+                    return self._halt(stay)
+            if not stay:
                 return 0
-        self.write_progress()
-        return 0
+            time.sleep(5)
+
+    def _halt(self, stay: bool) -> int:
+        """After an explicit stop: exit, or keep the page up showing "stopped" until killed."""
+        if not stay:
+            return 0
+        while True:
+            time.sleep(60)
+
+    def write_idle(self) -> None:
+        path = self.root / "state" / "_idle.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(self.snapshot(), indent=1))
 
     # ------------------------------------------------------------------ web
     def serve_forever(self) -> None:
@@ -487,6 +521,9 @@ def main() -> int:
     p.add_argument("--root", default=str(Path.home() / "pvz-worker"))
     p.add_argument("--label", help="only this task label (default: every pending task, in name order)")
     p.add_argument("--port", type=int, default=DEFAULT_PORT)
+    p.add_argument("--repo", help="code checkout (default: <root>/repo)")
+    p.add_argument("--no-stay", dest="stay", action="store_false",
+                   help="exit when every task is done instead of polling for new ones")
     p.add_argument("--json", action="store_true", help="status: machine-readable")
     args = p.parse_args()
 
@@ -506,7 +543,8 @@ def main() -> int:
                       f"{row.get('done')}/{row.get('total')} {row.get('games_per_hour')}/h")
         return 0
 
-    worker = Worker(root, args.port, args.label)
+    worker = Worker(root, args.port, args.label,
+                    Path(args.repo).expanduser() if args.repo else None)
     if args.command == "serve":
         worker.serve_forever()
         return 0
@@ -519,7 +557,7 @@ def main() -> int:
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
-    code = worker.run()
+    code = worker.run(args.stay)
     worker.write_progress()
     return code
 
