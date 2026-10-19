@@ -170,7 +170,8 @@ def _search_decisions(seed: int) -> list[dict]:
     env.set_sim_skip(0)
     # min_gap is applied here, once, so all three arms search at exactly the same decisions.
     sargs = ap.Namespace(samples=args.samples, horizon=args.horizon, margin=args.margin, min_gap=0, per_card=args.per_card,
-                         halving=args.base_halving)
+                         halving=args.base_halving, student_candidates=args.student_candidates,
+                         verify_samples=args.search_verify_samples)
     # The approximate arm: SIM_SKIP during rollouts and/or a cheaper search configuration.
     approx_sargs = ap.Namespace(**{**vars(sargs), **{k: v for k, v in (
         ("per_card", args.approx_per_card), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
@@ -186,7 +187,7 @@ def _search_decisions(seed: int) -> list[dict]:
     stream = (args.jsonl_dir / f"seed_{seed}.jsonl").open("x", buffering=1) if args.jsonl_dir else None
 
     def run(decision_seed: int, mask: int, policy_action: dict, config, cpp=False,
-            cuda=False) -> tuple[dict, list, float]:
+            cuda=False) -> tuple[dict, list, float, dict | None, dict]:
         stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
         search_play._W["rollout_sim_skip"] = mask
         search_play._W["cpp_rollouts"] = cpp
@@ -200,8 +201,13 @@ def _search_decisions(seed: int) -> list[dict]:
         finally:
             search_play._W["rollout_sim_skip"] = 0
             search_play._W["cuda"] = None
+        audit = {"student_candidates": config.student_candidates, "verify_samples": config.verify_samples,
+                 "horizon": config.horizon, "rollout_mask": mask,
+                 "student_candidates_added": stats.get("student_candidate_added", 0),
+                 "verification_samples_used": (stats.get("last_verification") or {}).get("samples", 0),
+                 "searched": stats["searched"], "rollout_lanes": stats.get("rollout_lanes", 0)}
         return chosen, [(json.dumps(c, sort_keys=True), v) for c, v in (stats.get("last_targets") or [])], \
-            time.perf_counter() - started, stats.get("last_best")
+            time.perf_counter() - started, stats.get("last_best"), audit
 
     while not obs["terminal"] and decisions < args.max_actions:
         action = search_play._fast_action(obs, fast_state)
@@ -223,7 +229,7 @@ def _search_decisions(seed: int) -> list[dict]:
             offsets = [0, 15_555_557 if args.label_noise else 0, 7_777_777]
             if args.label_noise:
                 for samples in args.verify_samples:
-                    runs.append((args.base_mask, ap.Namespace(**vars(sargs), verify_samples=samples),
+                    runs.append((args.base_mask, ap.Namespace(**{**vars(sargs), "verify_samples": samples}),
                                  args.base_cpp_rollouts, False))
                     offsets.append(0)
                 order = list(range(len(runs)))
@@ -231,15 +237,17 @@ def _search_decisions(seed: int) -> list[dict]:
                 order = order[rotation:] + order[:rotation]
             results = {index: run(decision_seed + offsets[index], runs[index][0], action, runs[index][1], runs[index][2], runs[index][3])
                        for index in order}
-            exact, exact_totals, t_exact, _best = results[0]
-            approx, approx_totals, t_approx, _best = results[1]
-            other, other_totals, _t, _best = results[2]
+            exact, exact_totals, t_exact, _best = results[0][:4]
+            approx, approx_totals, t_approx, _best = results[1][:4]
+            other, other_totals, _t, _best = results[2][:4]
             if exact_totals:
                 rows.append({"seed": seed, "decision": decisions, "tick": obs["tick"],
                              "exact": exact, "approx": approx, "exact_other_futures": other,
                              "exact_totals": exact_totals, "approx_totals": approx_totals,
                              "other_totals": other_totals, "seconds_exact": round(t_exact, 3),
                              "seconds_approx": round(t_approx, 3),
+                             "teacher_audit": {"reference": results[0][4], "approximate": results[1][4],
+                                               "other_futures": results[2][4]},
                              "cuda_lanes": (_W["cuda_client"].lanes - lanes_before) if args.cuda_rollouts else 0})
                 if args.label_noise:
                     rows[-1] = {"seed": seed, "decision": decisions, "tick": obs["tick"], "wave": obs["wave"],
@@ -370,6 +378,10 @@ def main() -> None:
     p.add_argument("--approx-horizon", type=int)
     p.add_argument("--approx-halving", action="store_true", help="search mode: successive halving (search_play --halving)")
     p.add_argument("--per-card", type=int, default=1, help="search mode: search_play --per-card")
+    p.add_argument("--student-candidates", type=int, default=0,
+                   help="search mode: same student top-k additions as search_play (default preserves old diagnostics)")
+    p.add_argument("--search-verify-samples", type=int, default=0,
+                   help="search mode: ordinary verification futures in all three arms; separate from label-noise --verify-samples")
     p.add_argument("--min-gap", type=int, default=300, help="search mode: search_play --min-gap")
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--dagger-beta", type=float, default=0.0, help="search mode: probability of executing reference teacher")
@@ -380,6 +392,8 @@ def main() -> None:
     p.add_argument("--jsonl-dir", type=Path, help="search mode: stream each search point to a per-seed JSONL")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
+    if args.student_candidates < 0 or args.search_verify_samples < 0:
+        p.error("--student-candidates and --search-verify-samples must be nonnegative")
     if args.cuda_rollouts:
         if args.mode != "search":
             p.error("--cuda-rollouts is a search-mode arm")
@@ -454,6 +468,7 @@ def main() -> None:
                    approx_static_value=args.approx_static_value,
                    approx_halving=False if args.label_noise else args.approx_halving or args.base_halving,
                    per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
+                   student_candidates=args.student_candidates, search_verify_samples=args.search_verify_samples,
                    approx_samples=args.high_samples if args.label_noise else args.approx_samples,
                    approx_horizon=args.horizon if args.label_noise else args.approx_horizon,
                    margin=args.margin, dagger_beta=args.dagger_beta, label_noise=args.label_noise,
