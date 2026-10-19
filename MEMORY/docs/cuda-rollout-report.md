@@ -24,6 +24,13 @@ z20的256局beta1强度验收按主控新优先级延期，尚未测试，不宣
 第76轮稀疏轨道原型caf7ac1未编译、未实测、未采用，当前源码亦已撤回，先做task9。
 完整口径见[cuda-adaptive-verify-validation.json](cuda-adaptive-verify-validation.json)。
 
+**task9 老师反事实审计已完成（第80轮收尾）。**
+原生31轮各300不同局，v30/v3/2500、每动作64共同未来：近身雷83/300、前排向日葵236/300显著较差；
+独立留出平均价值损失为0.00418（区间跨零）/0.04059，不能一概禁近身雷。
+600份原老师标签/targets精确复现；前排向日葵236问题点中224个替代未进候选，
+其中117个经原v29独立64未来仍确认，优先修候选覆盖，不能只增加V9。
+方法、分组、代价和可复现例子见[老师雷与向日葵审计](teacher-mine-sunflower-audit.md)。
+
 task7 `cuda-merge`：混采入口已改为poll=100及精确复核预取默认开启；直接 `search_play.py` 仍需显式开关。
 下文task6的默认关闭描述是当时测量口径，现行合并说明见 [cuda-merge-notes.md](cuda-merge-notes.md)。
 

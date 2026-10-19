@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from teacher_counterfactual_audit import alternatives, category, physical
 from teacher_audit_stats import bootstrap_mean, paired, point_stats, t_critical
+from teacher_audit_attribution import mechanism
 
 
 class AuditTest(unittest.TestCase):
@@ -52,6 +53,21 @@ class AuditTest(unittest.TestCase):
 
     def test_single_game_does_not_claim_zero_uncertainty(self):
         self.assertIsNone(bootstrap_mean([.3])['cluster_ci95'])
+
+    def test_attribution_distinguishes_omission_pruning_and_margin(self):
+        row={'witness_action':{'type':'plant','packet':1,'row':0,'col':0}}
+        trace=dict(label_reproduced=True,targets_reproduced=True,
+                   candidates=[{'type':'plant','packet':1,'row':0,'col':5}],
+                   counts=[3],best_index=0,policy_index=0)
+        self.assertEqual(mechanism(row,trace),'candidate_generation_omission')
+        trace['candidates'].append(row['witness_action']);trace['counts'].append(1)
+        self.assertEqual(mechanism(row,trace),'halving_pruned_before_three_futures')
+        trace['counts'][1]=3;trace['best_index']=1
+        self.assertEqual(mechanism(row,trace),'initial_margin_no_verification')
+        trace['verification']={'samples':9}
+        self.assertEqual(mechanism(row,trace),'verification_plus_margin_rejected')
+        trace['label_reproduced']=False
+        self.assertEqual(mechanism(row,trace),'historical_trace_not_exact')
 
     def test_holdout_does_not_reselect_best_action(self):
         original={'type':'plant','packet':0,'row':0,'col':4}
