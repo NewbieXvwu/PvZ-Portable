@@ -38,7 +38,7 @@ DAGGER_BETA=0
 VERIFY_SAMPLES=9
 SPECULATIVE=1
 
-usage() { sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
 STUDENT=""; TASK=""; SEED_OFFSET=""; GAMES=""; FRAMES=""; LABEL=""; OUT=""; CPU_WORKERS=""; GPU_WORKERS=""
 while [ $# -gt 0 ]; do
