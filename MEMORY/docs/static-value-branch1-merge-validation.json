@@ -1,0 +1,77 @@
+{
+  "tested_merge_commit": "23ee7f91aba2d5ef37be1b0ebae49cb3ae4493d8",
+  "contains_origin_pvz_env": "1ffb38ab4436a3a1ef4a57adb6db7871f71dce1c",
+  "all_python_tests": 208,
+  "other_python_tests": 9,
+  "skips": 0,
+  "all_tests_passed": true,
+  "cuda_regressions": [
+    "test_missing_or_malformed_summary_is_not_replaced_by_console_parsing (test_cuda_batch_summary.BatchSummaryTest.test_missing_or_malformed_summary_is_not_replaced_by_console_parsing)",
+    "test_structured_timing_keeps_legacy_rounded_wave_units (test_cuda_batch_summary.BatchSummaryTest.test_structured_timing_keeps_legacy_rounded_wave_units)",
+    "test_default_and_explicit_zero_allow_legacy_binary (test_cuda_launch_handshake.LaunchHandshakeTest.test_default_and_explicit_zero_allow_legacy_binary)",
+    "test_invalid_setting_fails_before_spawning (test_cuda_launch_handshake.LaunchHandshakeTest.test_invalid_setting_fails_before_spawning)",
+    "test_matching_capability_accepts_requested_wait (test_cuda_launch_handshake.LaunchHandshakeTest.test_matching_capability_accepts_requested_wait)",
+    "test_requested_wait_requires_matching_capability (test_cuda_launch_handshake.LaunchHandshakeTest.test_requested_wait_requires_matching_capability)",
+    "test_shared_mechanics (test_cuda_mechanics.SharedMechanicsTest.test_shared_mechanics)",
+    "test_configuration_or_model_mismatch_cannot_pass (test_cuda_phase2_paired.PairedGateTest.test_configuration_or_model_mismatch_cannot_pass)",
+    "test_cpu_arm_cannot_pose_as_gpu (test_cuda_phase2_paired.PairedGateTest.test_cpu_arm_cannot_pose_as_gpu)",
+    "test_duplicate_seed_is_rejected (test_cuda_phase2_paired.PairedGateTest.test_duplicate_seed_is_rejected)",
+    "test_exact_probability (test_cuda_phase2_paired.PairedGateTest.test_exact_probability)",
+    "test_missing_config_does_not_establish_comparability (test_cuda_phase2_paired.PairedGateTest.test_missing_config_does_not_establish_comparability)",
+    "test_missing_wrong_and_complete_seeds (test_cuda_phase2_paired.PairedGateTest.test_missing_wrong_and_complete_seeds)",
+    "test_partial_cuda_fallback_and_error_lanes_cannot_pass (test_cuda_phase2_paired.PairedGateTest.test_partial_cuda_fallback_and_error_lanes_cannot_pass)",
+    "test_worker_count_is_reported_without_changing_strength_gate (test_cuda_phase2_paired.PairedGateTest.test_worker_count_is_reported_without_changing_strength_gate)",
+    "test_agreement_caller_without_backend_setting_keeps_cpu_behavior (test_cuda_search_coverage.CoverageTest.test_agreement_caller_without_backend_setting_keeps_cpu_behavior)",
+    "test_gpu_fallback_and_lane_errors_are_counted_per_game (test_cuda_search_coverage.CoverageTest.test_gpu_fallback_and_lane_errors_are_counted_per_game)",
+    "test_halving_keeps_the_same_rounds_with_a_cuda_client (test_cuda_search_schedule.SearchScheduleTest.test_halving_keeps_the_same_rounds_with_a_cuda_client)",
+    "test_invalid_poll_value_fails_before_startup (test_cuda_serve_merge.CudaHostWaitEnvTest.test_invalid_poll_value_fails_before_startup)",
+    "test_a_request_spanning_waves_preserves_every_leaf (test_cuda_serve_merge.CudaServeMergeTest.test_a_request_spanning_waves_preserves_every_leaf)",
+    "test_all_connected_workers_waiting_skips_gather_delay (test_cuda_serve_merge.CudaServeMergeTest.test_all_connected_workers_waiting_skips_gather_delay)",
+    "test_empty_request_is_not_sent (test_cuda_serve_merge.CudaServeMergeTest.test_empty_request_is_not_sent)",
+    "test_forced_wait_finishes_in_initialization (test_cuda_serve_merge.CudaServeMergeTest.test_forced_wait_finishes_in_initialization)",
+    "test_merge_does_not_move_a_lane (test_cuda_serve_merge.CudaServeMergeTest.test_merge_does_not_move_a_lane)",
+    "test_sleeping_host_wait_preserves_records_and_leaf_bits (test_cuda_serve_merge.CudaServeMergeTest.test_sleeping_host_wait_preserves_records_and_leaf_bits)",
+    "test_private_and_soa_paths_agree (test_cuda_serve_merge.PrivatePathTest.test_private_and_soa_paths_agree)",
+    "test_growing_the_root_array_does_not_move_a_lane (test_cuda_serve_merge.RootArrayGrowthTest.test_growing_the_root_array_does_not_move_a_lane)",
+    "test_prefetched_verification_retains_scores_batches_and_future_seeds (test_cuda_speculative_halving.SpeculativeHalvingTest.test_prefetched_verification_retains_scores_batches_and_future_seeds)",
+    "test_same_labels_and_stage_values_across_search_shapes (test_cuda_speculative_halving.SpeculativeHalvingTest.test_same_labels_and_stage_values_across_search_shapes)",
+    "test_cuda_dump_emits_v2h_without_trace (test_cuda_student_candidates.CudaDumpOptionsTest.test_cuda_dump_emits_v2h_without_trace)",
+    "test_k2_deduplicates_and_preserves_labels_and_stage_order (test_cuda_student_candidates.StudentCandidatesTest.test_k2_deduplicates_and_preserves_labels_and_stage_order)",
+    "test_verification_futures_are_one_continuation_batch (test_cuda_student_candidates.VerifySamplesBackendTest.test_verification_futures_are_one_continuation_batch)"
+  ],
+  "all128_c_cpp_commands_ffp_contract_off": true,
+  "removed_lines_remain_removed": true,
+  "binaries": {
+    "build-task12/pvz-portable": {
+      "sha256": "01754768c12845986d749d6a8f1f61e8dd52da6fb9c3f2d589e4f91de57161f0",
+      "bytes": 5252232
+    },
+    "build-task12/rollout_cuda_small": {
+      "sha256": "b81dd1a1e3650f7d83cffd137af3208a9807e666d4cf06b0bebd0b2ff0b5a89a",
+      "bytes": 3724888
+    }
+  },
+  "resources": {
+    "configure": {
+      "returncode": 0,
+      "wall_s": 108.09743928699754,
+      "peak_rss_kib": 122788,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 13174416
+    },
+    "build": {
+      "returncode": 0,
+      "wall_s": 326.52884913398884,
+      "peak_rss_kib": 1065632,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 12310528
+    },
+    "all_python_tests": {
+      "returncode": 0,
+      "wall_s": 41.017570454016095,
+      "peak_rss_kib": 1778656,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 15878780
+    }
+  }
+}
