@@ -60,6 +60,9 @@
 | `bootstrap.sh` | 朋友机器 | 从零装环境（micromamba + torch + 编译 + 自检），可重复执行 |
 | `worker.py` | 朋友机器 | 常驻采集：分段跑 `search_play.py`、断点续跑、本地网页 |
 
+- **朋友机器不依赖 GitHub / HF**（国内机器连 GitHub 会超时）：代码、模型、资源、清单全部由控制端
+  `rsync` 推过去，`bootstrap.sh` 看到 `repo/.pvz-pushed` 或 `PVZ_SKIP_GIT=1` 就跳过所有 git 操作。
+  朋友机器只访问 conda-forge（装环境）和 PyPI（torch），这两项在国内可用；装完之后采集阶段完全离线。
 - 每台朋友机器在本 Mac 上有一个 SSH 隧道端口（`127.0.0.1:2222x`），控制端用 ssh / rsync。
 - 隧道断了 worker 照常跑完手上的段，结果留在本地等下次拉取。
 - 结果进训练数据：本 Mac 打包 `transfer/<label>.tgz` 上传 HF，台式机队列下载（见第 6 节）。
