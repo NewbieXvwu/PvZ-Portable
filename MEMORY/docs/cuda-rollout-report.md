@@ -12,8 +12,9 @@
 **推荐配置（正式队列）**：仍用下面的 2+2 混采一条命令，另加两个环境变量：
 
 ```bash
-export PVZ_CUDA_POLL_US=100     # 服务主机等待改睡眠轮询；不设=原cudaStreamSynchronize
 export PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause   # 训练期间 touch，采集在局间让路
+# 服务主机等待：mixed_dagger_round.sh 默认已设 PVZ_CUDA_POLL_US=100（设 0 回旧自旋）；
+# 想试候选服务构建时加 --cuda-binary <path>（默认 build/rollout_cuda_small）。
 ```
 
 1. **主机等待（补充2，已验收）**。服务每轮 `cudaStreamSynchronize` 在 WSL 上是自旋：
@@ -22,7 +23,10 @@ export PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause   # 训练期间 touch，采集在�
    bin/leaf SHA 全同（`a9ac3b…`/`919680…`）——只改主机等待，设备逐字节不变。
    墙钟代价：18 道/432 续走探针 +0.3–1.5 s；同负载 4 局配对（种子 1725000–1725003，8 份
    `frames.npz` 两两 SHA 相同）合计 967.1 → 1001.8 s（+3.6%），差值集中在争卡最重的两局，
-   与"每局约 1.6 万次同步 × 100 µs ≈ 1.6 s"的上界一致。默认关（`PVZ_CUDA_POLL_US` 未设 = 旧行为）。
+   与"每局约 1.6 万次同步 × 100 µs ≈ 1.6 s"的上界一致。二进制默认仍是 0（旧行为）；
+   **正式入口 `mixed_dagger_round.sh` 默认导出 100**，环境变量显式给出时以它为准。
+   混采 1+1 实测（种子 14100/14101、同一脚本）：旧二进制服务 149.97 CPU 秒，新二进制 20.83 秒，
+   服务日志出现 "CUDA host wait: sleep 100 us"，合并输出 2 局完整。
 2. **采集/训练争卡（补充3，已定因）**。同一训练进程逐轮（12 轮，seed 1）：无 GPU 采集、8 个 CPU
    采集 sim 各占一核时 **63.10 s**（历史无负载 56 s，CPU 侧只占 12%）；恢复正式 2 个 GPU worker 后
    **88.72–115.54 s**（1.4–1.8×）；我另加 2 个 GPU worker（共 4 个）时 **548.8 s**（≈10×）。

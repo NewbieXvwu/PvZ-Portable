@@ -11,6 +11,7 @@
 #     --task day_l7_z17_train --seed-offset 12160 --games 16 \
 #     --frames ~/PvZ-search/artifacts/student/frames --frames-label z17dag28 \
 #     --out ~/PvZ-search/artifacts/hard/z17_dagger28_16 --cpu-workers 2 --gpu-workers 2
+#   # optional: --cuda-binary <path> to test a candidate service build (default build/rollout_cuda_small)
 #
 # The student checkpoint is validated/exported up front (OUT/student.pvzrn); the GPU process
 # re-exports into its own temporary directory because that is what the server loads.
@@ -19,6 +20,11 @@ set -euo pipefail
 # The training queue owns this file; both collection processes inherit the path.
 # search_play checks it only for CUDA workers, before each new game.
 if [[ -n "${PVZ_GPU_PAUSE_FILE:-}" ]]; then export PVZ_GPU_PAUSE_FILE; fi
+
+# The formal entry asks the service to sleep between stream queries instead of spinning
+# (248.9 -> 26.4 host CPU seconds per game, frames byte-identical). An explicit value wins,
+# so PVZ_CUDA_POLL_US=0 restores the old spin and 200 trades a little more latency for less CPU.
+export PVZ_CUDA_POLL_US="${PVZ_CUDA_POLL_US:-100}"
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PYTHON="$HOME/.venvs/ml/bin/python3"
@@ -47,6 +53,7 @@ while [ $# -gt 0 ]; do
     --cpu-workers) CPU_WORKERS="$2"; shift 2 ;;
     --gpu-workers) GPU_WORKERS="$2"; shift 2 ;;
     --manifest) MANIFEST="$2"; shift 2 ;;
+    --cuda-binary) CUDA_BINARY="$2"; shift 2 ;;
     --no-speculative) SPECULATIVE=0; shift ;;
     -h|--help) usage ;;
     *) echo "unknown argument: $1" >&2; usage ;;
