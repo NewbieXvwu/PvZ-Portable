@@ -72,3 +72,10 @@ Windows 机器，pvz-f1 那条转发仍然是死的。若 22222 就是新接入�
 - `collect` 现在自带重试与 `--wait <分钟>`，整轮失败不会回滚已收的 seed 目录：
   `python3 scripts/dist/controller.py collect --label z17distproto --wait 600 --retry-delay 20`
 
+
+## 2026-10-19 07:12 隧道中断时长
+
+32 局跑完（05:5x）之后 22223 一直 banner 超时；06:00–07:12 每分钟探测均失败。
+UURemote 的两个转发端口都还在监听（22222 Windows / 22223 Mac），TCP 能连上但对面不响应。
+`collect --wait 600` 从 06:45 起持续重试，日志 `/tmp/pvz-collect3.log`；
+**需要主控在 UU 里重连或唤醒 pvz-f1**，恢复后无需人工干预。
