@@ -32,7 +32,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from render_episode import _col_of  # noqa: E402
 
-LINE = re.compile(r"[★·] (\S+)\s.*第 (\d+)/(\d+) 波.*?(通关|僵尸进屋|\S+)\s+丢车 (\d+)\s+被吃 (\d+)")
+# whatif marks each tried line ★ better / · same / ↓ worse than the recorded game; read all three.
+LINE = re.compile(r"(?m)^\s+\S (plant:\S+|wait:\S+|shovel:\S+)\s.*第 (\d+)/(\d+) 波.*?(通关|僵尸进屋|\S+)\s+丢车 (\d+)\s+被吃 (\d+)")
 
 
 def frames_of(archive: Path) -> list[dict]:
