@@ -1,6 +1,7 @@
 """Potato mines lost before arming, and early sunflower columns: student (executed) vs teacher (label), from DAgger archives.
 
     python3 scripts/mine_sun_diag.py artifacts/hard_mac/frames z17dag32b_fast_search
+"""
 
 import sys, json
 from collections import Counter
