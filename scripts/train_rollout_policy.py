@@ -130,7 +130,12 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
         keep[path] = mask
     capacity = sum(map(sum, keep.values()))
     boards = scalars = None
-    plant, packet, cell, weight, seed_of, values = [], [], [], [], [], []
+    # Per-row labels go straight into preallocated arrays: as Python lists (8 floats a row for `values`) they cost
+    # ~2 GB of objects on 6.5M rows and the freed arenas stayed in the training process (13 GB RSS, 2026-10-19).
+    plant, weight = np.empty(capacity, np.float32), np.empty(capacity, np.float32)
+    packet, cell = np.empty(capacity, np.int64), np.empty(capacity, np.int64)
+    values = np.empty((capacity, PACKETS + 1), np.float32)
+    seed_of = []
     cands = np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16) if cells else None
     n = 0
     for path in paths:
@@ -155,10 +160,10 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 elif count:
                     boards.append(rows_boards[selected])
                 scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
-                types = stored["plant"][selected].tolist()
-                plant.extend(types)
-                packet.extend(stored["packet"][selected].tolist())
-                cell.extend(stored["cell"][selected].tolist())
+                types = stored["plant"][selected]
+                plant[n:n + count] = types
+                packet[n:n + count] = stored["packet"][selected]
+                cell[n:n + count] = stored["cell"][selected]
                 vals = stored["values"][selected]
                 if cells:
                     if path not in cell_cached:
@@ -166,9 +171,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                     with np.load(cell_cached[path], allow_pickle=False) as side:
                         assert np.array_equal(side["rows"], stored["rows"]), path
                         cands[n:n + count] = side["cands"][selected]
-                values.extend(vals.tolist())
-                searched = (~np.isnan(vals)).any(1).tolist()
-                weight.extend(scale * (1.0 if kind or done else 1.0 / wait_keep) for kind, done in zip(types, searched))
+                values[n:n + count] = vals
+                weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / wait_keep) * scale
                 seed_of.extend([seed] * count)
                 n += count
             continue
@@ -196,15 +200,15 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             scalars[n] = s; n += 1
             seed_of.append(seed)
             is_plant = action["type"] == "plant"
-            plant.append(float(is_plant))
-            weight.append(scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep))
-            packet.append(action["packet"] if is_plant else -1)
-            cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
-            values.append(target_values(frames[i].get("targets")))
+            plant[n - 1] = float(is_plant)
+            weight[n - 1] = scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep)
+            packet[n - 1] = action["packet"] if is_plant else -1
+            cell[n - 1] = action["row"] * LAWN_COLS + action["col"] if is_plant else -1
+            values[n - 1] = target_values(frames[i].get("targets"))
             if cells:
                 cands[n - 1] = candidate_cells(frames[i].get("targets"))
-    return (boards[:n] if dense_boards else boards.finish(), scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
-            torch.tensor(weight), seed_of, torch.tensor(values, dtype=torch.float32).reshape(-1, PACKETS + 1),
+    return (boards[:n] if dense_boards else boards.finish(), scalars[:n], *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
+            seed_of, torch.from_numpy(values[:n]),
             None if cands is None else torch.from_numpy(cands[:n]))
 
 
