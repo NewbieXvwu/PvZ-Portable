@@ -1,0 +1,10 @@
+{
+  "amended_before_model_metric_aggregation": "2026-10-20T06:22:09.752523+08:00",
+  "reason": "candidate set was symmetric but its insertion order favoured Mac when common-heavy empirical means exactly tied; code inspection found this without consulting model comparison tables",
+  "fix": "sort the common audit/reference actions by canonical action_key before continuations and heavy max; swapped-model-label invariance regression passes",
+  "discarded_partial_comparison_points": 106,
+  "retained_raw_trial": "artifacts/cuda/task12/order_pilot/",
+  "retained_manifest_sha256": "00bc8bae5b92d36a87fcd9f730c55e282cbdd486884719d28e21dae9fdd37d02",
+  "same32_trajectories_same256_points_same_future_seeds_and_all_other_parameters": true,
+  "formal_comparison_restarted_from_zero": true
+}

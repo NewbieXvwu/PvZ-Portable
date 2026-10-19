@@ -120,7 +120,9 @@ def pool_actions(scored_by_model,normal_arms,legal,seed):
     for packet in sorted({a['packet'] for a in legal}):
         rest=[a for a in legal if a['packet']==packet and key(a) not in seen]
         if rest:add(rng.choice(rest))
-    return actions
+    # The common reference must not resolve equal rollout means in favour of the
+    # model whose candidates were inserted first. This order is model-independent.
+    return sorted(actions,key=key)
 
 
 def evaluate(env,obs,policy,args,seed,point):

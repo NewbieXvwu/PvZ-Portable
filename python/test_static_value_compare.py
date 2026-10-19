@@ -13,6 +13,8 @@ class CommonPoolTest(unittest.TestCase):
               'desktop':{'candidates':[actions[5],actions[-1],wait]}}
         result=pool_actions(scores,arms,actions,20261020)
         self.assertEqual(result,pool_actions(scores,arms,actions,20261020))
+        self.assertEqual(result,pool_actions({'mac':scores['desktop'],'desktop':scores['mac']},
+                                             {'mac':arms['desktop'],'desktop':arms['mac']},actions,20261020))
         keys={key(a) for a in result}
         self.assertEqual(len(keys),len(result))
         self.assertTrue(all(key(a) in {key(x) for x in actions+[wait]} for a in result))
