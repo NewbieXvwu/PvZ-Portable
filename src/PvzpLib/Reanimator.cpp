@@ -33,6 +33,7 @@
 #include "misc/PerfTimer.h"
 #include "graphics/MemoryImage.h"
 #include <algorithm>
+#include <bit>
 #include <format>
 
 constexpr const int NO_BASE_POSE = -2;
@@ -398,6 +399,7 @@ void ReanimationPreload(ReanimationType theReanimationType)
 void Reanimation::ReanimationInitialize(float theX, float theY, ReanimatorDefinition* theDefinition)
 {
 	PVZP_ASSERT(mTrackInstances == nullptr);
+	ResetEnvTrackCache();
 	ReanimationCreateAtlas(theDefinition, mReanimationType);
 	mDead = false;
 	SetPosition(theX, theY);
@@ -420,6 +422,51 @@ void Reanimation::ReanimationInitialize(float theX, float theY, ReanimatorDefini
 	}
 	else
 		mFrameCount = 0;
+}
+
+void Reanimation::ResetEnvTrackCache()
+{
+	mEnvTrackPermanent.fill(0);
+	mEnvTrackActive.fill(0);
+	mEnvTrackCacheValid = false;
+}
+
+void Reanimation::RememberEnvTrack(int theTrackIndex)
+{
+	if (theTrackIndex >= 0 && theTrackIndex < 256)
+	{
+		const uint64_t aBit = uint64_t{1} << (theTrackIndex % 64);
+		mEnvTrackPermanent[theTrackIndex / 64] |= aBit;
+		mEnvTrackActive[theTrackIndex / 64] |= aBit;
+	}
+}
+
+void Reanimation::BuildEnvTrackCache()
+{
+	mEnvTrackActive = mEnvTrackPermanent;
+	for (int i = 0; i < mDefinition->mTracks.count; ++i)
+	{
+		const auto& aTrack = mTrackInstances[i];
+		if (mDefinition->mTracks.tracks[i].mIsAttacher || aTrack.mAttachmentID != AttachmentID::ATTACHMENTID_NULL)
+			RememberEnvTrack(i);
+		else if (aTrack.mBlendCounter > 0)
+			mEnvTrackActive[i / 64] |= uint64_t{1} << (i % 64);
+	}
+	mEnvTrackCacheValid = true;
+}
+
+int Reanimation::NextEnvTrack(int theStart) const
+{
+	const int aCount = mDefinition->mTracks.count;
+	for (int word = theStart / 64; word < 4 && word * 64 < aCount; ++word)
+	{
+		uint64_t bits = mEnvTrackActive[word];
+		if (word == theStart / 64)
+			bits &= ~uint64_t{0} << (theStart % 64);
+		if (bits)
+			return std::min(aCount, word * 64 + static_cast<int>(std::countr_zero(bits)));
+	}
+	return aCount;
 }
 
 void Reanimation::Update()
@@ -503,7 +550,7 @@ void Reanimation::Update()
 	if ((gEnvSimSkip & ENV_LIGHT_ANIMATION) && !mNeedsTrackUpdates)
 		return;
 
-	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
+	auto updateTrack = [this](int aTrackIndex)
 	{
 		ReanimatorTrackInstance* aTrack = &mTrackInstances[aTrackIndex];
 		if (aTrack->mBlendCounter > 0)
@@ -525,6 +572,28 @@ void Reanimation::Update()
 				GetAttachmentOverlayMatrix(aTrackIndex, aOverlayMatrix);
 			AttachmentUpdateAndSetMatrix(aTrack->mAttachmentID, aOverlayMatrix);
 		}
+	};
+	if ((gEnvSimSkip & (ENV_LIGHT_ANIMATION | ENV_SPARSE_TRACKS)) ==
+		(ENV_LIGHT_ANIMATION | ENV_SPARSE_TRACKS) && mDefinition->mTracks.count <= 256)
+	{
+		if (!mEnvTrackCacheValid)
+			BuildEnvTrackCache();
+		// Read the live mask after each callback: newly attached higher tracks must
+		// still run this frame, while lower tracks wait until the next, as before.
+		for (int i = NextEnvTrack(0); i < mDefinition->mTracks.count; i = NextEnvTrack(i + 1))
+		{
+			updateTrack(i);
+			const auto& aTrack = mTrackInstances[i];
+			const uint64_t aBit = uint64_t{1} << (i % 64);
+			if (!(mEnvTrackPermanent[i / 64] & aBit) && aTrack.mBlendCounter <= 0 &&
+				aTrack.mAttachmentID == AttachmentID::ATTACHMENTID_NULL && !mDefinition->mTracks.tracks[i].mIsAttacher)
+				mEnvTrackActive[i / 64] &= ~aBit;
+		}
+	}
+	else
+	{
+		for (int i = 0; i < mDefinition->mTracks.count; ++i)
+			updateTrack(i);
 	}
 }
 
@@ -1033,7 +1102,9 @@ int Reanimation::FindTrackIndex(const char* theTrackName)
 ReanimatorTrackInstance* Reanimation::GetTrackInstanceByName(const char* theTrackName)
 {
 	mNeedsTrackUpdates = true;
-	return &mTrackInstances[FindTrackIndex(theTrackName)];
+	int aTrackIndex = FindTrackIndex(theTrackName);
+	RememberEnvTrack(aTrackIndex);
+	return &mTrackInstances[aTrackIndex];
 }
 
 void Reanimation::AttachToAnotherReanimation(Reanimation* theAttachReanim, const char* theTrackName)
@@ -1156,6 +1227,7 @@ void Reanimation::StartBlend(int theBlendTime)
 {
 	if (gEnvSimSkip & ENV_LIGHT_ANIMATION)
 		return;
+	mEnvTrackCacheValid = false;
 	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
 	{
 		ReanimatorTransform aTransform;

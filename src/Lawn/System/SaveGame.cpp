@@ -1196,7 +1196,10 @@ static void SyncReanimationPortable(Board* theBoard, Reanimation* theReanimation
 	theContext.SyncEnum(theReanimation->mFilterEffect);
 
 	if (theContext.mReading)
+	{
 		theReanimation->mNeedsTrackUpdates = false;
+		theReanimation->ResetEnvTrackCache();
+	}
 	if (aDef && aDef->mTracks.count != 0)
 	{
 		int aCount = aDef->mTracks.count;

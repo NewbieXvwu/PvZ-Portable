@@ -1,0 +1,17 @@
+{
+  "registered": "2026-10-19T21:29:18.493483+08:00",
+  "candidate": "opt-in sparse animation-track update workset",
+  "basis": "baseline z20 native CPU4games65591 samples; Reanimation::Update exclusive16.4337percent,BLAS8.8381percent,FindPlantTarget1.1968percent",
+  "target": "avoid scanning no-op tracks; retain ascending update order and all blend/attacher/attachment effects",
+  "default": "off; current mask61 preserved; new bit256 combined with61 ->317",
+  "max_tracks": 256,
+  "fallback": "original full loop when unsupported track count or light-animation bit off",
+  "cache": "runtime-only POD masks; rebuilt on initialization and portable restore; track pointers returned by name stay permanently registered",
+  "acceptance": [
+    "default new binary and candidate versus frozen CPU reference: full target values and full frames bit equal except approved diagnostic timing",
+    "portable private-state equality when deterministic serialization permits",
+    "current-load ABBA CPU cost >=10percent improvement; at most4 games; memory below2GiB pause"
+  ],
+  "delivery": "h8 only, separate build-sparse; original h8 build and both old working trees untouched; local commits no push",
+  "scheduling": "existing cost ABBA runs finish before compile/extra games; adaptive256pairs resume after sparse prototype verdict"
+}
