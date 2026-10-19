@@ -50,3 +50,14 @@ Windows 机器，pvz-f1 那条转发仍然是死的。若 22222 就是新接入�
 
 **当前**：pvz-f1 仍不可达；32 局原型已用本机 4 进程跑完并上传 `transfer/z17distproto.tgz`，
 台账登记为 local-mac。pvz-f1 恢复后用同一 label/偏移重跑即可覆盖。
+
+## 2026-10-19 04:40 隧道抖动（04:17 通了一次，随后 20 分钟全超时）
+
+04:17:10 有一次成功的 `ssh pvz-f1`（远端 16:17、load 1.11、repo 011acef、models/resources 为空）。
+之后每 3 秒一次探测、连测 8 次全部 `banner exchange` 超时；rsync 传代码也在几秒内断。
+
+已启动一个**会自己重试的 master 脚本** `/tmp/pvz-master.sh`（日志 `/tmp/pvz-master.log`）：
+等 SSH → 分段推送（main.pak 用 `--append-verify` 续传）→ bootstrap 自检 → assign 32 局 8 进程
+→ 等 32/32 → collect 上传。每一步都有 20–200 次重试，隧道恢复后会自己跑完。
+
+**需要**：保持隧道在线、机器别合盖（`caffeinate` 只防空闲睡眠，合盖仍会睡）。
