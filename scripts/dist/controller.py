@@ -36,6 +36,7 @@ MACHINES = STATE / "machines.json"
 LEDGER = STATE / "ledger.json"
 RESULTS = STATE / "results"
 WORKER_ROOT = "pvz-worker"
+RSYNC_WALL_TIMEOUT = 300
 DIST_FIRST = 16384
 DIST_LAST = 65536
 DEFAULT_TASK = "day_l7_z17_train"
@@ -128,7 +129,13 @@ def rsync_try(entry: dict, source: str, target: str, extra: list | None = None,
            "ssh -o BatchMode=yes -o ConnectTimeout=180 -o ServerAliveInterval=60 -o ServerAliveCountMax=10"]
     # push: local -> machine (default). pull: machine -> local, used by collect.
     cmd += (extra or []) + ([f"{entry['host']}:{source}", target] if pull else [source, f"{entry['host']}:{target}"])
-    proc = subprocess.run(cmd, text=True, capture_output=True)
+    try:
+        # A stalled UU relay can leave rsync waiting forever; --timeout only covers socket I/O, so
+        # enforce a wall-clock cap here as well and let rsync_retry start over (--partial keeps bytes).
+        proc = subprocess.run(cmd, text=True, capture_output=True, timeout=RSYNC_WALL_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        say(f"rsync {source} -> {target}: no progress for {RSYNC_WALL_TIMEOUT}s, abandoned")
+        return False
     if proc.returncode != 0:
         sys.stderr.write(proc.stderr)
         say(f"rsync to {entry['host']} failed")
