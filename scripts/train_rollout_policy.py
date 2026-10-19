@@ -224,6 +224,9 @@ def main() -> None:
     p.add_argument("--lr-schedule", choices=["constant", "cosine"], default="constant",
                    help="cosine: learning rate falls from 2e-3 to 0 over the run (per batch), so the final weights are not "
                         "a snapshot of a still-bouncing optimiser; constant = the old behaviour")
+    p.add_argument("--ema", type=float, default=0.0,
+                   help="keep an exponential moving average of the weights with this decay (e.g. 0.999, per batch); "
+                        "validation and the saved model use the average. 0 = off (the old behaviour)")
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
     p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
@@ -280,13 +283,16 @@ def main() -> None:
     waits = float(weight[plant < 0.5].sum())
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
 
+    ema = (torch.optim.swa_utils.AveragedModel(net, multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(args.ema),
+                                                use_buffers=True) if args.ema else None)
+
     def batch_loss(idx, train):
         b = boards[idx].float().to(args.device) if args.dense_boards else boards.batch(idx, args.device)
         s = scalars[idx].to(args.device)
         y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
         w = weight[idx].to(args.device)
         planted = y > 0.5
-        out = net(b, s, pk.clamp(min=0))
+        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0))
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / w.sum()
         if args.soft_weight:
@@ -325,9 +331,9 @@ def main() -> None:
     history = []
 
     def checkpoint() -> dict:
-        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+        return {"state_dict": {k: v.cpu() for k, v in (net if ema is None else ema.module).state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
-                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule,
+                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "ema": args.ema,
                 "history": list(history)}
 
     for epoch in range(1, args.epochs + 1):
@@ -339,6 +345,8 @@ def main() -> None:
             opt.zero_grad(); loss.backward(); opt.step()
             if schedule is not None:
                 schedule.step()
+            if ema is not None:
+                ema.update_parameters(net)
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU).
