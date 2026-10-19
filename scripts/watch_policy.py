@@ -31,6 +31,10 @@ Usage::
     # (defaults 1 / 10 = normal speed); 5x:
     PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student ...
 
+    # replay one game of an evaluation (here v30 on 2.0x zombies, seed 30005) at 5x speed
+    PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student artifacts/student/v30/model.pt \
+        --task-id day_l7_z20_eval --seed 30005 --max-actions 3000 --hold-seconds 10
+
     # headless, print the action mix only
     python scripts/watch_policy.py --wave-cap 5 --seed 1330000 --quiet
 
@@ -100,9 +104,9 @@ def _student_actions(path: str):
     from render_episode import _frame
     net = load_student(path)
     memo = {"frame": None, "action": None}
-    if net.obs == "v2lite":
+    if net.obs != "v1":
         from pvz_student_observation import StudentHistory
-        memo["history"] = StudentHistory()
+        memo["history"] = StudentHistory(net.obs)
 
     def next_action(observation, _info=None):
         frame = _frame(observation)
@@ -135,7 +139,8 @@ def _load_checkpoint(path: str):
 
 def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: int | None,
         visible: bool, delay: float, max_actions: int, deterministic: bool,
-        resource_dir: str, deck, quiet: bool, student: str | None = None, multiplier: float = 1.0) -> dict:
+        resource_dir: str, deck, quiet: bool, student: str | None = None, multiplier: float = 1.0,
+        manifest: str | None = None, task_id: str | None = None) -> dict:
     if student:
         cfg = {"wait_mode": "events", "wait_mask": "progress_v1", "input_flags": 7}
         next_action = _student_actions(student)
@@ -152,8 +157,17 @@ def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: in
 
     env = policy_env(cfg, resource_dir=resource_dir, headless=not visible)
     from scripted_baseline import profile_for_deck
-    spec = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(tuple(deck)),
-                    zombie_count_multiplier=multiplier, wave_cap=wave_cap, preplanted=())
+    if task_id:   # the exact game an evaluation played: same task, same seed (scripts/search_play.py)
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from render_episode import load_training_task, training_task_kwargs
+        kw = training_task_kwargs(load_training_task(Path(manifest), task_id), seed)
+        deck, level = list(kw["deck"]), kw["level"]
+        spec = TaskSpec(level=level, seed=kw["seed"], playthrough=2,
+                        profile=profile_for_deck(tuple(deck), kw.get("first_aid_owned", False)),
+                        **{k: v for k, v in kw["task_extra"].items() if v is not None})
+    else:
+        spec = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(tuple(deck)),
+                        zombie_count_multiplier=multiplier, wave_cap=wave_cap, preplanted=())
     observation, _ = env.reset(deck=deck, task=spec)
 
     counts = {"plant": 0, "shovel": 0, "wait": 0}
@@ -202,6 +216,8 @@ def main() -> None:
     p.add_argument("--quiet", action="store_true", help="print only the final summary")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     p.add_argument("--deck", default=",".join(str(c) for c in DEFAULT_DECK))
+    p.add_argument("--task-id", help="replay a manifest task (e.g. day_l7_z20_eval) with --seed = the evaluation's seed")
+    p.add_argument("--manifest", default=str(ROOT / "artifacts/stage4/day_l7_hard.json"))
     p.add_argument("--hold-seconds", type=float, default=0.0,
                    help="keep the window up after the episode ends")
     args = p.parse_args()
@@ -209,7 +225,7 @@ def main() -> None:
     deck = [int(c) for c in args.deck.split(",") if c.strip()]
     result = run(args.checkpoint, args.policy, args.level, args.seed, args.wave_cap,
                  args.visible, args.delay, args.max_actions, not args.sampled,
-                 args.resource_dir, deck, args.quiet, args.student, args.multiplier)
+                 args.resource_dir, deck, args.quiet, args.student, args.multiplier, args.manifest, args.task_id)
     print(json.dumps(result, ensure_ascii=False), flush=True)
     if args.hold_seconds:
         time.sleep(args.hold_seconds)
