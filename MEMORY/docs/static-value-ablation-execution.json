@@ -1,0 +1,140 @@
+{
+  "experiment_code_commit": "4fb20f22d2b7b04d9fbbffbbe6fb4dbae424ad42",
+  "current_commit": "198b417f72c9650445eec68841e62ad4ed22845d",
+  "freeze": {
+    "commit": "4fb20f22d2b7b04d9fbbffbbe6fb4dbae424ad42",
+    "files": {
+      "scripts/search_play.py": "d249349fc5630d5d2b5a06f23bfcec3e40cd4bbd97b5058631bcdb1976b0c635",
+      "scripts/static_value_ablation.py": "a9b4ceadcb5d888d6259dcb94b1a16d3dc084beacb736e9a1182255a1626e0b8",
+      "scripts/static_value_compare.py": "e9496efa8c0aff1dd65a5a5dbc38fe3c6d61cb2abace756e6b92fd77ef38ab0b",
+      "MEMORY/docs/static-value-ablation-plan.json": "1fa422b5bdb2155b3c207d6802fee5271c4b46bda8e01d6131ba1aca0289960e",
+      "MEMORY/docs/static-value-ablation-protocol.json": "c19db02c965ec3ae179fc6445c23ac75474a59fa49a5da3c3f79263466484f5f"
+    },
+    "points_before_launch": 0
+  },
+  "input_models_and_binary": {
+    "mac": {
+      "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
+      "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c",
+      "bytes": 585243,
+      "trained_on_count": 383,
+      "heldout_seed_overlap": []
+    },
+    "desktop": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+      "bytes": 584603,
+      "trained_on_count": 256,
+      "heldout_seed_overlap": []
+    },
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
+      "sha256": "601d17c44f261d415aa997621e93b8b298a9bda94c6a0881e2e2d5b4a5136230",
+      "bytes": 595202
+    },
+    "leaf": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+      "sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+      "bytes": 586651,
+      "trained_on_count": 636,
+      "heldout_seed_overlap": []
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+      "sha256": "8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941",
+      "bytes": 1273514
+    },
+    "simulator": {
+      "path": "/home/newbiexvwu/pvz-h8/build-task12/pvz-portable",
+      "sha256": "01754768c12845986d749d6a8f1f61e8dd52da6fb9c3f2d589e4f91de57161f0",
+      "bytes": 5252232
+    }
+  },
+  "all_input_hashes_unchanged": true,
+  "frozen_primary_labels_equal": 256,
+  "A_and_A_noise_chosen_candidates_cost_exact_matches_each": 256,
+  "strict_replay_games": 32,
+  "strict_replay_frames": 34759,
+  "point_outputs_sha256": "01c628402a96249d7e1d025112d5b4fc3cc26f604500a2d7e648df469b534b1c",
+  "point_outputs": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task13/comparison/points",
+  "trajectory_source": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison",
+  "runs": {
+    "cli_static": {
+      "returncode": 0,
+      "wall_s": 4.004552636994049,
+      "peak_rss_kib": 785216,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6861036
+    },
+    "python_tests": {
+      "returncode": 0,
+      "wall_s": 45.02382140798727,
+      "peak_rss_kib": 1780372,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7282900
+    },
+    "dsh_tests": {
+      "returncode": 0,
+      "wall_s": 1.0008488269813824,
+      "peak_rss_kib": 264,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 8329044
+    },
+    "cli_student-topk": {
+      "returncode": 0,
+      "wall_s": 4.002116885007126,
+      "peak_rss_kib": 773052,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6854644
+    },
+    "statistics": {
+      "returncode": 0,
+      "wall_s": 1.0009501430031378,
+      "peak_rss_kib": 1192,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 9166056
+    },
+    "cli_student-per-card": {
+      "returncode": 0,
+      "wall_s": 4.006224273995031,
+      "peak_rss_kib": 821948,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6788400
+    },
+    "comparison": {
+      "returncode": 0,
+      "wall_s": 518.4452709129837,
+      "peak_rss_kib": 3338500,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7387108
+    }
+  },
+  "tests": {
+    "python_tests": {
+      "summary": "Ran 219 tests in 42.235s",
+      "result": "OK, no skips"
+    },
+    "dsh_tests": {
+      "summary": "Ran 9 tests in 0.001s",
+      "result": "OK, no skips"
+    }
+  },
+  "resource_summary": {
+    "peak_rss_gib": 3.1838417053222656,
+    "peak_own_swap_gib": 0.0,
+    "minimum_available_gib": 6.4739227294921875,
+    "paused_samples": 0,
+    "configured_max_simulators": 4
+  },
+  "cli_smokes": "default flag omitted / Btopk / Cpercard: actual native five-decision search, B/C no static checkpoint",
+  "comparison_process_group_exited": true,
+  "reference_numerics": {
+    "fsum_original_pool_trigger_and_challenger_agree_all": 256,
+    "triggered": 61,
+    "minimum_verified_distance_from_margin": 9.900930451188159e-05,
+    "changed_labels_are_new_actions": 6
+  },
+  "upstream_included": "761d51d93e3e78148c9de2f28bbb28d85220f150 (only progress documentation beyond task12)",
+  "resolved_cli_invocation": "Initial smoke omitted explicit resource directory and failed before simulator startup; original log retained in artifacts/cuda/task13/initial_cli_invocation. Corrected --resource-dir for all three smokes; final results all zero. Regression and comparison were not rerun.",
+  "all_seven_run_process_groups_exited": true
+}
