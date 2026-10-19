@@ -98,3 +98,12 @@ rsync `--timeout` 180→300 秒，避免在慢中继上自己把连接掐死。
 到达 19:16:57，**晚了 92 秒**。45 秒的 ConnectTimeout 仍然会被自己掐断，已改为 180 秒、
 rsync `--timeout=600`。但 SSH 握手要 5–6 个 RTT，按 90 秒/RT 算单次连接就要 ~10 分钟，
 rsync 更慢；**靠加大超时不能当长期方案**，需要主控重连 UU（或换网络）把中继队列清掉。
+
+## 2026-10-19 07:52 collect 的第二种失败：本机负载高时 openrsync 起不了子进程
+
+用假远端跑 `collect` 时看到 `rsync: fork: Resource temporarily unavailable` +
+一串 `rsync(PID): error: unexpected end of file`。当时本机 load 15.75、进程数 3941
+（正式采集 10 个进程在场，`ulimit -u` 8000）。**不是隧道问题，也不是代码问题**：
+同一份 shim 在空载时手动跑就成功。`rsync_retry` 会把它当普通失败重试，
+`collect --wait` 会整轮重试，所以最终会收完；只是日志里会先看到一串这种错。
+判断方法：`uptime` 看 load、`ps -e | wc -l` 看进程数。
