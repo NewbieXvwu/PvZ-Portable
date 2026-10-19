@@ -422,7 +422,8 @@ def cmd_collect(args) -> None:
             continue
         label = segment["label"]
         local = RESULTS / label
-        local.mkdir(parents=True, exist_ok=True)
+        (local / "out").mkdir(parents=True, exist_ok=True)
+        (local / "frames").mkdir(parents=True, exist_ok=True)
         say(f"collecting {label} from {segment['machine']}")
         rsync(entry, f"{WORKER_ROOT}/out/{label}/", str(local / "out") + "/")
         rsync(entry, f"{WORKER_ROOT}/frames/{label}/", str(local / "frames") + "/")
