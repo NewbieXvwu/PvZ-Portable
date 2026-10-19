@@ -102,8 +102,11 @@ def machine(name: str) -> dict:
 
 
 def ssh_args(entry: dict) -> list:
-    return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
-            "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=4", entry["host"]]
+    # UU 远程的转发会在网络抖动时缓冲几十秒（实测 SYN_ACK/主机密钥晚到 ~19 s），
+    # 15 秒的 ConnectTimeout 会在对端回答之前就把连接掐掉。给足时间，失败由 --wait 重试兜底。
+    return ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=45",
+            "-o", "ServerAliveInterval=30", "-o", "ServerAliveCountMax=8",
+            "-o", "TCPKeepAlive=yes", entry["host"]]
 
 
 def ssh(entry: dict, command: str, check: bool = True, stdin: str | None = None) -> subprocess.CompletedProcess:
@@ -119,8 +122,8 @@ def rsync_try(entry: dict, source: str, target: str, extra: list | None = None) 
     # macOS ships openrsync (rsync 2.6.9-compatible): --partial/--inplace exist, --append-verify does
     # NOT (it prints the usage text and fails). Large files over a flaky tunnel are therefore sent by
     # repeated --partial runs: whatever arrived stays on the far side and the next run replaces it.
-    cmd = ["rsync", "-az", "--stats", "--partial", "--inplace", "--timeout=180", "-e",
-           "ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=30"]
+    cmd = ["rsync", "-az", "--stats", "--partial", "--inplace", "--timeout=300", "-e",
+           "ssh -o BatchMode=yes -o ConnectTimeout=45 -o ServerAliveInterval=30 -o ServerAliveCountMax=8"]
     cmd += (extra or []) + [source, f"{entry['host']}:{target}"]
     proc = subprocess.run(cmd, text=True, capture_output=True)
     if proc.returncode != 0:

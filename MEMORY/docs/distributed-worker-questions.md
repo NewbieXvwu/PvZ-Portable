@@ -79,3 +79,17 @@ Windows 机器，pvz-f1 那条转发仍然是死的。若 22222 就是新接入�
 UURemote 的两个转发端口都还在监听（22222 Windows / 22223 Mac），TCP 能连上但对面不响应。
 `collect --wait 600` 从 06:45 起持续重试，日志 `/tmp/pvz-collect3.log`；
 **需要主控在 UU 里重连或唤醒 pvz-f1**，恢复后无需人工干预。
+
+## 2026-10-19 07:20 隧道真相：UU 转发会积压几十秒
+
+从 `~/Library/Application Support/com.netease.uuremote/Logs/UURemoteMac_*.log` 看到：
+
+- 我们这侧的 ssh 早已超时退出，UU 随后才把对面的 `SYN_ACK`、`SSH-2.0-OpenSSH_10.3`
+  banner 和主机密钥送到本地，日志写 `writeToLocal 忽略 - stream不存在或已关闭`。
+- 帧的远端时间戳比到达时间早 **~19 秒**：不是机器没响应，是 UU 中继在积压/限速。
+- 07:15 之后连积压帧也没有了（只剩本地心跳）—— 朋友 Mac 这次是真的离线/睡了。
+  32/32 跑完后 worker 虽常驻，但 `caffeinate` 是它的子进程，worker 若退出/被关终端，
+  机器就会按空闲睡眠；合盖也会睡。
+
+已改：`controller` 的 ssh `ConnectTimeout` 15→45 秒、`ServerAliveCountMax` 8、`TCPKeepAlive`，
+rsync `--timeout` 180→300 秒，避免在慢中继上自己把连接掐死。
