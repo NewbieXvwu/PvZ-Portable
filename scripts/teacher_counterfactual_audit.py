@@ -155,6 +155,11 @@ def run_point(point, args, replay_only=False):
             history.extra(frame)
         teacher._W['student_history'] = history
         actions,runner_up = alternatives(obs,point,frames[point['decision']])
+        if 'control_actions' in point:
+            actions=point['control_actions'];runner_up=None
+            assert len(actions)==2 and actions[0]==point['label']
+            legal={(a['packet'],a['row'],a['col']) for a in obs['legal_actions']['plants']}
+            assert all(a['type']=='wait' or (a['packet'],a['row'],a['col']) in legal for a in actions)
         root = env.snapshot()
         # Separate audit futures from the teacher's original 0..11 seeds.
         future_rng = random.Random(f"task9:{args.seed}:{point['seed']}:{point['decision']}")

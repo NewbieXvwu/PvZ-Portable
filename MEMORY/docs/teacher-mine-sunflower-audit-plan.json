@@ -81,5 +81,15 @@
     "sha256": "f22b259957d65c84f88f4b7f6f85fe942f1202344ccb40f1b5c12445c6064bf8",
     "path": "artifacts/cuda/task9/native31_archive_hashes.json"
   },
-  "secondary_robustness": "Report dependence-robust BY alongside BH; additionally count lower simultaneous CI > existing formal margin0.02. Primary threshold and data remain unchanged."
+  "secondary_robustness": "Report dependence-robust BY alongside BH; additionally count lower simultaneous CI > existing formal margin0.02. Primary threshold and data remain unchanged.",
+  "policy_shift_control": {
+    "registered_before_control": "2026-10-19T22:14:09.871196+08:00",
+    "selection": "all primary v30-significant states; compare original with fixed significant witness only",
+    "student": "original v29",
+    "futures": 64,
+    "independent_audit_seed": 20261020,
+    "primary_audit_seed": 20261019,
+    "purpose": "distinguish historical teacher shortcomings from the change of continuation student; do not call every v30 effect original V9 noise",
+    "inference": "single preselected paired comparison on fresh independent futures; report multiplicity across control cases as well"
+  }
 }
