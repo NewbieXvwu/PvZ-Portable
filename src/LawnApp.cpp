@@ -1644,7 +1644,7 @@ static void WriteObservationV2(std::ostream& out, Board* board)
 std::string LawnApp::EnvironmentLeanObservation()
 {
 	std::ostringstream out;
-	out << "{\"lean\":1,\"level\":" << mBoard->mLevel
+	out << "{\"lean\":1,\"observation_version\":4,\"level\":" << mBoard->mLevel
 		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
 		<< ",\"night\":" << (mBoard->StageIsNight() ? "true" : "false")
 		<< ",\"pool\":" << (mBoard->StageHasPool() ? "true" : "false")
@@ -1772,7 +1772,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		return EnvironmentLeanObservation();
 
 	std::ostringstream out;
-	out << "{\"protocol_version\":4,\"observation_version\":3,\"task_version\":2,\"level\":" << mBoard->mLevel
+	out << "{\"protocol_version\":4,\"observation_version\":4,\"task_version\":2,\"level\":" << mBoard->mLevel
 		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough
 		<< ",\"zombie_count_multiplier\":" << mEnvironmentTaskSpec.zombieCountMultiplier
 		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)

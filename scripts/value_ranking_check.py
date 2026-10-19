@@ -82,7 +82,7 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     from scripted_baseline import profile_for_deck
     args, env, net = _W["args"], _W["env"], _W["student"]
     seed, kw = seed_task
-    task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+    task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
     env.load_rollout_net(_W["weights"])
@@ -154,8 +154,8 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
                     frames.append(None)
                 else:
                     frames.append(_frame(leaf))
-                    end = env.rollout(None, 0, sim_skip=args.sim_skip)
-                wins.append(float(end.get("result") == 1)); reached.append(end["wave"])
+                    end = env.rollout(None, 0, sim_skip=args.finish_sim_skip if args.finish_sim_skip is not None else args.sim_skip)
+                wins.append(float(end.get("rollout_result", end.get("result")) == 1)); reached.append(end["wave"])
             outcomes.append(wins); leaves.append(frames); waves.append(sum(reached) / len(reached))
     finally:
         env.restore(root)
@@ -270,6 +270,7 @@ def main() -> None:
     p.add_argument("--samples", type=int, default=16)
     p.add_argument("--horizon", type=int, default=3000)
     p.add_argument("--sim-skip", type=int, default=29)
+    p.add_argument("--finish-sim-skip", type=int, help="mask for leaf-to-end labels only; defaults to --sim-skip (128 estimates decided games)")
     p.add_argument("--min-wave", type=int, default=3)
     p.add_argument("--position-rate", type=float, default=0.03, help="chance that a decision with legal plants is evaluated")
     p.add_argument("--min-sun", type=int, default=0, help="only positions with at least this much sun")

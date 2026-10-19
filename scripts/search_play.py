@@ -1,14 +1,22 @@
 """The teacher of expert iteration: the student plus a value-guided search (DESIGN.md §13–§14).
 
-At a decision where some plant is legal (packet ready, sun enough, free cell):
+At a decision where some plant is legal (packet ready, sun enough, free cell) or, with shovels on, some
+cell can be dug up:
   1. Every legal plant is applied from a snapshot (``branch_snapshot``) and the board right after planting is
      scored by the static value net (``--static-value``, default ``--value``). The best ``--per-card`` cells of
-     every card survive, plus "do nothing now" and the student's own choice.
+     every card survive, plus "do nothing now" and the student's own choice. With ``--shovel-candidates k``
+     the legal shovel actions are scored the same way and the best ``k`` join the candidates; the continuation
+     then decides what the freed cell is worth (the student may replant it). With ``--student-candidates k``
+     the student's own top-k plants (by its policy probabilities, ``pvz_rollout_policy.ranked_plants``) join
+     the candidates too -- the static net only ever offers one cell per card, so cells the student itself
+     would pick were previously reachable only by shovelling first. 0 = off for both, and off is the old
+     candidate set exactly.
   2. Each candidate is played and then continued by the student for ``--horizon`` ticks in C++, ``--samples``
      times with different random futures (the same futures for every candidate). The leaf is scored by
      ``--value`` (a game that ended inside the horizon scores its result). ``--halving`` (default) rolls out
      the weaker half fewer times.
   3. The student's choice is overridden only when the best candidate beats it by ``--margin``.
+     ``--verify-samples`` adds independent futures for just that pair before accepting an override.
 Between searches at least ``--min-gap`` ticks pass unless the student itself wants to plant.
 
 Arms: ``fast`` = the student alone, ``fast_search`` = the teacher. ``--frames`` writes per-decision archives
@@ -48,6 +56,15 @@ NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 _W: dict = {}
 
 
+def _close_worker_env():
+    env = _W.pop("env", None)
+    if env is not None:
+        env.close()
+    client = _W.pop("cuda", None)
+    if client is not None:
+        client.close()
+
+
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
                  static_value_path: str | None = None, cuda_socket: str | None = None) -> None:
     os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -56,6 +73,8 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
               cuda_socket=cuda_socket)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
+    from multiprocessing.util import Finalize
+    Finalize(None, _close_worker_env, exitpriority=10)
     import torch
     torch.set_num_threads(1)
     from pvz_rollout_policy import load_student
@@ -89,11 +108,14 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     from render_episode import _frame
     frame = _frame(obs)
     frame["action"] = fast_state.get("action")
+    previous = fast_state.get("frame")
     if _W["fast"].obs != "v1" and "history" not in fast_state:
         from pvz_student_observation import StudentHistory
         fast_state["history"] = StudentHistory(_W["fast"].obs)
     action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
                  context=_W.get("context"), history=fast_state.get("history"))
+    # --student-candidates needs exactly the frame / history the student just read, so keep them.
+    _W["student_frame"], _W["student_previous_frame"] = frame, previous
     fast_state["frame"] = frame
     fast_state["action"] = action
     return action
@@ -112,6 +134,8 @@ def _values(frames: list[dict], static: bool = False) -> list[float]:
 
 
 def _score_terminal_or_value(obs: dict) -> float | None:
+    if "rollout_result" in obs:
+        return float(obs["rollout_result"])
     if obs.get("terminal"):
         return 1.0 if obs.get("result") == 1 else 0.0
     return None
@@ -283,10 +307,28 @@ def _leaf_values(handles: list) -> list[float | None]:
     return values
 
 
-def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
+def _static_frames(env, root: int, actions: list[dict], income) -> list[tuple[dict, dict]]:
+    """Apply every action from ``root`` and return the frames the static value net scores."""
     from render_episode import _frame
+    out = []
+    for start in range(0, len(actions), 128):
+        chunk = actions[start:start + 128]
+        for action, record in zip(chunk, env.branch_snapshot(root, chunk, retain_snapshots=False)):
+            if record.get("ok") and record.get("observation"):
+                frame = _frame(record["observation"])
+                frame["sun_income_rate"] = income
+                out.append((action, frame))
+    return out
+
+
+def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
     legal = (obs.get("legal_actions") or {}).get("plants") or []
-    if not legal:
+    shovels = ([{"type": "shovel", "col": int(col), "row": int(row)}
+                for col, row in (obs.get("legal_actions") or {}).get("shovels") or []]
+               if getattr(args, "shovel_candidates", 0) > 0 else [])
+    # A full board has no legal plant but does have legal shovels: that is exactly the position where
+    # "shovel the front row and replant it behind" has to be considered, so shovels may trigger a search.
+    if not legal and not shovels:
         return policy_action
     if (args.min_gap and policy_action["type"] != "plant"
             and obs["tick"] - stats.get("last_search_tick", -10 ** 9) < args.min_gap):
@@ -297,30 +339,51 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     income = obs.get("sun_income_rate")
     try:
         plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
-        static = []
-        for start in range(0, len(plants), 128):
-            chunk = plants[start:start + 128]
-            for action, record in zip(chunk, env.branch_snapshot(root, chunk, retain_snapshots=False)):
-                if record.get("ok") and record.get("observation"):
-                    frame = _frame(record["observation"])
-                    frame["sun_income_rate"] = income
-                    static.append((action, frame))
+        static = _static_frames(env, root, plants, income)
+        static_shovels = _static_frames(env, root, shovels, income)
         scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
                         key=lambda item: -item[0]) if static else []
+        scored_shovels = sorted(zip(_values([f for _a, f in static_shovels], static=True),
+                                    [a for a, _f in static_shovels]), key=lambda item: -item[0]) \
+            if static_shovels else []
         # The best cells of *every* card, not the overall top-k: the static value net was trained on
         # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
         # against shooters right after planting -- only the rollout can show what they are worth.
         by_card: dict[int, list] = {}
         for v, a in scored:
             by_card.setdefault(a["packet"], []).append(a)
-        candidates = [a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP]
+        candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]]
+                      + [a for _v, a in scored_shovels[: getattr(args, "shovel_candidates", 0)]] + [NOOP])
         policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
         if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
             candidates.append(policy_action)
 
-        # Halving changes which candidates receive later futures, and can change the selected action.
-        # Preserve the requested search algorithm on either backend; --no-halving explicitly selects
-        # the full grid when measuring the cost of its wider GPU batches.
+        # --student-candidates k: the student's own top-k plants join the candidates
+        # (pvz_rollout_policy.ranked_plants). The static value net picks one cell per card, so a cell
+        # the student would actually pick -- or its second choice -- never gets compared; the search
+        # could only reach it indirectly by shovelling and letting the student react (learn/06).
+        # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
+        stats["last_student_keys"] = set()
+        if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
+            from pvz_rollout_policy import ranked_plants
+            present = {json.dumps(c, sort_keys=True) for c in candidates}
+            added = 0
+            for _score, entry in ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                               legal, context=_W.get("context"),
+                                               history=_W.get("student_history")):
+                action = {"type": "plant", "packet": int(entry["packet"]),
+                          "col": int(entry["col"]), "row": int(entry["row"])}
+                key = json.dumps(action, sort_keys=True)
+                if key in present:
+                    continue
+                candidates.append(action)
+                present.add(key)
+                stats["last_student_keys"].add(key)
+                added += 1
+                if added >= args.student_candidates:
+                    break
+            stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
+
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
         jobs = [(cand, decision_seed * 1000 + k) for cand in candidates for k in range(args.samples)]
@@ -330,14 +393,9 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             scored = [v for v in scores[index * args.samples:(index + 1) * args.samples] if v is not None]
             totals.append(sum(scored) / len(scored) if scored else float("-inf"))
         keys = [json.dumps(c, sort_keys=True) for c in candidates]
-        stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
-        policy_value = totals[keys.index(policy_key)]
         best = max(range(len(candidates)), key=lambda i: totals[i])
-        if totals[best] - policy_value > args.margin and keys[best] != policy_key:
-            stats["overrides"] += 1
-            stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
-            return candidates[best]
-        return policy_action
+        return _verified_choice(env, obs, root, candidates, totals, [args.samples] * len(candidates),
+                                best, keys.index(policy_key), policy_action, args, decision_seed, stats)
     finally:
         env.restore(root)
         env.release_snapshot(root)
@@ -399,8 +457,49 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     if speculative is not None:
         stats["halving_discarded_lanes"] = stats.get("halving_discarded_lanes", 0) + len(speculative) - selected_lanes
     totals = [sum(v) / len(v) if v else float("-inf") for v in values]
-    stats["last_targets"] = [(c, v) for c, v in zip(candidates, totals)]
     best = max(alive, key=lambda i: totals[i])
+    return _verified_choice(env, obs, root, candidates, totals, [len(v) for v in values], best,
+                            policy_index, policy_action, args, decision_seed, stats)
+
+
+def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: list[float],
+                     counts: list[int], best: int, policy_index: int, policy_action: dict,
+                     args, decision_seed: int, stats: dict, *, fresh: bool = False) -> dict:
+    from render_episode import _frame
+    before = fresh or (best != policy_index and totals[best] - totals[policy_index] > args.margin)
+    samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
+    if fresh:
+        counts = [0] * len(candidates)
+    if samples and before:
+        prior = None if fresh else [totals[policy_index], totals[best]]
+        started = time.perf_counter()
+        for index in (policy_index, best):
+            fixed, leaves = [], []
+            for future in range(args.samples, args.samples + samples):
+                leaf = _rollout_policy(env, obs, candidates[index], obs["tick"] + args.horizon,
+                                       root, (decision_seed * 1000 + future) % 2 ** 32)
+                terminal = _score_terminal_or_value(leaf)
+                if terminal is None:
+                    leaves.append(_frame(leaf))
+                else:
+                    fixed.append(terminal)
+            added = fixed + (_values(leaves) if leaves else [])
+            totals[index] = (totals[index] * counts[index] + sum(added)) / (counts[index] + samples)
+        stats["last_verification"] = {
+            "samples": samples, "student": policy_action, "challenger": candidates[best],
+            "before_values": prior, "after_values": [totals[policy_index], totals[best]],
+            "before_override": True, "after_override": totals[best] - totals[policy_index] > args.margin,
+            "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
+            "mode": "fresh" if fresh else "reproduced",
+            "seconds": time.perf_counter() - started}
+    # Did the winner come from --student-candidates? Counted here so both the halving and the
+    # full search report it; the override counter below is the subset that changed the action.
+    if json.dumps(candidates[best], sort_keys=True) in (stats.get("last_student_keys") or ()):
+        stats["student_candidate_best"] = stats.get("student_candidate_best", 0) + 1
+        if best != policy_index and totals[best] - totals[policy_index] > args.margin:
+            stats["student_candidate_override"] = stats.get("student_candidate_override", 0) + 1
+    stats["last_targets"] = list(zip(candidates, totals))
+    stats["last_best"] = candidates[best]
     if totals[best] - totals[policy_index] > args.margin and best != policy_index:
         stats["overrides"] += 1
         stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
@@ -426,11 +525,12 @@ def _play(job: dict) -> dict:
         if _W.get("cpp_rollouts"):
             env.load_rollout_net(_W["rollout_file"])
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
-                    profile=profile_for_deck(tuple(kw["deck"])),
+                    profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     torch.manual_seed(kw["seed"])
     started = time.time()
-    stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
+    stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
+             "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
     # The client counts per worker, not per game, so a game reports the delta it caused.
     cuda_client = _W.get("cuda")
     cuda_started_seconds = cuda_client.seconds if cuda_client is not None else 0.0
@@ -462,11 +562,34 @@ def _play(job: dict) -> dict:
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
                 stats["last_targets"] = None
+                stats.pop("last_verification", None)
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
+                if action["type"] == "shovel":
+                    stats["shovels"] += 1
+                    cell = next((p for p in obs.get("plants") or []
+                                 if p["row"] == action["row"] and p["col"] == action["col"]), None)
+                    stats.setdefault("shovel_events", []).append({
+                        "tick": obs["tick"], "row": action["row"], "col": action["col"],
+                        "plant": cell.get("type") if cell else None,
+                        "plant_health": cell.get("health") if cell else None,
+                        "student": policy_choice["type"], "decision": decisions})
             label = action
             if dagger is not None and dagger.random() >= args.dagger_beta:
                 action = policy_choice
             fast_state["action"] = action    # the student's next features read the executed action
+            # Planting on an occupied cell only became legal with wall-nut first aid (a damaged
+            # wall-nut takes another nut of the same type, Board::CanPlantAt) -- record what stood
+            # there, so the report can say how often the teacher actually used it. Harmless for
+            # ordinary plants: the legal list never offers an occupied cell without first aid.
+            if action["type"] == "plant":
+                occupant = next((p for p in obs.get("plants") or []
+                                 if p["row"] == action["row"] and p["col"] == action["col"]), None)
+                if occupant is not None:
+                    stats.setdefault("replant_events", []).append({
+                        "tick": obs["tick"], "row": action["row"], "col": action["col"],
+                        "packet": action["packet"], "occupant": occupant.get("type"),
+                        "occupant_health": occupant.get("health"),
+                        "same_type": occupant.get("type") == action["packet"]})
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
             if not rejected and action["type"] == "plant":
@@ -479,10 +602,15 @@ def _play(job: dict) -> dict:
                     # the search's estimate for every candidate it compared: [packet (-1 = wait), row, col, value];
                     # a soft target for the student (train_rollout_policy --soft-weight). Before "action" and
                     # "label", because the trainer finds the target by scanning for the last of those.
+                    # Shovel candidates are left out: the student has no shovel output yet, so a shovel
+                    # row would be read as a wait target by the trainer (phase 2 adds the head).
                     frames[-1]["targets"] = [[c.get("packet", -1), c.get("row", -1), c.get("col", -1), round(v, 4)]
-                                             for c, v in stats["last_targets"] if abs(v) != float("inf")]
+                                             for c, v in stats["last_targets"]
+                                             if abs(v) != float("inf") and c["type"] != "shovel"]
                 frames[-1]["action"] = action          # what was executed (after the search), like render_episode
                 frames[-1]["action_rejected"] = rejected
+                if stats.get("last_verification"):
+                    frames[-1]["verification"] = stats["last_verification"]
                 if dagger is not None:
                     frames[-1]["label"] = label        # last field: train_rollout_policy scans for it
             decisions += 1
@@ -504,7 +632,7 @@ def _play(job: dict) -> dict:
             "task": {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]},
             "context": task_context,
             "outcome": {"won": obs.get("result") == 1, "final_wave": obs["wave"]}}))
-    return {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
+    result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted": planted,
             "searched": stats["searched"], "overrides": stats["overrides"],
@@ -514,7 +642,22 @@ def _play(job: dict) -> dict:
                 "halving_candidates", "halving_rollouts", "halving_selected_lanes",
                 "halving_speculative_lanes", "halving_discarded_lanes")},
             "cuda_seconds": round(cuda_client.seconds - cuda_started_seconds, 2) if cuda_client is not None else 0.0,
+            "student_candidate_added": stats["student_candidate_added"],
+            "student_candidate_best": stats["student_candidate_best"],
+            "student_candidate_override": stats["student_candidate_override"],
+            "shovel_events": stats.get("shovel_events", []),
+            "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
+    if getattr(args, "measure_cpu", False):
+        from pvz_cpu_usage import usage, process_usage, difference
+        worker = usage()
+        simulator = process_usage(env._process.pid)
+        zero = {"user_s": 0.0, "system_s": 0.0}
+        result["host_cpu"] = {
+            "worker": difference(worker, _W.get("cpu_accounted", zero)),
+            "simulator": difference(simulator, _W.get("sim_cpu_accounted", zero))}
+        _W["cpu_accounted"], _W["sim_cpu_accounted"] = worker, simulator
+    return result
 
 
 def main() -> None:
@@ -526,11 +669,19 @@ def main() -> None:
     p.add_argument("--manifest", required=True)
     p.add_argument("--task-id", required=True)
     p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--measure-cpu", action="store_true",
+                   help="record host user/system CPU seconds for workers, simulators and owned CUDA service")
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
+    p.add_argument("--student-candidates", type=int, default=0,
+                   help="the student's own top-k plant actions (its policy probabilities) added to the "
+                        "candidates; 0 = off, which is the old candidate set exactly")
+    p.add_argument("--shovel-candidates", type=int, default=0,
+                   help="best legal shovel cells (scored by --static-value right after shovelling) added to "
+                        "the candidates; 0 = off, which is the old candidate set exactly")
     p.add_argument("--samples", type=int, default=3)
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
@@ -540,9 +691,11 @@ def main() -> None:
                         "halving survivors for scores and labels; spends extra CUDA work")
     p.add_argument("--horizon", type=int, default=2500)
     p.add_argument("--margin", type=float, default=0.02)
+    p.add_argument("--verify-samples", type=int, default=0,
+                   help="extra independent futures for student and challenger before an override (0 = disabled)")
     p.add_argument("--min-gap", type=int, default=300,
                    help="ticks between searches unless the student itself wants to plant (0 = search every time)")
-    p.add_argument("--rollout-sim-skip", type=int, default=29,
+    p.add_argument("--rollout-sim-skip", type=int, default=61,
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
     p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=True,
                    help="run student continuations in C++ (--no-cpp-rollouts: the Python reference loop)")
@@ -570,6 +723,12 @@ def main() -> None:
     args = p.parse_args()
     if args.cuda_speculative_halving and (not args.halving or args.rollout_backend != "cuda"):
         p.error("--cuda-speculative-halving requires --halving and --rollout-backend cuda")
+    if args.verify_samples < 0:
+        p.error("--verify-samples must be nonnegative")
+    if args.shovel_candidates < 0:
+        p.error("--shovel-candidates must be nonnegative")
+    if args.student_candidates < 0:
+        p.error("--student-candidates must be nonnegative")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
@@ -598,6 +757,11 @@ def main() -> None:
                                                     lanes=args.cuda_lanes, gather_ms=args.cuda_gather_ms,
                                                     start_timeout_ms=600000, log=log)
         print(f"cuda rollout server: {cuda_socket}, {args.cuda_lanes} lanes", flush=True)
+    if args.measure_cpu:
+        import resource
+        from pvz_cpu_usage import usage, difference, wait_with_cpu_usage
+        children_before = usage(resource.RUSAGE_CHILDREN)
+    server_cpu = None
     started = time.time()
     try:
         with results_path.open("a") as out, mp.get_context("spawn").Pool(
@@ -608,18 +772,40 @@ def main() -> None:
                 out.write(json.dumps(res) + "\n"); out.flush()
                 if i % 10 == 0 or i == len(jobs):
                     print(f"{i}/{len(jobs)} ({time.time() - started:.0f}s)", flush=True)
+            # A graceful join runs worker finalizers and reaps their simulator children. The parent's
+            # RUSAGE_CHILDREN now includes all worker startup, games and teardown, exactly once.
+            pool.close()
+            pool.join()
     finally:
+        if args.measure_cpu:
+            workers_cpu = difference(usage(resource.RUSAGE_CHILDREN), children_before)
         if cuda_server is not None:
             try:
                 # The workers closing their sockets is what shuts it down; only wait for that before
                 # stopping it ourselves, because a server that outlives the run holds its VRAM.
-                cuda_server.wait(timeout=30)
+                if args.measure_cpu:
+                    server_cpu = wait_with_cpu_usage(cuda_server)
+                else:
+                    cuda_server.wait(timeout=30)
             except subprocess.TimeoutExpired:
                 cuda_server.terminate()
+                if args.measure_cpu:
+                    server_cpu = wait_with_cpu_usage(cuda_server)
+                else:
+                    cuda_server.wait(timeout=30)
             print("cuda server: " + (args.out / "cuda_server.log").read_text(errors="replace").strip(),
                   flush=True)
         if cuda_keep is not None:
             cuda_keep.cleanup()
+    if args.measure_cpu:
+        driver_cpu = difference(usage(), {"user_s": 0.0, "system_s": 0.0})
+        total = workers_cpu["total_s"] + driver_cpu["total_s"] + (server_cpu["total_s"] if server_cpu else 0)
+        (args.out / "cpu_usage.json").write_text(json.dumps({
+            "method": "getrusage(RUSAGE_CHILDREN) after graceful worker/simulator joins; wait4 owned service",
+            "games": len(jobs), "workers_and_simulators": workers_cpu, "owned_service": server_cpu,
+            "driver": driver_cpu, "total_host_cpu_s": total,
+            "host_cpu_s_per_game": total / len(jobs) if jobs else None,
+            "external_service_excluded": bool(args.cuda_socket)}, indent=1) + "\n")
     summarize(results_path)
 
 
@@ -633,13 +819,19 @@ def summarize(results_path: Path) -> dict:
                      "mean_seconds": round(sum(r["seconds"] for r in v.values()) / len(v), 1),
                      "overrides_per_game": round(sum(r["overrides"] for r in v.values()) / len(v), 1),
                      "searched_per_game": round(sum(r["searched"] for r in v.values()) / len(v), 1),
-                     "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2),
                      # With --rollout-backend cuda these say what the GPU actually got to chew on: lanes per
                      # request is the batching, and cuda_seconds/seconds is how much of the game was waiting
                      # for it.
                      "cuda_lanes_per_game": round(sum(r.get("cuda_lanes", 0) for r in v.values()) / len(v), 1),
                      "cuda_batches_per_game": round(sum(r.get("cuda_batches", 0) for r in v.values()) / len(v), 1),
-                     "cuda_seconds_per_game": round(sum(r.get("cuda_seconds", 0.0) for r in v.values()) / len(v), 1)}
+                     "cuda_seconds_per_game": round(sum(r.get("cuda_seconds", 0.0) for r in v.values()) / len(v), 1),
+                     "shovels_per_game": round(sum(r.get("shovels", 0) for r in v.values()) / len(v), 2),
+                     "games_with_shovel": sum(1 for r in v.values() if r.get("shovels")),
+                     "replants_per_game": round(sum(len(r.get("replant_events") or []) for r in v.values()) / len(v), 2),
+                     "first_aid_replants_per_game": round(sum(
+                         sum(1 for e in (r.get("replant_events") or []) if e.get("same_type"))
+                         for r in v.values()) / len(v), 2),
+                     "mowers_used_per_game": round(sum(r.get("mowers_used", 0) for r in v.values()) / len(v), 2)}
                for arm, v in by.items()}
     (results_path.parent / "summary.json").write_text(json.dumps(summary, indent=1))
     print(json.dumps(summary, indent=1))

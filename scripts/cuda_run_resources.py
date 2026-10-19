@@ -9,6 +9,7 @@ import argparse
 from datetime import datetime
 import gzip
 import json
+import os
 from pathlib import Path
 import subprocess
 import time
@@ -80,6 +81,10 @@ def main() -> None:
                 "host_loadavg": Path("/proc/loadavg").read_text().split()[:3],
                 "host_available_kib": int(mem["MemAvailable"].split()[0]),
                 "host_swap_used_kib": int(mem["SwapTotal"].split()[0]) - int(mem["SwapFree"].split()[0]),
+                "host_cpu_ticks": {parts[0]: list(map(int, parts[1:]))
+                    for line in Path("/proc/stat").read_text().splitlines()
+                    if (parts := line.split()) and parts[0].startswith("cpu")},
+                "clock_ticks_per_second": os.sysconf("SC_CLK_TCK"),
                 "evaluation_rss_kib": sum(table[pid]["rss_kib"] for pid in owned),
                 "evaluation_swap_kib": sum(table[pid]["swap_kib"] for pid in owned),
                 "evaluation_processes": {str(pid): table[pid] for pid in sorted(owned)},

@@ -415,6 +415,7 @@ void Reanimation::ReanimationInitialize(float theX, float theY, ReanimatorDefini
 			ReanimatorTrackInstance* aTrack = &mTrackInstances[aTrackIndex];
 			if (aTrack != nullptr)
 				new (aTrack)ReanimatorTrackInstance();
+			mNeedsTrackUpdates |= mDefinition->mTracks.tracks[aTrackIndex].mIsAttacher;
 		}
 	}
 	else
@@ -499,13 +500,16 @@ void Reanimation::Update()
 		}
 	}
 
+	if ((gEnvSimSkip & ENV_LIGHT_ANIMATION) && !mNeedsTrackUpdates)
+		return;
+
 	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
 	{
 		ReanimatorTrackInstance* aTrack = &mTrackInstances[aTrackIndex];
 		if (aTrack->mBlendCounter > 0)
 			aTrack->mBlendCounter--;
 
-		if (aTrack->mShakeOverride != 0.0f)
+		if (aTrack->mShakeOverride != 0.0f && !(gEnvSimSkip & ENV_LIGHT_ANIMATION))
 		{
 			aTrack->mShakeX = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
 			aTrack->mShakeY = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
@@ -1028,6 +1032,7 @@ int Reanimation::FindTrackIndex(const char* theTrackName)
 
 ReanimatorTrackInstance* Reanimation::GetTrackInstanceByName(const char* theTrackName)
 {
+	mNeedsTrackUpdates = true;
 	return &mTrackInstances[FindTrackIndex(theTrackName)];
 }
 
@@ -1065,6 +1070,7 @@ void Reanimation::GetTrackBasePoseMatrix(int theTrackIndex, SexyTransform2D& the
 
 AttachEffect* Reanimation::AttachParticleToTrack(const char* theTrackName, PvzpParticleSystem* theParticleSystem, float thePosX, float thePosY)
 {
+	mNeedsTrackUpdates = true;
 	int aTrackIndex = FindTrackIndex(theTrackName);
 	ReanimatorTrackInstance* aTrackInstance = &mTrackInstances[aTrackIndex];
 	SexyTransform2D aBasePoseMatrix;
@@ -1148,6 +1154,8 @@ bool Reanimation::TrackExists(const char* theTrackName)
 
 void Reanimation::StartBlend(int theBlendTime)
 {
+	if (gEnvSimSkip & ENV_LIGHT_ANIMATION)
+		return;
 	for (int aTrackIndex = 0; aTrackIndex < mDefinition->mTracks.count; aTrackIndex++)
 	{
 		ReanimatorTransform aTransform;
@@ -1555,7 +1563,8 @@ void Reanimation::UpdateAttacherTrack(int theTrackIndex)
 
 	Color aColor = ColorsMultiply(mColorOverride, aTrackInstance->mTrackColor);
 	aColor.mAlpha = std::clamp(FloatRoundToInt(aTransform.mAlpha * aColor.mAlpha), 0, 255);
-	AttachmentPropogateColor(aTrackInstance->mAttachmentID, aColor, mEnableExtraAdditiveDraw, mExtraAdditiveColor, mEnableExtraOverlayDraw, mExtraOverlayColor);
+	if (!(gEnvSimSkip & ENV_LIGHT_ANIMATION))
+		AttachmentPropogateColor(aTrackInstance->mAttachmentID, aColor, mEnableExtraAdditiveDraw, mExtraAdditiveColor, mEnableExtraOverlayDraw, mExtraOverlayColor);
 }
 
 bool Reanimation::IsAnimPlaying(const char* theTrackName)

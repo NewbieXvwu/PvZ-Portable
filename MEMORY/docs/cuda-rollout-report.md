@@ -7,6 +7,37 @@
 
 ## 当前结论
 
+task3（第61轮，2026-10-19 08:56 CST）已验收：k=2 在两个后端都生效，**GPU 每局主机 CPU 只有 CPU 的 1/3.16**；
+在固定 2 个 CPU worker 的同一批 6 局上，加 2 个推测 GPU worker 把吞吐从 **47.1 局/小时提到 101.1 局/小时（2.15 倍）**，
+主机 CPU 从 141.0 降到 93.9 秒/局。
+
+
+| 臂（同 4 种子 30000–30003，k=2，beta0.5，2500 tick，完整帧） | 墙钟 | 每局主机 CPU 秒 | 分解 |
+|---|---|---|---|
+| CPU 4 worker | 238.66 s | **177.113** | worker 14.51 + 模拟器 161.98 |
+| GPU 普通 4 worker | 317.68 s | **77.923** | worker 11.31 + 模拟器 7.75 + 服务 57.80 |
+| GPU 推测 2 worker | 207.76 s | **55.966** | worker 8.60 + 模拟器 6.08 + 服务 41.29 |
+
+推测臂因正式训练当时占用 13 GB 内存降为 2 worker，墙钟不与 4 worker 臂比；主机 CPU 秒按进程计量，与并发无关。
+GPU 省下的是**模拟器**那 154 秒/局（161.98→7.75），代价是服务进程 41–58 秒/局。
+
+混合部署（固定 N=2 个 CPU worker，同一 6 个种子 30000–30005，老师参数与 k 相同，load 21–24）：
+
+| M（推测 GPU worker） | 墙钟 | 吞吐 | 每局主机 CPU 秒 |
+|---|---|---|---|
+| 0 | 458.36 s | 47.1 局/时 | 140.97 |
+| 1 | 347.35 s | 62.2 局/时（1.32×） | 126.70 |
+| 2 | 213.56 s | **101.1 局/时（2.15×）** | **93.94** |
+| 3 | 228.30 s | 94.6 局/时（2.01×） | 96.26 |
+
+⇒ 这台机器上 M=2 是最优点；M=3 反而回落到 94.6（三个服务抢设备）。显存不是瓶颈：3 个服务合计 1.8 GB、利用率 39%。
+
+**等价边界（不要引用成"CPU/GPU 逐字节一致"）**：GPU 普通与推测四种子整局逐字节相同（1096–1320 帧，
+动作/标签/targets/v2 全等）；CPU 与 GPU 在**首个搜索决策**即分叉，差异只在叶子价值（最大 |Δ| 0.017–0.036），
+k=2 的候选集与顺序完全一致，4 个种子里 3 个在该决策仍选同一格。原因是 CUDA 独立 RNG 流与独立续走实现
+（v25 阶段 1 与原版搜索一致 76.96%），不是 k=2 引入的回归。跨后端混跑时标签来自同一老师策略、不同的模拟未来，
+这是任务族口径问题，已记在 `codex_cuda_questions.md`（2026-10-19 08:01 条）。
+
 | 验收 | 当前证据 | 状态 |
 |---|---|---|
 | 阶段 0 | OpenBLAS 单线程90.18条/秒，门槛9018。第22轮空闲复测27200道12388条/秒（1.374倍）；补机制后11616条/秒（1.288倍） | 通过 |
@@ -15,17 +46,63 @@
 | 阶段 1（v25） | 1393点全部GPU，一致76.96%对噪声75.59%，门槛72.59% | 通过（第35轮） |
 | 阶段 2（v25） | 完整128对：CPU126胜/GPU125胜，CPU独胜2/GPU独胜1，McNemar精确p=1.0；全部CUDA覆盖、零回退/错误 | 通过（第56轮） |
 | 实际DAgger墙钟 | 同4种子/4worker/beta0.5：CPU115.21/118.52s，原CUDA439.07s，内联原减半286.13/279.98s，内联推测减半124.63s | GPU改善3.523倍，仍未快过CPU |
+| 主机CPU/局（第61轮） | 同4种子/k=2：CPU 177.113s，GPU普通 77.923s，GPU推测 55.966s | 通过（GPU省3.16倍） |
+| 混合吞吐（第61轮） | N=2 CPU worker 固定，6局：M=0 47.1局/时，M=1 62.2，M=2 101.1，M=3 94.6 | 通过（M=2 为最优点） |
 
-截至第60轮：采用内联小波目标与opt-in推测减半，维持80ms合批；四种子的完整GPU帧（含
+截至第60轮（task3 之前的证据）：采用内联小波目标与opt-in推测减半，维持80ms合批；四种子的完整GPU帧（含
 动作、标签、targets、v2）与优化前逐字节相同。推测相对同内联核原减半快2.271倍，
 但GPU仍比两次CPU均值慢约6.6%，不宣称追平；墙钟证据只覆盖这4局，128局受外部负载
 影响的计时只用于强度门槛。GPU各控制臂资源采样无外部CUDA、子树VmSwap=0。
+第61轮更正口径：**墙钟不是结论**（同一天 load 21→24 时 CPU 4worker 从 115 s 涨到 238 s）；
+结论按"每局主机 CPU 秒"和"同批种子的每小时局数"记，见上面的 task3 两表。
 
-复现使用`rollout_cuda_small`目标，在现有采集命令中指定
-`--rollout-backend cuda --cuda-binary build/rollout_cuda_small --halving --cuda-speculative-halving --cuda-gather-ms 80`，
-并设置`PVZ_CUDA_PRIVATE_LIMIT=1200 PVZ_CUDA_COOPERATIVE_HEADS=1`。模型、任务、种子、
-4worker、beta0.5及完整帧参数见本地`artifacts/cuda/codex_r56/inline_speculative/command.json`。
-此开关增加实际续走工作：8952道→12192道，但只按原阶段取用8952道；3240道不参与标签。
+### 正式队列命令（第61轮实测过的那一份）
+
+构建（在仓库根目录）：
+
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --target pvz-portable rollout_cuda_small -j2
+```
+
+环境变量（每个 worker 进程都要有）：
+
+```bash
+export PVZ_CUDA_BINARY=$PWD/build/rollout_cuda_small
+export PVZ_CUDA_NET=$PWD/artifacts/cuda/student/v25.pvzrn
+export PVZ_CUDA_CORPUS=$PWD/artifacts/cuda/corpus_l7_z15_v9/roots.cudaroot
+export PVZ_CUDA_PRIVATE_LIMIT=1200
+export PVZ_CUDA_COOPERATIVE_HEADS=1
+export PVZ_SERVE_TRACE=1          # 可选：把每波 lanes/requests/rounds 写进 cuda_server.log
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
+```
+
+队列形态：**同一批种子按 `--seed-offset` 切开，CPU 进程与 GPU 进程并发跑**，
+每个进程自己拉起一个 CUDA 服务（不需要单独起服务、不要跨进程共享 socket）。
+N 个 CPU worker 配 M 个 GPU worker，实测最优点是 **2:2**：
+
+```bash
+COMMON="--rollout-policy .../student.pt --value .../value.pt --static-value .../static.pt \
+  --manifest .../manifest.json --task-id day_l7_z15_eval --executable build/pvz-portable \
+  --cuda-binary build/rollout_cuda_small --resource-dir ~/.cache/pvz-research-resources \
+  --arms fast_search --samples 3 --horizon 2500 --rollout-sim-skip 29 --halving \
+  --max-actions 3000 --student-candidates 2 --shovel-candidates 0 --measure-cpu --dagger-beta 0.5"
+
+# 2 个 CPU worker 进程（各 1 worker），种子前一半
+python3 scripts/search_play.py $COMMON --rollout-backend cpp --workers 1 \
+  --seed-offset 0 --seeds N/2 --out OUT/cpu_0 &
+# 2 个 GPU worker 进程（各 1 worker），种子后一半
+python3 scripts/search_play.py $COMMON --rollout-backend cuda --cuda-speculative-halving \
+  --workers 1 --seed-offset N/2 --seeds N/2 --out OUT/gpu_0 &
+```
+
+- **必须显式写 `--student-candidates 2`**：上游默认仍是 0，不写就退回旧候选集。
+- `--cuda-speculative-halving` 只改调度（一次算候选×所有 future，再按原阶段取值），
+  GPU 普通/推测四种子整局逐字节相同，可放心用；它增加实际续走道数（8952→12192）但只取用 8952。
+- 一个 GPU worker 约 52 主机 CPU 秒/局，一个 CPU worker 约 180 秒/局；按这个比例加 GPU worker，
+  直到 M>2 开始抢设备（第61轮 M=3 回落到 94.6 局/时）。
+- 混跑会让同一批标签来自 CPU/GPU 两种续走实现（不同模拟未来），这是任务族口径问题，见上一节。
+- 完整参数与逐局记录：`artifacts/cuda/codex_r61/{cpu_k2,gpu_k2_standard_r2,gpu_k2_speculative,mix_*}/command.json`。
 
 阶段 1 的判据是搜索一致率至少为另一组 CPU 随机未来的一致率减 3 个百分点。
 阶段 2 的判据是 z15 前 128 局配对 McNemar p > 0.1，胜局差不超过 4，并报告真实 DAgger 墙钟。

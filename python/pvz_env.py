@@ -170,8 +170,14 @@ class SeedCard:
     imitater_type: int | None = None
 
 
-def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]]) -> PlayerProfileContext:
-    """Match seed-bank capacity and upgrade ownership to a fixed task deck."""
+def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]],
+                     first_aid_owned: bool = False) -> PlayerProfileContext:
+    """Match seed-bank capacity and upgrade ownership to a fixed task deck.
+
+    first_aid_owned (wall-nut first aid) is a task property, not a deck property: it only
+    widens Board::CanPlantAt (a damaged wall-nut / tall-nut may take another nut of the same
+    type). Default False keeps every historical task's reset message byte-identical.
+    """
     seed_types = []
     imitater_owned = False
     for card in deck:
@@ -188,7 +194,7 @@ def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]]) -> Player
         seed_types.append(seed_type)
     upgrades = tuple(sorted(seed_type for seed_type in set(seed_types) if 40 <= seed_type <= 47))
     return PlayerProfileContext(seed_slot_count=len(deck), owned_upgrade_plants=upgrades,
-                                imitater_owned=imitater_owned)
+                                imitater_owned=imitater_owned, first_aid_owned=bool(first_aid_owned))
 
 
 class PvZEnv:
@@ -302,6 +308,7 @@ class PvZEnv:
             env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1")},
         )
         ready = self._read_message()
+        self._rollout_version = ready.get("rollout_version", 0)
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
             self._abort_process()
             raise RuntimeError(f"PvZ-Portable did not enter protocol-v{ENV_PROTOCOL_VERSION} environment mode: {ready}")
@@ -598,8 +605,8 @@ class PvZEnv:
         code sets it around its rollouts and puts it back to 0 afterwards. Any non-zero mask is an
         approximation whose effect must be measured (scripts/sim_skip_agreement.py), not assumed.
         """
-        if type(mask) is not int or mask < 0 or mask & ~29:
-            raise ValueError("sim skip mask must combine the bits 1, 4, 8 and 16")
+        if type(mask) is not int or mask < 0 or mask & ~61:
+            raise ValueError("SIM_SKIP only accepts presentation bits 1, 4, 8, 16 and 32")
         if not self._command(f"SIM_SKIP {mask}").get("ok"):
             raise RuntimeError("simulator rejected SIM_SKIP (binary older than this wrapper?)")
 
@@ -618,34 +625,47 @@ class PvZEnv:
         filename = str(Path(path).expanduser().resolve())
         if any(char in filename for char in ('\n', '\r')):
             raise ValueError("rollout network path must not contain newlines")
+        with open(filename, "rb") as stream:
+            version = stream.read(8)
+            if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004"):
+                raise ValueError("load_rollout_net requires an exported C++ network")
+            observation = int.from_bytes(stream.read(16)[12:16], "little") if version == b"PVZRN004" else 1
+        if self._process is None:
+            self._start()
+        if version == b"PVZRN004" and self._rollout_version < 2:
+            raise RuntimeError("v2lite requires a rebuilt simulator with rollout_version >= 2")
+        if observation == 3 and self._rollout_version < 3:
+            raise RuntimeError("v2 requires a rebuilt simulator with rollout_version >= 3")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")
 
-    def _student_options(self, student_history) -> str:
-        """The trailing ``V2H`` option: the student's history *before* the rollout's first decision.
-
-        The simulator advances it on the first network call, so the caller passes the state it holds
-        at the parent decision, not a state that already includes the root frame.  Empty for v1.
-        """
-        if student_history is None:
-            return ""
-        plants = student_history.plants
-        entries = " ".join(f"{int(row)} {int(col)} {int(kind)} {int(born)}"
-                           for (row, col, kind), born in plants.items())
-        wave = student_history.wave if student_history.wave is not None else -1
-        suffix = f" V2H {int(wave)} {int(student_history.wave_tick)} {len(plants)} {entries}".rstrip()
-        if self._rollout_version < 2:
-            raise RuntimeError("student history requires rollout_version >= 2")
+    def _student_options(self, student_history, trace_path) -> str:
+        suffix = ""
+        if student_history is not None:
+            plants = student_history.plants
+            entries = " ".join(f"{int(row)} {int(col)} {int(kind)} {int(born)}"
+                               for (row, col, kind), born in plants.items())
+            wave = student_history.wave if student_history.wave is not None else -1
+            suffix += f" V2H {int(wave)} {int(student_history.wave_tick)} {len(plants)} {entries}".rstrip()
+        if trace_path is not None:
+            filename = str(Path(trace_path).expanduser().resolve())
+            if any(char in filename for char in ('\n', '\r')):
+                raise ValueError("trace path must not contain newlines")
+            suffix += ' TRACE "' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        if suffix and self._rollout_version < 2:
+            raise RuntimeError("student history and tracing require rollout_version >= 2")
         return suffix
 
-    def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False) -> dict:
+    def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False, *,
+                        student_history=None, trace_path=None) -> dict:
         """Diagnostic logits and greedy action on the current public board, without advancing it."""
         if not self._reset_done:
             raise RuntimeError("call reset() before rollout_predict()")
         income = self._annotate_observation({"tick": self._tick, "wave_timer": 0})["sun_income_rate"]
         response = self._command(f"ROLLOUT_PREDICT {previous_tick if previous_tick is not None else -1} "
-                                 f"{int(previous_plant)} {income:.17g}")
+                                 f"{int(previous_plant)} {income:.17g}"
+                                 + self._student_options(student_history, trace_path))
         if not response.get("ok"):
             raise RuntimeError("simulator rejected ROLLOUT_PREDICT")
         return response
@@ -653,7 +673,7 @@ class PvZEnv:
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
                 sim_skip: int = 0, max_actions: int = 1000000,
                 snapshot_id: int | None = None, seed: int | None = None,
-                student_history=None) -> dict[str, Any]:
+                student_history=None, trace_path=None) -> dict[str, Any]:
         """Run the greedy student entirely in C++ and return its leaf (0 = whole game).
 
         None selects the first action with the student, with fresh previous-action context.
@@ -666,8 +686,8 @@ class PvZEnv:
             raise ValueError("until_tick must be a non-negative signed 32-bit integer")
         if type(max_actions) is not int or not 1 <= max_actions <= 1000000:
             raise ValueError("max_actions must be from 1 to 1000000")
-        if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~29:
-            raise ValueError("sim skip mask must combine the bits 1, 4, 8 and 16")
+        if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~253:
+            raise ValueError("rollout sim skip mask must combine the bits 1, 4, 8, 16, 32, 64 and 128")
         event_wait = False
         if first_action is None:
             token = "A"
@@ -676,12 +696,14 @@ class PvZEnv:
             condition = action.pop("until", None)
             if condition is not None and (action.get("type") != "wait" or condition != "timeout"):
                 raise ValueError("rollout first action only supports fixed or timeout waits")
-            if action.get("type") not in ("plant", "wait"):
-                raise ValueError("rollout first action must be plant or wait")
+            if action.get("type") not in ("plant", "shovel", "wait"):
+                raise ValueError("rollout first action must be plant, shovel or wait")
             if action["type"] == "wait" and (type(action.get("ticks")) is not int or not 0 <= action["ticks"] <= 1000000):
                 raise ValueError("wait ticks must be from 0 to 1000000")
             if action["type"] == "plant":
                 self._coordinates(action, ("packet", "row", "col"))
+            if action["type"] == "shovel":
+                self._coordinates(action, ("col", "row"))
             event_wait = condition is not None
             token = branch_action_token(action)
         if seed is not None and (type(seed) is not int or not 0 <= seed < 2 ** 32):
@@ -696,10 +718,12 @@ class PvZEnv:
         response = self._command(f"ROLLOUT {snapshot_id or 0} {seed if seed is not None else -1} "
                                  f"{until_tick} {sim_skip} {max_actions} {int(event_wait)} {token} "
                                  f"{history_start} {len(history)} {samples}".rstrip()
-                                 + self._student_options(student_history))
+                                 + self._student_options(student_history, trace_path))
         observation = response.get("observation")
         if not response.get("ok") or not isinstance(observation, dict):
-            raise RuntimeError(f"simulator rejected ROLLOUT: {response}")
+            raise RuntimeError(f"simulator rejected ROLLOUT (binary older than this wrapper?): {response}")
+        if response.get("estimated_result", -1) >= 0:
+            observation["rollout_result"] = response["estimated_result"]
         self._sun_production_history = deque(history)
         self._sun_history_start_tick = history_start
         for tick, produced in response["substeps"]:
@@ -730,7 +754,7 @@ class PvZEnv:
         samples = " ".join(f"{tick} {amount}" for tick, amount in history)
         response = self._command(f"CUDA_DUMP {quoted} {1 if write_level else 0} {history_start} "
                                  f"{len(history)} {samples}".rstrip()
-                                 + self._student_options(student_history))
+                                 + self._student_options(student_history, None))
         if not response.get("ok"):
             raise RuntimeError(f"simulator rejected CUDA_DUMP: {response}")
         return response

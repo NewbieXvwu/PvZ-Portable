@@ -1195,6 +1195,8 @@ static void SyncReanimationPortable(Board* theBoard, Reanimation* theReanimation
 	theContext.SyncFloat(theReanimation->mLastFrameTime);
 	theContext.SyncEnum(theReanimation->mFilterEffect);
 
+	if (theContext.mReading)
+		theReanimation->mNeedsTrackUpdates = false;
 	if (aDef && aDef->mTracks.count != 0)
 	{
 		int aCount = aDef->mTracks.count;
@@ -1235,6 +1237,9 @@ static void SyncReanimationPortable(Board* theBoard, Reanimation* theReanimation
 			for (int aTrackIndex = 0; aTrackIndex < aCount; aTrackIndex++)
 			{
 				SyncReanimTrackInstancePortable(theContext, theReanimation->mTrackInstances[aTrackIndex]);
+				if (theContext.mReading)
+					theReanimation->mNeedsTrackUpdates |= aDef->mTracks.tracks[aTrackIndex].mIsAttacher ||
+						theReanimation->mTrackInstances[aTrackIndex].mAttachmentID != AttachmentID::ATTACHMENTID_NULL;
 			}
 		}
 	}

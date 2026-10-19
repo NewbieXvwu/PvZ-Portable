@@ -24,8 +24,12 @@ Usage::
     python scripts/watch_policy.py --visible --wave-cap 5 --policy donothing
 
     # the current best student on a 1.5x-zombie game of level 7, its own deck
-    python scripts/watch_policy.py --visible --student artifacts/student/v10/model.pt --deck 0,1,2,3,4,5,7 \
+    python scripts/watch_policy.py --visible --student artifacts/student/v20/model.pt --deck 0,1,2,3,4,5,7 \
         --multiplier 1.5 --seed 30000 --max-actions 3000 --hold-seconds 10
+
+    # playback speed: PVZ_ENV_RENDER_EVERY logic ticks per drawn frame, PVZ_ENV_RENDER_MS pause per frame
+    # (defaults 1 / 10 = normal speed); 5x:
+    PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student ...
 
     # headless, print the action mix only
     python scripts/watch_policy.py --wave-cap 5 --seed 1330000 --quiet
@@ -96,6 +100,9 @@ def _student_actions(path: str):
     from render_episode import _frame
     net = load_student(path)
     memo = {"frame": None, "action": None}
+    if net.obs == "v2lite":
+        from pvz_student_observation import StudentHistory
+        memo["history"] = StudentHistory()
 
     def next_action(observation, _info=None):
         frame = _frame(observation)
@@ -105,7 +112,7 @@ def _student_actions(path: str):
                 from pvz_value_net import observation_context
                 memo["context"] = observation_context(observation)
             action = act(net, frame, memo["frame"], (observation.get("legal_actions") or {}).get("plants") or [],
-                         context=memo["context"])
+                         context=memo["context"], history=memo.get("history"))
         memo["frame"], memo["action"] = frame, action
         return action
     return next_action

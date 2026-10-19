@@ -31,6 +31,7 @@ import hashlib
 import json
 import multiprocessing as mp
 import os
+import random
 import sys
 import time
 from pathlib import Path
@@ -78,6 +79,9 @@ def _init(args) -> None:
             search_play._W["cuda_dump_tmp"] = temporary
             search_play._W["cuda_dump"] = str(Path(temporary.name) / "root.cudaroot")
             _W["cuda_client"] = CudaRolloutClient(args.cuda_socket)
+        if args.approx_static_value:
+            _W['reference_static_vnet'] = search_play._W.get('static_vnet', search_play._W['vnet'])
+            _W['approx_static_vnet'] = load_value_net(args.approx_static_value)
 
 
 def _reset(seed: int):
@@ -86,7 +90,7 @@ def _reset(seed: int):
     from scripted_baseline import profile_for_deck
     args = _W["args"]
     kw = training_task_kwargs(load_training_task(args.manifest, args.task_id), seed)
-    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = _W["env"].reset(deck=tuple(kw["deck"]), task=task)
     if args.mode == "search":
@@ -165,17 +169,21 @@ def _search_decisions(seed: int) -> list[dict]:
     obs = _reset(seed)
     env.set_sim_skip(0)
     # min_gap is applied here, once, so all three arms search at exactly the same decisions.
-    sargs = ap.Namespace(samples=args.samples, horizon=args.horizon, margin=0.02, min_gap=0, per_card=args.per_card,
+    sargs = ap.Namespace(samples=args.samples, horizon=args.horizon, margin=args.margin, min_gap=0, per_card=args.per_card,
                          halving=args.base_halving)
     # The approximate arm: SIM_SKIP during rollouts and/or a cheaper search configuration.
     approx_sargs = ap.Namespace(**{**vars(sargs), **{k: v for k, v in (
         ("per_card", args.approx_per_card), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
         ("halving", args.approx_halving or None))
         if v is not None}})
+    if args.label_noise:
+        approx_sargs = ap.Namespace(**{**vars(sargs), "samples": args.high_samples, "halving": False})
     last_search_tick = -10 ** 9
     fast_state: dict = {}
     search_play._W["student_history"] = None
     rows, decisions = [], 0
+    dagger = random.Random(seed) if args.dagger_beta else None
+    stream = (args.jsonl_dir / f"seed_{seed}.jsonl").open("x", buffering=1) if args.jsonl_dir else None
 
     def run(decision_seed: int, mask: int, policy_action: dict, config, cpp=False,
             cuda=False) -> tuple[dict, list, float]:
@@ -184,6 +192,8 @@ def _search_decisions(seed: int) -> list[dict]:
         search_play._W["cpp_rollouts"] = cpp
         # The GPU arm swaps only the continuation engine: same candidates, same futures, same horizon.
         search_play._W["cuda"] = _W["cuda_client"] if cuda else None
+        if args.approx_static_value:
+            search_play._W['static_vnet'] = _W['approx_static_vnet'] if config is approx_sargs else _W['reference_static_vnet']
         started = time.perf_counter()
         try:
             chosen = search_play._search(env, obs, policy_action, config, decision_seed, stats)
@@ -191,7 +201,7 @@ def _search_decisions(seed: int) -> list[dict]:
             search_play._W["rollout_sim_skip"] = 0
             search_play._W["cuda"] = None
         return chosen, [(json.dumps(c, sort_keys=True), v) for c, v in (stats.get("last_targets") or [])], \
-            time.perf_counter() - started
+            time.perf_counter() - started, stats.get("last_best")
 
     while not obs["terminal"] and decisions < args.max_actions:
         action = search_play._fast_action(obs, fast_state)
@@ -201,33 +211,58 @@ def _search_decisions(seed: int) -> list[dict]:
         if searches:
             last_search_tick = obs["tick"]
             decision_seed = seed * 10000 + decisions
+            lanes_before = _W["cuda_client"].lanes if args.cuda_rollouts else 0
             runs = [(args.base_mask, sargs, args.base_cpp_rollouts, False),
                     (args.mask, approx_sargs, args.cpp_rollouts, args.cuda_rollouts)]
-            order = (0, 1) if len(rows) % 2 == 0 else (1, 0)
-            lanes_before = _W["cuda_client"].lanes if args.cuda_rollouts else 0
-            # run()'s third positional is the policy action the search is allowed to override, and it sits
-            # between the mask and the config -- so `action` cannot be spliced in with a single *.
-            results = {index: run(decision_seed, runs[index][0], action, *runs[index][1:])
+            runs.append((args.base_mask, sargs, args.base_cpp_rollouts, False))
+            order = [0, 1, 2] if args.label_noise else ([0, 1, 2] if len(rows) % 2 == 0 else [1, 0, 2])
+            if args.label_noise:
+                rotation = len(rows) % 3
+                order = order[rotation:] + order[:rotation]
+                runs[1] = (args.base_mask, approx_sargs, args.base_cpp_rollouts, False)
+            offsets = [0, 15_555_557 if args.label_noise else 0, 7_777_777]
+            if args.label_noise:
+                for samples in args.verify_samples:
+                    runs.append((args.base_mask, ap.Namespace(**vars(sargs), verify_samples=samples),
+                                 args.base_cpp_rollouts, False))
+                    offsets.append(0)
+                order = list(range(len(runs)))
+                rotation = len(rows) % len(runs)
+                order = order[rotation:] + order[:rotation]
+            results = {index: run(decision_seed + offsets[index], runs[index][0], action, runs[index][1], runs[index][2], runs[index][3])
                        for index in order}
-            exact, exact_totals, t_exact = results[0]
-            approx, approx_totals, t_approx = results[1]
-            other, other_totals, _t = run(decision_seed + 7_777_777, args.base_mask, action, sargs,
-                                         args.base_cpp_rollouts)
+            exact, exact_totals, t_exact, _best = results[0]
+            approx, approx_totals, t_approx, _best = results[1]
+            other, other_totals, _t, _best = results[2]
             if exact_totals:
                 rows.append({"seed": seed, "decision": decisions, "tick": obs["tick"],
                              "exact": exact, "approx": approx, "exact_other_futures": other,
                              "exact_totals": exact_totals, "approx_totals": approx_totals,
                              "other_totals": other_totals, "seconds_exact": round(t_exact, 3),
                              "seconds_approx": round(t_approx, 3),
-                             # Zero here means the GPU arm silently fell back to the CPU for this decision
-                             # (an unsupported root), which would inflate the agreement this row reports.
                              "cuda_lanes": (_W["cuda_client"].lanes - lanes_before) if args.cuda_rollouts else 0})
-        obs, _r, done, _t, info = env.step(action)
+                if args.label_noise:
+                    rows[-1] = {"seed": seed, "decision": decisions, "tick": obs["tick"], "wave": obs["wave"],
+                                "student": action, "margin": args.margin,
+                                "arms": {name: {"label": results[index][0], "values": results[index][1],
+                                                "seconds": results[index][2], "best": results[index][3],
+                                                "decision_seed": decision_seed + offsets[index]}
+                                         for name, index in [("A", 0), ("B", 2), ("H", 1)] +
+                                         [(f"V{samples}", index + 3) for index, samples in enumerate(args.verify_samples)]}}
+                if stream:
+                    stream.write(json.dumps(rows[-1], allow_nan=False) + "\n")
+        executed = exact if searches and dagger is not None else action
+        if dagger is not None and dagger.random() >= args.dagger_beta:
+            executed = action
+        fast_state["action"] = executed
+        obs, _r, done, _t, info = env.step(executed)
         if not info.get("ok"):
             obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
         decisions += 1
         if done:
             break
+    if stream:
+        stream.close()
     return rows
 
 
@@ -324,6 +359,7 @@ def main() -> None:
     p.add_argument("--policy", default=DEFAULT_POLICY, help="RolloutNet / fast_ppo checkpoint, played greedily")
     p.add_argument("--value", default=DEFAULT_VALUE)
     p.add_argument("--static-value", help="search mode: separate net for choosing cells")
+    p.add_argument("--approx-static-value", help="search mode: compare another cell-scoring checkpoint")
     p.add_argument("--executable", default=str(ROOT / "build" / "pvz-portable"))
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     p.add_argument("--max-actions", type=int, default=3000)
@@ -335,15 +371,33 @@ def main() -> None:
     p.add_argument("--approx-halving", action="store_true", help="search mode: successive halving (search_play --halving)")
     p.add_argument("--per-card", type=int, default=1, help="search mode: search_play --per-card")
     p.add_argument("--min-gap", type=int, default=300, help="search mode: search_play --min-gap")
+    p.add_argument("--margin", type=float, default=0.02)
+    p.add_argument("--dagger-beta", type=float, default=0.0, help="search mode: probability of executing reference teacher")
+    p.add_argument("--label-noise", action="store_true", help="search mode: independent A/B teachers and full-sample H")
+    p.add_argument("--high-samples", type=int, default=12, help="label noise: futures for every H candidate, no halving")
+    p.add_argument("--verify-samples", nargs="+", type=int, default=[],
+                   help="label noise: compare A with these extra pairwise verification counts")
+    p.add_argument("--jsonl-dir", type=Path, help="search mode: stream each search point to a per-seed JSONL")
     p.add_argument("--out", type=Path)
     args = p.parse_args()
     if args.cuda_rollouts:
         if args.mode != "search":
             p.error("--cuda-rollouts is a search-mode arm")
+    if not 0 <= args.dagger_beta <= 1:
+        p.error("--dagger-beta must be between 0 and 1")
+    if args.label_noise and (args.mode != "search" or args.jsonl_dir is None):
+        p.error("--label-noise requires search mode and --jsonl-dir")
+    if args.verify_samples and (not args.label_noise or min(args.verify_samples) <= 0
+                                or len(set(args.verify_samples)) != len(args.verify_samples)):
+        p.error("--verify-samples requires --label-noise and distinct positive counts")
+    if args.jsonl_dir:
+        args.jsonl_dir.mkdir(parents=True, exist_ok=True)
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
     seeds = load_training_task(args.manifest, args.task_id)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
+    if len(seeds) != args.seeds:
+        p.error("requested seed range exceeds the manifest")
     cuda_keep = cuda_server = cuda_log = None
     cuda_report = ""
     if args.cuda_rollouts and not args.cuda_socket:
@@ -376,7 +430,11 @@ def main() -> None:
                         args.out.with_suffix(".partial.json").write_text(json.dumps(
                             {"completed_seeds": completed, "total_seeds": len(seeds),
                              "summary": partial, "results": results}) + "\n")
-                summary = summarize_search(results, args.mask)
+                if args.label_noise:
+                    from label_noise import read_rows, summarize
+                    summary = summarize(read_rows(sorted(args.jsonl_dir.glob("seed_*.jsonl"))))
+                else:
+                    summary = summarize_search(results, args.mask)
     finally:
         if cuda_server is not None:
             import subprocess
@@ -393,10 +451,14 @@ def main() -> None:
                    cpp_rollouts=args.cpp_rollouts, base_cpp_rollouts=args.base_cpp_rollouts,
                    cuda_rollouts=args.cuda_rollouts, cuda_server=cuda_report,
                    base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
-                   approx_halving=args.approx_halving or args.base_halving, per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
-                   approx_samples=args.approx_samples, approx_horizon=args.approx_horizon,
-                   horizon=args.horizon, workers=args.workers, seed_offset=args.seed_offset,
-                   seeds=seeds, complete=True,
+                   approx_static_value=args.approx_static_value,
+                   approx_halving=False if args.label_noise else args.approx_halving or args.base_halving,
+                   per_card=args.per_card, min_gap=args.min_gap, samples=args.samples,
+                   approx_samples=args.high_samples if args.label_noise else args.approx_samples,
+                   approx_horizon=args.horizon if args.label_noise else args.approx_horizon,
+                   margin=args.margin, dagger_beta=args.dagger_beta, label_noise=args.label_noise,
+                   high_samples=args.high_samples, horizon=args.horizon, seed_offset=args.seed_offset,
+                   workers=args.workers, seeds=seeds, complete=True,
                    cuda_binary_sha256=(hashlib.sha256(Path(args.cuda_binary).read_bytes()).hexdigest()
                                        if args.cuda_rollouts else None),
                    policy_sha256=hashlib.sha256(Path(args.policy).read_bytes()).hexdigest(),

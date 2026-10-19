@@ -57,7 +57,7 @@ def check_cpp(args) -> None:
             search_play._W["vnet"] = load_value_net(args.value)
         for seed in task_data["seeds"][: args.seeds]:
             kw = training_task_kwargs(task_data, seed)
-            task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+            task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                             **{k: v for k, v in kw["task_extra"].items() if v is not None})
             obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
             task_context = observation_context(obs)
@@ -160,7 +160,7 @@ def _rollout_pair(env, obs: dict, first: dict, seed: int, counters: dict) -> Non
 
 def play(env, net, manifest, task_id, seed, check_lean: bool, counters: dict) -> list:
     kw = training_task_kwargs(load_training_task(manifest, task_id), seed)
-    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"])),
+    task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
     memo = {"frame": None, "action": None}
