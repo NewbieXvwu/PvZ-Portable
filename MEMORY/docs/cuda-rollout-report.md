@@ -51,6 +51,13 @@ export PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause   # 训练期间 touch，采集在�
      --measure-cpu --frames <dir> --frames-label z20_h1800 --out <out>
    ```
    精确臂只把 `--horizon 1800` 换成 2500；两臂按种子配对后比胜局与 McNemar。
+5. **精度与 CPU 侧：按任务书跳过**。第65轮剖析：每轮 trunk 卷积约 1.0 ms、sim 3.6–5.8 ms、
+   heads+apply 6.1–10.1 ms，网络矩阵乘只占约一成，FP16/FP8 只能动这一成；
+   CPU worker 的 BLAS 占模拟器 CPU 13.736/152.076 s = **9.03%**，即使零成本整局主机 CPU 最多 1.093×。
+   两项都低于 10% 门槛，不引入量化/低精度路径。
+6. **方向 7（N:M）本轮未重测**：正式队列占着 GPU，重测会被背景负载污染。可用的边界来自第 2 条：
+   训练重叠时 M=2 已是上限（M=4 时训练约 10×）；poll 让每个 GPU worker 少占约 0.85 核，
+   2+2 配置下约 1.7 核可还给 CPU worker，这是下一轮 N=4/M=2 的直接动机。
 
 ### task5 合并审查清单（第64轮，已验收）
 

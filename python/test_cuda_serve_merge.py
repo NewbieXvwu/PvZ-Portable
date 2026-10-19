@@ -248,5 +248,20 @@ class PrivatePathTest(unittest.TestCase):
         self.assertEqual(answers[0], answers[1], "the private path changed a continuation")
 
 
+@unittest.skipUnless(BINARY.is_file() and NET.is_file(),
+                     "requires the CUDA server binary and a .pvzrn student net")
+class CudaHostWaitEnvTest(unittest.TestCase):
+    def test_invalid_poll_value_fails_before_startup(self):
+        # A typo must not silently fall back to spinning (or to a 10 s sleep): the server is
+        # started by the queue, so the only useful moment to complain is before it serves.
+        with tempfile.TemporaryDirectory() as directory:
+            process = subprocess.run(
+                [str(BINARY), "--serve", "--net", str(NET), "--socket", str(Path(directory) / "s.sock"),
+                 "--lanes", "8"], env={**os.environ, "PVZ_CUDA_POLL_US": "fast"},
+                capture_output=True, text=True, timeout=60)
+        self.assertNotEqual(process.returncode, 0)
+        self.assertIn("PVZ_CUDA_POLL_US", process.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
