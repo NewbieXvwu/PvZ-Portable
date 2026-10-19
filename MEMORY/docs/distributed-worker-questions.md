@@ -93,3 +93,8 @@ UURemote 的两个转发端口都还在监听（22222 Windows / 22223 Mac），T
 
 已改：`controller` 的 ssh `ConnectTimeout` 15→45 秒、`ServerAliveCountMax` 8、`TCPKeepAlive`，
 rsync `--timeout` 180→300 秒，避免在慢中继上自己把连接掐死。
+
+补充（07:17）：积压不是固定 19 秒，而是在变长 —— stream 650 的 SYN_ACK 远端时间戳 19:15:25、
+到达 19:16:57，**晚了 92 秒**。45 秒的 ConnectTimeout 仍然会被自己掐断，已改为 180 秒、
+rsync `--timeout=600`。但 SSH 握手要 5–6 个 RTT，按 90 秒/RT 算单次连接就要 ~10 分钟，
+rsync 更慢；**靠加大超时不能当长期方案**，需要主控重连 UU（或换网络）把中继队列清掉。
