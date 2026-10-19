@@ -26,8 +26,15 @@
 | 5 文档 | ✅ 本文件 |
 | 6 GPU | 等主控通知 |
 
-**卡点**：pvz-f1 在 bootstrap 装完后进入睡眠，SSH 停在 banner exchange。已加 `caffeinate -i`
-与 keepalive；机器醒来后由一次性脚本自动推送并跑自检。
+**卡点（2026-10-19 04:00）**：pvz-f1 的隧道仍然不通 —— 22223 一直停在 banner exchange，
+22222 曾短暂通到一台 Windows OpenSSH（公钥被拒），随后也超时。bootstrap 装完后的自检与
+8 进程复跑要等隧道恢复。恢复后一条命令即可补齐：
+
+    python3 scripts/dist/controller.py push pvz-f1 --all --student artifacts/student/v29/model.pt \
+      && ssh pvz-f1 "PVZ_COMMIT=$(git rev-parse HEAD) bash ~/bootstrap.sh" \
+      && python3 scripts/dist/controller.py assign pvz-f1 artifacts/student/v29/model.pt 32 \
+           --label z17distproto --offset 14736 --workers 8 --allow-reserved --start \
+      && python3 scripts/dist/controller.py collect --label z17distproto
 
 ## 0. 一页纸（发给朋友）
 
