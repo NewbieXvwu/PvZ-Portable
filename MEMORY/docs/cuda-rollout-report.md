@@ -82,7 +82,7 @@ export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 
 队列形态：**同一批种子按 `--seed-offset` 切开，CPU 进程与 GPU 进程并发跑**，
 每个进程自己拉起一个 CUDA 服务（不需要单独起服务、不要跨进程共享 socket）。
-N 个 CPU worker 配 M 个 GPU worker，实测最优点是 **2:2**：
+实测最优点是 **2 个 CPU worker + 2 个 GPU worker**（下面就是第61轮 B2 那份，6 个种子为例）：
 
 ```bash
 COMMON="--rollout-policy .../student.pt --value .../value.pt --static-value .../static.pt \
@@ -91,19 +91,24 @@ COMMON="--rollout-policy .../student.pt --value .../value.pt --static-value .../
   --arms fast_search --samples 3 --horizon 2500 --rollout-sim-skip 29 --halving \
   --max-actions 3000 --student-candidates 2 --shovel-candidates 0 --measure-cpu --dagger-beta 0.5"
 
-# 2 个 CPU worker 进程（各 1 worker），种子前一半
-python3 scripts/search_play.py $COMMON --rollout-backend cpp --workers 1 \
-  --seed-offset 0 --seeds N/2 --out OUT/cpu_0 &
-# 2 个 GPU worker 进程（各 1 worker），种子后一半
+# CPU 进程：2 个 worker，种子 0..1
+python3 scripts/search_play.py $COMMON --rollout-backend cpp --workers 2 \
+  --seed-offset 0 --seeds 2 --out OUT/cpu_0 &
+# GPU 进程：2 个 worker，种子 2..5
 python3 scripts/search_play.py $COMMON --rollout-backend cuda --cuda-speculative-halving \
-  --workers 1 --seed-offset N/2 --seeds N/2 --out OUT/gpu_0 &
+  --workers 2 --seed-offset 2 --seeds 4 --out OUT/gpu_0 &
+wait
 ```
+
+这是**两个进程**（不是四个）：`--workers` 是进程内的游戏并发，服务由该进程自动拉起。
+把 `--seeds`/`--seed-offset` 按总种子数等比放大即可，GPU 那一侧的比例不要超过 CPU 侧的 1:1
+（实测 M>N 时 M=3 已回落）。
 
 - **必须显式写 `--student-candidates 2`**：上游默认仍是 0，不写就退回旧候选集。
 - `--cuda-speculative-halving` 只改调度（一次算候选×所有 future，再按原阶段取值），
   GPU 普通/推测四种子整局逐字节相同，可放心用；它增加实际续走道数（8952→12192）但只取用 8952。
-- 一个 GPU worker 约 52 主机 CPU 秒/局，一个 CPU worker 约 180 秒/局；按这个比例加 GPU worker，
-  直到 M>2 开始抢设备（第61轮 M=3 回落到 94.6 局/时）。
+- 一个 GPU worker 约 52 主机 CPU 秒/局，一个 CPU worker 约 180 秒/局（约 3.5 倍）；
+  按这个比例配 GPU worker，实测 2:2 最优，M=3 回落到 94.6 局/时。
 - 混跑会让同一批标签来自 CPU/GPU 两种续走实现（不同模拟未来），这是任务族口径问题，见上一节。
 - 完整参数与逐局记录：`artifacts/cuda/codex_r61/{cpu_k2,gpu_k2_standard_r2,gpu_k2_speculative,mix_*}/command.json`。
 
