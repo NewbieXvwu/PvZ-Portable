@@ -306,7 +306,8 @@ def start_worker(entry: dict, label: str | None) -> None:
     root = f"$HOME/{WORKER_ROOT}"
     label_arg = f" --label {label}" if label else ""
     wake = "caffeinate -i " if entry.get("os", "darwin") == "darwin" else ""
-    cmd = (f"pkill -f 'dist/worker.py --root {root}' 2>/dev/null; sleep 1; cd {root} && mkdir -p logs && "
+    cmd = (f"pkill -f 'dist/worker.py --root {root}' 2>/dev/null; sleep 2; "
+           f"pkill -9 -f 'dist/worker.py --root {root}' 2>/dev/null; sleep 1; cd {root} && mkdir -p logs && "
            f"nohup {wake}{root}/env/bin/python {root}/repo/scripts/dist/worker.py --root {root} "
            f"run{label_arg} > logs/worker.out 2>&1 & echo started $!")
     proc = ssh(entry, cmd, check=False)

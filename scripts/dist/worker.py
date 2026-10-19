@@ -31,7 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))                 # repo/scripts
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "python"))      # repo/python
 
-PAUSE_AUTO_STOP = 30 * 60          # 冻结超过这么久 → 立即停止（把内存还给朋友）
+PAUSE_AUTO_STOP = int(os.environ.get("PVZ_PAUSE_AUTO_STOP", 30 * 60))   # 冻结超过这么久 → 立即停止
 DEFAULT_PORT = 8765
 
 
@@ -130,7 +130,7 @@ class Worker:
         self.env_bin = root / "env" / "bin"
         self.port = port
         self.only_label = only_label
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.proc = None
         self.task = None
         self.status = "idle"            # idle running paused stopping stopped done error
@@ -414,7 +414,7 @@ class Worker:
                     self.write_progress()
                     if not stay:
                         raise
-                if self.stop_now:
+                if self.stop_now or self.stop_after:
                     self.write_progress()
                     return self._halt(stay)
             if not stay:
@@ -436,7 +436,11 @@ class Worker:
     # ------------------------------------------------------------------ web
     def serve_forever(self) -> None:
         handler = make_handler(self)
-        server = ThreadingHTTPServer(("127.0.0.1", self.port), handler)
+        try:
+            server = ThreadingHTTPServer(("127.0.0.1", self.port), handler)
+        except OSError as exc:
+            log(f"web: cannot bind 127.0.0.1:{self.port} ({exc}); collection continues without a page")
+            return
         log(f"web: http://127.0.0.1:{self.port}/")
         server.serve_forever()
 
@@ -560,7 +564,10 @@ def main() -> int:
     thread.start()
 
     def stop(_sig, _frame):
+        # SIGTERM/SIGINT means "go away" (the controller restarts us), not the page button:
+        # record the stop, then actually exit so the port and the process group are released.
         worker.request("stop_now")
+        raise SystemExit(0)
 
     signal.signal(signal.SIGTERM, stop)
     signal.signal(signal.SIGINT, stop)
