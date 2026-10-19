@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from teacher_counterfactual_audit import alternatives, category, physical
-from teacher_audit_stats import paired, point_stats, t_critical
+from teacher_audit_stats import bootstrap_mean, paired, point_stats, t_critical
 
 
 class AuditTest(unittest.TestCase):
@@ -49,6 +49,9 @@ class AuditTest(unittest.TestCase):
         self.assertAlmostEqual(t_critical(31),2.0395134464,places=7)
         self.assertGreater(t_critical(63,20),t_critical(63))
         self.assertAlmostEqual(paired([.1,-.1]*32)['mean'],0)
+
+    def test_single_game_does_not_claim_zero_uncertainty(self):
+        self.assertIsNone(bootstrap_mean([.3])['cluster_ci95'])
 
     def test_holdout_does_not_reselect_best_action(self):
         original={'type':'plant','packet':0,'row':0,'col':4}

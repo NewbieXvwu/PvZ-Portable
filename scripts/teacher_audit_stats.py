@@ -83,6 +83,8 @@ def point_stats(row):
 
 def bootstrap_mean(values):
     a=np.asarray(values);rng=np.random.default_rng(20261019)
+    if len(a)<8:
+        return {'mean':float(a.mean()),'cluster_ci95':None,'reason':'fewer than8 independent games'}
     means=a[rng.integers(len(a),size=(10000,len(a)))].mean(axis=1)
     return {'mean':float(a.mean()),'cluster_ci95':np.quantile(means,[.025,.975]).tolist()}
 
@@ -125,6 +127,11 @@ def summarize(directory,out):
         cr=[r for r in rows if r['category']==c]
         assert len(cr)==300 and len({r['seed'] for r in cr})==300
         summary['groups'][c]={str(v):group([r for r in cr if r[field]==v]) for v in sorted({r[field] for r in cr})}
+        if c=='A':
+            summary['groups']['A_pooled']={label:group([r for r in cr if predicate(r['gap'])])
+                                          for label,predicate in [('0',lambda v:v==0),
+                                                                  ('-1',lambda v:v==-1),
+                                                                  ('<=-2',lambda v:v<=-2)]}
         summary['examples'][c]=[{k:v for k,v in r.items() if k!='action_statistics'}
                                 for r in sorted(cr,key=lambda r:r['witness']['ci95'][0],reverse=True)[:4]]
     (directory.parent/'point_statistics.json').write_text(json.dumps(rows,indent=2)+'\n')
