@@ -71,6 +71,7 @@
     "seeds": "30000..30007 each arm,8 pairs",
     "primary_metric": "total host CPU seconds/game including driver,workers,simulators; require >=10% reduction",
     "secondary_metric": "actual measured job wall throughput games/hour; report pauses and background load",
-    "no_strength_run_if_cost_fails": true
+    "no_strength_run_if_cost_fails": true,
+    "sampling": "Both arms use100Hz ITIMER_PROF saved-PC sampling of C++ processes only; no stacks/allocations/I/O in handler; matching CPU time instrumentation"
   }
 }
