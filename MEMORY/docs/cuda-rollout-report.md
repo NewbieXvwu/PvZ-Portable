@@ -1,5 +1,8 @@
 # CUDA 续走模拟器：设计与实测
 
+task7 `cuda-merge`：混采入口已改为poll=100及精确复核预取默认开启；直接 `search_play.py` 仍需显式开关。
+下文task6的默认关闭描述是当时测量口径，现行合并说明见 [cuda-merge-notes.md](cuda-merge-notes.md)。
+
 分支 `cuda-rollout`，只替代老师的续走。真实对局与帧档案仍由原版模拟器生成。
 交接材料在 `~/pvz-logs/qoder_cuda_task.md`、`qoder_goal_addendum.md`、`qoder_answers.md`。
 本报告在 2026-10-18 接手时重写；旧版本是阶段 0 前的设计，不能代表当前实现。

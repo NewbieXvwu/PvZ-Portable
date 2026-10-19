@@ -42,6 +42,7 @@
 ## 历史报告（`docs/`）
 
 - [CUDA 续走：设计与实测](docs/cuda-rollout-report.md)
+- [CUDA 合并待审说明](docs/cuda-merge-notes.md)
 - [CUDA 阶段 1 语料](docs/cuda-corpus-phase1.md)
 - [codex-night-plan.md](docs/codex-night-plan.md)
 - [codex-night-plan-v2.md](docs/codex-night-plan-v2.md)
