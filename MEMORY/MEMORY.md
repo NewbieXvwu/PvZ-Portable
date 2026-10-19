@@ -73,3 +73,5 @@
 - [teacher-candidate-coverage.md](docs/teacher-candidate-coverage.md)
 
 - [static-value-branch1-compare.md](docs/static-value-branch1-compare.md)
+
+- [static-value-ablation.md](docs/static-value-ablation.md)
