@@ -7,23 +7,32 @@
 
 ## 当前结论
 
-### task6 采集提速（第66轮，2026-10-19，进行中）
+### task6 采集提速（第68轮复核，2026-10-19，进行中）
 
 **推荐配置（正式队列）**：仍用下面的 2+2 混采一条命令，另加两个环境变量：
 
 ```bash
-export PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause   # 训练期间 touch，采集在局间让路
-# 服务主机等待：mixed_dagger_round.sh 默认已设 PVZ_CUDA_POLL_US=100（设 0 回旧自旋）；
-# 想试候选服务构建时加 --cuda-binary <path>（默认 build/rollout_cuda_small）。
+PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause scripts/mixed_dagger_round.sh \
+  --student ~/PvZ-search/artifacts/student/v28/model.pt \
+  --task day_l7_z17_train --seed-offset 15010 --games 8 \
+  --frames ~/PvZ-search/artifacts/student/frames --frames-label z17dag_cuda \
+  --out ~/PvZ-search/artifacts/hard/z17_dagger_cuda_15010 --cpu-workers 2 --gpu-workers 2
 ```
 
+`mixed_dagger_round.sh` 已默认 `PVZ_CUDA_POLL_US=100`（显式设0恢复旧等待）；
+可加 `--cuda-binary <path>` 测候选服务。训练队列与采集启动时使用同一个暂停文件路径，
+训练前 `touch /tmp/pvz_gpu_pause`，结束后 `rm -f /tmp/pvz_gpu_pause`，训练失败也要清理该文件。
+等待正在进行的一局结束后才完全让出采集GPU；未带此变量启动的旧采集进程不会自动受控。
+
 1. **主机等待（补充2，已验收）**。服务每轮 `cudaStreamSynchronize` 在 WSL 上是自旋：
-   整局服务 CPU 248.87 s（≈1 个核），改成 `cudaStreamQuery`+100 µs 睡眠后 **26.38 s**（6.1×），
-   每局总主机 CPU 267.5 → 43.7 s。两局 `frames.npz` SHA 相同（`420bd6…`），批探针 10 次
+   整局服务 CPU 248.87 s（≈1 个核），改成 `cudaStreamQuery`+100 µs 睡眠后 **26.38 s**（9.44×），
+   每局总主机 CPU 267.5 → 43.7 s（6.12×）。两局 `frames.npz` SHA 相同（`420bd6…`），批探针 10 次
    bin/leaf SHA 全同（`a9ac3b…`/`919680…`）——只改主机等待，设备逐字节不变。
    墙钟代价：18 道/432 续走探针 +0.3–1.5 s；同负载 4 局配对（种子 1725000–1725003，8 份
-   `frames.npz` 两两 SHA 相同）合计 967.1 → 1001.8 s（+3.6%），差值集中在争卡最重的两局，
-   与"每局约 1.6 万次同步 × 100 µs ≈ 1.6 s"的上界一致。二进制默认仍是 0（旧行为）；
+   `frames.npz` 两两 SHA 相同）逐局耗时之和 967.1 → 1001.8 s（+3.6%）；这是并发局的耗时之和，
+   不能当作作业墙钟或每小时局数。后续 off 重测为 1005.2 s，包住 on 结果，当前共享负载下
+   无法分离唤醒代价与背景争卡。100 µs 是请求睡眠时间，不是操作系统实际唤醒延迟的上界。
+   二进制默认仍是 0（旧行为）；
    **正式入口 `mixed_dagger_round.sh` 默认导出 100**，环境变量显式给出时以它为准。
    混采 1+1 实测（种子 14100/14101、同一脚本）：旧二进制服务 149.97 CPU 秒，新二进制 20.83 秒，
    服务日志出现 "CUDA host wait: sleep 100 us"，合并输出 2 局完整。
@@ -31,40 +40,62 @@ export PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause   # 训练期间 touch，采集在�
    采集 sim 各占一核时 **63.10 s**（历史无负载 56 s，CPU 侧只占 12%）；恢复正式 2 个 GPU worker 后
    **88.72–115.54 s**（1.4–1.8×）；我另加 2 个 GPU worker（共 4 个）时 **548.8 s**（≈10×）。
    首轮 462.87 s 含 cudnn 预热与 18 GB 首次读盘，不作基线。主因是**同卡 GPU 采集的时间片**，
-   不是服务自旋（只占 0.85 核）；代价随 worker 数强烈非线性，**训练重叠时 M=2 已是上限**。
+   不是服务自旋；上述 epoch 比较同时受预热和背景负载影响，不能推出普适的 worker 上限。
+   第67轮另做固定真实 minibatch 的 ON/OFF/CPU干扰/ON 因果对照：每批均值
+   97.17 / 17.83 / 17.45 / 81.36 ms，GPU事件均值 92.37 / 16.31 / 15.91 / 77.55 ms；
+   中位数 28.13 / 17.34 / 17.31 / 30.89 ms。仅暂停正式 GPU 采集 5.50 s 后已恢复，
+   额外一个 CPU 忙核没有抵消改善，支持同卡 GPU 争用是主因（本地 `codex_r67/contention_results.json`）。
    暂停用 `PVZ_GPU_PAUSE_FILE`：每局开始前检查，存在就每 10 s 重查，
-   进行中的局照常下完，服务不退出；CPU 臂不等待。验收：touch 后 6 s 日志出现暂停、GPU util 33–38%
-   （=只有训练）、服务进程存活；rm 后该局开跑 util 79%，混采 1+1 两局 2 胜、合并输出完整。
+   进行中的局照常下完，服务不退出；CPU 臂不等待。第66轮验收是在首局前预先 touch，
+   6 s 后日志出现暂停、服务存活；rm 后开局，混采 1+1 两局 2 胜、合并完整。
+   全卡 util 33–38% 不能证明该服务没有提交核函数。
+   **第68轮补验已通过**：运行中100波里的第4波时touch，本局继续正常结束；约40s后下一局入口暂停，
+   连续26.02s PING返回固定100波/1584道（无新批次执行），rm后4.11s恢复至104波/1650道。
+   服务保持存活，混采CPU2局+GPU2局合并完整；GPU两局完整帧与未暂停档案SHA相同。
+   本地证据 `codex_r68/live_gate/{events,server_status,parity}.json`；可复现入口
+   `scripts/task6/check_pause_gate.py --student <v28/model.pt> --out <全新目录>`。
    用法：训练队列开始前 `touch`、结束后 `rm`；变量经 `mixed_dagger_round.sh` 透传。
 3. **道数很便宜，轮数是成本（方向 3/4/6 的尺子）**。单请求 horizon 2500、道数 18/36/72/144 各 3 轮，
    进程内 rollout 墙钟 1159/1362/1752/1953 ms（翻倍 +17.5%/+51%/+68.5%），每道成本 64/38/24/14 ms。
-   所以 `--per-card 2`（道数翻倍）在未饱和时约 +18%，方向 6 值得做但要 256 局配对；
-   反过来，方向 3/4 的"提前停止少走几道"几乎不省时间（少 20% 道 ≈ −3%），
-   而多一次请求要多付一整个 horizon 波（约 0.8 s/请求、每局 225 次搜索），因此**不采用**多轮自适应。
+   各档增加了不同根与未来，且没有记录完整调度环境，这只是合成批容量探针，
+   不能据此认定正式 `--per-card 2` 整局只贵 18%。方向 6 的256局配对由主控接到 Mac CPU 跑（14:20）。
+   方向 3/4 的"提前停止少走几道"在未饱和批次预计收益有限，
+   而多一次请求要多付一整个 horizon 波（该局约 0.8 s/请求、225 次搜索），暂不引入多请求自适应。
    逐局账（poll100）：`cuda_batches` 343 = 搜索 225 + 复核 81 + 37，每请求 0.795 s、16–18 道；
-   `cuda_seconds` 272.6 ≈ 343 × 0.795，复核约占 24% 的请求数。**下一轮要动 GPU 时间，只能动
-   "请求数 × 每请求轮数"：要么少一次复核（改决策，需配对），要么短 horizon（见第 4 条）。**
-4. **续走截断（方向 5）第 1 关：1800 档通过、1250 档不通过**。同一 1036 个搜索点三臂比较：
+   `cuda_seconds` 272.6 ≈ 343 × 0.795 是请求均值的恒等式，不能证明成本只由轮数决定。
+   从完整帧复核：343 次 = 225 次搜索 + **118 次复核**（81接受推翻、37否决），复核占 **34.4%**。
+   另四个 z17 种子的复核占比 9.4–24.0%，不能用接受推翻数代替复核请求数。还可减少轮内模拟、启动和同步开销。
+4. **续走截断（方向 5）CPU 初筛：1800 档有希望、1250 档退后**。同一 1036 个搜索点三臂比较：
    `--approx-horizon 1250` 一致率 74.13% vs 噪声底线 77.99%（−3.86pp，价值 regret +60%）→ 不采用；
    `--approx-horizon 1800` 一致率 **78.76% vs 77.99%（+0.77pp）**、价值 regret +5.5%、搜索时间 552.9→407.5 s
-   （1.36×），但独立 regret 仍 +41%。**未跑第 2 关（256 局胜局配对），因此不改进正式队列。**
-   下一轮命令（z20_eval、30000–30255、2 worker、正式老师参数）：
+   （1.36×），但独立 regret 仍 +41%。原始报告 `gpu_covered_searches=0`，诊断入口也未传
+   student-candidates=2 或 verify9；所以这是 CPU 简化老师初筛，不能算正式 GPU 老师的第1关通过。
+   **正式参数第1关及256局强度配对均未完成，14:20主控已暂缓 horizon 配对，不改正式队列。**
+   待主控恢复后可用的强度命令（z20_eval、30000–30255、2 worker，beta1实际执行老师）：
    ```bash
    scripts/search_play.py --rollout-policy ~/PvZ-search/artifacts/student/v28/model.pt \
      --value ~/PvZ-search/artifacts/value_net/v3/model.pt --static-value ~/PvZ-search/artifacts/hard/value_branch1/model.pt \
      --manifest ~/PvZ-search/artifacts/stage4/day_l7_hard.json --task-id day_l7_z20_eval \
-     --student-candidates 2 --verify-samples 9 --dagger-beta 0 --horizon 1800 \
+     --student-candidates 2 --verify-samples 9 --dagger-beta 1 --horizon 1800 \
      --seeds 256 --seed-offset 0 --workers 2 --rollout-backend cuda --cuda-speculative-halving \
      --measure-cpu --frames <dir> --frames-label z20_h1800 --out <out>
    ```
    精确臂只把 `--horizon 1800` 换成 2500；两臂按种子配对后比胜局与 McNemar。
+   beta0只执行同一学生，适合采集与计时，不能检验搜索老师强度。
 5. **精度与 CPU 侧：按任务书跳过**。第65轮剖析：每轮 trunk 卷积约 1.0 ms、sim 3.6–5.8 ms、
    heads+apply 6.1–10.1 ms，网络矩阵乘只占约一成，FP16/FP8 只能动这一成；
    CPU worker 的 BLAS 占模拟器 CPU 13.736/152.076 s = **9.03%**，即使零成本整局主机 CPU 最多 1.093×。
-   两项都低于 10% 门槛，不引入量化/低精度路径。
+   第68轮当前v28正式小波调度补测108道：每轮13.7ms中sim1.7、trunk0.7、heads+apply1.9、
+   同步与提交差额9.4ms；trunk约5.1%。这是开启PHASE事件计时的共享负载测量，包含计时扰动，
+   不把9.4ms当纯驱动开销；不足以支持优先降精度，因此不引入量化/低精度路径。
 6. **方向 7（N:M）本轮未重测**：正式队列占着 GPU，重测会被背景负载污染。可用的边界来自第 2 条：
-   训练重叠时 M=2 已是上限（M=4 时训练约 10×）；poll 让每个 GPU worker 少占约 0.85 核，
-   2+2 配置下约 1.7 核可还给 CPU worker，这是下一轮 N=4/M=2 的直接动机。
+   训练重叠时先用暂停闸门。服务 CPU 节约按每个服务进程统计，不乘 worker 数；
+   2个GPU worker共用一个服务，不能推成省1.7核。自有游戏最多4个，后续 N:M 重测遵守该上限。
+
+第68轮另试质量中性优化：在GPU内连续执行无需网络的等待动作，每步仍更新全部历史/计数/RNG。
+108道与冻结服务的结果及叶子位全等，但同步轮286→266（只少7.0%），ABBA rollout耗时
+off 2299/2018ms、on 3757/3092ms，倒退且不足10%收益，**不采用，生产源未保留该路径**。
+原型、冻结二进制、SHA与完整命令只留本地 `codex_r68/`。
 
 ### task5 合并审查清单（第64轮，已验收）
 
