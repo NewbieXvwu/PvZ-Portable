@@ -494,6 +494,12 @@ def cmd_collect(args) -> None:
         segment["collected_at"] = now()
         segment["games"] = report["games"]
         segment["won"] = report["won"]
+        segment["win_rate"] = report["win_rate"]
+        segment["mean_seconds"] = report["mean_seconds"]
+        segment["archives"] = report["archives"]
+        segment["package"] = f"transfer/{package.name}"
+        if report.get("summary"):
+            segment["summary"] = report["summary"]
         save_json(LEDGER, ledger)
 
 
