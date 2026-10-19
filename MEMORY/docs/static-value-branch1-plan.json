@@ -1,0 +1,103 @@
+{
+  "registered_before_trajectories_or_scoring": "2026-10-20T06:09:31.044739+08:00",
+  "base": "3c2752a4244680e0d79cc2992f3867dd3c74c3bd",
+  "merge_step1_pushed": "3c2752a",
+  "models": {
+    "mac": {
+      "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
+      "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c",
+      "bytes": 585243,
+      "trained_on_count": 383,
+      "heldout_seed_overlap": []
+    },
+    "desktop": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+      "bytes": 584603,
+      "trained_on_count": 256,
+      "heldout_seed_overlap": []
+    },
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
+      "sha256": "601d17c44f261d415aa997621e93b8b298a9bda94c6a0881e2e2d5b4a5136230",
+      "bytes": 595202
+    },
+    "leaf": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+      "sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+      "bytes": 586651,
+      "trained_on_count": 636,
+      "heldout_seed_overlap": []
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+      "sha256": "8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941",
+      "bytes": 1273514
+    },
+    "simulator": {
+      "path": "/home/newbiexvwu/pvz-h8/build-task12/pvz-portable",
+      "sha256": "01754768c12845986d749d6a8f1f61e8dd52da6fb9c3f2d589e4f91de57161f0",
+      "bytes": 5252232
+    }
+  },
+  "heldout": {
+    "task": "day_l7_z17_eval",
+    "seeds": [
+      30000,
+      30001,
+      30002,
+      30003,
+      30004,
+      30005,
+      30006,
+      30007,
+      30008,
+      30009,
+      30010,
+      30011,
+      30012,
+      30013,
+      30014,
+      30015,
+      30016,
+      30017,
+      30018,
+      30019,
+      30020,
+      30021,
+      30022,
+      30023,
+      30024,
+      30025,
+      30026,
+      30027,
+      30028,
+      30029,
+      30030,
+      30031
+    ],
+    "trajectory": "v30 student alone, Python actions; both teachers query identical frozen states, never execute",
+    "sampling": "uniform without replacement8 teacher-search-eligible decisions/game, all if fewer; independent RNG20261020+seed; eligibility legal plants and original min_gap300/student-plant trigger; no plant/column filters",
+    "expected_states": 256
+  },
+  "pool": "union of exact original teacher candidate sets; top2 legal cells/card under each static net; one additional uniformly random legal cell/card; deduplicated, plus wait and policy anchor. Same pool for both ranking models and common heavy reference.",
+  "ranking_truth": {
+    "common_futures": 64,
+    "student": "v30",
+    "leaf": "v3",
+    "horizon": 2500,
+    "mask": 61,
+    "seed": "Dtruth=(seed*10000+decision-1)+33333333; future=(Dtruth*1000+k)%2**32, k0..63",
+    "primary": "within-card action-pair ordering versus common64-future mean; exact truth ties omitted, static prediction ties half-credit",
+    "secondary": "all candidate pairs including cross-card/wait; within-card pairs whose paired95%CI excludes0; direct top-cell-choice disagreements"
+  },
+  "teachers": {
+    "normal": "original per-card1,K2,samples3,halving,V9,margin.02,min_gap300,horizon2500,mask61; coverage/adaptive options off",
+    "arms": "macD,desktopD,mac(D+7777777),desktop(D+7777777)",
+    "heavy": "common full union pool, all64 futures/action without halving; original margin.02 anchored choice with18 additional independent futures for challenger vs policy if triggered; no static-net-specific reference pool",
+    "primary_label_metric": "each normalD vs the same common heavy teacher; raw inter-model agreement and each teacher reseed agreement also reported"
+  },
+  "statistics": "paired game-cluster bootstrap10000 resamples of32 games for ranking and label agreement and desktop-minus-mac differences; no wins claim; if CIs do not resolve superiority say inconclusive, do not select a winner from separate old metrics",
+  "resources": "at most4 own game processes; pause own subtree below2GiB, resume>=3GiB; no production changes or jobs paused",
+  "delivery": "MEMORY/docs/static-value-branch1-compare.md; code and KB summaries on cuda-merge; no model/npz/log binaries in git"
+}
