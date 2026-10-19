@@ -33,3 +33,20 @@
 上面第 3 条里的 `--push` 也安全（rsync 增量 + 重编译约 15 秒）。
 
 原型段 32 局、8 进程，预计 **6–8 分钟**（Mac 上同参数每局 97 秒）。
+
+## 2026-10-19 03:20 隧道端口观察（主控说"已重新连上"之后）
+
+`lsof -nP -iTCP -sTCP:LISTEN` 里 UURemote 只开了两个相关端口：
+
+| 端口 | 对端 | 状态 |
+|---|---|---|
+| 22223（~/.ssh/config 里的 pvz-f1） | 朋友 Mac | TCP 握手成功，**SSH banner 一直超时** |
+| 22222 | **Windows OpenSSH 9.5** | banner 正常，但我们的公钥被拒（`Permission denied (publickey)`） |
+
+22222 上的 host key 是 Windows 的，不是朋友 Mac —— 所以"重新连上"接的可能是另一台
+Windows 机器，pvz-f1 那条转发仍然是死的。若 22222 就是新接入的 Windows 朋友机，需要先把
+`~/.ssh/id_ed25519.pub` 放进它的 `administrators_authorized_keys`（Windows OpenSSH 的 root
+等价物），或者按 §2.3 走 WSL 里的 sshd（端口 2222）。
+
+**当前**：pvz-f1 仍不可达；32 局原型已用本机 4 进程跑完并上传 `transfer/z17distproto.tgz`，
+台账登记为 local-mac。pvz-f1 恢复后用同一 label/偏移重跑即可覆盖。
