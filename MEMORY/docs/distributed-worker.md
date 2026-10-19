@@ -26,10 +26,17 @@
 | 5 文档 | ✅ 本文件 |
 | 6 GPU | ✅ 已合并 `origin/pvz-env`（cuda-rollout）+ 代码/文档（`assign --gpu`，默认关，见 §7）；**未实机验证**，等主控安排 |
 
-**当前卡点（2026-10-19 07:30）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
+**当前卡点（2026-10-19 08:00）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
 拉回来。隧道是 **UU 远程（UURemote）的 22223 端口转发**，不是我们起的 ssh，抖动时只能等它恢复
-（详见 `distributed-worker-questions.md` 06:30 那条）。07:21 起已挂着一个 12 小时窗口的采集进程
-（日志 `~/.pvz-dist/collect.log`），隧道一恢复就会自己跑完；要重新挂就用下面这条：
+（详见 `distributed-worker-questions.md` 06:30 那条）。
+
+**07:56 修掉了 collect 的一个真 bug**：`rsync_try()` 只会拼"本地 → 机器"，而 collect 传的是
+（远端源, 本地目标），所以它一直在把本地的 `~/pvz-worker` 往远端推，必然失败（之前本机演练和
+假远端测试都因为两端同机 / shim 凑巧而"通过"）。现在有 `pull=True`，实测已能逐个 seed 拉回。
+另外给 rsync 加了 300 秒墙钟上限（中继卡死时不会永久等待）。
+
+一个 12 小时窗口的采集进程挂着（日志 `~/.pvz-dist/collect.log`），隧道一恢复就会自己跑完；
+要重新挂就用下面这条：
 
     python3 scripts/dist/controller.py collect --label z17distproto --wait 600 --retry-delay 20
 
