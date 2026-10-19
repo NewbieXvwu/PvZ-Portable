@@ -114,7 +114,12 @@ fi
 say "libopenmpt: $(ls "$ENV"/lib/libopenmpt.* | head -2 | tr '\n' ' ')"
 
 # ---------------------------------------------------------------- 5. repo
-if [ -d "$REPO/.git" ]; then
+# Friend machines do NOT depend on GitHub: the controller pushes the tree with rsync and drops
+# $ROOT/repo/.pvz-pushed. When that marker exists (or PVZ_SKIP_GIT=1) we use the pushed tree as is.
+if [ "${PVZ_SKIP_GIT:-0}" = "1" ] || [ -f "$REPO/.pvz-pushed" ]; then
+  say "code was pushed by the controller — skipping git"
+  [ -f "$REPO/CMakeLists.txt" ] || die "no code at $REPO and git is disabled (controller push missing?)"
+elif [ -d "$REPO/.git" ]; then
   say "repo exists, updating to $BRANCH ${COMMIT:-HEAD}"
   git -C "$REPO" fetch --depth 1 origin "$BRANCH"
   git -C "$REPO" checkout -q FETCH_HEAD

@@ -148,7 +148,9 @@ def push_code(entry: dict, commit: str | None) -> None:
         with tarfile.open(staging / "src.tar") as tar:
             tar.extractall(staging / "tree")
         rsync(entry, str(staging / "tree") + "/", f"{WORKER_ROOT}/repo/",
-              ["--delete", "--exclude", "build/", "--exclude", ".git/"])
+              ["--delete", "--exclude", "build/", "--exclude", ".git/", "--exclude", ".pvz-pushed"])
+        # Marker: bootstrap.sh sees this and does not try to reach GitHub (unreachable from China).
+        ssh(entry, f"touch {WORKER_ROOT}/repo/.pvz-pushed")
     finally:
         shutil.rmtree(staging, ignore_errors=True)
 
@@ -218,8 +220,9 @@ def cmd_bootstrap(args) -> None:
     commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD"], capture_output=True,
                             text=True).stdout.strip()
     say(f"bootstrap {entry['host']} at {commit[:8]} (this takes a while; log: ~/{WORKER_ROOT}/logs/bootstrap-run.log)")
-    proc = ssh(entry, f"mkdir -p ~/{WORKER_ROOT}/logs && PVZ_COMMIT={commit} bash ~/bootstrap.sh 2>&1 | tail -40",
-               check=False)
+    push_code(entry, None)          # friend machines never need GitHub
+    proc = ssh(entry, f"mkdir -p ~/{WORKER_ROOT}/logs && PVZ_SKIP_GIT=1 PVZ_COMMIT={commit} "
+                      f"bash ~/bootstrap.sh 2>&1 | tail -40", check=False)
     print(proc.stdout)
     if proc.returncode != 0:
         raise SystemExit("bootstrap failed")
