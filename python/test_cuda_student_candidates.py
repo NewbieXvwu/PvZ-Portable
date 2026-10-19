@@ -56,6 +56,34 @@ class StudentCandidatesTest(unittest.TestCase):
         self.assertEqual(len(set(records)), 1)
 
 
+class VerifySamplesBackendTest(unittest.TestCase):
+    """--verify-samples must ride the same backend as the search (task4)."""
+
+    def test_verification_futures_are_one_continuation_batch(self):
+        args = SimpleNamespace(samples=3, verify_samples=9, margin=0.02, halving=True,
+                               cuda_speculative_halving=False, rollout_backend="cuda")
+        candidates = [{"type": "plant", "packet": 1, "row": 0, "col": 0},
+                      {"type": "plant", "packet": 1, "row": 0, "col": 1}]
+        stats = {"overrides": 0, "override_kinds": Counter()}
+        seen = {}
+
+        def continuations(env, obs, root, jobs, args, counters):
+            seen["jobs"] = list(jobs)
+            return [0.9] * len(jobs)
+
+        with patch.dict(search_play._W, {"cuda": object()}, clear=True), \
+                patch.object(search_play, "_continuations", side_effect=continuations), \
+                patch.object(search_play, "_leaf_values", side_effect=lambda handles: list(handles)):
+            action = search_play._verified_choice(
+                Mock(), {"tick": 60}, 7, candidates, [0.1, 0.5], [3, 3], 1, 0,
+                {"type": "wait"}, args, 123, stats)
+        self.assertEqual(len(seen["jobs"]), 18)
+        self.assertEqual([job[1] for job in seen["jobs"]],
+                         [123 * 1000 + future for future in range(3, 12)] * 2)
+        self.assertEqual([job[0] for job in seen["jobs"]], [candidates[0]] * 9 + [candidates[1]] * 9)
+        self.assertEqual(action["col"], 1)
+
+
 class CudaDumpOptionsTest(unittest.TestCase):
     """CUDA_DUMP carries the v2lite history and never a TRACE suffix.
 

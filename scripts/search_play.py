@@ -465,7 +465,6 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
 def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: list[float],
                      counts: list[int], best: int, policy_index: int, policy_action: dict,
                      args, decision_seed: int, stats: dict, *, fresh: bool = False) -> dict:
-    from render_episode import _frame
     before = fresh or (best != policy_index and totals[best] - totals[policy_index] > args.margin)
     samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
     if fresh:
@@ -473,18 +472,38 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
     if samples and before:
         prior = None if fresh else [totals[policy_index], totals[best]]
         started = time.perf_counter()
-        for index in (policy_index, best):
-            fixed, leaves = [], []
-            for future in range(args.samples, args.samples + samples):
-                leaf = _rollout_policy(env, obs, candidates[index], obs["tick"] + args.horizon,
-                                       root, (decision_seed * 1000 + future) % 2 ** 32)
-                terminal = _score_terminal_or_value(leaf)
-                if terminal is None:
-                    leaves.append(_frame(leaf))
-                else:
-                    fixed.append(terminal)
-            added = fixed + (_values(leaves) if leaves else [])
-            totals[index] = (totals[index] * counts[index] + sum(added)) / (counts[index] + samples)
+        if _W.get("cuda") is None:
+            # Retain the original CPU value batches and terminal-first sum order. A different
+            # order can change the last bits even though the continuation jobs are identical.
+            from render_episode import _frame
+            stats["rollout_batches"] = stats.get("rollout_batches", 0) + 1
+            stats["rollout_lanes"] = stats.get("rollout_lanes", 0) + 2 * samples
+            for index in (policy_index, best):
+                fixed, leaves = [], []
+                for future in range(args.samples, args.samples + samples):
+                    leaf = _rollout_policy(env, obs, candidates[index], obs["tick"] + args.horizon,
+                                           root, (decision_seed * 1000 + future) % 2 ** 32)
+                    terminal = _score_terminal_or_value(leaf)
+                    if terminal is None:
+                        leaves.append(_frame(leaf))
+                    else:
+                        fixed.append(terminal)
+                added = fixed + (_values(leaves) if leaves else [])
+                totals[index] = (totals[index] * counts[index] + sum(added)) / (counts[index] + samples)
+        else:
+            # The extra futures are ordinary continuations: route them through _continuations so the GPU
+            # arm runs them on the GPU too.  Running them on the C++ simulator here would make every
+            # override pay 2 x --verify-samples CPU rollouts, which is exactly the cost the GPU arm
+            # exists to remove (task4).  Job order is unchanged, so the C++ arm stays bit-identical.
+            indexes = (policy_index, best)
+            jobs = [(candidates[index], (decision_seed * 1000 + future) % 2 ** 32)
+                    for index in indexes for future in range(args.samples, args.samples + samples)]
+            handles = _continuations(env, obs, root, jobs, args, stats)
+            for slot, index in enumerate(indexes):
+                added = [value for value in _leaf_values(handles[slot * samples:(slot + 1) * samples])
+                         if value is not None]
+                if added:
+                    totals[index] = (totals[index] * counts[index] + sum(added)) / (counts[index] + len(added))
         stats["last_verification"] = {
             "samples": samples, "student": policy_action, "challenger": candidates[best],
             "before_values": prior, "after_values": [totals[policy_index], totals[best]],
@@ -610,7 +629,11 @@ def _play(job: dict) -> dict:
                 frames[-1]["action"] = action          # what was executed (after the search), like render_episode
                 frames[-1]["action_rejected"] = rejected
                 if stats.get("last_verification"):
-                    frames[-1]["verification"] = stats["last_verification"]
+                    # Wall time is not part of the label: keeping it in the archive makes two runs of
+                    # the same arm differ byte for byte (and the GPU schedule comparison impossible).
+                    verification = dict(stats["last_verification"])
+                    verification.pop("seconds", None)
+                    frames[-1]["verification"] = verification
                 if dagger is not None:
                     frames[-1]["label"] = label        # last field: train_rollout_policy scans for it
             decisions += 1
