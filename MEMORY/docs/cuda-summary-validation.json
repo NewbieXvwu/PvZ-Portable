@@ -15,7 +15,10 @@
       "leaf_sha256": "730298aa21359c6d6eddb6af2503e7552e6980e03ca66715ab0e696cc3e80a34",
       "other_cuda_pids": [
         "479275"
-      ]
+      ],
+      "result_bytes": 3168,
+      "leaf_bytes": 544144,
+      "validated_records": 24
     },
     {
       "variant": "new",
@@ -27,7 +30,10 @@
         "479275"
       ],
       "wave_ms": 188.33333333333334,
-      "legacy_wave_ms": 188.33333333333334
+      "legacy_wave_ms": 188.33333333333334,
+      "result_bytes": 3168,
+      "leaf_bytes": 544144,
+      "validated_records": 24
     },
     {
       "variant": "old",
@@ -37,7 +43,10 @@
       "leaf_sha256": "2d54f126ca15cbaf498286d858a37cb95a0bedc14658f448545fce59de624b86",
       "other_cuda_pids": [
         "479275"
-      ]
+      ],
+      "result_bytes": 11880,
+      "leaf_bytes": 2040496,
+      "validated_records": 90
     },
     {
       "variant": "new",
@@ -49,7 +58,10 @@
         "479275"
       ],
       "wave_ms": 228.0,
-      "legacy_wave_ms": 228.0
+      "legacy_wave_ms": 228.0,
+      "result_bytes": 11880,
+      "leaf_bytes": 2040496,
+      "validated_records": 90
     }
   ],
   "note": "Correctness-only; other CUDA process present. wave_ms is compared to the same-run console, never to another run.",

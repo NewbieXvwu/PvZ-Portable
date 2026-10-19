@@ -1,0 +1,218 @@
+{
+  "strict_replay_frames": 226902,
+  "completed_games": 361,
+  "completed_states": 600,
+  "teacher_arms": 6,
+  "actual_continuations_all_arms": 92293,
+  "all_frozen_code_model_and_input_hashes_still_match": true,
+  "task9_source_archives_unchanged": 361,
+  "training_source_archives_unchanged": 23,
+  "resources": {
+    "dense_collect": {
+      "returncode": 0,
+      "wall_s": 678.1365427780256,
+      "peak_rss_kib": 3347560,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 4862576
+    },
+    "train_proposer": {
+      "returncode": 0,
+      "wall_s": 560.6921359570115,
+      "peak_rss_kib": 901036,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 8960416
+    },
+    "coverage_acceptance": {
+      "returncode": 0,
+      "wall_s": 967.5262470229936,
+      "peak_rss_kib": 3747060,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 4166744
+    },
+    "coverage_statistics": {
+      "returncode": 0,
+      "wall_s": 5.00748615100747,
+      "peak_rss_kib": 609204,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7051280
+    },
+    "cli_off": {
+      "returncode": 0,
+      "wall_s": 4.006333514000289,
+      "peak_rss_kib": 782380,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6644928
+    },
+    "cli_new2": {
+      "returncode": 0,
+      "wall_s": 4.005802578991279,
+      "peak_rss_kib": 826608,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6718032
+    },
+    "cli_new4": {
+      "returncode": 0,
+      "wall_s": 4.010637625993695,
+      "peak_rss_kib": 808340,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6898652
+    }
+  },
+  "paused_samples": {
+    "dense_collect": 0,
+    "train_proposer": 0,
+    "coverage_acceptance": 0,
+    "coverage_statistics": 0,
+    "cli_off": 0,
+    "cli_new2": 0,
+    "cli_new4": 0
+  },
+  "own_game_process_cap": 4,
+  "cli_smoke": {
+    "all_three_cli_arms_passed": true,
+    "max_actions": 1,
+    "not_a_win_evaluation": true,
+    "rows": [
+      {
+        "variant": "off",
+        "game": {
+          "seed": 1710000,
+          "arm": "fast_search",
+          "won": false,
+          "final_wave": 0,
+          "decisions": 1,
+          "seconds": 0.1,
+          "mowers_used": 0,
+          "planted": {
+            "1": 1
+          },
+          "searched": 1,
+          "overrides": 0,
+          "cuda_coverage_version": 1,
+          "rollout_batches": 3,
+          "rollout_lanes": 8,
+          "cuda_batches": 0,
+          "cuda_lanes": 0,
+          "cuda_error_lanes": 0,
+          "cuda_fallback_batches": 0,
+          "cuda_fallback_lanes": 0,
+          "halving_candidates": 4,
+          "halving_rollouts": 8,
+          "halving_selected_lanes": 8,
+          "halving_speculative_lanes": 0,
+          "halving_discarded_lanes": 0,
+          "cuda_seconds": 0.0,
+          "student_candidate_added": 2,
+          "student_candidate_best": 0,
+          "student_candidate_override": 0,
+          "shovel_events": [],
+          "replant_events": [],
+          "override_kinds": {}
+        },
+        "resources": {
+          "returncode": 0,
+          "wall_s": 4.006333514000289,
+          "peak_rss_kib": 782380,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 6644928
+        }
+      },
+      {
+        "variant": "new2",
+        "game": {
+          "seed": 1710000,
+          "arm": "fast_search",
+          "won": false,
+          "final_wave": 0,
+          "decisions": 1,
+          "seconds": 0.3,
+          "mowers_used": 0,
+          "planted": {
+            "1": 1
+          },
+          "searched": 1,
+          "overrides": 1,
+          "cuda_coverage_version": 1,
+          "rollout_batches": 4,
+          "rollout_lanes": 29,
+          "cuda_batches": 0,
+          "cuda_lanes": 0,
+          "cuda_error_lanes": 0,
+          "cuda_fallback_batches": 0,
+          "cuda_fallback_lanes": 0,
+          "halving_candidates": 6,
+          "halving_rollouts": 11,
+          "halving_selected_lanes": 11,
+          "halving_speculative_lanes": 0,
+          "halving_discarded_lanes": 0,
+          "cuda_seconds": 0.0,
+          "student_candidate_added": 2,
+          "student_candidate_best": 0,
+          "student_candidate_override": 0,
+          "shovel_events": [],
+          "replant_events": [],
+          "override_kinds": {
+            "plant_over_plant": 1
+          },
+          "coverage_candidate_added": 2
+        },
+        "resources": {
+          "returncode": 0,
+          "wall_s": 4.005802578991279,
+          "peak_rss_kib": 826608,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 6718032
+        }
+      },
+      {
+        "variant": "new4",
+        "game": {
+          "seed": 1710000,
+          "arm": "fast_search",
+          "won": false,
+          "final_wave": 0,
+          "decisions": 1,
+          "seconds": 0.3,
+          "mowers_used": 0,
+          "planted": {
+            "1": 1
+          },
+          "searched": 1,
+          "overrides": 1,
+          "cuda_coverage_version": 1,
+          "rollout_batches": 4,
+          "rollout_lanes": 33,
+          "cuda_batches": 0,
+          "cuda_lanes": 0,
+          "cuda_error_lanes": 0,
+          "cuda_fallback_batches": 0,
+          "cuda_fallback_lanes": 0,
+          "halving_candidates": 8,
+          "halving_rollouts": 15,
+          "halving_selected_lanes": 15,
+          "halving_speculative_lanes": 0,
+          "halving_discarded_lanes": 0,
+          "cuda_seconds": 0.0,
+          "student_candidate_added": 2,
+          "student_candidate_best": 0,
+          "student_candidate_override": 0,
+          "shovel_events": [],
+          "replant_events": [],
+          "override_kinds": {
+            "plant_over_plant": 1
+          },
+          "coverage_candidate_added": 4
+        },
+        "resources": {
+          "returncode": 0,
+          "wall_s": 4.010637625993695,
+          "peak_rss_kib": 808340,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 6898652
+        }
+      }
+    ]
+  },
+  "unit_tests": "30 passed; no skips",
+  "all384_source_archive_sha256_verified_after_execution": true
+}

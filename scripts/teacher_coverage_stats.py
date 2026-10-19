@@ -17,7 +17,7 @@ def wilson(count,n):
     p=count/n;z=1.959963984540054;den=1+z*z/n
     mid=(p+z*z/(2*n))/den
     half=z*math.sqrt(p*(1-p)/n+z*z/(4*n*n))/den
-    return {'count':int(count),'n':n,'rate':p,'wilson95':[mid-half,mid+half]}
+    return {'count':int(count),'n':n,'rate':p,'wilson95':[max(0.,mid-half),min(1.,mid+half)]}
 
 
 def cluster_metrics(rows):
@@ -51,6 +51,8 @@ def cluster_metrics(rows):
             'game_cluster_ci95':np.quantile(totals(name+'_count')/totals('old_count')-1,[.025,.975]).tolist()}
         report[name+'_agreement_minus_old_noise']={'estimate':report[name+'_agreement']['estimate']-report['old_noise']['estimate'],
             'game_cluster_ci95':np.quantile((totals(name+'_agreement')-totals('old_noise'))/totals('n'),[.025,.975]).tolist()}
+        report[name+'_noise_minus_old_noise']={'estimate':report[name+'_noise']['estimate']-report['old_noise']['estimate'],
+            'game_cluster_ci95':np.quantile((totals(name+'_noise')-totals('old_noise'))/totals('n'),[.025,.975]).tolist()}
     return {'points':len(rows),'games':len(games),'metrics':report}
 
 
@@ -63,9 +65,15 @@ def main():
     rows=[json.loads(p.read_text()) for p in sorted(args.audit.glob('[AB]_*.json'))]
     assert len(rows)==600 and all(r['old_label_and_targets_exact'] for r in rows)
     assert Counter(r['category'] for r in rows)=={'A':300,'B':300}
+    for row in rows:
+        arms=row['arms']
+        for name in ('old','new2','new4'):
+            assert arms[name]['candidates']==arms[name+'_noise']['candidates']
+        assert arms['new4']['added'][:len(arms['new2']['added'])]==arms['new2']['added']
     witness={(r['category'],r['seed'],r['decision']):r for r in json.loads(args.witnesses.read_text())
              if r['significant_inferiority']}
     report={'all600_default_off_labels_and_rounded_targets_exact':True,'pooled':cluster_metrics(rows),
+            'all600_proposals_independent_of_future_seed_and_budget_prefix_consistent':True,
             'classes':{},'witness_action':'original task9 multiplicity-significant witness_action, not reselected',
             'no_win_claim':True}
     for category in ('A','B'):

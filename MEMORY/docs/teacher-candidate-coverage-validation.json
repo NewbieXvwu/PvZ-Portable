@@ -1,0 +1,1025 @@
+{
+  "all600_default_off_labels_and_rounded_targets_exact": true,
+  "pooled": {
+    "points": 600,
+    "games": 361,
+    "metrics": {
+      "old_noise": {
+        "estimate": 0.775,
+        "game_cluster_ci95": [
+          0.7405481932008704,
+          0.8088235294117647
+        ]
+      },
+      "new2_agreement": {
+        "estimate": 0.8066666666666666,
+        "game_cluster_ci95": [
+          0.7759472817133443,
+          0.8369384359400999
+        ]
+      },
+      "new4_agreement": {
+        "estimate": 0.7216666666666667,
+        "game_cluster_ci95": [
+          0.6877051029674711,
+          0.7548717318865346
+        ]
+      },
+      "new2_noise": {
+        "estimate": 0.685,
+        "game_cluster_ci95": [
+          0.6462029503163929,
+          0.7218565232342729
+        ]
+      },
+      "new4_noise": {
+        "estimate": 0.6716666666666666,
+        "game_cluster_ci95": [
+          0.6331166060901555,
+          0.7088186356073212
+        ]
+      },
+      "old_count": {
+        "estimate": 20.866666666666667,
+        "game_cluster_ci95": [
+          20.096342375358198,
+          21.648213870927666
+        ]
+      },
+      "new2_count": {
+        "estimate": 25.906666666666666,
+        "game_cluster_ci95": [
+          25.191261116119627,
+          26.614510090609556
+        ]
+      },
+      "new4_count": {
+        "estimate": 30.0,
+        "game_cluster_ci95": [
+          29.310780606765707,
+          30.676880417718927
+        ]
+      },
+      "old_cpu": {
+        "estimate": 0.6075002766666664,
+        "game_cluster_ci95": [
+          0.5719831633303384,
+          0.6447179397759538
+        ]
+      },
+      "new2_cpu": {
+        "estimate": 0.7274612766666667,
+        "game_cluster_ci95": [
+          0.6895986847801504,
+          0.767288468153029
+        ]
+      },
+      "new4_cpu": {
+        "estimate": 0.8380392716666669,
+        "game_cluster_ci95": [
+          0.7965579503651803,
+          0.880783670193211
+        ]
+      },
+      "new2_count_increase": {
+        "estimate": 0.24153354632587853,
+        "game_cluster_ci95": [
+          0.21886790289242783,
+          0.2667888781807872
+        ]
+      },
+      "new2_agreement_minus_old_noise": {
+        "estimate": 0.03166666666666662,
+        "game_cluster_ci95": [
+          -0.014706484066621738,
+          0.07846738711676647
+        ]
+      },
+      "new2_noise_minus_old_noise": {
+        "estimate": -0.08999999999999997,
+        "game_cluster_ci95": [
+          -0.11920529801324503,
+          -0.061016949152542375
+        ]
+      },
+      "new4_count_increase": {
+        "estimate": 0.43769968051118213,
+        "game_cluster_ci95": [
+          0.4065001585872064,
+          0.47134826566976745
+        ]
+      },
+      "new4_agreement_minus_old_noise": {
+        "estimate": -0.053333333333333344,
+        "game_cluster_ci95": [
+          -0.10152575518016144,
+          -0.004934210526315789
+        ]
+      },
+      "new4_noise_minus_old_noise": {
+        "estimate": -0.10333333333333339,
+        "game_cluster_ci95": [
+          -0.13553859083905306,
+          -0.07239001860712388
+        ]
+      }
+    }
+  },
+  "all600_proposals_independent_of_future_seed_and_budget_prefix_consistent": true,
+  "classes": {
+    "A": {
+      "points": 300,
+      "games": 300,
+      "metrics": {
+        "old_noise": {
+          "estimate": 0.76,
+          "game_cluster_ci95": [
+            0.71,
+            0.8066666666666666
+          ]
+        },
+        "new2_agreement": {
+          "estimate": 0.9466666666666667,
+          "game_cluster_ci95": [
+            0.92,
+            0.97
+          ]
+        },
+        "new4_agreement": {
+          "estimate": 0.9266666666666666,
+          "game_cluster_ci95": [
+            0.8966666666666666,
+            0.9533333333333334
+          ]
+        },
+        "new2_noise": {
+          "estimate": 0.7266666666666667,
+          "game_cluster_ci95": [
+            0.6766666666666666,
+            0.7766666666666666
+          ]
+        },
+        "new4_noise": {
+          "estimate": 0.7033333333333334,
+          "game_cluster_ci95": [
+            0.65,
+            0.7533333333333333
+          ]
+        },
+        "old_count": {
+          "estimate": 19.696666666666665,
+          "game_cluster_ci95": [
+            18.66991666666667,
+            20.773416666666666
+          ]
+        },
+        "new2_count": {
+          "estimate": 23.66,
+          "game_cluster_ci95": [
+            22.626666666666665,
+            24.733333333333334
+          ]
+        },
+        "new4_count": {
+          "estimate": 27.303333333333335,
+          "game_cluster_ci95": [
+            26.276583333333335,
+            28.363333333333333
+          ]
+        },
+        "old_cpu": {
+          "estimate": 0.9349907599999998,
+          "game_cluster_ci95": [
+            0.8721921373333335,
+            0.9984823607499997
+          ]
+        },
+        "new2_cpu": {
+          "estimate": 1.1202876933333334,
+          "game_cluster_ci95": [
+            1.0537847494166666,
+            1.1880760600833333
+          ]
+        },
+        "new4_cpu": {
+          "estimate": 1.2907999733333337,
+          "game_cluster_ci95": [
+            1.218512176416667,
+            1.36373631675
+          ]
+        },
+        "new2_count_increase": {
+          "estimate": 0.201218480284312,
+          "game_cluster_ci95": [
+            0.17851811071985002,
+            0.22720141523265017
+          ]
+        },
+        "new2_agreement_minus_old_noise": {
+          "estimate": 0.18666666666666665,
+          "game_cluster_ci95": [
+            0.13666666666666666,
+            0.24
+          ]
+        },
+        "new2_noise_minus_old_noise": {
+          "estimate": -0.033333333333333326,
+          "game_cluster_ci95": [
+            -0.06,
+            -0.006666666666666667
+          ]
+        },
+        "new4_count_increase": {
+          "estimate": 0.38619055677779657,
+          "game_cluster_ci95": [
+            0.3560302518983534,
+            0.42060678210678215
+          ]
+        },
+        "new4_agreement_minus_old_noise": {
+          "estimate": 0.16666666666666663,
+          "game_cluster_ci95": [
+            0.11333333333333333,
+            0.22
+          ]
+        },
+        "new4_noise_minus_old_noise": {
+          "estimate": -0.05666666666666664,
+          "game_cluster_ci95": [
+            -0.08666666666666667,
+            -0.02666666666666667
+          ]
+        }
+      },
+      "significant_points": 83,
+      "arms": {
+        "old": {
+          "witness_included": {
+            "count": 48,
+            "n": 83,
+            "rate": 0.5783132530120482,
+            "wilson95": [
+              0.4709282330502335,
+              0.6787698509817465
+            ]
+          },
+          "witness_chosen": {
+            "count": 0,
+            "n": 83,
+            "rate": 0.0,
+            "wilson95": [
+              3.469446951953614e-18,
+              0.04423530964197385
+            ]
+          },
+          "best_included_secondary": {
+            "count": 48,
+            "n": 83,
+            "rate": 0.5783132530120482,
+            "wilson95": [
+              0.4709282330502335,
+              0.6787698509817465
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 0,
+            "n": 83,
+            "rate": 0.0,
+            "wilson95": [
+              3.469446951953614e-18,
+              0.04423530964197385
+            ]
+          },
+          "added_candidates": 0,
+          "added_by_packet": {},
+          "added_by_cost": {},
+          "new_cells_total": 0,
+          "new_rows_total": 0,
+          "new_columns_total": 0,
+          "actual_continuations": 5909,
+          "host_cpu_seconds": 280.49722799999995,
+          "wall_seconds": 287.444079769426
+        },
+        "old_noise": {
+          "witness_included": {
+            "count": 48,
+            "n": 83,
+            "rate": 0.5783132530120482,
+            "wilson95": [
+              0.4709282330502335,
+              0.6787698509817465
+            ]
+          },
+          "witness_chosen": {
+            "count": 4,
+            "n": 83,
+            "rate": 0.04819277108433735,
+            "wilson95": [
+              0.01889861550329229,
+              0.1174585920045154
+            ]
+          },
+          "best_included_secondary": {
+            "count": 48,
+            "n": 83,
+            "rate": 0.5783132530120482,
+            "wilson95": [
+              0.4709282330502335,
+              0.6787698509817465
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 4,
+            "n": 83,
+            "rate": 0.04819277108433735,
+            "wilson95": [
+              0.01889861550329229,
+              0.1174585920045154
+            ]
+          },
+          "added_candidates": 0,
+          "added_by_packet": {},
+          "added_by_cost": {},
+          "new_cells_total": 0,
+          "new_rows_total": 0,
+          "new_columns_total": 0,
+          "actual_continuations": 6027,
+          "host_cpu_seconds": 286.983316,
+          "wall_seconds": 297.53235764583223
+        },
+        "new2": {
+          "witness_included": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "witness_chosen": {
+            "count": 0,
+            "n": 83,
+            "rate": 0.0,
+            "wilson95": [
+              3.469446951953614e-18,
+              0.04423530964197385
+            ]
+          },
+          "best_included_secondary": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 0,
+            "n": 83,
+            "rate": 0.0,
+            "wilson95": [
+              3.469446951953614e-18,
+              0.04423530964197385
+            ]
+          },
+          "added_candidates": 600,
+          "added_by_packet": {
+            "0": 350,
+            "4": 152,
+            "1": 90,
+            "5": 2,
+            "3": 6
+          },
+          "added_by_cost": {
+            "100": 350,
+            "25": 152,
+            "50": 96,
+            "175": 2
+          },
+          "new_cells_total": 459,
+          "new_rows_total": 199,
+          "new_columns_total": 217,
+          "actual_continuations": 7098,
+          "host_cpu_seconds": 336.08630800000003,
+          "wall_seconds": 347.189010245027
+        },
+        "new2_noise": {
+          "witness_included": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "witness_chosen": {
+            "count": 3,
+            "n": 83,
+            "rate": 0.03614457831325301,
+            "wilson95": [
+              0.012367803271745428,
+              0.10095892976960381
+            ]
+          },
+          "best_included_secondary": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 3,
+            "n": 83,
+            "rate": 0.03614457831325301,
+            "wilson95": [
+              0.012367803271745428,
+              0.10095892976960381
+            ]
+          },
+          "added_candidates": 600,
+          "added_by_packet": {
+            "0": 350,
+            "4": 152,
+            "1": 90,
+            "5": 2,
+            "3": 6
+          },
+          "added_by_cost": {
+            "100": 350,
+            "25": 152,
+            "50": 96,
+            "175": 2
+          },
+          "new_cells_total": 459,
+          "new_rows_total": 199,
+          "new_columns_total": 217,
+          "actual_continuations": 7168,
+          "host_cpu_seconds": 344.6764059999999,
+          "wall_seconds": 355.7856704730366
+        },
+        "new4": {
+          "witness_included": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "witness_chosen": {
+            "count": 0,
+            "n": 83,
+            "rate": 0.0,
+            "wilson95": [
+              3.469446951953614e-18,
+              0.04423530964197385
+            ]
+          },
+          "best_included_secondary": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 0,
+            "n": 83,
+            "rate": 0.0,
+            "wilson95": [
+              3.469446951953614e-18,
+              0.04423530964197385
+            ]
+          },
+          "added_candidates": 1199,
+          "added_by_packet": {
+            "0": 690,
+            "4": 317,
+            "1": 178,
+            "3": 12,
+            "5": 2
+          },
+          "added_by_cost": {
+            "100": 690,
+            "25": 317,
+            "50": 190,
+            "175": 2
+          },
+          "new_cells_total": 949,
+          "new_rows_total": 344,
+          "new_columns_total": 343,
+          "actual_continuations": 8191,
+          "host_cpu_seconds": 387.2399920000001,
+          "wall_seconds": 400.0399502684886
+        },
+        "new4_noise": {
+          "witness_included": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "witness_chosen": {
+            "count": 3,
+            "n": 83,
+            "rate": 0.03614457831325301,
+            "wilson95": [
+              0.012367803271745428,
+              0.10095892976960381
+            ]
+          },
+          "best_included_secondary": {
+            "count": 49,
+            "n": 83,
+            "rate": 0.5903614457831325,
+            "wilson95": [
+              0.48285768523824363,
+              0.6898708732601949
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 3,
+            "n": 83,
+            "rate": 0.03614457831325301,
+            "wilson95": [
+              0.012367803271745428,
+              0.10095892976960381
+            ]
+          },
+          "added_candidates": 1199,
+          "added_by_packet": {
+            "0": 690,
+            "4": 317,
+            "1": 178,
+            "3": 12,
+            "5": 2
+          },
+          "added_by_cost": {
+            "100": 690,
+            "25": 317,
+            "50": 190,
+            "175": 2
+          },
+          "new_cells_total": 949,
+          "new_rows_total": 344,
+          "new_columns_total": 343,
+          "actual_continuations": 8258,
+          "host_cpu_seconds": 389.24755600000003,
+          "wall_seconds": 401.4412101629423
+        }
+      }
+    },
+    "B": {
+      "points": 300,
+      "games": 300,
+      "metrics": {
+        "old_noise": {
+          "estimate": 0.79,
+          "game_cluster_ci95": [
+            0.7433333333333333,
+            0.8333333333333334
+          ]
+        },
+        "new2_agreement": {
+          "estimate": 0.6666666666666666,
+          "game_cluster_ci95": [
+            0.6133333333333333,
+            0.72
+          ]
+        },
+        "new4_agreement": {
+          "estimate": 0.5166666666666667,
+          "game_cluster_ci95": [
+            0.46,
+            0.5733333333333334
+          ]
+        },
+        "new2_noise": {
+          "estimate": 0.6433333333333333,
+          "game_cluster_ci95": [
+            0.59,
+            0.6966666666666667
+          ]
+        },
+        "new4_noise": {
+          "estimate": 0.64,
+          "game_cluster_ci95": [
+            0.5866666666666667,
+            0.6933333333333334
+          ]
+        },
+        "old_count": {
+          "estimate": 22.036666666666665,
+          "game_cluster_ci95": [
+            20.93325,
+            23.110083333333332
+          ]
+        },
+        "new2_count": {
+          "estimate": 28.153333333333332,
+          "game_cluster_ci95": [
+            27.20991666666667,
+            29.050083333333333
+          ]
+        },
+        "new4_count": {
+          "estimate": 32.696666666666665,
+          "game_cluster_ci95": [
+            31.873333333333335,
+            33.49666666666667
+          ]
+        },
+        "old_cpu": {
+          "estimate": 0.28000979333333287,
+          "game_cluster_ci95": [
+            0.260152372083333,
+            0.30039716924999976
+          ]
+        },
+        "new2_cpu": {
+          "estimate": 0.33463485999999987,
+          "game_cluster_ci95": [
+            0.31468279899999946,
+            0.3552149342499998
+          ]
+        },
+        "new4_cpu": {
+          "estimate": 0.3852785700000002,
+          "game_cluster_ci95": [
+            0.36455525341666656,
+            0.4065570790000003
+          ]
+        },
+        "new2_count_increase": {
+          "estimate": 0.27756769021328087,
+          "game_cluster_ci95": [
+            0.23799683741172226,
+            0.3223300958172071
+          ]
+        },
+        "new2_agreement_minus_old_noise": {
+          "estimate": -0.1233333333333334,
+          "game_cluster_ci95": [
+            -0.2,
+            -0.04666666666666667
+          ]
+        },
+        "new2_noise_minus_old_noise": {
+          "estimate": -0.14666666666666672,
+          "game_cluster_ci95": [
+            -0.19333333333333333,
+            -0.1
+          ]
+        },
+        "new4_count_increase": {
+          "estimate": 0.4837392225079413,
+          "game_cluster_ci95": [
+            0.43083055744704146,
+            0.5436447743534917
+          ]
+        },
+        "new4_agreement_minus_old_noise": {
+          "estimate": -0.2733333333333333,
+          "game_cluster_ci95": [
+            -0.35333333333333333,
+            -0.19333333333333333
+          ]
+        },
+        "new4_noise_minus_old_noise": {
+          "estimate": -0.15000000000000002,
+          "game_cluster_ci95": [
+            -0.20333333333333334,
+            -0.09666666666666666
+          ]
+        }
+      },
+      "significant_points": 236,
+      "arms": {
+        "old": {
+          "witness_included": {
+            "count": 12,
+            "n": 236,
+            "rate": 0.05084745762711865,
+            "wilson95": [
+              0.029322947277093805,
+              0.08675981405028974
+            ]
+          },
+          "witness_chosen": {
+            "count": 0,
+            "n": 236,
+            "rate": 0.0,
+            "wilson95": [
+              0.0,
+              0.01601665883614395
+            ]
+          },
+          "best_included_secondary": {
+            "count": 16,
+            "n": 236,
+            "rate": 0.06779661016949153,
+            "wilson95": [
+              0.04215870673422199,
+              0.10727942209024142
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 0,
+            "n": 236,
+            "rate": 0.0,
+            "wilson95": [
+              0.0,
+              0.01601665883614395
+            ]
+          },
+          "added_candidates": 0,
+          "added_by_packet": {},
+          "added_by_cost": {},
+          "new_cells_total": 0,
+          "new_rows_total": 0,
+          "new_columns_total": 0,
+          "actual_continuations": 6611,
+          "host_cpu_seconds": 84.00293799999986,
+          "wall_seconds": 88.92068244222901
+        },
+        "old_noise": {
+          "witness_included": {
+            "count": 12,
+            "n": 236,
+            "rate": 0.05084745762711865,
+            "wilson95": [
+              0.029322947277093805,
+              0.08675981405028974
+            ]
+          },
+          "witness_chosen": {
+            "count": 0,
+            "n": 236,
+            "rate": 0.0,
+            "wilson95": [
+              0.0,
+              0.01601665883614395
+            ]
+          },
+          "best_included_secondary": {
+            "count": 16,
+            "n": 236,
+            "rate": 0.06779661016949153,
+            "wilson95": [
+              0.04215870673422199,
+              0.10727942209024142
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 1,
+            "n": 236,
+            "rate": 0.00423728813559322,
+            "wilson95": [
+              0.0007483774133292126,
+              0.0236071232970847
+            ]
+          },
+          "added_candidates": 0,
+          "added_by_packet": {},
+          "added_by_cost": {},
+          "new_cells_total": 0,
+          "new_rows_total": 0,
+          "new_columns_total": 0,
+          "actual_continuations": 6412,
+          "host_cpu_seconds": 82.09691699999996,
+          "wall_seconds": 84.52489924893598
+        },
+        "new2": {
+          "witness_included": {
+            "count": 88,
+            "n": 236,
+            "rate": 0.3728813559322034,
+            "wilson95": [
+              0.31368425598728694,
+              0.436150487784614
+            ]
+          },
+          "witness_chosen": {
+            "count": 29,
+            "n": 236,
+            "rate": 0.1228813559322034,
+            "wilson95": [
+              0.08693601825828187,
+              0.1709070549316911
+            ]
+          },
+          "best_included_secondary": {
+            "count": 96,
+            "n": 236,
+            "rate": 0.4067796610169492,
+            "wilson95": [
+              0.3460858539438247,
+              0.4704596248222361
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 30,
+            "n": 236,
+            "rate": 0.1271186440677966,
+            "wilson95": [
+              0.09051315939127659,
+              0.17566875567296636
+            ]
+          },
+          "added_candidates": 600,
+          "added_by_packet": {
+            "1": 575,
+            "3": 9,
+            "0": 16
+          },
+          "added_by_cost": {
+            "50": 584,
+            "100": 16
+          },
+          "new_cells_total": 593,
+          "new_rows_total": 123,
+          "new_columns_total": 540,
+          "actual_continuations": 8446,
+          "host_cpu_seconds": 100.39045799999997,
+          "wall_seconds": 102.63398364995373
+        },
+        "new2_noise": {
+          "witness_included": {
+            "count": 88,
+            "n": 236,
+            "rate": 0.3728813559322034,
+            "wilson95": [
+              0.31368425598728694,
+              0.436150487784614
+            ]
+          },
+          "witness_chosen": {
+            "count": 38,
+            "n": 236,
+            "rate": 0.16101694915254236,
+            "wilson95": [
+              0.11961496339430341,
+              0.21327768666409921
+            ]
+          },
+          "best_included_secondary": {
+            "count": 96,
+            "n": 236,
+            "rate": 0.4067796610169492,
+            "wilson95": [
+              0.3460858539438247,
+              0.4704596248222361
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 42,
+            "n": 236,
+            "rate": 0.17796610169491525,
+            "wilson95": [
+              0.1344439534210227,
+              0.23180406413445984
+            ]
+          },
+          "added_candidates": 600,
+          "added_by_packet": {
+            "1": 575,
+            "3": 9,
+            "0": 16
+          },
+          "added_by_cost": {
+            "50": 584,
+            "100": 16
+          },
+          "new_cells_total": 593,
+          "new_rows_total": 123,
+          "new_columns_total": 540,
+          "actual_continuations": 8478,
+          "host_cpu_seconds": 100.5009349999999,
+          "wall_seconds": 102.20191796025028
+        },
+        "new4": {
+          "witness_included": {
+            "count": 165,
+            "n": 236,
+            "rate": 0.6991525423728814,
+            "wilson95": [
+              0.6378328366280277,
+              0.7540927314626609
+            ]
+          },
+          "witness_chosen": {
+            "count": 80,
+            "n": 236,
+            "rate": 0.3389830508474576,
+            "wilson95": [
+              0.28159901180877767,
+              0.4015249969689636
+            ]
+          },
+          "best_included_secondary": {
+            "count": 168,
+            "n": 236,
+            "rate": 0.711864406779661,
+            "wilson95": [
+              0.6510537375019491,
+              0.7658883562115492
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 75,
+            "n": 236,
+            "rate": 0.3177966101694915,
+            "wilson95": [
+              0.2617152482017613,
+              0.37971455120463016
+            ]
+          },
+          "added_candidates": 1200,
+          "added_by_packet": {
+            "1": 1154,
+            "3": 14,
+            "0": 32
+          },
+          "added_by_cost": {
+            "50": 1168,
+            "100": 32
+          },
+          "new_cells_total": 1191,
+          "new_rows_total": 151,
+          "new_columns_total": 1048,
+          "actual_continuations": 9809,
+          "host_cpu_seconds": 115.58357100000006,
+          "wall_seconds": 117.3235924913024
+        },
+        "new4_noise": {
+          "witness_included": {
+            "count": 165,
+            "n": 236,
+            "rate": 0.6991525423728814,
+            "wilson95": [
+              0.6378328366280277,
+              0.7540927314626609
+            ]
+          },
+          "witness_chosen": {
+            "count": 88,
+            "n": 236,
+            "rate": 0.3728813559322034,
+            "wilson95": [
+              0.31368425598728694,
+              0.436150487784614
+            ]
+          },
+          "best_included_secondary": {
+            "count": 168,
+            "n": 236,
+            "rate": 0.711864406779661,
+            "wilson95": [
+              0.6510537375019491,
+              0.7658883562115492
+            ]
+          },
+          "best_chosen_secondary": {
+            "count": 85,
+            "n": 236,
+            "rate": 0.3601694915254237,
+            "wilson95": [
+              0.30161425949729903,
+              0.42320395865179206
+            ]
+          },
+          "added_candidates": 1200,
+          "added_by_packet": {
+            "1": 1154,
+            "3": 14,
+            "0": 32
+          },
+          "added_by_cost": {
+            "50": 1168,
+            "100": 32
+          },
+          "new_cells_total": 1191,
+          "new_rows_total": 151,
+          "new_columns_total": 1048,
+          "actual_continuations": 9886,
+          "host_cpu_seconds": 114.34896399999992,
+          "wall_seconds": 117.04273051361088
+        }
+      }
+    }
+  },
+  "witness_action": "original task9 multiplicity-significant witness_action, not reselected",
+  "no_win_claim": true
+}
