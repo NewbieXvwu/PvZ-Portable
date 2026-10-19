@@ -23,13 +23,14 @@ class ReferenceProtocolTests(unittest.TestCase):
                         "configs": ["config.json"], "model": model}
             path = root / "protocol.json"
             path.write_text(json.dumps(protocol))
+            loaded = {"model": model, "budget": {"decisions": 5000, "max_episodes": None}}
             with patch.object(audit, "ROOT", root):
-                self.assertEqual(audit.read_protocol(path, [config], [{"model": model}]), protocol)
+                self.assertEqual(audit.read_protocol(path, [config], [loaded]), protocol)
                 with self.assertRaises(ValueError):
-                    audit.read_protocol(path, [config], [{"model": {"width": 32}}])
+                    audit.read_protocol(path, [config], [{**loaded, "model": {"width": 32}}])
                 config.write_text('{"changed":true}')
                 with self.assertRaises(ValueError):
-                    audit.read_protocol(path, [config], [{"model": model}])
+                    audit.read_protocol(path, [config], [loaded])
 
     def test_no_gpu_work_while_predecessor_running(self):
         with tempfile.TemporaryDirectory() as tmp:

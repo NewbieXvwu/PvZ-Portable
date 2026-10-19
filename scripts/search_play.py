@@ -387,6 +387,26 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
         jobs = [(cand, decision_seed * 1000 + k) for cand in candidates for k in range(args.samples)]
+        if _W.get("cuda") is None:
+            # The CPU reference scores one candidate at a time, terminal futures first.
+            totals = []
+            from render_episode import _frame
+            for cand in candidates:
+                fixed, frames = [], []
+                for k in range(args.samples):
+                    leaf = _rollout_policy(env, obs, cand, obs["tick"] + args.horizon,
+                                           root, (decision_seed * 1000 + k) % 2 ** 32)
+                    terminal = _score_terminal_or_value(leaf)
+                    if terminal is None:
+                        frames.append(_frame(leaf))
+                    else:
+                        fixed.append(terminal)
+                scored = fixed + (_values(frames) if frames else [])
+                totals.append(sum(scored) / len(scored))
+            best = max(range(len(candidates)), key=lambda i: totals[i])
+            keys = [json.dumps(c, sort_keys=True) for c in candidates]
+            return _verified_choice(env, obs, root, candidates, totals, [args.samples] * len(candidates),
+                                    best, keys.index(policy_key), policy_action, args, decision_seed, stats)
         scores = _leaf_values(_continuations(env, obs, root, jobs, args, stats))
         totals = []
         for index in range(len(candidates)):
@@ -439,7 +459,11 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
             handles = _continuations(env, obs, root, jobs, args, stats)
         else:
             handles = [speculative[key] for key in order]
-        for (i, _k), value in zip(order, _leaf_values(handles)):
+        scored = list(zip(order, handles, _leaf_values(handles)))
+        if _W.get("cuda") is None:
+            # Match the original CPU accumulation order within each stage.
+            scored.sort(key=lambda row: _score_terminal_or_value(row[1]) is None)
+        for (i, _k), _handle, value in scored:
             if value is not None:
                 values[i].append(value)
         done = target
@@ -632,7 +656,8 @@ def _play(job: dict) -> dict:
                     # Wall time is not part of the label: keeping it in the archive makes two runs of
                     # the same arm differ byte for byte (and the GPU schedule comparison impossible).
                     verification = dict(stats["last_verification"])
-                    verification.pop("seconds", None)
+                    if getattr(args, "rollout_backend", "cpp") == "cuda":
+                        verification.pop("seconds", None)
                     frames[-1]["verification"] = verification
                 if dagger is not None:
                     frames[-1]["label"] = label        # last field: train_rollout_policy scans for it

@@ -7,6 +7,64 @@
 
 ## 当前结论
 
+### task5 合并审查清单（第64轮，已验收）
+
+合并方向是`origin/pvz-env` → 本地`cuda-rollout`，基线固定为`70a27f0`，使用merge，未rebase、未push。
+主线新增的`train_rollout_policy.py`（cosine/EMA/cell-soft-weight）、`pvz_frame_store.cache_candidates`
+和`lane_metrics.py`保留原样；学生候选、包扎术沿用同一实现，没有复制另一套训练器或候选规则。
+
+相对该主线，已有文件的改动如下：
+
+| 文件 | 为什么改 | CPU影响与审查点 |
+|---|---|---|
+| `CMakeLists.txt` | 增加可选CUDA构建入口 | `PVZ_CUDA_ROLLOUT`默认OFF；OFF不查找CUDA、不启用CUDA语言、不链接CUDA库 |
+| `python/pvz_env.py` | 增加`cuda_dump`，传递阳光窗口/学生历史 | 现有CPU方法保持主线版本；不主动导入或启动CUDA |
+| `scripts/search_play.py` | GPU续走、推测调度、可选CPU计量、正常回收子进程 | 默认仍为CPU；保留主线候选、复核、逐候选计分和终局优先累加顺序；增加统计字段，正常退出会回收模拟器 |
+| `scripts/sim_skip_agreement.py` | 可选GPU比较、部分结果/输入SHA记录、v2历史传递 | CPU诊断输出扩充，v2历史处理修正；不改变默认采集入口 |
+| `src/EnvironmentRollout.h/.cpp` | 记录实际网络调用次数 | 只计数，不改预测或游戏规则 |
+| `src/main.cpp` | `CUDA_DUMP`导出和续走计数 | CPU响应增加net_calls/ticks；恢复根后重读事件计数修正delta，需注意依赖events字段的调用方 |
+| `python/test_verify_override.py` | 锁定CPU复核批次/终局求和 | 仅回归测试 |
+| `python/test_curriculum.py` | 两条旧断言仍要求10-15已退役的流程门禁生效，改为验证忽略旧门禁且保留配置 | 仅测试；不改生产加载器，不恢复旧门禁 |
+| `python/test_reference_interrupt_protocol.py` | 补齐读取协议测试夹具必需的budget字段 | 仍验证模型和配置变更被拒绝，生产审计不变 |
+| `python/test_shared_helpers.py` | 旧常量断言仍是观测v3，主线已为v4 | 只修断言和说明，不改版本常量 |
+| `python/test_t5_overnight.py` | stage0计数测试不再依赖本地缺失的T0原始失败列表，用明确的临时夹具提供无关字段 | 320种子/5任务/零胜率仍取已跟踪的真实T4汇总；不产生实验记录 |
+| `scripts/watch_policy.py` | 去掉示例行尾空格 | 无行为变化 |
+| `MEMORY/`索引、日志和工作约定 | 交接证据与执行约定 | 无运行时影响；每日日志保留原字节后追加 |
+
+新增交付包括`cuda/`模拟核心/规格、`CMake/CudaRollout.cmake`、`src/CudaExport.*`、
+`python/pvz_cuda_*.py`、`python/pvz_cpu_usage.py`、混采入口、CUDA检查工具与回归。
+CPU的根导出只是标准C++代码，CPU-only构建也能编译；设备服务单独依赖NVCC/cuBLAS，当前服务使用POSIX socket。
+
+构建方式：默认`cmake -S . -B build-cpu -DPVZ_CUDA_ROLLOUT=OFF`后构建`pvz-portable`；
+GPU显式加`-DPVZ_CUDA_ROLLOUT=ON`并构建`rollout_cuda_small`（128槽、内联tick）。
+原`rollout_cuda`大波目标仍保留。无GPU的Mac走默认OFF；本次以Linux关闭可见GPU、无效CUDACXX路径
+配置/构建/运行验收，不冒充Mac实机测试。
+
+**不进主线**：`tmp/`、`build/`、参考工作树、全部实验产物/滚动日志、`.pt/.npz/.log`、
+`artifacts/research*/`与`logs/`。不强制添加，不用LFS或分片绕过忽略规则。
+保留代码、配置、规格和本报告；原始验收数据只在本地`artifacts/cuda/codex_r64/`。
+提交前检查暂存区无二进制、无上述后缀，并用AGENTS.md的`check-ignore --no-index`审计已跟踪产物。
+
+验收边界：上游把实测`verification.seconds`写进帧，自然运行不能保证此字段字节重复。
+默认CPU保留该字段；对照启动器只固定`search_play.time.perf_counter=0`，不改游戏时钟、策略或数据内容，
+再比较完整解压帧payload字节（不忽略任何字段），主控11:55已批准此口径。
+两个独立源码工作树、各自CPU-only二进制均已实跑：30000–30007共8局`fast`和8局正式采集参数
+`fast_search`（v28、k=2、verify9、beta0），逐局胜负/决策/推翻/候选统计相同，**16份完整压缩档案也逐字节相同**。
+`beta0`是采集口径，胜负不作执行老师策略的强度结论；帧包含搜索标签、targets和实际发生的9次复核。
+原始SHA、参数和独立构建证据见`codex_r64/{archive_parity,native_build_audit}.json`。
+全量**56模块/487项测试通过**，包括CPU原生续走、共享机制ASan/UBSan、7项CUDA服务集成测试。
+为控制内存，逐模块启动新解释器、串行编译（`TORCHINDUCTOR_COMPILE_THREADS=1`），没有跳过模块。
+首次发现的过时门禁断言、缺budget夹具、观测v3断言和本地T4原始文件依赖，已在未修改上游复现后修正测试；
+旧`artifacts/task_family/{train,heldout}.json`路径仅在本地链接到已跟踪的同SHA清单，不交付运行产物。
+初次失败、上游复现和复测日志都保留在`codex_r64/`，最终汇总在`suite_result.json`。
+
+`--epochs 1 --cell-soft-weight 1 --ema 0.99 --lr-schedule cosine --obs v2 --init v28`实跑成功：
+16种子/18092决策，训练单轮8.59s、进程18.20s，写出模型。`final_audit.json`再次核验16份完整档案、
+实际verify9、精确种子集和测试/训练退出码，全部通过。
+最初两次单进程测试尝试触发2GiB暂停线，随后改为逐模块串行；最终完整测试阶段采样自身RSS峰2.44GiB、
+主机可用内存最低2.19GiB，VmSwap峰3.31MiB。对局对照自身RSS峰1.74GiB、VmSwap零。
+默认OFF构建以无效CUDACXX配置/编译并关闭可见GPU实跑通过，动态依赖没有CUDA；Mac未实机测试。
+
 task3（第61轮，2026-10-19 08:56 CST）已验收：k=2 在两个后端都生效，**GPU 每局主机 CPU 只有 CPU 的 1/3.16**；
 在固定 2 个 CPU worker 的同一批 6 局上，加 2 个推测 GPU worker 把吞吐从 **47.1 局/小时提到 101.1 局/小时（2.15 倍）**，
 主机 CPU 从 141.0 降到 93.9 秒/局。

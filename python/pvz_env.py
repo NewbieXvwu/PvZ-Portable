@@ -217,7 +217,6 @@ class PvZEnv:
         self._temporary_save: tempfile.TemporaryDirectory[str] | None = None
         self._process: subprocess.Popen[str] | None = None
         self._reset_done = False
-        self._rollout_version = 1
         self._last_response: dict[str, Any] = {}
         self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
@@ -312,7 +311,6 @@ class PvZEnv:
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
             self._abort_process()
             raise RuntimeError(f"PvZ-Portable did not enter protocol-v{ENV_PROTOCOL_VERSION} environment mode: {ready}")
-        self._rollout_version = int(ready.get("rollout_version", 1))
 
     def _abort_process(self) -> None:
         if self._process is not None:

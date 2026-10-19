@@ -11,7 +11,6 @@ from unittest.mock import patch
 
 from pvz_curriculum import initial_state, observe, probabilities, validate_settings, validate_state
 from pvz_research import ROOT, _assign, load_config
-from pvz_common import sha256_file
 
 TASKS = [dict(task_id=name, terrain=terrain, seeds=list(range(10)))
          for terrain, names in (("day", ("fail", "progress", "mastered")), ("roof", ("roof",)))
@@ -150,7 +149,7 @@ class CurriculumTests(unittest.TestCase):
         self.assertGreater(details["tasks"][tasks[0]["task_id"]]["positive_progress"], 0)
         self.assertEqual(uniform, progress)
 
-    def test_probe_gate_cannot_authorize_another_experiment(self):
+    def test_retired_gate_allowlist_does_not_restrict_experiment(self):
         config = explicit_fixture()
         with tempfile.TemporaryDirectory() as temporary:
             gate = Path(temporary) / "gate.json"
@@ -158,8 +157,9 @@ class CurriculumTests(unittest.TestCase):
             config["prerequisites"] = [str(gate)]
             path = Path(temporary) / "config.json"
             path.write_text(json.dumps(config))
-            with self.assertRaisesRegex(RuntimeError, "does not authorize"):
-                load_config(path)
+            loaded, train, evaluation = load_config(path)
+            self.assertEqual(loaded, config)
+            self.assertTrue(train and evaluation)
 
     def test_zero_successes_do_not_overweight_unlearnable_tasks(self):
         state = initial_state(TASKS)
@@ -296,17 +296,20 @@ class CurriculumTests(unittest.TestCase):
             _, tasks, _ = load_config(path)
             self.assertEqual(len(tasks), 5)
 
-    def test_old_training_gate_rejects_this_changed_core(self):
-        binary = ROOT / "build/pvz-portable"
-        gate = json.loads((ROOT / "gates/T5-A-research-v4.json").read_text())
-        def hash_with_existing_binary(path):
-            return gate["simulator_sha256"] if path == binary else sha256_file(path)
-        with patch("pvz_research.sha256_file", side_effect=hash_with_existing_binary):
-            with tempfile.TemporaryDirectory() as temporary:
-                path = Path(temporary) / "config.json"
-                path.write_text(json.dumps(explicit_fixture()))
-                with self.assertRaisesRegex(RuntimeError, "source is stale"):
-                    load_config(path)
+    def test_retired_gate_stale_source_does_not_block_config(self):
+        # TODO.md's 2026-10-15 cleanup retired process gates, while resume identity
+        # checks remain active. Config parsing must not revive the old gate hashes.
+        with tempfile.TemporaryDirectory() as temporary:
+            gate = Path(temporary) / "gate.json"
+            gate.write_text(json.dumps({"gate_result": "fail", "source_sha256": {"python/pvz_research.py": "stale"}}))
+            config = explicit_fixture()
+            config["prerequisites"] = [str(gate)]
+            path = Path(temporary) / "config.json"
+            path.write_text(json.dumps(config))
+            with patch("pvz_research.sha256_file", side_effect=AssertionError("retired gate hash was read")):
+                loaded, train, evaluation = load_config(path)
+            self.assertEqual(loaded, config)
+            self.assertTrue(train and evaluation)
 
 
 if __name__ == "__main__":

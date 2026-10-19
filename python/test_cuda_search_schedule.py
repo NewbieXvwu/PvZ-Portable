@@ -37,13 +37,14 @@ class SearchScheduleTest(unittest.TestCase):
 
             def continue_jobs(env, frame, root, jobs, config, stats):
                 rounds.append(jobs.copy())
-                return [(action.get("packet", -1) + 1) / 10 for action, seed in jobs]
+                return [{"terminal": False, "score": (action.get("packet", -1) + 1) / 10}
+                        for action, seed in jobs]
 
             with patch.dict(search_play._W, {"cuda": client}, clear=True), \
                  patch("render_episode._frame", side_effect=lambda frame: frame), \
                  patch.object(search_play, "_values", side_effect=lambda frames, **kw: [0.5] * len(frames)), \
                  patch.object(search_play, "_continuations", side_effect=continue_jobs), \
-                 patch.object(search_play, "_leaf_values", side_effect=lambda values: values):
+                 patch.object(search_play, "_leaf_values", side_effect=lambda leaves: [leaf["score"] for leaf in leaves]):
                 stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
                 chosen.append(search_play._search(Root(), obs, policy, args, 123, stats))
             schedules.append(rounds)

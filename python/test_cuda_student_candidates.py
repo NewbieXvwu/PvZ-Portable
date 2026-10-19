@@ -28,11 +28,13 @@ class StudentCandidatesTest(unittest.TestCase):
             batches = []
 
             def continuations(env, obs, root, jobs, args, counters):
-                return [0.1 if a["type"] == "wait" else 0.4 + a["col"] / 10 for a, seed in jobs]
+                return [{"terminal": False, "score": 0.1 if a["type"] == "wait" else 0.4 + a["col"] / 10}
+                        for a, seed in jobs]
 
             def values(handles):
-                batches.append(list(handles))
-                return handles
+                scores = [handle["score"] for handle in handles]
+                batches.append(scores)
+                return scores
 
             with patch.dict(sys.modules, {"pvz_rollout_policy": SimpleNamespace(
                     ranked_plants=lambda *a, **kw: ranked)}), \
