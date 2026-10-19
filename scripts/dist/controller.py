@@ -27,6 +27,7 @@ import tarfile
 import tempfile
 import time
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -359,16 +360,28 @@ def cmd_stop(args) -> None:
 
 def cmd_status(args) -> None:
     ledger = load_json(LEDGER, {"segments": []})
-    rows = []
-    for name, entry in machines().items():
-        if not entry.get("enabled", True):
-            continue
+    enabled = [(name, entry) for name, entry in machines().items() if entry.get("enabled", True)]
+
+    def probe(item):
+        # One ssh per machine, in parallel: a dead tunnel blocks for minutes, and with several
+        # machines a sequential loop would multiply that by the number of machines.
+        name, entry = item
         proc = ssh(entry, f"{WORKER_ROOT}/env/bin/python {WORKER_ROOT}/repo/scripts/dist/worker.py "
                           f"--root $HOME/{WORKER_ROOT} status --json", check=False)
         try:
             states = json.loads(proc.stdout.strip() or "[]")
         except json.JSONDecodeError:
             states = []
+        return name, (None if proc.returncode != 0 and not states else states)
+
+    rows = []
+    with ThreadPoolExecutor(max_workers=max(1, len(enabled))) as pool:
+        results = list(pool.map(probe, enabled))
+    for name, states in results:
+        if states is None:
+            rows.append({"machine": name, "label": "—", "status": "unreachable", "done": 0, "total": 0,
+                         "games_per_hour": 0})
+            continue
         if not states:
             rows.append({"machine": name, "label": "—", "status": "no state", "done": 0, "total": 0,
                          "games_per_hour": 0})
