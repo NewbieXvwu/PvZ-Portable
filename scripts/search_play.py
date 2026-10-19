@@ -56,6 +56,29 @@ NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 _W: dict = {}
 
 
+def _wait_for_gpu_pause(args, seed: int) -> None:
+    """Yield the GPU between games while training owns the pause file."""
+    if getattr(args, "rollout_backend", "cpp") != "cuda":
+        return
+    filename = getattr(args, "gpu_pause_file", None) or os.environ.get("PVZ_GPU_PAUSE_FILE")
+    if not filename:
+        return
+    path = Path(filename).expanduser()
+    announced = False
+    while path.exists():
+        if not announced:
+            # A queue paused before its very first game must greet the server too:
+            # otherwise its startup timeout expires while every worker is waiting.
+            client = _W.get("cuda")
+            if client is not None:
+                client.connect()
+            print(f"GPU collection paused before seed {seed}: {path}", flush=True)
+            announced = True
+        time.sleep(10)
+    if announced:
+        print(f"GPU collection resumed before seed {seed}", flush=True)
+
+
 def _close_worker_env():
     env = _W.pop("env", None)
     if env is not None:
@@ -551,13 +574,14 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
 
 
 def _play(job: dict) -> dict:
+    args = job["args"]
+    _wait_for_gpu_pause(args, job["seed"])
     from collections import Counter
     import torch
     from pvz_event_env import EventWaitEnv
     from render_episode import _frame, load_training_task, training_task_kwargs
     from scripted_baseline import profile_for_deck
     from pvz_env import TaskSpec
-    args = job["args"]
     kw = training_task_kwargs(load_training_task(Path(args.manifest), args.task_id), job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading
     # resources costs ~0.7 s, as much as a whole student-only game. RESET_V2 rebuilds the board
@@ -769,6 +793,8 @@ def main() -> None:
                         "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     args = p.parse_args()
+    if args.rollout_backend == "cuda" and os.environ.get("PVZ_GPU_PAUSE_FILE"):
+        args.gpu_pause_file = str(Path(os.environ["PVZ_GPU_PAUSE_FILE"]).expanduser().resolve())
     if args.cuda_speculative_halving and (not args.halving or args.rollout_backend != "cuda"):
         p.error("--cuda-speculative-halving requires --halving and --rollout-backend cuda")
     if args.verify_samples < 0:

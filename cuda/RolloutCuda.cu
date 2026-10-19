@@ -50,6 +50,7 @@
 
 #include <cerrno>
 #include <chrono>
+#include <thread>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -86,6 +87,33 @@ void Checked(cublasStatus_t status, const char* what)
 
 #define CALL(expression) Checked((expression), #expression)
 #define CHECK_LAUNCH() Checked(cudaGetLastError(), "kernel launch")
+
+int HostWaitMicros()
+{
+	static const int value = [] {
+		const char* text = std::getenv("PVZ_CUDA_POLL_US");
+		if (text == nullptr) return 0;
+		char* end = nullptr;
+		const long parsed = std::strtol(text, &end, 10);
+		if (end == text || *end != '\0' || parsed < 0 || parsed > 10000)
+			Fail("PVZ_CUDA_POLL_US must be an integer from 0 to 10000");
+		return static_cast<int>(parsed);
+	}();
+	return value;
+}
+
+void WaitForStream()
+{
+	const int micros = HostWaitMicros();
+	if (micros == 0) { CALL(cudaStreamSynchronize(0)); return; }
+	// WSL reports BlockingSync/Yield flags correctly but still burns a host core
+	// inside cudaStreamSynchronize. Query success is the same completion fence;
+	// sleeping between queries releases the CPU without changing device work.
+	cudaError_t status;
+	while ((status = cudaStreamQuery(0)) == cudaErrorNotReady)
+		std::this_thread::sleep_for(std::chrono::microseconds(micros));
+	Checked(status, "cudaStreamQuery");
+}
 
 // An asynchronous fault is reported by whichever call comes next, so SYNC=1 puts a device sync after
 // every GEMM and every ReLU pass and makes the failing one name itself.
@@ -1083,12 +1111,15 @@ void DeviceOpen(Device& dev, const Options& options, const NetImage& image)
 	arguments.pairSeed = dev.pairSeed;
 	arguments.pairFirst = dev.pairFirst;
 
-	CALL(cudaEventCreate(&dev.start));
-	CALL(cudaEventCreate(&dev.stop));
+	// Device scheduling controls stream fences; events have their own wait policy.
+	// Both only change how the host waits, never the device work or its ordering.
+	const unsigned eventFlags = HostWaitMicros() ? cudaEventBlockingSync : cudaEventDefault;
+	CALL(cudaEventCreateWithFlags(&dev.start, eventFlags));
+	CALL(cudaEventCreateWithFlags(&dev.stop, eventFlags));
 	for (int32_t index = 0; index < 3; ++index)
 	{
-		CALL(cudaEventCreate(&dev.phaseStart[index]));
-		CALL(cudaEventCreate(&dev.phaseStop[index]));
+		CALL(cudaEventCreateWithFlags(&dev.phaseStart[index], eventFlags));
+		CALL(cudaEventCreateWithFlags(&dev.phaseStop[index], eventFlags));
 	}
 	CALL(cudaMallocHost(&dev.hostCounters, 2 * sizeof(int32_t)));
 	dev.hostResults.resize(static_cast<size_t>(lanes));
@@ -1203,7 +1234,7 @@ BatchStats RunBatch(Device& dev, int32_t firstRollout, int32_t batchLanes)
 			// its horizon.
 			CALL(cudaMemcpyAsync(dev.hostCounters, dev.counters, 2 * sizeof(int32_t),
 				cudaMemcpyDeviceToHost));
-			CALL(cudaStreamSynchronize(0));
+			WaitForStream();
 			if (dev.hostCounters[1] == 0) break;
 			const int32_t netCount = dev.hostCounters[0];
 			if (netCount > stats.maxNet) stats.maxNet = netCount;
@@ -1930,6 +1961,12 @@ using namespace pvzc;
 int main(int argc, char** argv)
 {
 	Options options = Parse(argc, argv);
+	if (HostWaitMicros())
+	{
+		// Set this before DeviceOpen's first allocation creates the CUDA context.
+		CALL(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
+		std::fprintf(stderr, "CUDA host wait: sleep %d us between stream queries\n", HostWaitMicros());
+	}
 	return options.serve ? Serve(options) : RunWorkload(options);
 }
 

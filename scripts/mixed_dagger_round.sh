@@ -16,6 +16,9 @@
 # re-exports into its own temporary directory because that is what the server loads.
 set -euo pipefail
 
+# The training queue owns this file; both collection processes inherit the path.
+# search_play checks it only for CUDA workers, before each new game.
+if [[ -n "${PVZ_GPU_PAUSE_FILE:-}" ]]; then export PVZ_GPU_PAUSE_FILE; fi
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PYTHON="$HOME/.venvs/ml/bin/python3"

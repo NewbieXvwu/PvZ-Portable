@@ -7,6 +7,28 @@
 
 ## 当前结论
 
+### task6 采集提速（第66轮，2026-10-19，进行中）
+
+**推荐配置（正式队列）**：仍用下面的 2+2 混采一条命令，另加两个环境变量：
+
+```bash
+export PVZ_CUDA_POLL_US=100     # 服务主机等待改睡眠轮询；不设=原cudaStreamSynchronize
+export PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause   # 训练期间 touch，采集在局间让路
+```
+
+1. **主机等待（补充2，已验收）**。服务每轮 `cudaStreamSynchronize` 在 WSL 上是自旋：
+   整局服务 CPU 248.87 s（≈1 个核），改成 `cudaStreamQuery`+100 µs 睡眠后 **26.38 s**（6.1×），
+   每局总主机 CPU 267.5 → 43.7 s。两局 `frames.npz` SHA 相同（`420bd6…`），批探针 10 次
+   bin/leaf SHA 全同（`a9ac3b…`/`919680…`）——只改主机等待，设备逐字节不变。
+   墙钟代价：18 道/432 续走探针 +0.3–1.5 s（5% 量级，load 17–20）；整局墙钟未做同负载配对，
+   不作为已证收益。默认关（`PVZ_CUDA_POLL_US` 未设 = 旧行为）。
+2. **采集/训练争卡（补充3，已定因）**。同一训练进程逐轮：全开 462.87 s → 停掉同卡 GPU 采集 141.74 s
+   → 8 个 CPU 采集 sim 仍各占一核时 63.10 s（历史无负载 56 s）。主因是**同卡 GPU 采集的时间片**，
+   不是服务自旋（只占 0.85 核）。暂停用 `PVZ_GPU_PAUSE_FILE`：每局开始前检查，存在就每 10 s 重查，
+   进行中的局照常下完，服务不退出；CPU 臂不等待。验收：touch 后 6 s 日志出现暂停、GPU util 33–38%
+   （=只有训练）、服务进程存活；rm 后该局开跑 util 79%，混采 1+1 两局 2 胜、合并输出完整。
+   用法：训练队列开始前 `touch`、结束后 `rm`；变量经 `mixed_dagger_round.sh` 透传。
+
 ### task5 合并审查清单（第64轮，已验收）
 
 合并方向是`origin/pvz-env` → 本地`cuda-rollout`，基线固定为`70a27f0`，使用merge，未rebase、未push。

@@ -19,6 +19,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -97,6 +98,16 @@ class CudaServeMergeTest(unittest.TestCase):
         client = CudaRolloutClient(busy)
         self.addCleanup(client.close)
         self.assertEqual(client.status()["waves"], 1)
+
+    def test_sleeping_host_wait_preserves_records_and_leaf_bits(self):
+        reference = self._answer(self._serve(gather_ms=0), [FIRST + SECOND])[0]
+        with patch.dict(os.environ, {"PVZ_CUDA_POLL_US": "100"}):
+            blocked_socket = self._serve(gather_ms=1)
+        blocked = self._answer(blocked_socket, [FIRST + SECOND])[0]
+        self.assertEqual(reference[0], blocked[0])
+        import numpy as np
+        np.testing.assert_array_equal(reference[1], blocked[1])
+        self.assertIn("sleep 100 us between stream queries", Path(blocked_socket + ".log").read_text())
 
     def test_a_request_spanning_waves_preserves_every_leaf(self):
         pairs = FIRST + SECOND + FIRST
