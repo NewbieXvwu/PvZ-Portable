@@ -7,41 +7,45 @@
 > 台账：`~/.pvz-dist/ledger.json` —— 偏移 16384–65535 的唯一权威记录
 > 代码：`scripts/dist/{bootstrap.sh,worker.py,controller.py,install_windows.ps1}`
 
-## 明天开工的三条命令
+## 当前状态（2026-10-19 09:30，**分布式暂停中**）
 
-    python3 scripts/dist/controller.py status
-    python3 scripts/dist/controller.py assign pvz-f1 artifacts/student/v29/model.pt 320 --push --start
-    python3 scripts/dist/controller.py collect --label <label>
-
-（第一条看进度；第二条派 320 局并立刻开跑；第三条收回来、校验、上传 HF。）
-
-## 当前状态（2026-10-19 07:30）
+用户要拿回那台 Mac，隧道已临时关闭，**pvz-f1 相关工作暂停**，等用户通知再继续。
+暂停期间控制端不再轮询那台机器（手工 ssh 探测已停）；collect 的后台等待进程留着，
+隧道恢复后它会自己把剩下的档案收完，不需要人工重跑。
 
 | 步骤 | 状态 |
 |---|---|
 | 1 bootstrap 在 pvz-f1 跑通 | ✅ 10 分 14 秒，1.3 GB；**自检 1 局通过**（1 个档案、1055 帧） |
 | 2 worker + 网页 | ✅ 32 局原型**已在 pvz-f1 上跑完 32/32**（8 进程、偏移 14736–14767）；暂停/继续/下完这局再停/立即停止+续跑都在 pvz-f1 上实测 |
-| 3 controller | ⏳ status/push/assign/collect 全部跑通；`transfer/z17distproto.tgz` 现有的是**本机演练版**；pvz-f1 的 32 个档案还差最后一段传输（见下） |
+| 3 controller | 🟡 status/push/assign/collect 全部跑通；**collect 的方向 bug 已修**（见下），已实测能逐个 seed 拉回；pvz-f1 的 32 个档案只拉回 2 个（07:56 隧道断），**等恢复后续传** |
 | 4 Windows 安装脚本 | ✅ 初版已加固（**未实机验证**，见 §9） |
 | 5 文档 | ✅ 本文件 |
-| 6 GPU | ✅ 已合并 `origin/pvz-env`（cuda-rollout）+ 代码/文档（`assign --gpu`，默认关，见 §7）；**未实机验证**，等主控安排 |
+| 6 GPU 采集开关 | ✅ 代码 + 文档（`assign --gpu`，**默认关**）；已在合并后的树上复核 `search_play.py` 六个 cuda 参数齐全；**没有任何 GPU 机器实机验证**（见 §7） |
 
-**当前卡点（2026-10-19 08:00）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
-拉回来。隧道是 **UU 远程（UURemote）的 22223 端口转发**，不是我们起的 ssh，抖动时只能等它恢复
-（详见 `distributed-worker-questions.md` 06:30 那条）。
+**collect 修掉的两个真 bug（2026-10-19 07:56 / 08:04）**
 
-**07:56 修掉了 collect 的一个真 bug**：`rsync_try()` 只会拼"本地 → 机器"，而 collect 传的是
-（远端源, 本地目标），所以它一直在把本地的 `~/pvz-worker` 往远端推，必然失败（之前本机演练和
-假远端测试都因为两端同机 / shim 凑巧而"通过"）。现在有 `pull=True`，实测已能逐个 seed 拉回。
-另外给 rsync 加了 300 秒墙钟上限（中继卡死时不会永久等待）。
+1. `rsync_try()` 只会拼"本地 → 机器"，而 `collect_segment()` 传的是（远端源, 本地目标）——
+   于是它一直在**把本地的 `~/pvz-worker` 往远端推**，本地没这个目录、远端没权限，必然失败。
+   之前本机演练（两端同机）和假远端测试（shim 凑巧实现成 pull）都没暴露它。
+   现在有 `pull=True`，日志按方向打印。
+2. openrsync 的 `--timeout` 只管 socket I/O，中继卡死时会一直等。给 `rsync_try` 加了
+   **300 秒墙钟上限**，超时按失败处理、由重试续传（`--partial` 保留已到字节）。
 
-一个 12 小时窗口的采集进程挂着（日志 `~/.pvz-dist/collect.log`），隧道一恢复就会自己跑完；
-要重新挂就用下面这条：
+**恢复后怎么继续（一条命令，不需要人工判断进度）**
 
-    python3 scripts/dist/controller.py collect --label z17distproto --wait 600 --retry-delay 20
+    python3 scripts/dist/controller.py collect --label z17distproto --wait 720 --retry-delay 20
 
-它会按 seed 目录分批 rsync，断了只损失一个 seed；收齐后自动校验 → 打包 →
-上传 `transfer/z17distproto.tgz`（覆盖本机演练版）→ 台账写 `status: collected`。
+已到的 seed 不会重下，缺的会补；收齐后自动校验 → 打包 → 上传 `transfer/z17distproto.tgz`
+（覆盖现在这份本机演练版）→ 台账写 `collected`。
+
+**明天接新机器时的三条命令**
+
+    python3 scripts/dist/controller.py status
+    python3 scripts/dist/controller.py assign pvz-f1 artifacts/student/v29/model.pt 320 --push --start
+    python3 scripts/dist/controller.py collect --label <label>
+
+（第一条看进度；第二条派 320 局并立刻开跑；第三条收回来、校验、上传 HF。
+ 第一条会并行探测所有机器，连不上的显示 `unreachable`。）
 
 ## 0. 一页纸（发给朋友）
 
@@ -252,6 +256,9 @@
 - 网页「进程数」后面会显示 `· GPU`。
 - 启动前 worker 自检：`build/rollout_cuda_small` 不存在、或 `search_play.py` 没有
   `--rollout-backend`，就跳过该任务并在页面/日志写明原因，不会拉起半截命令。
+- 复核（2026-10-19 09:2x，合并 `origin/pvz-env` 98e7ef72 之后）：`search_play.py --help` 里
+  `--rollout-backend` / `--cuda-binary` / `--cuda-speculative-halving` / `--cuda-prefetch-verify`
+  / `--executable` / `--measure-cpu` 六项都在，`worker.py` 与 `controller.py` 均编译通过。
 
 二进制与 ABI：
 
