@@ -535,7 +535,22 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
     if samples and before:
         prior = None if fresh else [totals[policy_index], totals[best]]
         started = time.perf_counter()
-        if _W.get("cuda") is None:
+        adaptive = None
+        if _W.get("cuda") is None and not fresh and getattr(args, "adaptive_verify_gap", 0):
+            from adaptive_verify import cpu_pair
+            from render_episode import _frame
+            requested = samples
+            adaptive = cpu_pair(env, obs, root, candidates, (policy_index, best), totals, counts,
+                                args, decision_seed, samples, rollout=_rollout_policy,
+                                terminal_score=_score_terminal_or_value, frame=_frame, values=_values)
+            samples = adaptive["samples"]
+            totals[policy_index], totals[best] = adaptive["means"]
+            stats["rollout_batches"] = stats.get("rollout_batches", 0) + (1 if adaptive["early_stop"] else 2)
+            stats["rollout_lanes"] = stats.get("rollout_lanes", 0) + 2 * samples
+            stats["adaptive_verify_attempts"] = stats.get("adaptive_verify_attempts", 0) + 1
+            stats["adaptive_verify_stopped"] = stats.get("adaptive_verify_stopped", 0) + int(adaptive["early_stop"])
+            stats["adaptive_verify_saved_lanes"] = stats.get("adaptive_verify_saved_lanes", 0) + 2 * (requested-samples)
+        elif _W.get("cuda") is None:
             # Retain the original CPU value batches and terminal-first sum order. A different
             # order can change the last bits even though the continuation jobs are identical.
             from render_episode import _frame
@@ -579,6 +594,10 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
             "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
             "mode": "fresh" if fresh else "reproduced",
             "seconds": time.perf_counter() - started}
+        if adaptive is not None:
+            stats["last_verification"].update(requested_samples=requested,
+                adaptive_gap=args.adaptive_verify_gap, adaptive_checkpoint_gap=adaptive["checkpoint_gap"],
+                adaptive_early_stop=adaptive["early_stop"])
     # Did the winner come from --student-candidates? Counted here so both the halving and the
     # full search report it; the override counter below is the subset that changed the action.
     if json.dumps(candidates[best], sort_keys=True) in (stats.get("last_student_keys") or ()):
@@ -744,6 +763,9 @@ def _play(job: dict) -> dict:
             "shovel_events": stats.get("shovel_events", []),
             "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
+    if getattr(args, "adaptive_verify_gap", 0):
+        result.update({name: stats.get(name, 0) for name in (
+            "adaptive_verify_attempts", "adaptive_verify_stopped", "adaptive_verify_saved_lanes")})
     if getattr(args, "measure_cpu", False):
         from pvz_cpu_usage import usage, process_usage, difference
         worker = usage()
@@ -792,6 +814,9 @@ def main() -> None:
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--verify-samples", type=int, default=0,
                    help="extra independent futures for student and challenger before an override (0 = disabled)")
+    p.add_argument("--adaptive-verify-gap", type=float, default=0,
+                   help="experimental CPU verification: inspect 3 new futures, stop if gap is this far "
+                        "from margin, otherwise finish the full budget (0 = off)")
     p.add_argument("--min-gap", type=int, default=300,
                    help="ticks between searches unless the student itself wants to plant (0 = search every time)")
     p.add_argument("--rollout-sim-skip", type=int, default=61,
@@ -828,6 +853,10 @@ def main() -> None:
         p.error("--cuda-prefetch-verify requires --cuda-speculative-halving and positive --verify-samples")
     if args.verify_samples < 0:
         p.error("--verify-samples must be nonnegative")
+    import math
+    if (not math.isfinite(args.adaptive_verify_gap) or args.adaptive_verify_gap < 0
+            or (args.adaptive_verify_gap and (args.rollout_backend != "cpp" or args.verify_samples <= 3))):
+        p.error("--adaptive-verify-gap requires a finite nonnegative gap, CPU and --verify-samples >3")
     if args.shovel_candidates < 0:
         p.error("--shovel-candidates must be nonnegative")
     if args.student_candidates < 0:
