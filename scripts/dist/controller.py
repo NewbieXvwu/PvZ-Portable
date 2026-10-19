@@ -304,10 +304,15 @@ def cmd_assign(args) -> None:
         "static_value": "models/value_branch1.pt",
         "resource_dir": "resources",
         "teacher_flags": teacher_flags(),
-        "workers": args.workers or max(1, min(int(entry.get("cores", 4)) - 2, 16)),
-        "chunk": args.workers or max(1, min(int(entry.get("cores", 4)) - 2, 16)),
+        "workers": 1 if args.gpu else (args.workers or max(1, min(int(entry.get("cores", 4)) - 2, 16))),
+        "chunk": 1 if args.gpu else (args.workers or max(1, min(int(entry.get("cores", 4)) - 2, 16))),
         "assigned_at": now(),
     }
+    if args.gpu:
+        spec["gpu"] = True
+        if not entry.get("gpu"):
+            say(f"note: {args.machine} is not marked \"gpu\": true in machines.json — the worker will "
+                "check for build/rollout_cuda_small and refuse to start if it is missing")
     ssh(entry, f"mkdir -p {WORKER_ROOT}/tasks/{label}")
     ssh(entry, f"cat > {WORKER_ROOT}/tasks/{label}/task.json", stdin=json.dumps(spec, indent=1))
     entry_ledger = {"label": label, "machine": args.machine, "student": str(student),
@@ -576,6 +581,8 @@ def main() -> int:
     q.add_argument("--push", action="store_true", help="also push models, manifest and code")
     q.add_argument("--start", action="store_true", help="start the worker right away")
     q.add_argument("--allow-reserved", action="store_true", help="allow offsets outside the distributed range")
+    q.add_argument("--gpu", action="store_true",
+                   help="CUDA rollout backend (1 worker, 1 game per wave; binary built on the worker)")
     q.set_defaults(func=cmd_assign)
 
     q = sub.add_parser("start", help="start the worker on a machine")

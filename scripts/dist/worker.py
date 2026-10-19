@@ -78,8 +78,12 @@ class Task:
         self.seeds = int(spec["seeds"])
         self.offset = int(spec["seed_offset"])
         self.workers = int(spec.get("workers") or default_workers())
+        # GPU 采集一次只跑一局（一个 CUDA 上下文）；一段 = 一波仍然成立。
+        self.gpu = bool(spec.get("gpu"))
+        if self.gpu:
+            self.workers = 1
         # 一段 = 一波：这样"下完这局再停"正好是"不再开下一段"。
-        self.chunk = int(spec.get("chunk") or self.workers)
+        self.chunk = 1 if self.gpu else int(spec.get("chunk") or self.workers)
         self.out = root / "out" / self.label
         self.frames = root / "frames" / self.label
         self.state_file = root / "state" / f"{self.label}.json"
@@ -88,6 +92,14 @@ class Task:
     def path(self, key: str) -> Path:
         value = Path(self.spec[key])
         return value if value.is_absolute() else self.root / value
+
+    def cuda_binary(self) -> Path:
+        """rollout_cuda_small lives next to the game binary in the repo's build/ (not in git)."""
+        value = self.spec.get("cuda_binary")
+        if not value:
+            return self.root / "repo" / "build" / "rollout_cuda_small"
+        path = Path(value)
+        return path if path.is_absolute() else self.root / path
 
     def done_seeds(self) -> set:
         path = self.out / "games.jsonl"
@@ -144,6 +156,7 @@ class Worker:
         self.stop_now = False
         self.history = []
         self.current_seeds = []
+        self.gpu_blocked = {}           # label -> why the GPU task cannot start (logged once)
 
     # ------------------------------------------------------------------ state
     def snapshot(self) -> dict:
@@ -166,6 +179,7 @@ class Worker:
                 "failed": len(failed),
                 "total": total,
                 "workers": task.workers if task else None,
+                "backend": ("gpu" if task.gpu else "cpu") if task else None,
                 "chunk": self.chunk_text,
                 "current_seeds": self.current_seeds,
                 "games_per_hour": round(rate, 2),
@@ -249,16 +263,50 @@ class Worker:
             "--frames-label", task.label,
             "--resource-dir", str(task.path("resource_dir")),
             "--out", str(task.out),
-        ] + [str(x) for x in spec.get("teacher_flags") or []]
+        ]
+        if task.gpu:
+            # 与 MEMORY/docs/cuda-merge-notes.md 的"分布式 worker 的 GPU 分片执行器"一致。
+            cmd += [
+                "--rollout-backend", "cuda",
+                "--cuda-binary", str(task.cuda_binary()),
+                "--cuda-speculative-halving", "--cuda-prefetch-verify",
+                "--executable", str(self.repo / "build" / "pvz-portable"),
+                "--measure-cpu",
+            ]
+        cmd += [str(x) for x in spec.get("teacher_flags") or []]
         return cmd
 
-    def _env(self) -> dict:
+    def _env(self, task: Task | None = None) -> dict:
         env = dict(os.environ)
         env["PATH"] = f"{self.env_bin}:{env.get('PATH', '')}"
         env.setdefault("OMP_NUM_THREADS", "1")
         env.setdefault("VECLIB_MAXIMUM_THREADS", "1")
         env.setdefault("PYTHONUNBUFFERED", "1")
+        if task is not None and task.gpu:
+            env.setdefault("PVZ_CUDA_POLL_US", "100")
+            env.setdefault("PVZ_CUDA_PRIVATE_LIMIT", "1200")
+            env.setdefault("PVZ_CUDA_COOPERATIVE_HEADS", "1")
         return env
+
+    def _gpu_problem(self, task: Task) -> str | None:
+        """Fail loudly and locally instead of launching a command the repo cannot honour."""
+        if not task.gpu:
+            return None
+        binary = task.cuda_binary()
+        if not binary.is_file():
+            return (f"GPU 二进制不存在：{binary}（需本机编译，见运维手册 §7；"
+                    "预编译产物要求 glibc ≥ 2.38）")
+        python = self.env_bin / "python"
+        if not python.is_file():
+            python = Path(sys.executable)
+        try:
+            probe = subprocess.run([str(python), str(self.repo / "scripts" / "search_play.py"), "--help"],
+                                   capture_output=True, text=True, timeout=120)
+        except OSError as exc:
+            return f"无法运行 search_play.py --help：{exc}"
+        if "--rollout-backend" not in (probe.stdout + probe.stderr):
+            return "search_play.py 不支持 --rollout-backend（先把 origin/pvz-env 合进 distributed）"
+        return None
 
     def _launch(self, task: Task, index: int, count: int):
         task.out.mkdir(parents=True, exist_ok=True)
@@ -272,7 +320,7 @@ class Worker:
         with logfile.open("a") as fh:
             fh.write(f"\n===== {now()} {self.chunk_text} =====\n")
             fh.flush()
-            return subprocess.Popen(cmd, cwd=self.repo, env=self._env(), stdout=fh, stderr=subprocess.STDOUT,
+            return subprocess.Popen(cmd, cwd=self.repo, env=self._env(task), stdout=fh, stderr=subprocess.STDOUT,
                                     start_new_session=True)
 
     def _wait(self, proc) -> int:
@@ -391,6 +439,13 @@ class Worker:
                 if self.only_label and spec.get("label") != self.only_label:
                     continue
                 task = Task(self.root, spec)
+                problem = self._gpu_problem(task)
+                if problem:
+                    if self.gpu_blocked.get(task.label) != problem:
+                        log(f"skip {task.label}: {problem}")
+                        self.gpu_blocked[task.label] = problem
+                    self.message = f"{task.label}: {problem}"
+                    continue
                 if len(task.done_seeds()) + len(task.failed_seeds()) < task.seeds:
                     pending.append(task)
             if not pending:
@@ -486,7 +541,7 @@ background:#fafafa;border-radius:6px;cursor:pointer}} button:hover{{background:#
 <tr><td>每小时局数</td><td>{s['games_per_hour']}</td></tr>
 <tr><td>已运行</td><td>{_fmt_seconds(s['elapsed_seconds'])}（暂停 {_fmt_seconds(s['paused_seconds'])}）</td></tr>
 <tr><td>预计剩余</td><td>{_fmt_seconds(s['eta_seconds'])}</td></tr>
-<tr><td>进程数</td><td>{s['workers'] or '—'}</td></tr>
+<tr><td>进程数</td><td>{s['workers'] or '—'}{(' · ' + s['backend'].upper()) if s['backend'] else ''}</td></tr>
 <tr><td>更新时间</td><td>{s['updated']}</td></tr>
 </table>
 <form method="post" action="/pause"><button>暂停（让出 CPU）</button></form>

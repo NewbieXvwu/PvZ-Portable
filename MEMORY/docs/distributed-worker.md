@@ -22,9 +22,9 @@
 | 1 bootstrap 在 pvz-f1 跑通 | ✅ 10 分 14 秒，1.3 GB；**自检 1 局通过**（1 个档案、1055 帧） |
 | 2 worker + 网页 | ✅ 32 局原型**已在 pvz-f1 上跑完 32/32**（8 进程、偏移 14736–14767）；暂停/继续/下完这局再停/立即停止+续跑都在 pvz-f1 上实测 |
 | 3 controller | ✅ status/push/assign/collect 全部跑通；`transfer/z17distproto.tgz` 已上传（本机演练版），**pvz-f1 版正在拉回覆盖** |
-| 4 Windows 安装脚本 | ✅ 初版（**未实机验证**，见 §8） |
+| 4 Windows 安装脚本 | ✅ 初版（**未实机验证**，见 §9） |
 | 5 文档 | ✅ 本文件 |
-| 6 GPU | 等主控通知 |
+| 6 GPU | ✅ 代码 + 文档（`assign --gpu`，默认关，见 §7）；**未实机验证**，等主控安排 |
 
 **当前卡点（2026-10-19 06:30）**：只剩 **第 3 步的最后一段** —— 把 pvz-f1 上的 32 个档案
 拉回来。隧道是 **UU 远程（UURemote）的 22223 端口转发**，不是我们起的 ssh，抖动时只能等它恢复
@@ -229,7 +229,32 @@
 （`F=~/PvZ-search/artifacts/student/frames`，`V2=~/PvZ-search/artifacts/student/frames_v2`，
 `PY=~/.venvs/ml/bin/python3`。）
 
-## 7. 清理
+## 7. GPU 采集（默认关，代码已接入，未实机验证）
+
+前置：`distributed` 已合并 `origin/pvz-env`（cuda-rollout）。GPU 开关只影响新任务，CPU 路径不变。
+
+- 派活：`controller.py assign <机器> <student> <局数> --gpu ...` → `task.json` 里 `"gpu": true`，
+  `workers`/`chunk` 固定为 1（一局一波，一个 CUDA 上下文）。
+- worker 执行的命令与 `cuda-merge-notes.md`「分布式 worker 的 GPU 分片执行器」逐项一致：
+  `--rollout-backend cuda --cuda-binary build/rollout_cuda_small --cuda-speculative-halving
+  --cuda-prefetch-verify --executable build/pvz-portable --measure-cpu`，环境变量
+  `PVZ_CUDA_POLL_US=100`、`PVZ_CUDA_PRIVATE_LIMIT=1200`、`PVZ_CUDA_COOPERATIVE_HEADS=1`。
+- 网页「进程数」后面会显示 `· GPU`。
+- 启动前 worker 自检：`build/rollout_cuda_small` 不存在、或 `search_play.py` 没有
+  `--rollout-backend`，就跳过该任务并在页面/日志写明原因，不会拉起半截命令。
+
+二进制与 ABI：
+
+- `build/rollout_cuda_small` 是 **Linux x86-64 ELF**，只能在匹配 ABI 的 Linux/WSL 跑；
+  预编译产物要求 **glibc ≥ 2.38**、GLIBCXX ≥ 3.4.21、CXXABI ≥ 1.3.9，CUDA 13（R580+ 驱动）。
+- **Ubuntu 22.04 的 WSL 必须本机编译**（glibc 不够），编译不需要 GPU 在场：
+  `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPVZ_CUDA_ROLLOUT=ON -DCMAKE_CUDA_ARCHITECTURES=120`
+  `&& cmake --build build --target pvz-portable rollout_cuda_small -j2`
+- 二进制、模型、帧都不进 git；模型走现有 `push` 通道。
+- 目前**没有**在任何朋友机器上实测 GPU（主控要求只做代码与文档）；第一次实机时先跑 1 局自检，
+  看 `logs/<label>.log` 里的 backend 与回退计数。
+
+## 8. 清理
 
 **Mac 朋友机**：
 
@@ -243,7 +268,7 @@
 它会删计划任务、桌面快捷方式、`C:\ProgramData\pvz-worker`，并 `wsl --unregister Ubuntu`
 （**该发行版里的所有东西都会删掉**；WSL 本身还留着）。
 
-## 8. Windows 安装脚本：未实机验证的部分
+## 9. Windows 安装脚本：未实机验证的部分
 
 本机没有 Windows，也没有 PowerShell（`which pwsh` 为空），所以
 `scripts/dist/install_windows.ps1` **一行都没有真正执行过**。逐项列出风险：
