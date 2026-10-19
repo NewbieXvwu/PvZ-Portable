@@ -1,6 +1,7 @@
 # CUDA 合并说明（待主控审核）
 
-`cuda-merge` 从 `cuda-rollout 3d74462` 合入 `origin/pvz-env adbbb2f`；合并提交 `f4c6eae`。
+`cuda-merge` 从 `cuda-rollout 3d74462` 合入最新 `origin/pvz-env cd8191f`；先合并 `adbbb2f` 为 `f4c6eae`，
+随后同步仅文档变更的 `cd8191f` 为 `cbff7e7`，生产/测试代码树相同。
 训练器、学生/缓存实现及上游更新的测试、文档保留主线；当日日志冲突按 append-only 保留双方内容。
 只推 `cuda-merge`，不更新 `pvz-env`；正式 `~/pvz-cuda` 的源码与 build 未改动。
 
@@ -14,12 +15,12 @@
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DPVZ_CUDA_ROLLOUT=ON -DCMAKE_CUDA_ARCHITECTURES=120
 cmake --build build --target pvz-portable rollout_cuda_small -j2
 ```
-正式混采一条命令（资产沿用台式机目录）：
+正式混采一条命令（资产沿用台式机目录，OFFSET/LABEL取队列分配值，输出目录须全新）：
 ```bash
 PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause scripts/mixed_dagger_round.sh \
   --student ~/PvZ-search/artifacts/student/v29/model.pt --task day_l7_z17_train \
-  --seed-offset 15000 --games 16 --frames ~/PvZ-search/artifacts/student/frames \
-  --frames-label cuda_review --out ~/PvZ-search/artifacts/hard/cuda_review --cpu-workers 3 --gpu-workers 1
+  --seed-offset "$OFFSET" --games 16 --frames ~/PvZ-search/artifacts/student/frames \
+  --frames-label "$LABEL" --out "$HOME/PvZ-search/artifacts/hard/$LABEL" --cpu-workers 3 --gpu-workers 1
 ```
 分布式worker的GPU分片执行器如下；任务文件提供路径、LABEL、OFFSET、GAMES、FRAMES、OUT，
 `PY` 指向worker自己的venv，资源留在worker目录；偏移必须来自controller台账，不能手选重复段。
@@ -28,7 +29,7 @@ PVZ_CUDA_POLL_US=100 PVZ_CUDA_PRIVATE_LIMIT=1200 PVZ_CUDA_COOPERATIVE_HEADS=1 \
 "$PY" scripts/search_play.py --rollout-backend cuda --cuda-binary "$PWD/build/rollout_cuda_small" \
   --cuda-speculative-halving --cuda-prefetch-verify --rollout-policy "$STUDENT" \
   --value "$VALUE" --static-value "$STATIC_VALUE" --manifest "$MANIFEST" --task-id day_l7_z17_train \
-  --student-candidates 2 --verify-samples 9 --dagger-beta 0 --workers 1 \
+  --student-candidates 2 --verify-samples 9 --dagger-beta 0 --workers 1 --measure-cpu \
   --executable "$PWD/build/pvz-portable" --resource-dir "$RESOURCE_DIR" \
   --seed-offset "$OFFSET" --seeds "$GAMES" --frames "$FRAMES" --frames-label "$LABEL" --out "$OUT"
 ```
@@ -47,5 +48,9 @@ CUDA13要求R580或更新驱动，旧驱动对新特性的限制见[官方兼容
 风险：预取多算未来，收益不保证覆盖所有候选数/复核率/并发；训练与采集仍抢GPU；跨机器不承诺浮点逐位一致。
 CPU/GPU原本使用不同未来流，本次只要求优化前后GPU等价，不声称跨后端逐字节一致。
 
-验收正在新worktree独立执行：CPU与最新主线各2局、GPU与冻结档案2局、全部Python/原生测试。
-最终结果在完成后补齐；本地原始证据为 `artifacts/cuda/task7/`，不入git。
+验收完成：CPU与主线各2局的完整压缩档案逐字节相同；仅固定 `verification.seconds` 诊断时钟为0，
+游戏时钟真实（task5已批准口径），使用两套独立源码/二进制。GPU两局与冻结参照完整档案逐字节相同，
+默认poll100/预取生效、零回退/错误。**58模块497项全部通过，无跳过**，含原生CPU/CUDA及ASan/UBSan；
+一项缺大型语料路径的初次跳过已显式配置语料重跑9项通过，原日志保留。主线最后仅文档更新后，另过35项相关门禁。
+自有进程组RSS峰2.56GiB、swap0，全程可用最低2.68GiB，未触发暂停；最多4个自有游戏进程。
+结论与SHA见 [cuda-merge-validation.json](cuda-merge-validation.json)；本地原始证据 `artifacts/cuda/task7/` 不入git。
