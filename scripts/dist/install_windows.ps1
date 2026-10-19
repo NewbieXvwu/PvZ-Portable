@@ -181,9 +181,12 @@ if ($Stage -eq "provision" -or $ProvisionOnly) {
         "sed -i 's/^#*Port .*/Port $Port/' /etc/ssh/sshd_config",
         "sed -i 's/^#*PasswordAuthentication .*/PasswordAuthentication no/' /etc/ssh/sshd_config",
         "sed -i 's/^#*PermitRootLogin .*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config",
-        "grep -q '^\[boot\]' /etc/wsl.conf 2>/dev/null || printf '\n[boot]\ncommand = service ssh start\n' >> /etc/wsl.conf",
+        # sshd on distro boot: keep an existing [boot] section working, do not add a second one
+        "if ! grep -q '^\[boot\]' /etc/wsl.conf 2>/dev/null; then printf '\n[boot]\ncommand = /usr/sbin/service ssh start\n' >> /etc/wsl.conf; elif ! grep -q '^command *=' /etc/wsl.conf; then sed -i '/^\[boot\]/a command = /usr/sbin/service ssh start' /etc/wsl.conf; fi",
         "service ssh restart",
         "sleep 1",
+        # fail loudly here instead of letting the controller discover it over a slow tunnel
+        "(ss -ltn 2>/dev/null || netstat -ltn 2>/dev/null) | grep -q ':$Port ' || { echo 'sshd is not listening on port $Port'; exit 1; }",
         "service ssh status | head -2"
     )
     [IO.File]::WriteAllText($bashPath, ($lines -join $NL), (New-Object System.Text.UTF8Encoding($false)))
