@@ -1,0 +1,1706 @@
+{
+  "ready_code_commit": "61bd3415ee7917ba1fbac5f7aaaf14b57f8e883e",
+  "latest_main_included": "fb86c4ac6f038599d05d6a0062557f713118d90d",
+  "all222_python_tests_passed_without_skips": true,
+  "python_directory_tests": 213,
+  "other_directory_tests": 9,
+  "no_executable_source_changes_since_full_tests": true,
+  "freeze": {
+    "comparison_code_commit": "45ae9dd98de04bbcca2ddb8d9b16b1c78e0c3f35",
+    "comparison_code_sha256": "1ab1a69a1cc11d8888e00820dca1414f9b79328a5172411de4f8afa953d2bac4",
+    "plan_sha256": "fdb7ae86166e175293099f9ecd9847bbeab952db215e14b62bce345bd0eafbd6",
+    "amendment_sha256": "325df17c238ef733a46216b39f4f551687fe55df3c09c9a446d916b82cf79a44",
+    "formal_points_before_launch": 0,
+    "no_metric_tables_computed": true
+  },
+  "all_frozen_models_manifest_program_and_code_hashes_match": true,
+  "heldout_games": 32,
+  "query_points": 256,
+  "strict_replay_frames": 34759,
+  "truth_common_futures_per_action": 64,
+  "truth_continuations": 212608,
+  "heavy_fresh_verification_continuations": 2196,
+  "normal_teacher_continuations": 17344,
+  "all_formal_continuations": 232148,
+  "selection_sha256": "add7143b8752d71a9b6a80a01cb98c39451c3d1763f43df55bf52e7f37f88d8a",
+  "trajectories_unchanged": [
+    {
+      "seed": 30000,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30000/frames.jsonl",
+      "archive_sha256": "17713dd4294188533a4d113808315cb2182925d03c0880e545077cba32adb446",
+      "frames": 1227,
+      "eligible_points": 235,
+      "points": [
+        {
+          "decision": 39,
+          "tick": 2100,
+          "wave": 1
+        },
+        {
+          "decision": 91,
+          "tick": 4980,
+          "wave": 2
+        },
+        {
+          "decision": 176,
+          "tick": 9540,
+          "wave": 3
+        },
+        {
+          "decision": 479,
+          "tick": 26100,
+          "wave": 12
+        },
+        {
+          "decision": 489,
+          "tick": 26700,
+          "wave": 12
+        },
+        {
+          "decision": 510,
+          "tick": 27900,
+          "wave": 13
+        },
+        {
+          "decision": 711,
+          "tick": 39000,
+          "wave": 20
+        },
+        {
+          "decision": 914,
+          "tick": 49789,
+          "wave": 26
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30001,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30001/frames.jsonl",
+      "archive_sha256": "551d6430474504045c449cbc8893b882c7d213adfd57015571170dd8004b8602",
+      "frames": 1104,
+      "eligible_points": 216,
+      "points": [
+        {
+          "decision": 38,
+          "tick": 2040,
+          "wave": 1
+        },
+        {
+          "decision": 49,
+          "tick": 2640,
+          "wave": 1
+        },
+        {
+          "decision": 115,
+          "tick": 6240,
+          "wave": 2
+        },
+        {
+          "decision": 403,
+          "tick": 21960,
+          "wave": 10
+        },
+        {
+          "decision": 634,
+          "tick": 34740,
+          "wave": 19
+        },
+        {
+          "decision": 746,
+          "tick": 41280,
+          "wave": 21
+        },
+        {
+          "decision": 839,
+          "tick": 46320,
+          "wave": 25
+        },
+        {
+          "decision": 1073,
+          "tick": 59340,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30002,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30002/frames.jsonl",
+      "archive_sha256": "1a56f6f27d9f1eea659ebcdd5155cb2cb94e7dab0a4eda8fb78ddd098417c25b",
+      "frames": 1097,
+      "eligible_points": 231,
+      "points": [
+        {
+          "decision": 60,
+          "tick": 3240,
+          "wave": 1
+        },
+        {
+          "decision": 211,
+          "tick": 11340,
+          "wave": 4
+        },
+        {
+          "decision": 486,
+          "tick": 26520,
+          "wave": 13
+        },
+        {
+          "decision": 506,
+          "tick": 27720,
+          "wave": 14
+        },
+        {
+          "decision": 600,
+          "tick": 33180,
+          "wave": 18
+        },
+        {
+          "decision": 610,
+          "tick": 33780,
+          "wave": 18
+        },
+        {
+          "decision": 871,
+          "tick": 48840,
+          "wave": 25
+        },
+        {
+          "decision": 962,
+          "tick": 53460,
+          "wave": 28
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30003,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30003/frames.jsonl",
+      "archive_sha256": "da4fc21804297a91b23484e33f35eb0d898c23c924bed805d23cba11a9804473",
+      "frames": 1209,
+      "eligible_points": 238,
+      "points": [
+        {
+          "decision": 189,
+          "tick": 10200,
+          "wave": 4
+        },
+        {
+          "decision": 199,
+          "tick": 10680,
+          "wave": 4
+        },
+        {
+          "decision": 231,
+          "tick": 12360,
+          "wave": 5
+        },
+        {
+          "decision": 278,
+          "tick": 15000,
+          "wave": 7
+        },
+        {
+          "decision": 553,
+          "tick": 30300,
+          "wave": 16
+        },
+        {
+          "decision": 806,
+          "tick": 43980,
+          "wave": 24
+        },
+        {
+          "decision": 1012,
+          "tick": 55200,
+          "wave": 29
+        },
+        {
+          "decision": 1205,
+          "tick": 65493,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30004,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30004/frames.jsonl",
+      "archive_sha256": "16e5195f3f6c8462067dccacbc9b893b3badd71bbd819408f7b9c7944914d359",
+      "frames": 1424,
+      "eligible_points": 278,
+      "points": [
+        {
+          "decision": 93,
+          "tick": 5100,
+          "wave": 2
+        },
+        {
+          "decision": 126,
+          "tick": 6840,
+          "wave": 2
+        },
+        {
+          "decision": 336,
+          "tick": 18054,
+          "wave": 8
+        },
+        {
+          "decision": 800,
+          "tick": 42783,
+          "wave": 19
+        },
+        {
+          "decision": 810,
+          "tick": 43323,
+          "wave": 19
+        },
+        {
+          "decision": 974,
+          "tick": 52023,
+          "wave": 23
+        },
+        {
+          "decision": 1100,
+          "tick": 58803,
+          "wave": 26
+        },
+        {
+          "decision": 1241,
+          "tick": 66363,
+          "wave": 29
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30005,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30005/frames.jsonl",
+      "archive_sha256": "b753a1c9a753369f0fda1fffb96f31bc6a9988ae59ad8afc1164a7b13dcb64f2",
+      "frames": 1158,
+      "eligible_points": 230,
+      "points": [
+        {
+          "decision": 152,
+          "tick": 8160,
+          "wave": 3
+        },
+        {
+          "decision": 211,
+          "tick": 11340,
+          "wave": 4
+        },
+        {
+          "decision": 228,
+          "tick": 12300,
+          "wave": 5
+        },
+        {
+          "decision": 262,
+          "tick": 14160,
+          "wave": 6
+        },
+        {
+          "decision": 284,
+          "tick": 15420,
+          "wave": 7
+        },
+        {
+          "decision": 446,
+          "tick": 24360,
+          "wave": 13
+        },
+        {
+          "decision": 693,
+          "tick": 38280,
+          "wave": 20
+        },
+        {
+          "decision": 851,
+          "tick": 47040,
+          "wave": 25
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30006,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30006/frames.jsonl",
+      "archive_sha256": "dd6d519e55f0854f70c5b402e7a11f87ed174b21cc80881fcc490df7d7fe4707",
+      "frames": 1222,
+      "eligible_points": 240,
+      "points": [
+        {
+          "decision": 157,
+          "tick": 8460,
+          "wave": 3
+        },
+        {
+          "decision": 363,
+          "tick": 19560,
+          "wave": 9
+        },
+        {
+          "decision": 506,
+          "tick": 27300,
+          "wave": 14
+        },
+        {
+          "decision": 649,
+          "tick": 34920,
+          "wave": 19
+        },
+        {
+          "decision": 872,
+          "tick": 46980,
+          "wave": 24
+        },
+        {
+          "decision": 903,
+          "tick": 48660,
+          "wave": 25
+        },
+        {
+          "decision": 910,
+          "tick": 49020,
+          "wave": 26
+        },
+        {
+          "decision": 1127,
+          "tick": 60660,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30007,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30007/frames.jsonl",
+      "archive_sha256": "987eadab53e86211e8a4714e5971237eb494a8966c79eb1c3d0ea347ba6d2e10",
+      "frames": 1175,
+      "eligible_points": 228,
+      "points": [
+        {
+          "decision": 449,
+          "tick": 24480,
+          "wave": 11
+        },
+        {
+          "decision": 470,
+          "tick": 25620,
+          "wave": 12
+        },
+        {
+          "decision": 651,
+          "tick": 35640,
+          "wave": 19
+        },
+        {
+          "decision": 736,
+          "tick": 40320,
+          "wave": 22
+        },
+        {
+          "decision": 881,
+          "tick": 48060,
+          "wave": 26
+        },
+        {
+          "decision": 989,
+          "tick": 53641,
+          "wave": 29
+        },
+        {
+          "decision": 1072,
+          "tick": 58141,
+          "wave": 30
+        },
+        {
+          "decision": 1115,
+          "tick": 60421,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30008,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30008/frames.jsonl",
+      "archive_sha256": "81ef09f1a45fc7e64566e9196779f4b6dc3d9af6c8a6001d07ecb9fc176bbd3e",
+      "frames": 1320,
+      "eligible_points": 250,
+      "points": [
+        {
+          "decision": 593,
+          "tick": 31866,
+          "wave": 13
+        },
+        {
+          "decision": 684,
+          "tick": 36726,
+          "wave": 16
+        },
+        {
+          "decision": 690,
+          "tick": 37026,
+          "wave": 16
+        },
+        {
+          "decision": 741,
+          "tick": 39726,
+          "wave": 18
+        },
+        {
+          "decision": 820,
+          "tick": 43926,
+          "wave": 19
+        },
+        {
+          "decision": 870,
+          "tick": 46566,
+          "wave": 20
+        },
+        {
+          "decision": 1020,
+          "tick": 54606,
+          "wave": 25
+        },
+        {
+          "decision": 1139,
+          "tick": 60966,
+          "wave": 28
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30009,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30009/frames.jsonl",
+      "archive_sha256": "22da1c865e56f3cc27396a1c63eeca1585685e3ed01548cd05871f88bb1fb457",
+      "frames": 605,
+      "eligible_points": 98,
+      "points": [
+        {
+          "decision": 198,
+          "tick": 10822,
+          "wave": 4
+        },
+        {
+          "decision": 354,
+          "tick": 18942,
+          "wave": 7
+        },
+        {
+          "decision": 380,
+          "tick": 20382,
+          "wave": 8
+        },
+        {
+          "decision": 391,
+          "tick": 20922,
+          "wave": 9
+        },
+        {
+          "decision": 411,
+          "tick": 22002,
+          "wave": 9
+        },
+        {
+          "decision": 428,
+          "tick": 22962,
+          "wave": 9
+        },
+        {
+          "decision": 489,
+          "tick": 26322,
+          "wave": 10
+        },
+        {
+          "decision": 589,
+          "tick": 31686,
+          "wave": 14
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30010,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30010/frames.jsonl",
+      "archive_sha256": "508753a44ec8e01e4fea8346c63c9bc476ef4031c2c1760a7a642c7268360d05",
+      "frames": 1189,
+      "eligible_points": 217,
+      "points": [
+        {
+          "decision": 22,
+          "tick": 1200,
+          "wave": 0
+        },
+        {
+          "decision": 324,
+          "tick": 17428,
+          "wave": 8
+        },
+        {
+          "decision": 703,
+          "tick": 38068,
+          "wave": 20
+        },
+        {
+          "decision": 772,
+          "tick": 41788,
+          "wave": 22
+        },
+        {
+          "decision": 839,
+          "tick": 45388,
+          "wave": 24
+        },
+        {
+          "decision": 871,
+          "tick": 47068,
+          "wave": 25
+        },
+        {
+          "decision": 936,
+          "tick": 50608,
+          "wave": 27
+        },
+        {
+          "decision": 985,
+          "tick": 53248,
+          "wave": 28
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30011,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30011/frames.jsonl",
+      "archive_sha256": "284d762729df0bc6b72878328c6a945d4645d3b9f599ecfc63a6bf5ed50459ff",
+      "frames": 1375,
+      "eligible_points": 249,
+      "points": [
+        {
+          "decision": 59,
+          "tick": 3180,
+          "wave": 1
+        },
+        {
+          "decision": 267,
+          "tick": 14477,
+          "wave": 6
+        },
+        {
+          "decision": 424,
+          "tick": 22869,
+          "wave": 9
+        },
+        {
+          "decision": 495,
+          "tick": 26709,
+          "wave": 11
+        },
+        {
+          "decision": 734,
+          "tick": 39489,
+          "wave": 17
+        },
+        {
+          "decision": 1165,
+          "tick": 62709,
+          "wave": 27
+        },
+        {
+          "decision": 1267,
+          "tick": 68349,
+          "wave": 29
+        },
+        {
+          "decision": 1369,
+          "tick": 73929,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30012,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30012/frames.jsonl",
+      "archive_sha256": "f14cc4633336807f1845c4660df2075c8220d49b930c8eb7cdf9f872b77ebacc",
+      "frames": 1397,
+      "eligible_points": 276,
+      "points": [
+        {
+          "decision": 350,
+          "tick": 18766,
+          "wave": 8
+        },
+        {
+          "decision": 371,
+          "tick": 19906,
+          "wave": 8
+        },
+        {
+          "decision": 645,
+          "tick": 34606,
+          "wave": 15
+        },
+        {
+          "decision": 652,
+          "tick": 34966,
+          "wave": 15
+        },
+        {
+          "decision": 667,
+          "tick": 35746,
+          "wave": 15
+        },
+        {
+          "decision": 837,
+          "tick": 44806,
+          "wave": 19
+        },
+        {
+          "decision": 1002,
+          "tick": 53746,
+          "wave": 24
+        },
+        {
+          "decision": 1102,
+          "tick": 59086,
+          "wave": 27
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30013,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30013/frames.jsonl",
+      "archive_sha256": "21625fa7cc695d73407c9c834e8d4a31810ba73dfc916a820dbf36b31dfa3114",
+      "frames": 1160,
+      "eligible_points": 227,
+      "points": [
+        {
+          "decision": 172,
+          "tick": 9300,
+          "wave": 3
+        },
+        {
+          "decision": 423,
+          "tick": 23040,
+          "wave": 10
+        },
+        {
+          "decision": 510,
+          "tick": 27780,
+          "wave": 14
+        },
+        {
+          "decision": 550,
+          "tick": 30180,
+          "wave": 16
+        },
+        {
+          "decision": 686,
+          "tick": 38160,
+          "wave": 19
+        },
+        {
+          "decision": 840,
+          "tick": 46860,
+          "wave": 24
+        },
+        {
+          "decision": 933,
+          "tick": 52260,
+          "wave": 28
+        },
+        {
+          "decision": 1088,
+          "tick": 61560,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30014,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30014/frames.jsonl",
+      "archive_sha256": "7c9577c3d60376aef4f62d12ad98d0f096348d42c43d480ac92f2804ee8342d2",
+      "frames": 1275,
+      "eligible_points": 242,
+      "points": [
+        {
+          "decision": 268,
+          "tick": 14460,
+          "wave": 6
+        },
+        {
+          "decision": 381,
+          "tick": 20760,
+          "wave": 9
+        },
+        {
+          "decision": 487,
+          "tick": 26520,
+          "wave": 12
+        },
+        {
+          "decision": 514,
+          "tick": 27900,
+          "wave": 13
+        },
+        {
+          "decision": 802,
+          "tick": 44160,
+          "wave": 22
+        },
+        {
+          "decision": 916,
+          "tick": 50160,
+          "wave": 25
+        },
+        {
+          "decision": 1057,
+          "tick": 57683,
+          "wave": 28
+        },
+        {
+          "decision": 1261,
+          "tick": 68323,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30015,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30015/frames.jsonl",
+      "archive_sha256": "323ed4e4af3c27fbda06a1bc0389a1c017bbd828e4d97ae53abb07d871876d14",
+      "frames": 1316,
+      "eligible_points": 253,
+      "points": [
+        {
+          "decision": 144,
+          "tick": 7794,
+          "wave": 3
+        },
+        {
+          "decision": 390,
+          "tick": 21030,
+          "wave": 9
+        },
+        {
+          "decision": 669,
+          "tick": 35850,
+          "wave": 17
+        },
+        {
+          "decision": 715,
+          "tick": 38370,
+          "wave": 19
+        },
+        {
+          "decision": 802,
+          "tick": 43110,
+          "wave": 20
+        },
+        {
+          "decision": 809,
+          "tick": 43470,
+          "wave": 20
+        },
+        {
+          "decision": 1094,
+          "tick": 58890,
+          "wave": 28
+        },
+        {
+          "decision": 1232,
+          "tick": 66450,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30016,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30016/frames.jsonl",
+      "archive_sha256": "b1df006455512a10b490ee440ecb1ed0599b4c48cbe9262e3db280af27905b7e",
+      "frames": 1084,
+      "eligible_points": 194,
+      "points": [
+        {
+          "decision": 199,
+          "tick": 10819,
+          "wave": 5
+        },
+        {
+          "decision": 332,
+          "tick": 17899,
+          "wave": 9
+        },
+        {
+          "decision": 609,
+          "tick": 33199,
+          "wave": 18
+        },
+        {
+          "decision": 715,
+          "tick": 38959,
+          "wave": 20
+        },
+        {
+          "decision": 772,
+          "tick": 42139,
+          "wave": 22
+        },
+        {
+          "decision": 826,
+          "tick": 45019,
+          "wave": 24
+        },
+        {
+          "decision": 879,
+          "tick": 47839,
+          "wave": 25
+        },
+        {
+          "decision": 1075,
+          "tick": 58309,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30017,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30017/frames.jsonl",
+      "archive_sha256": "2015c8e964066a920b5e883326c515ef42dfb2915612d36b3b6662b4d41390ee",
+      "frames": 1170,
+      "eligible_points": 207,
+      "points": [
+        {
+          "decision": 253,
+          "tick": 13560,
+          "wave": 5
+        },
+        {
+          "decision": 392,
+          "tick": 21300,
+          "wave": 10
+        },
+        {
+          "decision": 395,
+          "tick": 21480,
+          "wave": 10
+        },
+        {
+          "decision": 461,
+          "tick": 25140,
+          "wave": 12
+        },
+        {
+          "decision": 478,
+          "tick": 26100,
+          "wave": 13
+        },
+        {
+          "decision": 569,
+          "tick": 30960,
+          "wave": 17
+        },
+        {
+          "decision": 787,
+          "tick": 42780,
+          "wave": 22
+        },
+        {
+          "decision": 1003,
+          "tick": 54169,
+          "wave": 27
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30018,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30018/frames.jsonl",
+      "archive_sha256": "d6716ae9acc993e18843eef7f1a7dc4fb364031aae482d5e74da2f9630041717",
+      "frames": 1374,
+      "eligible_points": 264,
+      "points": [
+        {
+          "decision": 411,
+          "tick": 21852,
+          "wave": 9
+        },
+        {
+          "decision": 416,
+          "tick": 22152,
+          "wave": 9
+        },
+        {
+          "decision": 660,
+          "tick": 35112,
+          "wave": 15
+        },
+        {
+          "decision": 871,
+          "tick": 46392,
+          "wave": 20
+        },
+        {
+          "decision": 890,
+          "tick": 47412,
+          "wave": 21
+        },
+        {
+          "decision": 968,
+          "tick": 51612,
+          "wave": 23
+        },
+        {
+          "decision": 986,
+          "tick": 52572,
+          "wave": 23
+        },
+        {
+          "decision": 1109,
+          "tick": 59112,
+          "wave": 27
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30019,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30019/frames.jsonl",
+      "archive_sha256": "adb8fa0e21fe937b7b162b229fa2f52f34efdf8e0648b965c33b477966b9446f",
+      "frames": 1251,
+      "eligible_points": 248,
+      "points": [
+        {
+          "decision": 1,
+          "tick": 0,
+          "wave": 0
+        },
+        {
+          "decision": 402,
+          "tick": 21637,
+          "wave": 9
+        },
+        {
+          "decision": 495,
+          "tick": 26617,
+          "wave": 12
+        },
+        {
+          "decision": 702,
+          "tick": 37537,
+          "wave": 19
+        },
+        {
+          "decision": 722,
+          "tick": 38617,
+          "wave": 20
+        },
+        {
+          "decision": 831,
+          "tick": 44437,
+          "wave": 22
+        },
+        {
+          "decision": 892,
+          "tick": 47617,
+          "wave": 24
+        },
+        {
+          "decision": 1103,
+          "tick": 58957,
+          "wave": 29
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30020,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30020/frames.jsonl",
+      "archive_sha256": "8ace00123c6fe5302400ac2301b24b153338783f40afaf37c0504e69db8aa71f",
+      "frames": 1116,
+      "eligible_points": 227,
+      "points": [
+        {
+          "decision": 72,
+          "tick": 3900,
+          "wave": 2
+        },
+        {
+          "decision": 94,
+          "tick": 5100,
+          "wave": 2
+        },
+        {
+          "decision": 369,
+          "tick": 20040,
+          "wave": 9
+        },
+        {
+          "decision": 382,
+          "tick": 20820,
+          "wave": 9
+        },
+        {
+          "decision": 505,
+          "tick": 27840,
+          "wave": 15
+        },
+        {
+          "decision": 680,
+          "tick": 38040,
+          "wave": 19
+        },
+        {
+          "decision": 705,
+          "tick": 39540,
+          "wave": 20
+        },
+        {
+          "decision": 706,
+          "tick": 39540,
+          "wave": 20
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30021,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30021/frames.jsonl",
+      "archive_sha256": "5c0f1a789468eeeb818aecc57992203a14d34e5a10aa7209bf414f85237d86eb",
+      "frames": 1246,
+      "eligible_points": 232,
+      "points": [
+        {
+          "decision": 247,
+          "tick": 13264,
+          "wave": 5
+        },
+        {
+          "decision": 404,
+          "tick": 21849,
+          "wave": 9
+        },
+        {
+          "decision": 477,
+          "tick": 25809,
+          "wave": 12
+        },
+        {
+          "decision": 515,
+          "tick": 27849,
+          "wave": 14
+        },
+        {
+          "decision": 604,
+          "tick": 32649,
+          "wave": 18
+        },
+        {
+          "decision": 733,
+          "tick": 39549,
+          "wave": 21
+        },
+        {
+          "decision": 930,
+          "tick": 50109,
+          "wave": 26
+        },
+        {
+          "decision": 1083,
+          "tick": 58145,
+          "wave": 29
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30022,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30022/frames.jsonl",
+      "archive_sha256": "77fc8702a4353a16365a7a2a02110f7ecac839070825b1dd297a34c4459768ae",
+      "frames": 1217,
+      "eligible_points": 236,
+      "points": [
+        {
+          "decision": 393,
+          "tick": 20886,
+          "wave": 9
+        },
+        {
+          "decision": 405,
+          "tick": 21546,
+          "wave": 9
+        },
+        {
+          "decision": 439,
+          "tick": 23466,
+          "wave": 10
+        },
+        {
+          "decision": 463,
+          "tick": 24726,
+          "wave": 11
+        },
+        {
+          "decision": 484,
+          "tick": 25866,
+          "wave": 12
+        },
+        {
+          "decision": 1092,
+          "tick": 58626,
+          "wave": 29
+        },
+        {
+          "decision": 1132,
+          "tick": 61026,
+          "wave": 29
+        },
+        {
+          "decision": 1138,
+          "tick": 61386,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30023,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30023/frames.jsonl",
+      "archive_sha256": "3387740b96912131aff967a72caf160874da5a7c02cdf5c7c184ad6d550ed4cf",
+      "frames": 1177,
+      "eligible_points": 230,
+      "points": [
+        {
+          "decision": 107,
+          "tick": 5760,
+          "wave": 2
+        },
+        {
+          "decision": 430,
+          "tick": 23520,
+          "wave": 11
+        },
+        {
+          "decision": 500,
+          "tick": 27420,
+          "wave": 14
+        },
+        {
+          "decision": 517,
+          "tick": 28320,
+          "wave": 14
+        },
+        {
+          "decision": 537,
+          "tick": 29520,
+          "wave": 15
+        },
+        {
+          "decision": 624,
+          "tick": 34380,
+          "wave": 19
+        },
+        {
+          "decision": 753,
+          "tick": 41700,
+          "wave": 21
+        },
+        {
+          "decision": 1055,
+          "tick": 57793,
+          "wave": 29
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30024,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30024/frames.jsonl",
+      "archive_sha256": "4313ce09c17df5a84b68df4ca805022cadea893da19fdc8698aab1e38e1c97df",
+      "frames": 1182,
+      "eligible_points": 219,
+      "points": [
+        {
+          "decision": 103,
+          "tick": 5580,
+          "wave": 2
+        },
+        {
+          "decision": 263,
+          "tick": 14100,
+          "wave": 6
+        },
+        {
+          "decision": 483,
+          "tick": 26220,
+          "wave": 12
+        },
+        {
+          "decision": 638,
+          "tick": 34860,
+          "wave": 19
+        },
+        {
+          "decision": 731,
+          "tick": 40260,
+          "wave": 20
+        },
+        {
+          "decision": 904,
+          "tick": 49620,
+          "wave": 27
+        },
+        {
+          "decision": 997,
+          "tick": 54590,
+          "wave": 29
+        },
+        {
+          "decision": 1050,
+          "tick": 57410,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30025,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30025/frames.jsonl",
+      "archive_sha256": "a352ab75cc495963ac4ef2737a0c353deac0f76521d2031196065e2ed5f60a64",
+      "frames": 1415,
+      "eligible_points": 272,
+      "points": [
+        {
+          "decision": 738,
+          "tick": 39479,
+          "wave": 16
+        },
+        {
+          "decision": 892,
+          "tick": 47593,
+          "wave": 20
+        },
+        {
+          "decision": 1010,
+          "tick": 53893,
+          "wave": 23
+        },
+        {
+          "decision": 1023,
+          "tick": 54613,
+          "wave": 23
+        },
+        {
+          "decision": 1164,
+          "tick": 62173,
+          "wave": 28
+        },
+        {
+          "decision": 1200,
+          "tick": 64093,
+          "wave": 29
+        },
+        {
+          "decision": 1282,
+          "tick": 68653,
+          "wave": 30
+        },
+        {
+          "decision": 1293,
+          "tick": 69073,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30026,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30026/frames.jsonl",
+      "archive_sha256": "d834e69c5aca021482f210b2494df8953049fc4657a2027e9892c86b6af8f323",
+      "frames": 1034,
+      "eligible_points": 218,
+      "points": [
+        {
+          "decision": 88,
+          "tick": 4800,
+          "wave": 2
+        },
+        {
+          "decision": 210,
+          "tick": 11220,
+          "wave": 4
+        },
+        {
+          "decision": 395,
+          "tick": 21540,
+          "wave": 9
+        },
+        {
+          "decision": 447,
+          "tick": 24420,
+          "wave": 11
+        },
+        {
+          "decision": 688,
+          "tick": 38340,
+          "wave": 20
+        },
+        {
+          "decision": 831,
+          "tick": 46260,
+          "wave": 26
+        },
+        {
+          "decision": 846,
+          "tick": 47160,
+          "wave": 26
+        },
+        {
+          "decision": 918,
+          "tick": 51240,
+          "wave": 29
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30027,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30027/frames.jsonl",
+      "archive_sha256": "e56a22036711e53e075726a787b3dd0ebb4248ec6ae3895b9cefc9ac0ee0dffa",
+      "frames": 1302,
+      "eligible_points": 254,
+      "points": [
+        {
+          "decision": 38,
+          "tick": 2040,
+          "wave": 1
+        },
+        {
+          "decision": 260,
+          "tick": 13919,
+          "wave": 5
+        },
+        {
+          "decision": 334,
+          "tick": 17939,
+          "wave": 7
+        },
+        {
+          "decision": 718,
+          "tick": 38459,
+          "wave": 18
+        },
+        {
+          "decision": 755,
+          "tick": 40439,
+          "wave": 19
+        },
+        {
+          "decision": 1060,
+          "tick": 56819,
+          "wave": 27
+        },
+        {
+          "decision": 1189,
+          "tick": 63899,
+          "wave": 29
+        },
+        {
+          "decision": 1274,
+          "tick": 68459,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30028,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30028/frames.jsonl",
+      "archive_sha256": "f4ae4a71a7f702b435a2e4a99efda25195fa0f79daf0cae947d5deaac2dc982d",
+      "frames": 1199,
+      "eligible_points": 234,
+      "points": [
+        {
+          "decision": 139,
+          "tick": 7500,
+          "wave": 3
+        },
+        {
+          "decision": 448,
+          "tick": 24420,
+          "wave": 12
+        },
+        {
+          "decision": 610,
+          "tick": 33480,
+          "wave": 19
+        },
+        {
+          "decision": 754,
+          "tick": 41460,
+          "wave": 23
+        },
+        {
+          "decision": 848,
+          "tick": 46680,
+          "wave": 26
+        },
+        {
+          "decision": 1091,
+          "tick": 59681,
+          "wave": 30
+        },
+        {
+          "decision": 1116,
+          "tick": 61061,
+          "wave": 30
+        },
+        {
+          "decision": 1165,
+          "tick": 63701,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30029,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30029/frames.jsonl",
+      "archive_sha256": "bbefd4a5dc5489eac63c4fce4bbceccd2770472e8caf3e37a7fe1de5e0e6a574",
+      "frames": 1310,
+      "eligible_points": 259,
+      "points": [
+        {
+          "decision": 201,
+          "tick": 10748,
+          "wave": 5
+        },
+        {
+          "decision": 366,
+          "tick": 19688,
+          "wave": 9
+        },
+        {
+          "decision": 410,
+          "tick": 22028,
+          "wave": 9
+        },
+        {
+          "decision": 455,
+          "tick": 24428,
+          "wave": 10
+        },
+        {
+          "decision": 483,
+          "tick": 25928,
+          "wave": 11
+        },
+        {
+          "decision": 780,
+          "tick": 41888,
+          "wave": 21
+        },
+        {
+          "decision": 961,
+          "tick": 51548,
+          "wave": 27
+        },
+        {
+          "decision": 1293,
+          "tick": 69348,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30030,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30030/frames.jsonl",
+      "archive_sha256": "e99d57f52d9a86dc8546b9cf9d43d28d195e5f93ca8c811474e0d64236cadd74",
+      "frames": 1488,
+      "eligible_points": 271,
+      "points": [
+        {
+          "decision": 382,
+          "tick": 20564,
+          "wave": 8
+        },
+        {
+          "decision": 405,
+          "tick": 21764,
+          "wave": 9
+        },
+        {
+          "decision": 838,
+          "tick": 45284,
+          "wave": 19
+        },
+        {
+          "decision": 1081,
+          "tick": 58424,
+          "wave": 25
+        },
+        {
+          "decision": 1168,
+          "tick": 63224,
+          "wave": 27
+        },
+        {
+          "decision": 1279,
+          "tick": 69152,
+          "wave": 29
+        },
+        {
+          "decision": 1292,
+          "tick": 69872,
+          "wave": 29
+        },
+        {
+          "decision": 1388,
+          "tick": 75032,
+          "wave": 30
+        }
+      ],
+      "terminal": true
+    },
+    {
+      "seed": 30031,
+      "archive": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task12/comparison/trajectories/seed_30031/frames.jsonl",
+      "archive_sha256": "9288e264479c6ebf055a6d99229561669bcaca4c8c07076fa228abe4ed9298e0",
+      "frames": 1073,
+      "eligible_points": 208,
+      "points": [
+        {
+          "decision": 171,
+          "tick": 9180,
+          "wave": 4
+        },
+        {
+          "decision": 178,
+          "tick": 9540,
+          "wave": 4
+        },
+        {
+          "decision": 575,
+          "tick": 32100,
+          "wave": 18
+        },
+        {
+          "decision": 591,
+          "tick": 32880,
+          "wave": 19
+        },
+        {
+          "decision": 756,
+          "tick": 42060,
+          "wave": 24
+        },
+        {
+          "decision": 802,
+          "tick": 44520,
+          "wave": 26
+        },
+        {
+          "decision": 844,
+          "tick": 46860,
+          "wave": 27
+        },
+        {
+          "decision": 853,
+          "tick": 47280,
+          "wave": 27
+        }
+      ],
+      "terminal": true
+    }
+  ],
+  "resource_records": {
+    "configure": {
+      "returncode": 0,
+      "wall_s": 108.09743928699754,
+      "peak_rss_kib": 122788,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 13174416
+    },
+    "build": {
+      "returncode": 0,
+      "wall_s": 326.52884913398884,
+      "peak_rss_kib": 1065632,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 12310528
+    },
+    "all_python_tests": {
+      "returncode": 0,
+      "wall_s": 41.017570454016095,
+      "peak_rss_kib": 1778656,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 15878780
+    },
+    "generate": {
+      "returncode": 0,
+      "wall_s": 30.025919978012098,
+      "peak_rss_kib": 3231932,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 17230028
+    },
+    "compare": {
+      "returncode": 0,
+      "wall_s": 2162.8939394949994,
+      "peak_rss_kib": 3365592,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6357628
+    },
+    "statistics": {
+      "returncode": 0,
+      "wall_s": 1.0099952520104125,
+      "peak_rss_kib": 4320,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 8505080
+    },
+    "all_python_tests_final": {
+      "returncode": 0,
+      "wall_s": 60.06163424800616,
+      "peak_rss_kib": 1726044,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7094676
+    },
+    "retained_order_pilot": {
+      "returncode": -15,
+      "wall_s": 584.3552261699806,
+      "peak_rss_kib": 3347360,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 10624148
+    }
+  },
+  "paused_samples": {
+    "configure": 0,
+    "build": 0,
+    "all_python_tests": 0,
+    "generate": 0,
+    "compare": 0,
+    "statistics": 0,
+    "all_python_tests_final": 0
+  },
+  "own_game_process_cap": 4,
+  "cross_run_numerical_probe": {
+    "overlap_points": 106,
+    "candidate_set_mismatches": 0,
+    "future_values": 84352,
+    "changed_future_values": 1,
+    "max_abs_future_difference": 2.3245811462402344e-05,
+    "max_abs_action_mean_difference": 3.632158041000366e-07,
+    "note": "Cross-run numerical probe only, not a bit-equivalence gate; model comparison uses only the same canonical formal matrix for both models."
+  },
+  "all_owned_experiment_groups_exited": true
+}
