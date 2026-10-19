@@ -524,20 +524,44 @@ def cmd_collect(args) -> None:
         save_json(LEDGER, ledger)
 
 
+def hf_python() -> str | None:
+    """An interpreter that can import huggingface_hub.
+
+    The controller gets started from whatever shell is at hand, and `python3` is not the same
+    interpreter everywhere (mise / homebrew / system); only one of them has the library.
+    """
+    for exe in (sys.executable, shutil.which("python3") or "", "/opt/homebrew/bin/python3",
+                "/usr/bin/python3"):
+        if not exe or not os.path.exists(exe):
+            continue
+        if subprocess.run([exe, "-c", "import huggingface_hub"], capture_output=True).returncode == 0:
+            return exe
+    return None
+
+
 def upload(package: Path) -> None:
     repo = os.environ.get("PVZ_HF_REPO")
     token = os.environ.get("HF_TOKEN")
     if not repo or not token:
         raise SystemExit("PVZ_HF_REPO / HF_TOKEN not set (see ~/.zshrc) — package kept at " + str(package))
-    code = (
-        "import os, sys\n"
-        "from huggingface_hub import HfApi\n"
-        f"HfApi(token=os.environ['HF_TOKEN']).upload_file(path_or_fileobj={str(package)!r}, "
-        f"path_in_repo='transfer/{package.name}', repo_id=os.environ['PVZ_HF_REPO'])\n"
-        "print('uploaded transfer/" + package.name + "')\n"
-    )
+    path_in_repo = f"transfer/{package.name}"
+    exe = hf_python()
+    if exe:
+        code = (
+            "import os, sys\n"
+            "from huggingface_hub import HfApi\n"
+            f"HfApi(token=os.environ['HF_TOKEN']).upload_file(path_or_fileobj={str(package)!r}, "
+            f"path_in_repo={path_in_repo!r}, repo_id=os.environ['PVZ_HF_REPO'])\n"
+            f"print('uploaded {path_in_repo}')\n"
+        )
+        cmd = [exe, "-c", code]
+    else:
+        cli = shutil.which("hf") or shutil.which("huggingface-cli")
+        if not cli:
+            raise SystemExit("no python with huggingface_hub and no hf CLI — package kept at " + str(package))
+        cmd = [cli, "upload", repo, str(package), path_in_repo]
     for attempt in range(1, 6):
-        proc = subprocess.run([sys.executable, "-c", code], text=True, capture_output=True)
+        proc = subprocess.run(cmd, text=True, capture_output=True)
         if proc.returncode == 0:
             say(proc.stdout.strip())
             return
