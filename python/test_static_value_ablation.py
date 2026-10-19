@@ -55,5 +55,47 @@ class GeneratorTest(unittest.TestCase):
         env.release_snapshot.assert_called_once()
 
 
+class AblationStatisticsTest(unittest.TestCase):
+    def test_paired_cost_ratio_noise_and_decision_family_use_whole_games(self):
+        from static_value_ablation_stats import clustered
+        game = {'points': 8, 'A_frozen': 6, 'A_expanded': 6, 'A_noise': 5,
+                'A_cost': 80, 'A_reseed_cost': 96, 'A_reseed_frozen': 5, 'A_reseed_expanded': 5}
+        for name in ('B2', 'B3', 'B4', 'C'):
+            for suffix in ('', '_reseed'):
+                game[name + suffix + '_frozen'] = game['A' + suffix + '_frozen']
+                game[name + suffix + '_expanded'] = game['A' + suffix + '_expanded']
+                game[name + suffix + '_cost'] = game['A' + suffix + '_cost'] / 2
+            game[name + '_noise'] = 6
+        result = clustered([game, game])
+        self.assertEqual(result['games'], 2)
+        self.assertEqual(result['points'], 16)
+        comparison = result['paired_vs_A']['B2']
+        self.assertEqual(comparison['_cost_ratio_to_A']['game_cluster_ci98_75'], [.5, .5])
+        self.assertEqual(comparison['noise_agreement_minus_A']['estimate'], 1/8)
+        self.assertTrue(comparison['recommendation_gate'])
+        # A higher point estimate alone must not pass noninferiority or superiority.
+        weaker = {**game, 'B2_frozen': 5}
+        self.assertFalse(clustered([weaker, weaker])['paired_vs_A']['B2']['recommendation_gate'])
+
+    def test_counts_compare_same_root_different_futures_and_both_references(self):
+        from static_value_ablation import ARMS
+        from static_value_ablation_stats import point_counts
+        plant = dict(type='plant', packet=0, row=0, col=0)
+        row = {'heavy_label': plant, 'policy':t.NOOP, 'actions':[plant,t.NOOP],
+               'expanded':{'label':t.NOOP,'new_actions':[], 'new_continuations':0,
+                           'verification_continuations':36}, 'arms':{}}
+        for name in ARMS:
+            for suffix in ('', '_noise'):
+                row['arms'][name+suffix] = {'chosen':plant if not suffix else t.NOOP,
+                    'candidates':[plant,t.NOOP], 'continuations':24,
+                    'halving_continuations':6, 'verification_continuations':18}
+        counts = point_counts(row)
+        self.assertEqual(counts['A_frozen'], 1)
+        self.assertEqual(counts['A_expanded'], 0)
+        self.assertEqual(counts['A_reseed_expanded'], 1)
+        self.assertEqual(counts['A_noise'], 0)
+        self.assertEqual(counts['expanded_label_changes'], 1)
+
+
 if __name__ == '__main__':
     unittest.main()
