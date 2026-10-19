@@ -14,6 +14,8 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--selection',type=Path,required=True);p.add_argument('--out',type=Path,required=True)
     p.add_argument('--candidate',default=str(ROOT/'build-sparse/pvz-portable'))
+    p.add_argument('--diagnose-hashes',action='store_true',
+                   help='add an independent frozen instance and record hash stability; never grants acceptance')
     args=p.parse_args();args.out.mkdir(parents=True,exist_ok=True)
     import torch
     torch.set_num_threads(1)
@@ -31,6 +33,7 @@ def main():
     rows=json.loads(args.selection.read_text())['points']
     points=sum([[r for r in rows if r['category']==c][:10] for c in ('A','B')],[])
     arms=[(str(ROOT/'build/pvz-portable'),61),(args.candidate,61),(args.candidate,317)]
+    if args.diagnose_hashes:arms.insert(1,arms[0])
     envs=[];verified=portable=0;records=[]
     def stable(data):return json.dumps(data,sort_keys=True,separators=(',',':'))
     try:
@@ -70,7 +73,10 @@ def main():
                                 assert branch['ok'] and 'state_hash' in branch
                                 state_hash=branch['state_hash'];env.release_snapshot(branch['snapshot_id']);env.release_snapshot(tip)
                             outputs.append({'leaf':stable(leaf),'private':stable(private),'portable_hash':state_hash})
-                        if not outputs[0]==outputs[1]==outputs[2]:
+                        public_private_equal=all(o['leaf']==outputs[0]['leaf'] and o['private']==outputs[0]['private'] for o in outputs)
+                        hashes=[o['portable_hash'] for o in outputs]
+                        hashes_equal=all(h==hashes[0] for h in hashes)
+                        if not public_private_equal or (not hashes_equal and not args.diagnose_hashes):
                             failure={'point':point,'action':action,'future':seed,'outputs':outputs}
                             (args.out/'failure.json').write_text(json.dumps(failure,indent=2)+'\n')
                             raise AssertionError(f'sparse/default/frozen divergence at {point},future{seed}')
@@ -78,12 +84,13 @@ def main():
                         records.append({'seed':point['seed'],'decision':point['decision'],'action':action,
                                         'future':seed,'leaf_sha256':hashlib.sha256(outputs[0]['leaf'].encode()).hexdigest(),
                                         'private_sha256':hashlib.sha256(outputs[0]['private'].encode()).hexdigest(),
-                                        'portable_hash':outputs[0]['portable_hash']})
+                                        'portable_hash':outputs[0]['portable_hash'],'all_portable_hashes':hashes,
+                                        'portable_hashes_equal':hashes_equal})
             finally:
                 for env,root in zip(envs,roots):env.restore(root);env.release_snapshot(root)
             print(json.dumps({'points':number+1,'triple_matched_rollouts':verified,'portable_hashes':portable}),flush=True)
         result={'points':len(points),'triple_matched_rollouts':verified,'portable_hashes':portable,
-                'arms':arms,'exact':True,'records':records}
+                'arms':arms,'exact':not args.diagnose_hashes,'diagnostic_only':args.diagnose_hashes,'records':records}
         (args.out/'result.json').write_text(json.dumps(result,indent=2)+'\n')
     finally:
         for env in envs:env.close()

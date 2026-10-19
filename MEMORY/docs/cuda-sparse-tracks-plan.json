@@ -20,5 +20,12 @@
   "resumed": "2026-10-20T00:55:47.485448+08:00",
   "implementation_review": "Register direct AttachParticleToTrack as well as escaped named pointers; all other external raw track writes only alter render/clipping fields; runtime cache never serialized",
   "cost_gate": ">=10percent lower total host CPU/game on formal z17 ABBA,4workers8pairedseeds; report wallthroughput also; reject and withdraw if below10percent",
-  "equivalence_gate": "focused cache contracts; actual same-root/future full leaves and portable private state; formal frames/targets default61 versus sparse317 and frozen reference; any divergence blocks adoption"
+  "equivalence_gate": "focused cache contracts; actual same-root/future full leaves and portable private state; formal frames/targets default61 versus sparse317 and frozen reference; any divergence blocks adoption",
+  "snapshot_hash_control": {
+    "time": "2026-10-20T01:08:32.274950+08:00",
+    "reason": "initial cross-build probe found hash differences despite exact full leaves and privileged state; independent frozen/frozen control also disagrees7/480",
+    "cross_process_probe": "480 sets,4 instances; all leaf/private/RNG equal; total31 hash disagreements; do not silently treat all hash differences as harmless",
+    "next": "same engine, same saved root, same future,61/61/317/317/61; require full-mode repeat stability and sparse equality before claiming portable equivalence",
+    "adoption": "any unresolved semantic or quality difference still blocks adoption"
+  }
 }
