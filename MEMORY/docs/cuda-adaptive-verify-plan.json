@@ -51,5 +51,26 @@
     "wins": "candidate at most5 fewer; no McNemar significant worsening at.05",
     "timing": "same-load ABBA, at most4 own game processes,2GiB pause"
   },
-  "helper_sha256": "172c352f604f1a82fc0cd1756618294f0503f8b1aeeeee3f7ef4b32202964823"
+  "helper_sha256": "172c352f604f1a82fc0cd1756618294f0503f8b1aeeeee3f7ef4b32202964823",
+  "cost_confirmation": {
+    "registered": "2026-10-19T20:37:45.746360+08:00",
+    "only_after": "same-point gate passes",
+    "method": "ABBA batches,4games/4workers each, beta0 student executes, full frames saved",
+    "offsets": [
+      0,
+      0,
+      4,
+      4
+    ],
+    "arms": [
+      "baseline",
+      "adaptive",
+      "adaptive",
+      "baseline"
+    ],
+    "seeds": "30000..30007 each arm,8 pairs",
+    "primary_metric": "total host CPU seconds/game including driver,workers,simulators; require >=10% reduction",
+    "secondary_metric": "actual measured job wall throughput games/hour; report pauses and background load",
+    "no_strength_run_if_cost_fails": true
+  }
 }
