@@ -1,0 +1,244 @@
+{
+  "completed": "2026-10-20T01:32:50.424991+08:00",
+  "status": "accepted opt-in CPU sparse tracks; no production deployment or push",
+  "mechanism": "same track-update body, ascending indices; skip tracks only when no blend, attacher or attachment work; named pointers permanently registered, direct particle attaches registered, restore/init invalidate runtime cache; fallback>256 tracks or LIGHT off",
+  "default": "CPU mask61; flag off; frozen reference build/pvz-portable unchanged",
+  "inputs": {
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v29/model.pt",
+      "sha256": "52dc3f8edd278194d18d75bcada6ef815383b81e5050bb12d958c86c3c9791d8"
+    },
+    "value": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+      "sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a"
+    },
+    "static_value": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+      "sha256": "8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941"
+    },
+    "executable": {
+      "path": "/home/newbiexvwu/pvz-h8/build/pvz-portable",
+      "sha256": "b999449af20753a1238a3ea22174cbe7472b67ab3579c36323266b6450aa9ad1"
+    }
+  },
+  "measured_candidate_binary_sha256": "7d6a0a427dbd39c316256135f58ec2b8a75a61c66a67b0585dbf99befb128a24",
+  "delivered_candidate_binary_sha256": "52547c06ec2bd6e3a3df87422448cca572400e2326380b654ad525cfaac56cbf",
+  "source_sha256": {
+    "src/PvzpLib/PvzpCommon.h": "f6f38d2086ae207067eebd496a34856ea4bae54482e0a7839de92e443779eab4",
+    "src/PvzpLib/Reanimator.h": "193542f7e951fd8568269922e8110cc741ab6fb3fb0377b45c8c0b37089e084a",
+    "src/PvzpLib/Reanimator.cpp": "4eacdf9aada7ccba12ffb13674d81a0ea8f6690bbf90bc9856f6295bcc1cac36",
+    "src/Lawn/System/SaveGame.cpp": "b969f1555f7ba37367634fe101efc4f1746461447ae4cdef837abc060e2df4de",
+    "src/main.cpp": "16a57fc4b9801dc2f714008c32635389ae60984f07b1e57d93792496ebea2dc4",
+    "python/pvz_env.py": "deee7ca4718985718ab34307133955bea6a1925ed2a5cd42866f1a526d815630",
+    "scripts/search_play.py": "13fa66d43cfd0f4880bf55f342ae8d20957f1aef27a6da5948e671d6e0736c05",
+    "python/test_sparse_tracks.py": "4bfc7bac68ef57d59f2546f65830b2cff419ed18fb9c2ba9f5007bd4b07f1296"
+  },
+  "equivalence": {
+    "focused_native_contracts": "8 track count boundaries0/1/63/64/65/255/256/257;escaped pointers;restore;live ascending insertion;fallback",
+    "cross_process": {
+      "positions": 20,
+      "cases": 480,
+      "instances": 4,
+      "full_leaf_privileged_rng_equal": true,
+      "portable_hash_mismatches": 31,
+      "frozen_vs_independent_frozen_mismatches": 7,
+      "limitation": "cross-process portable hashes are not always a stable control; exact cause unproven, no serialization changes made"
+    },
+    "same_process": {
+      "positions": 20,
+      "cases": 480,
+      "modes": [
+        61,
+        61,
+        317,
+        317,
+        61
+      ],
+      "runs": 2400,
+      "full_leaf_privileged_rng_portable_hash_equal": true,
+      "full_mode_repeat_mismatches": 0
+    },
+    "full_games": {
+      "paired_seeds": 8,
+      "frames_per_arm": 8797,
+      "full_frames_equal": true,
+      "excluded_fields": [
+        "verification.seconds only"
+      ],
+      "real_trajectory_sim_skip": 0,
+      "rollout_masks": [
+        61,
+        317
+      ]
+    }
+  },
+  "cost": {
+    "task": "day_l7_z17_train",
+    "seeds": "1725000..1725007",
+    "method": "ABBA8 paired seeds4workersbeta0fullframes; frozen old61 versus new sparse317",
+    "arms": {
+      "A": {
+        "cpu_s_per_game": 185.797072125,
+        "games_per_hour": 58.48675923961834,
+        "wall_s": 492.41914536600234,
+        "total_cpu_s": 1486.376577,
+        "own_peak_rss_kib": 3367332,
+        "minimum_available_kib": 5847324,
+        "peak_swap_kib": 0
+      },
+      "H": {
+        "cpu_s_per_game": 159.406794,
+        "games_per_hour": 70.45672608747839,
+        "wall_s": 408.7615420029906,
+        "total_cpu_s": 1275.254352,
+        "own_peak_rss_kib": 3407264,
+        "minimum_available_kib": 7959308,
+        "peak_swap_kib": 0
+      }
+    },
+    "full_frames_equal": true,
+    "frames_per_arm": 8797,
+    "frame_exclusions": [
+      "verification.seconds only"
+    ],
+    "cpu_reduction": 0.14203818081290986,
+    "wall_speedup": 1.2046611404612022,
+    "cost_gate_passed": true
+  },
+  "activation": {
+    "named_numeric_same_mask317": true,
+    "full_frames_equal": true,
+    "frames": 31,
+    "targeted_tests": 64,
+    "targeted_tests_no_skips": true,
+    "core_objects_unchanged": true,
+    "old_binary_rejected_before_reset": true,
+    "unsupported_cli_combinations_rejected": 4
+  },
+  "final_binary_change": "only READY capability added to native source after cost run; Reanimator and portable serializer object hashes unchanged; real native regressions and explicit-flag parity passed on final binary",
+  "unchanged_core_objects": {
+    "objects": {
+      "src/Lawn/System/SaveGame.cpp.o": "6fee23294021a7af52b98ee4f3bcd440dd2c44f0a6526ccf7603dcdaf4089678",
+      "src/PvzpLib/Reanimator.cpp.o": "4dc945143d49977668ce21c63df59a677e8ffbd3e9029e567b8e8647548baddc"
+    },
+    "unchanged": true,
+    "new_binary_sha256": "52547c06ec2bd6e3a3df87422448cca572400e2326380b654ad525cfaac56cbf"
+  },
+  "resources": {
+    "cost_2_H.result.json": {
+      "returncode": 0,
+      "wall_s": 193.33951220600284,
+      "peak_rss_kib": 3407264,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7959308
+    },
+    "same_process.result.json": {
+      "returncode": 0,
+      "wall_s": 100.10074974101735,
+      "peak_rss_kib": 836632,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7261104
+    },
+    "configure.result.json": {
+      "returncode": 0,
+      "wall_s": 58.05111064898665,
+      "peak_rss_kib": 74312,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7618660
+    },
+    "acceptance_tests.result.json": {
+      "returncode": 0,
+      "wall_s": 20.017900765000377,
+      "peak_rss_kib": 909288,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6770916
+    },
+    "hash_diagnostic.result.json": {
+      "returncode": 0,
+      "wall_s": 130.16519952798262,
+      "peak_rss_kib": 1489028,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6812972
+    },
+    "cli_named.result.json": {
+      "returncode": 0,
+      "wall_s": 4.005730470991693,
+      "peak_rss_kib": 800316,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7044016
+    },
+    "build.result.json": {
+      "returncode": 0,
+      "wall_s": 219.3127811110171,
+      "peak_rss_kib": 1074284,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6997248
+    },
+    "cost_1_H.result.json": {
+      "returncode": 0,
+      "wall_s": 215.42202979698777,
+      "peak_rss_kib": 3324156,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 8937280
+    },
+    "cli_numeric.result.json": {
+      "returncode": 0,
+      "wall_s": 4.005666020006174,
+      "peak_rss_kib": 804976,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6712432
+    },
+    "final_build.result.json": {
+      "returncode": 0,
+      "wall_s": 38.05741376700462,
+      "peak_rss_kib": 938272,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7090120
+    },
+    "leaf_probe.result.json": {
+      "returncode": 1,
+      "wall_s": 68.07798518799245,
+      "peak_rss_kib": 1254112,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6993328
+    },
+    "cost_3_A.result.json": {
+      "returncode": 0,
+      "wall_s": 223.58252755299327,
+      "peak_rss_kib": 3367332,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7106608
+    },
+    "cost_0_A.result.json": {
+      "returncode": 0,
+      "wall_s": 268.83661781300907,
+      "peak_rss_kib": 3253100,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 5847324
+    },
+    "contracts.result.json": {
+      "returncode": 0,
+      "wall_s": 3.002122269012034,
+      "peak_rss_kib": 213964,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 7681524
+    }
+  },
+  "raw_sha256": {
+    "cost_summary.json": "25bc01f11085a959805be79c63e755082214d90f30208dd175c830c4a2ad119c",
+    "cost_progress.json": "5e1a5fe110d10a8a214062f4e66ce5e8437336706059dd78c5a0b299564be8a5",
+    "equivalence_probe_gate.json": "861b92b2f0f34f057ca4eb62d6a8154187d22b6598963043d67a33bb8d2005b8",
+    "activation_gate.json": "1273623dc0f86e11a46f4dd28229d0d165d444daacfbfd4d4bb66c685a75a87b",
+    "core_objects_unchanged.json": "aff24ae995f1caa006cf555d31e24230536dd23a38d78eec179853d837ce58f2",
+    "hash_diagnostic/result.json": "6f057117f5ffd46c2b8c60f108d00ed7ef3b4556e769756dd21d97bc51a2a236",
+    "same_process/result.json": "bc30ecdde67f3a018f688582f720f292c600208df30056a9b6f3983a9a69cbc5",
+    "acceptance_tests.txt": "c6566b66478181c921da7df75915d2e6b07f1b4f0ea04db6a0af625cc052f70d"
+  },
+  "quality_gate_scope": "traversal change only, exact formal61 semantics; no new horizon/samples/seed/leaf approximation; not a claimed256-game strength improvement",
+  "limits": "8 paired collection seeds, current shared load; report CPU and job throughput separately, do not assume universal speedup; GPU backend disallowed; all own jobs ended",
+  "delivery": "cuda-h8 local only/no push; old pvz-cuda/PvZ-search source/build not edited"
+}

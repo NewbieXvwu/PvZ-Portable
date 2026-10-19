@@ -362,7 +362,8 @@ static void RunEnvironment(LawnApp* app)
 	EnvironmentRollout rollout;
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
-		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version << ",\"rollout_version\":3}" << std::endl;
+		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
+		<< ",\"rollout_version\":3,\"sparse_tracks_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();

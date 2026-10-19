@@ -90,6 +90,8 @@ def _close_worker_env():
 
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
                  static_value_path: str | None = None, cuda_socket: str | None = None) -> None:
+    if rollout_sim_skip & 256 and cuda_socket is not None:
+        raise ValueError("sparse tracks are a CPU-only rollout feature")
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True, cpp_rollouts=cpp_rollouts,
@@ -612,6 +614,8 @@ def _play(job: dict) -> dict:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
         if _W.get("cpp_rollouts"):
             env.load_rollout_net(_W["rollout_file"])
+        if _W.get("rollout_sim_skip", 0) & 256:
+            env.require_sparse_tracks()
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
@@ -796,6 +800,8 @@ def main() -> None:
                    help="ticks between searches unless the student itself wants to plant (0 = search every time)")
     p.add_argument("--rollout-sim-skip", type=int, default=61,
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
+    p.add_argument("--cpu-sparse-tracks", action="store_true",
+                   help="CPU-only: skip inactive animation tracks, preserving mask61 results; requires a rebuilt simulator")
     p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=True,
                    help="run student continuations in C++ (--no-cpp-rollouts: the Python reference loop)")
     p.add_argument("--rollout-backend", choices=["cpp", "cuda"], default="cpp",
@@ -820,6 +826,12 @@ def main() -> None:
                         "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     args = p.parse_args()
+    if args.cpu_sparse_tracks:
+        args.rollout_sim_skip |= 256
+    if args.rollout_sim_skip & 256 and (
+            args.rollout_backend != "cpp" or args.cuda_socket is not None or not args.cpp_rollouts
+            or not args.rollout_sim_skip & 32):
+        p.error("CPU sparse tracks require --cpp-rollouts, backend cpp, no CUDA socket and LIGHT_ANIMATION bit32")
     if args.rollout_backend == "cuda" and os.environ.get("PVZ_GPU_PAUSE_FILE"):
         args.gpu_pause_file = str(Path(os.environ["PVZ_GPU_PAUSE_FILE"]).expanduser().resolve())
     if args.cuda_speculative_halving and (not args.halving or args.rollout_backend != "cuda"):

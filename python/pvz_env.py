@@ -218,6 +218,7 @@ class PvZEnv:
         self._process: subprocess.Popen[str] | None = None
         self._reset_done = False
         self._last_response: dict[str, Any] = {}
+        self._sparse_tracks_version = 0
         self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
         # Resource hashes and git metadata are computed on first use: hashing main.pak
@@ -308,6 +309,7 @@ class PvZEnv:
         )
         ready = self._read_message()
         self._rollout_version = ready.get("rollout_version", 0)
+        self._sparse_tracks_version = ready.get("sparse_tracks_version", 0)
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
             self._abort_process()
             raise RuntimeError(f"PvZ-Portable did not enter protocol-v{ENV_PROTOCOL_VERSION} environment mode: {ready}")
@@ -596,15 +598,25 @@ class PvZEnv:
         if not response.get("ok"):
             raise ValueError(f"environment could not reseed: {response}")
 
+    def require_sparse_tracks(self) -> None:
+        """Fail before collection starts when the requested CPU feature is absent."""
+        if self._process is None:
+            self._start()
+        if self._sparse_tracks_version != 1:
+            raise RuntimeError("CPU sparse tracks require a rebuilt simulator advertising sparse_tracks_version=1")
+
     def set_sim_skip(self, mask: int) -> None:
         """Approximate simulation (``SIM_SKIP``, bits in ``EnvSimSkip`` of src/PvzpLib/PvzpCommon.h).
 
         0 is the exact game. The setting is process-wide and survives RESET/RESTORE, so search
-        code sets it around its rollouts and puts it back to 0 afterwards. Any non-zero mask is an
-        approximation whose effect must be measured (scripts/sim_skip_agreement.py), not assumed.
+        code sets it around its rollouts and puts it back to 0 afterwards. Presentation skips are
+        approximations to measure (scripts/sim_skip_agreement.py). Bit256 only changes traversal
+        of otherwise inactive animation tracks and preserves the chosen presentation mode.
         """
         if type(mask) is not int or mask < 0 or mask & ~317:
             raise ValueError("SIM_SKIP accepts presentation bits 1, 4, 8, 16, 32 and sparse-track bit256")
+        if mask & 256:
+            self.require_sparse_tracks()
         if not self._command(f"SIM_SKIP {mask}").get("ok"):
             raise RuntimeError("simulator rejected SIM_SKIP (binary older than this wrapper?)")
 
@@ -686,6 +698,8 @@ class PvZEnv:
             raise ValueError("max_actions must be from 1 to 1000000")
         if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~509:
             raise ValueError("rollout sim skip mask must combine the bits 1, 4, 8, 16, 32, 64, 128 and 256")
+        if sim_skip & 256:
+            self.require_sparse_tracks()
         event_wait = False
         if first_action is None:
             token = "A"

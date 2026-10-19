@@ -13,8 +13,8 @@
     "current-load ABBA CPU cost >=10percent improvement; at most4 games; memory below2GiB pause"
   ],
   "delivery": "h8 only, separate build-sparse; original h8 build and both old working trees untouched; local commits no push",
-  "scheduling": "build-sparse only; frozen build/pvz-portable unchanged; no task8 or adaptive256 retries",
-  "status": "task9 completed; resume prototype and independent build; no adoption before tests and cost gates",
+  "scheduling": "all probes and ABBA finished; task8/old adaptive256 not restarted",
+  "status": "accepted as opt-in CPU traversal optimization; formal default61 unchanged",
   "prototype_commit": "caf7ac1",
   "priority": "task9 before any remaining task6 work",
   "resumed": "2026-10-20T00:55:47.485448+08:00",
@@ -27,5 +27,13 @@
     "cross_process_probe": "480 sets,4 instances; all leaf/private/RNG equal; total31 hash disagreements; do not silently treat all hash differences as harmless",
     "next": "same engine, same saved root, same future,61/61/317/317/61; require full-mode repeat stability and sparse equality before claiming portable equivalence",
     "adoption": "any unresolved semantic or quality difference still blocks adoption"
-  }
+  },
+  "completed": "2026-10-20T01:32:50.424991+08:00",
+  "cost_result": {
+    "cpu_reduction": 0.14203818081290986,
+    "throughput_speedup": 1.2046611404612022,
+    "frames_per_arm": 8797,
+    "full_frames_equal": true
+  },
+  "activation": "--cpu-sparse-tracks sets bit256 atop default61; CPU cpp only, LIGHT32 required; sparse_tracks_version1 preflight rejects old binary before reset"
 }

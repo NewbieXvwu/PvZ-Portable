@@ -1,5 +1,31 @@
 # CUDA 续走模拟器：设计与实测
 
+**当前新增推荐（第81轮，2026-10-20）：CPU老师可显式开启稀疏轨道，默认仍关。**
+正式z17/v29/K2/V9/v3/2500、4worker、8配对种子ABBA：主机CPU **185.80→159.41秒/局，省14.20%**；
+作业吞吐 **58.49→70.46局/小时（1.205倍）**。每臂8797帧的物理状态、动作、标签、targets和复核值全部相同，
+只排除`verification.seconds`。这项只省空轨道遍历，不缩视界、不减未来，不新增老师近似。
+GPU训练期间的暂停闸门、poll100及精确预取约定继续生效；此开关只给CPU采集入口。
+
+必须使用从本轮源码新编的CPU产物。当前验证产物在`pvz-h8/build-sparse/pvz-portable`；
+新增`--cpu-sparse-tracks`将默认61变为317，旧构建没有`sparse_tracks_version=1`会在开局前拒绝。
+以下复现已验收配置，正式队列可在其原CPU命令上加此开关和新产物路径；混采脚本本轮未改。
+
+```bash
+PYTHONPATH=python:scripts OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ~/.venvs/ml/bin/python3 scripts/search_play.py \
+  --rollout-policy ~/PvZ-search/artifacts/student/v29/model.pt \
+  --value ~/PvZ-search/artifacts/value_net/v3/model.pt \
+  --static-value ~/PvZ-search/artifacts/hard/value_branch1/model.pt \
+  --manifest ~/PvZ-search/artifacts/stage4/day_l7_hard.json --task-id day_l7_z17_train \
+  --student-candidates 2 --verify-samples 9 --horizon 2500 --samples 3 --halving \
+  --dagger-beta 0 --workers 4 --seeds 8 --seed-offset 15000 --measure-cpu \
+  --cpu-sparse-tracks --executable "$PWD/build-sparse/pvz-portable" \
+  --frames artifacts/cuda/sparse_cpu_example/frames --out artifacts/cuda/sparse_cpu_example
+```
+
+独立构建方式：`cmake -S . -B build-sparse -DCMAKE_BUILD_TYPE=Release -DPVZ_CUDA_ROLLOUT=OFF`，
+再`cmake --build build-sparse -j2`。当前冻结的`build/pvz-portable`未替换，单改Python或只加开关不够。
+完整证据与输入/产物SHA见[cuda-sparse-tracks-validation.json](cuda-sparse-tracks-validation.json)。
+
 **task8 视界 1800：不通过（正式第一关，2026-10-19，第74轮）。**
 独立 `pvz-h8` CPU 构建、v29/v3/branch1、K2/V9、samples3、halving、mask61；
 30000–30015 共16局3335搜索点，1800对2500一致率 **66.54%**，2500换未来的噪声底线 **71.33%**。
@@ -21,7 +47,7 @@ z20主机CPU秒/局178.559→153.831，省13.85%；局/小时57.04→68.78。
 两任务全部17457帧/臂的物理状态和实际动作相同（只排除老师targets/verification/label），swap0。
 z20的256局beta1强度验收按主控新优先级延期，尚未测试，不宣称强度通过或失败。
 当前生产自适应入口已撤回，研究实现保留在本地a37a126/88875a9；正式仍V9/2500/mask61。
-第76轮稀疏轨道原型caf7ac1未编译、未实测、未采用，当前源码亦已撤回，先做task9。
+第76轮轨道原型曾按优先级封存；task9完成后第81轮已恢复并通过验收，见本页最新推荐。
 完整口径见[cuda-adaptive-verify-validation.json](cuda-adaptive-verify-validation.json)。
 
 **task9 老师反事实审计已完成（第80轮收尾）。**
@@ -1656,3 +1682,39 @@ Pre/Post仍占42.8%/51.1%。第60轮隔离原型将Pre特征的float64临时数�
 1.000/0.997/1.006/1.001，均在约1%噪声范围，不采用，正式CUDA源未加入该原型。
 截至此轮，编译选项、扩大实体位图、缩短合批窗口、共享特征暂存均未提供足够额外收益；
 交付保留已实际获益的内联小波核与推测减半，明确GPU四局墙钟尚未超过CPU。
+
+
+## 第81轮：精确CPU轨道工作集（2026-10-20）
+
+`Reanimation::Update`在原CPU样本占16.43%，其中扫描大量无事可做的轨道。
+bit256仅在LIGHT_ANIMATION(bit32)与≤256轨道时遍历活跃位图；混合、attacher、attachment及曾返回的具名轨道均保留，
+仍按索引升序、每次回调后读取活跃集合，保持本帧新增高索引/下帧新增低索引的原顺序。
+直接粒子附着也登记；初始化和portable恢复重建，运行时缓存不写存档。
+其余情况回退原循环，默认61不变；不改变真实轨迹的mask0、学生/叶子/种子/未来预算/减半/复核。
+
+验证包括8种轨道数边界、逃逸指针后续修改、恢复和顺序；
+20真实局面480组×4独立实例的完整叶子、privileged私态和完整RNG相同。
+跨进程portable哈希曾有31组差异，连冻结旧/旧也有7组不同；没有把该检查悄悄删掉。
+改用同一引擎、同根、同未来按61/61/317/317/61交叉，480组共2400次的叶子、私态、RNG和portable哈希全部相同，
+重复默认模式也稳定。跨进程哈希差异的准确来源仍未定因，未改序列化代码来迎合测试。
+
+| 正式beta0存帧，8配对种子/4worker/ABBA | 冻结原版61 | 新构建317 |
+|---|---:|---:|
+| 总主机CPU秒/局 | 185.797 | 159.407 |
+| 作业墙钟（8局合计，秒） | 492.419 | 408.762 |
+| 局/小时 | 58.487 | 70.457 |
+| 每臂完整帧 | 8797 | 8797 |
+
+两对批次CPU节省分别12.43%与15.77%，合计14.20%，通过预登记≥10%门槛。
+墙钟优势仅代表本次共享负载，不推广为恒定1.205倍。全部实验最多4自有游戏，
+RSS峰3.25GiB、自有swap0、可用最低5.58GiB，未触发2GiB暂停，正式作业未发信号。
+默认关闭，直接CPU入口使用`--cpu-sparse-tracks`；GPU、Python参考续走、缺少bit32的组合拒绝。
+
+最终产物新增READY能力声明和开局前检查，防止旧构建静默忽略或运行半局才失败。
+重链接前后Reanimator与portable序列化目标SHA未变，64项定向/原生回归全部通过无skip，
+命名开关与数值317的端到端冒烟31帧完全一致。未把本项当成新的256局强度提升；
+它保持既有老师的采样与评分语义，未重启已被否决的task8或尚未验收的自适应复核。
+
+方向收束：低精度受网络占比限制，Graph收益不足；主机等待/争卡闸门/精确预取已交付；
+自适应复核正式z17收益8.88%未采用，1800正式一致率不合格；per-card2配对仍由主控Mac负责，不重复启动。
+本轮新增的CPU轨道遍历优化已完成实现、质量等价和正式成本验收；全部仅本地提交、不push。
