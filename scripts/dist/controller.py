@@ -119,20 +119,23 @@ def ssh(entry: dict, command: str, check: bool = True, stdin: str | None = None)
     return proc
 
 
-def rsync_try(entry: dict, source: str, target: str, extra: list | None = None) -> bool:
+def rsync_try(entry: dict, source: str, target: str, extra: list | None = None,
+              pull: bool = False) -> bool:
     # macOS ships openrsync (rsync 2.6.9-compatible): --partial/--inplace exist, --append-verify does
     # NOT (it prints the usage text and fails). Large files over a flaky tunnel are therefore sent by
     # repeated --partial runs: whatever arrived stays on the far side and the next run replaces it.
     cmd = ["rsync", "-az", "--stats", "--partial", "--inplace", "--timeout=600", "-e",
            "ssh -o BatchMode=yes -o ConnectTimeout=180 -o ServerAliveInterval=60 -o ServerAliveCountMax=10"]
-    cmd += (extra or []) + [source, f"{entry['host']}:{target}"]
+    # push: local -> machine (default). pull: machine -> local, used by collect.
+    cmd += (extra or []) + ([f"{entry['host']}:{source}", target] if pull else [source, f"{entry['host']}:{target}"])
     proc = subprocess.run(cmd, text=True, capture_output=True)
     if proc.returncode != 0:
         sys.stderr.write(proc.stderr)
         say(f"rsync to {entry['host']} failed")
         return False
     tail = [line.strip() for line in proc.stdout.splitlines() if line.startswith("Number of")]
-    say(f"rsync {source} -> {entry['host']}:{target} ({' '.join(tail)})")
+    route = f"{entry['host']}:{source} -> {target}" if pull else f"{source} -> {entry['host']}:{target}"
+    say(f"rsync {route} ({' '.join(tail)})")
     return True
 
 
@@ -142,10 +145,10 @@ def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> N
 
 
 def rsync_retry(entry: dict, source: str, target: str, extra: list | None = None,
-                tries: int = 3, delay: int = 10) -> bool:
+                tries: int = 3, delay: int = 10, pull: bool = False) -> bool:
     """The tunnel drops mid-transfer often; retry the same --partial run instead of failing the job."""
     for attempt in range(1, tries + 1):
-        if rsync_try(entry, source, target, extra):
+        if rsync_try(entry, source, target, extra, pull=pull):
             return True
         if attempt < tries:
             say(f"retry {attempt}/{tries} in {delay}s")
@@ -456,7 +459,7 @@ def collect_segment(entry: dict, segment: dict, args) -> dict:
     say(f"collecting {label} from {segment['machine']}")
     tries, delay = args.retries, args.retry_delay
     if not rsync_retry(entry, f"~/{WORKER_ROOT}/out/{label}/", str(local / "out") + "/",
-                       tries=tries, delay=delay):
+                       tries=tries, delay=delay, pull=True):
         raise SystemExit(f"{label}: could not fetch out/")
     # Frames are the bulk of the payload. One seed per rsync keeps a dropped tunnel cheap: what
     # arrived stays, and the next attempt only moves the missing archives.
@@ -466,10 +469,10 @@ def collect_segment(entry: dict, segment: dict, args) -> dict:
         say(f"{len(seeds)} seed dirs on {segment['machine']}")
         for name in sorted(seeds):
             if not rsync_retry(entry, f"~/{WORKER_ROOT}/frames/{label}/{name}/",
-                               str(local / "frames" / name) + "/", tries=tries, delay=delay):
+                               str(local / "frames" / name) + "/", tries=tries, delay=delay, pull=True):
                 raise SystemExit(f"{label}: could not fetch frames/{name}")
     elif not rsync_retry(entry, f"~/{WORKER_ROOT}/frames/{label}/", str(local / "frames") + "/",
-                         tries=tries, delay=delay):
+                         tries=tries, delay=delay, pull=True):
         raise SystemExit(f"{label}: could not fetch frames/")
     return validate(local, segment)
 
