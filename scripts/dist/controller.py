@@ -116,7 +116,7 @@ def ssh(entry: dict, command: str, check: bool = True, stdin: str | None = None)
 
 
 def rsync(entry: dict, source: str, target: str, extra: list | None = None) -> None:
-    cmd = ["rsync", "-az", "--stats", "--timeout=180", "-e",
+    cmd = ["rsync", "-az", "--stats", "--partial", "--inplace", "--timeout=180", "-e",
            "ssh -o BatchMode=yes -o ConnectTimeout=15 -o ServerAliveInterval=30"]
     cmd += (extra or []) + [source, f"{entry['host']}:{target}"]
     proc = subprocess.run(cmd, text=True, capture_output=True)
