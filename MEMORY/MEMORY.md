@@ -69,3 +69,5 @@
 - [automations/a2607a07-…](automations/a2607a07-1ecd-40c9-b059-afa3234da37f/memory.md)
 - [automations/436f3e5c-…](automations/436f3e5c-d5b1-48a8-b561-e865920da1d4/memory.md)
 - [automations/938705e9-…](automations/938705e9-2dd7-4c5b-80e5-2ffbc2a64aac/memory.md)
+
+- [teacher-candidate-coverage.md](docs/teacher-candidate-coverage.md)

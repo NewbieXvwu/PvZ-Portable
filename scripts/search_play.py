@@ -11,6 +11,9 @@ cell can be dug up:
      the candidates too -- the static net only ever offers one cell per card, so cells the student itself
      would pick were previously reachable only by shovelling first. 0 = off for both, and off is the old
      candidate set exactly.
+     ``--candidate-coverage-model`` optionally adds legal cells from a learned, set-conditioned
+     marginal-coverage predictor, bounded by ``--candidate-coverage-budget`` (default 2). Without
+     a checkpoint the feature is off, with no extra model inference or candidate changes.
   2. Each candidate is played and then continued by the student for ``--horizon`` ticks in C++, ``--samples``
      times with different random futures (the same futures for every candidate). The leaf is scored by
      ``--value`` (a game that ended inside the horizon scores its result). ``--halving`` (default) rolls out
@@ -97,7 +100,8 @@ def _close_worker_env():
 
 
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
-                 static_value_path: str | None = None, cuda_socket: str | None = None) -> None:
+                 static_value_path: str | None = None, cuda_socket: str | None = None,
+                 coverage_path: str | None = None, coverage_budget: int = 2) -> None:
     if rollout_sim_skip & 256 and cuda_socket is not None:
         raise ValueError("sparse tracks are a CPU-only rollout feature")
     os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -110,6 +114,11 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
     Finalize(None, _close_worker_env, exitpriority=10)
     import torch
     torch.set_num_threads(1)
+    _W.pop("coverage", None)
+    if coverage_path:
+        from pvz_candidate_coverage import load
+        _W["coverage"] = load(coverage_path)
+        _W["coverage_budget"] = coverage_budget
     from pvz_rollout_policy import load_student
     from pvz_value_net import load_value_net
     _W["vnet"] = load_value_net(value_path)
@@ -397,13 +406,14 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         # could only reach it indirectly by shovelling and letting the student react (learn/06).
         # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
         stats["last_student_keys"] = set()
+        student_ranked = None
         if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
             from pvz_rollout_policy import ranked_plants
             present = {json.dumps(c, sort_keys=True) for c in candidates}
             added = 0
-            for _score, entry in ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
-                                               legal, context=_W.get("context"),
-                                               history=_W.get("student_history")):
+            student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                          legal, context=_W.get("context"), history=_W.get("student_history"))
+            for _score, entry in student_ranked:
                 action = {"type": "plant", "packet": int(entry["packet"]),
                           "col": int(entry["col"]), "row": int(entry["row"])}
                 key = json.dumps(action, sort_keys=True)
@@ -416,6 +426,22 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                 if added >= args.student_candidates:
                     break
             stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
+
+        if _W.get("coverage") is not None and _W.get("coverage_budget", 0):
+            from pvz_candidate_coverage import features, propose
+            from pvz_rollout_policy import ranked_plants
+            from render_episode import _frame
+            if student_ranked is None:
+                student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                              legal, context=_W.get("context"), history=_W.get("student_history"))
+            frame = _frame(obs)
+            state, action_features = features(frame, _W["context"], plants + [NOOP],
+                                              scored + [(_values([frame], static=True)[0], NOOP)], student_ranked)
+            added = propose(_W["coverage"], state, action_features, plants + [NOOP], candidates,
+                            _W["coverage_budget"])
+            candidates.extend(added)
+            stats["coverage_candidate_added"] = stats.get("coverage_candidate_added", 0) + len(added)
+            stats["last_coverage_actions"] = added
 
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
@@ -756,6 +782,8 @@ def _play(job: dict) -> dict:
             "shovel_events": stats.get("shovel_events", []),
             "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
+    if getattr(args, "candidate_coverage_model", None):
+        result["coverage_candidate_added"] = stats.get("coverage_candidate_added", 0)
     if getattr(args, "measure_cpu", False):
         from pvz_cpu_usage import usage, process_usage, difference
         worker = usage()
@@ -787,6 +815,9 @@ def main() -> None:
     p.add_argument("--student-candidates", type=int, default=0,
                    help="the student's own top-k plant actions (its policy probabilities) added to the "
                         "candidates; 0 = off, which is the old candidate set exactly")
+    p.add_argument("--candidate-coverage-model", help="optional learned candidate proposer checkpoint; default off")
+    p.add_argument("--candidate-coverage-budget", type=int, default=2,
+                   help="maximum additional legal plants per search when the coverage model is enabled")
     p.add_argument("--shovel-candidates", type=int, default=0,
                    help="best legal shovel cells (scored by --static-value right after shovelling) added to "
                         "the candidates; 0 = off, which is the old candidate set exactly")
@@ -852,6 +883,8 @@ def main() -> None:
         p.error("--shovel-candidates must be nonnegative")
     if args.student_candidates < 0:
         p.error("--student-candidates must be nonnegative")
+    if args.candidate_coverage_budget < 0:
+        p.error("--candidate-coverage-budget must be nonnegative")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
@@ -891,7 +924,9 @@ def main() -> None:
         with results_path.open("a") as out, mp.get_context("spawn").Pool(
                 args.workers, initializer=_init_worker,
                 initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.cpp_rollouts,
-                          args.static_value, cuda_socket)) as pool:
+                          args.static_value, cuda_socket) +
+                         ((args.candidate_coverage_model, args.candidate_coverage_budget)
+                          if args.candidate_coverage_model else ())) as pool:
             for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
                 out.write(json.dumps(res) + "\n"); out.flush()
                 if i % 10 == 0 or i == len(jobs):
