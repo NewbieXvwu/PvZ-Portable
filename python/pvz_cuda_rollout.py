@@ -240,18 +240,39 @@ def launch_server(binary: str | os.PathLike[str], net: str | os.PathLike[str],
                   start_timeout_ms: int = 120000, env: dict[str, str] | None = None,
                   log: Any = None) -> subprocess.Popen:
     """Start ``--serve`` and wait for its READY line.  The caller owns the process."""
+    environment = {**os.environ, **(env or {})}
+    try:
+        host_wait_us = int(environment.get("PVZ_CUDA_POLL_US", "0"))
+        if not 0 <= host_wait_us <= 10000:
+            raise ValueError
+    except ValueError:
+        raise CudaServerError("PVZ_CUDA_POLL_US must be an integer from 0 to 10000") from None
     Path(socket_path).unlink(missing_ok=True)
     process = subprocess.Popen(
         [str(binary), "--serve", "--net", str(net), "--socket", str(socket_path),
          "--lanes", str(lanes), "--gather-ms", str(gather_ms),
          "--start-timeout-ms", str(start_timeout_ms)],
         stdout=subprocess.PIPE, stderr=(subprocess.PIPE if log is None else log), text=True,
-        env={**os.environ, **(env or {})})
+        env=environment)
     line = ""
     deadline = time.time() + 120.0
     while time.time() < deadline:
         line = process.stdout.readline()
         if line.startswith("READY"):
+            if host_wait_us and f"host_wait_us={host_wait_us}" not in line.split():
+                # Old binaries silently ignore the environment variable. Refuse before
+                # any game starts rather than publishing CPU savings that never happened.
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait(timeout=5)
+                process.stdout.close()
+                if process.stderr is not None:
+                    process.stderr.close()
+                raise CudaServerError("CUDA binary did not confirm PVZ_CUDA_POLL_US="
+                                      f"{host_wait_us}; rebuild rollout_cuda_small")
             return process
         if not line and process.poll() is not None:
             break

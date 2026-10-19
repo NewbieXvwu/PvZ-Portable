@@ -24,6 +24,13 @@ PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause scripts/mixed_dagger_round.sh \
 训练前 `touch /tmp/pvz_gpu_pause`，结束后 `rm -f /tmp/pvz_gpu_pause`，训练失败也要清理该文件。
 等待正在进行的一局结束后才完全让出采集GPU；未带此变量启动的旧采集进程不会自动受控。
 
+**第71轮修复交付遗漏**：此前默认 `build/rollout_cuda_small` 实际还是12:27旧产物，不识别poll设置；
+cb的省CPU实测用的是另一个 `rollout_cuda_poll`。当前已从源码重新CMake构建并原子替换默认产物，
+同时让服务启动响应携带 `host_wait_us`；启动器要求非零请求得到相同确认，否则开局前报错要求重建。
+9项原生服务与18项Python回归通过，新产物216道结果/叶子与冻结旧产物逐字节相同；
+替换前后正式旧服务PID356666的映像inode/SHA均相同，未打断运行。
+同步代码到另一台机器后必须重建CUDA目标，不能只更新脚本或设置环境变量；已有旧服务不会自动升级。
+
 1. **主机等待（补充2，已验收）**。服务每轮 `cudaStreamSynchronize` 在 WSL 上是自旋：
    整局服务 CPU 248.87 s（≈1 个核），改成 `cudaStreamQuery`+100 µs 睡眠后 **26.38 s**（9.44×），
    每局总主机 CPU 267.5 → 43.7 s（6.12×）。两局 `frames.npz` SHA 相同（`420bd6…`），批探针 10 次
@@ -96,6 +103,10 @@ PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause scripts/mixed_dagger_round.sh \
 108道与冻结服务的结果及叶子位全等，但同步轮286→266（只少7.0%），ABBA rollout耗时
 off 2299/2018ms、on 3757/3092ms，倒退且不足10%收益，**不采用，生产源未保留该路径**。
 原型、冻结二进制、SHA与完整命令只留本地 `codex_r68/`。
+
+第70轮补测当前v28的trunk CUDA Graph：216道的结果与叶子位全等，ABBA耗时
+off 5685/5192ms、on 5003/5302ms，速度1.056倍，低于10%门槛，不采用；
+与第36轮整轮Graph仅约3%的负结果方向一致，原型仅留本地 `codex_r70/`。
 
 ### task5 合并审查清单（第64轮，已验收）
 

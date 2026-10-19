@@ -1618,8 +1618,9 @@ int Serve(const Options& options)
 		Fail("bind " + options.socket + ": " + std::strerror(errno));
 	if (::listen(listener, 16) != 0) Fail("listen: " + std::string(std::strerror(errno)));
 	// The client reads this line to know the server is up (and to learn the lane capacity, which caps how
-	// wide a request it may send in one go).
-	std::printf("READY %s %d\n", options.socket.c_str(), dev.lanes);
+	// wide a request it may send in one go). Confirm the actual host wait too: an old
+	// executable would otherwise silently ignore PVZ_CUDA_POLL_US in the queue.
+	std::printf("READY %s %d host_wait_us=%d\n", options.socket.c_str(), dev.lanes, HostWaitMicros());
 	std::fflush(stdout);
 
 	// Per-wave tracing for the service-shape measurements: which requests merged into one wave and
