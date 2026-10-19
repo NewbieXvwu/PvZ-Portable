@@ -1,6 +1,6 @@
 {
-  "updated": "2026-10-19T21:19:21.318657+08:00",
-  "status": "gate1 passed; cost ABBA and strength gate pending; not adopted",
+  "updated": "2026-10-19T21:53:18.341074+08:00",
+  "status": "closed for current formal queue: z17 CPU saving below preregistered 10%; not adopted; z20 strength deferred for task9",
   "gate1": {
     "games": 16,
     "searches": 3335,
@@ -201,5 +201,82 @@
     "backend": "new worktree CPU-only build, no original source or build edits",
     "default": "adaptive-verify-gap0; horizon2500; formal caller stillverify9"
   },
-  "default": "gap0/off, formal verify9 and horizon2500 unchanged"
+  "default": "gap0/off, formal verify9 and horizon2500 unchanged",
+  "cost": {
+    "formal17": {
+      "task": "day_l7_z17_train",
+      "seeds": "1725000..1725007",
+      "method": "ABBA, beta0 collection with frames;8 paired seeds;4 workers",
+      "arms": {
+        "A": {
+          "cpu_s_per_game": 167.677254625,
+          "games_per_hour": 67.97271003101456,
+          "wall_s": 423.6994521309971,
+          "total_cpu_s": 1341.418037,
+          "own_peak_rss_kib": 3414976,
+          "minimum_available_kib": 6275832,
+          "peak_swap_kib": 0
+        },
+        "H": {
+          "cpu_s_per_game": 152.78979262500002,
+          "games_per_hour": 77.06847511369955,
+          "wall_s": 373.6936530469975,
+          "total_cpu_s": 1222.3183410000001,
+          "own_peak_rss_kib": 3379584,
+          "minimum_available_kib": 6265980,
+          "peak_swap_kib": 0
+        }
+      },
+      "cpu_reduction": 0.0887864131202224,
+      "wall_speedup": 1.1338149542446487,
+      "cost_gate_passed": false
+    },
+    "z20": {
+      "method": "ABBA, beta0 collection with frames;8 paired seeds;4 workers",
+      "arms": {
+        "A": {
+          "cpu_s_per_game": 178.558834375,
+          "games_per_hour": 57.03509329450472,
+          "wall_s": 504.9522730030294,
+          "total_cpu_s": 1428.470675,
+          "own_peak_rss_kib": 3361124,
+          "minimum_available_kib": 3828756,
+          "peak_swap_kib": 0
+        },
+        "H": {
+          "cpu_s_per_game": 153.8309715,
+          "games_per_hour": 68.7781337809097,
+          "wall_s": 418.7377356259967,
+          "total_cpu_s": 1230.647772,
+          "own_peak_rss_kib": 3403312,
+          "minimum_available_kib": 2769932,
+          "peak_swap_kib": 0
+        }
+      },
+      "cpu_reduction": 0.13848579915720005,
+      "wall_speedup": 1.2058914925547497,
+      "cost_gate_passed": true
+    }
+  },
+  "cost_frame_audit": {
+    "z20": {
+      "pairs": 8,
+      "frames_per_arm": 8660,
+      "mismatches": []
+    },
+    "formal17": {
+      "pairs": 8,
+      "frames_per_arm": 8797,
+      "mismatches": []
+    }
+  },
+  "strength": {
+    "pairs_started": 0,
+    "status": "not tested; z20-only 256 pairs deferred at controller request to prioritize task9; neither passed nor failed"
+  },
+  "delivery": {
+    "production_adaptive_flag": "withdrawn; prototype available at a37a126/88875a9",
+    "sparse_animation": "unbuilt/unmeasured prototype caf7ac1 withdrawn; deferred for task9",
+    "default": "formal verify9, horizon2500, mask61 unchanged"
+  }
 }

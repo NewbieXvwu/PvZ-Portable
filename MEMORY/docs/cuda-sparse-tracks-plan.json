@@ -13,5 +13,8 @@
     "current-load ABBA CPU cost >=10percent improvement; at most4 games; memory below2GiB pause"
   ],
   "delivery": "h8 only, separate build-sparse; original h8 build and both old working trees untouched; local commits no push",
-  "scheduling": "existing cost ABBA runs finish before compile/extra games; adaptive256pairs resume after sparse prototype verdict"
+  "scheduling": "existing cost ABBA runs finish before compile/extra games; adaptive256pairs resume after sparse prototype verdict",
+  "status": "deferred at controller request before compilation or measurement; current source withdrawn",
+  "prototype_commit": "caf7ac1",
+  "priority": "task9 before any remaining task6 work"
 }

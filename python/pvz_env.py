@@ -603,8 +603,8 @@ class PvZEnv:
         code sets it around its rollouts and puts it back to 0 afterwards. Any non-zero mask is an
         approximation whose effect must be measured (scripts/sim_skip_agreement.py), not assumed.
         """
-        if type(mask) is not int or mask < 0 or mask & ~317:
-            raise ValueError("SIM_SKIP accepts presentation bits 1, 4, 8, 16, 32 and sparse-track bit256")
+        if type(mask) is not int or mask < 0 or mask & ~61:
+            raise ValueError("SIM_SKIP only accepts presentation bits 1, 4, 8, 16 and 32")
         if not self._command(f"SIM_SKIP {mask}").get("ok"):
             raise RuntimeError("simulator rejected SIM_SKIP (binary older than this wrapper?)")
 
@@ -684,7 +684,7 @@ class PvZEnv:
             raise ValueError("until_tick must be a non-negative signed 32-bit integer")
         if type(max_actions) is not int or not 1 <= max_actions <= 1000000:
             raise ValueError("max_actions must be from 1 to 1000000")
-        if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~509:
+        if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~253:
             raise ValueError("rollout sim skip mask must combine the bits 1, 4, 8, 16, 32, 64 and 128")
         event_wait = False
         if first_action is None:

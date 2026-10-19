@@ -23,7 +23,6 @@
 #define __REANIMATION_H__
 
 #include <cstdint>
-#include <array>
 #include <memory>
 #include "DataArray.h"
 #include "FilterEffect.h"
@@ -212,17 +211,8 @@ public:
 	float                           mLastFrameTime;
 	FilterEffect                    mFilterEffect;
 	bool                            mNeedsTrackUpdates = false;
-	// Runtime index only, never serialized. An escaped named track stays registered:
-	// callers may retain its pointer and mutate it after an otherwise idle frame.
-	std::array<uint64_t, 4>         mEnvTrackPermanent{};
-	std::array<uint64_t, 4>         mEnvTrackActive{};
-	bool                            mEnvTrackCacheValid = false;
 
 public:
-	void                            ResetEnvTrackCache();
-	void                            RememberEnvTrack(int theTrackIndex);
-	void                            BuildEnvTrackCache();
-	int                             NextEnvTrack(int theStart) const;
 	Reanimation();
 	~Reanimation();
 

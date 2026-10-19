@@ -175,8 +175,7 @@ def _search_decisions(seed: int) -> list[dict]:
     # The approximate arm: SIM_SKIP during rollouts and/or a cheaper search configuration.
     approx_sargs = ap.Namespace(**{**vars(sargs), **{k: v for k, v in (
         ("per_card", args.approx_per_card), ("samples", args.approx_samples), ("horizon", args.approx_horizon),
-        ("halving", args.approx_halving or None),
-        ("adaptive_verify_gap", getattr(args, "approx_adaptive_verify_gap", None)))
+        ("halving", args.approx_halving or None))
         if v is not None}})
     if args.label_noise:
         approx_sargs = ap.Namespace(**{**vars(sargs), "samples": args.high_samples, "halving": False})
@@ -206,8 +205,6 @@ def _search_decisions(seed: int) -> list[dict]:
                  "horizon": config.horizon, "rollout_mask": mask,
                  "student_candidates_added": stats.get("student_candidate_added", 0),
                  "verification_samples_used": (stats.get("last_verification") or {}).get("samples", 0),
-                 "adaptive_verify_gap": getattr(config, "adaptive_verify_gap", 0),
-                 "adaptive_early_stop": (stats.get("last_verification") or {}).get("adaptive_early_stop", False),
                  "searched": stats["searched"], "rollout_lanes": stats.get("rollout_lanes", 0)}
         return chosen, [(json.dumps(c, sort_keys=True), v) for c, v in (stats.get("last_targets") or [])], \
             time.perf_counter() - started, stats.get("last_best"), audit
@@ -379,8 +376,6 @@ def main() -> None:
     p.add_argument("--approx-per-card", type=int, help="search mode: cheaper configuration for the approximate arm")
     p.add_argument("--approx-samples", type=int)
     p.add_argument("--approx-horizon", type=int)
-    p.add_argument("--approx-adaptive-verify-gap", type=float,
-                   help="search mode CPU arm: experimental verification early-stop gap (default off)")
     p.add_argument("--approx-halving", action="store_true", help="search mode: successive halving (search_play --halving)")
     p.add_argument("--per-card", type=int, default=1, help="search mode: search_play --per-card")
     p.add_argument("--student-candidates", type=int, default=0,
@@ -399,12 +394,6 @@ def main() -> None:
     args = p.parse_args()
     if args.student_candidates < 0 or args.search_verify_samples < 0:
         p.error("--student-candidates and --search-verify-samples must be nonnegative")
-    if args.approx_adaptive_verify_gap is not None:
-        import math
-        if (not math.isfinite(args.approx_adaptive_verify_gap) or args.approx_adaptive_verify_gap <= 0
-                or args.search_verify_samples <= 3 or args.cuda_rollouts or args.label_noise
-                or args.mode != "search"):
-            p.error("adaptive verification requires search mode, CPU, verify-samples >3 and a positive finite gap")
     if args.cuda_rollouts:
         if args.mode != "search":
             p.error("--cuda-rollouts is a search-mode arm")
@@ -482,7 +471,6 @@ def main() -> None:
                    student_candidates=args.student_candidates, search_verify_samples=args.search_verify_samples,
                    approx_samples=args.high_samples if args.label_noise else args.approx_samples,
                    approx_horizon=args.horizon if args.label_noise else args.approx_horizon,
-                   approx_adaptive_verify_gap=args.approx_adaptive_verify_gap,
                    margin=args.margin, dagger_beta=args.dagger_beta, label_noise=args.label_noise,
                    high_samples=args.high_samples, horizon=args.horizon, seed_offset=args.seed_offset,
                    workers=args.workers, seeds=seeds, complete=True,
