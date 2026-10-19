@@ -70,7 +70,10 @@
     python3 scripts/dist/controller.py bootstrap <别名>
     python3 scripts/dist/controller.py push <别名> --all --student artifacts/student/v29/model.pt
 
-`bootstrap.sh` 只往 `~/pvz-worker/` 写东西，不需要 sudo / brew。装完会打印耗时与磁盘占用。
+`bootstrap.sh` 只往 `~/pvz-worker/` 写东西，不需要 sudo。依赖全部来自 micromamba（conda-forge），
+**不依赖 brew**；不过 macOS 上它会先探测 `/opt/homebrew/bin`（Apple Silicon）与 `/usr/local/bin`（Intel）
+并加进 PATH —— 非交互 ssh 登录的 PATH 里通常没有这两项，之前 `which cmake` 找不到就是这个原因，
+不代表机器没装。装完会打印耗时与磁盘占用。
 
 ### 2.3 Windows（WSL2）
 

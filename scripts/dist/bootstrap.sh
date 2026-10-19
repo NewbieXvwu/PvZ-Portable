@@ -35,6 +35,20 @@ case "$ARCH" in
   x86_64|amd64)  A=x86_64 ;;
   *) die "unsupported arch $ARCH" ;;
 esac
+# macOS: brew lives in /opt/homebrew/bin (Apple Silicon) or /usr/local/bin (Intel), and a
+# non-interactive ssh session does not have it on PATH. Probe explicitly -- brew is only a
+# convenience here: every dependency still comes from micromamba, so no sudo and no brew needed.
+if [ "$PLAT" = osx ]; then
+  for d in /opt/homebrew/bin /usr/local/bin; do
+    if [ -d "$d" ]; then
+      case ":$PATH:" in
+        *":$d:"*) ;;
+        *) PATH="$d:$PATH" ;;
+      esac
+    fi
+  done
+  export PATH
+fi
 say "bootstrap: $OS/$ARCH -> $ROOT (jobs=$JOBS)"
 
 # ---------------------------------------------------------------- 1. micromamba
