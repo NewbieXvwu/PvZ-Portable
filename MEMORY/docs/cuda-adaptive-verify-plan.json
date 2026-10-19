@@ -1,0 +1,55 @@
+{
+  "created": "2026-10-19T20:10:05.861939+08:00",
+  "status": "prepared; not connected to search_play; horizon1800 task completes first",
+  "inputs_reference": "cuda-horizon1800-plan.json (same v29/v3/branch1 and original256 eval seeds)",
+  "baseline": {
+    "horizon": 2500,
+    "samples": 3,
+    "verify_samples": 9,
+    "student_candidates": 2,
+    "per_card": 1,
+    "rollout_sim_skip": 61,
+    "halving": true
+  },
+  "candidate": {
+    "initial_new_futures_per_leg": 3,
+    "maximum_new_futures_per_leg": 9,
+    "stop_when": "abs((challenger_mean - policy_mean) - margin) >= .05 after3 new futures",
+    "stop_gap": 0.05,
+    "fallback": "run remaining6 per leg; recompute original full9 nonterminal batches and terminal-first sums",
+    "cpu_only": true,
+    "default": "off"
+  },
+  "screen": {
+    "same_point_seeds": [
+      30000,
+      30001,
+      30002,
+      30003,
+      30004,
+      30005,
+      30006,
+      30007,
+      30008,
+      30009,
+      30010,
+      30011,
+      30012,
+      30013,
+      30014,
+      30015
+    ],
+    "noise": "simultaneous independent full-budget teacher",
+    "confidence": "whole-game bootstrap95% CI,20000 draws, seed20261019",
+    "maximum_agreement_deficit_pp": 3,
+    "minimum_cost_benefit": 0.1,
+    "stop_rule": "no adoption if either quality gate fails or measured speed benefit <10%; no post-outcome threshold tuning"
+  },
+  "strength_gate": {
+    "seeds": "30000..30255 inclusive,256 pairs",
+    "dagger_beta": 1,
+    "wins": "candidate at most5 fewer; no McNemar significant worsening at.05",
+    "timing": "same-load ABBA, at most4 own game processes,2GiB pause"
+  },
+  "helper_sha256": "172c352f604f1a82fc0cd1756618294f0503f8b1aeeeee3f7ef4b32202964823"
+}
