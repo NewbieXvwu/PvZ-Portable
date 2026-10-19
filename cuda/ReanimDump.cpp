@@ -20,6 +20,8 @@
 //   /tmp/reanim_dump <path/to/main.pak> Zombie anim_walk --velx 0.37
 //   /tmp/reanim_dump <path/to/main.pak> Zombie anim_death --rate 24      (death: caller-supplied rate)
 //   /tmp/reanim_dump <path/to/main.pak> LawnMoweredZombie --ground locator locator
+//   /tmp/reanim_dump <path/to/main.pak> SnowPea --ground anim_stem --rate 18 anim_idle --json out.json
+//                                                                         (the ground track per anim, for programs)
 //
 // Format authorities, all in this repo:
 //   pak index        src/SexyAppFramework/paklib/PakInterface.cpp:84-216   (XOR 0xF7, magic
@@ -532,6 +534,28 @@ namespace
 //     mPosX -= aSpeed (float). Bodies are attachments: EffectSystem skips them, and
 //     Zombie::UpdateReanim advances them AFTER movement. The loop mean below is only
 //     a diagnostic of the resource recurrence, not a substitute for imported animation phase.
+// What --json writes: per named anim, the ground track's (x, y) over the anim's frame range -- the numbers
+// scripts/cuda_animation_tables.py and scripts/cuda_muzzle_tables.py turn into headers.
+struct ClipOut
+{
+	std::string mName;
+	int mStart = 0, mCount = 0;
+	std::vector<std::pair<float, float>> mXY;
+};
+static std::vector<ClipOut> gClips;
+
+// %.9g, the digits the text tables print, always written as a JSON float: a bare "-0" would be read back as
+// the integer 0 and lose its sign.
+static std::string JsonFloat(float theValue)
+{
+	char aBuffer[32];
+	std::snprintf(aBuffer, sizeof aBuffer, "%.9g", theValue);
+	std::string aText = aBuffer;
+	if (aText.find_first_of(".eEn") == std::string::npos)
+		aText += ".0";
+	return aText;
+}
+
 static void ReportAnim(const Definition& theDef, const char* const theGroundName, const char* theAnimName,
 	float theVelX, float theScale, float theRateOverride)
 {
@@ -659,6 +683,7 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 		}
 	}
 
+	gClips.push_back({theAnimName, aStart, aCount, {}});
 	std::printf("  frame   f           x              dx     advance px/update   visits\n");
 	double aSumDx = 0.0;
 	float aMinDx = 0.0f, aMaxDx = 0.0f;
@@ -683,9 +708,7 @@ static void ReportAnim(const Definition& theDef, const char* const theGroundName
 			aX[static_cast<size_t>(i)].mValue[Xform::FRAME], aX[static_cast<size_t>(i)].mValue[Xform::X],
 			aDx, aSpeed, aVisits[static_cast<size_t>(i - aStart)],
 			anAfter == i ? "   <- last frame: after==before, dx==0" : "");
-		// Machine-readable coordinates for gameplay tracks such as a shooter's animated stem.
-		std::printf("xy %d %.9g %.9g\n", i, aX[static_cast<size_t>(i)].mValue[Xform::X],
-			aX[static_cast<size_t>(i)].mValue[Xform::Y]);
+		gClips.back().mXY.emplace_back(aX[static_cast<size_t>(i)].mValue[Xform::X], aX[static_cast<size_t>(i)].mValue[Xform::Y]);
 	}
 	std::printf("  sum dx over the %d transitions = %.9g (aDistance %.9g);  dx range [%.9g, %.9g],"
 		" %d of %d transitions are zero\n", aCount - 1, aSumDx, aDistance, aMinDx, aMaxDx, aZeroDx, aCount - 1);
@@ -732,7 +755,7 @@ int main(int argc, char** argv)
 
 	const std::string aName = argv[2];
 	float aVelX = 1.0f, aScale = 1.0f, aRate = 0.0f;
-	std::string aGround = "_ground";
+	std::string aGround = "_ground", aJson;
 	std::vector<std::string> aAnims;
 	for (int i = 3; i < argc; i++)
 	{
@@ -744,6 +767,8 @@ int main(int argc, char** argv)
 			aRate = std::strtof(argv[++i], nullptr);
 		else if (!std::strcmp(argv[i], "--ground") && i + 1 < argc)
 			aGround = argv[++i];
+		else if (!std::strcmp(argv[i], "--json") && i + 1 < argc)
+			aJson = argv[++i];
 		else
 			aAnims.push_back(argv[i]);
 	}
@@ -768,7 +793,7 @@ int main(int argc, char** argv)
 	const long aTextInherited = FillInMissing(aFromText);
 
 	Definition aFromCompiled;
-	bool aCompiledParsed = false, aCompiledIsNative = false;
+	bool aCompiledParsed = false, aCompiledIsNative = false, aIdentical = false;
 	std::string aCompiledLayout;
 	if (aHaveCompiled && !ParseCompiled(aCompBytes, aFromCompiled, anError, aCompiledLayout, aCompiledIsNative))
 		std::fprintf(stderr, "compiled parse of %s failed: %s\n", aCompMember.c_str(), anError.c_str());
@@ -807,6 +832,7 @@ int main(int argc, char** argv)
 								Xform::Names()[k], a.mTransforms[j].mValue[k], b.mTransforms[j].mValue[k]);
 					}
 		}
+		aIdentical = aDiffs == 0;
 		std::printf("text vs %s: %s (%zu field differences)\n", aCompMember.c_str(),
 			aDiffs == 0 ? "IDENTICAL" : "DIFFERS", aDiffs);
 		std::printf("  compiled member is in the %s layout; the engine's reader would %s it, so at "
@@ -839,5 +865,27 @@ int main(int argc, char** argv)
 	}
 	for (const std::string& anAnim : aAnims)
 		ReportAnim(aFromText, aGround.c_str(), anAnim.c_str(), aVelX, aScale, aRate);
+	if (!aJson.empty())
+	{
+		// "identical": the text XML and the compiled blob agree field for field (false when there is no readable blob).
+		FILE* aFile = std::fopen(aJson.c_str(), "w");
+		if (aFile == nullptr)
+		{
+			std::fprintf(stderr, "cannot write %s\n", aJson.c_str());
+			return 2;
+		}
+		std::fprintf(aFile, "{\"identical\": %s, \"clips\": [", aIdentical ? "true" : "false");
+		for (size_t c = 0; c < gClips.size(); c++)
+		{
+			std::fprintf(aFile, "%s\n {\"name\": \"%s\", \"start\": %d, \"count\": %d, \"xy\": [", c ? "," : "",
+				gClips[c].mName.c_str(), gClips[c].mStart, gClips[c].mCount);
+			for (size_t i = 0; i < gClips[c].mXY.size(); i++)
+				std::fprintf(aFile, "%s[%s, %s]", i ? ", " : "", JsonFloat(gClips[c].mXY[i].first).c_str(),
+					JsonFloat(gClips[c].mXY[i].second).c_str());
+			std::fprintf(aFile, "]}");
+		}
+		std::fprintf(aFile, "]}\n");
+		std::fclose(aFile);
+	}
 	return 0;
 }

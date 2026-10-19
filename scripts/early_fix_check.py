@@ -9,7 +9,7 @@ nothing by itself.  This script asks the same question over many games instead. 
 student's game (episode_query capture), finds
   sun   the first sunflower planted in waves 0-3 at column >= 4, and
   mine  the first potato mine planted in waves 0-10 with the front zombie of its row at most one column ahead,
-and replays each from that decision (`whatif`, the student plays on) with three choices:
+and replays each from that decision (the `whatif` replay, the student plays on) with three choices:
   orig     the student's own action (reproduces the game),
   fix      the same plant in the same row moved back (sun: leftmost empty column; mine: the empty column nearest
            to three columns in front of the zombie, at least two),
@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import subprocess
 import sys
 import tempfile
@@ -30,10 +29,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+from episode_query import DEFAULT_RESOURCE_DIR, _run_variant  # noqa: E402
 from render_episode import _col_of  # noqa: E402
-
-# whatif marks each tried line ★ better / · same / ↓ worse than the recorded game; read all three.
-LINE = re.compile(r"(?m)^\s+\S (plant:\S+|wait:\S+|shovel:\S+)\s.*第 (\d+)/(\d+) 波.*?(通关|僵尸进屋|\S+)\s+丢车 (\d+)\s+被吃 (\d+)")
 
 
 def frames_of(archive: Path) -> list[dict]:
@@ -57,21 +54,20 @@ def find_cases(frames: list[dict]) -> dict:
         if not a or a.get("type") != "plant" or frames[d].get("action_rejected"):
             continue
         kind, row, col = state["packets"][a["packet"]][1], a["row"], a["col"]
-        orig = f"plant:{a['packet']}:{row}:{col}"
+        plant = lambda c: {"type": "plant", "packet": a["packet"], "row": row, "col": c}
         if kind == 1 and "sun" not in out and state["wave"] <= 3 and col >= 4:
             back = [c for c in range(col) if empty(state, row, c)]
             other = [c for c in range(4, 9) if c != col and empty(state, row, c)]
             if back and other:
-                out["sun"] = {"decision": d, "wave": state["wave"], "orig": orig,
-                              "fix": f"plant:{a['packet']}:{row}:{back[0]}",
-                              "placebo": f"plant:{a['packet']}:{row}:{other[len(other) // 2]}"}
+                out["sun"] = {"decision": d, "wave": state["wave"], "orig": plant(col), "fix": plant(back[0]),
+                              "placebo": plant(other[len(other) // 2])}
         if kind == 4 and "mine" not in out and state["wave"] <= 10:
             z = front_col(state, row)
             if z is not None and z - col <= 1:
                 far = sorted((c for c in range(min(z - 1, 9)) if empty(state, row, c)), key=lambda c: abs(z - 3 - c))
                 if far:
-                    out["mine"] = {"decision": d, "wave": state["wave"], "orig": orig, "zombie_col": z,
-                                   "fix": f"plant:{a['packet']}:{row}:{far[0]}", "placebo": "wait:60"}
+                    out["mine"] = {"decision": d, "wave": state["wave"], "zombie_col": z, "orig": plant(col),
+                                   "fix": plant(far[0]), "placebo": {"type": "wait", "ticks": 60}}
         if len(out) == 2:
             break
     return out
@@ -85,17 +81,15 @@ def run_seed(args: tuple) -> dict:
                         "--checkpoint", student, "--task-manifest", manifest, "--task-id", task_id,
                         "--seed", str(seed), "--out", str(archive)], check=True, capture_output=True, cwd=ROOT)
         frames = frames_of(archive)
-        record = {"seed": seed, "won": frames[-1].get("result") == 1}
+        meta = json.loads((archive / "meta.json").read_text())
+        record = {"seed": seed, "won": meta["outcome"]["won"]}
         for name, case in find_cases(frames).items():
-            tries = [x for key in ("orig", "fix", "placebo") for x in ("--try", case[key])]
-            text = subprocess.run([sys.executable, str(ROOT / "scripts/episode_query.py"), "whatif", "--archive",
-                                   str(archive), "--decision", str(case["decision"]), *tries],
-                                  check=True, capture_output=True, text=True, cwd=ROOT).stdout
-            results = {}
-            for m in LINE.finditer(text):
-                results[m.group(1)] = {"wave": int(m.group(2)), "won": m.group(4) == "通关",
-                                       "mowers": int(m.group(5)), "eaten": int(m.group(6))}
-            case["result"] = {key: results.get(case[key]) for key in ("orig", "fix", "placebo")}
+            # the same replay `episode_query.py whatif` runs: recorded actions up to the decision, the override, then the student
+            prefix = [f.get("action") for f in frames[1:case["decision"]]]
+            case["result"] = {}
+            for key in ("orig", "fix", "placebo"):
+                o = _run_variant(meta, {case["decision"]: case[key]}, DEFAULT_RESOURCE_DIR, prefix=prefix)
+                case["result"][key] = {k: o[k] for k in ("won", "final_wave", "mowers_used", "plants_eaten", "override_rejected")}
             record[name] = case
         return record
 

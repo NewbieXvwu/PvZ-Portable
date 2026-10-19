@@ -2,8 +2,8 @@
 import argparse
 import hashlib
 from pathlib import Path
-import re
-import subprocess
+
+from cuda_animation_tables import run_dump
 
 
 def main():
@@ -19,16 +19,15 @@ def main():
         token = format(value, ".9g")
         return token + ("f" if "." in token or "e" in token else ".0f")
     for seed, asset in ((0, "PeaShooterSingle"), (5, "SnowPea"), (7, "PeaShooter")):
-        output = subprocess.run([str(args.dump.resolve()), str(args.pak), asset,
-                                 "--ground", "anim_stem", "--rate", "18", "anim_idle"],
-                                check=True, text=True, capture_output=True).stdout
-        if "IDENTICAL (0 field differences)" not in output:
+        dump = run_dump(args.dump, args.pak, asset, "--ground", "anim_stem", "--rate", "18", "anim_idle")
+        if not dump["identical"]:
             raise RuntimeError(f"{asset}: XML/compiled definitions disagree")
-        if not re.search(r"== anim_idle .*mFrameStart=4 mFrameCount=25", output):
+        (clip,) = dump["clips"]
+        if (clip["start"], clip["count"]) != (4, 25):
             raise RuntimeError(f"{asset}: unsupported body clip")
-        rows = [tuple(map(float, row)) for row in re.findall(r"^xy (\d+) (\S+) (\S+)$", output, re.M)]
-        if [int(row[0]) for row in rows] != list(range(4, 29)):
+        if len(clip["xy"]) != 25:
             raise RuntimeError(f"{asset}: incomplete stem track")
+        rows = [(frame, x, y) for frame, (x, y) in enumerate(clip["xy"], start=4)]
         for axis in (0, 1):
             name = f"stem{seed}_{axis}"
             values = ", ".join(literal(row[axis + 1]) for row in rows)

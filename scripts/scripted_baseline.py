@@ -11,7 +11,6 @@ than the search teacher, the teacher is the problem.
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -29,6 +28,23 @@ SUN_SHROOM = 9      # 阳光菇 25☀，夜间经济（夜间天不掉阳光，�
 LILY_PAD = 16       # 睡莲 25☀，水路底座
 CATTAIL = 43        # 香蒲 225☀，睡莲的升级植物（只能种在睡莲上）
 FLOWER_POT = 33     # 花盆 25☀，屋顶底座（本环境屋顶关开局已预置 c0–c4）
+
+# choose() 的全部阈值。`DECISION_RULES` 的描述从这里填数，所以描述和代码不可能对不上。
+WALLNUT_X = 260         # ① 最前僵尸的 x 低于它就补坚果
+CHERRY_X = 320          # ② 统计 x 低于它的僵尸
+CHERRY_CLUSTER = 4      # ② 达到这么多只就扔樱桃
+PRODUCER_TARGET = 10    # ③ 生产者种到这么多株为止
+PRODUCER_MAX_COL = 2    # ③ 生产者只种在这一列及以左
+MID_COLS = (2, 5)       # ④⑤ 睡莲 / 香蒲 / 射手的列范围
+CATTAIL_TARGET = 2      # ④b
+SHOOTER_TARGET = 14     # ⑤ 豌豆 + 寒冰合计
+SNOWPEA_TARGET = 4      # ⑤a
+SNOWPEA_SUN = 275       # ⑤a 阳光不低于它才种寒冰
+MINE_TARGET = 4         # ⑥
+MINE_MAX_WAVE = 4       # ⑥ 只在这一波及以前
+MINE_MIN_COL = 6        # ⑥ 只种在这一列及以右
+WAIT_TICKS = 60         # ⑦
+NO_THREAT_X = 9999.0    # 没有僵尸的路的「最前僵尸 x」
 
 
 def deck_for_level(level: int) -> tuple[int, ...]:
@@ -79,9 +95,8 @@ def rows_with(plants: list[dict], kind: int) -> Counter:
 # MCP server、文档）必然会漂移，而漂移后的描述比没有描述更坏 ——
 # 模型会照着一条**已经不存在**的规则去推理。
 #
-# 为什么用 ①②③ 而不是 1. 2. 3.：`decision_rules_text()` 会校验描述里
-# 出现的每个数字都能在源码里找到。用阿拉伯数字做序号，序号本身会被
-# 当成"常量"去校验，校验就变成了噪音。
+# 描述里的阈值都是 `{名字}` 占位，由 `decision_rules_text()` 用上面的常量填；卡组那几行由
+# `deck_for_level` 现算。所以改阈值只改常量，描述自动跟着变。
 # 策略行为修订号：choose() 的**行为**一变就递增。capture 的 meta 里会记录
 # 它，whatif 据此判断"重放用的策略和存档当时的策略是否一致"——不一致时
 # 明确警告，不静默分叉（2026-10-04 rule ① 几何修复就是第一个跨版本的例子）。
@@ -91,63 +106,63 @@ DECISION_RULES = """\
 ── 脚本策略的决策规则（scripted policy）──
 
 一句话：**这是一条固定顺序的 if-else 链，每个决策点只做一件事，没有全局规划。**
-它不搜索、不预测、不记历史。当前状态不满足任何一条，就走 wait 60 tick。
+它不搜索、不预测、不记历史。当前状态不满足任何一条，就走 wait {WAIT_TICKS} tick。
 
 卡组按关卡地形定（这一关是 {level}；场景判定见 constants 的 terrain 节）：
-· 白天草地 1–10：0,1,2,3,4,5
-· 夜间草地 11–20（含 35）：0,1,9,2,3,4,5（9 = 阳光菇 25☀，夜里天不掉阳光）
-· 白天泳池 21–30：0,1,2,3,4,5,16,43（16 = 睡莲；43 = 香蒲 225☀，睡莲的升级植物）
-· 夜间泳池有雾 31–40：0,9,2,3,4,5,16,43
-· 屋顶/Boss 41–50：0,1,2,3,4,5,33（33 = 花盆；本环境屋顶关开局已预置 c0–c4 的花盆）
+· 白天草地 1–10：{deck_day}
+· 夜间草地 11–20（含 35）：{deck_night}（{SUN_SHROOM} = 阳光菇 25☀，夜里天不掉阳光）
+· 白天泳池 21–30：{deck_pool}（{LILY_PAD} = 睡莲；{CATTAIL} = 香蒲 225☀，睡莲的升级植物）
+· 夜间泳池有雾 31–40：{deck_fog}
+· 屋顶/Boss 41–50：{deck_roof}（{FLOWER_POT} = 花盆；本环境屋顶关开局已预置 c0–c4 的花盆）
 
 按下面的顺序判断，命中即返回：
 
   ① 紧急坚果墙
-     某一路「最前僵尸的 x < 260」，且该路僵尸的**必经之路**
+     某一路「最前僵尸的 x < {WALLNUT_X}」，且该路僵尸的**必经之路**
      （col ≤ 最前僵尸所在列）上没有坚果墙
      → 在必经之路上种坚果墙（取最靠右的合法列：挡在它走向房子的路上，
      且离房子尽可能远）。2026-10-04 几何修复：旧版种在 col >= 5，
      那在深入腹地的僵尸**身后**，拦不住任何东西。
 
   ② 樱桃炸弹清场
-     x < 320 的僵尸 >= 4 只
+     x < {CHERRY_X} 的僵尸 >= {CHERRY_CLUSTER} 只
      → 在僵尸最多的那一路种樱桃炸弹（取最靠左的合法列）。
 
   ③ 经济
-     生产者 = 阳光菇(9)（夜间优先，或卡组里没有向日葵时）；否则向日葵(1)。
-     生产者 < 10 株 → 在 col <= 2 种（优先最靠左的列；同列里优先生产者最少
+     生产者 = 阳光菇({SUN_SHROOM})（夜间优先，或卡组里没有向日葵时）；否则向日葵({SUNFLOWER})。
+     生产者 < {PRODUCER_TARGET} 株 → 在 col <= {PRODUCER_MAX_COL} 种（优先最靠左的列；同列里优先生产者最少
      的那一路；仍并列时取合法列表里靠前的那条路，实测即行号较小的）。
 
-  ④ 水路防御（卡组里有睡莲(16)才会触发；草地关没有这张牌）
-     ④a. 某条水路上还没有睡莲/香蒲 → 在该路 col 2..5 种睡莲
+  ④ 水路防御（卡组里有睡莲({LILY_PAD})才会触发；草地关没有这张牌）
+     ④a. 某条水路上还没有睡莲/香蒲 → 在该路 col {mid_cols} 种睡莲
          （优先最危险的水路，取最靠左的列）。
-     ④b. 场上香蒲(43) < 2 株，且香蒲有合法位（必须种在睡莲上，225☀）
+     ④b. 场上香蒲({CATTAIL}) < {CATTAIL_TARGET} 株，且香蒲有合法位（必须种在睡莲上，225☀）
          → 种香蒲（优先最危险的那一路，取最靠左的列）。
 
-  ⑤ 火力（射手 = 豌豆射手 + 寒冰射手，合计 < 14 株时）
-     ⑤a. 寒冰射手 < 4 株且阳光 >= 275
-         → 在 col 2..5 种寒冰射手（优先最危险的那一路）。
+  ⑤ 火力（射手 = 豌豆射手 + 寒冰射手，合计 < {SHOOTER_TARGET} 株时）
+     ⑤a. 寒冰射手 < {SNOWPEA_TARGET} 株且阳光 >= {SNOWPEA_SUN}
+         → 在 col {mid_cols} 种寒冰射手（优先最危险的那一路）。
      ⑤b. 否则
-         → 在 col 2..5 种豌豆射手（优先最危险的那一路；同一路优先最靠左的列）。
+         → 在 col {mid_cols} 种豌豆射手（优先最危险的那一路；同一路优先最靠左的列）。
 
   ⑥ 早期地雷
-     土豆雷 < 4 株且 wave <= 4
-     → 在 col >= 6 种土豆雷（优先最危险的那一路）。
+     土豆雷 < {MINE_TARGET} 株且 wave <= {MINE_MAX_WAVE}
+     → 在 col >= {MINE_MIN_COL} 种土豆雷（优先最危险的那一路）。
 
-  ⑦ 以上都不满足 → wait 60 tick。
+  ⑦ 以上都不满足 → wait {WAIT_TICKS} tick。
 
-「最危险的那一路」= 该路「最前僵尸的 x」最小；该路没有僵尸时视为 9999。
+「最危险的那一路」= 该路「最前僵尸的 x」最小；该路没有僵尸时视为 {no_threat}。
 **x 的单位是像素横坐标**：每列 80 像素、最左列 c0 的左缘 x=40（列 c 的中心
-≈ 80*c+40）。所以 ① 的 x<260 ≈ 最前僵尸走进 c2 深处，② 的 x<320 ≈ 刚进 c3。
+≈ 80*c+40）。所以 ① 的 x<{WALLNUT_X} ≈ 最前僵尸走进 c2 深处，② 的 x<{CHERRY_X} ≈ 刚进 c3。
 lane 工具输出的「距割草机 xxx t」是**另一个口径**（用该僵尸自身速度换算的
-时间），和 x 不是一回事，别拿 260/320 去比它。
+时间），和 x 不是一回事，别拿 {WALLNUT_X}/{CHERRY_X} 去比它。
 
 三条容易误判的行为：
-· 选中的落点若被引擎拒绝（例如格子已被占、那一格是墓碑），这一步**退化成 wait 60 tick**，
+· 选中的落点若被引擎拒绝（例如格子已被占、那一格是墓碑），这一步**退化成 wait {WAIT_TICKS} tick**，
   策略不会换个落点重试 —— 所以某一步"没种下东西"不代表它没做决策。
-· 所有阈值（260 / 320 / 4 / 10 / 14 / 275 / 6 / 2）都是写死的常数，
+· 所有阈值（{all_thresholds}）都是写死的常数，
   不随波数、阳光余额或僵尸密度变化。
-· 香蒲(43)是睡莲(16)的升级植物：空水格上**没有**香蒲的合法位，
+· 香蒲({CATTAIL})是睡莲({LILY_PAD})的升级植物：空水格上**没有**香蒲的合法位，
   必须先有睡莲。legal_actions 里看不到香蒲的位置通常就是这两个原因之一
   （没睡莲垫底，或阳光不足 225——付不起的卡整个不出合法位）。
 · 环境是确定性的：同 (level, seed, policy, deck) 重抓一局，帧序列与决策
@@ -157,33 +172,28 @@ lane 工具输出的「距割草机 xxx t」是**另一个口径**（用该僵�
 
 
 def decision_rules_text() -> str:
-    """把 `DECISION_RULES` 填上卡组/关卡，并**校验描述没有和代码脱钩**。
+    """把 `DECISION_RULES` 填上关卡、卡组和 choose() 的阈值常量。
 
-    校验方式：描述里出现的每一个数字，都必须能在本文件的源码里找到。
-    为什么要这一步：这份描述是人写的（不像 `pvz_constants.py` 那样现解析），
-    人写的就会过期。改 `choose()` 里的阈值却忘了改描述，模型会照着一份
-    错误的规则推理，而且**它没有任何办法察觉**。
-    所以宁可在这里硬失败，也不放一份可能过期的描述出去。
+    这份描述是给模型读的人话；数字一律从常量填，卡组从 `deck_for_level` 现算，
+    所以改 `choose()` 的阈值不会留下一份过期的描述（以前靠"描述里的数字能在源码里搜到"
+    来校验，但源码里本来就含这段描述，那个校验永远通过）。
     """
-    text = DECISION_RULES.format(level=LEVEL)
-    source = Path(__file__).read_text(encoding="utf-8")
-    # 只校验 DECISION_RULES 之后的部分，避免"数字出现在描述自己的定义里"这种自证。
-    body = text
-    missing = sorted({int(n) for n in re.findall(r"\d+", body)
-                      if not re.search(rf"(?<!\d){n}(?!\d)", source)})
-    if missing:
-        raise RuntimeError(
-            f"决策规则描述里的这些数字在 {Path(__file__).name} 里找不到：{missing}。"
-            f"要么描述过期了（改 choose() 时漏改这里），要么阈值被挪去了别处。"
-            f"先核对再放行 —— 一份和代码对不上的规则描述，比没有更坏。"
-        )
-    return body
+    deck = lambda level: ",".join(map(str, deck_for_level(level)))
+    return DECISION_RULES.format(
+        level=LEVEL, deck_day=deck(1), deck_night=deck(11), deck_pool=deck(21), deck_fog=deck(31), deck_roof=deck(41),
+        SUNFLOWER=SUNFLOWER, SUN_SHROOM=SUN_SHROOM, LILY_PAD=LILY_PAD, CATTAIL=CATTAIL, FLOWER_POT=FLOWER_POT,
+        WALLNUT_X=WALLNUT_X, CHERRY_X=CHERRY_X, CHERRY_CLUSTER=CHERRY_CLUSTER, PRODUCER_TARGET=PRODUCER_TARGET,
+        PRODUCER_MAX_COL=PRODUCER_MAX_COL, mid_cols="{}..{}".format(*MID_COLS), CATTAIL_TARGET=CATTAIL_TARGET,
+        SHOOTER_TARGET=SHOOTER_TARGET, SNOWPEA_TARGET=SNOWPEA_TARGET, SNOWPEA_SUN=SNOWPEA_SUN, MINE_TARGET=MINE_TARGET,
+        MINE_MAX_WAVE=MINE_MAX_WAVE, MINE_MIN_COL=MINE_MIN_COL, WAIT_TICKS=WAIT_TICKS, no_threat=int(NO_THREAT_X),
+        all_thresholds=" / ".join(map(str, (WALLNUT_X, CHERRY_X, CHERRY_CLUSTER, PRODUCER_TARGET, SHOOTER_TARGET,
+                                             SNOWPEA_SUN, MINE_MIN_COL, PRODUCER_MAX_COL))))
 
 
 def choose(observation: dict) -> dict:
     legal = observation["legal_actions"]["plants"]
     if not legal:
-        return {"type": "wait", "ticks": 60, "rule": "⑦无满足条件→wait"}
+        return {"type": "wait", "ticks": WAIT_TICKS, "rule": "⑦无满足条件→wait"}
     packets = observation["packets"]
     by_type: dict[int, list[dict]] = {}
     for placement in legal:
@@ -202,7 +212,7 @@ def choose(observation: dict) -> dict:
     def row_threat(row: int) -> float:
         # zombie["x"] 是像素横坐标：每列 80 像素，最左列左缘 x=40。
         xs = [z["x"] for z in zombies if z["row"] == row]
-        return min(xs) if xs else 9999.0
+        return min(xs) if xs else NO_THREAT_X
 
     # 1. emergency wall-nut: block in front of the zombie's remaining path.
     #    2026-10-04 几何修复（S6 教师会话发现，见 dsh/pvz-teacher/README.md）：
@@ -213,7 +223,7 @@ def choose(observation: dict) -> dict:
     #    所在列），取最靠右的合法列 = 离房子最远、最贴近僵尸的拦截点。
     for row in range(6):
         threat = row_threat(row)
-        if threat < 260:
+        if threat < WALLNUT_X:
             front_col = int((threat - 40) // 80)
             if not any(
                     p["type"] == WALLNUT and p["row"] == row and p["col"] <= front_col for p in plants):
@@ -224,8 +234,8 @@ def choose(observation: dict) -> dict:
                     return action
 
     # 2. cherry bomb on a clustered breach
-    cluster = [z for z in zombies if z["x"] < 320]
-    if len(cluster) >= 4:
+    cluster = [z for z in zombies if z["x"] < CHERRY_X]
+    if len(cluster) >= CHERRY_CLUSTER:
         row = Counter(z["row"] for z in cluster).most_common(1)[0][0]
         action = pick(CHERRY, lambda item: item["row"] == row, lambda item: -item["col"])
         if action:
@@ -237,8 +247,8 @@ def choose(observation: dict) -> dict:
     producer = (SUN_SHROOM if by_type.get(SUN_SHROOM) else SUNFLOWER) \
         if observation.get("night") else \
         (SUNFLOWER if by_type.get(SUNFLOWER) else SUN_SHROOM)
-    if producer and count[producer] < 10:
-        action = pick(producer, lambda item: item["col"] <= 2,
+    if producer and count[producer] < PRODUCER_TARGET:
+        action = pick(producer, lambda item: item["col"] <= PRODUCER_MAX_COL,
                       lambda item: (-item["col"], rows_with(plants, producer)[item["row"]]))
         if action:
             action["rule"] = "③经济"
@@ -254,14 +264,14 @@ def choose(observation: dict) -> dict:
         if uncovered:
             target = uncovered[0]
             action = pick(LILY_PAD,
-                          lambda item: item["row"] == target and 2 <= item["col"] <= 5,
+                          lambda item: item["row"] == target and MID_COLS[0] <= item["col"] <= MID_COLS[1],
                           lambda item: -item["col"])
             if action:
                 action["rule"] = "④a水路防御·睡莲"
                 return action
         cattail_options = by_type.get(CATTAIL)
-        if cattail_options and count[CATTAIL] < 2:
-            action = pick(CATTAIL, lambda item: 2 <= item["col"] <= 5,
+        if cattail_options and count[CATTAIL] < CATTAIL_TARGET:
+            action = pick(CATTAIL, lambda item: MID_COLS[0] <= item["col"] <= MID_COLS[1],
                           lambda item: (-row_threat(item["row"]), -item["col"]))
             if action:
                 action["rule"] = "④b水路防御·香蒲"
@@ -269,27 +279,27 @@ def choose(observation: dict) -> dict:
 
     # 5. offence: peashooters (with a few snow peas) in the middle columns
     shooters = count[PEASHOOTER] + count[SNOWPEA]
-    if shooters < 14:
-        if count[SNOWPEA] < 4 and observation["sun"] >= 275:
-            action = pick(SNOWPEA, lambda item: 2 <= item["col"] <= 5,
+    if shooters < SHOOTER_TARGET:
+        if count[SNOWPEA] < SNOWPEA_TARGET and observation["sun"] >= SNOWPEA_SUN:
+            action = pick(SNOWPEA, lambda item: MID_COLS[0] <= item["col"] <= MID_COLS[1],
                           lambda item: -row_threat(item["row"]))
             if action:
                 action["rule"] = "⑤a火力·寒冰"
                 return action
-        action = pick(PEASHOOTER, lambda item: 2 <= item["col"] <= 5,
+        action = pick(PEASHOOTER, lambda item: MID_COLS[0] <= item["col"] <= MID_COLS[1],
                       lambda item: (-row_threat(item["row"]), -item["col"]))
         if action:
             action["rule"] = "⑤b火力·豌豆"
             return action
 
     # 6. cheap early mines on the lane the first zombies walk down
-    if count[POTATO] < 4 and observation["wave"] <= 4:
-        action = pick(POTATO, lambda item: item["col"] >= 6, lambda item: -row_threat(item["row"]))
+    if count[POTATO] < MINE_TARGET and observation["wave"] <= MINE_MAX_WAVE:
+        action = pick(POTATO, lambda item: item["col"] >= MINE_MIN_COL, lambda item: -row_threat(item["row"]))
         if action:
             action["rule"] = "⑥早期地雷"
             return action
 
-    return {"type": "wait", "ticks": 60, "rule": "⑦无满足条件→wait"}
+    return {"type": "wait", "ticks": WAIT_TICKS, "rule": "⑦无满足条件→wait"}
 
 
 def run(env: PvZEnv, seed: int, level: int = LEVEL, max_actions: int = 4000,

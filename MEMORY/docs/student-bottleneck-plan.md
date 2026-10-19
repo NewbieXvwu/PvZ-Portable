@@ -278,3 +278,9 @@
 - 22:15（台式机时间）用户澄清：**后期把土豆雷当垫材没问题，问题在前期**（离僵尸够远一颗雷换一只僵尸，模型却贴脸种）。分波次（第 32b 轮）：第 0–5 波学生近种（列差 ≤ 1）被吃 188 / 出土 132，远种 85 / 1491；老师标签近 : 远 = 273 : 1428。第 6–10 波近种比例升到约一半。task9 已改为聚焦第 0–10 波的近种雷。
   另：用户指的“LLM 教师”是仓库的 DSH pvz-teacher（gemini-3.8-flash-high）。会话 s10 已起（`$CLAUDE_JOB_DIR/tmp/pvz-s10`），诊断 v30 z20 种子 30005（丢 5 车），存档 `artifacts/teacher_diag/v30_z20_30005`；顺带修了 capture / watch_policy 对 obs v2 学生不带历史的问题（1db63c1f、71db8ecc）。
 - 2026-10-19 11:10（Mac 时间）**LLM 教师 s10 的头条是蝴蝶效应**：它说第 1 步向日葵 (3,4)→(1,0) 让丢车 5→0、被吃 90→47。我把第 1 步 29 个合法动作全跑了：8 个输局（含同在第 0 列的 (3,0)），赢局丢车 0–5 都有，第 0–1 列平均 2.4 车 vs 第 ≥4 列 2.9 车。单局 whatif 不能当证据，它入库的技能不采信。改为多局成对检验 `scripts/early_fix_check.py`（原动作 / 往后挪 / 同等扰动安慰剂，v30 z20 种子 30000–30511，Mac 2 核在跑）。报告与复核 `MEMORY/docs/teacher-diag-v30-z20-30005.md`。Mac 第 33b 轮 559/640 已上传，第 34b 轮（v30，19072–19711，8 进程）开跑。台式机隧道 10:21 起连不上（banner 超时）。
+- 12:10（Mac 时间）**清理“用正则解析自家程序的人话输出”**（用户指出 early_fix_check 的正则是屎山；它确实因为只认 ★/· 漏读了 ↓ 行，结果偏向“改好了”的那些，前一版中期数字作废）：
+  - `early_fix_check.py` 直接调 `episode_query._run_variant`，拿结构化结果；
+  - `cuda/ReanimDump.cpp` 加 `--json`，`cuda_animation_tables.py` / `cuda_muzzle_tables.py` 读 JSON（重生成的两份头文件与已提交的逐字节相同）；
+  - `search_play.py` 写 `cuda_server.json` 与 `gpu_pause.jsonl`，`task6/check_pause_gate.py` 读文件、不再刮日志；
+  - `scripted_baseline.py` 的规则描述改为从阈值常量填数（原来的“描述里的数字能在源码里搜到”校验永远通过，因为源码里就含这段描述）；两局动作序列与改前 md5 相同；`bc_pipeline/scripted_baseline_d1.py` 的同款空校验删掉。
+  - 剩下 `cuda_batch_bench.py` 刮 RolloutCuda 打印的 “wall N ms for M rollouts”：要改 CUDA 程序并在台式机 GPU 上验证，交给 Codex。

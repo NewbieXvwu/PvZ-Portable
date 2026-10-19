@@ -11,7 +11,6 @@ than the search teacher, the teacher is the problem.
 from __future__ import annotations
 
 import argparse
-import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -73,10 +72,7 @@ def rows_with(plants: list[dict], kind: int) -> Counter:
 # 改代码的人抬头就能看见"还有一份描述要跟着改"。放到别处（README、
 # MCP server、文档）必然会漂移，而漂移后的描述比没有描述更坏 ——
 # 模型会照着一条**已经不存在**的规则去推理。
-#
-# 为什么用 ①②③ 而不是 1. 2. 3.：`decision_rules_text()` 会校验描述里
-# 出现的每个数字都能在源码里找到。用阿拉伯数字做序号，序号本身会被
-# 当成"常量"去校验，校验就变成了噪音。
+
 # 策略行为修订号：choose() 的**行为**一变就递增。capture 的 meta 里会记录
 # 它，whatif 据此判断"重放用的策略和存档当时的策略是否一致"——不一致时
 # 明确警告，不静默分叉（2026-10-04 rule ① 几何修复就是第一个跨版本的例子）。
@@ -151,27 +147,8 @@ lane 工具输出的「距割草机 xxx t」是**另一个口径**（用该僵�
 
 
 def decision_rules_text() -> str:
-    """把 `DECISION_RULES` 填上卡组/关卡，并**校验描述没有和代码脱钩**。
-
-    校验方式：描述里出现的每一个数字，都必须能在本文件的源码里找到。
-    为什么要这一步：这份描述是人写的（不像 `pvz_constants.py` 那样现解析），
-    人写的就会过期。改 `choose()` 里的阈值却忘了改描述，模型会照着一份
-    错误的规则推理，而且**它没有任何办法察觉**。
-    所以宁可在这里硬失败，也不放一份可能过期的描述出去。
-    """
-    text = DECISION_RULES.format(level=LEVEL)
-    source = Path(__file__).read_text(encoding="utf-8")
-    # 只校验 DECISION_RULES 之后的部分，避免"数字出现在描述自己的定义里"这种自证。
-    body = text
-    missing = sorted({int(n) for n in re.findall(r"\d+", body)
-                      if not re.search(rf"(?<!\d){n}(?!\d)", source)})
-    if missing:
-        raise RuntimeError(
-            f"决策规则描述里的这些数字在 {Path(__file__).name} 里找不到：{missing}。"
-            f"要么描述过期了（改 choose() 时漏改这里），要么阈值被挪去了别处。"
-            f"先核对再放行 —— 一份和代码对不上的规则描述，比没有更坏。"
-        )
-    return body
+    """把 `DECISION_RULES` 填上关卡。这份冻结副本没有调用方；描述与阈值的同步做法见 scripts/scripted_baseline.py。"""
+    return DECISION_RULES.format(level=LEVEL)
 
 
 def choose(observation: dict) -> dict:

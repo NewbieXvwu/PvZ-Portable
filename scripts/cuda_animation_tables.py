@@ -5,9 +5,18 @@ Only numerical x coordinates of the four supported walk clips are retained, not 
 """
 import argparse
 import hashlib
+import json
 from pathlib import Path
-import re
 import subprocess
+import tempfile
+
+
+def run_dump(dump: Path, pak: Path, *arguments: str) -> dict:
+    """cuda/ReanimDump.cpp with --json: {"identical": bool, "clips": [{"name", "start", "count", "xy"}]}."""
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "dump.json"
+        subprocess.run([str(dump.resolve()), str(pak), *arguments, "--json", str(out)], check=True, capture_output=True)
+        return json.loads(out.read_text())
 
 
 def main():
@@ -19,25 +28,14 @@ def main():
     tracks = []
     for asset, clips in (("Zombie", ("anim_walk", "anim_walk2", "anim_superlongdeath")),
                          ("Zombie_polevaulter", ("anim_run", "anim_walk"))):
-        output = subprocess.run([str(args.dump.resolve()), str(args.pak), asset, *clips],
-                                capture_output=True, text=True, check=True).stdout
-        if "IDENTICAL (0 field differences)" not in output:
+        dump = run_dump(args.dump, args.pak, asset, *clips)
+        if not dump["identical"]:
             raise RuntimeError(f"{asset}: XML/compiled definitions did not verify")
-        current = None
-        for line in output.splitlines():
-            match = re.match(r"== (\w+) .*mFrameStart=(\d+) mFrameCount=(\d+)", line)
-            if match:
-                current = {"name": asset + "_" + match[1], "start": int(match[2]),
-                           "count": int(match[3]), "x": []}
-                tracks.append(current)
-            elif current:
-                match = re.match(r"\s+(\d+)\s+[-+\d.eE]+\s+([-+\d.eE]+)\s", line)
-                if match:
-                    if int(match[1]) != current["start"] + len(current["x"]):
-                        raise RuntimeError("non-contiguous ground table")
-                    current["x"].append(float(match[2]))
-        if any(len(t["x"]) != t["count"] for t in tracks):
-            raise RuntimeError("short ground table")
+        for clip in dump["clips"]:
+            if len(clip["xy"]) != clip["count"]:
+                raise RuntimeError("short ground table")
+            tracks.append({"name": asset + "_" + clip["name"], "start": clip["start"], "count": clip["count"],
+                           "x": [x for x, _ in clip["xy"]]})
     def literal(value):
         token = format(value, ".9g")
         return token + ("f" if "." in token or "e" in token else ".0f")
