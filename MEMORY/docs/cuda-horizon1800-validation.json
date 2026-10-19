@@ -1,0 +1,365 @@
+{
+  "completed": "2026-10-19T20:31:39.605471+08:00",
+  "verdict": "horizon1800 rejected at formal gate1; no stage2 or ABBA whole-game throughput run",
+  "task": "day_l7_z20_eval",
+  "parameters": {
+    "samples": 3,
+    "student_candidates": 2,
+    "verify_samples": 9,
+    "halving": true,
+    "rollout_sim_skip": 61,
+    "per_card": 1,
+    "margin": 0.02,
+    "min_gap": 300,
+    "horizons": [
+      2500,
+      1800
+    ]
+  },
+  "inputs": {
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v29/model.pt",
+      "sha256": "52dc3f8edd278194d18d75bcada6ef815383b81e5050bb12d958c86c3c9791d8"
+    },
+    "value": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+      "sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a"
+    },
+    "static_value": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+      "sha256": "8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941"
+    },
+    "executable": {
+      "path": "/home/newbiexvwu/pvz-h8/build/pvz-portable",
+      "sha256": "b999449af20753a1238a3ea22174cbe7472b67ab3579c36323266b6450aa9ad1"
+    }
+  },
+  "statistics": {
+    "games": 16,
+    "searches": 3335,
+    "approx_agreement": 0.6653673163418291,
+    "noise_agreement": 0.7133433283358321,
+    "approx_wilson_ci95_pooled": [
+      0.6491705771029549,
+      0.6811835333283888
+    ],
+    "noise_wilson_ci95_pooled": [
+      0.6977574888404131,
+      0.7284382492772677
+    ],
+    "approx_cluster_ci95": [
+      0.630005658734765,
+      0.7026317888934694
+    ],
+    "noise_cluster_ci95": [
+      0.6805807359478155,
+      0.7469927568806008
+    ],
+    "difference": -0.04797601199400303,
+    "difference_cluster_ci95": [
+      -0.06830261511167206,
+      -0.03111221020120962
+    ],
+    "noninferiority_margin": 0.03,
+    "bootstrap_draws": 20000,
+    "bootstrap_seed": 20261019,
+    "bootstrap_unit": "whole game, ratio of resampled agreement counts to resampled search counts",
+    "gate_passed": false,
+    "minimum_games": 8,
+    "per_game": [
+      {
+        "seed": 30000,
+        "searches": 201,
+        "approx_matches": 121,
+        "noise_matches": 153
+      },
+      {
+        "seed": 30001,
+        "searches": 229,
+        "approx_matches": 168,
+        "noise_matches": 171
+      },
+      {
+        "seed": 30002,
+        "searches": 123,
+        "approx_matches": 94,
+        "noise_matches": 96
+      },
+      {
+        "seed": 30003,
+        "searches": 221,
+        "approx_matches": 137,
+        "noise_matches": 140
+      },
+      {
+        "seed": 30004,
+        "searches": 105,
+        "approx_matches": 64,
+        "noise_matches": 71
+      },
+      {
+        "seed": 30005,
+        "searches": 267,
+        "approx_matches": 168,
+        "noise_matches": 177
+      },
+      {
+        "seed": 30006,
+        "searches": 213,
+        "approx_matches": 137,
+        "noise_matches": 142
+      },
+      {
+        "seed": 30007,
+        "searches": 262,
+        "approx_matches": 196,
+        "noise_matches": 211
+      },
+      {
+        "seed": 30008,
+        "searches": 227,
+        "approx_matches": 133,
+        "noise_matches": 148
+      },
+      {
+        "seed": 30009,
+        "searches": 302,
+        "approx_matches": 183,
+        "noise_matches": 211
+      },
+      {
+        "seed": 30010,
+        "searches": 114,
+        "approx_matches": 75,
+        "noise_matches": 80
+      },
+      {
+        "seed": 30011,
+        "searches": 269,
+        "approx_matches": 190,
+        "noise_matches": 198
+      },
+      {
+        "seed": 30012,
+        "searches": 228,
+        "approx_matches": 133,
+        "noise_matches": 146
+      },
+      {
+        "seed": 30013,
+        "searches": 285,
+        "approx_matches": 225,
+        "noise_matches": 232
+      },
+      {
+        "seed": 30014,
+        "searches": 188,
+        "approx_matches": 116,
+        "noise_matches": 118
+      },
+      {
+        "seed": 30015,
+        "searches": 101,
+        "approx_matches": 79,
+        "noise_matches": 85
+      }
+    ]
+  },
+  "search_timing": {
+    "search_seconds_exact": 2423.52,
+    "search_seconds_approx": 1715.65,
+    "search_speedup": 1.413
+  },
+  "timing_limit": "interleaved same-position search wall times; not CPU seconds per game or production games per hour",
+  "cohorts": [
+    {
+      "seeds": [
+        30000,
+        30001,
+        30002,
+        30004
+      ],
+      "source": "agreement_cohort1_complete.json",
+      "completion": "retained whole completed games before deliberate own-job rescale"
+    },
+    {
+      "seeds": [
+        30003,
+        30005,
+        30006,
+        30007,
+        30008,
+        30009,
+        30010,
+        30011,
+        30012,
+        30013,
+        30014,
+        30015
+      ],
+      "source": "agreement_remainder.json",
+      "completion": "normal process exit0"
+    }
+  ],
+  "all_completed_rows_match_per_seed_streams": true,
+  "seed_decision_duplicates": 0,
+  "actual_verify9_searches": {
+    "reference": 1652,
+    "approximate": 1563,
+    "other_futures": 1676
+  },
+  "input_audit": {
+    "time": "2026-10-19T20:24:59.641363+08:00",
+    "input_sha_unchanged": {
+      "student": true,
+      "value": true,
+      "static_value": true,
+      "manifest": true,
+      "executable": true
+    },
+    "derived_task_differs_only_in_selected_seeds": true,
+    "complete_seed_union": [
+      30000,
+      30001,
+      30002,
+      30003,
+      30004,
+      30005,
+      30006,
+      30007,
+      30008,
+      30009,
+      30010,
+      30011,
+      30012,
+      30013,
+      30014,
+      30015
+    ],
+    "retained_and_remainder_disjoint": true,
+    "remainder_manifest_sha256": "986a757d6f83cd9c1e9f1c57afaf9db49a9e36c40bbbeb3e554ce03d44ac9e9b"
+  },
+  "resources": [
+    {
+      "returncode": -15,
+      "wall_s": 720.9488086310157,
+      "peak_rss_kib": 1677712,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 2451668
+    },
+    {
+      "returncode": 0,
+      "wall_s": 1517.3409011479816,
+      "peak_rss_kib": 3318028,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 5078600
+    }
+  ],
+  "resource_limit": "own experiments only; at most4 games; pause below2GiB; original2-worker cohort deliberately stopped after retaining4 completed games, then remaining12 ran on4 workers",
+  "raw_result": "artifacts/cuda/task8/agreement_combined.json",
+  "raw_result_sha256": "5781a6b7c76ba6a3cf7d133a865bc6721dcd44eb287519e8349ea780288e5c77",
+  "raw_summary": {
+    "mask": 61,
+    "searches": 3335,
+    "gpu_covered_searches": 0,
+    "approx_agrees_with_exact": 0.6654,
+    "noise_floor_exact_vs_other_futures": 0.7133,
+    "mean_value_regret_approx": 0.02492,
+    "mean_value_regret_other_futures": 0.02078,
+    "independent_regret_exact": 0.02174,
+    "independent_regret_approx": 0.02656,
+    "search_seconds_exact": 2423.52,
+    "search_seconds_approx": 1715.65,
+    "search_speedup": 1.413,
+    "task_id": "day_l7_z20_eval",
+    "policy": "/home/newbiexvwu/PvZ-search/artifacts/student/v29/model.pt",
+    "approx_per_card": null,
+    "cpp_rollouts": true,
+    "base_cpp_rollouts": true,
+    "cuda_rollouts": false,
+    "cuda_server": "",
+    "base_halving": true,
+    "static_value": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+    "base_mask": 61,
+    "approx_static_value": null,
+    "approx_halving": true,
+    "per_card": 1,
+    "min_gap": 300,
+    "samples": 3,
+    "student_candidates": 2,
+    "search_verify_samples": 9,
+    "approx_samples": null,
+    "approx_horizon": 1800,
+    "margin": 0.02,
+    "dagger_beta": 0.0,
+    "label_noise": false,
+    "high_samples": 12,
+    "horizon": 2500,
+    "seed_offset": 0,
+    "workers": [
+      2,
+      4
+    ],
+    "seeds": [
+      30000,
+      30001,
+      30002,
+      30003,
+      30004,
+      30005,
+      30006,
+      30007,
+      30008,
+      30009,
+      30010,
+      30011,
+      30012,
+      30013,
+      30014,
+      30015
+    ],
+    "complete": true,
+    "cuda_binary_sha256": null,
+    "policy_sha256": "52dc3f8edd278194d18d75bcada6ef815383b81e5050bb12d958c86c3c9791d8",
+    "value_sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+    "executable_sha256": "b999449af20753a1",
+    "original_manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+    "remainder_manifest": "agreement_remainder_manifest.json",
+    "cohorts": [
+      {
+        "seeds": [
+          30000,
+          30001,
+          30002,
+          30004
+        ],
+        "source": "agreement_cohort1_complete.json",
+        "completion": "retained whole completed games before deliberate own-job rescale"
+      },
+      {
+        "seeds": [
+          30003,
+          30005,
+          30006,
+          30007,
+          30008,
+          30009,
+          30010,
+          30011,
+          30012,
+          30013,
+          30014,
+          30015
+        ],
+        "source": "agreement_remainder.json",
+        "completion": "normal process exit0"
+      }
+    ]
+  },
+  "defaults": "horizon2500, verify9 unchanged",
+  "delivery": "local cuda-h8; no push"
+}
