@@ -2,9 +2,9 @@
   "schema": 1,
   "time": "2026-10-19T18:21:07.996591+08:00",
   "branch": "cuda-merge",
-  "upstream": "cd8191fb6ad88355b0cb96ae6c806ce3c157f497",
+  "upstream": "d1cc2ce4a75c8e4d5545f7087ada27c639ba638b",
   "paired_reference_upstream": "adbbb2f14ffc3b2b0c3a5eea14dce6a559c98f3a",
-  "runtime_validation_head": "cbff7e7bbec0a29fb1edbbcd4dcfbd3ab32c04bc",
+  "runtime_validation_head": "1415860ed2703bd04eb8e3afe357c8cb1253ee55",
   "latest_upstream_runtime_trees_unchanged": {
     "src": "008ac9cfe8aaca2079a8934d816fd5646db3ec07",
     "python": "425f9a75e917ac0ce1745452dfed1907738ad82a",
@@ -93,5 +93,6 @@
     "tracked_files_unchanged": true,
     "binary_unchanged_since_task6": true
   },
-  "raw_evidence_local_only": "/home/newbiexvwu/pvz-merge/artifacts/cuda/task7/"
+  "raw_evidence_local_only": "/home/newbiexvwu/pvz-merge/artifacts/cuda/task7/",
+  "latest_upstream_docs_only": "cd8191f: DESIGN/student plan; d1cc2ce: student plan only; runtime/test/config trees equal to paired reference adbbb2f"
 }

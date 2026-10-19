@@ -1,7 +1,7 @@
 # CUDA 合并说明（待主控审核）
 
-`cuda-merge` 从 `cuda-rollout 3d74462` 合入最新 `origin/pvz-env cd8191f`；先合并 `adbbb2f` 为 `f4c6eae`，
-随后同步仅文档变更的 `cd8191f` 为 `cbff7e7`，生产/测试代码树相同。
+`cuda-merge` 从 `cuda-rollout 3d74462` 合入最新 `origin/pvz-env d1cc2ce`；先合并 `adbbb2f` 为 `f4c6eae`，
+随后同步仅文档变更的 `cd8191f` 和 `d1cc2ce`，生产/测试代码树相同。
 训练器、学生/缓存实现及上游更新的测试、文档保留主线；当日日志冲突按 append-only 保留双方内容。
 只推 `cuda-merge`，不更新 `pvz-env`；正式 `~/pvz-cuda` 的源码与 build 未改动。
 
