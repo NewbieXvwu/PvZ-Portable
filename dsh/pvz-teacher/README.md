@@ -1,14 +1,17 @@
 # PvZ 教师 × DeepSeek Harness
 
 把 PvZ 对局诊断工具挂进 DSH，让模型自己看败局、提改动、用精确反事实验证、
-把结论写成可自演化的 skill。设计依据与分步计划在
-[`RESEARCH_EXECUTION.md`](../../RESEARCH_EXECUTION.md) 的
-「2026-10-03 LLM 教师方案」一节。
+把结论写成可自演化的 skill。设计依据与分步计划原在 `RESEARCH_EXECUTION.md` 的
+「2026-10-03 LLM 教师方案」一节（该文件已随 PPO 线删除，tag `pre-cleanup-20261019`）。
+
+> **2026-10-19 起**：PPO 与规则脚本两条线已删除，`capture` 只支持 `policy=student`（专家迭代的学生网络），
+> `pvz://scripted-policy` 换成了 `pvz://policy`。下文按会话记的开发史里凡涉及 `ppo` / `scripted`
+> 的段落都是历史记录。
 
 ## 这条流水线和 RL 是什么关系（先读这个）
 
 **它不产生行为，也不产生训练数据。** 那条路（教师蒸馏）已经判死，
-见 `DESIGN.md` §5 与 `TODO.md` §1.2：策略由 RL 产生，行为来源有且只有 RL，
+见 `DESIGN.md` §5：策略由 RL 产生，行为来源有且只有 RL，
 教师必须能被学生超越。本流水线产出的 skill 也**不允许**进奖励函数——
 LLM 判断不当地写进奖励会直接污染优化目标。
 
@@ -282,7 +285,7 @@ S4（2026-10-03）换了场景（L21 泳池关）重跑，验证 skill 判据与
 **③ 参数写错返回可自我纠正的提示**（列出全部可用植物），不再是 traceback。
 另加 `vocabulary` 工具补上"文档无处可查"。
 
-## 资源：`pvz://vocabulary` / `pvz://constants` / `pvz://scripted-policy`
+## 资源：`pvz://vocabulary` / `pvz://constants` / `pvz://policy`
 
 参考类文档（动作语法、植物 id 表、行列范围、游戏常量、策略规则）除了对应的工具，
 还发布成 **MCP resource**。理由是实测的：
@@ -320,9 +323,7 @@ S4（2026-10-03）换了场景（L21 泳池关）重跑，验证 skill 判据与
   唯一一处推导（该关波数、可能出现的僵尸）**把规则也一起写出来**，
   因为结论脱离了条件就变成了另一种猜。
 
-同理 `pvz://scripted-policy` 的描述写在 `scripted_baseline.py` 里、紧挨着它描述的
-`choose()`，并自带一道校验：**描述里出现的每个数字都必须能在源码里找到**。
-人写的描述会过期，而过期的描述比没有描述更坏。
+`pvz://policy` 由 `episode_query.py policy` 现场生成（打棋的是学生网络，没有规则表可读）。
 
 放哪的三条判据（照此分类，别凭感觉）：
 

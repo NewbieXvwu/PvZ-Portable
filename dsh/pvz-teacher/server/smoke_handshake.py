@@ -126,7 +126,7 @@ async def run(full_env: bool) -> int:
                     ok = False
 
             # 资源：S2 加的 `pvz://vocabulary`，S3 加的 `pvz://constants` /
-            # `pvz://scripted-policy`。它们存在的理由是可实测的 ——
+            # `pvz://policy`。它们存在的理由是可实测的 ——
             # 模型找不到动作语法时会去调 `list_mcp_resources`（DSH 的 system prompt
             # 主动告诉了它这个通道），我们一个资源都不发布就等于给了它一个空房间。
             resources = await session.list_resources()
@@ -153,7 +153,7 @@ async def run(full_env: bool) -> int:
             need = {
                 "pvz://vocabulary": ("plant:", "豌豆射手", "row 0..4"),
                 "pvz://constants": ("tick", "100", "土豆雷", "1500", "僵尸"),
-                "pvz://scripted-policy": ("if-else", "坚果墙", "col >= 6", "wave <= 4"),
+                "pvz://policy": ("学生网络", "whatif", "没有可以读的规则表"),
             }
             for uri, needles in need.items():
                 if uri not in uris:

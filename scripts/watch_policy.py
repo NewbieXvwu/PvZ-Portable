@@ -1,45 +1,26 @@
-"""Drive the real game with a delivered checkpoint, optionally with a visible window.
+"""Watch a student play the real game, optionally in a visible window.
 
 This is a read-only viewer for humans. It never trains, never writes into
 ``artifacts/``, and never touches a running experiment. It exists because a
 win rate alone cannot tell you *what the policy is doing* -- you have to look.
-
-Two things it can show:
-
-1. **The model playing.** Pass a checkpoint and it drives the simulator with the
-   policy's own actions. With ``--visible`` the simulator runs in ``-env-visible``
-   mode, so the normal game window opens and animates while Python supplies the
-   actions over the existing protocol.
-2. **The do-nothing baseline.** ``--policy donothing`` waits forever and never
-   plants. On short tasks this baseline wins on its own (lawnmowers), which is
-   exactly why a short-task win rate carries almost no policy information.
-   Compare the two side by side before believing any short-task number.
+With ``--visible`` the simulator runs in ``-env-visible`` mode, so the normal game
+window opens and animates while Python supplies the student's actions.
 
 Usage::
 
-    # watch the delivered full-level7 checkpoint on a 5-wave task, window open
-    python scripts/watch_policy.py --visible --wave-cap 5 --delay 0.15
-
-    # same, but with the do-nothing baseline
-    python scripts/watch_policy.py --visible --wave-cap 5 --policy donothing
-
     # the current best student on a 1.5x-zombie game of level 7, its own deck
-    python scripts/watch_policy.py --visible --student artifacts/student/v20/model.pt --deck 0,1,2,3,4,5,7 \
+    python scripts/watch_policy.py --visible --student artifacts/student/v31/model.pt --deck 0,1,2,3,4,5,7 \
         --multiplier 1.5 --seed 30000 --max-actions 3000 --hold-seconds 10
 
     # playback speed: PVZ_ENV_RENDER_EVERY logic ticks per drawn frame, PVZ_ENV_RENDER_MS pause per frame
     # (defaults 1 / 10 = normal speed); 5x:
     PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student ...
 
-    # headless, print the action mix only
-    python scripts/watch_policy.py --wave-cap 5 --seed 1330000 --quiet
+    # replay one game of an evaluation (here v30 on 2.0x zombies, seed 30005) at 5x speed
+    PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student artifacts/student/v30/model.pt \
+        --task-id day_l7_z20_eval --seed 30005 --max-actions 3000 --hold-seconds 10
 
-Checkpoints are not in git; fetch one first:
-
-    python3 -c "from huggingface_hub import hf_hub_download; \\
-        hf_hub_download('realnewbiexvwu/pvz-agent-artifacts', \\
-        'mainline_full_level7_v1_seed0/runs/run_1/<name>.pt', repo_type='model', \\
-        revision='evidence-mainline-full-level7-v1-seed0', local_dir='/tmp/pvz_infer')"
+Students are not in git; fetch one from HF (``transfer/v31_model.pt``).
 """
 from __future__ import annotations
 
@@ -51,46 +32,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
+sys.path.insert(0, str(ROOT / "scripts"))
 
 import torch  # noqa: E402
 
 from pvz_env import TaskSpec  # noqa: E402
-from pvz_event_env import policy_env  # noqa: E402
-from pvz_agent_model import (  # noqa: E402
-    GameplayModelV1, observation_tokens, policy_legal_summary, select_action,
-)
+from pvz_event_env import EventWaitEnv  # noqa: E402
 
 DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
 DEFAULT_DECK = [0, 1, 2, 3, 4, 5]
-
-
-def _model_actions(model, cfg, deterministic: bool):
-    """Yield one policy action per observation; state lives across calls.
-
-    ``info`` from the previous ``env.step`` must be fed back: the wait head
-    conditions on the previous wait's result and the ticks it actually
-    advanced, and the replay path re-validates those two against each other.
-    """
-    hidden = prev = prev_wait = None
-    elapsed, events = 0, {}
-
-    def next_action(observation, info=None):
-        nonlocal hidden, prev, prev_wait, elapsed, events
-        if info is not None:
-            prev_wait = info.get("wait_result")
-            elapsed = int(info.get("ticks_advanced", 0) or 0)
-            events = info.get("events", {}) or {}
-        tensors, meta = observation_tokens(observation, cfg.get("input_flags", 0))
-        legal = policy_legal_summary(observation, cfg)
-        with torch.no_grad():
-            out = model.step_tokens(
-                tensors, meta, observation["wave"], hidden, prev, elapsed, events,
-                prev_wait, planner_context=model.planner_context(observation))
-        action, _, _ = select_action(model, out, legal, deterministic=deterministic)
-        hidden, prev = out["hidden"], action
-        return action
-
-    return next_action
 
 
 def _student_actions(path: str):
@@ -100,9 +50,9 @@ def _student_actions(path: str):
     from render_episode import _frame
     net = load_student(path)
     memo = {"frame": None, "action": None}
-    if net.obs == "v2lite":
+    if net.obs != "v1":
         from pvz_student_observation import StudentHistory
-        memo["history"] = StudentHistory()
+        memo["history"] = StudentHistory(net.obs)
 
     def next_action(observation, _info=None):
         frame = _frame(observation)
@@ -118,42 +68,23 @@ def _student_actions(path: str):
     return next_action
 
 
-def _donothing_actions():
-    def next_action(_observation, _info=None):
-        return {"type": "wait", "ticks": 300, "until": "timeout"}
-    return next_action
-
-
-def _load_checkpoint(path: str):
-    ck = torch.load(path, map_location="cpu", weights_only=False)
-    cfg = ck["config"]
-    model = GameplayModelV1(cfg)
-    model.load_state_dict(ck["state_dict"])
-    model.eval()
-    return model, cfg, ck.get("training_state", {})
-
-
-def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: int | None,
-        visible: bool, delay: float, max_actions: int, deterministic: bool,
-        resource_dir: str, deck, quiet: bool, student: str | None = None, multiplier: float = 1.0) -> dict:
-    if student:
-        cfg = {"wait_mode": "events", "wait_mask": "progress_v1", "input_flags": 7}
-        next_action = _student_actions(student)
-        state = {}
-    elif policy == "donothing":
-        cfg = {"wait_mode": "events", "wait_mask": "progress_v1", "input_flags": 7}
-        next_action = _donothing_actions()
-        state = {}
+def run(student: str, level: int, seed: int, wave_cap: int | None, visible: bool, delay: float,
+        max_actions: int, resource_dir: str, deck, quiet: bool, multiplier: float = 1.0,
+        manifest: str | None = None, task_id: str | None = None) -> dict:
+    next_action = _student_actions(student)
+    env = EventWaitEnv(resource_dir=resource_dir, headless=not visible)
+    from pvz_tasks import profile_for_deck
+    if task_id:   # the exact game an evaluation played: same task, same seed (scripts/search_play.py)
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from render_episode import load_training_task, training_task_kwargs
+        kw = training_task_kwargs(load_training_task(Path(manifest), task_id), seed)
+        deck, level = list(kw["deck"]), kw["level"]
+        spec = TaskSpec(level=level, seed=kw["seed"], playthrough=2,
+                        profile=profile_for_deck(tuple(deck), kw.get("first_aid_owned", False)),
+                        **{k: v for k, v in kw["task_extra"].items() if v is not None})
     else:
-        if not checkpoint:
-            raise SystemExit("--checkpoint is required unless --policy donothing")
-        model, cfg, state = _load_checkpoint(checkpoint)
-        next_action = _model_actions(model, cfg, deterministic)
-
-    env = policy_env(cfg, resource_dir=resource_dir, headless=not visible)
-    from scripted_baseline import profile_for_deck
-    spec = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(tuple(deck)),
-                    zombie_count_multiplier=multiplier, wave_cap=wave_cap, preplanted=())
+        spec = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(tuple(deck)),
+                        zombie_count_multiplier=multiplier, wave_cap=wave_cap, preplanted=())
     observation, _ = env.reset(deck=deck, task=spec)
 
     counts = {"plant": 0, "shovel": 0, "wait": 0}
@@ -174,12 +105,11 @@ def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: in
         if done:
             break
     result = {
-        "policy": policy, "level": level, "seed": seed, "wave_cap": wave_cap,
+        "student": student, "level": level, "seed": seed, "wave_cap": wave_cap,
         "decisions": sum(counts.values()), "counts": counts,
         "zero_tick_waits": zero_tick, "terminal_wave": observation.get("wave"),
         "result": observation.get("result"), "won": observation.get("result") == 1,
         "ticks": observation.get("tick"),
-        "checkpoint_updates": state.get("updates"),
         "seconds": round(time.perf_counter() - started, 1),
     }
     return result
@@ -187,9 +117,7 @@ def run(checkpoint: str | None, policy: str, level: int, seed: int, wave_cap: in
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--checkpoint", help="local .pt path (not in git; fetch from HF)")
-    p.add_argument("--student", help="small student / fast_ppo .pt instead of a GameplayModelV1 checkpoint")
-    p.add_argument("--policy", choices=("model", "donothing"), default="model")
+    p.add_argument("--student", required=True, help="student model.pt (not in git; fetch from HF)")
     p.add_argument("--level", type=int, default=7)
     p.add_argument("--seed", type=int, default=1330000)
     p.add_argument("--multiplier", type=float, default=1.0, help="zombie-count multiplier (1.3 / 1.5 = the hard tasks)")
@@ -198,18 +126,18 @@ def main() -> None:
     p.add_argument("--visible", action="store_true", help="open the real game window")
     p.add_argument("--delay", type=float, default=0.0, help="pause per action, seconds")
     p.add_argument("--max-actions", type=int, default=800)
-    p.add_argument("--sampled", action="store_true", help="sample instead of greedy")
     p.add_argument("--quiet", action="store_true", help="print only the final summary")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
     p.add_argument("--deck", default=",".join(str(c) for c in DEFAULT_DECK))
+    p.add_argument("--task-id", help="replay a manifest task (e.g. day_l7_z20_eval) with --seed = the evaluation's seed")
+    p.add_argument("--manifest", default=str(ROOT / "artifacts/stage4/day_l7_hard.json"))
     p.add_argument("--hold-seconds", type=float, default=0.0,
                    help="keep the window up after the episode ends")
     args = p.parse_args()
 
     deck = [int(c) for c in args.deck.split(",") if c.strip()]
-    result = run(args.checkpoint, args.policy, args.level, args.seed, args.wave_cap,
-                 args.visible, args.delay, args.max_actions, not args.sampled,
-                 args.resource_dir, deck, args.quiet, args.student, args.multiplier)
+    result = run(args.student, args.level, args.seed, args.wave_cap, args.visible, args.delay, args.max_actions,
+                 args.resource_dir, deck, args.quiet, args.multiplier, args.manifest, args.task_id)
     print(json.dumps(result, ensure_ascii=False), flush=True)
     if args.hold_seconds:
         time.sleep(args.hold_seconds)

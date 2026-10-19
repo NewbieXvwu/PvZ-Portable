@@ -26,7 +26,7 @@ def trace(point,args):
     from pvz_student_observation import StudentHistory
     from pvz_value_net import observation_context
     from render_episode import _frame,load_training_task,training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     frames=read_frames(Path(point['archive'])/'frames.npz');d=point['decision']
     kw=training_task_kwargs(load_training_task(args.manifest,'day_l7_z17_train'),point['seed'])
     task=TaskSpec(level=kw['level'],seed=kw['seed'],playthrough=2,

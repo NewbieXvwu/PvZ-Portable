@@ -1,6 +1,7 @@
 """A training pause waits at game boundaries without stopping the CUDA service."""
 from pathlib import Path
 from types import SimpleNamespace
+import json
 import os
 import sys
 import tempfile
@@ -36,8 +37,10 @@ class GpuCollectionPauseTest(unittest.TestCase):
             with patch.dict(search_play._W, {"cuda": client}, clear=True), \
                     patch.dict(os.environ, {"PVZ_GPU_PAUSE_FILE": str(path)}), \
                     patch.object(search_play.time, "sleep", side_effect=sleep):
-                search_play._wait_for_gpu_pause(SimpleNamespace(rollout_backend="cuda"), 30000)
+                search_play._wait_for_gpu_pause(SimpleNamespace(rollout_backend="cuda", out=directory), 30000)
             self.assertEqual(sleeps, [10, 10])
+            events = [json.loads(line) for line in (Path(directory) / "gpu_pause.jsonl").read_text().splitlines()]
+            self.assertEqual([(e["event"], e["seed"]) for e in events], [("paused", 30000), ("resumed", 30000)])
             client.connect.assert_called_once_with()
             client.close.assert_not_called()
 

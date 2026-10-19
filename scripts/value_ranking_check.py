@@ -79,7 +79,7 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     from pvz_rollout_policy import act
     from pvz_value_net import featurize, observation_context
     from render_episode import _frame
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     args, env, net = _W["args"], _W["env"], _W["student"]
     seed, kw = seed_task
     task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),

@@ -20,7 +20,8 @@
 用法
 ----
     # 1. 存档（会跑一局并落盘）
-    python3 scripts/episode_query.py capture --seed 30001 --level 7 --out /tmp/ep30001
+    python3 scripts/episode_query.py capture --checkpoint artifacts/student/v31/model.pt \
+        --task-manifest artifacts/stage4/day_l7_hard.json --task-id day_l7_z20_eval --seed 30001 --out /tmp/ep30001
 
     # 2. 目录：哪里值得看
     python3 scripts/episode_query.py index --archive /tmp/ep30001
@@ -39,7 +40,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import secrets
 import sys
 from pathlib import Path
 
@@ -48,7 +48,6 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_constants import PLANT_NAME, ZOMBIE_NAME  # noqa: E402
-from scripted_baseline import POLICY_REVISION  # noqa: E402
 from render_episode import (  # noqa: E402
     DEFAULT_RESOURCE_DIR, PLANT_GLYPH,
     _board_ascii, _disp, _lane_causal, _lane_line, _lane_rows, _lane_table,
@@ -69,26 +68,19 @@ SCHEMA = "episode_archive_v1"
 
 def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
             out_dir: Path, max_actions: int, checkpoint: str | None = None,
-            deterministic: bool = True, task_extra: dict | None = None,
-            policy_rng_seed: int | None = None) -> dict:
+            task_extra: dict | None = None) -> dict:
     rec = collect(resource_dir, seed, level, policy, max_actions, deck,
-                  checkpoint=checkpoint, deterministic=deterministic,
-                  task_extra=task_extra, policy_rng_seed=policy_rng_seed)
+                  checkpoint=checkpoint, task_extra=task_extra)
     out_dir.mkdir(parents=True, exist_ok=True)
     meta = {
         "schema": SCHEMA,
         "task": rec["task"],
         "outcome": rec["outcome"],
         "totals": rec["totals"],
-        "policy_revision": rec["task"].get("policy_revision"),
         "frame_count": len(rec["frames"]),
     }
-    if policy in ("ppo", "student"):
-        meta["checkpoint"] = rec["task"].get("checkpoint")
-        meta["checkpoint_sha256"] = rec["task"].get("checkpoint_sha256")
-        # 这一局是在哪个模拟器 build 上跑的。见 render_episode.simulator_build()：
-        # 跨平台比对没有意义，但"换了 build"这件事必须在存档里看得见。
-        meta["simulator_build"] = rec["task"].get("simulator_build")
+    meta["checkpoint"] = rec["task"].get("checkpoint")
+    meta["checkpoint_sha256"] = rec["task"].get("checkpoint_sha256")
     (out_dir / "meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     with (out_dir / "frames.jsonl").open("w", encoding="utf-8") as fh:
@@ -376,13 +368,12 @@ def _fmt_frame(prev: dict | None, cur: dict, idx: int, total: int) -> str:
     # 图例的地图做规划。
     L.append(_fmt_scene(cur))
     L.append(_fmt_bank(cur))
-    # 全盘计数：脚本策略的关键规则前置（生产者/射手/香蒲阈值）是全盘量。
+    # 全盘计数：生产者 / 射手 / 睡莲 / 香蒲的全盘总数。
     # 没有这行，读的人只能从棋盘 ASCII 逐格数 —— 实测模型数了三遍还标注不确定。
     t = cur.get("totals")
     if t:
         L.append(f"全盘计数：生产者 {t['producers']}、射手 {t['shooters']}、"
-                 f"睡莲 {t['lilypads']}、香蒲 {t['cattails']}"
-                 f"（脚本策略的经济/火力/水路规则阈值见 policy 命令）")
+                 f"睡莲 {t['lilypads']}、香蒲 {t['cattails']}")
     L.append("植物：")
     L.append("  " + _board_ascii(cur, "plant").replace("\n", "\n  "))
     L.append("僵尸：")
@@ -664,7 +655,6 @@ def _action_text(a: dict | None, deck: list) -> str:
     if not a:
         return "（开局）"
     kind = a.get("type")
-    rule = a.get("rule")
     if kind == "plant":
         pk = a.get("packet")
         ty = deck[pk] if isinstance(pk, int) and 0 <= pk < len(deck) else pk
@@ -675,9 +665,7 @@ def _action_text(a: dict | None, deck: list) -> str:
         txt = f"等待 {a.get('ticks')} tick"
     else:
         return json.dumps(a, ensure_ascii=False)
-    # rule 是脚本策略自己标注的"命中了哪条规则"（capture 时由 choose() 写入）。
-    # 旧存档 / whatif 的 override 动作没有这个字段 → 不加后缀。
-    return f"{txt}〔{rule}〕" if rule else txt
+    return txt
 
 
 def _action_consequence(frames: list, i: int, act: dict | None) -> str:
@@ -754,19 +742,12 @@ def _replay_task_extra(task: dict) -> dict:
 
 
 def _run_variant(meta: dict, override: dict, resource_dir: str,
-                 prefix: list | None = None, *, deterministic: bool | None = None,
-                 policy_rng_seed: int | None = None) -> dict:
+                 prefix: list | None = None) -> dict:
     t = meta["task"]
     rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
                   4000, t.get("deck"), override=override, prefix_actions=prefix,
-                  # RL 存档的反事实重放必须用**同一个检查点**，否则"改一步之后
-                  # 会怎样"问的是另一个模型。
-                  checkpoint=t.get("checkpoint"),
-                  deterministic=(t.get("deterministic", True)
-                                 if deterministic is None else deterministic),
-                  task_extra=_replay_task_extra(t),
-                  policy_rng_seed=(t.get("policy_rng_seed", t["seed"])
-                                   if policy_rng_seed is None else policy_rng_seed))
+                  # 反事实重放必须用**同一个检查点**，否则"改一步之后会怎样"问的是另一个模型。
+                  checkpoint=t.get("checkpoint"), task_extra=_replay_task_extra(t))
     # 换上去的动作当时到底执行没有：阳光不够 / 冷却中 / 格子被占时环境会拒绝，补成等待 ——
     # 不标出来的话，几个“种不了”的候选会给出一模一样的结果，看起来像真有差别。
     rejected = [d for d in override if d < len(rec["frames"]) and rec["frames"][d].get("action_rejected")]
@@ -775,34 +756,16 @@ def _run_variant(meta: dict, override: dict, resource_dir: str,
 
 def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             raw_actions: list, resource_dir: str, enumerate_: bool,
-            row_filter: int | None, limit: int, save_best: str | None,
-            sampled: bool = False, policy_rng_seed: int | None = None) -> str:
+            row_filter: int | None, limit: int, save_best: str | None) -> str:
     deck = meta["task"].get("deck") or []
     task = meta["task"]
     t = task
-    deterministic = False if sampled else task.get("deterministic", True)
-    if task.get("policy") == "ppo":
-        if sampled and policy_rng_seed is None:
-            policy_rng_seed = secrets.randbits(63)
-        elif policy_rng_seed is None:
-            policy_rng_seed = task.get("policy_rng_seed", task["seed"])
-    elif sampled:
-        return "--sampled 只适用于 PPO 存档。"
     if decision < 1 or decision >= len(frames):
         return f"（决策序号要在 1–{len(frames) - 1} 之间）"
 
-    # 前缀照抄：第 1..N-1 步用存档里录下的真实动作，保证重放到分叉点为止
-    # 与存档逐位一致（哪怕存档产生于旧的策略修订——见 POLICY_REVISION）。
-    # 第 N 步用 override，之后由当前策略接管。
+    # 前缀照抄：第 1..N-1 步用存档里录下的真实动作，保证重放到分叉点为止与存档逐位一致。
+    # 第 N 步用 override，之后由存档里的同一个学生检查点接管。
     prefix = [f.get("action") for f in frames[1:decision]]
-    revision_note = ""
-    revision_note = ""
-    if meta.get("task", {}).get("policy_revision") != POLICY_REVISION:
-        stored = meta.get("task", {}).get("policy_revision") or "未记录（策略修订号机制引入前）"
-        revision_note = (
-            f"⚠ 此存档产生于策略修订 {POLICY_REVISION} 之前（存档版本：{stored}）。"
-            f"重放的第 1..{decision - 1} 步已按存档动作忠实回放，第 {decision} 步换成指定动作，"
-            "**之后**的决策由当前（修订后）策略重新做出——与存档当时的策略行为可能不同。\n\n")
 
     base_act = frames[decision].get("action")
     base = meta["outcome"]
@@ -820,11 +783,6 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
          "不是照抄原局录下的那串动作。所以结果反映的是「改了这一步之后，"
          "策略会怎么接着打」，不是「只改这一步、后面硬按原剧本走」。",
          ""]
-    if revision_note:
-        L.append(revision_note)
-    if task.get("policy") == "ppo":
-        L.extend([f"选动作方式：{'贪心' if deterministic else '按概率采样'}",
-                  f"策略随机种子：{policy_rng_seed}", ""])
 
     cands: list[dict] = []
     for raw in raw_actions:
@@ -846,9 +804,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
                         meta["task"]["policy"], 4000, deck,
                         capture_legal_at=decision, prefix_actions=prefix,
                         checkpoint=meta["task"].get("checkpoint"),
-                        deterministic=deterministic,
-                        task_extra=_replay_task_extra(task),
-                        policy_rng_seed=policy_rng_seed)
+                        task_extra=_replay_task_extra(task))
         legal = probe.get("legal_at") or {}
         for p in (legal.get("plants") or []):
             if row_filter is not None and p["row"] != row_filter:
@@ -870,9 +826,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     results = []
     for cand in cands:
         try:
-            o = _run_variant(meta, {decision: cand}, resource_dir, prefix=prefix,
-                             deterministic=deterministic,
-                             policy_rng_seed=policy_rng_seed)
+            o = _run_variant(meta, {decision: cand}, resource_dir, prefix=prefix)
         except Exception as exc:  # noqa: BLE001 - 单个候选失败不该打断整批
             L.append(f"  {_action_text(cand, deck):<34} 重放失败：{exc}")
             continue
@@ -908,14 +862,11 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             out = Path(save_best)
             rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
                           4000, deck, override={decision: top[1]}, prefix_actions=prefix,
-                          checkpoint=t.get("checkpoint"),
-                          deterministic=deterministic,
-                          task_extra=_replay_task_extra(t),
-                          policy_rng_seed=policy_rng_seed)
+                          checkpoint=t.get("checkpoint"), task_extra=_replay_task_extra(t))
             out.mkdir(parents=True, exist_ok=True)
             (out / "meta.json").write_text(json.dumps(
                 {"schema": SCHEMA,
-                 "task": {**t, "policy_revision": POLICY_REVISION,
+                 "task": {**t,
                           "note": f"反事实：第 {decision} 步改为 "
                                   f"{_action_text(top[1], deck)}"},
                  "outcome": rec["outcome"], "totals": rec["totals"],
@@ -1031,12 +982,7 @@ def _vocabulary() -> str:
     L.append("  不用自己翻译。")
     L.append("")
     L.append("── 复盘用的两个事实 ──")
-    L.append("  · actions 输出里每个动作可能带〔规则名〕后缀（如〔③经济〕）——那是")
-    L.append("    脚本策略自己标注的\"这个决策命中了哪条规则\"，不用再从行为反推。")
-    L.append("    whatif 的 override 动作没有后缀（它是你给的动作，不是策略选的）。")
-    L.append("  · frame 输出的「全盘计数」行给出生产者/射手/睡莲/香蒲的全盘总数；")
-    L.append("    脚本策略的关键规则阈值（③生产者、⑤射手、④香蒲）都是**全盘量**，")
-    L.append("    用这行直接判断哪条规则会触发，别从棋盘字符里数。")
+    L.append("  · frame 输出的「全盘计数」行给出生产者/射手/睡莲/香蒲的全盘总数，别从棋盘字符里数。")
     L.append("  · 环境是确定性的：同 (level, seed, policy, deck) 重抓一局，帧序列与")
     L.append("    决策编号逐位一致。重新 capture 后旧分析里的决策序号可直接复用。")
     return "\n".join(L)
@@ -1104,22 +1050,17 @@ def main() -> None:
     c.add_argument("--seed", type=int, default=None,
                    help="不给就取 --task-manifest 里该任务的第一个种子。")
     c.add_argument("--level", type=int, default=7)
-    c.add_argument("--policy", choices=["scripted", "donothing", "ppo", "student"], default="scripted",
-                   help="student = 专家迭代的学生网络（--checkpoint 给 model.pt，卡组用 --task-manifest/--task-id）")
-    c.add_argument("--checkpoint", default=None,
-                   help="--policy ppo 时用：训练出来的检查点 .pt 路径。只做推理，不训练。")
-    c.add_argument("--sampled", action="store_true",
-                   help="--policy ppo 时用：按概率采样（默认贪心，可复现）。")
-    c.add_argument("--policy-rng-seed", type=int,
-                   help="PPO 动作采样随机种子，默认等于 --seed。")
+    c.add_argument("--policy", choices=["student"], default="student",
+                   help="只有 student = 专家迭代的学生网络（卡组用 --task-manifest/--task-id）")
+    c.add_argument("--checkpoint", required=True, help="学生 model.pt")
     c.add_argument("--deck", default=None)
     c.add_argument("--task-manifest", default=None,
                    help="复现训练任务：任务清单 json（如 "
-                        "experiments/t7/bridge_level7_v1/train.json）。给了它就用清单里的 "
+                        "artifacts/stage4/day_l7_hard.json）。给了它就用清单里的 "
                         "level / deck / 波数上限 / 僵尸倍率 / 预种植物 —— 这些是训练时"
                         "真正用的值，手抄到命令行会漂。")
     c.add_argument("--task-id", default=None,
-                   help="--task-manifest 里的任务 id（如 train_roof_4）。")
+                   help="--task-manifest 里的任务 id（如 day_l7_z20_eval）。")
     c.add_argument("--wave-cap", type=int, default=None,
                    help="复现评估任务：这一关只打前 N 波（训练用的任务族常设上限）。")
     c.add_argument("--zombie-mult", type=float, default=None,
@@ -1192,10 +1133,6 @@ def main() -> None:
                            help="把最好的那个反事实整局存成新存档，"
                                 "之后可以用 lane / narrative / frame 复查它")
             p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
-            p.add_argument("--sampled", action="store_true",
-                           help="PPO 反事实后续按概率采样，每次默认生成新随机种子。")
-            p.add_argument("--policy-rng-seed", type=int,
-                           help="指定 PPO 动作采样种子，便于重放同一份采样结果。")
 
     args = ap.parse_args()
 
@@ -1231,22 +1168,9 @@ def main() -> None:
             print("要给 --seed，或者用 --task-manifest + --task-id。", file=sys.stderr)
             return 2
         res = capture(args.resource_dir, seed, level, args.policy, deck,
-                      Path(args.out), args.max_actions, checkpoint=args.checkpoint,
-                      deterministic=not args.sampled, task_extra=task_extra,
-                      policy_rng_seed=args.policy_rng_seed)
+                      Path(args.out), args.max_actions, checkpoint=args.checkpoint, task_extra=task_extra)
         print(f"已存档到 {args.out}：{res['meta']['frame_count']} 帧，"
               f"{res['meta']['outcome']['reason']}")
-        sb = res["meta"].get("simulator_build") or {}
-        if sb.get("status") == "mismatch":
-            print("")
-            print("⚠ 这一局用的模拟器 build 与检查点训练时的**不是同一个**：")
-            print(f"    训练时 {sb['trained']}…   本机 {sb['local']}…")
-            print("  跨平台编译同一份源码字节就不同，所以这不等于行为变了；")
-            print("  但这一局里 whatif 算出的结果属于**本机 build**，"
-                  "要拿它跟训练时的成绩直接比就得先说明这一点。")
-        elif sb.get("status") == "unknown":
-            print("（模拟器 build 对不上号：本机没有 build/pvz-portable，"
-                  "或检查点没记 fingerprints.simulator）")
         return
 
     if args.cmd == "vocabulary":
@@ -1255,55 +1179,20 @@ def main() -> None:
         return
 
     if args.cmd == "policy":
-        if args.archive:
-            meta, _ = load(Path(args.archive))
-            t = meta["task"]
-            if t.get("policy") == "student":
-                print("\n".join([
-                    "这一局是**专家迭代的学生网络**打的（DESIGN.md §13–§14），不是规则脚本，也不是 PPO。",
-                    "",
-                    f"  检查点：{t.get('checkpoint')}（指纹 {t.get('checkpoint_sha256')}）",
-                    "  怎么来的：模仿“学生 + 搜索”这位老师在每个局面的选择（搜索 = 每张卡挑一个格子、"
-                    "再加“先不种”，各自往后模拟 3000 tick 比输赢）。老师自己也只考虑每张卡一个格子。",
-                    "  它看什么：这一帧的棋盘与卡槽、上一帧、上一步实际执行的动作。**没有更长的记忆**。",
-                    "  它怎么选：先判断“种还是等”（等 = 60 tick），种的话选哪张卡、哪个格子，全部贪心。",
-                    "",
-                    "它没有可以读的规则表 —— 想知道某一步为什么这么选，只能看当时局面（frame / lane）",
-                    "和试别的动作会怎样（whatif；--enumerate 会把当时所有合法动作都试一遍）。",
-                    "whatif 换掉一步之后，后面仍由同一个学生网络接着打。",
-                ]))
-                return
-            if t.get("policy") == "ppo":
-                # 这条分支存在的理由：脚本规则那份文档描述的是 if-else 链，
-                # 而 RL 存档里打棋的是**训练出来的网络**。如果把那份规则发给
-                # 模型，它会拿着一套不存在的规则去解释每一步（"这一步命中了
-                # 规则 ③"），整份诊断就建立在一个错误前提上 —— 和 S5 那次
-                # 6 路渲染 bug 是同一类事故，只是更难发现。
-                L = ["这一局是**训练出来的 RL 模型**打的，不是规则脚本。",
-                     "",
-                     f"  检查点：{t.get('checkpoint')}",
-                     f"  指纹（前 16 位）：{t.get('checkpoint_sha256')}",
-                     f"  观测格式版本：{t.get('observation_version')}（本机代码 4）",
-                     f"  选动作方式：{'贪心（可复现）' if t.get('deterministic') else '按概率采样'}",
-                     "",
-                     "它没有可以读的 if-else 规则表 —— 它的行为是网络权重决定的，",
-                     "**没有文档能告诉你它为什么这么走**。想知道它某一步为什么",
-                     "这么选，只能看当时局面（frame / lane）和试别的动作会怎样",
-                     "（whatif --enumerate，会把它当时所有合法动作的结果都算出来）。",
-                     "",
-                     "注意：下面这份规则表描述的是 scripted 策略，和这一局无关：",
-                     ""]
-                from scripted_baseline import decision_rules_text
-                print("\n".join(L))
-                print(decision_rules_text())
-                return
-            from scripted_baseline import decision_rules_text
-            print(decision_rules_text())
-            return
-        # 描述写在 scripted_baseline.py 里、紧挨着它描述的 choose()，
-        # 并自带"数字必须能在源码里找到"的校验 —— 见那个文件的注释。
-        from scripted_baseline import decision_rules_text
-        print(decision_rules_text())
+        t = load(Path(args.archive))[0]["task"] if args.archive else {}
+        print("\n".join([
+            "这一局是**专家迭代的学生网络**打的（DESIGN.md §13–§14），不是规则脚本。",
+            "",
+            *([f"  检查点：{t.get('checkpoint')}（指纹 {t.get('checkpoint_sha256')}）"] if t else []),
+            "  怎么来的：模仿“学生 + 搜索”这位老师在每个局面的选择（搜索 = 每张卡挑少数几个格子、"
+            "再加“先不种”，各自往后模拟约 2500 tick 用价值网络比输赢）。",
+            "  它看什么：这一帧的棋盘与卡槽、上一帧、上一步实际执行的动作。**没有更长的记忆**。",
+            "  它怎么选：先判断“种还是等”（等 = 60 tick），种的话选哪张卡、哪个格子，全部贪心。",
+            "",
+            "它没有可以读的规则表 —— 想知道某一步为什么这么选，只能看当时局面（frame / lane）",
+            "和试别的动作会怎样（whatif；--enumerate 会把当时所有合法动作都试一遍）。",
+            "whatif 换掉一步之后，后面仍由同一个学生网络接着打。",
+        ]))
         return
 
     if args.cmd == "constants":
@@ -1348,8 +1237,7 @@ def main() -> None:
     elif args.cmd == "whatif":
         print(_whatif(Path(args.archive), meta, frames, args.decision, args.raw,
                       args.resource_dir, args.enumerate, args.row, args.limit,
-                      args.save_best, sampled=args.sampled,
-                      policy_rng_seed=args.policy_rng_seed))
+                      args.save_best))
 
 
 if __name__ == "__main__":

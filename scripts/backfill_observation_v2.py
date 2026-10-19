@@ -29,7 +29,7 @@ def _init(args):
 
 def backfill(path: Path):
     from pvz_env import TaskSpec
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     started = time.perf_counter()
     frames = read_frames(path)
     meta = json.loads((path.parent / "meta.json").read_text())

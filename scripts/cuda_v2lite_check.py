@@ -67,7 +67,7 @@ def main() -> None:
     from pvz_rollout_policy import act, load_student
     from pvz_student_observation import StudentHistory
     from render_episode import _frame, load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
 
     net = load_student(args.rollout_policy)
     if net.obs not in ("v2lite", "v2"):

@@ -87,7 +87,7 @@ def _init(args) -> None:
 def _reset(seed: int):
     from pvz_env import TaskSpec
     from render_episode import load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     args = _W["args"]
     kw = training_task_kwargs(load_training_task(args.manifest, args.task_id), seed)
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),

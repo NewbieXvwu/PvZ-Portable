@@ -102,7 +102,7 @@ def _worker(seed: int) -> dict:
     sys.path.insert(0, str(ROOT / "python"))
     from pvz_env import TaskSpec
     from render_episode import load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     kw = load_training_task(Path(args["manifest"]), args["task_id"])
     task = TaskSpec(level=kw["level"], seed=seed, playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"])),

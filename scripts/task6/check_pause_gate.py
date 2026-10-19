@@ -9,7 +9,6 @@ import datetime
 import json
 import os
 from pathlib import Path
-import re
 import signal
 import subprocess
 import sys
@@ -75,12 +74,9 @@ def main():
                 rss = swap = 0
                 for pid in owned:
                     try:
-                        text = Path(f"/proc/{pid}/status").read_text()
-                        for label in ("VmRSS", "VmSwap"):
-                            m = re.search(rf"^{label}:\s+(\d+)", text, re.M)
-                            if m:
-                                if label == "VmRSS": rss += int(m[1])
-                                else: swap += int(m[1])
+                        status = dict(line.split(":", 1) for line in Path(f"/proc/{pid}/status").read_text().splitlines())
+                        rss += int(status.get("VmRSS", "0 kB").split()[0])
+                        swap += int(status.get("VmSwap", "0 kB").split()[0])
                     except FileNotFoundError:
                         pass
                 peak_rss, peak_swap = max(peak_rss, rss), max(peak_swap, swap)
@@ -103,13 +99,14 @@ def main():
                 if paused_pids:
                     time.sleep(2)
                     continue
-                gpu_log = run / "logs/gpu.log"
-                text = gpu_log.read_text() if gpu_log.exists() else ""
-                if client is None and not resumed:
-                    socket = re.search(r"cuda rollout server: (.+), \d+ lanes", text)
-                    if socket:
-                        client = CudaRolloutClient(socket[1], timeout=600)
-                        client.connect()
+                gpu = run / ".parts/gpu"   # search_play's --out for the GPU part (scripts/mixed_dagger_round.sh)
+                server = gpu / "cuda_server.json"
+                pauses = gpu / "gpu_pause.jsonl"
+                paused = pauses.exists() and any(json.loads(line)["event"] == "paused"
+                                                 for line in pauses.read_text().splitlines())
+                if client is None and not resumed and server.exists():
+                    client = CudaRolloutClient(json.loads(server.read_text())["socket"], timeout=600)
+                    client.connect()
                 if client is not None:
                     status = client.status()
                     status_rows.append({**row, **status})
@@ -117,7 +114,7 @@ def main():
                         pause.touch()
                         touched = True
                         event("touch_during_game", status=status)
-                    if touched and boundary is None and "GPU collection paused before seed" in text:
+                    if touched and boundary is None and paused:
                         boundary = time.monotonic()
                         initial_status = status
                         event("game_boundary_paused", status=status)

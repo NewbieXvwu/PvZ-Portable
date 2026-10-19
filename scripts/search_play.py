@@ -73,10 +73,18 @@ def _wait_for_gpu_pause(args, seed: int) -> None:
             if client is not None:
                 client.connect()
             print(f"GPU collection paused before seed {seed}: {path}", flush=True)
+            _gpu_pause_event(args, "paused", seed)
             announced = True
         time.sleep(10)
     if announced:
         print(f"GPU collection resumed before seed {seed}", flush=True)
+        _gpu_pause_event(args, "resumed", seed)
+
+
+def _gpu_pause_event(args, event: str, seed: int) -> None:
+    """The same news as the printed line, for programs: one JSON line per event in <out>/gpu_pause.jsonl."""
+    with (Path(args.out) / "gpu_pause.jsonl").open("a") as f:
+        f.write(json.dumps({"event": event, "seed": seed, "time": time.time()}) + "\n")
 
 
 def _close_worker_env():
@@ -603,7 +611,7 @@ def _play(job: dict) -> dict:
     import torch
     from pvz_event_env import EventWaitEnv
     from render_episode import _frame, load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     from pvz_env import TaskSpec
     kw = training_task_kwargs(load_training_task(Path(args.manifest), args.task_id), job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading
@@ -872,6 +880,7 @@ def main() -> None:
                                                     lanes=args.cuda_lanes, gather_ms=args.cuda_gather_ms,
                                                     start_timeout_ms=600000, log=log)
         print(f"cuda rollout server: {cuda_socket}, {args.cuda_lanes} lanes", flush=True)
+        (args.out / "cuda_server.json").write_text(json.dumps({"socket": cuda_socket, "lanes": args.cuda_lanes}) + "\n")
     if args.measure_cpu:
         import resource
         from pvz_cpu_usage import usage, difference, wait_with_cpu_usage

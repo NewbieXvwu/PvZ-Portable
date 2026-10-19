@@ -33,7 +33,7 @@ from pvz_event_env import EventWaitEnv  # noqa: E402
 from pvz_rollout_policy import RolloutNet, act, features, load_student, export_student  # noqa: E402
 from pvz_value_net import _featurize_reference, featurize, observation_context  # noqa: E402
 from render_episode import _frame, load_training_task, training_task_kwargs  # noqa: E402
-from scripted_baseline import profile_for_deck  # noqa: E402
+from pvz_tasks import profile_for_deck  # noqa: E402
 
 DEFAULT_MANIFEST = ROOT / "experiments/t7/bc_finetune_level7_v1/progress_evaluation_1024.json"
 

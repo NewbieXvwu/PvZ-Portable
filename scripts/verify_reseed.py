@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
-from scripted_baseline import profile_for_deck  # noqa: E402
+from pvz_tasks import profile_for_deck  # noqa: E402
 
 DECK = (0, 1, 2, 3, 4, 5, 7)
 

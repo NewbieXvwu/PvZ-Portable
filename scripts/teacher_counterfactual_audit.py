@@ -106,7 +106,7 @@ def alternatives(obs, point, archived):
 def run_point(point, args, replay_only=False):
     from pvz_frame_store import read_frames
     from render_episode import _frame, load_training_task, training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     from pvz_env import TaskSpec
     from pvz_event_env import EventWaitEnv
     from pvz_student_observation import StudentHistory

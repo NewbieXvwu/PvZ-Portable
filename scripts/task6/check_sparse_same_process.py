@@ -21,7 +21,7 @@ def main():
     from pvz_rollout_policy import load_student,export_student
     from pvz_student_observation import StudentHistory
     from render_episode import _frame,load_training_task,training_task_kwargs
-    from scripted_baseline import profile_for_deck
+    from pvz_tasks import profile_for_deck
     from teacher_counterfactual_audit import alternatives,physical
     artifacts=Path.home()/'PvZ-search/artifacts';student=load_student(artifacts/'student/v29/model.pt')
     net=args.out/'student.bin';export_student(student,net)
