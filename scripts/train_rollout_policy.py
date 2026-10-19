@@ -50,18 +50,20 @@ def _board_store(shape, cache_dir: Path) -> torch.Tensor:
 
 
 class CompactBoards:
-    """CSR boards: uint16 cell indices, float16 values, int64 row offsets."""
+    """CSR rows: uint16 element indices, values (float16 boards, float32 scalars -- lossless either way), int64 row offsets.
+    Scalars are 84% zeros, so 488 bytes a row become ~120 (2026-10-19)."""
 
-    def __init__(self, shape):
+    def __init__(self, shape, dtype=np.float16):
         self.shape = (0, *shape)
+        self.dtype = np.dtype(dtype)
         self.indices = bytearray()
         self.values = bytearray()
         self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
         self.nnz = 0
 
     def append(self, boards):
-        flat = np.asarray(boards, dtype=np.float16).reshape(len(boards), -1)
-        rows, columns = np.nonzero(flat.view(np.uint16))
+        flat = np.asarray(boards, dtype=self.dtype).reshape(len(boards), -1)
+        rows, columns = np.nonzero(flat.view(f"u{self.dtype.itemsize}"))  # bit test: keeps -0.0
         counts = np.bincount(rows, minlength=len(boards))
         self.indices.extend(columns.astype(np.uint16).tobytes())
         self.values.extend(flat[rows, columns].tobytes())
@@ -71,7 +73,7 @@ class CompactBoards:
 
     def finish(self):
         self.indices = np.frombuffer(self.indices, dtype=np.uint16)
-        self.values = np.frombuffer(self.values, dtype=np.float16)
+        self.values = np.frombuffer(self.values, dtype=self.dtype)
         self.offsets = np.frombuffer(self.offsets, dtype=np.int64)
         return self
 
@@ -130,7 +132,12 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
         keep[path] = mask
     capacity = sum(map(sum, keep.values()))
     boards = scalars = None
-    plant, packet, cell, weight, seed_of, values = [], [], [], [], [], []
+    # Per-row labels go straight into preallocated arrays: as Python lists (8 floats a row for `values`) they cost
+    # ~2 GB of objects on 6.5M rows and the freed arenas stayed in the training process (13 GB RSS, 2026-10-19).
+    plant, weight = np.empty(capacity, np.float32), np.empty(capacity, np.float32)
+    packet, cell = np.empty(capacity, np.int64), np.empty(capacity, np.int64)
+    values = np.empty((capacity, PACKETS + 1), np.float32)
+    seed_of = []
     cands = np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16) if cells else None
     n = 0
     for path in paths:
@@ -149,16 +156,20 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 if boards is None:
                     boards = (_board_store((capacity, *rows_boards.shape[1:]), cache_dir) if dense_boards
                               else CompactBoards(rows_boards.shape[1:]))
-                    scalars = torch.empty((capacity, rows_scalars.shape[1]), dtype=torch.float32)
+                    scalars = (torch.empty((capacity, rows_scalars.shape[1]), dtype=torch.float32) if dense_boards
+                               else CompactBoards(rows_scalars.shape[1:], np.float32))
                 if dense_boards:
                     boards[n:n + count] = torch.from_numpy(rows_boards[selected])
                 elif count:
                     boards.append(rows_boards[selected])
-                scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
-                types = stored["plant"][selected].tolist()
-                plant.extend(types)
-                packet.extend(stored["packet"][selected].tolist())
-                cell.extend(stored["cell"][selected].tolist())
+                if dense_boards:
+                    scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
+                elif count:
+                    scalars.append(rows_scalars)
+                types = stored["plant"][selected]
+                plant[n:n + count] = types
+                packet[n:n + count] = stored["packet"][selected]
+                cell[n:n + count] = stored["cell"][selected]
                 vals = stored["values"][selected]
                 if cells:
                     if path not in cell_cached:
@@ -166,9 +177,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                     with np.load(cell_cached[path], allow_pickle=False) as side:
                         assert np.array_equal(side["rows"], stored["rows"]), path
                         cands[n:n + count] = side["cands"][selected]
-                values.extend(vals.tolist())
-                searched = (~np.isnan(vals)).any(1).tolist()
-                weight.extend(scale * (1.0 if kind or done else 1.0 / wait_keep) for kind, done in zip(types, searched))
+                values[n:n + count] = vals
+                weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / wait_keep) * scale
                 seed_of.extend([seed] * count)
                 n += count
             continue
@@ -188,23 +198,26 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             if boards is None:
                 boards = (torch.empty((capacity, *b.shape), dtype=torch.half) if dense_boards
                           else CompactBoards(b.shape))
-                scalars = torch.empty((capacity, *s.shape), dtype=s.dtype)
+                scalars = (torch.empty((capacity, *s.shape), dtype=s.dtype) if dense_boards
+                           else CompactBoards(s.shape, np.float32))
             if dense_boards:
                 boards[n] = b
+                scalars[n] = s
             else:
                 boards.append(b.numpy()[None])
-            scalars[n] = s; n += 1
+                scalars.append(s.numpy()[None])
+            n += 1
             seed_of.append(seed)
             is_plant = action["type"] == "plant"
-            plant.append(float(is_plant))
-            weight.append(scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep))
-            packet.append(action["packet"] if is_plant else -1)
-            cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
-            values.append(target_values(frames[i].get("targets")))
+            plant[n - 1] = float(is_plant)
+            weight[n - 1] = scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep)
+            packet[n - 1] = action["packet"] if is_plant else -1
+            cell[n - 1] = action["row"] * LAWN_COLS + action["col"] if is_plant else -1
+            values[n - 1] = target_values(frames[i].get("targets"))
             if cells:
                 cands[n - 1] = candidate_cells(frames[i].get("targets"))
-    return (boards[:n] if dense_boards else boards.finish(), scalars[:n], torch.tensor(plant), torch.tensor(packet), torch.tensor(cell),
-            torch.tensor(weight), seed_of, torch.tensor(values, dtype=torch.float32).reshape(-1, PACKETS + 1),
+    return (*((boards[:n], scalars[:n]) if dense_boards else (boards.finish(), scalars.finish())), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
+            seed_of, torch.from_numpy(values[:n]),
             None if cands is None else torch.from_numpy(cands[:n]))
 
 
@@ -267,8 +280,9 @@ def main() -> None:
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
     memory = {"rows": len(plant), "board_bytes": boards.numel() * boards.element_size() if args.dense_boards else boards.nbytes,
+              "scalar_bytes": scalars.numel() * scalars.element_size() if args.dense_boards else scalars.nbytes,
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
-                                  for tensor in (scalars, plant, packet, cell, weight, values, is_val))}
+                                  for tensor in (plant, packet, cell, weight, values, is_val))}
     print(json.dumps({"data_memory": memory}), flush=True)
 
     if args.packet_balance:
@@ -307,7 +321,7 @@ def main() -> None:
 
     def batch_loss(idx, train):
         b = boards[idx].float().to(args.device) if args.dense_boards else boards.batch(idx, args.device)
-        s = scalars[idx].to(args.device)
+        s = scalars[idx].to(args.device) if args.dense_boards else scalars.batch(idx, args.device)
         y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
         w = weight[idx].to(args.device)
         planted = y > 0.5
