@@ -9,14 +9,15 @@
 
 ### task6 采集提速（第68轮复核，2026-10-19，进行中）
 
-**推荐配置（正式队列）**：仍用下面的 2+2 混采一条命令，另加两个环境变量：
+**推荐配置（正式队列）**：训练期间先用暂停闸门让GPU采集让路；允许同时采集时，
+当前共享负载的小样本建议3+1，主机CPU更省、吞吐与纯CPU4接近。配置如下：
 
 ```bash
 PVZ_GPU_PAUSE_FILE=/tmp/pvz_gpu_pause scripts/mixed_dagger_round.sh \
   --student ~/PvZ-search/artifacts/student/v28/model.pt \
   --task day_l7_z17_train --seed-offset 15010 --games 8 \
   --frames ~/PvZ-search/artifacts/student/frames --frames-label z17dag_cuda \
-  --out ~/PvZ-search/artifacts/hard/z17_dagger_cuda_15010 --cpu-workers 2 --gpu-workers 2
+  --out ~/PvZ-search/artifacts/hard/z17_dagger_cuda_15010 --cpu-workers 3 --gpu-workers 1
 ```
 
 `mixed_dagger_round.sh` 已默认 `PVZ_CUDA_POLL_US=100`（显式设0恢复旧等待）；
@@ -95,9 +96,26 @@ cb的省CPU实测用的是另一个 `rollout_cuda_poll`。当前已从源码重�
    第68轮当前v28正式小波调度补测108道：每轮13.7ms中sim1.7、trunk0.7、heads+apply1.9、
    同步与提交差额9.4ms；trunk约5.1%。这是开启PHASE事件计时的共享负载测量，包含计时扰动，
    不把9.4ms当纯驱动开销；不足以支持优先降精度，因此不引入量化/低精度路径。
-6. **方向 7（N:M）本轮未重测**：正式队列占着 GPU，重测会被背景负载污染。可用的边界来自第 2 条：
-   训练重叠时先用暂停闸门。服务 CPU 节约按每个服务进程统计，不乘 worker 数；
-   2个GPU worker共用一个服务，不能推成省1.7核。自有游戏最多4个，后续 N:M 重测遵守该上限。
+6. **方向7（N:M），第69/71轮已在当前真实负载重测**：v28、k2、verify9、beta0，
+   同四个种子1725000–1725003，始终有正式训练394162和原GPU采集356666在场，最多4个自有游戏。
+   先保留旧等待的4+0/2+2/3+1/4+0对照，再以确认生效的poll100重跑GPU配置和CPU参照。
+
+   | 当前poll100配置 | 四局采集墙钟 | 局/小时 | 主机CPU秒/局 | 自有RSS峰 | 全卡显存采样峰 |
+   |---|---:|---:|---:|---:|---:|
+   | 4 CPU | 162 s | 88.89 | 118.257 | 3.21 GiB | 4458 MiB |
+   | 2 CPU + 2 GPU | 184 s | 78.26 | 83.223 | 4.22 GiB | 5370 MiB |
+   | 3 CPU + 1 GPU | 160 s | 90.00 | 86.310 | 4.23 GiB | 5370 MiB |
+
+   3+1相对纯CPU主机成本少27.0%，吞吐只差1.25%，在同期CPU参照83.72–88.89局/时的波动范围内；
+   它比2+2吞吐高15%，CPU成本仅高3.7%，是本次较合适的折中。**不外推为普适最优**：只有四种子，
+   其中一局很短，共享负载持续变化。训练优先时仍先暂停GPU臂（新队列可用4+0）。
+   旧2+2服务CPU共132.126s，新产物18.962s；GPU臂主机CPU79.660→22.991s/局，
+   两个GPU完整档案逐字节相同；新3+1的GPU档案也与参照全等。
+   主机CPU账按每个服务统计，不乘worker数。自身swap全零、可用内存最低5.67GiB，未触发暂停；
+   WSL每PID显存不可用，表中显存是包含正式作业的全卡峰值，不能冒充自有占用。
+   可复现脚本 `scripts/task6/compare_worker_mix.py --student <model.pt> --out <新目录>`；
+   原始命令、各阶段资源采样、二进制SHA、真实等待确认和完整帧对照见本地
+   `codex_r69/`、`codex_r71_mix/{comparison,gpu_frame_parity}.json`。
 
 第68轮另试质量中性优化：在GPU内连续执行无需网络的等待动作，每步仍更新全部历史/计数/RNG。
 108道与冻结服务的结果及叶子位全等，但同步轮286→266（只少7.0%），ABBA rollout耗时
