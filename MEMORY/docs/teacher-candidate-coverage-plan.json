@@ -1,0 +1,45 @@
+{
+  "registered_before_collection_and_acceptance": "2026-10-20T04:08:10.357503+08:00",
+  "base_revision": "b93a840",
+  "method": "learned set-conditioned candidate proposer; no plant/column rules or hand-weighted acquisition score",
+  "training": {
+    "independent_source_games": 23,
+    "train_games": 18,
+    "validation_games": 5,
+    "states": 552,
+    "selection_sha256": "155e2bcc1f9783ed011076508f2c583f49150f6b5566d10469958f34625b1b61",
+    "all_legal_plants_plus_wait": true,
+    "paired_futures_per_action": 3,
+    "continuation": "v29/v3/2500/mask61; branch1 static features; common future seeds across actions",
+    "root_sampling": "up to24 teacher-search states/game,12wave0..3 and12later,fill shortages from remaining searchstates; no plant/cell filters",
+    "target": "mean over training futures of positive improvement over the best member of the supplied candidate set; contexts are legacy set,legacy+oracle,legacy+random; learns complementary coverage from data",
+    "model": "MLP state encoder64;action encoder32;mean/max selected-action embeddings;head64 sigmoid; root features from existing value featurizer and task context; action features cost,student/static scores/ranks/gaps,learned one-hot cell/packet representation",
+    "fit": "train-only normalization; Adam lr0.001 weight_decay0.0001,80 epochs,batch8contexts,seed20261020; lowest validation MSE checkpoint; no tuning on600 evaluation states"
+  },
+  "acceptance": {
+    "selection": "exact task9 original300A+300B; exact236B+83A significant witness actions frompoint_statistics",
+    "primary_budget": 2,
+    "secondary_budget": 4,
+    "arms": "oldD,old(D+7777777),new2D,new2(D+7777777),new4D,new4(D+7777777)",
+    "seed": "D=seed*10000+decision-1; same original future seeds; only candidate additions differ",
+    "metrics": [
+      "exact witness inclusion and final selection",
+      "old/new agreement on all600",
+      "old/old and new/new reseed noise for each budget",
+      "actual halving+verification continuation counts and increase",
+      "added candidates by cost/card and new represented cells/rows/columns,reported only,not policy rules"
+    ],
+    "confidence": "game-cluster bootstrap for agreement/count increases;Wilson for class-specific witness inclusion;pool uses game clustering because A/B can share game",
+    "invariants": [
+      "default off reproduces all600 original labels/rounded targets",
+      "existing candidates never removed or reordered",
+      "extra candidates legal,unique,within explicit budget",
+      "train/val games disjoint fromall361 evaluationgames",
+      "model frozen before evaluating; report all budgets, no retuning on testcases"
+    ],
+    "no_win_claim": "main owns student retraining and win evaluation; leaf improvements need not improve wins"
+  },
+  "resources": "at most4 own game processes; pause own subtree below2GiB, resume>=3GiB; no production jobs paused",
+  "task10": "structured CUDA summary_json; results/leaf bytes unchanged, JSON rounded timing equals same-run old console parser; baseline parser no longer used inbench",
+  "delivery": "cuda-h8 local; review branch cuda-merge may be pushed after validation; keep pvz-env cleanup; no binaries/checkpoints/npz/logs ingit"
+}
