@@ -24,17 +24,20 @@ def cluster_metrics(rows):
     games=sorted({r['seed'] for r in rows})
     index={s:i for i,s in enumerate(games)}
     arrays={name:np.zeros(len(games)) for name in ['n','old_noise','new2_agreement','new4_agreement',
-        'new2_noise','new4_noise','old_count','new2_count','new4_count']}
+        'new2_noise','new4_noise','old_count','new2_count','new4_count',
+        'old_cpu','new2_cpu','new4_cpu']}
     for r in rows:
         i=index[r['seed']];a=r['arms'];arrays['n'][i]+=1
         same=lambda x,y:action_key(a[x]['chosen'])==action_key(a[y]['chosen'])
         arrays['old_noise'][i]+=same('old','old_noise')
         arrays['old_count'][i]+=a['old']['actual_continuations']
+        arrays['old_cpu'][i]+=a['old']['worker_and_simulator_cpu_seconds']
         for budget in (2,4):
             name=f'new{budget}'
             arrays[name+'_agreement'][i]+=same('old',name)
             arrays[name+'_noise'][i]+=same(name,name+'_noise')
             arrays[name+'_count'][i]+=a[name]['actual_continuations']
+            arrays[name+'_cpu'][i]+=a[name]['worker_and_simulator_cpu_seconds']
     rng=np.random.default_rng(20261020)
     picks=rng.integers(0,len(games),size=(10000,len(games)))
     def totals(name):return arrays[name][picks].sum(axis=1)
@@ -81,6 +84,10 @@ def main():
                 best_included+=action_key(w['best_action']) in keys
                 best_chosen+=action_key(w['best_action'])==action_key(a['chosen'])
             added=[a for row in group for a in row['arms'][arm]['added']]
+            costs=Counter()
+            for row in group:
+                packets={p[0]:p for p in row['packets']}
+                costs.update(str(packets[a['packet']][-1]) for a in row['arms'][arm]['added'])
             new_cells=new_rows=new_cols=0
             for row in group:
                 old=[a for a in row['arms']['old']['candidates'] if a['type']=='plant']
@@ -93,8 +100,11 @@ def main():
                 'best_included_secondary':wilson(best_included,len(significant)),
                 'best_chosen_secondary':wilson(best_chosen,len(significant)),
                 'added_candidates':len(added),'added_by_packet':dict(Counter(a['packet'] for a in added)),
+                'added_by_cost':dict(costs),
                 'new_cells_total':new_cells,'new_rows_total':new_rows,'new_columns_total':new_cols,
-                'actual_continuations':sum(r['arms'][arm]['actual_continuations'] for r in group)}
+                'actual_continuations':sum(r['arms'][arm]['actual_continuations'] for r in group),
+                'host_cpu_seconds':sum(r['arms'][arm]['worker_and_simulator_cpu_seconds'] for r in group),
+                'wall_seconds':sum(r['arms'][arm]['wall_seconds'] for r in group)}
         report['classes'][category]=cls
     args.out.write_text(json.dumps(report,indent=2)+'\n')
     print(json.dumps(report['pooled'],indent=2))

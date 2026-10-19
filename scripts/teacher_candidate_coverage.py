@@ -14,6 +14,7 @@ import json
 import multiprocessing
 from pathlib import Path
 import sys
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
@@ -144,6 +145,8 @@ def collect(env, obs, policy, args, seed, point):
 def audit(env, obs, policy, args, seed, point, archived, coverage):
     import search_play as teacher
     from pvz_candidate_coverage import action_key
+    from pvz_cpu_usage import process_usage, usage
+    from render_episode import _frame
     original_halving, original_rollout = teacher._halving_choice, teacher._rollout_policy
     rows = {}
     try:
@@ -163,7 +166,13 @@ def audit(env, obs, policy, args, seed, point, archived, coverage):
                 assert coverage is not None
                 teacher._W['coverage'], teacher._W['coverage_budget'] = coverage, budget
             stats = {'searched':0,'overrides':0,'override_kinds':Counter()}
+            worker_before, sim_before = usage(), process_usage(env._process.pid)
+            started = time.perf_counter()
             chosen = teacher._search(env, obs, policy, args, seed+offset, stats)
+            elapsed = time.perf_counter()-started
+            worker_after, sim_after = usage(), process_usage(env._process.pid)
+            cpu_seconds = sum(worker_after[k]-worker_before[k]+sim_after[k]-sim_before[k]
+                              for k in ('user_s','system_s'))
             rounded = [[a.get('packet',-1),a.get('row',-1),a.get('col',-1),round(v,4)]
                        for a,v in stats['last_targets'] if abs(v)!=float('inf') and a['type']!='shovel']
             assert actual[0] == stats['halving_rollouts']+18*bool(stats.get('last_verification'))
@@ -180,11 +189,12 @@ def audit(env, obs, policy, args, seed, point, archived, coverage):
                 assert all(action_key(a) in legal for a in captured[len(old):])
             rows[name] = {'chosen':chosen,'candidates':captured,'actual_continuations':actual[0],
                           'halving':stats['halving_rollouts'], 'verification':bool(stats.get('last_verification')),
-                          'added':stats.get('last_coverage_actions',[])}
+                          'added':stats.get('last_coverage_actions',[]),
+                          'wall_seconds':elapsed,'worker_and_simulator_cpu_seconds':cpu_seconds}
     finally:
         teacher._halving_choice, teacher._rollout_policy = original_halving, original_rollout
         teacher._W.pop('coverage', None)
-    return {**point,'arms':rows,'old_label_and_targets_exact':True}
+    return {**point,'arms':rows,'old_label_and_targets_exact':True,'packets':_frame(obs)['packets']}
 
 
 def main():
