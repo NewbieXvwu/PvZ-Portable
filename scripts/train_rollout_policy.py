@@ -28,7 +28,7 @@ import torch.nn.functional as F  # noqa: E402
 
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
 from pvz_frame_store import (CELL_CANDIDATES, cache_candidates, cache_episode, candidate_cells, frame_bytes,  # noqa: E402
-                              frame_paths, read_frames, target_values)
+                              frame_paths, read_frames, row_damage_labels, target_values)
 
 
 def _episode_context(path: Path) -> np.ndarray:
@@ -97,7 +97,7 @@ class CompactBoards:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
-         dense_boards: bool = False, cells: bool = False):
+         dense_boards: bool = False, cells: bool = False, aux_horizon: int = 0):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -113,14 +113,15 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
         from functools import partial
         import multiprocessing as mp
         with ProcessPoolExecutor(max_workers=precompute_workers, mp_context=mp.get_context("spawn")) as pool:
-            cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs), paths, chunksize=8)))
+            cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs,
+                                                      aux_horizon=aux_horizon), paths, chunksize=8)))
             if cells:
                 cell_cached = dict(zip(paths, pool.map(partial(cache_candidates, directory=cache_dir), paths, chunksize=8)))
     for path in paths:
         mask = []
         if cache_dir is not None:
             if path not in cached:
-                cached[path] = cache_episode(path, cache_dir, obs)
+                cached[path] = cache_episode(path, cache_dir, obs, aux_horizon)
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             keep[path] = mask
@@ -139,6 +140,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     values = np.empty((capacity, PACKETS + 1), np.float32)
     seed_of = []
     cands = np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16) if cells else None
+    auxiliary = np.empty((capacity, 6), dtype=np.float32) if aux_horizon else None
     n = 0
     for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
@@ -178,11 +180,14 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                         assert np.array_equal(side["rows"], stored["rows"]), path
                         cands[n:n + count] = side["cands"][selected]
                 values[n:n + count] = vals
+                if aux_horizon:
+                    auxiliary[n:n + count] = stored["aux"][selected]
                 weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / wait_keep) * scale
                 seed_of.extend([seed] * count)
                 n += count
             continue
         frames = read_frames(path)
+        future_damage = row_damage_labels(frames, aux_horizon) if aux_horizon else None
         ctx = _episode_context(path) if with_context else None
         if obs != "v1":
             from pvz_student_observation import StudentHistory
@@ -214,11 +219,14 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             packet[n - 1] = action["packet"] if is_plant else -1
             cell[n - 1] = action["row"] * LAWN_COLS + action["col"] if is_plant else -1
             values[n - 1] = target_values(frames[i].get("targets"))
+            if aux_horizon:
+                auxiliary[n - 1] = future_damage[i - 1]
             if cells:
                 cands[n - 1] = candidate_cells(frames[i].get("targets"))
-    return (*((boards[:n], scalars[:n]) if dense_boards else (boards.finish(), scalars.finish())), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
+    result = (*((boards[:n], scalars[:n]) if dense_boards else (boards.finish(), scalars.finish())), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
             seed_of, torch.from_numpy(values[:n]),
             None if cands is None else torch.from_numpy(cands[:n]))
+    return (*result, torch.from_numpy(auxiliary[:n])) if aux_horizon else result
 
 
 def main() -> None:
@@ -273,11 +281,14 @@ def main() -> None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    boards, scalars, plant, packet, cell, weight, seed_of, values, cands = load(args.data, set(args.labels.split(",")),
+    loaded = load(args.data, set(args.labels.split(",")),
                                                                  args.wait_keep, label_weight,
                                                                  (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None,
                                                                  args.context, args.obs, args.precompute_workers, args.dense_boards,
-                                                                 cells=bool(args.cell_soft_weight))
+                                                                 cells=bool(args.cell_soft_weight),
+                                                                 aux_horizon=args.aux_horizon if args.aux_weight else 0)
+    boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
+    auxiliary = loaded[9] if args.aux_weight else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
@@ -332,9 +343,12 @@ def main() -> None:
         y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
         w = weight[idx].to(args.device)
         planted = y > 0.5
-        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0))
+        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight))
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / w.sum()
+        if args.aux_weight:
+            row_loss = F.binary_cross_entropy_with_logits(out["aux"], auxiliary[idx].to(args.device), reduction="none").mean(1)
+            loss = loss + args.aux_weight * (row_loss * w).sum() / w.sum()
         if args.soft_weight:
             v = values[idx].to(args.device)
             known = ~torch.isnan(v)
@@ -393,8 +407,10 @@ def main() -> None:
         epoch_started = time.perf_counter()
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
+        train_loss = 0.0
         for start in range(0, len(perm), 2048):
             loss, _ = batch_loss(perm[start:start + 2048], True)
+            train_loss += float(loss.detach()) * len(perm[start:start + 2048])
             opt.zero_grad(); loss.backward(); opt.step()
             if schedule is not None:
                 schedule.step()
@@ -408,7 +424,8 @@ def main() -> None:
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "val_loss": float(vl), **vs, "seconds": time.perf_counter() - epoch_started})
+        history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": float(vl),
+                        **vs, "seconds": time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:
             args.out.mkdir(parents=True, exist_ok=True)

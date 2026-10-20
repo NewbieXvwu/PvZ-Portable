@@ -30,6 +30,38 @@ def read_frames(path: Path) -> list[dict]:
     return [json.loads(line) for line in frame_bytes(path).splitlines() if line.strip()]
 
 
+def row_damage_labels(frames: list[dict], horizon: int) -> np.ndarray:
+    """Per input frame: plant disappearance or first mower activation in the next K decisions.
+
+    Archives expose disappearance, not a per-plant cause of death. Executed shovels are excluded;
+    natural consumption/expiry remains indistinguishable from destruction in these archives.
+    The final window ends at the last recorded frame. Sampling training rows never changes K.
+    """
+    from collections import Counter
+    events = np.zeros((len(frames), 6), dtype=np.int64)
+    for index in range(1, len(frames)):
+        previous, current = frames[index - 1], frames[index]
+        before = Counter(tuple(plant[:3]) for plant in previous["plants"])
+        after = Counter(tuple(plant[:3]) for plant in current["plants"])
+        action = current.get("action") or {}
+        for row, col, _kind in before - after:
+            if (action.get("type") == "shovel" and not current.get("action_rejected")
+                    and (row, col) == (action.get("row"), action.get("col"))):
+                continue
+            events[index, row] = 1
+        old_mowers, new_mowers = dict(previous["mowers"]), dict(current["mowers"])
+        for row, state in new_mowers.items():
+            if state == 2 and old_mowers.get(row) != 2:
+                events[index, row] = 1
+        for row, state in old_mowers.items():
+            if state != 2 and row not in new_mowers:
+                events[index, row] = 1
+    cumulative = events.cumsum(axis=0)
+    starts = np.arange(len(frames))
+    ends = np.minimum(starts + horizon, len(frames) - 1)
+    return (cumulative[ends] > cumulative[starts]).astype(np.float32)
+
+
 def target_values(targets) -> list[float]:
     from pvz_rollout_policy import PACKETS
     out = [float("nan")] * (PACKETS + 1)
@@ -180,11 +212,15 @@ def write_frames(path: Path, frames: list[dict]):
           **encode_frames(frames, source))
 
 
-def cache_episode(path: Path, directory: Path, obs: str = "v1") -> Path:
+def cache_episode(path: Path, directory: Path, obs: str = "v1", aux_horizon: int = 0) -> Path:
     signature = encoder_signature(obs)
     if obs != "v1":
         directory = directory / obs
-    if path.suffix == ".npz":
+    if aux_horizon:
+        directory = directory / f"aux_v1_k{aux_horizon}"
+        signature = hashlib.sha256((signature + "aux_v1" + str(aux_horizon)
+                                    + inspect.getsource(row_damage_labels)).encode()).hexdigest()
+    if path.suffix == ".npz" and not aux_horizon:
         with np.load(path, allow_pickle=False) as stored:
             if "encoder" in stored and str(stored["encoder"]) == signature:
                 return path
@@ -197,5 +233,8 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1") -> Path:
                 return target
     frames = [json.loads(line) for line in source.splitlines()]
     encoded = encode_frames(frames, source) if obs == "v1" else encode_student_frames(frames, source, obs)
+    if aux_horizon:
+        encoded.update(aux=row_damage_labels(frames, aux_horizon)[encoded["rows"] - 1],
+                       aux_version=1, aux_horizon=aux_horizon)
     _save(target, digest=digest, **encoded)
     return target
