@@ -235,6 +235,9 @@ def main() -> None:
     p.add_argument("--packet-balance", type=float, default=0.0,
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
+    p.add_argument("--row-pool", action="store_true", help="broadcast learned per-row mean/max features")
+    p.add_argument("--aux-weight", type=float, default=0.0, help="row damage prediction BCE weight (0 = off)")
+    p.add_argument("--aux-horizon", type=int, default=8, help="future decision points for row damage labels")
     p.add_argument("--context", action="store_true",
                    help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
     p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1", help="student feature version")
@@ -264,6 +267,8 @@ def main() -> None:
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
     p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
     args = p.parse_args()
+    if args.aux_weight < 0 or args.aux_horizon < 1:
+        p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
@@ -302,11 +307,13 @@ def main() -> None:
         weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
         print(f"spread weights: {int(compared.sum())} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs)
+    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool, aux=bool(args.aux_weight))
     if args.init:
         from pvz_rollout_policy import load_student
         initial = load_student(args.init)
         weights = initial.state_dict()
+        if net.aux is not None:
+            weights.update({k: v for k, v in net.state_dict().items() if k.startswith("aux.")})
         if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
             weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
             weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
@@ -378,6 +385,7 @@ def main() -> None:
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in (net if ema is None else ema.module).state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
+                "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "ema": args.ema, "cell_soft_weight": args.cell_soft_weight,
                 "history": list(history)}
 
