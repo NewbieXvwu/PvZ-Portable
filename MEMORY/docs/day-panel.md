@@ -73,7 +73,27 @@ flags 照 `artifacts/hard_mac/round15_flags`：`--verify-samples 9 --value artif
 老师（v32 + 搜索，`round15_flags`）在 6 卡上只跑了 1-1、1-2（按主控要求停掉）：
 两关都是 **32/32**、平均丢车 0.53、平均 20 波。这两关学生本来 238/256，差距不在这里。
 
-## 5. 7 卡（`day_panel_d7.json`，正式跑数在台式机）
+## 5. 任务书那张表（现有证据，6 卡）
+
+`scripts/day_panel_report.py` 把各次 `eval_panel.py` 的结果合成任务书要的一行一关，
+并能直接回答“哪几关学生明显不如老师”。现有数据（6 卡，v32 每关 256 局，老师只到 1-1/1-2）：
+
+| 关卡 | 卡组 | v32 胜局 | 老师 胜局 | 平均丢车 | 平均到达波数 |
+|---|---|---|---|---|---|
+| 1-1 | [0,1,2,3,4,5] | 238/256 | 32/32 | 0.48 | 19.98 |
+| 1-2 | [0,1,2,3,4,5] | 238/256 | 32/32 | 0.48 | 19.98 |
+| 1-3 | [0,1,2,3,4,5] | 214/256 | - | 1.05 | 19.90 |
+| 1-4 | [0,1,2,3,4,5] | 211/256 | - | 1.05 | 19.90 |
+| 1-6 | [0,1,2,3,4,5] | 194/256 | - | 1.18 | 19.88 |
+| 1-7 | [0,1,2,3,4,5] | 34/256 | - | 2.35 | 26.75 |
+| 1-8 | [0,1,2,3,4,5] | 86/256 | - | 2.17 | 19.34 |
+| 1-9 | [0,1,2,3,4,5] | 6/256 | - | 2.64 | 23.75 |
+| 1-10 | [0,1,2,3,4,5] | 28/256 | - | 3.41 | 13.58 |
+
+生成命令：`python3 scripts/day_panel_report.py --student v32=artifacts/day_panel/v32
+--teacher 老师=artifacts/day_panel/teacher --deck 0,1,2,3,4,5`。
+
+## 6. 7 卡正式面板（`day_panel_d7.json`，台式机）
 
 7 卡版清单已生成并冒烟验证（`day_l1_d7_eval` 种子 30000 一局：胜、0 丢车、20 波、634 次决策）：
 
@@ -83,47 +103,54 @@ python3 scripts/make_day_panel.py --deck 0,1,2,3,4,5,7 --suffix _d7 \
 ```
 
 任务名 `day_lN_d7_eval`，种子段与 6 卡版相同（30000..31023）。正式跑数由主控在台式机做
-（20 线程），本机不再跑大评估。结果路径回来后补这张表：
-
-| 关卡 | 卡组 | v32 胜局/256 | d35rows2 胜局/256 | 老师 胜局/32 | 丢车 | 到达波数 |
-|---|---|---|---|---|---|---|
-| 1-1 … 1-10 | [0,1,2,3,4,5,7] | 待台式机 | 待台式机 | 待台式机 | | |
-
-台式机命令（清单路径换它自己的工作树）：
+（20 线程），本机不再跑大评估。结果路径回来后，用 `day_panel_report.py` 一次出表：
 
 ```
 python3 scripts/eval_panel.py --rollout-policy artifacts/student/v32/model.pt \
     --value artifacts/hard_mac/value_v3/model.pt --manifest artifacts/stage4/day_panel_d7.json \
     --out artifacts/day_panel/v32_d7 --seeds 256 --workers 20
 
+python3 scripts/eval_panel.py --rollout-policy artifacts/student/d35rows2/model.pt \
+    --value artifacts/hard_mac/value_v3/model.pt --manifest artifacts/stage4/day_panel_d7.json \
+    --out artifacts/day_panel/d35rows2_d7 --seeds 256 --workers 20
+
 python3 scripts/eval_panel.py --rollout-policy artifacts/student/v32/model.pt \
     --value artifacts/hard_mac/value_v3/model.pt --static-value artifacts/hard_mac/value_branch1_desk/model.pt \
     --verify-samples 9 --arms fast_search --manifest artifacts/stage4/day_panel_d7.json \
     --out artifacts/day_panel/teacher_d7 --seeds 32 --workers 20
+
+python3 scripts/day_panel_report.py --student v32=artifacts/day_panel/v32_d7 \
+    --student d35rows2=artifacts/day_panel/d35rows2_d7 \
+    --teacher 老师=artifacts/day_panel/teacher_d7 --deck 0,1,2,3,4,5,7
 ```
 
-## 6. 哪几关学生明显不如老师
+## 7. 哪几关学生明显不如老师
 
-现有直接证据只有 6 卡版的 1-1、1-2：学生 238/256（93%），老师 32/32，**这两关看不出差距**。
-1-3..1-10 的老师数据被主控停掉（改到台式机跑 7 卡版），所以任务书这一问目前没有完整答案。
-按 6 卡版的学生曲线，最值得先采集的是 **1-7、1-8、1-9、1-10**（2%–34%），
-其中 1-9 只有 6/256，1-7 与 1-9 是 30 波。7 卡结果回来后用“学生胜率 vs 老师胜率”的差值重排这张清单。
+`day_panel_report.py` 的结论（阈值 10%，只比较有老师数据的关卡）：
 
-## 7. 交付状态（对照任务书）
+- 已比较 1-1、1-2：学生 93.0% vs 老师 100%，差 −7.0pp，**不构成“明显不如”**。
+- 未比较（没有老师数据）：1-3、1-4、1-6、1-7、1-8、1-9、1-10——老师评估按主控要求停掉，
+  改到台式机跑 7 卡版。
+
+所以任务书这一问目前只有“1-1/1-2 没差距”这一半答案。按 6 卡版的学生曲线，下一步采集重点是
+**1-7（13%）、1-8（34%）、1-9（2%）、1-10（11%）**；7 卡结果回来后用同一脚本按胜率差重排。
+
+## 8. 交付状态（对照任务书）
 
 | 任务书条目 | 状态 |
 |---|---|
 | 清单 `artifacts/stage4/day_panel.json`（不进 git）+ 生成脚本 | 完成（`scripts/make_day_panel.py`，1-5 排除） |
 | 评估脚本（薄包装 `scripts/eval_panel.py`） | 完成，输出每关胜局 / 丢车 / 到达波数 + `panel.json` + 表 |
+| 汇总成任务书表格 + “哪几关不如老师” | 完成（`scripts/day_panel_report.py`，§5/§7） |
 | 学生 v32 每关 256 局 | 完成（6 卡，§4） |
 | 学生 d35rows2 每关 256 局 | **未完成**：HF `transfer/` 与本机都没有这个检查点（§8） |
 | 老师每关 32 局 | **部分**：6 卡 1-1、1-2 完成；其余按主控要求停掉，改台式机 7 卡 |
 | 特殊关 1-5 / 1-10 | 1-5 排除；1-10 能跑但语义是“固定卡组”，见 §2.2 |
 | 卡组/地形核对 | 完成（§3） |
 | 跑测试 `python3 -m pytest python -q` | 完成：216 passed, 12 skipped, 423 subtests passed |
-| 本地提交 / 推送 | `daypanel` 分支 `bb223056` 已推 origin |
+| 本地提交 / 推送 | `daypanel` 分支已推 origin（`bb223056`，报告与脚本更新见后续提交） |
 
-## 8. 问题
+## 9. 问题
 
 - **d35rows2 取不到**：HF `transfer/` 下没有 `d35rows2*`（2026-10-20 10:5x 与 12:0x 两次复查，
   1278 个文件里 `rows`/`d35` 均无命中），本机 `artifacts/student/` 也没有。它是在台式机 rowpool2
