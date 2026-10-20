@@ -1,0 +1,35 @@
+{
+  "registered_at": "2026-10-20T09:08:43.255033+00:00",
+  "timing": "after all14 training; before ANY formal study game; cb two-game pipeline smoke was separate and is not used in inference",
+  "reason": "published evaluation entry point depended on an ignored private runner; include validated memory guard in tracked source",
+  "scope": "engineering dependency only; original helper body byte-equal after repository-root/default-output substitution; CPU environment resolves identically in this worktree",
+  "preserved": [
+    "all14 model bytes and training source freeze",
+    "7 arms and14 training seeds/jobs",
+    "six tiers1024 common environment seeds",
+    "search_play.py and environment source hashes",
+    "Student t/bootstrap/Holm7 and selection/support rules",
+    "8 workers and all admission/memory thresholds"
+  ],
+  "prior_wait_attempt": {
+    "evaluation_pid": 597481,
+    "statistics_waiter_pid": 596388,
+    "deliberate_own_waiting_process_stop": true,
+    "returncode": -15,
+    "formal_games": 0,
+    "archive": "artifacts/cuda/task15/before_tracked_runner"
+  },
+  "tests": {
+    "command": "PYTHONPATH=python:scripts python -m unittest test_dagger_experiment_runner -v",
+    "passed": 2,
+    "skipped": 0,
+    "seconds": 6.013,
+    "real_process_tree_stop_and_resume": true,
+    "foreign_pid_untouched": true,
+    "nonzero_child_exit_preserved": true
+  },
+  "legacy_helper_sha256": "9afd32bbe3e069bfd20df1706dc91f93f87fea2c95cf54efc2e244f3d0927dc5",
+  "tracked_helper_sha256": "2d351c28e0be995c461a6d1ea5c97012160bbbe73768c1ea0152634ae08c2f2e",
+  "prior_evaluation_freeze_sha256": "fb6d9867a9eb0f3dd89e4ee58f7270d73943c612cf7abfd7a9cd829fc6971fea",
+  "new_evaluation_freeze_sha256": "ecb549e627d1c7ea9f626eca03fc155036692207f0c67a92d4378f27fbe47686"
+}

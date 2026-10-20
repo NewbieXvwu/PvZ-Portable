@@ -35,6 +35,7 @@
 - [2026-10-17](2026-10-17.md)
 - [2026-10-18](2026-10-18.md)
 - [2026-10-19](2026-10-19.md)
+- [2026-10-20](2026-10-20.md)
 
 ## 历史报告（`docs/`）
 
@@ -75,3 +76,5 @@
 - [static-value-branch1-compare.md](docs/static-value-branch1-compare.md)
 
 - [static-value-ablation.md](docs/static-value-ablation.md)
+
+- [dagger-data-dilution.md](docs/dagger-data-dilution.md)

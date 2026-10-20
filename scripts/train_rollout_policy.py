@@ -97,7 +97,7 @@ class CompactBoards:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
-         dense_boards: bool = False, cells: bool = False, aux_horizon: int = 0):
+         dense_boards: bool = False, cells: bool = False, aux_horizon: int = 0, row_observer=None):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -151,6 +151,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             with np.load(cached[path], allow_pickle=False) as stored:
                 selected = np.flatnonzero(np.asarray(keep[path])[stored["rows"]])
                 count = len(selected)
+                if row_observer is not None:
+                    row_observer(path, stored["rows"][selected])
                 rows_scalars = stored["scalars"][selected]
                 if with_context:
                     ctx = _episode_context(path)
@@ -280,9 +282,19 @@ def main() -> None:
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
     p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
+    p.add_argument("--row-weights", type=Path, help="optional checksummed per-row experiment manifest; cached rows required, default off")
+    p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")
     args = p.parse_args()
     if args.aux_weight < 0 or args.aux_horizon < 1:
         p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
+    if args.row_weights and not args.cache:
+        p.error("--row-weights requires --cache")
+    if args.max_steps is not None and args.max_steps<=0:
+        p.error("--max-steps must be positive")
+    row_plan = None
+    if args.row_weights:
+        from pvz_training_rows import RowWeights
+        row_plan = RowWeights(args.row_weights, args.data)
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
@@ -292,13 +304,16 @@ def main() -> None:
                                                                  (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None,
                                                                  args.context, args.obs, args.precompute_workers, args.dense_boards,
                                                                  cells=bool(args.cell_soft_weight),
-                                                                 aux_horizon=args.aux_horizon if args.aux_weight else 0)
+                                                                 aux_horizon=args.aux_horizon if args.aux_weight else 0,
+                                                                 row_observer=row_plan.observe if row_plan else None)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
     is_val = torch.tensor([s in val_seeds for s in seed_of])
+    if row_plan:
+        row_plan.finish(len(plant), is_val.numpy())
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
     memory = {"rows": len(plant), "board_bytes": boards.numel() * boards.element_size() if args.dense_boards else boards.nbytes,
@@ -324,6 +339,10 @@ def main() -> None:
         weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
         print(f"spread weights: {int(compared.sum())} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
+    if row_plan:
+        row_plan.apply(weight)
+        print(json.dumps({"row_intervention":row_plan.metadata(),
+                          "positive_weight_rows":int((weight>0).sum())}),flush=True)
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool, aux=bool(args.aux_weight))
     if args.init:
         from pvz_rollout_policy import load_student
@@ -350,11 +369,12 @@ def main() -> None:
         w = weight[idx].to(args.device)
         planted = y > 0.5
         out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight))
+        denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
-                ).sum() / w.sum()
+                ).sum() / denom
         if args.aux_weight:
             row_loss = F.binary_cross_entropy_with_logits(out["aux"], auxiliary[idx].to(args.device), reduction="none").mean(1)
-            loss = loss + args.aux_weight * (row_loss * w).sum() / w.sum()
+            loss = loss + args.aux_weight * (row_loss * w).sum() / denom
         if args.soft_weight:
             v = values[idx].to(args.device)
             known = ~torch.isnan(v)
@@ -369,7 +389,8 @@ def main() -> None:
                 teacher = torch.softmax((vk / args.soft_temperature).masked_fill(~kk, -1e9), 1)
                 kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~kk, 0).sum(1)
                 ws = w[soft]
-                loss = loss + args.soft_weight * (kl * ws).sum() / ws.sum()
+                soft_denom=ws.sum().clamp_min(1e-30) if row_plan else ws.sum()
+                loss = loss + args.soft_weight * (kl * ws).sum() / soft_denom
         if args.cell_soft_weight and planted.any():
             cd = cands[idx].to(args.device).float()                       # (B, K, 3): packet, cell, value
             same = (cd[:, :, 0] == pk[:, None].float()) & ~torch.isnan(cd[:, :, 2]) & planted[:, None]
@@ -381,11 +402,12 @@ def main() -> None:
                 teacher = torch.softmax((cd[rows][:, :, 2].nan_to_num(0) / args.soft_temperature).masked_fill(~m, -1e9), 1)
                 kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~m, 0).sum(1)
                 wc = w[rows]
-                loss = loss + args.cell_soft_weight * (kl * wc).sum() / wc.sum()
+                cell_denom=wc.sum().clamp_min(1e-30) if row_plan else wc.sum()
+                loss = loss + args.cell_soft_weight * (kl * wc).sum() / cell_denom
         if planted.any():
             wp = w[planted]                               # all 1 unless --label-weight is used
             loss = loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +
-                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / wp.sum()
+                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if row_plan else wp.sum())
         stats = {}
         if not train:
             with torch.no_grad():
@@ -398,6 +420,10 @@ def main() -> None:
 
     train_idx = torch.nonzero(~is_val).squeeze(1); val_idx = torch.nonzero(is_val).squeeze(1)
     steps = args.epochs * -(-len(train_idx) // 2048)
+    if args.max_steps is not None:
+        if args.max_steps>steps:
+            p.error("--max-steps exceeds the requested epochs")
+        steps=args.max_steps
     schedule = (torch.optim.lr_scheduler.LambdaLR(opt, lambda t: 0.5 * (1 + math.cos(math.pi * min(t, steps) / steps)))
                 if args.lr_schedule == "cosine" else None)
     history = []
@@ -407,8 +433,11 @@ def main() -> None:
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "ema": args.ema, "cell_soft_weight": args.cell_soft_weight,
-                "history": list(history)}
+                "history": list(history),
+                **({"row_intervention":row_plan.metadata()} if row_plan else {}),
+                **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
 
+    completed_steps=0
     for epoch in range(1, args.epochs + 1):
         epoch_started = time.perf_counter()
         net.train()
@@ -422,6 +451,9 @@ def main() -> None:
                 schedule.step()
             if ema is not None:
                 ema.update_parameters(net)
+            completed_steps+=1
+            if completed_steps>=steps:
+                break
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU).
@@ -436,6 +468,8 @@ def main() -> None:
         if args.save_epochs and epoch > args.epochs - args.save_epochs:
             args.out.mkdir(parents=True, exist_ok=True)
             torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
+        if completed_steps>=steps:
+            break
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,

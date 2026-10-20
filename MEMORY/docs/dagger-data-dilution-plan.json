@@ -1,0 +1,30 @@
+{
+  "registered_at": "2026-10-20T12:03:22.399883+08:00",
+  "phase": "hypotheses and audit protocol BEFORE data statistics or new training; final arm manifests to freeze before new experiments",
+  "base_commit": "8cf0305c696d6c1db7358d97c5f51cbd303ff3c0",
+  "hypotheses": {
+    "H1": "declining effective multiplier z13..z16 weight drives losses; balancing effective loss mass by multiplier should improve at fixed data, labels, updates and other knobs",
+    "H2": "new-round self-label mass dilutes corrections; targeted new-row weighting should beat equal-size random within-round/action-type reweighting with matching multiplier/action-type mass and the same optimizer steps",
+    "H3": "training seed variance explains reported single-run regressions; quantify all available matched recipe seeds, all six eval tiers, and require every NEW arm at least two common training seeds, no best-seed selection",
+    "H4": "data-cohort drift or optimizer exposure/weighting confounds (D35 labels, splits, steps and class balance), not just label count; audit and isolate strongest detected factor"
+  },
+  "audit": "read-only frames_v2; per-label/seed multiplier, source/provenance, raw and kept rows, overrides (canonical plant packet/row/col vs fixed wait), targets, spread, plant/wait/packet and effective recipe weights including wait thinning, packet balance and spread normalization. Only training-data statistics for threshold selection; freeze deterministic arms before their training/evaluation.",
+  "design_rules": "use actual checkpoint label strings to define historical D30 and D35; never compare 35b-including weighted data to 35b-excluding unweighted data as pure weighting. Every causal contrast shares exact frame inventory and within-data split. Existing baseline models may be reused only if full recipe/provenance matches and evaluated on common frozen evaluation engine; otherwise train fresh baselines.",
+  "candidate_interventions": [
+    "uniform effective multiplier mass",
+    "new informative rows (override OR top-quartile nonzero compared-row spread) with matched random-mask negative control; maintain row allocation/update count and per-label/action-type effective mass",
+    "if audit confirms different optimizer exposure, fixed-update D35 versus fixed-epoch D35; recency weighting may be replaced by this cleaner H4 control"
+  ],
+  "inference": {
+    "new_training_seeds": [
+      1,
+      2
+    ],
+    "eval": "all z15..z20, same1024 evaluation seeds/tier; average six win rates primary; per-tier wins, mower loss and trained seed differences secondary; never select recipe by best run",
+    "criterion": "mechanism support needs both training seeds improve over appropriate control in same direction and paired whole-game bootstrap95% CI of equally-seed-averaged six-tier win difference exclude0 after Holm correction over preregistered primary contrasts. Report training-seed range separately; with2 seeds do not claim population-wide seed certainty. Failure/mixed directions/inconclusive CI reported explicitly.",
+    "training_recipe": "queue85 unchanged: width64,meanmax,obs v2,no context,packet-balance.5,wait-keep.1,spread-weight8 cap10,cell-soft3,cosine,AdamW2e-3/1e-4,batch2048,epochs12,EMA0; only specified data/weight/update intervention differs",
+    "no_new_eval_peeking": "do not alter arms based on new eval; fixed final manifests and order before GPU launches"
+  },
+  "resources": "wait until queue86 final training exits and no train_rollout_policy process; single own GPU training; no interference with formal queues. Data frames_v2 read-only. During formal8-worker eval at most4 own game processes; own full8-worker eval only when other eval retired. Pause owned subtrees below2GiB, resume>=3GiB; avoid duplicate feature cache and checkpoints in git.",
+  "deliverables": "MEMORY/docs/dagger-data-dilution.md homepage conclusion/evidence/recommended training composition, frozen plans and compact results, push cuda-merge; all models/npz/log outside git"
+}

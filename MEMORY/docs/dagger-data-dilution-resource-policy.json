@@ -1,0 +1,48 @@
+{
+  "registered_at": "2026-10-20T09:18:54.293326+00:00",
+  "formal_study_games_before_amendment": 0,
+  "scientific_scope": "resource scheduling only; no change to models,7 arms,2 training seeds,six tiers1024 environment seeds,last-checkpoint selection or Student/bootstrap/Holm7 inference",
+  "previous_admission": {
+    "workers": 8,
+    "max_foreign_games": 4,
+    "minimum_available_kib": 9437184,
+    "requires_no_foreign_trainers": true
+  },
+  "admission": {
+    "workers": 8,
+    "max_foreign_games": 4,
+    "minimum_available_kib": 9109968,
+    "requires_no_foreign_trainers": false
+  },
+  "memory_rule": "pause own subtrees below2GiB; resume>=3GiB; unchanged",
+  "capacity_extrapolation": "3GiB reserve + 2 * measured whole-subtree peak RSS of4 workers; conservatively duplicates fixed parent and shared RSS; remains guarded every second",
+  "calibration": {
+    "task": "day_l7_z20_eval",
+    "workers": 4,
+    "seeds": [
+      30000,
+      30001,
+      30002,
+      30003
+    ],
+    "model": "B_s1",
+    "resource_result": {
+      "returncode": 0,
+      "wall_s": 11.020261013007257,
+      "peak_rss_kib": 2982120,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 5177700
+    },
+    "background": "one queue88 GPU trainer and8 queue90 native games; own4 stayed within12 games",
+    "quality_outcomes_not_inspected": true,
+    "excluded_from_formal_inference": true,
+    "games_sha256": "496d4429d0dbc479d13f8e89671c632236a78a28ab1d5021f64712aba729b048"
+  },
+  "reason": "CPU-only evaluation has CUDA_VISIBLE_DEVICES empty; remove an unnecessarily added GPU-training exclusion while retaining measured RAM reserve and game count cap required by the task",
+  "previous_wait_attempt": {
+    "evaluation_pid": 600263,
+    "statistics_waiter_pid": 600262,
+    "deliberate_zero_game_stop": true,
+    "archive": "artifacts/cuda/task15/before_cpu_admission"
+  }
+}
