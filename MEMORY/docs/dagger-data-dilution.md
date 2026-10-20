@@ -40,11 +40,15 @@
 
 除指定干预外，统一queue85配方：width64、meanmax、obs v2、context关闭、packet-balance0.5、wait-keep0.1、spread-weight8/cap10、cell-soft3、AdamW与cosine、12 epoch、EMA关闭。训练串行，仅共享只读数据；每次都重置模型、优化器和随机种子，权重另行clone。实际启动顺序与源码/行身份/权重校验和见[启动清单](dagger-data-dilution-launch.json)。
 
+B/F参照使用原始无倍率附加权重的D30/D35，全部新模型的`label_weight`均为空；M/T通过冻结的行权重测试倍率均衡/恢复。queue85历史的统一早期倍率×1.5不作为本次F，也未另加该臂，因此本研究的改善对比不等同于“优于×1.5或现役v32”。
+
 七个主要对比B−F、M−F、T−F、I−R、I−F、R−F、S−F；两个训练种子方向一致、整簇bootstrap95%区间排除0、Holm7校正通过，才认定支持相应机制。每个模型在z15–z20六档各跑1024个共同环境种子，六档和两个初始化按环境种子联合重采样；区间只对这两个已训练初始化作条件推断，不把游戏数当作训练种子数。
 
 预登记依次为[假设](dagger-data-dilution-plan.json)、[六臂原案](dagger-data-dilution-experiments.json)、[训练前补充T与加强R](dagger-data-dilution-amendment.json)、[评估源码冻结](dagger-data-dilution-evaluation-freeze.json)。原案均匀倍率M仍保留；T用于区分恢复原分布与更激进的均衡。
 
 ## 工程验收与资源
+
+评估与queue85一样使用`--arms fast`、原生学生、无帧采集：`search_play.py`直接调用`env.rollout(None, 0, max_actions=...)`跑整局，只加载学生网给原生执行器，不调用搜索或叶子价值网选择动作。queue85的`--value v2`与本研究的`v3`仅在初始化加载，均不参与此fast路径决策；停止依据终局/动作数，墙钟只作记录。最终统计强制逐局`searched=0`，并核对所有模型、程序和种子身份。
 
 旧训练器、新默认、全1行权重及缓存重用的CPU短程checkpoint张量完全一致；部分步数停止、零权重分支也通过。权重/缓存/统计/旧特征共13个唯一检查全过；初次缺资源跳过的live-history已用冻结原生程序补跑，v1/v2lite/v2档案历史一致。此为兼容性检查，不声称大型GPU训练的逐比特复现。
 
