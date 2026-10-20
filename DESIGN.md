@@ -574,4 +574,4 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 - 用途：“加宽”第一步。白天 L1–L10 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50），1-5（坚果保龄球）不收；1-1 与 1-2 在环境里是同一局；1-10 的传送带被固定卡组覆盖（是“L10 波次 + 固定卡组”，不是原版玩法）。清单 `artifacts/stage4/day_panel.json`（不进 git，生成脚本 `scripts/make_day_panel.py` 在 `daypanel` 分支）。
 - 卡组：`day_lN_eval` 用 `deck_for_level`（白天 6 卡 [0..5]）；`_d7` 后缀用学生训练卡组 7 卡 [0,1,2,3,4,5,7]（多双发射手）。两者是不同任务族，结果不可混比。
 - 种子：评估 30000–31023（与 `day_l7_*_eval` 同段）；训练 `day_l7_train_d7` 1800000–1808191、`day_l8_train_d7` 1810000–1818191、`day_l9_train_d7` 1820000–1828191、`day_l10_train_d7` 1830000–1838191。
-- 已用偏移：L9 / L10 各 0–1151 台式机（queue93，d9dag1–3 / d10dag1–3），4096–4735 Mac（d9dag1b / d10dag1b），4736–5375 Mac（d9dag2b / d10dag2b）。
+- 已用偏移：L9 / L10 各 0–1535 台式机（queue93 / 95，d9dag1–4 / d10dag1–4；d9dag3 只下完 299 局），4096–4735 Mac（d9dag1b / d10dag1b），4736–5375 Mac（d9dag2b / d10dag2b）。
