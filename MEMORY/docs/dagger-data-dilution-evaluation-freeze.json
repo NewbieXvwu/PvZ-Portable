@@ -1,0 +1,21 @@
+{
+  "frozen_at": "2026-10-20T13:08:38.398346+08:00",
+  "commit": "8c05463af9f3ad494eec400572133b81ec0a5ea7",
+  "before_any_new_checkpoint_evaluation": true,
+  "source_files": {
+    "scripts/dagger_dilution_eval.py": "02a77b5c5ed659fdf2c2eb46e18c89b3d1962c22789098245521281603af91aa",
+    "scripts/dagger_dilution_stats.py": "88063b91d7d49c5e8946245bacaddb789e4eb3c006d620ceccef2da9321801d3",
+    "scripts/search_play.py": "d249349fc5630d5d2b5a06f23bfcec3e40cd4bbd97b5058631bcdb1976b0c635",
+    "scripts/render_episode.py": "b19167c4d7b280f2f0dbb196a8a2a3313ed6946af97706a52540b8aa2d8f5377",
+    "scripts/pvz_tasks.py": "2ddf5f67d960b7379d8d996a9a4d2734d86454ee8d5a1ac7419c93b4606fd608",
+    "scripts/teacher_audit_stats.py": "2f80804be40c034e0d06a7b0c6c43c8a2299fe36b96894a23b472b86c2dfa343",
+    "python/pvz_env.py": "deee7ca4718985718ab34307133955bea6a1925ed2a5cd42866f1a526d815630",
+    "python/pvz_event_env.py": "027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89",
+    "scripts/pvz_constants.py": "33ac3d274a312a3f0c5c5f174f2cfe06d45fdaebba3d7e5148c3c519fce74276",
+    "python/pvz_rollout_policy.py": "9b966c89c1f2b554ed41a05a02955a97404c0a846e0276dd2ccd7cfbfc179e3d",
+    "python/pvz_student_observation.py": "2555fadf3c63ae97cbefb1301f411f566adae3b9a980e135a9d8a065fc9fb5bd",
+    "python/pvz_value_net.py": "ed214b79bbb092e7fd043e1b95ec2d39f3a75eb6bcff856291702a76cfb2ff8b",
+    "python/pvz_frame_store.py": "ebae19469348c3e9a78bfe8de386bb41d36180d0b09df5df705dc7cf5c9013a5"
+  },
+  "new_model_game_files_before_freeze": 0
+}
