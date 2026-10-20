@@ -75,3 +75,5 @@
 - [static-value-branch1-compare.md](docs/static-value-branch1-compare.md)
 
 - [static-value-ablation.md](docs/static-value-ablation.md)
+
+- [dagger-data-dilution.md](docs/dagger-data-dilution.md)
