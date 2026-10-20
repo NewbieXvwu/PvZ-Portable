@@ -1,0 +1,65 @@
+{
+  "audited_at": "2026-10-20T08:28:37.584060+00:00",
+  "scope": "exploratory training-data audit; no policy outcomes or new intervention",
+  "shared_archives": 28159,
+  "rows": {
+    "old_rows": 8038389,
+    "full_rows_from_old_archives": 8038389,
+    "shared_rows": 8038389,
+    "old_plant_rows": 3228813,
+    "full_old_archive_plant_rows": 3228813,
+    "shared_plant_rows": 3228813,
+    "old_train_rows": 7244286,
+    "full_train_rows_from_old_archives": 7234454,
+    "shared_train_rows": 6568515,
+    "old_train_rows_on_seeds_now_validation": 675771,
+    "full_train_rows_on_seeds_previously_validation": 665939,
+    "old_wait_rows": 4809576,
+    "full_old_archive_wait_rows": 4809576,
+    "shared_wait_rows": 4809576
+  },
+  "seed_split_transition": {
+    "shared_environment_seeds": 25343,
+    "old_train_to_full_validation": 2115,
+    "old_validation_to_full_train": 2127,
+    "remain_train": 20694,
+    "remain_validation": 407
+  },
+  "old_archives_prefix_in_full_order": true,
+  "old_selected_rows_unchanged": true,
+  "wait_row_retention_overlap_fraction": 1.0,
+  "old_training_row_retention_fraction": 0.9067166867790697,
+  "global_weight_normalizers": {
+    "D30_mean_spread": 0.07992557436227798,
+    "D35_mean_spread": 0.07363570481538773,
+    "D30_packet_scale": [
+      0.8352371454238892,
+      0.7090299725532532,
+      1.947629690170288,
+      1.021140217781067,
+      1.0992653369903564,
+      1.662502408027649,
+      2.978260040283203,
+      20.0,
+      20.0,
+      20.0
+    ],
+    "D35_packet_scale": [
+      0.8518855571746826,
+      0.707346498966217,
+      1.8986150026321411,
+      0.9988600015640259,
+      1.098758578300476,
+      1.5957280397415161,
+      2.9220998287200928,
+      20.0,
+      20.0,
+      20.0
+    ]
+  },
+  "cohort_metadata_sha256": {
+    "D30": "8f482635eb3a01d8e52dbe261d5d2167ff23160f67f3f28fd1c5abebf5f0a208",
+    "D35": "134f6384585b77617e7491d293b2351130eb24426f01ef8f9bb008003b7cec67"
+  },
+  "interpretation": "Check old_selected_rows_unchanged before attributing any drift to wait sampling. B-F measures the complete legacy D30-to-D35 recipe, including validation-seed repartition and global packet/spread normalization. These descriptive changes are not proven causes. M/T/I/R/S vs F keep the same D35 rows/split; no new arm is added."
+}
