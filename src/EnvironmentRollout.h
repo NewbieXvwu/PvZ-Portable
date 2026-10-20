@@ -46,6 +46,7 @@ public:
 private:
 	int width = 0;
 	bool meanmax = false;
+	bool rowPool = false;
 	bool taskContext = false;
 	bool v2lite = false;
 	bool v2 = false;

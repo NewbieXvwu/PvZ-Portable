@@ -38,7 +38,8 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
 
 
 class RolloutNet(nn.Module):
-    def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1"):
+    def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1",
+                 row_pool: bool = False, aux: bool = False):
         super().__init__()
         if obs not in OBS_EXTRA:
             raise ValueError(f"unknown student observation version: {obs}")
@@ -63,12 +64,18 @@ class RolloutNet(nn.Module):
         self.packet_embedding = nn.Embedding(PACKETS, width)
         # Each cell sees its own features, the chosen packet and the global context.
         self.cell = nn.Sequential(nn.Conv2d(2 * width + g, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
+        self.row_pool = row_pool
+        self.row_projection = nn.Conv2d(2 * width, width, 1) if row_pool else None
+        self.aux = nn.Conv2d(width, 1, 1) if aux else None
 
-    def forward(self, board: torch.Tensor, scalars: torch.Tensor, packet: torch.Tensor | None = None):
+    def forward(self, board: torch.Tensor, scalars: torch.Tensor, packet: torch.Tensor | None = None,
+                auxiliary: bool = False):
         h, g = self.encode(board, scalars)
         out = {"plant": self.plant(g).squeeze(1), "packet": self.packet(g)}
         if packet is not None:
             out["cell"] = self.cell_logits(h, g, packet)
+        if auxiliary:
+            out["aux"] = self.aux(h).mean(dim=3).squeeze(1)
         return out
 
     def encode(self, board: torch.Tensor, scalars: torch.Tensor,
@@ -77,6 +84,9 @@ class RolloutNet(nn.Module):
             h = self._trunk_sparse(board)
         else:
             h = self.trunk(board)                               # [B, W, 6, 10]
+        if self.row_pool:
+            rows = torch.cat([h.mean(dim=3, keepdim=True), h.amax(dim=3, keepdim=True)], dim=1)
+            h = F.relu(h + self.row_projection(rows))
         s = self.scalar(scalars)                                # [B, W]
         if self.pool == "meanmax":
             return h, torch.cat([h.mean(dim=(2, 3)), h.amax(dim=(2, 3)), s], dim=1)
@@ -180,26 +190,31 @@ def load_student(path) -> RolloutNet:
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     weights = checkpoint["state_dict"]
     net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),
-                     bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"))
-    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith("value.")})
+                     bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"),
+                     bool(checkpoint.get("row_pool", False)))
+    net.load_state_dict({k: v for k, v in weights.items() if not k.startswith(("value.", "aux."))})
     return net.eval()
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """Keep v1 exports byte-compatible; v4 adds an explicit observation version for v2lite."""
+    """Keep existing exports byte-compatible; v5 adds row pooling and its projection weights."""
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
              "plant.weight", "plant.bias", "packet.weight", "packet.bias", "packet_embedding.weight",
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
+    if net.row_pool:
+        names += ("row_projection.weight", "row_projection.bias")
     with open(path, "wb") as stream:
-        stream.write((b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
+        stream.write((b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
-        if net.context or net.obs != "v1":
+        if net.row_pool or net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))
-        if net.obs != "v1":
-            stream.write(struct.pack("<I", 3 if net.obs == "v2" else 2))
+        if net.row_pool or net.obs != "v1":
+            stream.write(struct.pack("<I", 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
+        if net.row_pool:
+            stream.write(struct.pack("<I", int(net.row_pool)))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 

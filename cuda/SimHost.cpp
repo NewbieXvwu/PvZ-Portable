@@ -131,15 +131,18 @@ NetImage ReadNet(const std::string& path)
 	std::FILE* stream = std::fopen(path.c_str(), "rb");
 	if (!stream) Fail("cannot open " + path);
 	char magic[9] = {0};
-	uint32_t width = 0, pool = 0, withContext = 0, observation = 1;
+	uint32_t width = 0, pool = 0, withContext = 0, observation = 1, rowPool = 0;
 	if (std::fread(magic, 8, 1, stream) != 1) Fail(path + " is too short");
 	const std::string version(magic, 8);
-	if (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004")
+	if (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005")
 		Fail("unsupported network dump " + version);
 	if (std::fread(&width, 4, 1, stream) != 1 || std::fread(&pool, 4, 1, stream) != 1) Fail("short header");
-	if ((version == "PVZRN003" || version == "PVZRN004") && std::fread(&withContext, 4, 1, stream) != 1)
+	if ((version == "PVZRN003" || version == "PVZRN004" || version == "PVZRN005") && std::fread(&withContext, 4, 1, stream) != 1)
 		Fail("short header");
-	if (version == "PVZRN004" && std::fread(&observation, 4, 1, stream) != 1) Fail("short header");
+	if ((version == "PVZRN004" || version == "PVZRN005") && std::fread(&observation, 4, 1, stream) != 1) Fail("short header");
+	if (version == "PVZRN005" && std::fread(&rowPool, 4, 1, stream) != 1) Fail("short header");
+	if (rowPool == 1) Fail("row_pool not supported on CUDA yet");
+	if (rowPool > 1) Fail("bad row_pool flag");
 	if (observation < 1 || observation > 3) Fail("bad observation version");
 	if (width < 1 || width > kMaxNetWidth) Fail("network width " + std::to_string(width) + " out of range");
 
@@ -175,7 +178,7 @@ NetImage ReadNet(const std::string& path)
 	params.width = static_cast<int32_t>(width);
 	params.meanmax = pool ? 1 : 0;
 	params.taskContext = withContext ? 1 : 0;
-	params.version = version == "PVZRN004" ? 4 : (version == "PVZRN003" ? 3 : 2);
+	params.version = version == "PVZRN005" ? 5 : version == "PVZRN004" ? 4 : (version == "PVZRN003" ? 3 : 2);
 	params.contextSize = (params.meanmax ? 3 : 2) * params.width;
 	params.scalarCount = kScalars + (params.taskContext ? kTaskContext : 0) + (observation == 3 ? 7 : observation == 2 ? 1 : 0);
 	params.observation = observation;

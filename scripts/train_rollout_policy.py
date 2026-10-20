@@ -27,8 +27,8 @@ import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
-from pvz_frame_store import (CELL_CANDIDATES, cache_candidates, cache_episode, candidate_cells, frame_bytes,  # noqa: E402
-                              frame_paths, read_frames, target_values)
+from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, candidate_cells, frame_bytes,  # noqa: E402
+                              frame_paths, read_frames, row_damage_labels, target_values)
 
 
 def _episode_context(path: Path) -> np.ndarray:
@@ -97,7 +97,7 @@ class CompactBoards:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
-         dense_boards: bool = False, cells: bool = False):
+         dense_boards: bool = False, cells: bool = False, aux_horizon: int = 0):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -108,6 +108,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     keep = {}
     cached = {}
     cell_cached = {}
+    aux_cached = {}
     if cache_dir is not None and precompute_workers > 1:
         from concurrent.futures import ProcessPoolExecutor
         from functools import partial
@@ -116,6 +117,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs), paths, chunksize=8)))
             if cells:
                 cell_cached = dict(zip(paths, pool.map(partial(cache_candidates, directory=cache_dir), paths, chunksize=8)))
+            if aux_horizon:
+                aux_cached = dict(zip(paths, pool.map(partial(cache_aux, directory=cache_dir, horizon=aux_horizon), paths, chunksize=8)))
     for path in paths:
         mask = []
         if cache_dir is not None:
@@ -139,6 +142,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     values = np.empty((capacity, PACKETS + 1), np.float32)
     seed_of = []
     cands = np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16) if cells else None
+    auxiliary = np.empty((capacity, 6), dtype=np.float32) if aux_horizon else None
     n = 0
     for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
@@ -178,11 +182,18 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                         assert np.array_equal(side["rows"], stored["rows"]), path
                         cands[n:n + count] = side["cands"][selected]
                 values[n:n + count] = vals
+                if aux_horizon:
+                    if path not in aux_cached:
+                        aux_cached[path] = cache_aux(path, cache_dir, aux_horizon)
+                    with np.load(aux_cached[path], allow_pickle=False) as side:
+                        assert np.array_equal(side["rows"], stored["rows"]), path
+                        auxiliary[n:n + count] = side["aux"][selected]
                 weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / wait_keep) * scale
                 seed_of.extend([seed] * count)
                 n += count
             continue
         frames = read_frames(path)
+        future_damage = row_damage_labels(frames, aux_horizon) if aux_horizon else None
         ctx = _episode_context(path) if with_context else None
         if obs != "v1":
             from pvz_student_observation import StudentHistory
@@ -214,11 +225,14 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             packet[n - 1] = action["packet"] if is_plant else -1
             cell[n - 1] = action["row"] * LAWN_COLS + action["col"] if is_plant else -1
             values[n - 1] = target_values(frames[i].get("targets"))
+            if aux_horizon:
+                auxiliary[n - 1] = future_damage[i - 1]
             if cells:
                 cands[n - 1] = candidate_cells(frames[i].get("targets"))
-    return (*((boards[:n], scalars[:n]) if dense_boards else (boards.finish(), scalars.finish())), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
+    result = (*((boards[:n], scalars[:n]) if dense_boards else (boards.finish(), scalars.finish())), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
             seed_of, torch.from_numpy(values[:n]),
             None if cands is None else torch.from_numpy(cands[:n]))
+    return (*result, torch.from_numpy(auxiliary[:n])) if aux_horizon else result
 
 
 def main() -> None:
@@ -235,6 +249,9 @@ def main() -> None:
     p.add_argument("--packet-balance", type=float, default=0.0,
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
+    p.add_argument("--row-pool", action="store_true", help="broadcast learned per-row mean/max features")
+    p.add_argument("--aux-weight", type=float, default=0.0, help="row damage prediction BCE weight (0 = off)")
+    p.add_argument("--aux-horizon", type=int, default=8, help="future decision points for row damage labels")
     p.add_argument("--context", action="store_true",
                    help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
     p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1", help="student feature version")
@@ -264,15 +281,20 @@ def main() -> None:
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
     p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
     args = p.parse_args()
+    if args.aux_weight < 0 or args.aux_horizon < 1:
+        p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    boards, scalars, plant, packet, cell, weight, seed_of, values, cands = load(args.data, set(args.labels.split(",")),
+    loaded = load(args.data, set(args.labels.split(",")),
                                                                  args.wait_keep, label_weight,
                                                                  (args.cache_dir or args.out.parent / ".feature_cache") if args.cache else None,
                                                                  args.context, args.obs, args.precompute_workers, args.dense_boards,
-                                                                 cells=bool(args.cell_soft_weight))
+                                                                 cells=bool(args.cell_soft_weight),
+                                                                 aux_horizon=args.aux_horizon if args.aux_weight else 0)
+    boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
+    auxiliary = loaded[9] if args.aux_weight else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
@@ -302,11 +324,13 @@ def main() -> None:
         weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
         print(f"spread weights: {int(compared.sum())} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs)
+    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool, aux=bool(args.aux_weight))
     if args.init:
         from pvz_rollout_policy import load_student
         initial = load_student(args.init)
         weights = initial.state_dict()
+        if net.aux is not None:
+            weights.update({k: v for k, v in net.state_dict().items() if k.startswith("aux.")})
         if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
             weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
             weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
@@ -325,9 +349,12 @@ def main() -> None:
         y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
         w = weight[idx].to(args.device)
         planted = y > 0.5
-        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0))
+        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight))
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / w.sum()
+        if args.aux_weight:
+            row_loss = F.binary_cross_entropy_with_logits(out["aux"], auxiliary[idx].to(args.device), reduction="none").mean(1)
+            loss = loss + args.aux_weight * (row_loss * w).sum() / w.sum()
         if args.soft_weight:
             v = values[idx].to(args.device)
             known = ~torch.isnan(v)
@@ -378,6 +405,7 @@ def main() -> None:
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in (net if ema is None else ema.module).state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
+                "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "ema": args.ema, "cell_soft_weight": args.cell_soft_weight,
                 "history": list(history)}
 
@@ -385,8 +413,10 @@ def main() -> None:
         epoch_started = time.perf_counter()
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
+        train_loss = 0.0
         for start in range(0, len(perm), 2048):
             loss, _ = batch_loss(perm[start:start + 2048], True)
+            train_loss += float(loss.detach()) * len(perm[start:start + 2048])
             opt.zero_grad(); loss.backward(); opt.step()
             if schedule is not None:
                 schedule.step()
@@ -400,7 +430,8 @@ def main() -> None:
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "val_loss": float(vl), **vs, "seconds": time.perf_counter() - epoch_started})
+        history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": float(vl),
+                        **vs, "seconds": time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:
             args.out.mkdir(parents=True, exist_ok=True)

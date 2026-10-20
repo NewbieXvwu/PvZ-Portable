@@ -15,6 +15,11 @@
 #include <stdexcept>
 
 #ifdef PVZ_ROLLOUT_BLAS
+#ifdef __APPLE__
+#include <vecLib/cblas.h>
+#else
+#include <cblas.h>
+#endif
 extern "C" void sgemm_(const char*, const char*, const int*, const int*, const int*, const float*,
 	const float*, const int*, const float*, const int*, const float*, float*, const int*);
 #endif
@@ -71,22 +76,24 @@ void EnvironmentRollout::Load(const std::string& path)
 {
 	std::ifstream input(path, std::ios::binary);
 	char magic[8]{};
-	uint32_t size = 0, pool = 0, withContext = 0, observation = 1;
+	uint32_t size = 0, pool = 0, withContext = 0, observation = 1, withRowPool = 0;
 	input.read(magic, 8);
 	input.read(reinterpret_cast<char*>(&size), 4);
 	input.read(reinterpret_cast<char*>(&pool), 4);
 	const std::string version(magic, 8);
-	if (version == "PVZRN003" || version == "PVZRN004") input.read(reinterpret_cast<char*>(&withContext), 4);
-	if (version == "PVZRN004") input.read(reinterpret_cast<char*>(&observation), 4);
-	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004") || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 3)
+	if (version == "PVZRN003" || version == "PVZRN004" || version == "PVZRN005") input.read(reinterpret_cast<char*>(&withContext), 4);
+	if (version == "PVZRN004" || version == "PVZRN005") input.read(reinterpret_cast<char*>(&observation), 4);
+	if (version == "PVZRN005") input.read(reinterpret_cast<char*>(&withRowPool), 4);
+	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005") || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 3 || withRowPool > 1)
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
-	const std::vector<size_t> counts = {
+	std::vector<size_t> counts = {
 		nextWidth * (Channels + (observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
 		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation == 3 ? 7 : observation == 2)), nextWidth,
 		nextContext, 1, 10 * nextContext, 10, 10 * nextWidth,
 		nextWidth * (2 * nextWidth + nextContext), nextWidth, nextWidth, 1};
+	if (withRowPool) { counts.push_back(2 * nextWidth * nextWidth); counts.push_back(nextWidth); }
 	std::vector<std::vector<float>> loaded;
 	for (size_t count : counts)
 	{
@@ -99,6 +106,7 @@ void EnvironmentRollout::Load(const std::string& path)
 		throw std::runtime_error("unexpected rollout network data");
 	width = size;
 	meanmax = pool != 0;
+	rowPool = withRowPool != 0;
 	taskContext = withContext != 0;
 	v2lite = observation == 2;
 	v2 = observation == 3;
@@ -342,6 +350,40 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 	Convolve(board, Channels + (v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
 	Convolve(hidden, width, 3, 3, 2, scratch, false);
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
+	if (rowPool)
+	{
+		columns.resize(6 * 2 * width);
+		for (int row = 0; row < 6; ++row)
+			for (int channel = 0; channel < width; ++channel)
+			{
+				const float* values = hidden.data() + channel * Cells + row * 10;
+				float total = 0;
+				for (int col = 0; col < 10; ++col) total += values[col];
+				columns[row * 2 * width + channel] = total / 10;
+				columns[row * 2 * width + width + channel] = *std::max_element(values, values + 10);
+			}
+	#ifdef PVZ_ROLLOUT_BLAS
+		for (int row = 0; row < 6; ++row)
+			std::copy_n(weights[18].data(), width, scratch.data() + row * width);
+		cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, 6, width, 2 * width, 1.0f,
+			columns.data(), 2 * width, weights[17].data(), 2 * width, 1.0f, scratch.data(), width);
+	#endif
+		for (int channel = 0; channel < width; ++channel)
+			for (int row = 0; row < 6; ++row)
+			{
+			#ifdef PVZ_ROLLOUT_BLAS
+				const float projected = scratch[row * width + channel];
+			#else
+				const float projected = Linear(columns.data() + row * 2 * width,
+					weights[17].data() + channel * 2 * width, 2 * width, weights[18][channel]);
+			#endif
+				for (int col = 0; col < 10; ++col)
+				{
+					float& value = hidden[channel * Cells + row * 10 + col];
+					value = std::max(0.0f, value + projected);
+				}
+			}
+	}
 	for (int channel = 0; channel < width; ++channel)
 	{
 		float total = 0;

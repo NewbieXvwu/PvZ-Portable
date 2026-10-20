@@ -30,6 +30,38 @@ def read_frames(path: Path) -> list[dict]:
     return [json.loads(line) for line in frame_bytes(path).splitlines() if line.strip()]
 
 
+def row_damage_labels(frames: list[dict], horizon: int) -> np.ndarray:
+    """Per input frame: plant disappearance or first mower activation in the next K decisions.
+
+    Archives expose disappearance, not a per-plant cause of death. Executed shovels are excluded;
+    natural consumption/expiry remains indistinguishable from destruction in these archives.
+    The final window ends at the last recorded frame. Sampling training rows never changes K.
+    """
+    from collections import Counter
+    events = np.zeros((len(frames), 6), dtype=np.int64)
+    for index in range(1, len(frames)):
+        previous, current = frames[index - 1], frames[index]
+        before = Counter(tuple(plant[:3]) for plant in previous["plants"])
+        after = Counter(tuple(plant[:3]) for plant in current["plants"])
+        action = current.get("action") or {}
+        for row, col, _kind in before - after:
+            if (action.get("type") == "shovel" and not current.get("action_rejected")
+                    and (row, col) == (action.get("row"), action.get("col"))):
+                continue
+            events[index, row] = 1
+        old_mowers, new_mowers = dict(previous["mowers"]), dict(current["mowers"])
+        for row, state in new_mowers.items():
+            if state == 2 and old_mowers.get(row) != 2:
+                events[index, row] = 1
+        for row, state in old_mowers.items():
+            if state != 2 and row not in new_mowers:
+                events[index, row] = 1
+    cumulative = events.cumsum(axis=0)
+    starts = np.arange(len(frames))
+    ends = np.minimum(starts + horizon, len(frames) - 1)
+    return (cumulative[ends] > cumulative[starts]).astype(np.float32)
+
+
 def target_values(targets) -> list[float]:
     from pvz_rollout_policy import PACKETS
     out = [float("nan")] * (PACKETS + 1)
@@ -84,6 +116,23 @@ def cache_candidates(path: Path, directory: Path) -> Path:
             if str(stored["digest"]) == digest:
                 return target
     _save(target, digest=digest, **encode_candidates([json.loads(line) for line in source.splitlines() if line.strip()]))
+    return target
+
+
+def cache_aux(path: Path, directory: Path, horizon: int) -> Path:
+    source = frame_bytes(path)
+    signature = inspect.getsource(row_damage_labels) + inspect.getsource(cache_aux) + str(horizon)
+    digest = hashlib.sha256(signature.encode() + source).hexdigest()
+    target = directory / f"aux_v1_k{horizon}" / (hashlib.sha256(str(path.resolve()).encode()).hexdigest() + ".npz")
+    if target.exists():
+        with np.load(target, allow_pickle=False) as stored:
+            if str(stored["digest"]) == digest:
+                return target
+    frames = [json.loads(line) for line in source.splitlines() if line.strip()]
+    rows = np.array([index for index in range(1, len(frames))
+                     if (frames[index].get("label") or frames[index].get("action"))
+                     and not frames[index].get("action_rejected")], dtype=np.int64)
+    _save(target, digest=digest, rows=rows, aux=row_damage_labels(frames, horizon)[rows - 1].astype(np.uint8))
     return target
 
 
