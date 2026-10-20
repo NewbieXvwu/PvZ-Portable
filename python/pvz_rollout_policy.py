@@ -197,20 +197,24 @@ def load_student(path) -> RolloutNet:
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """Keep v1 exports byte-compatible; v4 adds an explicit observation version for v2lite."""
+    """Keep existing exports byte-compatible; v5 adds row pooling and its projection weights."""
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
              "plant.weight", "plant.bias", "packet.weight", "packet.bias", "packet_embedding.weight",
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
+    if net.row_pool:
+        names += ("row_projection.weight", "row_projection.bias")
     with open(path, "wb") as stream:
-        stream.write((b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
+        stream.write((b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
-        if net.context or net.obs != "v1":
+        if net.row_pool or net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))
-        if net.obs != "v1":
-            stream.write(struct.pack("<I", 3 if net.obs == "v2" else 2))
+        if net.row_pool or net.obs != "v1":
+            stream.write(struct.pack("<I", 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
+        if net.row_pool:
+            stream.write(struct.pack("<I", int(net.row_pool)))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 
