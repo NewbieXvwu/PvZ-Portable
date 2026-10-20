@@ -1,0 +1,22 @@
+{
+  "registered_at": "2026-10-20T12:39:43.029857+08:00",
+  "timing": "after training-data audit, before ANY new experimental optimizer step; queue86 seed2 still active",
+  "new_training_started": false,
+  "changes": {
+    "T": "add fresh seed1/2 T: full D35, same steps/split/class+soft eligibility mass as F; restore D30 effective multiplier proportions within packet\u00d7cell-soft stratum (normalize over supported old multipliers; no-prior stratum unchanged). Original uniform M remains, do not substitute it.",
+    "R": "strengthen the prespecified matched random control: permute the informative arms final-weight multiset within label\u00d7packet\u00d7cell-soft\u00d7compared strata onto the equally sized random chosen rows. Preserve counts, weighted masses and approximately the exact final-weight distribution, not just raw multipliers. Prevent stochastic-gradient-weight variance from explaining I-R.",
+    "primary_family": [
+      "B-F",
+      "M-F",
+      "T-F",
+      "I-R",
+      "I-F",
+      "R-F",
+      "S-F"
+    ],
+    "training_runs": 14,
+    "eval": "7 arms\u00d72 training seeds\u00d76 tiers\u00d71024 common episodes; same preregistered inference, Holm over7 comparisons"
+  },
+  "audit_reason": "D30\u2192D35 early-multiplier loss-row mass53.87%\u219244.69%; equalizing five multipliers would boost rare z13 strata up to23x, whereas restoration tests the actual cohort-mixture shift. Global override row-weight share6.49%\u21926.72% does not support literal global correction-mass dilution; I/R still tests content/label-habit quality. New policy outcomes have not been observed.",
+  "other_recipe_and_stop_rules": "unchanged from experiments.json"
+}

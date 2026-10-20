@@ -117,6 +117,21 @@ class ControlledSelectionTest(unittest.TestCase):
                         if name in ('I','R'):
                             self.assertAlmostEqual(float((weight[ix]*values[ix]).sum()),float(weight[ix].sum()),places=4)
             self.assertEqual(int((I[~val]>0).sum()),int((R[~val]>0).sum()))
+            for p in (-1,0):
+                for s in (False,True):
+                    for c in (False,True):
+                        ix=(episode>=2)&~val&(packet==p)&(soft==s)&(arrays['compared']==c)
+                        self.assertTrue(np.allclose(np.sort(weight[ix]*I[ix]),np.sort(weight[ix]*R[ix]),rtol=2e-6))
+            old=root/'old';old.mkdir()
+            for k in ('episode','packet','cell_soft','is_val','weight'):np.save(old/(k+'.npy'),arrays[k][:40])
+            (old/'cohort.json').write_text(json.dumps({'episodes':info['episodes'][:2]}))
+            restored=build(cohort,['old'],root/'restored',old)
+            T=np.load(root/'restored/T.npy')
+            self.assertTrue(np.equal(T[val],1).all())
+            self.assertIn('T',restored['specs'])
+            for item in restored['D30_mixture_restoration']:
+                prior=np.asarray(item['D30_mass']);actual=np.asarray(item['restored_mass'])
+                if prior.sum():self.assertTrue(np.allclose(prior/prior.sum(),actual/actual.sum(),rtol=2e-6))
 
 
 if __name__=='__main__':unittest.main()

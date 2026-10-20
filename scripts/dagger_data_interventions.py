@@ -26,7 +26,7 @@ def matched_random(keep,compared,cell_soft,rng):
     return result
 
 
-def build(cohort_dir,old_labels,out):
+def build(cohort_dir,old_labels,out,old_cohort_dir=None):
     cohort=json.loads((cohort_dir/'cohort.json').read_text());out.mkdir(parents=True,exist_ok=True)
     keys=['episode','packet','spread','compared','cell_soft','override','is_val','weight']
     a={k:np.load(cohort_dir/(k+'.npy'),mmap_mode='r',allow_pickle=False) for k in keys}
@@ -34,8 +34,15 @@ def build(cohort_dir,old_labels,out):
     assert all(len(v)==n for v in a.values())
     labels=np.asarray([r['label'] for r in cohort['episodes']]);z=np.asarray([r['multiplier'] for r in cohort['episodes']])
     unique_z=sorted(set(z));zcode=np.searchsorted(unique_z,z)
-    M=np.ones(n,np.float32);I=np.ones(n,np.float32);R=np.ones(n,np.float32)
+    M=np.ones(n,np.float32);I=np.ones(n,np.float32);R=np.ones(n,np.float32);T=np.ones(n,np.float32)
     balancing=[];rules=[];rng=np.random.default_rng(20261020)
+    restoration=[]
+    if old_cohort_dir is not None:
+        old=json.loads((old_cohort_dir/'cohort.json').read_text())
+        b={k:np.load(old_cohort_dir/(k+'.npy'),mmap_mode='r',allow_pickle=False)
+           for k in ('packet','cell_soft','is_val','episode','weight')}
+        bz=np.asarray([v['multiplier'] for v in old['episodes']])
+        bzcode=np.searchsorted(unique_z,bz)
     for p in sorted(set(packet)):
         for soft_type in (False,True):
             ix=np.flatnonzero(train&(packet==p)&(a['cell_soft']==soft_type))
@@ -50,6 +57,19 @@ def build(cohort_dir,old_labels,out):
             assert np.allclose(after[present],mass.sum()/present.sum(),rtol=2e-6)
             balancing.append({'packet':int(p),'cell_soft':soft_type,'multipliers':unique_z,
                               'original_mass':mass.tolist(),'balanced_mass':after.tolist(),'factors':factors.tolist()})
+            if old_cohort_dir is not None:
+                bix=np.flatnonzero(~b['is_val']&(b['packet']==p)&(b['cell_soft']==soft_type))
+                prior=np.bincount(bzcode[b['episode'][bix]],weights=b['weight'][bix],minlength=len(unique_z))
+                supported=present&(prior>0)
+                tfactors=np.ones(len(unique_z),np.float64)
+                if prior[supported].sum()>0:
+                    target=prior*supported;target=target/target.sum()*mass.sum()
+                    tfactors[present]=target[present]/mass[present]
+                    T[ix]=tfactors[groups].astype(np.float32)
+                ta=np.bincount(groups,weights=weight[ix]*T[ix],minlength=len(unique_z))
+                assert np.isclose(ta.sum(),mass.sum(),rtol=2e-6)
+                restoration.append({'packet':int(p),'cell_soft':soft_type,'D30_mass':prior.tolist(),
+                                    'D35_mass':mass.tolist(),'restored_mass':ta.tolist(),'factors':tfactors.tolist()})
     for label in sorted(set(labels)-set(old_labels)):
         episode_ids=np.flatnonzero(labels==label)
         in_label=train&np.isin(ep,episode_ids)
@@ -66,16 +86,28 @@ def build(cohort_dir,old_labels,out):
                 fallback=not keep.any()
                 iw,keep,ifactor=normalize_selection(np.asarray(weight[ix]),keep)
                 control=matched_random(keep,compared,soft,rng)
-                rw,control,rfactor=normalize_selection(np.asarray(weight[ix]),control)
+                # Match the final-weight multiset as well as row counts, so R
+                # cannot differ merely because its original spreads were smaller.
+                rw=np.zeros(len(ix),np.float32)
+                code=compared.astype(np.uint8)*2+soft.astype(np.uint8)
+                for group in range(4):
+                    source=np.flatnonzero(keep&(code==group));dest=np.flatnonzero(control&(code==group))
+                    values=np.asarray(weight[ix[source]])*iw[source]
+                    values=values[rng.permutation(len(values))]
+                    rw[dest]=values/np.asarray(weight[ix[dest]])
+                    assert np.isclose(np.sum(weight[ix[dest]]*rw[dest],dtype=np.float64),
+                                      np.sum(values,dtype=np.float64),rtol=2e-6)
                 assert keep.sum()==control.sum()
                 I[ix]=iw;R[ix]=rw
                 rules.append({'label':label,'packet':int(p),'cell_soft':soft_type,'train_rows':len(ix),
                               'selected_each':int(keep.sum()),'overrides':int(override.sum()),
                               'no_informative_rows_preserve_stratum':fallback,
                               'spread_q75_nonzero_compared':threshold,
-                              'informative_mass_factor':ifactor,'random_mass_factor':rfactor})
+                              'informative_mass_factor':ifactor,'random_max_multiplier':float(rw.max()),
+                              'final_weight_multiset_matched':True})
     specs={}
-    for name,multipliers in [('M',M),('I',I),('R',R)]:
+    choices=[('M',M),('I',I),('R',R)]+([('T',T)] if old_cohort_dir is not None else [])
+    for name,multipliers in choices:
         assert np.equal(multipliers[a['is_val']],1).all()
         path=out/(name+'.npy');np.save(path,multipliers)
         spec={'name':name,'rows':n,'multipliers':path.name,
@@ -88,7 +120,8 @@ def build(cohort_dir,old_labels,out):
         assert np.isclose(spec['train_weight_before'],spec['train_weight_after'],rtol=2e-6)
         dest=out/(name+'.json');dest.write_text(json.dumps(spec,indent=2)+'\n');specs[name]=spec
     report={'cohort':str(cohort_dir),'rows':n,'old_labels_unchanged_for_I_R':sorted(old_labels),
-            'balanced_multiplier_within_packet':balancing,'informative_vs_random_strata':rules,
+            'balanced_multiplier_within_packet':balancing,'D30_mixture_restoration':restoration,
+            'informative_vs_random_strata':rules,
             'random_mask_seed':20261020,'validation_multipliers_all_one':True,'specs':specs}
     (out/'interventions.json').write_text(json.dumps(report,indent=2)+'\n')
     return report
@@ -100,7 +133,7 @@ def main():
     p.add_argument('--out',type=Path,required=True)
     args=p.parse_args()
     old=json.loads((args.cohorts/'D30/cohort.json').read_text())
-    report=build(args.cohorts/'D35',old['labels'],args.out)
+    report=build(args.cohorts/'D35',old['labels'],args.out,args.cohorts/'D30')
     print(json.dumps(report['specs'],indent=2))
 
 

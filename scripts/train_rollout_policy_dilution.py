@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import random
 import sys
 import time
 
@@ -30,6 +31,7 @@ class ImmutableDataCache:
     """Only weight is mutable in the original trainer; return a fresh copy each run."""
     def __init__(self,load):
         self.load=load;self.key=None;self.payload=None;self.observations=[];self.loads=0
+        self.expectation=None
 
     @staticmethod
     def freeze(value):
@@ -49,6 +51,16 @@ class ImmutableDataCache:
             self.key=key;self.loads+=1
         if observer is not None:
             for path,rows in self.observations:observer(path,rows)
+        if self.expectation is not None:
+            import numpy as np
+            from pvz_training_rows import update_identity
+            digest=hashlib.sha256()
+            for path,rows in self.observations:update_identity(digest,str(path.relative_to(args[0])),rows)
+            assert digest.hexdigest()==self.expectation['row_identity_sha256'], 'changed cached row identities'
+            assert len(self.payload[2])==self.expectation['rows']
+            seeds=sorted(set(self.payload[6]));random.Random(0).shuffle(seeds)
+            val=set(seeds[:len(seeds)//10]);split=np.asarray([s in val for s in self.payload[6]])
+            assert hashlib.sha256(np.packbits(split).tobytes()).hexdigest()==self.expectation['split_sha256']
         # All features and targets are read-only in batch_loss. Row weighting is
         # the one in-place transformation in main; never share it between runs.
         result=list(self.payload);result[5]=result[5].clone()
@@ -67,6 +79,10 @@ def main():
     cache=ImmutableDataCache(trainer.load);trainer.load=cache
     completed=[]
     for job in plan['jobs']:
+        assert hashlib.sha256(args.plan.read_bytes()).hexdigest()==plan_hash, 'run plan changed'
+        for name,digest in plan.get('source_files',{}).items():
+            assert hashlib.sha256((ROOT/name).read_bytes()).hexdigest()==digest,name
+        cache.expectation=plan['cohorts'][job['cohort']]
         dest=Path(job['out']);dest.mkdir(parents=True,exist_ok=True)
         done=dest/'experiment_complete.json'
         if done.exists():
