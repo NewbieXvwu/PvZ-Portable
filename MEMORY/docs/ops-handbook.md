@@ -13,7 +13,7 @@
 - Mac：采集轮次脚本 `artifacts/hard_mac/mac_dagger*.sh`，日志 `artifacts/hard_mac/z17_dagger*.log`，结束时日志末尾有 summary（won / games）。
 
 ## 每 30 分钟做一次
-1. 台式机：`date; tmux ls; tail -n 3 ~/pvz-logs/queue8[6-9].log ~/pvz-logs/queue9*.log 2>/dev/null; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader; df -h /mnt/c | tail -1`，
+1. 台式机：`date; tmux ls; tail -n 3 ~/pvz-logs/queue8[6-9].log ~/pvz-logs/queue9*.log 2>/dev/null; nvidia-smi --query-gpu=utilization.gpu,memory.used --format=csv,noheader; df -h /mnt/c | tail -1; grep MemAvailable /proc/meminfo`，
    以及 codex-cuda 窗格最后 5 行。
 2. Mac：`tail -c 400` 最新两轮的 z17_dagger 日志；`pgrep -fl search_play | wc -l`。
 3. 有**新结果行**（`<模型名> z15 z16 z17 z18 z19 z20: a b c d e f`）就算六档平均 `(a+…+f)/6`，追加到
@@ -21,7 +21,8 @@
 4. **异常**（任何一条都在 ops-log 里写“⚠”开头的一行）：
    - 队列的 tmux 会话没了但日志没有 `QUEUENN DONE`；日志出现 `FAILED`；
    - 训练日志 30 分钟没有新 epoch 行；GPU 利用率 0 且没有训练 / 评估进程；
-   - 台式机 C 盘剩余 < 15 GB；Mac 采集进程数为 0 但最新一轮没有 summary；
+   - 台式机 C 盘剩余 < 15 GB；台式机 MemAvailable < 3 GB（训练 + 评估 + 采集同时起来时会出现，记下当时在跑的进程）；
+   - Mac 采集进程数为 0 但最新一轮没有 summary；**Mac 空闲**：`pgrep -f mac_dagger` 为空（所有排队轮次都跑完了），主控要排下一轮；
    - codex-cuda 窗格停在空输入框（`› Ask Codex to do anything`）且没有 “Pursuing goal”，同时状态行不是额度用完。
    出现异常**只报告，不修**（不要杀进程、不要重启队列、不要删文件），除非下面“允许的处置”覆盖。
 
