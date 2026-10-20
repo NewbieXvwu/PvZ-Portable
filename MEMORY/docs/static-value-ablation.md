@@ -109,4 +109,6 @@ task13 的 B3 只少 1.56pp 却因 256 点区间过宽而无法判不劣。本�
 
 墙钟（4 worker，同负载，非 ABBA）：首批 128 局 1251.13 s、次批 128 局 1499.78 s，合计 2750.91 s，10.75 s/局、约 335 局/小时。RSS 峰 3.40 GiB、自有 swap 0、可用最低 4.45 GiB，无内存暂停。回归 224 项 Python + 9 项 dsh 全过、无 skip。
 
-**结论**：B3 在 −3pp 非劣界内（−0.93pp），同时少 23.1% 续走、少 29.3% 搜索 CPU。默认仍为 A（本文件所有实验入口未改），B3 现在可作为正式老师候选生成的替换试线；本设计只能给配对差值，不给绝对一致率（同动作根按预登记不计标签），也不能外推成胜率。证据见 [预登记](static-value-ablation-ni-plan.json)、[统计结果](static-value-ablation-ni-validation.json)、[执行与资源验收](static-value-ablation-ni-execution.json)。
+**结论**：B3 在 −3pp 非劣界内（−0.93pp），同时少 23.1% 续走、少 29.3% 搜索 CPU。
+
+**开关（默认关，2026-10-20 补）**：正式混采入口 `scripts/mixed_dagger_round.sh` 现在接受可选 `--candidate-generator student-topk --student-candidates 3`；不传时命令与合并校验都仍按 `static` + 2 走（逐字不变），非 static 且 k≤0 在启动前报错。冒烟（`day_l7_z17_eval`、CPU 2 worker、`build/pvz-portable`）：默认 seed 30000 为 5.574 候选/根、`candidate_generator=static`，B3 seed 30001 为 4.000 候选/根，两局均胜且帧档写出；默认路径在改后重跑 seed 30000 仍 5.574 候选/根。两局种子不同，只作管线与候选数一致性检查，不作质量或成本比较。默认仍为 A（本文件所有实验入口未改），B3 现在可作为正式老师候选生成的替换试线；本设计只能给配对差值，不给绝对一致率（同动作根按预登记不计标签），也不能外推成胜率。证据见 [预登记](static-value-ablation-ni-plan.json)、[统计结果](static-value-ablation-ni-validation.json)、[执行与资源验收](static-value-ablation-ni-execution.json)。
