@@ -1,0 +1,68 @@
+{
+  "method": "same paired Student t, df1023, same Holm7; 100-decimal arithmetic from exact integer cluster counts",
+  "purpose": "numerical precision supplement only; frozen primary outputs and all seven decisions unchanged",
+  "statistics_sha256": "9203c8d2e51b7abb4c0972dd4a12d60c469378579b09794c55ec8d6691edaafe",
+  "execution_sha256": "0f600b8157d01318bb351b02900e6d69c25e7ad559d84479ce69fdf62022a89b",
+  "plan_sha256": "3468b30ffd8d1d14f06668b020b35710333be188fda02a2bc1fee82030eea467",
+  "source_sha256": "3b4fffc9b1d7bfc01d0cb8b8266066d3886a360caa0e050e32cde1bb94de2625",
+  "games_recounted": 86016,
+  "all_decisions_unchanged": true,
+  "contrasts": {
+    "B-F": {
+      "t_p": "5.0809331023878519161e-10",
+      "holm_p": "1.5242799307163555748e-9",
+      "frozen_t_p": 5.075442288671184e-10,
+      "frozen_holm_p": 1.522632686601355e-09,
+      "supports_positive_effect": true,
+      "supports_negative_effect": false
+    },
+    "M-F": {
+      "t_p": "4.349535235415465065e-61",
+      "holm_p": "2.1747676177077325325e-60",
+      "frozen_t_p": 0.0,
+      "frozen_holm_p": 0.0,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "T-F": {
+      "t_p": "4.2455080295124470782e-6",
+      "holm_p": "4.2455080295124470782e-6",
+      "frozen_t_p": 4.245507482014688e-06,
+      "frozen_holm_p": 4.245507482014688e-06,
+      "supports_positive_effect": true,
+      "supports_negative_effect": false
+    },
+    "I-R": {
+      "t_p": "4.9201650727540839589e-273",
+      "holm_p": "2.9520990436524503753e-272",
+      "frozen_t_p": 0.0,
+      "frozen_holm_p": 0.0,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "I-F": {
+      "t_p": "6.2726027421097965708e-305",
+      "holm_p": "4.3908219194768575996e-304",
+      "frozen_t_p": 0.0,
+      "frozen_holm_p": 0.0,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "R-F": {
+      "t_p": "8.0797069209596218173e-13",
+      "holm_p": "3.2318827683838487269e-12",
+      "frozen_t_p": 2.5845992013273644e-13,
+      "frozen_holm_p": 1.0338396805309458e-12,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "S-F": {
+      "t_p": "6.5549996660548644933e-10",
+      "holm_p": "1.5242799307163555748e-9",
+      "frozen_t_p": 6.549520925602792e-10,
+      "frozen_holm_p": 1.522632686601355e-09,
+      "supports_positive_effect": true,
+      "supports_negative_effect": false
+    }
+  }
+}

@@ -1,0 +1,878 @@
+{
+  "arms": {
+    "B": {
+      "wins_by_training_seed_and_tier": [
+        [
+          973,
+          944,
+          872,
+          720,
+          575,
+          437
+        ],
+        [
+          973,
+          951,
+          914,
+          782,
+          637,
+          491
+        ]
+      ],
+      "mean_rate_by_training_seed": [
+        0.73583984375,
+        0.7727864583333334
+      ],
+      "macro_win_rate": 0.7543131510416666,
+      "macro_wins_per1024_equivalent": 772.4166666666666,
+      "env_seed_cluster_ci95": [
+        0.7447102864583333,
+        0.7640787760416667
+      ],
+      "absolute_training_seed_gap": 0.03694661458333337,
+      "mean_mowers_used_by_training_seed_and_tier": [
+        [
+          1.3125,
+          1.486328125,
+          1.732421875,
+          2.3671875,
+          2.83203125,
+          3.2666015625
+        ],
+        [
+          1.205078125,
+          1.34765625,
+          1.671875,
+          2.3857421875,
+          2.7841796875,
+          3.28515625
+        ]
+      ]
+    },
+    "F": {
+      "wins_by_training_seed_and_tier": [
+        [
+          864,
+          883,
+          825,
+          687,
+          585,
+          425
+        ],
+        [
+          916,
+          905,
+          862,
+          738,
+          580,
+          465
+        ]
+      ],
+      "mean_rate_by_training_seed": [
+        0.69482421875,
+        0.7268880208333334
+      ],
+      "macro_win_rate": 0.7108561197916667,
+      "macro_wins_per1024_equivalent": 727.9166666666667,
+      "env_seed_cluster_ci95": [
+        0.69970703125,
+        0.721923828125
+      ],
+      "absolute_training_seed_gap": 0.03206380208333337,
+      "mean_mowers_used_by_training_seed_and_tier": [
+        [
+          1.7646484375,
+          1.783203125,
+          2.015625,
+          2.5703125,
+          2.8623046875,
+          3.30859375
+        ],
+        [
+          1.7724609375,
+          1.8681640625,
+          2.025390625,
+          2.4384765625,
+          2.8642578125,
+          3.1337890625
+        ]
+      ]
+    },
+    "M": {
+      "wins_by_training_seed_and_tier": [
+        [
+          889,
+          862,
+          746,
+          525,
+          409,
+          264
+        ],
+        [
+          871,
+          803,
+          687,
+          482,
+          345,
+          186
+        ]
+      ],
+      "mean_rate_by_training_seed": [
+        0.6013997395833334,
+        0.5491536458333334
+      ],
+      "macro_win_rate": 0.5752766927083334,
+      "macro_wins_per1024_equivalent": 589.0833333333334,
+      "env_seed_cluster_ci95": [
+        0.5633138020833334,
+        0.587158203125
+      ],
+      "absolute_training_seed_gap": 0.05224609375,
+      "mean_mowers_used_by_training_seed_and_tier": [
+        [
+          1.404296875,
+          1.625,
+          2.0712890625,
+          2.6953125,
+          3.0,
+          3.3828125
+        ],
+        [
+          1.6484375,
+          1.884765625,
+          2.2431640625,
+          2.845703125,
+          3.1572265625,
+          3.552734375
+        ]
+      ]
+    },
+    "T": {
+      "wins_by_training_seed_and_tier": [
+        [
+          937,
+          912,
+          865,
+          709,
+          584,
+          458
+        ],
+        [
+          929,
+          911,
+          890,
+          767,
+          663,
+          513
+        ]
+      ],
+      "mean_rate_by_training_seed": [
+        0.7267252604166666,
+        0.7605794270833334
+      ],
+      "macro_win_rate": 0.74365234375,
+      "macro_wins_per1024_equivalent": 761.5,
+      "env_seed_cluster_ci95": [
+        0.7329915364583333,
+        0.754150390625
+      ],
+      "absolute_training_seed_gap": 0.03385416666666674,
+      "mean_mowers_used_by_training_seed_and_tier": [
+        [
+          1.830078125,
+          1.8037109375,
+          1.9541015625,
+          2.5068359375,
+          2.8173828125,
+          3.1611328125
+        ],
+        [
+          1.8447265625,
+          1.837890625,
+          2.0029296875,
+          2.404296875,
+          2.6162109375,
+          3.0400390625
+        ]
+      ]
+    },
+    "I": {
+      "wins_by_training_seed_and_tier": [
+        [
+          355,
+          359,
+          372,
+          317,
+          276,
+          223
+        ],
+        [
+          324,
+          337,
+          308,
+          301,
+          236,
+          202
+        ]
+      ],
+      "mean_rate_by_training_seed": [
+        0.3095703125,
+        0.2779947916666667
+      ],
+      "macro_win_rate": 0.2937825520833333,
+      "macro_wins_per1024_equivalent": 300.8333333333333,
+      "env_seed_cluster_ci95": [
+        0.2836100260416667,
+        0.30387369791666663
+      ],
+      "absolute_training_seed_gap": 0.031575520833333315,
+      "mean_mowers_used_by_training_seed_and_tier": [
+        [
+          2.85546875,
+          2.939453125,
+          2.953125,
+          3.1650390625,
+          3.2734375,
+          3.4033203125
+        ],
+        [
+          2.9287109375,
+          3.080078125,
+          3.15234375,
+          3.291015625,
+          3.4677734375,
+          3.572265625
+        ]
+      ]
+    },
+    "R": {
+      "wins_by_training_seed_and_tier": [
+        [
+          728,
+          760,
+          777,
+          728,
+          630,
+          508
+        ],
+        [
+          738,
+          770,
+          763,
+          669,
+          562,
+          448
+        ]
+      ],
+      "mean_rate_by_training_seed": [
+        0.67236328125,
+        0.6429036458333334
+      ],
+      "macro_win_rate": 0.6576334635416666,
+      "macro_wins_per1024_equivalent": 673.4166666666666,
+      "env_seed_cluster_ci95": [
+        0.6468098958333334,
+        0.6681315104166667
+      ],
+      "absolute_training_seed_gap": 0.02945963541666663,
+      "mean_mowers_used_by_training_seed_and_tier": [
+        [
+          2.1875,
+          2.2529296875,
+          2.259765625,
+          2.62109375,
+          2.8525390625,
+          3.306640625
+        ],
+        [
+          2.234375,
+          2.2724609375,
+          2.375,
+          2.7841796875,
+          3.025390625,
+          3.291015625
+        ]
+      ]
+    },
+    "S": {
+      "wins_by_training_seed_and_tier": [
+        [
+          921,
+          904,
+          879,
+          771,
+          638,
+          479
+        ],
+        [
+          929,
+          920,
+          876,
+          762,
+          679,
+          511
+        ]
+      ],
+      "mean_rate_by_training_seed": [
+        0.7473958333333334,
+        0.76123046875
+      ],
+      "macro_win_rate": 0.7543131510416667,
+      "macro_wins_per1024_equivalent": 772.4166666666667,
+      "env_seed_cluster_ci95": [
+        0.7435709635416667,
+        0.764892578125
+      ],
+      "absolute_training_seed_gap": 0.01383463541666663,
+      "mean_mowers_used_by_training_seed_and_tier": [
+        [
+          1.7783203125,
+          1.8759765625,
+          2.029296875,
+          2.3798828125,
+          2.787109375,
+          3.216796875
+        ],
+        [
+          1.79296875,
+          1.7939453125,
+          1.9951171875,
+          2.3486328125,
+          2.6611328125,
+          3.1474609375
+        ]
+      ]
+    }
+  },
+  "contrasts": {
+    "B-F": {
+      "difference": 0.04345703125,
+      "per_training_seed_difference": [
+        0.041015625,
+        0.0458984375
+      ],
+      "both_training_seeds_positive": true,
+      "both_training_seeds_negative": false,
+      "t_ci95": [
+        0.029872391299312614,
+        0.057041671200687386
+      ],
+      "t_p": 5.075442288671184e-10,
+      "df": 1023,
+      "env_seed_cluster_ci95": [
+        0.030029296875,
+        0.057047526041666664
+      ],
+      "tier_differences": [
+        0.0810546875,
+        0.05224609375,
+        0.04833984375,
+        0.03759765625,
+        0.02294921875,
+        0.0185546875
+      ],
+      "tier_env_seed_cluster_ci95": [
+        [
+          0.064453125,
+          0.09814453125
+        ],
+        [
+          0.03466796875,
+          0.0703125
+        ],
+        [
+          0.02587890625,
+          0.07080078125
+        ],
+        [
+          0.009765625,
+          0.0654296875
+        ],
+        [
+          -0.0068359375,
+          0.052734375
+        ],
+        [
+          -0.0107421875,
+          0.046875
+        ]
+      ],
+      "mowers_used_difference": -0.2275390625,
+      "holm_p": 1.522632686601355e-09,
+      "supports_positive_effect": true,
+      "supports_negative_effect": false
+    },
+    "M-F": {
+      "difference": -0.13557942708333334,
+      "per_training_seed_difference": [
+        -0.09342447916666667,
+        -0.177734375
+      ],
+      "both_training_seeds_positive": false,
+      "both_training_seeds_negative": true,
+      "t_ci95": [
+        -0.15064990701422362,
+        -0.12050894715244306
+      ],
+      "t_p": 0.0,
+      "df": 1023,
+      "env_seed_cluster_ci95": [
+        -0.15071614583333331,
+        -0.12060546875
+      ],
+      "tier_differences": [
+        -0.009765625,
+        -0.06005859375,
+        -0.1240234375,
+        -0.2041015625,
+        -0.20068359375,
+        -0.21484375
+      ],
+      "tier_env_seed_cluster_ci95": [
+        [
+          -0.03125,
+          0.01123046875
+        ],
+        [
+          -0.0830078125,
+          -0.037109375
+        ],
+        [
+          -0.14990234375,
+          -0.09814453125
+        ],
+        [
+          -0.232421875,
+          -0.17529296875
+        ],
+        [
+          -0.22998046875,
+          -0.171875
+        ],
+        [
+          -0.24169921875,
+          -0.18798828125
+        ]
+      ],
+      "mowers_used_difference": 0.09195963541666667,
+      "holm_p": 0.0,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "T-F": {
+      "difference": 0.032796223958333336,
+      "per_training_seed_difference": [
+        0.031901041666666664,
+        0.03369140625
+      ],
+      "both_training_seeds_positive": true,
+      "both_training_seeds_negative": false,
+      "t_ci95": [
+        0.018878500113138796,
+        0.046713947803527875
+      ],
+      "t_p": 4.245507482014688e-06,
+      "df": 1023,
+      "env_seed_cluster_ci95": [
+        0.018961588541666664,
+        0.04671223958333333
+      ],
+      "tier_differences": [
+        0.0419921875,
+        0.01708984375,
+        0.033203125,
+        0.02490234375,
+        0.0400390625,
+        0.03955078125
+      ],
+      "tier_env_seed_cluster_ci95": [
+        [
+          0.02294921875,
+          0.06103515625
+        ],
+        [
+          -0.00244140625,
+          0.037109375
+        ],
+        [
+          0.01123046875,
+          0.05567626953124982
+        ],
+        [
+          -0.002453613281249989,
+          0.05177001953124982
+        ],
+        [
+          0.0107421875,
+          0.06982421875
+        ],
+        [
+          0.00927734375,
+          0.068359375
+        ]
+      ],
+      "mowers_used_difference": -0.048990885416666664,
+      "holm_p": 4.245507482014688e-06,
+      "supports_positive_effect": true,
+      "supports_negative_effect": false
+    },
+    "I-R": {
+      "difference": -0.3638509114583333,
+      "per_training_seed_difference": [
+        -0.36279296875,
+        -0.3649088541666667
+      ],
+      "both_training_seeds_positive": false,
+      "both_training_seeds_negative": true,
+      "t_ci95": [
+        -0.3783095168491369,
+        -0.34939230606752975
+      ],
+      "t_p": 0.0,
+      "df": 1023,
+      "env_seed_cluster_ci95": [
+        -0.37809244791666663,
+        -0.34920247395833337
+      ],
+      "tier_differences": [
+        -0.38427734375,
+        -0.4072265625,
+        -0.419921875,
+        -0.38037109375,
+        -0.33203125,
+        -0.25927734375
+      ],
+      "tier_env_seed_cluster_ci95": [
+        [
+          -0.4140625,
+          -0.3544921875
+        ],
+        [
+          -0.43458251953125,
+          -0.3798828125
+        ],
+        [
+          -0.44677734375,
+          -0.39208984375
+        ],
+        [
+          -0.40869140625,
+          -0.35205078125
+        ],
+        [
+          -0.3603515625,
+          -0.302734375
+        ],
+        [
+          -0.287109375,
+          -0.23193359375
+        ]
+      ],
+      "mowers_used_difference": 0.5515950520833334,
+      "holm_p": 0.0,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "I-F": {
+      "difference": -0.41707356770833337,
+      "per_training_seed_difference": [
+        -0.38525390625,
+        -0.4488932291666667
+      ],
+      "both_training_seeds_positive": false,
+      "both_training_seeds_negative": true,
+      "t_ci95": [
+        -0.4320842054017768,
+        -0.40206293001488996
+      ],
+      "t_p": 0.0,
+      "df": 1023,
+      "env_seed_cluster_ci95": [
+        -0.4324564615885417,
+        -0.40218098958333337
+      ],
+      "tier_differences": [
+        -0.53759765625,
+        -0.533203125,
+        -0.49169921875,
+        -0.39404296875,
+        -0.31884765625,
+        -0.22705078125
+      ],
+      "tier_env_seed_cluster_ci95": [
+        [
+          -0.56298828125,
+          -0.5126953125
+        ],
+        [
+          -0.55908203125,
+          -0.5078125
+        ],
+        [
+          -0.51806640625,
+          -0.46435546875
+        ],
+        [
+          -0.42236328125,
+          -0.3661987304687502
+        ],
+        [
+          -0.3466796875,
+          -0.29052734375
+        ],
+        [
+          -0.25390625,
+          -0.20067138671875018
+        ]
+      ],
+      "mowers_used_difference": 0.8062337239583334,
+      "holm_p": 0.0,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "R-F": {
+      "difference": -0.05322265625,
+      "per_training_seed_difference": [
+        -0.0224609375,
+        -0.083984375
+      ],
+      "both_training_seeds_positive": false,
+      "both_training_seeds_negative": true,
+      "t_ci95": [
+        -0.06762344851453661,
+        -0.03882186398546338
+      ],
+      "t_p": 2.5845992013273644e-13,
+      "df": 1023,
+      "env_seed_cluster_ci95": [
+        -0.067626953125,
+        -0.0390625
+      ],
+      "tier_differences": [
+        -0.1533203125,
+        -0.1259765625,
+        -0.07177734375,
+        -0.013671875,
+        0.01318359375,
+        0.0322265625
+      ],
+      "tier_env_seed_cluster_ci95": [
+        [
+          -0.17822265625,
+          -0.12890625
+        ],
+        [
+          -0.14990234375,
+          -0.1015625
+        ],
+        [
+          -0.0966796875,
+          -0.04638671875
+        ],
+        [
+          -0.04052734375,
+          0.01318359375
+        ],
+        [
+          -0.017578125,
+          0.04248046875
+        ],
+        [
+          0.001953125,
+          0.0615234375
+        ]
+      ],
+      "mowers_used_difference": 0.254638671875,
+      "holm_p": 1.0338396805309458e-12,
+      "supports_positive_effect": false,
+      "supports_negative_effect": true
+    },
+    "S-F": {
+      "difference": 0.04345703125,
+      "per_training_seed_difference": [
+        0.052571614583333336,
+        0.034342447916666664
+      ],
+      "both_training_seeds_positive": true,
+      "both_training_seeds_negative": false,
+      "t_ci95": [
+        0.029782494370280844,
+        0.05713156812971916
+      ],
+      "t_p": 6.549520925602792e-10,
+      "df": 1023,
+      "env_seed_cluster_ci95": [
+        0.029703776041666664,
+        0.05745442708333333
+      ],
+      "tier_differences": [
+        0.0341796875,
+        0.017578125,
+        0.033203125,
+        0.052734375,
+        0.07421875,
+        0.048828125
+      ],
+      "tier_env_seed_cluster_ci95": [
+        [
+          0.0146484375,
+          0.0537109375
+        ],
+        [
+          -0.001953125,
+          0.03759765625
+        ],
+        [
+          0.0107421875,
+          0.05615234375
+        ],
+        [
+          0.0263671875,
+          0.07911376953124982
+        ],
+        [
+          0.0439453125,
+          0.1044921875
+        ],
+        [
+          0.02049560546875001,
+          0.07763671875
+        ]
+      ],
+      "mowers_used_difference": -0.050048828125,
+      "holm_p": 1.522632686601355e-09,
+      "supports_positive_effect": true,
+      "supports_negative_effect": false
+    }
+  },
+  "training_seeds": [
+    1,
+    2
+  ],
+  "tiers": [
+    "z15",
+    "z16",
+    "z17",
+    "z18",
+    "z19",
+    "z20"
+  ],
+  "environment_seed_clusters": 1024,
+  "bootstrap_replicates": 10000,
+  "bootstrap_seed": 20261020,
+  "primary_family": [
+    "B-F",
+    "M-F",
+    "T-F",
+    "I-R",
+    "I-F",
+    "R-F",
+    "S-F"
+  ],
+  "inference_scope": "conditional on these two trained initializations; all six tiers and both models resampled jointly by env seed; no population-level training-seed inference",
+  "recommendation_rule": "supported I-F/M-F/T-F/S-F practical improvement with both seed directions shown; no untested combination or best-seed claim",
+  "models": 14,
+  "total_games": 86016,
+  "game_files_sha256": {
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s1/day_l7_z15_eval/games.jsonl": "17b20e91484a0acfc4445a83c0395c0c40807e8a938c15ccc2d470e66aaa8a5e",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s1/day_l7_z16_eval/games.jsonl": "90ef2670378f0c4cc5d20aa2925de1359fa5486a788f27af11c541130c3e4d28",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s1/day_l7_z17_eval/games.jsonl": "845b53c08debf70d4ff71517298b134a0fbe716d70533be2ce567a6173fec7ed",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s1/day_l7_z18_eval/games.jsonl": "01e25c9fcb85c65c1f61fb1814c9cfd472b325271412a6deb48742d7a73f67ea",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s1/day_l7_z19_eval/games.jsonl": "1873c72f3319725cdad9655db3e05f8758c6e6b6aa17d726807f305584d2f93a",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s1/day_l7_z20_eval/games.jsonl": "eeabea6b95ed1e238d331afcecdac8746012673615587515f499d7bfaa416e29",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s2/day_l7_z15_eval/games.jsonl": "9e3a229f4a1bd69daa50e2e9a14a0cb21fd97da829bc3f7ff8bdea68f19bd9db",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s2/day_l7_z16_eval/games.jsonl": "4cfb7927c3053d10f21ddebdbc32f5051664c50b09a891bf0c49ae35255c2d32",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s2/day_l7_z17_eval/games.jsonl": "8773d4ee48837d0625a3873622f06ad7baf6a2b73fcb469172618f29e0509f36",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s2/day_l7_z18_eval/games.jsonl": "d9029cc841cc8b5636e5d9551697fa410a2721a860521d3a850517c7e379318c",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s2/day_l7_z19_eval/games.jsonl": "a36feb5013c67b3505b079054ee523a3b45affda426cca4994c02c1bfa7246d0",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/B_s2/day_l7_z20_eval/games.jsonl": "823152f06c1001c061efde4f7b8ad4d6f7f2e84a5606f13e64e368f2b43949d9",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s2/day_l7_z15_eval/games.jsonl": "12f2f9cfacb98f1740db4c82a054cd8aef91acffdbc5f7cb1420ae981e63b319",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s2/day_l7_z16_eval/games.jsonl": "da8293ebe211e8ff135d5ef7f58f275a8d7e971e47c2b873d1778fad4b98eb93",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s2/day_l7_z17_eval/games.jsonl": "143b8befef3b42e5a58abcf5b4dde2f4207c6bc9643efe9576a23cfac23bc93f",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s2/day_l7_z18_eval/games.jsonl": "9a9d33c50ace44f794d174ed95ca8809b77bbd70d843165aefc57ba71c460273",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s2/day_l7_z19_eval/games.jsonl": "60ec6c9ff5c9975907a23e16d4fdcba4da0ac0a82c06e52f8f391ca94aa79246",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s2/day_l7_z20_eval/games.jsonl": "1279de2d83d680f1e8a58b14f27aa49397649fc30e0ba29c7adcf3b363c31935",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s1/day_l7_z15_eval/games.jsonl": "b3f0a52271977c189b34d09d61de040be87b9b6948c937abe010ab467eef5491",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s1/day_l7_z16_eval/games.jsonl": "c6083652b1a41130d664c78cb3b379af143b997c9407c6094732185ee5a9ac40",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s1/day_l7_z17_eval/games.jsonl": "09cf430e07e3fa640c608fe3621a31ea9dba9f77f7f9cf0853a3a08e7fd6378c",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s1/day_l7_z18_eval/games.jsonl": "872272efb08bf85554ec1bc336365f0bcdea7564654579cdd8d0714208605bdc",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s1/day_l7_z19_eval/games.jsonl": "d92bec8dee7d606bfef9708673d5567b77b8ff525aaef36c1d79f7be4768b367",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s1/day_l7_z20_eval/games.jsonl": "0b6299b7cdca2da1cfb2018024fc4eab2a11c459d69ef463dcdd3fecf54cd46e",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s1/day_l7_z15_eval/games.jsonl": "aa7d7f211813cd1211c330ddc9786100fd0eb31915e5d1e5f4696f6f843a4a2f",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s1/day_l7_z16_eval/games.jsonl": "2d6e539e3897d435c4b011d73fbe0a36cb90dd5e57729f781d7de4af5dfac24c",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s1/day_l7_z17_eval/games.jsonl": "f7893eeca0ec68398412bb9633e8283857e3e0a8de15ec6faf10ca1c96fc2dbf",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s1/day_l7_z18_eval/games.jsonl": "8cf754f75a107eb90ed146a3f7b684bc94647f531fb7ba09f2e69511f4d0532a",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s1/day_l7_z19_eval/games.jsonl": "c362e197b5119d3466e0d8a85eff83dbc3803bae59bd74ae8043d335c618c016",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s1/day_l7_z20_eval/games.jsonl": "d588e178ceacdebfd5736a8a341e3fe8e8de0326bc9c60139c97ccdba3e5b3e3",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s1/day_l7_z15_eval/games.jsonl": "2cc4bf035f9c10447183d8350fbad49534ef8d89f320c26b44e4c3a0946ab051",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s1/day_l7_z16_eval/games.jsonl": "bfa883228d64c8d703feb72b060099b05ff8ff192c3cfe1d17b9c974da4ee7d6",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s1/day_l7_z17_eval/games.jsonl": "cb058bc0ebcebe722d4adf6491e23ff3cdc5fb310f18182043e0d08c0dcb91c7",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s1/day_l7_z18_eval/games.jsonl": "9ea072a2e1052425f4df216372732ea1efdcdfe830247a1e0749d5b4ac6b519e",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s1/day_l7_z19_eval/games.jsonl": "da842663edac0d21f7e1d4815f75f4b6084fc5110f27f7b6eaeaac284d865146",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s1/day_l7_z20_eval/games.jsonl": "374fc518fa4f43d5dee758c35f19ef3efa2a64d2c3bdf7b1858e8796d9528e8b",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s1/day_l7_z15_eval/games.jsonl": "21c1441cf2b09719d267165a4a7f77dc2e39852787998f1c819e218024ac026a",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s1/day_l7_z16_eval/games.jsonl": "4eb7161009a56c51a30d1c094033d7862778f51dc3c632899c7585cff2cf0718",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s1/day_l7_z17_eval/games.jsonl": "69f57fbbf694d745e53444a9caea6fc0ebeed6d0ee58ab9cbcc07815806f1c9a",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s1/day_l7_z18_eval/games.jsonl": "03878668b395b3d4c9450b384fbb36671c54e5fd877af85948ec9271197dd9b2",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s1/day_l7_z19_eval/games.jsonl": "e2b70d71ba75744fb05093b3040f76065446fcbff76313bff628947691926423",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s1/day_l7_z20_eval/games.jsonl": "dd30b653e823073db0f869445215a19fb4cdb52db86187e87d35fa600eb17cdb",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s2/day_l7_z15_eval/games.jsonl": "06d4fea47a136c4cf325823bb712d0af0a79bd13395c42f72d0e5e90d572a79c",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s2/day_l7_z16_eval/games.jsonl": "2900efe812ea02f742019e8a129a3d993f2f4297842d1c4b2c53df4ee6c2eea9",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s2/day_l7_z17_eval/games.jsonl": "97945c358559f65ea13286f9de7e77d6d131b0e3f393de440d614eb3b8f4acdb",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s2/day_l7_z18_eval/games.jsonl": "67208dd3cff8e56ae7888484079ae01ac239a3a42469bd9f099cecccb050e8c5",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s2/day_l7_z19_eval/games.jsonl": "eb207a141342e1a64ab21e4937f14c01274a03c276d2dcd33ad548de580baaa6",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/R_s2/day_l7_z20_eval/games.jsonl": "4b42df662059b5f53caa92f79cd57e1b474afe283a6620c4ef9084f964bd42eb",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s1/day_l7_z15_eval/games.jsonl": "359bb9ec2fbfc88fa78de90d08e48ae5223a86031bab77db5bb0f8993ed4a257",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s1/day_l7_z16_eval/games.jsonl": "89c94516c1781bc06ade9459c8475344b65d5b172c75246181d69d437d10e1b2",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s1/day_l7_z17_eval/games.jsonl": "dba7014734b12c103835b98d5a9e146b5ff0cb9889a1f12aa6e46a0e5d5764f7",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s1/day_l7_z18_eval/games.jsonl": "ef43a9fb7e957c89a0d5075ff2acd25ea7a102c42020cb7310fdbef5de84d2af",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s1/day_l7_z19_eval/games.jsonl": "77a2867d1049b8de1c3d414b39a409da1420d57d5345ac5e2390231466885f96",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/F_s1/day_l7_z20_eval/games.jsonl": "28c5d65a7d23da0b808674faf01d0abc9a6103b1a783ae97311ef4e8240a5e90",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s2/day_l7_z15_eval/games.jsonl": "b6675926389936f397f2ad7ae0624a7a1fd20447e19905a2a2b6928f5bcf041a",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s2/day_l7_z16_eval/games.jsonl": "c0772e7245b94410e27dd56132a8aba8e5b88f1bdbf13d4ae9f3d28b876c4576",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s2/day_l7_z17_eval/games.jsonl": "1bee1b9c26b0fb87efcc75e6f498a6812edafd35ebe01e9c8880aac503052fe9",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s2/day_l7_z18_eval/games.jsonl": "ee89aa84cf3981841f9ac66b9f266f36b9f563cc2c5cc9a1422aeaa1a82b86b6",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s2/day_l7_z19_eval/games.jsonl": "db1ddb7aeef1c7e9682926c29b8018c3791a4bf9c16b21eb42507eaec8b41d49",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s2/day_l7_z20_eval/games.jsonl": "cc8d0bf0db0083b14ba2e315d7b8c9ce84b9567f0e04063ae3490817247568f1",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s2/day_l7_z15_eval/games.jsonl": "8c2669356d6e9606d33e21cb67d5705772c7af471580d3df945f0e94488d4473",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s2/day_l7_z16_eval/games.jsonl": "68f341a0d758569baf803eb2ba6678828adc776db5bdd34839f68bc68db38c27",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s2/day_l7_z17_eval/games.jsonl": "76290728cb6c21e626b1869b562a0ac23a89cb2c6e9d31bc4d5c4c2c3fbaa70f",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s2/day_l7_z18_eval/games.jsonl": "e7e41fca47878009a35e97eedf90eaa41d566a12a246e7aae5ba924d42f614c7",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s2/day_l7_z19_eval/games.jsonl": "b1ab30bcf5aa3e720deaf67076b417285ba6315cb1435c45941b25d5c5464bda",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/M_s2/day_l7_z20_eval/games.jsonl": "1ae67975913d57d8c9c6d0e7cd00603ab1d27a603e9b733129daf50ad6978683",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s2/day_l7_z15_eval/games.jsonl": "b1f6876af1dc28942f93625a5c2b6df21ac24284e3f712c90742f8d46fd08d78",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s2/day_l7_z16_eval/games.jsonl": "4009d9aa40916ba29944e49788f4fef7bf366963cfb7e444afc5b45680fd387c",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s2/day_l7_z17_eval/games.jsonl": "f5cdf8c17db065b00cf1e5c8f7f356c43688997a05f29fe3f5e28f12e0fef52b",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s2/day_l7_z18_eval/games.jsonl": "2161fe643f5131ea57bdb3759c5d79ce347b5123c35f9fc6615130bd6181bf8c",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s2/day_l7_z19_eval/games.jsonl": "585d839f1bbde5f5531d70fdc7aa2e1ddb26ac562575c52305e295355250403d",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/T_s2/day_l7_z20_eval/games.jsonl": "15ec3f27b07fcb15463b47af92ee02af034fdf11105e4d7d52aa689d27721a73",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s1/day_l7_z15_eval/games.jsonl": "35e05bc6472538b82fd5a26e52caf1a5a12b184314d04e87e5ce24e89b715b83",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s1/day_l7_z16_eval/games.jsonl": "bdda07f92f09c90eb6fc987126b170e78423f3fa5cb8a8370146e40e03f01fcf",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s1/day_l7_z17_eval/games.jsonl": "7d6601029636399865f4b6348af5d020dda283124b9745a09305fd9c9a1a7886",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s1/day_l7_z18_eval/games.jsonl": "837a78729bbd7390d1632572f92b1eee3c473140741884e73666b3b5b2369bda",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s1/day_l7_z19_eval/games.jsonl": "90b15184c94cb4fc1631040772f0e6173fa2a23d08201088fca1d23b18ce1f27",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/S_s1/day_l7_z20_eval/games.jsonl": "116025dc900337d96bd037121d1601d4eece363c0fa4748cbdb3f11da3d7f09a",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s2/day_l7_z15_eval/games.jsonl": "e956e6cf55b08be58ae2526ee9083fcee7184eb2f14c11927839c0014245d20f",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s2/day_l7_z16_eval/games.jsonl": "f285d19880aceced3be7833110773ae749abb62a82c1d35e8298039154fc0f65",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s2/day_l7_z17_eval/games.jsonl": "d5ece89abe26f30730fbb31fc97943c015e134594f17c616fc6bceaaca4a9fa5",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s2/day_l7_z18_eval/games.jsonl": "0c25228ce214c3af9b201118ac70db0be6616fff9b2e912a932f5eda3edf6a1a",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s2/day_l7_z19_eval/games.jsonl": "5bd120795aa459075a27edf3c56c326c2e8251fe6a2c0ddc625b7442b38d7f1d",
+    "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/eval/I_s2/day_l7_z20_eval/games.jsonl": "7538ebbe7fcff23d0b8b07192dffe1ea920cdc07392cfd8c727b708674b86f76"
+  },
+  "model_sha256": {
+    "B_s1": "b9e6e7b3ef45bb5acfca309da8f795d20048c3a3d37e4cc7786615aaa167fa8f",
+    "B_s2": "261bbbec586d690d5461c59f419dcef66cbd651728a8a53ca1c321c24ecf3b48",
+    "F_s2": "e17b790b249273c84a4a664cbe557b152319e177a8fcf56e76c86af11f5ccaf9",
+    "M_s1": "1abed9f8ffc8dd966f1924acb1a61cbfd91c8854b56862f5802faab13ff01821",
+    "T_s1": "151aba494d6985c840bc4747a57f73220a76e7e66463e3aa7e720b591b7cb1f1",
+    "I_s1": "54bf12e29b647e40ec6f185bc5b08619dfeb25d8a6410ea5ac2cf4f1282106f7",
+    "R_s1": "e4cf52b619163cb3519199d9bfee270130fafda039e262e18a29a0e2070dcc5c",
+    "R_s2": "bd5c3ab4d6736419b8131cf081b6ad4b8f5f076bf021796f6910736e019d8cba",
+    "F_s1": "29d36f88c116090dadba9b43664318f0b8619bd7dc5150812898c98863c064ff",
+    "S_s2": "5dcfff1f6f232ac1f7bcfae8be3266a758d280d9c0d05c9f71a157078c8623f2",
+    "M_s2": "66b604f0fe16fdda8ae6291967ca59d46f8683086c8935fc734ba9d109770b27",
+    "T_s2": "8e97a1abc052e9ff0afca305fcd45ca37968ecaf8f6b411b45d772cbeb579e71",
+    "S_s1": "0311332ddc57ba4348db2080bf138460f2fd9a4b0b6f98525861b2401cd337b6",
+    "I_s2": "bf306e3d857165259abbb1468da2d963fa9472e204d5080c41a4e8a009abc5f8"
+  }
+}
