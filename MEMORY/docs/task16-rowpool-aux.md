@@ -95,3 +95,33 @@ C++ 计时直接调用本 worktree 已编译的 `EnvironmentRollout::Encode + He
 | row_pool | **90.416 µs** |
 
 本次按行汇总增加 18.541 µs，约 25.80%。
+
+## 后续修改（Codex，2026-10-20）
+
+代码与单测本地提交为 `6c698005`，分支仍为 `rowpool`，未 push。主仓库工作区及其 `build/` 保持原样。开始时主仓库已有 10 个采集游戏进程，未操作这些外部进程，本任务新增游戏进程串行、峰值 1 个。
+
+### 辅助标签旁路缓存
+
+`cache_episode(path, directory, obs)` 已移除 aux 参数，特征摘要与原路径不变，源 npz 的 encoder 签名匹配时直接返回原文件。新增 `cache_aux(path, directory, horizon)`，在 `cache_dir/aux_v1_kK/` 下只存 `rows`、`aux`（uint8）及 `digest`。摘要包含源档案、`row_damage_labels` 与缓存函数源码，以及 horizon。辅助标签生成不调用特征编码，也不写 boards 或 scalars。
+
+`load()` 的串行与多进程路径均独立准备辅助缓存，读取时先断言辅助缓存和特征缓存的 `rows` 完全相同，再用同一份抽样索引选择标签。三帧测试覆盖 v1 / v2、K=1 / 2、完整 / wait 抽样、串行 / 多进程，并验证开启辅助标签前后特征缓存路径和修改时间不变。对签名匹配的源 npz，测试将特征编码替换为直接报错，开关辅助训练均正常加载且原训练张量逐位一致。故意打乱辅助缓存 rows 时，加载按预期断言失败。
+
+### C++ 投影、对拍与测试
+
+开启 `PVZ_ROLLOUT_BLAS` 时，六行汇总使用一次 `cblas_sgemm` 完成 6×2W→W 投影，复用既有 scratch 存储输出。未开启时继续走原来的逐通道 `Linear`。本 worktree 的 Release/BLAS 构建成功，另外将 `EnvironmentRollout.cpp` 编译为无 BLAS 版本并替换本 worktree 链接输入，生成独立测试程序。
+
+随机权重与真实局面共 48 组配置，对拍覆盖 mean / meanmax、上下文开关、v1 / v2lite / v2、row_pool 开关。BLAS 最大绝对误差 **1.6391277313232422e-7**，无 BLAS 为 **1.7881393432617188e-7**，均低于 1e-5。选卡和选格 argmax 全部一致，合法贪心动作全部一致。
+
+全量 `python -m pytest python -q -s`：**216 passed、12 skipped、423 subtests passed，27.01 秒**。无 BLAS 独立对拍：**1 passed、48 subtests passed，3.06 秒**。辅助标签专项四项测试通过。
+
+### 10000 次计时
+
+复用原计时程序与同一真实局面的输入、随机权重，仍测 `Encode + Heads(0)`，宽 64、meanmax、obs v2，Release、关闭乘加融合、`VECLIB_MAXIMUM_THREADS=1`。各组预热 100 次后逐次计时 10000 次，取中位数。旧投影使用原任务留下的计时可执行文件，默认和新投影使用本次编译的对象文件。
+
+| 结构 | 单步前向中位数 |
+|---|---|
+| 默认（按行汇总关闭） | **73.083 µs** |
+| 旧标量按行投影 | **90.917 µs** |
+| 新 SGEMM 按行投影 | **76.959 µs** |
+
+本次同机复测，按行汇总前向耗时减少 **15.35%**，相对默认的额外成本为 **3.876 µs（5.30%）**。
