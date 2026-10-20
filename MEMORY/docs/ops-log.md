@@ -5,3 +5,5 @@
 - 台式机 13:23（Mac 01:23）｜GPU 45% / 3113 MiB；C 盘剩 28 GB；q87/q88/q89 均在跑
 - 台式机 13:23（Mac 01:23）｜Mac z17_dagger40b 完成：569/640 胜；z17_dagger41b 进行中 310/640（2856s），search_play 进程 1 个
 - 台式机 13:23（Mac 01:23）｜codex-cuda 停在空输入框，状态行 Goal hit usage limits（额度用完，非异常）；cb-cuda 于 13:16 新建
+- 台式机 13:54（Mac 01:54）｜无新结果行。q87/q88/q89 会话均在，z17_dagger41.log 13:54 仍在写（q87 存活）；GPU 44% / 3112 MiB；C 盘剩 28 GB
+- 台式机 13:54（Mac 01:54）｜Mac z17_dagger41b 进度 510/640（4680s），search_play 进程 1 个；无异常
