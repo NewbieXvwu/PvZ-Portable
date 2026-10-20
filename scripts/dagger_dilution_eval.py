@@ -33,6 +33,12 @@ def main():
     p.add_argument('--plan',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True)
     args=p.parse_args();plan=json.loads(args.plan.read_text());contract=plan['eval_contract']
+    freeze=json.loads((args.plan.parent/'evaluation_freeze.json').read_text())
+    def verify_sources():
+        for path,digest in freeze['source_files'].items():
+            assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==digest,path
+        assert hashlib.sha256(Path(contract['executable']).read_bytes()).hexdigest()==contract['executable_sha256']
+    verify_sources()
     # runnerlib is the same already-validated private memory guard used throughout
     # tasks8..15; keep logs/raw games ignored rather than publishing them in git.
     sys.path.insert(0,str(ROOT/'artifacts/cuda/task8'));import runnerlib as r
@@ -50,6 +56,14 @@ def main():
         for task in contract['task_ids']:
             tag='eval_'+job['name']+'_'+task.split('_')[-2]
             dest=args.out/job['name']/task
+            identity={'model_sha256':expected,'manifest_sha256':contract['manifest_sha256'],
+                      'executable_sha256':contract['executable_sha256'],'task':task,
+                      'count':contract['seeds_each'],'evaluation_freeze_sha256':hashlib.sha256((args.plan.parent/'evaluation_freeze.json').read_bytes()).hexdigest()}
+            identity_path=dest/'evaluation_identity.json'
+            if identity_path.exists():assert json.loads(identity_path.read_text())==identity
+            else:
+                assert not (dest/'games.jsonl').exists(), 'unidentified existing evaluation'
+                dest.mkdir(parents=True,exist_ok=True);identity_path.write_text(json.dumps(identity,indent=2)+'\n')
             if (dest/'summary.json').exists():
                 rows=[json.loads(v) for v in (dest/'games.jsonl').read_text().splitlines()]
                 if len(rows)==contract['seeds_each']:continue
@@ -61,6 +75,7 @@ def main():
                 time.sleep(10)
             for path,digest in plan['source_files'].items():
                 assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==digest,path
+            verify_sources()
             cmd=[r.PYTHON,'scripts/search_play.py','--rollout-policy',str(model),
                  '--value',str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt'),
                  '--manifest',str(snapshot),'--task-id',task,'--seeds',str(contract['seeds_each']),
