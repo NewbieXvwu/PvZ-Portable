@@ -39,9 +39,8 @@ def main():
             assert hashlib.sha256((ROOT/path).read_bytes()).hexdigest()==digest,path
         assert hashlib.sha256(Path(contract['executable']).read_bytes()).hexdigest()==contract['executable_sha256']
     verify_sources()
-    # runnerlib is the same already-validated private memory guard used throughout
-    # tasks8..15; keep logs/raw games ignored rather than publishing them in git.
-    sys.path.insert(0,str(ROOT/'artifacts/cuda/task8'));import runnerlib as r
+    # The validated guard is tracked with the entry point; raw evidence stays ignored.
+    import dagger_experiment_runner as r
     r.OUT=args.out;r.OUT.mkdir(parents=True,exist_ok=True)
     completed=json.loads((args.plan.parent/'training_complete.json').read_text())
     by_name={v['name']:v for v in completed};assert set(by_name)=={j['name'] for j in plan['jobs']}
