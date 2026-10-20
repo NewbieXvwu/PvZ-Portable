@@ -1,0 +1,447 @@
+{
+  "frozen_at": "2026-10-20T12:49:28.866855+08:00",
+  "code_commit": "8227d4c6ef80f9572256d444874c56b7745d1b71",
+  "cohorts": {
+    "D30": {
+      "labels": [
+        "z13dag3_fast_search",
+        "z13dag4_fast_search",
+        "z14dag5_fast_search",
+        "z15dag10_fast_search",
+        "z15dag10b_fast_search",
+        "z15dag11_fast_search",
+        "z15dag11b_fast_search",
+        "z15dag12_fast_search",
+        "z15dag12b_fast_search",
+        "z15dag13_fast_search",
+        "z15dag13b_fast_search",
+        "z15dag14_fast_search",
+        "z15dag14b_fast_search",
+        "z15dag15_fast_search",
+        "z15dag15b_fast_search",
+        "z15dag15c_fast_search",
+        "z15dag16b_fast_search",
+        "z15dag17_fast_search",
+        "z15dag17b_fast_search",
+        "z15dag18_fast_search",
+        "z15dag3_fast_search",
+        "z15dag4_fast_search",
+        "z15dag6_fast_search",
+        "z15dag6b_fast_search",
+        "z15dag6c_fast_search",
+        "z15dag7_fast_search",
+        "z15dag8_fast_search",
+        "z15dag8b_fast_search",
+        "z15dag8c_fast_search",
+        "z15dag9_fast_search",
+        "z15dag9b_fast_search",
+        "z16dag18b_fast_search",
+        "z16dag19_fast_search",
+        "z17dag20_fast_search",
+        "z17dag20b_fast_search",
+        "z17dag21_fast_search",
+        "z17dag21b_fast_search",
+        "z17dag22_fast_search",
+        "z17dag22b_fast_search",
+        "z17dag23_fast_search",
+        "z17dag23b_fast_search",
+        "z17dag24_fast_search",
+        "z17dag24b_fast_search",
+        "z17dag25_fast_search",
+        "z17dag25b_fast_search",
+        "z17dag26s_fast_search",
+        "z17dag26t_fast_search",
+        "z17dag26u_fast_search",
+        "z17dag26v_fast_search",
+        "z17dag27_fast_search",
+        "z17dag27b_fast_search",
+        "z17dag27c_fast_search",
+        "z17dag28_fast_search",
+        "z17dag28b_fast_search",
+        "z17dag28g_fast_search",
+        "z17dag29_fast_search",
+        "z17dag29b_fast_search"
+      ],
+      "rows": 8038389,
+      "val_rows": 794103,
+      "row_identity_sha256": "cbc3cbc6898df91f2e98c3fa575dcc27b0bbb0f3921c94d35afd10eee827b927",
+      "split_sha256": "501855f850f8f31eabef6462246ff81a0f23f2b58b2640e6cc7fad8abfeb7770",
+      "optimizer_steps_12epochs": 42456
+    },
+    "D35": {
+      "labels": [
+        "z13dag3_fast_search",
+        "z13dag4_fast_search",
+        "z14dag5_fast_search",
+        "z15dag10_fast_search",
+        "z15dag10b_fast_search",
+        "z15dag11_fast_search",
+        "z15dag11b_fast_search",
+        "z15dag12_fast_search",
+        "z15dag12b_fast_search",
+        "z15dag13_fast_search",
+        "z15dag13b_fast_search",
+        "z15dag14_fast_search",
+        "z15dag14b_fast_search",
+        "z15dag15_fast_search",
+        "z15dag15b_fast_search",
+        "z15dag15c_fast_search",
+        "z15dag16b_fast_search",
+        "z15dag17_fast_search",
+        "z15dag17b_fast_search",
+        "z15dag18_fast_search",
+        "z15dag3_fast_search",
+        "z15dag4_fast_search",
+        "z15dag6_fast_search",
+        "z15dag6b_fast_search",
+        "z15dag6c_fast_search",
+        "z15dag7_fast_search",
+        "z15dag8_fast_search",
+        "z15dag8b_fast_search",
+        "z15dag8c_fast_search",
+        "z15dag9_fast_search",
+        "z15dag9b_fast_search",
+        "z16dag18b_fast_search",
+        "z16dag19_fast_search",
+        "z17dag20_fast_search",
+        "z17dag20b_fast_search",
+        "z17dag21_fast_search",
+        "z17dag21b_fast_search",
+        "z17dag22_fast_search",
+        "z17dag22b_fast_search",
+        "z17dag23_fast_search",
+        "z17dag23b_fast_search",
+        "z17dag24_fast_search",
+        "z17dag24b_fast_search",
+        "z17dag25_fast_search",
+        "z17dag25b_fast_search",
+        "z17dag26s_fast_search",
+        "z17dag26t_fast_search",
+        "z17dag26u_fast_search",
+        "z17dag26v_fast_search",
+        "z17dag27_fast_search",
+        "z17dag27b_fast_search",
+        "z17dag27c_fast_search",
+        "z17dag28_fast_search",
+        "z17dag28b_fast_search",
+        "z17dag28g_fast_search",
+        "z17dag29_fast_search",
+        "z17dag29b_fast_search",
+        "z17dag29c_fast_search",
+        "z17dag30_fast_search",
+        "z17dag31_fast_search",
+        "z17dag31b_fast_search",
+        "z17dag32_fast_search",
+        "z17dag32b_fast_search",
+        "z17dag33_fast_search",
+        "z17dag33b_fast_search",
+        "z17dag34b_fast_search",
+        "z17dag35_fast_search",
+        "z17dag35b_fast_search"
+      ],
+      "rows": 9914278,
+      "val_rows": 994513,
+      "row_identity_sha256": "328b3882557352190fdcca30fd4b06d435aaf0c9583ad50bdb668ef143ceb8e3",
+      "split_sha256": "dabf199ac1aef4157c6299405172950a40b197dc5171108517ea7986811dd291",
+      "optimizer_steps_12epochs": 52272
+    }
+  },
+  "jobs": [
+    {
+      "name": "B_s1",
+      "seed": 1,
+      "arm": "B",
+      "cohort": "D30",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/B_s1",
+      "extra_args": []
+    },
+    {
+      "name": "B_s2",
+      "seed": 2,
+      "arm": "B",
+      "cohort": "D30",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/B_s2",
+      "extra_args": []
+    },
+    {
+      "name": "F_s2",
+      "seed": 2,
+      "arm": "F",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/F_s2",
+      "extra_args": []
+    },
+    {
+      "name": "M_s1",
+      "seed": 1,
+      "arm": "M",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/M_s1",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/M.json"
+      ]
+    },
+    {
+      "name": "T_s1",
+      "seed": 1,
+      "arm": "T",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/T_s1",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/T.json"
+      ]
+    },
+    {
+      "name": "I_s1",
+      "seed": 1,
+      "arm": "I",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/I_s1",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/I.json"
+      ]
+    },
+    {
+      "name": "R_s1",
+      "seed": 1,
+      "arm": "R",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/R_s1",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/R.json"
+      ]
+    },
+    {
+      "name": "R_s2",
+      "seed": 2,
+      "arm": "R",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/R_s2",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/R.json"
+      ]
+    },
+    {
+      "name": "F_s1",
+      "seed": 1,
+      "arm": "F",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/F_s1",
+      "extra_args": []
+    },
+    {
+      "name": "S_s2",
+      "seed": 2,
+      "arm": "S",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/S_s2",
+      "extra_args": [
+        "--max-steps",
+        "42456"
+      ]
+    },
+    {
+      "name": "M_s2",
+      "seed": 2,
+      "arm": "M",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/M_s2",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/M.json"
+      ]
+    },
+    {
+      "name": "T_s2",
+      "seed": 2,
+      "arm": "T",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/T_s2",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/T.json"
+      ]
+    },
+    {
+      "name": "S_s1",
+      "seed": 1,
+      "arm": "S",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/S_s1",
+      "extra_args": [
+        "--max-steps",
+        "42456"
+      ]
+    },
+    {
+      "name": "I_s2",
+      "seed": 2,
+      "arm": "I",
+      "cohort": "D35",
+      "out": "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/models/I_s2",
+      "extra_args": [
+        "--row-weights",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task15/interventions/I.json"
+      ]
+    }
+  ],
+  "source_files": {
+    "scripts/train_rollout_policy.py": "ec12574cdd404b094e7ad23edb4c0e2be65de6235828418b7a701984dbd49102",
+    "scripts/train_rollout_policy_dilution.py": "cbb83f75d35df7a6570edd6f585b10207b3500f6674334ed7222a2f557e32209",
+    "python/pvz_training_rows.py": "191c16e0a4248ef1e60f1b2d4ce6a6058e8238820fca840c86f44ad62694124b",
+    "python/pvz_frame_store.py": "ebae19469348c3e9a78bfe8de386bb41d36180d0b09df5df705dc7cf5c9013a5",
+    "python/pvz_rollout_policy.py": "9b966c89c1f2b554ed41a05a02955a97404c0a846e0276dd2ccd7cfbfc179e3d",
+    "python/pvz_student_observation.py": "2555fadf3c63ae97cbefb1301f411f566adae3b9a980e135a9d8a065fc9fb5bd",
+    "python/pvz_value_net.py": "ed214b79bbb092e7fd043e1b95ec2d39f3a75eb6bcff856291702a76cfb2ff8b",
+    "scripts/dagger_data_design.py": "3ebcbf4323a61b4d46fd5c2343a5a0c2f729c58aa4821fd24f24ad5a3ed9762d",
+    "scripts/dagger_data_interventions.py": "2dae1135da36c3886cdddc37133d264a907c6acc5b28f8d418920d7e2bb77194",
+    "MEMORY/docs/dagger-data-dilution-plan.json": "406279550968dccec97da359463165daef35969fa3b75c5d61bbcd8458c68bb1",
+    "MEMORY/docs/dagger-data-dilution-experiments.json": "7572e689fb5f21e1b9f7d25d526a04a900aa704cd407e5725916d2da7f86c7a4",
+    "MEMORY/docs/dagger-data-dilution-amendment.json": "8c17d8774bf3f456861b6c890a62941b28beed123c1bcffca6aeba00c729d292"
+  },
+  "row_weight_specs": {
+    "M": {
+      "name": "M",
+      "rows": 9914278,
+      "multipliers": "M.npy",
+      "row_identity_sha256": "328b3882557352190fdcca30fd4b06d435aaf0c9583ad50bdb668ef143ceb8e3",
+      "split_sha256": "dabf199ac1aef4157c6299405172950a40b197dc5171108517ea7986811dd291",
+      "multipliers_sha256": "125a250874a5e37e4a511371d8160c59eaaecfbb958d08aa962abb9e974cda65",
+      "positive_train_rows": 8919765,
+      "train_weight_before": 33840074.76953835,
+      "train_weight_after": 33840075.21041313,
+      "max_multiplier": 23.14156150817871,
+      "min_multiplier": 0.3620709776878357
+    },
+    "T": {
+      "name": "T",
+      "rows": 9914278,
+      "multipliers": "T.npy",
+      "row_identity_sha256": "328b3882557352190fdcca30fd4b06d435aaf0c9583ad50bdb668ef143ceb8e3",
+      "split_sha256": "dabf199ac1aef4157c6299405172950a40b197dc5171108517ea7986811dd291",
+      "multipliers_sha256": "95f5ea024eaed8f1d1a92f64c8769d4b1de942b60bf9f933ab459de4b628805d",
+      "positive_train_rows": 8919765,
+      "train_weight_before": 33840074.76953835,
+      "train_weight_after": 33840074.10805813,
+      "max_multiplier": 1.394231915473938,
+      "min_multiplier": 0.8269335031509399
+    },
+    "I": {
+      "name": "I",
+      "rows": 9914278,
+      "multipliers": "I.npy",
+      "row_identity_sha256": "328b3882557352190fdcca30fd4b06d435aaf0c9583ad50bdb668ef143ceb8e3",
+      "split_sha256": "dabf199ac1aef4157c6299405172950a40b197dc5171108517ea7986811dd291",
+      "multipliers_sha256": "d9cb85fbd7bc2cb2b760d0976772116cb54d25519d1720f9b889d11ea78f4470",
+      "positive_train_rows": 7672076,
+      "train_weight_before": 33840074.76953835,
+      "train_weight_after": 33840074.754144415,
+      "max_multiplier": 41.64075469970703,
+      "min_multiplier": 0.0
+    },
+    "R": {
+      "name": "R",
+      "rows": 9914278,
+      "multipliers": "R.npy",
+      "row_identity_sha256": "328b3882557352190fdcca30fd4b06d435aaf0c9583ad50bdb668ef143ceb8e3",
+      "split_sha256": "dabf199ac1aef4157c6299405172950a40b197dc5171108517ea7986811dd291",
+      "multipliers_sha256": "38a37f356028b79361c8cd3580fc42d216102d3c38bc2d36ef3fd98f0485a2ac",
+      "positive_train_rows": 7672076,
+      "train_weight_before": 33840074.76953835,
+      "train_weight_after": 33840074.75510512,
+      "max_multiplier": 3740.662841796875,
+      "min_multiplier": 0.0
+    }
+  },
+  "compatibility_probe": {
+    "legacy": {
+      "model_sha256": "7d1ca4d36deb2b1fc2eed903d4bc144ef658aca333166fa92f39876b45506124",
+      "epochs": 3,
+      "tensor_exact_to_legacy": true,
+      "optimizer_steps": null
+    },
+    "default": {
+      "model_sha256": "4167e36c8d7ef8a890cbc76827086731d253ab3af30840a8b953b449bdc07fef",
+      "epochs": 3,
+      "tensor_exact_to_legacy": true,
+      "optimizer_steps": null
+    },
+    "ones": {
+      "model_sha256": "b2793b369b2d3e0359bad8fc02de9803512a917e2da0cf59301f8b33a8696341",
+      "epochs": 3,
+      "tensor_exact_to_legacy": true,
+      "optimizer_steps": null
+    },
+    "cached_default": {
+      "model_sha256": "9230f3dcb8a643b33e38d693d6f1d4479a93e118bf3c0dd10b2a171731ca29bd",
+      "epochs": 3,
+      "tensor_exact_to_legacy": true,
+      "optimizer_steps": null
+    },
+    "partial": {
+      "model_sha256": "c470049eb44c718796dec8a8ab74604b99e30f37811cfeb9656293cc04473440",
+      "epochs": 2,
+      "tensor_exact_to_legacy": false,
+      "optimizer_steps": 3
+    },
+    "zero_plant": {
+      "model_sha256": "333b1f468f678ee2f1340001d8835410287420606682075ecd0f437afe49aa6b",
+      "epochs": 3,
+      "tensor_exact_to_legacy": false,
+      "optimizer_steps": null
+    },
+    "cache_loads": 1
+  },
+  "eval_contract": {
+    "task_ids": [
+      "day_l7_z15_eval",
+      "day_l7_z16_eval",
+      "day_l7_z17_eval",
+      "day_l7_z18_eval",
+      "day_l7_z19_eval",
+      "day_l7_z20_eval"
+    ],
+    "seeds_each": 1024,
+    "workers": 8,
+    "executable": "/home/newbiexvwu/pvz-h8/build-task12/pvz-portable",
+    "executable_sha256": "01754768c12845986d749d6a8f1f61e8dd52da6fb9c3f2d589e4f91de57161f0",
+    "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+    "manifest_sha256": "8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941"
+  },
+  "audit_inventory_sha256": "7c8d23592e97f3348180c456b513592d09441e5b52e6ec5c94b01b86bf1ff0ba",
+  "common_args": [
+    "--data",
+    "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2",
+    "--packet-balance",
+    "0.5",
+    "--pool",
+    "meanmax",
+    "--wait-keep",
+    "0.1",
+    "--obs",
+    "v2",
+    "--cache-dir",
+    "/home/newbiexvwu/PvZ-search/artifacts/student/v2_cache",
+    "--precompute-workers",
+    "8",
+    "--spread-weight",
+    "8",
+    "--spread-cap",
+    "10",
+    "--device",
+    "cuda",
+    "--lr-schedule",
+    "cosine",
+    "--cell-soft-weight",
+    "3",
+    "--width",
+    "64",
+    "--epochs",
+    "12"
+  ]
+}
