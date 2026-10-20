@@ -119,6 +119,23 @@ def cache_candidates(path: Path, directory: Path) -> Path:
     return target
 
 
+def cache_aux(path: Path, directory: Path, horizon: int) -> Path:
+    source = frame_bytes(path)
+    signature = inspect.getsource(row_damage_labels) + inspect.getsource(cache_aux) + str(horizon)
+    digest = hashlib.sha256(signature.encode() + source).hexdigest()
+    target = directory / f"aux_v1_k{horizon}" / (hashlib.sha256(str(path.resolve()).encode()).hexdigest() + ".npz")
+    if target.exists():
+        with np.load(target, allow_pickle=False) as stored:
+            if str(stored["digest"]) == digest:
+                return target
+    frames = [json.loads(line) for line in source.splitlines() if line.strip()]
+    rows = np.array([index for index in range(1, len(frames))
+                     if (frames[index].get("label") or frames[index].get("action"))
+                     and not frames[index].get("action_rejected")], dtype=np.int64)
+    _save(target, digest=digest, rows=rows, aux=row_damage_labels(frames, horizon)[rows - 1].astype(np.uint8))
+    return target
+
+
 def encode_frames(frames: list[dict], source: bytes) -> dict:
     from pvz_rollout_policy import LAWN_COLS, PACKETS, features
     from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS
@@ -212,15 +229,11 @@ def write_frames(path: Path, frames: list[dict]):
           **encode_frames(frames, source))
 
 
-def cache_episode(path: Path, directory: Path, obs: str = "v1", aux_horizon: int = 0) -> Path:
+def cache_episode(path: Path, directory: Path, obs: str = "v1") -> Path:
     signature = encoder_signature(obs)
     if obs != "v1":
         directory = directory / obs
-    if aux_horizon:
-        directory = directory / f"aux_v1_k{aux_horizon}"
-        signature = hashlib.sha256((signature + "aux_v1" + str(aux_horizon)
-                                    + inspect.getsource(row_damage_labels)).encode()).hexdigest()
-    if path.suffix == ".npz" and not aux_horizon:
+    if path.suffix == ".npz":
         with np.load(path, allow_pickle=False) as stored:
             if "encoder" in stored and str(stored["encoder"]) == signature:
                 return path
@@ -233,8 +246,5 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", aux_horizon: int
                 return target
     frames = [json.loads(line) for line in source.splitlines()]
     encoded = encode_frames(frames, source) if obs == "v1" else encode_student_frames(frames, source, obs)
-    if aux_horizon:
-        encoded.update(aux=row_damage_labels(frames, aux_horizon)[encoded["rows"] - 1],
-                       aux_version=1, aux_horizon=aux_horizon)
     _save(target, digest=digest, **encoded)
     return target

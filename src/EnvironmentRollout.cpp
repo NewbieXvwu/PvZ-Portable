@@ -15,6 +15,11 @@
 #include <stdexcept>
 
 #ifdef PVZ_ROLLOUT_BLAS
+#ifdef __APPLE__
+#include <vecLib/cblas.h>
+#else
+#include <cblas.h>
+#endif
 extern "C" void sgemm_(const char*, const char*, const int*, const int*, const int*, const float*,
 	const float*, const int*, const float*, const int*, const float*, float*, const int*);
 #endif
@@ -357,11 +362,21 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 				columns[row * 2 * width + channel] = total / 10;
 				columns[row * 2 * width + width + channel] = *std::max_element(values, values + 10);
 			}
+	#ifdef PVZ_ROLLOUT_BLAS
+		for (int row = 0; row < 6; ++row)
+			std::copy_n(weights[18].data(), width, scratch.data() + row * width);
+		cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, 6, width, 2 * width, 1.0f,
+			columns.data(), 2 * width, weights[17].data(), 2 * width, 1.0f, scratch.data(), width);
+	#endif
 		for (int channel = 0; channel < width; ++channel)
 			for (int row = 0; row < 6; ++row)
 			{
+			#ifdef PVZ_ROLLOUT_BLAS
+				const float projected = scratch[row * width + channel];
+			#else
 				const float projected = Linear(columns.data() + row * 2 * width,
 					weights[17].data() + channel * 2 * width, 2 * width, weights[18][channel]);
+			#endif
 				for (int col = 0; col < 10; ++col)
 				{
 					float& value = hidden[channel * Cells + row * 10 + col];

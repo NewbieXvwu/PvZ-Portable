@@ -2,12 +2,15 @@ import struct
 import sys
 import tempfile
 from pathlib import Path
+from unittest.mock import patch
 
 import torch
 import numpy as np
+import pytest
 
 from pvz_rollout_policy import RolloutNet, export_student, load_student
-from pvz_frame_store import cache_episode, row_damage_labels, write_frames
+from pvz_frame_store import (cache_aux, cache_episode, encode_student_frames, encoder_signature,
+                             frame_bytes, row_damage_labels, write_frames)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from train_rollout_policy import load
@@ -33,7 +36,8 @@ def test_rowpool_checkpoint_and_export_without_aux():
         assert binary.read_bytes() == data
 
 
-def test_three_frame_aux_labels_and_sampled_cache():
+@pytest.mark.parametrize("obs", ["v1", "v2"])
+def test_three_frame_aux_labels_and_sampled_cache(obs):
     base = dict(sun=50, wave=0, scene={"wave_count": 10}, packets=[], zombies=[], lanes=list(range(5)))
     frames = [dict(base, tick=0, plants=[[0, 0, 0, 100, 100], [1, 1, 1, 100, 100]], mowers=[[2, 1], [3, 1]]),
               dict(base, tick=60, plants=[[1, 1, 1, 100, 100]], mowers=[[2, 2], [3, 1]],
@@ -50,23 +54,50 @@ def test_three_frame_aux_labels_and_sampled_cache():
         archive.parent.mkdir(parents=True)
         write_frames(archive, frames)
         cache = Path(directory) / "cache"
-        old = cache_episode(archive, cache)
+        old = cache_episode(archive, cache, obs)
+        modified = old.stat().st_mtime_ns
         for horizon, expected in ((1, one), (2, two)):
-            cached = cache_episode(archive, cache, aux_horizon=horizon)
+            cached = cache_aux(archive, cache, horizon)
             assert cached != old
             with np.load(cached) as stored:
-                assert stored["aux_version"] == 1
-                assert stored["aux_horizon"] == horizon
+                assert set(stored.files) == {"rows", "aux", "digest"}
+                assert stored["aux"].dtype == np.uint8
+                np.testing.assert_array_equal(stored["rows"], [1, 2])
                 np.testing.assert_array_equal(stored["aux"], expected[:-1])
-            for fraction in (1.0, 0.5):
-                direct = load(data, {"teacher"}, wait_keep=fraction, dense_boards=True, aux_horizon=horizon)
+            timestamp = cached.stat().st_mtime_ns
+            assert cache_aux(archive, cache, horizon) == cached
+            assert cached.stat().st_mtime_ns == timestamp
+            for fraction, workers in ((1.0, 1), (0.5, 2)):
+                direct = load(data, {"teacher"}, wait_keep=fraction, dense_boards=True, obs=obs, aux_horizon=horizon)
                 actual = load(data, {"teacher"}, wait_keep=fraction, cache_dir=cache,
-                              dense_boards=True, aux_horizon=horizon)
+                              dense_boards=True, obs=obs, precompute_workers=workers, aux_horizon=horizon)
                 torch.testing.assert_close(direct[-1], actual[-1], rtol=0, atol=0)
                 np.testing.assert_array_equal(actual[-1], expected[1:2] if fraction < 1 else expected[:-1])
+            assert cache_episode(archive, cache, obs) == old
+            assert old.stat().st_mtime_ns == modified
+            assert set(cached.parent.glob("*.npz")) == {cached}
         binary = archive.with_suffix(".npz")
-        write_frames(binary, frames)
-        assert cache_episode(binary, cache, aux_horizon=1) != binary
+        source = frame_bytes(archive)
+        if obs == "v1":
+            write_frames(binary, frames)
+        else:
+            np.savez_compressed(binary, frames=np.frombuffer(source, dtype=np.uint8), encoder=encoder_signature(obs),
+                                **encode_student_frames(frames, source, obs))
+        with patch("pvz_frame_store.encode_frames", side_effect=AssertionError("unexpected feature encoding")):
+            assert cache_episode(binary, cache, obs) == binary
+            before = load(data, {"teacher"}, cache_dir=cache, obs=obs, dense_boards=True)
+            actual = load(data, {"teacher"}, cache_dir=cache, obs=obs, dense_boards=True, aux_horizon=1)
+            for plain, auxiliary in zip(before[:6], actual[:6]):
+                torch.testing.assert_close(plain, auxiliary, rtol=0, atol=0)
+            np.testing.assert_array_equal(actual[-1], one[:-1])
+            assert cache_episode(binary, cache, obs) == binary
+        side = cache_aux(binary, cache, 1)
+        with np.load(side) as stored:
+            arrays = dict(stored)
+        arrays["rows"] = arrays["rows"][::-1]
+        np.savez_compressed(side, **arrays)
+        with pytest.raises(AssertionError):
+            load(data, {"teacher"}, cache_dir=cache, obs=obs, aux_horizon=1)
 
 
 def test_aux_excludes_executed_shovel():

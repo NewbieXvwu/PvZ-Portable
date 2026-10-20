@@ -27,7 +27,7 @@ import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
-from pvz_frame_store import (CELL_CANDIDATES, cache_candidates, cache_episode, candidate_cells, frame_bytes,  # noqa: E402
+from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, candidate_cells, frame_bytes,  # noqa: E402
                               frame_paths, read_frames, row_damage_labels, target_values)
 
 
@@ -108,20 +108,22 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     keep = {}
     cached = {}
     cell_cached = {}
+    aux_cached = {}
     if cache_dir is not None and precompute_workers > 1:
         from concurrent.futures import ProcessPoolExecutor
         from functools import partial
         import multiprocessing as mp
         with ProcessPoolExecutor(max_workers=precompute_workers, mp_context=mp.get_context("spawn")) as pool:
-            cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs,
-                                                      aux_horizon=aux_horizon), paths, chunksize=8)))
+            cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs), paths, chunksize=8)))
             if cells:
                 cell_cached = dict(zip(paths, pool.map(partial(cache_candidates, directory=cache_dir), paths, chunksize=8)))
+            if aux_horizon:
+                aux_cached = dict(zip(paths, pool.map(partial(cache_aux, directory=cache_dir, horizon=aux_horizon), paths, chunksize=8)))
     for path in paths:
         mask = []
         if cache_dir is not None:
             if path not in cached:
-                cached[path] = cache_episode(path, cache_dir, obs, aux_horizon)
+                cached[path] = cache_episode(path, cache_dir, obs)
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             keep[path] = mask
@@ -181,7 +183,11 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                         cands[n:n + count] = side["cands"][selected]
                 values[n:n + count] = vals
                 if aux_horizon:
-                    auxiliary[n:n + count] = stored["aux"][selected]
+                    if path not in aux_cached:
+                        aux_cached[path] = cache_aux(path, cache_dir, aux_horizon)
+                    with np.load(aux_cached[path], allow_pickle=False) as side:
+                        assert np.array_equal(side["rows"], stored["rows"]), path
+                        auxiliary[n:n + count] = side["aux"][selected]
                 weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / wait_keep) * scale
                 seed_of.extend([seed] * count)
                 n += count
