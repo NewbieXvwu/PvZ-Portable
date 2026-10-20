@@ -33,6 +33,9 @@ def main():
     p.add_argument('--plan',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True)
     args=p.parse_args();plan=json.loads(args.plan.read_text());contract=plan['eval_contract']
+    admission=json.loads((ROOT/'MEMORY/docs/dagger-data-dilution-resource-policy.json').read_text())['admission']
+    assert admission['workers']==contract['workers']==8 and admission['max_foreign_games']==4
+    assert admission['minimum_available_kib']>=int(3.25*1024*1024)
     freeze=json.loads((args.plan.parent/'evaluation_freeze.json').read_text())
     def verify_sources():
         for path,digest in freeze['source_files'].items():
@@ -68,7 +71,11 @@ def main():
                 if len(rows)==contract['seeds_each']:continue
             while True:
                 busy=foreign_trainers();games=game_processes();avail=available_kib()
-                if not busy and len(games)<=4 and avail>=9*1024*1024:break
+                if len(games)<=admission['max_foreign_games'] and avail>=admission['minimum_available_kib']:
+                    print(json.dumps({'eval_admission':job['name'],'task':task,'foreign_trainers':busy,
+                                      'foreign_games':len(games),'available_kib':avail,
+                                      'minimum_available_kib':admission['minimum_available_kib']}),flush=True)
+                    break
                 print(json.dumps({'eval_admission_wait':job['name'],'task':task,'foreign_trainers':busy,
                                   'foreign_games':len(games),'available_kib':avail}),flush=True)
                 time.sleep(10)
