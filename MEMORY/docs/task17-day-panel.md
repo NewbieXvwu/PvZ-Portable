@@ -35,3 +35,16 @@
 ## 不要做的
 - 不训模型；不改 `deck_for_level`、不改默认值；不写手工规则。
 - 不写字面密钥（`$HF_TOKEN` / `$PVZ_HF_REPO`）；不 `git add -f`；`.pt/.npz/.log` 不进 git。
+
+## 问题（执行后补记，2026-10-20）
+
+- **d35rows2 取不到**：HF `transfer/` 下没有 `d35rows2*`（两次复查，1278 个文件里 `rows`/`d35` 均无命中），
+  本机 `artifacts/student/` 也没有；它是在台式机 rowpool2 工作树训的，还没同步。面板里这一列先空着，
+  上传后用同一份清单重跑即可（`games.jsonl` 续跑）。
+- **1-10 不是原版传送带**：`IsMiniBossLevel` 让 `HasConveyorBeltSeedBank()` 为真，但 `RESET_V2` 仍把
+  卡组写进 seed bank，实测开局与 600 tick 后都是 `[0..5]`、阳光不动。环境能跑，语义是“L10 波次 + 固定卡组”。
+- **1-1 与 1-2 在环境里完全相同**（都是 20 波、只允许普通僵尸，同种子 256/256 同结果）。
+- **卡组与原版解锁不一致**：按 `LawnApp::GetAwardSeedForLevel`，6 卡版在 1-1..1-4、7 卡版在 1-1..1-7
+  带了解锁前的植物；模拟器不拦（`playthrough=2` 时 `GetSeedsAvailable()` 返回 49），只作记录。
+- **正式面板改用 7 卡**：主控 2026-10-20 决定正式跑数用训练卡组 `[0,1,2,3,4,5,7]`（清单
+  `day_panel_d7.json`，任务名 `day_lN_d7_eval`）在台式机跑；6 卡结果保留为“卡组泛化”基线。
