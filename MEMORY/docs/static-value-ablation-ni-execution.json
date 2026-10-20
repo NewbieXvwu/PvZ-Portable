@@ -1,0 +1,270 @@
+{
+  "task": "task14",
+  "plan": "MEMORY/docs/static-value-ablation-ni-plan.json",
+  "registered_at": "2026-10-20T08:21:58.139013+08:00",
+  "base_commit": "a66e370e9426393236f909f7172caee482a46fbe",
+  "commits": {
+    "preregister": "f4d9fd6",
+    "implementation": "fd818bc",
+    "statistics_freeze": {
+      "commit": "21433120cc9297e3b3d436e82b93a1c1d15774c2",
+      "file": "scripts/static_value_noninferiority_stats.py",
+      "sha256": "02a866c8ecfbd74385d62a2db3bb843cc745a6e821d4d1b16b15a588a93e569c",
+      "captured_at": "2026-10-20T08:36:11.145933+08:00",
+      "before_any_actual_aggregate": true
+    },
+    "merge_upstream": "e593aef"
+  },
+  "freeze": {
+    "commit": "fd818bcd7d0cc8ce93995f76af1df7416bdf09c5",
+    "files": {
+      "scripts/search_play.py": "d249349fc5630d5d2b5a06f23bfcec3e40cd4bbd97b5058631bcdb1976b0c635",
+      "scripts/static_value_noninferiority.py": "bc94b6b7f61ee193f1dbbfaa8dc49d279e2dbad3f57d5758f78c65cea5e08469",
+      "scripts/static_value_compare.py": "e9496efa8c0aff1dd65a5a5dbc38fe3c6d61cb2abace756e6b92fd77ef38ab0b",
+      "scripts/static_value_ablation.py": "a9b4ceadcb5d888d6259dcb94b1a16d3dc084beacb736e9a1182255a1626e0b8",
+      "python/pvz_cpu_usage.py": "8040f7438d740c2f6e757df881646da1ebbbae9f4bc1cf9027c39a14705908bb",
+      "MEMORY/docs/static-value-ablation-ni-plan.json": "158c5bf0e64bab88e6d7ab7ad95b2b1b8eb63d274451a8fcc6895bf37873bf6d"
+    },
+    "points_before_launch": 0
+  },
+  "inputs": {
+    "mac": {
+      "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
+      "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c",
+      "bytes": 585243,
+      "trained_on_count": 383,
+      "heldout_seed_overlap": []
+    },
+    "desktop": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+      "bytes": 584603,
+      "trained_on_count": 256,
+      "heldout_seed_overlap": []
+    },
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
+      "sha256": "601d17c44f261d415aa997621e93b8b298a9bda94c6a0881e2e2d5b4a5136230",
+      "bytes": 595202
+    },
+    "leaf": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+      "sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+      "bytes": 586651,
+      "trained_on_count": 636,
+      "heldout_seed_overlap": []
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+      "sha256": "8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941",
+      "bytes": 1273514
+    },
+    "simulator": {
+      "path": "/home/newbiexvwu/pvz-h8/build-task12/pvz-portable",
+      "sha256": "01754768c12845986d749d6a8f1f61e8dd52da6fb9c3f2d589e4f91de57161f0",
+      "bytes": 5252232
+    }
+  },
+  "sampling": {
+    "seeds_first": 30032,
+    "seeds_last": 30287,
+    "games": 256,
+    "points": 2048,
+    "old_seed_overlap": [],
+    "interim_rule": {
+      "at_games": 128,
+      "policy": "resource feasibility only; do not inspect efficacy or change sample size based on outcomes; no early NI claim",
+      "budget_stop": "if first128 complete after >90min active experiment wall (excluding memory pauses), stop for prespecified180min projected compute budget; report achieved128/1024 with descriptive CI and NO formal NI claim. Otherwise mandatory256. If external quota ends, checkpoint and resume same jobs; never restart a live handle."
+    }
+  },
+  "batches": [
+    {
+      "batch": "first",
+      "wall_s": 1252.1269038470055,
+      "peak_rss_kib": 3401164,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 4445952,
+      "returncode": 0
+    },
+    {
+      "batch": "second",
+      "wall_s": 1500.7822787359764,
+      "peak_rss_kib": 3257088,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 5104880,
+      "returncode": 0
+    }
+  ],
+  "interim_checkpoint": {
+    "completed_games": 128,
+    "completed_points": 1024,
+    "active_seconds": 1252.1269038470055,
+    "paused_seconds": 0,
+    "budget_stop": false,
+    "efficacy_inspected": false
+  },
+  "budget": {
+    "gate_active_seconds": 5400,
+    "actual_active_seconds": 2752.909182582982,
+    "budget_stop": false,
+    "efficacy_inspected_before_final": false
+  },
+  "primary": {
+    "difference_B3_minus_A": -0.00927734375,
+    "se_of_game_means": 0.0037766441292758145,
+    "df": 255,
+    "t_critical": 1.9693105698498812,
+    "ci95": [
+      -0.01671472895234436,
+      -0.001839958547655638
+    ],
+    "NI_margin": 0.03,
+    "noninferiority_passed": true,
+    "bootstrap_agrees_with_NI": true,
+    "robust_NI": true
+  },
+  "paired_counts": {
+    "delta": {
+      "estimate": -0.00927734375,
+      "game_cluster_ci95": [
+        -0.0166015625,
+        -0.001953125
+      ]
+    },
+    "identical": {
+      "estimate": 0.93701171875,
+      "game_cluster_ci95": [
+        0.92529296875,
+        0.94775390625
+      ]
+    },
+    "judged": {
+      "estimate": 0.06298828125,
+      "game_cluster_ci95": [
+        0.05224609375,
+        0.07470703125
+      ]
+    },
+    "only_A_correct": {
+      "estimate": 0.02197265625,
+      "game_cluster_ci95": [
+        0.01611328125,
+        0.0283203125
+      ]
+    },
+    "only_B3_correct": {
+      "estimate": 0.0126953125,
+      "game_cluster_ci95": [
+        0.00830078125,
+        0.017578125
+      ]
+    },
+    "disagreed_both_wrong": {
+      "estimate": 0.0283203125,
+      "game_cluster_ci95": [
+        0.021484375,
+        0.03564453125
+      ]
+    }
+  },
+  "cost": {
+    "A_continuations": 34621.0,
+    "B3_continuations": 26618.0,
+    "A_cont_per_point": 16.90478515625,
+    "B3_cont_per_point": 12.9970703125,
+    "continuation_saving": {
+      "estimate": 0.2311602784437191,
+      "game_cluster_ci95": [
+        0.21611766743475214,
+        0.24644628394780177
+      ]
+    },
+    "A_cpu_s_per_point": 0.7380294331054686,
+    "B3_cpu_s_per_point": 0.5215214687499998,
+    "cpu_saving": {
+      "estimate": 0.29335952557400047,
+      "game_cluster_ci95": [
+        0.2757084736926061,
+        0.31097413120480566
+      ]
+    },
+    "A_cpu_s_per_game": 5.904235464843749,
+    "B3_cpu_s_per_game": 4.172171749999999,
+    "worker_cpu_s_per_point": {
+      "A": 0.035602675292968636,
+      "B3": 0.014763656250000017
+    },
+    "sim_cpu_s_per_point": {
+      "A": 0.7024267578125001,
+      "B3": 0.5067578125
+    },
+    "A_candidates_per_point": 5.96142578125,
+    "B3_candidates_per_point": 4.0009765625,
+    "A_halving_continuations": 25099.0,
+    "B3_halving_continuations": 18122.0,
+    "A_verification_continuations": 9522.0,
+    "B3_verification_continuations": 8496.0,
+    "heavy_truth_continuations": 122816.0,
+    "heavy_verification_continuations": 4248.0,
+    "total_actual_continuations": 188303.0,
+    "strict_replay_frames": 278120,
+    "terminal_trajectories": 256,
+    "wall_s_total_4workers": 2752.909182582982,
+    "wall_s_per_game": 10.753551494464773,
+    "games_per_hour_4workers": 334.7731214058021
+  },
+  "tests": {
+    "python": {
+      "result_line": "Ran 224 tests in 49.291s",
+      "ok": true,
+      "skipped": false
+    },
+    "dsh": {
+      "result_line": "Ran 9 tests in 0.001s",
+      "ok": true,
+      "skipped": false
+    }
+  },
+  "commands": {
+    "first": {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "scripts/static_value_noninferiority.py",
+        "--out",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task14/comparison",
+        "--batch",
+        "first",
+        "--workers",
+        "4"
+      ],
+      "cwd": "/home/newbiexvwu/pvz-h8",
+      "extra": {
+        "PVZ_EXECUTABLE": "/home/newbiexvwu/pvz-h8/build-task12/pvz-portable"
+      },
+      "unset": []
+    },
+    "second": {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "scripts/static_value_noninferiority.py",
+        "--out",
+        "/home/newbiexvwu/pvz-h8/artifacts/cuda/task14/comparison",
+        "--batch",
+        "second",
+        "--workers",
+        "4"
+      ],
+      "cwd": "/home/newbiexvwu/pvz-h8",
+      "extra": {
+        "PVZ_EXECUTABLE": "/home/newbiexvwu/pvz-h8/build-task12/pvz-portable"
+      },
+      "unset": []
+    }
+  },
+  "resource_peak": {
+    "rss_kib": 3401164,
+    "swap_kib": 0,
+    "minimum_available_kib": 4445952
+  },
+  "defaults_changed": false
+}

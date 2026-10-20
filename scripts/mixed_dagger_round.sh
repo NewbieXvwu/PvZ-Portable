@@ -12,6 +12,7 @@
 #     --frames ~/PvZ-search/artifacts/student/frames --frames-label z17dag28 \
 #     --out ~/PvZ-search/artifacts/hard/z17_dagger28_16 --cpu-workers 2 --gpu-workers 2
 #   # optional: --cuda-binary <path>; --no-prefetch-verify disables exact GPU verification prefetch
+#   # optional: --candidate-generator student-topk --student-candidates 3 (task14 B3; default static/2)
 #
 # The student checkpoint is validated/exported up front (OUT/student.pvzrn); the GPU process
 # re-exports into its own temporary directory because that is what the server loads.
@@ -39,6 +40,8 @@ VERIFY_SAMPLES=9
 SPECULATIVE=1
 PREFETCH_VERIFY=1
 PREFETCH_EXPLICIT=0
+GENERATOR=static
+STUDENT_CANDIDATES=2
 
 usage() { sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
 
@@ -59,6 +62,8 @@ while [ $# -gt 0 ]; do
     --prefetch-verify) PREFETCH_VERIFY=1; PREFETCH_EXPLICIT=1; shift ;;
     --no-prefetch-verify) PREFETCH_VERIFY=0; PREFETCH_EXPLICIT=1; shift ;;
     --no-speculative) SPECULATIVE=0; shift ;;
+    --candidate-generator) GENERATOR="$2"; shift 2 ;;
+    --student-candidates) STUDENT_CANDIDATES="$2"; shift 2 ;;
     -h|--help) usage ;;
     *) echo "unknown argument: $1" >&2; usage ;;
   esac
@@ -82,6 +87,14 @@ fi
 [ -f "$MANIFEST" ] || { echo "manifest not found: $MANIFEST" >&2; exit 2; }
 [ -x "$EXECUTABLE" ] || { echo "executable not found: $EXECUTABLE (build pvz-portable)" >&2; exit 2; }
 [ -x "$CUDA_BINARY" ] || { echo "cuda binary not found: $CUDA_BINARY (build rollout_cuda_small)" >&2; exit 2; }
+case "$GENERATOR" in
+  static|student-topk|student-per-card) ;;
+  *) echo "--candidate-generator must be static, student-topk or student-per-card" >&2; exit 2 ;;
+esac
+[[ "$STUDENT_CANDIDATES" =~ ^[0-9]+$ ]] || { echo "--student-candidates must be a nonnegative integer" >&2; exit 2; }
+if [ "$GENERATOR" != static ] && [ "$STUDENT_CANDIDATES" -le 0 ]; then
+  echo "--candidate-generator $GENERATOR needs a positive --student-candidates (k)" >&2; exit 2
+fi
 [ -f "$VALUE" ] || { echo "value net not found: $VALUE" >&2; exit 2; }
 [ -f "$STATIC_VALUE" ] || { echo "static value net not found: $STATIC_VALUE" >&2; exit 2; }
 if [ -e "$OUT/games.jsonl" ]; then
@@ -123,10 +136,13 @@ export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
 export PVZ_CUDA_BINARY="$CUDA_BINARY" PVZ_CUDA_PRIVATE_LIMIT=1200 PVZ_CUDA_COOPERATIVE_HEADS=1
 export PVZ_SERVE_TRACE=1 PVZ_EXECUTABLE="$EXECUTABLE" PVZ_RESOURCE_DIR="$RESOURCE_DIR"
 
+GENERATOR_ARGS=()
+if [ "$GENERATOR" != static ]; then GENERATOR_ARGS=(--candidate-generator "$GENERATOR"); fi
 COMMON=("$ROOT/scripts/search_play.py" --rollout-policy "$STUDENT" --value "$VALUE" --static-value "$STATIC_VALUE"
   --manifest "$MANIFEST" --task-id "$TASK" --executable "$EXECUTABLE"
   --cuda-binary "$CUDA_BINARY" --resource-dir "$RESOURCE_DIR"
-  --arms fast_search --student-candidates 2 --shovel-candidates 0
+  --arms fast_search --student-candidates "$STUDENT_CANDIDATES" --shovel-candidates 0
+  ${GENERATOR_ARGS[@]+"${GENERATOR_ARGS[@]}"}
   --verify-samples "$VERIFY_SAMPLES" --dagger-beta "$DAGGER_BETA"
   --frames "$FRAMES" --frames-label "$LABEL" --measure-cpu)
 PIDS=()
@@ -167,13 +183,14 @@ done
 elapsed=$(( $(date +%s) - started ))
 
 # 3. merge into the single-process layout: games.jsonl (sorted by seed) + summary.json + config.json.
-"$PYTHON" - "$ROOT" "$OUT" "$elapsed" "$CPU_GAMES" "$GPU_GAMES" "$CPU_WORKERS" "$GPU_WORKERS" "$TASK" "$SEED_OFFSET" "$LABEL" "$STUDENT" "$MANIFEST" "$FRAMES" <<'PY'
+"$PYTHON" - "$ROOT" "$OUT" "$elapsed" "$CPU_GAMES" "$GPU_GAMES" "$CPU_WORKERS" "$GPU_WORKERS" "$TASK" "$SEED_OFFSET" "$LABEL" "$STUDENT" "$MANIFEST" "$FRAMES" "$STUDENT_CANDIDATES" "$GENERATOR" <<'PY'
 import json, sys
 from pathlib import Path
 root, out = Path(sys.argv[1]), Path(sys.argv[2])
 elapsed, cpu_games, gpu_games = int(sys.argv[3]), int(sys.argv[4]), int(sys.argv[5])
 cpu_workers, gpu_workers = int(sys.argv[6]), int(sys.argv[7])
 task, offset, label, student = sys.argv[8], int(sys.argv[9]), sys.argv[10], sys.argv[11]
+student_candidates, generator = sys.argv[14], sys.argv[15]
 sys.path.insert(0, str(root / "scripts"))
 import search_play
 
@@ -202,8 +219,8 @@ rows.sort(key=lambda r: (r["seed"], r["arm"]))
 if sorted(r["seed"] for r in rows) != sorted(expected):
     raise SystemExit("merged seed set does not match requested interval")
 for c in configs:
-    for key, value in {"verify_samples": "9", "student_candidates": "2", "dagger_beta": "0.0",
-                       "task_id": task, "rollout_policy": student}.items():
+    for key, value in {"verify_samples": "9", "student_candidates": student_candidates, "dagger_beta": "0.0",
+                       "candidate_generator": generator, "task_id": task, "rollout_policy": student}.items():
         if c.get(key) != value: raise SystemExit(f"teacher parameter mismatch: {key}")
 if len(configs) == 2:
     for key in ("rollout_policy", "value", "static_value", "manifest", "task_id", "samples", "horizon",
