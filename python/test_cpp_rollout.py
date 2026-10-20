@@ -46,16 +46,22 @@ class CppRolloutTest(unittest.TestCase):
         self.obs, _ = self.env.reset(task=TaskSpec(level=7, seed=30000))
 
     def test_logits_width_and_checkpoint_export(self):
-        for pool, with_context, multiplier, version in product(("mean", "meanmax"), (False, True), (1.3, 1.5), ("v1", "v2lite", "v2")):
-            with self.subTest(pool=pool, context=with_context, multiplier=multiplier):
-                self.net = RolloutNet(width=13, pool=pool, context=with_context, obs=version).eval()
+        maximum_error = 0.0
+        for pool, with_context, multiplier, version, row_pool in product(("mean", "meanmax"), (False, True), (1.3, 1.5), ("v1", "v2lite", "v2"), (False, True)):
+            with self.subTest(pool=pool, context=with_context, multiplier=multiplier, obs=version, row_pool=row_pool):
+                self.net = RolloutNet(width=64 if row_pool else 13, pool=pool, context=with_context, obs=version,
+                                      row_pool=row_pool).eval()
                 weights = dict(self.net.state_dict())
                 weights["value.weight"] = torch.zeros(1, self.net.plant.in_features)
                 checkpoint = Path(self.directory.name) / "fast.pt"
-                torch.save({"state_dict": weights, "pool": pool, "context": with_context, "obs": version}, checkpoint)
+                torch.save({"state_dict": weights, "pool": pool, "context": with_context, "obs": version,
+                            "row_pool": row_pool}, checkpoint)
                 export_student(load_student(checkpoint), self.path)
                 self.env.load_rollout_net(self.path)
                 self.obs, _ = self.env.reset(task=TaskSpec(level=7, seed=30000, zombie_count_multiplier=multiplier))
+                if row_pool:
+                    while self.obs["tick"] < 6000:
+                        self.obs, *_ = self.env.step(_build_up(self.obs))
                 task_context = observation_context(self.obs) if with_context else None
                 previous = None
                 previous_action = None
@@ -72,13 +78,20 @@ class CppRolloutTest(unittest.TestCase):
                         hidden, context = self.net.encode(board[None], scalars[None])
                         torch.testing.assert_close(self.net.plant(context).flatten(), torch.tensor([native["plant"]]), rtol=0, atol=1e-5)
                         torch.testing.assert_close(self.net.packet(context)[0], torch.tensor(native["packet"]), rtol=0, atol=1e-5)
+                        self.assertEqual(int(self.net.packet(context)[0].argmax()), int(np.argmax(native["packet"])))
+                        maximum_error = max(maximum_error,
+                                            float((self.net.plant(context).flatten() - torch.tensor([native["plant"]])).abs().max()),
+                                            float((self.net.packet(context)[0] - torch.tensor(native["packet"])).abs().max()))
                         if native["cell_packet"] >= 0:
                             cells = self.net.cell_logits(hidden, context, torch.tensor([native["cell_packet"]]))[0]
                             torch.testing.assert_close(cells, torch.tensor(native["cell"]), rtol=0, atol=1e-5)
+                            self.assertEqual(int(cells.argmax()), int(np.argmax(native["cell"])))
+                            maximum_error = max(maximum_error, float((cells - torch.tensor(native["cell"])).abs().max()))
                     action = act(self.net, frame, previous, self.obs["legal_actions"]["plants"], context=task_context, history=history)
                     self.assertEqual(action, native["action"])
                     previous, previous_action = frame, action
                     self.obs, *_ = self.env.step(action)
+        print(json.dumps({"rollout_max_abs_error": maximum_error, "configurations": 48}), flush=True)
 
     def test_v2lite_continuation_features_and_root_history(self):
         self._continuation_features("v2lite")
