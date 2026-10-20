@@ -37,5 +37,36 @@ class CancellationTest(unittest.TestCase):
         self.assertEqual(read.call_count, 2)
 
 
+class NoninferiorityStatisticsTest(unittest.TestCase):
+    @staticmethod
+    def game(delta):
+        return {'points':8,'delta':delta,'A_cost':100,'B3_cost':80,
+                'A_cpu':10,'B3_cpu':6,'A_worker_cpu':2,'B3_worker_cpu':1,
+                'A_sim_cpu':8,'B3_sim_cpu':5}
+
+    def test_margin_and_formal_gate_do_not_turn_interim_or_deficit_into_success(self):
+        from static_value_noninferiority_stats import summarize
+        games=[self.game(0)]*128
+        interim=summarize(games,formal=False)
+        self.assertIsNone(interim['primary']['noninferiority_passed'])
+        final=summarize(games*2)
+        self.assertTrue(final['primary']['robust_NI'])
+        deficit=summarize([self.game(-1)]*256)
+        self.assertFalse(deficit['primary']['noninferiority_passed'])
+
+    def test_paired_uncertainty_uses_game_means_and_cpu_ratio_is_not_lane_ratio(self):
+        from static_value_noninferiority_stats import summarize
+        import numpy as np
+        games=[self.game(-1 if i%4==0 else 0) for i in range(256)]
+        r=summarize(games)
+        self.assertEqual(r['primary']['df'],255)
+        self.assertAlmostEqual(r['primary']['difference_B3_minus_A'],-.03125)
+        expected=np.std([g['delta']/8 for g in games],ddof=1)/16
+        self.assertAlmostEqual(r['primary']['se_of_game_means'],expected)
+        self.assertEqual(r['metrics']['B3_cost_saving']['estimate'],1-.8)
+        self.assertAlmostEqual(r['metrics']['B3_cpu_saving']['estimate'],.4)
+        self.assertFalse(r['primary']['noninferiority_passed'])
+
+
 if __name__ == '__main__':
     unittest.main()
