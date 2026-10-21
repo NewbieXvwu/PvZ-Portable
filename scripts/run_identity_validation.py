@@ -143,10 +143,29 @@ def evaluate(plan):
     assert complete['plan_sha256'] == sha(OUT / 'validation_plan.json')
     model = OUT / 'identity_dw3_s1/model.pt'
     assert sha(model) == complete['model_sha256']
+    freeze_path = OUT / 'evaluation_freeze.json'
+    source_names = [*plan['training_sources'], 'scripts/run_identity_validation.py',
+                    'scripts/dagger_experiment_runner.py', 'scripts/search_play.py', 'scripts/render_episode.py',
+                    'scripts/pvz_tasks.py', 'python/pvz_env.py', 'src/EnvironmentRollout.cpp',
+                    'src/EnvironmentRollout.h', 'src/LawnApp.cpp', 'src/main.cpp']
+    if not freeze_path.exists():
+        freeze_path.write_text(json.dumps(dict(model_sha256=sha(model), manifest_sha256=sha(plan['manifest']),
+            executable_sha256=sha(ROOT / 'build/pvz-portable'), sources={n: sha(ROOT / n) for n in source_names}), indent=2) + '\n')
+    frozen = json.loads(freeze_path.read_text())
+
+    def verify_evaluation():
+        assert sha(model) == frozen['model_sha256']
+        assert sha(plan['manifest']) == frozen['manifest_sha256']
+        assert sha(ROOT / 'build/pvz-portable') == frozen['executable_sha256']
+        for name, digest in frozen['sources'].items():
+            assert sha(ROOT / name) == digest, name
+
+    verify_evaluation()
     evidence = dict(model_sha256=sha(model), executable_sha256=sha(ROOT / 'build/pvz-portable'),
                     search_source_sha256=sha(ROOT / 'scripts/search_play.py'),
                     env_source_sha256=sha(ROOT / 'python/pvz_env.py'), tasks={})
     for task in plan['task_ids']:
+        verify_evaluation()
         dest = OUT / 'eval' / task
         summary = dest / 'summary.json'
         if not summary.exists():
@@ -167,12 +186,29 @@ def evaluate(plan):
         evidence['tasks'][task] = dict(won=wins, games=256, games_sha256=sha(dest / 'games.jsonl'))
         print(json.dumps({'completed_task': task, 'wins': wins}), flush=True)
     evidence['complete'] = True
+    verify_evaluation()
+    evidence['evaluation_freeze_sha256'] = sha(freeze_path)
     (OUT / 'identity_evaluation_complete.json').write_text(json.dumps(evidence, indent=2) + '\n')
+
+
+def finish(plan):
+    """Reuse the live trainer, then run exactly the previously registered eight evaluation groups."""
+    watcher = json.loads((OUT / 'train_watcher.process.json').read_text())['pid']
+    while not (OUT / 'identity_training_complete.json').exists():
+        try:
+            args = Path(f'/proc/{watcher}/cmdline').read_bytes().split(b'\0')
+        except FileNotFoundError:
+            args = []
+        if not guard.live(watcher) or b'scripts/run_identity_validation.py' not in args:
+            raise RuntimeError('registered training watcher stopped without a completed model; inspect its existing logs')
+        time.sleep(10)
+    assert json.loads((ROOT / 'MEMORY/docs/task19-perturbation-smoke.json').read_text())['complete']
+    evaluate(plan)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--phase', choices=['prepare', 'train', 'evaluate'], required=True)
+    parser.add_argument('--phase', choices=['prepare', 'train', 'evaluate', 'finish'], required=True)
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     plan = prepare()
@@ -180,3 +216,5 @@ if __name__ == '__main__':
         train(plan)
     elif args.phase == 'evaluate':
         evaluate(plan)
+    elif args.phase == 'finish':
+        finish(plan)

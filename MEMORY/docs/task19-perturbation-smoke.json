@@ -1,0 +1,159 @@
+{
+  "model": "/home/newbiexvwu/PvZ-search/artifacts/student/v33/model.pt",
+  "model_sha256": "fec04fb2d96a310e00013244f4ff20e0fad3c1aa7a0bad52a26e6c215ef36979",
+  "manifest_sha256": "11942312efbd9dd4c5ea950f03fd1ecf2a733432dae96256f66adc30f1d865e1",
+  "capture_manifest_executable_sha256": "56eeb7b422acf1282db609c983ffde40205e73ff0425722573c9369f82593775",
+  "replay_executable_sha256": "a046711743058b57a3376526af86c4b52b2a0d69b70589134844a2bba4fb1580",
+  "games": [
+    {
+      "level": 7,
+      "seed": 1840000,
+      "actual_deck": [
+        7,
+        4,
+        0,
+        1,
+        20,
+        3,
+        2
+      ],
+      "frames": 651,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1840000/task19_l7p_fast_search",
+      "won": false,
+      "frames_with_changed_seed_bank": 0
+    },
+    {
+      "level": 7,
+      "seed": 1840001,
+      "actual_deck": [
+        4,
+        7,
+        2,
+        1,
+        5,
+        20,
+        0
+      ],
+      "frames": 712,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1840001/task19_l7p_fast_search",
+      "won": false,
+      "frames_with_changed_seed_bank": 0
+    },
+    {
+      "level": 8,
+      "seed": 1850000,
+      "actual_deck": [
+        3,
+        0,
+        7,
+        29,
+        1,
+        21,
+        4
+      ],
+      "frames": 1249,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1850000/task19_l8p_fast_search",
+      "won": false,
+      "frames_with_changed_seed_bank": 0
+    },
+    {
+      "level": 8,
+      "seed": 1850001,
+      "actual_deck": [
+        4,
+        6,
+        5,
+        3,
+        18,
+        2,
+        1
+      ],
+      "frames": 949,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1850001/task19_l8p_fast_search",
+      "won": false,
+      "frames_with_changed_seed_bank": 0
+    },
+    {
+      "level": 9,
+      "seed": 1860000,
+      "actual_deck": [
+        7,
+        37,
+        3,
+        5,
+        20,
+        4,
+        2
+      ],
+      "frames": 498,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1860000/task19_l9p_fast_search",
+      "won": false,
+      "frames_with_changed_seed_bank": 0
+    },
+    {
+      "level": 9,
+      "seed": 1860001,
+      "actual_deck": [
+        7,
+        0,
+        35,
+        3,
+        5,
+        2,
+        4
+      ],
+      "frames": 446,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1860001/task19_l9p_fast_search",
+      "won": false,
+      "frames_with_changed_seed_bank": 0
+    },
+    {
+      "level": 10,
+      "seed": 1870000,
+      "actual_deck": [
+        38,
+        2,
+        7,
+        0,
+        1,
+        5,
+        20
+      ],
+      "frames": 996,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1870000/task19_l10p_fast_search",
+      "won": false,
+      "frames_with_changed_seed_bank": 995
+    },
+    {
+      "level": 10,
+      "seed": 1870001,
+      "actual_deck": [
+        1,
+        4,
+        0,
+        3,
+        23,
+        27,
+        7
+      ],
+      "frames": 699,
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/perturbed_frames/seed_1870001/task19_l10p_fast_search",
+      "won": true,
+      "frames_with_changed_seed_bank": 698
+    }
+  ],
+  "training_loader": {
+    "rows": 6192,
+    "obs": "v2",
+    "cell_targets": true,
+    "packet_head": "identity"
+  },
+  "free_card_cpu_gradient_preflight": {
+    "rows": 128,
+    "eligible_rows": 147,
+    "packet_cross_entropy": 1.6541231870651245,
+    "finite_gradients": true
+  },
+  "live_replay_archived_deck_verified": true,
+  "complete": true
+}

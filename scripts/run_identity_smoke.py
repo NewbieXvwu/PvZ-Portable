@@ -19,6 +19,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/day_panel_identity.json')
     args = parser.parse_args()
+    OUT.mkdir(parents=True, exist_ok=True)
     frames_dir = OUT / 'perturbed_frames'
     model = SOURCE / 'artifacts/student/v33/model.pt'
     identity = sha(model)
