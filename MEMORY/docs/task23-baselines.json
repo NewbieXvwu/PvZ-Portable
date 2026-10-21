@@ -1,0 +1,475 @@
+{
+  "complete": false,
+  "observed_at": "2026-10-21T21:22:42.236799+00:00",
+  "expected_models": [
+    "v34",
+    "identity"
+  ],
+  "models": {
+    "v34": {
+      "complete": true,
+      "games": 2944,
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "group": "day",
+          "games": 128,
+          "won": 128,
+          "games_sha256": "bf5d6c4e2c826580483e2acdea5011b97cf41f128ee5872c43faf49decae0e8d",
+          "config_sha256": "a5e9b0b1bddc6b020150ab9003778b5adf4bf785ffa1ea46fb282d6c53750ce5",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 94.31904766900698,
+            "peak_rss_kib": 2700104,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 14943744
+          }
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "group": "day",
+          "games": 128,
+          "won": 128,
+          "games_sha256": "c8e9a8c8145cf8cfe9897c4f65ecd4a11341a53c3a43d61ec0c3bad332139bc4",
+          "config_sha256": "e5c15124c532cdb1bf1e6925eb19e2fb48399ef7c7fc3a8529240609698b9e46",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 76.18956611101748,
+            "peak_rss_kib": 2699900,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15112480
+          }
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "group": "day",
+          "games": 128,
+          "won": 128,
+          "games_sha256": "0bc3680c2971c8ff9643cae214a1d8446a7ec6e6abbc94a15d9977daa14b0a2e",
+          "config_sha256": "1ea6263a84ce367bfa11fc728ed4775216d6c1425d7796bf3c0fd75d34dc6997",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 51.04614310798934,
+            "peak_rss_kib": 2704016,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 17704272
+          }
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "group": "day",
+          "games": 128,
+          "won": 128,
+          "games_sha256": "28dc82ed828416c391238f98f0c777d13e2c098d3810c7fc2b2cb042c977cb73",
+          "config_sha256": "d2abbbe3247979c99e21675b542b603fa16920fef887c746d2d87abbd6b3d981",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 71.19175025203731,
+            "peak_rss_kib": 2687208,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15167100
+          }
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "group": "day",
+          "games": 128,
+          "won": 123,
+          "games_sha256": "eda3c7a13597376d9198a83027d21f62d1996621aef3ca5a4260f8baa77f539a",
+          "config_sha256": "2f9ffaf8ab606f91e905e61a8fb296790c868ea974c2deb1f324567400c1e859",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 111.28986428701319,
+            "peak_rss_kib": 2790816,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15081140
+          }
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "group": "day",
+          "games": 128,
+          "won": 125,
+          "games_sha256": "ae2741ae4c3ed048963eb157ebe92c273e79b1cf432b44379b69cdd3f58194e2",
+          "config_sha256": "268401577baf6bf47803be46d4027e0a904423604238393c679cdb1ba2f8a289",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 95.30798948701704,
+            "peak_rss_kib": 2684736,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15109816
+          }
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "group": "day",
+          "games": 128,
+          "won": 116,
+          "games_sha256": "5e39d3d942ac5444c9e720cfdffb6b989c4f9416a3a0c0f0244b58c817b50c76",
+          "config_sha256": "a1397f30af125a0c0bbc98b52608f57af75b606558d6bfb34c4f3e1caf5aa634",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 113.33977138699265,
+            "peak_rss_kib": 2688056,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15113024
+          }
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "group": "day",
+          "games": 128,
+          "won": 119,
+          "games_sha256": "20249ad3fed643b4a19c74227d6aa501b9e0057bfdc1abd9b288f539eb40981d",
+          "config_sha256": "792734883a2147bee6fa994c4edfc98e157da6af7c7e6b47b119757d4411ab1b",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 104.28133153298404,
+            "peak_rss_kib": 2712284,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15141852
+          }
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "group": "heldout",
+          "games": 64,
+          "won": 36,
+          "games_sha256": "9bb0edd4426040225471fc6af7d581c9240c299cb72a4bcf1b816aefa246d2ee",
+          "config_sha256": "dbdeefd3344fa6dae7753bf25cc61f1d8007b3b695efb2a562f5ae17b1d16451",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 38.05675028695259,
+            "peak_rss_kib": 2686092,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 16236896
+          }
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "group": "heldout",
+          "games": 64,
+          "won": 42,
+          "games_sha256": "ef310c38930ed77c62eddf03646226ec5cfdc702096ec7dc873736c6e7fab2c3",
+          "config_sha256": "e69a13ae871b4e9d2bfd82e15a2a61a4a1aeae9c65dc058e1328c67640566491",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 46.08746162697207,
+            "peak_rss_kib": 2687244,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15286740
+          }
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "group": "heldout",
+          "games": 64,
+          "won": 0,
+          "games_sha256": "9bed9af488ddb3ca39f9b3b9a2446f265a67e72041b3d245d7ccfb8807e62f15",
+          "config_sha256": "817104557f3d545f9f9b225078851358eb868ac41921ffcf0bbf3f3e7e270c52",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 39.16725929896347,
+            "peak_rss_kib": 2652812,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15235176
+          }
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "group": "heldout",
+          "games": 64,
+          "won": 0,
+          "games_sha256": "b754401cb03160e329068907524e589b9386c8603721cb4536acdb012073dcc1",
+          "config_sha256": "c9674d75e03a1c4f5223140e6bfb3903d68f624444ac77d7c2b7fbe9966e3729",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 40.07993552100379,
+            "peak_rss_kib": 2597596,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15133928
+          }
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "group": "heldout",
+          "games": 64,
+          "won": 24,
+          "games_sha256": "65f5e4b68d56679fb8af7b59ac43a6210e2c954da7c9885ae656600024b3032d",
+          "config_sha256": "d55a4b144086e4b73785064f4d6443b0ab1f0f0134841687015b3054df816825",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 44.11931199399987,
+            "peak_rss_kib": 2592132,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15250652
+          }
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "group": "heldout",
+          "games": 64,
+          "won": 27,
+          "games_sha256": "e053e45a81865285182b4525cea41f50beab517e2cbdc0cd05448958b5636178",
+          "config_sha256": "d288f7a7a4cc8013ad0bacc9a8beba28af75abe73e33429311a8d27056a4a3c1",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 45.10763381404104,
+            "peak_rss_kib": 2621904,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15129084
+          }
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "group": "heldout",
+          "games": 64,
+          "won": 2,
+          "games_sha256": "bd99059bae07ea5e11f40ef135a6e4c9c7b514d4a7d152226b1da2bae7e0b113",
+          "config_sha256": "b4ed0e004412c4d07f96703ae9b24d6b8c17a776a5d4c560683ef8114542f24e",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 50.129242613969836,
+            "peak_rss_kib": 2684696,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15040980
+          }
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "group": "heldout",
+          "games": 64,
+          "won": 3,
+          "games_sha256": "294a44c50003c775d07b6e135971e69cb9dd1ffa8a2e78f2809b9d6519b59067",
+          "config_sha256": "f59c3f764311f1e573de16be776e2cc1ae528cbb575eb7b09175562aac0cb8a6",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 45.10272035503294,
+            "peak_rss_kib": 2633896,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15160856
+          }
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "group": "heldout",
+          "games": 64,
+          "won": 11,
+          "games_sha256": "07285e453a288c2ddf22c728dfa7452c587b7e313489d0dd88efa56a2bfb8144",
+          "config_sha256": "c481b83629ec8c9262bc5194e818f60d37182a7360c85d0b6b08379489e61397",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 53.12992678198498,
+            "peak_rss_kib": 2687672,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15080556
+          }
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "group": "heldout",
+          "games": 64,
+          "won": 41,
+          "games_sha256": "a41c6305c0347b1a0ab541fe21f0b1300a17e01e6ff3c46e0a0a1e4e9cdadfc2",
+          "config_sha256": "b71e3f5463200e3fe1020b28518e8c6b3cfdd0051120f3efd4da8d71d415921d",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 37.050779323035385,
+            "peak_rss_kib": 2694268,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 16577660
+          }
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "group": "heldout",
+          "games": 64,
+          "won": 50,
+          "games_sha256": "a03673417906ea560edd02422df304cbeb43af0911d0c7050a5a01f5ff976a37",
+          "config_sha256": "e8bfd2cda8b8dcd34bcfc9d9dab5c2ddbccb615f5a7141c2777c77c648e4aecf",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 31.029960547981318,
+            "peak_rss_kib": 2689236,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 17899404
+          }
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "group": "heldout",
+          "games": 64,
+          "won": 64,
+          "games_sha256": "f94f8a7d9992d95b17330d92766e8b54d098df6a6047db0fc539eb3e7d9f4e30",
+          "config_sha256": "30cd23d084121adad9888e7e12aeee12713edb53f6e421eec47c5d8d963bd646",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 52.120299016998615,
+            "peak_rss_kib": 2694196,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15143048
+          }
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "d12626b89c5af6130b55af20fe968cbad2ba9980ee044e33afc3e125089c4a2e",
+          "config_sha256": "9ff4108a3f70f88597cebfaaacd0c5ed343ed59b16b5eb3a8ba3fa1ea887dd15",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 72.16732108598808,
+            "peak_rss_kib": 2861328,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15131016
+          }
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "619b4c1a6c5cae86012043b9d5a5e1364f0a044b6208dc416df2b04c4a4f5576",
+          "config_sha256": "291ecfebcf8bd396c11081b7ad2c5bb23b68a10cad9ee835afb4d656e0efe76d",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 74.15534197399393,
+            "peak_rss_kib": 2663424,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15127688
+          }
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "4970890102f5e2c78c3ac486f57c1edbd920c7cb2799465a64ab1bba9e29d05a",
+          "config_sha256": "8a9522b355773223de031c1a46e1429d635a498dd732827343a39618efe7dae7",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 72.16906236897921,
+            "peak_rss_kib": 2501276,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15213976
+          }
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "e7d09a8b4303f41cb9172f774ac402f40e2337e740d1d145e909513a68888c5d",
+          "config_sha256": "c4aaf4c181e980e1c7e2404723ac5e7cee4bb4a5dfaf5af9dff68bba2cd84b19",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 72.16997069795616,
+            "peak_rss_kib": 2618048,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 14936672
+          }
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "4caf22f99648c3758656346a3ba4462f8ac7a0fd6ea7799cdd5b9eb48882bf7c",
+          "config_sha256": "c4d80625429aadfc1b8fc6db9088e0e68fbeb5dabdb14ddd48c77ed231f8daa0",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 73.17668425798183,
+            "peak_rss_kib": 2611648,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15030928
+          }
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "b1091e2b6ea09e600a142e83dd02a366cd1033227f60719d6c96f91c5d966b4e",
+          "config_sha256": "97cfe8bc6bac16d3fc91001469d0c8dc5987882dab120583fb577b857ad558e2",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 60.10982298501767,
+            "peak_rss_kib": 2549616,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15276192
+          }
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "d7e767ee5abcd9e211d9b7c8db3b9f4b8aeab4117ab1da240a0e74aaf51f24d2",
+          "config_sha256": "0f35db92c896eba2dbb28c8ecd66f3ad9d1b3aef165f5c3d466ca097c58585a0",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 46.057633352000266,
+            "peak_rss_kib": 2682264,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 16923640
+          }
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "ecbac1761c36d0d5b652f239ac272d903542a93faa12ec1aa5cdc967db88f0fd",
+          "config_sha256": "2e8a1826a9a3fafbed06893494c3328d9aded3759d48b1f2995cdbb438505a4f",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 41.035278103954624,
+            "peak_rss_kib": 2569024,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 17707116
+          }
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "group": "night",
+          "games": 128,
+          "won": 0,
+          "games_sha256": "efd170aaed19cf1c9b9d4c0fdab0eea6f6788d2ec23eb4b6a00783189fdb919d",
+          "config_sha256": "74ebcf4ceb80a3f64a1557955e4d957af6ea96cbe043bbbfd7d22c5e454218e1",
+          "resources": {
+            "returncode": 0,
+            "wall_s": 82.17667578102555,
+            "peak_rss_kib": 2679016,
+            "peak_swap_kib": 0,
+            "minimum_available_kib": 15090864
+          }
+        }
+      ],
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 995,
+          "mean_win_rate": 0.9716796875
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 300,
+          "mean_win_rate": 0.390625
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 0,
+          "mean_win_rate": 0.0
+        }
+      },
+      "model_sha256": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+      "executable_sha256": "788b1771a6d1914816a9644521422c4db020ebe7a11046e4f99b17a56fbb81cf",
+      "manifest_sha256": "c17daf9a2ded971f51e6af53642badb4969cc17b234583aa7d3630409fe00b32",
+      "panel_sha256": "1f12afd5f71f07c08664a44683a666711ccf349c5d62e0f8f1ec1f674f7d956a"
+    }
+  }
+}
