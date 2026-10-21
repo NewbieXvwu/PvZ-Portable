@@ -17,7 +17,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from pvz_value_net import BOARD_CHANNELS, COLS, CONTEXT, PLANT_TYPES, ROWS, SCALARS, featurize_numpy
+from pvz_value_net import BOARD_CHANNELS, COLS, CONTEXT, ROWS, SCALARS, featurize_numpy
+from pvz_value_net import PLANT_TYPES as PlantTypes
 from pvz_student_observation import OBS_EXTRA
 
 PACKETS = 10            # seed-bank slots (SEEDBANK_MAX)
@@ -37,7 +38,7 @@ def packet_features(frame: dict) -> torch.Tensor:
     for slot, kind, active, cooldown, refresh, cost in frame['packets']:
         if not 0 <= slot < PACKETS or kind < 0:
             continue
-        result[slot] = (min(kind, PLANT_TYPES - 1), bool(active),
+        result[slot] = (min(kind, PlantTypes - 1), bool(active),
                         min(1.0, 1.0 if active or not refresh else cooldown / refresh),
                         frame['sun'] >= cost)
     return torch.from_numpy(result)
@@ -87,7 +88,7 @@ class RolloutNet(nn.Module):
         e = self.plant_embedding_dim
         self.packet = (nn.Linear(g, PACKETS) if packet_head == 'slot' else
                        nn.Sequential(nn.Linear(g + e + 3, width), nn.ReLU(), nn.Linear(width, 1)))
-        self.packet_embedding = nn.Embedding(PACKETS if packet_head == 'slot' else PLANT_TYPES, e)
+        self.packet_embedding = nn.Embedding(PACKETS if packet_head == 'slot' else PlantTypes, e)
         # Each cell sees its own features, the chosen packet and the global context.
         self.cell = nn.Sequential(nn.Conv2d(width + e + g, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
         self.row_pool = row_pool
@@ -115,7 +116,7 @@ class RolloutNet(nn.Module):
             valid = kinds >= 0
             ready = packet_info[:, :, 1] * packet_info[:, :, 3]
             for start, values in ((5, ready), (59, packet_info[:, :, 2])):
-                scalars[:, start:start + PLANT_TYPES].scatter_reduce_(
+                scalars[:, start:start + PlantTypes].scatter_reduce_(
                     1, kinds.clamp(min=0), values.masked_fill(~valid, 0), reduce='amax', include_self=True)
         if sparse_input:
             h = self._trunk_sparse(board)

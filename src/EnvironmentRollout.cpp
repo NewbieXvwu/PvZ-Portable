@@ -77,23 +77,33 @@ void EnvironmentRollout::Load(const std::string& path)
 	std::ifstream input(path, std::ios::binary);
 	char magic[8]{};
 	uint32_t size = 0, pool = 0, withContext = 0, observation = 1, withRowPool = 0;
+	uint32_t packetHead = 0, embedding = 0;
 	input.read(magic, 8);
 	input.read(reinterpret_cast<char*>(&size), 4);
 	input.read(reinterpret_cast<char*>(&pool), 4);
 	const std::string version(magic, 8);
-	if (version == "PVZRN003" || version == "PVZRN004" || version == "PVZRN005") input.read(reinterpret_cast<char*>(&withContext), 4);
-	if (version == "PVZRN004" || version == "PVZRN005") input.read(reinterpret_cast<char*>(&observation), 4);
-	if (version == "PVZRN005") input.read(reinterpret_cast<char*>(&withRowPool), 4);
-	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005") || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 3 || withRowPool > 1)
+	const bool v6 = version == "PVZRN006";
+	if (version == "PVZRN003" || version == "PVZRN004" || version == "PVZRN005" || v6) input.read(reinterpret_cast<char*>(&withContext), 4);
+	if (version == "PVZRN004" || version == "PVZRN005" || v6) input.read(reinterpret_cast<char*>(&observation), 4);
+	if (version == "PVZRN005" || v6) input.read(reinterpret_cast<char*>(&withRowPool), 4);
+	if (v6)
+	{
+		input.read(reinterpret_cast<char*>(&packetHead), 4);
+		input.read(reinterpret_cast<char*>(&embedding), 4);
+	}
+	else embedding = size;
+	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 3 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	std::vector<size_t> counts = {
 		nextWidth * (Channels + (observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
 		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation == 3 ? 7 : observation == 2)), nextWidth,
-		nextContext, 1, 10 * nextContext, 10, 10 * nextWidth,
-		nextWidth * (2 * nextWidth + nextContext), nextWidth, nextWidth, 1};
+		nextContext, 1, packetHead ? nextWidth * (nextContext + embedding + 3) : 10 * nextContext,
+		packetHead ? nextWidth : 10, (packetHead ? 54 : 10) * embedding,
+		nextWidth * (nextWidth + embedding + nextContext), nextWidth, nextWidth, 1};
 	if (withRowPool) { counts.push_back(2 * nextWidth * nextWidth); counts.push_back(nextWidth); }
+	if (packetHead) { counts.push_back(nextWidth); counts.push_back(1); }
 	std::vector<std::vector<float>> loaded;
 	for (size_t count : counts)
 	{
@@ -105,6 +115,8 @@ void EnvironmentRollout::Load(const std::string& path)
 	if (input.peek() != std::char_traits<char>::eof())
 		throw std::runtime_error("unexpected rollout network data");
 	width = size;
+	identityPacket = packetHead != 0;
+	plantEmbedding = embedding;
 	meanmax = pool != 0;
 	rowPool = withRowPool != 0;
 	taskContext = withContext != 0;
@@ -173,15 +185,20 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	scalars[2] = state->mMainCounter / 60000.0;
 	scalars[3] = income / 100.0;
 	scalars[4] = std::log1p(waves) / std::log1p(50);
+	for (auto& info : packetInfo) info = {-1, 0, 0, 0};
 	for (int index = 0; index < state->mSeedBank->mNumPackets; ++index)
 	{
 		const SeedPacket& packet = state->mSeedBank->mSeedPackets[index];
 		const int kind = std::min(static_cast<int>(packet.mPacketType), 53);
 		const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
 		if (kind < 0) continue;
-		scalars[5 + kind] = packet.mActive && state->mSunMoney >= cost;
-		scalars[59 + kind] = std::min(1.0, packet.mActive || !packet.mRefreshTime ? 1.0 :
+		const float ready = packet.mActive && state->mSunMoney >= cost;
+		const float progress = std::min(1.0, packet.mActive || !packet.mRefreshTime ? 1.0 :
 			static_cast<double>(packet.mRefreshCounter) / packet.mRefreshTime);
+		packetInfo[index] = {static_cast<float>(kind), static_cast<float>(packet.mActive), progress,
+			static_cast<float>(state->mSunMoney >= cost)};
+		scalars[5 + kind] = identityPacket ? std::max(scalars[5 + kind], ready) : ready;
+		scalars[59 + kind] = identityPacket ? std::max(scalars[59 + kind], progress) : progress;
 	}
 	if (previousTick >= 0)
 	{
@@ -398,18 +415,37 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 {
 	Prediction result{};
-	const int global = context.size(), stride = 2 * width + global;
+	const int global = context.size(), stride = width + plantEmbedding + global;
 	result.cellPacket = packet;
 	result.plant = Linear(context.data(), weights[8].data(), global, weights[9][0]);
-	for (int index = 0; index < 10; ++index)
-		result.packets[index] = Linear(context.data(), weights[10].data() + index * global, global, weights[11][index]);
+	if (!identityPacket)
+		for (int index = 0; index < 10; ++index)
+			result.packets[index] = Linear(context.data(), weights[10].data() + index * global, global, weights[11][index]);
+	else
+	{
+		result.packets.fill(-1e9f);
+		std::vector<float> input(context.begin(), context.end()), activation(width);
+		input.resize(global + plantEmbedding + 3);
+		const int last = rowPool ? 19 : 17;
+		for (int index = 0; index < 10; ++index)
+		{
+			const auto& info = packetInfo[index];
+			if (info[0] < 0 || !info[1] || !info[3]) continue;
+			std::copy_n(weights[12].data() + static_cast<int>(info[0]) * plantEmbedding, plantEmbedding, input.data() + global);
+			std::copy_n(info.data() + 1, 3, input.data() + global + plantEmbedding);
+			for (int channel = 0; channel < width; ++channel)
+				activation[channel] = std::max(0.0f, Linear(input.data(), weights[10].data() + channel * input.size(), input.size(), weights[11][channel]));
+			result.packets[index] = Linear(activation.data(), weights[last].data(), width, weights[last + 1][0]);
+		}
+	}
 	if (packet < 0) return result;
 	result.cells.fill(weights[16][0]);
 	for (int channel = 0; channel < width; ++channel)
 	{
 		const float* kernel = weights[13].data() + channel * stride;
-		float base = Linear(weights[12].data() + packet * width, kernel + width, width, weights[14][channel]);
-		base = Linear(context.data(), kernel + 2 * width, global, base);
+		const int kind = identityPacket ? std::max(0, static_cast<int>(packetInfo[packet][0])) : packet;
+		float base = Linear(weights[12].data() + kind * plantEmbedding, kernel + width, plantEmbedding, weights[14][channel]);
+		base = Linear(context.data(), kernel + width + plantEmbedding, global, base);
 		std::fill_n(scratch.data() + channel * Cells, Cells, base);
 	}
 #ifdef PVZ_ROLLOUT_BLAS
@@ -442,18 +478,21 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 	result = Heads(-1);
 	if (result.plant <= 0 && !diagnostics) return result;
 	float bestPacket = -std::numeric_limits<float>::infinity();
+	int bestKind = std::numeric_limits<int>::max();
 	std::vector<Action> legal;
 	for (int index = 0; index < app->mBoard->mSeedBank->mNumPackets; ++index)
 	{
 		SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[index];
-		if (!packet.CanPickUp() || result.packets[index] <= bestPacket) continue;
+		const int kind = static_cast<int>(packetInfo[index][0]);
+		if (!packet.CanPickUp() || result.packets[index] < bestPacket ||
+			(result.packets[index] == bestPacket && (!identityPacket || kind >= bestKind))) continue;
 		const SeedType seed = packet.mPacketType == SeedType::SEED_IMITATER ? packet.mImitaterType : packet.mPacketType;
 		std::vector<Action> cells;
 		for (int row = 0; row < 6; ++row)
 			for (int col = 0; col < 9; ++col)
 				if (app->mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
 					cells.push_back({index, col, row});
-		if (!cells.empty()) { bestPacket = result.packets[index]; legal = std::move(cells); }
+		if (!cells.empty()) { bestPacket = result.packets[index]; bestKind = kind; legal = std::move(cells); }
 	}
 	if (legal.empty()) return result;
 	result = Heads(legal[0].packet);

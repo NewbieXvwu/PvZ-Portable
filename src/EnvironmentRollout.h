@@ -45,6 +45,9 @@ public:
 
 private:
 	int width = 0;
+	int plantEmbedding = 0;
+	bool identityPacket = false;
+	std::array<std::array<float, 4>, 10> packetInfo{};
 	bool meanmax = false;
 	bool rowPool = false;
 	bool taskContext = false;

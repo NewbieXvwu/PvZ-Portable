@@ -26,8 +26,8 @@ sys.path.insert(0, str(ROOT / "python"))
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
-from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features  # noqa: E402
-from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, candidate_cells, frame_bytes,  # noqa: E402
+from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features  # noqa: E402
+from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, cache_packets, candidate_cells, frame_bytes,  # noqa: E402
                               frame_paths, read_frames, row_damage_labels, target_values)
 
 
@@ -40,11 +40,11 @@ def _episode_context(path: Path) -> np.ndarray:
     return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
 
 
-def _board_store(shape, cache_dir: Path) -> torch.Tensor:
-    """Legacy float16 file-backed boards for --dense-boards; unlinked at once and freed on exit."""
+def _board_store(shape, cache_dir: Path, dtype=np.float16) -> torch.Tensor:
+    """File-backed inputs, unlinked at once and freed on exit; identity packets keep float32."""
     cache_dir.mkdir(parents=True, exist_ok=True)
     path = cache_dir / f"boards_{os.getpid()}.npy"
-    store = np.lib.format.open_memmap(path, mode="w+", dtype=np.float16, shape=shape)
+    store = np.lib.format.open_memmap(path, mode="w+", dtype=dtype, shape=shape)
     path.unlink()
     return torch.from_numpy(store)
 
@@ -97,7 +97,8 @@ class CompactBoards:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
-         dense_boards: bool = False, cells: bool = False, aux_horizon: int = 0, row_observer=None):
+         dense_boards: bool = False, cells: bool = False, aux_horizon: int = 0, row_observer=None,
+         packet_head: str = 'slot', read_cache_dir: Path | None = None):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
@@ -109,21 +110,25 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     cached = {}
     cell_cached = {}
     aux_cached = {}
+    packet_cached = {}
     if cache_dir is not None and precompute_workers > 1:
         from concurrent.futures import ProcessPoolExecutor
         from functools import partial
         import multiprocessing as mp
         with ProcessPoolExecutor(max_workers=precompute_workers, mp_context=mp.get_context("spawn")) as pool:
-            cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs), paths, chunksize=8)))
+            cached = dict(zip(paths, pool.map(partial(cache_episode, directory=cache_dir, obs=obs,
+                                                    read_directory=read_cache_dir), paths, chunksize=8)))
             if cells:
                 cell_cached = dict(zip(paths, pool.map(partial(cache_candidates, directory=cache_dir), paths, chunksize=8)))
             if aux_horizon:
                 aux_cached = dict(zip(paths, pool.map(partial(cache_aux, directory=cache_dir, horizon=aux_horizon), paths, chunksize=8)))
+            if packet_head == 'identity':
+                packet_cached = dict(zip(paths, pool.map(partial(cache_packets, directory=cache_dir), paths, chunksize=8)))
     for path in paths:
         mask = []
         if cache_dir is not None:
             if path not in cached:
-                cached[path] = cache_episode(path, cache_dir, obs)
+                cached[path] = cache_episode(path, cache_dir, obs, read_directory=read_cache_dir)
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             keep[path] = mask
@@ -143,6 +148,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     seed_of = []
     cands = np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16) if cells else None
     auxiliary = np.empty((capacity, 6), dtype=np.float32) if aux_horizon else None
+    packets = (_board_store((capacity, PACKETS, 4), cache_dir, np.float32) if cache_dir is not None
+               else torch.empty((capacity, PACKETS, 4))) if packet_head == 'identity' else None
     n = 0
     for path in paths:
         seed = int(path.parent.parent.name.split("_")[-1])
@@ -151,6 +158,12 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             with np.load(cached[path], allow_pickle=False) as stored:
                 selected = np.flatnonzero(np.asarray(keep[path])[stored["rows"]])
                 count = len(selected)
+                if packets is not None:
+                    if path not in packet_cached:
+                        packet_cached[path] = cache_packets(path, cache_dir)
+                    with np.load(packet_cached[path], allow_pickle=False) as side:
+                        assert np.array_equal(side['rows'], stored['rows']), path
+                        packets[n:n + count] = torch.from_numpy(side['packets'][selected])
                 if row_observer is not None:
                     row_observer(path, stored["rows"][selected])
                 rows_scalars = stored["scalars"][selected]
@@ -219,6 +232,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             else:
                 boards.append(b.numpy()[None])
                 scalars.append(s.numpy()[None])
+            if packets is not None:
+                packets[n] = packet_features(frames[i - 1])
             n += 1
             seed_of.append(seed)
             is_plant = action["type"] == "plant"
@@ -234,7 +249,9 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     result = (*((boards[:n], scalars[:n]) if dense_boards else (boards.finish(), scalars.finish())), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
             seed_of, torch.from_numpy(values[:n]),
             None if cands is None else torch.from_numpy(cands[:n]))
-    return (*result, torch.from_numpy(auxiliary[:n])) if aux_horizon else result
+    if aux_horizon:
+        result = (*result, torch.from_numpy(auxiliary[:n]))
+    return (*result, packets[:n]) if packets is not None else result
 
 
 def main() -> None:
@@ -252,6 +269,7 @@ def main() -> None:
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
     p.add_argument("--row-pool", action="store_true", help="broadcast learned per-row mean/max features")
+    p.add_argument('--packet-head', choices=['slot', 'identity'], default='slot')
     p.add_argument("--aux-weight", type=float, default=0.0, help="row damage prediction BCE weight (0 = off)")
     p.add_argument("--aux-horizon", type=int, default=8, help="future decision points for row damage labels")
     p.add_argument("--context", action="store_true",
@@ -281,6 +299,7 @@ def main() -> None:
     p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
+    p.add_argument('--read-cache-dir', type=Path, help='optional existing feature cache to read only; misses go to --cache-dir')
     p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
     p.add_argument("--row-weights", type=Path, help="optional checksummed per-row experiment manifest; cached rows required, default off")
     p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")
@@ -305,9 +324,11 @@ def main() -> None:
                                                                  args.context, args.obs, args.precompute_workers, args.dense_boards,
                                                                  cells=bool(args.cell_soft_weight),
                                                                  aux_horizon=args.aux_horizon if args.aux_weight else 0,
-                                                                 row_observer=row_plan.observe if row_plan else None)
+                                                                 row_observer=row_plan.observe if row_plan else None,
+                                                                 packet_head=args.packet_head, read_cache_dir=args.read_cache_dir)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
+    packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
@@ -320,15 +341,18 @@ def main() -> None:
               "scalar_bytes": scalars.numel() * scalars.element_size() if args.dense_boards else scalars.nbytes,
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
                                   for tensor in (plant, packet, cell, weight, values, is_val))}
+    if packet_info is not None:
+        memory['packet_bytes'] = packet_info.numel() * packet_info.element_size()
     print(json.dumps({"data_memory": memory}), flush=True)
-
     if args.packet_balance:
         planted_rows = packet >= 0
-        freq = torch.bincount(packet[planted_rows], minlength=PACKETS).float() / int(planted_rows.sum())
+        balanced_packet = (packet if packet_info is None else
+                           packet_info[torch.arange(len(packet)), packet.clamp(min=0), 0].long())
+        freq = torch.bincount(balanced_packet[planted_rows], minlength=PACKETS if packet_info is None else 54).float() / int(planted_rows.sum())
         scale = freq.clamp(min=1e-6) ** -args.packet_balance
-        scale = (scale / scale[packet[planted_rows]].mean()).clamp(max=20.0)  # mean plant-row weight ~1
-        weight[planted_rows] *= scale[packet[planted_rows]]
-        print("packet weights", {k: round(float(scale[k]), 2) for k in range(PACKETS) if freq[k] > 0}, flush=True)
+        scale = (scale / scale[balanced_packet[planted_rows]].mean()).clamp(max=20.0)  # mean plant-row weight ~1
+        weight[planted_rows] *= scale[balanced_packet[planted_rows]]
+        print("packet weights", {k: round(float(scale[k]), 2) for k in range(len(freq)) if freq[k] > 0}, flush=True)
     if args.spread_weight:
         # 2026-10-17: only ~3% of rows are the teacher overriding the student, and those carry what the student lacks;
         # plain cross-entropy weighs a trivial wait as much as a decision worth 10 points of win rate.
@@ -343,7 +367,8 @@ def main() -> None:
         row_plan.apply(weight)
         print(json.dumps({"row_intervention":row_plan.metadata(),
                           "positive_weight_rows":int((weight>0).sum())}),flush=True)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool, aux=bool(args.aux_weight))
+    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
+                     aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
         from pvz_rollout_policy import load_student
         initial = load_student(args.init)
@@ -368,7 +393,8 @@ def main() -> None:
         y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
         w = weight[idx].to(args.device)
         planted = y > 0.5
-        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight))
+        packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
+        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
@@ -432,6 +458,7 @@ def main() -> None:
         return {"state_dict": {k: v.cpu() for k, v in (net if ema is None else ema.module).state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
+                "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
                 "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "ema": args.ema, "cell_soft_weight": args.cell_soft_weight,
                 "history": list(history),
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),

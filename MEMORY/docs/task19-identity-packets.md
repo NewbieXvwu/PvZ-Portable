@@ -50,6 +50,8 @@
 
 - 2026-10-21，A1：在独立identity工作树实现可选identity头：共享植物embedding供逐槽MLP与选格头使用，逐槽输入植物ID/active/冷却进度/买得起，空槽及不可用槽屏蔽；重复植物的全局标量按max聚合、平分时按植物身份决策，避免顺序泄漏。checkpoint加载及PVZRN006导出已接入；6项Python检查通过（重排、重复卡、可用性、共享embedding梯度、往返及缺失输入），与基线7384b8d对24个slot配置的初始化、全部logit和导出逐字节相同。训练数据接线及C++尚待下一步，不将此视为A完成。
 
+- 2026-10-21，A2完成：训练器支持--packet-head identity、记录头类型/E维度，实际逐槽输入使用独立float32文件映射与按原训练行对齐的侧缓存；--read-cache-dir只读复用既有缓存，缺失项写本工作树，旧v1/v2lite/v2编码签名均与7384b8d相同。C++ CPU接PVZRN006（width/pool/context/obs/row_pool/packet_head/E），旧PVZRN002–005保持；两个CUDA入口均明确拒绝identity。11项新检查通过（含2epoch CPU实际训练及只读缓存）、24种identity/192个真实局面最大误差1.19e−7、全部argmax/动作相同；新C++顺序/平分检查通过。旧C++ 48配置回归通过，旧/新默认slot两epoch训练张量与验证loss逐位相同。A完成，B扰动及C完整dw3验证仍待完成。
+
 ## 问题
 
 - 可选的棋盘卷积与植物embedding共享暂不做：空间卷积是每植物×3×3核，直接共用将改变干线结构；当前只共享出卡/选格两头，不改变旧slot网络。没有改任何其他工作树或tmux队列。

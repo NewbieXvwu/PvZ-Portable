@@ -134,6 +134,7 @@ NetImage ReadNet(const std::string& path)
 	uint32_t width = 0, pool = 0, withContext = 0, observation = 1, rowPool = 0;
 	if (std::fread(magic, 8, 1, stream) != 1) Fail(path + " is too short");
 	const std::string version(magic, 8);
+	if (version == "PVZRN006") Fail("identity packet head not supported on CUDA yet");
 	if (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005")
 		Fail("unsupported network dump " + version);
 	if (std::fread(&width, 4, 1, stream) != 1 || std::fread(&pool, 4, 1, stream) != 1) Fail("short header");
