@@ -1,5 +1,5 @@
 {
-  "identity_unique_tests": 30,
+  "identity_unique_tests": 34,
   "test_runs": {
     "corrected_input_tests.txt": {
       "sha256": "3df3ff5f4818fff3c8ef11b04df1b18009769d83721e119dfd772b1ad0b3fc64",
@@ -53,6 +53,18 @@
     "legacy_cpp_tests.txt": {
       "sha256": "e7e92bdc37dd344e09a87371fd051700463b4eb8635b75fe95eff6ed2aa1762f",
       "test_ids": []
+    },
+    "numerics_tests.txt": {
+      "sha256": "7414a92ba4d027eef8119eeb753730f6ab5a4cc4975d6136d5a6718087c10a48",
+      "test_ids": [
+        "python.test_cpp_rollout.CppRolloutTest.test_logits_width_and_checkpoint_export",
+        "python.test_cpp_rollout.CppRolloutTest.test_rollout_leaf_income_restore_and_rng",
+        "python.test_cpp_rollout.CppRolloutTest.test_v2_continuation_features_and_root_history",
+        "python.test_cpp_rollout.CppRolloutTest.test_v2lite_continuation_features_and_root_history",
+        "python.test_identity_cpp.IdentityCppTest.test_live_conveyor_free_cards_and_empty_slots_match_python",
+        "python.test_identity_cpp.IdentityCppTest.test_native_identity_ties_are_independent_of_slot_order",
+        "python.test_identity_cpp.IdentityCppTest.test_random_identity_heads_on_real_positions"
+      ]
     }
   },
   "parity_results": [
@@ -105,7 +117,7 @@
     "python/pvz_rollout_policy.py": "01565d74998e1b0a649c48660802e702e0251215e2b4e0851c4dd05bfeba7e4d",
     "scripts/train_rollout_policy.py": "7c32d66903d132e719a213922705b800b9b8d1a2c604c8daf6816c5ef689ba8e",
     "python/pvz_frame_store.py": "4cc94a0624a736723b3f4726013a6fbf8519fbf66ab24f73a51a7874d86d1fe2",
-    "src/EnvironmentRollout.cpp": "25037ecc20e0fe5a8e854b1c7e4363209e58d85d63b697e530a84a24da3d7e96",
+    "src/EnvironmentRollout.cpp": "3fc80de1014522627951931c4f99a6da81ac587445693cc76733d964f57dad5e",
     "src/EnvironmentRollout.h": "0f0cd7259786c3bec19b468c90eecc0cbaf8fdc382fe0adfdc034dfa6fae35af",
     "src/LawnApp.cpp": "32c09a21cd2ba7fd6518036a25cdbea22cf152f56c9688d58badcb8e8f605258",
     "src/main.cpp": "04fff2b67f83c1c654ca610c89c2ebd2535b1373b045a453d62c4e749489acb0",
@@ -122,6 +134,69 @@
     "python/test_identity_cpp.py": "33f56a703b043b23a4592c1766e5e47018759f0a7c9f766abd044593ed8e8108",
     "python/test_deck_perturb.py": "cd13188fdf3e4a88b62641400ea711b89619b11c75642263f9a5b6fe7e192a44"
   },
-  "executable_sha256": "a046711743058b57a3376526af86c4b52b2a0d69b70589134844a2bba4fb1580",
-  "cuda_scope": "both CUDA loaders contain explicit PVZRN006 rejection; identity GPU inference not implemented or claimed"
+  "executable_sha256": "864b30902e2d0e1dc1db80e595e62dcc0247ab70915b2076816e8b21e33c576d",
+  "cuda_scope": "both CUDA loaders contain explicit PVZRN006 rejection; identity GPU inference not implemented or claimed",
+  "numeric_fix": {
+    "amendment": "task19-cpu-numerics-amendment.json",
+    "change": "identity head accumulates its two-layer packet MLP, per-channel cell base and the 54-cell channel reduction in float64; the slot head path is textually and numerically untouched",
+    "before": {
+      "executable_sha256": "a046711743058b57a3376526af86c4b52b2a0d69b70589134844a2bba4fb1580",
+      "source_sha256": "25037ecc20e0fe5a8e854b1c7e4363209e58d85d63b697e530a84a24da3d7e96",
+      "per_head_maximum": {
+        "plant": 5.7220458984375e-06,
+        "packet": 2.288818359375e-05,
+        "cell": 1.430511474609375e-05
+      }
+    },
+    "after": {
+      "executable_sha256": "864b30902e2d0e1dc1db80e595e62dcc0247ab70915b2076816e8b21e33c576d",
+      "source_sha256": "3fc80de1014522627951931c4f99a6da81ac587445693cc76733d964f57dad5e",
+      "per_head_maximum": {
+        "plant": 3.814697265625e-06,
+        "packet": 1.52587890625e-05,
+        "cell": 1.3828277587890625e-05
+      }
+    },
+    "slot_bit_exact": {
+      "model": "artifacts/student/v33",
+      "levels": [
+        7,
+        9,
+        10
+      ],
+      "decisions": 72,
+      "values": 4680,
+      "bit_mismatches": 0,
+      "maximum_abs_error": 0.0
+    },
+    "trained_parity": {
+      "tolerance_absolute": 1e-05,
+      "tolerance_relative": 1e-05,
+      "reference_noise": {
+        "plant": 1.8765930347441895e-06,
+        "packet": 1.3029889132099015e-05,
+        "cell": 1.1238920826883714e-05
+      },
+      "worst_tolerance_ratio": 0.32818679379733207,
+      "tolerance_overruns": 0,
+      "argmax_mismatches": 0,
+      "action_mismatches": 0,
+      "real_decisions": 128
+    },
+    "evaluation": {
+      "games": 2048,
+      "identical_outcomes": true,
+      "only_differing_field": "seconds",
+      "wins": {
+        "day_l7_eval_d7": 241,
+        "day_l8_eval_d7": 249,
+        "day_l9_eval_d7": 222,
+        "day_l10_eval_d7": 251,
+        "day_l7_eval": 88,
+        "day_l8_eval": 119,
+        "day_l9_eval": 62,
+        "day_l10_eval": 247
+      }
+    }
+  }
 }

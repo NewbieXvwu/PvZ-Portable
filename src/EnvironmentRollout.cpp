@@ -362,6 +362,13 @@ static float Linear(const float* input, const float* weight, int count, float bi
 	return bias;
 }
 
+static float IdentityLinear(const float* input, const float* weight, int count, float bias)
+{
+	double total = bias;
+	for (int index = 0; index < count; ++index) total += static_cast<double>(input[index]) * weight[index];
+	return static_cast<float>(total);
+}
+
 void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vector<float>& scalars)
 {
 	Convolve(board, Channels + (v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
@@ -417,7 +424,8 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 	Prediction result{};
 	const int global = context.size(), stride = width + plantEmbedding + global;
 	result.cellPacket = packet;
-	result.plant = Linear(context.data(), weights[8].data(), global, weights[9][0]);
+	const auto linear = identityPacket ? IdentityLinear : Linear;
+	result.plant = linear(context.data(), weights[8].data(), global, weights[9][0]);
 	if (!identityPacket)
 		for (int index = 0; index < 10; ++index)
 			result.packets[index] = Linear(context.data(), weights[10].data() + index * global, global, weights[11][index]);
@@ -434,8 +442,8 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 			std::copy_n(weights[12].data() + static_cast<int>(info[0]) * plantEmbedding, plantEmbedding, input.data() + global);
 			std::copy_n(info.data() + 1, 3, input.data() + global + plantEmbedding);
 			for (int channel = 0; channel < width; ++channel)
-				activation[channel] = std::max(0.0f, Linear(input.data(), weights[10].data() + channel * input.size(), input.size(), weights[11][channel]));
-			result.packets[index] = Linear(activation.data(), weights[last].data(), width, weights[last + 1][0]);
+				activation[channel] = std::max(0.0f, IdentityLinear(input.data(), weights[10].data() + channel * input.size(), input.size(), weights[11][channel]));
+			result.packets[index] = IdentityLinear(activation.data(), weights[last].data(), width, weights[last + 1][0]);
 		}
 	}
 	if (packet < 0) return result;
@@ -444,8 +452,8 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 	{
 		const float* kernel = weights[13].data() + channel * stride;
 		const int kind = identityPacket ? std::max(0, static_cast<int>(packetInfo[packet][0])) : packet;
-		float base = Linear(weights[12].data() + kind * plantEmbedding, kernel + width, plantEmbedding, weights[14][channel]);
-		base = Linear(context.data(), kernel + width + plantEmbedding, global, base);
+		float base = linear(weights[12].data() + kind * plantEmbedding, kernel + width, plantEmbedding, weights[14][channel]);
+		base = linear(context.data(), kernel + width + plantEmbedding, global, base);
 		std::fill_n(scratch.data() + channel * Cells, Cells, base);
 	}
 #ifdef PVZ_ROLLOUT_BLAS
@@ -457,9 +465,20 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 #else
 	MultiplyRows(weights[13].data(), hidden.data(), scratch.data(), width, width, stride);
 #endif
-	for (int channel = 0; channel < width; ++channel)
+	if (identityPacket)
+	{
 		for (int cell = 0; cell < 54; ++cell)
-			result.cells[cell] += std::max(0.0f, scratch[channel * Cells + cell / 9 * 10 + cell % 9]) * weights[15][channel];
+		{
+			double total = weights[16][0];
+			for (int channel = 0; channel < width; ++channel)
+				total += static_cast<double>(std::max(0.0f, scratch[channel * Cells + cell / 9 * 10 + cell % 9])) * weights[15][channel];
+			result.cells[cell] = static_cast<float>(total);
+		}
+	}
+	else
+		for (int channel = 0; channel < width; ++channel)
+			for (int cell = 0; cell < 54; ++cell)
+				result.cells[cell] += std::max(0.0f, scratch[channel * Cells + cell / 9 * 10 + cell % 9]) * weights[15][channel];
 	return result;
 }
 

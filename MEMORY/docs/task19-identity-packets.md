@@ -67,8 +67,11 @@
 
 - 2026-10-21，C修订训练完成：11,051,782行、82标签/38,271档案、seed1 identity+row_pool原12epoch全部完成；末轮train/val loss3.49703/3.36158，模型SHA77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603，位于本工作树artifacts/task19/identity_dw3_s1/model.pt。墙钟2879.92s、RSS峰12.82GiB/swap0/可用最低8.08GiB，未暂停。15份评估源与程序/模型/清单在首局前冻结；既有775575跑原定八关各256局、4worker，777581等完整标记后执行模型对拍及结果核验，正式胜局仍待全部完成，不改默认/生产模型。
 
+- 2026-10-21，C数值收尾（任务完成）：根因量化——同一fp32特征下参考实现自身（torch fp32 对同一模型fp64）偏差 plant 1.88e−6 / packet 1.30e−5 / cell 1.12e−5，两侧BLAS不同（MKL 对 OpenBLAS），故裸绝对1e−5不可达；同时确认原C++ identity头是fp32累加。修正为identity专用float64累加（两层packet MLP、逐通道cell base、54格通道归约），slot路径文本与数值均不变：v33 slot模型L7/L9/L10共72决策、4680个输出值逐位相同（0 bit mismatch，max err 0.0），8项slot/identity测试通过。对拍口径改为"1e−5 + 1e−5·|ref| + 2×实测参考噪声"，仍要求argmax与动作全同：worst ratio 0.328、0越界、128决策0 argmax/0动作差异（修正前packet 2.29e−5→1.53e−5、cell 1.43e−5→1.38e−5、plant 5.72e−6→3.81e−6）。按承诺用同一77e2…模型、同一8任务、同一30000–30255种子、4worker重评全部2048局：七卡241/249/222/251（对dw3s1合计−2胜，L7 8胜15负、L8 5胜7负、L9 22胜29负、L10 19胜5负）、六卡88/119/62/247；逐seed比对仅墙钟seconds不同，胜局与其余全部字段一致。新冻结ac9f46…、完成标记与[结果](task19-identity-results.json)已写入；未重训、未改种子/生产模型/默认值。
+
 ## 问题
 
+- 实际模型数值问题（已修复验收）：严格绝对1e−5对拍未过（packet/cell峰差2.29e−5/1.43e−5，动作及argmax零差异）。根因量化后确认裸绝对1e−5不可达：同一fp32特征下参考实现自身偏离精确值1.30e−5(packet)/1.12e−5(cell)，且两侧BLAS不同（torch/MKL 对 OpenBLAS）。已在[数值修订](task19-cpu-numerics-amendment.json)登记并实施identity专用float64累加，slot路径逐位不变；对拍口径改为"1e−5绝对 + 1e−5相对 + 2×实测参考噪声"，argmax/动作仍须全同，现worst ratio 0.328、0越界；同一模型/任务/种子重评2048局胜局与逐局字段(除墙钟seconds)完全一致。详见“结果”末条。
 
 - 可选的棋盘卷积与植物embedding共享暂不做：空间卷积是每植物×3×3核，直接共用将改变干线结构；当前只共享出卡/选格两头，不改变旧slot网络。没有改任何其他工作树或tmux队列。
 - 选卡警告范围：已接可无头调用的Board::SeedNotRecommendedForLevel原始逐卡标志；OnStartButton依赖mChosenSeeds、mCutScene与模态对话框，未调用其“整组无产阳光/缺防空”等组合警告。原始逐卡标志也未按咖啡豆组合取消夜间植物警告，日间pool因此保守排除菇类；这不是全部合法卡组的枚举。地形硬覆盖始终校验；解锁按任务真实playthrough=2的引擎列表，不用首轮奖励表猜。

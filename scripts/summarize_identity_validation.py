@@ -133,13 +133,24 @@ def summarize():
     engineering = read(engineering_path)
     for name, digest in engineering['source_sha256'].items():
         assert sha(ROOT / name) == digest, name
-    assert engineering['identity_unique_tests'] == 30
+    assert engineering['identity_unique_tests'] == 34
+    fix = engineering['numeric_fix']
+    assert fix['after']['source_sha256'] == sha(ROOT / 'src/EnvironmentRollout.cpp')
+    assert fix['after']['executable_sha256'] == frozen['executable_sha256']
+    assert fix['slot_bit_exact']['bit_mismatches'] == 0 and fix['slot_bit_exact']['decisions'] == 72
+    assert fix['evaluation']['games'] == 2048 and fix['evaluation']['identical_outcomes']
+    assert not fix['trained_parity']['argmax_mismatches'] and not fix['trained_parity']['action_mismatches']
     assert engineering['legacy_slot']['configurations'] == 24
     assert engineering['perturbation']['training_seeds'] == 32768
     parity_path = ROOT / 'MEMORY/docs/task19-trained-parity.json'
     parity = read(parity_path)
     assert parity['model_sha256'] == sha(model_path) and parity['executable_sha256'] == frozen['executable_sha256']
-    assert parity['all_argmax_and_actions_equal'] and parity['maximum_abs_error'] < 1e-5
+    assert parity['checker_sha256'] == sha(ROOT / 'scripts/check_identity_checkpoint.py')
+    assert parity['exported_sha256'] == sha(model_path.with_suffix('.pvzrn'))
+    assert parity['format'] == 'PVZRN006' and parity['header_fields'] == [64, 1, 0, 3, 1, 1, 64]
+    assert parity['all_argmax_and_actions_equal'] and parity['passed']
+    assert parity['tolerance_absolute'] == 1e-5 and parity['tolerance_relative'] == 1e-5
+    assert parity['worst_tolerance_ratio'] < 1 and parity['argmax_mismatches'] == 0
     assert parity['real_decisions'] == 128
     return dict(completed_at=datetime.now(timezone.utc).isoformat(), complete=True,
         scope='one corrected seed1 dw3+identity+row_pool model; all eight predeclared 256-game groups',
@@ -154,10 +165,16 @@ def summarize():
                           smoke_games=8, loaded_rows=6192, heldouts='initial unordered card sets',
                           smoke_archives=smoke_archives,
                           live_replay_scope='one archived eight-action prefix, plus archived-deck replay unit tests'),
-        engineering=dict(validation_sha256=sha(engineering_path), unique_identity_tests=30,
+        engineering=dict(validation_sha256=sha(engineering_path),
+                         unique_identity_tests=engineering['identity_unique_tests'],
                          slot_exact_configurations=24, trained_parity_sha256=sha(parity_path),
                          trained_cpu_max_abs_error=parity['maximum_abs_error'],
-                         trained_cpu_real_decisions=parity['real_decisions']),
+                         trained_cpu_tolerance=[parity['tolerance_absolute'], parity['tolerance_relative']],
+                         trained_cpu_worst_tolerance_ratio=parity['worst_tolerance_ratio'],
+                         trained_cpu_reference_noise=parity['per_head_reference_noise'],
+                         trained_cpu_absolute_only_exceedances=parity['absolute_only_exceedances'],
+                         trained_cpu_real_decisions=parity['real_decisions'],
+                         numeric_fix=engineering['numeric_fix']),
         limitations=[
             'Single training seed; descriptive comparison, no population-level noninferiority claim.',
             'Identity also repairs the empty-slot public wave scalar and balances packets by plant identity.',
@@ -176,4 +193,4 @@ if __name__ == '__main__':
     result = summarize()
     args.out.write_text(json.dumps(result, indent=2) + '\n')
     print(json.dumps(dict(complete=True, games=result['evaluation']['games'],
-                         tasks=[(r['task_id'], r['won']) for r in result['evaluation']['tasks']]), flush=True))
+                          tasks=[(r['task_id'], r['won']) for r in result['evaluation']['tasks']])), flush=True)
