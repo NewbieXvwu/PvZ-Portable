@@ -104,9 +104,9 @@ def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None
                coverage_budget: int = 2) -> None:
     """Load the nets and the student's C++ export into the worker state dict.
 
-    Every worker calls this, and -- where the platform can fork -- so does the parent, once,
-    before the pool starts: a forked worker inherits these pages copy-on-write, so a run of
-    sixteen workers keeps one copy of torch and of the weights instead of sixteen (task18).
+    Either every worker calls this, or -- where the platform can fork -- the parent calls it
+    once before the pool starts and the children inherit the pages copy-on-write: a run of
+    sixteen workers then keeps one copy of torch and of the weights instead of sixteen (task18).
     Nothing ever writes to a weight, so the shared pages stay shared.
     """
     os.environ.setdefault("OMP_NUM_THREADS", "1")
