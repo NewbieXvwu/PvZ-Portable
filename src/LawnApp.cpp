@@ -1764,6 +1764,33 @@ bool LawnApp::EnvironmentAnyLegalPlant()
 	return false;
 }
 
+std::string LawnApp::EnvironmentDeckOptions()
+{
+	if (!mBoard) return "{\"ok\":false}";
+	std::ostringstream out;
+	out << "{\"ok\":true,\"level\":" << mBoard->mLevel
+		<< ",\"playthrough\":" << mEnvironmentTaskSpec.playthrough << ",\"available_plants\":[";
+	bool first = true;
+	for (int type = 0; type < SeedType::NUM_SEED_TYPES; ++type)
+		if (HasSeedType(static_cast<SeedType>(type)))
+		{
+			if (!first) out << ',';
+			first = false;
+			out << type;
+		}
+	out << "],\"not_recommended\":[";
+	first = true;
+	for (int type = 0; type < SeedType::NUM_SEED_TYPES; ++type)
+	{
+		if (!HasSeedType(static_cast<SeedType>(type))) continue;
+		if (!first) out << ',';
+		first = false;
+		out << '[' << type << ',' << mBoard->SeedNotRecommendedForLevel(static_cast<SeedType>(type)) << ']';
+	}
+	out << "],\"warning_scope\":\"Board::SeedNotRecommendedForLevel; raw per-card flags; interactive OnStartButton not invoked\"}";
+	return out.str();
+}
+
 std::string LawnApp::EnvironmentObservation(bool privileged)
 {
 	if (!mBoard)

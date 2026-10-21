@@ -729,7 +729,8 @@ def _play(job: dict) -> dict:
     from render_episode import _frame, load_training_task, training_task_kwargs
     from pvz_tasks import profile_for_deck
     from pvz_env import TaskSpec
-    kw = training_task_kwargs(load_training_task(Path(args.manifest), args.task_id), job["seed"])
+    task_definition = load_training_task(Path(args.manifest), args.task_id)
+    kw = training_task_kwargs(task_definition, job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading
     # resources costs ~0.7 s, as much as a whole student-only game. RESET_V2 rebuilds the board
     # from the seed, so a reused process plays the same game (scripts/perf_rollout_check.py).
@@ -854,10 +855,23 @@ def _play(job: dict) -> dict:
         from pvz_frame_store import write_frames_from_source
         write_frames_from_source(archive / f"frames.{getattr(args, 'frames_format', 'npz')}",
                                  "".join(frames).encode())
+        archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
+        archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
+        if 'deck_perturb' in task_definition:
+            import hashlib
+            archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
+                                policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
+                                checkpoint_sha256=hashlib.sha256(Path(args.rollout_policy).read_bytes()).hexdigest(),
+                                task_id=args.task_id, first_aid_owned=kw.get('first_aid_owned', False),
+                                **{k: v for k, v in kw['task_extra'].items() if v is not None})
+            archive_task['deck_perturb'] = task_definition['deck_perturb']
+            archive_task['base_deck'] = task_definition['deck']
+            archive_outcome.update(final_tick=obs['tick'], wave_count=_frame(obs)['scene'].get('wave_count', 0),
+                                   reason='win' if obs.get('result') == 1 else 'not_won')
         (archive / "meta.json").write_text(json.dumps({
-            "task": {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]},
+            "task": archive_task,
             "context": task_context,
-            "outcome": {"won": obs.get("result") == 1, "final_wave": obs["wave"]}}))
+            "outcome": archive_outcome}))
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted": planted,

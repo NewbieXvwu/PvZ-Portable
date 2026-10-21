@@ -254,6 +254,7 @@ public:
 	bool							EnvironmentTerminal() const;
 	std::string					EnvironmentObservation(bool privileged = false);
 	std::string					EnvironmentLeanObservation();
+	std::string                     EnvironmentDeckOptions();
 	bool						EnvironmentAnyLegalPlant();
 	void							Start() override;
 	Dialog*							NewDialog(int theDialogId, bool isModal, const std::string& theDialogHeader, const std::string& theDialogLines, const std::string& theDialogFooter, int theButtonMode) override;

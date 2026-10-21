@@ -5,6 +5,8 @@
 from __future__ import annotations
 
 import sys
+import random
+from functools import lru_cache
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
@@ -55,3 +57,64 @@ def profile_for_deck(deck: tuple[int, ...], first_aid_owned: bool = False) -> Pl
     return PlayerProfileContext(seed_slot_count=len(deck),
                                 owned_upgrade_plants=upgrades,
                                 first_aid_owned=bool(first_aid_owned))
+
+
+@lru_cache(maxsize=50)
+def _perturbation_background(level: int) -> str:
+    return pvz_constants.background_for_level(level)
+
+
+def terrain_covered(level: int, deck) -> bool:
+    """AGENTS §8 coverage only; no handwritten playing or card-strength policy."""
+    background = _perturbation_background(level)
+    if background in ('BACKGROUND_3_POOL', 'BACKGROUND_4_FOG'):
+        return LILY_PAD in deck or CATTAIL in deck
+    if background in ('BACKGROUND_5_ROOF', 'BACKGROUND_6_BOSS'):
+        return FLOWER_POT in deck
+    return True
+
+
+def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
+    """Deterministic exact-set replacements then slot shuffle; held-out sets are never returned.
+
+    Eligibility is supplied by a frozen DECK_OPTIONS engine query, not a manually ranked card list.
+    New choices exclude upgrades, imitater and special seeds; pre-existing upgrades retain their profile.
+    """
+    base = tuple(task['deck'])
+    if 'deck_perturb' not in task:
+        return base
+    spec = task['deck_perturb']
+    options = spec['engine_options']
+    if options['level'] != task['level'] or options['playthrough'] != task.get('playthrough', 2):
+        raise ValueError('deck perturbation engine options do not match task level/profile')
+    if not 6 <= len(base) <= 10 or len(set(base)) != len(base):
+        raise ValueError('deck perturbation requires 6..10 distinct cards')
+    available = set(options['available_plants'])
+    warnings = dict(options['not_recommended'])
+    pool = sorted(set(spec['pool']))
+    if not pool or any(p not in available or not 0 <= p < 40 or warnings.get(p, 1) for p in pool):
+        raise ValueError('perturbation pool includes locked, upgraded/special, or engine-warned plants')
+    if not set(base) <= available:
+        raise ValueError('base deck includes locked plants')
+    swaps = spec.get('swaps', [1, 2])
+    if not swaps or any(n not in (1, 2) for n in swaps):
+        raise ValueError('deck perturbation supports exactly one or two replacements')
+    additions = sorted(set(pool) - set(base))
+    if len(additions) < max(swaps):
+        raise ValueError('not enough new eligible plants for the requested swaps')
+    excluded = {tuple(sorted(deck)) for deck in spec.get('excluded_decks', [])}
+    rng = random.Random(int(seed))
+    for _ in range(4096):
+        n = rng.choice(swaps)
+        slots = rng.sample(range(len(base)), n)
+        new = rng.sample(additions, n)
+        deck = list(base)
+        for slot, plant in zip(slots, new):
+            deck[slot] = plant
+        if not terrain_covered(task['level'], deck) or tuple(sorted(deck)) in excluded:
+            continue
+        if any(warnings.get(plant, 1) for plant in deck):
+            continue
+        rng.shuffle(deck)
+        return tuple(deck)
+    raise ValueError('no admissible non-held-out deck under the requested perturbation')
