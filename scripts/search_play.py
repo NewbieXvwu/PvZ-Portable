@@ -99,19 +99,18 @@ def _close_worker_env():
         client.close()
 
 
-def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
-                 static_value_path: str | None = None, cuda_socket: str | None = None,
-                 coverage_path: str | None = None, coverage_budget: int = 2) -> None:
-    if rollout_sim_skip & 256 and cuda_socket is not None:
-        raise ValueError("sparse tracks are a CPU-only rollout feature")
+def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None = None,
+               cpp_rollouts: bool = True, coverage_path: str | None = None,
+               coverage_budget: int = 2) -> None:
+    """Load the nets and the student's C++ export into the worker state dict.
+
+    Every worker calls this, and -- where the platform can fork -- so does the parent, once,
+    before the pool starts: a forked worker inherits these pages copy-on-write, so a run of
+    sixteen workers keeps one copy of torch and of the weights instead of sixteen (task18).
+    Nothing ever writes to a weight, so the shared pages stay shared.
+    """
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
-    _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True, cpp_rollouts=cpp_rollouts,
-              cuda_socket=cuda_socket)
-    sys.path.insert(0, str(ROOT / "python"))
-    sys.path.insert(0, str(ROOT / "scripts"))
-    from multiprocessing.util import Finalize
-    Finalize(None, _close_worker_env, exitpriority=10)
     import torch
     torch.set_num_threads(1)
     _W.pop("coverage", None)
@@ -131,6 +130,55 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
         _W["rollout_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-")
         _W["rollout_file"] = str(Path(_W["rollout_tmp"].name) / "student.bin")
         export_student(_W["fast"], _W["rollout_file"])
+
+
+def _release_freed_memory() -> None:
+    """Hand the C allocator's free pages back to the OS after a game.
+
+    glibc keeps freed blocks on its arenas, so a worker's RSS stays at the high-water mark of
+    the biggest game it ever played even though almost none of it is live (task18).  Linux only:
+    the other platforms either have no such call or return nothing for a Python heap.
+    """
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):
+        pass
+
+
+def _freeze_startup() -> None:
+    """Take the imported modules and the weights out of the garbage collector's generations.
+
+    Nothing allocated at startup is cyclic garbage, and a forked worker that leaves them
+    tracked pays twice: every collection walks the whole inherited heap, and each header it
+    touches is a copy-on-write page it now owns privately.  Freezing them keeps the shared
+    pages shared and makes the collections that do run cheaper (task18).
+    """
+    import gc
+    gc.collect()
+    gc.freeze()
+
+
+def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
+                 static_value_path: str | None = None, cuda_socket: str | None = None,
+                 coverage_path: str | None = None, coverage_budget: int = 2) -> None:
+    if rollout_sim_skip & 256 and cuda_socket is not None:
+        raise ValueError("sparse tracks are a CPU-only rollout feature")
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+    _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True, cpp_rollouts=cpp_rollouts,
+              cuda_socket=cuda_socket)
+    sys.path.insert(0, str(ROOT / "python"))
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from multiprocessing.util import Finalize
+    Finalize(None, _close_worker_env, exitpriority=10)
+    if "fast" not in _W:        # a preloading parent already loaded them, and we inherited the pages
+        _load_nets(value_path, rollout_path, static_value_path, cpp_rollouts, coverage_path, coverage_budget)
+    import torch
+    # Forking does not carry the parent's intra-op thread count into the child; a worker is
+    # single threaded either way.
+    torch.set_num_threads(1)
+    _freeze_startup()
     if cuda_socket:
         # One connection per worker; the *server* is what turns the workers' separate decisions into one
         # GPU wave.  The dump file is this worker's only channel of positions to it, and a worker is single
@@ -811,6 +859,7 @@ def _play(job: dict) -> dict:
             "worker": difference(worker, _W.get("cpu_accounted", zero)),
             "simulator": difference(simulator, _W.get("sim_cpu_accounted", zero))}
         _W["cpu_accounted"], _W["sim_cpu_accounted"] = worker, simulator
+    _release_freed_memory()      # this game's archives are written; its buffers are garbage now
     return result
 
 
@@ -944,6 +993,14 @@ def main() -> None:
                                                     start_timeout_ms=600000, log=log)
         print(f"cuda rollout server: {cuda_socket}, {args.cuda_lanes} lanes", flush=True)
         (args.out / "cuda_server.json").write_text(json.dumps({"socket": cuda_socket, "lanes": args.cuda_lanes}) + "\n")
+    # Where the platform can fork, the parent loads the nets once and the pool children inherit
+    # the pages copy-on-write (_init_worker then finds them already in place): torch and the three
+    # checkpoints cost one copy per run instead of one per worker (task18).
+    start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
+    if start_method == "fork":
+        _load_nets(args.value, args.rollout_policy, args.static_value, args.cpp_rollouts,
+                   args.candidate_coverage_model, args.candidate_coverage_budget)
+        _freeze_startup()
     if args.measure_cpu:
         import resource
         from pvz_cpu_usage import usage, difference, wait_with_cpu_usage
@@ -951,7 +1008,7 @@ def main() -> None:
     server_cpu = None
     started = time.time()
     try:
-        with results_path.open("a") as out, mp.get_context("spawn").Pool(
+        with results_path.open("a") as out, mp.get_context(start_method).Pool(
                 args.workers, initializer=_init_worker,
                 initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.cpp_rollouts,
                           args.static_value, cuda_socket) +
