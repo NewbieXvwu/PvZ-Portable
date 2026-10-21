@@ -49,6 +49,11 @@
 ## 问题
 
 ## 第二步（主控 2026-10-21 22:55 追加）
+
+### 第二步结果
+
+- 2026-10-21 第二步清单：`make_night_panel.py` 加 `--deck/--suffix`，生成 `artifacts/stage4/night_panel_n8.json`（`night_lN_eval_n8` = `[0,1,2,3,4,5,8,9]`）与 `night_panel_n9.json`（`night_lN_eval_n9` = `[0,1,2,3,4,5,7,8,9]`）；三套卡组同种子段 30000–31023，`deck_for_level` 未改。DESIGN 我的登记改为 §14.9（§14.8 留给 task20）。第一步的老师 L20 16 局（v34 推演）作废并停止，改 identity 推演。
+
 报告很好。两点更正与下一步：
 1. **老师的推演策略要换成 identity 学生**：第一步老师 = v34 + 搜索，搜索的推演用的是 v34（slot 头），在夜间卡组上同样槽位错位，
    所以“老师也打不过”混着错位效应。之后老师一律用 identity 学生做 `--rollout-policy`

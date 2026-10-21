@@ -579,7 +579,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 - 留出族`day_lN_eval_d7p_holdout{1,2,3}`：每关3套初始7卡，环境种子30000–30255；12套无序初始植物集合在四个训练族中全部显式排除，槽位排列不解除排除。生成时穷举核对全部32768训练种子，无训练/留出初始卡组集合重叠；这不保证L10后续传送带动态手牌集合完全未见。采集meta保存实际初始deck、基础deck、扰动来源及冻结学生检查点，各帧packets保存真实动态手牌；反事实沿既有`episode_query`路径读取存档deck，不重新采样/读取现行清单。
 - 可行性范围：DECK_OPTIONS直接调用`HasSeedType`和`Board::SeedNotRecommendedForLevel`，默认排除逐卡原始警告；无头模式不调用会弹窗/依赖选卡UI状态的`SeedChooserScreen::OnStartButton`，尚未接其“整副卡无产阳光”等组合检查。上述随机扰动不按手工战术或卡牌强弱排序。L10保持既有任务物理语义，没有为满足固定卡组假设而关闭传送带或改动历史基线。
 
-### 14.8 新任务族：夜间原版难度面板 `night_l*_eval`（2026-10-21 登记，AGENTS.md §8 第 4 条）
+### 14.9 新任务族：夜间原版难度面板 `night_l*_eval` / `night_l*_eval_n8` / `night_l*_eval_n9`（2026-10-21 登记，AGENTS.md §8 第 4 条）
 
 - 用途：“加宽”第二步。夜间草地 L11–L20 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50、不预置植物），
   每关一个评估任务 `night_lN_eval`；清单 `artifacts/stage4/night_panel.json`（不进 git，生成脚本 `scripts/make_night_panel.py`）。
@@ -589,4 +589,11 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   **2-10（L20）是 mini-boss**（`IsMiniBossLevel` 含 `mLevel == 20`），`HasConveyorBeltSeedBank()` 为真，语义同白天 1-10：reset 把卡组写进初始 seed bank，之后走原生传送带。
 - 地形与坟头：11–14、16–20 全是 `BACKGROUND_2_NIGHT`；坟头数按 `Board::AddGraveStones` 随关卡增长（11–13: 4、14/16: 7、17–19: 11、20: 13）。
 - 评估结果见 `MEMORY/docs/night-panel.md`（学生 v34 / identity 每关 128 局、老师每关 16 局）。
+- **卡组候选（2026-10-21 主控追加，实测选卡，不凭感觉）**：同一批评估种子 30000–31023、同一批关卡，
+  另开两个任务族，与 `night_l*_eval` 对照，互不覆盖：
+  - `night_lN_eval_n8`：`[0,1,2,3,4,5,8,9]`（白天 6 卡 + 小喷菇 8 + 阳光菇 9），清单 `artifacts/stage4/night_panel_n8.json`；
+  - `night_lN_eval_n9`：`[0,1,2,3,4,5,7,8,9]`（学生训练卡组 + 小喷菇 + 阳光菇），清单 `artifacts/stage4/night_panel_n9.json`。
+  生成方式 `scripts/make_night_panel.py --deck ... --suffix _n8`；`deck_for_level` 仍未改动。三套卡组只换卡组，任务其余字段逐项相同。
+  **老师一律用 identity 学生做推演**（`identity_dw3_s1`，PVZRN006 走 C++ CPU 前向，不用 CUDA），
+  避免 slot 头在夜间卡组上的槽位错位污染“老师上限”这个量。
 

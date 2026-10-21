@@ -73,7 +73,13 @@ def main() -> None:
                    help="不收的关卡（默认只收 2-5 打地鼠）")
     p.add_argument("--include", type=int, action="append", default=[],
                    help="强制收进默认排除的关卡（如 --include 15）")
+    p.add_argument("--deck", default="",
+                   help="逗号分隔的种子编号，覆盖 deck_for_level（全关卡同一副卡）；默认空 = 用 deck_for_level")
+    p.add_argument("--suffix", default="",
+                   help="任务名后缀，接在 _eval 之后（如 _n8 -> night_l1_eval_n8）")
     args = p.parse_args()
+
+    fixed_deck = tuple(int(seed) for seed in args.deck.split(",")) if args.deck else None
 
     skipped = dict(EXCLUDED)
     for level in args.include:
@@ -85,7 +91,7 @@ def main() -> None:
     for level in range(FIRST_LEVEL, LAST_LEVEL + 1):
         if level in skipped:
             continue
-        deck = deck_for_level(level)
+        deck = fixed_deck if fixed_deck is not None else deck_for_level(level)
         background = pvz_constants.background_for_level(level)
         unlocked = unlocked_plants(level)
         missing = [seed for seed in deck if seed not in unlocked]
@@ -93,7 +99,7 @@ def main() -> None:
                        "unlocked": list(unlocked), "not_yet_unlocked": missing,
                        "special": special_note(level)})
         tasks.append({
-            "task_id": f"night_l{level}_eval",
+            "task_id": f"night_l{level}_eval{args.suffix}",
             "terrain": "night",
             "level": level,
             "deck": list(deck),
