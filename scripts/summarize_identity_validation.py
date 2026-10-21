@@ -105,6 +105,18 @@ def summarize():
     assert smoke['complete'] and len(smoke['games']) == 8 and smoke['training_loader']['rows'] == 6192
     manifest = read(ROOT / 'artifacts/stage4/day_panel_identity.json')
     assert sha(ROOT / 'artifacts/stage4/day_panel_identity.json') == smoke['manifest_sha256']
+    engineering_path = ROOT / 'MEMORY/docs/task19-engineering-validation.json'
+    engineering = read(engineering_path)
+    for name, digest in engineering['source_sha256'].items():
+        assert sha(ROOT / name) == digest, name
+    assert engineering['identity_unique_tests'] == 30
+    assert engineering['legacy_slot']['configurations'] == 24
+    assert engineering['perturbation']['training_seeds'] == 32768
+    parity_path = ROOT / 'MEMORY/docs/task19-trained-parity.json'
+    parity = read(parity_path)
+    assert parity['model_sha256'] == sha(model_path) and parity['executable_sha256'] == frozen['executable_sha256']
+    assert parity['all_argmax_and_actions_equal'] and parity['maximum_abs_error'] < 1e-5
+    assert parity['real_decisions'] == 128
     return dict(completed_at=datetime.now(timezone.utc).isoformat(), complete=True,
         scope='one corrected seed1 dw3+identity+row_pool model; all eight predeclared 256-game groups',
         model_sha256=sha(model_path), baseline_model_sha256=sha(baseline_path),
@@ -115,6 +127,10 @@ def summarize():
         evaluation=dict(games=sum(r['games'] for r in results), tasks=results),
         perturbation=dict(generation_audit=manifest['generation_audit'], smoke_sha256=sha(smoke_path),
                           smoke_games=8, loaded_rows=6192, heldouts='initial unordered card sets'),
+        engineering=dict(validation_sha256=sha(engineering_path), unique_identity_tests=30,
+                         slot_exact_configurations=24, trained_parity_sha256=sha(parity_path),
+                         trained_cpu_max_abs_error=parity['maximum_abs_error'],
+                         trained_cpu_real_decisions=parity['real_decisions']),
         limitations=[
             'Single training seed; descriptive comparison, no population-level noninferiority claim.',
             'Identity also repairs the empty-slot public wave scalar and balances packets by plant identity.',
