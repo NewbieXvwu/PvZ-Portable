@@ -578,3 +578,15 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 - task19新族：`day_l{7,8,9,10}_train_d7p`，由`scripts/make_identity_tasks.py --manifest <day_panel.json>`生成本地`artifacts/stage4/day_panel_identity.json`；训练种子分别1840000–1848191、1850000–1858191、1860000–1868191、1870000–1878191，不覆盖旧任务。`deck_perturb`含swaps=[1,2]、pool、引擎DECK_OPTIONS冻结查询及excluded_decks；每种子确定性替换恰1/2张、再洗牌，pool只取实际profile已解锁的非升级/非特殊且逐卡无引擎警告的植物，按AGENTS §8保持水路/屋顶覆盖。当前playthrough=2，解锁按第二轮冒险的引擎实际列表，不按首轮关卡奖励猜。
 - 留出族`day_lN_eval_d7p_holdout{1,2,3}`：每关3套初始7卡，环境种子30000–30255；12套无序初始植物集合在四个训练族中全部显式排除，槽位排列不解除排除。生成时穷举核对全部32768训练种子，无训练/留出初始卡组集合重叠；这不保证L10后续传送带动态手牌集合完全未见。采集meta保存实际初始deck、基础deck、扰动来源及冻结学生检查点，各帧packets保存真实动态手牌；反事实沿既有`episode_query`路径读取存档deck，不重新采样/读取现行清单。
 - 可行性范围：DECK_OPTIONS直接调用`HasSeedType`和`Board::SeedNotRecommendedForLevel`，默认排除逐卡原始警告；无头模式不调用会弹窗/依赖选卡UI状态的`SeedChooserScreen::OnStartButton`，尚未接其“整副卡无产阳光”等组合检查。上述随机扰动不按手工战术或卡牌强弱排序。L10保持既有任务物理语义，没有为满足固定卡组假设而关闭传送带或改动历史基线。
+
+### 14.8 新任务族：夜间原版难度面板 `night_l*_eval`（2026-10-21 登记，AGENTS.md §8 第 4 条）
+
+- 用途：“加宽”第二步。夜间草地 L11–L20 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50、不预置植物），
+  每关一个评估任务 `night_lN_eval`；清单 `artifacts/stage4/night_panel.json`（不进 git，生成脚本 `scripts/make_night_panel.py`）。
+- 卡组：`deck_for_level`（未改动），夜间草地 = `[0, 1, 9, 2, 3, 4, 5]`（第 3 槽阳光菇 9）。与白天 6 卡 / 7 卡是不同任务族，结果不可混比。
+- 种子：评估 30000–31023（与白天面板同段，与训练段 1500000+/1600000+/1840000+ 不重叠）。
+- 特殊关：**2-5（L15）是打地鼠**（`LawnApp::IsWhackAZombieLevel`，Adventure `mLevel == 15`；波次走 `mChallenge->InitZombieWaves()`、8 波、`WhackAZombiePlaceGraves(9)`），没有卡组与阳光经济，**不收**；
+  **2-10（L20）是 mini-boss**（`IsMiniBossLevel` 含 `mLevel == 20`），`HasConveyorBeltSeedBank()` 为真，语义同白天 1-10：reset 把卡组写进初始 seed bank，之后走原生传送带。
+- 地形与坟头：11–14、16–20 全是 `BACKGROUND_2_NIGHT`；坟头数按 `Board::AddGraveStones` 随关卡增长（11–13: 4、14/16: 7、17–19: 11、20: 13）。
+- 评估结果见 `MEMORY/docs/night-panel.md`（学生 v34 / identity 每关 128 局、老师每关 16 局）。
+
