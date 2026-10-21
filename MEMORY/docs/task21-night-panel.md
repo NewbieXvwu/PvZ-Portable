@@ -39,4 +39,6 @@
 
 ## 结果
 
+- 2026-10-21 清单：`scripts/make_night_panel.py` 生成 `artifacts/stage4/night_panel.json`（不进 git），9 个任务 `night_lN_eval`（L11–14、16–20，各 1024 种子 30000–31023），卡组 `deck_for_level` = `[0,1,9,2,3,4,5]`。2-5（L15）经源码核对是**打地鼠**（`LawnApp::IsWhackAZombieLevel`，Adventure `mLevel == 15`），默认排除；2-10（L20）是 mini-boss/传送带，收进来并在报告标注。
+
 ## 问题
