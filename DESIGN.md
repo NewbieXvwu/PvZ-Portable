@@ -608,3 +608,29 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   **2-10 的 `conveyor_start` 原版开局**：本分支还没有 task20 的引擎/python 支持，L20 暂按“卡组写进初始手牌”的语义，
   等 conveyor 合入后再改成原版开局（另开任务族名，不覆盖 `night_l*_n9`）。
 
+### 14.10 新任务族：白天泳池原版难度面板 `pool_l*_eval` / `pool_l*_eval_p9` / `pool_l*_eval_p9k`（2026-10-22 登记，AGENTS.md §8 第 4 条）
+
+- 用途：“加宽”第三步。白天泳池 L21–L30 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50、不预置植物），
+  每关一个评估任务 `pool_lN_eval`；清单 `artifacts/stage4/pool_panel.json`（不进 git，生成脚本
+  `scripts/make_pool_panel.py`，公共核心 `scripts/zone_panel.py`；task21 的 `make_night_panel.py` 也是它的薄包装，
+  `--combined` 输出与登记时逐字节相同）。
+- 卡组：`deck_for_level`（未改动），白天泳池 = `[0, 1, 2, 3, 4, 5, 16, 43]`（白天 6 卡 + 睡莲 16 + 香蒲 43）。
+  与白天 6/7 卡、夜间 n9 是不同任务族，结果不可混比。
+- 种子：评估 30000–31023（与白天/夜间面板同段）。
+- 地形：21–30 全是 `BACKGROUND_3_POOL`；6 行、row 2/3 是水路，非水生植物必须种在睡莲 16 上，
+  香蒲 43 只能种在睡莲上（`PLANTING_NEEDS_UPGRADE`），缠绕水草 19 可直接种水里；泳池没有坟头。
+- 特殊关：**3-5（L25）是 Little Trouble**（`LawnApp::IsLittleTroubleLevel`，Adventure `mLevel == 25`；
+  `HasConveyorBeltSeedBank()` 为真、僵尸点数 ×4、僵尸半尺寸 1/4 血），没有卡组与阳光经济，**不收**；
+  **3-10（L30）是 mini-boss**（`IsMiniBossLevel` 含 `mLevel == 30`），语义同 1-10 / 2-10：
+  reset 把卡组写进初始 seed bank，之后走原生传送带。
+- **卡组候选（2026-10-22 主控下发，实测选卡）**：同一批评估种子、同一批关卡，三个族互不覆盖：
+  - `pool_lN_eval`（对照）：`[0,1,2,3,4,5,16,43]`；
+  - `pool_lN_eval_p9`：`[0,1,2,3,4,5,7,16,43]`（学生训练卡组 + 睡莲 + 香蒲）；
+  - `pool_lN_eval_p9k`：`[0,1,2,3,4,5,7,16,19]`（学生训练卡组 + 睡莲 + 缠绕水草 19）。
+  生成时按 AGENTS §8 强制核对地形覆盖、升级植物所有权（香蒲 43 由 `pvz_tasks.profile_for_deck` 声明）、
+  长度 6..10、无重复；不合法直接报错。`deck_for_level` 仍未改动，最后选哪套由主控定。
+  **老师一律用 identity 学生做推演**（`identity_dw3_s1`，PVZRN006 走 C++ CPU 前向，不用 CUDA），
+  `--dagger-beta 1`（搜索实际执行）。
+- 评估结果见 `MEMORY/docs/pool-panel.md`（identity 学生每关 64 局、老师每关 16 局，L21–24、26 五关）。
+
+
