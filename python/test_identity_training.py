@@ -102,6 +102,24 @@ class IdentityTrainingTest(unittest.TestCase):
             checkpoint = torch.load(root / 'model/model.pt', map_location='cpu', weights_only=True)
             self.assertTrue(all(torch.isfinite(v).all() for v in checkpoint['state_dict'].values()))
             self.assertEqual(len(checkpoint['history']), 2)
+            report = root/'source_rows.json'
+            command = [sys.executable, str(ROOT/'scripts/train_rollout_policy.py'),
+                       '--data', str(root/'data'), '--labels', 'example', '--out', str(root/'reported'),
+                       '--device', 'cpu', '--width', '8', '--epochs', '2', '--seed', '1', '--obs', 'v2',
+                       '--pool', 'meanmax', '--row-pool', '--packet-head', 'identity',
+                       '--packet-balance', '.5', '--cell-soft-weight', '3', '--spread-weight', '8',
+                       '--source-row-report', str(report)]
+            counted = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(counted.returncode,0,counted.stdout+counted.stderr)
+            other = torch.load(root/'reported/model.pt',map_location='cpu',weights_only=True)
+            for key,tensor in checkpoint['state_dict'].items():
+                torch.testing.assert_close(tensor,other['state_dict'][key],rtol=0,atol=0)
+            for before,after in zip(checkpoint['history'],other['history']):
+                self.assertEqual({k:v for k,v in before.items() if k!='seconds'},
+                                 {k:v for k,v in after.items() if k!='seconds'})
+            counts=json.loads(report.read_text())
+            self.assertEqual(counts['rows'],84)
+            self.assertEqual(counts['sources']['example'],dict(archives=12,rows=84,training_rows=77,validation_rows=7))
 
     def test_empty_labelled_slot_fails_before_optimization(self):
         with tempfile.TemporaryDirectory() as folder:

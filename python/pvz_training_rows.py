@@ -6,6 +6,30 @@ from pathlib import Path
 import numpy as np
 
 
+class SourceRowCounts:
+    """Count actual retained cached rows without changing sampling, weights or RNG state."""
+    def __init__(self):
+        self.sources = {}
+
+    def observe(self, path, rows):
+        path = Path(path)
+        record = self.sources.setdefault(path.parent.name, dict(archives=0, seeds={}))
+        record['archives'] += 1
+        seed = int(path.parent.parent.name.split('_')[-1])
+        record['seeds'][seed] = record['seeds'].get(seed, 0)+len(rows)
+
+    def finish(self, total, validation_seeds, destination):
+        result = {}
+        for label, record in self.sources.items():
+            rows = sum(record['seeds'].values())
+            validation = sum(n for seed,n in record['seeds'].items() if seed in validation_seeds)
+            result[label] = dict(archives=record['archives'], rows=rows, training_rows=rows-validation,
+                                 validation_rows=validation)
+        assert sum(r['rows'] for r in result.values()) == total
+        destination = Path(destination); destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(dict(rows=total, sources=result), indent=2)+'\n')
+
+
 def update_identity(digest, relative_path, rows):
     digest.update(relative_path.encode()+b'\0')
     digest.update(len(rows).to_bytes(8,'little'))

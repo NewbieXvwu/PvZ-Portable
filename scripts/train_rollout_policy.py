@@ -321,18 +321,29 @@ def main() -> None:
     p.add_argument('--read-cache-dir', type=Path, help='optional existing feature cache to read only; misses go to --cache-dir')
     p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
     p.add_argument("--row-weights", type=Path, help="optional checksummed per-row experiment manifest; cached rows required, default off")
+    p.add_argument('--source-row-report', type=Path, help='optional actual retained row counts by source; cached rows required')
     p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")
     args = p.parse_args()
     if args.aux_weight < 0 or args.aux_horizon < 1:
         p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
     if args.row_weights and not args.cache:
         p.error("--row-weights requires --cache")
+    if args.source_row_report and not args.cache:
+        p.error('--source-row-report requires --cache')
     if args.max_steps is not None and args.max_steps<=0:
         p.error("--max-steps must be positive")
     row_plan = None
     if args.row_weights:
         from pvz_training_rows import RowWeights
         row_plan = RowWeights(args.row_weights, args.data)
+    source_counts = None
+    observer = row_plan.observe if row_plan else None
+    if args.source_row_report:
+        from pvz_training_rows import SourceRowCounts
+        source_counts = SourceRowCounts()
+        def observer(path, rows):
+            source_counts.observe(path, rows)
+            if row_plan: row_plan.observe(path, rows)
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
@@ -343,7 +354,7 @@ def main() -> None:
                                                                  args.context, args.obs, args.precompute_workers, args.dense_boards,
                                                                  cells=bool(args.cell_soft_weight),
                                                                  aux_horizon=args.aux_horizon if args.aux_weight else 0,
-                                                                 row_observer=row_plan.observe if row_plan else None,
+                                                                 row_observer=observer,
                                                                  packet_head=args.packet_head, read_cache_dir=args.read_cache_dir)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
@@ -354,6 +365,8 @@ def main() -> None:
     is_val = torch.tensor([s in val_seeds for s in seed_of])
     if row_plan:
         row_plan.finish(len(plant), is_val.numpy())
+    if source_counts:
+        source_counts.finish(len(plant), val_seeds, args.source_row_report)
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
     memory = {"rows": len(plant), "board_bytes": boards.numel() * boards.element_size() if args.dense_boards else boards.nbytes,

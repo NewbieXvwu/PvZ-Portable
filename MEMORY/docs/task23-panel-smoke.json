@@ -1,0 +1,251 @@
+{
+  "games": 10,
+  "models": {
+    "v34": {
+      "complete": false,
+      "model": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
+      "model_sha256": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+      "executable_sha256": "788b1771a6d1914816a9644521422c4db020ebe7a11046e4f99b17a56fbb81cf",
+      "manifest_sha256": "c17daf9a2ded971f51e6af53642badb4969cc17b234583aa7d3630409fe00b32",
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "level": 1,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 1,
+          "won": 1,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.0,
+          "mean_final_wave": 20.0,
+          "games_sha256": "ba4242970540aaf46c68202bec09aa57c1ff557b843dce63de074a625f29d49c",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "level": 10,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 1,
+          "won": 1,
+          "win_rate": 1.0,
+          "mean_mowers_used": 3.0,
+          "mean_final_wave": 20.0,
+          "games_sha256": "8282c90134c2f4c7f84c5db419d332fb9cfcc491c1a313811e1390757bb4097f",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            27,
+            5,
+            32,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 1,
+          "won": 1,
+          "win_rate": 1.0,
+          "mean_mowers_used": 2.0,
+          "mean_final_wave": 30.0,
+          "games_sha256": "6ab2937efe48ca26ef1cb3297acb524931b433a0c95e3728e8124ace833819db",
+          "group": "heldout"
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "level": 11,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 1,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 5.0,
+          "mean_final_wave": 8.0,
+          "games_sha256": "a33140165502deec3186cbb21293dfbf1267b5bf47447163bd1ac7f917683ac3",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "level": 20,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 1,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 5.0,
+          "mean_final_wave": 7.0,
+          "games_sha256": "6be5aba70ff7b4cef2da833a460432704e2eeac32bc5ba422d3ed837f44b7bd4",
+          "group": "night"
+        }
+      ],
+      "groups": {
+        "day": {
+          "tasks": 2,
+          "games": 2,
+          "won": 2,
+          "mean_win_rate": 1.0
+        },
+        "heldout": {
+          "tasks": 1,
+          "games": 1,
+          "won": 1,
+          "mean_win_rate": 1.0
+        },
+        "night": {
+          "tasks": 2,
+          "games": 2,
+          "won": 0,
+          "mean_win_rate": 0.0
+        }
+      }
+    },
+    "identity": {
+      "complete": false,
+      "model": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt",
+      "model_sha256": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+      "executable_sha256": "788b1771a6d1914816a9644521422c4db020ebe7a11046e4f99b17a56fbb81cf",
+      "manifest_sha256": "c17daf9a2ded971f51e6af53642badb4969cc17b234583aa7d3630409fe00b32",
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "level": 1,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 1,
+          "won": 1,
+          "win_rate": 1.0,
+          "mean_mowers_used": 2.0,
+          "mean_final_wave": 20.0,
+          "games_sha256": "637f0b48ad6b2c2ef5985c91828806b5dc955831bdfc791ad23096fa79f8a2ce",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "level": 10,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 1,
+          "won": 1,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.0,
+          "mean_final_wave": 20.0,
+          "games_sha256": "cb3ad62f9ad3cdba52cd30090da563671ac42773e1a0ac53a1bfba905eaaf133",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            27,
+            5,
+            32,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 1,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 2.0,
+          "mean_final_wave": 29.0,
+          "games_sha256": "40bee83da03a49e17feec66caa06ac79a86301136790dfc642cb147b848ac6b9",
+          "group": "heldout"
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "level": 11,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 1,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 5.0,
+          "mean_final_wave": 9.0,
+          "games_sha256": "945cd0ac20bc6a6a054ff82efa175c53528e2fb9b652cfc18b9633cc6e7212dc",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "level": 20,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 1,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 5.0,
+          "mean_final_wave": 7.0,
+          "games_sha256": "5b6b18702e3be1064ae90812a391b845fd58c33beb725672a6087094193dd222",
+          "group": "night"
+        }
+      ],
+      "groups": {
+        "day": {
+          "tasks": 2,
+          "games": 2,
+          "won": 2,
+          "mean_win_rate": 1.0
+        },
+        "heldout": {
+          "tasks": 1,
+          "games": 1,
+          "won": 0,
+          "mean_win_rate": 0.0
+        },
+        "night": {
+          "tasks": 2,
+          "games": 2,
+          "won": 0,
+          "mean_win_rate": 0.0
+        }
+      }
+    }
+  },
+  "night_original_probe": {
+    "level": 20,
+    "initial_empty_packets": 10,
+    "first_card_tick": 240,
+    "first_card_legal": true
+  }
+}
