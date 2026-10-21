@@ -59,6 +59,8 @@ task19 的 identity 头按植物身份出卡、逐槽读“种类 / 可用 / 冷
 
 ## 问题
 
+- 2026-10-21 接管复核更正：原 C++ identity 输入没有使用原版标志，affordable/global-ready仍按阳光计算；原search_play/collect meta及whatif未传conveyor_start，静态清单校验仍拒绝空deck/None wave_cap。已只在conveyor修复，31项目标检查通过（含40个真实原版局面Python/C++一致、回放传字段与清单契约），旧slot输入/旧任务episode字段不变。原identity 247/256基线须重评对齐后的输入；保留旧文件，不混作新基线。
+- 2026-10-21 老师运行状态更正：833286及本树老师进程均已不在，原文件保留24个完整种子30000–30023，停止原因不确定；原作业dagger-beta=0，仅老师标注、学生执行。正在明确“老师64局”是否应由搜索执行（beta=1）；采集继续采用queue100 beta=0，二者不混比。
 - 老师基线（`artifacts/task20/base_teacher`，PID 833286，4 worker）交接时仍在运行，只写了 20/64 局；接手方先确认它是否继续，`games.jsonl` 是增量写的、可续跑。
 - 下一步建议：跑完老师 64 局并补进 `MEMORY/docs/day-panel.md` 新一节 → 用 identity+v34 老师（queue100 参数）在 `day_l10_orig_train` 采 2 轮各 128 局（offset 0/128，label `d10orig1/2`）→ 训 1 个 identity 种子 → 评 `day_l10_orig_eval` 256 局与 `day_l7/8/9_eval_d7` 各 256 局。
 - 采集时 `--frames` 请写本工作树（`artifacts/task20/frames`），再硬链进 `artifacts/task20/frames_v2`，不要写主工作区。

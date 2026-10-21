@@ -491,7 +491,7 @@ class PvZEnv:
                 "zombie_count_multiplier": task.zombie_count_multiplier,
                 "wave_cap": task.wave_cap,
                 "preplanted": [list(plant) for plant in task.preplanted],
-                "conveyor_start": task.conveyor_start,
+                **({"conveyor_start": task.conveyor_start} if task.conveyor_start else {}),
             },
             "initial_state": self._state_record(observation),
             "operations": [],

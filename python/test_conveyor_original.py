@@ -12,7 +12,8 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from pvz_env import TaskSpec, profile_for_deck
 from pvz_event_env import EventWaitEnv
-from pvz_rollout_policy import packet_features
+from pvz_rollout_policy import (RolloutNet, act, export_student, features, identity_scalars,
+                                packet_features)
 from render_episode import _frame
 
 RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz-research-resources')))
@@ -64,7 +65,7 @@ class ConveyorOriginalTest(unittest.TestCase):
         frame = _frame(obs)
         self.assertNotIn('conveyor_start', frame)
         self.assertEqual([kind for _slot, kind, *_rest in frame['packets']], list(DECK))
-        self.assertEqual(self.env.episode['task']['conveyor_start'], None)
+        self.assertNotIn('conveyor_start', self.env.episode['task'])
 
     def test_non_conveyor_levels_reject_the_option(self):
         with self.assertRaises(ValueError):
@@ -99,6 +100,70 @@ class ConveyorOriginalTest(unittest.TestCase):
         self.env.reset(deck=(), task=task)
         self.assertEqual(self.env.episode['task']['conveyor_start'], 'original')
         self.assertEqual(self.env.episode['deck'], [])
+
+    def test_identity_native_inputs_and_actions_match_original_conveyor(self):
+        import tempfile
+        torch.set_num_threads(1)
+        torch.manual_seed(20001)
+        model = RolloutNet(8, packet_head='identity').eval()
+        with torch.no_grad():
+            model.plant.weight.zero_()
+            model.plant.bias.fill_(1)
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'identity.pvzrn'
+            export_student(model, path)
+            self.env.load_rollout_net(path)
+            live, _ = self.env.reset(deck=(), task=TaskSpec(level=10, seed=30000,
+                conveyor_start='original', profile=profile_for_deck(())))
+            previous = action = None
+            free = 0
+            for _ in range(40):
+                frame = _frame(live)
+                frame['action'] = action
+                legal = live['legal_actions']['plants']
+                free += any(frame['packets'][p['packet']][5] > frame['sun'] for p in legal)
+                native = self.env.rollout_predict(previous['tick'] if previous else None,
+                                                  bool(action and action['type'] == 'plant'))
+                board, scalars = features(frame, previous)
+                info = packet_features(frame)[None]
+                with torch.inference_mode():
+                    h, g = model.encode(board[None], identity_scalars(frame, scalars)[None], packet_info=info)
+                    torch.testing.assert_close(model.packet_logits(g, info)[0],
+                        torch.tensor(native['packet'], dtype=torch.float32), rtol=0, atol=1e-5)
+                    torch.testing.assert_close(model.plant(g).flatten(),
+                        torch.tensor([native['plant']], dtype=torch.float32), rtol=0, atol=1e-5)
+                chosen = act(model, frame, previous, legal)
+                self.assertEqual(chosen, native['action'])
+                previous, action = frame, chosen
+                live, *_ = self.env.step(chosen)
+            self.assertGreater(free, 0)
+
+
+class ConveyorTaskContract(unittest.TestCase):
+    def test_whatif_carries_original_start_from_archive(self):
+        from unittest.mock import patch
+        import episode_query
+        meta = dict(task=dict(level=10, seed=30000, deck=[], conveyor_start='original',
+                             policy='student', checkpoint='/frozen/model.pt'))
+        with patch.object(episode_query, 'collect', return_value={'outcome': {}, 'frames': []}) as collect:
+            episode_query._run_variant(meta, {}, '/resources')
+        self.assertEqual(collect.call_args.args[5], [])
+        self.assertEqual(collect.call_args.kwargs['task_extra']['conveyor_start'], 'original')
+
+    def test_original_task_validation_and_engine_level_mapping(self):
+        from check_task_manifests import _validate_task
+        from pvz_tasks import conveyor_belt_level, deck_for_level
+        self.assertTrue(conveyor_belt_level(50))
+        self.assertFalse(conveyor_belt_level(7))
+        self.assertEqual(deck_for_level(10, conveyor_start='original'), ())
+        with self.assertRaises(ValueError):
+            deck_for_level(7, conveyor_start='original')
+        task = dict(task_id='original', level=10, terrain='day', deck=[], conveyor_start='original',
+            zombie_count_multiplier=1.0, wave_cap=None, sun_start=50, preplanted=[],
+            playthrough=2, seeds=list(range(30000, 30256)))
+        _validate_task(task)
+        with self.assertRaises(AssertionError):
+            _validate_task({**task, 'conveyor_start': None})
 
 
 if __name__ == '__main__':

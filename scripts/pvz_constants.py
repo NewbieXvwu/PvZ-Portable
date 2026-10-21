@@ -386,6 +386,25 @@ def background_types() -> dict[int, str]:
     return {v: k for k, v in _parse_enum(_read(CONST_ENUMS), "BackgroundType").items()}
 
 
+def adventure_conveyor_levels() -> tuple[int, ...]:
+    """Adventure levels with the engine's conveyor bank, parsed from its own predicates."""
+    board = _strip_comments(_read(ROOT / 'src/Lawn/Board.cpp'))
+    start, end = _function_span(board, 'bool Board::HasConveyorBeltSeedBank()')
+    names = re.findall(r'mApp->(Is\w+Level)\(\)', board[start:end])
+    app = _strip_comments(_read(ROOT / 'src/LawnApp.cpp'))
+    levels = set()
+    for name in names:
+        start, end = _function_span(app, 'bool LawnApp::' + name + '()')
+        body = app[start:end]
+        found = re.findall(r'mBoard->mLevel\s*==\s*(\d+)', body)
+        if 'mBoard->mLevel' in body and not found:
+            raise RuntimeError(f'unsupported adventure conveyor predicate: {name}')
+        levels.update(map(int, found))
+    if not names or not levels:
+        raise RuntimeError('engine conveyor predicates could not be resolved')
+    return tuple(sorted(levels))
+
+
 def grid_square_types() -> dict[int, str]:
     """`enum GridSquareType`：编号 -> 枚举名（**每一格**的地形）。
 

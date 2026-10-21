@@ -22,14 +22,10 @@ CATTAIL = 43        # 香蒲 225☀，睡莲的升级植物（只能种在睡莲
 FLOWER_POT = 33     # 花盆 25☀，屋顶底座（本环境屋顶关开局已预置 c0–c4）
 
 
+@lru_cache(maxsize=50)
 def conveyor_belt_level(level: int) -> bool:
-    """冒险模式的传送带关：10 / 20 / 30（小 Boss）。
-
-    对应 LawnApp::IsMiniBossLevel（src/LawnApp.cpp:2997，mLevel == 10/20/30）→
-    Board::HasConveyorBeltSeedBank（src/Lawn/Board.cpp:8577）。只有这些关能开
-    原版传送带开局；其余关设了会被环境直接拒绝。
-    """
-    return level in (10, 20, 30)
+    """Read Adventure conveyor eligibility from Board/LawnApp, including special levels."""
+    return level in pvz_constants.adventure_conveyor_levels()
 
 
 def deck_for_level(level: int, conveyor_start: str | None = None) -> tuple[int, ...]:
@@ -43,6 +39,8 @@ def deck_for_level(level: int, conveyor_start: str | None = None) -> tuple[int, 
     """
     # 原版传送带开局没有任务卡组：卡由 Challenge::UpdateConveyorBelt 发。
     if conveyor_start == "original":
+        if not conveyor_belt_level(level):
+            raise ValueError('original conveyor start requires an engine conveyor level')
         return ()
     bg = pvz_constants.background_for_level(level)
     if bg == "BACKGROUND_3_POOL":          # 21–30 白天泳池：水路两张
