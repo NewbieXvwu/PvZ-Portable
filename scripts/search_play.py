@@ -99,19 +99,18 @@ def _close_worker_env():
         client.close()
 
 
-def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
-                 static_value_path: str | None = None, cuda_socket: str | None = None,
-                 coverage_path: str | None = None, coverage_budget: int = 2) -> None:
-    if rollout_sim_skip & 256 and cuda_socket is not None:
-        raise ValueError("sparse tracks are a CPU-only rollout feature")
+def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None = None,
+               cpp_rollouts: bool = True, coverage_path: str | None = None,
+               coverage_budget: int = 2) -> None:
+    """Load the nets and the student's C++ export into the worker state dict.
+
+    Either every worker calls this, or -- where the platform can fork -- the parent calls it
+    once before the pool starts and the children inherit the pages copy-on-write: a run of
+    sixteen workers then keeps one copy of torch and of the weights instead of sixteen (task18).
+    Nothing ever writes to a weight, so the shared pages stay shared.
+    """
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
-    _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True, cpp_rollouts=cpp_rollouts,
-              cuda_socket=cuda_socket)
-    sys.path.insert(0, str(ROOT / "python"))
-    sys.path.insert(0, str(ROOT / "scripts"))
-    from multiprocessing.util import Finalize
-    Finalize(None, _close_worker_env, exitpriority=10)
     import torch
     torch.set_num_threads(1)
     _W.pop("coverage", None)
@@ -131,6 +130,55 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
         _W["rollout_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-")
         _W["rollout_file"] = str(Path(_W["rollout_tmp"].name) / "student.bin")
         export_student(_W["fast"], _W["rollout_file"])
+
+
+def _release_freed_memory() -> None:
+    """Hand the C allocator's free pages back to the OS after a game.
+
+    glibc keeps freed blocks on its arenas, so a worker's RSS stays at the high-water mark of
+    the biggest game it ever played even though almost none of it is live (task18).  Linux only:
+    the other platforms either have no such call or return nothing for a Python heap.
+    """
+    try:
+        import ctypes
+        ctypes.CDLL("libc.so.6").malloc_trim(0)
+    except (OSError, AttributeError):
+        pass
+
+
+def _freeze_startup() -> None:
+    """Take the imported modules and the weights out of the garbage collector's generations.
+
+    Nothing allocated at startup is cyclic garbage, and a forked worker that leaves them
+    tracked pays twice: every collection walks the whole inherited heap, and each header it
+    touches is a copy-on-write page it now owns privately.  Freezing them keeps the shared
+    pages shared and makes the collections that do run cheaper (task18).
+    """
+    import gc
+    gc.collect()
+    gc.freeze()
+
+
+def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
+                 static_value_path: str | None = None, cuda_socket: str | None = None,
+                 coverage_path: str | None = None, coverage_budget: int = 2) -> None:
+    if rollout_sim_skip & 256 and cuda_socket is not None:
+        raise ValueError("sparse tracks are a CPU-only rollout feature")
+    os.environ.setdefault("OMP_NUM_THREADS", "1")
+    os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
+    _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True, cpp_rollouts=cpp_rollouts,
+              cuda_socket=cuda_socket)
+    sys.path.insert(0, str(ROOT / "python"))
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from multiprocessing.util import Finalize
+    Finalize(None, _close_worker_env, exitpriority=10)
+    if "fast" not in _W:        # a preloading parent already loaded them, and we inherited the pages
+        _load_nets(value_path, rollout_path, static_value_path, cpp_rollouts, coverage_path, coverage_budget)
+    import torch
+    # Forking does not carry the parent's intra-op thread count into the child; a worker is
+    # single threaded either way.
+    torch.set_num_threads(1)
+    _freeze_startup()
     if cuda_socket:
         # One connection per worker; the *server* is what turns the workers' separate decisions into one
         # GPU wave.  The dump file is this worker's only channel of positions to it, and a worker is single
@@ -163,16 +211,28 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     return action
 
 
+# Frames per value-net forward. The net scores each row independently, so the batch size does not
+# change a single number -- but it does change the worker's peak: a final-wave candidate set is
+# ~240 frames of 122 channels, and scoring them in one stack was the tallest allocation a
+# collection worker ever held (task18). A fixed batch also keeps every forward the same shape,
+# so the allocator reuses one buffer instead of growing a new one per candidate count.
+VALUE_BATCH = 32
+
+
 def _values(frames: list[dict], static: bool = False) -> list[float]:
     import torch
     from pvz_value_net import featurize
     net = _W.get("static_vnet", _W["vnet"]) if static else _W["vnet"]
-    boards, scalars = zip(*(featurize(f) for f in frames))
-    scalars = torch.stack(scalars)
-    if net.context:          # the game's multiplier and zombie roster, set by _play at reset
-        scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(frames), -1)], dim=1)
-    with torch.inference_mode():
-        return torch.sigmoid(net(torch.stack(boards), scalars)).tolist()
+    values: list[float] = []
+    for start in range(0, len(frames), VALUE_BATCH):
+        part = frames[start:start + VALUE_BATCH]
+        boards, scalars = zip(*(featurize(f) for f in part))
+        scalars = torch.stack(scalars)
+        if net.context:      # the game's multiplier and zombie roster, set by _play at reset
+            scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(part), -1)], dim=1)
+        with torch.inference_mode():
+            values.extend(torch.sigmoid(net(torch.stack(boards), scalars)).tolist())
+    return values
 
 
 def _score_terminal_or_value(obs: dict) -> float | None:
@@ -349,12 +409,19 @@ def _leaf_values(handles: list) -> list[float | None]:
     return values
 
 
+# Branches per BRANCH_SNAPSHOT request. The simulator answers with one full observation per branch,
+# so 128 at once held 128 of them in the worker at the same moment -- the second tallest allocation
+# a collection worker made after the value-net batch (task18). Eight is the same work in the same
+# order, just spread over more requests: the measured peak fell 301.9 -> 277.3 MB, wall time flat.
+BRANCH_SNAPSHOT = 8
+
+
 def _static_frames(env, root: int, actions: list[dict], income) -> list[tuple[dict, dict]]:
     """Apply every action from ``root`` and return the frames the static value net scores."""
     from render_episode import _frame
     out = []
-    for start in range(0, len(actions), 128):
-        chunk = actions[start:start + 128]
+    for start in range(0, len(actions), BRANCH_SNAPSHOT):
+        chunk = actions[start:start + BRANCH_SNAPSHOT]
         for action, record in zip(chunk, env.branch_snapshot(root, chunk, retain_snapshots=False)):
             if record.get("ok") and record.get("observation"):
                 frame = _frame(record["observation"])
@@ -648,6 +715,11 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
     return policy_action
 
 
+def _frame_json(frame: dict) -> str:
+    """One archive line: byte for byte what pvz_frame_store.write_frames serializes."""
+    return json.dumps(frame, separators=(",", ":")) + "\n"
+
+
 def _play(job: dict) -> dict:
     args = job["args"]
     _wait_for_gpu_pause(args, job["seed"])
@@ -685,7 +757,10 @@ def _play(job: dict) -> dict:
         task_context = {"level": kw["level"], "multiplier": obs.get("zombie_count_multiplier", 1.0),
                         "roster": (obs.get("loadout_context") or {}).get("zombie_roster") or []}
         decisions = 0
-        frames = [_frame(obs)] if args.frames else None
+        # One JSON line per decision, exactly what write_frames would serialize -- kept as bytes
+        # rather than as parsed dicts, so the archive costs 2.8 MB instead of ~18 MB of Python
+        # objects for the whole game (task18).
+        frames = [_frame_json(_frame(obs))] if args.frames else None
         fast_state = {}
         _W["student_history"] = None
         # DAgger (DESIGN.md §14.6): the search still labels every decision, but with probability
@@ -741,27 +816,28 @@ def _play(job: dict) -> dict:
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
             if frames is not None:
-                frames.append(_frame(obs))
+                frame = _frame(obs)
                 if stats.get("last_targets"):
                     # the search's estimate for every candidate it compared: [packet (-1 = wait), row, col, value];
                     # a soft target for the student (train_rollout_policy --soft-weight). Before "action" and
                     # "label", because the trainer finds the target by scanning for the last of those.
                     # Shovel candidates are left out: the student has no shovel output yet, so a shovel
                     # row would be read as a wait target by the trainer (phase 2 adds the head).
-                    frames[-1]["targets"] = [[c.get("packet", -1), c.get("row", -1), c.get("col", -1), round(v, 4)]
-                                             for c, v in stats["last_targets"]
-                                             if abs(v) != float("inf") and c["type"] != "shovel"]
-                frames[-1]["action"] = action          # what was executed (after the search), like render_episode
-                frames[-1]["action_rejected"] = rejected
+                    frame["targets"] = [[c.get("packet", -1), c.get("row", -1), c.get("col", -1), round(v, 4)]
+                                        for c, v in stats["last_targets"]
+                                        if abs(v) != float("inf") and c["type"] != "shovel"]
+                frame["action"] = action          # what was executed (after the search), like render_episode
+                frame["action_rejected"] = rejected
                 if stats.get("last_verification"):
                     # Wall time is not part of the label: keeping it in the archive makes two runs of
                     # the same arm differ byte for byte (and the GPU schedule comparison impossible).
                     verification = dict(stats["last_verification"])
                     if getattr(args, "rollout_backend", "cpp") == "cuda":
                         verification.pop("seconds", None)
-                    frames[-1]["verification"] = verification
+                    frame["verification"] = verification
                 if dagger is not None:
-                    frames[-1]["label"] = label        # last field: train_rollout_policy scans for it
+                    frame["label"] = label        # last field: train_rollout_policy scans for it
+                frames.append(_frame_json(frame))
             decisions += 1
             if not obs["terminal"]:      # a won level fires the remaining mowers; count before that
                 mowers_left = ready_mowers(obs)
@@ -775,8 +851,9 @@ def _play(job: dict) -> dict:
         # Same layout as episode_query archives, so scripts/train_value_net.py reads it directly.
         archive = Path(args.frames) / f"seed_{job['seed']}" / f"{args.frames_label}_{job['arm']}"
         archive.mkdir(parents=True, exist_ok=True)
-        from pvz_frame_store import write_frames
-        write_frames(archive / f"frames.{getattr(args, 'frames_format', 'npz')}", frames)
+        from pvz_frame_store import write_frames_from_source
+        write_frames_from_source(archive / f"frames.{getattr(args, 'frames_format', 'npz')}",
+                                 "".join(frames).encode())
         (archive / "meta.json").write_text(json.dumps({
             "task": {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]},
             "context": task_context,
@@ -811,6 +888,7 @@ def _play(job: dict) -> dict:
             "worker": difference(worker, _W.get("cpu_accounted", zero)),
             "simulator": difference(simulator, _W.get("sim_cpu_accounted", zero))}
         _W["cpu_accounted"], _W["sim_cpu_accounted"] = worker, simulator
+    _release_freed_memory()      # this game's archives are written; its buffers are garbage now
     return result
 
 
@@ -944,15 +1022,28 @@ def main() -> None:
                                                     start_timeout_ms=600000, log=log)
         print(f"cuda rollout server: {cuda_socket}, {args.cuda_lanes} lanes", flush=True)
         (args.out / "cuda_server.json").write_text(json.dumps({"socket": cuda_socket, "lanes": args.cuda_lanes}) + "\n")
+    # Where the platform can fork, the parent loads the nets once and the pool children inherit
+    # the pages copy-on-write (_init_worker then finds them already in place): torch and the three
+    # checkpoints cost one copy per run instead of one per worker (task18).
+    start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
+    if start_method == "fork":
+        _load_nets(args.value, args.rollout_policy, args.static_value, args.cpp_rollouts,
+                   args.candidate_coverage_model, args.candidate_coverage_budget)
+        _freeze_startup()
     if args.measure_cpu:
         import resource
         from pvz_cpu_usage import usage, difference, wait_with_cpu_usage
         children_before = usage(resource.RUSAGE_CHILDREN)
     server_cpu = None
     started = time.time()
+    # A worker's resident size only ever grows -- macOS keeps freed pages in the process (task18).
+    # A long-lived worker therefore pays for the high-water of every game it played, so where the
+    # platform can fork, recycle the process after each game: the next one starts from the parent's
+    # copy-on-write baseline instead of on top of the last game's peak. Same games, same bytes.
+    recycle = 1 if start_method == "fork" else None
     try:
-        with results_path.open("a") as out, mp.get_context("spawn").Pool(
-                args.workers, initializer=_init_worker,
+        with results_path.open("a") as out, mp.get_context(start_method).Pool(
+                args.workers, initializer=_init_worker, maxtasksperchild=recycle,
                 initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.cpp_rollouts,
                           args.static_value, cuda_socket) +
                          ((args.candidate_coverage_model, args.candidate_coverage_budget)
