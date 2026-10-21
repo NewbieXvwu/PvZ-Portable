@@ -30,6 +30,7 @@ def commit_documents(message, report):
     assert all((ROOT/path).stat().st_size < 1_000_000 for path in paths)
     git('add', '--', *paths)
     stats = git('diff', '--cached', '--numstat')
+    print(stats.decode()+git('diff', '--cached', '--stat').decode(), flush=True)
     assert all(line.split(b'\t', 2)[0] != b'-' for line in stats.splitlines()), 'no binary delivery'
     tracked = git('ls-files', '-z', 'artifacts', 'logs')
     ignored = subprocess.run(['git', 'check-ignore', '-z', '--stdin', '--no-index'],
