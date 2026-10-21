@@ -1,0 +1,37 @@
+{
+  "registered_at": "2026-10-21T10:17:53.102366+00:00",
+  "reason": "eight required smoke games revealed real native conveyor and SEED_NONE/public wave-scalar mismatch before any identity evaluation",
+  "original_plan_sha256": "75213968b526806fe8c0d9346b16d818ab38b69fc68e3920125d187d096af4e0",
+  "amended_plan_sha256": "ee4665e897029a39836dbc59c68b75ceef73a1ef230571ed8a1f6d9b6b148c28",
+  "previous_attempt": {
+    "completed_epochs": [
+      1,
+      2,
+      3
+    ],
+    "partial_next_epoch_steps": "unknown",
+    "model_saved": false,
+    "formal_evaluation_games": 0,
+    "returncode": -15,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/before_conveyor_input_fix"
+  },
+  "preserved": "same82 labels38271 archives, matched dw3 sampled11051782 rows, same seed1,12epochs,row_pool,cosine,label weights,8tasksx256seeds; cached base/cell/packet arrays retained",
+  "corrections": [
+    "raw packet head masks empty slots only; act/ranked/native choose strictly among engine legal actions, including free conveyor cards",
+    "identity-only global wave scalar restored from public per-frame scene; legacy slot/features/cache signatures unchanged",
+    "archives preserve reset initial deck and per-frame changing hand; heldouts refer to initial sets"
+  ],
+  "evidence": {
+    "smoke_l10_planted_rows": 250,
+    "free_card_labels_rejected_by_previous_sun_gate": 147,
+    "live_conveyor_parity_decisions": 80,
+    "empty_slot_positions": 79,
+    "free_card_positions": 13,
+    "maximum_abs_error": 1.6391277313232422e-07
+  },
+  "validation": {
+    "identity_data_and_replay_tests": 27,
+    "identity_cpp_tests": 3,
+    "formal_identity_game_outcomes_inspected": false
+  }
+}

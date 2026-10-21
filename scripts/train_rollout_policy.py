@@ -26,8 +26,8 @@ sys.path.insert(0, str(ROOT / "python"))
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
-from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features  # noqa: E402
-from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, cache_packets, candidate_cells, frame_bytes,  # noqa: E402
+from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
+from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, cache_packets, cache_identity_scene, candidate_cells, frame_bytes,  # noqa: E402
                               frame_paths, read_frames, row_damage_labels, target_values)
 
 
@@ -111,6 +111,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     cell_cached = {}
     aux_cached = {}
     packet_cached = {}
+    scene_cached = {}
     if cache_dir is not None and precompute_workers > 1:
         from concurrent.futures import ProcessPoolExecutor
         from functools import partial
@@ -124,6 +125,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 aux_cached = dict(zip(paths, pool.map(partial(cache_aux, directory=cache_dir, horizon=aux_horizon), paths, chunksize=8)))
             if packet_head == 'identity':
                 packet_cached = dict(zip(paths, pool.map(partial(cache_packets, directory=cache_dir), paths, chunksize=8)))
+                scene_cached = dict(zip(paths, pool.map(partial(cache_identity_scene, directory=cache_dir), paths, chunksize=8)))
     for path in paths:
         mask = []
         if cache_dir is not None:
@@ -167,6 +169,12 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 if row_observer is not None:
                     row_observer(path, stored["rows"][selected])
                 rows_scalars = stored["scalars"][selected]
+                if packets is not None:
+                    if path not in scene_cached:
+                        scene_cached[path] = cache_identity_scene(path, cache_dir)
+                    with np.load(scene_cached[path], allow_pickle=False) as side:
+                        assert np.array_equal(side['rows'], stored['rows']), path
+                        rows_scalars[:, 4] = side['wave_scalar'][selected]
                 if with_context:
                     ctx = _episode_context(path)
                     context_rows = np.broadcast_to(ctx, (count, len(ctx)))
@@ -188,6 +196,13 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 types = stored["plant"][selected]
                 plant[n:n + count] = types
                 packet[n:n + count] = stored["packet"][selected]
+                if packets is not None:
+                    planted_indices = np.flatnonzero(types > .5)
+                    if len(planted_indices):
+                        target = packets[torch.from_numpy(n + planted_indices),
+                                         torch.from_numpy(packet[n + planted_indices]), 0]
+                        if (target < 0).any():
+                            raise ValueError(f'identity labelled plant has an empty packet slot: {path}')
                 cell[n:n + count] = stored["cell"][selected]
                 vals = stored["values"][selected]
                 if cells:
@@ -221,6 +236,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 continue
             if obs == "v1":
                 b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
+            if packets is not None:
+                s = identity_scalars(frames[i - 1], s)
             if boards is None:
                 boards = (torch.empty((capacity, *b.shape), dtype=torch.half) if dense_boards
                           else CompactBoards(b.shape))
@@ -240,6 +257,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             plant[n - 1] = float(is_plant)
             weight[n - 1] = scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep)
             packet[n - 1] = action["packet"] if is_plant else -1
+            if packets is not None and is_plant and packets[n - 1, packet[n - 1], 0] < 0:
+                raise ValueError(f'identity labelled plant has an empty packet slot: {path}, row {i}')
             cell[n - 1] = action["row"] * LAWN_COLS + action["col"] if is_plant else -1
             values[n - 1] = target_values(frames[i].get("targets"))
             if aux_horizon:

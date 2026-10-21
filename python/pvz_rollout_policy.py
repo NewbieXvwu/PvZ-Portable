@@ -13,6 +13,7 @@ imitate the search's counter-intuitive choices.
 from __future__ import annotations
 
 import numpy as np
+import math
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -42,6 +43,19 @@ def packet_features(frame: dict) -> torch.Tensor:
                         min(1.0, 1.0 if active or not refresh else cooldown / refresh),
                         frame['sun'] >= cost)
     return torch.from_numpy(result)
+
+
+def identity_wave_scalar(frame: dict) -> float:
+    """Canonical public wave-count feature; legacy featurize overwrites it for SEED_NONE (-1)."""
+    waves = max(1, frame['scene'].get('wave_count') or 1)
+    return math.log1p(waves) / math.log1p(50)
+
+
+def identity_scalars(frame: dict, scalars: torch.Tensor) -> torch.Tensor:
+    """Use with identity inputs, including direct encode/forward callers; slot features stay legacy."""
+    result = scalars.clone()
+    result[4] = identity_wave_scalar(frame)
+    return result
 
 
 def features(frame: dict, previous: dict | None, context: np.ndarray | None = None) -> tuple[torch.Tensor, torch.Tensor]:
@@ -156,8 +170,9 @@ class RolloutNet(nn.Module):
         embedding = self.packet_embedding(kind.clamp(min=0))
         global_context = g[:, None, :].expand(-1, PACKETS, -1)
         logits = self.packet(torch.cat([global_context, embedding, packet_info[:, :, 1:]], dim=2)).squeeze(2)
-        available = (kind >= 0) & (packet_info[:, :, 1] > 0) & (packet_info[:, :, 3] > 0)
-        return logits.masked_fill(~available, -1e9)
+        # CanPickUp/CanPlantAt are authoritative at action selection: conveyor cards are free
+        # even when their displayed price exceeds the current sun. Do not invent a budget gate.
+        return logits.masked_fill(kind < 0, -1e9)
 
     def cell_logits(self, h: torch.Tensor, g: torch.Tensor, packet: torch.Tensor,
                     packet_info: torch.Tensor | None = None) -> torch.Tensor:
@@ -188,6 +203,8 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
     # The trunk is computed once and shared by the three heads: the cell head used to rerun the
     # whole network on the same input, which gives the same numbers at twice the cost.
     info = packet_features(frame)[None] if net.packet_head == 'identity' else None
+    if info is not None:
+        scalars = identity_scalars(frame, scalars)
     h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
     if float(net.plant(g)[0, 0]) <= 0.0:
         return dict(WAIT)
@@ -227,6 +244,8 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
             raise ValueError("this student reads the task context: pass context=observation_context(obs)")
         board, scalars = features(frame, previous, context if net.context else None)
     info = packet_features(frame)[None] if net.packet_head == 'identity' else None
+    if info is not None:
+        scalars = identity_scalars(frame, scalars)
     h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
     plant_p = float(torch.sigmoid(net.plant(g))[0, 0])
     by_packet: dict[int, list[dict]] = {}

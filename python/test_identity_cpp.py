@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
-from pvz_rollout_policy import RolloutNet, act, export_student, features, packet_features
+from pvz_rollout_policy import RolloutNet, act, export_student, features, packet_features, identity_scalars
 from pvz_student_observation import StudentHistory
 from pvz_tasks import profile_for_deck
 from pvz_value_net import observation_context
@@ -55,14 +55,15 @@ class IdentityCppTest(unittest.TestCase):
                                                  bool(previous_action and previous_action['type'] == 'plant'),
                                                  student_history=history)
                     b, s = history.features(frame, previous, task_context) if history else features(frame, previous, task_context)
+                    s = identity_scalars(frame, s)
                     info = packet_features(frame)[None]
                     with torch.inference_mode():
                         h, g = net.encode(b[None], s[None], packet_info=info)
-                        pairs = [(net.plant(g).flatten(), torch.tensor([native['plant']])),
-                                 (net.packet_logits(g, info)[0], torch.tensor(native['packet']))]
+                        pairs = [(net.plant(g).flatten(), torch.tensor([native['plant']], dtype=torch.float32)),
+                                 (net.packet_logits(g, info)[0], torch.tensor(native['packet'], dtype=torch.float32))]
                         if native['cell_packet'] >= 0:
                             pairs.append((net.cell_logits(h, g, torch.tensor([native['cell_packet']]), info)[0],
-                                          torch.tensor(native['cell'])))
+                                          torch.tensor(native['cell'], dtype=torch.float32)))
                         for python, cpp in pairs:
                             maximum = max(maximum, float((python - cpp).abs().max()))
                             torch.testing.assert_close(python, cpp, rtol=0, atol=1e-5)
@@ -95,6 +96,54 @@ class IdentityCppTest(unittest.TestCase):
                 self.assertEqual(native['type'], 'plant')
                 selected.append(deck[native['packet']])
         self.assertEqual(len(set(selected)), 1)
+
+    def test_live_conveyor_free_cards_and_empty_slots_match_python(self):
+        torch.set_num_threads(1)
+        torch.manual_seed(19010)
+        net = RolloutNet(64, 'meanmax', obs='v2', row_pool=True, packet_head='identity').eval()
+        with torch.no_grad():
+            net.plant.weight.zero_()
+            net.plant.bias.fill_(1)
+        empty = free = 0
+        maximum = 0.
+        deck = (0, 1, 2, 3, 4, 5, 7)
+        with tempfile.TemporaryDirectory() as folder, EventWaitEnv(RESOURCE, executable=BINARY) as env:
+            path = Path(folder) / 'conveyor.bin'
+            export_student(net, path)
+            env.load_rollout_net(path)
+            live, _ = env.reset(deck=deck, task=TaskSpec(level=10, seed=30000, profile=profile_for_deck(deck)))
+            history = StudentHistory('v2')
+            previous = action = None
+            for _ in range(80):
+                frame = _frame(live)
+                frame['action'] = action
+                empty += any(p[1] < 0 for p in frame['packets'])
+                legal = live['legal_actions']['plants']
+                free += any(frame['packets'][p['packet']][5] > frame['sun'] for p in legal)
+                native = env.rollout_predict(previous['tick'] if previous else None,
+                                             bool(action and action['type'] == 'plant'), student_history=history)
+                b, s = history.features(frame, previous)
+                s = identity_scalars(frame, s)
+                info = packet_features(frame)[None]
+                with torch.inference_mode():
+                    h, g = net.encode(b[None], s[None], packet_info=info)
+                    pairs = [(net.plant(g).flatten(), torch.tensor([native['plant']], dtype=torch.float32)),
+                             (net.packet_logits(g, info)[0], torch.tensor(native['packet'], dtype=torch.float32))]
+                    if native['cell_packet'] >= 0:
+                        pairs.append((net.cell_logits(h, g, torch.tensor([native['cell_packet']]), info)[0],
+                                      torch.tensor(native['cell'], dtype=torch.float32)))
+                    for python, cpp in pairs:
+                        maximum = max(maximum, float((python - cpp).abs().max()))
+                        torch.testing.assert_close(python, cpp, rtol=0, atol=1e-5)
+                        self.assertEqual(int(python.argmax()), int(cpp.argmax()))
+                chosen = act(net, frame, previous, legal, history=history)
+                self.assertEqual(chosen, native['action'])
+                previous, action = frame, chosen
+                live, *_ = env.step(chosen)
+        self.assertGreater(empty, 0)
+        self.assertGreater(free, 0)
+        print(json.dumps(dict(conveyor_decisions=80, empty_slot_positions=empty,
+                              free_card_positions=free, maximum_error=maximum)), flush=True)
 
 
 if __name__ == '__main__':

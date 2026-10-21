@@ -5,6 +5,7 @@ import inspect
 import json
 from pathlib import Path
 import tempfile
+import re
 
 import numpy as np
 
@@ -331,10 +332,10 @@ def encode_packets(frames: list[dict]) -> dict:
                 packets=np.asarray(packets, np.float32).reshape(-1, PACKETS, 4))
 
 
-def cache_packets(path: Path, directory: Path) -> Path:
+def cache_packets(path: Path, directory: Path, source: bytes | None = None) -> Path:
     """Identity-only side cache; old feature signatures/archives stay unchanged."""
     from pvz_rollout_policy import PACKETS, PlantTypes, packet_features
-    source = frame_bytes(path)
+    source = frame_bytes(path) if source is None else source
     signature = inspect.getsource(packet_features) + inspect.getsource(encode_packets) + str((PACKETS, PlantTypes))
     digest = hashlib.sha256(signature.encode() + source).hexdigest()
     target = directory / 'packets' / (hashlib.sha256(str(path.resolve()).encode()).hexdigest() + '.npz')
@@ -343,4 +344,37 @@ def cache_packets(path: Path, directory: Path) -> Path:
             if str(stored['digest']) == digest:
                 return target
     _save(target, digest=digest, **encode_packets([json.loads(line) for line in source.splitlines()]))
+    return target
+
+
+def identity_scene_scalars(source: bytes) -> np.ndarray:
+    """Read every frame's scene exactly; flat, uniquely named scene objects avoid decoding entities.
+
+    Nested/escaped/ambiguous scenes fall back to the full JSON parser. No assumption that wave
+    count is constant, and no inference from a scalar already corrupted by an empty seed slot.
+    """
+    from pvz_rollout_policy import identity_wave_scalar
+    pattern = re.compile(rb'"scene"\s*:\s*(\{[^{}\n]*\})')
+    result = []
+    for line in source.splitlines():
+        match = pattern.search(line) if b'\\u' not in line and line.count(b'"scene"') == 1 else None
+        scene = json.loads(match[1]) if match else json.loads(line)['scene']
+        result.append(identity_wave_scalar({'scene': scene}))
+    return np.asarray(result, dtype=np.float32)
+
+
+def cache_identity_scene(path: Path, directory: Path) -> Path:
+    from pvz_rollout_policy import identity_wave_scalar
+    source = frame_bytes(path)
+    signature = inspect.getsource(identity_scene_scalars) + inspect.getsource(identity_wave_scalar)
+    digest = hashlib.sha256(signature.encode() + source).hexdigest()
+    target = directory / 'identity_scene' / (hashlib.sha256(str(path.resolve()).encode()).hexdigest() + '.npz')
+    if target.exists():
+        with np.load(target, allow_pickle=False) as stored:
+            if str(stored['digest']) == digest:
+                return target
+    with np.load(cache_packets(path, directory, source=source), allow_pickle=False) as stored:
+        rows = stored['rows']
+    scalars = identity_scene_scalars(source)
+    _save(target, digest=digest, rows=rows, wave_scalar=scalars[rows - 1])
     return target

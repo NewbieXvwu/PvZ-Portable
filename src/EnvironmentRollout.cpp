@@ -430,7 +430,7 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 		for (int index = 0; index < 10; ++index)
 		{
 			const auto& info = packetInfo[index];
-			if (info[0] < 0 || !info[1] || !info[3]) continue;
+			if (info[0] < 0) continue;
 			std::copy_n(weights[12].data() + static_cast<int>(info[0]) * plantEmbedding, plantEmbedding, input.data() + global);
 			std::copy_n(info.data() + 1, 3, input.data() + global + plantEmbedding);
 			for (int channel = 0; channel < width; ++channel)

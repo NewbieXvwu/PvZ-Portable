@@ -7,7 +7,7 @@ from pathlib import Path
 
 import torch
 
-from pvz_rollout_policy import RolloutNet, act, export_student, features, load_student, packet_features
+from pvz_rollout_policy import RolloutNet, act, export_student, features, load_student, packet_features, identity_scalars
 from pvz_value_net import BOARD_CHANNELS, SCALARS
 
 
@@ -31,6 +31,7 @@ class IdentityPacketsTest(unittest.TestCase):
 
     def prediction(self, frame, net=None):
         board, scalars = features(frame, None)
+        scalars = identity_scalars(frame, scalars)
         return (net or self.net)(board[None], scalars[None], packet_info=packet_features(frame)[None])
 
     def test_slot_permutation_changes_slots_but_not_plant_or_cell(self):
@@ -52,16 +53,27 @@ class IdentityPacketsTest(unittest.TestCase):
         after = self.prediction(self.permuted(self.frame, order))
         torch.testing.assert_close(before['plant'], after['plant'], rtol=0, atol=0)
         torch.testing.assert_close(before['packet'][0, order], after['packet'][0, :7], rtol=0, atol=0)
-        self.assertEqual(before['packet'][0, 1].item(), -1e9)
+        self.assertTrue(torch.isfinite(before['packet'][0, 1]))
 
-    def test_empty_cooldown_and_unaffordable_slots_are_masked(self):
+    def test_empty_slots_are_masked_and_real_legality_controls_availability(self):
         self.frame['packets'][1][2] = False
         self.frame['packets'][2][-1] = 2000
         logits = self.prediction(self.frame)['packet'][0]
-        self.assertEqual(logits[1].item(), -1e9)
-        self.assertEqual(logits[2].item(), -1e9)
+        self.assertGreater(logits[1].item(), -1e9)
+        self.assertGreater(logits[2].item(), -1e9)
         self.assertTrue((logits[7:] == -1e9).all())
         self.assertGreater(logits[0].item(), -1e9)
+        chosen = act(self.net, self.frame, None, [{'packet': 0, 'row': 0, 'col': 0}])
+        self.assertEqual(chosen['packet'], 0)
+
+    def test_empty_seed_slot_does_not_overwrite_global_wave_count(self):
+        self.frame['packets'][1][1] = -1
+        raw = features(self.frame, None)[1]
+        repaired = identity_scalars(self.frame, raw)
+        self.assertNotEqual(raw[4], repaired[4])
+        reference = copy.deepcopy(self.frame)
+        reference['packets'].pop(1)
+        torch.testing.assert_close(self.prediction(self.frame)['plant'], self.prediction(reference)['plant'], rtol=0, atol=0)
 
     def test_selected_card_uses_the_shared_plant_embedding(self):
         self.frame['packets'][1][1] = 0

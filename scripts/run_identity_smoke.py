@@ -22,8 +22,10 @@ def main():
     frames_dir = OUT / 'perturbed_frames'
     model = SOURCE / 'artifacts/student/v33/model.pt'
     identity = sha(model)
+    manifest_data = json.loads(args.manifest.read_text())
     report = dict(model=str(model), model_sha256=identity, manifest_sha256=sha(args.manifest),
-                  executable_sha256=sha(ROOT / 'build/pvz-portable'), games=[])
+                  capture_manifest_executable_sha256=manifest_data['generation_audit']['executable_sha256'],
+                  replay_executable_sha256=sha(ROOT / 'build/pvz-portable'), games=[])
     labels = set()
     for level in (7, 8, 9, 10):
         task_id = f'day_l{level}_train_d7p'
@@ -49,15 +51,35 @@ def main():
             from pvz_frame_store import read_frames
             frames = read_frames(archive / 'frames.npz')
             assert len(frames) > 1
-            assert all([p[1] for p in sorted(frame['packets'])] == actual for frame in frames)
+            assert [p[1] for p in sorted(frames[0]['packets'])] == actual
+            changes = sum([p[1] for p in sorted(frame['packets'])] != actual for frame in frames)
             report['games'].append(dict(level=level, seed=seed, actual_deck=actual, frames=len(frames),
-                                         archive=str(archive), won=meta['outcome']['won']))
+                                         archive=str(archive), won=meta['outcome']['won'],
+                                         frames_with_changed_seed_bank=changes))
     assert len(report['games']) == 8 and sha(model) == identity
     from train_rollout_policy import load
     loaded = load(frames_dir, labels, cache_dir=OUT / 'smoke_cache', obs='v2', cells=True, packet_head='identity')
     assert len(loaded) == 10 and loaded[-1].shape == (len(loaded[2]), 10, 4)
     assert loaded[0].shape[0] > 8
     report['training_loader'] = dict(rows=loaded[0].shape[0], obs='v2', cell_targets=True, packet_head='identity')
+    import torch
+    import torch.nn.functional as F
+    from pvz_rollout_policy import RolloutNet
+    torch.set_num_threads(1)
+    torch.manual_seed(19019)
+    free = torch.nonzero((loaded[2] > .5) &
+                         (loaded[-1][torch.arange(len(loaded[2])), loaded[3].clamp(min=0), 3] == 0)).flatten()
+    assert len(free) > 0
+    selected = free[:128]
+    net = RolloutNet(8, 'meanmax', obs='v2', row_pool=True, packet_head='identity')
+    output = net(loaded[0].batch(selected, 'cpu'), loaded[1].batch(selected, 'cpu'),
+                 loaded[3][selected], packet_info=loaded[-1][selected])
+    loss = F.cross_entropy(output['packet'], loaded[3][selected])
+    assert torch.isfinite(loss) and loss < 100
+    loss.backward()
+    assert all(p.grad is None or torch.isfinite(p.grad).all() for p in net.parameters())
+    report['free_card_cpu_gradient_preflight'] = dict(rows=len(selected), eligible_rows=len(free),
+                                                     packet_cross_entropy=float(loss.detach()), finite_gradients=True)
     # The replay entry uses the archive's deck and checkpoint; never consult a changed task manifest.
     from episode_query import _replay_task_extra
     from render_episode import collect
