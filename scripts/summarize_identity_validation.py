@@ -33,6 +33,7 @@ def games(folder, task, seeds):
 
 def summarize():
     # Check evidence rather than treating an existing completion marker as sufficient.
+    import numpy as np
     import torch
     torch.set_num_threads(1)
     plan_path = OUT / 'validation_plan.json'
@@ -56,6 +57,9 @@ def summarize():
     checkpoint = torch.load(model_path, map_location='cpu', weights_only=True)
     baseline_path = SOURCE / 'artifacts/student/dw3s1/model.pt'
     baseline = torch.load(baseline_path, map_location='cpu', weights_only=True)
+    reference_path = ROOT / 'MEMORY/docs/task19-dw3s1-reference.json'
+    reference_proof = read(reference_path)
+    assert sha(baseline_path) == reference_proof['checkpoint_sha256_at_audit']
     assert checkpoint['packet_head'] == 'identity' and checkpoint['row_pool']
     assert checkpoint['width'] == checkpoint['plant_embedding_dim'] == 64
     assert len(checkpoint['history']) == 12 and 'max_steps' not in checkpoint
@@ -91,6 +95,8 @@ def summarize():
             reference, base_config = games(base_folder, task, plan['evaluation_seeds'])
             assert base_config['rollout_policy'] == str(baseline_path)
             assert sum(reference.values()) == plan['reference_dw3s1_d7_wins'][level-7]
+            assert sha(base_folder / 'games.jsonl') == reference_proof['tasks'][task]['games_sha256']
+            assert sha(base_folder / 'config.json') == reference_proof['tasks'][task]['config_sha256']
             row['reference_dw3s1'] = dict(won=sum(reference.values()),
                 delta_wins=sum(actual.values())-sum(reference.values()),
                 delta_pp=100*(sum(actual.values())-sum(reference.values()))/256,
@@ -103,6 +109,24 @@ def summarize():
     smoke_path = ROOT / 'MEMORY/docs/task19-perturbation-smoke.json'
     smoke = read(smoke_path)
     assert smoke['complete'] and len(smoke['games']) == 8 and smoke['training_loader']['rows'] == 6192
+    smoke_archives = []
+    for game in smoke['games']:
+        archive = Path(game['archive'])
+        meta = read(archive / 'meta.json')
+        actual_task = meta['task']
+        assert actual_task['deck'] == game['actual_deck']
+        assert actual_task['seed'] == game['seed'] and actual_task['level'] == game['level']
+        assert actual_task['checkpoint_sha256'] == smoke['model_sha256']
+        assert meta['outcome']['won'] == game['won']
+        with np.load(archive / 'frames.npz', allow_pickle=False) as stored:
+            frames = [json.loads(line) for line in stored['frames'].tobytes().splitlines()]
+        assert len(frames) == game['frames']
+        assert [p[1] for p in frames[0]['packets']] == actual_task['deck']
+        changed = sum([p[1] for p in f['packets']] != actual_task['deck'] for f in frames)
+        assert changed == game['frames_with_changed_seed_bank']
+        smoke_archives.append(dict(level=game['level'], seed=game['seed'], frames=len(frames),
+            meta_sha256=sha(archive / 'meta.json'), frames_sha256=sha(archive / 'frames.npz')))
+    assert sum(g['frames'] for g in smoke_archives) == 6200
     manifest = read(ROOT / 'artifacts/stage4/day_panel_identity.json')
     assert sha(ROOT / 'artifacts/stage4/day_panel_identity.json') == smoke['manifest_sha256']
     engineering_path = ROOT / 'MEMORY/docs/task19-engineering-validation.json'
@@ -120,13 +144,16 @@ def summarize():
     return dict(completed_at=datetime.now(timezone.utc).isoformat(), complete=True,
         scope='one corrected seed1 dw3+identity+row_pool model; all eight predeclared 256-game groups',
         model_sha256=sha(model_path), baseline_model_sha256=sha(baseline_path),
+        baseline_reference_sha256=sha(reference_path),
         plan_sha256=sha(plan_path), evaluation_freeze_sha256=sha(OUT / 'evaluation_freeze.json'),
         training=dict(epochs=12, labels=len(plan['labels']), archives=sum(plan['archive_counts'].values()),
                       data_memory=data_memory, final_epoch=checkpoint['history'][-1], resources=train['result'],
                       recipe_matches_dw3s1=recipe_keys),
         evaluation=dict(games=sum(r['games'] for r in results), tasks=results),
         perturbation=dict(generation_audit=manifest['generation_audit'], smoke_sha256=sha(smoke_path),
-                          smoke_games=8, loaded_rows=6192, heldouts='initial unordered card sets'),
+                          smoke_games=8, loaded_rows=6192, heldouts='initial unordered card sets',
+                          smoke_archives=smoke_archives,
+                          live_replay_scope='one archived eight-action prefix, plus archived-deck replay unit tests'),
         engineering=dict(validation_sha256=sha(engineering_path), unique_identity_tests=30,
                          slot_exact_configurations=24, trained_parity_sha256=sha(parity_path),
                          trained_cpu_max_abs_error=parity['maximum_abs_error'],

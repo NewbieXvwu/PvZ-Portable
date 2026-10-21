@@ -1,0 +1,40 @@
+{
+  "recorded_at": "2026-10-21T11:01:58.238627+00:00",
+  "checkpoint_sha256_at_audit": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+  "checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/student/dw3s1/model.pt",
+  "scope": "existing reference games audited before any identity evaluation; historical wins supplied in task19; no historical binary hash asserted",
+  "tasks": {
+    "day_l7_eval_d7": {
+      "games": 256,
+      "won": 248,
+      "workers": "6",
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable",
+      "games_sha256": "6ebb2edf163aa267ea8fac08a2f7447186cfb7c5e36855678c31a975aa00f8d9",
+      "config_sha256": "554717e1844ef4a7484aff2e61a3261c753206b07b5b0bfb64d7427350deff34"
+    },
+    "day_l8_eval_d7": {
+      "games": 256,
+      "won": 251,
+      "workers": "6",
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable",
+      "games_sha256": "927ae28a8ecea3efdb1cffd3bba7bbf71d918c436784d9ec1b1feec1a66e2c03",
+      "config_sha256": "6011e1e2fde54135bb003d1a13c4363ea9902337341c9245940987f939904cab"
+    },
+    "day_l9_eval_d7": {
+      "games": 256,
+      "won": 229,
+      "workers": "6",
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable",
+      "games_sha256": "38e971556fb376e7c17f95f15feff5b54396c76efdb0e821b7b434af202a2158",
+      "config_sha256": "b82a2685c8d22272a1a761bc1b6efccf84d1b87f82851e03200764e2ad1e2d92"
+    },
+    "day_l10_eval_d7": {
+      "games": 256,
+      "won": 237,
+      "workers": "6",
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable",
+      "games_sha256": "82c8489e666ede596fd5fdef98b9e4d0bd0015cbdd0333b05d0e696ad02395a4",
+      "config_sha256": "4fba2275f30b83ace876b96886a3513a1c57f6f973a59f17c62a1ca5d78d9005"
+    }
+  }
+}
