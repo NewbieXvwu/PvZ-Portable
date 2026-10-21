@@ -101,7 +101,7 @@ def main():
                 limitations=['Two fixed training seeds, no best-seed/epoch selection or production promotion.',
                              'Many data sources are added together; not an attribution study of any individual source.',
                              'Additional data also changes the seed-based validation split and optimizer-step count.',
-                             'v34 is a slot model; night and changed-deck results also reflect slot identity mismatch.',
+                             'v34 uses slot heads: perturbations reorder identities; n9 preserves the first seven slots but adds two untrained slots; conveyors shift identities.',
                              'L10 holdouts test initial-deck generalization; later conveyor refills are not held out.',
                              'Training RSS peaks sum process RSS and may count shared pages repeatedly.'])
     destination=ROOT/'MEMORY/docs/task23-results.json';write(destination,result)
@@ -131,7 +131,7 @@ def main():
             '两个模型均上传HF transfer/dw4i_s{1,2}_model.pt，并回读核对内容。'
             'Mac与缺失标签按[冻结计划](task23-study-plan.json)记账，原始首批导入见[记录](task23-mac-import.json)。',
             '', 'L10三套留出保持task23指定的初始牌语义，后续仍由原生传送带补卡；原版L10/L20是10空槽开局。'
-            'v34的夜间/换卡成绩混有slot错位，不能当作纯粹地形策略差异。'
+            'v34在扰动卡组上混有slot错位；n9保留原七槽顺序但新增两槽未训练，传送带还会动态移槽，不能把这些比较当作纯粹地形策略差异。'
             '此试验同时加入多种数据，不能归因到单一来源；只报告固定两种子，不宣称总体非劣，不晋升默认/生产模型。']
     report=ROOT/'MEMORY/docs/unified-panel.md';report.write_text('\n'.join(lines)+'\n')
     verify(plan)
