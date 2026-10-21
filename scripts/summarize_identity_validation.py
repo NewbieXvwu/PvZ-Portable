@@ -182,6 +182,7 @@ def summarize():
             'The eight perturbation smoke archives are not added to this existing-data training pilot.',
             'Baseline used six workers and a separate native build; counts are not a throughput comparison.',
             'Full interactive whole-deck warning checks and optional trunk embedding sharing are omitted.',
+            'CPU parity is judged at the reference float32 noise floor (1e-5 absolute + 1e-5 relative + twice the measured reference noise); a bare absolute 1e-5 is unreachable because the reference itself is 1.3e-5 from exact.',
             'No default or production model promotion; CUDA explicitly rejects PVZRN006.'
         ])
 

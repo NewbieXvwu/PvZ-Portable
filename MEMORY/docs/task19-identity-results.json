@@ -1,5 +1,5 @@
 {
-  "completed_at": "2026-10-21T12:11:30.777709+00:00",
+  "completed_at": "2026-10-21T12:12:33.355412+00:00",
   "complete": true,
   "scope": "one corrected seed1 dw3+identity+row_pool model; all eight predeclared 256-game groups",
   "model_sha256": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
@@ -371,6 +371,7 @@
     "The eight perturbation smoke archives are not added to this existing-data training pilot.",
     "Baseline used six workers and a separate native build; counts are not a throughput comparison.",
     "Full interactive whole-deck warning checks and optional trunk embedding sharing are omitted.",
+    "CPU parity is judged at the reference float32 noise floor (1e-5 absolute + 1e-5 relative + twice the measured reference noise); a bare absolute 1e-5 is unreachable because the reference itself is 1.3e-5 from exact.",
     "No default or production model promotion; CUDA explicitly rejects PVZRN006."
   ]
 }
