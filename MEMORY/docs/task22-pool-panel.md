@@ -37,4 +37,6 @@
 
 ## 结果
 
+- 2026-10-22 第一步（清单）：`make_night_panel.py` 的通用逻辑抽到 `scripts/zone_panel.py`（按区生成：`Zone` + `Family`），`make_night_panel.py` 变薄包装且 `--combined` 输出与 task21 逐字节相同（cmp 通过）；新增 `scripts/make_pool_panel.py`，生成 `artifacts/stage4/pool_panel.json`（不进 git）：27 个任务（L21–24、26–30 × 3 套卡组，各 1024 种子 30000–31023）。L25（3-5）源码核对是 **Little Trouble**（`IsLittleTroubleLevel`，传送带 + 僵尸点数×4 + 半尺寸 1/4 血），默认排除；L30（3-10）是 mini-boss 传送带，收进来并标注。三套卡组均过 AGENTS §8 核对（水路有睡莲 16、香蒲 43 由 `profile_for_deck` 声明所有权、长度 9、无重复）。
+
 ## 问题
