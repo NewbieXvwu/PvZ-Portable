@@ -150,8 +150,11 @@ Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 是 glibc 比 macO
 
 按 16 worker 折算：改前 16 × 454 ≈ 7.3 GB；改后 221 + 16 × 125 ≈ 2.2 GB。
 台式机的 650 MB 里 torch 更大、glibc 高水位更高，共享掉的那份也更大，
-但**这是折算，不是台式机实测**，别当结论用。glibc 那边 `malloc_trim` 每局回收一次，
-理论上还能再低一些；反过来，如果台式机的高水位来自我们没测到的别的分配，折算会偏乐观。
+但**这是折算，不是台式机实测**，别当结论用。
+
+> 台式机已经实测过了（见下面的"台式机复核"）：改前每 worker RSS 峰值 594.9 / 590.5 MB、
+> 私有脏页 393.7 / 391.5 MB；改后每 worker 私有脏页 43–62 MB、PSS 143–181 MB，
+> 逐位一致。折算的方向对，绝对数要看那一节。
 
 ### 4. 逐位比对
 
@@ -183,6 +186,96 @@ Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 是 glibc 比 macO
 
 ---
 
+## 台式机复核（Linux，fork + glibc，2026-10-21）
+
+### 1. 环境与跑法
+
+| | |
+|---|---|
+| 机器 | 20 核 / 24 GB，load average 13–22（正式采集 16 worker + 训练同时在跑；没有动任何 tmux 队列） |
+| 代码 | `origin/slimworker` @ `67c12e5` → 工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/slimworker` |
+| 改前 | `/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool` @ `46e34cb`（= `origin/pvz-env`），只读，用它自己那份 build |
+| 编译 | `cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j4`，GCC 15.2.0，产物 5 256 368 B（与 rowpool 那份同样大小；sha 不同只是因为编译路径写进了二进制） |
+| Python | `/home/newbiexvwu/.venvs/ml/bin/python3` 3.14.4，torch 2.14.0+cu132，numpy 2.5.2 |
+| 网络 | student v33、`artifacts/value_net/v3`、`artifacts/hard/value_branch1` |
+| 任务 | `day_l9_train_d7`，种子 1826000–1826007（8 局），2 worker，`--verify-samples 9 --student-candidates 2 --dagger-beta 0`，带 `--frames` |
+
+采样器是独立进程（不碰被测代码），0.25 s 一次读 `/proc/<pid>/status`（VmHWM）与 `smaps_rollup`
+（Pss / Pss_Anon / Private_Dirty）。两条坑写在脚本注释里：
+
+- 角色要按 `/proc/<pid>/comm` 判，不能按 cmdline —— fork 出来的 worker 继承了 argv，而 argv 里有
+  `--executable .../pvz-portable`，第一版把每个 worker 都当成了模拟器（于是 `workers=[]`）；
+- 子进程要从 `/proc/<pid>/task/*/children` 全线程找。只看主线程那份的话，第一局之后由
+  multiprocessing 的 handler 线程 fork 出来的 worker 全都看不见（第二版量到的"峰值"只覆盖第一局）。
+
+### 2. 逐位比对
+
+    python scripts/compare_run_bytes.py /tmp/slim_out_base2 /tmp/slim_out_slim3
+    games.jsonl: 8 rows compared
+    archives: 8 compared
+    identical
+
+跑了两遍（第一遍 base/slim，第二遍 base2/slim3），两遍都 `identical`：8 行 `games.jsonl`、
+8 个 `frames.npz`（逐数组 + 帧 JSON）+ `meta.json`。决策数与胜负也对上
+（1235 / 1280 / 1170 / 1152 / 1099 / 1176 / 1169 / 1182，7 胜 1 负）。
+
+### 3. 每 worker 内存
+
+Linux 上"每 worker RSS"和 Mac 不是一回事：fork 出来的子进程 RSS 里包含它和父进程共享的那些页
+（父进程带着 torch，RSS 552.6 MB），所以 RSS 会显得和父进程一样大。三个口径一起给：
+
+| 口径 | 改前（spawn，2 worker） | 改后（fork，8 局 = 8 个 worker） |
+|---|---|---|
+| 每 worker RSS 峰值（VmHWM） | **594.9 / 590.5 MB** | **394.3 / 393.9 MB**（其余 392.4 / 391.9 / 380.9 / 380.2 / 374.8 / 373.9） |
+| 每 worker PSS 峰值 | **401.7 / 399.1 MB** | **181.0 / 162.3 MB**（其余 143.6–162.3） |
+| 每 worker 私有脏页峰值（Private_Dirty） | **393.7 / 391.5 MB** | **61.7 / 51.7 MB**（8 局 42.9–61.7） |
+| 模拟器 RSS 峰值 | 208.8 MB | 208.9 MB（没动它，符合预期） |
+| 父进程 | ~30 MB（spawn 不在父进程载网络） | 552.6 MB RSS / 134.9 MB PSS（全轮就这一份 torch） |
+| 墙钟（8 局，2 worker） | 693.1 s | 609.2 s |
+| 每局均值 | 168.3 s | 147.8 s |
+
+怎么读这张表：
+
+- **任务书的 650 MB 在台式机上复现了**：改前两个 worker 的 RSS 峰值 594.9 / 590.5 MB，
+  第一遍（load 更低）是 650.5 / 640.5 MB —— 650 就是 spawn worker 各自 import 一遍 torch。
+- **RSS 那一行不能直接拿去和 250 MB 比。** fork 之后 worker 的 RSS 是从父进程继承来的
+  （父 552.6 MB），它量的是"这个进程地址空间里驻留了多少页"，不是"它自己花了多少"。
+  一个 8 局全跑完的 worker 私有脏页只有 43–62 MB，PSS 143–181 MB。
+- 能横向比的是 **PSS 402 → 181 MB（-55%）** 与 **私有脏页 394 → 62 MB（-84%）**。
+  私有脏页才是"多开一个 worker 这台机器要多掏多少"：改前每个 worker 394 MB（torch 每人一份，
+  PSS 里几乎全是私有），改后 torch 只剩父进程那一份（134.9 MB PSS），每 worker 43–62 MB。
+- 整棵树同一时刻的 PSS 之和（对局中途实测快照）：父 134.9 + 两个 worker 121.3 / 122.1 +
+  两个模拟器 196.2 × 2 = **781 MB**；改前光是两个 worker 的 PSS 就是 401.7 + 399.1 = 801 MB，
+  还没算模拟器。
+- 按 16 worker 折算：改前 torch 的私有部分 16 × 394 ≈ 6.3 GB；改后 135 MB + 16 × ~60 ≈ 1.1 GB。
+
+### 4. 墙钟
+
+两遍之间没有一致的差异：第一遍 640.3 s（改前）vs 669.0 s（改后），第二遍 693.1 vs 609.2。
+这台机器 load 在 13–22 之间跳（正式采集 16 worker + 训练），同一份代码自己两遍就差 8%。
+按每局均值看也是交叉的：改前 157.2 / 168.3，改后 163.0 / 147.8。
+结论：**在这个负载下量不出改动的耗时影响**；能确定的是每决策路径的工作量没变（分批前向的总行数不变），
+每局只多一次 fork 与一次模拟器启动。
+
+### 5. 和 Mac 的数字为什么对不上
+
+Mac 上每 worker 峰值 124.8 MB，这里 PSS 181 MB、RSS 394 MB —— 三个数不是同一件事：
+
+- Mac 的 124.8 是 psutil 的 RSS，但 macOS 不把子进程没摸过的继承页算进它的 RSS（父 221 MB，子 124.8 < 父），
+  所以它更接近"私有 + 摸过的"这个口径；
+- Linux 的 394 是 VmHWM，把共享页算进去了（父进程那 552.6 MB 里的大部分）；
+- Linux 的 181 是 PSS，把共享页按使用者摊开 —— 这个才和 Mac 那个数可以并列看。
+
+两边都是"torch 一份 + 每 worker 几十 MB"，差别在分配器和记账方式，不在代码。
+
+### 6. `malloc_trim` 在台式机上已经多余
+
+glibc 的 `malloc_trim(0)` 在台式机上会真的归还（Mac 上那个 no-op 的坑见问题 §4），但它在每局结束时才调一次，
+而 fork 平台每局结束本来就回收进程 —— 所以它对**对局内**的峰值没有任何影响，对最终数字也没贡献。
+它只在把 `maxtasksperchild` 去掉时才有意义。这一条是读代码得出的，没有单独做对照实验。
+
+---
+
 ## 问题
 
 1. **任务书的 `--seed-offset 60000` 越界。** `day_l9_train_d7` 只有 8192 个种子（1820000–1828191），
@@ -204,9 +297,15 @@ Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 是 glibc 比 macO
    8 局耗时在 366–412 s 之间波动。改动本身只在 fork / 初始化 / 每局结束时各多一次调用，
    每决策路径没有增加任何工作（分批前向的总行数不变）。
 6. **RSS 会把共享页重复计数。** 子进程的 RSS 里包含它已经摸过（因此被写时复制）的那部分父进程页，
-   所以 fork 之后"每 worker RSS"不等于"这台机器多花了多少内存"。真正省下来的是
-   **torch 那一份（213 MB）从 16 份变成 1 份**，加上每个 worker 少摸约 150 MB 的继承页。
-   要看机器总量请用各进程 private 之和，不要用 RSS 之和。
+   所以 fork 之后"每 worker RSS"不等于"这台机器多花了多少内存"。要看机器总量请用各进程 PSS /
+   私有脏页之和，不要用 RSS 之和（台式机实测把这笔账算清楚了，见问题 §8 与"台式机复核"§3）。
 7. **`psutil.Process()` 在 fork 出来的子进程里会报父进程的内存。** 第一轮的"对局内数字全平"就是它：
    在 fork 之前建的 `Process` 对象带着父进程的 task 句柄，子进程里 `memory_info()` 一直返回父进程的值。
    要么每次新建 `psutil.Process()`，要么从外面采样。这一条差点让整轮的归因停在"帧列表"上。
+8. **"每 worker RSS 250 MB"这条指标在 Linux + fork 上不成立，要换成 PSS / 私有脏页。**
+   fork 出来的 worker 的 RSS 天生包含父进程那 552.6 MB 里的共享页，实测 394 MB —— 它反映的是
+   "地址空间里驻留了多少"，不是"这个 worker 花了多少"。同一份代码在 Mac 上是 124.8 MB（macOS 不把
+   没摸过的继承页算进子进程 RSS），两边不能直接比。台式机上真正可比的是 PSS 181 MB 与私有脏页 62 MB，
+   改前分别是 402 / 394 MB。**下次派任务时，Linux 侧的门槛请写成"私有脏页 / PSS"，别写 RSS。**
+9. **台式机上 `malloc_trim` 已经是多余的。** glibc 会真的归还，但它每局结束才调一次，而 fork 平台每局
+   结束本来就回收进程；对局内峰值它一分钱没省。要留着它只在去掉 `maxtasksperchild` 时才有意义。
