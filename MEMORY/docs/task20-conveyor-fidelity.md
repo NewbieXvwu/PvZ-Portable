@@ -65,6 +65,8 @@ task19 的 identity 头按植物身份出卡、逐槽读“种类 / 可用 / 冷
 
 - 2026-10-21，训练运行闸门补齐：独立guard_conveyor_training守卫在本试验训练期间遇到其他train脚本时暂停自有控制+训练子树，别人结束且可用≥3GiB再恢复，不修改冻结实验源。受控普通父子进程实测暂停/恢复、外部进程不受影响、保留原先已暂停子进程均通过；这不是实际GPU并训测试，暂停也不释放既有显存。进程身份在artifacts/task20/gpu_yield_controller.process.json。
 
+- 2026-10-21，5完成（重新核验）：原版学生v34 244/256、对齐identity 256/256，老师beta=1 64/64（同前64种子v34 58/64）。逐seed/config/均值摘要/冻结身份重读通过，结果见task20-baseline.json与day-panel第9节；两轮采集继续beta=0。
+
 ## 问题
 
 - 2026-10-21 接管复核更正：原 C++ identity 输入没有使用原版标志，affordable/global-ready仍按阳光计算；原search_play/collect meta及whatif未传conveyor_start，静态清单校验仍拒绝空deck/None wave_cap。已只在conveyor修复，31项目标检查通过（含40个真实原版局面Python/C++一致、回放传字段与清单契约），旧slot输入/旧任务episode字段不变。原identity 247/256基线须重评对齐后的输入；保留旧文件，不混作新基线。
