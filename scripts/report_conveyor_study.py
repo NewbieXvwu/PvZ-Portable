@@ -202,9 +202,12 @@ def report(final):
         assert len(parity['games']) == 2 and all(r['identical_except_seconds'] for r in parity['games'])
         for name, digest in parity['source_files'].items():
             assert sha(ROOT/name) == digest
+        gpu_guard = read(OUT/'gpu_guard_check.json')
+        assert gpu_guard['source_sha256'] == sha(ROOT/'scripts/guard_conveyor_training.py')
+        assert all(gpu_guard[k] for k in ('pause_resume_real_tree', 'foreign_process_untouched', 'preserved_preexisting_stop'))
         result.update(complete=True, evaluation=evaluation, evaluated_games=1024,
                       engineering=dict(legacy_contract=compatibility, collector_cpp_full_game_metrics=parity,
-                                       targeted_tests=31, test_log_sha256=sha(tests)),
+                                       targeted_tests=31, test_log_sha256=sha(tests), training_gpu_guard=gpu_guard),
                       limitations=['One fresh training seed: descriptive pilot, no population-level noninferiority claim.',
                                    'More data also changes the seed-based validation split and optimizer-step count.',
                                    'v34 baseline inherited from cb; historical executable hash unavailable.',
