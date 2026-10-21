@@ -1,0 +1,20 @@
+{
+  "scope": "Same trained identity checkpoint on full original-conveyor games: Python collector path versus C++ whole-game path",
+  "games": [
+    {
+      "seed": 30001,
+      "decisions": 816,
+      "identical_except_seconds": true
+    },
+    {
+      "seed": 30000,
+      "decisions": 752,
+      "identical_except_seconds": true
+    }
+  ],
+  "source_files": {
+    "artifacts/task20/review_smoke_identity/games.jsonl": "1d504bdd7ca062cb4ce7834025a18bb483cee36071e0e7ec27648e8a070739d0",
+    "artifacts/task20/base_identity_aligned/games.jsonl": "a24aed2d1305c10da7e26a5cf1d8067885ac924f09df3efd39d18066cb705a82"
+  },
+  "limitation": "Full game result fields only; not a per-decision logit or action-sequence comparison."
+}

@@ -192,11 +192,15 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		const int kind = std::min(static_cast<int>(packet.mPacketType), 53);
 		const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
 		if (kind < 0) continue;
-		const float ready = packet.mActive && state->mSunMoney >= cost;
+		// Identity packet inputs follow the original-start engine flag, just like packet_features.
+		// Legacy slot students keep their established scalar encoding on every task.
+		const bool affordable = state->mSunMoney >= cost ||
+			(identityPacket && app->mEnvironmentTaskSpec.originalConveyorStart && state->HasConveyorBeltSeedBank());
+		const float ready = packet.mActive && affordable;
 		const float progress = std::min(1.0, packet.mActive || !packet.mRefreshTime ? 1.0 :
 			static_cast<double>(packet.mRefreshCounter) / packet.mRefreshTime);
 		packetInfo[index] = {static_cast<float>(kind), static_cast<float>(packet.mActive), progress,
-			static_cast<float>(state->mSunMoney >= cost)};
+			static_cast<float>(affordable)};
 		scalars[5 + kind] = identityPacket ? std::max(scalars[5 + kind], ready) : ready;
 		scalars[59 + kind] = identityPacket ? std::max(scalars[59 + kind], progress) : progress;
 	}

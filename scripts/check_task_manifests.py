@@ -167,19 +167,26 @@ def _task_signature(task: dict[str, Any]) -> tuple[Any, ...]:
 def _validate_task(task: dict[str, Any]) -> None:
     required = {"task_id", "terrain", "level", "deck", "zombie_count_multiplier", "wave_cap",
                 "sun_start", "preplanted", "playthrough", "seeds"}
-    if set(task) != required:
+    if set(task) - {"conveyor_start"} != required:
         raise AssertionError(f"{task.get('task_id')}: incomplete task fields")
+    original = task.get('conveyor_start') == 'original'
+    if task.get('conveyor_start') not in (None, 'original'):
+        raise AssertionError(f"{task['task_id']}: invalid conveyor_start")
+    if original:
+        from pvz_tasks import conveyor_belt_level
+        if task['deck'] or not conveyor_belt_level(task['level']):
+            raise AssertionError(f"{task['task_id']}: original conveyor requires empty deck and conveyor level")
     if terrain_for_level(task["level"]) != task["terrain"]:
         raise AssertionError(f"{task['task_id']}: terrain does not match level")
     if task["playthrough"] != 2 or not 1 <= task["sun_start"] <= 10000:
         raise AssertionError(f"{task['task_id']}: unsupported playthrough or sun_start")
-    if not task["deck"] or len(task["deck"]) > 10 or len(set(task["deck"])) != len(task["deck"]):
+    if (not task["deck"] and not original) or len(task["deck"]) > 10 or len(set(task["deck"])) != len(task["deck"]):
         raise AssertionError(f"{task['task_id']}: invalid deck")
     if any(type(seed) is not int or not 0 <= seed <= 48 for seed in task["deck"]):
         raise AssertionError(f"{task['task_id']}: invalid deck seed type")
     if not 1.0 <= task["zombie_count_multiplier"] <= 10.0:
         raise AssertionError(f"{task['task_id']}: invalid zombie_count_multiplier")
-    if type(task["wave_cap"]) is not int or not 1 <= task["wave_cap"] <= 50:
+    if not (original and task['wave_cap'] is None) and (type(task["wave_cap"]) is not int or not 1 <= task["wave_cap"] <= 50):
         raise AssertionError(f"{task['task_id']}: invalid wave_cap")
     if any(len(plant) != 3 or not 0 <= plant[0] <= 48 or not 0 <= plant[1] <= 5 or not 0 <= plant[2] <= 8
            for plant in task["preplanted"]):
@@ -271,9 +278,13 @@ def _validate_environment(train: dict[str, Any], heldout: dict[str, Any], resour
                 profile=profile_for_deck(task["deck"]),
                 zombie_count_multiplier=task["zombie_count_multiplier"],
                 wave_cap=task["wave_cap"], preplanted=tuple(tuple(item) for item in task["preplanted"]),
+                conveyor_start=task.get("conveyor_start"),
             )
             observation, _ = env.reset(deck=task["deck"], task=spec)
-            if observation["sun"] != task["sun_start"] or observation["wave_count"] != task["wave_cap"]:
+            # wave_cap=None means "no cap": the board keeps the engine's own wave count, so
+            # only capped tasks can be compared against it.
+            wave_ok = task["wave_cap"] is None or observation["wave_count"] == task["wave_cap"]
+            if observation["sun"] != task["sun_start"] or not wave_ok:
                 failures.append(
                     f"{task['task_id']}: reset sun={observation['sun']} wave_count={observation['wave_count']} "
                     f"expected sun={task['sun_start']} wave_count={task['wave_cap']}"

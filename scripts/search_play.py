@@ -857,15 +857,16 @@ def _play(job: dict) -> dict:
                                  "".join(frames).encode())
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
-        if 'deck_perturb' in task_definition:
+        if 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original':
             import hashlib
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
                                 policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
                                 checkpoint_sha256=hashlib.sha256(Path(args.rollout_policy).read_bytes()).hexdigest(),
                                 task_id=args.task_id, first_aid_owned=kw.get('first_aid_owned', False),
                                 **{k: v for k, v in kw['task_extra'].items() if v is not None})
-            archive_task['deck_perturb'] = task_definition['deck_perturb']
-            archive_task['base_deck'] = task_definition['deck']
+            if 'deck_perturb' in task_definition:
+                archive_task['deck_perturb'] = task_definition['deck_perturb']
+                archive_task['base_deck'] = task_definition['deck']
             archive_outcome.update(final_tick=obs['tick'], wave_count=_frame(obs)['scene'].get('wave_count', 0),
                                    reason='win' if obs.get('result') == 1 else 'not_won')
         (archive / "meta.json").write_text(json.dumps({

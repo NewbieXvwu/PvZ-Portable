@@ -91,6 +91,9 @@ struct EnvironmentTaskSpec
 	// never the original final-wave/flag/ambush mechanics.
 	int originalWaveCount = 0;
 	std::vector<EnvironmentPreplanted> preplanted;
+	// Conveyor levels only: leave the engine's own seed bank (10 empty packets) in place and
+	// let Challenge::UpdateConveyorBelt deal cards, instead of writing the task deck into it.
+	bool originalConveyorStart = false;
 };
 
 class LevelStats

@@ -46,4 +46,35 @@ task19 的 identity 头按植物身份出卡、逐槽读“种类 / 可用 / 冷
 
 ## 结果
 
+- 2026-10-21，1完成（原版开局选项）：`RESET_V2` 新增可选尾标记 `conveyor_original`（旧任务报文逐字节不变），传送带关设了它时 reset 不写卡组、不 `UpdateWidth`，保留 `Board::InitLevel` 给的 10 格空传送带、之后由 `Challenge::UpdateConveyorBelt` 发卡；非传送带关设了直接拒绝。空卡组在报文里写 `-`。观测只在原版开局任务里多一个 `conveyor_start` 键（旧观测不变）；Python `TaskSpec.conveyor_start`、空卡组 `profile_for_deck`（6 槽）、`packet_features` 按引擎标志把传送带卡视为买得起、`training_task_kwargs`/`collect`/清单校验全部接通。实测：L10 开局 10 个空槽、tick 240 出现首卡、可堆满 10 张；L7 设了被拒；dw3s1 在 `day_l10_eval_d7` 的 30000–30007 八局与既有 `dw3s1_l10_d7_256/games.jsonl` 除 `seconds` 外逐字段相同；27 项既有测试通过。
+- 2026-10-21，2完成（观测核对）：传送带卡的 `active` 由 `SeedPacket::AddSeed` 直接置 true（SeedPacket.cpp:1010-1035），不经过 `SetPacketType` 的冷却分支；`CanPickUp`（SeedPacket.cpp:686-720）在传送带关跳过阳光检查，合法动作 = `CanPickUp` ∧ `CanPlantAt`（LawnApp.cpp:1726-1741）。所以观测里的标称 cost / affordable 与引擎合法性**不一致**：已在观测里由引擎回 `conveyor_start`，`packet_features` 只在原版开局任务上按它判买得起（旧任务逐字节不变，见 6 项新测试）。滑动：`CanPickUp` 不读 `mOffsetX`，只有 `MouseHitTest` 读（SeedPacket.cpp:898-917）；实测首卡出现那一帧 `legal_actions` 已非空，所以滑动不影响可点性，**不需要**新特征。张数仍由非空槽数得出，未加手工特征。
+
+- 2026-10-21，3完成（任务族）：`scripts/make_day_panel.py` 生成 `day_l10_orig_eval`（deck `[]`、`conveyor_start: original`、种子 30000–31023）与 `day_l10_orig_train`（同字段、种子 1880000–1888191，避开 task19 的 184–187 万段）；旧 `day_l10_eval` / `day_l10_eval_d7` 保留不动。`deck_for_level(level, conveyor_start="original")` 返回空卡组，`conveyor_belt_level()` 从 `IsMiniBossLevel` 映射 10/20/30；清单校验接受空卡组与 `wave_cap=None`。
+
+- 2026-10-21，4完成（冒烟）：[6 局证据](task20-smoke.json)。`day_l10_orig_eval` 种子 30000/30001：v34 学生 2/2 胜（855/966 决策）、identity 学生 2/2 胜（773/934）、老师（v34+搜索，queue100 参数）2/2 胜（863/779 决策，193/196 次搜索）。开局空槽、等卡期间没有报错；老师与学生都能在只有空槽的局面下等待。
+
+- 2026-10-21，5部分完成（基线，`day_l10_orig_eval`）：v34 学生 **244/256**（95.3%，均 867.5 决策）、identity 学生 **247/256**（96.5%，均 853.8），各 4 worker、种子 30000–30255；老师 64 局交接时仍在跑（20/64，见“问题”）。
+- 2026-10-21，交接状态：步骤 1–4 已全部提交（`f0132d8` 原版开局、`7c1d153` 观测核对+任务族+6 局冒烟、`836c55f` DESIGN §14.8），工作区干净；本文件的数值/冒烟证据在 `task20-smoke.json`。
+- 2026-10-21，6未开始：DAgger 采集（2×128）、训练、评估都没有启动；训练数据镜像 `artifacts/task20/frames_v2`（私有普通目录，旧种子目录逐个软链到主树，新188万种子只建私有目录，未写主树）已备好。
+
+- 2026-10-21，复核后预检：修正后的identity学生原版2局2胜，2份真实采集meta均保留空deck/原版模式/模型SHA，两个8动作前缀实际重放均保持10空槽开局。冻结[实验计划](task20-study-plan.json)：老师基线64局beta=1，两轮各128局beta=0；同一冻结identity老师，合并原82标签后从头训seed1原12epoch，再评原版256与七卡L7–L9各256。最多4个自有游戏，2/3GiB内存暂停/恢复，训练须无其他训练且14GiB稳定30秒。
+
+- 2026-10-21，5推进：修正Python/C++原版输入后identity **256/256**，种子30000–30255、4worker、fast无搜索，212.51秒；原247/256仅留历史。v34沿用244/256，老师新目录base_teacher_executed以beta=1启动，原beta=0的24局不并入。流水线控制960045，计划和命令在本树artifacts/task20。
+
+- 2026-10-21，补充实际模型路径核对：两个完整原版种子30000/30001，修正后的identity在Python逐步采集路径与C++整局路径的games.jsonl除seconds外全部字段相同（含决策数/胜负/种植数）；见task20-collector-parity.json。不冒称逐动作序列或logit全对拍。
+
+- 2026-10-21，训练运行闸门补齐：独立guard_conveyor_training守卫在本试验训练期间遇到其他train脚本时暂停自有控制+训练子树，别人结束且可用≥3GiB再恢复，不修改冻结实验源。受控普通父子进程实测暂停/恢复、外部进程不受影响、保留原先已暂停子进程均通过；这不是实际GPU并训测试，暂停也不释放既有显存。进程身份在artifacts/task20/gpu_yield_controller.process.json。
+
+- 2026-10-21，5完成（重新核验）：原版学生v34 244/256、对齐identity 256/256，老师beta=1 64/64（同前64种子v34 58/64）。逐seed/config/均值摘要/冻结身份重读通过，结果见task20-baseline.json与day-panel第9节；两轮采集继续beta=0。
+
+- 2026-10-22，6完成：两轮beta0各128份原版归档，合并原数据38,527份/84标签，seed1 identity+row_pool原12epoch从头训练；原版/L7/L8/L9各256局胜局255/240/246/213。原版对照256→255；完整结果见task20-results.json与day-panel第9节。档案/模式/标签/检查点/源哈希/配方/所有种子实际重读通过；另8局旧任务兼容检查除seconds外逐字段相同。单种子描述性试验，不晋升默认/生产模型。
+
 ## 问题
+
+- 2026-10-21 接管复核更正：原 C++ identity 输入没有使用原版标志，affordable/global-ready仍按阳光计算；原search_play/collect meta及whatif未传conveyor_start，静态清单校验仍拒绝空deck/None wave_cap。已只在conveyor修复，31项目标检查通过（含40个真实原版局面Python/C++一致、回放传字段与清单契约），旧slot输入/旧任务episode字段不变。原identity 247/256基线须重评对齐后的输入；保留旧文件，不混作新基线。
+- 2026-10-21 老师运行状态更正：833286及本树老师进程均已不在，原文件保留24个完整种子30000–30023，停止原因不确定；原作业dagger-beta=0，仅老师标注、学生执行。主控已明确老师64局必须beta=1（搜索执行），DAgger两轮beta=0（学生执行、老师标注），二者分目录重跑，不混比。
+- cb交接时记载老师PID833286仍在运行；接管复核确认已退出、留下24局且beta=0。该条以本节前述更正为准，不向旧目录续写beta=1基线。
+- 下一步建议：跑完老师 64 局并补进 `MEMORY/docs/day-panel.md` 新一节 → 用 identity+v34 老师（queue100 参数）在 `day_l10_orig_train` 采 2 轮各 128 局（offset 0/128，label `d10orig1/2`）→ 训 1 个 identity 种子 → 评 `day_l10_orig_eval` 256 局与 `day_l7/8/9_eval_d7` 各 256 局。
+- 采集时 `--frames` 请写本工作树（`artifacts/task20/frames`），再硬链进 `artifacts/task20/frames_v2`，不要写主工作区。
+
+- 当前接管入口：主流水线PID960045，`artifacts/task20/study_controller.process.json`/`.log`；收尾入口`scripts/finalize_conveyor_study.py`，当前PID见`finalization_controller.process.json`。两个控制进程均为本树自有；先查活性和完成标记，不重复启动或改动冻结20份实验源。基线及最终核验通过后自动只提交/推送origin conveyor的小型结论与文档，不提交模型、原帧或日志。

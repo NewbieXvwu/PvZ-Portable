@@ -1,0 +1,61 @@
+{
+  "manifest_sha256": "01e3ae4f437b7673b3278280e3891bfcb0f65e92ba8bddaeb7b6321713fcdc27",
+  "executable_sha256": "aa6fec3a8ab0a1668a08c3b9d3daaea4832d90961ab598b8d4d1961b06777f34",
+  "task_id": "day_l10_orig_eval",
+  "games": {
+    "v34": {
+      "model_sha256": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+      "arms": "fast",
+      "seeds": [
+        30001,
+        30000
+      ],
+      "won": 2,
+      "decisions": {
+        "30001": 855,
+        "30000": 966
+      },
+      "searched": {
+        "30001": 0,
+        "30000": 0
+      },
+      "games_sha256": "b1c50828ec2bba82023ac371884dc4db1a2f65eb9465d0c9ddefe8b467d5f9f8"
+    },
+    "identity": {
+      "model_sha256": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+      "arms": "fast",
+      "seeds": [
+        30001,
+        30000
+      ],
+      "won": 2,
+      "decisions": {
+        "30001": 773,
+        "30000": 934
+      },
+      "searched": {
+        "30001": 0,
+        "30000": 0
+      },
+      "games_sha256": "bcdfe77707a0b00add4145800f2aaca8ca4167d535e0036f94f83a53ae66558b"
+    },
+    "teacher": {
+      "model_sha256": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+      "arms": "fast_search",
+      "seeds": [
+        30001,
+        30000
+      ],
+      "won": 2,
+      "decisions": {
+        "30001": 863,
+        "30000": 779
+      },
+      "searched": {
+        "30001": 196,
+        "30000": 193
+      },
+      "games_sha256": "d601ba313ceafc0762b4a43af808b83a86047d3a72cb7c96e9e635ba15dc75b7"
+    }
+  }
+}

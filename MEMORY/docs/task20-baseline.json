@@ -1,0 +1,72 @@
+{
+  "completed_at": "2026-10-21T15:18:43.497191+00:00",
+  "complete": false,
+  "study_plan_sha256": "342e371d2d10c4a2daeb16f9a693e9d566f08168d024402125e9f991a4646bd6",
+  "executable_sha256": "fe5d3993b7e910f647a9dd940483976de5398616311e5d1958074cccf8a757d2",
+  "original_models_sha256": {
+    "v34": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+    "identity": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+    "value": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+    "static": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "baseline": {
+    "v34": {
+      "games": 256,
+      "won": 244,
+      "win_rate": 0.953125,
+      "games_sha256": "31a2d88a973b00066e6391415048fd4c12432fc9ad96bb9f6553652b6c2f67ea",
+      "config_sha256": "1f191bb34620d82929e16184499d364d0e352c9f0e80f01bf7ae0ea432ad1447",
+      "searched": 0,
+      "provenance": "completed cb slot baseline; unchanged slot inputs; original binary hash unavailable"
+    },
+    "identity": {
+      "games": 256,
+      "won": 256,
+      "win_rate": 1.0,
+      "games_sha256": "a24aed2d1305c10da7e26a5cf1d8067885ac924f09df3efd39d18066cb705a82",
+      "config_sha256": "1cd4a1edfde7753ded0bbfe742f2f58eaac05fc972b3666e72ae4ba3733d96a6",
+      "searched": 0,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 212.51164319599047,
+        "peak_rss_kib": 2866732,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 15357868
+      }
+    },
+    "teacher": {
+      "games": 64,
+      "won": 64,
+      "win_rate": 1.0,
+      "games_sha256": "23be29f40c6ed6f5de82bb7e1e3bec86edb697e1c76ba500b3b489175133ee61",
+      "config_sha256": "2a700971b91d8c5f74e56f1f01d29bc216820ee818736dc697cea4d15422e8a0",
+      "searched": 11826,
+      "dagger_beta": 1,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 4041.0359230369795,
+        "peak_rss_kib": 3138692,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 14360452
+      },
+      "student_v34_same_64_won": 58
+    }
+  },
+  "preflight": {
+    "plan_sha256": "342e371d2d10c4a2daeb16f9a693e9d566f08168d024402125e9f991a4646bd6",
+    "identity_smoke": {
+      "games": 2,
+      "won": 2,
+      "games_sha256": "1d504bdd7ca062cb4ce7834025a18bb483cee36071e0e7ec27648e8a070739d0",
+      "resources": {
+        "returncode": 0,
+        "wall_s": 7.012847319012508,
+        "peak_rss_kib": 2309068,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 16017644
+      }
+    },
+    "archived_mode_and_checkpoint_verified": true,
+    "live_replay_prefixes": 2
+  }
+}

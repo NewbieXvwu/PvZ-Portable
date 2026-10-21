@@ -580,6 +580,15 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 - 留出族`day_lN_eval_d7p_holdout{1,2,3}`：每关3套初始7卡，环境种子30000–30255；12套无序初始植物集合在四个训练族中全部显式排除，槽位排列不解除排除。生成时穷举核对全部32768训练种子，无训练/留出初始卡组集合重叠；这不保证L10后续传送带动态手牌集合完全未见。采集meta保存实际初始deck、基础deck、扰动来源及冻结学生检查点，各帧packets保存真实动态手牌；反事实沿既有`episode_query`路径读取存档deck，不重新采样/读取现行清单。
 - 可行性范围：DECK_OPTIONS直接调用`HasSeedType`和`Board::SeedNotRecommendedForLevel`，默认排除逐卡原始警告；无头模式不调用会弹窗/依赖选卡UI状态的`SeedChooserScreen::OnStartButton`，尚未接其“整副卡无产阳光”等组合检查。上述随机扰动不按手工战术或卡牌强弱排序。L10保持既有任务物理语义，没有为满足固定卡组假设而关闭传送带或改动历史基线。
 
+原版传送带空手开局的新任务族见 §14.8；L10旧变体停止新采集与评估，旧档案仍可训练与重放。
+
+### 14.8 新任务族：原版传送带开局 `day_l10_orig_eval` / `day_l10_orig_train`（2026-10-21 登记，AGENTS.md §8 第 4 条）
+
+- 用途：把 1-10 恢复成原版语义。L10 是传送带关（`LawnApp::IsMiniBossLevel` 含 mLevel 10/20/30 → `Board::HasConveyorBeltSeedBank`），原版开局是**空槽、容量 10**，之后由 `Challenge::UpdateConveyorBelt` 按引擎权重表发卡。此前的 `day_l10_eval` / `day_l10_eval_d7` 是 `RESET_V2` 把任务卡组写进卡槽的变体（开局 6/7 张、`UpdateWidth` 改容量），**停止新采集与评估**，已有档案只当训练数据（逐帧真实手牌照样能学）。
+- 任务字段：`conveyor_start: "original"` + `deck: []`，其余同面板（倍率 1.0、不限波、playthrough 2、阳光 50）。reset 报文在末尾多一个 `conveyor_original` 标记；不设这个字段的任务报文逐字节不变，旧档案重放不受影响。非传送带关设了它会被环境直接拒绝。
+- 种子：`day_l10_orig_eval` 30000–31023（与面板同段）；`day_l10_orig_train` 1880000–1888191（184–187 万段已被 task19 的 `day_l*_train_d7p` 占用）。
+- 观测：只有这类任务的观测/帧多一个 `conveyor_start` 键。传送带卡的 `active` 由 `SeedPacket::AddSeed` 直接置真，`CanPickUp` 在传送带关跳过阳光检查，所以 `packet_features` 的 affordable 按这个引擎标志判，而不是在 Python 里写"传送带=免费"。滑动只影响 `MouseHitTest`，不影响可点性，不另加特征；张数由非空槽数得出。
+- 不可混比：`day_l10_orig_eval` 与 `day_l10_eval(_d7)` 是不同任务族（开局手牌、卡槽容量、后续发卡都不同）。
 ### 14.9 新任务族：夜间原版难度面板 `night_l*_eval` / `night_l*_eval_n8` / `night_l*_eval_n9`（2026-10-21 登记，AGENTS.md §8 第 4 条）
 
 - 用途：“加宽”第二步。夜间草地 L11–L20 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50、不预置植物），

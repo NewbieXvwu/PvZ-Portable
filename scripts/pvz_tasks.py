@@ -22,7 +22,13 @@ CATTAIL = 43        # 香蒲 225☀，睡莲的升级植物（只能种在睡莲
 FLOWER_POT = 33     # 花盆 25☀，屋顶底座（本环境屋顶关开局已预置 c0–c4）
 
 
-def deck_for_level(level: int) -> tuple[int, ...]:
+@lru_cache(maxsize=50)
+def conveyor_belt_level(level: int) -> bool:
+    """Read Adventure conveyor eligibility from Board/LawnApp, including special levels."""
+    return level in pvz_constants.adventure_conveyor_levels()
+
+
+def deck_for_level(level: int, conveyor_start: str | None = None) -> tuple[int, ...]:
     """按关卡地形排卡组。规则：**卡组必须覆盖这一关的每一格地形**。
 
     这是 2026-10-03 定下的任务约束（AGENTS.md「任务与卡组」节）：
@@ -31,6 +37,11 @@ def deck_for_level(level: int) -> tuple[int, ...]:
     而不是可教的政策缺陷。场景判定用 `pvz_constants.background_for_level`
     （从 Board::PickBackground 解析，含第 35 关 ScaryPotter 特例）。
     """
+    # 原版传送带开局没有任务卡组：卡由 Challenge::UpdateConveyorBelt 发。
+    if conveyor_start == "original":
+        if not conveyor_belt_level(level):
+            raise ValueError('original conveyor start requires an engine conveyor level')
+        return ()
     bg = pvz_constants.background_for_level(level)
     if bg == "BACKGROUND_3_POOL":          # 21–30 白天泳池：水路两张
         return DECK + (LILY_PAD, CATTAIL)
@@ -54,7 +65,9 @@ def profile_for_deck(deck: tuple[int, ...], first_aid_owned: bool = False) -> Pl
     profile。缺省 False，旧任务的 reset 报文逐字节不变（AGENTS.md §8：
     改任务 = 换任务族，任务清单里用 "first_aid_owned": true 显式打开）。"""
     upgrades = tuple(sorted(set(deck) & set(pvz_constants.upgrade_plants())))
-    return PlayerProfileContext(seed_slot_count=len(deck),
+    # 空卡组 = 原版传送带开局（任务 deck: []）：没有任务卡组，profile 仍用正常 6 槽，
+    # 棋盘用引擎自己的 10 格传送带。
+    return PlayerProfileContext(seed_slot_count=len(deck) if deck else 6,
                                 owned_upgrade_plants=upgrades,
                                 first_aid_owned=bool(first_aid_owned))
 

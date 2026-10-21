@@ -1,0 +1,302 @@
+{
+  "completed_at": "2026-10-21T20:05:49.480470+00:00",
+  "complete": true,
+  "study_plan_sha256": "342e371d2d10c4a2daeb16f9a693e9d566f08168d024402125e9f991a4646bd6",
+  "executable_sha256": "fe5d3993b7e910f647a9dd940483976de5398616311e5d1958074cccf8a757d2",
+  "original_models_sha256": {
+    "v34": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+    "identity": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+    "value": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+    "static": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "baseline": {
+    "v34": {
+      "games": 256,
+      "won": 244,
+      "win_rate": 0.953125,
+      "games_sha256": "31a2d88a973b00066e6391415048fd4c12432fc9ad96bb9f6553652b6c2f67ea",
+      "config_sha256": "1f191bb34620d82929e16184499d364d0e352c9f0e80f01bf7ae0ea432ad1447",
+      "searched": 0,
+      "provenance": "completed cb slot baseline; unchanged slot inputs; original binary hash unavailable"
+    },
+    "identity": {
+      "games": 256,
+      "won": 256,
+      "win_rate": 1.0,
+      "games_sha256": "a24aed2d1305c10da7e26a5cf1d8067885ac924f09df3efd39d18066cb705a82",
+      "config_sha256": "1cd4a1edfde7753ded0bbfe742f2f58eaac05fc972b3666e72ae4ba3733d96a6",
+      "searched": 0,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 212.51164319599047,
+        "peak_rss_kib": 2866732,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 15357868
+      }
+    },
+    "teacher": {
+      "games": 64,
+      "won": 64,
+      "win_rate": 1.0,
+      "games_sha256": "23be29f40c6ed6f5de82bb7e1e3bec86edb697e1c76ba500b3b489175133ee61",
+      "config_sha256": "2a700971b91d8c5f74e56f1f01d29bc216820ee818736dc697cea4d15422e8a0",
+      "searched": 11826,
+      "dagger_beta": 1,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 4041.0359230369795,
+        "peak_rss_kib": 3138692,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 14360452
+      },
+      "student_v34_same_64_won": 58
+    }
+  },
+  "preflight": {
+    "plan_sha256": "342e371d2d10c4a2daeb16f9a693e9d566f08168d024402125e9f991a4646bd6",
+    "identity_smoke": {
+      "games": 2,
+      "won": 2,
+      "games_sha256": "1d504bdd7ca062cb4ce7834025a18bb483cee36071e0e7ec27648e8a070739d0",
+      "resources": {
+        "returncode": 0,
+        "wall_s": 7.012847319012508,
+        "peak_rss_kib": 2309068,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 16017644
+      }
+    },
+    "archived_mode_and_checkpoint_verified": true,
+    "live_replay_prefixes": 2
+  },
+  "collection": {
+    "rounds": [
+      {
+        "games": 128,
+        "won": 127,
+        "win_rate": 0.9921875,
+        "games_sha256": "12b68d2a582762a35b6ee4bdbc6e69c4d80855e7a550d72a4dada02b5b325709",
+        "config_sha256": "1a99f2236c22c9b2055362e4a6d8d9ae8dc6d0b9e3af63a2496c8a18f1bdda38",
+        "searched": 21129,
+        "dagger_beta": 0,
+        "resources": {
+          "returncode": 0,
+          "wall_s": 7008.844807494024,
+          "peak_rss_kib": 2908792,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 14578044
+        }
+      },
+      {
+        "games": 128,
+        "won": 127,
+        "win_rate": 0.9921875,
+        "games_sha256": "d644f0a5bec715f46ee7817dc11e0073d38188a9306fd7d2e7a5465cd6c06bf3",
+        "config_sha256": "f1e90a490c212ba1c06d52283115339752ef1630fb3e6523709afb45ed9d4647",
+        "searched": 21507,
+        "dagger_beta": 0,
+        "resources": {
+          "returncode": 0,
+          "wall_s": 6306.387299345981,
+          "peak_rss_kib": 2907324,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 14808876
+        }
+      }
+    ],
+    "archives": 256,
+    "frames": 194709,
+    "labelled_decisions": 194453,
+    "teacher_student_action_differences": 1021,
+    "free_packet_observations": 790140,
+    "ledger_sha256": "8f56d36e39674b85edbf621a751caa66d3c3e76783eaf3dbdb3fab381dba0feb"
+  },
+  "training": {
+    "model_sha256": "d99b2dbd76e4c037bf5a1aa193bd210cc45969978401cd38371fd186ddd2ac0d",
+    "seed": 1,
+    "epochs": 12,
+    "labels": 84,
+    "archives": 38527,
+    "recipe_matches_reference": [
+      "width",
+      "pool",
+      "label_weight",
+      "packet_balance",
+      "row_pool",
+      "aux_weight",
+      "aux_horizon",
+      "packet_head",
+      "plant_embedding_dim",
+      "context",
+      "obs",
+      "soft_weight",
+      "spread_weight",
+      "spread_cap",
+      "lr_schedule",
+      "ema",
+      "cell_soft_weight"
+    ],
+    "data_memory": {
+      "rows": 11109608,
+      "board_bytes": 6077231252,
+      "scalar_bytes": 1410429378,
+      "tensor_bytes": 766562952,
+      "packet_bytes": 1777537280
+    },
+    "final_epoch": {
+      "epoch": 12,
+      "train_loss": 3.512901325299562,
+      "val_loss": 3.368822703731126,
+      "type_acc": 0.9310481325300399,
+      "plant_recall": 0.7658093899459774,
+      "packet_acc": 0.7937128505985367,
+      "cell_acc": 0.5279871236226944,
+      "seconds": 107.19550751399947
+    },
+    "resources": {
+      "returncode": 0,
+      "wall_s": 3127.592116373009,
+      "peak_rss_kib": 13582584,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 6121368
+    }
+  },
+  "evaluation": [
+    {
+      "games": 256,
+      "won": 255,
+      "win_rate": 0.99609375,
+      "games_sha256": "7e0096f62f2c4d3003f313017f95f4ced1d795e18e155b5187e8b477e0fe597c",
+      "config_sha256": "266cdecfecbd97843ddde9d5321dbdb22a141eb2e0272f9d465a14a01904c18d",
+      "searched": 0,
+      "task_id": "day_l10_orig_eval",
+      "reference_won": 256,
+      "delta_wins": -1,
+      "delta_pp": -0.390625,
+      "pilot_only_wins": 0,
+      "reference_only_wins": 1,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 152.26337141002296,
+        "peak_rss_kib": 2689320,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 15044992
+      }
+    },
+    {
+      "games": 256,
+      "won": 240,
+      "win_rate": 0.9375,
+      "games_sha256": "47a6d463d487ad91862ef0cf73cf8fca83af4e18a9fcabdd48456f5342e90560",
+      "config_sha256": "910ed9539bcb99207b0d33410e7ee702c3386b5546bbd7018c087a290bcb2a97",
+      "searched": 0,
+      "task_id": "day_l7_eval_d7",
+      "reference_won": 241,
+      "delta_wins": -1,
+      "delta_pp": -0.390625,
+      "pilot_only_wins": 13,
+      "reference_only_wins": 14,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 224.6268862609868,
+        "peak_rss_kib": 2688108,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 14904560
+      }
+    },
+    {
+      "games": 256,
+      "won": 246,
+      "win_rate": 0.9609375,
+      "games_sha256": "ac7546de95d34a8632eae152d1cfe9949cba5c5cde6214ccf67f5bdae665b812",
+      "config_sha256": "8a7e8cb6fb9879e010b525d396e8cd1573b6e564b6014ccba46bcec80ea22201",
+      "searched": 0,
+      "task_id": "day_l8_eval_d7",
+      "reference_won": 249,
+      "delta_wins": -3,
+      "delta_pp": -1.171875,
+      "pilot_only_wins": 7,
+      "reference_only_wins": 10,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 191.44391453801654,
+        "peak_rss_kib": 2668848,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 14844644
+      }
+    },
+    {
+      "games": 256,
+      "won": 213,
+      "win_rate": 0.83203125,
+      "games_sha256": "99f2622308a88d79c5cc06d8b2c1ebec4ddeaa93c9cc84077115b790af0a9f6c",
+      "config_sha256": "16b0908a3d7a1ef7c1bb354f5980dab7db17dd6694f1d3da00346db442a86139",
+      "searched": 0,
+      "task_id": "day_l9_eval_d7",
+      "reference_won": 222,
+      "delta_wins": -9,
+      "delta_pp": -3.515625,
+      "pilot_only_wins": 27,
+      "reference_only_wins": 36,
+      "resources": {
+        "returncode": 0,
+        "wall_s": 173.30005126498872,
+        "peak_rss_kib": 2687096,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 14901472
+      }
+    }
+  ],
+  "evaluated_games": 1024,
+  "engineering": {
+    "legacy_contract": {
+      "games": 8,
+      "identical_except_seconds": true,
+      "executable_sha256": "fe5d3993b7e910f647a9dd940483976de5398616311e5d1958074cccf8a757d2",
+      "source_games_sha256": "82c8489e666ede596fd5fdef98b9e4d0bd0015cbdd0333b05d0e696ad02395a4",
+      "current_games_sha256": "4bc70b1eebdd0a2ae7f04b6856ad5fa124326cb55d72251ce40ad856a6dc59bc",
+      "resources": {
+        "returncode": 0,
+        "wall_s": 9.026599885954056,
+        "peak_rss_kib": 2687644,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 15431680
+      },
+      "scope": "Mandatory default-task compatibility check only; retired variant not studied"
+    },
+    "collector_cpp_full_game_metrics": {
+      "scope": "Same trained identity checkpoint on full original-conveyor games: Python collector path versus C++ whole-game path",
+      "games": [
+        {
+          "seed": 30001,
+          "decisions": 816,
+          "identical_except_seconds": true
+        },
+        {
+          "seed": 30000,
+          "decisions": 752,
+          "identical_except_seconds": true
+        }
+      ],
+      "source_files": {
+        "artifacts/task20/review_smoke_identity/games.jsonl": "1d504bdd7ca062cb4ce7834025a18bb483cee36071e0e7ec27648e8a070739d0",
+        "artifacts/task20/base_identity_aligned/games.jsonl": "a24aed2d1305c10da7e26a5cf1d8067885ac924f09df3efd39d18066cb705a82"
+      },
+      "limitation": "Full game result fields only; not a per-decision logit or action-sequence comparison."
+    },
+    "targeted_tests": 31,
+    "test_log_sha256": "064fe05a9a82e597b8c4de8705991ec31e47fd118df8c3e7c98d756ca67feb63",
+    "training_gpu_guard": {
+      "pause_resume_real_tree": true,
+      "foreign_process_untouched": true,
+      "preserved_preexisting_stop": true,
+      "source_sha256": "614af76731214741793bcd1bc6ce45311b67e0a2655ce4efe9c1656f13707bfc"
+    }
+  },
+  "limitations": [
+    "One fresh training seed: descriptive pilot, no population-level noninferiority claim.",
+    "More data also changes the seed-based validation split and optimizer-step count.",
+    "v34 baseline inherited from cb; historical executable hash unavailable.",
+    "No production/default promotion; previous L10 variant is retired from new studies."
+  ]
+}

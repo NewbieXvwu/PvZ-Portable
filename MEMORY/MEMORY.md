@@ -36,6 +36,7 @@
 - [2026-10-18](2026-10-18.md)
 - [2026-10-19](2026-10-19.md)
 - [2026-10-20](2026-10-20.md)
+- [2026-10-21](2026-10-21.md)
 
 ## 历史报告（`docs/`）
 
@@ -82,3 +83,6 @@
 - [task19-identity-packets.md](docs/task19-identity-packets.md)
 - [task19-engineering-validation.json](docs/task19-engineering-validation.json)
 - [task19-identity-results.json](docs/task19-identity-results.json)
+
+- [task20-conveyor-fidelity.md](docs/task20-conveyor-fidelity.md)
+- [day-panel.md](docs/day-panel.md)
