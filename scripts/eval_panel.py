@@ -50,6 +50,8 @@ def run_level(args, task_id: str, out: Path) -> dict:
         command += ["--verify-samples", str(args.verify_samples)]
     if args.student_candidates:
         command += ["--student-candidates", str(args.student_candidates)]
+    if args.resource_dir:
+        command += ["--resource-dir", str(args.resource_dir)]
     print("+ " + " ".join(command), flush=True)
     subprocess.run(command, check=True)
     return read_games(out / "games.jsonl")
@@ -89,6 +91,8 @@ def main() -> None:
     p.add_argument("--arms", default="fast", choices=("fast", "fast_search"))
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--levels", default="", help="逗号分隔的关卡子集，默认面板全部")
+    p.add_argument("--resource-dir", type=Path,
+                   help="游戏资源目录（不传则用 search_play.py 的默认值）")
     args = p.parse_args()
 
     document = json.loads(args.manifest.read_text())
@@ -123,7 +127,7 @@ def main() -> None:
     print("| 关卡 | 卡组 | 胜局 | 胜率 | 平均丢车 | 平均到达波数 |")
     print("|---|---|---|---|---|---|")
     for row in rows:
-        print(f"| 1-{row['level']} | {row['deck']} | {row['won']}/{row['games']} | "
+        print(f"| L{row['level']} | {row['deck']} | {row['won']}/{row['games']} | "
               f"{row['win_rate']:.3f} | {row['mean_mowers_used']} | {row['mean_final_wave']} |")
     print(f"\nwrote {args.out / 'panel.json'}")
 

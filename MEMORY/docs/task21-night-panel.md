@@ -39,4 +39,55 @@
 
 ## 结果
 
+- 2026-10-21 清单：`scripts/make_night_panel.py` 生成 `artifacts/stage4/night_panel.json`（不进 git），9 个任务 `night_lN_eval`（L11–14、16–20，各 1024 种子 30000–31023），卡组 `deck_for_level` = `[0,1,9,2,3,4,5]`。2-5（L15）经源码核对是**打地鼠**（`LawnApp::IsWhackAZombieLevel`，Adventure `mLevel == 15`），默认排除；2-10（L20）是 mini-boss/传送带，收进来并在报告标注。
+
+- 2026-10-21 编译与冒烟：`build/` 在本工作树单独编译成功（Release + BLAS，131 步）。冒烟 L11/L20 能跑；L15（打地鼠）能 reset 也能跑，但 2 局都是 wave 2 结束、丢 3–5 车，语义退化，确认排除。
+- 2026-10-21 学生 v34（slot 头）128 局/关：**9 关全 0 胜**（L11–14、16–20）。夜间关没见过是预期，但还有一层混淆：v34 的槽位头按槽位索引出卡，夜间卡组 `[0,1,9,2,3,4,5]` 把 2 号槽从樱桃换成阳光菇、后面整体错位，见“问题”。
+
+- 2026-10-21 学生与老师跑数：identity 学生 9 关合计 1/1152（只有 2-1 赢 1 局），老师 8 关合计 3/128（2-1 2/16、2-6 1/16，其余 0）。**师生一起卡在同一处**：平均停在 9–10 波、丢 4 车左右。报告见 `MEMORY/docs/night-panel.md`。
+- 2026-10-22 第三步：夜间卡组定 n9，`--combined` 四族清单（36 任务）+ `night_lN_train_n9`（8192 种子/关）已生成并同步到 `~/PvZ-search/artifacts/stage4/night_panel.json`；2-10 的 `conveyor_start` 未做（conveyor 未合入），详见“第三步结果”与“问题”。
+
 ## 问题
+
+- **2-10（L20）仍是“卡组写进初始手牌”的语义**，不是原版传送带开局：`conveyor_start` 只在 `conveyor` 工作树里（本分支 grep 只命中文档）。
+  合并后建议把 L20 单独开一族（如 `night_l20_train_n9_cv`），不要原地改 `night_l20_train_n9` 的语义。
+
+## 第二步（主控 2026-10-21 22:55 追加）
+
+### 第二步结果
+
+- 2026-10-21 identity 学生 64 局/关（5 关）：对照 0/320、n8 4/320、n9 13/320。n9（带双发射手）最好但仍在地板；详见 `night-panel.md` §9.1。
+- 2026-10-21 老师（identity 推演）16 局/关（5 关）：对照 3/80（3.8%）、n8 44/80（55.0%）、n9 58/80（72.5%）。**卡组是第一步“老师也打不过”的原因**；n9 上学生 4.1% 对老师 72.5%，差约 68pp，是下一步采集第一优先。详见 `night-panel.md` §9.2–9.3。
+
+- 2026-10-21 第二步清单：`make_night_panel.py` 加 `--deck/--suffix`，生成 `artifacts/stage4/night_panel_n8.json`（`night_lN_eval_n8` = `[0,1,2,3,4,5,8,9]`）与 `night_panel_n9.json`（`night_lN_eval_n9` = `[0,1,2,3,4,5,7,8,9]`）；三套卡组同种子段 30000–31023，`deck_for_level` 未改。DESIGN 我的登记改为 §14.9（§14.8 留给 task20）。第一步的老师 L20 16 局（v34 推演）作废并停止，改 identity 推演。
+
+报告很好。两点更正与下一步：
+1. **老师的推演策略要换成 identity 学生**：第一步老师 = v34 + 搜索，搜索的推演用的是 v34（slot 头），在夜间卡组上同样槽位错位，
+   所以“老师也打不过”混着错位效应。之后老师一律用 identity 学生做 `--rollout-policy`
+   （`~/PvZ-search/.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt`，C++ CPU 前向已支持 PVZRN006；CUDA 不支持，别开 CUDA 推演）。
+2. **卡组靠实测选，不凭感觉**：新开任务族（不覆盖 `night_l*_eval`，DESIGN 登记；你和 task20 都写了 §14.8，你这边改成 §14.9），候选：
+   - `night_lN_eval_n8`：`[0,1,2,3,4,5,8,9]`（白天 6 卡 + 小喷菇 + 阳光菇）
+   - `night_lN_eval_n9`：`[0,1,2,3,4,5,7,8,9]`（学生训练卡组 + 小喷菇 + 阳光菇）
+   - 现有 `night_lN_eval`（`[0,1,9,2,3,4,5]`）作对照
+   卡组照 AGENTS §8 核对解锁与所有权；种子同评估段 30000–31023。
+3. **跑数**（同时最多 2 个游戏进程）：三套卡组 × L11–L14、L16 × 老师（identity 推演）16 局，再加 identity 学生 64 局。
+   表格加进 `MEMORY/docs/night-panel.md` 新的一节，写清哪套卡组老师赢得最多、学生离老师多远。
+   不改 `deck_for_level`；最后选哪套由主控定。
+
+## 第三步（主控 2026-10-22 02:50 追加）：定夜间卡组 n9，准备采集
+
+### 第三步结果
+
+- 2026-10-22 `make_night_panel.py` 加 `--combined`：一份清单写 eval / eval_n8 / eval_n9 / train_n9 四族（36 个任务）。
+  新增 `night_lN_train_n9`（N=11–14、16–20，8192 种子/关：1900000、1910000、1920000、1930000、1950000、1960000、1970000、1980000、1990000 起），
+  生成时自查：任务内无重复、训练种子不落在 30000–31023 或 1500000/1600000/1800000–1878191。DESIGN §14.9 已登记。
+  合并清单已写本工作树与 `~/PvZ-search/artifacts/stage4/night_panel.json`（两份逐字节相同），9 卡 reset 冒烟通过（seed 1900000，identity 学生种出了小喷菇与阳光菇）。
+- 2026-10-22 **2-10 的 `conveyor_start` 原版开局没做**：本分支的引擎/python 还没有 task20 的该字段（`grep conveyor_start` 只命中文档），
+  按任务书要求保持现状并写进“问题”，等 conveyor 合入后再改（另开族名）。
+三套卡组老师 3/80、44/80、58/80，**夜间卡组定为 n9 `[0,1,2,3,4,5,7,8,9]`**（是白天训练卡组的超集，学生已认识其中 7 张）。
+1. `scripts/make_night_panel.py` 加训练任务族 `night_lN_train_n9`（N = 11–14、16–20），字段同 `night_lN_eval_n9`，
+   训练种子 `1900000 + (N−11)·10000` 起每关 8192 个（与现有所有段不重叠，生成时自查），DESIGN §14.9 登记。
+   重新生成 `artifacts/stage4/night_panel.json`（含 eval / eval_n8 / eval_n9 / train_n9），**另拷一份到 `~/PvZ-search/artifacts/stage4/night_panel.json`**（主控的采集队列读这份）。
+2. 2-10（L20）是传送带：按 task20 的原版开局字段（`conveyor_start`，见 conveyor 分支）能做就把 `night_l20_*_n9` 改成原版开局；
+   conveyor 分支还没合进来就先保持现状并在“问题”里写明，主控合并后再改。
+3. 提交、`git push origin night`，在“结果”记一行。然后本任务完成，停下即可。
