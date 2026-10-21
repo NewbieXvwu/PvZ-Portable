@@ -1,0 +1,377 @@
+{
+  "completed_at": "2026-10-21T12:12:33.355412+00:00",
+  "complete": true,
+  "scope": "one corrected seed1 dw3+identity+row_pool model; all eight predeclared 256-game groups",
+  "model_sha256": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+  "baseline_model_sha256": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+  "baseline_reference_sha256": "c8fabe78204a18dfe971883b700f285ffcde266dd723c372cb05b79abce8e8f7",
+  "plan_sha256": "ee4665e897029a39836dbc59c68b75ceef73a1ef230571ed8a1f6d9b6b148c28",
+  "evaluation_freeze_sha256": "ac9f46f6459fa0423a42cd6fcea71aa11829095be5303f31cd9b6d44dd80b915",
+  "training": {
+    "epochs": 12,
+    "labels": 82,
+    "archives": 38271,
+    "data_memory": {
+      "rows": 11051782,
+      "board_bytes": 6046125540,
+      "scalar_bytes": 1404861118,
+      "tensor_bytes": 762572958,
+      "packet_bytes": 1768285120
+    },
+    "final_epoch": {
+      "epoch": 12,
+      "train_loss": 3.4970299496699524,
+      "val_loss": 3.361582852909849,
+      "type_acc": 0.9301983368135309,
+      "plant_recall": 0.7648138051092271,
+      "packet_acc": 0.7919245023519295,
+      "cell_acc": 0.5284457647287106,
+      "seconds": 96.90430581901455
+    },
+    "resources": {
+      "returncode": 0,
+      "wall_s": 2879.9202887379797,
+      "peak_rss_kib": 13438092,
+      "peak_swap_kib": 0,
+      "minimum_available_kib": 8469356
+    },
+    "recipe_matches_dw3s1": [
+      "width",
+      "label_weight",
+      "pool",
+      "packet_balance",
+      "row_pool",
+      "aux_weight",
+      "context",
+      "obs",
+      "soft_weight",
+      "spread_weight",
+      "spread_cap",
+      "lr_schedule",
+      "ema",
+      "cell_soft_weight"
+    ]
+  },
+  "evaluation": {
+    "games": 2048,
+    "tasks": [
+      {
+        "task_id": "day_l7_eval_d7",
+        "games": 256,
+        "won": 241,
+        "win_rate": 0.94140625,
+        "games_sha256": "7e96b27d06a6c6e3b7d53c7abefa52213277416c4e3c3fad4a888829ee2962ca",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 190.40618284401717,
+          "peak_rss_kib": 2814336,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16125804
+        },
+        "reference_dw3s1": {
+          "won": 248,
+          "delta_wins": -7,
+          "delta_pp": -2.734375,
+          "identity_only_wins": 8,
+          "baseline_only_wins": 15,
+          "games_sha256": "6ebb2edf163aa267ea8fac08a2f7447186cfb7c5e36855678c31a975aa00f8d9",
+          "workers": "6",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable"
+        }
+      },
+      {
+        "task_id": "day_l8_eval_d7",
+        "games": 256,
+        "won": 249,
+        "win_rate": 0.97265625,
+        "games_sha256": "c774b971f538c275f7e1e9092484358380d93f6367e96425504f013e39f438df",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 163.35652827098966,
+          "peak_rss_kib": 2688132,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16111744
+        },
+        "reference_dw3s1": {
+          "won": 251,
+          "delta_wins": -2,
+          "delta_pp": -0.78125,
+          "identity_only_wins": 5,
+          "baseline_only_wins": 7,
+          "games_sha256": "927ae28a8ecea3efdb1cffd3bba7bbf71d918c436784d9ec1b1feec1a66e2c03",
+          "workers": "6",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable"
+        }
+      },
+      {
+        "task_id": "day_l9_eval_d7",
+        "games": 256,
+        "won": 222,
+        "win_rate": 0.8671875,
+        "games_sha256": "ede7458a0806c649bc91d1744da9cf02e969e3fa5e221983cea2d8b2cade888f",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 194.44053588504903,
+          "peak_rss_kib": 2892472,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16060988
+        },
+        "reference_dw3s1": {
+          "won": 229,
+          "delta_wins": -7,
+          "delta_pp": -2.734375,
+          "identity_only_wins": 22,
+          "baseline_only_wins": 29,
+          "games_sha256": "38e971556fb376e7c17f95f15feff5b54396c76efdb0e821b7b434af202a2158",
+          "workers": "6",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable"
+        }
+      },
+      {
+        "task_id": "day_l10_eval_d7",
+        "games": 256,
+        "won": 251,
+        "win_rate": 0.98046875,
+        "games_sha256": "2fc010bcc5fe8bfb6f8377388ed0ce30cdc8d1739ef850ec8e07213d68372333",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 186.41779653000413,
+          "peak_rss_kib": 2693272,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16122488
+        },
+        "reference_dw3s1": {
+          "won": 237,
+          "delta_wins": 14,
+          "delta_pp": 5.46875,
+          "identity_only_wins": 19,
+          "baseline_only_wins": 5,
+          "games_sha256": "82c8489e666ede596fd5fdef98b9e4d0bd0015cbdd0333b05d0e696ad02395a4",
+          "workers": "6",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/rowpool/build/pvz-portable"
+        }
+      },
+      {
+        "task_id": "day_l7_eval",
+        "games": 256,
+        "won": 88,
+        "win_rate": 0.34375,
+        "games_sha256": "9ab425e8b16e3d5c70bfd2e0241307a797fa42c21c78d22803340fdc0153f0a8",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 175.39260935701896,
+          "peak_rss_kib": 2690324,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16101220
+        }
+      },
+      {
+        "task_id": "day_l8_eval",
+        "games": 256,
+        "won": 119,
+        "win_rate": 0.46484375,
+        "games_sha256": "7ae921c41e04c91c535c635717976122cdff9ba0274e9db376a83bb41ae7b961",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 154.31505873601418,
+          "peak_rss_kib": 3006060,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16012552
+        }
+      },
+      {
+        "task_id": "day_l9_eval",
+        "games": 256,
+        "won": 62,
+        "win_rate": 0.2421875,
+        "games_sha256": "01a4bc3dfbec30753a96edb96baf964de207bb3550fdd6caba96fddae7eef7b6",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 163.31415235396707,
+          "peak_rss_kib": 2688848,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16147876
+        }
+      },
+      {
+        "task_id": "day_l10_eval",
+        "games": 256,
+        "won": 247,
+        "win_rate": 0.96484375,
+        "games_sha256": "58260fb6f28ad591a3aa841ec4abb00c3d2bd39c50d119e6a02569ce7a9fea25",
+        "resources": {
+          "returncode": 0,
+          "wall_s": 120.11465291498462,
+          "peak_rss_kib": 2693772,
+          "peak_swap_kib": 0,
+          "minimum_available_kib": 16230500
+        }
+      }
+    ]
+  },
+  "perturbation": {
+    "generation_audit": {
+      "training_seeds": 32768,
+      "distinct_training_card_sets": 3682,
+      "heldout_card_sets": 12,
+      "all_heldout_sets_excluded": true,
+      "source_manifest_sha256": "a0ad46cd3c4ef43dd33055711623091a54fa923042230365033d84a4a8ef8a08",
+      "executable_sha256": "56eeb7b422acf1282db609c983ffde40205e73ff0425722573c9369f82593775"
+    },
+    "smoke_sha256": "ef7070f5a57c3de8e8599a67e22cf8b2b80d490e29ccfd160d2a48beadf48381",
+    "smoke_games": 8,
+    "loaded_rows": 6192,
+    "heldouts": "initial unordered card sets",
+    "smoke_archives": [
+      {
+        "level": 7,
+        "seed": 1840000,
+        "frames": 651,
+        "meta_sha256": "e488473b41ac1eddc8174f968b2a90c4af95cc1be491d58f14962fd81d04f2be",
+        "frames_sha256": "0a0e4fea9667754c4a544bcad726a821c853016f06c5e97ccfa1549276c32f39"
+      },
+      {
+        "level": 7,
+        "seed": 1840001,
+        "frames": 712,
+        "meta_sha256": "ea5ae5e181d6a904fb379cbb9be828ed19e171b2c8b88a7c4cd1bb235672335d",
+        "frames_sha256": "f496048e222ac5aed4e54f40b01f7d208c2adaa2dbedbff4b4287cedb97ec0fe"
+      },
+      {
+        "level": 8,
+        "seed": 1850000,
+        "frames": 1249,
+        "meta_sha256": "31a35641e637877bdc9427edccad4b28be7ce2a183007db2876e2077a211a8df",
+        "frames_sha256": "540aa7e5ad03be5bf7098b3ec683e5ca7c46f62bc82fab5f7d455a31e26e4041"
+      },
+      {
+        "level": 8,
+        "seed": 1850001,
+        "frames": 949,
+        "meta_sha256": "94c2bd9282d1b655aae52b87927a4b8eaae4b6952502adb4828efda622bfacbf",
+        "frames_sha256": "9c9cc8a14bff18306f2dfbae229b7f9262684bd131045d5d25093b8760556c10"
+      },
+      {
+        "level": 9,
+        "seed": 1860000,
+        "frames": 498,
+        "meta_sha256": "fa21aa782e31c95b64bceae3ea76fb807f95bd37e265a0178b616043828ef985",
+        "frames_sha256": "3b15daa9bacfc490296661c31c04539622db456d1a196a1690aab5f83fe56fd9"
+      },
+      {
+        "level": 9,
+        "seed": 1860001,
+        "frames": 446,
+        "meta_sha256": "bfe6f9221e9b7a9c0256904d2f510b56eaf1b800c67f70f14818f08272a868d6",
+        "frames_sha256": "1469fc6dd6fe8caf5cca67edde62380dc226fb78513d5dab642945e57340fb23"
+      },
+      {
+        "level": 10,
+        "seed": 1870000,
+        "frames": 996,
+        "meta_sha256": "f94fec527bb3aaabdd5f8c33a8087c6c18eeacf71bca72fff4ab65f34587999d",
+        "frames_sha256": "8d980d552331e6eed47207d193b715a99496c2e671fadfa96bc0dd1779e79a93"
+      },
+      {
+        "level": 10,
+        "seed": 1870001,
+        "frames": 699,
+        "meta_sha256": "bebe6deac58317ff569facab39454a4b3ba588db0cc5328cfa2b333c2aaf956d",
+        "frames_sha256": "eae6b5269c3e6d438653bef133c3ea1aa975a431aadafab7b7eca6d5290984dd"
+      }
+    ],
+    "live_replay_scope": "one archived eight-action prefix, plus archived-deck replay unit tests"
+  },
+  "engineering": {
+    "validation_sha256": "2f1840db0a409036a0c34951783887c5bae6988ae2d4632f04453abc5f25c88d",
+    "unique_identity_tests": 34,
+    "slot_exact_configurations": 24,
+    "trained_parity_sha256": "a6b2d36ec3fff16f3c088e62ed909fe4e8ab24477103e01f78a05b546e884012",
+    "trained_cpu_max_abs_error": 1.52587890625e-05,
+    "trained_cpu_tolerance": [
+      1e-05,
+      1e-05
+    ],
+    "trained_cpu_worst_tolerance_ratio": 0.32818679379733207,
+    "trained_cpu_reference_noise": {
+      "plant": 1.8765930347441895e-06,
+      "packet": 1.3029889132099015e-05,
+      "cell": 1.1238920826883714e-05
+    },
+    "trained_cpu_absolute_only_exceedances": 48,
+    "trained_cpu_real_decisions": 128,
+    "numeric_fix": {
+      "amendment": "task19-cpu-numerics-amendment.json",
+      "change": "identity head accumulates its two-layer packet MLP, per-channel cell base and the 54-cell channel reduction in float64; the slot head path is textually and numerically untouched",
+      "before": {
+        "executable_sha256": "a046711743058b57a3376526af86c4b52b2a0d69b70589134844a2bba4fb1580",
+        "source_sha256": "25037ecc20e0fe5a8e854b1c7e4363209e58d85d63b697e530a84a24da3d7e96",
+        "per_head_maximum": {
+          "plant": 5.7220458984375e-06,
+          "packet": 2.288818359375e-05,
+          "cell": 1.430511474609375e-05
+        }
+      },
+      "after": {
+        "executable_sha256": "864b30902e2d0e1dc1db80e595e62dcc0247ab70915b2076816e8b21e33c576d",
+        "source_sha256": "3fc80de1014522627951931c4f99a6da81ac587445693cc76733d964f57dad5e",
+        "per_head_maximum": {
+          "plant": 3.814697265625e-06,
+          "packet": 1.52587890625e-05,
+          "cell": 1.3828277587890625e-05
+        }
+      },
+      "slot_bit_exact": {
+        "model": "artifacts/student/v33",
+        "levels": [
+          7,
+          9,
+          10
+        ],
+        "decisions": 72,
+        "values": 4680,
+        "bit_mismatches": 0,
+        "maximum_abs_error": 0.0
+      },
+      "trained_parity": {
+        "tolerance_absolute": 1e-05,
+        "tolerance_relative": 1e-05,
+        "reference_noise": {
+          "plant": 1.8765930347441895e-06,
+          "packet": 1.3029889132099015e-05,
+          "cell": 1.1238920826883714e-05
+        },
+        "worst_tolerance_ratio": 0.32818679379733207,
+        "tolerance_overruns": 0,
+        "argmax_mismatches": 0,
+        "action_mismatches": 0,
+        "real_decisions": 128
+      },
+      "evaluation": {
+        "games": 2048,
+        "identical_outcomes": true,
+        "only_differing_field": "seconds",
+        "wins": {
+          "day_l7_eval_d7": 241,
+          "day_l8_eval_d7": 249,
+          "day_l9_eval_d7": 222,
+          "day_l10_eval_d7": 251,
+          "day_l7_eval": 88,
+          "day_l8_eval": 119,
+          "day_l9_eval": 62,
+          "day_l10_eval": 247
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Single training seed; descriptive comparison, no population-level noninferiority claim.",
+    "Identity also repairs the empty-slot public wave scalar and balances packets by plant identity.",
+    "L10 keeps RESET_V2 initial stock plus native conveyor shifts, refills and free cards.",
+    "The eight perturbation smoke archives are not added to this existing-data training pilot.",
+    "Baseline used six workers and a separate native build; counts are not a throughput comparison.",
+    "Full interactive whole-deck warning checks and optional trunk embedding sharing are omitted.",
+    "CPU parity is judged at the reference float32 noise floor (1e-5 absolute + 1e-5 relative + twice the measured reference noise); a bare absolute 1e-5 is unreachable because the reference itself is 1.3e-5 from exact.",
+    "No default or production model promotion; CUDA explicitly rejects PVZRN006."
+  ]
+}

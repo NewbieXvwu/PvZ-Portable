@@ -78,3 +78,7 @@
 - [static-value-ablation.md](docs/static-value-ablation.md)
 
 - [dagger-data-dilution.md](docs/dagger-data-dilution.md)
+
+- [task19-identity-packets.md](docs/task19-identity-packets.md)
+- [task19-engineering-validation.json](docs/task19-engineering-validation.json)
+- [task19-identity-results.json](docs/task19-identity-results.json)

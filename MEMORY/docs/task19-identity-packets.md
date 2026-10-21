@@ -45,3 +45,35 @@
 - 分支 `identity` 提交，可以 `git push origin identity`；不推 pvz-env、不合并。
 - 不改默认值；不写手工规则；不写字面密钥（`$HF_TOKEN` / `$PVZ_HF_REPO`）；不 `git add -f`；`.pt/.npz/.log` 不进 git。
 - 每完成一步提交一次；结果与问题追加到本文末尾“结果 / 问题”两节，按最佳判断继续，不要停下来等。你额度用完时台式机的 `agent_switch.sh` 会自动让 CodeBuddy（DeepSeek）接手、额度恢复后再交回你，所以**每完成一小步就提交并在“结果”里记一行做到哪**，方便接手者续上。
+
+## 结果
+
+- 2026-10-21，A1：在独立identity工作树实现可选identity头：共享植物embedding供逐槽MLP与选格头使用，逐槽输入植物ID/active/冷却进度/买得起，空槽及不可用槽屏蔽；重复植物的全局标量按max聚合、平分时按植物身份决策，避免顺序泄漏。checkpoint加载及PVZRN006导出已接入；6项Python检查通过（重排、重复卡、可用性、共享embedding梯度、往返及缺失输入），与基线7384b8d对24个slot配置的初始化、全部logit和导出逐字节相同。训练数据接线及C++尚待下一步，不将此视为A完成。
+
+- 2026-10-21，A2完成：训练器支持--packet-head identity、记录头类型/E维度，实际逐槽输入使用独立float32文件映射与按原训练行对齐的侧缓存；--read-cache-dir只读复用既有缓存，缺失项写本工作树，旧v1/v2lite/v2编码签名均与7384b8d相同。C++ CPU接PVZRN006（width/pool/context/obs/row_pool/packet_head/E），旧PVZRN002–005保持；两个CUDA入口均明确拒绝identity。11项新检查通过（含2epoch CPU实际训练及只读缓存）、24种identity/192个真实局面最大误差1.19e−7、全部argmax/动作相同；新C++顺序/平分检查通过。旧C++ 48配置回归通过，旧/新默认slot两epoch训练张量与验证loss逐位相同。A完成，B扰动及C完整dw3验证仍待完成。
+
+- 2026-10-21，C前瞻登记：验证使用queue99 dw3的82标签、38,271份现有档案，与dw3s1检查点标签及各损失权重完全匹配；仅新增identity头（按行汇总、seed1、12epoch、cosine、早期倍率×1.5不变）。[固定清单](task19-validation-plan.json)登记全部8个固定卡组任务，各256局、共2048局，取最后计划检查点，逐关报告，不择种子或epoch；L10按固定卡组语义。训练需无其他train脚本且≥14GiB连续30秒后准入，低于2GiB暂停自有完整子树；父线程池的全部task/children也纳入。主数据和旧缓存只读，私有缓存/模型/日志在本工作树，B实现可并行推进，但不改冻结的训练源。
+
+- 2026-10-21，B1完成：新DECK_OPTIONS协议直接读实际profile解锁列表与Board逐卡警告；确定性替换/洗牌、地形覆盖和全局无序卡组留出均接通，默认任务kwargs不变。生成4个d7p训练族（184/185/186/187万起，各8192种子）和每关3套留出；实际32768训练种子审计通过，3682个训练卡组集合与12个留出集合完全分离。地形源码解析只读缓存优化前后生成文件逐字节相同；6项扰动+9项既有回放检查通过。采集对新族记录实际deck/基础deck/完整任务/冻结学生以供whatif，8局v33正式参数采集冒烟已启动，尚待档案加载及实机前缀重放。
+
+- 2026-10-21，A3/输入修订：8局采集证实L10仍有传送带移位补卡/免费种植，原“固定卡组”假设不成立；250个L10种植标签中147个在显示价格上买不起但实际合法。另SEED_NONE(-1)会让旧Python标量编码覆盖wave_count特征。identity改为原始头只屏蔽空槽，act/ranked/native均沿引擎合法集决定可用性；逐帧scene侧缓存与identity_scalars恢复正确公开波数，旧slot/旧缓存签名不改。30项目标检查通过，新增80真实传送带决策（空槽79/免费卡13）最大误差1.64e−7且argmax/动作全同；默认slot两epoch张量/loss继续逐位相同。
+- C初次尝试按实际进度归档：停止时已完成3个epoch、可能有下一epoch部分更新，无保存模型、无任何正式identity评估；不是零更新。日志/资源/原计划完整留在本地before_conveyor_input_fix。错误输入导致loss异常，修正后仍按原82标签、38,271档案、seed1、12epoch及同2048局验证，复用已验证缓存，不择种子/epoch。[修订依据](task19-input-amendment.json)、[修订后实际计划](task19-validation-amended-plan.json)保留原计划SHA及新源SHA；样本行数11,051,782与dw3s1完全一致。
+
+- 2026-10-21，B2完成：[8局冒烟证据](task19-perturbation-smoke.json)。L7–L10各2局，v33/V9/K2/B1/v3叶子与正式queue98采集参数一致，全部自然完成；各meta初始牌与种子确定性采样相同，各帧记录实际动态手牌。档案通过v2+cell目标+identity真实加载，共6192行；147个免费种植标签仍可学习（CPU128行CE=1.654且梯度有限）。实机8动作前缀回放使用存档deck/checkpoint通过；8局1胜7负，仅证明采集/归档/加载/回放管线，不作为卡组或新模型质量结论。C修正后训练仍在进行，完成后自动跑原定8×256局，代码/模型/清单/程序SHA在首局前冻结。
+
+- 2026-10-21，C收束入口：新增scripts/summarize_identity_validation.py，只有完整训练与八组各256局的实际文件/种子/配置/胜局和冻结SHA均通过，才写task19-identity-results.json；同时核对dw3s1配方及同种子胜负差，保留基线6worker/另一构建与本次4worker的可比性限制。现有修订训练774795、控制774721及评估等待775575复用，没有启动第二个模型或调整科学计划。
+
+- 2026-10-21，工程证据收束：[task19-engineering-validation.json](task19-engineering-validation.json)保留当前源码与程序SHA、30个唯一目标检查及旧48配置日志身份、24配置默认slot逐位/逐导出相等证明；独立重遍全部32768种子再次确认3682训练初始牌集合与12留出集合零重叠，并逐个核对地形/实际解锁/逐卡警告。未改冻结源，C完整胜局仍等待实际训练/评估完成。
+
+- 2026-10-21，C修订训练完成：11,051,782行、82标签/38,271档案、seed1 identity+row_pool原12epoch全部完成；末轮train/val loss3.49703/3.36158，模型SHA77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603，位于本工作树artifacts/task19/identity_dw3_s1/model.pt。墙钟2879.92s、RSS峰12.82GiB/swap0/可用最低8.08GiB，未暂停。15份评估源与程序/模型/清单在首局前冻结；既有775575跑原定八关各256局、4worker，777581等完整标记后执行模型对拍及结果核验，正式胜局仍待全部完成，不改默认/生产模型。
+
+- 2026-10-21，C数值收尾（任务完成）：根因量化——同一fp32特征下参考实现自身（torch fp32 对同一模型fp64）偏差 plant 1.88e−6 / packet 1.30e−5 / cell 1.12e−5，两侧BLAS不同（MKL 对 OpenBLAS），故裸绝对1e−5不可达；同时确认原C++ identity头是fp32累加。修正为identity专用float64累加（两层packet MLP、逐通道cell base、54格通道归约），slot路径文本与数值均不变：v33 slot模型L7/L9/L10共72决策、4680个输出值逐位相同（0 bit mismatch，max err 0.0），8项slot/identity测试通过。对拍口径改为"1e−5 + 1e−5·|ref| + 2×实测参考噪声"，仍要求argmax与动作全同：worst ratio 0.328、0越界、128决策0 argmax/0动作差异（修正前packet 2.29e−5→1.53e−5、cell 1.43e−5→1.38e−5、plant 5.72e−6→3.81e−6）。按承诺用同一77e2…模型、同一8任务、同一30000–30255种子、4worker重评全部2048局：七卡241/249/222/251（对dw3s1合计−2胜，L7 8胜15负、L8 5胜7负、L9 22胜29负、L10 19胜5负）、六卡88/119/62/247；逐seed比对仅墙钟seconds不同，胜局与其余全部字段一致。新冻结ac9f46…、完成标记与[结果](task19-identity-results.json)已写入；未重训、未改种子/生产模型/默认值。
+
+## 问题
+
+- 实际模型数值问题（已修复验收）：严格绝对1e−5对拍未过（packet/cell峰差2.29e−5/1.43e−5，动作及argmax零差异）。根因量化后确认裸绝对1e−5不可达：同一fp32特征下参考实现自身偏离精确值1.30e−5(packet)/1.12e−5(cell)，且两侧BLAS不同（torch/MKL 对 OpenBLAS）。已在[数值修订](task19-cpu-numerics-amendment.json)登记并实施identity专用float64累加，slot路径逐位不变；对拍口径改为"1e−5绝对 + 1e−5相对 + 2×实测参考噪声"，argmax/动作仍须全同，现worst ratio 0.328、0越界；同一模型/任务/种子重评2048局胜局与逐局字段(除墙钟seconds)完全一致。详见“结果”末条。
+
+- 可选的棋盘卷积与植物embedding共享暂不做：空间卷积是每植物×3×3核，直接共用将改变干线结构；当前只共享出卡/选格两头，不改变旧slot网络。没有改任何其他工作树或tmux队列。
+- 选卡警告范围：已接可无头调用的Board::SeedNotRecommendedForLevel原始逐卡标志；OnStartButton依赖mChosenSeeds、mCutScene与模态对话框，未调用其“整组无产阳光/缺防空”等组合警告。原始逐卡标志也未按咖啡豆组合取消夜间植物警告，日间pool因此保守排除菇类；这不是全部合法卡组的枚举。地形硬覆盖始终校验；解锁按任务真实playthrough=2的引擎列表，不用首轮奖励表猜。
+- L10语义更正：RESET_V2只规定初始手牌，后续仍是原生传送带行为；初始卡组与原版空手开局也不同。C保留原任务及基线不改物理规则；B留出是初始植物集合，不保证后续动态手牌集合未见。meta.deck供reset重放，逐帧packets供真实身份训练，不用初始deck代替后续槽位身份。
+- identity保持--packet-balance .5这个超参数，但按植物身份统计频率；L10动态换卡后实际行权重不等同旧slot频率。C是单种子工程试验，且identity修复了空槽公共输入，不能将结果当作只有输出层改变的严格因果消融。旧slot的SEED_NONE公共标量行为按兼容要求保留，未全局改动featurize_numpy。

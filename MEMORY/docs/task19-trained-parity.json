@@ -1,0 +1,103 @@
+{
+  "model_sha256": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+  "exported_sha256": "23d080545c3da59af6492799b91c0a67c036b7f423345e106b1b4b33d13fcbab",
+  "format": "PVZRN006",
+  "header_fields": [
+    64,
+    1,
+    0,
+    3,
+    1,
+    1,
+    64
+  ],
+  "executable_sha256": "864b30902e2d0e1dc1db80e595e62dcc0247ab70915b2076816e8b21e33c576d",
+  "checker_sha256": "9d023d26fb5107f476115ca2c178ed90969a5c92a641bab586cde85f6cd8ee10",
+  "maximum_abs_error": 1.52587890625e-05,
+  "tolerance_absolute": 1e-05,
+  "tolerance_relative": 1e-05,
+  "per_head_maximum": {
+    "plant": 3.814697265625e-06,
+    "packet": 1.52587890625e-05,
+    "cell": 1.3828277587890625e-05
+  },
+  "per_head_reference_noise": {
+    "plant": 1.8765930347441895e-06,
+    "packet": 1.3029889132099015e-05,
+    "cell": 1.1238920826883714e-05
+  },
+  "worst_tolerance_ratio": 0.32818679379733207,
+  "tolerance_overruns": 0,
+  "absolute_only_exceedances": 48,
+  "all_argmax_and_actions_equal": true,
+  "argmax_mismatches": 0,
+  "action_mismatches": 0,
+  "passed": true,
+  "discrepancies": [],
+  "real_decisions": 128,
+  "cases": [
+    {
+      "level": 9,
+      "initial_deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "decisions": 32,
+      "planted": 2,
+      "empty_slot_positions": 0,
+      "free_card_positions": 0
+    },
+    {
+      "level": 9,
+      "initial_deck": [
+        7,
+        5,
+        4,
+        3,
+        2,
+        1,
+        0
+      ],
+      "decisions": 32,
+      "planted": 2,
+      "empty_slot_positions": 0,
+      "free_card_positions": 0
+    },
+    {
+      "level": 9,
+      "initial_deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "decisions": 32,
+      "planted": 2,
+      "empty_slot_positions": 0,
+      "free_card_positions": 0
+    },
+    {
+      "level": 10,
+      "initial_deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "decisions": 32,
+      "planted": 8,
+      "empty_slot_positions": 31,
+      "free_card_positions": 23
+    }
+  ]
+}

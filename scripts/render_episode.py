@@ -271,11 +271,13 @@ def training_task_kwargs(task: dict, seed: int | None = None) -> dict:
     if preplanted:
         extra["preplanted"] = preplanted
     seeds = task.get("seeds") or []
+    actual_seed = seed if seed is not None else (seeds[0] if seeds else 0)
+    from pvz_tasks import deck_for_seed
     # 坚果包扎术（first_aid_owned）是 profile 字段，不是 TaskSpec 字段，所以放在
     # task_extra 外面：调用方用 profile_for_deck(deck, kw["first_aid_owned"]) 带进去。
     # 缺省 False —— 旧任务不带这个键，reset 报文逐字节不变。
-    return {"level": task["level"], "deck": list(task["deck"]),
-            "seed": seed if seed is not None else (seeds[0] if seeds else 0),
+    return {"level": task["level"], "deck": list(deck_for_seed(task, actual_seed)),
+            "seed": actual_seed,
             "first_aid_owned": bool(task.get("first_aid_owned", False)),
             "task_extra": extra}
 

@@ -571,7 +571,10 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 
 ### 14.7 新任务族：白天原版难度面板 `day_l*_eval[_d7]` / `day_l*_train_d7`（2026-10-21 登记，AGENTS.md §8 第 4 条）
 
-- 用途：“加宽”第一步。白天 L1–L10 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50），1-5（坚果保龄球）不收；1-1 与 1-2 在环境里是同一局；1-10 的传送带被固定卡组覆盖（是“L10 波次 + 固定卡组”，不是原版玩法）。清单 `artifacts/stage4/day_panel.json`（不进 git，生成脚本 `scripts/make_day_panel.py` 在 `daypanel` 分支）。
+- 用途：“加宽”第一步。白天 L1–L10 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50），1-5（坚果保龄球）不收；1-1 与 1-2 在环境里是同一局。task19轨迹复核更正：L10由RESET_V2指定初始卡槽，之后仍有原生传送带的免费种植、消耗移位和补卡；历史“固定卡组”措辞只准确描述初始手牌。清单 `artifacts/stage4/day_panel.json`（不进 git，生成脚本 `scripts/make_day_panel.py` 在 `daypanel` 分支）。
 - 卡组：`day_lN_eval` 用 `deck_for_level`（白天 6 卡 [0..5]）；`_d7` 后缀用学生训练卡组 7 卡 [0,1,2,3,4,5,7]（多双发射手）。两者是不同任务族，结果不可混比。
 - 种子：评估 30000–31023（与 `day_l7_*_eval` 同段）；训练 `day_l7_train_d7` 1800000–1808191、`day_l8_train_d7` 1810000–1818191、`day_l9_train_d7` 1820000–1828191、`day_l10_train_d7` 1830000–1838191。
 - 已用偏移：L9 / L10 各 0–1535 台式机（queue93 / 95，d9dag1–4 / d10dag1–4；d9dag3 只下完 299 局），4096–4735 Mac（d9dag1b / d10dag1b），4736–5375 Mac（d9dag2b / d10dag2b），5376–6015 Mac（d9dag3b / d10dag3b，采集学生 v33），6016–6655 Mac（d9dag4b / d10dag4b，v33），6656–7295 Mac（d9dag5b / d10dag5b，v34）；v33 台式机 queue98：L7 / L8 0–1023（d7dag1–8 / d8dag1–8），L9 / L10 1536–2559（d9dag5–12 / d10dag5–12），每轮每关 128（queue98 实际只用到第 4 轮）；v34 台式机 queue100：L9 / L10 2560–3839（d9dag21–30 / d10dag21–30，每轮 128），L7 / L8 1024–1663（d7dag21–30 / d8dag21–30，每轮 64）。
+- task19新族：`day_l{7,8,9,10}_train_d7p`，由`scripts/make_identity_tasks.py --manifest <day_panel.json>`生成本地`artifacts/stage4/day_panel_identity.json`；训练种子分别1840000–1848191、1850000–1858191、1860000–1868191、1870000–1878191，不覆盖旧任务。`deck_perturb`含swaps=[1,2]、pool、引擎DECK_OPTIONS冻结查询及excluded_decks；每种子确定性替换恰1/2张、再洗牌，pool只取实际profile已解锁的非升级/非特殊且逐卡无引擎警告的植物，按AGENTS §8保持水路/屋顶覆盖。当前playthrough=2，解锁按第二轮冒险的引擎实际列表，不按首轮关卡奖励猜。
+- 留出族`day_lN_eval_d7p_holdout{1,2,3}`：每关3套初始7卡，环境种子30000–30255；12套无序初始植物集合在四个训练族中全部显式排除，槽位排列不解除排除。生成时穷举核对全部32768训练种子，无训练/留出初始卡组集合重叠；这不保证L10后续传送带动态手牌集合完全未见。采集meta保存实际初始deck、基础deck、扰动来源及冻结学生检查点，各帧packets保存真实动态手牌；反事实沿既有`episode_query`路径读取存档deck，不重新采样/读取现行清单。
+- 可行性范围：DECK_OPTIONS直接调用`HasSeedType`和`Board::SeedNotRecommendedForLevel`，默认排除逐卡原始警告；无头模式不调用会弹窗/依赖选卡UI状态的`SeedChooserScreen::OnStartButton`，尚未接其“整副卡无产阳光”等组合检查。上述随机扰动不按手工战术或卡牌强弱排序。L10保持既有任务物理语义，没有为满足固定卡组假设而关闭传送带或改动历史基线。

@@ -388,6 +388,12 @@ static void RunEnvironment(LawnApp* app)
 				<< ",\"control_seconds\":" << controlSeconds << '}' << std::endl;
 			continue;
 		}
+		else if (command == "DECK_OPTIONS")
+		{
+			const std::string options = app->EnvironmentDeckOptions();
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ',' << options.substr(1) << std::endl;
+			continue;
+		}
 		else if (command == "LOAD_ROLLOUT_NET")
 		{
 			std::string path, extra;

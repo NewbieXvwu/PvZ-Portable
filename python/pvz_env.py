@@ -637,18 +637,25 @@ class PvZEnv:
             raise ValueError("rollout network path must not contain newlines")
         with open(filename, "rb") as stream:
             version = stream.read(8)
-            if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004", b"PVZRN005"):
+            if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004", b"PVZRN005", b"PVZRN006"):
                 raise ValueError("load_rollout_net requires an exported C++ network")
-            observation = int.from_bytes(stream.read(16)[12:16], "little") if version in (b"PVZRN004", b"PVZRN005") else 1
+            observation = int.from_bytes(stream.read(16)[12:16], "little") if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") else 1
         if self._process is None:
             self._start()
-        if version in (b"PVZRN004", b"PVZRN005") and self._rollout_version < 2:
+        if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") and self._rollout_version < 2:
             raise RuntimeError("v2lite requires a rebuilt simulator with rollout_version >= 2")
         if observation == 3 and self._rollout_version < 3:
             raise RuntimeError("v2 requires a rebuilt simulator with rollout_version >= 3")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")
+
+    def deck_options(self) -> dict:
+        """Read engine unlocks and raw per-card recommendation flags without advancing the game."""
+        result = self._command('DECK_OPTIONS')
+        if not result.get('ok'):
+            raise RuntimeError('DECK_OPTIONS requires a reset board and an identity-capable simulator')
+        return result
 
     def _student_options(self, student_history, trace_path) -> str:
         suffix = ""
