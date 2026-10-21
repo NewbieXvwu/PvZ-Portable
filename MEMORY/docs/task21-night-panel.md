@@ -1,0 +1,42 @@
+# task21（主控 2026-10-21 下发给台式机 CodeBuddy 第二条线）：夜间 L11–L20 原版难度评估面板
+
+先读仓库根目录 `AGENTS.md`（优先级最高，尤其 §8 卡组与地形），再读 `MEMORY/docs/task17-day-panel.md`（白天面板，本任务照它的做法）、
+`MEMORY/docs/day-panel.md` 与 DESIGN §14.7。
+
+## 背景
+“加宽”阶段：一个模型、原版难度、按地形配卡组，打通冒险模式。白天面板已有（task17），学生在白天 7 卡上 L1–L10 基本都在 87% 以上。
+下一个区是夜间草地（11–20）：天上不掉阳光、有墓碑格、蘑菇醒着。先要知道现在站在哪：现役学生与老师在每一关原版难度下各赢多少。
+学生从没见过夜间关和阳光菇，数字低是预期的，这一步只是量出起点、把面板搭好。
+
+本任务与 task20（另一个代理在 `conveyor` 工作树做传送带）**并行**，互不依赖。
+
+## 要做的
+工作区（台式机）：`~/PvZ-search/.claude/worktrees/night`（分支 `night`，主控已从 origin/pvz-env 建好），只在这里改代码、单独编译
+（`cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPVZ_ROLLOUT_BLAS=ON && cmake --build build -j4`）。
+
+1. **清单**：`scripts/make_day_panel.py` 加夜间关（或写 `scripts/make_night_panel.py`，能复用就复用），生成 `artifacts/stage4/night_panel.json`（不进 git）：
+   每关一个评估任务 `night_lN_eval`（倍率 1.0、不限波、playthrough 2，其余字段照白天面板），卡组用 `deck_for_level`（不要另写）。
+   种子用评估段 30000–31023（每关 1024 个）。
+   先查清每一关：是不是夜间草地（`pvz_constants.background_for_level`）、有没有特殊玩法（例如 2-5 / 2-10 是否小游戏或传送带）、
+   卡组是否只含该关已解锁的植物（按引擎实际 playthrough=2 的列表，task19 的 `DECK_OPTIONS` 可用）、墓碑格是否会让某些卡组结构性输局。
+   特殊关能跑就收并在报告里写清语义，不能跑就写进报告。不要改 `deck_for_level`；觉得卡组该换，写进“问题”由主控决定。
+2. **跑数**（同时最多 2 个游戏进程：台式机采集队列与另一个代理也在用 CPU）：
+   - 学生 v34（`~/PvZ-search/artifacts/student/v34/model.pt`，slot 头）与 identity 学生
+     （`~/PvZ-search/.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt`）：每关 128 局；
+   - 老师（学生 v34 + 搜索，参数照 `~/pvz-logs/queue100.sh` 里采集轮的写法）：每关 16 局，只为知道老师在各关的上限。
+   用 `scripts/eval_panel.py` / `scripts/search_play.py`，Python 用 `~/.venvs/ml/bin/python3`，资源目录 `~/.cache/pvz-research-resources`。
+3. 在 DESIGN §14 下登记新任务族 `night_l*_eval`（AGENTS §8 第 4 条）。
+
+## 交付
+- 结果写 `MEMORY/docs/night-panel.md`：每关一行（关卡、卡组、特殊玩法、v34 / identity 胜局 / 128、老师胜局 / 16、平均到达波数），
+  加一段“哪几关老师也打不过”（多半是卡组或地形问题，不是策略问题）和“哪几关学生明显不如老师”（下一步采集重点）。
+- 分支 `night` 提交，可以 `git push origin night`；不推 pvz-env、不合并。
+
+## 规则
+- **不要动任何 tmux 队列（q100 等）与别的代理的会话；不要改 `rowpool`、`identity`、`conveyor` 工作树与 `~/PvZ-search` 主工作区。**
+- 不训模型；不改默认值；不写手工规则；不写字面密钥（`$HF_TOKEN` / `$PVZ_HF_REPO`）；不 `git add -f`；`.pt/.npz/.log` 不进 git。
+- 只用绝对路径。每完成一小步就提交，并在本文末尾“结果”里记一行做到哪；疑问写“问题”一节，按最佳判断继续，不要停下来等。
+
+## 结果
+
+## 问题
