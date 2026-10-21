@@ -132,7 +132,8 @@ def training(plan):
     model = torch.load(path, map_location='cpu', weights_only=True)
     reference = torch.load(plan['models']['identity'], map_location='cpu', weights_only=True)
     inventory = read(ROOT/'MEMORY/docs/task20-reference.json')
-    counts = {label: len(list((OUT/'frames_v2').glob('*/'+label+'/frames.npz'))) for label in plan['labels']}
+    from pvz_frame_store import frame_paths
+    counts = Counter(p.parent.name for p in frame_paths(OUT/'frames_v2') if p.parent.name in plan['labels'])
     assert all(counts[label] == count for label, count in inventory['inherited_archive_counts'].items())
     assert all(counts[label+'_fast_search'] == 128 for label in plan['collection_labels'])
     assert sum(counts.values()) == 38271+256
