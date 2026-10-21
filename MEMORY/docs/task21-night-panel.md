@@ -69,3 +69,12 @@
 3. **跑数**（同时最多 2 个游戏进程）：三套卡组 × L11–L14、L16 × 老师（identity 推演）16 局，再加 identity 学生 64 局。
    表格加进 `MEMORY/docs/night-panel.md` 新的一节，写清哪套卡组老师赢得最多、学生离老师多远。
    不改 `deck_for_level`；最后选哪套由主控定。
+
+## 第三步（主控 2026-10-22 02:50 追加）：定夜间卡组 n9，准备采集
+三套卡组老师 3/80、44/80、58/80，**夜间卡组定为 n9 `[0,1,2,3,4,5,7,8,9]`**（是白天训练卡组的超集，学生已认识其中 7 张）。
+1. `scripts/make_night_panel.py` 加训练任务族 `night_lN_train_n9`（N = 11–14、16–20），字段同 `night_lN_eval_n9`，
+   训练种子 `1900000 + (N−11)·10000` 起每关 8192 个（与现有所有段不重叠，生成时自查），DESIGN §14.9 登记。
+   重新生成 `artifacts/stage4/night_panel.json`（含 eval / eval_n8 / eval_n9 / train_n9），**另拷一份到 `~/PvZ-search/artifacts/stage4/night_panel.json`**（主控的采集队列读这份）。
+2. 2-10（L20）是传送带：按 task20 的原版开局字段（`conveyor_start`，见 conveyor 分支）能做就把 `night_l20_*_n9` 改成原版开局；
+   conveyor 分支还没合进来就先保持现状并在“问题”里写明，主控合并后再改。
+3. 提交、`git push origin night`，在“结果”记一行。然后本任务完成，停下即可。
