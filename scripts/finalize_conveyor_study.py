@@ -20,6 +20,26 @@ def record_task(text):
     path.write_text(before+'\n- '+today()+'，'+text+'\n\n## 问题'+after)
 
 
+def commit_documents(message, report):
+    def git(*args):
+        return subprocess.check_output(['git', *args], cwd=ROOT)
+    assert git('branch', '--show-current').strip() == b'conveyor'
+    assert not git('diff', '--cached', '--name-only').strip(), 'leave another staged change alone'
+    paths = [f'MEMORY/docs/{report}', 'MEMORY/docs/day-panel.md',
+             'MEMORY/docs/task20-conveyor-fidelity.md', f'MEMORY/{today()}.md']
+    assert all((ROOT/path).stat().st_size < 1_000_000 for path in paths)
+    git('add', '--', *paths)
+    stats = git('diff', '--cached', '--numstat')
+    assert all(line.split(b'\t', 2)[0] != b'-' for line in stats.splitlines()), 'no binary delivery'
+    tracked = git('ls-files', '-z', 'artifacts', 'logs')
+    ignored = subprocess.run(['git', 'check-ignore', '-z', '--stdin', '--no-index'],
+                             cwd=ROOT, input=tracked, stdout=subprocess.PIPE, check=False)
+    assert ignored.returncode in (0, 1) and not ignored.stdout, 'tracked artifact delivery violates repository rules'
+    if stats.strip():
+        subprocess.run(['git', 'commit', '-m', message], cwd=ROOT, check=True)
+    subprocess.run(['git', 'push', 'origin', 'conveyor'], cwd=ROOT, check=True)
+
+
 def update_section(path, text):
     old = path.read_text()
     heading = '\n## 9. task20：原版 1-10 传送带（2026-10-21）'
@@ -117,7 +137,6 @@ def document_final():
                      f'seed1原12epoch，原版及七卡L7/L8/L9各256局胜局{wins}；'
                      '独立重读完整1024局/归档/标签/模型/配方，旧默认8局除seconds外逐字段一致。'
                      '报告在task20-results.json/day-panel第9节，无默认/生产晋升，单种子不作非劣推断。\n')
-    write(OUT/'finalization_complete.json', dict(complete=True, results_sha256=sha(ROOT/'MEMORY/docs/task20-results.json')))
 
 
 if __name__ == '__main__':
@@ -130,10 +149,14 @@ if __name__ == '__main__':
         while guard.available() < 6*1024*1024: time.sleep(10)
         subprocess.run([guard.PYTHON, 'scripts/report_conveyor_study.py'], cwd=ROOT, env=guard.ENV, check=True)
         if not (OUT/'baseline_documented.json').exists():
-            document_baseline(); write(OUT/'baseline_documented.json', dict(complete=True))
+            document_baseline()
+            commit_documents('Record executed-teacher original conveyor baseline', 'task20-baseline.json')
+            write(OUT/'baseline_documented.json', dict(complete=True))
         while guard.live(controller): time.sleep(10)
         assert read(OUT/'evaluation_complete.json')['complete']
         while guard.available() < 6*1024*1024: time.sleep(10)
         legacy_contract(read(OUT/'study_plan.json'))
         subprocess.run([guard.PYTHON, 'scripts/report_conveyor_study.py', '--final'], cwd=ROOT, env=guard.ENV, check=True)
         document_final()
+        commit_documents('Complete original conveyor DAgger pilot and compatibility evidence', 'task20-results.json')
+        write(marker, dict(complete=True, results_sha256=sha(ROOT/'MEMORY/docs/task20-results.json')))
