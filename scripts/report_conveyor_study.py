@@ -20,6 +20,10 @@ def games(folder, task, seeds, model, *, teacher=False, beta=None, workers=True)
     assert config['max_actions'] == '3000'
     if teacher:
         assert float(config['dagger_beta']) == beta
+        plan = read(OUT/'study_plan.json')
+        assert config['value'] == plan['models']['value'] and config['static_value'] == plan['models']['static']
+        assert config['executable'] == str(ROOT/'build/pvz-portable')
+        assert config['manifest'] == plan['manifest']
         expected = dict(samples='3', halving='True', verify_samples='9', student_candidates='2',
                         candidate_generator='static', per_card='1', horizon='2500', margin='0.02',
                         min_gap='300', rollout_sim_skip='61', rollout_backend='cpp', cpu_sparse_tracks='False')
@@ -161,6 +165,7 @@ def report(final):
                   study_plan_sha256=sha(OUT/'study_plan.json'), executable_sha256=plan['executable_sha256'],
                   original_models_sha256=plan['model_sha256'], baseline=baseline,
                   preflight=read(OUT/'preflight_complete.json'))
+    assert result['preflight']['plan_sha256'] == result['study_plan_sha256']
     if final:
         result['collection'] = collection(plan)
         result['training'] = training(plan)
@@ -188,7 +193,13 @@ def report(final):
             record['resources'] = read(OUT/('t20_pilot_'+task+'.result.json'))
             assert record['resources']['returncode'] == 0
             evaluation.append(record)
+        compatibility = read(OUT/'legacy_contract.json')
+        assert compatibility['games'] == 8 and compatibility['identical_except_seconds']
+        assert compatibility['executable_sha256'] == plan['executable_sha256']
+        tests = OUT/'review_fix_tests.txt'
+        assert 'Ran 31 tests' in tests.read_text() and tests.read_text().rstrip().endswith('OK')
         result.update(complete=True, evaluation=evaluation, evaluated_games=1024,
+                      engineering=dict(legacy_contract=compatibility, targeted_tests=31, test_log_sha256=sha(tests)),
                       limitations=['One fresh training seed: descriptive pilot, no population-level noninferiority claim.',
                                    'More data also changes the seed-based validation split and optimizer-step count.',
                                    'v34 baseline inherited from cb; historical executable hash unavailable.',
