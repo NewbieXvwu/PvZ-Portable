@@ -17,13 +17,30 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from pvz_value_net import BOARD_CHANNELS, COLS, CONTEXT, ROWS, SCALARS, featurize_numpy
+from pvz_value_net import BOARD_CHANNELS, COLS, CONTEXT, PLANT_TYPES, ROWS, SCALARS, featurize_numpy
 from pvz_student_observation import OBS_EXTRA
 
 PACKETS = 10            # seed-bank slots (SEEDBANK_MAX)
 LAWN_COLS = 9
 EXTRA = 2               # previous action was a plant; ticks since the previous decision / 300
 WAIT = {"type": "wait", "ticks": 60, "until": "timeout"}
+
+
+def packet_features(frame: dict) -> torch.Tensor:
+    """Public per-slot [plant type, active, cooldown progress, affordable]; -1 marks an empty slot.
+
+    Kept separate from the legacy scalar encoding: duplicate cards can have different cooldowns.
+    No slot position is a learned feature of the identity head.
+    """
+    result = np.zeros((PACKETS, 4), dtype=np.float32)
+    result[:, 0] = -1
+    for slot, kind, active, cooldown, refresh, cost in frame['packets']:
+        if not 0 <= slot < PACKETS or kind < 0:
+            continue
+        result[slot] = (min(kind, PLANT_TYPES - 1), bool(active),
+                        min(1.0, 1.0 if active or not refresh else cooldown / refresh),
+                        frame['sun'] >= cost)
+    return torch.from_numpy(result)
 
 
 def features(frame: dict, previous: dict | None, context: np.ndarray | None = None) -> tuple[torch.Tensor, torch.Tensor]:
@@ -39,11 +56,18 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
 
 class RolloutNet(nn.Module):
     def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1",
-                 row_pool: bool = False, aux: bool = False):
+                 row_pool: bool = False, aux: bool = False, packet_head: str = "slot",
+                 plant_embedding_dim: int | None = None):
         super().__init__()
         if obs not in OBS_EXTRA:
             raise ValueError(f"unknown student observation version: {obs}")
         self.obs = obs
+        if packet_head not in ('slot', 'identity'):
+            raise ValueError(f'unknown packet head: {packet_head}')
+        self.packet_head = packet_head
+        self.plant_embedding_dim = width if plant_embedding_dim is None else plant_embedding_dim
+        if self.plant_embedding_dim < 1 or (packet_head == 'slot' and self.plant_embedding_dim != width):
+            raise ValueError('invalid plant embedding dimension')
         # With context the student also reads the task (zombie-count multiplier, zombie roster): early in a
         # 1.5x game the board looks like a 1.0x game, but the teacher already plays differently (2026-10-16:
         # v12 copies the teacher's early wall-nuts 13% of the time).
@@ -60,26 +84,39 @@ class RolloutNet(nn.Module):
         self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA + (CONTEXT if context else 0)
                                              + OBS_EXTRA[obs][1], width), nn.ReLU())
         self.plant = nn.Linear(g, 1)
-        self.packet = nn.Linear(g, PACKETS)
-        self.packet_embedding = nn.Embedding(PACKETS, width)
+        e = self.plant_embedding_dim
+        self.packet = (nn.Linear(g, PACKETS) if packet_head == 'slot' else
+                       nn.Sequential(nn.Linear(g + e + 3, width), nn.ReLU(), nn.Linear(width, 1)))
+        self.packet_embedding = nn.Embedding(PACKETS if packet_head == 'slot' else PLANT_TYPES, e)
         # Each cell sees its own features, the chosen packet and the global context.
-        self.cell = nn.Sequential(nn.Conv2d(2 * width + g, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
+        self.cell = nn.Sequential(nn.Conv2d(width + e + g, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
         self.row_pool = row_pool
         self.row_projection = nn.Conv2d(2 * width, width, 1) if row_pool else None
         self.aux = nn.Conv2d(width, 1, 1) if aux else None
 
     def forward(self, board: torch.Tensor, scalars: torch.Tensor, packet: torch.Tensor | None = None,
-                auxiliary: bool = False):
-        h, g = self.encode(board, scalars)
-        out = {"plant": self.plant(g).squeeze(1), "packet": self.packet(g)}
+                auxiliary: bool = False, packet_info: torch.Tensor | None = None):
+        h, g = self.encode(board, scalars, packet_info=packet_info)
+        out = {"plant": self.plant(g).squeeze(1), "packet": self.packet_logits(g, packet_info)}
         if packet is not None:
-            out["cell"] = self.cell_logits(h, g, packet)
+            out["cell"] = self.cell_logits(h, g, packet, packet_info)
         if auxiliary:
             out["aux"] = self.aux(h).mean(dim=3).squeeze(1)
         return out
 
     def encode(self, board: torch.Tensor, scalars: torch.Tensor,
-               sparse_input: bool = False) -> tuple[torch.Tensor, torch.Tensor]:
+               sparse_input: bool = False, packet_info: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+        if self.packet_head == 'identity':
+            self._check_packet_info(packet_info)
+            # Symmetric per-type aggregate, including duplicate cards; legacy features use last slot.
+            scalars = scalars.clone()
+            scalars[:, 5:113] = 0
+            kinds = packet_info[:, :, 0].long()
+            valid = kinds >= 0
+            ready = packet_info[:, :, 1] * packet_info[:, :, 3]
+            for start, values in ((5, ready), (59, packet_info[:, :, 2])):
+                scalars[:, start:start + PLANT_TYPES].scatter_reduce_(
+                    1, kinds.clamp(min=0), values.masked_fill(~valid, 0), reduce='amax', include_self=True)
         if sparse_input:
             h = self._trunk_sparse(board)
         else:
@@ -105,7 +142,27 @@ class RolloutNet(nn.Module):
                      padding=conv.padding)
         return self.trunk[1:](x)
 
-    def cell_logits(self, h: torch.Tensor, g: torch.Tensor, packet: torch.Tensor) -> torch.Tensor:
+    @staticmethod
+    def _check_packet_info(packet_info):
+        if packet_info is None or packet_info.ndim != 3 or packet_info.shape[1:] != (PACKETS, 4):
+            raise ValueError('identity packet head requires [batch,10,4] public packet_info')
+
+    def packet_logits(self, g: torch.Tensor, packet_info: torch.Tensor | None = None) -> torch.Tensor:
+        if self.packet_head == 'slot':
+            return self.packet(g)
+        self._check_packet_info(packet_info)
+        kind = packet_info[:, :, 0].long()
+        embedding = self.packet_embedding(kind.clamp(min=0))
+        global_context = g[:, None, :].expand(-1, PACKETS, -1)
+        logits = self.packet(torch.cat([global_context, embedding, packet_info[:, :, 1:]], dim=2)).squeeze(2)
+        available = (kind >= 0) & (packet_info[:, :, 1] > 0) & (packet_info[:, :, 3] > 0)
+        return logits.masked_fill(~available, -1e9)
+
+    def cell_logits(self, h: torch.Tensor, g: torch.Tensor, packet: torch.Tensor,
+                    packet_info: torch.Tensor | None = None) -> torch.Tensor:
+        if self.packet_head == 'identity':
+            self._check_packet_info(packet_info)
+            packet = packet_info[:, :, 0].long().gather(1, packet[:, None]).squeeze(1).clamp(min=0)
         e = self.packet_embedding(packet)[:, :, None, None].expand(-1, -1, ROWS, COLS)
         ctx = g[:, :, None, None].expand(-1, -1, ROWS, COLS)
         return self.cell(torch.cat([h, e, ctx], dim=1))[:, 0, :, :LAWN_COLS].flatten(1)  # [B, 54]
@@ -129,15 +186,17 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
         board, scalars = features(frame, previous, context if net.context else None)
     # The trunk is computed once and shared by the three heads: the cell head used to rerun the
     # whole network on the same input, which gives the same numbers at twice the cost.
-    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input)
+    info = packet_features(frame)[None] if net.packet_head == 'identity' else None
+    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
     if float(net.plant(g)[0, 0]) <= 0.0:
         return dict(WAIT)
     by_packet: dict[int, list[dict]] = {}
     for a in legal_plants:
         by_packet.setdefault(a["packet"], []).append(a)
-    packet_logits = net.packet(g)[0].tolist()
-    packet = max(by_packet, key=lambda p: packet_logits[p] if p < PACKETS else -1e9)
-    cells = net.cell_logits(h, g, torch.tensor([packet]))[0].tolist()
+    packet_logits = net.packet_logits(g, info)[0].tolist()
+    packet = max(by_packet, key=(lambda p: (packet_logits[p], -int(info[0, p, 0])))
+                 if info is not None else (lambda p: packet_logits[p] if p < PACKETS else -1e9))
+    cells = net.cell_logits(h, g, torch.tensor([packet]), info)[0].tolist()
     best = max(by_packet[packet], key=lambda a: cells[a["row"] * LAWN_COLS + a["col"]])
     return {"type": "plant", "packet": packet, "col": best["col"], "row": best["row"]}
 
@@ -166,21 +225,24 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
         if net.context and context is None:
             raise ValueError("this student reads the task context: pass context=observation_context(obs)")
         board, scalars = features(frame, previous, context if net.context else None)
-    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input)
+    info = packet_features(frame)[None] if net.packet_head == 'identity' else None
+    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
     plant_p = float(torch.sigmoid(net.plant(g))[0, 0])
     by_packet: dict[int, list[dict]] = {}
     for a in legal_plants:
         by_packet.setdefault(a["packet"], []).append(a)
     packets = sorted(by_packet)
-    packet_p = torch.softmax(net.packet(g)[0][packets], dim=0).tolist()
+    packet_p = torch.softmax(net.packet_logits(g, info)[0][packets], dim=0).tolist()
     out: list[tuple[float, dict]] = []
     for packet, p_packet in zip(packets, packet_p):
-        cells = net.cell_logits(h, g, torch.tensor([packet]))[0]
+        cells = net.cell_logits(h, g, torch.tensor([packet]), info)[0]
         index = torch.tensor([a["row"] * LAWN_COLS + a["col"] for a in by_packet[packet]])
         cell_p = torch.softmax(cells[index], dim=0).tolist()
         for a, p_cell in zip(by_packet[packet], cell_p):
             out.append((plant_p * p_packet * p_cell, a))
-    out.sort(key=lambda item: -item[0])
+    out.sort(key=(lambda item: (-item[0], int(info[0, item[1]['packet'], 0]),
+                               item[1]['row'], item[1]['col'], item[1]['packet']))
+             if info is not None else (lambda item: -item[0]))
     return out
 
 
@@ -191,30 +253,38 @@ def load_student(path) -> RolloutNet:
     weights = checkpoint["state_dict"]
     net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),
                      bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"),
-                     bool(checkpoint.get("row_pool", False)))
+                     bool(checkpoint.get("row_pool", False)), packet_head=checkpoint.get('packet_head', 'slot'),
+                     plant_embedding_dim=checkpoint.get('plant_embedding_dim'))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith(("value.", "aux."))})
     return net.eval()
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """Keep existing exports byte-compatible; v5 adds row pooling and its projection weights."""
+    """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
              "plant.weight", "plant.bias", "packet.weight", "packet.bias", "packet_embedding.weight",
              "cell.0.weight", "cell.0.bias", "cell.2.weight", "cell.2.bias")
     weights = net.state_dict()
+    if net.packet_head == 'identity':
+        names = tuple(n.replace('packet.weight', 'packet.0.weight').replace('packet.bias', 'packet.0.bias') for n in names)
     if net.row_pool:
         names += ("row_projection.weight", "row_projection.bias")
+    if net.packet_head == 'identity':
+        names += ('packet.2.weight', 'packet.2.bias')
     with open(path, "wb") as stream:
-        stream.write((b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
+        identity = net.packet_head == 'identity'
+        stream.write((b"PVZRN006" if identity else b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
-        if net.row_pool or net.context or net.obs != "v1":
+        if identity or net.row_pool or net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))
-        if net.row_pool or net.obs != "v1":
+        if identity or net.row_pool or net.obs != "v1":
             stream.write(struct.pack("<I", 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
-        if net.row_pool:
+        if identity or net.row_pool:
             stream.write(struct.pack("<I", int(net.row_pool)))
+        if identity:
+            stream.write(struct.pack('<II', 1, net.plant_embedding_dim))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 
