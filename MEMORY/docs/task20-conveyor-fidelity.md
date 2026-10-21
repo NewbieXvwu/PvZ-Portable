@@ -61,6 +61,8 @@ task19 的 identity 头按植物身份出卡、逐槽读“种类 / 可用 / 冷
 
 - 2026-10-21，5推进：修正Python/C++原版输入后identity **256/256**，种子30000–30255、4worker、fast无搜索，212.51秒；原247/256仅留历史。v34沿用244/256，老师新目录base_teacher_executed以beta=1启动，原beta=0的24局不并入。流水线控制960045，计划和命令在本树artifacts/task20。
 
+- 2026-10-21，补充实际模型路径核对：两个完整原版种子30000/30001，修正后的identity在Python逐步采集路径与C++整局路径的games.jsonl除seconds外全部字段相同（含决策数/胜负/种植数）；见task20-collector-parity.json。不冒称逐动作序列或logit全对拍。
+
 ## 问题
 
 - 2026-10-21 接管复核更正：原 C++ identity 输入没有使用原版标志，affordable/global-ready仍按阳光计算；原search_play/collect meta及whatif未传conveyor_start，静态清单校验仍拒绝空deck/None wave_cap。已只在conveyor修复，31项目标检查通过（含40个真实原版局面Python/C++一致、回放传字段与清单契约），旧slot输入/旧任务episode字段不变。原identity 247/256基线须重评对齐后的输入；保留旧文件，不混作新基线。

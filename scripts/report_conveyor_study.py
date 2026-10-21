@@ -198,8 +198,13 @@ def report(final):
         assert compatibility['executable_sha256'] == plan['executable_sha256']
         tests = OUT/'review_fix_tests.txt'
         assert 'Ran 31 tests' in tests.read_text() and tests.read_text().rstrip().endswith('OK')
+        parity = read(ROOT/'MEMORY/docs/task20-collector-parity.json')
+        assert len(parity['games']) == 2 and all(r['identical_except_seconds'] for r in parity['games'])
+        for name, digest in parity['source_files'].items():
+            assert sha(ROOT/name) == digest
         result.update(complete=True, evaluation=evaluation, evaluated_games=1024,
-                      engineering=dict(legacy_contract=compatibility, targeted_tests=31, test_log_sha256=sha(tests)),
+                      engineering=dict(legacy_contract=compatibility, collector_cpp_full_game_metrics=parity,
+                                       targeted_tests=31, test_log_sha256=sha(tests)),
                       limitations=['One fresh training seed: descriptive pilot, no population-level noninferiority claim.',
                                    'More data also changes the seed-based validation split and optimizer-step count.',
                                    'v34 baseline inherited from cb; historical executable hash unavailable.',
