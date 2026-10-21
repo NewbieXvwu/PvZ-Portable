@@ -67,6 +67,8 @@ task19 的 identity 头按植物身份出卡、逐槽读“种类 / 可用 / 冷
 
 - 2026-10-21，5完成（重新核验）：原版学生v34 244/256、对齐identity 256/256，老师beta=1 64/64（同前64种子v34 58/64）。逐seed/config/均值摘要/冻结身份重读通过，结果见task20-baseline.json与day-panel第9节；两轮采集继续beta=0。
 
+- 2026-10-22，6完成：两轮beta0各128份原版归档，合并原数据38,527份/84标签，seed1 identity+row_pool原12epoch从头训练；原版/L7/L8/L9各256局胜局255/240/246/213。原版对照256→255；完整结果见task20-results.json与day-panel第9节。档案/模式/标签/检查点/源哈希/配方/所有种子实际重读通过；另8局旧任务兼容检查除seconds外逐字段相同。单种子描述性试验，不晋升默认/生产模型。
+
 ## 问题
 
 - 2026-10-21 接管复核更正：原 C++ identity 输入没有使用原版标志，affordable/global-ready仍按阳光计算；原search_play/collect meta及whatif未传conveyor_start，静态清单校验仍拒绝空deck/None wave_cap。已只在conveyor修复，31项目标检查通过（含40个真实原版局面Python/C++一致、回放传字段与清单契约），旧slot输入/旧任务episode字段不变。原identity 247/256基线须重评对齐后的输入；保留旧文件，不混作新基线。
