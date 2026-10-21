@@ -596,4 +596,13 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   生成方式 `scripts/make_night_panel.py --deck ... --suffix _n8`；`deck_for_level` 仍未改动。三套卡组只换卡组，任务其余字段逐项相同。
   **老师一律用 identity 学生做推演**（`identity_dw3_s1`，PVZRN006 走 C++ CPU 前向，不用 CUDA），
   避免 slot 头在夜间卡组上的槽位错位污染“老师上限”这个量。
+- **2026-10-22 主控定卡组：夜间用 n9** `[0,1,2,3,4,5,7,8,9]`（实测老师 58/80，n8 44/80，对照 3/80）。
+  新增训练任务族 `night_lN_train_n9`（N = 11–14、16–20）：字段同 `night_lN_eval_n9`，
+  训练种子 `1900000 + (N−11)·10000` 起每关 8192 个（L11 1900000–1908191、L12 1910000–…、L13 1920000–…、
+  L14 1930000–…、L16 1950000–…、L17 1960000–…、L18 1970000–…、L19 1980000–…、L20 1990000–1998191），
+  与评估段 30000–31023 及 1500000/1600000/1800000–1878191 各训练段不重叠（生成时自查）。
+  合并清单 `artifacts/stage4/night_panel.json`（`make_night_panel.py --combined`，36 个任务：
+  eval / eval_n8 / eval_n9 / train_n9 各 9 关），本工作树与 `~/PvZ-search/artifacts/stage4/night_panel.json` 各一份（都不进 git）。
+  **2-10 的 `conveyor_start` 原版开局**：本分支还没有 task20 的引擎/python 支持，L20 暂按“卡组写进初始手牌”的语义，
+  等 conveyor 合入后再改成原版开局（另开任务族名，不覆盖 `night_l*_n9`）。
 

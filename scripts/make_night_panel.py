@@ -27,8 +27,15 @@
     `playthrough = 2` 时引擎的 `GetSeedsAvailable()` 返回 49，模拟器不拦，
     所以这一列只是“原版首轮解锁”的记录，不是运行约束。
 
+2026-10-22 主控定夜间卡组 n9 = `[0,1,2,3,4,5,7,8,9]`。`--combined` 在同一个清单里写四个族
+（eval 对照 / eval_n8 / eval_n9 / train_n9），供采集队列直接读；训练种子
+`1900000 + (N-11)*10000` 起每关 8192 个，生成时自查不与评估段及旧训练段重叠。
+
 用法：
-  python3 scripts/make_night_panel.py                       # 写 artifacts/stage4/night_panel.json
+  python3 scripts/make_night_panel.py                       # 只写对照族（night_lN_eval）
+  python3 scripts/make_night_panel.py --combined            # 四个族一起写（主控的采集清单）
+  python3 scripts/make_night_panel.py --deck 0,1,2,3,4,5,8,9 --suffix _n8 \
+      --out artifacts/stage4/night_panel_n8.json            # 单写 n8 族
   python3 scripts/make_night_panel.py --include 15          # 连打地鼠关一起收
   python3 scripts/make_night_panel.py --skip 20             # 去掉 mini-boss 关
 """
@@ -55,6 +62,62 @@ SEEDS_PER_LEVEL = 1024
 # 2-5 打地鼠：没有卡组与阳光经济（LawnApp::IsWhackAZombieLevel，mLevel == 15）。
 EXCLUDED = {15: "whack-a-zombie (LawnApp::IsWhackAZombieLevel, mLevel == 15)"}
 
+# 2026-10-22 主控定卡组：n9 是白天训练卡组的超集（学生已认识其中 7 张）。
+N8_DECK = (0, 1, 2, 3, 4, 5, 8, 9)
+N9_DECK = (0, 1, 2, 3, 4, 5, 7, 8, 9)
+
+# 训练段：1900000 + (N - 11) * 10000，每关 8192 个。
+TRAIN_SEED_BASE = 1900000
+TRAIN_SEED_STRIDE = 10000
+TRAIN_SEEDS = 8192
+# 已用种子段（自查用）：与这些区间重叠就直接报错，不生成。
+RESERVED_SEED_RANGES = (
+    (30000, 31023),        # 评估段（白天 / 夜间面板共用）
+    (1500000, 1501023),    # night_l12_n1 训练段
+    (1600000, 1608191),    # 白天早期训练段
+    (1800000, 1878191),    # day_l7..l10 train_d7 / train_d7p
+)
+
+
+def train_seed_start(level: int) -> int:
+    return TRAIN_SEED_BASE + (level - FIRST_LEVEL) * TRAIN_SEED_STRIDE
+
+
+def check_seed_overlap(tasks: list[dict]) -> None:
+    """自查：单个任务里种子不重复；训练种子不撞任何已用段。
+
+    不同关卡、不同卡组共用同一段评估种子是**设计如此**（配对比较要同种子），
+    所以重复只在“同一个任务内部”才算错。
+    """
+    for task in tasks:
+        if len(set(task["seeds"])) != len(task["seeds"]):
+            raise RuntimeError(f"{task['task_id']}: 任务内部有重复种子")
+        if "_train_" not in task["task_id"]:
+            continue
+        for seed in task["seeds"]:
+            for low, high in RESERVED_SEED_RANGES:
+                if low <= seed <= high:
+                    raise RuntimeError(f"{task['task_id']}: seed {seed} 落在已用段 {low}..{high}")
+    for task in tasks:
+        if task["task_id"].startswith("night_l") and "_train_" in task["task_id"]:
+            if min(task["seeds"]) < TRAIN_SEED_BASE or max(task["seeds"]) >= TRAIN_SEED_BASE + 9 * TRAIN_SEED_STRIDE + TRAIN_SEEDS:
+                raise RuntimeError(f"{task['task_id']}: 训练种子越出 1900000 段")
+
+
+def task_document(level: int, deck, task_id: str, seeds: list[int]) -> dict:
+    return {
+        "task_id": task_id,
+        "terrain": "night",
+        "level": level,
+        "deck": list(deck),
+        "zombie_count_multiplier": 1.0,
+        "wave_cap": None,
+        "sun_start": SUN_START,
+        "preplanted": [],
+        "playthrough": 2,
+        "seeds": seeds,
+    }
+
 
 def special_note(level: int) -> str:
     if level == 15:
@@ -77,6 +140,8 @@ def main() -> None:
                    help="逗号分隔的种子编号，覆盖 deck_for_level（全关卡同一副卡）；默认空 = 用 deck_for_level")
     p.add_argument("--suffix", default="",
                    help="任务名后缀，接在 _eval 之后（如 _n8 -> night_l1_eval_n8）")
+    p.add_argument("--combined", action="store_true",
+                   help="一份清单里同时写 eval（对照）/ eval_n8 / eval_n9 / train_n9 四个族（主控的采集队列读这份）")
     args = p.parse_args()
 
     fixed_deck = tuple(int(seed) for seed in args.deck.split(",")) if args.deck else None
@@ -98,25 +163,28 @@ def main() -> None:
         checks.append({"level": level, "background": background, "deck": list(deck),
                        "unlocked": list(unlocked), "not_yet_unlocked": missing,
                        "special": special_note(level)})
-        tasks.append({
-            "task_id": f"night_l{level}_eval{args.suffix}",
-            "terrain": "night",
-            "level": level,
-            "deck": list(deck),
-            "zombie_count_multiplier": 1.0,
-            "wave_cap": None,
-            "sun_start": SUN_START,
-            "preplanted": [],
-            "playthrough": 2,
-            "seeds": list(range(args.seed_start, args.seed_start + args.seeds)),
-        })
+        tasks.append(task_document(level, deck, f"night_l{level}_eval{args.suffix}",
+                                   list(range(args.seed_start, args.seed_start + args.seeds))))
+
+    if args.combined:
+        for level in range(FIRST_LEVEL, LAST_LEVEL + 1):
+            if level in skipped:
+                continue
+            evaluation = list(range(args.seed_start, args.seed_start + args.seeds))
+            tasks.append(task_document(level, N8_DECK, f"night_l{level}_eval_n8", evaluation))
+            tasks.append(task_document(level, N9_DECK, f"night_l{level}_eval_n9", evaluation))
+            tasks.append(task_document(level, N9_DECK, f"night_l{level}_train_n9",
+                                       list(range(train_seed_start(level), train_seed_start(level) + TRAIN_SEEDS))))
+        check_seed_overlap(tasks)
 
     document = {
         "schema_version": 1,
         "split": "stage4",
         "purpose": "task21: original-difficulty panel for night levels 11-20 (one model, one deck per level, adventure mode)",
         "note": ("local manifest, not in git; decks come from scripts/pvz_tasks.py deck_for_level, "
-                 "seeds 30000.. are the same evaluation block as the day panel"),
+                 "seeds 30000.. are the same evaluation block as the day panel"
+                 + ("; families: night_l*_eval (control), night_l*_eval_n8, night_l*_eval_n9, "
+                    "night_l*_train_n9 (1900000 + (N-11)*10000, 8192 each)" if args.combined else "")),
         "skipped_levels": {str(level): reason for level, reason in sorted(skipped.items())},
         "tasks": tasks,
     }
@@ -133,6 +201,14 @@ def main() -> None:
     bad_terrain = [row["level"] for row in checks if row["background"] != "BACKGROUND_2_NIGHT"]
     if bad_terrain:
         print(f"WARNING: not night grass: {bad_terrain}")
+    if args.combined:
+        for name, deck in (("n8", N8_DECK), ("n9", N9_DECK)):
+            bad = {row["level"]: [seed for seed in deck if seed not in row["unlocked"]] for row in checks}
+            bad = {level: missing for level, missing in bad.items() if missing}
+            print(f"{name} deck {list(deck)}: " + ("all unlocked" if not bad else f"NOT unlocked: {bad}"))
+        for row in checks:
+            start = train_seed_start(row["level"])
+            print(f"train_n9 L{row['level']}: {start}..{start + TRAIN_SEEDS - 1}")
 
 
 if __name__ == "__main__":
