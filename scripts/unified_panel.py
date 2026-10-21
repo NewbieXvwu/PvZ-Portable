@@ -87,7 +87,8 @@ def evaluate(args):
     for task in manifest['tasks']:
         name = task['task_id']
         if name not in selected: continue
-        group = manifest['groups'][name]; count = getattr(args, group+'_seeds')
+        group = manifest['groups'][name]
+        count = args.task_seed_overrides.get(name, getattr(args, group+'_seeds'))
         seeds = task['seeds'][:count]
         assert count > 0 and len(seeds) == count
         folder = args.out/name
@@ -145,6 +146,8 @@ def main():
     p.add_argument('--day-seeds', type=int, default=128)
     p.add_argument('--heldout-seeds', type=int, default=64)
     p.add_argument('--night-seeds', type=int, default=128)
+    p.add_argument('--task-seeds', action='append', default=[], metavar='TASK=N',
+                   help='override any individual task budget; repeat for multiple tasks')
     p.add_argument('--workers', type=int, default=4)
     p.add_argument('--tasks', default='', help='optional comma-separated smoke subset; marks output incomplete')
     args = p.parse_args()
@@ -155,7 +158,21 @@ def main():
     if args.generate:
         write(args.manifest, generate(read(args.day_manifest), read(args.perturb_manifest), read(args.night_manifest)))
         print(f'wrote {args.manifest}: 29 tasks')
-    if args.rollout_policy: evaluate(args)
+    if args.rollout_policy:
+        tasks = {task['task_id']:task for task in read(args.manifest)['tasks']}
+        selected = set(args.tasks.split(',')) if args.tasks else set(tasks)
+        args.task_seed_overrides = {}
+        for item in args.task_seeds:
+            try:
+                name, value = item.rsplit('=',1); count = int(value)
+            except ValueError:
+                p.error('--task-seeds requires TASK=N')
+            if name not in tasks or name not in selected or name in args.task_seed_overrides:
+                p.error('--task-seeds task must be selected and specified once: '+name)
+            if not 1 <= count <= len(tasks[name]['seeds']):
+                p.error('--task-seeds exceeds the task seed range: '+name)
+            args.task_seed_overrides[name] = count
+        evaluate(args)
     elif not args.generate: p.error('pass --generate or --rollout-policy')
 
 
