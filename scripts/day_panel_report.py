@@ -72,7 +72,7 @@ def main() -> None:
     p.add_argument("--out", type=Path)
     args = p.parse_args()
 
-    def label(level: int) -> str:
+    def level_label(level: int) -> str:
         return f"{args.area}-{level - (args.area - 1) * 10}"
 
     students = []
@@ -107,7 +107,7 @@ def main() -> None:
         mowers = first["mean_mowers_used"]
         waves = first["mean_final_wave"]
         cells = [cell(rows.get(level)) for _, rows in students]
-        row = f"| {label(level)} | [{deck}] | " + " | ".join(cells)
+        row = f"| {level_label(level)} | [{deck}] | " + " | ".join(cells)
         if teacher:
             teacher_row = teacher[1].get(level)
             row += f" | {cell(teacher_row)}"
@@ -121,17 +121,17 @@ def main() -> None:
     if teacher and gaps:
         compared = sorted(level for _, level, _, _ in gaps)
         lines.append(f"学生明显不如老师（胜率差 > {args.gap:.0%}，按差值排序；"
-                     f"只比较有老师数据的关卡 {', '.join(label(level) for level in compared)}）：")
+                     f"只比较有老师数据的关卡 {', '.join(level_label(level) for level in compared)}）：")
         worse = [item for item in sorted(gaps, reverse=True) if item[0] > args.gap]
         if worse:
             for gap, level, student_rate, teacher_rate in worse:
-                lines.append(f"- {label(level)}：学生 {student_rate:.1%} vs 老师 {teacher_rate:.1%}"
+                lines.append(f"- {level_label(level)}：学生 {student_rate:.1%} vs 老师 {teacher_rate:.1%}"
                              f"（差 {gap:+.1%}）")
         else:
             lines.append("- 无（这些关卡的学生胜率都在阈值内）")
         missing = [level for level in levels if level not in compared]
         if missing:
-            lines.append(f"- 未比较（没有老师数据）：{', '.join(label(level) for level in missing)}")
+            lines.append(f"- 未比较（没有老师数据）：{', '.join(level_label(level) for level in missing)}")
     elif teacher:
         lines.append("老师结果还没有，无法比较。")
     else:

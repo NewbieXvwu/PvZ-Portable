@@ -127,7 +127,7 @@ def main() -> None:
     print("| 关卡 | 卡组 | 胜局 | 胜率 | 平均丢车 | 平均到达波数 |")
     print("|---|---|---|---|---|---|")
     for row in rows:
-        print(f"| 1-{row['level']} | {row['deck']} | {row['won']}/{row['games']} | "
+        print(f"| L{row['level']} | {row['deck']} | {row['won']}/{row['games']} | "
               f"{row['win_rate']:.3f} | {row['mean_mowers_used']} | {row['mean_final_wave']} |")
     print(f"\nwrote {args.out / 'panel.json'}")
 
