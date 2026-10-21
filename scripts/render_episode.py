@@ -246,6 +246,8 @@ def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
         **({"v2": obs["v2"]} if "v2" in obs else {}),
+        # 只有原版传送带开局的观测带这个键；旧任务/旧档案的帧逐字节不变。
+        **({"conveyor_start": obs["conveyor_start"]} if obs.get("conveyor_start") else {}),
     }
 
 
@@ -270,6 +272,9 @@ def training_task_kwargs(task: dict, seed: int | None = None) -> dict:
     preplanted = tuple(tuple(p) for p in (task.get("preplanted") or ()))
     if preplanted:
         extra["preplanted"] = preplanted
+    # 原版传送带开局（task20）：任务不带卡组，只带这个字段。
+    if task.get("conveyor_start"):
+        extra["conveyor_start"] = task["conveyor_start"]
     seeds = task.get("seeds") or []
     actual_seed = seed if seed is not None else (seeds[0] if seeds else 0)
     from pvz_tasks import deck_for_seed
@@ -311,7 +316,8 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
         raise ValueError(f"policy={policy!r}：只支持 student（PPO 与规则脚本已删除，见 tag pre-cleanup-20261019）")
     # 专家迭代里的学生（python/pvz_rollout_policy.py，DESIGN §13–§14）：没有记忆，
     # 只看这一帧、上一帧和上一步实际执行的动作，贪心。卡组同样必须显式给。
-    if not checkpoint or not deck:
+    # 原版传送带开局的任务没有卡组（deck 为空），卡由引擎发；其余任务仍必须显式给卡组。
+    if not checkpoint or (not deck and (task_extra or {}).get("conveyor_start") != "original"):
         raise ValueError("policy=student 需要 checkpoint=<学生 model.pt> 和训练任务的 deck")
     import hashlib
     from pvz_event_env import EventWaitEnv

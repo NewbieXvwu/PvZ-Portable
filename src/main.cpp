@@ -103,7 +103,10 @@ static bool ParseIntList(const std::string& text, std::vector<int>& values)
 static bool ParseDeck(const std::string& text, std::vector<EnvironmentSeed>& deck)
 {
 	deck.clear();
-	if (text.empty() || text == "-") return false;
+	// "-" is the empty deck: only the original conveyor start accepts it (EnvironmentReset
+	// rejects an empty deck for every other task).
+	if (text == "-") return true;
+	if (text.empty()) return false;
 	std::istringstream input(text);
 	std::string item;
 	while (std::getline(input, item, ','))
@@ -602,8 +605,16 @@ static void RunEnvironment(LawnApp* app)
 					parsed = static_cast<bool>(multiplierInput >> task.zombieCountMultiplier) &&
 						multiplierInput.peek() == std::char_traits<char>::eof() && ParsePreplanted(preplantedText, task.preplanted);
 				}
+				// Optional trailing token, absent in every pre-task20 task: the command text of
+				// those tasks therefore stays byte-identical.
 				std::string extra;
-				if (input >> extra) parsed = false;
+				if (input >> extra)
+				{
+					if (extra == "conveyor_original") task.originalConveyorStart = true;
+					else parsed = false;
+					std::string trailing;
+					if (input >> trailing) parsed = false;
+				}
 			}
 			if (parsed && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&
 				(poolCleaner == 0 || poolCleaner == 1) && (roofCleaner == 0 || roofCleaner == 1))

@@ -1325,7 +1325,8 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedT
 
 bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task)
 {
-	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || deck.empty() || deck.size() > SEEDBANK_MAX ||
+	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || (deck.empty() && !task.originalConveyorStart) ||
+		deck.size() > SEEDBANK_MAX ||
 		task.playthrough != 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
 		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || !std::isfinite(task.zombieCountMultiplier) ||
 		task.zombieCountMultiplier < 1.0 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
@@ -1402,20 +1403,31 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 
 	MakeNewBoard();
 	mBoard->InitLevel();
+	// The original conveyor start only exists where the engine itself has a conveyor belt;
+	// every other level keeps the task deck and rejects the option.
+	if (task.originalConveyorStart && !mBoard->HasConveyorBeltSeedBank())
+		return false;
 	mMusic->mMusicDisabled = true;
 	mGameScene = GameScenes::SCENE_LEVEL_INTRO;
 	ShowSeedChooserScreen();
 	mBoard->mCutScene->StartLevelIntro();
 	mBoard->mCutScene->mCutsceneTime = 1000000;
 	mBoard->mCutScene->CancelIntro();
-		mBoard->mSeedBank->UpdateWidth(static_cast<int>(deck.size()));
-	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	// Board::InitLevel already sized the bank from GetNumSeedsInBank() (10 on a conveyor level)
+	// and cleared every packet, which is exactly the original start. Writing the task deck on
+	// top of it is the task19 variant; it stays the default so old tasks and archives replay
+	// unchanged.
+	if (!task.originalConveyorStart)
 	{
-		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
-		packet.mIndex = i;
-		packet.mX = mBoard->GetSeedPacketPositionX(i);
-		packet.mY = 8;
-		packet.SetPacketType(deck[i].type, deck[i].imitaterType);
+		mBoard->mSeedBank->UpdateWidth(static_cast<int>(deck.size()));
+		for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+		{
+			SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+			packet.mIndex = i;
+			packet.mX = mBoard->GetSeedPacketPositionX(i);
+			packet.mY = 8;
+			packet.SetPacketType(deck[i].type, deck[i].imitaterType);
+		}
 	}
 	mBoard->mTutorialState = TutorialState::TUTORIAL_OFF;
 	mBoard->mTutorialTimer = -1;
@@ -1649,8 +1661,13 @@ std::string LawnApp::EnvironmentLeanObservation()
 		<< ",\"night\":" << (mBoard->StageIsNight() ? "true" : "false")
 		<< ",\"pool\":" << (mBoard->StageHasPool() ? "true" : "false")
 		<< ",\"fog\":" << (mBoard->StageHasFog() ? "true" : "false")
-		<< ",\"roof\":" << (mBoard->StageHasRoof() ? "true" : "false")
-		<< ",\"tick\":" << mBoard->mMainCounter
+		<< ",\"roof\":" << (mBoard->StageHasRoof() ? "true" : "false");
+	// Only the original-conveyor tasks carry this key, so every pre-task20 observation stays
+	// byte-identical. It tells the client that the bank is the engine's own conveyor (empty at
+	// the start, cards dealt by Challenge::UpdateConveyorBelt) rather than a task deck.
+	if (mEnvironmentTaskSpec.originalConveyorStart)
+		out << ",\"conveyor_start\":\"original\"";
+	out << ",\"tick\":" << mBoard->mMainCounter
 		<< ",\"sun\":" << mBoard->mSunMoney << ",\"wave\":" << mBoard->mCurrentWave
 		<< ",\"wave_count\":" << mBoard->mNumWaves
 		<< ",\"wave_timer\":" << mBoard->mZombieCountDown
@@ -1806,8 +1823,10 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		<< ",\"night\":" << (mBoard->StageIsNight() ? "true" : "false")
 		<< ",\"pool\":" << (mBoard->StageHasPool() ? "true" : "false")
 		<< ",\"fog\":" << (mBoard->StageHasFog() ? "true" : "false")
-		<< ",\"roof\":" << (mBoard->StageHasRoof() ? "true" : "false")
-		<< ",\"tick\":" << mBoard->mMainCounter
+		<< ",\"roof\":" << (mBoard->StageHasRoof() ? "true" : "false");
+	if (mEnvironmentTaskSpec.originalConveyorStart)
+		out << ",\"conveyor_start\":\"original\"";
+	out << ",\"tick\":" << mBoard->mMainCounter
 		<< ",\"sun\":" << mBoard->mSunMoney << ",\"wave\":" << mBoard->mCurrentWave
 		<< ",\"wave_count\":" << mBoard->mNumWaves
 		<< ",\"wave_timer\":" << mBoard->mZombieCountDown

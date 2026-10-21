@@ -36,12 +36,17 @@ def packet_features(frame: dict) -> torch.Tensor:
     """
     result = np.zeros((PACKETS, 4), dtype=np.float32)
     result[:, 0] = -1
+    # The engine reports the start mode it actually used. On the original conveyor start
+    # SeedPacket::CanPickUp skips the sun check when the board has a conveyor bank, so the
+    # nominal packet cost is not a budget gate there. This is the engine's own flag, not a
+    # Python "conveyor is free" rule; tasks without it keep the nominal-cost comparison.
+    free_cards = frame.get('conveyor_start') == 'original'
     for slot, kind, active, cooldown, refresh, cost in frame['packets']:
         if not 0 <= slot < PACKETS or kind < 0:
             continue
         result[slot] = (min(kind, PlantTypes - 1), bool(active),
                         min(1.0, 1.0 if active or not refresh else cooldown / refresh),
-                        frame['sun'] >= cost)
+                        True if free_cards else frame['sun'] >= cost)
     return torch.from_numpy(result)
 
 

@@ -129,6 +129,9 @@ class TaskSpec:
     zombie_count_multiplier: float = 1.0
     wave_cap: int | None = None
     preplanted: tuple[tuple[int, int, int], ...] = ()
+    # "original": conveyor levels keep the engine's own seed bank (10 empty packets, cards dealt
+    # by Challenge::UpdateConveyorBelt) instead of writing the task deck into it.
+    conveyor_start: str | None = None
 
 
 def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -> TaskSpec:
@@ -193,7 +196,9 @@ def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]],
             raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
         seed_types.append(seed_type)
     upgrades = tuple(sorted(seed_type for seed_type in set(seed_types) if 40 <= seed_type <= 47))
-    return PlayerProfileContext(seed_slot_count=len(deck), owned_upgrade_plants=upgrades,
+    # An empty deck is the original conveyor start: no task deck exists, so the profile keeps
+    # the normal six slots while the board uses the engine's own ten-packet conveyor bank.
+    return PlayerProfileContext(seed_slot_count=len(deck) if deck else 6, owned_upgrade_plants=upgrades,
                                 imitater_owned=imitater_owned, first_aid_owned=bool(first_aid_owned))
 
 
@@ -392,6 +397,8 @@ class PvZEnv:
                type(col) is not int or not 0 <= col <= 8
                for seed_type, row, col in task.preplanted):
             raise ValueError("preplanted seed_type, row and col must be in range")
+        if task.conveyor_start not in (None, "original"):
+            raise ValueError("conveyor_start must be None or 'original'")
         if type(task.playthrough) is not int or task.playthrough != 2:
             raise ValueError("only replay semantics (playthrough=2) are supported")
         if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:
@@ -423,7 +430,7 @@ class PvZEnv:
                 cards.append(SeedCard(card[0], card[1]))
             else:
                 raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
-        if not cards or len(cards) > profile.seed_slot_count:
+        if (not cards and task.conveyor_start != "original") or len(cards) > profile.seed_slot_count:
             raise ValueError("deck must contain cards and fit the profile's seed slots")
         if any(type(card.seed_type) is not int or card.seed_type < 0 or card.seed_type >= 49 or
                (card.imitater_type is not None and
@@ -444,14 +451,19 @@ class PvZEnv:
         deck_text = ",".join(
             str(card.seed_type) if card.imitater_type is None else f"{card.seed_type}:{card.imitater_type}"
             for card in cards
-        )
-        response = self._command(
+        ) or "-"   # empty deck (original conveyor start): "-" keeps the positional fields aligned
+        command = (
             f"RESET_V2 {level} {seed} {task.playthrough} {profile.seed_slot_count} "
             f"{int(profile.imitater_owned)} {int(profile.first_aid_owned)} "
             f"{int(profile.pool_cleaner_owned)} {int(profile.roof_cleaner_owned)} {profile.rake_charges} "
             f"{upgrades} {forced} {deck_text} {task.zombie_count_multiplier:g} "
             f"{task.wave_cap or 0} {preplanted}"
         )
+        # Only the original-conveyor tasks append this token: every earlier task's reset
+        # message (and therefore its replay) stays byte-identical.
+        if task.conveyor_start == "original":
+            command += " conveyor_original"
+        response = self._command(command)
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
         self._reset_done = True
@@ -479,6 +491,7 @@ class PvZEnv:
                 "zombie_count_multiplier": task.zombie_count_multiplier,
                 "wave_cap": task.wave_cap,
                 "preplanted": [list(plant) for plant in task.preplanted],
+                "conveyor_start": task.conveyor_start,
             },
             "initial_state": self._state_record(observation),
             "operations": [],

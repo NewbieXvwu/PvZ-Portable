@@ -271,9 +271,13 @@ def _validate_environment(train: dict[str, Any], heldout: dict[str, Any], resour
                 profile=profile_for_deck(task["deck"]),
                 zombie_count_multiplier=task["zombie_count_multiplier"],
                 wave_cap=task["wave_cap"], preplanted=tuple(tuple(item) for item in task["preplanted"]),
+                conveyor_start=task.get("conveyor_start"),
             )
             observation, _ = env.reset(deck=task["deck"], task=spec)
-            if observation["sun"] != task["sun_start"] or observation["wave_count"] != task["wave_cap"]:
+            # wave_cap=None means "no cap": the board keeps the engine's own wave count, so
+            # only capped tasks can be compared against it.
+            wave_ok = task["wave_cap"] is None or observation["wave_count"] == task["wave_cap"]
+            if observation["sun"] != task["sun_start"] or not wave_ok:
                 failures.append(
                     f"{task['task_id']}: reset sun={observation['sun']} wave_count={observation['wave_count']} "
                     f"expected sun={task['sun_start']} wave_count={task['wave_cap']}"

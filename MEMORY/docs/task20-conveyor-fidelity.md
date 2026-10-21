@@ -46,4 +46,5 @@ task19 的 identity 头按植物身份出卡、逐槽读“种类 / 可用 / 冷
 
 ## 结果
 
+- 2026-10-21，1完成（原版开局选项）：`RESET_V2` 新增可选尾标记 `conveyor_original`（旧任务报文逐字节不变），传送带关设了它时 reset 不写卡组、不 `UpdateWidth`，保留 `Board::InitLevel` 给的 10 格空传送带、之后由 `Challenge::UpdateConveyorBelt` 发卡；非传送带关设了直接拒绝。空卡组在报文里写 `-`。观测只在原版开局任务里多一个 `conveyor_start` 键（旧观测不变）；Python `TaskSpec.conveyor_start`、空卡组 `profile_for_deck`（6 槽）、`packet_features` 按引擎标志把传送带卡视为买得起、`training_task_kwargs`/`collect`/清单校验全部接通。实测：L10 开局 10 个空槽、tick 240 出现首卡、可堆满 10 张；L7 设了被拒；dw3s1 在 `day_l10_eval_d7` 的 30000–30007 八局与既有 `dw3s1_l10_d7_256/games.jsonl` 除 `seconds` 外逐字段相同；27 项既有测试通过。
 ## 问题
