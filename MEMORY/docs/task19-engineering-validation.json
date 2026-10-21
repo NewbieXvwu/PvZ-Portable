@@ -1,0 +1,127 @@
+{
+  "identity_unique_tests": 30,
+  "test_runs": {
+    "corrected_input_tests.txt": {
+      "sha256": "3df3ff5f4818fff3c8ef11b04df1b18009769d83721e119dfd772b1ad0b3fc64",
+      "test_ids": [
+        "python.test_identity_packets.IdentityPacketsTest.test_checkpoint_roundtrip_and_v6_header",
+        "python.test_identity_packets.IdentityPacketsTest.test_duplicate_cards_have_separate_state_and_symmetric_global_context",
+        "python.test_identity_packets.IdentityPacketsTest.test_empty_seed_slot_does_not_overwrite_global_wave_count",
+        "python.test_identity_packets.IdentityPacketsTest.test_empty_slots_are_masked_and_real_legality_controls_availability",
+        "python.test_identity_packets.IdentityPacketsTest.test_missing_identity_inputs_fail_clearly",
+        "python.test_identity_packets.IdentityPacketsTest.test_selected_card_uses_the_shared_plant_embedding",
+        "python.test_identity_packets.IdentityPacketsTest.test_slot_permutation_changes_slots_but_not_plant_or_cell",
+        "python.test_identity_training.IdentityTrainingTest.test_cached_uncached_auxiliary_and_packet_alignment",
+        "python.test_identity_training.IdentityTrainingTest.test_cpu_training_checkpoint_is_loadable",
+        "python.test_identity_training.IdentityTrainingTest.test_read_cache_is_never_modified",
+        "python.test_identity_training.IdentityTrainingTest.test_scene_partial_decode_matches_full_json_for_ambiguous_or_nested_input",
+        "python.test_deck_perturb.DeckPerturbTest.test_global_heldout_sets_cannot_appear_in_any_training_family",
+        "python.test_deck_perturb.DeckPerturbTest.test_legacy_task_kwargs_unchanged_and_perturbed_kwargs_use_actual_deck",
+        "python.test_deck_perturb.DeckPerturbTest.test_locked_warned_upgrade_and_impossible_requests_fail",
+        "python.test_deck_perturb.DeckPerturbTest.test_seed_determinism_exact_replacements_and_no_global_rng_mutation",
+        "python.test_deck_perturb.DeckPerturbTest.test_terrain_required_cards_survive_sampling",
+        "python.test_deck_perturb.DeckPerturbTest.test_whatif_uses_archived_deck_instead_of_a_current_manifest",
+        "python.test_replay_task_spec.LoadTrainingTask.test_explicit_seed_wins",
+        "python.test_replay_task_spec.LoadTrainingTask.test_finds_the_task_by_id",
+        "python.test_replay_task_spec.LoadTrainingTask.test_first_aid_is_off_by_default_and_carried_when_set",
+        "python.test_replay_task_spec.LoadTrainingTask.test_kwargs_come_from_the_manifest",
+        "python.test_replay_task_spec.LoadTrainingTask.test_missing_task_lists_what_is_available",
+        "python.test_replay_task_spec.LoadTrainingTask.test_no_preplanted_means_no_key",
+        "python.test_replay_task_spec.LoadTrainingTask.test_profile_for_deck_carries_first_aid",
+        "python.test_replay_task_spec.ReplayRefusesTheWrongDeck.test_only_the_student_policy_remains",
+        "python.test_replay_task_spec.ReplayRefusesTheWrongDeck.test_student_without_checkpoint_or_deck_is_rejected"
+      ]
+    },
+    "corrected_training_tests.txt": {
+      "sha256": "87e80f49666a7bf06bcb059077591128ae4b271c151eefea450f6b2e6cd4c3f8",
+      "test_ids": [
+        "python.test_identity_training.IdentityTrainingTest.test_cached_uncached_auxiliary_and_packet_alignment",
+        "python.test_identity_training.IdentityTrainingTest.test_cpu_training_checkpoint_is_loadable",
+        "python.test_identity_training.IdentityTrainingTest.test_empty_labelled_slot_fails_before_optimization",
+        "python.test_identity_training.IdentityTrainingTest.test_read_cache_is_never_modified",
+        "python.test_identity_training.IdentityTrainingTest.test_scene_partial_decode_matches_full_json_for_ambiguous_or_nested_input"
+      ]
+    },
+    "corrected_cpp_tests.txt": {
+      "sha256": "28d3d0d738cb9f056fae8cc9728d589947e0a8cf6a8a95efd9e24268950b2be4",
+      "test_ids": [
+        "python.test_identity_cpp.IdentityCppTest.test_live_conveyor_free_cards_and_empty_slots_match_python",
+        "python.test_identity_cpp.IdentityCppTest.test_native_identity_ties_are_independent_of_slot_order",
+        "python.test_identity_cpp.IdentityCppTest.test_random_identity_heads_on_real_positions"
+      ]
+    },
+    "legacy_cpp_tests.txt": {
+      "sha256": "e7e92bdc37dd344e09a87371fd051700463b4eb8635b75fe95eff6ed2aa1762f",
+      "test_ids": []
+    }
+  },
+  "parity_results": [
+    {
+      "conveyor_decisions": 80,
+      "empty_slot_positions": 79,
+      "free_card_positions": 13,
+      "maximum_error": 1.6391277313232422e-07
+    },
+    {
+      "identity_cpu_max_abs_error": 1.1920928955078125e-07,
+      "configurations": 24,
+      "real_decisions": 192,
+      "all_argmax_and_actions_equal": true
+    },
+    {
+      "rollout_max_abs_error": 1.341104507446289e-07,
+      "configurations": 48
+    }
+  ],
+  "legacy_slot": {
+    "baseline": "7384b8d",
+    "configurations": 24,
+    "obs_versions": [
+      "v1",
+      "v2lite",
+      "v2"
+    ],
+    "initial_parameters_bit_exact": true,
+    "all_logits_bit_exact": true,
+    "exports_byte_identical": true,
+    "legacy_formats": [
+      "PVZRN002",
+      "PVZRN003",
+      "PVZRN004",
+      "PVZRN005"
+    ],
+    "current_source_sha256": "01565d74998e1b0a649c48660802e702e0251215e2b4e0851c4dd05bfeba7e4d",
+    "baseline_source_sha256": "8628c8f8f7e2c78c4de1b877a3f6bb2a683d9b72758c98ea73cb6fc593c303b8"
+  },
+  "perturbation": {
+    "manifest_sha256": "11942312efbd9dd4c5ea950f03fd1ecf2a733432dae96256f66adc30f1d865e1",
+    "training_seeds": 32768,
+    "distinct_training_initial_sets": 3682,
+    "heldout_initial_sets": 12,
+    "overlap": 0,
+    "all_terrain_eligible_unlocked_unwarned": true
+  },
+  "source_sha256": {
+    "python/pvz_rollout_policy.py": "01565d74998e1b0a649c48660802e702e0251215e2b4e0851c4dd05bfeba7e4d",
+    "scripts/train_rollout_policy.py": "7c32d66903d132e719a213922705b800b9b8d1a2c604c8daf6816c5ef689ba8e",
+    "python/pvz_frame_store.py": "4cc94a0624a736723b3f4726013a6fbf8519fbf66ab24f73a51a7874d86d1fe2",
+    "src/EnvironmentRollout.cpp": "25037ecc20e0fe5a8e854b1c7e4363209e58d85d63b697e530a84a24da3d7e96",
+    "src/EnvironmentRollout.h": "0f0cd7259786c3bec19b468c90eecc0cbaf8fdc382fe0adfdc034dfa6fae35af",
+    "src/LawnApp.cpp": "32c09a21cd2ba7fd6518036a25cdbea22cf152f56c9688d58badcb8e8f605258",
+    "src/main.cpp": "04fff2b67f83c1c654ca610c89c2ebd2535b1373b045a453d62c4e749489acb0",
+    "python/pvz_env.py": "6f757e6de6e036620b0a37f325d2eccac311e039a456cc4e0696b2f1c1ddc350",
+    "scripts/pvz_tasks.py": "ba43ef9877c73c8c8e1ad3de3cde0cac11ebbf5e6cc8f6b95ed22498c5525545",
+    "scripts/render_episode.py": "e96ded60ec0506b9a97c1371b68e667ef387256afd5df735fe995a6be2eb3e70",
+    "scripts/search_play.py": "03ba915e70d9e2c91632ef2c306820b3ef431a79597ff116a8707c545425b8e4",
+    "scripts/make_identity_tasks.py": "d14ab424091b9a89c192872b8e119b12ee0c5f720516f3b94cd07d85bd6a981a",
+    "scripts/run_identity_smoke.py": "c7e74a6f472658e8fd9977cc6a3326e4cec8bf9846ac413f5fec3ebfa9bf9ed2",
+    "cuda/RolloutCuda.cu": "c42319fafea7823f4f45a3a130fa9e07fda57d00a012fdb50a359acb210ce859",
+    "cuda/SimHost.cpp": "ac571f7e39eab698ef8f85943f6171f9b5c4dbed68729b35af1dfa1bb4b8e067",
+    "python/test_identity_packets.py": "a8ff1682c9117934b8d9d61f76f17354a07501fee4b294ba524f1b6f0d78f111",
+    "python/test_identity_training.py": "2e7d0947c8d94aa6904acda25e8e7e620db99aaa7c760d9eb8e1dc20a1dc9db6",
+    "python/test_identity_cpp.py": "33f56a703b043b23a4592c1766e5e47018759f0a7c9f766abd044593ed8e8108",
+    "python/test_deck_perturb.py": "cd13188fdf3e4a88b62641400ea711b89619b11c75642263f9a5b6fe7e192a44"
+  },
+  "executable_sha256": "a046711743058b57a3376526af86c4b52b2a0d69b70589134844a2bba4fb1580",
+  "cuda_scope": "both CUDA loaders contain explicit PVZRN006 rejection; identity GPU inference not implemented or claimed"
+}
