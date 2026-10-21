@@ -219,6 +219,69 @@ def _save(path: Path, **arrays):
             temporary_path.unlink(missing_ok=True)
 
 
+# Frames per encode chunk. One chunk of boards is what the archive writer holds at a time
+# (28 KB a frame) instead of a whole game's; see encode_frames_from_source.
+ENCODE_CHUNK = 128
+
+
+def encode_frames_from_source(source: bytes, chunk: int = ENCODE_CHUNK) -> dict:
+    """``encode_frames`` over the frame JSON in ``source``, one chunk of frames at a time.
+
+    Same arrays, same order, same dtype as ``encode_frames(frames, source)`` for the frames
+    ``source`` holds: each chunk carries the two frames of context ``features`` reads, and its
+    rows are re-based to absolute frame indices. Only the peak allocation differs -- one
+    chunk of boards instead of the whole game's, which is what made the archive write the
+    tallest point of a collection worker (task18).
+    """
+    from pvz_rollout_policy import PACKETS
+    from pvz_value_net import BOARD_CHANNELS, COLS, ROWS, SCALARS
+    lines = source.splitlines(keepends=True)
+    if not lines:
+        return encode_frames([], source)
+    # A row is a frame index from 1 to len(lines)-1, so the arrays can be allocated once and
+    # filled chunk by chunk: accumulating one array per chunk and concatenating them at the end
+    # would hold the whole game's boards twice, which is the spike this function exists to avoid.
+    limit = len(lines) - 1
+    out = {"rows": np.empty(limit, dtype=np.int64),
+           "boards": np.empty((limit, BOARD_CHANNELS, ROWS, COLS), dtype=np.float16),
+           "scalars": np.empty((limit, SCALARS + 2), dtype=np.float32),
+           "plant": np.empty(limit, dtype=np.float32),
+           "packet": np.empty(limit, dtype=np.int64),
+           "cell": np.empty(limit, dtype=np.int64),
+           "values": np.empty((limit, PACKETS + 1), dtype=np.float32)}
+    hints: list[bool] = []
+    filled = 0
+    for start in range(0, len(lines), chunk):
+        end = min(start + chunk, len(lines))
+        base = max(0, start - 2)                 # features() reads frame i-1 and frame i-2
+        encoded = encode_frames([json.loads(line) for line in lines[base:end]], b"".join(lines[base:end]))
+        keep = encoded["rows"] >= start - base    # rows are chunk-local; drop the overlap
+        count = int(keep.sum())
+        out["rows"][filled:filled + count] = encoded["rows"][keep] + base   # re-base to the whole game
+        for name in ("boards", "scalars", "plant", "packet", "cell", "values"):
+            out[name][filled:filled + count] = encoded[name][keep] if not keep.all() else encoded[name]
+        hints.extend(encoded["hints"][start - base:])
+        filled += count
+    for name in out:
+        out[name] = out[name][:filled]
+    return dict(hints=hints, **out)
+
+
+def write_frames_from_source(path: Path, source: bytes) -> None:
+    """``write_frames`` for a caller that already holds the frame JSON as bytes.
+
+    A collection worker writes one JSON line per decision anyway; keeping the parsed frames
+    alive for the whole game only to re-encode them costs ~18 MB of dicts and makes the
+    writer hold every board twice (task18).
+    """
+    if path.suffix == ".jsonl":
+        path.write_bytes(source)
+        path.with_suffix(".npz").unlink(missing_ok=True)
+        return
+    _save(path, frames=np.frombuffer(source, dtype=np.uint8), encoder=encoder_signature(),
+          **encode_frames_from_source(source))
+
+
 def write_frames(path: Path, frames: list[dict]):
     source = "".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames).encode()
     if path.suffix == ".jsonl":

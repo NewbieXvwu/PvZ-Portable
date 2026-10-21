@@ -65,30 +65,40 @@
 三个网络（学生 + 价值 + 静态价值）加导出**一共 2.4 MB**，numpy 10 MB，项目代码 0.5 MB。
 把网络拆开看没有意义 —— 大头是 `import torch`，不是权重。
 
-**一局之内**（同一进程，day_l9_train_d7 种子 1826000，1281 决策，91 s）：
+**一局之内**（同一进程，day_l9_train_d7 种子 1826000，1280 决策）。这一节在第二轮重测过：
+第一轮用的是 fork 之前创建的 `psutil.Process()`，它在子进程里报的是**父进程**的 task，整局数字是平的；
+每次新建 `Process()`（以及外部 0.2 s 采样器）才得到下面这条曲线。用 `vmmap -summary` 的 physical
+footprint（不含共享库页）：
 
-| 时点 | RSS |
-|---|---|
-| reset 前（import + 三个网络） | 242 MB |
-| 对局中 | 265 → 396 MB（随局面推进线性上升） |
-| `write_frames` 写档案 | +50 MB（395.8 → 445.8） |
+| 决策 | footprint | 其中 Malloc Large (empty) |
+|---|---|---|
+| 200 | 66.8 MB | 7.9 MB |
+| 800 | 74.4 MB | 10.2 MB |
+| 1000 | 118.8 MB | 52.2 MB |
+| 1200 | 143.3 MB | 72.3 MB |
+| 1280（终局） | 181.0 MB | 107.8 MB |
+| 写完档案 | 215.6 MB | 132.0 MB |
 
-对局内那 150 MB 的组成：
+对局内那段增长的组成（第一轮的归因是错的，这里是重测后的）：
 
-- **档案帧列表 17.5 MB**（1281 帧，序列化后 2.76 MB JSON，驻留的是 dict/tuple 的 Python 开销）。
-- **对局活对象约 57 MB**：终局时 tracemalloc 活着的 Python 对象 89.2 MB，其中 31.8 MB 是
-  importlib 的模块状态（属静态部分），剩下是帧、目标值与搜索状态。
-- **malloc 高水位约 70 MB**：终局时 MALLOC zone 保留 167.7 MB、实际分配 98.6 MB、碎片 0%。
-  一局里 Python 层要解析约 460 MB 的 JSON（1281 次 `step` × 9–20 KB + 4371 个 rollout 叶子 +
-  508 次 `branch_snapshot`，后者每次约 30 份完整观测），分配器把高水位留下了。
-- **不是泄漏**：终局时整局只剩 **2** 个完整观测 dict 活着（用 `gc.get_referrers` 数过）；
-  tracemalloc 把 10.7 MB 归到 `EventWaitEnv.step` 只是说明那批分配发生在那里。
+- **不是活对象，也不是帧列表。** 终局时 tracemalloc 活对象只比第 200 决策多 2 MB；帧列表按 JSON 行
+  存也只有 2.76 MB。涨的是分配器的**空区域**（Malloc Large (empty)：已经 free、但 macOS 不归还的大块）。
+  所以 **worker 的 RSS ≈ 本局出现过的最大一次同时分配**，而不是"整局累计分配了多少"。
+- **最尖的那一下是价值网络的前向。** 终局候选集约 240 帧 × 122 通道，`_values` 一次 `torch.stack`
+  成全批再算，单次 12 MB 起步、候选数越大越贵，而这个高水位永不归还。批次固定成 32 行之后，
+  同一局的终局 RSS 从 268 MB 掉到 **125 MB**（第 3 节）。
+- **观测本身很小**：终局 `json.dumps(obs)` 只有 16 KB（3 个僵尸、15 株植物），1281 次 `step` 不是问题。
+- **写档案**仍是单步最高的一个（+35 MB：`boards` 预分配 14.1 MB + 压缩），但已不在关键路径上。
+- **不是泄漏**：终局时整局只剩 **2** 个完整观测 dict 活着（用 `gc.get_referrers` 数过）。
 
 **另一个进程**：每个 worker 还有一个 `pvz-portable`，本机实测 **237 MB**（台式机 210 MB），
 不在这 650 MB 里，本任务没动它。
 
-**所以 650 MB ≈ 213 torch + 3 网络 + 100 对局活对象 + 70 分配器高水位 + 50 写档案**。
-Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 就是 glibc 比 macOS libmalloc 留得更多的那部分。
+**所以 650 MB ≈ 213 torch + 3 网络 + 一次价值网络全批前向的高水位 + 写档案的 35 MB**。
+第一轮把对局内的 150 MB 记在"活对象 / 帧列表"上，第二轮重测证明那是错的：活对象是平的，
+抬起来的是分配器的空区域，而制造那个高水位的是一次把整批候选喂给价值网络（见上表）。
+Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 是 glibc 比 macOS libmalloc 留得更多的空堆 ——
+同一段代码在 Mac 上的峰值是 125 MB（第 3 节），所以那 200 MB 的差额只能是分配器，不是代码。
 
 ### 2. 改了什么（`scripts/search_play.py`）
 
@@ -100,9 +110,19 @@ Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 就是 glibc 比 m
    这条是本次的关键：只 fork 不 freeze 时，GC 每一轮都遍历继承来的整个堆，
    每个被摸到的对象头都是一次写时复制，共享页很快被子进程私有化（见第 3 节的两行对照）。
 4. **`_release_freed_memory()`：每局写完档案后 `malloc_trim(0)`**（只有 glibc 有，Mac 上是 no-op）。
+5. **每局回收 worker 进程**（`Pool(..., maxtasksperchild=1)`，仅 fork 平台）。worker 的 RSS 只增不减，
+   一个长期活着的 worker 要替它玩过的每一局都付一次高水位；每局重新 fork 之后，下一局从父进程的
+   写时复制基线开始，峰值不再随局数叠加（551 → 384 MB 的和）。
+6. **`VALUE_BATCH = 32`：价值网络按固定 32 行分批前向**（原来一次 `torch.stack` 全批）。
+   网络逐行打分，批次只影响峰值：固定批次让每次前向形状一致，分配器复用同一块，
+   而不是每遇到一个新的候选数就再占一块。**这是本次最大的一笔：304 → 125 MB。**
+7. **`BRANCH_SNAPSHOT = 8`：`branch_snapshot` 每次 8 个分支**（原来 128）。模拟器为每个分支回一份
+   完整观测，终局那 128 份是 worker 里第二高的同时分配；8 个分支是同样的工作在同样的顺序上，
+   只是多几次往返（实测 301.9 → 277.3 MB，耗时不变）。
 
 搜索 / 标签 / 采集逻辑与默认值一行未动；`--frames` 的编码函数（`encode_frames` / `features` /
-`featurize_numpy` / `target_values`）一行未动，档案里的 `encoder` 哈希不变。
+`featurize_numpy` / `target_values`）一行未动，档案里的 `encoder` 哈希不变。第 5–7 条改的只有
+**进程生命周期与批次大小**：同样的种子跑出逐位相同的 `games.jsonl` / `frames.npz` / `meta.json`（第 4 节）。
 
 ### 3. 改前改后每 worker RSS 峰值
 
@@ -113,16 +133,25 @@ Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 就是 glibc 比 m
 | 改前（spawn，各载一份） | **454.3 / 377.0** | 851.2 | 21 |
 | 只 fork（未 freeze） | 392.4 / 322.8 | 715.2 | 221 |
 | fork + freeze | 322.1 / 210.8 | 530.2 | 221 |
-| **fork + freeze + trim（最终）** | **304.3 / 247.0** | 551.3 | 221 |
+| fork + freeze + trim | 304.3 / 247.0 | 551.3 | 221 |
+| + 每局回收进程 | 301.9 / 213.5 | 383.6 | 221 |
+| + `BRANCH_SNAPSHOT=8` | 277.3 / 217.8 | 402.8 | 221 |
+| **+ `VALUE_BATCH=32`（最终）** | **124.8 / 123.9** | **206.9** | 221 |
 
-4 worker、最终代码（同样 8 局）：峰值 **288.2 / 210.8 / 199.0 / 191.0**，和 837.6 MB。
-对局进行中的常态在 170–210 MB/worker，峰值出现在最长那局写档案的那一下。
+最终版 8 局各占一个进程（每局回收），所以是 8 个峰值：**124.8 / 123.9 / 122.9 / 112.1 / 109.6 /
+98.9 / 94.6 / 92.4 MB** —— 每一个都在 250 MB 以下，最差的离门槛还有 125 MB。
+4 worker、同样 8 局、最终代码：**124.7 / 122.2 / 120.8 / 120.5 / 108.9 / 106.6 / 99.7 / 97.0 MB**
+（四个之和峰值 367.0 MB，耗时 213.9 s）。worker 数与峰值无关了 —— 每个 worker 只玩一局。
+
+最后两行是阶梯式的：只改批次不动逻辑，峰值就掉 150 MB，说明高水位是"一次同时分配多少"，
+不是"一局总共分配多少"。
 
 父进程那 221 MB 是**一份**共享拷贝（fork 后子进程刚起来时 RSS 只有 14.6 MB，说明没有复制）。
 
-按 16 worker 折算：改前 16 × 454 ≈ 7.3 GB；改后 221 + 16 × 304 ≈ 5.1 GB。
+按 16 worker 折算：改前 16 × 454 ≈ 7.3 GB；改后 221 + 16 × 125 ≈ 2.2 GB。
 台式机的 650 MB 里 torch 更大、glibc 高水位更高，共享掉的那份也更大，
-但**这是折算，不是台式机实测**，别当结论用。
+但**这是折算，不是台式机实测**，别当结论用。glibc 那边 `malloc_trim` 每局回收一次，
+理论上还能再低一些；反过来，如果台式机的高水位来自我们没测到的别的分配，折算会偏乐观。
 
 ### 4. 逐位比对
 
@@ -130,17 +159,19 @@ Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 就是 glibc 比 m
 `frames.npz`（含 `frames` 里那串 JSON 的逐帧比对）与 `meta.json`，只忽略纯计时字段
 （`seconds` / `cuda_seconds`，含帧里 `verification.seconds`）。
 
-    python scripts/compare_run_bytes.py /tmp/slim/baseline /tmp/slim/final_run
+    python scripts/compare_run_bytes.py /tmp/slim/baseline /tmp/slim/slim_run
     games.jsonl: 8 rows compared
     archives: 8 compared
     identical
 
-改前 vs 改后（2 worker）、改前 vs 4 worker，都是 `identical`。
+比对的是**改前那棵树**（工作树 commit `5b6b6dcd`，即 `origin/pvz-env`）在同一组 8 个种子上跑出的结果。
+中间每一版（只 fork / fork+freeze / 每局回收 / 分支批次 8 / 价值批次 32）都单独跑过同一个脚本，
+全部 `identical` —— 包括只改 `VALUE_BATCH` 的那一版，说明按行分批前向对每一行的分数没有任何影响。
 
 ### 5. 测试
 
     python3 -m pytest python -q
-    1 failed, 228 passed, 12 skipped, 423 subtests passed
+    1 failed, 231 passed, 12 skipped, 423 subtests passed
 
 唯一的失败是 `test_dagger_experiment_runner.py::...test_low_memory_pauses_and_resumes_only_own_parent_and_child`
 —— 任务书里点名的 Mac 平台既有失败（它只 import `dagger_experiment_runner`，与本次改动无关）。
@@ -157,18 +188,24 @@ Mac 实测峰值 454 MB、台式机 650 MB，差的约 200 MB 就是 glibc 比 m
 1. **任务书的 `--seed-offset 60000` 越界。** `day_l9_train_d7` 只有 8192 个种子（1820000–1828191），
    60000 切出来是空列表，`search_play` 直接打印 "0 games on 2 workers" 退出。
    按最佳判断改用 **6000**（种子 1826000–1826007），8 局。任务书里的 60000 应为笔误。
-2. **250 MB 这个门槛没完全达到。** 常态 170–210 MB/worker 已低于它，但最长那局的峰值是 304 MB。
-   峰值里约 50 MB 是 `write_frames`：它要为整局 1281 帧建 `boards` 列表（18 MB）再 stack（又 18 MB）再压缩。
-   要再往下压只能改 `write_frames` 的写法（流式写），而档案里存的 `encoder` 哈希是
-   `encode_frames` 的源码哈希 —— 动它等于让所有历史档案的 `encoder` 对不上，所以没动。
-   要继续的话这是下一个目标，代价是"档案编码函数冻结"这条约束得重新谈。
-3. **`malloc_trim` 在本机无法验证。** macOS 没有 glibc（`malloc_zone_pressure_relief` 实测不归还任何东西），
-   所以第 4 条改动在这里是 no-op，对台式机 glibc 的效果**没有测过**。它只可能让 RSS 更低、不会影响结果；
-   如果台式机上量出来没变化，说明那 200 MB 差额不是空闲堆，而是活对象/碎片，删掉它即可。
-4. **墙钟时间这次没法比。** 本机同时跑着主仓库的正式采集（10 worker，load average 20），
-   8 局耗时在 371–412 s 之间波动。改动本身只在 fork / 初始化 / 每局结束时各多一次调用，
-   每决策路径没有增加任何工作。
-5. **RSS 会把共享页重复计数。** 子进程的 RSS 里包含它已经摸过（因此被写时复制）的那部分父进程页，
+2. **250 MB 的门槛最后是靠"固定批次"过的，不是靠流式写档案。** 第一轮判断峰值在 `write_frames`，
+   重测后不成立：写档案只占 +35 MB，真正的高水位是价值网络一次全批前向（终局 ~240 帧 × 122 通道）。
+   所以档案编码函数一行没动，`encoder` 哈希不变。**代价**：`VALUE_BATCH` 与 `BRANCH_SNAPSHOT` 是
+   显式的常量，将来如果候选集更大（更多卡、更大棋盘），这两个数要跟着复核 —— 它们现在约束的是
+   峰值，不是正确性。
+3. **每局回收进程会多花每局一次的模拟器启动（~0.7 s）。** 8 局实测 375.5 s vs 改前 366.6 s，
+   差在噪声内，但 16 worker × 几百局时这笔钱要算进去；不想要的话把 `maxtasksperchild` 去掉，
+   峰值会回到 ~180 MB（仍在 250 以下，只是会随局数缓慢叠加）。
+4. **`malloc_trim` 在本机无法验证。** macOS 没有 glibc（`malloc_zone_pressure_relief` 对 100 MB 已释放的
+   大块实测返回 0 字节，goal 传 0 / 1 MB / 2^62 都一样），所以第 4 条改动在这里是 no-op，
+   对台式机 glibc 的效果**没有测过**。它只可能让 RSS 更低、不会影响结果。
+5. **墙钟时间这次没法比。** 本机同时跑着主仓库的正式采集（10 worker，load average 20），
+   8 局耗时在 366–412 s 之间波动。改动本身只在 fork / 初始化 / 每局结束时各多一次调用，
+   每决策路径没有增加任何工作（分批前向的总行数不变）。
+6. **RSS 会把共享页重复计数。** 子进程的 RSS 里包含它已经摸过（因此被写时复制）的那部分父进程页，
    所以 fork 之后"每 worker RSS"不等于"这台机器多花了多少内存"。真正省下来的是
    **torch 那一份（213 MB）从 16 份变成 1 份**，加上每个 worker 少摸约 150 MB 的继承页。
    要看机器总量请用各进程 private 之和，不要用 RSS 之和。
+7. **`psutil.Process()` 在 fork 出来的子进程里会报父进程的内存。** 第一轮的"对局内数字全平"就是它：
+   在 fork 之前建的 `Process` 对象带着父进程的 task 句柄，子进程里 `memory_info()` 一直返回父进程的值。
+   要么每次新建 `psutil.Process()`，要么从外面采样。这一条差点让整轮的归因停在"帧列表"上。
