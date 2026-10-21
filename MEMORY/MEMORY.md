@@ -86,3 +86,9 @@
 
 - [task20-conveyor-fidelity.md](docs/task20-conveyor-fidelity.md)
 - [day-panel.md](docs/day-panel.md)
+
+- [2026-10-22](2026-10-22.md)
+
+- [task23-dw4i-unified-panel.md](docs/task23-dw4i-unified-panel.md)
+
+- [unified-panel.md](docs/unified-panel.md)
