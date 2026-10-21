@@ -47,4 +47,10 @@ task19 的 identity 头按植物身份出卡、逐槽读“种类 / 可用 / 冷
 ## 结果
 
 - 2026-10-21，1完成（原版开局选项）：`RESET_V2` 新增可选尾标记 `conveyor_original`（旧任务报文逐字节不变），传送带关设了它时 reset 不写卡组、不 `UpdateWidth`，保留 `Board::InitLevel` 给的 10 格空传送带、之后由 `Challenge::UpdateConveyorBelt` 发卡；非传送带关设了直接拒绝。空卡组在报文里写 `-`。观测只在原版开局任务里多一个 `conveyor_start` 键（旧观测不变）；Python `TaskSpec.conveyor_start`、空卡组 `profile_for_deck`（6 槽）、`packet_features` 按引擎标志把传送带卡视为买得起、`training_task_kwargs`/`collect`/清单校验全部接通。实测：L10 开局 10 个空槽、tick 240 出现首卡、可堆满 10 张；L7 设了被拒；dw3s1 在 `day_l10_eval_d7` 的 30000–30007 八局与既有 `dw3s1_l10_d7_256/games.jsonl` 除 `seconds` 外逐字段相同；27 项既有测试通过。
+- 2026-10-21，2完成（观测核对）：传送带卡的 `active` 由 `SeedPacket::AddSeed` 直接置 true（SeedPacket.cpp:1010-1035），不经过 `SetPacketType` 的冷却分支；`CanPickUp`（SeedPacket.cpp:686-720）在传送带关跳过阳光检查，合法动作 = `CanPickUp` ∧ `CanPlantAt`（LawnApp.cpp:1726-1741）。所以观测里的标称 cost / affordable 与引擎合法性**不一致**：已在观测里由引擎回 `conveyor_start`，`packet_features` 只在原版开局任务上按它判买得起（旧任务逐字节不变，见 6 项新测试）。滑动：`CanPickUp` 不读 `mOffsetX`，只有 `MouseHitTest` 读（SeedPacket.cpp:898-917）；实测首卡出现那一帧 `legal_actions` 已非空，所以滑动不影响可点性，**不需要**新特征。张数仍由非空槽数得出，未加手工特征。
+
+- 2026-10-21，3完成（任务族）：`scripts/make_day_panel.py` 生成 `day_l10_orig_eval`（deck `[]`、`conveyor_start: original`、种子 30000–31023）与 `day_l10_orig_train`（同字段、种子 1880000–1888191，避开 task19 的 184–187 万段）；旧 `day_l10_eval` / `day_l10_eval_d7` 保留不动。`deck_for_level(level, conveyor_start="original")` 返回空卡组，`conveyor_belt_level()` 从 `IsMiniBossLevel` 映射 10/20/30；清单校验接受空卡组与 `wave_cap=None`。
+
+- 2026-10-21，4完成（冒烟）：[6 局证据](task20-smoke.json)。`day_l10_orig_eval` 种子 30000/30001：v34 学生 2/2 胜（855/966 决策）、identity 学生 2/2 胜（773/934）、老师（v34+搜索，queue100 参数）2/2 胜（863/779 决策，193/196 次搜索）。开局空槽、等卡期间没有报错；老师与学生都能在只有空槽的局面下等待。
+
 ## 问题
