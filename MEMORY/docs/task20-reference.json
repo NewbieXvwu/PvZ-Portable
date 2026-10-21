@@ -1,0 +1,30 @@
+{
+  "frozen_at": "2026-10-21T14:08:36.111388+00:00",
+  "model_sha256": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+  "native_sha256": "864b30902e2d0e1dc1db80e595e62dcc0247ab70915b2076816e8b21e33c576d",
+  "study_plan_sha256": "342e371d2d10c4a2daeb16f9a693e9d566f08168d024402125e9f991a4646bd6",
+  "tasks": [
+    {
+      "task_id": "day_l7_eval_d7",
+      "folder": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/eval/day_l7_eval_d7",
+      "won": 241,
+      "games_sha256": "7e96b27d06a6c6e3b7d53c7abefa52213277416c4e3c3fad4a888829ee2962ca",
+      "config_sha256": "f76431ab64d83119c0edf58419165e4d1e3867cf28cc6d87752b1ffd6fc9d7cc"
+    },
+    {
+      "task_id": "day_l8_eval_d7",
+      "folder": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/eval/day_l8_eval_d7",
+      "won": 249,
+      "games_sha256": "c774b971f538c275f7e1e9092484358380d93f6367e96425504f013e39f438df",
+      "config_sha256": "af9b0d04af8587c21276157e5034072ee36d37334f384765e08e72ce656cb21c"
+    },
+    {
+      "task_id": "day_l9_eval_d7",
+      "folder": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/eval/day_l9_eval_d7",
+      "won": 222,
+      "games_sha256": "ede7458a0806c649bc91d1744da9cf02e969e3fa5e221983cea2d8b2cade888f",
+      "config_sha256": "758a3f55daaa42370e4daf22dc337c05f266d5a39f33ec38f517e3bf4cd695f1"
+    }
+  ],
+  "scope": "Read-only final task19 identity baseline; identical seven-card task definitions and 30000..30255 seeds; task20 changes apply only to original-conveyor mode"
+}
