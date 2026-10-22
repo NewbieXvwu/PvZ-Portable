@@ -33,4 +33,6 @@
 
 ## 结果
 
+- 第 1 步（量）：`scripts/measure_training_memory.py` 在 Mac 上按生产配方（`--wait-keep .1 --obs v2 --packet-head identity --cell-soft-weight 3`）跑 200 档案 / 61 903 行，逐组件记账 → `MEMORY/docs/task32-baseline.json`。外推 1500 万行 **14.32 GiB**：棋盘 CSR 7.49（536 B/行，134 非零/行）、`packet_info` 2.24（160 B）、标量 CSR 1.68（120 B）、`cands` 1.01（72 B）、`values` 0.62（44 B）、keep 掩码 0.39（28 B）、索引张量 0.22、packet/cell 0.22、`seed_of` 0.12。
+
 ## 问题
