@@ -39,6 +39,7 @@
 
 - 第 3 步（压·价值网络）：`train_value_net.py` 的训练棋盘从稠密 `(样本, 92, 6, 10) float16`（11 040 B/样本）换成同一套 CSR 行存储（约 330 B/样本，21 倍），`train_value_branches.py` 的多份 dump 合并改成写文件再映射（不再 `torch.cat` 复制一份）。新测试 `python/test_value_net_rows.py` 用第二次 `featurize` 对照 CSR 取回的棋盘逐位相等；60 档案端到端（2 折 2 epoch）跑通。2000 档案基准（61.9 万行、60 步、同种子）四种组合 21 个权重张量 sha256 **全同**，`data_memory` 54.6→35.1 MB 的同一比例：棋盘 335→206 MB、packet 99→43 MB。
 
+- 第 4 步（引擎·无界面只读尺寸）：`-env` 模式下 `SexyAppBase::Init` 打开 `ImageLib::gSizeOnly`，`ImageLib::GetImage` 只解析文件头（PNG IHDR / GIF 屏描述符 / JPEG SOF / TGA 头）取宽高，不再分配像素；回退顺序与完整加载一致（基图缺失时探 `_name` / `name_` 的 alpha 图 —— `IMAGE_BLANK` 实际只有 `images/blank_.gif`，这就是第一版启动即 `Failed to load image` 的原因）。`SexyAppBase::GetImage` 对无像素的图只填宽高；`MemoryImage::GetBits` 在无可恢复像素时清零而不是从空指针 `memcpy`（字体 `Palletize` 会走这里）；`DoLoadImage` 跳过 alpha 合成。验收：同一动作序列（第 7 关 80 决策、17/27/47 关各 60 决策，覆盖白天/夜间/泳池/屋顶）两版 `frames` 摘要**逐字节相同**；每个引擎进程峰值常驻 **231.5 → 123.3 MB（-47%）**，启动 **1.02 → 0.81 s（-20%）**。`scripts/engine_replay_compare.py` 每个引擎放到独立 spawn 子进程里跑，否则 `RUSAGE_CHILDREN` 的 `ru_maxrss` 会把第一个引擎的峰值报给第二个。
 ## 问题
 
 ## 追加（主控 2026-10-22 23:05，用户的两点）
@@ -50,3 +51,7 @@
    查清无界面模式下哪些东西游戏逻辑真的要用（例如动画定义的时间轴会影响攻击 / 判定，不能丢；贴图像素、字体、水面特效、禅境花园大概率不用；
    若有代码在逻辑里读图片尺寸，改成只读尺寸不解码像素），按需加载或跳过。**验收**：同一动作序列重放逐帧状态相同（`frames` 逐字节或逐字段相同），同种子 64 局 games.jsonl 相同；
    报告每个引擎进程的常驻内存与启动时间改前 / 改后。这一项优先级高（每个采集 worker、每次搜索推演都受益），可以先做。
+
+## 追加（主控 2026-10-22 23:55）：不再加开关
+重构不加开关：新实现直接替换旧实现，验收通过后旧路径在同一系列提交里删掉，A/B 用上一个提交对比。你已加的 `--compact-data` / `--data-memmap`：既然权重逐位一致，就把紧凑存储改成唯一实现、删掉旧路径与这两个开关
+（`--data-memmap` 若与常驻 RAM 是二选一的取舍，按 28 GB 预算给出结论后只留一种，或把它登记进 `MEMORY/docs/flags.md` 并写到期日）。价值网络 CSR 同理。引擎跳过不必要加载也不加开关。
