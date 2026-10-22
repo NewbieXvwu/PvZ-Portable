@@ -232,7 +232,11 @@ def evaluate(frames: list, deck: list, probe: dict) -> list[dict]:
         plant_type = None
         if kind == "plant":
             pk = act.get("packet")
-            plant_type = deck[pk] if isinstance(pk, int) and 0 <= pk < len(deck) else pk
+            # 卡槽号 → 植物：按这一步的手牌（prev = frames[i-1]），不按任务 deck —— 传送带关 deck 为空、
+            # search_play 存档的 meta 常不带 deck、换卡组任务槽号不对应同一种植物。旧存档没有 packets 才退回 deck。
+            hand = {int(p[0]): int(p[1]) for p in (prev.get("packets") or [])}
+            plant_type = hand.get(pk) if hand and isinstance(pk, int) else \
+                (deck[pk] if isinstance(pk, int) and 0 <= pk < len(deck) else pk)
             if "plant_role" in probe:
                 want = probe["plant_role"]
                 want = want if isinstance(want, list) else [want]
