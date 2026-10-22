@@ -86,15 +86,17 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 
 - 2026-10-22，4门禁预演与开训：新增只读脚本 preflight_task27_q103.py，q103 已完成 41 个标签在 frames_v2 的档案数与清单 seed 切片逐项相等（随后第 2 轮补齐到 d10p8d）；冻结刷新另纳入 2 个新 Mac 标签 n14dag8m/n17dag8m（各 80 档案），mac_new 由 4480 升至 4640，旧档案只增不改。19:50 写 study_plan.json，19:53 开训（pid 1319701）。
 
+- 2026-10-22，4cb提交复核：冻结56784档案/281标签及原12epoch命令与实际运行相符，源文件/清单SHA通过，现有训练继续。修正只读预演脚本的meta空glob误判：缺meta夹具正确失败、补齐后通过；q103完整42标签重新检查档案数/精确seed及meta均通过。仅改诊断，不改冻结/训练来源，不重跑游戏或训练；更新报告当前状态。
+
 ## 问题
 
-- HF里的z15dag12bv/z15dag13bv是10-17的历史重标版本（见当天日志），不是新Mac轮次；导入档案已保留，但不加入本次训练以免和原12b/13b重复加权。新增训练轮次为48个夜间Mac标签及z17dag43b；冻结前还会刷新最新上传。
+- HF里的z15dag12bv/z15dag13bv是10-17的历史重标版本（见当天日志），不是新Mac轮次；导入档案已保留，但不加入本次训练以免和原12b/13b重复加权。首轮新增48个夜间Mac标签及z17dag43b；冻结刷新再纳入n14dag8m/n17dag8m，共4640份新Mac档案，冻结后不再改本次来源。
 
 - 三套全零留出实测：L7 h3 [5,3,36,7,4,2,0] 与 L8 h1 [3,22,4,2,7,5,32] 老师均0/16，列为结构性弱卡组嫌疑，交主控决定是否另开任务族替换；L9 h1 [0,3,1,7,37,2,4] 老师1/16，仍有学生泛化缺口。0/16是有限样本证据，不宣称数学上不可赢。
 
-- 两参考v2已正常完成，pretraining_controller.process.json仅留存历史句柄，pretraining_complete.json已通过计划SHA校验；不要重启参考。当前唯一运行控制器为artifacts/task27/study_controller.process.json（等q103完整第2轮d10p8d）；先读/proc核对实际PID/命令与阶段result，成功阶段复用。完整task27只以artifacts/task27/complete.json及匹配task27-results.json的SHA为准；19:50 已冻结、19:53 已开训，该句此前“尚未冻结/开训”已过期。
+- 两参考v2已正常完成，pretraining_controller.process.json仅留存历史句柄，pretraining_complete.json已通过计划SHA校验；不要重启参考。当前唯一运行控制器为artifacts/task27/study_controller.process.json（已冻结并开训，后续交付/两版评估自动串接）；先读/proc核对实际PID/命令与阶段result，成功阶段复用。完整task27只以artifacts/task27/complete.json及匹配task27-results.json的SHA为准；19:50 已冻结、19:53 已开训，该句此前“尚未冻结/开训”已过期。
 
-- 交接时训练处于加载/建缓存阶段（约 10 分钟，training_s1.txt 仍空、cache 2.0G），另有一个非本任务队列（worktrees/cq，8 workers）在同机跑游戏，训练让卡会等待；下一步只需看 training_s1.txt 的 epoch 行与 artifacts/task27/complete.json，不要重跑冻结。
+- 训练仍在加载/建缓存阶段，监看training_s1.txt、training_s1.resources.jsonl与complete.json，不重跑冻结或训练。外部cq采集队列不动；本次复核时external_busy=false、paused=false，尚未触发让卡或内存暂停，不能把加载时间误报为暂停。
 
 - 现用 night_panel_n10.json 的 L20 是旧初始牌变体 night_l20_eval_n10，按任务要求逐字段复现并保留主文件。v2 将从54项合并清单选 night_l20_eval_n10_orig（空槽原版），两者不混用。泳池登记与统一面板均曾占 §14.10，本次保留统一面板为 §14.10、泳池改 §14.11。
 

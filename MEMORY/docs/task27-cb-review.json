@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "labels_checked": 42,
+  "source_sha256": "2187ec419478ee8098b865516e7fec8089e1032ff7976a46b44ce124bb37db42",
+  "original_defect": "meta glob used bare label; empty matches made all() vacuously true",
+  "missing_meta_fixture_returncode": 1,
+  "restored_meta_fixture_returncode": 0,
+  "actual_sha256": "96afb4b3aea01ecb55e2ea1f9ff9294cdf27473e98ee52460b358e06be13c5b8",
+  "actual_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/q103_preflight_reviewed.json",
+  "frozen_archives": 56784,
+  "frozen_labels": 281,
+  "note": "Diagnostic fixed only. Active training/freeze sources unchanged; no games, training restarts, or shared-file mutations."
+}

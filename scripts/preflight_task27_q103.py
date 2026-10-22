@@ -45,7 +45,7 @@ def main():
                          seeds_exact=not missing and not extra and len(found) == len(set(found)),
                          missing_seeds=missing[:8], extra_seeds=extra[:8],
                          meta_complete=all((p.parent/'meta.json').is_file()
-                                           for p in FRAMES.glob(f'*/{label}/frames.npz'))))
+                                           for p in FRAMES.glob(f'*/{folder}/frames.npz'))))
     failed = [r['label'] for r in rows
               if not r['seeds_exact'] or not r['meta_complete'] or r['archives'] != r['games']]
     data = dict(complete=not failed, scope='Read-only gate rehearsal; q103 round2 not frozen here.',
