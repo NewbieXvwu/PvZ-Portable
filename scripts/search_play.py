@@ -771,12 +771,17 @@ def _play(job: dict) -> dict:
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
         planted: dict[int, int] = {}
+        planted_by_type: dict[int, int] = {}
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
         if job["arm"] == "fast" and _W.get("cpp_rollouts") and not args.frames:
             obs = env.rollout(None, 0, max_actions=args.max_actions)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
             planted = {index: count for index, count in enumerate(details["planted"]) if count}
+            if "planted_by_type" in details:
+                planted_by_type = {index: count for index, count in enumerate(details["planted_by_type"]) if count}
+            else:
+                raise RuntimeError('native executable lacks plant-type counts; rebuild this worktree')
         while not obs["terminal"] and decisions < args.max_actions:
             action = policy_choice = _fast_action(obs, fast_state)
             _W["student_history"] = fast_state.get("history")
@@ -810,10 +815,15 @@ def _play(job: dict) -> dict:
                         "packet": action["packet"], "occupant": occupant.get("type"),
                         "occupant_health": occupant.get("health"),
                         "same_type": occupant.get("type") == action["packet"]})
+            planted_type = next((p.get('imitater_type') if p['type'] == 48 else p['type']
+                                 for p in obs['packets'] if p['index'] == action.get('packet')), None
+                                ) if action['type'] == 'plant' else None
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
             if not rejected and action["type"] == "plant":
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
+                assert planted_type is not None and planted_type >= 0
+                planted_by_type[planted_type] = planted_by_type.get(planted_type, 0) + 1
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
             if frames is not None:
@@ -876,6 +886,7 @@ def _play(job: dict) -> dict:
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted": planted,
+            "planted_by_type": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],
             "cuda_coverage_version": 1,
             **{name: stats.get(name, 0) for name in ("rollout_batches", "rollout_lanes", "cuda_batches",
