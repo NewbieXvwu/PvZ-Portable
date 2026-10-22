@@ -100,6 +100,8 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 
 - 2026-10-23，4训练完成：dw5i_s1宽64、identity+row_pool，原12epoch自然结束，15788614保留行，耗时3609.3s，最低可用5.16GiB；实际来源行数齐，模型随后HF交付与两版面板。
 
+- 2026-10-23，4模型交付：HF transfer/dw5i_s1_model.pt上传后固定revision回读SHA一致；模型不入git。
+
 ## 问题
 
 - 训练I/O病根（供主控决策）：`packet_info`（`train_rollout_policy.py:153`，2.4GB memmap）每batch随机gather；内存被外部qc(10局)+vnet(6局)占去约6GB时页缓存留不住它，磁盘863MB/s、GPU 0%，12 epoch按当前速率约4小时。要么等外部队列收工让页缓存装下2.4GB（同代码在dw4i满内存时162s/epoch），要么下一轮改成常驻RAM/更小dtype。本次不改冻结源码、不重启训练，先让它跑完。
