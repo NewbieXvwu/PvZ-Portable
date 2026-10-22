@@ -37,3 +37,14 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 ## 结果
 
 ## 问题
+
+## 第 0 步（主控 2026-10-22 15:45 追加，先于其他步骤做）：种植统计改按植物类型记录
+用户指出：对局汇总里的 `planted` 按**卡槽序号**计数，与“按植物身份”的设计方向不一致（传送带关槽位会移动，槽号连跨局都不可比）。动作接口按槽号（和人点卡槽一样）不改，**统计与报告**改成按类型：
+1. `src/main.cpp`（整局 C++ 推演，约 469/525/579 行）与 `scripts/search_play.py`（约 773–878 行）：在**执行种植之前**读出该槽的植物类型（传送带关种完槽会移动，不能事后查），
+   新增键 `planted_types`（`{植物类型: 棵数}`，JSON 对象）；原键改名 `planted_slots`，不再写 `planted`，免得新旧文件同名不同义。
+2. 写一个公用读取函数（如 `python/pvz_episode_stats.py` 的 `planted_by_type(game, deck)`）：有 `planted_types` 直接用；旧文件只有 `planted` 时用该局卡组把槽翻成类型；
+   传送带关（`conveyor_start` 或 L10/L20 类）的旧文件翻不了，返回 None 并在报告里注明，不要猜。
+   把读 `planted` 的脚本（`git grep -n planted scripts python`：`dw4_night_ab_report.py`、`analyze_l20_conveyor.py`、`sim_skip_agreement.py`、`cuda_root_corpus.py`、`unified_panel.py` 等）改用它。
+3. 顺手修同类错误：`search_play.py` 的 `replant_events` 里 `"same_type": occupant.get("type") == action["packet"]` 是拿植物类型比槽号，改成比较该槽的植物类型。
+4. 测试：单元测试覆盖翻译函数（含传送带返回 None）；冒烟 1 局 C++ 整局路径与 1 局 Python 路径，核对两边 `planted_types` 与逐动作重放一致。
+   编译只在 dw5 工作树的 `build/`，**不要重编主工作区 `~/PvZ-search/build/`**（q103 在用；它采完的旧文件照旧是槽号，由第 2 条的读取函数兼容）。
