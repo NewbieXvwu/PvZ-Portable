@@ -397,6 +397,27 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ',' << options.substr(1) << std::endl;
 			continue;
 		}
+		else if (command == "DECK_WARNINGS")
+		{
+			int count = 0;
+			std::vector<int> deck;
+			ok = static_cast<bool>(input >> count) && count >= 0 && count <= 10;
+			for (int index = 0; ok && index < count; ++index)
+			{
+				int type = -1;
+				ok = static_cast<bool>(input >> type) && type >= 0 && type < 64;
+				if (ok) deck.push_back(type);
+			}
+			const std::string warnings = ok ? app->EnvironmentDeckWarnings(deck) : std::string("{\"ok\":false}");
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ',' << warnings.substr(1) << std::endl;
+			continue;
+		}
+		else if (command == "DECK_POOL")
+		{
+			const std::string pool = app->EnvironmentDeckPool();
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ',' << pool.substr(1) << std::endl;
+			continue;
+		}
 		else if (command == "LOAD_ROLLOUT_NET")
 		{
 			std::string path, extra;

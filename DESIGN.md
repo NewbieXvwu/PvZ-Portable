@@ -651,3 +651,28 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 `scripts/unified_panel.py --generate`合并已登记的白天七卡L1/3/4/6/7/8/9、原版L10、L7–L10各3套初始牌留出、夜间n9 L11/12/13/14/16/17/18/19及原版L20，共29项，清单仅在artifacts本地生成。白天与原版默认各128局，留出每套64，夜间各128；取各任务评估段前N种子，按白天/换卡组/夜间分别报告任务平均胜率，每模型默认2944局。最多4个自有游戏进程，slot/identity均沿同一面板跑纯学生。
 
 L10的三套留出按task23明确要求保留初始牌变体的测试语义（后续仍有原生补卡），与`day_l10_orig_eval`分开；不把这些留出伪称原版空手关。dw4i从原identity配方加入白天新轮、Mac、d7p、夜间与原版数据，冻结同一数据集合后依次训seed1/2，不改默认/生产模型；完整对照见MEMORY/docs/unified-panel.md。
+
+### 14.11 新任务族：夜间扰动卡组 `night_lN_train_n10p` / `night_lN_eval_n10p_holdout{1,2}`（task28，2026-10-22 登记，AGENTS.md §8 第 4 条）
+
+task26 的结论是：2-10（原版传送带）发得到的 7 种卡里，大喷菇 10、魅惑菇 12、胆小菇 13、寒冰菇 14、毁灭菇 15 **从未进过任何任务卡组**（只有小喷菇 8、墓碑吞噬者 11 出现过），identity 头在这些身份上把种植门压成负值，学生 16 局一棵不种。这一族的作用是让这些植物在普通夜间关里以任务卡组的形式出现，补训练分布；它不改变 2-10 本身（传送带关没有卡组，见 §14.8 的 `conveyor_start`）。
+
+- 生成器 `scripts/make_night_n10p.py`，输入 `~/PvZ-search/artifacts/stage4/night_panel.json`，输出 `<worktree>/artifacts/stage4/night_panel_n10p.json` 并另拷一份到 `~/PvZ-search/artifacts/stage4/`（清单不进 git）。
+- 底卡组 n10 `[0,1,2,3,4,5,7,8,9,11]`（10 张 = SEEDBANK_MAX）。`deck_perturb` 与 task19 的 d7p 同一机制：`swaps=[1,2]`，每种子确定性替换恰好 1 或 2 张、再洗牌，卡组长度与槽位数不变。
+- 池子 = 引擎 `SeedChooserScreen::CrazyDavePickSeeds` 的候选（`PvZEnv.deck_pool`，按 reset 后真实 Board 的僵尸名单/地形/雾判断；叶子保护伞只在有蹦极/投石车时进池、三叶草只在有气球或雾时进池、屋顶排除火炬树桩），本机夜间实测 32 种；生成时**断言** 10/12/13/14/15 全在池里，缺一个直接报错（这是这一族存在的理由，不能静默退化）。
+- 整组检查 = `SeedChooserScreen::OnStartButton` 的 `CheckDeckWarnings`（`PvZEnv.deck_warnings`，判断全部来自引擎）。生成时把这一族能产生的全部卡组穷举一遍，把会触发任何警告的卡组写进 `engine_warned_decks`，`deck_for_seed` 运行时按集合排除（`require_no_warnings: true`）。夜间每关 10615 个候选卡组里 231 个（2.2%）触发 `sun` 警告（同时换掉向日葵 1 和阳光菇 9 的那些），已全部排除。
+- 训练族 `night_lN_train_n10p`，N = 11、12、13、14、16、17、18、19，每关 8192 个种子：2400000 / 2410000 / 2420000 / 2430000 / 2450000 / 2460000 / 2470000 / 2480000 起（2440000 空着，对应夜间面板里不存在的第 15 关）。
+- 留出族 `night_lN_eval_n10p_holdout{1,2}`：每关 2 套初始卡组，环境种子 30000–30255（每套 256 局）。16 套无序初始植物集合在 8 个训练族里全部显式排除，槽位排列不解除排除（与 d7p 同语义）。
+- 生成自查（`generation_audit` 写进清单）：65536 个训练种子、9982 个不同卡组集合；与 15 份现有清单（主工作区 5 份 + 各工作树 10 份）共 407552 个已用种子穷举比对，**重叠 0**；每个训练卡组都满足地形覆盖、长度 10、无重复、无升级植物、且不在 `engine_warned_decks` 里；5 种必需植物分别出现在 4576 / 4531 / 4587 / 4350 / 4451 个训练卡组里。
+- 与 16:10 前的旧版（只查逐卡 `not_recommended`）相比：池子 34 → 32（少了叶子保护伞 37、三叶草 27）；65536 个训练种子里 **59.0% 的卡组变了**；旧版有 765 局（1.17%）的卡组同时没有向日葵 1 和阳光菇 9，属于结构性缺经济卡，新版本已全部排除。
+- 配套采集标签：2-10 的 DAgger 用 `n20o1`（`night_l20_train_n10_orig`，偏移 0 起 32 局，`--dagger-beta 0`，帧写 `~/PvZ-search/artifacts/student/frames_v2`）。
+
+### 14.12 新任务族：白天扰动卡组 `day_lN_train_d7q` / `day_lN_eval_d7q_holdout{1,2,3}`（task28 第 6 步第 3 条，2026-10-22 登记，AGENTS.md §8 第 4 条）
+
+旧族 `day_lN_train_d7p` 已经采过大量数据，**不改**（历史档案照样能用，第 5 步量出缺经济卡那部分基本全输）。d7q 是另起的新族名，机制与 d7p 相同，但两处判断换成引擎：替换池用 `CrazyDavePickSeeds` 候选，整组检查用 `OnStartButton` 的 `CheckDeckWarnings`。
+
+- 生成器 `scripts/make_day_d7q.py`（与 `make_night_n10p.py` 共用 `scripts/perturb_family.py`），输入 `~/PvZ-search/artifacts/stage4/day_panel.json`，输出 `<worktree>/artifacts/stage4/day_panel_d7q.json` 并另拷一份到 `~/PvZ-search/artifacts/stage4/`（清单不进 git）。
+- 底卡组 d7 `[0,1,2,3,4,5,7]`，`swaps=[1,2]`，每种子确定性替换 1–2 张再洗牌。
+- 训练族 `day_lN_train_d7q`，N = 7、8、9、10，每关 8192 个种子：2500000 / 2510000 / 2520000 / 2530000 起（与 d7p 的 1840000–1878191、d7 的 1800000–1838191 都不重叠）。
+- 留出族 `day_lN_eval_d7q_holdout{1,2,3}`：每关 3 套初始卡组，环境种子 30000–30255（每套 256 局）；12 套无序集合在 4 个训练族里全部排除。
+- 审计（`generation_audit`）：32768 个训练种子、2130 个不同卡组；每关 2975 个候选卡组里 **833 个（28.0%）触发 `sun` 警告**（换掉唯一一张向日葵的那些），已全部排除；与 15 份现有清单的 407552 个已用种子**重叠 0**。
+- 与 d7p 的差别：d7p 的池子是 `DECK_OPTIONS` 的 40 种（只排除逐卡警告），允许生成没有向日葵的卡组；d7q 的池子是戴夫候选（本机白天实测 24 种），且没有产阳光植物的卡组一律不生成。

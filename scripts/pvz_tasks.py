@@ -116,6 +116,12 @@ def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
     if len(additions) < max(swaps):
         raise ValueError('not enough new eligible plants for the requested swaps')
     excluded = {tuple(sorted(deck)) for deck in spec.get('excluded_decks', [])}
+    # task28: whole-deck OnStartButton warnings (no sun producer, pool without an aquatic plant,
+    # roof without a flower pot, ...).  The list is produced by the engine query
+    # PvZEnv.deck_warnings over every deck this perturbation can generate; nothing is re-derived here.
+    warned = {tuple(sorted(deck)) for deck in spec.get('engine_warned_decks', [])}
+    if spec.get('require_no_warnings') and 'engine_warned_decks' not in spec:
+        raise ValueError('require_no_warnings needs the engine_warned_decks table')
     rng = random.Random(int(seed))
     for _ in range(4096):
         n = rng.choice(swaps)
@@ -125,6 +131,8 @@ def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
         for slot, plant in zip(slots, new):
             deck[slot] = plant
         if not terrain_covered(task['level'], deck) or tuple(sorted(deck)) in excluded:
+            continue
+        if tuple(sorted(deck)) in warned:
             continue
         if any(warnings.get(plant, 1) for plant in deck):
             continue

@@ -222,13 +222,31 @@ int SeedChooserScreen::PickFromWeightedArrayUsingSpecialRandSeed(PvzpWeightedArr
 	unreachable();
 }
 
-void SeedChooserScreen::CrazyDavePickSeeds()
+// The candidate weights behind CrazyDavePickSeeds, shared with the environment query so the
+// "which cards can Dave hand out on this level" judgement stays in one place (task28).
+static uint32_t DeckNotRecommended(Board* theBoard, SeedType theSeedType,
+	const std::function<bool(SeedType)>& picked)
 {
-	PvzpWeightedArray aSeedArray[NUM_SEED_TYPES];
+	uint32_t aRecFlags = theBoard->SeedNotRecommendedForLevel(theSeedType);
+	if (TestBit(aRecFlags, NOT_RECOMMENDED_NOCTURNAL) && picked(SEED_INSTANT_COFFEE))
+		SetBit(aRecFlags, NOT_RECOMMENDED_NOCTURNAL, false);
+	return aRecFlags;
+}
+
+static bool DeckSeedNotAllowed(LawnApp* theApp, SeedType theSeedType)
+{
+	return theApp->mGameMode == GAMEMODE_CHALLENGE_LAST_STAND && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
+		theSeedType == SEED_TWINSUNFLOWER || theSeedType == SEED_SEASHROOM || theSeedType == SEED_PUFFSHROOM);
+}
+
+static void BuildCrazyDaveWeights(LawnApp* theApp, Board* theBoard, const std::function<bool(SeedType)>& picked,
+	PvzpWeightedArray* aSeedArray)
+{
 	for (SeedType aSeedType = SEED_PEASHOOTER; aSeedType < NUM_SEEDS_IN_CHOOSER; aSeedType = (SeedType)(aSeedType + 1))
 	{
 		aSeedArray[aSeedType].mItem = aSeedType;
-		if (!mApp->HasSeedType(aSeedType) || SeedNotRecommendedToPick(aSeedType) || SeedNotAllowedToPick(aSeedType) || Plant::IsUpgrade(aSeedType) ||
+		if (!theApp->HasSeedType(aSeedType) || DeckNotRecommended(theBoard, aSeedType, picked) ||
+			DeckSeedNotAllowed(theApp, aSeedType) || Plant::IsUpgrade(aSeedType) ||
 			aSeedType == SEED_IMITATER || aSeedType == SEED_UMBRELLA || aSeedType == SEED_BLOVER)
 		{
 			aSeedArray[aSeedType].mWeight = 0;
@@ -238,18 +256,37 @@ void SeedChooserScreen::CrazyDavePickSeeds()
 			aSeedArray[aSeedType].mWeight = 1;
 		}
 	}
-	if (mBoard->mZombieAllowed[ZOMBIE_BUNGEE] || mBoard->mZombieAllowed[ZOMBIE_CATAPULT])
+	if (theBoard->mZombieAllowed[ZOMBIE_BUNGEE] || theBoard->mZombieAllowed[ZOMBIE_CATAPULT])
 	{
 		aSeedArray[SEED_UMBRELLA].mWeight = 1;
 	}
-	if (mBoard->mZombieAllowed[ZOMBIE_BALLOON] || mBoard->StageHasFog())
+	if (theBoard->mZombieAllowed[ZOMBIE_BALLOON] || theBoard->StageHasFog())
 	{
 		aSeedArray[SEED_BLOVER].mWeight = 1;
 	}
-	if (mBoard->StageHasRoof())
+	if (theBoard->StageHasRoof())
 	{
 		aSeedArray[SEED_TORCHWOOD].mWeight = 0;
 	}
+}
+
+std::vector<SeedType> SeedChooserScreen::CrazyDaveSeedPool(LawnApp* theApp, Board* theBoard)
+{
+	std::vector<SeedType> aPool;
+	if (!theApp || !theBoard)
+		return aPool;
+	PvzpWeightedArray aSeedArray[NUM_SEED_TYPES];
+	BuildCrazyDaveWeights(theApp, theBoard, [](SeedType) { return false; }, aSeedArray);
+	for (SeedType aSeedType = SEED_PEASHOOTER; aSeedType < NUM_SEEDS_IN_CHOOSER; aSeedType = (SeedType)(aSeedType + 1))
+		if (aSeedArray[aSeedType].mWeight > 0)
+			aPool.push_back(aSeedType);
+	return aPool;
+}
+
+void SeedChooserScreen::CrazyDavePickSeeds()
+{
+	PvzpWeightedArray aSeedArray[NUM_SEED_TYPES];
+	BuildCrazyDaveWeights(mApp, mBoard, [this](SeedType theType) { return PickedPlantType(theType); }, aSeedArray);
 
 	MTRand aLevelRNG = MTRand(mBoard->GetLevelRandSeed());
 	for (int i = 0; i < 3; i++)
@@ -315,16 +352,12 @@ SeedChooserScreen::~SeedChooserScreen() = default;
 
 unsigned int SeedChooserScreen::SeedNotRecommendedToPick(SeedType theSeedType)
 {
-	uint aRecFlags = mBoard->SeedNotRecommendedForLevel(theSeedType);
-	if (TestBit(aRecFlags, NOT_RECOMMENDED_NOCTURNAL) && PickedPlantType(SEED_INSTANT_COFFEE))
-		SetBit(aRecFlags, NOT_RECOMMENDED_NOCTURNAL, false);
-	return aRecFlags;
+	return DeckNotRecommended(mBoard, theSeedType, [this](SeedType theType) { return PickedPlantType(theType); });
 }
 
 bool SeedChooserScreen::SeedNotAllowedToPick(SeedType theSeedType)
 {
-	return mApp->mGameMode == GAMEMODE_CHALLENGE_LAST_STAND && (theSeedType == SEED_SUNFLOWER || theSeedType == SEED_SUNSHROOM ||
-		theSeedType == SEED_TWINSUNFLOWER || theSeedType == SEED_SEASHROOM || theSeedType == SEED_PUFFSHROOM);
+	return DeckSeedNotAllowed(mApp, theSeedType);
 }
 
 bool SeedChooserScreen::SeedNotAllowedDuringTrial(SeedType theSeedType)
@@ -564,13 +597,15 @@ bool SeedChooserScreen::DisplayRepickWarningDialog(const char* theMessage)
 	) == Dialog::ID_YES;
 }
 
-bool SeedChooserScreen::FlyersAreComming()
+static bool DeckFlyersAreComing(Board* theBoard)
 {
-	for (int aWave = 0; aWave < mBoard->mNumWaves; aWave++)
+	if (!theBoard)
+		return false;
+	for (int aWave = 0; aWave < theBoard->mNumWaves; aWave++)
 	{
 		for (int anIndex = 0; anIndex < MAX_ZOMBIES_IN_WAVE; anIndex++)
 		{
-			ZombieType aZombieType = mBoard->mZombiesInWave[aWave][anIndex];
+			ZombieType aZombieType = theBoard->mZombiesInWave[aWave][anIndex];
 			if (aZombieType == ZOMBIE_INVALID)
 				break;
 
@@ -581,9 +616,11 @@ bool SeedChooserScreen::FlyersAreComming()
 	return false;
 }
 
-bool SeedChooserScreen::FlyProtectionCurrentlyPlanted()
+static bool DeckFlyProtectionPlanted(Board* theBoard)
 {
-	for (Plant* aPlant : mBoard->mPlants)
+	if (!theBoard)
+		return false;
+	for (Plant* aPlant : theBoard->mPlants)
 	{
 		if (aPlant->mDead)
 			continue;
@@ -595,9 +632,58 @@ bool SeedChooserScreen::FlyProtectionCurrentlyPlanted()
 	return false;
 }
 
+// The pair check behind CheckSeedUpgrade, without the dialog.
+static bool DeckUpgradeWarns(LawnApp* theApp, const std::function<bool(SeedType)>& picked,
+	SeedType theSeedTypeTo, SeedType theSeedTypeFrom)
+{
+	if (theApp->IsSurvivalMode() || !picked(theSeedTypeTo) || picked(theSeedTypeFrom))
+		return false;
+	return true;
+}
+
+bool SeedChooserScreen::FlyersAreComming()
+{
+	return DeckFlyersAreComing(mBoard);
+}
+
+bool SeedChooserScreen::FlyProtectionCurrentlyPlanted()
+{
+	return DeckFlyProtectionPlanted(mBoard);
+}
+
+SeedChooserScreen::DeckWarningSet SeedChooserScreen::CheckDeckWarnings(LawnApp* theApp, Board* theBoard,
+	const std::function<bool(SeedType)>& picked, bool survivalRepick)
+{
+	DeckWarningSet result;
+	if (!theApp || !theBoard)
+		return result;
+	result.sun = !picked(SEED_SUNFLOWER) && !picked(SEED_TWINSUNFLOWER) && !picked(SEED_SUNSHROOM) &&
+		!survivalRepick && theApp->mGameMode != GAMEMODE_CHALLENGE_LAST_STAND;
+	result.pool = theBoard->StageHasPool() && !picked(SEED_LILYPAD) && !picked(SEED_SEASHROOM) &&
+		!picked(SEED_TANGLEKELP) && !survivalRepick;
+	result.roof = theBoard->StageHasRoof() && !picked(SEED_FLOWERPOT) && theApp->HasSeedType(SEED_FLOWERPOT);
+	result.flyer = DeckFlyersAreComing(theBoard) && !DeckFlyProtectionPlanted(theBoard) &&
+		!picked(SEED_CATTAIL) && !picked(SEED_CACTUS) && !picked(SEED_BLOVER);
+	result.upgrade = DeckUpgradeWarns(theApp, picked, SEED_GATLINGPEA, SEED_REPEATER) ||
+		DeckUpgradeWarns(theApp, picked, SEED_WINTERMELON, SEED_MELONPULT) ||
+		DeckUpgradeWarns(theApp, picked, SEED_TWINSUNFLOWER, SEED_SUNFLOWER) ||
+		DeckUpgradeWarns(theApp, picked, SEED_SPIKEROCK, SEED_SPIKEWEED) ||
+		DeckUpgradeWarns(theApp, picked, SEED_COBCANNON, SEED_KERNELPULT) ||
+		DeckUpgradeWarns(theApp, picked, SEED_GOLD_MAGNET, SEED_MAGNETSHROOM) ||
+		DeckUpgradeWarns(theApp, picked, SEED_GLOOMSHROOM, SEED_FUMESHROOM) ||
+		DeckUpgradeWarns(theApp, picked, SEED_CATTAIL, SEED_LILYPAD);
+	result.seeingStars = theApp->mGameMode == GAMEMODE_CHALLENGE_SEEING_STARS && !picked(SEED_STARFRUIT);
+	result.puffshroom = theApp->IsFirstTimeAdventureMode() && theBoard->mLevel == 11 && !picked(SEED_PUFFSHROOM);
+	result.artWallnut = theApp->mGameMode == GAMEMODE_CHALLENGE_ART_CHALLENGE_WALLNUT && !picked(SEED_WALLNUT);
+	result.art2 = theApp->mGameMode == GAMEMODE_CHALLENGE_ART_CHALLENGE_SUNFLOWER &&
+		(!picked(SEED_STARFRUIT) || !picked(SEED_UMBRELLA) || !picked(SEED_WALLNUT));
+	return result;
+}
+
 bool SeedChooserScreen::CheckSeedUpgrade(SeedType theSeedTypeTo, SeedType theSeedTypeFrom)
 {
-	if (mApp->IsSurvivalMode() || !PickedPlantType(theSeedTypeTo) || PickedPlantType(theSeedTypeFrom))
+	if (!DeckUpgradeWarns(mApp, [this](SeedType theType) { return PickedPlantType(theType); },
+			theSeedTypeTo, theSeedTypeFrom))
 		return true;
 
 	std::string aWarning(PvzpStringTranslate("[SEED_CHOOSER_UPGRADE_WARNING]"));
@@ -608,7 +694,13 @@ bool SeedChooserScreen::CheckSeedUpgrade(SeedType theSeedTypeTo, SeedType theSee
 
 void SeedChooserScreen::OnStartButton()
 {
-	if (mApp->mGameMode == GAMEMODE_CHALLENGE_SEEING_STARS && !PickedPlantType(SEED_STARFRUIT))
+	// One shared predicate set for both the interactive dialogs and the environment query
+	// (task28): the deck is checked once, the dialogs still fire in the original order.
+	DeckWarningSet warnings = CheckDeckWarnings(mApp, mBoard,
+		[this](SeedType theType) { return PickedPlantType(theType); },
+		mBoard->mCutScene->IsSurvivalRepick());
+
+	if (warnings.seeingStars)
 	{
 		if (!DisplayRepickWarningDialog("[SEED_CHOOSER_SEEING_STARS_WARNING]"))
 		{
@@ -616,15 +708,14 @@ void SeedChooserScreen::OnStartButton()
 		}
 	}
 
-	if (mApp->IsFirstTimeAdventureMode() && mBoard->mLevel == 11 && !PickedPlantType(SEED_PUFFSHROOM))
+	if (warnings.puffshroom)
 	{
 		if (!DisplayRepickWarningDialog("[SEED_CHOOSER_PUFFSHROOM_WARNING]"))
 		{
 			return;
 		}
 	}
-	if (!PickedPlantType(SEED_SUNFLOWER) && !PickedPlantType(SEED_TWINSUNFLOWER) && !PickedPlantType(SEED_SUNSHROOM) &&
-		!mBoard->mCutScene->IsSurvivalRepick() && mApp->mGameMode != GAMEMODE_CHALLENGE_LAST_STAND)
+	if (warnings.sun)
 	{
 		if (mApp->IsFirstTimeAdventureMode() && mBoard->mLevel == 11)
 		{
@@ -638,7 +729,7 @@ void SeedChooserScreen::OnStartButton()
 			return;
 		}
 	}
-	if (mBoard->StageHasPool() && !PickedPlantType(SEED_LILYPAD) && !PickedPlantType(SEED_SEASHROOM) && !PickedPlantType(SEED_TANGLEKELP) && !mBoard->mCutScene->IsSurvivalRepick())
+	if (warnings.pool)
 	{
 		if (mApp->IsFirstTimeAdventureMode() && mBoard->mLevel == 21)
 		{
@@ -652,7 +743,7 @@ void SeedChooserScreen::OnStartButton()
 			return;
 		}
 	}
-	if (mBoard->StageHasRoof() && !PickedPlantType(SEED_FLOWERPOT) && mApp->HasSeedType(SEED_FLOWERPOT))
+	if (warnings.roof)
 	{
 		if (!DisplayRepickWarningDialog("[SEED_CHOOSER_ROOF_WARNING]"))
 		{
@@ -660,15 +751,14 @@ void SeedChooserScreen::OnStartButton()
 		}
 	}
 
-	if (mApp->mGameMode == GAMEMODE_CHALLENGE_ART_CHALLENGE_WALLNUT && !PickedPlantType(SEED_WALLNUT))
+	if (warnings.artWallnut)
 	{
 		if (!DisplayRepickWarningDialog("[SEED_CHOOSER_ART_WALLNUT_WARNING]"))
 		{
 			return;
 		}
 	}
-	if (mApp->mGameMode == GAMEMODE_CHALLENGE_ART_CHALLENGE_SUNFLOWER &&
-		(!PickedPlantType(SEED_STARFRUIT) || !PickedPlantType(SEED_UMBRELLA) || !PickedPlantType(SEED_WALLNUT)))
+	if (warnings.art2)
 	{
 		if (!DisplayRepickWarningDialog("[SEED_CHOOSER_ART_2_WARNING]"))
 		{
@@ -676,7 +766,7 @@ void SeedChooserScreen::OnStartButton()
 		}
 	}
 
-	if (FlyersAreComming() && !FlyProtectionCurrentlyPlanted() && !PickedPlantType(SEED_CATTAIL) && !PickedPlantType(SEED_CACTUS) && !PickedPlantType(SEED_BLOVER))
+	if (warnings.flyer)
 	{
 		if (!DisplayRepickWarningDialog("[SEED_CHOOSER_FLYER_WARNING]"))
 		{

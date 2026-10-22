@@ -1808,6 +1808,60 @@ std::string LawnApp::EnvironmentDeckOptions()
 	return out.str();
 }
 
+// Whole-deck warnings from SeedChooserScreen::OnStartButton, for an arbitrary deck on the current
+// board (task28).  The judgement is the engine's own CheckDeckWarnings; nothing is re-derived here.
+std::string LawnApp::EnvironmentDeckWarnings(const std::vector<int>& theDeck)
+{
+	if (!mBoard)
+		return "{\"ok\":false}";
+	bool aPresent[SeedType::NUM_SEED_TYPES] = {};
+	for (int aType : theDeck)
+		if (aType >= 0 && aType < SeedType::NUM_SEED_TYPES)
+			aPresent[aType] = true;
+	auto aPicked = [&aPresent](SeedType theType) {
+		return theType >= 0 && theType < SeedType::NUM_SEED_TYPES && aPresent[theType];
+	};
+	bool aSurvivalRepick = mBoard->mCutScene && mBoard->mCutScene->IsSurvivalRepick();
+	SeedChooserScreen::DeckWarningSet aWarnings = SeedChooserScreen::CheckDeckWarnings(this, mBoard, aPicked, aSurvivalRepick);
+	std::ostringstream out;
+	out << "{\"ok\":true,\"level\":" << mBoard->mLevel << ",\"warnings\":[";
+	bool first = true;
+	auto emit = [&](bool theFlag, const char* theCode) {
+		if (!theFlag) return;
+		if (!first) out << ',';
+		first = false;
+		out << '"' << theCode << '"';
+	};
+	emit(aWarnings.sun, "sun");
+	emit(aWarnings.pool, "pool");
+	emit(aWarnings.roof, "roof");
+	emit(aWarnings.flyer, "flyer");
+	emit(aWarnings.upgrade, "upgrade");
+	emit(aWarnings.seeingStars, "seeing_stars");
+	emit(aWarnings.puffshroom, "puffshroom");
+	emit(aWarnings.artWallnut, "art_wallnut");
+	emit(aWarnings.art2, "art_2");
+	out << "]}";
+	return out.str();
+}
+
+// CrazyDavePickSeeds' candidate list for the current level, without picking (task28).
+std::string LawnApp::EnvironmentDeckPool()
+{
+	if (!mBoard)
+		return "{\"ok\":false}";
+	std::vector<SeedType> aPool = SeedChooserScreen::CrazyDaveSeedPool(this, mBoard);
+	std::ostringstream out;
+	out << "{\"ok\":true,\"level\":" << mBoard->mLevel << ",\"crazy_dave_pool\":[";
+	for (size_t i = 0; i < aPool.size(); ++i)
+	{
+		if (i) out << ',';
+		out << static_cast<int>(aPool[i]);
+	}
+	out << "]}";
+	return out.str();
+}
+
 std::string LawnApp::EnvironmentObservation(bool privileged)
 {
 	if (!mBoard)
