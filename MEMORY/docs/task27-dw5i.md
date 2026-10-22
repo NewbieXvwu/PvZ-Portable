@@ -76,13 +76,15 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 
 - 2026-10-22，2参考面板完成：identity的v2共34项/3264局，逐任务原始seed、胜局及动态植物类型计数核对；各区域数字将在dw5i齐后同表汇报。
 
+- 2026-10-22，2两参考v2收尾：各34项3264局原始seed/契约/类型计数/退出码核验齐；旧identity白天986/1024、留出492/768、夜间25/1152、泳池19/320，早关505/512。其与旧构建共同21项1920局除耗时/统计改名外全字段及槽计数一致；两参考同表入报告，参考控制器正常结束，不重启。仅保留study控制器等待q103第2轮。
+
 ## 问题
 
 - HF里的z15dag12bv/z15dag13bv是10-17的历史重标版本（见当天日志），不是新Mac轮次；导入档案已保留，但不加入本次训练以免和原12b/13b重复加权。新增训练轮次为48个夜间Mac标签及z17dag43b；冻结前还会刷新最新上传。
 
 - 三套全零留出实测：L7 h3 [5,3,36,7,4,2,0] 与 L8 h1 [3,22,4,2,7,5,32] 老师均0/16，列为结构性弱卡组嫌疑，交主控决定是否另开任务族替换；L9 h1 [0,3,1,7,37,2,4] 老师1/16，仍有学生泛化缺口。0/16是有限样本证据，不宣称数学上不可赢。
 
-- 唯一后台句柄：artifacts/task27/pretraining_controller.process.json（老师诊断已齐、两个参考v2依次跑）和study_controller.process.json（等待q103完整第2轮d10p8d）。先读/proc核对实际PID/命令与各阶段result，成功阶段复用，禁止重复训练或评估。完整task27只以artifacts/task27/complete.json及匹配task27-results.json的SHA为准，当前尚未冻结/开训。
+- 两参考v2已正常完成，pretraining_controller.process.json仅留存历史句柄，pretraining_complete.json已通过计划SHA校验；不要重启参考。当前唯一运行控制器为artifacts/task27/study_controller.process.json（等q103完整第2轮d10p8d）；先读/proc核对实际PID/命令与阶段result，成功阶段复用。完整task27只以artifacts/task27/complete.json及匹配task27-results.json的SHA为准，当前尚未冻结/开训。
 
 - 现用 night_panel_n10.json 的 L20 是旧初始牌变体 night_l20_eval_n10，按任务要求逐字段复现并保留主文件。v2 将从54项合并清单选 night_l20_eval_n10_orig（空槽原版），两者不混用。泳池登记与统一面板均曾占 §14.10，本次保留统一面板为 §14.10、泳池改 §14.11。
 
