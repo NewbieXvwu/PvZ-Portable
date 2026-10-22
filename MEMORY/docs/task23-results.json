@@ -1,0 +1,5228 @@
+{
+  "complete": true,
+  "evaluated_games": 11776,
+  "archives": 48816,
+  "labels": 170,
+  "plan_sha256": "7c0f425a3935eaf6411b529561f0edf2c01cf75663bae5c261b69a989af60023",
+  "inventory_sha256": "3b1892381f3ef424e565ce1cf6e3aa5cd6d6d1bcbe91b9d6ddb352bce1f82426",
+  "training": {
+    "dw4i_s1": {
+      "seed": 1,
+      "epochs": 12,
+      "model_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+      "rows": 13643901,
+      "source_groups": {
+        "identity_base": {
+          "archives": 38271,
+          "rows": 11051106,
+          "training_rows": 9953807,
+          "validation_rows": 1097299
+        },
+        "queue100": {
+          "archives": 2944,
+          "rows": 817419,
+          "training_rows": 735542,
+          "validation_rows": 81877
+        },
+        "mac_v33": {
+          "archives": 1280,
+          "rows": 361344,
+          "training_rows": 326615,
+          "validation_rows": 34729
+        },
+        "mac_v34": {
+          "archives": 1280,
+          "rows": 365592,
+          "training_rows": 331458,
+          "validation_rows": 34134
+        },
+        "perturb_desktop": {
+          "archives": 768,
+          "rows": 179567,
+          "training_rows": 162938,
+          "validation_rows": 16629
+        },
+        "perturb_mac": {
+          "archives": 2481,
+          "rows": 580026,
+          "training_rows": 516150,
+          "validation_rows": 63876
+        },
+        "original": {
+          "archives": 256,
+          "rows": 57917,
+          "training_rows": 51506,
+          "validation_rows": 6411
+        },
+        "night": {
+          "archives": 1536,
+          "rows": 230930,
+          "training_rows": 205079,
+          "validation_rows": 25851
+        }
+      },
+      "source_labels": {
+        "z13dag4_fast_search": {
+          "archives": 384,
+          "rows": 61064,
+          "training_rows": 55734,
+          "validation_rows": 5330
+        },
+        "z14dag5_fast_search": {
+          "archives": 768,
+          "rows": 129691,
+          "training_rows": 116655,
+          "validation_rows": 13036
+        },
+        "z15dag4_fast_search": {
+          "archives": 384,
+          "rows": 70745,
+          "training_rows": 64591,
+          "validation_rows": 6154
+        },
+        "z15dag6_fast_search": {
+          "archives": 384,
+          "rows": 72434,
+          "training_rows": 66634,
+          "validation_rows": 5800
+        },
+        "z15dag6c_fast_search": {
+          "archives": 384,
+          "rows": 72877,
+          "training_rows": 66822,
+          "validation_rows": 6055
+        },
+        "z13dag3_fast_search": {
+          "archives": 384,
+          "rows": 60334,
+          "training_rows": 53681,
+          "validation_rows": 6653
+        },
+        "z15dag3_fast_search": {
+          "archives": 384,
+          "rows": 69141,
+          "training_rows": 61592,
+          "validation_rows": 7549
+        },
+        "z15dag6b_fast_search": {
+          "archives": 384,
+          "rows": 73614,
+          "training_rows": 65655,
+          "validation_rows": 7959
+        },
+        "z15dag7_fast_search": {
+          "archives": 384,
+          "rows": 75290,
+          "training_rows": 67324,
+          "validation_rows": 7966
+        },
+        "z15dag8_fast_search": {
+          "archives": 384,
+          "rows": 109719,
+          "training_rows": 99060,
+          "validation_rows": 10659
+        },
+        "z15dag8b_fast_search": {
+          "archives": 384,
+          "rows": 107287,
+          "training_rows": 95226,
+          "validation_rows": 12061
+        },
+        "z15dag8c_fast_search": {
+          "archives": 256,
+          "rows": 72461,
+          "training_rows": 67750,
+          "validation_rows": 4711
+        },
+        "z15dag9_fast_search": {
+          "archives": 384,
+          "rows": 109856,
+          "training_rows": 101318,
+          "validation_rows": 8538
+        },
+        "z15dag9b_fast_search": {
+          "archives": 640,
+          "rows": 183767,
+          "training_rows": 162590,
+          "validation_rows": 21177
+        },
+        "z15dag10_fast_search": {
+          "archives": 384,
+          "rows": 110324,
+          "training_rows": 97291,
+          "validation_rows": 13033
+        },
+        "z15dag10b_fast_search": {
+          "archives": 640,
+          "rows": 183140,
+          "training_rows": 162962,
+          "validation_rows": 20178
+        },
+        "z15dag11_fast_search": {
+          "archives": 383,
+          "rows": 111715,
+          "training_rows": 99493,
+          "validation_rows": 12222
+        },
+        "z15dag11b_fast_search": {
+          "archives": 640,
+          "rows": 185266,
+          "training_rows": 167816,
+          "validation_rows": 17450
+        },
+        "z15dag12_fast_search": {
+          "archives": 384,
+          "rows": 112717,
+          "training_rows": 104665,
+          "validation_rows": 8052
+        },
+        "z15dag12b_fast_search": {
+          "archives": 640,
+          "rows": 186067,
+          "training_rows": 169847,
+          "validation_rows": 16220
+        },
+        "z15dag13_fast_search": {
+          "archives": 384,
+          "rows": 113170,
+          "training_rows": 100994,
+          "validation_rows": 12176
+        },
+        "z15dag13b_fast_search": {
+          "archives": 640,
+          "rows": 186203,
+          "training_rows": 169214,
+          "validation_rows": 16989
+        },
+        "z15dag14_fast_search": {
+          "archives": 384,
+          "rows": 101581,
+          "training_rows": 87718,
+          "validation_rows": 13863
+        },
+        "z15dag14b_fast_search": {
+          "archives": 640,
+          "rows": 168255,
+          "training_rows": 148441,
+          "validation_rows": 19814
+        },
+        "z15dag15_fast_search": {
+          "archives": 384,
+          "rows": 118820,
+          "training_rows": 104747,
+          "validation_rows": 14073
+        },
+        "z15dag15b_fast_search": {
+          "archives": 640,
+          "rows": 194829,
+          "training_rows": 176500,
+          "validation_rows": 18329
+        },
+        "z15dag15c_fast_search": {
+          "archives": 640,
+          "rows": 195734,
+          "training_rows": 178685,
+          "validation_rows": 17049
+        },
+        "z15dag16b_fast_search": {
+          "archives": 640,
+          "rows": 195156,
+          "training_rows": 176414,
+          "validation_rows": 18742
+        },
+        "z15dag17b_fast_search": {
+          "archives": 640,
+          "rows": 178603,
+          "training_rows": 161400,
+          "validation_rows": 17203
+        },
+        "z15dag17_fast_search": {
+          "archives": 384,
+          "rows": 107522,
+          "training_rows": 95804,
+          "validation_rows": 11718
+        },
+        "z15dag18_fast_search": {
+          "archives": 384,
+          "rows": 113353,
+          "training_rows": 102839,
+          "validation_rows": 10514
+        },
+        "z16dag19_fast_search": {
+          "archives": 384,
+          "rows": 115712,
+          "training_rows": 102290,
+          "validation_rows": 13422
+        },
+        "z16dag18b_fast_search": {
+          "archives": 640,
+          "rows": 189925,
+          "training_rows": 170708,
+          "validation_rows": 19217
+        },
+        "z17dag20_fast_search": {
+          "archives": 384,
+          "rows": 113793,
+          "training_rows": 104553,
+          "validation_rows": 9240
+        },
+        "z17dag20b_fast_search": {
+          "archives": 640,
+          "rows": 186524,
+          "training_rows": 168016,
+          "validation_rows": 18508
+        },
+        "z17dag21b_fast_search": {
+          "archives": 640,
+          "rows": 188089,
+          "training_rows": 164824,
+          "validation_rows": 23265
+        },
+        "z17dag21_fast_search": {
+          "archives": 384,
+          "rows": 115147,
+          "training_rows": 103372,
+          "validation_rows": 11775
+        },
+        "z17dag22b_fast_search": {
+          "archives": 640,
+          "rows": 190210,
+          "training_rows": 171494,
+          "validation_rows": 18716
+        },
+        "z17dag22_fast_search": {
+          "archives": 384,
+          "rows": 118019,
+          "training_rows": 104584,
+          "validation_rows": 13435
+        },
+        "z17dag23_fast_search": {
+          "archives": 384,
+          "rows": 116853,
+          "training_rows": 105869,
+          "validation_rows": 10984
+        },
+        "z17dag23b_fast_search": {
+          "archives": 640,
+          "rows": 196483,
+          "training_rows": 178174,
+          "validation_rows": 18309
+        },
+        "z17dag24b_fast_search": {
+          "archives": 640,
+          "rows": 196372,
+          "training_rows": 175238,
+          "validation_rows": 21134
+        },
+        "z17dag24_fast_search": {
+          "archives": 384,
+          "rows": 117390,
+          "training_rows": 106918,
+          "validation_rows": 10472
+        },
+        "z17dag25_fast_search": {
+          "archives": 384,
+          "rows": 124463,
+          "training_rows": 109530,
+          "validation_rows": 14933
+        },
+        "z17dag25b_fast_search": {
+          "archives": 640,
+          "rows": 205920,
+          "training_rows": 184111,
+          "validation_rows": 21809
+        },
+        "z17dag26s_fast_search": {
+          "archives": 640,
+          "rows": 209421,
+          "training_rows": 189600,
+          "validation_rows": 19821
+        },
+        "z17dag26t_fast_search": {
+          "archives": 384,
+          "rows": 125897,
+          "training_rows": 113076,
+          "validation_rows": 12821
+        },
+        "z17dag26u_fast_search": {
+          "archives": 640,
+          "rows": 212728,
+          "training_rows": 190752,
+          "validation_rows": 21976
+        },
+        "z17dag26v_fast_search": {
+          "archives": 640,
+          "rows": 210542,
+          "training_rows": 186420,
+          "validation_rows": 24122
+        },
+        "z17dag27_fast_search": {
+          "archives": 384,
+          "rows": 122853,
+          "training_rows": 113341,
+          "validation_rows": 9512
+        },
+        "z17dag27b_fast_search": {
+          "archives": 640,
+          "rows": 204822,
+          "training_rows": 181520,
+          "validation_rows": 23302
+        },
+        "z17dag27c_fast_search": {
+          "archives": 640,
+          "rows": 204673,
+          "training_rows": 182505,
+          "validation_rows": 22168
+        },
+        "z17dag28_fast_search": {
+          "archives": 384,
+          "rows": 122400,
+          "training_rows": 107193,
+          "validation_rows": 15207
+        },
+        "z17dag28b_fast_search": {
+          "archives": 640,
+          "rows": 203909,
+          "training_rows": 186023,
+          "validation_rows": 17886
+        },
+        "z17dag28g_fast_search": {
+          "archives": 256,
+          "rows": 81691,
+          "training_rows": 74618,
+          "validation_rows": 7073
+        },
+        "z17dag29_fast_search": {
+          "archives": 384,
+          "rows": 123812,
+          "training_rows": 109009,
+          "validation_rows": 14803
+        },
+        "z17dag29b_fast_search": {
+          "archives": 640,
+          "rows": 210006,
+          "training_rows": 191053,
+          "validation_rows": 18953
+        },
+        "z17dag29c_fast_search": {
+          "archives": 640,
+          "rows": 209575,
+          "training_rows": 190844,
+          "validation_rows": 18731
+        },
+        "z17dag30_fast_search": {
+          "archives": 384,
+          "rows": 124303,
+          "training_rows": 111799,
+          "validation_rows": 12504
+        },
+        "z17dag31_fast_search": {
+          "archives": 384,
+          "rows": 124457,
+          "training_rows": 112868,
+          "validation_rows": 11589
+        },
+        "z17dag31b_fast_search": {
+          "archives": 640,
+          "rows": 208000,
+          "training_rows": 188469,
+          "validation_rows": 19531
+        },
+        "z17dag32b_fast_search": {
+          "archives": 640,
+          "rows": 206675,
+          "training_rows": 184165,
+          "validation_rows": 22510
+        },
+        "z17dag32_fast_search": {
+          "archives": 384,
+          "rows": 123532,
+          "training_rows": 115177,
+          "validation_rows": 8355
+        },
+        "z17dag33b_fast_search": {
+          "archives": 640,
+          "rows": 209482,
+          "training_rows": 193180,
+          "validation_rows": 16302
+        },
+        "z17dag33_fast_search": {
+          "archives": 384,
+          "rows": 125597,
+          "training_rows": 110568,
+          "validation_rows": 15029
+        },
+        "z17dag34b_fast_search": {
+          "archives": 640,
+          "rows": 209336,
+          "training_rows": 189021,
+          "validation_rows": 20315
+        },
+        "z17dag35_fast_search": {
+          "archives": 384,
+          "rows": 125868,
+          "training_rows": 113553,
+          "validation_rows": 12315
+        },
+        "z17dag35b_fast_search": {
+          "archives": 640,
+          "rows": 209064,
+          "training_rows": 188390,
+          "validation_rows": 20674
+        },
+        "d7dag1_fast_search": {
+          "archives": 128,
+          "rows": 36878,
+          "training_rows": 31424,
+          "validation_rows": 5454
+        },
+        "d7dag2_fast_search": {
+          "archives": 128,
+          "rows": 37258,
+          "training_rows": 34135,
+          "validation_rows": 3123
+        },
+        "d7dag21_fast_search": {
+          "archives": 64,
+          "rows": 18636,
+          "training_rows": 17014,
+          "validation_rows": 1622
+        },
+        "d7dag22_fast_search": {
+          "archives": 64,
+          "rows": 18811,
+          "training_rows": 16850,
+          "validation_rows": 1961
+        },
+        "d7dag23_fast_search": {
+          "archives": 64,
+          "rows": 18472,
+          "training_rows": 16834,
+          "validation_rows": 1638
+        },
+        "d7dag24_fast_search": {
+          "archives": 64,
+          "rows": 18456,
+          "training_rows": 16690,
+          "validation_rows": 1766
+        },
+        "d7dag25_fast_search": {
+          "archives": 64,
+          "rows": 18385,
+          "training_rows": 17215,
+          "validation_rows": 1170
+        },
+        "d7dag26_fast_search": {
+          "archives": 64,
+          "rows": 18530,
+          "training_rows": 16274,
+          "validation_rows": 2256
+        },
+        "d7dag27_fast_search": {
+          "archives": 64,
+          "rows": 18688,
+          "training_rows": 16923,
+          "validation_rows": 1765
+        },
+        "d8dag1_fast_search": {
+          "archives": 128,
+          "rows": 28583,
+          "training_rows": 26657,
+          "validation_rows": 1926
+        },
+        "d8dag2_fast_search": {
+          "archives": 128,
+          "rows": 28057,
+          "training_rows": 26021,
+          "validation_rows": 2036
+        },
+        "d8dag21_fast_search": {
+          "archives": 64,
+          "rows": 14469,
+          "training_rows": 13036,
+          "validation_rows": 1433
+        },
+        "d8dag22_fast_search": {
+          "archives": 64,
+          "rows": 14623,
+          "training_rows": 13724,
+          "validation_rows": 899
+        },
+        "d8dag23_fast_search": {
+          "archives": 64,
+          "rows": 14483,
+          "training_rows": 13528,
+          "validation_rows": 955
+        },
+        "d8dag24_fast_search": {
+          "archives": 64,
+          "rows": 14705,
+          "training_rows": 13117,
+          "validation_rows": 1588
+        },
+        "d8dag25_fast_search": {
+          "archives": 64,
+          "rows": 14537,
+          "training_rows": 13322,
+          "validation_rows": 1215
+        },
+        "d8dag26_fast_search": {
+          "archives": 64,
+          "rows": 14573,
+          "training_rows": 13167,
+          "validation_rows": 1406
+        },
+        "d8dag27_fast_search": {
+          "archives": 64,
+          "rows": 14688,
+          "training_rows": 13312,
+          "validation_rows": 1376
+        },
+        "d9dag1_fast_search": {
+          "archives": 384,
+          "rows": 117427,
+          "training_rows": 105467,
+          "validation_rows": 11960
+        },
+        "d9dag5_fast_search": {
+          "archives": 128,
+          "rows": 40950,
+          "training_rows": 36456,
+          "validation_rows": 4494
+        },
+        "d9dag6_fast_search": {
+          "archives": 128,
+          "rows": 41188,
+          "training_rows": 38801,
+          "validation_rows": 2387
+        },
+        "d9dag21_fast_search": {
+          "archives": 128,
+          "rows": 41211,
+          "training_rows": 35436,
+          "validation_rows": 5775
+        },
+        "d9dag22_fast_search": {
+          "archives": 128,
+          "rows": 41273,
+          "training_rows": 38704,
+          "validation_rows": 2569
+        },
+        "d9dag23_fast_search": {
+          "archives": 128,
+          "rows": 41592,
+          "training_rows": 37499,
+          "validation_rows": 4093
+        },
+        "d9dag24_fast_search": {
+          "archives": 128,
+          "rows": 40514,
+          "training_rows": 36851,
+          "validation_rows": 3663
+        },
+        "d9dag25_fast_search": {
+          "archives": 128,
+          "rows": 41098,
+          "training_rows": 36970,
+          "validation_rows": 4128
+        },
+        "d9dag26_fast_search": {
+          "archives": 128,
+          "rows": 41257,
+          "training_rows": 38309,
+          "validation_rows": 2948
+        },
+        "d9dag27_fast_search": {
+          "archives": 128,
+          "rows": 41218,
+          "training_rows": 35280,
+          "validation_rows": 5938
+        },
+        "d9dag28_fast_search": {
+          "archives": 128,
+          "rows": 41115,
+          "training_rows": 37453,
+          "validation_rows": 3662
+        },
+        "d9dag1b_fast_search": {
+          "archives": 640,
+          "rows": 194534,
+          "training_rows": 175766,
+          "validation_rows": 18768
+        },
+        "d9dag3b_fast_search": {
+          "archives": 640,
+          "rows": 205137,
+          "training_rows": 186422,
+          "validation_rows": 18715
+        },
+        "d9dag4b_fast_search": {
+          "archives": 640,
+          "rows": 203049,
+          "training_rows": 183122,
+          "validation_rows": 19927
+        },
+        "d9dag5b_fast_search": {
+          "archives": 640,
+          "rows": 206119,
+          "training_rows": 186493,
+          "validation_rows": 19626
+        },
+        "d10dag1_fast_search": {
+          "archives": 384,
+          "rows": 72265,
+          "training_rows": 67760,
+          "validation_rows": 4505
+        },
+        "d10dag5_fast_search": {
+          "archives": 128,
+          "rows": 31015,
+          "training_rows": 28146,
+          "validation_rows": 2869
+        },
+        "d10dag6_fast_search": {
+          "archives": 128,
+          "rows": 30964,
+          "training_rows": 27801,
+          "validation_rows": 3163
+        },
+        "d10dag21_fast_search": {
+          "archives": 128,
+          "rows": 31845,
+          "training_rows": 28774,
+          "validation_rows": 3071
+        },
+        "d10dag22_fast_search": {
+          "archives": 128,
+          "rows": 31799,
+          "training_rows": 28282,
+          "validation_rows": 3517
+        },
+        "d10dag23_fast_search": {
+          "archives": 128,
+          "rows": 31779,
+          "training_rows": 27895,
+          "validation_rows": 3884
+        },
+        "d10dag24_fast_search": {
+          "archives": 128,
+          "rows": 32328,
+          "training_rows": 29910,
+          "validation_rows": 2418
+        },
+        "d10dag25_fast_search": {
+          "archives": 128,
+          "rows": 32077,
+          "training_rows": 29038,
+          "validation_rows": 3039
+        },
+        "d10dag26_fast_search": {
+          "archives": 128,
+          "rows": 31807,
+          "training_rows": 27385,
+          "validation_rows": 4422
+        },
+        "d10dag27_fast_search": {
+          "archives": 128,
+          "rows": 32446,
+          "training_rows": 30182,
+          "validation_rows": 2264
+        },
+        "d10dag28_fast_search": {
+          "archives": 128,
+          "rows": 32004,
+          "training_rows": 26568,
+          "validation_rows": 5436
+        },
+        "d10dag1b_fast_search": {
+          "archives": 640,
+          "rows": 118128,
+          "training_rows": 107525,
+          "validation_rows": 10603
+        },
+        "d10dag3b_fast_search": {
+          "archives": 640,
+          "rows": 154444,
+          "training_rows": 139139,
+          "validation_rows": 15305
+        },
+        "d10dag4b_fast_search": {
+          "archives": 640,
+          "rows": 158295,
+          "training_rows": 143493,
+          "validation_rows": 14802
+        },
+        "d10dag5b_fast_search": {
+          "archives": 640,
+          "rows": 159473,
+          "training_rows": 144965,
+          "validation_rows": 14508
+        },
+        "d7p1d_fast_search": {
+          "archives": 64,
+          "rows": 14278,
+          "training_rows": 12833,
+          "validation_rows": 1445
+        },
+        "d7p2d_fast_search": {
+          "archives": 64,
+          "rows": 14719,
+          "training_rows": 14719,
+          "validation_rows": 0
+        },
+        "d7p3d_fast_search": {
+          "archives": 64,
+          "rows": 16330,
+          "training_rows": 15055,
+          "validation_rows": 1275
+        },
+        "d7p1m_fast_search": {
+          "archives": 160,
+          "rows": 38383,
+          "training_rows": 34121,
+          "validation_rows": 4262
+        },
+        "d7p2m_fast_search": {
+          "archives": 160,
+          "rows": 39904,
+          "training_rows": 37833,
+          "validation_rows": 2071
+        },
+        "d7p3m_fast_search": {
+          "archives": 160,
+          "rows": 39183,
+          "training_rows": 35162,
+          "validation_rows": 4021
+        },
+        "d7p4m_fast_search": {
+          "archives": 160,
+          "rows": 40199,
+          "training_rows": 34613,
+          "validation_rows": 5586
+        },
+        "d8p1d_fast_search": {
+          "archives": 64,
+          "rows": 12227,
+          "training_rows": 11649,
+          "validation_rows": 578
+        },
+        "d8p2d_fast_search": {
+          "archives": 64,
+          "rows": 13284,
+          "training_rows": 10934,
+          "validation_rows": 2350
+        },
+        "d8p3d_fast_search": {
+          "archives": 64,
+          "rows": 13083,
+          "training_rows": 11824,
+          "validation_rows": 1259
+        },
+        "d8p1m_fast_search": {
+          "archives": 160,
+          "rows": 32000,
+          "training_rows": 28486,
+          "validation_rows": 3514
+        },
+        "d8p2m_fast_search": {
+          "archives": 160,
+          "rows": 30701,
+          "training_rows": 27513,
+          "validation_rows": 3188
+        },
+        "d8p3m_fast_search": {
+          "archives": 160,
+          "rows": 30372,
+          "training_rows": 27289,
+          "validation_rows": 3083
+        },
+        "d8p4m_fast_search": {
+          "archives": 160,
+          "rows": 32155,
+          "training_rows": 27871,
+          "validation_rows": 4284
+        },
+        "d9p1d_fast_search": {
+          "archives": 64,
+          "rows": 16443,
+          "training_rows": 15659,
+          "validation_rows": 784
+        },
+        "d9p2d_fast_search": {
+          "archives": 64,
+          "rows": 15474,
+          "training_rows": 14177,
+          "validation_rows": 1297
+        },
+        "d9p3d_fast_search": {
+          "archives": 64,
+          "rows": 16018,
+          "training_rows": 12750,
+          "validation_rows": 3268
+        },
+        "d9p1m_fast_search": {
+          "archives": 160,
+          "rows": 39630,
+          "training_rows": 35606,
+          "validation_rows": 4024
+        },
+        "d9p2m_fast_search": {
+          "archives": 81,
+          "rows": 21019,
+          "training_rows": 17878,
+          "validation_rows": 3141
+        },
+        "d9p3m_fast_search": {
+          "archives": 160,
+          "rows": 39585,
+          "training_rows": 34719,
+          "validation_rows": 4866
+        },
+        "d9p4m_fast_search": {
+          "archives": 160,
+          "rows": 39830,
+          "training_rows": 35269,
+          "validation_rows": 4561
+        },
+        "d10p1d_fast_search": {
+          "archives": 64,
+          "rows": 15827,
+          "training_rows": 14189,
+          "validation_rows": 1638
+        },
+        "d10p2d_fast_search": {
+          "archives": 64,
+          "rows": 16110,
+          "training_rows": 14601,
+          "validation_rows": 1509
+        },
+        "d10p3d_fast_search": {
+          "archives": 64,
+          "rows": 15774,
+          "training_rows": 14548,
+          "validation_rows": 1226
+        },
+        "d10p1m_fast_search": {
+          "archives": 160,
+          "rows": 39173,
+          "training_rows": 36361,
+          "validation_rows": 2812
+        },
+        "d10p2m_fast_search": {
+          "archives": 160,
+          "rows": 39518,
+          "training_rows": 34899,
+          "validation_rows": 4619
+        },
+        "d10p3m_fast_search": {
+          "archives": 160,
+          "rows": 39447,
+          "training_rows": 34730,
+          "validation_rows": 4717
+        },
+        "d10p4m_fast_search": {
+          "archives": 160,
+          "rows": 38927,
+          "training_rows": 33800,
+          "validation_rows": 5127
+        },
+        "d10orig1_fast_search": {
+          "archives": 128,
+          "rows": 28597,
+          "training_rows": 26013,
+          "validation_rows": 2584
+        },
+        "d10orig2_fast_search": {
+          "archives": 128,
+          "rows": 29320,
+          "training_rows": 25493,
+          "validation_rows": 3827
+        },
+        "n11dag1_fast_search": {
+          "archives": 64,
+          "rows": 8769,
+          "training_rows": 7706,
+          "validation_rows": 1063
+        },
+        "n11dag2_fast_search": {
+          "archives": 64,
+          "rows": 8670,
+          "training_rows": 7543,
+          "validation_rows": 1127
+        },
+        "n11dag3_fast_search": {
+          "archives": 64,
+          "rows": 8442,
+          "training_rows": 7564,
+          "validation_rows": 878
+        },
+        "n12dag1_fast_search": {
+          "archives": 64,
+          "rows": 9775,
+          "training_rows": 8761,
+          "validation_rows": 1014
+        },
+        "n12dag2_fast_search": {
+          "archives": 64,
+          "rows": 9718,
+          "training_rows": 8773,
+          "validation_rows": 945
+        },
+        "n12dag3_fast_search": {
+          "archives": 64,
+          "rows": 9985,
+          "training_rows": 9285,
+          "validation_rows": 700
+        },
+        "n13dag1_fast_search": {
+          "archives": 64,
+          "rows": 9341,
+          "training_rows": 8170,
+          "validation_rows": 1171
+        },
+        "n13dag2_fast_search": {
+          "archives": 64,
+          "rows": 8652,
+          "training_rows": 7079,
+          "validation_rows": 1573
+        },
+        "n13dag3_fast_search": {
+          "archives": 64,
+          "rows": 9993,
+          "training_rows": 9288,
+          "validation_rows": 705
+        },
+        "n14dag1_fast_search": {
+          "archives": 64,
+          "rows": 9797,
+          "training_rows": 8580,
+          "validation_rows": 1217
+        },
+        "n14dag2_fast_search": {
+          "archives": 64,
+          "rows": 9264,
+          "training_rows": 8512,
+          "validation_rows": 752
+        },
+        "n14dag3_fast_search": {
+          "archives": 64,
+          "rows": 9724,
+          "training_rows": 8717,
+          "validation_rows": 1007
+        },
+        "n16dag1_fast_search": {
+          "archives": 64,
+          "rows": 9650,
+          "training_rows": 8506,
+          "validation_rows": 1144
+        },
+        "n16dag2_fast_search": {
+          "archives": 64,
+          "rows": 9547,
+          "training_rows": 8558,
+          "validation_rows": 989
+        },
+        "n16dag3_fast_search": {
+          "archives": 64,
+          "rows": 8869,
+          "training_rows": 8086,
+          "validation_rows": 783
+        },
+        "n17dag1_fast_search": {
+          "archives": 64,
+          "rows": 10159,
+          "training_rows": 9165,
+          "validation_rows": 994
+        },
+        "n17dag2_fast_search": {
+          "archives": 64,
+          "rows": 10211,
+          "training_rows": 8287,
+          "validation_rows": 1924
+        },
+        "n17dag3_fast_search": {
+          "archives": 64,
+          "rows": 10264,
+          "training_rows": 8785,
+          "validation_rows": 1479
+        },
+        "n18dag1_fast_search": {
+          "archives": 64,
+          "rows": 9872,
+          "training_rows": 8640,
+          "validation_rows": 1232
+        },
+        "n18dag2_fast_search": {
+          "archives": 64,
+          "rows": 10181,
+          "training_rows": 9157,
+          "validation_rows": 1024
+        },
+        "n18dag3_fast_search": {
+          "archives": 64,
+          "rows": 9591,
+          "training_rows": 8902,
+          "validation_rows": 689
+        },
+        "n19dag1_fast_search": {
+          "archives": 64,
+          "rows": 10644,
+          "training_rows": 9395,
+          "validation_rows": 1249
+        },
+        "n19dag2_fast_search": {
+          "archives": 64,
+          "rows": 10326,
+          "training_rows": 9687,
+          "validation_rows": 639
+        },
+        "n19dag3_fast_search": {
+          "archives": 64,
+          "rows": 9486,
+          "training_rows": 7933,
+          "validation_rows": 1553
+        }
+      },
+      "final_epoch": {
+        "epoch": 12,
+        "train_loss": 3.636314607501606,
+        "val_loss": 3.5008687431284855,
+        "type_acc": 0.9205279714430772,
+        "plant_recall": 0.7485111891297668,
+        "packet_acc": 0.7633422773417862,
+        "cell_acc": 0.5130942814459662,
+        "seconds": 131.80818582698703
+      },
+      "resources": {
+        "returncode": 0,
+        "wall_s": 4441.922625389008,
+        "peak_rss_kib": 15901896,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 4352092
+      },
+      "upload": {
+        "repo": "realnewbiexvwu/pvz-agent-artifacts",
+        "path": "transfer/dw4i_s1_model.pt",
+        "revision": "1d585cef7a7e897090bb9a273890644b142c5166",
+        "model_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+        "download_verified": true
+      },
+      "recipe_matches": [
+        "width",
+        "pool",
+        "label_weight",
+        "packet_balance",
+        "row_pool",
+        "aux_weight",
+        "aux_horizon",
+        "packet_head",
+        "plant_embedding_dim",
+        "context",
+        "obs",
+        "soft_weight",
+        "spread_weight",
+        "spread_cap",
+        "lr_schedule",
+        "ema",
+        "cell_soft_weight"
+      ]
+    },
+    "dw4i_s2": {
+      "seed": 2,
+      "epochs": 12,
+      "model_sha256": "a9f4467c2860fe65a5209d03e863f6d9f9b60ceafc26955a30a786715ca0dde8",
+      "rows": 13643901,
+      "source_groups": {
+        "identity_base": {
+          "archives": 38271,
+          "rows": 11051106,
+          "training_rows": 9953807,
+          "validation_rows": 1097299
+        },
+        "queue100": {
+          "archives": 2944,
+          "rows": 817419,
+          "training_rows": 735542,
+          "validation_rows": 81877
+        },
+        "mac_v33": {
+          "archives": 1280,
+          "rows": 361344,
+          "training_rows": 326615,
+          "validation_rows": 34729
+        },
+        "mac_v34": {
+          "archives": 1280,
+          "rows": 365592,
+          "training_rows": 331458,
+          "validation_rows": 34134
+        },
+        "perturb_desktop": {
+          "archives": 768,
+          "rows": 179567,
+          "training_rows": 162938,
+          "validation_rows": 16629
+        },
+        "perturb_mac": {
+          "archives": 2481,
+          "rows": 580026,
+          "training_rows": 516150,
+          "validation_rows": 63876
+        },
+        "original": {
+          "archives": 256,
+          "rows": 57917,
+          "training_rows": 51506,
+          "validation_rows": 6411
+        },
+        "night": {
+          "archives": 1536,
+          "rows": 230930,
+          "training_rows": 205079,
+          "validation_rows": 25851
+        }
+      },
+      "source_labels": {
+        "z13dag4_fast_search": {
+          "archives": 384,
+          "rows": 61064,
+          "training_rows": 55734,
+          "validation_rows": 5330
+        },
+        "z14dag5_fast_search": {
+          "archives": 768,
+          "rows": 129691,
+          "training_rows": 116655,
+          "validation_rows": 13036
+        },
+        "z15dag4_fast_search": {
+          "archives": 384,
+          "rows": 70745,
+          "training_rows": 64591,
+          "validation_rows": 6154
+        },
+        "z15dag6_fast_search": {
+          "archives": 384,
+          "rows": 72434,
+          "training_rows": 66634,
+          "validation_rows": 5800
+        },
+        "z15dag6c_fast_search": {
+          "archives": 384,
+          "rows": 72877,
+          "training_rows": 66822,
+          "validation_rows": 6055
+        },
+        "z13dag3_fast_search": {
+          "archives": 384,
+          "rows": 60334,
+          "training_rows": 53681,
+          "validation_rows": 6653
+        },
+        "z15dag3_fast_search": {
+          "archives": 384,
+          "rows": 69141,
+          "training_rows": 61592,
+          "validation_rows": 7549
+        },
+        "z15dag6b_fast_search": {
+          "archives": 384,
+          "rows": 73614,
+          "training_rows": 65655,
+          "validation_rows": 7959
+        },
+        "z15dag7_fast_search": {
+          "archives": 384,
+          "rows": 75290,
+          "training_rows": 67324,
+          "validation_rows": 7966
+        },
+        "z15dag8_fast_search": {
+          "archives": 384,
+          "rows": 109719,
+          "training_rows": 99060,
+          "validation_rows": 10659
+        },
+        "z15dag8b_fast_search": {
+          "archives": 384,
+          "rows": 107287,
+          "training_rows": 95226,
+          "validation_rows": 12061
+        },
+        "z15dag8c_fast_search": {
+          "archives": 256,
+          "rows": 72461,
+          "training_rows": 67750,
+          "validation_rows": 4711
+        },
+        "z15dag9_fast_search": {
+          "archives": 384,
+          "rows": 109856,
+          "training_rows": 101318,
+          "validation_rows": 8538
+        },
+        "z15dag9b_fast_search": {
+          "archives": 640,
+          "rows": 183767,
+          "training_rows": 162590,
+          "validation_rows": 21177
+        },
+        "z15dag10_fast_search": {
+          "archives": 384,
+          "rows": 110324,
+          "training_rows": 97291,
+          "validation_rows": 13033
+        },
+        "z15dag10b_fast_search": {
+          "archives": 640,
+          "rows": 183140,
+          "training_rows": 162962,
+          "validation_rows": 20178
+        },
+        "z15dag11_fast_search": {
+          "archives": 383,
+          "rows": 111715,
+          "training_rows": 99493,
+          "validation_rows": 12222
+        },
+        "z15dag11b_fast_search": {
+          "archives": 640,
+          "rows": 185266,
+          "training_rows": 167816,
+          "validation_rows": 17450
+        },
+        "z15dag12_fast_search": {
+          "archives": 384,
+          "rows": 112717,
+          "training_rows": 104665,
+          "validation_rows": 8052
+        },
+        "z15dag12b_fast_search": {
+          "archives": 640,
+          "rows": 186067,
+          "training_rows": 169847,
+          "validation_rows": 16220
+        },
+        "z15dag13_fast_search": {
+          "archives": 384,
+          "rows": 113170,
+          "training_rows": 100994,
+          "validation_rows": 12176
+        },
+        "z15dag13b_fast_search": {
+          "archives": 640,
+          "rows": 186203,
+          "training_rows": 169214,
+          "validation_rows": 16989
+        },
+        "z15dag14_fast_search": {
+          "archives": 384,
+          "rows": 101581,
+          "training_rows": 87718,
+          "validation_rows": 13863
+        },
+        "z15dag14b_fast_search": {
+          "archives": 640,
+          "rows": 168255,
+          "training_rows": 148441,
+          "validation_rows": 19814
+        },
+        "z15dag15_fast_search": {
+          "archives": 384,
+          "rows": 118820,
+          "training_rows": 104747,
+          "validation_rows": 14073
+        },
+        "z15dag15b_fast_search": {
+          "archives": 640,
+          "rows": 194829,
+          "training_rows": 176500,
+          "validation_rows": 18329
+        },
+        "z15dag15c_fast_search": {
+          "archives": 640,
+          "rows": 195734,
+          "training_rows": 178685,
+          "validation_rows": 17049
+        },
+        "z15dag16b_fast_search": {
+          "archives": 640,
+          "rows": 195156,
+          "training_rows": 176414,
+          "validation_rows": 18742
+        },
+        "z15dag17b_fast_search": {
+          "archives": 640,
+          "rows": 178603,
+          "training_rows": 161400,
+          "validation_rows": 17203
+        },
+        "z15dag17_fast_search": {
+          "archives": 384,
+          "rows": 107522,
+          "training_rows": 95804,
+          "validation_rows": 11718
+        },
+        "z15dag18_fast_search": {
+          "archives": 384,
+          "rows": 113353,
+          "training_rows": 102839,
+          "validation_rows": 10514
+        },
+        "z16dag19_fast_search": {
+          "archives": 384,
+          "rows": 115712,
+          "training_rows": 102290,
+          "validation_rows": 13422
+        },
+        "z16dag18b_fast_search": {
+          "archives": 640,
+          "rows": 189925,
+          "training_rows": 170708,
+          "validation_rows": 19217
+        },
+        "z17dag20_fast_search": {
+          "archives": 384,
+          "rows": 113793,
+          "training_rows": 104553,
+          "validation_rows": 9240
+        },
+        "z17dag20b_fast_search": {
+          "archives": 640,
+          "rows": 186524,
+          "training_rows": 168016,
+          "validation_rows": 18508
+        },
+        "z17dag21b_fast_search": {
+          "archives": 640,
+          "rows": 188089,
+          "training_rows": 164824,
+          "validation_rows": 23265
+        },
+        "z17dag21_fast_search": {
+          "archives": 384,
+          "rows": 115147,
+          "training_rows": 103372,
+          "validation_rows": 11775
+        },
+        "z17dag22b_fast_search": {
+          "archives": 640,
+          "rows": 190210,
+          "training_rows": 171494,
+          "validation_rows": 18716
+        },
+        "z17dag22_fast_search": {
+          "archives": 384,
+          "rows": 118019,
+          "training_rows": 104584,
+          "validation_rows": 13435
+        },
+        "z17dag23_fast_search": {
+          "archives": 384,
+          "rows": 116853,
+          "training_rows": 105869,
+          "validation_rows": 10984
+        },
+        "z17dag23b_fast_search": {
+          "archives": 640,
+          "rows": 196483,
+          "training_rows": 178174,
+          "validation_rows": 18309
+        },
+        "z17dag24b_fast_search": {
+          "archives": 640,
+          "rows": 196372,
+          "training_rows": 175238,
+          "validation_rows": 21134
+        },
+        "z17dag24_fast_search": {
+          "archives": 384,
+          "rows": 117390,
+          "training_rows": 106918,
+          "validation_rows": 10472
+        },
+        "z17dag25_fast_search": {
+          "archives": 384,
+          "rows": 124463,
+          "training_rows": 109530,
+          "validation_rows": 14933
+        },
+        "z17dag25b_fast_search": {
+          "archives": 640,
+          "rows": 205920,
+          "training_rows": 184111,
+          "validation_rows": 21809
+        },
+        "z17dag26s_fast_search": {
+          "archives": 640,
+          "rows": 209421,
+          "training_rows": 189600,
+          "validation_rows": 19821
+        },
+        "z17dag26t_fast_search": {
+          "archives": 384,
+          "rows": 125897,
+          "training_rows": 113076,
+          "validation_rows": 12821
+        },
+        "z17dag26u_fast_search": {
+          "archives": 640,
+          "rows": 212728,
+          "training_rows": 190752,
+          "validation_rows": 21976
+        },
+        "z17dag26v_fast_search": {
+          "archives": 640,
+          "rows": 210542,
+          "training_rows": 186420,
+          "validation_rows": 24122
+        },
+        "z17dag27_fast_search": {
+          "archives": 384,
+          "rows": 122853,
+          "training_rows": 113341,
+          "validation_rows": 9512
+        },
+        "z17dag27b_fast_search": {
+          "archives": 640,
+          "rows": 204822,
+          "training_rows": 181520,
+          "validation_rows": 23302
+        },
+        "z17dag27c_fast_search": {
+          "archives": 640,
+          "rows": 204673,
+          "training_rows": 182505,
+          "validation_rows": 22168
+        },
+        "z17dag28_fast_search": {
+          "archives": 384,
+          "rows": 122400,
+          "training_rows": 107193,
+          "validation_rows": 15207
+        },
+        "z17dag28b_fast_search": {
+          "archives": 640,
+          "rows": 203909,
+          "training_rows": 186023,
+          "validation_rows": 17886
+        },
+        "z17dag28g_fast_search": {
+          "archives": 256,
+          "rows": 81691,
+          "training_rows": 74618,
+          "validation_rows": 7073
+        },
+        "z17dag29_fast_search": {
+          "archives": 384,
+          "rows": 123812,
+          "training_rows": 109009,
+          "validation_rows": 14803
+        },
+        "z17dag29b_fast_search": {
+          "archives": 640,
+          "rows": 210006,
+          "training_rows": 191053,
+          "validation_rows": 18953
+        },
+        "z17dag29c_fast_search": {
+          "archives": 640,
+          "rows": 209575,
+          "training_rows": 190844,
+          "validation_rows": 18731
+        },
+        "z17dag30_fast_search": {
+          "archives": 384,
+          "rows": 124303,
+          "training_rows": 111799,
+          "validation_rows": 12504
+        },
+        "z17dag31_fast_search": {
+          "archives": 384,
+          "rows": 124457,
+          "training_rows": 112868,
+          "validation_rows": 11589
+        },
+        "z17dag31b_fast_search": {
+          "archives": 640,
+          "rows": 208000,
+          "training_rows": 188469,
+          "validation_rows": 19531
+        },
+        "z17dag32b_fast_search": {
+          "archives": 640,
+          "rows": 206675,
+          "training_rows": 184165,
+          "validation_rows": 22510
+        },
+        "z17dag32_fast_search": {
+          "archives": 384,
+          "rows": 123532,
+          "training_rows": 115177,
+          "validation_rows": 8355
+        },
+        "z17dag33b_fast_search": {
+          "archives": 640,
+          "rows": 209482,
+          "training_rows": 193180,
+          "validation_rows": 16302
+        },
+        "z17dag33_fast_search": {
+          "archives": 384,
+          "rows": 125597,
+          "training_rows": 110568,
+          "validation_rows": 15029
+        },
+        "z17dag34b_fast_search": {
+          "archives": 640,
+          "rows": 209336,
+          "training_rows": 189021,
+          "validation_rows": 20315
+        },
+        "z17dag35_fast_search": {
+          "archives": 384,
+          "rows": 125868,
+          "training_rows": 113553,
+          "validation_rows": 12315
+        },
+        "z17dag35b_fast_search": {
+          "archives": 640,
+          "rows": 209064,
+          "training_rows": 188390,
+          "validation_rows": 20674
+        },
+        "d7dag1_fast_search": {
+          "archives": 128,
+          "rows": 36878,
+          "training_rows": 31424,
+          "validation_rows": 5454
+        },
+        "d7dag2_fast_search": {
+          "archives": 128,
+          "rows": 37258,
+          "training_rows": 34135,
+          "validation_rows": 3123
+        },
+        "d7dag21_fast_search": {
+          "archives": 64,
+          "rows": 18636,
+          "training_rows": 17014,
+          "validation_rows": 1622
+        },
+        "d7dag22_fast_search": {
+          "archives": 64,
+          "rows": 18811,
+          "training_rows": 16850,
+          "validation_rows": 1961
+        },
+        "d7dag23_fast_search": {
+          "archives": 64,
+          "rows": 18472,
+          "training_rows": 16834,
+          "validation_rows": 1638
+        },
+        "d7dag24_fast_search": {
+          "archives": 64,
+          "rows": 18456,
+          "training_rows": 16690,
+          "validation_rows": 1766
+        },
+        "d7dag25_fast_search": {
+          "archives": 64,
+          "rows": 18385,
+          "training_rows": 17215,
+          "validation_rows": 1170
+        },
+        "d7dag26_fast_search": {
+          "archives": 64,
+          "rows": 18530,
+          "training_rows": 16274,
+          "validation_rows": 2256
+        },
+        "d7dag27_fast_search": {
+          "archives": 64,
+          "rows": 18688,
+          "training_rows": 16923,
+          "validation_rows": 1765
+        },
+        "d8dag1_fast_search": {
+          "archives": 128,
+          "rows": 28583,
+          "training_rows": 26657,
+          "validation_rows": 1926
+        },
+        "d8dag2_fast_search": {
+          "archives": 128,
+          "rows": 28057,
+          "training_rows": 26021,
+          "validation_rows": 2036
+        },
+        "d8dag21_fast_search": {
+          "archives": 64,
+          "rows": 14469,
+          "training_rows": 13036,
+          "validation_rows": 1433
+        },
+        "d8dag22_fast_search": {
+          "archives": 64,
+          "rows": 14623,
+          "training_rows": 13724,
+          "validation_rows": 899
+        },
+        "d8dag23_fast_search": {
+          "archives": 64,
+          "rows": 14483,
+          "training_rows": 13528,
+          "validation_rows": 955
+        },
+        "d8dag24_fast_search": {
+          "archives": 64,
+          "rows": 14705,
+          "training_rows": 13117,
+          "validation_rows": 1588
+        },
+        "d8dag25_fast_search": {
+          "archives": 64,
+          "rows": 14537,
+          "training_rows": 13322,
+          "validation_rows": 1215
+        },
+        "d8dag26_fast_search": {
+          "archives": 64,
+          "rows": 14573,
+          "training_rows": 13167,
+          "validation_rows": 1406
+        },
+        "d8dag27_fast_search": {
+          "archives": 64,
+          "rows": 14688,
+          "training_rows": 13312,
+          "validation_rows": 1376
+        },
+        "d9dag1_fast_search": {
+          "archives": 384,
+          "rows": 117427,
+          "training_rows": 105467,
+          "validation_rows": 11960
+        },
+        "d9dag5_fast_search": {
+          "archives": 128,
+          "rows": 40950,
+          "training_rows": 36456,
+          "validation_rows": 4494
+        },
+        "d9dag6_fast_search": {
+          "archives": 128,
+          "rows": 41188,
+          "training_rows": 38801,
+          "validation_rows": 2387
+        },
+        "d9dag21_fast_search": {
+          "archives": 128,
+          "rows": 41211,
+          "training_rows": 35436,
+          "validation_rows": 5775
+        },
+        "d9dag22_fast_search": {
+          "archives": 128,
+          "rows": 41273,
+          "training_rows": 38704,
+          "validation_rows": 2569
+        },
+        "d9dag23_fast_search": {
+          "archives": 128,
+          "rows": 41592,
+          "training_rows": 37499,
+          "validation_rows": 4093
+        },
+        "d9dag24_fast_search": {
+          "archives": 128,
+          "rows": 40514,
+          "training_rows": 36851,
+          "validation_rows": 3663
+        },
+        "d9dag25_fast_search": {
+          "archives": 128,
+          "rows": 41098,
+          "training_rows": 36970,
+          "validation_rows": 4128
+        },
+        "d9dag26_fast_search": {
+          "archives": 128,
+          "rows": 41257,
+          "training_rows": 38309,
+          "validation_rows": 2948
+        },
+        "d9dag27_fast_search": {
+          "archives": 128,
+          "rows": 41218,
+          "training_rows": 35280,
+          "validation_rows": 5938
+        },
+        "d9dag28_fast_search": {
+          "archives": 128,
+          "rows": 41115,
+          "training_rows": 37453,
+          "validation_rows": 3662
+        },
+        "d9dag1b_fast_search": {
+          "archives": 640,
+          "rows": 194534,
+          "training_rows": 175766,
+          "validation_rows": 18768
+        },
+        "d9dag3b_fast_search": {
+          "archives": 640,
+          "rows": 205137,
+          "training_rows": 186422,
+          "validation_rows": 18715
+        },
+        "d9dag4b_fast_search": {
+          "archives": 640,
+          "rows": 203049,
+          "training_rows": 183122,
+          "validation_rows": 19927
+        },
+        "d9dag5b_fast_search": {
+          "archives": 640,
+          "rows": 206119,
+          "training_rows": 186493,
+          "validation_rows": 19626
+        },
+        "d10dag1_fast_search": {
+          "archives": 384,
+          "rows": 72265,
+          "training_rows": 67760,
+          "validation_rows": 4505
+        },
+        "d10dag5_fast_search": {
+          "archives": 128,
+          "rows": 31015,
+          "training_rows": 28146,
+          "validation_rows": 2869
+        },
+        "d10dag6_fast_search": {
+          "archives": 128,
+          "rows": 30964,
+          "training_rows": 27801,
+          "validation_rows": 3163
+        },
+        "d10dag21_fast_search": {
+          "archives": 128,
+          "rows": 31845,
+          "training_rows": 28774,
+          "validation_rows": 3071
+        },
+        "d10dag22_fast_search": {
+          "archives": 128,
+          "rows": 31799,
+          "training_rows": 28282,
+          "validation_rows": 3517
+        },
+        "d10dag23_fast_search": {
+          "archives": 128,
+          "rows": 31779,
+          "training_rows": 27895,
+          "validation_rows": 3884
+        },
+        "d10dag24_fast_search": {
+          "archives": 128,
+          "rows": 32328,
+          "training_rows": 29910,
+          "validation_rows": 2418
+        },
+        "d10dag25_fast_search": {
+          "archives": 128,
+          "rows": 32077,
+          "training_rows": 29038,
+          "validation_rows": 3039
+        },
+        "d10dag26_fast_search": {
+          "archives": 128,
+          "rows": 31807,
+          "training_rows": 27385,
+          "validation_rows": 4422
+        },
+        "d10dag27_fast_search": {
+          "archives": 128,
+          "rows": 32446,
+          "training_rows": 30182,
+          "validation_rows": 2264
+        },
+        "d10dag28_fast_search": {
+          "archives": 128,
+          "rows": 32004,
+          "training_rows": 26568,
+          "validation_rows": 5436
+        },
+        "d10dag1b_fast_search": {
+          "archives": 640,
+          "rows": 118128,
+          "training_rows": 107525,
+          "validation_rows": 10603
+        },
+        "d10dag3b_fast_search": {
+          "archives": 640,
+          "rows": 154444,
+          "training_rows": 139139,
+          "validation_rows": 15305
+        },
+        "d10dag4b_fast_search": {
+          "archives": 640,
+          "rows": 158295,
+          "training_rows": 143493,
+          "validation_rows": 14802
+        },
+        "d10dag5b_fast_search": {
+          "archives": 640,
+          "rows": 159473,
+          "training_rows": 144965,
+          "validation_rows": 14508
+        },
+        "d7p1d_fast_search": {
+          "archives": 64,
+          "rows": 14278,
+          "training_rows": 12833,
+          "validation_rows": 1445
+        },
+        "d7p2d_fast_search": {
+          "archives": 64,
+          "rows": 14719,
+          "training_rows": 14719,
+          "validation_rows": 0
+        },
+        "d7p3d_fast_search": {
+          "archives": 64,
+          "rows": 16330,
+          "training_rows": 15055,
+          "validation_rows": 1275
+        },
+        "d7p1m_fast_search": {
+          "archives": 160,
+          "rows": 38383,
+          "training_rows": 34121,
+          "validation_rows": 4262
+        },
+        "d7p2m_fast_search": {
+          "archives": 160,
+          "rows": 39904,
+          "training_rows": 37833,
+          "validation_rows": 2071
+        },
+        "d7p3m_fast_search": {
+          "archives": 160,
+          "rows": 39183,
+          "training_rows": 35162,
+          "validation_rows": 4021
+        },
+        "d7p4m_fast_search": {
+          "archives": 160,
+          "rows": 40199,
+          "training_rows": 34613,
+          "validation_rows": 5586
+        },
+        "d8p1d_fast_search": {
+          "archives": 64,
+          "rows": 12227,
+          "training_rows": 11649,
+          "validation_rows": 578
+        },
+        "d8p2d_fast_search": {
+          "archives": 64,
+          "rows": 13284,
+          "training_rows": 10934,
+          "validation_rows": 2350
+        },
+        "d8p3d_fast_search": {
+          "archives": 64,
+          "rows": 13083,
+          "training_rows": 11824,
+          "validation_rows": 1259
+        },
+        "d8p1m_fast_search": {
+          "archives": 160,
+          "rows": 32000,
+          "training_rows": 28486,
+          "validation_rows": 3514
+        },
+        "d8p2m_fast_search": {
+          "archives": 160,
+          "rows": 30701,
+          "training_rows": 27513,
+          "validation_rows": 3188
+        },
+        "d8p3m_fast_search": {
+          "archives": 160,
+          "rows": 30372,
+          "training_rows": 27289,
+          "validation_rows": 3083
+        },
+        "d8p4m_fast_search": {
+          "archives": 160,
+          "rows": 32155,
+          "training_rows": 27871,
+          "validation_rows": 4284
+        },
+        "d9p1d_fast_search": {
+          "archives": 64,
+          "rows": 16443,
+          "training_rows": 15659,
+          "validation_rows": 784
+        },
+        "d9p2d_fast_search": {
+          "archives": 64,
+          "rows": 15474,
+          "training_rows": 14177,
+          "validation_rows": 1297
+        },
+        "d9p3d_fast_search": {
+          "archives": 64,
+          "rows": 16018,
+          "training_rows": 12750,
+          "validation_rows": 3268
+        },
+        "d9p1m_fast_search": {
+          "archives": 160,
+          "rows": 39630,
+          "training_rows": 35606,
+          "validation_rows": 4024
+        },
+        "d9p2m_fast_search": {
+          "archives": 81,
+          "rows": 21019,
+          "training_rows": 17878,
+          "validation_rows": 3141
+        },
+        "d9p3m_fast_search": {
+          "archives": 160,
+          "rows": 39585,
+          "training_rows": 34719,
+          "validation_rows": 4866
+        },
+        "d9p4m_fast_search": {
+          "archives": 160,
+          "rows": 39830,
+          "training_rows": 35269,
+          "validation_rows": 4561
+        },
+        "d10p1d_fast_search": {
+          "archives": 64,
+          "rows": 15827,
+          "training_rows": 14189,
+          "validation_rows": 1638
+        },
+        "d10p2d_fast_search": {
+          "archives": 64,
+          "rows": 16110,
+          "training_rows": 14601,
+          "validation_rows": 1509
+        },
+        "d10p3d_fast_search": {
+          "archives": 64,
+          "rows": 15774,
+          "training_rows": 14548,
+          "validation_rows": 1226
+        },
+        "d10p1m_fast_search": {
+          "archives": 160,
+          "rows": 39173,
+          "training_rows": 36361,
+          "validation_rows": 2812
+        },
+        "d10p2m_fast_search": {
+          "archives": 160,
+          "rows": 39518,
+          "training_rows": 34899,
+          "validation_rows": 4619
+        },
+        "d10p3m_fast_search": {
+          "archives": 160,
+          "rows": 39447,
+          "training_rows": 34730,
+          "validation_rows": 4717
+        },
+        "d10p4m_fast_search": {
+          "archives": 160,
+          "rows": 38927,
+          "training_rows": 33800,
+          "validation_rows": 5127
+        },
+        "d10orig1_fast_search": {
+          "archives": 128,
+          "rows": 28597,
+          "training_rows": 26013,
+          "validation_rows": 2584
+        },
+        "d10orig2_fast_search": {
+          "archives": 128,
+          "rows": 29320,
+          "training_rows": 25493,
+          "validation_rows": 3827
+        },
+        "n11dag1_fast_search": {
+          "archives": 64,
+          "rows": 8769,
+          "training_rows": 7706,
+          "validation_rows": 1063
+        },
+        "n11dag2_fast_search": {
+          "archives": 64,
+          "rows": 8670,
+          "training_rows": 7543,
+          "validation_rows": 1127
+        },
+        "n11dag3_fast_search": {
+          "archives": 64,
+          "rows": 8442,
+          "training_rows": 7564,
+          "validation_rows": 878
+        },
+        "n12dag1_fast_search": {
+          "archives": 64,
+          "rows": 9775,
+          "training_rows": 8761,
+          "validation_rows": 1014
+        },
+        "n12dag2_fast_search": {
+          "archives": 64,
+          "rows": 9718,
+          "training_rows": 8773,
+          "validation_rows": 945
+        },
+        "n12dag3_fast_search": {
+          "archives": 64,
+          "rows": 9985,
+          "training_rows": 9285,
+          "validation_rows": 700
+        },
+        "n13dag1_fast_search": {
+          "archives": 64,
+          "rows": 9341,
+          "training_rows": 8170,
+          "validation_rows": 1171
+        },
+        "n13dag2_fast_search": {
+          "archives": 64,
+          "rows": 8652,
+          "training_rows": 7079,
+          "validation_rows": 1573
+        },
+        "n13dag3_fast_search": {
+          "archives": 64,
+          "rows": 9993,
+          "training_rows": 9288,
+          "validation_rows": 705
+        },
+        "n14dag1_fast_search": {
+          "archives": 64,
+          "rows": 9797,
+          "training_rows": 8580,
+          "validation_rows": 1217
+        },
+        "n14dag2_fast_search": {
+          "archives": 64,
+          "rows": 9264,
+          "training_rows": 8512,
+          "validation_rows": 752
+        },
+        "n14dag3_fast_search": {
+          "archives": 64,
+          "rows": 9724,
+          "training_rows": 8717,
+          "validation_rows": 1007
+        },
+        "n16dag1_fast_search": {
+          "archives": 64,
+          "rows": 9650,
+          "training_rows": 8506,
+          "validation_rows": 1144
+        },
+        "n16dag2_fast_search": {
+          "archives": 64,
+          "rows": 9547,
+          "training_rows": 8558,
+          "validation_rows": 989
+        },
+        "n16dag3_fast_search": {
+          "archives": 64,
+          "rows": 8869,
+          "training_rows": 8086,
+          "validation_rows": 783
+        },
+        "n17dag1_fast_search": {
+          "archives": 64,
+          "rows": 10159,
+          "training_rows": 9165,
+          "validation_rows": 994
+        },
+        "n17dag2_fast_search": {
+          "archives": 64,
+          "rows": 10211,
+          "training_rows": 8287,
+          "validation_rows": 1924
+        },
+        "n17dag3_fast_search": {
+          "archives": 64,
+          "rows": 10264,
+          "training_rows": 8785,
+          "validation_rows": 1479
+        },
+        "n18dag1_fast_search": {
+          "archives": 64,
+          "rows": 9872,
+          "training_rows": 8640,
+          "validation_rows": 1232
+        },
+        "n18dag2_fast_search": {
+          "archives": 64,
+          "rows": 10181,
+          "training_rows": 9157,
+          "validation_rows": 1024
+        },
+        "n18dag3_fast_search": {
+          "archives": 64,
+          "rows": 9591,
+          "training_rows": 8902,
+          "validation_rows": 689
+        },
+        "n19dag1_fast_search": {
+          "archives": 64,
+          "rows": 10644,
+          "training_rows": 9395,
+          "validation_rows": 1249
+        },
+        "n19dag2_fast_search": {
+          "archives": 64,
+          "rows": 10326,
+          "training_rows": 9687,
+          "validation_rows": 639
+        },
+        "n19dag3_fast_search": {
+          "archives": 64,
+          "rows": 9486,
+          "training_rows": 7933,
+          "validation_rows": 1553
+        }
+      },
+      "final_epoch": {
+        "epoch": 12,
+        "train_loss": 3.6482313670437065,
+        "val_loss": 3.50154959551086,
+        "type_acc": 0.9196046357817972,
+        "plant_recall": 0.7448474481816981,
+        "packet_acc": 0.7616430954869756,
+        "cell_acc": 0.5144627223636326,
+        "seconds": 121.81424516899278
+      },
+      "resources": {
+        "returncode": 0,
+        "wall_s": 3018.083462892042,
+        "peak_rss_kib": 15791212,
+        "peak_swap_kib": 0,
+        "minimum_available_kib": 4048812
+      },
+      "upload": {
+        "repo": "realnewbiexvwu/pvz-agent-artifacts",
+        "path": "transfer/dw4i_s2_model.pt",
+        "revision": "2b6d4547500738280060ca53388a4f0441efdf73",
+        "model_sha256": "a9f4467c2860fe65a5209d03e863f6d9f9b60ceafc26955a30a786715ca0dde8",
+        "download_verified": true
+      },
+      "recipe_matches": [
+        "width",
+        "pool",
+        "label_weight",
+        "packet_balance",
+        "row_pool",
+        "aux_weight",
+        "aux_horizon",
+        "packet_head",
+        "plant_embedding_dim",
+        "context",
+        "obs",
+        "soft_weight",
+        "spread_weight",
+        "spread_cap",
+        "lr_schedule",
+        "ema",
+        "cell_soft_weight"
+      ]
+    }
+  },
+  "models": {
+    "v34": {
+      "model_sha256": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+      "panel_sha256": "1f12afd5f71f07c08664a44683a666711ccf349c5d62e0f8f1ec1f674f7d956a",
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 995,
+          "mean_win_rate": 0.9716796875
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 300,
+          "mean_win_rate": 0.390625
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 0,
+          "mean_win_rate": 0.0
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "level": 1,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.640625,
+          "mean_final_wave": 20.0,
+          "games_sha256": "bf5d6c4e2c826580483e2acdea5011b97cf41f128ee5872c43faf49decae0e8d",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "level": 3,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.8828125,
+          "mean_final_wave": 20.0,
+          "games_sha256": "c8e9a8c8145cf8cfe9897c4f65ecd4a11341a53c3a43d61ec0c3bad332139bc4",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "level": 4,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.890625,
+          "mean_final_wave": 20.0,
+          "games_sha256": "0bc3680c2971c8ff9643cae214a1d8446a7ec6e6abbc94a15d9977daa14b0a2e",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "level": 6,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.890625,
+          "mean_final_wave": 20.0,
+          "games_sha256": "28dc82ed828416c391238f98f0c777d13e2c098d3810c7fc2b2cb042c977cb73",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 123,
+          "win_rate": 0.9609375,
+          "mean_mowers_used": 2.390625,
+          "mean_final_wave": 29.953125,
+          "games_sha256": "eda3c7a13597376d9198a83027d21f62d1996621aef3ca5a4260f8baa77f539a",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "level": 8,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625,
+          "mean_mowers_used": 1.78125,
+          "mean_final_wave": 19.9765625,
+          "games_sha256": "ae2741ae4c3ed048963eb157ebe92c273e79b1cf432b44379b69cdd3f58194e2",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "level": 9,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625,
+          "mean_mowers_used": 3.140625,
+          "mean_final_wave": 29.8828125,
+          "games_sha256": "5e39d3d942ac5444c9e720cfdffb6b989c4f9416a3a0c0f0244b58c817b50c76",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "level": 10,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 119,
+          "win_rate": 0.9296875,
+          "mean_mowers_used": 1.65625,
+          "mean_final_wave": 19.890625,
+          "games_sha256": "20249ad3fed643b4a19c74227d6aa501b9e0057bfdc1abd9b288f539eb40981d",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            27,
+            5,
+            32,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 36,
+          "win_rate": 0.5625,
+          "mean_mowers_used": 2.28125,
+          "mean_final_wave": 29.46875,
+          "games_sha256": "9bb0edd4426040225471fc6af7d581c9240c299cb72a4bcf1b816aefa246d2ee",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "level": 7,
+          "deck": [
+            3,
+            7,
+            29,
+            4,
+            5,
+            1,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 42,
+          "win_rate": 0.65625,
+          "mean_mowers_used": 2.4375,
+          "mean_final_wave": 28.390625,
+          "games_sha256": "ef310c38930ed77c62eddf03646226ec5cfdc702096ec7dc873736c6e7fab2c3",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "level": 7,
+          "deck": [
+            5,
+            3,
+            36,
+            7,
+            4,
+            2,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 2.90625,
+          "mean_final_wave": 12.203125,
+          "games_sha256": "9bed9af488ddb3ca39f9b3b9a2446f265a67e72041b3d245d7ccfb8807e62f15",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "level": 8,
+          "deck": [
+            3,
+            22,
+            4,
+            2,
+            7,
+            5,
+            32
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 3.15625,
+          "mean_final_wave": 14.484375,
+          "games_sha256": "b754401cb03160e329068907524e589b9386c8603721cb4536acdb012073dcc1",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "level": 8,
+          "deck": [
+            1,
+            2,
+            34,
+            4,
+            3,
+            39,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 24,
+          "win_rate": 0.375,
+          "mean_mowers_used": 3.46875,
+          "mean_final_wave": 17.296875,
+          "games_sha256": "65f5e4b68d56679fb8af7b59ac43a6210e2c954da7c9885ae656600024b3032d",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "level": 8,
+          "deck": [
+            0,
+            28,
+            7,
+            1,
+            17,
+            5,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 27,
+          "win_rate": 0.421875,
+          "mean_mowers_used": 2.328125,
+          "mean_final_wave": 17.71875,
+          "games_sha256": "e053e45a81865285182b4525cea41f50beab517e2cbdc0cd05448958b5636178",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "level": 9,
+          "deck": [
+            0,
+            3,
+            1,
+            7,
+            37,
+            2,
+            4
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 2,
+          "win_rate": 0.03125,
+          "mean_mowers_used": 2.90625,
+          "mean_final_wave": 21.421875,
+          "games_sha256": "bd99059bae07ea5e11f40ef135a6e4c9c7b514d4a7d152226b1da2bae7e0b113",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "level": 9,
+          "deck": [
+            7,
+            2,
+            5,
+            38,
+            4,
+            1,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 3,
+          "win_rate": 0.046875,
+          "mean_mowers_used": 4.0625,
+          "mean_final_wave": 15.765625,
+          "games_sha256": "294a44c50003c775d07b6e135971e69cb9dd1ffa8a2e78f2809b9d6519b59067",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "level": 9,
+          "deck": [
+            4,
+            1,
+            2,
+            5,
+            21,
+            7,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 11,
+          "win_rate": 0.171875,
+          "mean_mowers_used": 2.65625,
+          "mean_final_wave": 26.25,
+          "games_sha256": "07285e453a288c2ddf22c728dfa7452c587b7e313489d0dd88efa56a2bfb8144",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "level": 10,
+          "deck": [
+            0,
+            20,
+            4,
+            5,
+            3,
+            2,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 41,
+          "win_rate": 0.640625,
+          "mean_mowers_used": 2.75,
+          "mean_final_wave": 19.515625,
+          "games_sha256": "a41c6305c0347b1a0ab541fe21f0b1300a17e01e6ff3c46e0a0a1e4e9cdadfc2",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "level": 10,
+          "deck": [
+            7,
+            18,
+            21,
+            5,
+            4,
+            2,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 50,
+          "win_rate": 0.78125,
+          "mean_mowers_used": 2.296875,
+          "mean_final_wave": 19.25,
+          "games_sha256": "a03673417906ea560edd02422df304cbeb43af0911d0c7050a5a01f5ff976a37",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "level": 10,
+          "deck": [
+            7,
+            22,
+            2,
+            3,
+            4,
+            27,
+            1
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.828125,
+          "mean_final_wave": 20.0,
+          "games_sha256": "f94f8a7d9992d95b17330d92766e8b54d098df6a6047db0fc539eb3e7d9f4e30",
+          "group": "heldout"
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "level": 11,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.515625,
+          "mean_final_wave": 8.8828125,
+          "games_sha256": "d12626b89c5af6130b55af20fe968cbad2ba9980ee044e33afc3e125089c4a2e",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "level": 12,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.3359375,
+          "mean_final_wave": 9.390625,
+          "games_sha256": "619b4c1a6c5cae86012043b9d5a5e1364f0a044b6208dc416df2b04c4a4f5576",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "level": 13,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.375,
+          "mean_final_wave": 9.0546875,
+          "games_sha256": "4970890102f5e2c78c3ac486f57c1edbd920c7cb2799465a64ab1bba9e29d05a",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "level": 14,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.2578125,
+          "mean_final_wave": 8.9296875,
+          "games_sha256": "e7d09a8b4303f41cb9172f774ac402f40e2337e740d1d145e909513a68888c5d",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "level": 16,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.46875,
+          "mean_final_wave": 9.1875,
+          "games_sha256": "4caf22f99648c3758656346a3ba4462f8ac7a0fd6ea7799cdd5b9eb48882bf7c",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "level": 17,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.3671875,
+          "mean_final_wave": 9.515625,
+          "games_sha256": "b1091e2b6ea09e600a142e83dd02a366cd1033227f60719d6c96f91c5d966b4e",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "level": 18,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.46875,
+          "mean_final_wave": 9.71875,
+          "games_sha256": "d7e767ee5abcd9e211d9b7c8db3b9f4b8aeab4117ab1da240a0e74aaf51f24d2",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "level": 19,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.4765625,
+          "mean_final_wave": 9.8828125,
+          "games_sha256": "ecbac1761c36d0d5b652f239ac272d903542a93faa12ec1aa5cdc967db88f0fd",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "level": 20,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.1640625,
+          "mean_final_wave": 8.6796875,
+          "games_sha256": "efd170aaed19cf1c9b9d4c0fdab0eea6f6788d2ec23eb4b6a00783189fdb919d",
+          "group": "night"
+        }
+      ]
+    },
+    "identity": {
+      "model_sha256": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603",
+      "panel_sha256": "1e3d5f92ae2d15e2fe7e45b69f9d4587f1df958a897b7157cc5d407651fb279e",
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 986,
+          "mean_win_rate": 0.962890625
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 492,
+          "mean_win_rate": 0.640625
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 29,
+          "mean_win_rate": 0.025173611111111112
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "level": 1,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.8359375,
+          "mean_final_wave": 20.0,
+          "games_sha256": "dee25afdf950c820e83f9c717d8a0dbd4e004e64e4ec2a58d7959233caeb81cf",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "level": 3,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 127,
+          "win_rate": 0.9921875,
+          "mean_mowers_used": 1.046875,
+          "mean_final_wave": 19.984375,
+          "games_sha256": "0e5fc58baf807ffe54d008fd4c6c24064307159779b5f3293b9e76492de6ff4f",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "level": 4,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625,
+          "mean_mowers_used": 0.9765625,
+          "mean_final_wave": 20.0,
+          "games_sha256": "6af8d2812dfe612ee48788da2d287ba126ede2fdf1a3c6ca77d0478e0a9d155b",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "level": 6,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625,
+          "mean_mowers_used": 1.203125,
+          "mean_final_wave": 19.984375,
+          "games_sha256": "c4862631bf16df3d7db2a34de38db370333b0c8638a03d2447fbf23ffd544955",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 120,
+          "win_rate": 0.9375,
+          "mean_mowers_used": 2.3984375,
+          "mean_final_wave": 29.8984375,
+          "games_sha256": "1a29ffe7ea97f5d8fd5ee1ff703f0a132fa1af0f4b615d821ac5c83d3ed16dc3",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "level": 8,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625,
+          "mean_mowers_used": 1.7578125,
+          "mean_final_wave": 19.9921875,
+          "games_sha256": "4b36ef3c991ab067ff7da236a601181bf83650ffea341c1aa5e0d70c5ef723ac",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "level": 9,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 108,
+          "win_rate": 0.84375,
+          "mean_mowers_used": 3.1484375,
+          "mean_final_wave": 29.703125,
+          "games_sha256": "14f0e2dff37f1d419fd244f0e80654f2bc7eba1bca30287e927dc0f876af6fdd",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "level": 10,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.46875,
+          "mean_final_wave": 20.0,
+          "games_sha256": "324bda681270a964e44c15cf4b077d19c712e5f3371b9fef9f16df0f4e9b0e6b",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            27,
+            5,
+            32,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 20,
+          "win_rate": 0.3125,
+          "mean_mowers_used": 2.4375,
+          "mean_final_wave": 27.734375,
+          "games_sha256": "93a47d68ccf601a923343510b0afe679141d488a7da863b11e6ad7804b5a2652",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "level": 7,
+          "deck": [
+            3,
+            7,
+            29,
+            4,
+            5,
+            1,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 55,
+          "win_rate": 0.859375,
+          "mean_mowers_used": 2.390625,
+          "mean_final_wave": 29.9375,
+          "games_sha256": "1299814adb7edae5b9cebf8cd5c21dc3fd971c1013ba955d9f381c72288ca180",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "level": 7,
+          "deck": [
+            5,
+            3,
+            36,
+            7,
+            4,
+            2,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 2.125,
+          "mean_final_wave": 7.34375,
+          "games_sha256": "eee7409cf6515495c172394ac281db0d2ce92ff2d04f2210eace53c394651e0c",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "level": 8,
+          "deck": [
+            3,
+            22,
+            4,
+            2,
+            7,
+            5,
+            32
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 3.796875,
+          "mean_final_wave": 14.390625,
+          "games_sha256": "a1ddcaef10433906a700364813a1eb43e4e1477e7fe3dcdfea8baa62269e5a90",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "level": 8,
+          "deck": [
+            1,
+            2,
+            34,
+            4,
+            3,
+            39,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.515625,
+          "mean_final_wave": 20.0,
+          "games_sha256": "6bf42a57ef851d6c70ce998d370dcfc786ef8d7ed0866f8754f26672fb7640bb",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "level": 8,
+          "deck": [
+            0,
+            28,
+            7,
+            1,
+            17,
+            5,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 58,
+          "win_rate": 0.90625,
+          "mean_mowers_used": 1.609375,
+          "mean_final_wave": 20.0,
+          "games_sha256": "d463dc2fda1df42f0730f92d3608bb3397ee4e7ab7d025952d15469f432d9cb0",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "level": 9,
+          "deck": [
+            0,
+            3,
+            1,
+            7,
+            37,
+            2,
+            4
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 43,
+          "win_rate": 0.671875,
+          "mean_mowers_used": 2.296875,
+          "mean_final_wave": 28.53125,
+          "games_sha256": "6b14efee6c1ed8c33bb1047ad12347dd5af858b79faa6ebefab7dd849c83bbf5",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "level": 9,
+          "deck": [
+            7,
+            2,
+            5,
+            38,
+            4,
+            1,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 62,
+          "win_rate": 0.96875,
+          "mean_mowers_used": 1.0625,
+          "mean_final_wave": 29.984375,
+          "games_sha256": "c0e479cbdd6d7c24900e47bad2136337138d290606f8cd43802645838ed499e9",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "level": 9,
+          "deck": [
+            4,
+            1,
+            2,
+            5,
+            21,
+            7,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 51,
+          "win_rate": 0.796875,
+          "mean_mowers_used": 2.359375,
+          "mean_final_wave": 29.5,
+          "games_sha256": "c76c676ae1babd9e775f0b3c1c9e61f17abcc77f471171d9db83a45735a6b12e",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "level": 10,
+          "deck": [
+            0,
+            20,
+            4,
+            5,
+            3,
+            2,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 35,
+          "win_rate": 0.546875,
+          "mean_mowers_used": 2.609375,
+          "mean_final_wave": 19.5,
+          "games_sha256": "365608090612e6e5ac18f0869794917e5e38b1f093beeb020e957e25c284c155",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "level": 10,
+          "deck": [
+            7,
+            18,
+            21,
+            5,
+            4,
+            2,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 42,
+          "win_rate": 0.65625,
+          "mean_mowers_used": 2.453125,
+          "mean_final_wave": 19.703125,
+          "games_sha256": "5574167af8a5d87ada85c179e2bb3cf7c15ffe1dbc7dc00e660a39e99f4bcff1",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "level": 10,
+          "deck": [
+            7,
+            22,
+            2,
+            3,
+            4,
+            27,
+            1
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 62,
+          "win_rate": 0.96875,
+          "mean_mowers_used": 1.203125,
+          "mean_final_wave": 20.0,
+          "games_sha256": "15acc48880916155b5e6b352d7c36233968d5a0641727d4cdd64d181d2686494",
+          "group": "heldout"
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "level": 11,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 3,
+          "win_rate": 0.0234375,
+          "mean_mowers_used": 4.484375,
+          "mean_final_wave": 10.09375,
+          "games_sha256": "2e386125f3b16ab41c02ffc87c089bff50517f4e5aaac9c5b8bb90ca403086d3",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "level": 12,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 6,
+          "win_rate": 0.046875,
+          "mean_mowers_used": 4.4921875,
+          "mean_final_wave": 11.3125,
+          "games_sha256": "aadcfe51039847486b5d562f10d32dcc4a6c7d300e418914967d69ce35233647",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "level": 13,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 8,
+          "win_rate": 0.0625,
+          "mean_mowers_used": 4.375,
+          "mean_final_wave": 10.7265625,
+          "games_sha256": "364b7391f2ab05eda6928779ff8025834ddfd7a549b998cea81c1d45deb53237",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "level": 14,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 1,
+          "win_rate": 0.0078125,
+          "mean_mowers_used": 4.5625,
+          "mean_final_wave": 10.3984375,
+          "games_sha256": "7ad390346946c770fddefaeff6a5104b021474b9de08801ba5059c7c4a05f06a",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "level": 16,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 9,
+          "win_rate": 0.0703125,
+          "mean_mowers_used": 4.3984375,
+          "mean_final_wave": 10.78125,
+          "games_sha256": "6acd951ace87017546489c47f20b8118e5d9b0876ba20f787c2224bf09b70f02",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "level": 17,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.40625,
+          "mean_final_wave": 10.8671875,
+          "games_sha256": "42cf7d3068e0473c28a0d2877fe75572a3392dcabc33d4e30fb095717d18c3dc",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "level": 18,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 2,
+          "win_rate": 0.015625,
+          "mean_mowers_used": 4.3046875,
+          "mean_final_wave": 11.2109375,
+          "games_sha256": "f2e6427112e52b5d685b33ad1640ac9813955a0d347b92903d6e3a98c1a3559c",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "level": 19,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.3359375,
+          "mean_final_wave": 11.3984375,
+          "games_sha256": "b92a1d2b139266d3ccb257fc1bc0faecac5792d1fced15ce02ec5975b47414c8",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "level": 20,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 4.9765625,
+          "mean_final_wave": 6.859375,
+          "games_sha256": "53afe23731084bc9b50385357fda47ac7c234b7762cbab28bf989811ed6b99ad",
+          "group": "night"
+        }
+      ]
+    },
+    "dw4i_s1": {
+      "model_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+      "panel_sha256": "71ae14926dab3cfedb65e2864f4473cc6cb8250a692bcae605bbb18c4b26a73e",
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 947,
+          "mean_win_rate": 0.9248046875
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 461,
+          "mean_win_rate": 0.6002604166666666
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 592,
+          "mean_win_rate": 0.5138888888888888
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "level": 1,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 118,
+          "win_rate": 0.921875,
+          "mean_mowers_used": 1.8671875,
+          "mean_final_wave": 19.9609375,
+          "games_sha256": "2af0580037b51336ebf8425ef768af4c981bb416cd4d1f0692c611a8dbcf822c",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "level": 3,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625,
+          "mean_mowers_used": 2.0,
+          "mean_final_wave": 19.921875,
+          "games_sha256": "1fbf8e309d73b46b40bb044caa7511eb1827716fe8bd20c6ce930bd947bad63f",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "level": 4,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125,
+          "mean_mowers_used": 1.90625,
+          "mean_final_wave": 19.96875,
+          "games_sha256": "7c791d7e091ed8b3f49d7549e4fcfd670f72847d48e1f92af4bd4f702c143fb3",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "level": 6,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125,
+          "mean_mowers_used": 2.0,
+          "mean_final_wave": 19.9765625,
+          "games_sha256": "f55e35c625cc596b9aad8036a4a8a52a7731c0aabf23efc4cd0c4d2d1c394892",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625,
+          "mean_mowers_used": 3.0390625,
+          "mean_final_wave": 29.9375,
+          "games_sha256": "83e9375eedb7e9c81717deafe216584a63db9d52b87e4285d5daa4d1f243aa77",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "level": 8,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625,
+          "mean_mowers_used": 2.984375,
+          "mean_final_wave": 19.9375,
+          "games_sha256": "c3df9dded64e37d291a8890a4e5305014262857d12bd11c4e0fc352fa290ac5d",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "level": 9,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 112,
+          "win_rate": 0.875,
+          "mean_mowers_used": 3.6875,
+          "mean_final_wave": 29.8828125,
+          "games_sha256": "76fc1f652b0fa56165871fbeab309d027ccf39d11062b6c265ce72575a613b34",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "level": 10,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625,
+          "mean_mowers_used": 1.5546875,
+          "mean_final_wave": 19.9921875,
+          "games_sha256": "e0e6eecc49141992ce29914701cef2db615285e8ee7744b00c194795f894c65f",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            27,
+            5,
+            32,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0,
+          "mean_mowers_used": 1.03125,
+          "mean_final_wave": 30.0,
+          "games_sha256": "76cfc3d8aa7a86bc9410aa98601abe05442716e3b4d497f556d0314d174a48f7",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "level": 7,
+          "deck": [
+            3,
+            7,
+            29,
+            4,
+            5,
+            1,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 60,
+          "win_rate": 0.9375,
+          "mean_mowers_used": 1.6875,
+          "mean_final_wave": 29.984375,
+          "games_sha256": "b2c49f6571977c18ab4f1c6ebe24e3aad995b4b7f292d82ea839263866f4d096",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "level": 7,
+          "deck": [
+            5,
+            3,
+            36,
+            7,
+            4,
+            2,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 2.921875,
+          "mean_final_wave": 8.84375,
+          "games_sha256": "205fae7d310f1a5668f9d89ff967cbd549f71a5aaf18ce0a33115012773a6a11",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "level": 8,
+          "deck": [
+            3,
+            22,
+            4,
+            2,
+            7,
+            5,
+            32
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 3.265625,
+          "mean_final_wave": 15.53125,
+          "games_sha256": "26e517a6d39ef9dfd701cad8a98517f54c1e43a67f2e291c93071f5f4aab4f3f",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "level": 8,
+          "deck": [
+            1,
+            2,
+            34,
+            4,
+            3,
+            39,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 56,
+          "win_rate": 0.875,
+          "mean_mowers_used": 1.4375,
+          "mean_final_wave": 19.703125,
+          "games_sha256": "945981f84668c9b8dfcfddc04904bf26ae46e54524ab202a2770e4b7ec595a9d",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "level": 8,
+          "deck": [
+            0,
+            28,
+            7,
+            1,
+            17,
+            5,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0,
+          "mean_mowers_used": 2.375,
+          "mean_final_wave": 20.0,
+          "games_sha256": "3e03b2234347b66b966e947b4e20a44d82e15807e371e7ed4ef127f802820689",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "level": 9,
+          "deck": [
+            0,
+            3,
+            1,
+            7,
+            37,
+            2,
+            4
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 3.28125,
+          "mean_final_wave": 16.734375,
+          "games_sha256": "21bf6eaeda854c6cb0d198a60e5603b8cf0be25952df368796869ec45658e9a6",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "level": 9,
+          "deck": [
+            7,
+            2,
+            5,
+            38,
+            4,
+            1,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 41,
+          "win_rate": 0.640625,
+          "mean_mowers_used": 2.203125,
+          "mean_final_wave": 28.171875,
+          "games_sha256": "4387704832d3394cdded35f1e99d4eb3380febf0035fa9a188fccacd69536022",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "level": 9,
+          "deck": [
+            4,
+            1,
+            2,
+            5,
+            21,
+            7,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 11,
+          "win_rate": 0.171875,
+          "mean_mowers_used": 2.65625,
+          "mean_final_wave": 24.0,
+          "games_sha256": "044b786c7609e399f2b53bce7f5fdbb364dd3f3ca024e65d8609045db5b2457e",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "level": 10,
+          "deck": [
+            0,
+            20,
+            4,
+            5,
+            3,
+            2,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 52,
+          "win_rate": 0.8125,
+          "mean_mowers_used": 2.71875,
+          "mean_final_wave": 19.90625,
+          "games_sha256": "fd6083fecca1a0043dd1b8f5229b0495afcf791211551755016f06b8d04b58ab",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "level": 10,
+          "deck": [
+            7,
+            18,
+            21,
+            5,
+            4,
+            2,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 54,
+          "win_rate": 0.84375,
+          "mean_mowers_used": 2.609375,
+          "mean_final_wave": 19.96875,
+          "games_sha256": "13d5922624309f92f9975b97c5859f5e24175d5f8f27e8e4d5fa623a0e1b9b37",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "level": 10,
+          "deck": [
+            7,
+            22,
+            2,
+            3,
+            4,
+            27,
+            1
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 59,
+          "win_rate": 0.921875,
+          "mean_mowers_used": 2.03125,
+          "mean_final_wave": 19.984375,
+          "games_sha256": "9fd57f40510a54bb9a235ed11a72ef6ef3fd618fa77d9d5e4d7bad689adb37b2",
+          "group": "heldout"
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "level": 11,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0,
+          "mean_mowers_used": 0.21875,
+          "mean_final_wave": 20.0,
+          "games_sha256": "30a279aed3226bd460619fdddc9086051a5361d730458524c2329afd321c4bf1",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "level": 12,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 100,
+          "win_rate": 0.78125,
+          "mean_mowers_used": 2.46875,
+          "mean_final_wave": 29.9140625,
+          "games_sha256": "c979939a3a85b803bdbf3c17af614083844587e5c8b2e9df7de37fe237f64bd4",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "level": 13,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625,
+          "mean_mowers_used": 0.6640625,
+          "mean_final_wave": 20.0,
+          "games_sha256": "5eac334392ea7dd85e999e4d665931ed33805d871bc9f7cbff4f0e20c8d328c5",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "level": 14,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 41,
+          "win_rate": 0.3203125,
+          "mean_mowers_used": 3.4609375,
+          "mean_final_wave": 29.3125,
+          "games_sha256": "8e85b72eae77fece5ee80b9bc335ba081a4fe555f45dc0b15fe7fab9eb526b53",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "level": 16,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125,
+          "mean_mowers_used": 1.1796875,
+          "mean_final_wave": 20.0,
+          "games_sha256": "40719bf72b0d8b0a74e86a80f329036966525566dbc5ebef1851e3427178d818",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "level": 17,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 2,
+          "win_rate": 0.015625,
+          "mean_mowers_used": 3.78125,
+          "mean_final_wave": 27.59375,
+          "games_sha256": "35a7c20bc7d20cd1ebbc870d8489fa905a1aa601034687546d05fcf7997308d0",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "level": 18,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 73,
+          "win_rate": 0.5703125,
+          "mean_mowers_used": 3.171875,
+          "mean_final_wave": 19.9296875,
+          "games_sha256": "a6f607c79fce740aafc61a6a8dbf203126fe032cb7a43efd9bd0ee7c1b505f4c",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "level": 19,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 1,
+          "win_rate": 0.0078125,
+          "mean_mowers_used": 3.78125,
+          "mean_final_wave": 27.4453125,
+          "games_sha256": "226baa381db8eabf6f162952fd2439207aac071bd260708d92e221fbe12dd2f1",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "level": 20,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 5.0,
+          "mean_final_wave": 6.8125,
+          "games_sha256": "3b44f06c7ad09eb2a523ea7211d2f3a6cbe3f68f2a92599e942920594d1401ad",
+          "group": "night"
+        }
+      ]
+    },
+    "dw4i_s2": {
+      "model_sha256": "a9f4467c2860fe65a5209d03e863f6d9f9b60ceafc26955a30a786715ca0dde8",
+      "panel_sha256": "ad9e0a6aa8c47549f88bf86e2a1808be9b77cdd36e476e39331b5d9084e0640a",
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 951,
+          "mean_win_rate": 0.9287109375
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 456,
+          "mean_win_rate": 0.59375
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 503,
+          "mean_win_rate": 0.4366319444444444
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "level": 1,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 119,
+          "win_rate": 0.9296875,
+          "mean_mowers_used": 1.4296875,
+          "mean_final_wave": 19.9609375,
+          "games_sha256": "eba90876fe4ea24529d903a118a5417a87c21ff39ec64b5c4e520ad9f8bf530b",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "level": 3,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 117,
+          "win_rate": 0.9140625,
+          "mean_mowers_used": 1.765625,
+          "mean_final_wave": 19.9609375,
+          "games_sha256": "baed8c86410a8b2053474ef043de0536092401447d4c9776bab91a1706d7d72c",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "level": 4,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 117,
+          "win_rate": 0.9140625,
+          "mean_mowers_used": 1.6484375,
+          "mean_final_wave": 19.9140625,
+          "games_sha256": "a9c858e4f50c7837f48b6368efb458ad44c384b80be090c42e2a85cedc04723f",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "level": 6,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 120,
+          "win_rate": 0.9375,
+          "mean_mowers_used": 1.703125,
+          "mean_final_wave": 19.953125,
+          "games_sha256": "9edcb4788433437f36a06e0e7fb739bda9929ff20ef9c87d330254205baff34c",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 123,
+          "win_rate": 0.9609375,
+          "mean_mowers_used": 3.15625,
+          "mean_final_wave": 29.9765625,
+          "games_sha256": "f12c67ae9a472cdfcf5420c89f6190bc0ee1e053d245ecbe48447637e030f604",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "level": 8,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 119,
+          "win_rate": 0.9296875,
+          "mean_mowers_used": 2.78125,
+          "mean_final_wave": 19.9140625,
+          "games_sha256": "0d757d2dc6abd1fcb5983a36b27e5016dde1a911f6da2f2722659d4c47cba142",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "level": 9,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 111,
+          "win_rate": 0.8671875,
+          "mean_mowers_used": 3.4765625,
+          "mean_final_wave": 29.78125,
+          "games_sha256": "294f528e85281fd0e3045854fe1af8781c718bae20dfa96591911a5643f1fd2b",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "level": 10,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625,
+          "mean_mowers_used": 1.3984375,
+          "mean_final_wave": 20.0,
+          "games_sha256": "87513e88a7f47fbb23d8f7198bfe3689633cdb04f2d17e1b743a894652bf9781",
+          "group": "day"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "level": 7,
+          "deck": [
+            0,
+            1,
+            2,
+            27,
+            5,
+            32,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 32,
+          "win_rate": 0.5,
+          "mean_mowers_used": 2.140625,
+          "mean_final_wave": 28.078125,
+          "games_sha256": "696635535b6da902394a02cdc97f2f2905cab0ede502848e664ada58876567d8",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "level": 7,
+          "deck": [
+            3,
+            7,
+            29,
+            4,
+            5,
+            1,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 63,
+          "win_rate": 0.984375,
+          "mean_mowers_used": 1.421875,
+          "mean_final_wave": 30.0,
+          "games_sha256": "a7e42c1fdd45e6bbe505d29109cdf6b2247e030791d6845aa551cc2bb792e636",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "level": 7,
+          "deck": [
+            5,
+            3,
+            36,
+            7,
+            4,
+            2,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 2.8125,
+          "mean_final_wave": 8.828125,
+          "games_sha256": "52211e730539bff66d4ee93e737f5836fdbd37ede6972c8371e3a77835a37281",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "level": 8,
+          "deck": [
+            3,
+            22,
+            4,
+            2,
+            7,
+            5,
+            32
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 3.8125,
+          "mean_final_wave": 15.953125,
+          "games_sha256": "249ec872bb25d326a022faa8b0218fbd1ce176492cfabfde4f2b8f7ffed6a068",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "level": 8,
+          "deck": [
+            1,
+            2,
+            34,
+            4,
+            3,
+            39,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 56,
+          "win_rate": 0.875,
+          "mean_mowers_used": 1.53125,
+          "mean_final_wave": 19.796875,
+          "games_sha256": "5aee641d73c61fafc280ab43120337b976020c22822d201a008a760d50b12e28",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "level": 8,
+          "deck": [
+            0,
+            28,
+            7,
+            1,
+            17,
+            5,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0,
+          "mean_mowers_used": 1.78125,
+          "mean_final_wave": 20.0,
+          "games_sha256": "502dccc07c0c2c1d31aad5a0b2dfe6bad572a0a236366e075e1366d5c25de87d",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "level": 9,
+          "deck": [
+            0,
+            3,
+            1,
+            7,
+            37,
+            2,
+            4
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 3.8125,
+          "mean_final_wave": 15.71875,
+          "games_sha256": "2f2691cb12075e5c29ebaec8aede7c3b2ee00da9eb11bf8691ca490a81bd8e86",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "level": 9,
+          "deck": [
+            7,
+            2,
+            5,
+            38,
+            4,
+            1,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 41,
+          "win_rate": 0.640625,
+          "mean_mowers_used": 2.828125,
+          "mean_final_wave": 28.484375,
+          "games_sha256": "d3d9bd997764f5d97952449cf5acb13900dadc972a8caf81cba2fec4c9515c51",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "level": 9,
+          "deck": [
+            4,
+            1,
+            2,
+            5,
+            21,
+            7,
+            0
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 23,
+          "win_rate": 0.359375,
+          "mean_mowers_used": 2.3125,
+          "mean_final_wave": 25.03125,
+          "games_sha256": "6ff4c11e1753f04cbda5aa90ad9cf08e47e274b9071b67a38e51a65382f488df",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "level": 10,
+          "deck": [
+            0,
+            20,
+            4,
+            5,
+            3,
+            2,
+            7
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 57,
+          "win_rate": 0.890625,
+          "mean_mowers_used": 2.15625,
+          "mean_final_wave": 19.9375,
+          "games_sha256": "4bf194e10c5798871d065cea4a48442521436b5131fa7e569bd581419a5337fa",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "level": 10,
+          "deck": [
+            7,
+            18,
+            21,
+            5,
+            4,
+            2,
+            3
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 58,
+          "win_rate": 0.90625,
+          "mean_mowers_used": 2.1875,
+          "mean_final_wave": 19.875,
+          "games_sha256": "0f2042dec75dafb01f111d9e141848671a15e7d279a4c47b96b93145108b97cc",
+          "group": "heldout"
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "level": 10,
+          "deck": [
+            7,
+            22,
+            2,
+            3,
+            4,
+            27,
+            1
+          ],
+          "conveyor_start": null,
+          "games": 64,
+          "won": 62,
+          "win_rate": 0.96875,
+          "mean_mowers_used": 2.046875,
+          "mean_final_wave": 20.0,
+          "games_sha256": "14bd573990b6ee6e27e5c7813c2bb61c9b8bb198afa380fa42bfaa6e93ab1f68",
+          "group": "heldout"
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "level": 11,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 126,
+          "win_rate": 0.984375,
+          "mean_mowers_used": 0.375,
+          "mean_final_wave": 20.0,
+          "games_sha256": "5a5d1288ced4d6831ef205c179b17616a332e0104f1574edc1df683e611b81d6",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "level": 12,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 57,
+          "win_rate": 0.4453125,
+          "mean_mowers_used": 2.953125,
+          "mean_final_wave": 26.9296875,
+          "games_sha256": "6148a402d4b3c29219165ef72fcd3e88016c5a45973cfa255d15a545c45a5be5",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "level": 13,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 114,
+          "win_rate": 0.890625,
+          "mean_mowers_used": 1.1875,
+          "mean_final_wave": 19.9453125,
+          "games_sha256": "d114c890fb1b07120772ad2dcf28d9bc3423e835c195ac40344012c36b09770e",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "level": 14,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 19,
+          "win_rate": 0.1484375,
+          "mean_mowers_used": 3.4609375,
+          "mean_final_wave": 27.765625,
+          "games_sha256": "8cb6efe304ba951cbf1cc8fd81a1aa66d77076203d0514a24db1d720545df714",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "level": 16,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 107,
+          "win_rate": 0.8359375,
+          "mean_mowers_used": 1.7578125,
+          "mean_final_wave": 19.9140625,
+          "games_sha256": "c2205b648fb653a9d7498e6bf63d21208c291b3d40bcb35aae9a9f94eb3eab27",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "level": 17,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 1,
+          "win_rate": 0.0078125,
+          "mean_mowers_used": 3.5859375,
+          "mean_final_wave": 26.8984375,
+          "games_sha256": "f870bae1a8a2624a81fb85b100845682ab5843dd838ef1439f412425da346f14",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "level": 18,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 78,
+          "win_rate": 0.609375,
+          "mean_mowers_used": 3.40625,
+          "mean_final_wave": 19.8984375,
+          "games_sha256": "d459e092038c558135df9ff7452a2629ba6fd913903fe9e79b3fd9067a16a253",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "level": 19,
+          "deck": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9
+          ],
+          "conveyor_start": null,
+          "games": 128,
+          "won": 1,
+          "win_rate": 0.0078125,
+          "mean_mowers_used": 3.6640625,
+          "mean_final_wave": 26.1328125,
+          "games_sha256": "29a67181789b0388d83db44845c7c5c9b1b4265f45c654156bed3114c0c4cef3",
+          "group": "night"
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "level": 20,
+          "deck": [],
+          "conveyor_start": "original",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0,
+          "mean_mowers_used": 5.0,
+          "mean_final_wave": 6.828125,
+          "games_sha256": "ff59e0eae62674fc6a176e894a6bff2d3016eb724c09c3787e0ef73fafe609ed",
+          "group": "night"
+        }
+      ]
+    }
+  },
+  "comparisons_vs_identity": {
+    "dw4i_s1": {
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 10,
+          "delta_wins": -10,
+          "delta_pp": -7.8125
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "pilot_only_wins": 1,
+          "reference_only_wins": 12,
+          "delta_wins": -11,
+          "delta_pp": -8.59375
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "pilot_only_wins": 3,
+          "reference_only_wins": 6,
+          "delta_wins": -3,
+          "delta_pp": -2.34375
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "pilot_only_wins": 3,
+          "reference_only_wins": 6,
+          "delta_wins": -3,
+          "delta_pp": -2.34375
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "pilot_only_wins": 7,
+          "reference_only_wins": 11,
+          "delta_wins": -4,
+          "delta_pp": -3.125
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "pilot_only_wins": 3,
+          "reference_only_wins": 12,
+          "delta_wins": -9,
+          "delta_pp": -7.03125
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "pilot_only_wins": 18,
+          "reference_only_wins": 14,
+          "delta_wins": 4,
+          "delta_pp": 3.125
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 3,
+          "delta_wins": -3,
+          "delta_pp": -2.34375
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "pilot_only_wins": 44,
+          "reference_only_wins": 0,
+          "delta_wins": 44,
+          "delta_pp": 68.75
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "pilot_only_wins": 8,
+          "reference_only_wins": 3,
+          "delta_wins": 5,
+          "delta_pp": 7.8125
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 0,
+          "delta_wins": 0,
+          "delta_pp": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 0,
+          "delta_wins": 0,
+          "delta_pp": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 8,
+          "delta_wins": -8,
+          "delta_pp": -12.5
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "pilot_only_wins": 6,
+          "reference_only_wins": 0,
+          "delta_wins": 6,
+          "delta_pp": 9.375
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 43,
+          "delta_wins": -43,
+          "delta_pp": -67.1875
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "pilot_only_wins": 2,
+          "reference_only_wins": 23,
+          "delta_wins": -21,
+          "delta_pp": -32.8125
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "pilot_only_wins": 4,
+          "reference_only_wins": 44,
+          "delta_wins": -40,
+          "delta_pp": -62.5
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "pilot_only_wins": 25,
+          "reference_only_wins": 8,
+          "delta_wins": 17,
+          "delta_pp": 26.5625
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "pilot_only_wins": 20,
+          "reference_only_wins": 8,
+          "delta_wins": 12,
+          "delta_pp": 18.75
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "pilot_only_wins": 2,
+          "reference_only_wins": 5,
+          "delta_wins": -3,
+          "delta_pp": -4.6875
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "pilot_only_wins": 125,
+          "reference_only_wins": 0,
+          "delta_wins": 125,
+          "delta_pp": 97.65625
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "pilot_only_wins": 97,
+          "reference_only_wins": 3,
+          "delta_wins": 94,
+          "delta_pp": 73.4375
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "pilot_only_wins": 117,
+          "reference_only_wins": 0,
+          "delta_wins": 117,
+          "delta_pp": 91.40625
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "pilot_only_wins": 41,
+          "reference_only_wins": 1,
+          "delta_wins": 40,
+          "delta_pp": 31.25
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "pilot_only_wins": 114,
+          "reference_only_wins": 1,
+          "delta_wins": 113,
+          "delta_pp": 88.28125
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "pilot_only_wins": 2,
+          "reference_only_wins": 0,
+          "delta_wins": 2,
+          "delta_pp": 1.5625
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "pilot_only_wins": 73,
+          "reference_only_wins": 2,
+          "delta_wins": 71,
+          "delta_pp": 55.46875
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "pilot_only_wins": 1,
+          "reference_only_wins": 0,
+          "delta_wins": 1,
+          "delta_pp": 0.78125
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 0,
+          "delta_wins": 0,
+          "delta_pp": 0.0
+        }
+      ],
+      "groups": {
+        "day": -3.80859375,
+        "heldout": -4.0364583333333375,
+        "night": 48.87152777777777
+      }
+    },
+    "dw4i_s2": {
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 9,
+          "delta_wins": -9,
+          "delta_pp": -7.03125
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "pilot_only_wins": 1,
+          "reference_only_wins": 11,
+          "delta_wins": -10,
+          "delta_pp": -7.8125
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "pilot_only_wins": 3,
+          "reference_only_wins": 11,
+          "delta_wins": -8,
+          "delta_pp": -6.25
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "pilot_only_wins": 3,
+          "reference_only_wins": 8,
+          "delta_wins": -5,
+          "delta_pp": -3.90625
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "pilot_only_wins": 8,
+          "reference_only_wins": 5,
+          "delta_wins": 3,
+          "delta_pp": 2.34375
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "pilot_only_wins": 3,
+          "reference_only_wins": 9,
+          "delta_wins": -6,
+          "delta_pp": -4.6875
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "pilot_only_wins": 18,
+          "reference_only_wins": 15,
+          "delta_wins": 3,
+          "delta_pp": 2.34375
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 3,
+          "delta_wins": -3,
+          "delta_pp": -2.34375
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "pilot_only_wins": 23,
+          "reference_only_wins": 11,
+          "delta_wins": 12,
+          "delta_pp": 18.75
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "pilot_only_wins": 9,
+          "reference_only_wins": 1,
+          "delta_wins": 8,
+          "delta_pp": 12.5
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 0,
+          "delta_wins": 0,
+          "delta_pp": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 0,
+          "delta_wins": 0,
+          "delta_pp": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 8,
+          "delta_wins": -8,
+          "delta_pp": -12.5
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "pilot_only_wins": 6,
+          "reference_only_wins": 0,
+          "delta_wins": 6,
+          "delta_pp": 9.375
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 43,
+          "delta_wins": -43,
+          "delta_pp": -67.1875
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "pilot_only_wins": 1,
+          "reference_only_wins": 22,
+          "delta_wins": -21,
+          "delta_pp": -32.8125
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "pilot_only_wins": 4,
+          "reference_only_wins": 32,
+          "delta_wins": -28,
+          "delta_pp": -43.75
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "pilot_only_wins": 26,
+          "reference_only_wins": 4,
+          "delta_wins": 22,
+          "delta_pp": 34.375
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "pilot_only_wins": 20,
+          "reference_only_wins": 4,
+          "delta_wins": 16,
+          "delta_pp": 25.0
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "pilot_only_wins": 2,
+          "reference_only_wins": 2,
+          "delta_wins": 0,
+          "delta_pp": 0.0
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "pilot_only_wins": 123,
+          "reference_only_wins": 0,
+          "delta_wins": 123,
+          "delta_pp": 96.09375
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "pilot_only_wins": 55,
+          "reference_only_wins": 4,
+          "delta_wins": 51,
+          "delta_pp": 39.84375
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "pilot_only_wins": 107,
+          "reference_only_wins": 1,
+          "delta_wins": 106,
+          "delta_pp": 82.8125
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "pilot_only_wins": 18,
+          "reference_only_wins": 0,
+          "delta_wins": 18,
+          "delta_pp": 14.0625
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "pilot_only_wins": 100,
+          "reference_only_wins": 2,
+          "delta_wins": 98,
+          "delta_pp": 76.5625
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "pilot_only_wins": 1,
+          "reference_only_wins": 0,
+          "delta_wins": 1,
+          "delta_pp": 0.78125
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "pilot_only_wins": 77,
+          "reference_only_wins": 1,
+          "delta_wins": 76,
+          "delta_pp": 59.375
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "pilot_only_wins": 1,
+          "reference_only_wins": 0,
+          "delta_wins": 1,
+          "delta_pp": 0.78125
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "pilot_only_wins": 0,
+          "reference_only_wins": 0,
+          "delta_wins": 0,
+          "delta_pp": 0.0
+        }
+      ],
+      "groups": {
+        "day": -3.41796875,
+        "heldout": -4.6875,
+        "night": 41.14583333333333
+      }
+    }
+  },
+  "limitations": [
+    "Two fixed training seeds, no best-seed/epoch selection or production promotion.",
+    "Many data sources are added together; not an attribution study of any individual source.",
+    "Additional data also changes the seed-based validation split and optimizer-step count.",
+    "v34 uses slot heads: perturbations reorder identities; n9 preserves the first seven slots but adds two untrained slots; conveyors shift identities.",
+    "L10 holdouts test initial-deck generalization; later conveyor refills are not held out.",
+    "Training RSS peaks sum process RSS and may count shared pages repeatedly."
+  ]
+}
