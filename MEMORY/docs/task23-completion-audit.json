@@ -1,0 +1,39 @@
+{
+  "complete": true,
+  "results_sha256": "c63cc0ba7fdcae5c47355ef88bd1c2861430d6c8d0b2e5396255c9bd7c0a0157",
+  "plan_sha256": "7c0f425a3935eaf6411b529561f0edf2c01cf75663bae5c261b69a989af60023",
+  "inventory_sha256": "3b1892381f3ef424e565ce1cf6e3aa5cd6d6d1bcbe91b9d6ddb352bce1f82426",
+  "frozen_sources_verified": 23,
+  "training_eval_seed_intersection": [],
+  "models": {
+    "v34": {
+      "tasks": 29,
+      "games": 2944,
+      "successful_stages": 29,
+      "panel_sha256": "1f12afd5f71f07c08664a44683a666711ccf349c5d62e0f8f1ec1f674f7d956a"
+    },
+    "identity": {
+      "tasks": 29,
+      "games": 2944,
+      "successful_stages": 29,
+      "panel_sha256": "1e3d5f92ae2d15e2fe7e45b69f9d4587f1df958a897b7157cc5d407651fb279e"
+    },
+    "dw4i_s1": {
+      "tasks": 29,
+      "games": 2944,
+      "successful_stages": 29,
+      "panel_sha256": "71ae14926dab3cfedb65e2864f4473cc6cb8250a692bcae605bbb18c4b26a73e"
+    },
+    "dw4i_s2": {
+      "tasks": 29,
+      "games": 2944,
+      "successful_stages": 29,
+      "panel_sha256": "ad9e0a6aa8c47549f88bf86e2a1808be9b77cdd36e476e39331b5d9084e0640a"
+    }
+  },
+  "evaluated_games": 11776,
+  "successful_evaluation_stages": 116,
+  "all_raw_games_fast_without_search": true,
+  "workers_per_task": 4,
+  "study_controller_exited": true
+}
