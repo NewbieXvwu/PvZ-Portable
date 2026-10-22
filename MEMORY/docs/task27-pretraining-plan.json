@@ -1,0 +1,66 @@
+{
+  "registered_at": "2026-10-22T15:16:46.765174+08:00",
+  "models": {
+    "dw4i_s1": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+    "identity": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt"
+  },
+  "models_sha256": {
+    "dw4i_s1": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "identity": "77e2b21efd8e8a3a73959c7f1eb52129c34c2f2b56204d1df38a41b1b8b94603"
+  },
+  "manifests_sha256": {
+    "v1": "c17daf9a2ded971f51e6af53642badb4969cc17b234583aa7d3630409fe00b32",
+    "v2": "a03243d6f7f55f30e4fdc500e06e36e9c44fb95357d976d82104edac532f862f"
+  },
+  "executable_sha256": "ed6c7b5376afe386c515969bfc00a3430c05fa092e4eca3ae0b0c2aa782ed4fc",
+  "sources": {
+    "scripts/run_task27_pretraining.py": "eafad6d5367aee3d0d0dd80a012c7abe841af0c70f4c79ad15029d005df47d08",
+    "scripts/task27_common.py": "081110cc1890a0ad5813a38c455d2bbdb5f8bfb3e720f69fdd3495e4584ea69d",
+    "scripts/unified_panel.py": "3fa2df851eb30fc636f38e14048e1ff2a6607f35e752a9b6bbf3979fec56ef33",
+    "scripts/search_play.py": "0be3d3aa6bdbbb22e252d1b6ca323c2d2ce1094809962ce6063cf681c920b13e",
+    "scripts/dagger_experiment_runner.py": "41dc29e428bfb6e40c2f966defdd89ec0d147cf3ec22fc220dfbe8a040b9a8ed",
+    "src/main.cpp": "111cba3354428c6c16233fdbb0c94320268116c874efa8632679fc5d0197827b",
+    "src/EnvironmentRollout.cpp": "db91844a3c1a7b652cdd23c75df48e1e5ef4b6b890deee3747643eed4f4a2aee",
+    "python/pvz_rollout_policy.py": "361429c4553369e50b652ed36ad0ea3cfaa9cd5bc02b28debacc65c579296590",
+    "python/pvz_event_env.py": "027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89",
+    "python/pvz_env.py": "c909690dd907d5ca38027e1a0b35d090acc44fbacdbfbbd7d203af7d3a78ed9c",
+    "scripts/render_episode.py": "e64f1c249f4946a9bb2da56bbbf926095e654488ebe44c4f551e272e3c278b75",
+    "scripts/pvz_tasks.py": "9c091a4b40e633930effcb70173677fa4cbd3dd4f6a0bef049b29dbff0525906"
+  },
+  "dead_tasks": [
+    "day_l7_eval_d7p_holdout3",
+    "day_l8_eval_d7p_holdout1",
+    "day_l9_eval_d7p_holdout1"
+  ],
+  "dead_seeds": [
+    30000,
+    30001,
+    30002,
+    30003,
+    30004,
+    30005,
+    30006,
+    30007,
+    30008,
+    30009,
+    30010,
+    30011,
+    30012,
+    30013,
+    30014,
+    30015
+  ],
+  "workers": 4,
+  "teacher": {
+    "beta": 1,
+    "verify_samples": 9,
+    "student_candidates": 2,
+    "samples": 3,
+    "horizon": 2500,
+    "min_gap": 300,
+    "margin": 0.02,
+    "static_value": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt"
+  },
+  "value_sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+  "static_value_sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+}
