@@ -626,4 +626,20 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   已用偏移：台式机 queue101 `night_lN_train_n9`（N = 11–14、16–19）每轮每关 64，第 r 轮 (r−1)·64 起（标签 n{N}dag{r}，采集学生 identity_dw3_s1）；同队列 `day_l*_train_d7p` 台式机段 (r−1)·64 起（标签 d{l}p{r}d）。 Mac `mac_dagger_n9a.sh`：`night_lN_train_n9` 4096 + (r−1)·80 起，每轮每关 80（标签 n{N}dag{r}m）。 第二批（采集学生 dw4i_s1，只采弱关 12/14/17/18/19）：Mac `mac_dagger_n9b.sh` 4416 + (r−1)·80（标签 n{N}dag{r+4}m）；台式机 queue102 320 + (r−1)·64（标签 n{N}dag{r+5}），同队列 d7p 320 + (r−1)·64（d{l}p{r+5}d）、泳池 `pool_lN_train_p9k` (r−1)·64（p{N}dag{r}）。白天早关 `day_l{1,3,4,6}_train_d7`：Mac `mac_dagger_d1a.sh` 4096 + (r−1)·80（标签 d{l}dag{r}m，采集学生 dw4i_s1）；台式机 0–4095 预留。
   **2-10 的 `conveyor_start` 原版开局**：本分支还没有 task20 的引擎/python 支持，L20 暂按“卡组写进初始手牌”的语义，
   等 conveyor 合入后再改成原版开局（另开任务族名，不覆盖 `night_l*_n9`）。
+- **2026-10-22 task25：夜间卡组改定 n10** `[0,1,2,3,4,5,7,8,9,11]`（= n9 + 墓碑吞噬者 11，10 张 = `SEEDBANK_MAX`）。
+  动机：最后一波开始约 200 tick 后每个坟头各冒一只僵尸（`Board.cpp:4958–4962` → `Board::SpawnZombiesFromGraves`），
+  2-7..2-9 有 11 个坟头；老师（`dw4i_s1` 推演，`--dagger-beta 1`，16 局）n9 → n10：**2-7 4 → 11、2-9 1 → 8**。
+  新增任务族 `night_lN_eval_n10` 与 `night_lN_train_n10`（N = 11–14、16–19），字段同 `night_lN_eval_n9`，
+  训练种子 `2200000 + (N−11)·10000` 起每关 8192 个（L11 2200000–2208191、L12 2210000–…、L13 2220000–…、
+  L14 2230000–…、L16 2250000–…、L17 2260000–…、L18 2270000–…、L19 2280000–2288191）。
+  **2-10（L20）只出原版开局版** `night_l20_eval_n10_orig` / `night_l20_train_n10_orig`（`deck: []` +
+  `conveyor_start: "original"`，训练种子 2290000–2298191），仿 task23 的 `night_l20_eval_n9_orig`；
+  不再出“卡组写进初始手牌”的 L20 n10 任务（n9 的 L20 旧任务保留，历史档案照旧重放）。
+  合并清单 `artifacts/stage4/night_panel.json`（`make_night_panel.py --combined`，**36 → 54 个任务**：
+  原 eval / eval_n8 / eval_n9 / train_n9 各 9 关 + n10 的 8 eval + 8 train + 2 orig），本工作树与
+  `~/PvZ-search/artifacts/stage4/night_panel.json` 各一份（都不进 git）；旧清单备份 `night_panel.json.bak_task25`，
+  原有 36 个任务逐任务 JSON 逐字节不变。
+  生成时自查的已用种子段：30000–31023、1500000、1600000、1800000–1878191、1880000–1888191、1900000–1998191、
+  2000000–2088191、2100000 / 2120000 / 2130000 / 2150000 各 8192、2200000–2298191（n10 段与前面全不重叠，
+  训练任务之间也不重叠）。
 
