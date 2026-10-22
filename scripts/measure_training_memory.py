@@ -62,8 +62,6 @@ def main() -> None:
     p.add_argument("--packet-head", default="identity")
     p.add_argument("--cell-soft-weight", type=float, default=3.0)
     p.add_argument("--obs", default="v2")
-    p.add_argument("--compact", action="store_true", help="measure the compact row store")
-    p.add_argument("--memmap", action="store_true", help="measure the file-backed row store")
     p.add_argument("--json", type=Path)
     p.add_argument("--extrapolate", type=int, default=15_000_000)
     args = p.parse_args()
@@ -82,12 +80,10 @@ def main() -> None:
     baseline = current_rss()
     started = current_rss()
     loaded = T.load(args.data, labels, args.wait_keep, {},
-                    args.cache_dir, False, args.obs, 1, False,
+                    args.cache_dir, False, args.obs, 1,
                     cells=bool(args.cell_soft_weight),
                     aux_horizon=0, row_observer=None,
-                    packet_head=args.packet_head, read_cache_dir=None,
-                    compact=args.compact,
-                    memmap_dir=args.cache_dir / "data" if args.memmap else None)
+                    packet_head=args.packet_head, read_cache_dir=None)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     packet_info = loaded[9] if args.packet_head == "identity" else None
     after_load = current_rss()

@@ -68,9 +68,9 @@ def test_three_frame_aux_labels_and_sampled_cache(obs):
             assert cache_aux(archive, cache, horizon) == cached
             assert cached.stat().st_mtime_ns == timestamp
             for fraction, workers in ((1.0, 1), (0.5, 2)):
-                direct = load(data, {"teacher"}, wait_keep=fraction, dense_boards=True, obs=obs, aux_horizon=horizon)
+                direct = load(data, {"teacher"}, wait_keep=fraction, obs=obs, aux_horizon=horizon)
                 actual = load(data, {"teacher"}, wait_keep=fraction, cache_dir=cache,
-                              dense_boards=True, obs=obs, precompute_workers=workers, aux_horizon=horizon)
+                              obs=obs, precompute_workers=workers, aux_horizon=horizon)
                 torch.testing.assert_close(direct[-1], actual[-1], rtol=0, atol=0)
                 np.testing.assert_array_equal(actual[-1], expected[1:2] if fraction < 1 else expected[:-1])
             assert cache_episode(archive, cache, obs) == old
@@ -85,9 +85,12 @@ def test_three_frame_aux_labels_and_sampled_cache(obs):
                                 **encode_student_frames(frames, source, obs))
         with patch("pvz_frame_store.encode_frames", side_effect=AssertionError("unexpected feature encoding")):
             assert cache_episode(binary, cache, obs) == binary
-            before = load(data, {"teacher"}, cache_dir=cache, obs=obs, dense_boards=True)
-            actual = load(data, {"teacher"}, cache_dir=cache, obs=obs, dense_boards=True, aux_horizon=1)
+            before = load(data, {"teacher"}, cache_dir=cache, obs=obs)
+            actual = load(data, {"teacher"}, cache_dir=cache, obs=obs, aux_horizon=1)
             for plain, auxiliary in zip(before[:6], actual[:6]):
+                if hasattr(plain, "batch"):
+                    plain = plain.batch(np.arange(plain.shape[0]), "cpu")
+                    auxiliary = auxiliary.batch(np.arange(auxiliary.shape[0]), "cpu")
                 torch.testing.assert_close(plain, auxiliary, rtol=0, atol=0)
             np.testing.assert_array_equal(actual[-1], one[:-1])
             assert cache_episode(binary, cache, obs) == binary

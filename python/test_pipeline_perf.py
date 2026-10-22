@@ -78,7 +78,7 @@ class PipelinePerfTest(unittest.TestCase):
         source.write_text("".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames))
         cache = self.directory / "cache"
         for fraction in (.1, .5, 1.0):
-            expected = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5}, dense_boards=True)
+            expected = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5})
             for _ in range(2):
                 actual = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5}, cache)
                 self.assert_rows_equal(expected, actual)

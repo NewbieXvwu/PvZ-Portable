@@ -1,10 +1,10 @@
 """The compact row store must hand the trainer bit-identical batches (task32).
 
-Everything here is synthetic: two tiny games whose lanes are constant (so the per-archive plane has
-something to hoist), a zombie walking across the lawn, cooldown progress that is not representable in
-float16 (500/750), and search targets on some frames. The default path, the compact path and the
-file-backed variants must produce the same dense boards, scalars, labels, values, candidates and packet
-block -- that is the gate for calling any of them a memory-only change.
+The store is the only representation now, so what has to be pinned down is the invariant it replaced:
+the rows a batch sees are the rows the frames said. Two tiny synthetic games -- constant lanes so the
+per-archive plane has something to hoist, a zombie walking across the lawn, cooldown progress that is
+not representable in float16 (500/750), -0.0 in a cell -- and the same rows loaded with and without the
+feature cache must agree bit for bit.
 """
 import sys
 import tempfile
@@ -17,7 +17,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_frame_store import write_frames  # noqa: E402
-from train_rollout_policy import CompactBoards, PacketStore, load  # noqa: E402
+from train_rollout_policy import CompactBoards, PacketStore, constant_plane, load  # noqa: E402
 
 
 def game_frames(count: int) -> list[dict]:
@@ -49,6 +49,50 @@ def game_frames(count: int) -> list[dict]:
     return frames
 
 
+class CompactBoardsTest(unittest.TestCase):
+    def test_round_trip_is_bit_exact(self):
+        rng = np.random.default_rng(0)
+        boards = rng.normal(size=(5, 4, 3)).astype(np.float16)
+        boards[boards > 0.5] = 0                      # mostly zeros, like a real board
+        boards[0, 0, 0] = np.float16(-0.0)            # a stored zero whose sign matters
+        boards[1, 2, 1] = np.float16(np.nan)
+        store = CompactBoards(boards.shape[1:])
+        store.append(boards)
+        store.finish()
+        out = store.batch(np.arange(5), "cpu")
+        self.assertTrue(torch.equal(out.to(torch.float16).view(torch.int16),
+                                    torch.from_numpy(boards).view(torch.int16)))
+
+    def test_constant_plane_is_hoisted_and_written_back(self):
+        rng = np.random.default_rng(1)
+        boards = np.zeros((6, 10, 10), dtype=np.float16)
+        boards[:, 0, :] = np.float16(0.75)            # the "lane" channel: constant inside the archive
+        boards[:, 1:, :] = rng.normal(size=(6, 9, 10)).astype(np.float16)
+        plane, covered = constant_plane(boards)
+        self.assertIsNotNone(plane)
+        plain = CompactBoards(boards.shape[1:])
+        plain.append(boards)
+        plain.finish()
+        hoisted = CompactBoards(boards.shape[1:])
+        hoisted.append(boards, covered=covered, plane=plane)
+        hoisted.finish()
+        self.assertEqual(len(hoisted.planes), 1)
+        self.assertLess(hoisted.nnz, plain.nnz)
+        self.assertLess(hoisted.nbytes, plain.nbytes)
+        self.assertTrue(torch.equal(hoisted.batch(np.arange(6), "cpu").to(torch.float16).view(torch.int16),
+                                    torch.from_numpy(boards).view(torch.int16)))
+
+    def test_packet_columns_widen_back_exactly(self):
+        store = PacketStore(3, 4)
+        block = np.array([[[1, 1, 500 / 750, 0]] * 4,
+                          [[2, 0, 0.25, 1]] * 4,
+                          [[-1, 0, 0.0, 1]] * 4], dtype=np.float32)
+        store.set(0, 3, block)
+        store.finish(3)
+        self.assertTrue(torch.equal(store[torch.arange(3)], torch.from_numpy(block)))
+        self.assertEqual(store.kinds(torch.tensor([0, 2]), torch.tensor([0, 3])).tolist(), [1, -1])
+
+
 class CompactLoaderTest(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory()
@@ -61,57 +105,35 @@ class CompactLoaderTest(unittest.TestCase):
             path.parent.mkdir(parents=True)
             write_frames(path, game_frames(60))
 
-    def variants(self):
-        common = dict(cache_dir=self.cache, cells=True, packet_head="identity", obs="v2", wait_keep=.5)
-        yield "compact", load(self.data, {"fast"}, compact=True, **common)
-        yield "memmap", load(self.data, {"fast"}, memmap_dir=self.directory / "mapped", **common)
-        yield "compact+memmap", load(self.data, {"fast"}, compact=True,
-                                     memmap_dir=self.directory / "mapped_compact", **common)
+    def load(self, **extra):
+        return load(self.data, {"fast"}, cache_dir=self.cache, cells=True, packet_head="identity",
+                    obs="v2", wait_keep=.5, **extra)
 
     @staticmethod
-    def dense(store, rows):
-        return store.batch(torch.arange(rows), "cpu")
+    def dense(value, rows):
+        return value.batch(torch.arange(rows), "cpu") if hasattr(value, "batch") else value
 
-    @staticmethod
-    def materialize(value, rows):
-        return value[torch.arange(rows)] if isinstance(value, PacketStore) else value
-
-    def test_every_variant_matches_the_default(self):
-        base = load(self.data, {"fast"}, cache_dir=self.cache, cells=True, packet_head="identity",
-                    obs="v2", wait_keep=.5)
-        rows = len(base[2])
+    def test_cached_and_plain_rows_agree(self):
+        cached = self.load()
+        plain = load(self.data, {"fast"}, cells=True, packet_head="identity", obs="v2", wait_keep=.5)
+        rows = len(cached[2])
         self.assertGreater(rows, 40)
-        expected_boards = self.dense(base[0], rows)
-        expected_scalars = self.dense(base[1], rows)
-        for name, other in self.variants():
-            with self.subTest(variant=name):
-                self.assertEqual(len(other[2]), rows)
-                # int32 views also catch -0.0 versus 0.0, which assert_close would let through
-                self.assertTrue(torch.equal(self.dense(other[0], rows).view(torch.int32),
-                                            expected_boards.view(torch.int32)))
-                self.assertTrue(torch.equal(self.dense(other[1], rows).view(torch.int32),
-                                            expected_scalars.view(torch.int32)))
-                for index in (2, 3, 4, 5, 7):
-                    left, right = base[index], other[index]
-                    torch.testing.assert_close(left.float(), right.float(), rtol=0, atol=0, equal_nan=True)
-                torch.testing.assert_close(base[8].float(), other[8].float(), rtol=0, atol=0, equal_nan=True)
-                torch.testing.assert_close(self.materialize(base[9], rows).float(),
-                                            self.materialize(other[9], rows).float(), rtol=0, atol=0, equal_nan=True)
-                self.assertEqual(base[6], other[6])
+        for index in (0, 1):
+            self.assertTrue(torch.equal(self.dense(cached[index], rows).view(torch.int32),
+                                        self.dense(plain[index], rows).view(torch.int32)))
+        for index in (2, 3, 4, 5, 7):
+            torch.testing.assert_close(cached[index].float(), plain[index].float(), rtol=0, atol=0, equal_nan=True)
+        torch.testing.assert_close(cached[8].float(), plain[8].float(), rtol=0, atol=0, equal_nan=True)
+        rows_range = torch.arange(rows)
+        torch.testing.assert_close(cached[9][rows_range], plain[9][rows_range], rtol=0, atol=0, equal_nan=True)
+        self.assertEqual(cached[6], plain[6])
 
-    def test_compact_store_hoists_the_constant_plane(self):
-        base = load(self.data, {"fast"}, cache_dir=self.cache, cells=True, packet_head="identity",
-                    obs="v2", wait_keep=.5)
-        compact = load(self.data, {"fast"}, cache_dir=self.cache, cells=True, packet_head="identity",
-                       obs="v2", wait_keep=.5, compact=True)
-        self.assertGreater(len(compact[0].planes), 0)
-        self.assertLess(compact[0].nnz, base[0].nnz)
-        self.assertLess(compact[0].nbytes, base[0].nbytes)
-        self.assertIsInstance(compact[9], PacketStore)
-
-    def test_compact_requires_the_cache(self):
-        with self.assertRaises(ValueError):
-            load(self.data, {"fast"}, compact=True, cells=True)
+    def test_the_store_hoists_the_constant_plane(self):
+        rows = self.load()
+        self.assertGreater(len(rows[0].planes), 0)
+        self.assertIsInstance(rows[9], PacketStore)
+        # a dense board would be 92*6*10 float16 a row; the CSR has to be a small multiple of the nonzeros
+        self.assertLess(rows[0].nbytes / len(rows[2]), 600)
 
 
 if __name__ == "__main__":
