@@ -60,6 +60,8 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 
 - 2026-10-22，2旧数字兼容复核：dw4i_s1的白天/留出20项1792局，与task23旧二进制原始记录逐seed核对，除耗时和新增类型计数外完全一致，胜负/决策/槽计数/波次等差异0。完整v2的夜间与泳池继续，不把这一覆盖范围冒充全模型验收。
 
+- 2026-10-22，0公用读取函数完成：新增pvz_episode_stats，planted_types优先，旧planted按真实卡组翻译；传送带旧槽计数返回None，兼容本轮初版真实类型字段而不误认旧CUDA槽数组。11项单元测试通过，含n9/n10、重排/重复卡、传送带和执行前取类型。主控新增第0步任务书一并提交；仅暂停本任务外层控制器，当前dw4i参考模型继续收尾，其余队列未动。
+
 ## 问题
 
 - HF里的z15dag12bv/z15dag13bv是10-17的历史重标版本（见当天日志），不是新Mac轮次；导入档案已保留，但不加入本次训练以免和原12b/13b重复加权。新增训练轮次为48个夜间Mac标签及z17dag43b；冻结前还会刷新最新上传。
@@ -69,3 +71,14 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 - 唯一后台句柄：artifacts/task27/pretraining_controller.process.json（老师诊断已齐、两个参考v2依次跑）和study_controller.process.json（等待q103完整第2轮d10p8d）。先读/proc核对实际PID/命令与各阶段result，成功阶段复用，禁止重复训练或评估。完整task27只以artifacts/task27/complete.json及匹配task27-results.json的SHA为准，当前尚未冻结/开训。
 
 - 现用 night_panel_n10.json 的 L20 是旧初始牌变体 night_l20_eval_n10，按任务要求逐字段复现并保留主文件。v2 将从54项合并清单选 night_l20_eval_n10_orig（空槽原版），两者不混用。泳池登记与统一面板均曾占 §14.10，本次保留统一面板为 §14.10、泳池改 §14.11。
+
+## 第 0 步（主控 2026-10-22 15:45 追加，先于其他步骤做）：种植统计改按植物类型记录
+用户指出：对局汇总里的 `planted` 按**卡槽序号**计数，与“按植物身份”的设计方向不一致（传送带关槽位会移动，槽号连跨局都不可比）。动作接口按槽号（和人点卡槽一样）不改，**统计与报告**改成按类型：
+1. `src/main.cpp`（整局 C++ 推演，约 469/525/579 行）与 `scripts/search_play.py`（约 773–878 行）：在**执行种植之前**读出该槽的植物类型（传送带关种完槽会移动，不能事后查），
+   新增键 `planted_types`（`{植物类型: 棵数}`，JSON 对象）；原键改名 `planted_slots`，不再写 `planted`，免得新旧文件同名不同义。
+2. 写一个公用读取函数（如 `python/pvz_episode_stats.py` 的 `planted_by_type(game, deck)`）：有 `planted_types` 直接用；旧文件只有 `planted` 时用该局卡组把槽翻成类型；
+   传送带关（`conveyor_start` 或 L10/L20 类）的旧文件翻不了，返回 None 并在报告里注明，不要猜。
+   把读 `planted` 的脚本（`git grep -n planted scripts python`：`dw4_night_ab_report.py`、`analyze_l20_conveyor.py`、`sim_skip_agreement.py`、`cuda_root_corpus.py`、`unified_panel.py` 等）改用它。
+3. 顺手修同类错误：`search_play.py` 的 `replant_events` 里 `"same_type": occupant.get("type") == action["packet"]` 是拿植物类型比槽号，改成比较该槽的植物类型。
+4. 测试：单元测试覆盖翻译函数（含传送带返回 None）；冒烟 1 局 C++ 整局路径与 1 局 Python 路径，核对两边 `planted_types` 与逐动作重放一致。
+   编译只在 dw5 工作树的 `build/`，**不要重编主工作区 `~/PvZ-search/build/`**（q103 在用；它采完的旧文件照旧是槽号，由第 2 条的读取函数兼容）。
