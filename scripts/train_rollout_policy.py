@@ -180,6 +180,50 @@ class PacketStore:
         return sum(column.nbytes for column in self.columns)
 
 
+class CandidateStore:
+    """The search's cell candidates, stored sparse.
+
+    candidate_cells() ranks at most CELL_CANDIDATES entries and pads the rest with [-1, -1, nan], and
+    only the rows whose frame had search targets have any at all -- but the dense block costs 12*3*2 = 72
+    bytes on every row. A uint8 count plus the ranked entries is 6 bytes a candidate instead, and
+    getitem() rebuilds exactly the padded block the cell soft target reads (task32).
+    """
+
+    def __init__(self):
+        self.counts = bytearray()
+        self.entries = bytearray()
+
+    def append(self, block):
+        block = np.asarray(block, dtype=np.float16).reshape(-1, 3)
+        padding = np.isnan(block[:, 2])
+        count = int(np.argmax(padding)) if padding.any() else len(block)
+        self.counts.append(count)
+        self.entries.extend(block[:count].tobytes())
+
+    def finish(self):
+        self.counts = np.frombuffer(self.counts, dtype=np.uint8)
+        self.entries = np.frombuffer(self.entries, dtype=np.float16).reshape(-1, 3)
+        self.offsets = np.zeros(len(self.counts) + 1, dtype=np.int32)
+        np.cumsum(self.counts, out=self.offsets[1:])
+        return self
+
+    def __getitem__(self, idx):
+        selected = np.asarray(idx)
+        counts = self.counts[selected].astype(np.int64)
+        output = np.full((len(selected), CELL_CANDIDATES, 3), np.nan, dtype=np.float16)
+        if counts.sum():
+            starts = self.offsets[selected]
+            positions = np.arange(counts.sum()) + np.repeat(starts - (np.cumsum(counts) - counts), counts)
+            slots = (np.repeat(np.arange(len(selected)), counts) * CELL_CANDIDATES
+                     + np.arange(counts.sum()) - np.repeat(np.cumsum(counts) - counts, counts))
+            output.reshape(-1, 3)[slots] = self.entries[positions]
+        return torch.from_numpy(output)
+
+    @property
+    def nbytes(self):
+        return self.counts.nbytes + self.entries.nbytes + self.offsets.nbytes
+
+
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
          cells: bool = False, aux_horizon: int = 0, row_observer=None,
@@ -240,7 +284,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     cell = np.empty(capacity, np.int16)
     values = np.empty((capacity, PACKETS + 1), np.float32)
     seed_of = []
-    cands = np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16) if cells else None
+    cands = CandidateStore() if cells else None
     auxiliary = np.empty((capacity, 6), dtype=np.float32) if aux_horizon else None
     packets = PacketStore(capacity, PACKETS) if packet_head == 'identity' else None
     n = 0
@@ -297,7 +341,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                         cell_cached[path] = cache_candidates(path, cache_dir)
                     with np.load(cell_cached[path], allow_pickle=False) as side:
                         assert np.array_equal(side["rows"], stored["rows"]), path
-                        cands[n:n + count] = side["cands"][selected]
+                        for row in side["cands"][selected]:
+                            cands.append(row)
                 values[n:n + count] = vals
                 if aux_horizon:
                     if path not in aux_cached:
@@ -346,10 +391,10 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             if aux_horizon:
                 auxiliary[n - 1] = future_damage[i - 1]
             if cells:
-                cands[n - 1] = candidate_cells(frames[i].get("targets"))
+                cands.append(candidate_cells(frames[i].get("targets")))
     result = (boards.finish(), scalars.finish(), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
               seed_of, torch.from_numpy(values[:n]),
-              None if cands is None else torch.from_numpy(cands[:n]))
+              None if cands is None else cands.finish())
     if aux_horizon:
         result = (*result, torch.from_numpy(auxiliary[:n]))
     if packets is not None:
@@ -454,7 +499,7 @@ def main() -> None:
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
     memory = {"rows": len(plant), "board_bytes": boards.nbytes,
-              "scalar_bytes": scalars.nbytes,
+              "scalar_bytes": scalars.nbytes, "cand_bytes": 0 if cands is None else cands.nbytes,
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
                                   for tensor in (plant, packet, cell, weight, values, is_val))}
     if packet_info is not None:

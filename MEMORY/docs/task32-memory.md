@@ -45,6 +45,7 @@
 - 第 7 步（报告 + 整局门槛）：`MEMORY/docs/memory-budget.md` 写成（账本、每项省多少、28 GB 排布、复现命令、还剩什么）。`scripts/engine_replay_compare.py` 加 `--student`：用学生自己下整局（每决策一帧，到 terminal），同种子多局逐帧比摘要。`scripts/measure_collection_memory.py` 量 worker 常驻构成（解释器 23.0 / 导入后 24.4 / 装网络 205.0 MiB，引擎 57.2 MiB）。合并 `origin/pvz-env`（弹窗改 stderr 那次），重编后重放仍逐帧相同。
 - 第 8 步（整局门槛）：同种子 64 局、每局 400 决策、学生（v25）自己下，两版引擎**每局逐帧摘要全部相同**（最深第 13 波，无一局在 400 决策内结束）；峰值常驻 222.9→60.6 MB，启动 1.048→0.343 s，64 局总耗时 89.8→44.2 s。数字已写进 `MEMORY/docs/memory-budget.md`。
 - 第 9 步（收尾修正）：`PacketStore.__getitem__` 的堆叠轴改 `dim=-1` 并支持 `(row, slot, component)` 单格取值（原来的 `dim=2` 只在标量下标下成立，向量下标直接报错，之前没人走到）；`python/test_identity_training.py` 的 identity 对照改成按列还原。7 个相关测试文件 24 项全过。
+- 第 10 步（cands 稀疏）：`CandidateStore` 只存每行排名靠前的候选（uint8 计数 + 6 B/候选），`__getitem__` 还原成 (12,3) 的 NaN 填充块，调用方不用改。实测 **72 → 25.9 B/行**（66 993 行 1.73 MB），1500 万行省 **0.64 GiB**；同 200 档案 30 步权重 21 张 sha256 **全同**。顺带发现 `data_memory` 之前没算 `cands`（账本漏项），已补 `cand_bytes`。
 ## 问题
 
 ## 追加（主控 2026-10-22 23:05，用户的两点）

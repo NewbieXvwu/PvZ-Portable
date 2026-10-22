@@ -18,7 +18,7 @@
 | 棋盘/标量行指针 | 8 | 0.11 GiB |
 | 标量 CSR（indices uint16 + values float32） | 120 | 1.68 GiB |
 | `packet_info`（identity，54×4 float32） | 160 | 2.24 GiB |
-| 格候选 `cands`（float16 54×3） | 72 | 1.01 GiB |
+| 格候选 `cands`（float16 12×3） | 72 | 1.01 GiB |
 | 目标 `values`（float32 55） | 44 | 0.62 GiB |
 | keep 掩码（Python bool 列表） | 28 | 0.39 GiB |
 | 标签 plant/packet/cell/weight | 24 | 0.34 GiB |
@@ -57,8 +57,10 @@ torch 的 180 MiB 在 fork 模式下是全 worker 共享的（父进程先装载
 | 每档案恒定平面（可通行车道那 50/134 个非零） | 棋盘非零 134 → 84/行 |
 | 索引张量 int32、`values` 一次预分配 | 小项 |
 
-结果：**1024 → 593 B/行，14.32 → 8.30 GiB**（1500 万行）。实测 66 993 行
-`data_memory` = 棋盘 24.18 + 标量 7.25 + packet 4.69 + 其它张量 3.62 = 39.75 MB。
+格候选同样只存排名靠前的几个（`CandidateStore`：uint8 计数 + 6 B/候选）：**72 → 25.9 B/行**。
+
+结果：**1024 → 619 B/行，14.32 → 8.65 GiB**（1500 万行）。实测 66 993 行
+`data_memory` = 棋盘 24.18 + 标量 7.25 + packet 4.69 + 其它张量 3.62 + 格候选 1.73 = 41.47 MB。
 门槛：同数据同种子，改前（`--compact-data`）与改后 21 个权重张量 sha256 **全同**；
 峰值 2.457 → 2.423 GB，耗时 34 s 不变。
 
