@@ -37,6 +37,10 @@
   python3 scripts/make_day_panel.py --skip 10       # 不收传送带关
   python3 scripts/make_day_panel.py --deck 0,1,2,3,4,5,7 --suffix _d7 \
       --out artifacts/stage4/day_panel_d7.json      # 7 卡版面板
+  python3 scripts/make_day_panel.py --combined \
+      --out ~/PvZ-search/artifacts/stage4/day_panel.json
+      # 主清单布局：eval / eval_d7 / train_d7（L7-L10 + task24 的 L1/3/4/6），
+      # 26 个任务；不含 §14.8 的 1-10 原版开局任务（那两项不在主清单里）
 """
 from __future__ import annotations
 
@@ -55,6 +59,25 @@ from pvz_tasks import conveyor_belt_level, deck_for_level  # noqa: E402
 LEVELS_PER_AREA = 10
 SEED_START = 30000          # 与 day_l7_*_eval 相同的评估段
 SEEDS_PER_LEVEL = 1024
+# 训练用的白天 7 卡（多双发射手 7）。--combined 用它写 _eval_d7 与 _train_d7。
+D7_DECK = (0, 1, 2, 3, 4, 5, 7)
+# 已有训练段（task17 / task19）：1800000 + (N-7)*10000，每关 8192。
+TRAIN_D7_START = 1800000
+TRAIN_D7_LEVELS = (7, 8, 9, 10)
+TRAIN_D7_SEEDS = 8192
+# task24：L1/3/4/6 从来没有训练任务族（白天训练族只有 L7-L10），补上。
+# 2100000 + (N-1)*10000，每关 8192。
+EARLY_TRAIN_D7_START = 2100000
+EARLY_TRAIN_D7_LEVELS = (1, 3, 4, 6)
+# 生成时自查用：训练种子不得落进这些已用段。
+RESERVED_TRAIN_RANGES = (
+    (30000, 31023),        # 评估段（白天 / 夜间 / 泳池面板共用）
+    (1500000, 1501023),    # night_l12_n1
+    (1600000, 1608191),    # 白天早期训练段
+    (1880000, 1888191),    # day_l10_orig_train（task20 传送带）
+    (1900000, 1998191),    # night_lN_train_n9
+    (2000000, 2088191),    # pool_lN_train_p9k
+)
 # task20 原版传送带开局的训练段：1840000–1878191 已被 task19 的 day_l*_train_d7p 占用。
 CONVEYOR_TRAIN_START = 1880000
 CONVEYOR_TRAIN_SEEDS = 8192
@@ -83,6 +106,51 @@ def unlocked_plants(level: int) -> tuple[int, ...]:
     return tuple(range(award_seed_for_level(level) + 1))
 
 
+def train_seed_start(level: int) -> int:
+    """训练种子起点：L7-L10 沿用 task17 的 1800000 段，L1/3/4/6 用 task24 的 2100000 段。"""
+    if level in TRAIN_D7_LEVELS:
+        return TRAIN_D7_START + (level - 7) * 10000
+    if level in EARLY_TRAIN_D7_LEVELS:
+        return EARLY_TRAIN_D7_START + (level - 1) * 10000
+    raise RuntimeError(f"L{level} 没有训练段配置")
+
+
+def train_task(level: int) -> dict:
+    start = train_seed_start(level)
+    return {
+        "task_id": f"day_l{level}_train_d7",
+        "terrain": "day",
+        "level": level,
+        "deck": list(D7_DECK),
+        "zombie_count_multiplier": 1.0,
+        "wave_cap": None,
+        "sun_start": SUN_START,
+        "preplanted": [],
+        "playthrough": 2,
+        "seeds": list(range(start, start + TRAIN_D7_SEEDS)),
+    }
+
+
+def check_train_seeds(tasks: list[dict]) -> None:
+    """自查：任务内种子不重复；训练种子不落进已用段，也不和别的训练/评估任务撞种子。"""
+    eval_seeds = {seed for task in tasks if "_train_" not in task["task_id"] for seed in task["seeds"]}
+    owner: dict[int, str] = {}
+    for task in tasks:
+        if "_train_" not in task["task_id"]:
+            continue
+        if len(set(task["seeds"])) != len(task["seeds"]):
+            raise RuntimeError(f"{task['task_id']}: 任务内部有重复种子")
+        for seed in task["seeds"]:
+            for low, high in RESERVED_TRAIN_RANGES:
+                if low <= seed <= high:
+                    raise RuntimeError(f"{task['task_id']}: seed {seed} 落在已用段 {low}..{high}")
+            if seed in eval_seeds:
+                raise RuntimeError(f"{task['task_id']}: seed {seed} 与评估段重叠")
+            if seed in owner and owner[seed] != task["task_id"]:
+                raise RuntimeError(f"{task['task_id']}: seed {seed} 与 {owner[seed]} 重叠")
+            owner[seed] = task["task_id"]
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--out", type=Path, default=ROOT / "artifacts/stage4/day_panel.json")
@@ -94,6 +162,9 @@ def main() -> None:
                    help="逗号分隔的种子编号，覆盖 deck_for_level（全关卡同一副卡）；默认空 = 用 deck_for_level")
     p.add_argument("--suffix", default="",
                    help="任务名后缀，插在 _eval 之前（如 _d7 -> day_l1_d7_eval）")
+    p.add_argument("--combined", action="store_true",
+                   help="复现主清单布局：eval / eval_d7 / train_d7（L7-L10 + task24 的 L1/3/4/6），"
+                        "不含 task20 的 1-10 原版开局任务")
     args = p.parse_args()
 
     fixed_deck = tuple(int(seed) for seed in args.deck.split(",")) if args.deck else None
@@ -129,7 +200,7 @@ def main() -> None:
     # 开局空槽、容量 10，之后由 Challenge::UpdateConveyorBelt 发卡；上面按卡组生成的
     # day_l10_eval 是 task19 的变体（把任务卡组写进卡槽），保留但不再新采集。
     # 原版开局不用任务卡组，所以清单里 deck 写成空数组，并显式带 conveyor_start。
-    if 10 not in skipped and conveyor_belt_level(10):
+    if 10 not in skipped and conveyor_belt_level(10) and not args.combined:
         tasks.append({
             "task_id": "day_l10_orig_eval",
             "terrain": "day",
@@ -157,10 +228,28 @@ def main() -> None:
             "seeds": list(range(CONVEYOR_TRAIN_START, CONVEYOR_TRAIN_START + CONVEYOR_TRAIN_SEEDS)),
         })
 
+    # task24：主清单的 _eval_d7 / _train_d7 族。顺序与现有清单一致：
+    # eval（全部关）→ eval_d7（全部关）→ train_d7（先 L7-L10，再追加 L1/3/4/6）。
+    if args.combined:
+        for task in list(tasks):
+            d7 = dict(task)
+            d7["task_id"] = f"day_l{task['level']}_eval_d7"
+            d7["deck"] = list(D7_DECK)
+            tasks.append(d7)
+        for level in TRAIN_D7_LEVELS + EARLY_TRAIN_D7_LEVELS:
+            if level in skipped:
+                continue
+            tasks.append(train_task(level))
+        check_train_seeds(tasks)
+
+    purpose = "task17: original-difficulty panel for day levels 1-10 (one model, one deck per level, adventure mode)"
+    if args.combined:
+        purpose += (" | d7 variant: training deck [0,1,2,3,4,5,7] (main 2026-10-20)"
+                    " | task24: day_lN_train_d7 for L1/3/4/6, seeds 2100000+(N-1)*10000 (2026-10-22)")
     document = {
         "schema_version": 1,
         "split": "stage4",
-        "purpose": "task17: original-difficulty panel for day levels 1-10 (one model, one deck per level, adventure mode)",
+        "purpose": purpose,
         "note": ("local manifest, not in git; decks come from scripts/pvz_tasks.py deck_for_level, "
                  "seeds 30000.. are the same evaluation block as day_l7_*_eval"),
         "skipped_levels": {str(level): reason for level, reason in sorted(skipped.items())},
@@ -179,6 +268,10 @@ def main() -> None:
     bad_terrain = [row["level"] for row in checks if row["background"] != "BACKGROUND_1_DAY"]
     if bad_terrain:
         print(f"WARNING: not day grass: {bad_terrain}")
+    if args.combined:
+        for level in TRAIN_D7_LEVELS + EARLY_TRAIN_D7_LEVELS:
+            start = train_seed_start(level)
+            print(f"train_d7 L{level}: {start}..{start + TRAIN_D7_SEEDS - 1}")
 
 
 if __name__ == "__main__":
