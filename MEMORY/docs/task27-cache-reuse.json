@@ -1,0 +1,29 @@
+{
+  "complete": true,
+  "counts": {
+    "packets": {
+      "eligible": 48816,
+      "existing": 7574,
+      "published": 41242,
+      "lost_race": 0,
+      "invalid_parent": 0,
+      "bytes": 452704590
+    },
+    "identity_scene": {
+      "eligible": 48816,
+      "existing": 0,
+      "published": 48816,
+      "lost_race": 0,
+      "invalid_parent": 0,
+      "bytes": 114293203
+    }
+  },
+  "inventory_sha256": "2d0939a803a2f35d21b92348be91a486a4fbcfd5230dc5532d549f35f0510e28",
+  "inventory_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/cache_reuse_inventory.jsonl",
+  "study_plan_sha256": "b8e8e9962129aa5d65c60ad6e21512d74848c196499f7dcf003b1b07820e384a",
+  "frame_store_sha256": "4cc94a0624a736723b3f4726013a6fbf8519fbf66ab24f73a51a7874d86d1fe2",
+  "private_byte_copies_verified": true,
+  "parent_files_read_only": true,
+  "validation": "Unmodified pinned reader checks source+encoder digest on each cache hit; mismatches regenerate.",
+  "note": "Only frozen archive keys. No command/source/recipe changes, restarts, or checkpoint writes."
+}
