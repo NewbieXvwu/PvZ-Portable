@@ -52,4 +52,6 @@
 
 8. **引擎每 tick 的无用功 ③：粒子的每 tick 视觉积分**。`PvzpParticleEmitter::UpdateParticle` 里 field 曲线求值 + 位置/自旋积分只喂渲染；寿命（`mParticleAge`）必须照旧推进，因为粒子死亡可能 spawn 一个 cross-fade emitter、从共享 RNG 里取数。改成 `ENV_LIGHT_ANIMATION` 下只做寿命记账（年龄、time value、最后 time value），跳过其余数学。**+4.7%**（配对 A/B 4 轮比值中位数 0.955；同一改动另一次 3 轮测得 0.854，机器负载 13 时抖动很大，报告取保守值）。验收：64 个 root 叶摘要**逐位相同**，16 个存档整局逐帧重放 0 差异。
 
+9. **im2col 按行整段拷贝**：3×3/1×5 卷积的 im2col 原来逐格判断边界再赋值，改成先算出行内连续区间、`memcpy` 整段（值完全相同）。**+2.4%**（配对 A/B 4 轮中位数 0.977），叶摘要与逐帧重放不变。
+
 ## 问题

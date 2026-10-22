@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <stdexcept>
@@ -341,9 +342,13 @@ void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels,
 			for (int kernelCol = 0; kernelCol < kernelCols; ++kernelCol, ++feature)
 			{
 				const int deltaRow = kernelRow - kernelRows / 2, deltaCol = kernelCol - kernelCols / 2;
+				// The in-bounds columns of a row are one contiguous run: copy it as a run instead of
+				// testing every cell (this im2col was 5.2% of the rollout CPU on 2026-10-23).
+				const int colStart = std::max(0, -deltaCol), colEnd = std::min(10, 10 - deltaCol);
+				const size_t run = static_cast<size_t>(colEnd - colStart) * sizeof(float);
 				for (int row = std::max(0, -deltaRow); row < std::min(6, 6 - deltaRow); ++row)
-					for (int col = std::max(0, -deltaCol); col < std::min(10, 10 - deltaCol); ++col)
-						columns[feature * Cells + row * 10 + col] = input[channel * Cells + (row + deltaRow) * 10 + col + deltaCol];
+					std::memcpy(&columns[feature * Cells + row * 10 + colStart],
+						&input[channel * Cells + (row + deltaRow) * 10 + colStart + deltaCol], run);
 				if (transpose)
 					for (int target = 0; target < width; ++target)
 						kernelBuffer[target * count + feature] = kernel[((target * channels + channel) * kernelRows + kernelRow) * kernelCols + kernelCol];
