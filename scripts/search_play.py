@@ -1051,14 +1051,15 @@ def main() -> None:
         children_before = usage(resource.RUSAGE_CHILDREN)
     server_cpu = None
     started = time.time()
-    # A worker's resident size only ever grows -- macOS keeps freed pages in the process (task18).
-    # A long-lived worker therefore pays for the high-water of every game it played, so where the
-    # platform can fork, recycle the process after each game: the next one starts from the parent's
-    # copy-on-write baseline instead of on top of the last game's peak. Same games, same bytes.
-    recycle = 1 if start_method == "fork" else None
+    # Workers stay alive for the whole run. They used to be recycled after every game (task18) so
+    # that a worker never paid for the high-water of the games before it; the price was a fork, an
+    # engine process, its resource load and the rollout-net upload per game, 1.62 s of 2.76 s on a
+    # student-only game (task33, 8 games: 2.76 -> 1.13 s, RSS 111 -> 153 MB and flat after the
+    # second game; a search game is 117 -> 116 s at 138 MB either way). RESET_V2 rebuilds the board
+    # from the seed, so the games are identical; only the process cost goes away.
     try:
         with results_path.open("a") as out, mp.get_context(start_method).Pool(
-                args.workers, initializer=_init_worker, maxtasksperchild=recycle,
+                args.workers, initializer=_init_worker, maxtasksperchild=None,
                 initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.cpp_rollouts,
                           args.static_value, cuda_socket) +
                          ((args.candidate_coverage_model, args.candidate_coverage_budget)

@@ -154,14 +154,15 @@ train_rollout_policy 少 `--ema` `--width 128` `--soft-weight` `--soft-temperatu
 
 ### 第 1 项（已做，§9）：worker 不再每局重建
 
-- **现状**：`search_play.main` 里 `recycle = 1 if fork else None`（`maxtasksperchild=1`），macOS/Linux 上每个游戏都换一个新 worker 进程，
+- **现状（改前）**：`search_play.main` 里 `recycle = 1 if fork else None`（`maxtasksperchild=1`），macOS/Linux 上每个游戏都换一个新 worker 进程，
   于是引擎进程、`load_rollout_net`、torch 都重来一遍。实测 **1.62 s/局**。
 - **病根**：为了压常驻内存（task18：macOS 把释放的页留在进程里），代价是每局固定开销。
-- **改法**：`maxtasksperchild=None`（worker 常驻），引擎与网络随之复用。`RESET_V2` 从种子重建棋盘，所以**同种子仍打同一局**。
-- **收益**：纯学生局 2.76 → 1.13 s/局（**−59%**，8 局实测）；搜索局 117 → 116 s（−1.4%）。面板（`unified_panel` 全部 `--arms fast`）直接受益。
-- **代价**：worker RSS 111 → 153 MB（+42 MB，8 局后稳定不涨）；搜索局 138 MB 持平。16 worker 多 0.7 GB，比 task18 省下的少。
-- **验收**：同种子同配方 `games.jsonl` 逐字段相同（棋盘由种子重建，结果必须一致）。
-- **风险**：长局把 RSS 抬到高水位后不回落；用 §8 的内存上限监测，超了再改成每 N 局回收。
+- **改法（已做）**：`maxtasksperchild=None`（worker 常驻），引擎与网络随之复用。`RESET_V2` 从种子重建棋盘，所以**同种子仍打同一局**。
+- **收益（A/B：上一个提交在 `/tmp/audit-old` 工作树里跑同一命令）**：8 局纯学生、1 worker，**22.64 s → 15.64 s（−31% 整跑，−0.88 s/局）**；
+  搜索局 117 → 116 s（−1.4%）。面板（`unified_panel` 全部 `--arms fast`）直接受益。
+- **代价**：worker RSS 从 fork 后 31 MB 长到 16 局内的 194 MB 峰值、之后 163–194 MB 来回（无单调增长）；搜索局 138 MB 持平。
+- **验收（已过）**：8 局 `games.jsonl` 的 `won/final_wave/decisions/mowers_used/planted/searched` **逐字段相同**（0 处差异）。
+- **风险**：Linux 上 glibc 的 arena 高水位比 macOS 更黏；台式机 16 worker 若内存吃紧，改成每 N 局回收（`maxtasksperchild=N`）即可，收益仍保留 N−1/N。
 
 ### 第 2 项：训练装载不再每轮重解压、重算 CSR
 
