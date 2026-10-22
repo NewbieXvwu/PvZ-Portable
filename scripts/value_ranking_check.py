@@ -192,8 +192,8 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
 
 def _score(vnet, frames, context) -> list[float]:
     import torch
-    from pvz_value_net import featurize
-    b, s = zip(*(featurize(f) for f in frames))
+    from pvz_value_net import encode_frame
+    b, s = zip(*(encode_frame(f, vnet.encoder_version) for f in frames))
     s = torch.stack(s)
     if vnet.context:
         s = torch.cat([s, context.expand(len(frames), -1)], dim=1)

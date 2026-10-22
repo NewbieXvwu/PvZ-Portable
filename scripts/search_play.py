@@ -221,12 +221,12 @@ VALUE_BATCH = 32
 
 def _values(frames: list[dict], static: bool = False) -> list[float]:
     import torch
-    from pvz_value_net import featurize
+    from pvz_value_net import encode_frame
     net = _W.get("static_vnet", _W["vnet"]) if static else _W["vnet"]
     values: list[float] = []
     for start in range(0, len(frames), VALUE_BATCH):
         part = frames[start:start + VALUE_BATCH]
-        boards, scalars = zip(*(featurize(f) for f in part))
+        boards, scalars = zip(*(encode_frame(f, net.encoder_version) for f in part))
         scalars = torch.stack(scalars)
         if net.context:      # the game's multiplier and zombie roster, set by _play at reset
             scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(part), -1)], dim=1)
@@ -397,6 +397,8 @@ def _leaf_values(handles: list) -> list[float | None]:
     if rows:
         import torch
         net = _W["vnet"]
+        if net.encoder_version != 1:
+            raise ValueError("CUDA leaf features support value encoder v1 only; use CPU rollouts for v2")
         boards = torch.stack([row[0] for row in rows])
         scalars = torch.stack([row[1] for row in rows])
         context = torch.stack([row[2] for row in rows])
@@ -1024,6 +1026,10 @@ def main() -> None:
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
     print(f"{len(jobs)} games on {args.workers} workers", flush=True)
     cuda_socket, cuda_server, cuda_keep = args.cuda_socket, None, None
+    if args.rollout_backend == "cuda":
+        from pvz_value_net import load_value_net
+        if load_value_net(args.value).encoder_version != 1:
+            p.error("CUDA leaves expose value encoder v1 only; use --rollout-backend cpp for v2")
     if args.rollout_backend == "cuda" and cuda_socket is None:
         # The server is the parent's child so it outlives every worker and dies with the run; the workers
         # hold nothing but a socket to it.  Its own stderr goes to a file because the lanes-per-wave it
