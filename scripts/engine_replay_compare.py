@@ -53,21 +53,67 @@ def replay(executable: Path, level: int, seed: int, decisions: int) -> dict:
             "frame_bytes": len(payload)}
 
 
-def _run_child(executable, level, seed, decisions, connection) -> None:
+def student_action(net, observation: dict, state: dict, history, context) -> dict:
+    """One decision of the student, the same way search_play makes it (no search, no labels)."""
+    from pvz_rollout_policy import act
+    frame = _frame(observation)
+    frame["action"] = state.get("action")
+    action = act(net, frame, state.get("frame"), (observation.get("legal_actions") or {}).get("plants") or [],
+                 context=context, history=history)
+    state["frame"] = frame
+    state["action"] = action
+    return action
+
+
+def play(executable: Path, level: int, seed: int, max_decisions: int, student: Path) -> dict:
+    """A whole game with the student playing: every decision, every wave, until the simulator says terminal."""
+    from pvz_rollout_policy import load_student
+    from pvz_value_net import observation_context
+    started = time.time()
+    net = load_student(student)
+    env = EventWaitEnv(RESOURCE, executable=executable)
+    frames = []
     try:
-        connection.send(replay(executable, level, seed, decisions))
+        observation, _ = env.reset(task=training_task(seed, level))
+        startup = time.time() - started
+        history = None
+        if net.obs != "v1":
+            from pvz_student_observation import StudentHistory
+            history = StudentHistory(net.obs)
+        context = observation_context(observation) if net.context else None
+        frames.append(_frame(observation))
+        state = {}
+        while not observation.get("terminal") and len(frames) <= max_decisions:
+            observation, *_rest, info = env.step(student_action(net, observation, state, history, context))
+            frames.append(_frame(observation))
+    finally:
+        env.close()
+    payload = json.dumps(frames, sort_keys=True, separators=(",", ":")).encode()
+    return {"executable": str(executable), "seed": seed, "decisions": len(frames) - 1,
+            "digest": hashlib.sha256(payload).hexdigest(),
+            "final_tick": frames[-1].get("tick"), "final_wave": frames[-1].get("wave"),
+            "terminal": bool(frames[-1].get("terminal")),
+            "startup_seconds": round(startup, 3), "replay_seconds": round(time.time() - started, 2),
+            "peak_child_rss_bytes": resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss,
+            "frame_bytes": len(payload)}
+
+
+def _run_child(executable, level, seed, decisions, connection, student=None) -> None:
+    try:
+        connection.send(play(executable, level, seed, decisions, student) if student
+                        else replay(executable, level, seed, decisions))
     except BaseException as exc:                     # report, do not hang the parent on the pipe
         connection.send({"executable": str(executable), "error": repr(exc)})
     finally:
         connection.close()
 
 
-def replay_isolated(executable: Path, level: int, seed: int, decisions: int) -> dict:
+def replay_isolated(executable: Path, level: int, seed: int, decisions: int, student: Path | None = None) -> dict:
     """One replay in a fresh interpreter: ru_maxrss of a process covers every child it ever reaped, so
     measuring two engines from the same parent would report the first one's peak for both."""
     context = multiprocessing.get_context("spawn")
     receiver, sender = context.Pipe(duplex=False)
-    process = context.Process(target=_run_child, args=(executable, level, seed, decisions, sender))
+    process = context.Process(target=_run_child, args=(executable, level, seed, decisions, sender, student))
     process.start()
     sender.close()
     result = receiver.recv()
@@ -83,7 +129,23 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=30000)
     p.add_argument("--decisions", type=int, default=120)
     p.add_argument("--json", type=Path)
+    p.add_argument("--student", type=Path, help="play whole games with this student instead of replaying a fixed sequence")
+    p.add_argument("--games", type=int, default=1, help="how many seeds to play from --seed (student mode)")
     args = p.parse_args()
+    if args.student:
+        runs = []
+        for seed in range(args.seed, args.seed + args.games):
+            runs.append([replay_isolated(executable, args.level, seed, args.decisions, args.student)
+                         for executable in args.executable])
+        for run in runs:
+            for result in run:
+                print(json.dumps(result), flush=True)
+        identical = all(all(result["digest"] == run[0]["digest"] for result in run) for run in runs)
+        print(json.dumps({"games": len(runs), "identical": identical}), flush=True)
+        if args.json:
+            args.json.parent.mkdir(parents=True, exist_ok=True)
+            args.json.write_text(json.dumps({"runs": runs, "identical": identical}, indent=1) + "\n")
+        return
     results = [replay_isolated(executable, args.level, args.seed, args.decisions) for executable in args.executable]
     for result in results:
         print(json.dumps(result), flush=True)
