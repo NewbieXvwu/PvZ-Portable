@@ -99,6 +99,8 @@ DESIGN §14.7–§14.10、`MEMORY/docs/task19-identity-packets.md`、`task20-con
 
 - 后台复用入口：本树artifacts/task23/baseline_controller.process.json与study_controller.process.json（启动后写入）。先查具体PID活性、日志与完成文件，不重复启动。study_plan.json一旦冻结，勿修改其sources中的实验代码；所有数据/模型/清单/资源文件留在本树artifacts，主frames_v2仅按任务授权导入新增数据，其他工作树只读。
 
+- 第5步已独立顺序启动，后台控制PID1166256；唯一续跑句柄为本树artifacts/task23/day_diagnosis/controller.process.json，标准输出controller.txt，各阶段保存process/result/command文件。旧artifacts/task23/study_complete.json只表示步骤1–4完成，新增第5步必须以day_diagnosis/complete.json及匹配的task23-day-diagnosis.json结果SHA为准。plan.json冻结后不要直接改其sources；已有成功阶段复用，失败先保留并查明原因，不重复采集/训练。当前历史损失齐、L1的16局齐，L3在跑。
+
 ## 第 5 步（主控 2026-10-22 10:20 追加）：白天下降的诊断
 dw4i 两个种子白天都比 identity_dw3_s1 低 ~3.5pp，掉分集中在 L1/L3/L4/L6（从来没有训练任务族，只靠从 L7–L10 泛化）。先诊断是“缺当前学生局面的数据”还是“容量不够”，再决定要不要加宽 / MoE：
 1. **按来源的损失（不训练）**：同一批白天验证数据（d7 L7–L10 与已有 L1–L6 档案若有），比较 identity_dw3_s1 与 dw4i s1/s2 的逐头损失（plant / packet / cell）。
