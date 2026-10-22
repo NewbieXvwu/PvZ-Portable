@@ -252,8 +252,12 @@ train_rollout_policy 少 `--ema` `--width 128` `--soft-weight` `--soft-temperatu
 
 | 提交 | 内容 | 验收 |
 |---|---|---|
-| 86316a28 | 体检工具 + 一局的耗时拆解 | 工具本身 |
-| （见 `git log`） | worker 常驻（§7 第 1 项） | 同种子 `games.jsonl` 逐字段相同 |
+| 86316a28 | 体检工具（`hotpath_bench` / `hotpath_profile`）+ 一局的耗时拆解 | 工具本身 |
+| 4a0dba12 | 报告 + 开关清单 / 死代码 / 脚本清单工具 | `hotpath_flags` 覆盖 201 份运行配置 |
+| **3854e758** | **worker 常驻（§7 第 1 项）** | 8 局 + 16 局 `games.jsonl` 逐字段相同 |
+| 10df7165 | `pvz_compat.py` + LEGACY/EXPERIMENT 标记 + 双向校验测试 | `test_compat_registry` 5 项通过 |
+| 93abd87e | `pack_training_rows.py` 打包原型 | `--verify` 13 个数组逐项相同 |
+| bc9e2b91 / b78dec5d / 58447d65 | 面板口径 A/B 修正、打包验收与旧档案换算、压榨记录 | 见各节 |
 
 ## 10. 复现命令
 
