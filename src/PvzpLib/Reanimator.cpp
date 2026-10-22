@@ -575,8 +575,13 @@ void Reanimation::Update()
 			AttachmentUpdateAndSetMatrix(aTrack->mAttachmentID, aOverlayMatrix);
 		}
 	};
-	if ((gEnvSimSkip & (ENV_LIGHT_ANIMATION | ENV_SPARSE_TRACKS)) ==
-		(ENV_LIGHT_ANIMATION | ENV_SPARSE_TRACKS) && mDefinition->mTracks.count <= 256)
+	// Sparse tracks used to be opt-in behind ENV_SPARSE_TRACKS.  With ENV_LIGHT_ANIMATION the
+	// per-track work of a track that is not an attacher, has no live attachment and no blend
+	// left is nothing but three loads, and a reanimation has 50-200 of those tracks: iterating
+	// them was ~13% of the rollout CPU (2026-10-23 profile).  The skip is exact by construction
+	// (those three conditions are all the body checks) and was validated action-for-action on
+	// 224 games by scripts/sim_skip_agreement.py.
+	if ((gEnvSimSkip & ENV_LIGHT_ANIMATION) && mDefinition->mTracks.count <= 256)
 	{
 		if (!mEnvTrackCacheValid)
 			BuildEnvTrackCache();
