@@ -9,13 +9,13 @@ def descendants(pid):
     while todo:
         p=todo.pop();result.append(p)
         try:todo.extend(map(int,Path(f'/proc/{p}/task/{p}/children').read_text().split()))
-        except FileNotFoundError:pass
+        except (FileNotFoundError, ProcessLookupError):pass
     return result
 def available():
     return int(next(l.split()[1] for l in Path('/proc/meminfo').read_text().splitlines() if l.startswith('MemAvailable:')))
 def live(pid):
     try:return Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()[0]!='Z'
-    except FileNotFoundError:return False
+    except (FileNotFoundError, ProcessLookupError):return False
 ENV={**os.environ,'OPENBLAS_NUM_THREADS':'1','OMP_NUM_THREADS':'1','TORCHINDUCTOR_COMPILE_THREADS':'1',
      'MAX_JOBS':'1','MALLOC_ARENA_MAX':'2','PYTHONPATH':str(ROOT/'python')+':'+str(ROOT/'scripts'),
      'PVZ_EXECUTABLE':str(ROOT/'build/pvz-portable'),'PVZ_RESOURCE_DIR':str(Path.home()/'.cache/pvz-research-resources'),
@@ -41,7 +41,7 @@ def run(cmd,tag,cwd=ROOT,extra=None,unset=(),pause_when=None):
                         lines=Path(f'/proc/{pid}/status').read_text().splitlines()
                         rss+=sum(int(l.split()[1]) for l in lines if l.startswith('VmRSS:'))
                         sw+=sum(int(l.split()[1]) for l in lines if l.startswith('VmSwap:'))
-                    except FileNotFoundError:pass
+                    except (FileNotFoundError, ProcessLookupError):pass
                 peak=max(peak,rss);swap=max(swap,sw)
                 busy=bool(pause_when(owned)) if pause_when is not None else False
                 if a<2*1024*1024 or busy:
