@@ -13,9 +13,9 @@ ROOT=Path(__file__).resolve().parents[1]
 MAIN=Path('/home/newbiexvwu/PvZ-search')
 
 
-def command(task, manifest, out, workers, games, offset, label):
+def command(task, manifest, out, workers, games, offset, label, policy):
     return [sys.executable,str(ROOT/'scripts/search_play.py'),
-            '--rollout-policy',str(MAIN/'artifacts/student/dw4i_s1/model.pt'),
+            '--rollout-policy',str(policy),
             '--verify-samples','9','--student-candidates','2',
             '--static-value',str(MAIN/'artifacts/hard/value_branch1/model.pt'),
             '--value',str(MAIN/'artifacts/value_net/v3/model.pt'),
@@ -29,6 +29,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--out',type=Path,required=True)
     p.add_argument('--workers',type=int,default=4);p.add_argument('--games',type=int,default=32)
     p.add_argument('--seed-offset',type=int,default=6144)
+    p.add_argument('--rollout-policy',type=Path,default=MAIN/'artifacts/student/dw4i_s1/model.pt')
     p.add_argument('--only',default='',help='comma-separated labels; empty runs the three original missing-outcome groups')
     a=p.parse_args()
     if not 1<=a.workers<=4:p.error('--workers must be 1..4')
@@ -41,7 +42,7 @@ def main():
         ('day_l10_orig_train',ROOT/'artifacts/task30/day_panel.json','task30_day10')]:
         if a.only and label not in a.only.split(','):continue
         if not a.only and label in ('task30_pool21','task30_day10'):continue
-        cmd=command(task,manifest,a.out,a.workers,a.games,a.seed_offset,label)
+        cmd=command(task,manifest,a.out,a.workers,a.games,a.seed_offset,label,a.rollout_policy)
         (a.out/f'{label}_command.json').write_text(json.dumps(cmd,indent=1))
         print(f'collect {label}',flush=True)
         with (a.out/f'{label}.log').open('a') as log:

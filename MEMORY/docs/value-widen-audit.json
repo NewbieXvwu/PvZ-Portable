@@ -5753,5 +5753,19 @@
     }
    }
   }
+ },
+ "encoding_damage": {
+  "day_original_conveyor": {
+   "games": 48,
+   "nonterminal_frames": 40213,
+   "frames_with_empty_slots": 21541,
+   "frames_with_free_but_sun_unaffordable_packets": 36093
+  },
+  "night_original_conveyor": {
+   "games": 32,
+   "nonterminal_frames": 8695,
+   "frames_with_empty_slots": 2180,
+   "frames_with_free_but_sun_unaffordable_packets": 8519
+  }
  }
 }

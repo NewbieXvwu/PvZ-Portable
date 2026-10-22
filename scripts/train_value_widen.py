@@ -76,11 +76,14 @@ def append_supplement(args):
     meta=json.loads((args.out/'episodes.json').read_text())
     old=np.load(args.out/'rows.npz');labels=old['labels'].tolist();seeds=old['seeds'].tolist();cohorts=old['cohorts'].tolist()
     b=np.load(args.out/'boards.npy',mmap_mode='r+');s=np.load(args.out/'scalars.npy',mmap_mode='r+')
-    seen={g['archive'] for g in meta['games']};excluded=set(meta['excluded_audit_seeds']);n=meta['rows']
+    seen={g['archive'] for g in meta['games']}
+    excluded={g['seed'] for g in json.loads(args.audit_manifest.read_text())}
+    if set(seeds)&excluded:raise ValueError('updated external audit overlaps prepared training rows')
+    meta['excluded_audit_seeds']=sorted(excluded);n=meta['rows']
     for mp in sorted((args.supplement/'frames').glob('*/*/meta.json')):
         if str(mp.parent) in seen:continue
         m=json.loads(mp.read_text());seed=int(m['task']['seed'])
-        if seed in excluded:raise ValueError('supplement overlaps external audit')
+        if seed in excluded:continue
         label=mp.parent.name
         group=('pool_p9k' if 'pool' in label else 'day_original_conveyor' if 'day10' in label else 'night_original_conveyor')
         frames=read_frames(frame_path(mp.parent));live=[i for i,f in enumerate(frames) if not f.get('terminal')]

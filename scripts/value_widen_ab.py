@@ -30,7 +30,7 @@ def plan(args):
     tasks=[]
     for manifest,ids in [
         (MAIN/'artifacts/stage4/night_panel.json',['night_l14_eval_n10','night_l17_eval_n10','night_l20_eval_n10_orig']),
-        (MAIN/'artifacts/stage4/pool_panel.json',['pool_l24_eval_p9k','pool_l27_eval_p9k']),
+        (MAIN/'artifacts/stage4/pool_panel.json',['pool_l21_eval_p9k','pool_l24_eval_p9k']),
         (MAIN/'artifacts/stage4/day_l7_hard.json',['day_l7_z15_eval'])]:
         data=json.loads(manifest.read_text())
         for task_id in ids:
