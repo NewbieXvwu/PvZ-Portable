@@ -61,6 +61,7 @@ private:
 	// being rebuilt per forward).
 	std::vector<float> hidden, context, scratch, columns, kernelBuffer, rowPoolColumns;
 	std::vector<float> featureBoard, featureScalars, packetInput, packetActivation;
+	std::vector<double> packetWeightDouble, packetMatrix, packetOutput;
 	// The sparse first layer only changes its active-channel set when a plant or zombie appears
 	// or disappears; while it stays the same, the transposed kernel and the zero border of the
 	// im2col buffer are still valid, so they are not rebuilt.

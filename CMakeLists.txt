@@ -19,6 +19,9 @@ endif()
 # scripts/bench_engine.py, 3 runs each) and it would make the binary machine-specific, which the
 # identical-game guarantee across Mac and desktop does not want.
 if(NOT MSVC AND NOT EMSCRIPTEN)
+	# Line tables for the sampler in scripts/prof_sample.c: without them a profile can only say
+	# "inside Reanimation::Update", not which line.  -g1 does not change code generation.
+	add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-g1>)
 	include(CheckIPOSupported)
 	check_ipo_supported(RESULT PVZ_IPO_SUPPORTED OUTPUT PVZ_IPO_ERROR LANGUAGES C CXX)
 	if(PVZ_IPO_SUPPORTED)

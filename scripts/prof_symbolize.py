@@ -2,12 +2,15 @@
 """Flat profile from scripts/prof_sample.c samples.
 
 This machine has no perf and no valgrind, so the simulator is sampled by a SIGPROF
-handler (scripts/prof_sample.c) that records the interrupted program counter.  This
-script maps those PCs to functions with addr2line and prints the shares.
+handler (scripts/prof_sample.c) that records the interrupted program counter.  The
+handler resolves each sample to (module, offset) at exit, so samples that land in
+libc are reported as such instead of being lost as "??"; the executable's offsets go
+through addr2line.
 
     cc -shared -fPIC -O2 -o /tmp/prof_sample.so scripts/prof_sample.c -ldl
-    PVZ_PROF_OUT=/tmp/pcs.bin LD_PRELOAD=/tmp/prof_sample.so python3 scripts/bench_engine.py bench ...
-    python3 scripts/prof_symbolize.py --samples /tmp/pcs.bin --binary build/pvz-portable --top 15
+    PVZ_PROF_OUT=/tmp/pcs.bin LD_PRELOAD=/tmp/prof_sample.so \
+        python3 scripts/bench_engine.py bench ...
+    python3 scripts/prof_symbolize.py --samples /tmp/pcs.bin --binary build/pvz-portable
 """
 
 from __future__ import annotations
@@ -16,14 +19,24 @@ import argparse
 import json
 import struct
 import subprocess
-import sys
 from collections import Counter
 from pathlib import Path
 
 
-def load(path: Path) -> list[int]:
+def load(path: Path) -> tuple[list[str], list[int], list[int]]:
     data = path.read_bytes()
-    return list(struct.unpack(f"<{len(data) // 8}Q", data))
+    head, _, rest = data.partition(b"\n")
+    magic, version, count = head.decode().split()
+    if magic != "PVZPROF" or version != "1":
+        raise SystemExit(f"unexpected sample file header: {head!r}")
+    names = []
+    for _ in range(int(count)):
+        line, _, rest = rest.partition(b"\n")
+        names.append(line.decode())
+    total = len(rest) // 12
+    offsets = list(struct.unpack(f"<{total}Q", rest[: total * 8]))
+    modules = list(struct.unpack(f"<{total}I", rest[total * 8:]))
+    return names, offsets, modules
 
 
 def symbolize(binary: Path, offsets: list[int]) -> dict[int, str]:
@@ -47,11 +60,30 @@ def main() -> None:
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
 
-    offsets = load(args.samples)
+    names, offsets, modules = load(args.samples)
     if not offsets:
         raise SystemExit(f"no samples in {args.samples}")
-    names = symbolize(args.binary, offsets)
-    counts = Counter(names[offset] for offset in offsets)
+    # The executable is whichever module the binary path names; everything else is reported
+    # by library name so libc (malloc/memcpy) is visible instead of hiding in "??".
+    target = str(args.binary.resolve())
+    executable = next((index for index, name in enumerate(names) if Path(name).resolve() == Path(target)),
+                      None)
+    by_module: dict[int, list[int]] = {}
+    for offset, module in zip(offsets, modules):
+        by_module.setdefault(module, []).append(offset)
+    labels: dict[tuple[int, int], str] = {}
+    for module, values in by_module.items():
+        if module == 0xFFFFFFFF:
+            for value in set(values):
+                labels[(module, value)] = "??"
+        elif module == executable:
+            resolved = symbolize(args.binary, values)
+            for value, name in resolved.items():
+                labels[(module, value)] = name
+        else:
+            for value in set(values):
+                labels[(module, value)] = f"[{Path(names[module]).name}]"
+    counts = Counter(labels[(module, offset)] for offset, module in zip(offsets, modules))
     total = sum(counts.values())
     rows = [{"function": name, "samples": count, "share": round(count / total, 4)}
             for name, count in counts.most_common(args.top)]
@@ -60,8 +92,8 @@ def main() -> None:
         print(f"  {row['share'] * 100:5.1f}%  {row['function']}")
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
-        args.out.write_text(json.dumps({"samples": total, "binary": str(args.binary), "top": rows},
-                                       indent=1) + "\n")
+        args.out.write_text(json.dumps({"samples": total, "binary": str(args.binary),
+                                        "modules": names, "top": rows}, indent=1) + "\n")
 
 
 if __name__ == "__main__":

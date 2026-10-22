@@ -449,10 +449,48 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 	else
 	{
 		result.packets.fill(-1e9f);
-		packetInput.resize(global + plantEmbedding + 3);
+		const int inputSize = global + plantEmbedding + 3;
+		packetInput.resize(inputSize);
 		std::copy_n(context.begin(), global, packetInput.begin());
 		packetActivation.resize(width);
 		const int last = rowPool ? 19 : 17;
+#ifdef PVZ_ROLLOUT_BLAS
+		// The packet head is one matrix-matrix product (up to 10 inputs x width), not ten
+		// independent dot products: this loop was 16.7% of the rollout CPU as scalar double
+		// arithmetic (2026-10-23 profile).  The weights are widened to double once.
+		if (packetWeightDouble.empty())
+		{
+			packetWeightDouble.resize(static_cast<size_t>(width) * inputSize);
+			std::copy(weights[10].begin(), weights[10].begin() + static_cast<long>(packetWeightDouble.size()),
+				packetWeightDouble.begin());
+		}
+		int rows = 0;
+		std::array<int, 10> rowPacket{};
+		packetMatrix.resize(static_cast<size_t>(10) * inputSize);
+		for (int index = 0; index < 10; ++index)
+		{
+			const auto& info = packetInfo[index];
+			if (info[0] < 0) continue;
+			std::copy_n(weights[12].data() + static_cast<int>(info[0]) * plantEmbedding, plantEmbedding, packetInput.data() + global);
+			std::copy_n(info.data() + 1, 3, packetInput.data() + global + plantEmbedding);
+			std::copy(packetInput.begin(), packetInput.end(), packetMatrix.begin() + static_cast<long>(rows) * inputSize);
+			rowPacket[rows++] = index;
+		}
+		if (rows)
+		{
+			packetOutput.resize(static_cast<size_t>(rows) * width);
+			cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows, width, inputSize, 1.0,
+				packetMatrix.data(), inputSize, packetWeightDouble.data(), inputSize, 0.0,
+				packetOutput.data(), width);
+		}
+		for (int row = 0; row < rows; ++row)
+		{
+			for (int channel = 0; channel < width; ++channel)
+				packetActivation[channel] = std::max(0.0f,
+					static_cast<float>(packetOutput[static_cast<size_t>(row) * width + channel] + weights[11][channel]));
+			result.packets[rowPacket[row]] = IdentityLinear(packetActivation.data(), weights[last].data(), width, weights[last + 1][0]);
+		}
+#else
 		for (int index = 0; index < 10; ++index)
 		{
 			const auto& info = packetInfo[index];
@@ -460,9 +498,10 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 			std::copy_n(weights[12].data() + static_cast<int>(info[0]) * plantEmbedding, plantEmbedding, packetInput.data() + global);
 			std::copy_n(info.data() + 1, 3, packetInput.data() + global + plantEmbedding);
 			for (int channel = 0; channel < width; ++channel)
-				packetActivation[channel] = std::max(0.0f, IdentityLinear(packetInput.data(), weights[10].data() + channel * packetInput.size(), packetInput.size(), weights[11][channel]));
+				packetActivation[channel] = std::max(0.0f, IdentityLinear(packetInput.data(), weights[10].data() + channel * inputSize, inputSize, weights[11][channel]));
 			result.packets[index] = IdentityLinear(packetActivation.data(), weights[last].data(), width, weights[last + 1][0]);
 		}
+#endif
 		packetLogits = result.packets;
 		packetLogitsValid = true;
 	}

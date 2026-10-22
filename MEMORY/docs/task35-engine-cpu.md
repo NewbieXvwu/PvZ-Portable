@@ -44,4 +44,8 @@
 
 5. **引擎每 tick 的无用功 ①**：`Reanimation::UpdateAttacherTrack` 每 tick、每条 attacher 轨道都把 `reanim/<名字>.reanim` 用 `std::format` 拼出来，再对整张 `gReanimationParamArray` 做 `strcasecmp` 线性扫描；`AttacherInfo` 还是每次新建（两次 string 分配）。改成按名字查一次就记住（表在启动后不变，命中前仍走原来的顺序扫描，语义一致），`AttacherInfo` 复用。**+5.4%**（114.8k → 121.0k tick/CPU-s，3 次中位数），叶摘要与整局重放逐帧全部不变。
 
+6. **学生前向 ②：packet 头改成一次 dgemm**。剖面里 `IdentityLinear`（10 个卡槽各做一遍 259 维 double 点积）占 **16.7%**，是当时单项最大。改成把有效卡槽拼成 10×259 矩阵、一次 `cblas_dgemm`（权重在 Load 后转 double 缓存一次）。**+10.2%**（配对 A/B，比值中位数 0.908，3 轮）。验收：叶摘要仍然**逐位相同**——dgemm 与顺序累加在 double 里差 ~1e-16，转 float32 后没有翻位，所以没走到统计验收那条路。
+   - 方法说明：机器上同时跑着采集队列（13 个模拟器、load ~13），绝对数抖动 ±5%，所以从这里开始一律用 `bench_engine.py compare` 做**配对 A/B**（同一轮里两个二进制背靠背跑，取比值中位数）。
+   - 累计（配对口径）：当前构建 / 基线 = **1.41×**（82.2k → 114.2k tick/CPU-s）。
+
 ## 问题

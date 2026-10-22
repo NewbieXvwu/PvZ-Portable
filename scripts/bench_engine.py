@@ -31,7 +31,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -269,6 +271,35 @@ def replay_episode(env, spec: dict, rows: list[dict], decisions: list[int]):
     return snapshots, mismatches
 
 
+def _arm(env, on: bool) -> None:
+    """Tell the SIGPROF sampler which phase to count (scripts/prof_sample.c).
+
+    Without LD_PRELOAD the simulator has no handler and the signal kills it, so only send
+    it when the sampler was requested.
+    """
+    process = getattr(env, "_process", None)
+    if process is None or process.poll() is not None or not os.environ.get("PVZ_PROF_ARM_ONLY"):
+        return
+    try:
+        os.kill(process.pid, signal.SIGUSR1 if on else signal.SIGUSR2)
+    except OSError:
+        pass
+
+
+def _process_cpu(pid: int) -> float:
+    """CPU seconds the simulator has burned (utime+stime from /proc/<pid>/stat).
+
+    The in-simulator timers are steady_clock, so on a machine that is also running the
+    collection queue they inherit every preemption.  Process CPU time is the number that
+    survives a noisy neighbour, and it is what this benchmark compares across builds.
+    """
+    try:
+        fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
+    except (OSError, IndexError):
+        return 0.0
+    return (int(fields[11]) + int(fields[12])) / os.sysconf("SC_CLK_TCK")
+
+
 def _open_env(executable: str):
     from pvz_event_env import EventWaitEnv
     return EventWaitEnv(str(RESOURCES), executable=executable, headless=True)
@@ -282,22 +313,29 @@ def bench(args) -> dict:
         env = _open_env(str(args.executable))
         try:
             env.load_rollout_net(net_path)
+            # The replay phase is not the workload being measured, and it must not skew the
+            # profile: run every replay first, then arm the sampler for the rollouts only.
+            env.set_sim_skip(args.sim_skip)
             report = {"executable": str(args.executable), "student": str(STUDENT),
                       "sim_skip": args.sim_skip, "horizon": args.horizon,
                       "rollouts_per_root": args.rollouts, "families": {}}
+            replay_failures = 0
             for family, entries in manifest["families"].items():
-                ticks = simulated = network = wall = 0.0
+                ticks = simulated = network = wall = process_cpu = 0.0
                 rollouts = decisions = roots = 0
-                replay_failures = 0
                 leaves = []
                 for entry in entries:
                     archive = Path(entry["archive"])
                     rows = _archive_rows(archive / ("frames.npz" if (archive / "frames.npz").is_file()
                                                     else "frames.jsonl"))
+                    # RESET_V2 clears the snapshot table, so every archive is replayed and
+                    # measured before the next one starts.
                     snapshots, mismatches = replay_episode(env, entry, rows, entry["decisions"])
                     if mismatches:
                         replay_failures += len(mismatches)
                         print(f"  !! replay mismatch {archive}: {mismatches[0]}", flush=True)
+                    _arm(env, True)
+                    cpu_before = _process_cpu(env._process.pid)
                     for index, snapshot in snapshots.items():
                         roots += 1
                         for repeat in range(args.rollouts):
@@ -317,6 +355,8 @@ def bench(args) -> dict:
                             decisions += last.get("decisions", 0)
                             leaves.append(_digest([_state_of(observation), observation.get("tick")]))
                         env.release_snapshot(snapshot)
+                    process_cpu += _process_cpu(env._process.pid) - cpu_before
+                    _arm(env, False)
                 cpu = simulated + network
                 report["families"][family] = {
                     "archives": len(entries), "roots": roots, "rollouts": rollouts,
@@ -324,6 +364,8 @@ def bench(args) -> dict:
                     "simulation_seconds": round(simulated, 4), "network_seconds": round(network, 4),
                     "wall_seconds": round(wall, 4),
                     "ticks_per_second": round(ticks / cpu, 1) if cpu else None,
+                    "process_cpu_seconds": round(process_cpu, 3),
+                    "ticks_per_cpu_second": round(ticks / process_cpu, 1) if process_cpu else None,
                     "seconds_per_rollout": round(wall / rollouts, 4) if rollouts else None,
                     "network_share": round(network / cpu, 4) if cpu else None,
                     "decisions_per_second": round(decisions / cpu, 1) if cpu else None,
@@ -337,8 +379,14 @@ def bench(args) -> dict:
                          "network_seconds": sum(v["network_seconds"] for v in report["families"].values()),
                          "wall_seconds": sum(v["wall_seconds"] for v in report["families"].values()),
                          "rollouts": sum(v["rollouts"] for v in report["families"].values()),
-                         "decisions": sum(v["decisions"] for v in report["families"].values())}
+                         "decisions": sum(v["decisions"] for v in report["families"].values()),
+                         "process_cpu_seconds": sum(v["process_cpu_seconds"]
+                                                    for v in report["families"].values())}
             aggregate["ticks_per_second"] = round(aggregate["ticks"] / aggregate["cpu_seconds"], 1)
+            aggregate["ticks_per_cpu_second"] = round(
+                aggregate["ticks"] / aggregate["process_cpu_seconds"], 1)
+            aggregate["seconds_per_rollout_cpu"] = round(
+                aggregate["process_cpu_seconds"] / aggregate["rollouts"], 4)
             aggregate["seconds_per_rollout"] = round(aggregate["wall_seconds"] / aggregate["rollouts"], 4)
             aggregate["network_share"] = round(aggregate["network_seconds"] / aggregate["cpu_seconds"], 4)
             report["total"] = aggregate
@@ -349,6 +397,34 @@ def bench(args) -> dict:
     args.out.write_text(json.dumps(report, indent=1) + "\n")
     print(f"-> {args.out}")
     return report
+
+
+def compare(args) -> dict:
+    """Paired A/B measurement: alternate the two binaries so machine load cancels out.
+
+    This machine runs the collection queue at the same time (13 simulators, load ~13 on 20
+    cores), so a sequential "before, then after" comparison drifts by several percent.  Every
+    round here runs both binaries back to back and the result is the median of the ratios.
+    """
+    import statistics
+    ratios, per_binary = [], {str(args.executable): [], str(args.compare): []}
+    for _round in range(args.rounds):
+        round_values = {}
+        for binary in (args.executable, args.compare):
+            namespace = argparse.Namespace(**{**vars(args), "executable": binary,
+                                              "out": Path(tempfile.gettempdir()) / "bench_compare.json"})
+            report = bench(namespace)
+            value = report["total"]["ticks_per_cpu_second"]
+            per_binary[str(binary)].append(value)
+            round_values[str(binary)] = value
+        ratios.append(round_values[str(args.compare)] / round_values[str(args.executable)])
+        print(f"round {_round + 1}: {ratios[-1]:.4f}x", flush=True)
+    summary = {"a": str(args.executable), "b": str(args.compare),
+               "a_median": statistics.median(per_binary[str(args.executable)]),
+               "b_median": statistics.median(per_binary[str(args.compare)]),
+               "ratios": ratios, "ratio_median": statistics.median(ratios)}
+    print(json.dumps(summary, indent=1))
+    return summary
 
 
 def replay(args) -> dict:
@@ -437,6 +513,18 @@ def main() -> None:
     p.add_argument("--min-frames", type=int, default=200)
     p.add_argument("--scan-seeds", type=int, default=4000)
 
+    p = sub.add_parser("compare", help="paired A/B of two binaries (machine load cancels)")
+    p.add_argument("--manifest", type=Path, default=ROOT / "artifacts" / "perf" / "engine_roots.json")
+    p.add_argument("--executable", type=Path, default=EXECUTABLE)
+    p.add_argument("--compare", type=Path, required=True)
+    p.add_argument("--out", type=Path, default=ROOT / "artifacts" / "perf" / "engine_compare.json")
+    p.add_argument("--horizon", type=int, default=2500)
+    p.add_argument("--max-actions", type=int, default=1000)
+    p.add_argument("--sim-skip", type=int, default=61)
+    p.add_argument("--seed-base", type=int, default=0)
+    p.add_argument("--rollouts", type=int, default=3)
+    p.add_argument("--rounds", type=int, default=4)
+
     for name in ("bench", "replay"):
         p = sub.add_parser(name)
         p.add_argument("--manifest", type=Path, default=ROOT / "artifacts" / "perf" / "engine_roots.json")
@@ -463,7 +551,8 @@ def main() -> None:
     p.add_argument("--out", type=Path, default=ROOT / "artifacts" / "perf" / "engine_search")
 
     args = parser.parse_args()
-    {"manifest": build_manifest, "bench": bench, "replay": replay, "search": search}[args.command](args)
+    {"manifest": build_manifest, "bench": bench, "replay": replay, "search": search,
+     "compare": compare}[args.command](args)
 
 
 if __name__ == "__main__":
