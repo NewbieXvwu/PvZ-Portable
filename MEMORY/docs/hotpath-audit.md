@@ -78,6 +78,7 @@
 **旧 JSONL 档案换成 npz 是白捡的**：实测一个 3.72 MB 的 `frames.jsonl` → `frames.npz` **0.24 MB（7%）**，
 `scripts/pack_frames.py` 在一个 seed 目录上跑 8 个档案：**12.70 MB → 1.04 MB（8%）**，每个 0.76 s。
 全量 7.54 GB → 约 0.6 GB，省 7 GB 磁盘，并让训练装载不再 `json.loads` 文本。
+**逐帧核对已做**：3001 帧 JSONL → npz → `read_frames` 读回，**每一帧的 dict 完全相同**（`a == b`，3001/3001）。
 
 单档案内容（一局 ~1 300 行）：`frames`（原始 JSON 字节，**无损源码副本**）+ `boards`（92×6×10 float16）+ `scalars`（115 float32）
 + `plant/packet/cell/values`。一行 **13.8 KB 解压后 / 288 B 落盘**（zlib 压缩 48:1，因为棋盘 96% 是零）。

@@ -49,6 +49,7 @@
 - 01:40 打包原型验收通过：`--verify` 与 `load()` 逐项对比 13 个数组全部相同；读回 1.56 M 行 0.17 s（mmap）对 164 s（无 cache-dir）/ 32 s（有 cache-dir）。旧 JSONL 档案实测 12.70 MB → 1.04 MB（8%），全量 7.54 GB → 约 0.6 GB（`scripts/pack_frames.py` 可用，未动数据）。
 - 01:45 面板口径 A/B 修正并重测（改前提交 `4a0dba12`，`/tmp/audit-old3`）：16 局 31.18 → 16.11 s（−48%），16 局结果逐字段相同。
 - 01:50 全量测试：272 passed / 31 skipped / 375 subtests passed，6 failed —— 5 个是 `test_cpp_rollout` 在**工作树里没有 `build/`**（不是代码问题），1 个是 `test_dagger_experiment_runner` 的导入顺序依赖（单独跑连模块都导入不了），均与本次改动无关。
+- 02:00 旧档案转换逐帧核对：3001 帧 JSONL → npz → 读回，**每帧 dict 相同**（3001/3001）。启动账：每次 `search_play` 进程 1.2 s（torch 导入 0.46 s + 三个网 + 任务），每个 worker 引擎启动约 1.3 s；`export_student` 实测 0 ms、`load_student` 2 ms，所以没有可缓存的东西。
 - 01:55 压榨记录见 `MEMORY/docs/hotpath-audit.md` §13：6 项尝试、收益与阻断原因；停止条件**未满足**（第 2/3 项仍是可证明的大额冗余，但剩余工作量在 cb-mem 的 `load()` 与主工作区数据上）。
 
 ## 问题
