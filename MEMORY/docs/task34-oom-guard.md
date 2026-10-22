@@ -30,5 +30,6 @@
 
 ## 结果
 - 10-22 23:51 OOM 分数落地：`python/pvz_common.py` 加 `set_oom_score_adj` 与三个角色常量（worker/引擎 1000、控制器 500、训练 300）；`search_play._init_worker`、`pvz_env` 引擎 Popen 的 `preexec_fn`、`curriculum_queue.main`、三个训练脚本 `main` 均已写入；`python/test_oom_guard.py` 3 项在 Linux 子进程里实测通过（Mac 跳过）。
+- 10-22 23:53 用户态守护：系统 apt 镜像（bfsu）对 pools 返回 403，改从清华镜像取同版本 deb 用 dpkg 安装 earlyoom 1.9.0（systemd 已启用，`active` + `enabled`）。`/etc/default/earlyoom` = `-m 5 -s 50 -r 300 --prefer '(pvz-portable|search_play|python3)' --avoid '(init|sshd|tmux|codex|codebuddy|qodercli|node)'`。earlyoom 只匹配 comm（15 字节），`search_play` 的 comm 是 `python3`，故 prefer 里补 `python3`；worker 自身分数 1000 仍是第一顺位。当前 MemAvailable 约 31%，未触发。
 
 ## 问题
