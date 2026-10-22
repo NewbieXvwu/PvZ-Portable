@@ -6,9 +6,7 @@ seeds are excluded globally, and early stopping is split by environment seed.
 """
 from __future__ import annotations
 import argparse
-import bisect
 from collections import defaultdict
-import hashlib
 import json
 from pathlib import Path
 import sys
@@ -142,6 +140,7 @@ def train(args):
     boards=np.load(args.out/'boards.npy',mmap_mode='r');scalars=np.load(args.out/'scalars.npy',mmap_mode='r')
     seeds=rows['seeds'];labels=rows['labels'];stop=np.array([held(s) for s in seeds])
     fit_idx=np.flatnonzero(~stop);val_idx=np.flatnonzero(stop)
+    if not len(fit_idx) or not len(val_idx):raise ValueError('episode seed split is empty')
     paths=[f for p in map(Path,args.branches.split(',')) for f in (sorted(p.glob('*.pt')) if p.is_dir() else [p])]
     branches=Branches(paths,set(meta['excluded_audit_seeds']))
     net=initialize(args.init).to(args.device);opt=torch.optim.AdamW(net.parameters(),lr=args.lr,weight_decay=1e-4)
@@ -160,13 +159,18 @@ def train(args):
             b,s,y=batch(rng.choice(branches.fit,nb),rng.choice(fit_idx,ne))
             logits=net(b,s);loss=F.binary_cross_entropy_with_logits(logits,y)
             opt.zero_grad();loss.backward();opt.step();losses.append(loss.item())
-        net.eval();v=[]
+        net.eval();validation={}
         with torch.inference_mode():
-            for ii in range(0,max(len(val_b),len(val_e)),args.batch_size):
-                b,s,y=batch(val_b[ii:ii+args.batch_size],val_e[ii:ii+args.batch_size])
-                if len(y):v.append((F.binary_cross_entropy_with_logits(net(b,s),y,reduction='sum').item(),len(y)))
-        val_loss=sum(x for x,_ in v)/sum(k for _,k in v)
-        entry=dict(epoch=epoch,fit=float(np.mean(losses)),validation=val_loss);history.append(entry);print(entry,flush=True)
+            for name,indices in [('branch',val_b),('episode',val_e)]:
+                total=count=0
+                for ii in range(0,len(indices),args.batch_size):
+                    pick=indices[ii:ii+args.batch_size];empty=np.array([],dtype=np.int64)
+                    b,s,y=batch(pick,empty) if name=='branch' else batch(empty,pick)
+                    total+=F.binary_cross_entropy_with_logits(net(b,s),y,reduction='sum').item();count+=len(y)
+                validation[name]=total/count
+        val_loss=args.branch_fraction*validation['branch']+(1-args.branch_fraction)*validation['episode']
+        entry=dict(epoch=epoch,fit=float(np.mean(losses)),validation=val_loss,validation_components=validation)
+        history.append(entry);print(entry,flush=True)
         if val_loss<best-1e-4:
             best=val_loss;patience=0
             used=sorted(branches.seeds|set(map(int,seeds)))
@@ -174,7 +178,10 @@ def train(args):
             checkpoint=dict(state_dict={k:v.detach().cpu().clone() for k,v in net.state_dict().items()},
                             encoder=ENCODER_V2,width=net.conv[0].out_channels,context=True,trained_on=used,
                             source='L7 branches + multi-zone episode outcomes',init=str(args.init),
-                            audit_manifest=str(args.audit_manifest),branches=[str(p) for p in paths],epoch=epoch)
+                            audit_manifest=str(args.audit_manifest),branches=[str(p) for p in paths],epoch=epoch,
+                            code_commit=__import__('subprocess').check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
+                            branch_fit_rows=len(branches.fit),branch_validation_rows=len(branches.val),
+                            episode_fit_rows=len(fit_idx),episode_validation_rows=len(val_idx))
             torch.save(checkpoint,args.out/'model.pt')
         else:
             patience+=1

@@ -1,0 +1,14 @@
+{
+ "groups": [
+  {
+   "task_id": "pool_l24_train_p9k",
+   "student": "dw4i_s1",
+   "seed_start": 2036144,
+   "seed_end": 2036175,
+   "games": 32,
+   "wins": 1,
+   "mean_seconds": 142.1
+  }
+ ],
+ "complete": false
+}
