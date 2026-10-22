@@ -321,15 +321,22 @@ void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels,
 {
 	const auto& kernel = weights[layer];
 	const auto& bias = weights[layer + 1];
-	std::vector<int> active;
+	activeChannels.clear();
 	for (int channel = 0; channel < channels; ++channel)
 		if (!sparse || std::any_of(input.data() + channel * Cells, input.data() + (channel + 1) * Cells,
-			[](float value) { return value != 0.0f; })) active.push_back(channel);
-	const int count = active.size() * kernelRows * kernelCols;
-	columns.assign(count * Cells, 0.0f);
-	kernelBuffer.resize(width * count);
+			[](float value) { return value != 0.0f; })) activeChannels.push_back(channel);
+	const int count = static_cast<int>(activeChannels.size()) * kernelRows * kernelCols;
+	const size_t needed = static_cast<size_t>(count) * Cells;
+	// im2col writes every in-bounds cell of every feature; the padding border must be zero.  It
+	// only has to be zeroed when the feature->channel mapping changes, not on every forward.
+	if (columns.size() < needed) columns.resize(needed, 0.0f);
+	if (count != columnsCount) std::fill_n(columns.data(), needed, 0.0f);
+	columnsCount = count;
+	// The transposed kernel depends only on which channels are active.
+	const bool transpose = sparse && activeChannels != kernelChannels;
+	if (transpose) kernelBuffer.resize(static_cast<size_t>(width) * count);
 	int feature = 0;
-	for (int channel : active)
+	for (int channel : activeChannels)
 		for (int kernelRow = 0; kernelRow < kernelRows; ++kernelRow)
 			for (int kernelCol = 0; kernelCol < kernelCols; ++kernelCol, ++feature)
 			{
@@ -337,10 +344,11 @@ void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels,
 				for (int row = std::max(0, -deltaRow); row < std::min(6, 6 - deltaRow); ++row)
 					for (int col = std::max(0, -deltaCol); col < std::min(10, 10 - deltaCol); ++col)
 						columns[feature * Cells + row * 10 + col] = input[channel * Cells + (row + deltaRow) * 10 + col + deltaCol];
-				if (sparse)
+				if (transpose)
 					for (int target = 0; target < width; ++target)
 						kernelBuffer[target * count + feature] = kernel[((target * channels + channel) * kernelRows + kernelRow) * kernelCols + kernelCol];
 			}
+	if (transpose) kernelChannels = activeChannels;
 	output.resize(width * Cells);
 	const float* matrix = sparse ? kernelBuffer.data() : kernel.data();
 	for (int target = 0; target < width; ++target)
@@ -380,21 +388,22 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
 	if (rowPool)
 	{
-		columns.resize(6 * 2 * width);
+		// A buffer of its own: the im2col buffer above keeps its zero border between forwards.
+		rowPoolColumns.resize(6 * 2 * width);
 		for (int row = 0; row < 6; ++row)
 			for (int channel = 0; channel < width; ++channel)
 			{
 				const float* values = hidden.data() + channel * Cells + row * 10;
 				float total = 0;
 				for (int col = 0; col < 10; ++col) total += values[col];
-				columns[row * 2 * width + channel] = total / 10;
-				columns[row * 2 * width + width + channel] = *std::max_element(values, values + 10);
+				rowPoolColumns[row * 2 * width + channel] = total / 10;
+				rowPoolColumns[row * 2 * width + width + channel] = *std::max_element(values, values + 10);
 			}
 	#ifdef PVZ_ROLLOUT_BLAS
 		for (int row = 0; row < 6; ++row)
 			std::copy_n(weights[18].data(), width, scratch.data() + row * width);
 		cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, 6, width, 2 * width, 1.0f,
-			columns.data(), 2 * width, weights[17].data(), 2 * width, 1.0f, scratch.data(), width);
+			rowPoolColumns.data(), 2 * width, weights[17].data(), 2 * width, 1.0f, scratch.data(), width);
 	#endif
 		for (int channel = 0; channel < width; ++channel)
 			for (int row = 0; row < 6; ++row)
@@ -402,7 +411,7 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 			#ifdef PVZ_ROLLOUT_BLAS
 				const float projected = scratch[row * width + channel];
 			#else
-				const float projected = Linear(columns.data() + row * 2 * width,
+				const float projected = Linear(rowPoolColumns.data() + row * 2 * width,
 					weights[17].data() + channel * 2 * width, 2 * width, weights[18][channel]);
 			#endif
 				for (int col = 0; col < 10; ++col)
@@ -433,22 +442,29 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 	if (!identityPacket)
 		for (int index = 0; index < 10; ++index)
 			result.packets[index] = Linear(context.data(), weights[10].data() + index * global, global, weights[11][index]);
+	else if (packetLogitsValid)
+		// Predict() asks for the same packet logits twice per decision (Heads(-1) to choose a
+		// card, then Heads(card) for the cells); they only depend on the context and packetInfo.
+		result.packets = packetLogits;
 	else
 	{
 		result.packets.fill(-1e9f);
-		std::vector<float> input(context.begin(), context.end()), activation(width);
-		input.resize(global + plantEmbedding + 3);
+		packetInput.resize(global + plantEmbedding + 3);
+		std::copy_n(context.begin(), global, packetInput.begin());
+		packetActivation.resize(width);
 		const int last = rowPool ? 19 : 17;
 		for (int index = 0; index < 10; ++index)
 		{
 			const auto& info = packetInfo[index];
 			if (info[0] < 0) continue;
-			std::copy_n(weights[12].data() + static_cast<int>(info[0]) * plantEmbedding, plantEmbedding, input.data() + global);
-			std::copy_n(info.data() + 1, 3, input.data() + global + plantEmbedding);
+			std::copy_n(weights[12].data() + static_cast<int>(info[0]) * plantEmbedding, plantEmbedding, packetInput.data() + global);
+			std::copy_n(info.data() + 1, 3, packetInput.data() + global + plantEmbedding);
 			for (int channel = 0; channel < width; ++channel)
-				activation[channel] = std::max(0.0f, IdentityLinear(input.data(), weights[10].data() + channel * input.size(), input.size(), weights[11][channel]));
-			result.packets[index] = IdentityLinear(activation.data(), weights[last].data(), width, weights[last + 1][0]);
+				packetActivation[channel] = std::max(0.0f, IdentityLinear(packetInput.data(), weights[10].data() + channel * packetInput.size(), packetInput.size(), weights[11][channel]));
+			result.packets[index] = IdentityLinear(packetActivation.data(), weights[last].data(), width, weights[last + 1][0]);
 		}
+		packetLogits = result.packets;
+		packetLogitsValid = true;
 	}
 	if (packet < 0) return result;
 	result.cells.fill(weights[16][0]);
@@ -495,9 +511,9 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 		return result;
 	}
 	++networkCalls;
-	std::vector<float> board, scalars;
-	Features(app, income, previousTick, previousPlant, board, scalars, history);
-	Encode(board, scalars);
+	packetLogitsValid = false;
+	Features(app, income, previousTick, previousPlant, featureBoard, featureScalars, history);
+	Encode(featureBoard, featureScalars);
 	result = Heads(-1);
 	if (result.plant <= 0 && !diagnostics) return result;
 	float bestPacket = -std::numeric_limits<float>::infinity();
