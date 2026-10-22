@@ -273,3 +273,54 @@ python3 scripts/hotpath_deadcode.py                 # 顶层定义引用计数
 其中 `adaptive_verify.py`、`dagger_dilution_*`、`run_*_study.py` 都是已结束实验的驱动脚本。
 删除按 AGENTS §4 由主控批。
 
+
+## 11. 向后兼容与实验开关的统一登记（2026-10-23）
+
+登记处：`python/pvz_compat.py`（纯数据 + `expired()`）。代码里每处兼容分支写 `# LEGACY(<id>)`、
+每个保留的实验开关在 `add_argument` 上方写 `# EXPERIMENT(<id>)`，help 文字以
+`[legacy]` / `[experiment until 2026-11-06]` 开头（`--help` 一眼可见）。
+
+`python/test_compat_registry.py` 双向校验（5 项，全部通过）：标记必须在登记处、登记处必须在代码里出现、
+决定日已过就失败、每条 LEGACY 必须写"为谁保留"与"移除条件"、每个实验开关必须在它声称的脚本里真实存在。
+
+已登记的 8 条 LEGACY：
+
+| id | 保留给谁 | 移除条件 |
+|---|---|---|
+| obs-versions | 21 056 个旧档案 + v34 / identity_dw3_s1 / dw4i_s1 检查点 | 旧档案重算完、面板不再对照 v2lite/v2 |
+| jsonl-archives | 2026-10 以前的 JSONL 档案（whatif 重放） | artifacts 下不再有 frames.jsonl |
+| slot-packet-head | v34 及更早的学生（面板对照） | v34 退出所有面板与文档 |
+| python-rollout-reference | `perf_rollout_check.py` 的逐帧对拍 | 对拍改用存档回放 |
+| conveyor-start-key | L10 传送带任务族 | 传送带任务族退役 |
+| dense-boards | CSR 与稠密两条路径的对拍测试 | CSR 有独立逐元素测试 |
+| aux-labels | task16 辅助头实验数据 | 辅助头判死或转正 |
+| pvzrn-versions | 旧导出文件与 `test_cpp_rollout.py` 版本矩阵 | 测试只留 PVZRN006 |
+
+已登记的 8 个实验开关（决定日统一 2026-11-06）：`--rollout-backend`、`--cuda-prefetch-verify`、
+`--cuda-speculative-halving`、`--candidate-generator`、`--candidate-coverage-model`、
+`--shovel-candidates`、`--cpu-sparse-tracks`、`--measure-cpu`。到期测试会失败，逼着转正或删除。
+
+## 12. 观测载荷（下一项的依据）
+
+一局学生决策的响应 11.7–14.3 KB，构成（同一 tick 实测）：
+
+| 键 | 字节 | 占比 |
+|---|---|---|
+| `legal_actions` | 5 257 | 45% |
+| `cells` | 4 375 | 37% |
+| `packets` | 676 | 6% |
+| `zombies` | 374 | 3% |
+| `loadout_context` + `defenses` + `player_profile` | 668 | 6% |
+
+引擎已有 `OBS_LEAN`（`LawnApp::EnvironmentLeanObservation`，搜索推演一直在用）。实测同一 tick 下
+lean 观测是完整观测的 **51%**（14 280 → 7 341 B），且 `render_episode._frame` 与
+`pvz_value_net.featurize_numpy` 在 lean 上产出**逐位相同的棋盘**（max abs diff 0.0）。
+
+缺的键：`cells`、`coins`、`loadout_context`、`player_profile`、`playthrough`、`projectiles`、
+`protocol_version`、`task_version`、`zombie_count_multiplier`。其中 `zombie_count_multiplier` 与
+`loadout_context` 被 `_play` 用来构造价值网的任务上下文，**必须补进 lean** 才能整局用 lean。
+
+**这一项没有做**：它要改 `src/LawnApp.cpp` 并重编 `build/pvz-portable`，而 build 目录与正在跑的
+13 个采集进程共用，重编会换掉它们手里的二进制。留给 task35（引擎侧）或在采集停下的窗口做。
+预计收益：面板局 step 0.88 → 约 0.65 s（−0.23 s，−20% 面板局）；搜索局 step 1.2 s 同比例。
+

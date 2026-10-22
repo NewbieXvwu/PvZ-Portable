@@ -40,6 +40,7 @@ def _episode_context(path: Path) -> np.ndarray:
     return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
 
 
+# LEGACY(dense-boards): the dense store is the reference the CSR path is checked against.
 def _board_store(shape, cache_dir: Path, dtype=np.float16) -> torch.Tensor:
     """File-backed inputs, unlinked at once and freed on exit; identity packets keep float32."""
     cache_dir.mkdir(parents=True, exist_ok=True)
@@ -288,6 +289,7 @@ def main() -> None:
                    help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
     p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
     p.add_argument("--row-pool", action="store_true", help="broadcast learned per-row mean/max features")
+    # LEGACY(slot-packet-head): 'slot' is what v34 and earlier students were trained with.
     p.add_argument('--packet-head', choices=['slot', 'identity'], default='slot')
     p.add_argument("--aux-weight", type=float, default=0.0, help="row damage prediction BCE weight (0 = off)")
     p.add_argument("--aux-horizon", type=int, default=8, help="future decision points for row damage labels")
@@ -319,7 +321,7 @@ def main() -> None:
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
     p.add_argument('--read-cache-dir', type=Path, help='optional existing feature cache to read only; misses go to --cache-dir')
-    p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
+    p.add_argument("--dense-boards", action="store_true", help="[legacy] use the legacy dense board store instead of in-memory CSR")
     p.add_argument("--row-weights", type=Path, help="optional checksummed per-row experiment manifest; cached rows required, default off")
     p.add_argument('--source-row-report', type=Path, help='optional actual retained row counts by source; cached rows required')
     p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")

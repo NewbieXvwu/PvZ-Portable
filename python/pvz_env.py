@@ -651,6 +651,7 @@ class PvZEnv:
             raise ValueError("rollout network path must not contain newlines")
         with open(filename, "rb") as stream:
             version = stream.read(8)
+            # LEGACY(pvzrn-versions): 002-005 are older exports; 006 is the current one.
             if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004", b"PVZRN005", b"PVZRN006"):
                 raise ValueError("load_rollout_net requires an exported C++ network")
             observation = int.from_bytes(stream.read(16)[12:16], "little") if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") else 1

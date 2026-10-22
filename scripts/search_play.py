@@ -250,6 +250,7 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
     In C++ by default; the Python loop below is the reference the C++ path is checked against
     (scripts/perf_rollout_check.py)."""
     student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
+    # LEGACY(python-rollout-reference): the loop below is the reference the C++ path is checked against.
     if _W.get("cpp_rollouts"):
         leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed,
                            student_history=student_history)
@@ -916,36 +917,42 @@ def main() -> None:
     p.add_argument("--manifest", required=True)
     p.add_argument("--task-id", required=True)
     p.add_argument("--out", type=Path, required=True)
+    # EXPERIMENT(measure-cpu)
     p.add_argument("--measure-cpu", action="store_true",
-                   help="record host user/system CPU seconds for workers, simulators and owned CUDA service")
+                   help="[experiment until 2026-11-06] record host user/system CPU seconds for workers, simulators and owned CUDA service")
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
+    # EXPERIMENT(candidate-generator)
     p.add_argument("--candidate-generator", choices=["static", "student-topk", "student-per-card"],
-                   default="static", help="candidate ablation, default static (unchanged); student-topk uses "
+                   default="static", help="[experiment until 2026-11-06] candidate ablation, default static (unchanged); student-topk uses "
                    "--student-candidates as a global prefix, without a per-card floor; student-per-card "
                    "uses student probabilities for per-card cells plus the usual additional student candidates. "
                    "Both student modes skip the static net and require shovel/coverage candidates off")
     p.add_argument("--student-candidates", type=int, default=0,
                    help="the student's own top-k plant actions (its policy probabilities) added to the "
                         "candidates; 0 = off, which is the old candidate set exactly")
-    p.add_argument("--candidate-coverage-model", help="optional learned candidate proposer checkpoint; default off")
+    # EXPERIMENT(candidate-coverage)
+    p.add_argument("--candidate-coverage-model", help="[experiment until 2026-11-06] optional learned candidate proposer checkpoint; default off")
     p.add_argument("--candidate-coverage-budget", type=int, default=2,
                    help="maximum additional legal plants per search when the coverage model is enabled")
+    # EXPERIMENT(shovel-candidates)
     p.add_argument("--shovel-candidates", type=int, default=0,
-                   help="best legal shovel cells (scored by --static-value right after shovelling) added to "
+                   help="[experiment until 2026-11-06] best legal shovel cells (scored by --static-value right after shovelling) added to "
                         "the candidates; 0 = off, which is the old candidate set exactly")
     p.add_argument("--samples", type=int, default=3)
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
+    # EXPERIMENT(cuda-prefetch)
     p.add_argument("--cuda-prefetch-verify", action="store_true",
-                   help="prefetch verification futures in the speculative GPU wave; spends extra lanes "
+                   help="[experiment until 2026-11-06] prefetch verification futures in the speculative GPU wave; spends extra lanes "
                         "to avoid a serial verification request, preserving scoring and selection")
+    # EXPERIMENT(cuda-speculative)
     p.add_argument("--cuda-speculative-halving", action="store_true",
-                   help="batch all candidate/future continuations once, then use only the original "
+                   help="[experiment until 2026-11-06] batch all candidate/future continuations once, then use only the original "
                         "halving survivors for scores and labels; spends extra CUDA work")
     p.add_argument("--horizon", type=int, default=2500)
     p.add_argument("--margin", type=float, default=0.02)
@@ -955,12 +962,14 @@ def main() -> None:
                    help="ticks between searches unless the student itself wants to plant (0 = search every time)")
     p.add_argument("--rollout-sim-skip", type=int, default=61,
                    help="SIM_SKIP mask during rollouts only (0 = exact; see scripts/sim_skip_agreement.py)")
+    # EXPERIMENT(sparse-tracks)
     p.add_argument("--cpu-sparse-tracks", action="store_true",
-                   help="CPU-only: skip inactive animation tracks, preserving mask61 results; requires a rebuilt simulator")
+                   help="[experiment until 2026-11-06] CPU-only: skip inactive animation tracks, preserving mask61 results; requires a rebuilt simulator")
     p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=True,
-                   help="run student continuations in C++ (--no-cpp-rollouts: the Python reference loop)")
+                   help="[legacy] run student continuations in C++ (--no-cpp-rollouts: the Python reference loop)")
+    # EXPERIMENT(cuda-backend)
     p.add_argument("--rollout-backend", choices=["cpp", "cuda"], default="cpp",
-                   help="where the search's continuations run: cpp = the original simulator (default, and the "
+                   help="[experiment until 2026-11-06] where the search's continuations run: cpp = the original simulator (default, and the "
                         "reference the GPU is checked against), cuda = build/rollout_cuda --serve")
     p.add_argument("--executable", default=str(ROOT / "build/pvz-portable"),
                    help="fixed original-simulator binary used for roots and real game decisions")
@@ -975,7 +984,7 @@ def main() -> None:
     p.add_argument("--frames", help="write per-game frame archives here (for training)")
     p.add_argument("--frames-label", default="play")
     p.add_argument("--frames-format", choices=["npz", "jsonl"], default="npz",
-                   help="lossless archive with cached training features (jsonl: legacy text)")
+                   help="[legacy] lossless archive with cached training features (jsonl: legacy text)")
     p.add_argument("--dagger-beta", type=float, default=1.0,
                    help="probability of executing the search's decision (1 = the teacher plays; < 1 = DAgger: "
                         "the student plays the rest, every frame still records the search's label)")

@@ -40,6 +40,7 @@ def packet_features(frame: dict) -> torch.Tensor:
     # SeedPacket::CanPickUp skips the sun check when the board has a conveyor bank, so the
     # nominal packet cost is not a budget gate there. This is the engine's own flag, not a
     # Python "conveyor is free" rule; tasks without it keep the nominal-cost comparison.
+    # LEGACY(conveyor-start-key): only the L10 conveyor tasks carry the key.
     free_cards = frame.get('conveyor_start') == 'original'
     for slot, kind, active, cooldown, refresh, cost in frame['packets']:
         if not 0 <= slot < PACKETS or kind < 0:
@@ -168,6 +169,7 @@ class RolloutNet(nn.Module):
             raise ValueError('identity packet head requires [batch,10,4] public packet_info')
 
     def packet_logits(self, g: torch.Tensor, packet_info: torch.Tensor | None = None) -> torch.Tensor:
+        # LEGACY(slot-packet-head): v34 and earlier students pick a card slot, not a plant identity.
         if self.packet_head == 'slot':
             return self.packet(g)
         self._check_packet_info(packet_info)
