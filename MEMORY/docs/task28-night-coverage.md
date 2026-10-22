@@ -29,4 +29,10 @@ task26 已合进 pvz-env（042e4c79）。结论：2-10 原版开局学生 0 胜�
 
 ## 结果
 
+- 2026-10-22 第二步（夜间扰动卡组族 n10p）：新增 `scripts/make_night_n10p.py`（照 task19 的 `deck_perturb`，底卡组 n10、`swaps=[1,2]`、池子从引擎 `DECK_OPTIONS` 现查）。生成 `artifacts/stage4/night_panel_n10p.json`（工作树 + `~/PvZ-search/artifacts/stage4/` 各一份，不进 git）：8 个训练族 `night_lN_train_n10p`（N=11–14、16–19，种子 2400000/2410000/2420000/2430000/2450000/2460000/2470000/2480000 起各 8192）+ 16 个留出 `night_lN_eval_n10p_holdout{1,2}`（种子 30000–30255）。审计：65536 训练种子 / 11794 个不同卡组；与 15 份现有清单的 407552 个已用种子穷举比对**重叠 0**；必需植物 10/12/13/14/15 分别出现在 4180/4128/4243/4011/4142 个训练卡组；reset 抽查 4 个任务均为 10 槽且类型逐位等于 `deck_for_seed`。DESIGN §14.11 登记，`MEMORY/docs/night-panel.md` §10 写族定义与审计。
+
 ## 问题
+- **任务书指的 `artifacts/stage4/night_panel_n10.json` 里没有 `night_l20_train_n10_orig`**：那份是 2026-10-22 10:10 的 9 个 eval 任务的旧清单（只有 `night_l11..l20_eval_n10`），没有 train 族、也没有 L20 原版开局任务。第 1 步改用 `~/PvZ-search/artifacts/stage4/night_panel.json`（task25 的合并清单，54 个任务，含 `night_l20_train_n10_orig`，种子 2290000–2298191）。
+- **`planted` 在 beta=0 的采集里恒为空**：任务书说“用卡组把槽号翻成类型”，但 beta=0 时执行者是学生，而学生在 2-10 上一棵都不种，`planted` 全是 0（槽号字典为空，没有可翻的东西）。真正有意义的是**标签侧**（搜索想种什么）：报告里另算 `label` 的按类型计数，并注明这是“老师想种”，不是“实际种了”。
+- **生成器的 `DECK_OPTIONS` 查询会短暂多开一个引擎进程**：n10p 的池子必须现查引擎，`EventWaitEnv` 每关起一次、顺序执行、每次数秒。当时 2-10 采集占着 2 个 worker，峰值 3 个引擎进程（每个只活几秒、不跑对局）。除此之外全程 ≤2 个游戏进程。
+
