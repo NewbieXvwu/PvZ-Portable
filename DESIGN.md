@@ -631,6 +631,9 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   长度 6..10、无重复；不合法直接报错。`deck_for_level` 仍未改动，最后选哪套由主控定。
   **老师一律用 identity 学生做推演**（`identity_dw3_s1`，PVZRN006 走 C++ CPU 前向，不用 CUDA），
   `--dagger-beta 1`（搜索实际执行）。
-- 评估结果见 `MEMORY/docs/pool-panel.md`（identity 学生每关 64 局、老师每关 16 局，L21–24、26 五关）。
+- 评估结果见 `MEMORY/docs/pool-panel.md`（identity 学生每关 64 局、老师每关 16 局，L21–24、26 五关）：
+  学生 0/320（对照）/ 18/320（p9）/ 19/320（p9k），老师 13/80 / 23/80 / 25/80。
+  p9 与 p9k 只差 2 局（80 局，区间重叠），**能确定的是两套 p9 系都明显好于对照**；
+  最终选哪套由主控定，`deck_for_level` 未改。
 
 
