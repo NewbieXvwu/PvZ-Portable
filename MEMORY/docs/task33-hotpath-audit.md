@@ -46,6 +46,11 @@
 - 01:20 观测载荷实测：完整观测 14 280 B，其中 `legal_actions` 45% + `cells` 37%；引擎已有的 `OBS_LEAN` 在同一 tick 是 **51%**，且学生特征逐位相同（棋盘 max abs diff 0.0）。缺 `zombie_count_multiplier` / `loadout_context` 两项（价值网上下文要用）。**没做**：要重编 `build/pvz-portable`，与正在跑的 13 个采集共用二进制，留给 task35 或停采窗口。
 - 01:25 训练装载打包原型 `scripts/pack_training_rows.py`：把 `load()` 的结果按档案顺序写成单个 904 MB 的 CSR 文件（1.56 M 行 = 581 B/行），读回一遍即可，不再解压 345 GB、不再重算 `np.nonzero`。
 
+- 01:40 打包原型验收通过：`--verify` 与 `load()` 逐项对比 13 个数组全部相同；读回 1.56 M 行 0.17 s（mmap）对 164 s（无 cache-dir）/ 32 s（有 cache-dir）。旧 JSONL 档案实测 12.70 MB → 1.04 MB（8%），全量 7.54 GB → 约 0.6 GB（`scripts/pack_frames.py` 可用，未动数据）。
+- 01:45 面板口径 A/B 修正并重测（改前提交 `4a0dba12`，`/tmp/audit-old3`）：16 局 31.18 → 16.11 s（−48%），16 局结果逐字段相同。
+- 01:50 全量测试：272 passed / 31 skipped / 375 subtests passed，6 failed —— 5 个是 `test_cpp_rollout` 在**工作树里没有 `build/`**（不是代码问题），1 个是 `test_dagger_experiment_runner` 的导入顺序依赖（单独跑连模块都导入不了），均与本次改动无关。
+- 01:55 压榨记录见 `MEMORY/docs/hotpath-audit.md` §13：6 项尝试、收益与阻断原因；停止条件**未满足**（第 2/3 项仍是可证明的大额冗余，但剩余工作量在 cb-mem 的 `load()` 与主工作区数据上）。
+
 ## 问题
 
 ## 追加（主控 2026-10-22 23:55，用户两点 + 主控决定）
