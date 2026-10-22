@@ -26,6 +26,16 @@ if(NOT MSVC AND NOT EMSCRIPTEN)
 	else()
 		message(STATUS "LTO unavailable: ${PVZ_IPO_ERROR}")
 	endif()
+	# Profile-guided optimisation.  scripts/build_pgo.sh writes the profile for this same
+	# build directory (GCC looks the .gcda up by object path, so it cannot be moved); once it
+	# is there every build uses it.  A machine without a profile still builds normally.
+	set(PVZ_PGO_DATA "${PROJECT_SOURCE_DIR}/artifacts/perf/pgo" CACHE PATH "PGO profile directory")
+	file(GLOB PVZ_PGO_FILES "${PVZ_PGO_DATA}/*.gcda")
+	if(PVZ_PGO_FILES)
+		message(STATUS "PGO: using profile in ${PVZ_PGO_DATA}")
+		add_compile_options(-fprofile-use=${PVZ_PGO_DATA} -fprofile-correction -Wno-missing-profile)
+		add_link_options(-fprofile-use=${PVZ_PGO_DATA})
+	endif()
 endif()
 
 # Opt-in: the normal portable build does not inspect or require a CUDA installation.
