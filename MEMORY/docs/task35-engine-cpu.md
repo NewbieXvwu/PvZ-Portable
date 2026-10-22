@@ -39,4 +39,7 @@
 2. **PGO**（`scripts/build_pgo.sh`，两阶段同一个 build 目录——GCC 按目标文件路径找 `.gcda`，换目录会静默失效）：**+18%**（87.5k → 103.2k tick/CPU-s，各 3 次，叶摘要全部相同）。profile 放在 `artifacts/perf/pgo/`（不入库，机器各自生成）；CMakeLists 检测到 `.gcda` 就自动用 `-fprofile-use`，没有 profile 的机器照常编译。
 3. 学生前向：缓存转置卷积核与 im2col 零边界、前向缓冲全部预分配、每决策只算一次 packet 头。**+0.5%**（87.9k vs 87.5k，叶摘要相同）；瓶颈不在这些分配上，见后面 openblas/Heads 的占比。
 
+4. **分配器 mimalloc**（FetchContent 静态链接，`MI_OVERRIDE` 全局接管 malloc）：**+11.2%**（103.2k → 114.8k tick/CPU-s，各 3 次，叶摘要相同）。对照：系统 jemalloc（LD_PRELOAD）只有 +3.6% 且波动大（103.1k–110.4k）。首次 configure 需要联网下载，之后用 `build/_deps` 缓存。
+   - 累计：基线 82.0k → **114.8k tick/CPU-s（+40%）**，每推演 28.5 ms → 22.1 ms（CPU 口径）。
+
 ## 问题

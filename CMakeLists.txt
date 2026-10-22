@@ -266,6 +266,24 @@ if (LOW_MEMORY)
 	target_compile_definitions(pvz-portable PRIVATE LOW_MEMORY)
 endif()
 
+# Allocator.  The engine allocates and frees board objects, reanimation tracks and particles
+# constantly; the system malloc was ~7% of the rollout CPU and mimalloc removes most of it
+# (2026-10-23: 103.2k -> 111.1k ticks/CPU-s, 3 runs each, scripts/bench_engine.py).  It
+# overrides malloc process-wide, so it is linked statically and needs no runtime switch.
+# The first configure downloads it; later ones reuse build/_deps.
+if(NOT MSVC AND NOT EMSCRIPTEN)
+	include(FetchContent)
+	set(MI_OVERRIDE ON CACHE BOOL "" FORCE)
+	set(MI_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+	set(MI_BUILD_OBJECT OFF CACHE BOOL "" FORCE)
+	FetchContent_Declare(mimalloc
+		GIT_REPOSITORY https://github.com/microsoft/mimalloc
+		GIT_TAG v2.1.7
+		GIT_SHALLOW TRUE)
+	FetchContent_MakeAvailable(mimalloc)
+	target_link_libraries(pvz-portable PRIVATE mimalloc-static)
+endif()
+
 if(EMSCRIPTEN)
 	set_property(TARGET pvz-portable APPEND PROPERTY LINK_DEPENDS
 		"${CMAKE_CURRENT_SOURCE_DIR}/wasm/shell.html"
