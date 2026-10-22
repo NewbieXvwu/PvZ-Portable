@@ -129,9 +129,56 @@ PVZ_NO_POPUP=1 python3 scripts/engine_replay_compare.py \
   --student artifacts/student/v25/model.pt --games 64 --decisions 400
 ```
 
-## 5. 还剩什么（没做，按收益排序）
+
+## 5. 当前分布（前 15 项及占比，2026-10-23）
+
+### 5.1 学生训练数据（593 B/行，1500 万行 8.29 GiB）
+
+| 项 | B/行 | 占比 | 为什么不能再压 |
+|---|---:|---:|---|
+| 棋盘 CSR（uint16 索引 + float16 值，87 非零/行） | 361 | 60.9% | 每档案去重后仍有 468–629 个不同格子（>256），uint8 索引放不下；索引值已是 float16 原值 |
+| 标量 CSR（uint8 索引 + float32 值，20 非零/行） | 108 | 18.2% | 实测只有 41% 的非零能无损装进 float16（11/28 个通道全通道可装，占 15% 的非零），收益 <2% |
+| packet 分列（int8/uint8/float32/uint8） | 70 | 11.8% | progress 列只有 62% 能无损 float16 |
+| 格候选（稀疏） | 26 | 4.4% | 已只存排名靠前的候选 |
+| 目标值（稀疏） | 17.6 | 3.0% | 已只存非 NaN |
+| plant/packet/cell/weight/is_val | 10 | 1.7% | uint8/int16 |
+
+### 5.2 引擎（malloc 7.9 MB，物理占用 21 MB）
+
+| 项 | MB | 占 malloc |
+|---|---:|---:|
+| `DefMapReadFromCache`（本关真正用到的动画定义） | 4.08 | 51.9% |
+| `SingleDataElement`（定义树节点） | 0.97 | 12.4% |
+| pak 记录表（3195 个文件名） | 0.48 | 6.1% |
+| `ParseCommonResource`（资源表字符串） | 0.34 | 4.3% |
+| `FontLayer::GetCharData`（字形度量） | 0.31 | 4.0% |
+| `ImageRes`（837 个资源描述） | 0.26 | 3.3% |
+| `ListDataElement` | 0.24 | 3.1% |
+| `vector<unique_ptr<DataElement>>` 节点 | 0.24 | 3.1% |
+| `std::string` 赋值 | 0.23 | 2.9% |
+| `ImageFont::GenerateActiveFontLayers` | 0.18 | 2.3% |
+| `SexyAppBase::SetString` | 0.16 | 2.1% |
+| `GetSharedImage`（共享图片表） | 0.09 | 1.1% |
+| `FloatTrackSetDefault`（动画轨道） | 0.07 | 0.9% |
+| `AddMemoryImage` | 0.02 | 0.3% |
+| 字符串拷贝构造 | 0.03 | 0.3% |
+
+### 5.3 停止条件：连续三项 < 2%
+
+| 尝试 | 实测收益 | 结论 |
+|---|---:|---|
+| 格子头梯度检查点（`torch.utils.checkpoint`） | 0%（1619 vs 1621 MB） | 峰值不在被检查点的张量上，已回退 |
+| 标量按通道降到 float16 | 1%（15% 的非零可无损） | 不划算 |
+| packet progress 降到 float16 | 0%（62% 可无损，但必须 100%） | 不划算 |
+
+前 15 项里没有可证明的冗余：棋盘/标量/packet 都已到「索引 1–2 B + 值 2–4 B × 非零数」的地板，
+引擎的 4 MB 是本关实际在用的动画定义。再往下要么改训练配方（batch、精度），要么改标签含义，
+都不属于「内存优化」。
+
+## 6. 还剩什么（没做，按收益排序）
 
 1. **Python 侧 205 MiB/worker 里 180 MiB 是 torch**：只有 fork 共享能压，Windows 上无解。
 2. **引擎 21 MB 里还有 `PoolEffect`/`ZenGarden`/`ReanimatorCache` 的初始化**（约 0.4 MB）：
    与贴图相比不值得改，且 `PoolEffect` 在 `Board::Update` 里每帧建粒子，要跳过它得动更新循环。
-3. **训练现场的 2.5 GiB**（torch + 软目标/cell 候选的中间张量）没动：它不是数据，改起来风险大。
+3. **训练现场的 1.6 GB**（torch + 一次 2048 行前向/反向的激活）没动：它不随数据量增长，
+   再压要改 batch 或做检查点，前者改配方、后者实测无收益（见 5.3）。
