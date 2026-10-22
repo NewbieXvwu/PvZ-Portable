@@ -33,6 +33,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
+from pvz_constants import PLANT_NAME  # noqa: E402
 from pvz_tasks import deck_for_seed  # noqa: E402
 from render_episode import load_training_task  # noqa: E402
 
@@ -115,12 +116,16 @@ def collect(manifest: Path, runs: list[tuple[str, Path]], base_override=None) ->
     return rows
 
 
-def summarize(rows: list[dict], group: str, kind: str) -> list[dict]:
+def summarize(rows: list[dict], group: str, kind: str, suspect=()) -> list[dict]:
+    """suspect：同族里“可能也很关键”的底卡集合。测某张卡时把“同时换掉另一张 suspect”的局剔掉，
+    否则那张卡造成的输局会算到这张卡头上（条件采样的 8 号卡批次里，9 号卡也常被一起换掉）。
+    对照列同样只用剔完剩下的局。"""
     rows = [row for row in rows if row['teacher'] == (kind == 'teacher')]
     cards = sorted({card for row in rows for card in row['base']})
     table = []
     for card in cards:
-        removed = [row for row in rows if card in row['removed']]
+        others = set(suspect) - {card}
+        removed = [row for row in rows if card in row['removed'] and not (others & set(row['removed']))]
         kept = [row for row in rows if card in row['deck']]
         wins = sum(row['won'] for row in removed)
         kept_wins = sum(row['won'] for row in kept)
@@ -141,9 +146,11 @@ def main() -> None:
     parser.add_argument('--day-manifest', type=Path, required=True)
     parser.add_argument('--day-run', action='append', default=[], metavar='TASK=DIR')
     parser.add_argument('--keep-threshold', type=float, default=0.25)
+    parser.add_argument('--suspect', default='', help='逗号分隔：测一张卡时，把同时换掉这些卡的局剔掉')
     parser.add_argument('--night-base', default='0,1,2,3,4,5,7,8,9,11')
     parser.add_argument('--day-base', default='0,1,2,3,4,5,7')
     parser.add_argument('--out', type=Path)
+    parser.add_argument('--markdown', action='store_true', help='把表按 markdown 输出（直接贴进报告）')
     args = parser.parse_args()
 
     def parse(items):
@@ -160,8 +167,9 @@ def main() -> None:
         if not runs:
             continue
         rows = collect(manifest, parse(runs), [int(v) for v in base.split(',') if v != ''])
-        teacher = summarize(rows, group, 'teacher')
-        student = summarize(rows, group, 'student')
+        suspect = [int(v) for v in args.suspect.split(',') if v.strip()]
+        teacher = summarize(rows, group, 'teacher', suspect)
+        student = summarize(rows, group, 'student', suspect)
         tables += teacher + student
         result[group] = dict(games=len(rows), wins=sum(row['won'] for row in rows),
                              teacher_games=sum(row['teacher'] for row in rows),
@@ -180,6 +188,19 @@ def main() -> None:
         print(f"{row['group']:<6}{row['kind']:<9}{row['card']:>5}{row['removed_games']:>6}"
               f"{row['removed_wins']:>5}{rate:>7}{row['removed_ci95'][1]:>7.2f}"
               f"{row['kept_games']:>7}{ctrl:>7}  {'YES' if row['keep'] else ''}")
+    if args.markdown:
+        print()
+        print('| 族 | 底卡 | 被换掉的局数 | 胜 | 胜率 | 95% 上界 | 对照局数 | 对照胜率 | 保留 |')
+        print('|---|---|---:|---:|---:|---:|---:|---:|:--:|')
+        for row in tables:
+            if row['kind'] != 'teacher':
+                continue
+            rate = f"{row['removed_rate']:.1%}" if row['removed_rate'] is not None else '—'
+            ctrl = f"{row['kept_rate']:.1%}" if row['kept_rate'] is not None else '—'
+            name = PLANT_NAME.get(row['card'], str(row['card']))
+            print(f"| {row['group']} | {row['card']} {name} | {row['removed_games']} | {row['removed_wins']} | "
+                  f"{rate} | {row['removed_ci95'][1]:.2f} | {row['kept_games']} | {ctrl} | "
+                  f"{'**保留**' if row['keep'] else ''} |")
     print('keep cards:', result['keep_cards'])
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)

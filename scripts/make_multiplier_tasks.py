@@ -42,10 +42,10 @@ MULTIPLIERS = ((1.25, 'm125'), (1.5, 'm150'), (1.75, 'm175'),
 
 # 种子段：5_000_000 起，每档 700_000。档内按 (族序号, 关卡) 排槽：
 #   slot = family_index * 32 + (level - 1)，每槽 SEEDS_PER_TASK 个种子。
-# 9 个族 × 32 槽 × 2048 = 589_824 < 700_000，档与档之间留 110k 空隙。
-# （task31 加第 8 个族 n10q 时 8 个族只有 524_288，加第 9 个族就到 589_824；
-#  原来的 500_000 会串档，所以整档加宽。加宽后旧倍率种子全部平移 —— 这些族还没开过
-#  采集局（task29 明确未开正式采集），所以没有数据要迁移。）
+# 8 个族 × 32 槽 × 2048 = 524_288 < 700_000，档与档之间留 175k 空隙（够再加一个族：
+# 9 个族是 589_824）。task31 加第 8 个族 n10q 时 524_288 已经超过原来的 500_000 档距，
+# 会串到下一档，所以整档加宽。加宽后旧倍率种子全部平移 —— 这些族还没开过采集局
+# （task29 明确未开正式采集），没有数据要迁移。
 # 与仓库里所有现有清单（最高约 3.4M 的 n10q 段）以及 DESIGN 登记的 DAgger 段都不相交。
 SEED_BASE = 5_000_000
 MULT_STRIDE = 700_000
@@ -120,7 +120,9 @@ def build_variants(sources: dict[str, dict[str, dict]], seeds: int = SEEDS_PER_T
 def existing_seeds(paths: list[Path], exclude: set[Path]) -> dict[int, str]:
     seen: dict[int, str] = {}
     for path in paths:
-        if path.resolve() in exclude:
+        if path.resolve() in exclude or path.name == 'multiplier_panel.json':
+            # 本脚本生成的那份（工作树 / 主目录 / 别的工作树的副本）是派生文件，整份重写；
+            # 把它自己算进“现有清单”会让新种子和自己的旧种子撞车（task31 加族时撞过）。
             continue
         try:
             document = json.loads(path.read_text())
