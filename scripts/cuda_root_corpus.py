@@ -19,7 +19,7 @@ corpus.jsonl keys, named after the cuda/CudaRollout.h RolloutResult they line up
                net_calls (::netCalls)
   outcome   -- terminal, result (0 / 1 / -1, normalised the way CudaExport.cpp normalises it)
   leaf body -- sun, wave, plants (::plantsAlive), zombies (::zombiesAlive), mowers_left (::mowersLeft),
-               mowers_alive (mowers still present, not the same number), planted_by_type (::plantedByType),
+               mowers_alive (mowers still present, not the same number), planted_slots / planted_types,
                plants_planted (::plantsPlanted), row_min_zombie_x (::rowMinZombieX)
   features  -- income (the 6000-tick sun income rate the student saw at the leaf), leaf_value
                (sigmoid V(leaf) from --value, 1/0 once terminal)
@@ -108,6 +108,7 @@ def build(env, vnet, args, out_dir: Path) -> tuple[list[dict], dict]:
     from pvz_value_net import observation_context
     from render_episode import load_training_task, training_task_kwargs
     from pvz_tasks import profile_for_deck
+    from pvz_episode_stats import planted_by_type, planted_slots
     import torch
 
     kw = load_training_task(Path(args.manifest), args.task_id)
@@ -170,8 +171,11 @@ def build(env, vnet, args, out_dir: Path) -> tuple[list[dict], dict]:
                               "zombies": len(leaf.get("zombies") or []),
                               "mowers_left": details.get("mowers_left"),
                               "mowers_alive": len(leaf.get("defenses") or []),
-                              "planted_by_type": details.get("planted"),
-                              "plants_planted": sum(details.get("planted") or []),
+                              "planted_slots": planted_slots(details),
+                              "planted_types": planted_by_type(details,kw),
+                              "level":kw['level'],"deck":list(deck),
+                              "conveyor_start":kw.get('conveyor_start'),
+                              "plants_planted": sum((planted_slots(details) or {}).values()),
                               "row_min_zombie_x": _row_min_zombie_x(leaf),
                               "leaf_value": _leaf_value(vnet, leaf, context)}
                     rollouts += 1
@@ -182,6 +186,7 @@ def build(env, vnet, args, out_dir: Path) -> tuple[list[dict], dict]:
             env.set_lean_observation(False)
     return roots, {"task_id": args.task_id, "manifest": args.manifest,
                    "level": kw["level"], "deck": list(deck), "terrain": kw.get("terrain"),
+                   "conveyor_start": kw.get("conveyor_start"),
                    "zombie_count_multiplier": kw.get("zombie_count_multiplier"),
                    "wave_cap": kw.get("wave_cap"), "horizon": args.horizon,
                    "sim_skip": args.sim_skip, "rollouts_per_root": args.rollouts_per_root,

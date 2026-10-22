@@ -7,10 +7,10 @@ from run_dw5_study import verify
 from unified_panel import summarize
 
 
-def audit_panel(folder, version, model_hash):
+def audit_panel(folder, version, model_hash, executable_hash=None):
     manifest=read(OUT/f'unified_{version}.json');panel=read(folder/'panel.json')
     assert panel['complete'] and panel['model_sha256']==model_hash
-    assert panel['executable_sha256']==sha(ROOT/'build/pvz-portable')
+    assert panel['executable_sha256']==(executable_hash or sha(ROOT/'build/pvz-portable'))
     assert panel['manifest_sha256']==sha(OUT/f'unified_{version}.json')
     assert len(panel['tasks'])==(34 if version=='v2' else 29)
     for task in manifest['tasks']:
@@ -38,6 +38,13 @@ def main():
     plan=read(OUT/'study_plan.json');verify(plan,files=True)
     engineering=read(ROOT/'MEMORY/docs/task27-panel-engineering.json')
     assert engineering['complete'] and engineering['tests']==24 and engineering['v1_matches_task23']
+    instrumentation=read(ROOT/'MEMORY/docs/task27-step0.json')
+    assert instrumentation['complete'] and instrumentation['unit_tests']==12
+    smoke=read(OUT/'step0/type_count_check/complete.json')
+    assert smoke==instrumentation['smoke'] and smoke['complete']
+    assert smoke['executable_sha256']==sha(ROOT/'build/pvz-portable')
+    assert {c['task'] for c in smoke['checks']}=={'night_l12_eval_n10','day_l10_orig_eval','pool_l21_eval_p9k'}
+    assert all(c['legacy_outcome_identical'] and c['native_vs_archived_actions_equal'] for c in smoke['checks'])
     zones=read(ROOT/'MEMORY/docs/task27-zone-comparison.json')
     assert zones['passed'] and [c['tasks'] for c in zones['comparisons']]==[54,9,35]
     assert all(c['passed'] and not c['changed'] and c['task_order_equal'] for c in zones['comparisons'])
@@ -74,7 +81,8 @@ def main():
     assert native['model_sha256']==sha(model) and native['executable_sha256']==sha(ROOT/'build/pvz-portable')
     assert read(OUT/'native_parity.result.json')['returncode']==0
     references=read(OUT/'pretraining_plan.json')
-    panels={name:audit_panel(OUT/f'baseline_v2_{name}','v2',references['models_sha256'][name])
+    panels={name:audit_panel(OUT/f'baseline_v2_{name}','v2',references['models_sha256'][name],
+                            references.get('historical_reference_executable_sha256',{}).get(name))
             for name in ('dw4i_s1','identity')}
     new={v:audit_panel(OUT/f'panel_dw5i_{v}',v,sha(model)) for v in ('v1','v2')}
     common_ids=set(t['task_id'] for t in new['v1']['tasks']) & set(t['task_id'] for t in new['v2']['tasks'])
@@ -135,6 +143,8 @@ def main():
                      for name,p in {'dw4i_s1':old_v1,'dw5i_s1':new['v1']}.items()},
                  native_states=native['states'],v1_v2_identical_task_games=matched_games,
                  legacy_dw4i_identical_task_games=legacy_games,
+                 retained_reference_executable_sha256=references.get('historical_reference_executable_sha256',{}),
+                 instrumentation_sha256=sha(ROOT/'MEMORY/docs/task27-step0.json'),
                  dead={name:{k:d[k] for k in ('deck','games','won','loss_waves','nearest_terminal_zombie_types','conclusion')} for name,d in dead.items()},
                  caveats=['One fixed training seed and final epoch; no seed/epoch selection or default promotion.',
                           'V1 and V2 use different night decks; compare models within each version.',
@@ -186,6 +196,7 @@ def main():
     resources=training['resources'];epoch_seconds=sum(h['seconds'] for h in metrics['history'])
     lines += ['', f"64宽identity+row_pool、seed1从头原12epoch；实际{rows['rows']}行，加载{metrics['load_seconds']:.1f}s、epoch训练+验证合计{epoch_seconds:.1f}s、总墙钟{resources['wall_s']:.1f}s。子树RSS求和峰{resources['peak_rss_kib']/1024**2:.2f}GiB（共享页可能重复），最低可用{resources['minimum_available_kib']/1024**2:.2f}GiB；模型{training['model_bytes']}字节。训练服从外部训练让卡与2/3GiB内存暂停守卫。",'',
               'C++与Python已在白天/夜间n10/原版传送带/泳池共256个真实状态核对，各头argmax与实际动作完全一致，并通过既定绝对+相对+实测浮点噪声容差。种植计数按每次成功动作前的真实类型累计；传送带没有用初始卡组翻译总槽计数。','',
+              '第0步按主控追加需求，将新记录统一为planted_types与planted_slots，并修same_type的类型比较；公用读取器对无法恢复的旧传送带槽计数返回未知。首份dw4i v2在该追加步骤前已完成，保留其原始记录/原二进制SHA，不伪装为新构建重跑；初版真实类型计数经共用读取器兼容，且新旧构建三场完整C++/Python对局的计数与结果完全一致。','',
               f"HF `{upload['path']}`，固定revision `{upload['revision']}` 已回读SHA一致。完整本地结果 `{OUT/'results.json'}`，SHA256 `{sha(OUT/'results.json')}`；模型、原始对局、档案和大JSON不入git。见[KB核验结果](task27-results.json)、[训练冻结计划](task27-study-plan.json)、[留出诊断](task27-dead-decks.json)。",'',
               '仅一个固定训练种子、使用第12epoch；不按最优seed/epoch挑选，不宣称总体非劣，不改默认/生产模型。q103和其他tmux队列未修改，主stage4清单只读。']
     report=ROOT/'MEMORY/docs/unified-panel.md';text=report.read_text().split('\n## task27：面板v2与第二次合训dw5i')[0].rstrip()

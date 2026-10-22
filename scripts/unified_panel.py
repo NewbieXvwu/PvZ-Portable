@@ -84,15 +84,22 @@ def summarize(folder, task, seeds, plant_types=False):
         # Dynamic conveyor slots cannot be translated through the initial deck. Native and
         # Python loops count the actual type before each successful planting instead.
         from collections import Counter
+        from pvz_episode_stats import planted_by_type,planted_slots
         totals = Counter()
+        unknown=0
         for row in rows:
-            assert 'planted_by_type' in row, 're-evaluate with plant-type telemetry'
-            counts = row['planted_by_type']
-            assert sum(counts.values()) == sum(row['planted'].values())
+            counts = planted_by_type(row,task)
+            if counts is None:
+                unknown+=1;continue
+            slots=planted_slots(row)
+            if slots is not None:assert sum(counts.values()) == sum(slots.values())
             assert all(0 <= int(k) < 54 and type(v) is int and v >= 0 for k,v in counts.items())
             totals.update(counts)
-        result.update(planted_by_type_total=dict(sorted(totals.items(), key=lambda kv:int(kv[0]))),
-                      planted_by_type_per_game={k:v/len(rows) for k,v in sorted(totals.items(), key=lambda kv:int(kv[0]))})
+        result.update(planted_by_type_total=None if unknown else dict(sorted(totals.items(), key=lambda kv:int(kv[0]))),
+                      planted_by_type_per_game=None if unknown else {k:v/len(rows) for k,v in sorted(totals.items(), key=lambda kv:int(kv[0]))})
+        if unknown:
+            result.update(planted_types_unknown_games=unknown,
+                          planted_types_note='Legacy conveyor slot totals cannot identify plant types; no translation guessed.')
     return result
 
 
@@ -148,11 +155,14 @@ def evaluate(args):
                                  mean_win_rate=sum(r['win_rate'] for r in part)/len(part))
             from collections import Counter
             counts = Counter()
+            unknown=0
             for task in part:
-                counts.update(task['planted_by_type_total'])
-            groups[group]['planted_by_type_total'] = dict(sorted(counts.items(), key=lambda kv:int(kv[0])))
-            groups[group]['planted_by_type_per_game'] = {k:v/groups[group]['games']
+                if task['planted_by_type_total'] is None:unknown+=task['games']
+                else:counts.update(task['planted_by_type_total'])
+            groups[group]['planted_by_type_total'] = None if unknown else dict(sorted(counts.items(), key=lambda kv:int(kv[0])))
+            groups[group]['planted_by_type_per_game'] = None if unknown else {k:v/groups[group]['games']
                                                         for k,v in groups[group]['planted_by_type_total'].items()}
+            if unknown:groups[group]['planted_types_unknown_games']=unknown
     panel = dict(complete=not args.tasks, model=str(args.rollout_policy), model_sha256=model_hash,
                  executable_sha256=binary_hash, manifest_sha256=manifest_hash, tasks=rows, groups=groups)
     write(args.out/'panel.json', panel)

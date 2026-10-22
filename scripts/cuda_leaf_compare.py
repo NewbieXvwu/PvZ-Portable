@@ -55,9 +55,10 @@ FIELDS = ("rootIndex", "decisions", "netCalls", "ticks", "endTick", "result", "s
           "mowersLeft", "mowersTriggered", "sunProduced", "errorFlags")
 RECORD = struct.Struct("<" + "i" * (len(FIELDS) + 10 + 6))
 ROWS = 6
+from pvz_episode_stats import planted_by_type, planted_slots
 
 
-def read_gpu(path: Path) -> list[dict]:
+def read_gpu(path: Path, context=None) -> list[dict]:
     blob = path.read_bytes()
     if len(blob) % RECORD.size:
         raise SystemExit(f"{path}: size {len(blob)} is not a whole number of {RECORD.size}-byte records")
@@ -66,17 +67,29 @@ def read_gpu(path: Path) -> list[dict]:
         words = RECORD.unpack_from(blob, offset)
         record = dict(zip(FIELDS, words[:len(FIELDS)]))
         record["plantedByType"] = list(words[len(FIELDS):len(FIELDS) + 10])
+        # CUDA's existing ABI name is historical: these ten counters are packet slots.
+        record['planted_types']=planted_by_type({'planted':record['plantedByType']},context)
         record["rowMinZombieX"] = list(words[len(FIELDS) + 10:])
         out.append(record)
     return out
 
 
-def read_cpu(path: Path) -> list[dict]:
+def read_cpu(path: Path, context=None) -> list[dict]:
+    if context is None:
+        metadata=path.parent/'roots.json'
+        context=json.loads(metadata.read_text()).get('summary',{}) if metadata.exists() else {}
     records = []
     for line in path.read_text().splitlines():
         if not line.strip():
             continue
         row = json.loads(line)
+        slots=planted_slots(row)
+        if slots is None and isinstance(row.get('planted_by_type'),list):
+            # The old corpus schema copied the ten slot counters under this misleading name.
+            slots=planted_slots({'planted':row['planted_by_type']})
+        kinds=planted_by_type(row,context)
+        if kinds is None and slots is not None:
+            kinds=planted_by_type({'planted_slots':slots},context)
         # Normalise the CPU keys onto the RolloutResult names so one table prints both sides.
         records.append({
             "rootIndex": row["root"],
@@ -91,7 +104,8 @@ def read_cpu(path: Path) -> list[dict]:
             "plantsAlive": row["plants"],
             "plantsPlanted": row["plants_planted"],
             "mowersLeft": row["mowers_left"],
-            "plantedByType": row["planted_by_type"],
+            "plantedByType":None if slots is None else [slots.get(str(i),0) for i in range(10)],
+            "planted_types":kinds,
             "rowMinZombieX": row["row_min_zombie_x"],
             # Not statistics columns but the two things the later stages need: --pairs-out has to name
             # the future so the GPU replays exactly this continuation, and the leaf-value check reads
@@ -327,8 +341,10 @@ def main() -> None:
     if not (args.cpu and args.gpu):
         raise SystemExit("needs --cpu and --gpu (or --root-features with --roots)")
 
-    cpu = read_cpu(args.cpu)
-    gpu = read_gpu(args.gpu)
+    metadata=args.cpu.parent/'roots.json'
+    context=json.loads(metadata.read_text()).get('summary',{}) if metadata.exists() else None
+    cpu = read_cpu(args.cpu,context)
+    gpu = read_gpu(args.gpu,context)
     print(f"CPU records {len(cpu)} (roots {len(set(r['rootIndex'] for r in cpu))}), "
           f"GPU records {len(gpu)} (roots {len(set(r['rootIndex'] for r in gpu))})")
     print()
@@ -346,11 +362,14 @@ def main() -> None:
         print(f"  {metric:14s} CPU  {_summary([float(r[metric]) for r in cpu if metric in r])}")
         print(f"  {'':14s} GPU  {_summary([float(r[metric]) for r in gpu])}")
     print()
-    print("planted-by-packet-slot (total plants of each deck slot over the batch)")
-    for slot in range(10):
-        cpu_total = sum(r["plantedByType"][slot] for r in cpu if slot < len(r["plantedByType"]))
-        gpu_total = sum(r["plantedByType"][slot] for r in gpu)
-        print(f"  slot {slot}:  CPU {cpu_total:6d}   GPU {gpu_total:6d}")
+    print('planted by plant type (known records only)')
+    known_cpu=[r['planted_types'] for r in cpu if r['planted_types'] is not None]
+    known_gpu=[r['planted_types'] for r in gpu if r['planted_types'] is not None]
+    print(f'  unknown records: CPU {len(cpu)-len(known_cpu)}, GPU {len(gpu)-len(known_gpu)}; legacy conveyor slots cannot identify types')
+    kinds=sorted({kind for counts in known_cpu+known_gpu for kind in counts},key=int)
+    for kind in kinds:
+        a=sum(counts.get(kind,0) for counts in known_cpu);b=sum(counts.get(kind,0) for counts in known_gpu)
+        print(f'  type {kind}: CPU {a:6d}   GPU {b:6d}')
 
 
 if __name__ == "__main__":

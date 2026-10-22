@@ -593,11 +593,13 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
 				<< ",\"observation\":" << observation
 				<< ",\"estimated_result\":" << estimatedResult
-				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted\":[";
+				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted_slots\":[";
 			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << planted[index];
-			std::cout << "],\"planted_by_type\":[";
-			for (size_t index = 0; index < plantedByType.size(); ++index) std::cout << (index ? "," : "") << plantedByType[index];
-			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds
+			std::cout << "],\"planted_types\":{";
+			bool firstType = true;
+			for (size_t index = 0; index < plantedByType.size(); ++index)
+				if (plantedByType[index]) { std::cout << (firstType ? "" : ",") << '\"' << index << "\":" << plantedByType[index]; firstType = false; }
+			std::cout << "},\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds
 				<< ",\"net_calls\":" << rollout.NetworkCalls() << ",\"ticks\":" << app->mBoard->mMainCounter - startTick << ",\"substeps\":[";
 			for (size_t index = 0; index < substeps.size(); ++index)
 				std::cout << (index ? ",[" : "[") << substeps[index].first << ',' << substeps[index].second << ']';

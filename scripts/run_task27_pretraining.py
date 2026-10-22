@@ -43,6 +43,12 @@ def verify(data):
     for version,digest in data['manifests_sha256'].items(): assert sha(OUT/f'unified_{version}.json') == digest
     assert sha(MAIN/'artifacts/value_net/v3/model.pt') == data['value_sha256']
     assert sha(MAIN/'artifacts/hard/value_branch1/model.pt') == data['static_value_sha256']
+    if data.get('retained_evidence'):
+        initial=read(OUT/'step0/pretraining_plan.initial.json')
+        assert sha(OUT/'step0/pretraining_plan.initial.json')==data['prior_pretraining_plan_sha256']
+        assert initial['models_sha256']==data['models_sha256'] and initial['manifests_sha256']==data['manifests_sha256']
+        assert sha(OUT/'step0/previous-pvz-portable')==initial['executable_sha256']
+        for path,digest in data['retained_evidence'].items():assert sha(OUT/path)==digest,path
 
 
 def diagnose(data):
@@ -105,6 +111,8 @@ def references(data):
         panel = read(target/'panel.json'); manifest = read(OUT/'unified_v2.json')
         assert panel['complete'] and len(panel['tasks']) == 34 and sum(t['games'] for t in panel['tasks']) == 3264
         assert panel['model_sha256'] == data['models_sha256'][name]
+        expected_binary=data.get('historical_reference_executable_sha256',{}).get(name,data['executable_sha256'])
+        assert panel['executable_sha256']==expected_binary
         for task in manifest['tasks']:
             group = manifest['groups'][task['task_id']];count = 64 if group in ('heldout','pool') else 128
             actual = summarize(target/task['task_id'],task,task['seeds'][:count],plant_types=True)

@@ -93,6 +93,8 @@ def _reset(seed: int):
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
     obs, _ = _W["env"].reset(deck=tuple(kw["deck"]), task=task)
+    _W['stats_context']={'deck':kw['deck'],'level':kw['level'],
+                         'conveyor_start':kw['task_extra'].get('conveyor_start')}
     if args.mode == "search":
         import search_play
         from pvz_value_net import observation_context
@@ -105,6 +107,7 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     import torch
     from pvz_rollout_policy import act
     from render_episode import _frame
+    from pvz_episode_stats import planted_by_type, planted_slots, plant_type_before_action
     seed, mask, approximate = job
     env = _W["env"]
     torch.manual_seed(seed)
@@ -120,6 +123,7 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     ready_mowers = lambda o: sum(d["state"] == 1 for d in o.get("defenses") or [])
     mowers_start = mowers_left = ready_mowers(obs)
     planted = {}
+    types = {}
     if approximate and _W["args"].cpp_rollouts:
         obs = env.rollout(None, 0, sim_skip=mask, max_actions=_W["args"].max_actions)
         details = env._last_response
@@ -128,7 +132,8 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
                 "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
                 "decisions": details["decisions"], "seconds": time.perf_counter() - started, "actions": None,
                 "mowers_used": mowers_start - details["mowers_left"],
-                "planted": {index: count for index, count in enumerate(details["planted"]) if count},
+                "planted_slots": planted_slots(details),
+                "planted_types": planted_by_type(details,_W['stats_context']),
                 "rng_state_sha256": hashlib.sha256(bytes.fromhex(env.privileged_state()["hidden"]["rand_state_hex"])).hexdigest(),
                 "simulation_seconds": details["simulation_seconds"], "network_seconds": details["network_seconds"]}
     while not obs["terminal"] and len(actions) < _W["args"].max_actions:
@@ -137,9 +142,12 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
         action = act(_W["net"], frame, memo["frame"], (obs.get("legal_actions") or {}).get("plants") or [],
                      history=history)
         memo["frame"], memo["action"] = frame, action
+        kind=plant_type_before_action(obs,action['packet']) if action['type']=='plant' else None
         obs, _r, done, _t, info = env.step(action)
         if info.get("ok") and action["type"] == "plant":
             planted[action["packet"]] = planted.get(action["packet"], 0) + 1
+            assert kind is not None and kind>=0
+            types[str(kind)]=types.get(str(kind),0)+1
         if not info.get("ok"):
             obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
         actions.append(f"{obs['tick']}:{action['type'][0]}{action.get('packet', '')}"
@@ -153,7 +161,7 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     return {"seed": seed, "mask": mask, "approximate": approximate, "backend": "python",
             "won": obs.get("result") == 1, "wave": obs["wave"], "tick": obs["tick"],
             "decisions": len(actions), "seconds": round(seconds, 3), "actions": actions,
-            "mowers_used": mowers_start - mowers_left, "planted": planted,
+            "mowers_used": mowers_start - mowers_left, "planted_slots": planted,"planted_types":types,
             "rng_state_sha256": hashlib.sha256(bytes.fromhex(env.privileged_state()["hidden"]["rand_state_hex"])).hexdigest()}
 
 
@@ -283,6 +291,7 @@ def _first_divergence(a: list[str], b: list[str]) -> int | None:
 
 def summarize_games(results: list[dict], mask: int) -> dict:
     from math import comb
+    from pvz_episode_stats import planted_by_type
     by = {(r["seed"], r["approximate"]): r for r in results}
     seeds = sorted({r["seed"] for r in results})
     pairs = [(by[(s, False)], by[(s, True)]) for s in seeds]
@@ -291,6 +300,9 @@ def summarize_games(results: list[dict], mask: int) -> dict:
     exact_only = sum(e["won"] and not a["won"] for e, a in pairs)
     approx_only = sum(a["won"] and not e["won"] for e, a in pairs)
     discordant = exact_only + approx_only
+    counts=[(planted_by_type(e,e.get('deck'),level=e.get('level')),
+             planted_by_type(a,a.get('deck'),level=a.get('level'))) for e,a in pairs]
+    known=[(e,a) for e,a in counts if e is not None and a is not None]
     return {
         "mask": mask, "games": n,
         "wins_exact": sum(e["won"] for e, _a in pairs), "wins_approx": sum(a["won"] for _e, a in pairs),
@@ -300,7 +312,8 @@ def summarize_games(results: list[dict], mask: int) -> dict:
         "mcnemar_exact_p": min(1.0, 2 * sum(comb(discordant, index) for index in range(min(exact_only, approx_only) + 1)) / 2 ** discordant),
         "final_wave_agreement": round(sum(e["wave"] == a["wave"] for e, a in pairs) / n, 4),
         "mowers_used_agreement": sum(e["mowers_used"] == a["mowers_used"] for e, a in pairs) / n,
-        "planted_agreement": sum(e["planted"] == a["planted"] for e, a in pairs) / n,
+        "planted_types_agreement":sum(e==a for e,a in known)/len(known) if known else None,
+        "planted_types_known_pairs":len(known),"planted_types_unknown_pairs":n-len(known),
         "rng_state_agreement": sum(e["rng_state_sha256"] == a["rng_state_sha256"] for e, a in pairs) / n,
         "mean_wave_exact": round(sum(e["wave"] for e, _a in pairs) / n, 3),
         "mean_wave_approx": round(sum(a["wave"] for _e, a in pairs) / n, 3),

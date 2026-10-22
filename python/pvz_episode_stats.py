@@ -43,6 +43,7 @@ def planted_by_type(game, deck, *, level=None, conveyor_start=None):
     an array under that name is NOT accepted as identity telemetry (old CUDA used slots).
     """
     if 'planted_types' in game:
+        if game['planted_types'] is None:return None
         if not isinstance(game['planted_types'],Mapping):raise ValueError('planted_types must be a JSON object')
         return _counts(game['planted_types'],'planted_types')
     if isinstance(game.get('planted_by_type'),Mapping):
