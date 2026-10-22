@@ -37,4 +37,16 @@
 
 - 第 2 步（压·学生训练）：`train_rollout_policy.py` 加两个默认关闭的开关 —— `--compact-data`（keep 掩码位打包、plant uint8 / packet·cell int16、`PacketStore` 按列拆成 int8/uint8/float32/uint8、标量 CSR 索引按位宽降到 uint8、按档案把恒定平面（可通行车道那一层 50/134 个非零）提到平面表）与 `--data-memmap`（棋盘/标量 CSR、`values`、`cands`、`packets` 写文件后只读映射，页面可回收）。逐位门槛：200 档案 61 903 行、同种子、生产配方跑一遍，四种组合（默认 / compact / memmap / 两者）21 个权重张量 sha256 **全同**；`data_memory` 从 54.6 MB 降到 35.1 MB（棋盘 33.7→20.7、packet 9.9→4.3）。新测试 `python/test_compact_loader.py`（默认 / compact / memmap / 两者 的密集棋盘逐位相等，含 -0.0）。
 
+- 第 3 步（压·价值网络）：`train_value_net.py` 的训练棋盘从稠密 `(样本, 92, 6, 10) float16`（11 040 B/样本）换成同一套 CSR 行存储（约 330 B/样本，21 倍），`train_value_branches.py` 的多份 dump 合并改成写文件再映射（不再 `torch.cat` 复制一份）。新测试 `python/test_value_net_rows.py` 用第二次 `featurize` 对照 CSR 取回的棋盘逐位相等；60 档案端到端（2 折 2 epoch）跑通。2000 档案基准（61.9 万行、60 步、同种子）四种组合 21 个权重张量 sha256 **全同**，`data_memory` 54.6→35.1 MB 的同一比例：棋盘 335→206 MB、packet 99→43 MB。
+
 ## 问题
+
+## 追加（主控 2026-10-22 23:05，用户的两点）
+1. **“结果不变”放宽**：此前实验已明确模型与搜索本身噪声很大（同一老师换随机未来只有约 75% 的决策相同），所以**不必逐位相同**。
+   收益足够大、代价不大的改法可以接受：训练侧要求同数据同配方下验证损失与面板胜率在种子噪声内（给出对照数字）；采集侧要求同种子对局的胜率 / 到达波数在噪声内，
+   且**游戏逻辑本身不能变**（同一动作序列重放，引擎的状态轨迹必须逐帧相同——这条仍是硬门槛，因为它决定标签的含义）。
+2. **游戏程序里不必要的加载**：`pvz-portable -env` 是无界面模式，但 `LawnApp::LoadingThreadProc`（src/LawnApp.cpp:2538 起）仍然加载
+   `LoadingImages`、`LoadingFonts` 资源组，初始化 `PoolEffect`、`ZenGarden`、`ReanimatorCache`、粒子 / 拖尾定义、`PreloadForUser`；Mac 实测每个引擎进程常驻约 220 MB，台式机 16 个就是 3.5 GB。
+   查清无界面模式下哪些东西游戏逻辑真的要用（例如动画定义的时间轴会影响攻击 / 判定，不能丢；贴图像素、字体、水面特效、禅境花园大概率不用；
+   若有代码在逻辑里读图片尺寸，改成只读尺寸不解码像素），按需加载或跳过。**验收**：同一动作序列重放逐帧状态相同（`frames` 逐字节或逐字段相同），同种子 64 局 games.jsonl 相同；
+   报告每个引擎进程的常驻内存与启动时间改前 / 改后。这一项优先级高（每个采集 worker、每次搜索推演都受益），可以先做。

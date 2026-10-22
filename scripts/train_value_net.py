@@ -33,6 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
 from pvz_value_net import ValueNet, context_vector, featurize, potential_phi  # noqa: E402
+from train_rollout_policy import CompactBoards  # noqa: E402
 
 SHOOTER_TYPES = {0, 5, 7, 40}
 FRAME_STRIDE = 3
@@ -56,8 +57,11 @@ def _game_context(meta: dict, meta_path: Path):
 
 def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict | None]:
     """Games with only their wave-start frames kept as dicts; with ``training`` the every-FRAME_STRIDE
-    training samples are featurized straight into preallocated tensors. Keeping the frames themselves
-    does not fit: 2048 night games held as dicts went past 16 GB and got OOM-killed (2026-10-15)."""
+    training samples are featurized straight into the row store. Keeping the frames themselves does not
+    fit: 2048 night games held as dicts went past 16 GB and got OOM-killed (2026-10-15).
+
+    The boards go into a CSR store rather than a dense (samples, 92, 6, 10) float16 tensor: 11 040 bytes a
+    sample become ~520, so 477k samples cost 250 MB instead of 5.3 GB and the 16.6 GB run fits (task32)."""
     from pvz_frame_store import frame_bytes, frame_path, read_frames
     paths = sorted(data_dir.glob("*/*/meta.json"))
     train = None
@@ -79,9 +83,9 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
             for i in picked:
                 b, sc = _features(frames[i], context)
                 if train["boards"] is None:
-                    train["boards"] = torch.empty((capacity, *b.shape), dtype=torch.half)
+                    train["boards"] = CompactBoards(b.shape)
                     train["scalars"] = torch.empty((capacity, *sc.shape), dtype=sc.dtype)
-                train["boards"][n] = b; train["scalars"][n] = sc; n += 1
+                train["boards"].append(b.numpy()[None]); train["scalars"][n] = sc; n += 1
                 train["labels"].append(float(won)); train["weights"].append(1.0 / len(picked))
                 train["game_of"].append(len(games))
         games.append({
@@ -93,7 +97,7 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
             "context": context,
         })
     if training:
-        train["boards"] = train["boards"][:n]; train["scalars"] = train["scalars"][:n]
+        train["boards"] = train["boards"].finish(); train["scalars"] = train["scalars"][:n]
         for k in ("labels", "weights", "game_of"):
             train[k] = torch.tensor(train[k])
     return games, train
@@ -160,7 +164,7 @@ def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: 
         order = np.random.permutation(idx) if train else idx
         for start in range(0, len(order), 1024):
             batch = torch.from_numpy(order[start:start + 1024])
-            board = t["boards"][batch].float().to(device)
+            board = t["boards"].batch(batch, device)
             scal = t["scalars"][batch].to(device)
             y = t["labels"][batch].to(device)
             w = t["weights"][batch].to(device)
