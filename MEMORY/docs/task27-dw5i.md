@@ -90,6 +90,8 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 
 - 2026-10-22，4加载提速：复用相同冻结编码器/源档案路径键的父缓存，向本树原子补入41242份手牌与48816份场景缓存（90058份、566997793字节），既有文件不覆盖、父文件只读，复制字节SHA逐项核对；原训练读取器仍逐项校验源内容+编码摘要。PID1319701及冻结命令/配方/源码均未改变，未重启或新增游戏，等待原12epoch。
 
+- 2026-10-22，4完整加载核验：原进程成功加载15788614行，281标签/56784档案的实际来源计数与冻结逐项一致，source_rows SHA已记录，验证复用缓存未遗漏来源。后处理时可用内存低于2GiB，既定守卫暂停PID1319701，>=3GiB自动恢复；保留进程/数据，未动外部cq队列，尚未完成12epoch。
+
 ## 问题
 
 - HF里的z15dag12bv/z15dag13bv是10-17的历史重标版本（见当天日志），不是新Mac轮次；导入档案已保留，但不加入本次训练以免和原12b/13b重复加权。首轮新增48个夜间Mac标签及z17dag43b；冻结刷新再纳入n14dag8m/n17dag8m，共4640份新Mac档案，冻结后不再改本次来源。
@@ -98,7 +100,7 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 
 - 两参考v2已正常完成，pretraining_controller.process.json仅留存历史句柄，pretraining_complete.json已通过计划SHA校验；不要重启参考。当前唯一运行控制器为artifacts/task27/study_controller.process.json（已冻结并开训，后续交付/两版评估自动串接）；先读/proc核对实际PID/命令与阶段result，成功阶段复用。完整task27只以artifacts/task27/complete.json及匹配task27-results.json的SHA为准；19:50 已冻结、19:53 已开训，该句此前“尚未冻结/开训”已过期。
 
-- 训练仍在加载/建缓存阶段，监看training_s1.txt、training_s1.resources.jsonl与complete.json，不重跑冻结或训练。外部cq采集队列不动；本次复核时external_busy=false、paused=false，尚未触发让卡或内存暂停，不能把加载时间误报为暂停。
+- 训练已加载全部15788614行；监看training_s1.txt、training_s1.resources.jsonl与complete.json，不重跑冻结或训练。内存<2GiB会暂停、>=3GiB自动恢复，已实际触发一次；瞬时暂停状态以资源日志为准。外部cq采集队列不动。
 
 - 现用 night_panel_n10.json 的 L20 是旧初始牌变体 night_l20_eval_n10，按任务要求逐字段复现并保留主文件。v2 将从54项合并清单选 night_l20_eval_n10_orig（空槽原版），两者不混用。泳池登记与统一面板均曾占 §14.10，本次保留统一面板为 §14.10、泳池改 §14.11。
 

@@ -25,5 +25,14 @@
   "private_byte_copies_verified": true,
   "parent_files_read_only": true,
   "validation": "Unmodified pinned reader checks source+encoder digest on each cache hit; mismatches regenerate.",
-  "note": "Only frozen archive keys. No command/source/recipe changes, restarts, or checkpoint writes."
+  "note": "Only frozen archive keys. No command/source/recipe changes, restarts, or checkpoint writes.",
+  "actual_loader_verification": {
+    "rows": 15788614,
+    "labels": 281,
+    "archives": 56784,
+    "source_rows_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/dw5i_s1/source_rows.json",
+    "source_rows_sha256": "2dbb3ec72d1d7955d5a7b3e4c9635c661a3383d70ea34a97df4bbabfd1ce0335",
+    "all_frozen_archive_counts_exact": true,
+    "scope": "Loader finished successfully under unchanged source and command; this is not a completed training result."
+  }
 }
