@@ -29,5 +29,6 @@
 - **不加新开关**（主控 10-22 规则：重构直接替换旧实现）。每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。
 
 ## 结果
+- 10-22 23:51 OOM 分数落地：`python/pvz_common.py` 加 `set_oom_score_adj` 与三个角色常量（worker/引擎 1000、控制器 500、训练 300）；`search_play._init_worker`、`pvz_env` 引擎 Popen 的 `preexec_fn`、`curriculum_queue.main`、三个训练脚本 `main` 均已写入；`python/test_oom_guard.py` 3 项在 Linux 子进程里实测通过（Mac 跳过）。
 
 ## 问题

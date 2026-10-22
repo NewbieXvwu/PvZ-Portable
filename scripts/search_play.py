@@ -170,6 +170,9 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, 
               cuda_socket=cuda_socket)
     sys.path.insert(0, str(ROOT / "python"))
     sys.path.insert(0, str(ROOT / "scripts"))
+    from pvz_common import OOM_SCORE_WORKER, set_oom_score_adj
+    # Leave the WSL entry point its memory: under pressure the kernel should pick this game worker first.
+    set_oom_score_adj(OOM_SCORE_WORKER)
     from multiprocessing.util import Finalize
     Finalize(None, _close_worker_env, exitpriority=10)
     if "fast" not in _W:        # a preloading parent already loaded them, and we inherited the pages

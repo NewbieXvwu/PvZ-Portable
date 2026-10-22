@@ -39,6 +39,7 @@ MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import FAMILIES, load_tasks, source_paths  # noqa: E402
+from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
 FRONTIER_LOW = 0.5
 FRONTIER_HIGH = 0.85
@@ -339,6 +340,8 @@ def print_plan(state: dict, plan: list[dict], changes: list[str]) -> None:
 
 
 def main() -> None:
+    # task34: die after the workers and training, but before the WSL access path.
+    set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
     parser.add_argument('--state', type=Path, default=DEFAULT_STATE)
