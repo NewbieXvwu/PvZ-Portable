@@ -33,7 +33,11 @@ if(NOT MSVC AND NOT EMSCRIPTEN)
 	file(GLOB PVZ_PGO_FILES "${PVZ_PGO_DATA}/*.gcda")
 	if(PVZ_PGO_FILES)
 		message(STATUS "PGO: using profile in ${PVZ_PGO_DATA}")
-		add_compile_options(-fprofile-use=${PVZ_PGO_DATA} -fprofile-correction -Wno-missing-profile)
+		# -Wno-error=coverage-mismatch: after a source change the old .gcda no longer matches;
+		# that must degrade to "no profile for this function", not fail the build.  The profile is
+		# regenerated with scripts/build_pgo.sh at the end of every optimisation round.
+		add_compile_options(-fprofile-use=${PVZ_PGO_DATA} -fprofile-correction -Wno-missing-profile
+			-Wno-error=coverage-mismatch)
 		add_link_options(-fprofile-use=${PVZ_PGO_DATA})
 	endif()
 endif()

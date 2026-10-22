@@ -42,4 +42,6 @@
 4. **分配器 mimalloc**（FetchContent 静态链接，`MI_OVERRIDE` 全局接管 malloc）：**+11.2%**（103.2k → 114.8k tick/CPU-s，各 3 次，叶摘要相同）。对照：系统 jemalloc（LD_PRELOAD）只有 +3.6% 且波动大（103.1k–110.4k）。首次 configure 需要联网下载，之后用 `build/_deps` 缓存。
    - 累计：基线 82.0k → **114.8k tick/CPU-s（+40%）**，每推演 28.5 ms → 22.1 ms（CPU 口径）。
 
+5. **引擎每 tick 的无用功 ①**：`Reanimation::UpdateAttacherTrack` 每 tick、每条 attacher 轨道都把 `reanim/<名字>.reanim` 用 `std::format` 拼出来，再对整张 `gReanimationParamArray` 做 `strcasecmp` 线性扫描；`AttacherInfo` 还是每次新建（两次 string 分配）。改成按名字查一次就记住（表在启动后不变，命中前仍走原来的顺序扫描，语义一致），`AttacherInfo` 复用。**+5.4%**（114.8k → 121.0k tick/CPU-s，3 次中位数），叶摘要与整局重放逐帧全部不变。
+
 ## 问题
