@@ -1,0 +1,33 @@
+# task30（主控 2026-10-22 19:00 下发给台式机 Codex 第二个会话 codex2，与 task27 并行）：价值网络跟上加宽——体检、重训、老师 A/B
+
+先读仓库根目录 `AGENTS.md`（优先级最高），再读 DESIGN §13（价值网络）、§14.4–§14.6，`MEMORY/docs/student-bottleneck-plan.md` 末尾 10-22 的几条
+（尤其 18:20 的槽号 / 类型审计结论），以及 `scripts/train_value_net.py`、`scripts/train_value_branches.py`、`python/pvz_value_net.py`。
+
+## 背景
+老师 = 学生推演 + 搜索；搜索的叶子估值与静态估值用价值网络（`--value value_net/v3`、`--static-value value_branch1`，见 `~/pvz-logs/queue103.sh` 的 `run()`）。
+这两个网络只在**白天 L7（z13–z15 倍率）**的分叉数据上训过（v3 共 93 万行），从没见过夜间（坟头、蘑菇、阳光菇、无天降阳光）、泳池（6 行、水路）、原版传送带开局。
+现在夜间 / 泳池 / 传送带的全部标签都靠它们。另有已知输入缺陷：旧编码 `features()` 把空卡槽 -1 写进 scalars[4]（总波数那格）与冷却末格；
+传送带关 10 个槽常有空的，价值网络在这些帧上输入有误（编码器按签名冻结，旧网络不能直接改）。
+
+## 要做的
+工作区（台式机）：`git -C ~/PvZ-search worktree add ~/PvZ-search/.claude/worktrees/vnet -b vnet origin/pvz-env`，只在这里改代码、单独编译。
+**同时最多 4 个游戏进程**（q103 用 16 个、task27 最多 4 个、第二条线最多 2 个）；GPU 训练前 `pgrep -f "train_rollout_policy|train_value"`，task27 的 dw5i 在训时不要同时训。
+
+1. **体检（不跑新局）**：用 `~/PvZ-search/artifacts/student/frames_v2` 里已有的对局（结果已知），按区（白天 d7 / 白天原版传送带 / d7p / 夜间 n9·n10 / 2-10 原版 / 泳池 p9k）
+   给 value_net/v3 与 value_branch1 算 DESIGN §13 的 A6 口径（每局每波一个样本、逐波 AUC、按种子分割）与校准（预测胜率 vs 实际），和白天 L7 对照。写清“出了白天还剩多少”。
+2. **新编码版本**：在 `pvz_value_net.py` 加一个新编码版本（空槽跳过——与 C++ `EnvironmentRollout.cpp:194` 一致；需要的话加区/地形与原版传送带的标量），
+   旧版本逐位不变（签名测试照旧通过），检查点里记录编码版本，C++ 侧若有价值网络前向要同步并做数值对拍。
+3. **重训**：数据 = 已有 L7 分叉数据 + 各区的对局 / 分叉数据（先用 frames_v2 里现成的整局结果；若体检显示某区明显差，再用 `generate_value_data.py` / 分叉采集按区补，≤4 进程），训 value v4（新编码），按区报 A6 指标与校准，和 v3 并列。
+4. **老师 A/B**：老师（dw4i_s1 推演，beta=1，其余参数照 queue103 的 `run()`）只换价值网络 v3 → v4，在夜间 2-4、2-7、2-10 原版与泳池两关上同种子配对（每关 32 局起，≤4 进程），报告胜局差与配对检验。
+   v4 不劣于 v3（白天 L7 也要测，不能掉）且夜间 / 泳池更好，才建议换；**不改默认值**，由主控决定。
+报告写 `MEMORY/docs/value-widen.md`。
+
+## 规则
+- **不要动任何 tmux 队列（q103 等）与别的代理会话；不要改别的工作树与 `~/PvZ-search` 主工作区**（frames_v2 只读）。
+- 分支 `vnet` 提交，可以 `git push origin vnet`；不推 pvz-env、不合并。不改默认值；不写手工规则或公式；不写字面密钥（`$HF_TOKEN` / `$PVZ_HF_REPO`）；
+  不 `git add -f`；`.pt/.npz/.log` 不进 git，价值网络传 HF `transfer/value_v4.pt`。
+- 每完成一小步就提交，并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续，不要停下来等。额度用完由 CodeBuddy 接手，进度一定要落在提交和“结果”里。
+
+## 结果
+
+## 问题
