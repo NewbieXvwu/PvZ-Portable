@@ -1,0 +1,45 @@
+{
+  "complete": true,
+  "passed": true,
+  "width": 128,
+  "cases": [
+    {
+      "task": "day_l9_eval_d7",
+      "seed": 30000,
+      "states": 64
+    },
+    {
+      "task": "night_l11_eval_n9",
+      "seed": 30000,
+      "states": 64
+    },
+    {
+      "task": "day_l10_orig_eval",
+      "seed": 30000,
+      "states": 64
+    }
+  ],
+  "states": 192,
+  "model_sha256": "0eefbb86bf2253f454f88c78c822b8cd9fe448013be7cb269ebed36cd09306de",
+  "checker_sha256": "3ce26204be3150d0911a61ea787f812a2efe06d4204f8612115643e82ec84752",
+  "executable_sha256": "788b1771a6d1914816a9644521422c4db020ebe7a11046e4f99b17a56fbb81cf",
+  "max_abs_error": {
+    "plant": 3.814697265625e-06,
+    "packet": 7.62939453125e-06,
+    "cell": 2.288818359375e-05
+  },
+  "per_head_reference_noise": {
+    "plant": 1.7864905856868063e-06,
+    "packet": 6.2727047733801555e-06,
+    "cell": 2.329714250492998e-05
+  },
+  "worst_tolerance_ratio": {
+    "plant": 0.07306493708983969,
+    "packet": 0.10283418818772956,
+    "cell": 0.17605909642473783
+  },
+  "tolerance_overruns": 0,
+  "action_mismatches": 0,
+  "argmax_mismatches": 0,
+  "tolerance": "abs error < 1e-5 + 1e-5*abs(float32 Python logit) + 2*measured per-head float32-vs-float64 head noise; all actions/argmax exact"
+}
