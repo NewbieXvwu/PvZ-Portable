@@ -651,6 +651,22 @@ def _fmt_narrative(frames: list, w0: int | None, w1: int | None,
 # 不是看棋盘用的 —— 想知道"我哪一步选错了"，得先能看见"我当时选了什么"。
 
 
+def _hand_at(frames: list, decision: int, deck: list | None) -> list:
+    """第 decision 步做决定时手里的牌：卡槽号 → 植物 id（空槽 -1）。
+
+    frames[i] 是第 i 步**之后**的局面，所以第 i 步看到的手牌在 frames[i-1]["packets"]。
+    动作里的 packet 是卡槽号；卡槽里是什么植物要看当时的手牌，不能看任务清单的 deck ——
+    传送带关（原版 1-10 / 2-10，deck=[]）卡槽随发卡移动，换卡组的任务槽号也不对应同一种植物。
+    2026-10-22 教师会话把“种豌豆射手”读成了“种土豆雷”，就是用了静态 deck。旧存档没有 packets 时退回 deck。
+    """
+    if 1 <= decision <= len(frames):
+        packets = frames[decision - 1].get("packets") or []
+        if packets:
+            by_slot = {int(pk[0]): int(pk[1]) for pk in packets}
+            return [by_slot.get(slot, -1) for slot in range(max(by_slot) + 1)]
+    return list(deck or [])
+
+
 def _action_text(a: dict | None, deck: list) -> str:
     if not a:
         return "（开局）"
@@ -719,7 +735,7 @@ def _fmt_actions(frames: list, deck: list, lo: int, hi: int | None,
             if lived > max_life:
                 continue
         sym = "｜".join(f"{r}路{_lane_causal(f, r)[0]}" for r in lane_indices(f))
-        L.append(fmt([i, f["tick"], f["wave"], _action_text(act, deck),
+        L.append(fmt([i, f["tick"], f["wave"], _action_text(act, _hand_at(frames, i, deck)),
                       sym, cons]))
         n_shown += 1
     L.append(f"  显示 {n_shown}/{n_total} 条（范围 帧 {lo}–{hi}）。"
@@ -763,6 +779,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     t = task
     if decision < 1 or decision >= len(frames):
         return f"（决策序号要在 1–{len(frames) - 1} 之间）"
+    hand = _hand_at(frames, decision, deck)   # 这一步的卡槽 → 植物；deck 只留给重放用
 
     # 前缀照抄：第 1..N-1 步用存档里录下的真实动作，保证重放到分叉点为止与存档逐位一致。
     # 第 N 步用 override，之后由存档里的同一个学生检查点接管。
@@ -771,7 +788,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     base_act = frames[decision].get("action")
     base = meta["outcome"]
     L = [f"基线：第 {decision} 步（tick {frames[decision]['tick']}）做的是 "
-         f"{_action_text(base_act, deck)} → 最终第 {base['final_wave']}/"
+         f"{_action_text(base_act, hand)} → 最终第 {base['final_wave']}/"
          f"{base['wave_count']} 波，{base['reason']}",
          "",
          # 重放语义必须写出来。2026-10-03 实测：模型在推理里反复追问
@@ -788,7 +805,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     cands: list[dict] = []
     for raw in raw_actions:
         try:
-            cands.append(_parse_action(raw, deck))
+            cands.append(_parse_action(raw, hand))
         except Exception as exc:  # noqa: BLE001 - 参数写错要给可读提示，不是 traceback
             # 之前这里直接抛，模型看到的是一坨 Python 栈 —— 它据此改不出对的东西。
             # 现在把"哪里错了 + 正确写法"直接回给它。
@@ -829,7 +846,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         try:
             o = _run_variant(meta, {decision: cand}, resource_dir, prefix=prefix)
         except Exception as exc:  # noqa: BLE001 - 单个候选失败不该打断整批
-            L.append(f"  {_action_text(cand, deck):<34} 重放失败：{exc}")
+            L.append(f"  {_action_text(cand, hand):<34} 重放失败：{exc}")
             continue
         delta = o["final_wave"] - base["final_wave"]
         results.append((delta, cand, o))
@@ -847,7 +864,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         losses = (f"  丢车 {o['mowers_used']}  被吃 {o['plants_eaten']:>2}" if has_losses else "")
         if o.get("override_rejected"):
             losses += "  ⚠ 这一步当时执行不了（阳光 / 冷却 / 格子），环境改成了等待"
-        L.append(f"  {mark} {_action_cli(cand, deck):<15} {_action_text(cand, deck):<28}"
+        L.append(f"  {mark} {_action_cli(cand, hand):<15} {_action_text(cand, hand):<28}"
                  f" → 第 {o['final_wave']:>2}/{o['wave_count']} 波  "
                  f"{sign:>4} 波  {o['reason']}{losses}")
     best = max((r[0] for r in results), default=0)
@@ -869,7 +886,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
                 {"schema": SCHEMA,
                  "task": {**t,
                           "note": f"反事实：第 {decision} 步改为 "
-                                  f"{_action_text(top[1], deck)}"},
+                                  f"{_action_text(top[1], hand)}"},
                  "outcome": rec["outcome"], "totals": rec["totals"],
                  "frame_count": len(rec["frames"])},
                 ensure_ascii=False, indent=2), encoding="utf-8")
@@ -993,7 +1010,7 @@ def _parse_action(raw: str, deck: list | None = None) -> dict:
     """支持简写 plant:packet:row:col / wait:ticks / shovel:row:col，也支持原始 JSON。
 
     `packet` 可以是数字 id、中文名（豌豆射手）或英文别名（peashooter）——都是**植物 id**，
-    这里换算成这局卡组里的**卡槽号**（环境的动作认卡槽）。原始 JSON 照原样，packet 是卡槽号。
+    这里按**这一步的手牌**（`_hand_at`）换算成卡槽号（环境的动作认卡槽）。原始 JSON 照原样，packet 是卡槽号。
 
     2026-10-16 修：原来直接把植物 id 当卡槽号用。卡组 [0..5] 时两者恰好相同，
     但学生的卡组是 [0,1,2,3,4,5,7]：`plant:双发射手:…` 变成卡槽 7（不存在），
@@ -1008,7 +1025,7 @@ def _parse_action(raw: str, deck: list | None = None) -> dict:
         if deck:
             if pid not in deck:
                 names = "、".join(f"{d}={PLANT_NAME.get(d, d)}" for d in deck)
-                raise ValueError(f"植物 {pid}={PLANT_NAME.get(pid, pid)} 不在这局的卡组里（卡组：{names}）")
+                raise ValueError(f"植物 {pid}={PLANT_NAME.get(pid, pid)} 不在这一步的手牌里（手牌：{names}）")
             pid = list(deck).index(pid)
         return {"type": "plant", "packet": pid,
                 "row": int(parts[2]), "col": int(parts[3])}
