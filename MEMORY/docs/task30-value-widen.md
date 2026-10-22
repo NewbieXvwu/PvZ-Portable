@@ -44,6 +44,8 @@
 
 - 2026-10-22：外部评估器增加严格种子交集拒绝、模型 SHA256 与清单指纹；1360 局原始外部清单复核通过。2-10 补采先完成 4 局，3 胜 1 负；继续完整批次，尚未训练 v4。
 
+- 2026-10-22：本任务本地串行执行器已运行：`/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/continue_collect.py`（补采）与 `.../artifacts/task30/finish_pipeline.py`（封存测试种子→附加特征→v3 基线；等学生训练退出→v4 训练/离线评估→v4 配对）。重入先查这两个进程，勿重复启动；总进展看同目录 `pipeline.log`、`continue_collect.log`，每阶段仍需汇总并提交，HF 上传与最终报告由代理收尾。
+
 ## 问题
 
 - 本地缺少 v3 记录的 Mac 端全部 93 万行原始分叉，重训先用现有 L7 z13 与 z15d 分叉；明确记录实际数据量。泳池现有整局数据几乎全败，不能报告未定义的 AUC 为 0.5，已补采老师数据。
