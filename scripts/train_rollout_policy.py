@@ -166,8 +166,11 @@ class PacketStore:
         return self
 
     def __getitem__(self, idx):
+        if isinstance(idx, tuple) and len(idx) == 3:        # (row, slot, component): one column, one cell
+            row, slot, component = idx
+            return torch.tensor(np.asarray(self.columns[component])[row, slot])
         kind, active, progress, affordable = (torch.from_numpy(np.asarray(column)) for column in self.columns)
-        return torch.stack([kind[idx].float(), active[idx].float(), progress[idx], affordable[idx].float()], dim=2)
+        return torch.stack([kind[idx].float(), active[idx].float(), progress[idx], affordable[idx].float()], dim=-1)
 
     def kinds(self, rows, slots):
         return torch.from_numpy(np.asarray(self.columns[0])[np.asarray(rows), np.asarray(slots)].astype(np.int64))

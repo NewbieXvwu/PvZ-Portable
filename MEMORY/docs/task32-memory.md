@@ -44,6 +44,7 @@
 - 第 6 步（转正·删开关）：`train_rollout_policy.py` 的紧凑存储改成**唯一实现**，删掉 `--compact-data` / `--data-memmap` / `--dense-boards` 与稠密路径（`_board_store`、`CompactBoards` 的文件后备、`PacketStore` 的列后备）；`_spilled_array` 留给 `train_value_branches.py` 合并 dump。`--data-memmap` 不保留：15M 行时紧凑行约 8.3 GiB，28 GB 预算里放得下，而换页版本在 2000 档案实测只把峰值 2.65→2.64 GB、却要在临时盘占 8.3 GB。门槛：同一 200 档案 / 66 993 行 / 同种子 / 生产配方，改前（`--compact-data`）与改后 21 个权重张量 sha256 **全同**；峰值 2.457→2.423 GB，耗时 34 s 不变。`python/test_compact_loader.py` 重写成单实现的测试（CSR 往返逐位含 -0.0、恒定平面提出去再写回、packet 列还原、缓存与非缓存两条路径一致）；`test_pipeline_perf` / `test_rowpool_aux` / `test_student_observation` 去掉 `dense_boards=True` 后全过。
 - 第 7 步（报告 + 整局门槛）：`MEMORY/docs/memory-budget.md` 写成（账本、每项省多少、28 GB 排布、复现命令、还剩什么）。`scripts/engine_replay_compare.py` 加 `--student`：用学生自己下整局（每决策一帧，到 terminal），同种子多局逐帧比摘要。`scripts/measure_collection_memory.py` 量 worker 常驻构成（解释器 23.0 / 导入后 24.4 / 装网络 205.0 MiB，引擎 57.2 MiB）。合并 `origin/pvz-env`（弹窗改 stderr 那次），重编后重放仍逐帧相同。
 - 第 8 步（整局门槛）：同种子 64 局、每局 400 决策、学生（v25）自己下，两版引擎**每局逐帧摘要全部相同**（最深第 13 波，无一局在 400 决策内结束）；峰值常驻 222.9→60.6 MB，启动 1.048→0.343 s，64 局总耗时 89.8→44.2 s。数字已写进 `MEMORY/docs/memory-budget.md`。
+- 第 9 步（收尾修正）：`PacketStore.__getitem__` 的堆叠轴改 `dim=-1` 并支持 `(row, slot, component)` 单格取值（原来的 `dim=2` 只在标量下标下成立，向量下标直接报错，之前没人走到）；`python/test_identity_training.py` 的 identity 对照改成按列还原。7 个相关测试文件 24 项全过。
 ## 问题
 
 ## 追加（主控 2026-10-22 23:05，用户的两点）
@@ -59,3 +60,7 @@
 ## 追加（主控 2026-10-22 23:55）：不再加开关
 重构不加开关：新实现直接替换旧实现，验收通过后旧路径在同一系列提交里删掉，A/B 用上一个提交对比。你已加的 `--compact-data` / `--data-memmap`：既然权重逐位一致，就把紧凑存储改成唯一实现、删掉旧路径与这两个开关
 （`--data-memmap` 若与常驻 RAM 是二选一的取舍，按 28 GB 预算给出结论后只留一种，或把它登记进 `MEMORY/docs/flags.md` 并写到期日）。价值网络 CSR 同理。引擎跳过不必要加载也不加开关。
+
+## 追加（主控 2026-10-23 00:45，用户）：持续压榨，直到没有油水
+用户的原话：“得继续给优化代理加压，让它持续优化直到真正完全炸不出油水为止。”本任务不再以“做完列出的几项”为完成：
+每做完一项就重测、把当前的耗时 / 内存分布（前 15 项及占比）贴进报告，再挑下一个最大项继续；**停止条件**：连续 3 项尝试的收益都 < 2%，且分布前 15 项里没有可以证明是冗余的部分。没达到就继续，不要自己宣布完成。
