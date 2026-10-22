@@ -5,6 +5,24 @@ from pathlib import Path
 from task27_common import ROOT, MAIN, OUT, read, write, sha, record
 from run_dw5_study import verify
 from unified_panel import summarize
+from pvz_episode_stats import planted_slots
+
+
+def compare_legacy_games(before_folder, after_folder, pairs):
+    """Compare behavior across the requested slot/type telemetry rename."""
+    ignored={'seconds','planted','planted_slots','planted_types','planted_by_type'}
+    matched=0
+    for left,right in pairs:
+        games=[]
+        for folder,name in ((before_folder,left),(after_folder,right)):
+            rows=[json.loads(line) for line in (folder/name/'games.jsonl').read_text().splitlines()]
+            normalized={row['seed']:{**{k:v for k,v in row.items() if k not in ignored},
+                                     'planted_slots':planted_slots(row)} for row in rows}
+            assert len(normalized)==len(rows), ('duplicate seed',folder,name)
+            games.append(normalized)
+        assert games[0]==games[1], ('legacy behavior changed',left,right)
+        matched+=len(games[0])
+    return matched
 
 
 def audit_panel(folder, version, model_hash, executable_hash=None):
@@ -114,6 +132,16 @@ def main():
                map(json.loads,(OUT/'baseline_v2_dw4i_s1'/new_name/'games.jsonl').read_text().splitlines())}
         assert before==after, ('legacy behavior changed',old_name,new_name)
         legacy_games+=len(before)
+    old_identity_path=old_v1_path.parent.parent/'baseline_identity/panel.json'
+    old_identity=read(old_identity_path)
+    assert old_identity['complete'] and old_identity['model_sha256']==references['models_sha256']['identity']
+    assert old_identity['manifest_sha256']==sha(OUT/'unified_v1.json')
+    for left,_ in legacy_pairs:
+        task=next(t for t in old_manifest['tasks'] if t['task_id']==left)
+        group=old_manifest['groups'][left];n=64 if group=='heldout' else 128
+        actual=summarize(old_identity_path.parent/left,task,task['seeds'][:n]);actual['group']=group
+        assert actual==next(t for t in old_identity['tasks'] if t['task_id']==left)
+    legacy_identity_games=compare_legacy_games(old_identity_path.parent,OUT/'baseline_v2_identity',legacy_pairs)
     dead=read(ROOT/'MEMORY/docs/task27-dead-decks.json')
     assert set(dead)=={'day_l7_eval_d7p_holdout3','day_l8_eval_d7p_holdout1','day_l9_eval_d7p_holdout1'}
     for name,data in dead.items():
@@ -132,7 +160,7 @@ def main():
         source_groups[group].update({key:stats[key] for key in ('archives','rows','training_rows','validation_rows')})
     full=dict(complete=True,study_plan=plan,training=training,metrics=metrics,source_rows=rows,
               upload=upload,native_parity=native,v2_references=panels,dw5i_panels=new,
-              historical_dw4i_v1=old_v1,dead_decks=dead)
+              historical_dw4i_v1=old_v1,historical_identity_v1=old_identity,dead_decks=dead)
     write(OUT/'results.json',full)
     compact=dict(complete=True,full_results_path=str(OUT/'results.json'),full_results_sha256=sha(OUT/'results.json'),
                  study_plan_sha256=sha(OUT/'study_plan.json'),training=training,upload=upload,
@@ -143,6 +171,7 @@ def main():
                      for name,p in {'dw4i_s1':old_v1,'dw5i_s1':new['v1']}.items()},
                  native_states=native['states'],v1_v2_identical_task_games=matched_games,
                  legacy_dw4i_identical_task_games=legacy_games,
+                 legacy_identity_identical_task_games=legacy_identity_games,
                  retained_reference_executable_sha256=references.get('historical_reference_executable_sha256',{}),
                  instrumentation_sha256=sha(ROOT/'MEMORY/docs/task27-step0.json'),
                  dead={name:{k:d[k] for k in ('deck','games','won','loss_waves','nearest_terminal_zombie_types','conclusion')} for name,d in dead.items()},
@@ -183,6 +212,7 @@ def main():
     lines += ['', f"本次结果判断：早关合计{recovery}（相差{early_delta:+d}/512局）；相对dw4i_s1，v2夜间n10变化{changed['night']:+.2f}pp、泳池{changed['pool']:+.2f}pp、白天{changed['day']:+.2f}pp、留出{changed['heldout']:+.2f}pp。这些是固定单seed和固定评估种子的描述性差异，不是总体非劣或因果归因证明。",'',
               f"v1/v2共有任务及两个同语义的原版L20任务，逐seed除seconds外{matched_games}局记录完全一致；版本切换没有改变这些局的策略行为。"]
     lines += [f"参考dw4i_s1的白天/留出及原版L20与task23旧二进制记录逐seed核对，{legacy_games}局除耗时和新增类型计数外完全相同。"]
+    lines += [f"旧identity对照使用第0步后的新构建；与task23旧构建的共同任务逐seed比较，{legacy_identity_games}局除耗时和种植统计键改名外，全部记录及槽计数完全一致。"]
     lines += ['', '| 全零留出诊断 | 卡组 | 老师胜局 | 输局波数 |','|---|---|---:|---|']
     for name,d in dead.items():lines.append(f"| {name} | {d['deck']} | {d['won']}/16 | {d['loss_waves']} |")
     from pvz_constants import ZOMBIE_NAME
