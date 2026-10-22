@@ -12,7 +12,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from render_episode import _frame
-from train_rollout_policy import CompactBoards, load
+from train_rollout_policy import CandidateStore, CompactBoards, ValueStore, load
 from pvz_frame_store import cache_episode, frame_paths, read_frames, write_frames
 from value_ranking_check import _save_dump
 
@@ -54,6 +54,10 @@ class PipelinePerfTest(unittest.TestCase):
 
     def assert_rows_equal(self, expected, actual):
         for left, right in zip(expected, actual):
+            if isinstance(left, (CandidateStore, ValueStore)):
+                left = left[torch.arange(len(left.counts))]
+            if isinstance(right, (CandidateStore, ValueStore)):
+                right = right[torch.arange(len(right.counts))]
             if isinstance(left, CompactBoards):
                 left = left.batch(torch.arange(left.shape[0]), "cpu").to(right.dtype if isinstance(right, torch.Tensor) else torch.half)
             if isinstance(right, CompactBoards):

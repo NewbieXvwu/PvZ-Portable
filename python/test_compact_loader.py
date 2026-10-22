@@ -17,7 +17,8 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_frame_store import write_frames  # noqa: E402
-from train_rollout_policy import CandidateStore, CompactBoards, PacketStore, constant_plane, load  # noqa: E402
+from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, ValueStore,
+                                  constant_plane, load)  # noqa: E402
 
 
 def game_frames(count: int) -> list[dict]:
@@ -121,9 +122,10 @@ class CompactLoaderTest(unittest.TestCase):
         for index in (0, 1):
             self.assertTrue(torch.equal(self.dense(cached[index], rows).view(torch.int32),
                                         self.dense(plain[index], rows).view(torch.int32)))
-        for index in (2, 3, 4, 5, 7):
+        for index in (2, 3, 4, 5):
             torch.testing.assert_close(cached[index].float(), plain[index].float(), rtol=0, atol=0, equal_nan=True)
         rows_range = torch.arange(rows)
+        torch.testing.assert_close(cached[7][rows_range], plain[7][rows_range], rtol=0, atol=0, equal_nan=True)
         torch.testing.assert_close(cached[8][rows_range], plain[8][rows_range], rtol=0, atol=0, equal_nan=True)
         torch.testing.assert_close(cached[9][rows_range], plain[9][rows_range], rtol=0, atol=0, equal_nan=True)
         self.assertEqual(cached[6], plain[6])

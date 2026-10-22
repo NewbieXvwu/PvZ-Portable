@@ -224,6 +224,60 @@ class CandidateStore:
         return self.counts.nbytes + self.entries.nbytes + self.offsets.nbytes
 
 
+class ValueStore:
+    """The search's per-candidate win probabilities, stored sparse.
+
+    target_values() returns PACKETS+1 floats with NaN for the candidates the search did not compare, and
+    most rows have no targets at all -- the dense block costs 44 bytes on every row. A uint8 slot plus the
+    float32 value is 5 bytes a known candidate, and getitem() rebuilds exactly the NaN-padded row the soft
+    target reads (task32).
+    """
+
+    def __init__(self):
+        self.counts = bytearray()
+        self.slots = bytearray()
+        self.values = bytearray()
+
+    def append(self, row):
+        row = np.asarray(row, dtype=np.float32)
+        known = np.flatnonzero(~np.isnan(row))
+        self.counts.append(len(known))
+        self.slots.extend(known.astype(np.uint8).tobytes())
+        self.values.extend(row[known].tobytes())
+
+    def finish(self):
+        self.counts = np.frombuffer(self.counts, dtype=np.uint8)
+        self.slots = np.frombuffer(self.slots, dtype=np.uint8)
+        self.values = np.frombuffer(self.values, dtype=np.float32)
+        self.offsets = np.zeros(len(self.counts) + 1, dtype=np.int32)
+        np.cumsum(self.counts, out=self.offsets[1:])
+        return self
+
+    def __getitem__(self, idx):
+        selected = np.asarray(idx)
+        counts = self.counts[selected].astype(np.int64)
+        output = np.full((len(selected), PACKETS + 1), np.nan, dtype=np.float32)
+        if counts.sum():
+            starts = self.offsets[selected]
+            positions = np.arange(counts.sum()) + np.repeat(starts - (np.cumsum(counts) - counts), counts)
+            output[np.repeat(np.arange(len(selected)), counts), self.slots[positions]] = self.values[positions]
+        return torch.from_numpy(output)
+
+    def spread(self) -> tuple[np.ndarray, np.ndarray]:
+        """(rows with at least two known values, max - min of them): the spread weighting, without a dense row."""
+        counts = self.counts.astype(np.int64)
+        rows = np.flatnonzero(counts >= 2)
+        spreads = np.empty(len(rows), dtype=np.float32)
+        for index, row in enumerate(rows):
+            block = self.values[self.offsets[row]:self.offsets[row + 1]]
+            spreads[index] = block.max() - block.min()
+        return rows, spreads
+
+    @property
+    def nbytes(self):
+        return self.counts.nbytes + self.slots.nbytes + self.values.nbytes + self.offsets.nbytes
+
+
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
          cells: bool = False, aux_horizon: int = 0, row_observer=None,
@@ -282,7 +336,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     plant, weight = np.empty(capacity, np.uint8), np.empty(capacity, np.float32)
     packet = np.empty(capacity, np.int16)
     cell = np.empty(capacity, np.int16)
-    values = np.empty((capacity, PACKETS + 1), np.float32)
+    values = ValueStore()
     seed_of = []
     cands = CandidateStore() if cells else None
     auxiliary = np.empty((capacity, 6), dtype=np.float32) if aux_horizon else None
@@ -343,7 +397,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                         assert np.array_equal(side["rows"], stored["rows"]), path
                         for row in side["cands"][selected]:
                             cands.append(row)
-                values[n:n + count] = vals
+                for row in vals:
+                    values.append(row)
                 if aux_horizon:
                     if path not in aux_cached:
                         aux_cached[path] = cache_aux(path, cache_dir, aux_horizon)
@@ -387,13 +442,13 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             if packets is not None and is_plant and packets.columns[0][n - 1, packet[n - 1]] < 0:
                 raise ValueError(f'identity labelled plant has an empty packet slot: {path}, row {i}')
             cell[n - 1] = action["row"] * LAWN_COLS + action["col"] if is_plant else -1
-            values[n - 1] = target_values(frames[i].get("targets"))
+            values.append(target_values(frames[i].get("targets")))
             if aux_horizon:
                 auxiliary[n - 1] = future_damage[i - 1]
             if cells:
                 cands.append(candidate_cells(frames[i].get("targets")))
     result = (boards.finish(), scalars.finish(), *(torch.from_numpy(a[:n]) for a in (plant, packet, cell, weight)),
-              seed_of, torch.from_numpy(values[:n]),
+              seed_of, values.finish(),
               None if cands is None else cands.finish())
     if aux_horizon:
         result = (*result, torch.from_numpy(auxiliary[:n]))
@@ -500,8 +555,9 @@ def main() -> None:
           f"{int(is_val.sum())} validation rows", flush=True)
     memory = {"rows": len(plant), "board_bytes": boards.nbytes,
               "scalar_bytes": scalars.nbytes, "cand_bytes": 0 if cands is None else cands.nbytes,
+              "value_bytes": values.nbytes,
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
-                                  for tensor in (plant, packet, cell, weight, values, is_val))}
+                                  for tensor in (plant, packet, cell, weight, is_val))}
     if packet_info is not None:
         memory['packet_bytes'] = (packet_info.nbytes if isinstance(packet_info, PacketStore)
                                   else packet_info.numel() * packet_info.element_size())
@@ -518,12 +574,12 @@ def main() -> None:
     if args.spread_weight:
         # 2026-10-17: only ~3% of rows are the teacher overriding the student, and those carry what the student lacks;
         # plain cross-entropy weighs a trivial wait as much as a decision worth 10 points of win rate.
-        known = ~torch.isnan(values)
-        compared = known.sum(1) >= 2
-        spread = (values.nan_to_num(-1e9).amax(1) - values.nan_to_num(1e9).amin(1))[compared]
+        compared_rows, spread = values.spread()
+        compared = torch.from_numpy(compared_rows).long()
+        spread = torch.from_numpy(spread)
         # capped: a few spreads near 1 are games decided inside the horizon, not choices 30x more important
         weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
-        print(f"spread weights: {int(compared.sum())} compared rows, mean spread {float(spread.mean()):.4f}, "
+        print(f"spread weights: {len(compared)} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
     if row_plan:
         row_plan.apply(weight)
@@ -649,9 +705,11 @@ def main() -> None:
                 break
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
-        # (2026-10-15: garbage val metrics while the model itself was fine on the CPU).
+        # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
+        # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
+        # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
         with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(4096)]
+            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(1024)]
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}

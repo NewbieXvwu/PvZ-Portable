@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from pvz_frame_store import cache_episode, read_frames, write_frames, identity_scene_scalars
 from pvz_rollout_policy import load_student, packet_features
-from train_rollout_policy import CandidateStore, PacketStore, load
+from train_rollout_policy import CandidateStore, PacketStore, ValueStore, load
 
 
 class IdentityTrainingTest(unittest.TestCase):
@@ -49,8 +49,8 @@ class IdentityTrainingTest(unittest.TestCase):
             self.assertEqual(len(direct), 11)
             for i in list(range(2, 6)) + list(range(7, 11)):
                 left, right = direct[i], cached[i]
-                if isinstance(left, (PacketStore, CandidateStore)):   # column-split / sparse stores
-                    rows = torch.arange(len(left.counts) if isinstance(left, CandidateStore)
+                if isinstance(left, (PacketStore, CandidateStore, ValueStore)):   # column-split / sparse stores
+                    rows = torch.arange(len(left.counts) if isinstance(left, (CandidateStore, ValueStore))
                                         else left.columns[0].shape[0])
                     left, right = left[rows], right[rows]
                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
