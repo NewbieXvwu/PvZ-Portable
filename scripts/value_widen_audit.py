@@ -71,10 +71,11 @@ def main():
     p.add_argument('--seeds-per-cohort',type=int,default=256)
     p.add_argument('--manifest',type=Path,help='reuse existing frozen manifest')
     args=p.parse_args();torch.set_num_threads(2);args.out.mkdir(parents=True,exist_ok=True)
-    nets={};excluded=set()
+    nets={};excluded=set();models={}
     for spec in args.model:
         name,path=spec.split('=',1);ck=torch.load(path,map_location='cpu',weights_only=False)
         nets[name]=load_value_net(path);excluded.update(ck.get('trained_on',[]))
+        models[name]=dict(path=path,sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),encoder=ck.get('encoder','pvz_value_net.featurize v1'))
     if args.manifest:
         manifest=json.loads(args.manifest.read_text())
     else:
@@ -93,6 +94,8 @@ def main():
                 paths=sorted(seeds[seed]);archive=paths[int(seed_key(seed),16)%len(paths)]
                 manifest.append(dict(cohort=group,seed=seed,archive=archive))
         (args.out/'manifest.json').write_text(json.dumps(manifest,indent=1))
+    overlap={g['seed'] for g in manifest}&excluded
+    if overlap:raise ValueError(f'external audit includes {len(overlap)} training/stopping seeds')
     records=[];predictions={name:[] for name in nets}
     for gi,game in enumerate(manifest):
         archive=Path(game['archive']);meta=json.loads((archive/'meta.json').read_text())
@@ -110,7 +113,7 @@ def main():
         records.extend(dict(**game,wave=w,won=int(meta['outcome']['won'])) for w in starts)
         if (gi+1)%100==0:print(f'{gi+1}/{len(manifest)} games',flush=True)
     report=dict(protocol='A6: first nonterminal frame per game/wave; seed hash sampling; one archive per seed/cohort; all old training seeds excluded',
-                excluded_training_seeds=len(excluded),cohorts=summarize(records,predictions))
+                excluded_training_seeds=len(excluded),models=models,manifest_sha256=hashlib.sha256(json.dumps(manifest,sort_keys=True).encode()).hexdigest(),cohorts=summarize(records,predictions))
     (args.out/'metrics.json').write_text(json.dumps(report,indent=1))
     np.savez_compressed(args.out/'predictions.npz',records=np.array(json.dumps(records)),**{k:np.array(v) for k,v in predictions.items()})
     for group,data in report['cohorts'].items():

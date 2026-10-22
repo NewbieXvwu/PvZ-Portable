@@ -5767,5 +5767,18 @@
    "frames_with_empty_slots": 2180,
    "frames_with_free_but_sun_unaffordable_packets": 8519
   }
- }
+ },
+ "models": {
+  "v3": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+   "encoder": "pvz_value_net.featurize v1"
+  },
+  "branch1": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+   "encoder": "pvz_value_net.featurize v1"
+  }
+ },
+ "manifest_sha256": "cfefaa885272ca33451bf9acf9cba53947f9a28cbfe1be84dde198b87f69cd22"
 }
