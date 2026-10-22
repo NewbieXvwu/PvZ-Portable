@@ -25,6 +25,11 @@
   * p9   `pool_lN_eval_p9`  = `[0,1,2,3,4,5,7,16,43]`（学生训练卡组 + 睡莲 + 香蒲）
   * p9k  `pool_lN_eval_p9k` = `[0,1,2,3,4,5,7,16,19]`（学生训练卡组 + 睡莲 + 缠绕水草 19）
 
+2026-10-22 主控定泳池卡组 **p9k**（老师 25/80，p9 23/80 在噪声内），`--combined` 另写训练族
+`pool_lN_train_p9k`：普通泳池关（21–24、26–29），种子 `2000000 + (N-21)*10000` 起每关 8192 个。
+**训练族不收 3-10（L30）**：它是 mini-boss 传送带，卡组只描述初始手牌，不适合当训练任务；
+3-5（L25）本来就整关不收。
+
 AGENTS §8 核对在生成时强制：地形覆盖（水路要有 16 或 43）、升级植物所有权
 （香蒲 43 必须在 `PlayerProfileContext.owned_upgrade_plants` 里，由
 `pvz_tasks.profile_for_deck` 按卡组自动声明）、长度 6..10、无重复。
@@ -49,6 +54,13 @@ from zone_panel import Family, Zone, main_for  # noqa: E402
 
 P9_DECK = (0, 1, 2, 3, 4, 5, 7, 16, 43)
 P9K_DECK = (0, 1, 2, 3, 4, 5, 7, 16, 19)
+
+# 训练段：2000000 + (N - 21) * 10000，每关 8192 个（与 1900000 夜间段、1800000 白天段不重叠）。
+TRAIN_SEED_BASE = 2000000
+TRAIN_SEED_STRIDE = 10000
+TRAIN_SEEDS = 8192
+# 训练族不收的关：3-10 是 mini-boss 传送带（3-5 整关已排除）。
+TRAIN_EXCLUDED_LEVELS = (30,)
 
 # 已用种子段（自查用）：与这些区间重叠就直接报错，不生成。
 RESERVED_SEED_RANGES = (
@@ -79,7 +91,11 @@ POOL = Zone(
         Family(""),
         Family("_p9", P9_DECK),
         Family("_p9k", P9K_DECK),
+        Family("_p9k", P9K_DECK, "train", exclude_levels=TRAIN_EXCLUDED_LEVELS),
     ),
+    train_seed_base=TRAIN_SEED_BASE,
+    train_seed_stride=TRAIN_SEED_STRIDE,
+    train_seeds=TRAIN_SEEDS,
     reserved_seed_ranges=RESERVED_SEED_RANGES,
 )
 

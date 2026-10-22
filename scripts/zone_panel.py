@@ -42,6 +42,7 @@ class Family:
     deck: tuple | None = None   # None = deck_for_level(level)
     kind: str = "eval"          # "eval" | "train"
     note: str = ""
+    exclude_levels: tuple = ()  # 这个族不收的关（如训练族不收传送带 / 小游戏关）
 
     @property
     def label(self) -> str:
@@ -166,8 +167,11 @@ def build_document(zone: Zone, args) -> tuple[dict, list[dict], dict]:
             task_id = f"{zone.task_prefix}{level}_eval{family.suffix}"
         tasks.append(task_document(zone, level, deck, task_id, seeds))
 
+    def family_levels(family: Family) -> list[int]:
+        return [level for level in levels if level not in family.exclude_levels]
+
     # 顺序与 task21 的清单逐字节一致：对照族先跑完所有关，再按关排其余族。
-    for level in levels:
+    for level in family_levels(families[0]):
         emit(families[0], level)
         deck = families[0].deck if families[0].deck is not None else deck_for_level(level)
         unlocked = unlocked_plants(level)
@@ -177,6 +181,8 @@ def build_document(zone: Zone, args) -> tuple[dict, list[dict], dict]:
                        "special": zone.special_notes.get(level, "")})
     for level in levels:
         for family in families[1:]:
+            if level in family.exclude_levels:
+                continue
             emit(family, level)
 
     check_seed_overlap(zone, tasks)
@@ -252,6 +258,6 @@ def main_for(zone: Zone, argv: list[str] | None = None) -> None:
         for family in zone.families:
             if family.kind != "train":
                 continue
-            for level in meta["levels"]:
+            for level in [lv for lv in meta["levels"] if lv not in family.exclude_levels]:
                 start = train_seed_start(zone, level)
                 print(f"train{family.suffix} L{level}: {start}..{start + args.train_seeds - 1}")
