@@ -29,6 +29,7 @@ task26 已合进 pvz-env（042e4c79）。结论：2-10 原版开局学生 0 胜�
 
 ## 结果
 
+- 2026-10-22 第一步（2-10 DAgger 采集）：`night_l20_train_n10_orig` 偏移 0 起 32 局（种子 2290000–2290031），`--dagger-beta 0`、标签 `n20o1`、帧写 `~/PvZ-search/artifacts/student/frames_v2/seed_22900xx/n20o1_fast_search`，2 并发 16 分钟跑完（每局 40.4 s）。**0/32 胜**、结束波 6–8（均值 6.66）、每局 271.7 决策 / 搜索 51.5 次 / 标签判“种”18.0 次。执行侧种植 **0**（beta=0 执行者是学生，与 task26 一致）；标签侧 575 个种植：毁灭菇 315、寒冰菇 113、小喷菇 93、胆小菇 27、大喷菇 18、魅惑菇 8、墓碑吞噬者 1。分析脚本 `scripts/analyze_n20o1.py`，汇总 `artifacts/task28/n20o1_summary.json`（不入 git）。报告 `MEMORY/docs/night-l20.md` §5。
 - 2026-10-22 第二步（夜间扰动卡组族 n10p）：新增 `scripts/make_night_n10p.py`（照 task19 的 `deck_perturb`，底卡组 n10、`swaps=[1,2]`、池子从引擎 `DECK_OPTIONS` 现查）。生成 `artifacts/stage4/night_panel_n10p.json`（工作树 + `~/PvZ-search/artifacts/stage4/` 各一份，不进 git）：8 个训练族 `night_lN_train_n10p`（N=11–14、16–19，种子 2400000/2410000/2420000/2430000/2450000/2460000/2470000/2480000 起各 8192）+ 16 个留出 `night_lN_eval_n10p_holdout{1,2}`（种子 30000–30255）。审计：65536 训练种子 / 11794 个不同卡组；与 15 份现有清单的 407552 个已用种子穷举比对**重叠 0**；必需植物 10/12/13/14/15 分别出现在 4180/4128/4243/4011/4142 个训练卡组；reset 抽查 4 个任务均为 10 槽且类型逐位等于 `deck_for_seed`。DESIGN §14.11 登记，`MEMORY/docs/night-panel.md` §10 写族定义与审计。
 
 ## 问题
