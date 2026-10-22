@@ -50,4 +50,6 @@
 
 7. **引擎每 tick 的无用功 ②：轨道稀疏遍历成为唯一实现**。`Reanimation::Update` 的 `updateTrack` 里，非 attacher、无挂件、无 blend 的轨道每 tick 只做三次 load+比较，而一个 reanim 有 50–200 条这样的轨道；剖面上这个 lambda 占 ~13%。稀疏遍历（位图 + 缓存）原来藏在 `ENV_SPARSE_TRACKS` 开关后面，现在只要 `ENV_LIGHT_ANIMATION` 打开就用（跳过的条件正是函数体里检查的那三个，按构造精确；`scripts/sim_skip_agreement.py` 已在 224 局上逐动作验证过）。**+6.0%**（配对 A/B，比值中位数 0.944），叶摘要与整局逐帧重放仍然全部相同。
 
+8. **引擎每 tick 的无用功 ③：粒子的每 tick 视觉积分**。`PvzpParticleEmitter::UpdateParticle` 里 field 曲线求值 + 位置/自旋积分只喂渲染；寿命（`mParticleAge`）必须照旧推进，因为粒子死亡可能 spawn 一个 cross-fade emitter、从共享 RNG 里取数。改成 `ENV_LIGHT_ANIMATION` 下只做寿命记账（年龄、time value、最后 time value），跳过其余数学。**+4.7%**（配对 A/B 4 轮比值中位数 0.955；同一改动另一次 3 轮测得 0.854，机器负载 13 时抖动很大，报告取保守值）。验收：64 个 root 叶摘要**逐位相同**，16 个存档整局逐帧重放 0 差异。
+
 ## 问题
