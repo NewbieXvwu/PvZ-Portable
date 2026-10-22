@@ -65,7 +65,8 @@ def analyze(archive, seed, wanted, rows):
         slot_type = {int(entry[0]): int(entry[1]) for entry in frame['packets']}
         plants = [(slot_type.get(slot, -1), row, col, value) for slot, row, col, value in targets if slot >= 0]
         wait = next((value for slot, _r, _c, value in targets if slot < 0), None)
-        label = frames[index + 1].get('label') or {}
+        # beta = 1 archives carry no 'label': the search decision is the executed 'action'.
+        label = frames[index + 1].get('label') or frames[index + 1].get('action') or {}
         chosen = value_of(targets, label.get('packet', -1)) if label.get('type') == 'plant' else wait
         row = dict(level=level, seed=seed, tick=frame.get('tick'), sun=frame.get('sun'),
                    wait=wait, chosen_value=chosen, label_type=label.get('type'),

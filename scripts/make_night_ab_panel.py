@@ -21,12 +21,32 @@ def main():
     p.add_argument('--panel', type=Path, default=MAIN/'artifacts/stage4/night_panel.json')
     p.add_argument('--levels', type=int, action='append', default=None)
     p.add_argument('--seeds', type=int, default=128)
+    p.add_argument('--extra-card', type=int, default=None,
+                   help='control: n9 plus one card that is never plantable on night grass (e.g. 43 cattail)')
+    p.add_argument('--extra-suffix', default='n9c')
     p.add_argument('--out', type=Path, required=True)
     args = p.parse_args()
     levels = args.levels or [12, 14, 17]
     document = json.loads(args.panel.read_text())
     tasks = {task['task_id']: task for task in document['tasks']}
     chosen = []
+    if args.extra_card is not None:
+        deck = N9_DECK + [args.extra_card]
+        for level in levels:
+            task = copy.deepcopy(tasks[f'night_l{level}_eval_n9'])
+            task['task_id'] = f'night_l{level}_eval_{args.extra_suffix}'
+            task['deck'] = deck
+            task['seeds'] = task['seeds'][:args.seeds]
+            chosen.append(task)
+        manifest = dict(schema_version=1,
+                        purpose=f'task23 step 6.1 control: n9 plus card {args.extra_card} (never plantable on night grass)',
+                        groups={task['task_id']: 'night' for task in chosen}, tasks=chosen,
+                        semantics='same seeds and task fields as the n9 arm; only the unused tenth slot differs')
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(manifest, indent=2) + '\n')
+        for task in chosen:
+            print(task['task_id'], task['deck'], len(task['seeds']))
+        return
     for level in levels:
         pair = []
         for suffix, deck in (('n9', N9_DECK), ('n10', N10_DECK)):
