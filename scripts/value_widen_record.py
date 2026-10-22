@@ -94,6 +94,17 @@ def final(out):
         for wave in (5,10,15):
             aucs={k:next((x['auc'] for x in v['per_wave'] if x['wave']==wave),None) for k,v in g['models'].items()}
             lines.append(f"| {name} | {wave} | {fmt(aucs['v3'])} | {fmt(aucs['v4'])} | {fmt(aucs['branch1'])} |")
+    # Mean per-wave AUC over waves with both outcome classes: the "what is left outside daytime" summary.
+    def mean_auc(model):
+        values=[x['auc'] for x in model['per_wave'] if x['auc'] is not None]
+        return sum(values)/len(values) if values else None, len(values)
+    lines+=['','| 区 | 胜/局 | v3 平均逐波 AUC | v4 平均逐波 AUC | branch1 平均逐波 AUC | 可算 AUC 的波数 |','|---|---:|---:|---:|---:|---:|']
+    for name,g in metrics['cohorts'].items():
+        cells=[mean_auc(g['models'][m]) for m in ('v3','v4','branch1')]
+        lines.append(f"| {name} | {g['wins']}/{g['games']} | {fmt(cells[0][0])} | {fmt(cells[1][0])} | {fmt(cells[2][0])} | {cells[1][1]} |")
+    saturated=[f"{name}（实际 {g['wins']}/{g['games']}，v4 平均预测 {g['models']['v4']['calibration']['predicted']:.3f}）"
+        for name,g in metrics['cohorts'].items() if g['models']['v4']['calibration']['predicted']<0.05 and g['wins']==0]
+    if saturated:lines+=['',f"v4 在这些全败区把胜率压到近零：{('、'.join(saturated))}。校准方向正确（v3 高估到 0.5–0.7），但叶值几乎不随局面变化，同局候选的排序只能靠实战 A/B 检验；泳池老师数据（有胜有负）仍给出可算的排序信息。"]
     lines+=['','## 老师同种子 A/B','',
         '固定 dw4i_s1 推演、beta=1、branch1 静态估值、verify=9、student-candidates=2，其余 queue103 默认；只换叶子 v3→v4。泳池 L21/L24 在任何 A/B 开局前固定，覆盖 20/40 波。每关同种子 32 对，双侧精确 McNemar。','',
         '| 任务 | v3 胜 | v4 胜 | 净胜局 | v4 独胜:独负 | p |','|---|---:|---:|---:|---:|---:|']
