@@ -5,7 +5,7 @@ from task27_common import ROOT, MAIN, OUT, read, write, sha
 from import_dw4_transfer import hf_environment, import_archive
 
 PATTERN = re.compile(r'transfer/((?:d(?:1|3|4|6|7|8|9|10)(?:dag\d+[bm]|p\d+m))|(?:n(?:11|12|13|14|16|17|18|19)dag\d+m))\.tgz')
-OLD_MAC = re.compile(r'transfer/(z\d+dag\d+[a-z]*)\.tgz')
+OLD_MAC = re.compile(r'transfer/(z\d+dag\d+(?:b|c))\.tgz')
 
 
 def refresh():
@@ -21,6 +21,10 @@ def refresh():
     for row in read(MAIN/'.claude/worktrees/dw4/artifacts/task23/mac_import.json')['rounds']:
         known.setdefault(row['label'],row)
     introduced = set(previous.get('introduced_labels',[])) | set(journal.get('introduced_labels',[]));records = []
+    eligible={m[1]+'_fast_search' for e in info.siblings
+              if (m := PATTERN.fullmatch(e.rfilename) or OLD_MAC.fullmatch(e.rfilename))}
+    archival_variants=sorted(set(previous.get('excluded_archival_variants',[])) | (introduced-eligible))
+    introduced.intersection_update(eligible)
     destination = MAIN/'artifacts/student/frames_v2'
     existing_old = Counter(p.parent.name for p in destination.glob('*/*/frames.npz')
                            if p.parent.name.startswith('z'))
@@ -53,7 +57,8 @@ def refresh():
         print({'label':label,'archives':result['archives'],'added':result['refresh_added_files']},flush=True)
     result = dict(repo=repo,revision=info.sha,destination=str(destination),rounds=records,
                   introduced_labels=sorted(introduced),
-                  package_scope='All uploaded d*/n* breadth Mac rounds, plus previously unimported z* rounds; v2fill is legacy feature backfill, not a new round.',
+                  excluded_archival_variants=archival_variants,
+                  package_scope='All uploaded d*/n* breadth Mac rounds and previously unimported z* Mac b/c rounds; bv relabels and v2fill are historical variants, not new rounds.',
                   added_files_this_refresh=sum(r['refresh_added_files'] for r in records))
     write(target,result)
     return result

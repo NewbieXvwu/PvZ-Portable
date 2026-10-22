@@ -77,6 +77,16 @@ def main():
     panels={name:audit_panel(OUT/f'baseline_v2_{name}','v2',references['models_sha256'][name])
             for name in ('dw4i_s1','identity')}
     new={v:audit_panel(OUT/f'panel_dw5i_{v}',v,sha(model)) for v in ('v1','v2')}
+    common_ids=set(t['task_id'] for t in new['v1']['tasks']) & set(t['task_id'] for t in new['v2']['tasks'])
+    matched_games=0
+    pairs=[(name,name) for name in sorted(common_ids)] + [('night_l20_eval_n9_orig','night_l20_eval_n10_orig')]
+    for left,right in pairs:
+        games=[]
+        for version,name in (('v1',left),('v2',right)):
+            games.append({r['seed']:{k:v for k,v in r.items() if k!='seconds'} for r in
+                          map(json.loads,(OUT/f'panel_dw5i_{version}'/name/'games.jsonl').read_text().splitlines())})
+        assert games[0]==games[1], ('same task changed across panel versions',left,right)
+        matched_games+=len(games[0])
     old_v1_path=MAIN/'.claude/worktrees/dw4/artifacts/task23/panel_dw4i_s1/panel.json'
     old_v1=read(old_v1_path);old_manifest=read(OUT/'unified_v1.json')
     assert old_v1['complete'] and old_v1['model_sha256']==references['models_sha256']['dw4i_s1']
@@ -112,7 +122,8 @@ def main():
                      for name,p in {**panels,'dw5i_s1':new['v2']}.items()},
                  v1={name:dict(groups=p['groups'],tasks=[{k:t[k] for k in ('task_id','games','won','win_rate')} for t in p['tasks']])
                      for name,p in {'dw4i_s1':old_v1,'dw5i_s1':new['v1']}.items()},
-                 native_states=native['states'],dead={name:{k:d[k] for k in ('deck','games','won','loss_waves','nearest_terminal_zombie_types','conclusion')} for name,d in dead.items()},
+                 native_states=native['states'],v1_v2_identical_task_games=matched_games,
+                 dead={name:{k:d[k] for k in ('deck','games','won','loss_waves','nearest_terminal_zombie_types','conclusion')} for name,d in dead.items()},
                  caveats=['One fixed training seed and final epoch; no seed/epoch selection or default promotion.',
                           'V1 and V2 use different night decks; compare models within each version.',
                           'Source rows grouped by label; expanded old labels remain in dw4i_labels.',
@@ -143,8 +154,18 @@ def main():
     for row in new['v1']['tasks']:
         before=next(t for t in old_v1['tasks'] if t['task_id']==row['task_id'])
         lines.append(f"| {row['task_id']} | {before['won']}/{before['games']} | {row['won']}/{row['games']} |")
+    early_delta=early['dw5i_s1']['won']-early['identity']['won']
+    recovery='达到旧identity的点估计' if early_delta>=0 else '仍未达到旧identity的点估计'
+    changed={g:100*(new['v2']['groups'][g]['mean_win_rate']-panels['dw4i_s1']['groups'][g]['mean_win_rate'])
+             for g in ('day','heldout','night','pool')}
+    lines += ['', f"本次结果判断：早关合计{recovery}（相差{early_delta:+d}/512局）；相对dw4i_s1，v2夜间n10变化{changed['night']:+.2f}pp、泳池{changed['pool']:+.2f}pp、白天{changed['day']:+.2f}pp、留出{changed['heldout']:+.2f}pp。这些是固定单seed和固定评估种子的描述性差异，不是总体非劣或因果归因证明。",'',
+              f"v1/v2共有任务及两个同语义的原版L20任务，逐seed除seconds外{matched_games}局记录完全一致；版本切换没有改变这些局的策略行为。"]
     lines += ['', '| 全零留出诊断 | 卡组 | 老师胜局 | 输局波数 |','|---|---|---:|---|']
     for name,d in dead.items():lines.append(f"| {name} | {d['deck']} | {d['won']}/16 | {d['loss_waves']} |")
+    from pvz_constants import ZOMBIE_NAME
+    for name,d in dead.items():
+        threats='、'.join(f"{ZOMBIE_NAME.get(int(kind),kind)}{count}局" for kind,count in d['nearest_terminal_zombie_types'].items())
+        lines.append(f"{name}输局终局最靠前的存活僵尸：{threats}。")
     lines += ['', '老师参数照queue103的run，仅改beta=1实际执行搜索，每套前16评估seed。逐局最后存活僵尸类型和距离见诊断JSON；最近僵尸不是经埋点确认的致死者。0/16提示卡组结构性弱点，留出集合本次保持不变，由主控决定是否另开任务族替换。','',
               f"训练语料在q103完整{plan['q103_full_rounds']}轮后冻结：{plan['archives']}档案/{len(plan['labels'])}标签，原dw4i全部48816份逐文件哈希保持；q102全部、指定q103完整轮次、已上传未导入Mac档案只增不改导入。不选赢局，不纳入评估种子。",'',
               '| 实际来源（按标签） | 档案 | 保留行 | 训练行 | 验证行 |','|---|---:|---:|---:|---:|']

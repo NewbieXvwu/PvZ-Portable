@@ -143,7 +143,8 @@ def task_document(zone: Zone, level: int, deck, task_id: str, seeds: list[int]) 
 
 def family_note(zone: Zone, family: Family) -> str:
     if family.kind == "train":
-        return (f"{zone.task_prefix}*_train{family.suffix} ({zone.train_seed_base} + (N-{zone.first_level})*"
+        base=family.train_seed_base if family.train_seed_base is not None else zone.train_seed_base
+        return (f"{zone.task_prefix}*_train{family.suffix} ({base} + (N-{zone.first_level})*"
                 f"{zone.train_seed_stride}, {zone.train_seeds} each)")
     if family.suffix == "":
         return f"{zone.task_prefix}*_eval (control)"
