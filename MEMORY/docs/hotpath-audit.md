@@ -50,7 +50,7 @@
 | 12 | 写档案 | 0.13 | 0.1% | 本任务 |
 | 13 | 帧 JSON 序列化 | 0.05 | 0.05% | 本任务 |
 
-纯学生局（面板口径，2.29 s）：
+纯学生局（`--arms fast` **带** `--frames`，走 Python 决策循环；2.29 s）：
 
 | # | 项 | 秒 | 占比 |
 |---|---|---|---|
@@ -59,6 +59,10 @@
 | 3 | Python 学生前向 | 0.20 | 9% |
 | 4 | 写档案 | 0.15 | 5% |
 | 5 | 帧 JSON | 0.03 | 1% |
+
+**注意口径**：面板（`unified_panel`）跑 `--arms fast` 且**不写档案**，此时 `_play` 走整局一条 C++ ROLLOUT
+（`env.rollout(None, 0, max_actions=...)`），没有 Python 决策循环：实测 **1.01–1.95 s/局**（改前 / 改后，见 §7 第 1 项），
+不是上面 2.29 s 那一档。
 
 ## 3. 存储账
 
@@ -158,8 +162,10 @@ train_rollout_policy 少 `--ema` `--width 128` `--soft-weight` `--soft-temperatu
   于是引擎进程、`load_rollout_net`、torch 都重来一遍。实测 **1.62 s/局**。
 - **病根**：为了压常驻内存（task18：macOS 把释放的页留在进程里），代价是每局固定开销。
 - **改法（已做）**：`maxtasksperchild=None`（worker 常驻），引擎与网络随之复用。`RESET_V2` 从种子重建棋盘，所以**同种子仍打同一局**。
-- **收益（A/B：上一个提交在 `/tmp/audit-old` 工作树里跑同一命令）**：8 局纯学生、1 worker，**22.64 s → 15.64 s（−31% 整跑，−0.88 s/局）**；
-  搜索局 117 → 116 s（−1.4%）。面板（`unified_panel` 全部 `--arms fast`）直接受益。
+- **收益（A/B：改前提交 `4a0dba12` 在 `/tmp/audit-old3` 工作树里跑同一命令）**：
+  面板口径（`--arms fast`、不写档案、整局一条 C++ ROLLOUT）16 局 **31.18 → 16.11 s（−48%，1.95 → 1.01 s/局）**；
+  采集口径（`--arms fast` + 写档案）8 局 **22.64 → 15.64 s（−31%，−0.88 s/局）**；搜索局 117 → 116 s（−1.4%）。
+  `unified_panel` 全部 `--arms fast`，因此面板直接受益。
 - **代价**：worker RSS 从 fork 后 31 MB 长到 16 局内的 194 MB 峰值、之后 163–194 MB 来回（无单调增长）；搜索局 138 MB 持平。
 - **验收（已过）**：8 局 `games.jsonl` 的 `won/final_wave/decisions/mowers_used/planted/searched` **逐字段相同**（0 处差异）。
 - **风险**：Linux 上 glibc 的 arena 高水位比 macOS 更黏；台式机 16 worker 若内存吃紧，改成每 N 局回收（`maxtasksperchild=N`）即可，收益仍保留 N−1/N。
