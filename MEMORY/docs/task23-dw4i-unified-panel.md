@@ -88,3 +88,11 @@ DESIGN §14.7–§14.10、`MEMORY/docs/task19-identity-packets.md`、`task20-con
 - 上次交接时s2面板尚未完成；现两seed与四模型面板均已齐，并通过最终与独立收尾核验，以上交接状态仅保留作历史记录。
 
 - 后台复用入口：本树artifacts/task23/baseline_controller.process.json与study_controller.process.json（启动后写入）。先查具体PID活性、日志与完成文件，不重复启动。study_plan.json一旦冻结，勿修改其sources中的实验代码；所有数据/模型/清单/资源文件留在本树artifacts，主frames_v2仅按任务授权导入新增数据，其他工作树只读。
+
+## 第 5 步（主控 2026-10-22 10:20 追加）：白天下降的诊断
+dw4i 两个种子白天都比 identity_dw3_s1 低 ~3.5pp，掉分集中在 L1/L3/L4/L6（从来没有训练任务族，只靠从 L7–L10 泛化）。先诊断是“缺当前学生局面的数据”还是“容量不够”，再决定要不要加宽 / MoE：
+1. **按来源的损失（不训练）**：同一批白天验证数据（d7 L7–L10 与已有 L1–L6 档案若有），比较 identity_dw3_s1 与 dw4i s1/s2 的逐头损失（plant / packet / cell）。
+   再在 dw4i 的 L1/L3/L4/L6 统一面板对局上看学生动作与老师（dw4i 推演 + 搜索）分歧的比例（取 16 局 × 4 关，beta=0 打标签即可）。写清结论倾向哪边。
+2. **容量对照**：同一份冻结语料，只改 `--width 128`（其余配方不变），训 1 个种子，跑统一面板；报告训练时长、模型大小、
+   以及 C++ CPU 单步前向耗时相对 64 宽的倍数（学生也是老师的推演策略，这决定采集速度）。
+结果写进 `unified-panel.md` 新的一节。规则同上（≤4 游戏进程，不动 tmux 队列，GPU 先查 pgrep）。
