@@ -361,8 +361,8 @@ def main() -> None:
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
-    if not 1 <= args.workers <= 2:
-        parser.error('--workers must be 1 or 2 (task29: at most two game processes)')
+    if args.workers < 1:
+        parser.error('--workers must be positive')
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir'):
         value = getattr(args, name)
