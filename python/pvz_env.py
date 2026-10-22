@@ -310,7 +310,8 @@ class PvZEnv:
             errors="replace",
             bufsize=1,
             # one simulator per worker process: a threaded BLAS would oversubscribe the cores
-            env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1")},
+            # PVZ_NO_POPUP: report fatal errors on stderr instead of a modal dialog that would hang the run
+            env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1"), "PVZ_NO_POPUP": "1"},
         )
         ready = self._read_message()
         self._rollout_version = ready.get("rollout_version", 0)

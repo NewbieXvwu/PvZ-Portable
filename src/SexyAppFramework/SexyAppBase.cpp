@@ -34,6 +34,7 @@
 #include <vector>
 #include <algorithm>
 #include <cinttypes>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <chrono>
@@ -1925,6 +1926,14 @@ void SexyAppBase::Popup(const std::string& theString)
 	if (IsScreenSaver())
 	{
 		LogScreenSaverError(theString);
+		return;
+	}
+	// Headless / environment runs (and anything started with PVZ_NO_POPUP=1) are driven by scripts and agents:
+	// a modal dialog would block the process until someone clicks it, so report on stderr instead.
+	if (mHeadlessMode || std::getenv("PVZ_NO_POPUP") != nullptr)
+	{
+		std::fprintf(stderr, "FATAL ERROR\n===\n%s\n", theString.c_str());
+		std::fflush(stderr);
 		return;
 	}
 
