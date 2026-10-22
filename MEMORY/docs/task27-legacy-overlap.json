@@ -1,7 +1,7 @@
 {
   "complete_common_day_heldout": true,
-  "tasks": 20,
-  "games": 1792,
+  "tasks": 21,
+  "games": 1920,
   "mismatches": 0,
   "checks": [
     {
@@ -123,7 +123,17 @@
       "games": 64,
       "legacy_sha256": "044b786c7609e399f2b53bce7f5fdbb364dd3f3ca024e65d8609045db5b2457e",
       "new_sha256": "31660d99b9d8da31008690345433ddcdfe0b114f8d1f31230189b1bfe5ed1802"
+    },
+    {
+      "task": "night_l20_eval_n10_orig",
+      "legacy_task": "night_l20_eval_n9_orig",
+      "games": 128,
+      "legacy_sha256": "3b44f06c7ad09eb2a523ea7211d2f3a6cbe3f68f2a92599e942920594d1401ad",
+      "new_sha256": "05c2d1968b22a5f94ba101fd9f7b7f944001428c4275893ae95f62318d5af7b0"
     }
   ],
-  "note": "This proves the 20 unchanged daytime/heldout tasks. New night deck and pool are separate measurements."
+  "note": "All 21 semantically identical tasks (day, heldout, original L20) match. No-version CLI also reproduces exact historical29 manifest; new n10 decks/pool are separate measurements.",
+  "complete_common_tasks": true,
+  "default_cli_manifest_sha256": "c17daf9a2ded971f51e6af53642badb4969cc17b234583aa7d3630409fe00b32",
+  "default_cli_version": "v1"
 }
