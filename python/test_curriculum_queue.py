@@ -8,9 +8,9 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
-from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, MIN_SAMPLES,
-                              PROMOTE_ABOVE, WINDOW, adjust, allocate, label_for,
-                              parse_task_id, plan_round, rate)
+from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
+                              MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
+                              label_for, parse_task_id, plan_round, rate, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -101,7 +101,8 @@ class CurriculumRulesTest(unittest.TestCase):
             original = queue.STOP_FLAG
             queue.STOP_FLAG = flag
             try:
-                args = SimpleNamespace(log=Path(tmp) / 'log', state=Path(tmp) / 'state.json', out=Path(tmp))
+                args = SimpleNamespace(log=Path(tmp) / 'log', state=Path(tmp) / 'state.json', out=Path(tmp),
+                                       workers=2)
                 state = dict(round=0, cells={}, offsets={}, log=[])
                 plan = [dict(base='x', multiplier=1.0, task_id='t', offset=0, games=2,
                              manifest='/m', label='l')]
@@ -114,6 +115,24 @@ class CurriculumRulesTest(unittest.TestCase):
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')
         self.assertEqual(label_for(1, 'night_l12_train_n10', 1.0), 'c1n12n10m100')
+
+
+class WorkerCountTest(unittest.TestCase):
+    def test_scales_with_available_memory(self):
+        per_worker = 900 * 1024 ** 2          # 0.9 GiB
+        self.assertEqual(worker_count(20 * GIB, per_worker, 16), 15)    # (20-6)/0.9 = 15.5
+        self.assertEqual(worker_count(10 * GIB, per_worker, 16), 4)     # (10-6)/0.9 = 4.4
+        self.assertEqual(worker_count(28 * GIB, 512 * 1024 ** 2, 8), 8)  # 上限
+        self.assertEqual(worker_count(4 * GIB, per_worker, 16), 1)      # 低于保留也不为 0
+        self.assertEqual(MEMORY_RESERVE_BYTES, 6 * GIB)
+
+    def test_unknown_memory_or_estimate_keeps_the_upper_limit(self):
+        self.assertEqual(worker_count(None, 900 * 1024 ** 2, 16), 16)   # 没有 /proc
+        self.assertEqual(worker_count(20 * GIB, 0, 16), 16)             # 没有实测值
+
+    def test_descendant_rss_excludes_root_and_unrelated(self):
+        table = {1: (0, 100), 10: (1, 1000), 11: (10, 500), 12: (1, 200), 20: (0, 9000)}
+        self.assertEqual(_descendant_rss(1, table), 1700)
 
 
 if __name__ == '__main__':

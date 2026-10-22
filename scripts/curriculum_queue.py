@@ -14,7 +14,11 @@
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
 
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
-帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改），并发默认 2 个游戏进程。
+帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
+每开一组前读 MemAvailable，`--workers` 只是上限，实际 worker 数按
+`(MemAvailable − 6 GiB) / 一个 worker 的实测 RSS` 取整，至少 1。每 worker 的 RSS 在
+控制器启动时用一个单 worker 的真实对局实测（Python + 引擎峰值；对局写临时目录，不占偏移）。
+非 Linux（没有 /proc）时不做缩放，直接用 `--workers`。
 
 用法：
   python3 scripts/curriculum_queue.py --dry-run                 # 第一轮分配表（用已有结果初始化）
@@ -28,8 +32,10 @@ from __future__ import annotations
 import argparse
 import glob
 import json
+import os
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -57,6 +63,106 @@ DEFAULT_STATIC_VALUE = MAIN / 'artifacts/hard/value_branch1/model.pt'
 DEFAULT_VALUE = MAIN / 'artifacts/value_net/v3/model.pt'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
+
+GIB = 1024 ** 3
+MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
+DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
+PROBE_TIMEOUT_SECONDS = 900.0
+RSS_POLL_SECONDS = 0.2
+
+
+def mem_available_bytes() -> int | None:
+    """Linux 的 MemAvailable（字节）；没有 /proc 的平台返回 None。"""
+    try:
+        text = Path('/proc/meminfo').read_text()
+    except OSError:
+        return None
+    for line in text.splitlines():
+        if line.startswith('MemAvailable:'):
+            return int(line.split()[1]) * 1024
+    return None
+
+
+def worker_count(available: int | None, per_worker: int, upper: int) -> int:
+    """clamp(⌊(MemAvailable − 6 GiB) / per_worker⌋, 1, upper)；未知内存或未实测时用上限。"""
+    if available is None or per_worker <= 0:
+        return upper
+    return max(1, min(upper, (available - MEMORY_RESERVE_BYTES) // per_worker))
+
+
+def _proc_table() -> dict[int, tuple[int, int]]:
+    """pid -> (ppid, 常驻字节)，一次扫完 /proc；没有 /proc 时为空。"""
+    try:
+        page = os.sysconf('SC_PAGE_SIZE')
+        entries = list(os.scandir('/proc'))
+    except (OSError, ValueError):
+        return {}
+    table = {}
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            fields = Path(entry.path, 'stat').read_text().rsplit(')', 1)[1].split()
+            table[int(entry.name)] = (int(fields[1]), int(fields[21]) * page)
+        except (OSError, ValueError, IndexError):
+            continue
+    return table
+
+
+def _descendant_rss(root: int, table: dict[int, tuple[int, int]]) -> int:
+    """root 的所有后代（不含 root）的常驻字节之和。"""
+    children: dict[int, list[int]] = {}
+    for pid, (ppid, _rss) in table.items():
+        children.setdefault(ppid, []).append(pid)
+    total, stack = 0, list(children.get(root, ()))
+    while stack:
+        pid = stack.pop()
+        total += table[pid][1]
+        stack.extend(children.get(pid, ()))
+    return total
+
+
+def measure_worker_bytes(args, item: dict) -> int:
+    """用一个单 worker 的真实对局测一个 worker 的 Python + 引擎峰值 RSS。
+
+    对局写在临时目录，不动状态偏移，也不进帧档案；正式第一组会用同一个种子重跑。
+    """
+    with tempfile.TemporaryDirectory(prefix='pvz-oom-probe-') as tmp:
+        tmp_path = Path(tmp)
+        command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'], 1,
+                              'oomprobe', workers=1, frames=tmp_path / 'frames', out=tmp_path)
+        process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                                   text=True)
+        peak = 0
+        deadline = time.monotonic() + PROBE_TIMEOUT_SECONDS
+        while process.poll() is None:
+            peak = max(peak, _descendant_rss(process.pid, _proc_table()))
+            if time.monotonic() > deadline:
+                process.kill()
+                process.communicate()
+                raise RuntimeError(f'probe timed out after {PROBE_TIMEOUT_SECONDS:.0f}s')
+            time.sleep(RSS_POLL_SECONDS)
+        _stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            raise RuntimeError(f'probe exited {process.returncode}: {stderr.strip()[-500:]}')
+        return peak
+
+
+def startup_worker_estimate(args, plan: list[dict]) -> int:
+    """控制器启动时实测一次；没有 /proc 返回 0（worker_count 会退回 --workers）。"""
+    if mem_available_bytes() is None:
+        return 0
+    if not plan:
+        return DEFAULT_WORKER_BYTES
+    started = time.time()
+    try:
+        measured = measure_worker_bytes(args, plan[0])
+    except (OSError, RuntimeError) as error:
+        log_line(args.log, f'worker probe failed ({error}); assuming {DEFAULT_WORKER_BYTES / GIB:.1f} GiB/worker')
+        return DEFAULT_WORKER_BYTES
+    log_line(args.log, f'worker estimate: {max(measured, 1) / GIB:.2f} GiB peak RSS (python+engine), '
+                       f'{time.time() - started:.0f}s probe')
+    return max(measured, 1)
 
 
 def load_panel(path: Path) -> tuple[dict[str, dict], list[float], dict[str, float], dict[str, Path]]:
@@ -232,7 +338,9 @@ def label_for(round_index: int, base: str, multiplier: float) -> str:
     return f'c{round_index}{short}m%03d' % round(multiplier * 100)
 
 
-def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str) -> list[str]:
+def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
+                workers: int | None = None, frames: Path | None = None,
+                out: Path | None = None) -> list[str]:
     python = str(args.python) if args.python.exists() else sys.executable
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
@@ -241,9 +349,10 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--manifest', str(manifest), '--task-id', task_id,
             '--seed-offset', str(offset), '--seeds', str(games),
             '--executable', str(args.executable), '--dagger-beta', '0',
-            '--workers', str(args.workers), '--resource-dir', str(args.resource_dir),
-            '--frames', str(args.frames), '--frames-label', label,
-            '--out', str(args.out / f'{label}_{games}')]
+            '--workers', str(args.workers if workers is None else workers),
+            '--resource-dir', str(args.resource_dir),
+            '--frames', str(args.frames if frames is None else frames), '--frames-label', label,
+            '--out', str((args.out if out is None else out) / f'{label}_{games}')]
 
 
 def log_line(path: Path, message: str) -> None:
@@ -278,7 +387,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     return plan, changes
 
 
-def run_round(args, state: dict, plan: list[dict], changes: list[str]) -> bool:
+def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool:
     """跑一轮；返回 False 表示看到停止标志。"""
     round_index = state['round'] + 1
     for item in plan:
@@ -287,8 +396,14 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str]) -> bool:
             return False
         state['offsets'][item['task_id']] = item['offset'] + item['games']
         save_state(args.state, state)          # 先占偏移，崩溃也不会重采
+        available = mem_available_bytes()
+        workers = worker_count(available, per_worker, args.workers)
+        per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
+        log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
+                           f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
+                           f'per-worker {per_worker_shown})')
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
-                              item['games'], item['label'])
+                              item['games'], item['label'], workers=workers)
         started = time.time()
         result = subprocess.run(command, cwd=ROOT)
         seconds = time.time() - started
@@ -353,7 +468,8 @@ def main() -> None:
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
-    parser.add_argument('--workers', type=int, default=2)
+    parser.add_argument('--workers', type=int, default=16,
+                        help='上限；每组实际进程数 = (MemAvailable − 6 GiB) / 实测单 worker RSS，至少 1')
     parser.add_argument('--python', type=Path, default=DEFAULT_PYTHON,
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
@@ -385,11 +501,17 @@ def main() -> None:
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
         return
+    per_worker = -1          # -1 = 还没测；0 = 平台无 /proc，按 --workers 上限跑
     for _ in range(args.rounds):
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
-        if not run_round(args, state, plan, changes):
+        if per_worker < 0:
+            if STOP_FLAG.exists():
+                log_line(args.log, f'round {state["round"] + 1}: stop flag seen before the worker probe; stopping')
+                break
+            per_worker = startup_worker_estimate(args, plan)
+        if not run_round(args, state, plan, changes, per_worker):
             break
 
 
