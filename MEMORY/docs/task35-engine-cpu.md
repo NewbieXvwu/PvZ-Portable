@@ -29,4 +29,11 @@
 
 ## 结果
 
+0. **基准与正确性夹具**（`scripts/bench_engine.py`、`scripts/prof_sample.c`、`scripts/prof_symbolize.py`）。
+   - 局面清单：`bench_engine.py manifest` 从 `~/PvZ-search/artifacts/student/frames_v2` 里挑 4 族各 4 个真实对局、每局 4 个决策点（共 64 个 root）：白天 L7（d7dag）、原版传送带 L10（c1d10orig）、夜间 L12（n12dag）、泳池 L24（p24dag）。任务参数从存档 `meta.json` 还原，卡组从首帧 `packets` 的类型读回（`context.roster` 不是卡组）。
+   - 每个 root 跑 3 条 C++ 推演（`env.rollout`，`--sim-skip 61`、`--horizon 2500`、学生 `dw4i_s1/model.pt`），计时取 C++ 的 `simulation_seconds`/`network_seconds` 加进程 CPU 时间（`/proc/<pid>/stat`，机器上还有采集队列在跑，wall 会被抢占污染）。
+   - 正确性（硬门槛）：`bench_engine.py replay` 用存档里录下的动作序列**整局**重放，逐帧比较 tick/wave/sun/plants/zombies/mowers/packets/graves/lanes/row_terrain/scene，四族各 1 局（953 / 877 / 531 / 464 帧）**0 差异**；同 root 同 seed 连跑两次 rollout，叶状态摘要相同。等待必须走 `EventWaitEnv` 的 `until:timeout`（存档里有 2/3/4/28/33/46/49/53 tick 的提前结束等待，压成固定 60 tick 会分叉）。
+   - 基线（Release `-O3`，无 LTO）：**82.0k tick/CPU-s**，28.5 ms/推演（wall 口径），学生前向 34%（openblas 14.1% + Heads 10.1% + Convolve 4.3% + Encode 2.0%）。
+1. **编译**：LTO（`CMAKE_INTERPROCEDURAL_OPTIMIZATION`）**+6.7%**（82.0k → 87.5k tick/CPU-s，各 3 次，64 root 叶摘要全部相同）。`-march=native` 与 LTO 叠加 **0 收益**（87.2k vs 87.2k），且会让二进制与机器绑定，已删。PGO、mimalloc 见后续条目。
+
 ## 问题

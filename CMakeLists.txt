@@ -9,6 +9,25 @@ if(NOT MSVC)
 	add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-ffp-contract=off>)
 endif()
 
+# The engine process is the whole cost of collection: every decision spends its time stepping
+# ticks in here.  Link-time optimisation is what lets its small inline-heavy update functions
+# fold into their callers.  -ffp-contract=off above keeps the game bit-identical: LTO never
+# reassociates float arithmetic, and the rollout leaf digests in scripts/bench_engine.py are
+# the gate (2026-10-23: 64/64 roots identical).
+#
+# -march=native was measured and dropped: with LTO it added nothing (87.2k -> 87.2k ticks/CPU-s,
+# scripts/bench_engine.py, 3 runs each) and it would make the binary machine-specific, which the
+# identical-game guarantee across Mac and desktop does not want.
+if(NOT MSVC AND NOT EMSCRIPTEN)
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT PVZ_IPO_SUPPORTED OUTPUT PVZ_IPO_ERROR LANGUAGES C CXX)
+	if(PVZ_IPO_SUPPORTED)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+	else()
+		message(STATUS "LTO unavailable: ${PVZ_IPO_ERROR}")
+	endif()
+endif()
+
 # Opt-in: the normal portable build does not inspect or require a CUDA installation.
 option(PVZ_CUDA_ROLLOUT "Build the optional CUDA continuation service" OFF)
 if(PVZ_CUDA_ROLLOUT)
