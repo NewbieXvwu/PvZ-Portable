@@ -33,4 +33,8 @@
 
 ## 结果
 
+- 2026-10-22 第 1 步（倍率语义核实 + 倍率任务族）：源码口径 `Board::SpawnZombieWave`（`src/Lawn/Board.cpp:4913`）——`aSpawnCount = std::lround(NumberZombiesInWave(wave) * multiplier)`，类型按 `mZombiesInWave[wave][i % aBaseCount]` 循环，所以放大的是**每波常规出怪数量**（`.5` 远离零，名单前几张多 0–1 次）；**不放大**最后一波之后的额外刷怪：坟头 `SpawnZombiesFromGraves`（Board.cpp:4850，每坟一只）、泳池 `SpawnZombiesFromPool`（Board.cpp:4728，固定 2–3 只）、屋顶 `SpawnZombiesFromSky`。冒烟 `scripts/smoke_zombie_multiplier.py`（同关同种子、不放植物、5 tick 步进数每波新增）：白天 L7、夜间 L12、泳池 L21、原版传送带 L10、夜间原版 L20，7 档（1.0/1.25/1.5/1.75/2.0/2.5/3.0）全部 `count == lround(base × mult)`，干净观测 19/16/14/14/14 条（被小推车碾死的波次标 dirty 不参与断言）。生成器 `scripts/make_multiplier_tasks.py`：7 个源族 37 个源任务 × 6 档 = **222 个任务**，命名 `<base>_m125..m300`，除 id/seeds/multiplier 外逐字段复制（含 `deck_perturb`）。种子段 5,000,000 起每档 500,000、每任务 2048（slot = 族序号×32 + 关卡−1），454,656 个种子；与 257,619 个清单文件 / 506,880 个已用种子穷举比对**重叠 0**，逐种子 `deck_for_seed` 卡组合法。清单 `artifacts/stage4/multiplier_panel.json`（工作树 + `~/PvZ-search/artifacts/stage4/` 各一份，9.0 MB，不进 git）；DESIGN §14.11 登记；静态测试 `python/test_multiplier_tasks.py` 4 项通过。
+
+
 ## 问题
+- **DESIGN 章节号会和 task28 撞**：本分支从 origin/pvz-env（1c983ed9）开出，那边没有 task28 的 DESIGN 条目；task28 的 n10p 分支把 §14.11 / §14.12 用在夜间扰动族与 d7q 上，本任务也用 §14.11 登记倍率族。合并时按 task28 先、task29 后的顺序把本节改成 §14.13（内容不变，只改标题编号）。

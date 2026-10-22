@@ -651,3 +651,58 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 `scripts/unified_panel.py --generate`合并已登记的白天七卡L1/3/4/6/7/8/9、原版L10、L7–L10各3套初始牌留出、夜间n9 L11/12/13/14/16/17/18/19及原版L20，共29项，清单仅在artifacts本地生成。白天与原版默认各128局，留出每套64，夜间各128；取各任务评估段前N种子，按白天/换卡组/夜间分别报告任务平均胜率，每模型默认2944局。最多4个自有游戏进程，slot/identity均沿同一面板跑纯学生。
 
 L10的三套留出按task23明确要求保留初始牌变体的测试语义（后续仍有原生补卡），与`day_l10_orig_eval`分开；不把这些留出伪称原版空手关。dw4i从原identity配方加入白天新轮、Mac、d7p、夜间与原版数据，冻结同一数据集合后依次训seed1/2，不改默认/生产模型；完整对照见MEMORY/docs/unified-panel.md。
+
+### 14.11 新任务族：倍率变体 `<base>_m125` … `<base>_m300`（task29，2026-10-22 登记，AGENTS.md §8 第 4 条）
+
+**动机**：加宽阶段把全部关卡放回原版难度（倍率 1.0）后，已经“通关”的关压力太小——
+用户 5 倍速看 dw4i_s1 打原版 1-10（约 98% 胜）时看到乱扔樱桃、后期不用卡、该种豌豆不种。
+没有压力时任何动作都能赢，带锚的 DAgger 标签只有在搜索优势超过 margin 时才推翻学生，
+坏习惯就原样留在数据里。§3.2 / §14.5 第 3 条约定的自动课程按“关卡 × 倍率”调压力，
+本族是它的任务供给。
+
+**倍率语义（引擎源码，不是新写的规则）**：`Board::SpawnZombieWave`（`src/Lawn/Board.cpp:4913`）
+
+    aBaseCount = NumberZombiesInWave(wave)              // 原版这一波的僵尸数
+    aSpawnCount = std::lround(aBaseCount * multiplier)  // 本环境放大
+    type = mZombiesInWave[wave][i % aBaseCount]         // 原版名单循环取用
+
+- 放大的是**每一波常规出怪的数量**；种类与比例沿用原版名单。`std::lround` 是 .5 远离零
+  （2 × 1.25 = 2.5 → 3），不是 Python 的银行家舍入。取模会让名单前几张多出现 0–1 次。
+- **不放大**原版在最后一波之后额外刷的那批：坟头 `Board::SpawnZombiesFromGraves`（Board.cpp:4850，
+  每个坟头一只）、泳池 `Board::SpawnZombiesFromPool`（Board.cpp:4728，固定 2–3 只）、
+  屋顶 `SpawnZombiesFromSky`。这三处不读 multiplier，是原版行为；夜间/泳池的“最后一波”因此
+  只按倍率放大常规名单，额外那批保持原版数量。
+- 原版传送带开局（`conveyor_start: original`）走同一条 `SpawnZombieWave`，倍率同样生效。
+
+**冒烟**（`scripts/smoke_zombie_multiplier.py`，7 档 1.0/1.25/1.5/1.75/2.0/2.5/3.0，每档同一关同一种子、
+不放植物，按 5 tick 步进数每波新增僵尸）：白天 L7、夜间 L12、泳池 L21、原版传送带 L10、夜间原版 L20
+全部满足 `count == lround(base × mult)`；干净观测分别 19 / 16 / 14 / 14 / 14 条，被小推车碾死污染的
+波次（僵尸数下降）标 dirty、不参与断言。汇总在 `artifacts/task29/smoke_l*.json`（不入 git）。
+
+**族与命名**：在现有训练族后加 `_m125` / `_m150` / `_m175` / `_m200` / `_m250` / `_m300`，例如
+`day_l7_train_d7_m150`、`night_l12_train_n10p_m200`、`pool_l21_train_p9k_m175`。除
+`task_id` / `seeds` / `zombie_count_multiplier` 外**逐字段复制源任务**（卡组、地形、`playthrough`、
+`sun_start`、`preplanted`、`wave_cap`、`conveyor_start`、扰动族的 `deck_perturb` 全保留）。
+覆盖 7 个源族、37 个源任务 × 6 档 = **222 个任务**：
+
+| 源族 | 关卡 | 任务数 |
+|---|---|---:|
+| `day_l{1,3,4,6,7,8,9}_train_d7` | 1、3、4、6、7、8、9 | 42 |
+| `day_l10_orig_train`（原版传送带） | 10 | 6 |
+| `night_l{11,12,13,14,16,17,18,19}_train_n10` | 11–14、16–19 | 48 |
+| `night_l20_train_n10_orig`（原版传送带） | 20 | 6 |
+| `pool_l{21,22,23,24,26,27,28,29}_train_p9k` | 21–24、26–29 | 48 |
+| `day_l{7,8,9,10}_train_d7q`（扰动卡组） | 7–10 | 24 |
+| `night_l{11..14,16..19}_train_n10p`（扰动卡组） | 11–14、16–19 | 48 |
+
+**种子段**：`5_000_000` 起，每档 500_000；档内按 `slot = 族序号 × 32 + (关卡 − 1)`、
+每槽 2048 个种子（7 × 32 × 2048 = 458_752 < 500_000）。六档总范围 5,000,000–7,932,127。
+生成时穷举比对仓库里**全部**清单（主工作区 + 各工作树 `artifacts/**/*.json`，257,619 个文件、
+506,880 个已用种子）：**重叠 0**；454,656 个新种子两两不重复；每个种子都按 `deck_for_seed` 取到
+长度正确、无重复、地形覆盖的卡组（扰动族逐种子现算，非扰动族逐位等于底卡组）。
+每任务 2048 个而不是源族的 8192：课程按轮消耗，2048 个够 40+ 轮；要扩段时按同槽位往后接，
+不要改已发出去的起点（改起点等于改任务族）。
+
+**清单**：`artifacts/stage4/multiplier_panel.json`（工作树与 `~/PvZ-search/artifacts/stage4/` 各一份，
+都不进 git），生成器 `scripts/make_multiplier_tasks.py`，静态检查 `python/test_multiplier_tasks.py`。
+**不改** `deck_for_level`、不改任何现有族的定义；旧存档的 `whatif` 重放不受影响（重放读存档里的 deck 与倍率）。
