@@ -9,13 +9,13 @@ def descendants(pid):
     while todo:
         p=todo.pop();result.append(p)
         try:todo.extend(map(int,Path(f'/proc/{p}/task/{p}/children').read_text().split()))
-        except FileNotFoundError:pass
+        except (FileNotFoundError, ProcessLookupError):pass
     return result
 def available():
     return int(next(l.split()[1] for l in Path('/proc/meminfo').read_text().splitlines() if l.startswith('MemAvailable:')))
 def live(pid):
     try:return Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()[0]!='Z'
-    except FileNotFoundError:return False
+    except (FileNotFoundError, ProcessLookupError):return False
 ENV={**os.environ,'OPENBLAS_NUM_THREADS':'1','OMP_NUM_THREADS':'1','TORCHINDUCTOR_COMPILE_THREADS':'1',
      'MAX_JOBS':'1','MALLOC_ARENA_MAX':'2','PYTHONPATH':str(ROOT/'python')+':'+str(ROOT/'scripts'),
      'PVZ_EXECUTABLE':str(ROOT/'build/pvz-portable'),'PVZ_RESOURCE_DIR':str(Path.home()/'.cache/pvz-research-resources'),
@@ -24,7 +24,7 @@ ENV={**os.environ,'OPENBLAS_NUM_THREADS':'1','OMP_NUM_THREADS':'1','TORCHINDUCTO
      'PVZ_CUDA_CORPUS':'/home/newbiexvwu/pvz-cuda/artifacts/cuda/corpus_l7_z15_v9/roots.cudaroot',
      'PVZ_CUDA_PRIVATE_LIMIT':'1200','PVZ_CUDA_COOPERATIVE_HEADS':'1','PVZ_CUDA_POLL_US':'0'}
 ENV.pop('PVZ_GPU_PAUSE_FILE',None)
-def run(cmd,tag,cwd=ROOT,extra=None,unset=()):
+def run(cmd,tag,cwd=ROOT,extra=None,unset=(),pause_when=None):
     while available()<int(3.25*1024*1024):time.sleep(3)
     env={**ENV,**(extra or {})}
     for key in unset:env.pop(key,None)
@@ -41,19 +41,20 @@ def run(cmd,tag,cwd=ROOT,extra=None,unset=()):
                         lines=Path(f'/proc/{pid}/status').read_text().splitlines()
                         rss+=sum(int(l.split()[1]) for l in lines if l.startswith('VmRSS:'))
                         sw+=sum(int(l.split()[1]) for l in lines if l.startswith('VmSwap:'))
-                    except FileNotFoundError:pass
+                    except (FileNotFoundError, ProcessLookupError):pass
                 peak=max(peak,rss);swap=max(swap,sw)
-                if a<2*1024*1024:
+                busy=bool(pause_when(owned)) if pause_when is not None else False
+                if a<2*1024*1024 or busy:
                     for pid in reversed(owned):
                         if pid not in paused:
                             try:os.kill(pid,signal.SIGSTOP);paused.add(pid)
                             except ProcessLookupError:pass
-                elif a>=3*1024*1024 and paused:
+                elif a>=3*1024*1024 and not busy and paused:
                     for pid in paused:
                         try:os.kill(pid,signal.SIGCONT)
                         except ProcessLookupError:pass
                     paused.clear()
-                resources.write(json.dumps({'elapsed_s':time.monotonic()-start,'available_kib':a,'rss_kib':rss,'swap_kib':sw,'paused':bool(paused)})+'\n');resources.flush();time.sleep(1)
+                resources.write(json.dumps({'elapsed_s':time.monotonic()-start,'available_kib':a,'rss_kib':rss,'swap_kib':sw,'paused':bool(paused),**({'external_busy':busy} if pause_when is not None else {})})+'\n');resources.flush();time.sleep(1)
         finally:
             if p.poll() is None:
                 for pid in reversed(descendants(p.pid)):

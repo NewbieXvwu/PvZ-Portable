@@ -1,0 +1,159 @@
+{
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "revision": "1821c207f91284f8f9e764a5fa87149b421030ba",
+  "destination": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2",
+  "rounds": [
+    {
+      "label": "d10dag4b",
+      "remote_path": "transfer/d10dag4b.tgz",
+      "archives": 640,
+      "added_files": 1280,
+      "existing_identical_files": 0,
+      "archive_sha256": "34e8ed91117cb5700bfe55fe292fa7062b25087f1689a800d47fde190a9c211f",
+      "member_ledger_sha256": "df6aab65e615ba332e7fef12fbfe487b00c200d05e4d6063b365fab0fcd0795d"
+    },
+    {
+      "label": "d10dag5b",
+      "remote_path": "transfer/d10dag5b.tgz",
+      "archives": 640,
+      "added_files": 1280,
+      "existing_identical_files": 0,
+      "archive_sha256": "1277b91d7f87ab4f1b7772dc721fb7ecb0635f17026f5ebeec16eacfc50369da",
+      "member_ledger_sha256": "880dedbde0c4c88bb7c7db81c0fd9e5a780f99943b78b49830fe5f370f7a1008"
+    },
+    {
+      "label": "d10p1m",
+      "remote_path": "transfer/d10p1m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "23946f0850bb56eeb8a0f76843c745ede2ff0e89ba747ff9ea5d8d4eb92a3f15",
+      "member_ledger_sha256": "32fa65128cf101639cb81db74073fa9cad602221ba08310c7bee5c2e8bc70882"
+    },
+    {
+      "label": "d10p2m",
+      "remote_path": "transfer/d10p2m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "98f8ce32f413802a57b3dfbd8867f77069487b05e4ddfaa1441fac3830cea1a4",
+      "member_ledger_sha256": "82cb23d130f3253da31a72a7d3a9d6d293a15be76d42f4de46ebf6acecf78dc3"
+    },
+    {
+      "label": "d7p1m",
+      "remote_path": "transfer/d7p1m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "da9c7122f7207b4fae0eac671f014b5238611e4d6eedfc02ced88ab22eeec031",
+      "member_ledger_sha256": "cf5daa610eae27177ce14207eee1973c537538c870c6f1beadee81dcfb30fcf6"
+    },
+    {
+      "label": "d7p2m",
+      "remote_path": "transfer/d7p2m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "cc3d275f1fd9e833b8ce6961f86c4af7b068faf083cab0bbb9a842d6df19bc33",
+      "member_ledger_sha256": "2ef630937355a2365ea41e2d85ad4ec6a4852db1d31aa32c51bc0a6d5986e6d6"
+    },
+    {
+      "label": "d7p3m",
+      "remote_path": "transfer/d7p3m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "c5eceb3b6e02dd2dbc7b152508cace1f6045d03794655f6b13ea85c1409de797",
+      "member_ledger_sha256": "c83ed912794435092c183dcc5c7528bc98285c2bb9c569879f1b1d71ac016abd"
+    },
+    {
+      "label": "d8p1m",
+      "remote_path": "transfer/d8p1m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "8b5a42a3c5fe12795b8983c1c477760bf500464c7e8d458564f7c74ae03d7fca",
+      "member_ledger_sha256": "0b33edbce0123d9807bd3697858ba5ee52d5be37a1a5d7c425d1edda563f124b"
+    },
+    {
+      "label": "d8p2m",
+      "remote_path": "transfer/d8p2m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "cb205545e28d5237c1e07a911a22779b7177af48f53d49fc67eb7947787ad7d0",
+      "member_ledger_sha256": "22a909d6c78b64b7eff69ec2d97095ebd5b21e87e3c86ffe0bf5a8a059d997aa"
+    },
+    {
+      "label": "d8p3m",
+      "remote_path": "transfer/d8p3m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "3ef6a2b5eecff9932702e6be2c519021e3ffd9a1c544727a0d53432b77ee5726",
+      "member_ledger_sha256": "85617cc6fa74c86796a1d68bb7da3ac0c97dc8503906f48a619cf00999f05dac"
+    },
+    {
+      "label": "d9dag4b",
+      "remote_path": "transfer/d9dag4b.tgz",
+      "archives": 640,
+      "added_files": 1280,
+      "existing_identical_files": 0,
+      "archive_sha256": "0405d2f5f963c350834da0132a8d69ebdf9dc6f88436826b236f7dcabbf81c04",
+      "member_ledger_sha256": "0e35828f4534ae8ec3c1240e3fb00e5e79fad68a58536cbffc532944f5f3dc8c"
+    },
+    {
+      "label": "d9dag5b",
+      "remote_path": "transfer/d9dag5b.tgz",
+      "archives": 640,
+      "added_files": 1280,
+      "existing_identical_files": 0,
+      "archive_sha256": "c4d65c1b5295f973569bbd8d66d38a689c7915c334580ce221fd78a332037038",
+      "member_ledger_sha256": "cd51c29198c264c1b767da02443419df2aa212e3faed5d90c24468208f68b8a2"
+    },
+    {
+      "label": "d9p1m",
+      "remote_path": "transfer/d9p1m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "c7c50bdde8607c9eab5989739658902c18c2c6bbd5808c46d38b16ed305f1b52",
+      "member_ledger_sha256": "c7a1c7ababfffb51ba54ef2f1e699546a99e06ccef5b3fb3443c07882ba1a5a0"
+    },
+    {
+      "label": "d9p2m",
+      "remote_path": "transfer/d9p2m.tgz",
+      "archives": 81,
+      "added_files": 162,
+      "existing_identical_files": 0,
+      "archive_sha256": "a9e2f410534958fa6438b39686239c4a168fc0d931530f9bd8b7088af4c3e59f",
+      "member_ledger_sha256": "56e028ef37426dcfbf7a5ffe752aa8f7963e7f5f9241a5b136e3970f52f95f6c"
+    },
+    {
+      "label": "d9p3m",
+      "remote_path": "transfer/d9p3m.tgz",
+      "archives": 160,
+      "added_files": 320,
+      "existing_identical_files": 0,
+      "archive_sha256": "2c7a341419308788ef7c18078fb220f8084954f49054563f7dea80f65ff5050e",
+      "member_ledger_sha256": "d76c7e4f435d9e2f59deed8dcbb5d9513bb35844625d19a7d442bde636be7bc5"
+    }
+  ],
+  "archives": 4241,
+  "missing_requested": [
+    "d10p3m",
+    "d7p4m",
+    "d8p4m",
+    "d9p4m",
+    "d10p4m"
+  ],
+  "idempotence_check": {
+    "label": "d7p1m",
+    "unchanged_mtime": true,
+    "archives": 160,
+    "added_files": 0,
+    "existing_identical_files": 320,
+    "archive_sha256": "da9c7122f7207b4fae0eac671f014b5238611e4d6eedfc02ced88ab22eeec031",
+    "member_ledger_sha256": "cf5daa610eae27177ce14207eee1973c537538c870c6f1beadee81dcfb30fcf6"
+  }
+}
