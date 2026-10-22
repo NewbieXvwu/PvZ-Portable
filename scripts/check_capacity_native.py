@@ -17,16 +17,16 @@ from pvz_tasks import profile_for_deck
 from render_episode import _frame, load_training_task, training_task_kwargs
 
 
-def check(model_path, out):
+def check(model_path, out, manifest=None, tasks=None):
     torch.set_num_threads(1)
     net = load_student(model_path).eval(); reference = copy.deepcopy(net).double().eval()
     exported = out.with_suffix('.pvzrn'); export_student(net,exported)
-    manifest = ROOT/'artifacts/task23/unified_manifest.json'
+    manifest = manifest or ROOT/'artifacts/task23/unified_manifest.json'
     heads = ('plant','packet','cell'); samples = {name:[] for name in heads}
     actions = argmax = 0; cases = []
     with EventWaitEnv('/home/newbiexvwu/.cache/pvz-research-resources',executable=ROOT/'build/pvz-portable') as env:
         env.load_rollout_net(exported)
-        for task_id in ('day_l9_eval_d7','night_l11_eval_n9','day_l10_orig_eval'):
+        for task_id in tasks or ('day_l9_eval_d7','night_l11_eval_n9','day_l10_orig_eval'):
             task = load_training_task(manifest,task_id); kw = training_task_kwargs(task,30000)
             spec = TaskSpec(level=kw['level'],seed=30000,playthrough=2,
                             profile=profile_for_deck(tuple(kw['deck']),kw.get('first_aid_owned',False)),
@@ -75,4 +75,6 @@ def check(model_path, out):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--model',type=Path,required=True);parser.add_argument('--out',type=Path,required=True)
-    args = parser.parse_args();check(args.model,args.out)
+    parser.add_argument('--manifest',type=Path)
+    parser.add_argument('--tasks',help='comma-separated task IDs; defaults preserve the task23 check')
+    args = parser.parse_args();check(args.model,args.out,args.manifest,args.tasks.split(',') if args.tasks else None)
