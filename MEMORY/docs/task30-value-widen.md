@@ -44,9 +44,13 @@
 
 - 2026-10-22：外部评估器增加严格种子交集拒绝、模型 SHA256 与清单指纹；1360 局原始外部清单复核通过。2-10 补采先完成 4 局，3 胜 1 负；继续完整批次，尚未训练 v4。
 
-- 2026-10-22：本任务本地串行执行器已运行：`/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/continue_collect.py`（补采）与 `/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/finish_pipeline.py`（封存测试种子→附加特征→v3 基线；等学生训练退出→v4 训练/离线评估→v4 配对）。重入先查这两个进程，勿重复启动；总进展看同目录 `pipeline.log`、`continue_collect.log`，每阶段仍需汇总并提交，HF 上传与最终报告由代理收尾。
+- 2026-10-22：本任务本地串行执行器已运行：`/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/continue_collect.py`（补采）与 `/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/finish_pipeline.py`（封存测试种子→附加特征→v3 基线；等学生训练退出→v4 训练/离线评估→v4 配对）。重入先查这两个进程，勿重复启动；总进展看同目录 `pipeline.log`、`continue_collect.log`，每阶段仍需汇总并提交，执行器已接上 HF 上传/下载 SHA256 回验及每阶段报告/提交，代理继续核查最终结论。
 
 - 2026-10-22：收紧 n9/n10 的标签解析，排除未来扰动卡组误入；1360 局冻结区组核对完全不变。2-10 补采进展 6/32、5 胜 1 负；继续固定配置采集。
+
+- 2026-10-22：长任务完成钩子就绪：补采、训练、A6、最终 A/B 各阶段完成后自动写结果/记忆并只提交 md/json，候选自动上传 HF 并下载回验，最终生成完整 value-widen.md。未完成批次发布门禁用当前数据验证通过；当前仍在补采，尚无 v4 结果。
+
+- 2026-10-22：自动完成钩子经隔离合成端到端验收：四阶段各一次仅文本提交，重复 final 不重复提交，真实报告未变；7 项原有门禁仍通过。当前真实 2-10 补采继续运行，尚无 v4 训练或配对结果。
 
 ## 问题
 
