@@ -131,12 +131,148 @@ def evaluate(args):
     (args.out/'panel.md').write_text('\n'.join(table)+'\n'); print('\n'.join(table), flush=True)
 
 
+PRESSURE_LEVELS = (
+    ('day', 7, 'day_l7_eval_d7'),
+    ('day', 10, 'day_l10_orig_eval'),
+    ('night', 12, 'night_l12_eval_n10'),
+    ('night', 18, 'night_l18_eval_n10'),
+    ('night', 20, 'night_l20_eval_n10_orig'),
+    ('pool', 21, 'pool_l21_eval_p9k'),
+    ('pool', 26, 'pool_l26_eval_p9k'),
+)
+PRESSURE_MULTIPLIERS = (1.0, 1.5, 2.0)
+
+
+def generate_pressure(day, day_orig, night, pool, seeds=64):
+    """v3 压力面板：每区代表关 × 1.0 / 1.5 / 2.0，各取评估段前 N 个种子。
+
+    任务定义直接从已登记的评估任务复制，只改 task_id / seeds / zombie_count_multiplier；
+    卡组、地形、playthrough、sun_start、conveyor_start 全不动（AGENTS §8：这是新任务族）。
+    """
+    tables = {'day': day, 'day_orig': day_orig, 'night': night, 'pool': pool}
+    tasks = []
+    for zone, level, source_id in PRESSURE_LEVELS:
+        table = tables['day_orig' if source_id.startswith('day_l10_orig') else zone]
+        source = next(t for t in table['tasks'] if t['task_id'] == source_id)
+        for multiplier in PRESSURE_MULTIPLIERS:
+            task = copy.deepcopy(source)
+            task.update(task_id=f'press_{zone}_l{level}_m{round(multiplier * 100):03d}',
+                        seeds=list(source['seeds'][:seeds]),
+                        zombie_count_multiplier=multiplier,
+                        split='pressure')
+            tasks.append(task)
+    assert len(tasks) == len(PRESSURE_LEVELS) * len(PRESSURE_MULTIPLIERS)
+    for task in tasks:
+        assert task['zombie_count_multiplier'] in PRESSURE_MULTIPLIERS
+        assert len(task['seeds']) == seeds
+    return dict(schema_version=1, purpose='task29 v3 pressure panel: level x multiplier',
+                seeds_per_task=seeds, multipliers=list(PRESSURE_MULTIPLIERS), tasks=tasks)
+
+
+def pressure_ceiling(points):
+    """points: {multiplier: (wins, games)} -> 胜率过 50% 的最大倍率（相邻两点线性插值，§13.7）。
+
+    返回 dict(ceiling, censored, below_floor, points)：ceiling 为 None 表示 1.0 都没过 50%；
+    censored=True 表示最高档仍 > 50%，真实上限在测点之外。
+    """
+    measured = sorted((m, w / g) for m, (w, g) in points.items() if g)
+    if not measured:
+        return dict(ceiling=None, censored=False, below_floor=True, points={})
+    if measured[0][1] <= 0.5:
+        return dict(ceiling=None, censored=False, below_floor=True, points=dict(measured))
+    ceiling = measured[-1][0]
+    censored = True
+    for (m1, r1), (m2, r2) in zip(measured, measured[1:]):
+        if r1 > 0.5 >= r2:
+            ceiling = m1 + (r1 - 0.5) / (r1 - r2) * (m2 - m1)
+            censored = False
+            break
+    return dict(ceiling=ceiling, censored=censored, below_floor=False, points=dict(measured))
+
+
+def evaluate_pressure(args):
+    manifest = read(args.pressure_manifest)
+    model_hash = sha(args.rollout_policy)
+    binary_hash = sha(args.executable)
+    manifest_hash = sha(args.pressure_manifest)
+    guard.OUT = args.out / 'resources'
+    guard.OUT.mkdir(parents=True, exist_ok=True)
+    guard.descendants = descendants
+    guard.ENV = {**os.environ, 'PYTHONPATH': str(ROOT / 'python') + ':' + str(ROOT / 'scripts'),
+                 'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1', 'MALLOC_ARENA_MAX': '2',
+                 'CUDA_VISIBLE_DEVICES': '', 'PVZ_RESOURCE_DIR': str(args.resource_dir),
+                 'PVZ_EXECUTABLE': str(args.executable)}
+    selected = set(args.pressure_tasks.split(',')) if args.pressure_tasks else None
+    rows = []
+    for task in manifest['tasks']:
+        name = task['task_id']
+        if selected is not None and name not in selected:
+            continue
+        seeds = task['seeds']
+        folder = args.out / name
+        command = [sys.executable, str(ROOT / 'scripts/search_play.py'),
+                   '--rollout-policy', str(args.rollout_policy), '--value', str(args.value),
+                   '--manifest', str(args.pressure_manifest), '--task-id', name,
+                   '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
+                   '--seeds', str(len(seeds)), '--workers', str(args.workers),
+                   '--arms', 'fast', '--out', str(folder)]
+        contract = dict(model_sha256=model_hash, executable_sha256=binary_hash,
+                        manifest_sha256=manifest_hash, seeds=seeds, command=command)
+        registration = guard.OUT / (name + '.contract.json')
+        if registration.exists():
+            assert read(registration) == contract, 'cannot resume a different pressure panel/model/build'
+        else:
+            assert not (folder / 'games.jsonl').exists(), 'unregistered existing pressure games'
+            write(registration, contract)
+        result_path = guard.OUT / (name + '.result.json')
+        if not result_path.exists() or read(result_path)['returncode'] != 0:
+            pidfile = guard.OUT / (name + '.process.json')
+            assert not pidfile.exists() or not guard.live(read(pidfile)['pid']), 'pressure stage already live'
+            result = guard.run(command, name, cwd=ROOT)
+            assert result['returncode'] == 0, (name, result)
+        row = summarize(folder, task, seeds)
+        row['multiplier'] = task['zombie_count_multiplier']
+        rows.append(row)
+        print(f"{name}: {row['won']}/{row['games']}", flush=True)
+    by_level = {}
+    for row in rows:
+        zone, level = row['task_id'].split('_')[1], row['level']
+        by_level.setdefault((zone, level), {})[row['multiplier']] = (row['won'], row['games'])
+    summary = []
+    for (zone, level), points in sorted(by_level.items()):
+        ceiling = pressure_ceiling(points)
+        summary.append(dict(zone=zone, level=level,
+                            win_rates={f'{m:g}': w / g for m, (w, g) in sorted(points.items()) if g},
+                            games={f'{m:g}': g for m, (w, g) in sorted(points.items())},
+                            **ceiling))
+    panel = dict(complete=selected is None, model=str(args.rollout_policy), model_sha256=model_hash,
+                 executable_sha256=binary_hash, manifest_sha256=manifest_hash,
+                 seeds_per_task=manifest['seeds_per_task'], levels=summary)
+    write(args.out / 'pressure.json', panel)
+    table = ['| 区 | 关卡 | 1.0 | 1.5 | 2.0 | 压力上限 |', '|---|---:|---:|---:|---:|---:|']
+    for item in summary:
+        cells = [f"{item['win_rates'].get(f'{m:g}', float('nan')):.1%}"
+                 if f'{m:g}' in item['win_rates'] else '—' for m in PRESSURE_MULTIPLIERS]
+        ceiling = '—（1.0 未过 50%）' if item['ceiling'] is None else (
+            f"≥{item['ceiling']:.2f}" if item['censored'] else f"{item['ceiling']:.2f}")
+        table.append(f"| {item['zone']} | {item['level']} | " + ' | '.join(cells) + f" | {ceiling} |")
+    (args.out / 'pressure.md').write_text('\n'.join(table) + '\n')
+    print('\n'.join(table), flush=True)
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--generate', action='store_true')
     p.add_argument('--day-manifest', type=Path, default=MAIN/'artifacts/stage4/day_panel.json')
     p.add_argument('--perturb-manifest', type=Path, default=MAIN/'.claude/worktrees/identity/artifacts/stage4/day_panel_identity.json')
     p.add_argument('--night-manifest', type=Path, default=MAIN/'artifacts/stage4/night_panel.json')
+    p.add_argument('--day-orig-manifest', type=Path,
+                   default=MAIN/'.claude/worktrees/conveyor/artifacts/stage4/day_panel.json')
+    p.add_argument('--pool-manifest', type=Path, default=MAIN/'artifacts/stage4/pool_panel.json')
+    p.add_argument('--generate-pressure', action='store_true')
+    p.add_argument('--pressure', action='store_true', help='run the v3 pressure panel')
+    p.add_argument('--pressure-manifest', type=Path, default=ROOT/'artifacts/task29/pressure_manifest.json')
+    p.add_argument('--pressure-seeds', type=int, default=64)
+    p.add_argument('--pressure-tasks', default='', help='optional comma-separated smoke subset')
     p.add_argument('--manifest', type=Path, default=ROOT/'artifacts/task23/unified_manifest.json')
     p.add_argument('--rollout-policy', type=Path)
     p.add_argument('--value', type=Path, default=MAIN/'artifacts/value_net/v3/model.pt')
@@ -152,12 +288,28 @@ def main():
     p.add_argument('--tasks', default='', help='optional comma-separated smoke subset; marks output incomplete')
     args = p.parse_args()
     if not 1 <= args.workers <= 4: p.error('--workers must be 1..4')
-    for name in ('manifest', 'rollout_policy', 'value', 'executable', 'resource_dir', 'out', 'day_manifest', 'perturb_manifest', 'night_manifest'):
+    for name in ('manifest', 'rollout_policy', 'value', 'executable', 'resource_dir', 'out',
+                 'day_manifest', 'perturb_manifest', 'night_manifest', 'day_orig_manifest',
+                 'pool_manifest', 'pressure_manifest'):
         value = getattr(args, name)
         if value is not None and not value.is_absolute(): p.error('all paths must be absolute: '+name)
     if args.generate:
         write(args.manifest, generate(read(args.day_manifest), read(args.perturb_manifest), read(args.night_manifest)))
         print(f'wrote {args.manifest}: 29 tasks')
+    if args.generate_pressure:
+        assert 1 <= args.pressure_seeds <= 1024
+        pressure = generate_pressure(read(args.day_manifest), read(args.day_orig_manifest),
+                                     read(args.night_manifest), read(args.pool_manifest),
+                                     args.pressure_seeds)
+        write(args.pressure_manifest, pressure)
+        print(f'wrote {args.pressure_manifest}: {len(pressure["tasks"])} tasks')
+        if not args.pressure:
+            return
+    if args.pressure:
+        if not args.rollout_policy:
+            p.error('--pressure needs --rollout-policy')
+        evaluate_pressure(args)
+        return
     if args.rollout_policy:
         tasks = {task['task_id']:task for task in read(args.manifest)['tasks']}
         selected = set(args.tasks.split(',')) if args.tasks else set(tasks)

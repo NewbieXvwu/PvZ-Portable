@@ -706,3 +706,11 @@ L10的三套留出按task23明确要求保留初始牌变体的测试语义（�
 **清单**：`artifacts/stage4/multiplier_panel.json`（工作树与 `~/PvZ-search/artifacts/stage4/` 各一份，
 都不进 git），生成器 `scripts/make_multiplier_tasks.py`，静态检查 `python/test_multiplier_tasks.py`。
 **不改** `deck_for_level`、不改任何现有族的定义；旧存档的 `whatif` 重放不受影响（重放读存档里的 deck 与倍率）。
+
+**v3 压力面板**（同属 task29，`scripts/unified_panel.py --generate-pressure`）：每区挑代表关
+——白天 L7、原版传送带 L10；夜间 2-2（L12）、2-8（L18）、原版 2-10（L20）；泳池 L21、L26——
+在 1.0 / 1.5 / 2.0 三档各跑评估段前 64 个种子（30000 起，与既有评估任务**同种子**，方便配对比较；
+不新增训练种子）。任务 id `press_<区>_l<关卡>_m<倍率×100>`，除 id / seeds / 倍率外逐字段复制
+对应评估任务（卡组、`conveyor_start` 不变）。汇总时按 §13.7 的做法在相邻两点间线性插值，
+输出每关“胜率过 50% 的最大倍率”（最高档仍 > 50% 记 `≥`，1.0 都没过记 `—`）。
+清单与结果默认 `artifacts/task29/pressure_manifest.json` / `pressure.json` / `pressure.md`（不进 git）。
