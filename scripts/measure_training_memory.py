@@ -24,6 +24,7 @@ sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
 import torch  # noqa: E402
 
 import train_rollout_policy as T  # noqa: E402
+from train_rollout_policy import PacketStore  # noqa: E402
 
 
 def current_rss() -> int:
@@ -61,6 +62,8 @@ def main() -> None:
     p.add_argument("--packet-head", default="identity")
     p.add_argument("--cell-soft-weight", type=float, default=3.0)
     p.add_argument("--obs", default="v2")
+    p.add_argument("--compact", action="store_true", help="measure the compact row store")
+    p.add_argument("--memmap", action="store_true", help="measure the file-backed row store")
     p.add_argument("--json", type=Path)
     p.add_argument("--extrapolate", type=int, default=15_000_000)
     args = p.parse_args()
@@ -82,7 +85,9 @@ def main() -> None:
                     args.cache_dir, False, args.obs, 1, False,
                     cells=bool(args.cell_soft_weight),
                     aux_horizon=0, row_observer=None,
-                    packet_head=args.packet_head, read_cache_dir=None)
+                    packet_head=args.packet_head, read_cache_dir=None,
+                    compact=args.compact,
+                    memmap_dir=args.cache_dir / "data" if args.memmap else None)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     packet_info = loaded[9] if args.packet_head == "identity" else None
     after_load = current_rss()
@@ -90,7 +95,9 @@ def main() -> None:
     rows = len(plant)
 
     def tensor_bytes(t):
-        return None if t is None else int(t.numel() * t.element_size())
+        if t is None:
+            return None
+        return int(t.nbytes) if isinstance(t, PacketStore) else int(t.numel() * t.element_size())
 
     components = {
         "boards.indices": int(boards.indices.nbytes),
@@ -115,7 +122,7 @@ def main() -> None:
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
     is_val = torch.tensor([s in val_seeds for s in seed_of])
-    train_idx = torch.nonzero(~is_val).squeeze(1)
+    train_idx = torch.nonzero(~is_val).squeeze(1).to(torch.int32)
     perm = train_idx[torch.randperm(len(train_idx))]
     after_index = current_rss()
     components["is_val + train_idx + perm"] = int(is_val.numel() * is_val.element_size()

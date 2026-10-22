@@ -40,46 +40,118 @@ def _episode_context(path: Path) -> np.ndarray:
     return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
 
 
-def _board_store(shape, cache_dir: Path, dtype=np.float16) -> torch.Tensor:
-    """File-backed inputs, unlinked at once and freed on exit; identity packets keep float32."""
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    path = cache_dir / f"boards_{os.getpid()}.npy"
+def _spilled_array(directory: Path, name: str, dtype, shape):
+    """Writable file-backed array that leaves the directory at once: the mapping keeps the pages alive,
+    and the kernel can drop them under pressure instead of holding them as anonymous memory (task32)."""
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{name}_{os.getpid()}.npy"
     store = np.lib.format.open_memmap(path, mode="w+", dtype=dtype, shape=shape)
     path.unlink()
-    return torch.from_numpy(store)
+    return store
+
+
+def _board_store(shape, cache_dir: Path, dtype=np.float16) -> torch.Tensor:
+    """File-backed inputs, unlinked at once and freed on exit; identity packets keep float32."""
+    return torch.from_numpy(_spilled_array(cache_dir, "boards", dtype, shape))
+
+
+def constant_plane(rows):
+    """Cells that hold the same value in every row of one archive, and the flat mask that covers them.
+
+    The playable-lane channel is 50 of the ~134 nonzeros a row and never changes inside a game, so hoisting
+    it into one plane per archive drops a third of the CSR. Exact: the plane writes back the very float16
+    values the CSR would have stored (task32).
+    """
+    if len(rows) < 4:
+        return None, None
+    flat = np.asarray(rows).reshape(len(rows), -1)
+    first = flat[0]
+    covered = np.all(flat == first, axis=0) & (first.view(f"u{first.dtype.itemsize}") != 0)
+    positions = np.flatnonzero(covered)
+    if len(positions) < 8:          # a handful of cells is not worth a plane id on every row
+        return None, None
+    return (positions.astype(np.int32), first[positions].copy()), covered
 
 
 class CompactBoards:
-    """CSR rows: uint16 element indices, values (float16 boards, float32 scalars -- lossless either way), int64 row offsets.
-    Scalars are 84% zeros, so 488 bytes a row become ~120 (2026-10-19)."""
+    """CSR rows: element indices, values (float16 boards, float32 scalars -- lossless either way), int64 row offsets.
+    Scalars are 84% zeros, so 488 bytes a row become ~120 (2026-10-19).
 
-    def __init__(self, shape, dtype=np.float16):
+    ``backing`` streams the three arrays to files instead of a bytearray, so building them never holds the
+    whole dataset on the heap; the finished arrays are then mapped read-only (task32). ``plane`` keeps the
+    cells of constant_plane once per archive, plus an int32 plane id a row.
+    """
+
+    def __init__(self, shape, dtype=np.float16, backing: Path | None = None):
         self.shape = (0, *shape)
         self.dtype = np.dtype(dtype)
-        self.indices = bytearray()
-        self.values = bytearray()
-        self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
+        self.cells = int(np.prod(shape))
+        self.index_dtype = np.uint8 if self.cells <= 256 else np.uint16 if self.cells <= 65536 else np.uint32
         self.nnz = 0
+        self.backing = None if backing is None else Path(backing)
+        self.planes, self._plane_ids, self._plane_index = [], bytearray(), {}
+        self.plane_of = None
+        if self.backing is None:
+            self.indices = bytearray()
+            self.values = bytearray()
+            self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
+        else:
+            self.backing.parent.mkdir(parents=True, exist_ok=True)
+            self._streams = [open(str(self.backing) + suffix, "wb")
+                             for suffix in (".indices", ".values", ".offsets")]
+            self._streams[2].write(np.zeros(1, dtype=np.int64).tobytes())
 
-    def append(self, boards):
+    def append(self, boards, covered=None, plane=None):
         flat = np.asarray(boards, dtype=self.dtype).reshape(len(boards), -1)
         rows, columns = np.nonzero(flat.view(f"u{self.dtype.itemsize}"))  # bit test: keeps -0.0
+        if covered is not None:                 # these cells are carried by the plane instead
+            keep = ~covered[columns]
+            rows, columns = rows[keep], columns[keep]
         counts = np.bincount(rows, minlength=len(boards))
-        self.indices.extend(columns.astype(np.uint16).tobytes())
-        self.values.extend(flat[rows, columns].tobytes())
-        self.offsets.extend((counts.cumsum(dtype=np.int64) + self.nnz).tobytes())
+        chunks = (columns.astype(self.index_dtype).tobytes(), flat[rows, columns].tobytes(),
+                  (counts.cumsum(dtype=np.int64) + self.nnz).tobytes())
+        if self.backing is None:
+            for target, chunk in zip((self.indices, self.values, self.offsets), chunks):
+                target.extend(chunk)
+        else:
+            for stream, chunk in zip(self._streams, chunks):
+                stream.write(chunk)
+        if plane is not None:
+            key = plane[0].tobytes() + plane[1].tobytes()
+            identity = self._plane_index.setdefault(key, len(self.planes))
+            if identity == len(self.planes):
+                self.planes.append(plane)
+            self._plane_ids.extend(np.full(len(boards), identity, dtype=np.int32).tobytes())
+        elif self.planes:
+            self._plane_ids.extend(np.full(len(boards), -1, dtype=np.int32).tobytes())
         self.nnz += len(columns)
         self.shape = (self.shape[0] + len(boards), *self.shape[1:])
 
     def finish(self):
-        self.indices = np.frombuffer(self.indices, dtype=np.uint16)
-        self.values = np.frombuffer(self.values, dtype=self.dtype)
-        self.offsets = np.frombuffer(self.offsets, dtype=np.int64)
+        if self.backing is None:
+            self.indices = np.frombuffer(self.indices, dtype=self.index_dtype)
+            self.values = np.frombuffer(self.values, dtype=self.dtype)
+            self.offsets = np.frombuffer(self.offsets, dtype=np.int64)
+        else:
+            for stream in self._streams:
+                stream.close()
+            self.indices = self._mapped(".indices", self.index_dtype)
+            self.values = self._mapped(".values", self.dtype)
+            self.offsets = self._mapped(".offsets", np.int64)
+        self.plane_of = np.frombuffer(self._plane_ids, dtype=np.int32) if self.planes else None
+        self._plane_ids = bytearray()
         return self
+
+    def _mapped(self, suffix, dtype):
+        path = Path(str(self.backing) + suffix)
+        mapped = np.memmap(path, dtype=dtype, mode="r")
+        path.unlink()                            # the mapping outlives the name
+        return mapped
 
     @property
     def nbytes(self):
-        return self.indices.nbytes + self.values.nbytes + self.offsets.nbytes
+        return (self.indices.nbytes + self.values.nbytes + self.offsets.nbytes
+                + (0 if self.plane_of is None else self.plane_of.nbytes))
 
     def batch(self, idx, device):
         selected = np.asarray(idx)
@@ -87,21 +159,75 @@ class CompactBoards:
         counts = self.offsets[selected + 1] - starts
         ends = counts.cumsum()
         positions = np.arange(ends[-1] if len(ends) else 0) + np.repeat(starts - (ends - counts), counts)
-        size = int(np.prod(self.shape[1:]))
+        size = self.cells
         destinations = np.repeat(np.arange(len(selected)) * size, counts) + self.indices[positions]
         output = torch.zeros(len(selected) * size, dtype=torch.float32, device=device)
         output.index_put_((torch.from_numpy(destinations).to(device),),
                           torch.from_numpy(self.values[positions]).to(device=device, dtype=torch.float32))
+        if self.plane_of is not None:
+            identities = self.plane_of[selected]
+            if (identities >= 0).any():
+                view = output.view(len(selected), size)
+                for identity in np.unique(identities[identities >= 0]):
+                    rows = torch.from_numpy(np.flatnonzero(identities == identity)).to(device)
+                    cells, values = self.planes[identity]
+                    view[rows.unsqueeze(1), torch.from_numpy(cells).long().to(device)] = torch.from_numpy(values).to(device=device, dtype=torch.float32)
         return output.reshape(len(selected), *self.shape[1:])
+
+
+class PacketStore:
+    """(rows, PACKETS, 4) float32 packet features split by column: kind int8, active uint8, progress float32,
+    affordable uint8. 160 bytes a row become 70, and every widening back to float32 is exact (task32)."""
+
+    def __init__(self, capacity, slots, backing: Path | None = None):
+        self.slots = slots
+        dtypes = (np.int8, np.uint8, np.float32, np.uint8)
+        self.columns = [_spilled_array(backing, name, dtype, (capacity, slots)) if backing is not None
+                        else np.empty((capacity, slots), dtype)
+                        for name, dtype in zip(("kind", "active", "progress", "affordable"), dtypes)]
+
+    def set(self, start, stop, block):
+        block = np.asarray(block, dtype=np.float32)
+        for column, values in zip(self.columns, (block[:, :, 0], block[:, :, 1], block[:, :, 2], block[:, :, 3])):
+            column[start:stop] = values
+
+    def finish(self, n):
+        self.columns = [column[:n] for column in self.columns]
+        return self
+
+    def __getitem__(self, idx):
+        kind, active, progress, affordable = (torch.from_numpy(np.asarray(column)) for column in self.columns)
+        return torch.stack([kind[idx].float(), active[idx].float(), progress[idx], affordable[idx].float()], dim=2)
+
+    def kinds(self, rows, slots):
+        return torch.from_numpy(np.asarray(self.columns[0])[np.asarray(rows), np.asarray(slots)].astype(np.int64))
+
+    @property
+    def nbytes(self):
+        return sum(column.nbytes for column in self.columns)
+
+
+def packets_kind(packet_info, rows, slots) -> torch.Tensor:
+    """The card id in one slot of the identity packet block, for either representation of it."""
+    return (packet_info.kinds(rows, slots) if isinstance(packet_info, PacketStore)
+            else packet_info[rows, slots.long(), 0].long())
 
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          cache_dir: Path | None = None, with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
          dense_boards: bool = False, cells: bool = False, aux_horizon: int = 0, row_observer=None,
-         packet_head: str = 'slot', read_cache_dir: Path | None = None):
+         packet_head: str = 'slot', read_cache_dir: Path | None = None, compact: bool = False,
+         memmap_dir: Path | None = None):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
-    ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games)."""
+    ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games).
+
+    ``compact`` stores the same rows in fewer bytes (task32): bit-packed keep masks, uint8/int16 labels, a split
+    packet block, uint8 scalar indices, and per-archive constant planes taken out of the board CSR. Every value a
+    batch sees is bit-identical to the default path. ``memmap_dir`` streams the large per-row arrays to files that
+    are mapped read-only afterwards, so they live in the page cache instead of anonymous memory."""
+    if compact and cache_dir is None:
+        raise ValueError("compact needs the feature cache (--cache) to know each archive's frames")
     paths = [p for p in frame_paths(data) if p.parent.name in labels]
     # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
     # twice the memory, which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
@@ -133,24 +259,31 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 cached[path] = cache_episode(path, cache_dir, obs, read_directory=read_cache_dir)
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
-            keep[path] = mask
+            # Bit-packed: a python list of bools is 8 bytes a frame, and at wait_keep .1 there are ~3.5 frames
+            # behind every kept row (task32).
+            keep[path] = np.packbits(mask) if compact else mask
             continue
         for line in frame_bytes(path).decode().splitlines():
             # The target is the last field: the DAgger label if there is one, else the executed action.
             tail = line[max(line.rfind('"label":'), line.rfind('"action":')):]
             mask.append('"type":"plant"' in tail or '"targets":' in line or rng.random() < wait_keep)
         keep[path] = mask
-    capacity = sum(map(sum, keep.values()))
+    capacity = (sum(int(np.unpackbits(packed).sum()) for packed in keep.values()) if compact
+                else sum(map(sum, keep.values())))
     boards = scalars = None
     # Per-row labels go straight into preallocated arrays: as Python lists (8 floats a row for `values`) they cost
     # ~2 GB of objects on 6.5M rows and the freed arenas stayed in the training process (13 GB RSS, 2026-10-19).
-    plant, weight = np.empty(capacity, np.float32), np.empty(capacity, np.float32)
-    packet, cell = np.empty(capacity, np.int64), np.empty(capacity, np.int64)
-    values = np.empty((capacity, PACKETS + 1), np.float32)
+    plant, weight = np.empty(capacity, np.uint8 if compact else np.float32), np.empty(capacity, np.float32)
+    packet = np.empty(capacity, np.int16 if compact else np.int64)
+    cell = np.empty(capacity, np.int16 if compact else np.int64)
+    values = (_spilled_array(memmap_dir, "values", np.float32, (capacity, PACKETS + 1)) if memmap_dir is not None
+              else np.empty((capacity, PACKETS + 1), np.float32))
     seed_of = []
-    cands = np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16) if cells else None
+    cands = (_spilled_array(memmap_dir, "cands", np.float16, (capacity, CELL_CANDIDATES, 3)) if memmap_dir is not None
+             else np.full((capacity, CELL_CANDIDATES, 3), np.nan, dtype=np.float16)) if cells else None
     auxiliary = np.empty((capacity, 6), dtype=np.float32) if aux_horizon else None
-    packets = (_board_store((capacity, PACKETS, 4), cache_dir, np.float32) if cache_dir is not None
+    packets = ((PacketStore(capacity, PACKETS, memmap_dir / "packets" if memmap_dir is not None else None) if compact
+                else _board_store((capacity, PACKETS, 4), cache_dir, np.float32)) if cache_dir is not None
                else torch.empty((capacity, PACKETS, 4))) if packet_head == 'identity' else None
     n = 0
     for path in paths:
@@ -158,14 +291,20 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
         scale = (label_weight or {}).get(path.parent.name, 1.0)
         if path in cached:
             with np.load(cached[path], allow_pickle=False) as stored:
-                selected = np.flatnonzero(np.asarray(keep[path])[stored["rows"]])
+                mask = keep[path]
+                if compact:
+                    mask = np.unpackbits(mask)[:len(stored["hints"])].astype(bool)
+                selected = np.flatnonzero(np.asarray(mask)[stored["rows"]])
                 count = len(selected)
                 if packets is not None:
                     if path not in packet_cached:
                         packet_cached[path] = cache_packets(path, cache_dir)
                     with np.load(packet_cached[path], allow_pickle=False) as side:
                         assert np.array_equal(side['rows'], stored['rows']), path
-                        packets[n:n + count] = torch.from_numpy(side['packets'][selected])
+                        if compact:
+                            packets.set(n, n + count, side['packets'][selected])
+                        else:
+                            packets[n:n + count] = torch.from_numpy(side['packets'][selected])
                 if row_observer is not None:
                     row_observer(path, stored["rows"][selected])
                 rows_scalars = stored["scalars"][selected]
@@ -182,13 +321,16 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 rows_boards = stored["boards"]
                 if boards is None:
                     boards = (_board_store((capacity, *rows_boards.shape[1:]), cache_dir) if dense_boards
-                              else CompactBoards(rows_boards.shape[1:]))
+                              else CompactBoards(rows_boards.shape[1:], backing=None if memmap_dir is None
+                                                 else memmap_dir / "boards"))
                     scalars = (torch.empty((capacity, rows_scalars.shape[1]), dtype=torch.float32) if dense_boards
-                               else CompactBoards(rows_scalars.shape[1:], np.float32))
+                               else CompactBoards(rows_scalars.shape[1:], np.float32,
+                                                  backing=None if memmap_dir is None else memmap_dir / "scalars"))
                 if dense_boards:
                     boards[n:n + count] = torch.from_numpy(rows_boards[selected])
                 elif count:
-                    boards.append(rows_boards[selected])
+                    plane, covered = constant_plane(rows_boards[selected]) if compact else (None, None)
+                    boards.append(rows_boards[selected], covered=covered, plane=plane)
                 if dense_boards:
                     scalars[n:n + count] = torch.from_numpy(np.ascontiguousarray(rows_scalars))
                 elif count:
@@ -199,8 +341,10 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
                 if packets is not None:
                     planted_indices = np.flatnonzero(types > .5)
                     if len(planted_indices):
-                        target = packets[torch.from_numpy(n + planted_indices),
-                                         torch.from_numpy(packet[n + planted_indices]), 0]
+                        planted_rows = torch.from_numpy(n + planted_indices)
+                        planted_slots = torch.from_numpy(packet[n + planted_indices]).long()
+                        target = (packets.kinds(planted_rows, planted_slots) if compact
+                                  else packets[planted_rows, planted_slots, 0])
                         if (target < 0).any():
                             raise ValueError(f'identity labelled plant has an empty packet slot: {path}')
                 cell[n:n + count] = stored["cell"][selected]
@@ -270,7 +414,9 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
             None if cands is None else torch.from_numpy(cands[:n]))
     if aux_horizon:
         result = (*result, torch.from_numpy(auxiliary[:n]))
-    return (*result, packets[:n]) if packets is not None else result
+    if packets is not None:
+        packets = packets.finish(n) if compact else packets[:n]
+    return (*result, packets) if packets is not None else result
 
 
 def main() -> None:
@@ -323,6 +469,13 @@ def main() -> None:
     p.add_argument("--row-weights", type=Path, help="optional checksummed per-row experiment manifest; cached rows required, default off")
     p.add_argument('--source-row-report', type=Path, help='optional actual retained row counts by source; cached rows required')
     p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")
+    p.add_argument("--compact-data", action=argparse.BooleanOptionalAction, default=False,
+                   help="store the loaded rows in the compact representation (task32): packed keep masks, uint8/int16 "
+                        "labels, split packet block, uint8 scalar indices, per-archive constant board planes. Every value "
+                        "a batch sees is bit-identical; ~40%% less memory")
+    p.add_argument("--data-memmap", action=argparse.BooleanOptionalAction, default=False,
+                   help="stream the large per-row arrays (board/scalar CSR, values, cell candidates, packets) to files "
+                        "beside the feature cache and map them read-only: the pages become reclaimable instead of anonymous")
     args = p.parse_args()
     if args.aux_weight < 0 or args.aux_horizon < 1:
         p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
@@ -355,14 +508,18 @@ def main() -> None:
                                                                  cells=bool(args.cell_soft_weight),
                                                                  aux_horizon=args.aux_horizon if args.aux_weight else 0,
                                                                  row_observer=observer,
-                                                                 packet_head=args.packet_head, read_cache_dir=args.read_cache_dir)
+                                                                 packet_head=args.packet_head, read_cache_dir=args.read_cache_dir,
+                                                                 compact=args.compact_data,
+                                                                 memmap_dir=((args.cache_dir or args.out.parent / ".feature_cache") / "data"
+                                                                             if args.data_memmap else None))
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
-    is_val = torch.tensor([s in val_seeds for s in seed_of])
+    # np.fromiter skips the ~8 bytes a row that a python list of bools costs on the way to the tensor (task32).
+    is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
     if row_plan:
         row_plan.finish(len(plant), is_val.numpy())
     if source_counts:
@@ -374,12 +531,13 @@ def main() -> None:
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
                                   for tensor in (plant, packet, cell, weight, values, is_val))}
     if packet_info is not None:
-        memory['packet_bytes'] = packet_info.numel() * packet_info.element_size()
+        memory['packet_bytes'] = (packet_info.nbytes if isinstance(packet_info, PacketStore)
+                                  else packet_info.numel() * packet_info.element_size())
     print(json.dumps({"data_memory": memory}), flush=True)
     if args.packet_balance:
         planted_rows = packet >= 0
-        balanced_packet = (packet if packet_info is None else
-                           packet_info[torch.arange(len(packet)), packet.clamp(min=0), 0].long())
+        balanced_packet = (packet.long() if packet_info is None else
+                           packets_kind(packet_info, torch.arange(len(packet)), packet.clamp(min=0)))
         freq = torch.bincount(balanced_packet[planted_rows], minlength=PACKETS if packet_info is None else 54).float() / int(planted_rows.sum())
         scale = freq.clamp(min=1e-6) ** -args.packet_balance
         scale = (scale / scale[balanced_packet[planted_rows]].mean()).clamp(max=20.0)  # mean plant-row weight ~1
@@ -422,7 +580,9 @@ def main() -> None:
     def batch_loss(idx, train):
         b = boards[idx].float().to(args.device) if args.dense_boards else boards.batch(idx, args.device)
         s = scalars[idx].to(args.device) if args.dense_boards else scalars.batch(idx, args.device)
-        y = plant[idx].to(args.device); pk = packet[idx].to(args.device); c = cell[idx].to(args.device)
+        y = plant[idx].to(args.device).float()          # uint8 in the compact store
+        pk = packet[idx].to(args.device).long()         # int16 in the compact store
+        c = cell[idx].to(args.device).long()
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
@@ -476,7 +636,9 @@ def main() -> None:
                          "cell_acc": float((out["cell"][planted].argmax(1) == c[planted]).float().mean()) if planted.any() else 0.0}
         return loss, stats
 
-    train_idx = torch.nonzero(~is_val).squeeze(1); val_idx = torch.nonzero(is_val).squeeze(1)
+    # int32 halves the two index tensors a row (perm is a second copy of train_idx); every use is a gather (task32).
+    train_idx = torch.nonzero(~is_val).squeeze(1).to(torch.int32)
+    val_idx = torch.nonzero(is_val).squeeze(1).to(torch.int32)
     steps = args.epochs * -(-len(train_idx) // 2048)
     if args.max_steps is not None:
         if args.max_steps>steps:

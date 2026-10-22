@@ -35,4 +35,6 @@
 
 - 第 1 步（量）：`scripts/measure_training_memory.py` 在 Mac 上按生产配方（`--wait-keep .1 --obs v2 --packet-head identity --cell-soft-weight 3`）跑 200 档案 / 61 903 行，逐组件记账 → `MEMORY/docs/task32-baseline.json`。外推 1500 万行 **14.32 GiB**：棋盘 CSR 7.49（536 B/行，134 非零/行）、`packet_info` 2.24（160 B）、标量 CSR 1.68（120 B）、`cands` 1.01（72 B）、`values` 0.62（44 B）、keep 掩码 0.39（28 B）、索引张量 0.22、packet/cell 0.22、`seed_of` 0.12。
 
+- 第 2 步（压·学生训练）：`train_rollout_policy.py` 加两个默认关闭的开关 —— `--compact-data`（keep 掩码位打包、plant uint8 / packet·cell int16、`PacketStore` 按列拆成 int8/uint8/float32/uint8、标量 CSR 索引按位宽降到 uint8、按档案把恒定平面（可通行车道那一层 50/134 个非零）提到平面表）与 `--data-memmap`（棋盘/标量 CSR、`values`、`cands`、`packets` 写文件后只读映射，页面可回收）。逐位门槛：200 档案 61 903 行、同种子、生产配方跑一遍，四种组合（默认 / compact / memmap / 两者）21 个权重张量 sha256 **全同**；`data_memory` 从 54.6 MB 降到 35.1 MB（棋盘 33.7→20.7、packet 9.9→4.3）。新测试 `python/test_compact_loader.py`（默认 / compact / memmap / 两者 的密集棋盘逐位相等，含 -0.0）。
+
 ## 问题
