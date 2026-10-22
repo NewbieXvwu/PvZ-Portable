@@ -22,4 +22,6 @@ dw4i（第一次加宽合训）白天 L1/L3/L4/L6 从 ~128/128 掉到 116–122�
 
 - 2026-10-22 第一步（脚本 + 清单）：`scripts/make_day_panel.py` 加 `--combined`（eval / eval_d7 / train_d7）与训练族 `day_lN_train_d7`（N=1、3、4、6，7 卡 `[0,1,2,3,4,5,7]`，种子 `2100000+(N−1)·10000` 起每关 8192：L1 2100000–2108191、L3 2120000–2128191、L4 2130000–2138191、L6 2150000–2158191）。自查：任务内无重复、与 30000–31023 / 1500000 / 1600000 / 1800000–1878191 / 1880000–1888191 / 1900000–1998191 / 2000000–2088191 不重叠、训练种子互不重叠。重新生成 `~/PvZ-search/artifacts/stage4/day_panel.json`（旧文件已备份 `day_panel.json.bak_task24`）：**22 → 26 任务，原有 22 个任务逐任务 JSON 逐字节相同**（前缀相等 + 逐任务 dumps 比较通过），文件级差异只有 purpose 末尾追加的 task24 后缀、末尾 4 个新任务与 EOF 换行。DESIGN §14.7 已登记。
 
+- 2026-10-22 第二步（冒烟）：本工作树单独编译（Release + BLAS，`build/pvz-portable`）；`search_play.py` 对 4 个新任务各跑 1 局（学生 `dw4i_s1`，`--workers 1`，`--arms fast`，清单读 `~/PvZ-search/artifacts/stage4/day_panel.json`）：`day_l1_train_d7` seed 2100000、`day_l3` 2120000、`day_l4` 2130000、`day_l6` 2150000，**4/4 reset 正常且都赢**（20 波，丢车 1–3）。种子与 DESIGN §14.7 登记一致。
+
 ## 问题
