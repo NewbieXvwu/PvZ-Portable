@@ -124,7 +124,9 @@ class Branches:
 
 
 def initialize(path):
-    old=load_value_net(path);new=ValueNet(width=old.conv[0].out_channels,context=True,encoder_version=2)
+    old=load_value_net(path)
+    if old.encoder_version!=1 or not old.context:raise ValueError('warm start requires a legacy context value net')
+    new=ValueNet(width=old.conv[0].out_channels,context=True,encoder_version=2)
     state=old.state_dict();weight=state['scalar.0.weight'];expanded=torch.zeros((len(weight),SCALARS+6+CONTEXT))
     expanded[:,:SCALARS]=weight[:,:SCALARS];expanded[:,SCALARS+6:]=weight[:,SCALARS:]
     state['scalar.0.weight']=expanded;new.load_state_dict(state);return new
@@ -143,6 +145,8 @@ def train(args):
     if not len(fit_idx) or not len(val_idx):raise ValueError('episode seed split is empty')
     paths=[f for p in map(Path,args.branches.split(',')) for f in (sorted(p.glob('*.pt')) if p.is_dir() else [p])]
     branches=Branches(paths,set(meta['excluded_audit_seeds']))
+    init_seeds=set(torch.load(args.init,map_location='cpu',weights_only=False).get('trained_on',[]))
+    if init_seeds&set(meta['excluded_audit_seeds']):raise ValueError('initial checkpoint saw external audit seeds')
     net=initialize(args.init).to(args.device);opt=torch.optim.AdamW(net.parameters(),lr=args.lr,weight_decay=1e-4)
     def batch(branch_indices,episode_indices):
         b,s,y=branches.batch(branch_indices)
@@ -173,7 +177,7 @@ def train(args):
         history.append(entry);print(entry,flush=True)
         if val_loss<best-1e-4:
             best=val_loss;patience=0
-            used=sorted(branches.seeds|set(map(int,seeds)))
+            used=sorted(init_seeds|branches.seeds|set(map(int,seeds)))
             # Includes stopping seeds: no later audit may treat them as untouched.
             checkpoint=dict(state_dict={k:v.detach().cpu().clone() for k,v in net.state_dict().items()},
                             encoder=ENCODER_V2,width=net.conv[0].out_channels,context=True,trained_on=used,

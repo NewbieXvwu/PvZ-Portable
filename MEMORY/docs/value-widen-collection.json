@@ -8,6 +8,15 @@
    "games": 32,
    "wins": 1,
    "mean_seconds": 142.1
+  },
+  {
+   "task_id": "pool_l21_train_p9k",
+   "student": "identity_dw3_s1",
+   "seed_start": 2006144,
+   "seed_end": 2006159,
+   "games": 16,
+   "wins": 8,
+   "mean_seconds": 114.1
   }
  ],
  "complete": false
