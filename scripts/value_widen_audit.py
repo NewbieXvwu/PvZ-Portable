@@ -29,7 +29,7 @@ def cohort(label):
     if label.startswith('n20o'): return 'night_original_conveyor'
     if label.startswith('n') and ('dag' in label or 't' in label): return 'night_n9_n10'
     if label.startswith('p'): return 'pool_p9k'
-    if label.startswith('d10orig'): return 'day_original_conveyor'
+    if label.startswith('d10orig') or ('d10orig' in label and label.startswith('c')): return 'day_original_conveyor'
     if label.startswith('d') and 'p' in label: return 'day_d7p'
     if label.startswith('d'): return 'day_d7'
     if label.startswith(('z13', 'z14', 'z15')): return 'day_l7_control'
