@@ -40,12 +40,15 @@ from pvz_tasks import deck_for_seed, terrain_covered  # noqa: E402
 MULTIPLIERS = ((1.25, 'm125'), (1.5, 'm150'), (1.75, 'm175'),
                (2.0, 'm200'), (2.5, 'm250'), (3.0, 'm300'))
 
-# 种子段：5_000_000 起，每档 500_000。档内按 (族序号, 关卡) 排槽：
+# 种子段：5_000_000 起，每档 700_000。档内按 (族序号, 关卡) 排槽：
 #   slot = family_index * 32 + (level - 1)，每槽 SEEDS_PER_TASK 个种子。
-# 7 个族 × 32 槽 × 2048 = 458_752 < 500_000，档与档之间留 41k 空隙。
-# 与仓库里所有现有清单（最高约 2.53M）以及 DESIGN 登记的 DAgger 段都不相交。
+# 9 个族 × 32 槽 × 2048 = 589_824 < 700_000，档与档之间留 110k 空隙。
+# （task31 加第 8 个族 n10q 时 8 个族只有 524_288，加第 9 个族就到 589_824；
+#  原来的 500_000 会串档，所以整档加宽。加宽后旧倍率种子全部平移 —— 这些族还没开过
+#  采集局（task29 明确未开正式采集），所以没有数据要迁移。）
+# 与仓库里所有现有清单（最高约 3.4M 的 n10q 段）以及 DESIGN 登记的 DAgger 段都不相交。
 SEED_BASE = 5_000_000
-MULT_STRIDE = 500_000
+MULT_STRIDE = 700_000
 SLOTS_PER_FAMILY = 32
 SEEDS_PER_TASK = 2048
 
@@ -54,6 +57,7 @@ NIGHT_N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 POOL_P9K_LEVELS = (21, 22, 23, 24, 26, 27, 28, 29)
 DAY_D7Q_LEVELS = (7, 8, 9, 10)
 NIGHT_N10P_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
+NIGHT_N10Q_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 
 # (族短名, 源清单 key, 源 task_id 模板, levels, 地形)
 FAMILIES = (
@@ -64,6 +68,7 @@ FAMILIES = (
     ('pool_p9k', 'pool', 'pool_l{level}_train_p9k', POOL_P9K_LEVELS, 'pool'),
     ('day_d7q', 'day_d7q', 'day_l{level}_train_d7q', DAY_D7Q_LEVELS, 'day'),
     ('night_n10p', 'night_n10p', 'night_l{level}_train_n10p', NIGHT_N10P_LEVELS, 'night'),
+    ('night_n10q', 'night_n10q', 'night_l{level}_train_n10q', NIGHT_N10Q_LEVELS, 'night'),
 )
 
 
@@ -85,6 +90,7 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'pool': overrides.get('pool') or MAIN / 'artifacts/stage4/pool_panel.json',
         'day_d7q': overrides.get('day_d7q') or MAIN / 'artifacts/stage4/day_panel_d7q.json',
         'night_n10p': overrides.get('night_n10p') or MAIN / 'artifacts/stage4/night_panel_n10p.json',
+        'night_n10q': overrides.get('night_n10q') or MAIN / 'artifacts/stage4/night_panel_n10q.json',
     }
 
 
@@ -198,13 +204,15 @@ def main() -> None:
     parser.add_argument('--pool-manifest', type=Path)
     parser.add_argument('--day-d7q-manifest', type=Path)
     parser.add_argument('--night-n10p-manifest', type=Path)
+    parser.add_argument('--night-n10q-manifest', type=Path)
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
     assert 1 <= args.seeds <= SEEDS_PER_TASK
     paths = source_paths({'day': args.day_manifest, 'day_orig': args.day_orig_manifest,
                           'night': args.night_manifest, 'pool': args.pool_manifest,
-                          'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest})
+                          'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
+                          'night_n10q': args.night_n10q_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests()
