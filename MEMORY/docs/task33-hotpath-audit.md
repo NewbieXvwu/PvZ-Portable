@@ -41,6 +41,11 @@
 - 00:40 **训练装载实测**：`--cache-dir` + 8 预计算进程 48 598 行/s（1.28 M 行 32 s），13.6 M 行约 280 s；不带 cache-dir 慢 5.4 倍（9 037 行/s，为筛行把每局原始 JSON 重解一遍）。档案 21 056 个、5.07 GB、25 M 行、288 B/行落盘、13.8 KB/行解压后。
 - 00:15 **一局的账（day_l7_z17 种子 1740001，搜索局 117.4 s / 1240 决策 / 253 次搜索 / 3962 条推演）**：引擎仿真 **90.2 s（77%）**、引擎内学生前向 **10.2 s（8.7%，146 531 次 → 70 µs/次）**、Python 搜索簿记 **6.7 s（5.6%）**、进程间往返 + JSON **≈2.5 s（2.1%）**、Python 学生前向 0.46 s（0.37 ms/决策）、写档案 0.15 s。同种子纯学生局 2.1 s（1425 决策，1.5 ms/决策）。**结论：IPC 只占 2%，C++ 整局化的收益在内存与架构，不在速度。**
 
+- 01:05 **第 1 项已做**（worker 常驻）：8 局纯学生 A/B（上一个提交在 `/tmp/audit-old` 工作树）22.64 → 15.64 s（−31%，−0.88 s/局）；同种子 8 局 `games.jsonl` 的 won/final_wave/decisions/mowers/planted/searched **逐字段相同**。worker RSS 16 局内 31 → 194 MB 峰值后 163–194 来回，无单调增长。
+- 01:15 **兼容与实验开关统一登记**：`python/pvz_compat.py`（8 条 LEGACY + 8 个实验开关，决定日 2026-11-06）、`LEGACY(...)`/`EXPERIMENT(...)` 标记、help 前缀、`python/test_compat_registry.py` 双向校验 5 项全过。
+- 01:20 观测载荷实测：完整观测 14 280 B，其中 `legal_actions` 45% + `cells` 37%；引擎已有的 `OBS_LEAN` 在同一 tick 是 **51%**，且学生特征逐位相同（棋盘 max abs diff 0.0）。缺 `zombie_count_multiplier` / `loadout_context` 两项（价值网上下文要用）。**没做**：要重编 `build/pvz-portable`，与正在跑的 13 个采集共用二进制，留给 task35 或停采窗口。
+- 01:25 训练装载打包原型 `scripts/pack_training_rows.py`：把 `load()` 的结果按档案顺序写成单个 904 MB 的 CSR 文件（1.56 M 行 = 581 B/行），读回一遍即可，不再解压 345 GB、不再重算 `np.nonzero`。
+
 ## 问题
 
 ## 追加（主控 2026-10-22 23:55，用户两点 + 主控决定）
