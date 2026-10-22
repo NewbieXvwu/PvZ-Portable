@@ -623,7 +623,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   与评估段 30000–31023 及 1500000/1600000/1800000–1878191 各训练段不重叠（生成时自查）。
   合并清单 `artifacts/stage4/night_panel.json`（`make_night_panel.py --combined`，36 个任务：
   eval / eval_n8 / eval_n9 / train_n9 各 9 关），本工作树与 `~/PvZ-search/artifacts/stage4/night_panel.json` 各一份（都不进 git）。
-  已用偏移：台式机 queue101 `night_lN_train_n9`（N = 11–14、16–19）每轮每关 64，第 r 轮 (r−1)·64 起（标签 n{N}dag{r}，采集学生 identity_dw3_s1）；同队列 `day_l*_train_d7p` 台式机段 (r−1)·64 起（标签 d{l}p{r}d）。 Mac `mac_dagger_n9a.sh`：`night_lN_train_n9` 4096 + (r−1)·80 起，每轮每关 80（标签 n{N}dag{r}m）。 第二批（采集学生 dw4i_s1，只采弱关 12/14/17/18/19）：Mac `mac_dagger_n9b.sh` 4416 + (r−1)·80（标签 n{N}dag{r+4}m）；台式机 queue102 320 + (r−1)·64（标签 n{N}dag{r+5}），同队列 d7p 320 + (r−1)·64（d{l}p{r+5}d）、泳池 `pool_lN_train_p9k` (r−1)·64（p{N}dag{r}）。
+  已用偏移：台式机 queue101 `night_lN_train_n9`（N = 11–14、16–19）每轮每关 64，第 r 轮 (r−1)·64 起（标签 n{N}dag{r}，采集学生 identity_dw3_s1）；同队列 `day_l*_train_d7p` 台式机段 (r−1)·64 起（标签 d{l}p{r}d）。 Mac `mac_dagger_n9a.sh`：`night_lN_train_n9` 4096 + (r−1)·80 起，每轮每关 80（标签 n{N}dag{r}m）。 第二批（采集学生 dw4i_s1，只采弱关 12/14/17/18/19）：Mac `mac_dagger_n9b.sh` 4416 + (r−1)·80（标签 n{N}dag{r+4}m）；台式机 queue102 320 + (r−1)·64（标签 n{N}dag{r+5}），同队列 d7p 320 + (r−1)·64（d{l}p{r+5}d）、泳池 `pool_lN_train_p9k` (r−1)·64（p{N}dag{r}）。白天早关 `day_l{1,3,4,6}_train_d7`：Mac `mac_dagger_d1a.sh` 4096 + (r−1)·80（标签 d{l}dag{r}m，采集学生 dw4i_s1）；台式机 0–4095 预留。
   **2-10 的 `conveyor_start` 原版开局**：本分支还没有 task20 的引擎/python 支持，L20 暂按“卡组写进初始手牌”的语义，
   等 conveyor 合入后再改成原版开局（另开任务族名，不覆盖 `night_l*_n9`）。
 
