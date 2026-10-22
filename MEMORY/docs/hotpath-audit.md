@@ -69,8 +69,15 @@
 | 目录 | 文件数 | 大小 | 每文件 | 谁写 | 谁读 |
 |---|---|---|---|---|---|
 | `artifacts/hard_mac/frames/seed_N/<label>_fast_search/` | 21 056 个 `frames.npz` | 5.07 GB | 均值 235 KB（中位 240 KB，最大 0.5 MB） | `search_play` 每局一个 | 每次训练整目录读一遍 |
-| `artifacts/value_net/episodes*` | 8 208 | 4.4 GB | — | 价值网络采集 | 价值网络训练 |
+| `artifacts/value_net/episodes*`（**旧 JSONL 格式**） | 6 866 个 `frames.jsonl` | **7.54 GB** | 均值 1.1 MB | 价值网络采集 | 价值网络训练（每次训练重新 `json.loads`） |
 | `artifacts/student/frames*` | 4 096 | 2.2 GB | — | 旧采集 | 旧训练 |
+
+**artifacts 全量 13.52 GB / 59 535 个文件**，按后缀：`.jsonl` 7.54 GB（56%，全是旧档案）、`.npz` 5.36 GB、
+`.log` 0.49 GB（221 个，最大的两个各 27 MB，无人轮转）、`.json` 0.06 GB（29 679 个，都是每局一个的 config/meta/summary）。
+
+**旧 JSONL 档案换成 npz 是白捡的**：实测一个 3.72 MB 的 `frames.jsonl` → `frames.npz` **0.24 MB（7%）**，
+`scripts/pack_frames.py` 在一个 seed 目录上跑 8 个档案：**12.70 MB → 1.04 MB（8%）**，每个 0.76 s。
+全量 7.54 GB → 约 0.6 GB，省 7 GB 磁盘，并让训练装载不再 `json.loads` 文本。
 
 单档案内容（一局 ~1 300 行）：`frames`（原始 JSON 字节，**无损源码副本**）+ `boards`（92×6×10 float16）+ `scalars`（115 float32）
 + `plant/packet/cell/values`。一行 **13.8 KB 解压后 / 288 B 落盘**（zlib 压缩 48:1，因为棋盘 96% 是零）。
@@ -181,6 +188,13 @@ train_rollout_policy 少 `--ema` `--width 128` `--soft-weight` `--soft-temperatu
   旧档案兼容（没有 CSR 就现算 → LEGACY 路径）。
 - **风险**：档案格式变更；用编码器签名 + 新键名做版本判定，旧档案原样可读。
 - **验收**：同一批档案，改前改后训练出的前 200 步损失一致到 1e-6；CSR 与原路径逐元素相同（`np.array_equal`）。
+- **原型已做并验证**（`scripts/pack_training_rows.py`）：两个标签 1.28 M 行打成 904 MB 单文件（581 B/行）；
+  `--verify` 与 `load()` 逐项对比 **13 个数组全部 `np.array_equal` 相同**（rows / board_indices / board_values /
+  board_offsets / scalar_* / plant / weight / packet / cell / values / seed / shape）。读回 1.56 M 行 **0.17 s**（mmap，惰性），
+  对照 `load()` 的 164 s（无 cache-dir）或 32 s（带 cache-dir + 8 进程）。
+- **真实收益要按"每份数据 4 个种子"算**（现行配方 D10–D13 都是 4 个种子）：一轮 4 次训练 × 280 s = **19 min** 的装载，
+  打包一次 164 s + 4 × 2 s ≈ **3 min**。代价是包文件 904 MB/1.28 M 行 = 581 B/行（比压缩档案 288 B/行 大一倍，
+  但比训练时重算省 100 倍 CPU）；也可用 `savez_compressed` 换磁盘，代价是一遍 zlib（单流，约 3 GB/s）。
 - **与 cb-mem 的边界**：cb-mem 管"常驻数组怎么压"（dtype、memmap、去副本）；本项管"从档案到常驻数组的这一段不再重复劳动"。合并实施时以本项为装载入口。
 
 ### 第 3 项：静态候选的 branch 往返（4.8 s/局，5%）
