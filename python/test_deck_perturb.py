@@ -83,6 +83,18 @@ class DeckPerturbTest(unittest.TestCase):
                 self.assertNotIn(tuple(sorted(deck_for_seed(spec, seed))), held)
         self.assertEqual(source, before)
 
+    def test_engine_warned_decks_are_never_sampled(self):
+        # task28: the whole-deck OnStartButton warnings arrive as an engine-produced exclusion table.
+        spec = task()
+        spec['deck_perturb']['require_no_warnings'] = True
+        spec['deck_perturb']['engine_warned_decks'] = [[0, 2, 3, 4, 5, 6, 7]]
+        banned = (0, 2, 3, 4, 5, 6, 7)
+        for seed in range(64):
+            self.assertNotEqual(tuple(sorted(deck_for_seed(spec, seed))), banned)
+        spec['deck_perturb'].pop('engine_warned_decks')
+        with self.assertRaisesRegex(ValueError, 'engine_warned_decks'):
+            deck_for_seed(spec, 1)
+
     def test_legacy_task_kwargs_unchanged_and_perturbed_kwargs_use_actual_deck(self):
         legacy = dict(level=7, deck=[0, 1, 2, 3, 4, 5, 7], seeds=[10])
         expected = dict(level=7, deck=legacy['deck'], seed=10, first_aid_owned=False,

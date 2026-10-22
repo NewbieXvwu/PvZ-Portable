@@ -670,6 +670,29 @@ class PvZEnv:
             raise RuntimeError('DECK_OPTIONS requires a reset board and an identity-capable simulator')
         return result
 
+    def deck_warnings(self, deck) -> dict:
+        """Whole-deck warnings from SeedChooserScreen::OnStartButton for an arbitrary deck.
+
+        The engine runs its own CheckDeckWarnings on the reset board, so level/mode facts
+        (pool, roof, fog, zombie roster, unlocks) come from the game, not from Python.
+        """
+        cards = [int(card) for card in deck]
+        if not 0 <= len(cards) <= 10:
+            raise ValueError('deck must have 0..10 cards')
+        if any(card < 0 or card >= 64 for card in cards):
+            raise ValueError('deck cards must be seed types in 0..63')
+        result = self._command(f'DECK_WARNINGS {len(cards)}' + ''.join(f' {card}' for card in cards))
+        if not result.get('ok'):
+            raise RuntimeError('DECK_WARNINGS requires a reset board and a rebuilt simulator')
+        return result
+
+    def deck_pool(self) -> dict:
+        """CrazyDavePickSeeds' candidate cards for the current level (engine query, no pick)."""
+        result = self._command('DECK_POOL')
+        if not result.get('ok'):
+            raise RuntimeError('DECK_POOL requires a reset board and a rebuilt simulator')
+        return result
+
     def _student_options(self, student_history, trace_path) -> str:
         suffix = ""
         if student_history is not None:

@@ -25,7 +25,9 @@
 #include "../../ConstEnums.h"
 #include "../../PvzpLib/PvzpCommon.h"
 #include "widget/Widget.h"
+#include <functional>
 #include <memory>
+#include <vector>
 using namespace Sexy;
 
 class Board;
@@ -94,6 +96,26 @@ public:
 	int                     mViewLawnTime;
 
 public:
+	// Whole-deck checks from OnStartButton, exposed without any dialog so the environment can ask
+	// "would this deck warn?" for an arbitrary deck (task28).  `picked` answers "is this plant in
+	// the deck"; the interactive path passes PickedPlantType, the environment passes a set lookup.
+	struct DeckWarningSet
+	{
+		bool sun = false;          // SEED_CHOOSER_SUN_WARNING / _NIGHT_SUN_WARNING
+		bool pool = false;         // SEED_CHOOSER_POOL_WARNING / _LILY_WARNING
+		bool roof = false;         // SEED_CHOOSER_ROOF_WARNING
+		bool flyer = false;        // SEED_CHOOSER_FLYER_WARNING
+		bool upgrade = false;      // SEED_CHOOSER_UPGRADE_WARNING
+		bool seeingStars = false;  // SEED_CHOOSER_SEEING_STARS_WARNING
+		bool puffshroom = false;   // SEED_CHOOSER_PUFFSHROOM_WARNING
+		bool artWallnut = false;   // SEED_CHOOSER_ART_WALLNUT_WARNING
+		bool art2 = false;         // SEED_CHOOSER_ART_2_WARNING
+	};
+	static DeckWarningSet CheckDeckWarnings(LawnApp* theApp, Board* theBoard,
+		const std::function<bool(SeedType)>& picked, bool survivalRepick);
+	// CrazyDavePickSeeds' candidate list (weight 1), without picking anything.
+	static std::vector<SeedType> CrazyDaveSeedPool(LawnApp* theApp, Board* theBoard);
+
 	SeedChooserScreen();
 	~SeedChooserScreen() override;
 

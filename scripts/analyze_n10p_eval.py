@@ -37,7 +37,7 @@ def summarize(run_dir: Path, manifest: Path, task_id: str):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', type=Path, required=True)
-    parser.add_argument('--run', type=Path, nargs='+', required=True, help='<task_id>=<dir> pairs')
+    parser.add_argument('--run', nargs='+', required=True, help='<task_id>=<dir> pairs')
     parser.add_argument('--out', type=Path)
     args = parser.parse_args()
     result = {}
