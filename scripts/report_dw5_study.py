@@ -95,6 +95,17 @@ def main():
         group=old_manifest['groups'][task['task_id']];n=64 if group=='heldout' else 128
         actual=summarize(old_v1_path.parent/task['task_id'],task,task['seeds'][:n]);actual['group']=group
         assert actual==next(r for r in old_v1['tasks'] if r['task_id']==task['task_id'])
+    legacy_pairs=[(t['task_id'],t['task_id']) for t in panels['dw4i_s1']['tasks']
+                  if t['group'] in ('day','heldout')]
+    legacy_pairs.append(('night_l20_eval_n9_orig','night_l20_eval_n10_orig'))
+    legacy_games=0
+    for old_name,new_name in legacy_pairs:
+        before={r['seed']:{k:v for k,v in r.items() if k!='seconds'} for r in
+                map(json.loads,(old_v1_path.parent/old_name/'games.jsonl').read_text().splitlines())}
+        after={r['seed']:{k:v for k,v in r.items() if k not in ('seconds','planted_by_type')} for r in
+               map(json.loads,(OUT/'baseline_v2_dw4i_s1'/new_name/'games.jsonl').read_text().splitlines())}
+        assert before==after, ('legacy behavior changed',old_name,new_name)
+        legacy_games+=len(before)
     dead=read(ROOT/'MEMORY/docs/task27-dead-decks.json')
     assert set(dead)=={'day_l7_eval_d7p_holdout3','day_l8_eval_d7p_holdout1','day_l9_eval_d7p_holdout1'}
     for name,data in dead.items():
@@ -123,6 +134,7 @@ def main():
                  v1={name:dict(groups=p['groups'],tasks=[{k:t[k] for k in ('task_id','games','won','win_rate')} for t in p['tasks']])
                      for name,p in {'dw4i_s1':old_v1,'dw5i_s1':new['v1']}.items()},
                  native_states=native['states'],v1_v2_identical_task_games=matched_games,
+                 legacy_dw4i_identical_task_games=legacy_games,
                  dead={name:{k:d[k] for k in ('deck','games','won','loss_waves','nearest_terminal_zombie_types','conclusion')} for name,d in dead.items()},
                  caveats=['One fixed training seed and final epoch; no seed/epoch selection or default promotion.',
                           'V1 and V2 use different night decks; compare models within each version.',
@@ -160,6 +172,7 @@ def main():
              for g in ('day','heldout','night','pool')}
     lines += ['', f"本次结果判断：早关合计{recovery}（相差{early_delta:+d}/512局）；相对dw4i_s1，v2夜间n10变化{changed['night']:+.2f}pp、泳池{changed['pool']:+.2f}pp、白天{changed['day']:+.2f}pp、留出{changed['heldout']:+.2f}pp。这些是固定单seed和固定评估种子的描述性差异，不是总体非劣或因果归因证明。",'',
               f"v1/v2共有任务及两个同语义的原版L20任务，逐seed除seconds外{matched_games}局记录完全一致；版本切换没有改变这些局的策略行为。"]
+    lines += [f"参考dw4i_s1的白天/留出及原版L20与task23旧二进制记录逐seed核对，{legacy_games}局除耗时和新增类型计数外完全相同。"]
     lines += ['', '| 全零留出诊断 | 卡组 | 老师胜局 | 输局波数 |','|---|---|---:|---|']
     for name,d in dead.items():lines.append(f"| {name} | {d['deck']} | {d['won']}/16 | {d['loss_waves']} |")
     from pvz_constants import ZOMBIE_NAME
