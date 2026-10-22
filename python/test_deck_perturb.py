@@ -103,6 +103,31 @@ class DeckPerturbTest(unittest.TestCase):
         spec = task()
         self.assertEqual(training_task_kwargs(spec, 1840007)['deck'], list(deck_for_seed(spec, 1840007)))
 
+    def test_keep_plants_are_never_replacement_targets(self):
+        # task31: a measured keep card's slot is never a replacement target; everything else still is.
+        spec = task(level=12, deck=(0, 1, 2, 3, 4, 5, 7, 8, 9, 11))
+        spec['deck_perturb']['keep_plants'] = [8, 9]
+        removed_seen = set()
+        for seed in range(300):
+            deck = deck_for_seed(spec, seed)
+            self.assertIn(8, deck)
+            self.assertIn(9, deck)
+            removed = set(spec['deck']) - set(deck)
+            self.assertFalse(removed & {8, 9})
+            removed_seen |= removed
+        self.assertEqual(deck_for_seed(spec, 7), deck_for_seed(spec, 7))
+        self.assertEqual(len(removed_seen), len(spec['deck']) - 2)
+
+    def test_keep_plants_must_be_base_cards_and_leave_enough_replaceable_slots(self):
+        spec = task()
+        spec['deck_perturb']['keep_plants'] = [8]
+        with self.assertRaisesRegex(ValueError, 'keep_plants'):
+            deck_for_seed(spec, 1)
+        spec = task(deck=(0, 1, 2, 3, 4, 5))
+        spec['deck_perturb']['keep_plants'] = [0, 1, 2, 3, 4]
+        with self.assertRaisesRegex(ValueError, 'replaceable'):
+            deck_for_seed(spec, 1)
+
     def test_whatif_uses_archived_deck_instead_of_a_current_manifest(self):
         import episode_query
         archived = list(deck_for_seed(task(), 1840001))
