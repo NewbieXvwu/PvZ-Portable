@@ -24,6 +24,12 @@ FAMILIES = [
     ('pool_p9k', re.compile(r'^p\d+dag\d+$'), 1),
 ]
 
+# 这些族的 meta 里没有 deck（不是 deck_perturb 任务），卡组是固定的。
+FAMILY_DECKS = {
+    'night_n10': [0, 1, 2, 3, 4, 5, 7, 8, 9, 11],
+    'pool_p9k': [0, 1, 2, 3, 4, 5, 7, 16, 19],
+}
+
 
 def family_of(label: str):
     for name, pattern, economy in FAMILIES:
@@ -59,7 +65,7 @@ def scan(root: Path, decks=None, only=None):
                 continue
             meta = json.loads(meta_path.read_text())
             task = meta.get('task') or {}
-            deck = task.get('deck') or decks.get(task.get('task_id'))
+            deck = task.get('deck') or decks.get(task.get('task_id')) or FAMILY_DECKS.get(family)
             if deck is None:
                 continue
             rows.append(dict(family=family, economy=economy, label=label, archive=archive,
