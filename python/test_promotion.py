@@ -1,6 +1,5 @@
 """Quality promotion gates: paired inference, complete coverage and zone-specific regressions."""
 import copy
-import math
 
 import pytest
 

@@ -12,8 +12,8 @@
 3. **落盘**：状态 json（默认 `~/pvz-logs/curriculum_state.json`），每轮一行日志；
    偏移在**跑之前**写进状态，崩溃/中断不会重采同一批种子。
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
-5. **后台打包 / 训练**：每轮保存“本队列写过的全部标签 + `--recipe` 来源标签”的快照，
-   复用已有标签段、只打新标签，然后训练。前台立即采下一轮，组间切换最新成功学生。
+5. **后台打包 / 训练 / 晋升评估**：每轮保存“本队列写过的全部标签 + `--recipe` 来源标签”的快照，
+   复用已有标签段、只打新标签，然后训练并做配对门禁。前台立即采下一轮，组间只切换通过者。
 
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
@@ -51,6 +51,8 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
+from pvz_promotion import GATE_VERSION, policy as promotion_policy, freeze_panel
+from promotion_gate import contract as promotion_contract, contract_key, sha as file_sha, valid_certificate
 from pvz_training_pack import pack_flags, pack_options
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
@@ -426,7 +428,7 @@ class TrainingPipeline:
     """One durable, serial pack/train queue, overlapping the foreground game groups.
 
     Only the foreground thread updates curriculum state. The background publishes a completion
-    marker after a successful trainer exit; interrupted snapshots can be resumed independently
+    marker after a quality decision; interrupted snapshots can be resumed independently
     of seed offsets. Models are immutable per round and activated only by poll at group boundaries.
     """
 
@@ -450,6 +452,57 @@ class TrainingPipeline:
                 job['status'] = 'queued'
                 self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
 
+    def pending(self):
+        return any(not future.done() for _, future in self.futures)
+
+    def foreground_limit(self):
+        # Evaluation always has one game worker. Reserve its slot before a group starts,
+        # because training may finish in the middle of that group. --workers=1 still allows
+        # one collector + one evaluator; --workers>=2 caps their combined game count.
+        return max(1, self.args.workers - int(self.pending()))
+
+    def incumbent(self):
+        with self.lock:
+            return Path(self.args.rollout_policy)
+
+    def evaluation_contract(self, job):
+        source = getattr(self.args, 'promotion_panel', None)
+        if source is None:
+            source = Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest'])
+        return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
+                                  self.args.value, self.args.resource_dir)
+
+    def _evaluate(self, job):
+        """Evaluate one already trained immutable candidate against the current collector."""
+        frozen = self.evaluation_contract(job)
+        folder = Path(job['recipe']).parent
+        out = folder / 'evaluations' / contract_key(frozen)
+        python = str(self.args.python) if self.args.python.exists() else sys.executable
+        command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
+                   '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
+                   '--executable', str(self.args.executable), '--value', str(self.args.value),
+                   '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1']
+        self._admit()
+        started = time.time()
+        log_line(self.args.log, f'background round {job["round"]} evaluate started against {frozen["incumbent_sha256"]}')
+        try:
+            self._command(command, folder / 'evaluation.log')
+            decision = json.loads((out / 'decision.json').read_text())
+            if not valid_certificate(decision, frozen, out):
+                raise ValueError('promotion certificate does not match the registered comparison')
+        except Exception as error:
+            # Evaluation failure is a closed gate, not permission to stop accumulating data.
+            decision = dict(version=GATE_VERSION, approved=False, policy=promotion_policy(),
+                            contract=frozen, reasons=['evaluation_error: ' + str(error)])
+            out.mkdir(parents=True, exist_ok=True)
+            (out / 'error.json').write_text(json.dumps(decision, indent=2) + '\n')
+        finished = time.time()
+        log_line(self.args.log, f'background round {job["round"]} evaluate done: {finished-started:.3f}s '
+                               f'approved={decision["approved"]} reasons={decision["reasons"]}')
+        return dict(model=job['model'], model_sha256=frozen['candidate_sha256'],
+                    evaluation_started=started, evaluation_finished=finished,
+                    promotion=decision, evaluation_directory=str(out))
+
     def estimate_peak(self):
         # Loading segments plus merging compact CSR peaks near twice the compact corpus;
         # allow a third copy and 2 GiB for Python, optimizer and host batches. At least 2 GiB
@@ -460,7 +513,7 @@ class TrainingPipeline:
         return 3 * compact_bytes + 2 * GIB
 
     def reservation(self):
-        if not any(not future.done() for _, future in self.futures):
+        if not self.pending():
             return 0
         with self.lock:
             process = self.process
@@ -556,8 +609,7 @@ class TrainingPipeline:
         recipe_path = Path(job['recipe'])
         folder = recipe_path.parent
         done = folder / 'complete.json'
-        if done.is_file() and Path(job['model']).is_file():
-            return json.loads(done.read_text())
+        trained = folder / 'trained.json'
         try:
             # A second controller cannot train this snapshot concurrently, even after its
             # parent's unexpected death. OS file locks follow the live process, not stale files.
@@ -565,29 +617,46 @@ class TrainingPipeline:
             with (folder / 'training.lock').open('w') as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)
                 self.lock_fd = lock.fileno()  # child retains lock if the controller unexpectedly dies
-                if done.is_file() and Path(job['model']).is_file():
-                    return json.loads(done.read_text())
-                self._admit()
-                local_args = copy.copy(self.args)
-                local_args.recipe = recipe_path
-                recipe = load_recipe(recipe_path, 'training')
-                local_args.frames = Path(recipe['data'])
-                report = {'round': job['round'], 'model': job['model']}
-                for phase, command in (
-                    ('pack', pack_command(local_args, recipe['labels'])),
-                    ('train', [str(self.args.python) if self.args.python.exists() else sys.executable,
-                               str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(recipe_path)])):
+                old = json.loads(done.read_text()) if done.is_file() else None
+                if old and Path(job['model']).is_file():
+                    if valid_certificate(old.get('promotion', {}), self.evaluation_contract(job), old.get('evaluation_directory')):
+                        return old
+                if trained.is_file():
+                    report = json.loads(trained.read_text())
+                    if (report.get('model_sha256') != file_sha(job['model'])
+                            or report.get('recipe_sha256') != file_sha(recipe_path)):
+                        raise ValueError('saved trained candidate or recipe changed')
+                elif old and Path(job['model']).is_file() and 'train_finished' in old:
+                    # Pre-A completion is proof of training only, never a quality approval.
+                    report = {k: v for k, v in old.items() if k not in
+                              ('promotion', 'evaluation_started', 'evaluation_finished', 'evaluation_directory')}
+                else:
                     self._admit()
-                    report[phase + '_started'] = time.time()
-                    log_line(self.args.log, f'background round {job["round"]} {phase} started')
-                    if phase == 'pack':
-                        self._prepare_corpus(recipe['labels'])
-                    self._command(command, folder / f'{phase}.log')
-                    report[phase + '_finished'] = time.time()
-                    log_line(self.args.log, f'background round {job["round"]} {phase} done: '
-                                           f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
+                    local_args = copy.copy(self.args)
+                    local_args.recipe = recipe_path
+                    recipe = load_recipe(recipe_path, 'training')
+                    local_args.frames = Path(recipe['data'])
+                    report = {'round': job['round'], 'model': job['model']}
+                    for phase, command in (
+                        ('pack', pack_command(local_args, recipe['labels'])),
+                        ('train', [str(self.args.python) if self.args.python.exists() else sys.executable,
+                                   str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(recipe_path)])):
+                        self._admit()
+                        report[phase + '_started'] = time.time()
+                        log_line(self.args.log, f'background round {job["round"]} {phase} started')
+                        if phase == 'pack':
+                            self._prepare_corpus(recipe['labels'])
+                        self._command(command, folder / f'{phase}.log')
+                        report[phase + '_finished'] = time.time()
+                        log_line(self.args.log, f'background round {job["round"]} {phase} done: '
+                                               f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
                 if not Path(job['model']).is_file():
                     raise RuntimeError(f'trainer did not publish {job["model"]}')
+                report.update(model_sha256=file_sha(job['model']), recipe_sha256=file_sha(recipe_path))
+                temporary = trained.with_suffix('.building')
+                temporary.write_text(json.dumps(report, indent=2) + '\n')
+                temporary.replace(trained)
+                report.update(self._evaluate(job))
                 temporary = done.with_suffix('.building')
                 temporary.write_text(json.dumps(report, indent=2) + '\n')
                 temporary.replace(done)
@@ -597,25 +666,61 @@ class TrainingPipeline:
             raise
 
     def poll(self):
-        for job, future in self.futures:
+        for index, (job, future) in enumerate(list(self.futures)):
             if job['status'] == 'done' or not future.done():
                 continue
             try:
-                job['timing'] = future.result()
+                report = future.result()
             except BaseException as error:
                 job['status'] = 'failed'
                 save_state(self.args.state, self.state)
                 raise RuntimeError(f'background round {job["round"]} failed: {error}') from error
-            job['status'] = 'done'
-            if job['round'] > self.state.get('student_round', 0):
-                self.args.rollout_policy = Path(job['model'])
-                self.state.update(student=job['model'], student_round=job['round'])
+            promotion = report.get('promotion', {})
+            current_contract = self.evaluation_contract(job)
+            invalid = False
+            if (promotion.get('version') != GATE_VERSION or promotion.get('policy') != promotion_policy()
+                    or type(promotion.get('approved')) is not bool):
+                invalid = True
+            elif promotion.get('contract') != current_contract:
+                job['status'] = 'queued'
+                log_line(self.args.log, f'background round {job["round"]} comparison stale; re-evaluate current student')
+                self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
+                save_state(self.args.state, self.state)
+                continue
+            elif not any(reason.startswith('evaluation_error:') for reason in promotion.get('reasons', [])):
+                invalid = not valid_certificate(promotion, current_contract, report.get('evaluation_directory'))
+            if invalid:
+                promotion = dict(version=GATE_VERSION, approved=False, policy=promotion_policy(),
+                                 contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
+                report['promotion'] = promotion
+                completed = Path(job['recipe']).parent / 'complete.json'
+                temporary = completed.with_suffix('.building')
+                temporary.write_text(json.dumps(report, indent=2) + '\n')
+                temporary.replace(completed)
+            job.update(status='done', timing=report, promotion_approved=promotion['approved'],
+                       promotion_reasons=promotion['reasons'])
+            if promotion['approved'] and job['round'] > self.state.get('student_round', 0):
+                with self.lock:
+                    self.args.rollout_policy = Path(job['model'])
+                    self.state.update(student=job['model'], student_round=job['round'])
                 log_line(self.args.log, f'student activated at group boundary: round {job["round"]} {job["model"]}')
+            elif not promotion['approved']:
+                log_line(self.args.log, f'student retained: round {job["round"]} rejected {promotion["reasons"]}')
             save_state(self.args.state, self.state)
 
     def close(self):
-        self.executor.shutdown(wait=True)
-        self.poll()
+        # poll may schedule a stale comparison again; drain it before closing the executor.
+        try:
+            while any(job['status'] != 'done' for job, _ in self.futures):
+                for _, future in list(self.futures):
+                    if not future.done():
+                        try:
+                            future.result()
+                        except BaseException:
+                            pass  # poll persists and reports the failure
+                self.poll()
+        finally:
+            self.executor.shutdown(wait=True)
 
 
 def log_line(path: Path, message: str) -> None:
@@ -666,7 +771,8 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         save_state(args.state, state)          # 先占偏移，崩溃也不会重采
         available = mem_available_bytes()
         background = pipeline.reservation() if pipeline is not None else 0
-        workers = worker_count(available, per_worker, args.workers, background)
+        upper = pipeline.foreground_limit() if pipeline is not None else args.workers
+        workers = worker_count(available, per_worker, upper, background)
         per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
         log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                            f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
@@ -751,7 +857,7 @@ def main() -> None:
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
     parser.add_argument('--workers', type=int, default=16,
-                        help='上限；每组实际进程数 = (MemAvailable − 6 GiB) / 实测单 worker RSS，至少 1')
+                        help='前台上限；后台队列非空时预留1名额给评估，总游戏数≤max(2,上限)，内存再限流')
     parser.add_argument('--python', type=Path, default=DEFAULT_PYTHON,
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
@@ -763,6 +869,9 @@ def main() -> None:
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--recipe', type=Path, default=ROOT / 'recipes/dw4i.json',
                         help='training recipe for the collection student; supplies every pack row option')
+    parser.add_argument('--promotion-panel', type=Path,
+                        default=Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest']),
+                        help='registered unified v2 source manifest for the mandatory paired promotion gate')
     args = parser.parse_args()
     try:
         load_recipe(args.recipe, 'training')
@@ -771,10 +880,14 @@ def main() -> None:
     if args.workers < 1:
         parser.error('--workers must be positive')
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
-                 'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag'):
+                 'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag', 'promotion_panel'):
         value = getattr(args, name)
         if not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
+    try:
+        freeze_panel(json.loads(args.promotion_panel.read_text()))
+    except (OSError, ValueError, KeyError) as error:
+        parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest)
     patterns = args.init_glob or [str(MAIN / 'artifacts/hard/*/config.json'),
                                   str(MAIN / 'artifacts/task28/*/config.json'),
