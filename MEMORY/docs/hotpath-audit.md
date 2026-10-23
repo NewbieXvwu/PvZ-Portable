@@ -471,6 +471,12 @@ Tag：`retire-cuda-20261023`（整条 CUDA 线）、`retire-flags-20261023`（�
 放在状态落盘之后，采到的局不会因为打包失败丢掉）。打包器新增 `--prune`：删掉标签集是本包子集的旧包
 （每轮的并集都包含上一轮，13.6 M 行时一个包 3.5 GB，不删会按轮数线性堆）。
 
+**采集端的打包成本（写在明处）**：打包器从档案重建 CSR，速度取决于行选项。默认选项 2 100 行/s（88 692 行 2.1 s，热缓存），
+生产配方（obs v2 + identity + cands）**3 800 行/s**（88 692 行 23.2 s，冷缓存）。每轮重打的是"到目前为止的并集"，
+所以成本是 O(轮数²)：8 轮、13.6 M 行时最后一轮约 1 小时 CPU。相对每轮数小时的采集可以接受，且它跑在采集之后、不占 worker。
+要消掉它只能把等待行的抽样改成"每档案独立种子"（rng 流不再依赖前序档案），那会改变行选择——**本次不做**，因为验收要求
+与改前逐位相同。
+
 单测：`python/test_curriculum_queue.py` 加 `test_pack_labels_union_the_log_and_the_base_corpus`、
 `test_pack_command_carries_the_row_options`。全量 `pytest python -q` → **231 passed / 24 skipped / 56 subtests**，
 6 failed 全是环境性（同 §14：5 个 `test_cpp_rollout` 缺 `build/`，1 个 `test_dagger_experiment_runner` 导入顺序）。
