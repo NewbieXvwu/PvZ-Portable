@@ -70,6 +70,8 @@ class Zone:
     train_seeds: int = 8192
     reserved_seed_ranges: tuple = ()
     deck_check_note: str = ""
+    # Optional reset-board DECK_OPTIONS evidence; older zones retain their original lookup.
+    unlocked_by_level: dict = field(default_factory=dict)
 
 
 def train_seed_start(zone: Zone, level: int, family: Family | None = None) -> int:
@@ -193,7 +195,8 @@ def build_document(zone: Zone, args) -> tuple[dict, list[dict], dict]:
     for level in family_levels(families[0]):
         emit(families[0], level)
         deck = families[0].deck if families[0].deck is not None else deck_for_level(level)
-        unlocked = unlocked_plants(level)
+        unlocked = (zone.unlocked_by_level[level] if level in zone.unlocked_by_level
+                    else unlocked_plants(level))
         checks.append({"level": level, "background": pvz_constants.background_for_level(level),
                        "deck": list(deck), "unlocked": list(unlocked),
                        "not_yet_unlocked": [seed for seed in deck if seed not in unlocked],
