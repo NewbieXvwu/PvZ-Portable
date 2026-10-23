@@ -6,6 +6,30 @@
    "teacher_wins": 15,
    "teacher_games": 16,
    "complete": true
+  },
+  {
+   "level": 42,
+   "teacher_wins": 4,
+   "teacher_games": 16,
+   "complete": true
+  },
+  {
+   "level": 43,
+   "teacher_wins": 2,
+   "teacher_games": 16,
+   "complete": true
+  },
+  {
+   "level": 44,
+   "teacher_wins": 0,
+   "teacher_games": 16,
+   "complete": true
+  },
+  {
+   "level": 45,
+   "teacher_wins": 2,
+   "teacher_games": 16,
+   "complete": true
   }
  ],
  "eligible_levels": [
@@ -20,7 +44,7 @@
   48,
   49
  ],
- "evaluation_status": "L41 complete; other cells still running",
+ "evaluation_status": "all 320 formal games complete; L46..49 unmeasured",
  "checkpoint_plan": "task46-roof-plan.json",
  "seeds": [
   45000000,

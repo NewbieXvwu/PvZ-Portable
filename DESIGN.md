@@ -863,3 +863,5 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 
 - L41 r7 原版老师正式16局已齐：**15/16**，学生 **8/16**，因此 `CURRICULUM_LEVELS["roof"]=(41,)`。其余正在评估或未测的关卡暂缓；后续若过线按完整证据补表。准入数据见 [task46-roof-admission.json](MEMORY/docs/task46-roof-admission.json)。
 - 屋顶倍率清单实际生成318任务（旧270+roof48）、651264个种子，329397个JSON/835018个既有种子穷举零冲突；另比对6份派生倍率清单（含fog工作树）屋顶种子零冲突，270个旧任务种子逐一等于原分配公式。摘要见 [task46-roof-multiplier-audit.json](MEMORY/docs/task46-roof-multiplier-audit.json)。本地两份隔离状态的 dry run 都显示roof L41原版/1.25倍率的cell与collect命令，[命令证据](MEMORY/docs/task46-roof-course-check.json)；未写生产状态、未启动采集。
+
+- 正式冷启动320局已齐：对照老师L41–45全0/16，学生仅L45为1/16；r7老师依次15/16、4/16、2/16、0/16、2/16，学生依次8/16、0/16、0/16、0/16、0/16。因此原版课程仅L41过线，L42=25%暂缓、L43/L44按预登记卡组复核后做0.5倍率诊断，L45传送带单列且不入普通训练。每个输局波数/路/僵尸和原始文件哈希见 [task46-roof-cold-start.json](MEMORY/docs/task46-roof-cold-start.json)；全部320局实际terminal，模型与引擎哈希/参数一致。
