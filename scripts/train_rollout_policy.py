@@ -234,7 +234,11 @@ class CandidateStore:
     def __getitem__(self, idx):
         selected = np.asarray(idx)
         counts = self.counts[selected].astype(np.int64)
+        # candidate_cells() pads with [-1, -1, nan], not all-nan: the cell soft target gathers the
+        # cell column of every slot, so a nan there is a bad index even though the value column masks it
         output = np.full((len(selected), CELL_CANDIDATES, 3), np.nan, dtype=np.float16)
+        output[:, :, 0] = -1
+        output[:, :, 1] = -1
         if counts.sum():
             starts = self.offsets[selected]
             positions = np.arange(counts.sum()) + np.repeat(starts - (np.cumsum(counts) - counts), counts)
