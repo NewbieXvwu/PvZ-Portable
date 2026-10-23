@@ -94,6 +94,8 @@ struct EnvironmentTaskSpec
 	// Conveyor levels only: leave the engine's own seed bank (10 empty packets) in place and
 	// let Challenge::UpdateConveyorBelt deal cards, instead of writing the task deck into it.
 	bool originalConveyorStart = false;
+	// A task property: old tasks retain their historical x-ray observations.
+	bool humanFogObservation = false;
 };
 
 class LevelStats
@@ -257,6 +259,10 @@ public:
 	bool							EnvironmentTerminal() const;
 	std::string					EnvironmentObservation(bool privileged = false);
 	std::string					EnvironmentLeanObservation();
+	int EnvironmentFogAmount(int row, int col) const;
+	bool EnvironmentFogMasked() const;
+	bool EnvironmentZombieVisible(const class Zombie* zombie) const;
+	bool EnvironmentVisibleEnemies() const;
 	std::string                     EnvironmentDeckOptions();
 	std::string                     EnvironmentDeckWarnings(const std::vector<int>& theDeck);
 	std::string                     EnvironmentDeckPool();

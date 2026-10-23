@@ -53,6 +53,8 @@
 
 ## 结果
 
+- 2026-10-23 步骤 2（含追加 A / B 的输入侧要求）：实现族属性 `fog_observation` 的 human / xray，共用引擎雾量和可见性，完整/lean/v2 与 C++ 推演均屏蔽；新增 v2fog 雾量通道及打包、训练热启动、原生导出。路灯花/火炬树桩/三叶草三个独立真实种植测试通过，三叶草回雾再屏蔽也通过。四份非雾整局存档 L7/L12/L21/L10 共 166138 帧完整观测逐 tick SHA256 全同；已有引擎测试包含在全套 `361 passed, 133 subtests passed` 中。旧 v1/v2lite/v2 编码指纹保持冻结，新增版本独立缓存。PRIV 诊断读取 WINNER 标记，不进入政策输入。追加 B 的老师信息差距统计及同数据记忆对照继续执行。
+
 - 2026-10-23 步骤 1：本树 Release 基线构建通过；`audit_fog_zone.py` 逐关 reset + 无动作终局探测完成，L31–34/36–40 全部能无头 reset 并到达输局终态；L35 是砸罐子，纯等待 240000 tick 不终局，排除。全部整组 `deck_warnings` 为空，`deck_pool` 已逐关查询；原始证据在本机 `artifacts/task45/inventory.json`（不入 git，可用脚本重现）。卡组 L31–34/36–40 为 `[0,9,2,3,4,5,16,43]`，L35 按夜间地形为 `[0,1,9,2,3,4,5]`。香蒲所有权由 `profile_for_deck` 声明。此探测只证明能跑至终态，不是通关能力评估。
 
 引擎 `loadout_context.zombie_roster` + `pvz_constants.zombie_defs()` 直接查询（seed 450031，playthrough 2）：

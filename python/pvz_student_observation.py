@@ -5,7 +5,19 @@ import torch
 from pvz_value_net import CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of
 
 SPEED_SCALE = 1.0
-OBS_EXTRA = {"v1": (0, 0), "v2lite": (4, 1), "v2": (9, 7)}
+OBS_EXTRA = {"v1": (0, 0), "v2lite": (4, 1), "v2": (9, 7), "v2fog": (10, 7)}
+
+
+def fog_channel(frame: dict) -> np.ndarray:
+    """Engine fog opacity / 255, including the off-board rightmost encoder column."""
+    board = np.zeros((1, ROWS, COLS), dtype=np.float32)
+    if 'fog_amount' in frame:
+        raw = np.asarray(frame['fog_amount'], dtype=np.float32)
+        if raw.shape != (ROWS, COLS - 1):
+            raise ValueError('fog_amount must be a 6 by 9 engine grid')
+        board[0, :, :COLS - 1] = raw / 255.0
+        board[0, :, -1] = raw[:, -1] / 255.0
+    return board
 
 
 def v2_extra(frame: dict, wave_tick: int) -> tuple[np.ndarray, np.ndarray]:
@@ -65,8 +77,11 @@ class StudentHistory:
         tick = frame["tick"]
         if frame["wave"] != self.wave:
             self.wave, self.wave_tick = frame["wave"], tick
-        if self.obs == "v2":
-            return v2_extra(frame, self.wave_tick)
+        if self.obs in ("v2", "v2fog"):
+            board, scalars = v2_extra(frame, self.wave_tick)
+            if self.obs == "v2fog":
+                board = np.concatenate([board, fog_channel(frame)])
+            return board, scalars
         current = {(row, col, kind): self.plants.get((row, col, kind), tick)
                    for row, col, kind, *_ in frame["plants"]
                    if 0 <= row < ROWS and 0 <= col < COLS - 1}

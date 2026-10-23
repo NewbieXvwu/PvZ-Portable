@@ -467,6 +467,8 @@ def main(*, step_observer=None) -> None:
         if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
             weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
             weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
+        if args.obs == "v2fog" and initial.obs == "v2" and args.context == initial.context:
+            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 1))
         net.load_state_dict(weights)
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})

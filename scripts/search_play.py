@@ -586,6 +586,11 @@ def _play(job: dict) -> dict:
              "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+        fog_diagnostics = None
+        if task_definition.get('fog_observation') and obs.get('fog'):
+            from pvz_fog import FogEpisodeDiagnostics
+            fog_diagnostics = FogEpisodeDiagnostics()
+            fog_diagnostics.sample(env, obs)
         from pvz_value_net import observation_context
         _W["context"] = observation_context(obs)
         task_context = {"level": kw["level"], "multiplier": obs.get("zombie_count_multiplier", 1.0),
@@ -607,7 +612,7 @@ def _play(job: dict) -> dict:
         planted_by_type: dict[int, int] = {}
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
-        if job["arm"] == "fast" and not args.frames:
+        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None:
             obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
@@ -655,8 +660,12 @@ def _play(job: dict) -> dict:
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
                 planted_by_type[planted_type] = planted_by_type.get(planted_type, 0) + 1
+                if fog_diagnostics is not None:
+                    fog_diagnostics.planted(planted_type, action)
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
+            if fog_diagnostics is not None:
+                fog_diagnostics.sample(env, obs)
             if frames is not None:
                 frame = _frame(obs)
                 if stats.get("last_targets"):
@@ -699,7 +708,8 @@ def _play(job: dict) -> dict:
                                  "".join(frames).encode())
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
-        if 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original':
+        if ('deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original'
+                or task_definition.get('fog_observation')):
             import hashlib
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
                                 policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
@@ -716,6 +726,8 @@ def _play(job: dict) -> dict:
             "context": task_context,
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
+            **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),
+                'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
             "planted_types": planted_by_type,

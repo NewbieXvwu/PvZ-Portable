@@ -93,13 +93,13 @@ void EnvironmentRollout::Load(const std::string& path)
 		input.read(reinterpret_cast<char*>(&embedding), 4);
 	}
 	else embedding = size;
-	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 3 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
+	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 4 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	std::vector<size_t> counts = {
-		nextWidth * (Channels + (observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
-		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation == 3 ? 7 : observation == 2)), nextWidth,
+		nextWidth * (Channels + (observation == 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
+		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation >= 3 ? 7 : observation == 2)), nextWidth,
 		nextContext, 1, packetHead ? nextWidth * (nextContext + embedding + 3) : 10 * nextContext,
 		packetHead ? nextWidth : 10, (packetHead ? 54 : 10) * embedding,
 		nextWidth * (nextWidth + embedding + nextContext), nextWidth, nextWidth, 1};
@@ -122,7 +122,8 @@ void EnvironmentRollout::Load(const std::string& path)
 	rowPool = withRowPool != 0;
 	taskContext = withContext != 0;
 	v2lite = observation == 2;
-	v2 = observation == 3;
+	v2 = observation >= 3;
+	fogChannel = observation == 4;
 	weights = std::move(loaded);
 	// LOAD_ROLLOUT_NET can replace a model in an existing process, including with
 	// another model of the same layout. Channel sets and dimensions do not identify
@@ -156,7 +157,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	std::vector<float>& board, std::vector<float>& scalars, History& history)
 {
 	Board* state = app->mBoard;
-	board.assign((Channels + (v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
+	board.assign((Channels + (fogChannel ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
 	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + (v2 ? 7 : v2lite), 0.0f);
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
@@ -166,7 +167,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		}
 	for (Zombie* zombie : state->mZombies)
 	{
-		if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6) continue;
+		if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6 || !app->EnvironmentZombieVisible(zombie)) continue;
 		double position = zombie->mPosX;
 		const double boundary = 40.0 + 80.0 * std::round((position - 40.0) / 80.0);
 		if (std::abs(position - boundary) < 0.001)
@@ -188,6 +189,10 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		if (uniform && (terrain == GridSquareType::GRIDSQUARE_GRASS || terrain == GridSquareType::GRIDSQUARE_POOL))
 			std::fill_n(board.data() + 91 * Cells + row * 10, 10, 1.0f);
 	}
+	if (fogChannel)
+		for (int row = 0; row < 6; ++row)
+			for (int col = 0; col < 10; ++col)
+				board[101 * Cells + row * 10 + col] = app->EnvironmentFogAmount(row, std::min(col, 8)) / 255.0f;
 	const int waves = std::max(1, state->mNumWaves);
 	scalars[0] = std::min(state->mSunMoney, 2000) / 1000.0;
 	scalars[1] = static_cast<double>(state->mCurrentWave) / waves;
@@ -238,7 +243,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		}
 		for (Zombie* zombie : state->mZombies)
 		{
-			if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6) continue;
+			if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6 || !app->EnvironmentZombieVisible(zombie)) continue;
 			const double position = EnvironmentWaitEvents::RenderedPublicCoordinate(zombie->mPosX);
 			const double velocity = EnvironmentWaitEvents::RenderedPublicCoordinate(zombie->mVelX);
 			const int col = std::clamp(static_cast<int>(std::floor((position - 40.0) / 80.0)), 0, 9);
@@ -264,7 +269,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		maximum.fill(-std::numeric_limits<double>::infinity());
 		for (Zombie* zombie : state->mZombies)
 		{
-			if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6) continue;
+			if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6 || !app->EnvironmentZombieVisible(zombie)) continue;
 			const double position = EnvironmentWaitEvents::RenderedPublicCoordinate(zombie->mPosX);
 			const double velocity = EnvironmentWaitEvents::RenderedPublicCoordinate(zombie->mVelX);
 			const int col = std::clamp(static_cast<int>(std::floor((position - 40.0) / 80.0)), 0, 9);
@@ -307,6 +312,8 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		for (Projectile* projectile : state->mProjectiles)
 		{
 			if (projectile->mDead || projectile->mRow < 0 || projectile->mRow >= 6) continue;
+			if (app->EnvironmentFogMasked() && app->EnvironmentFogAmount(projectile->mRow,
+				std::clamp(static_cast<int>((projectile->mPosX - 40) / 80), 0, 8)) > 0) continue;
 			const double position = EnvironmentWaitEvents::RenderedPublicCoordinate(projectile->mPosX);
 			const int col = std::clamp(static_cast<int>(std::floor((position - 40.0) / 80.0)), 0, 9);
 			board[100 * Cells + projectile->mRow * 10 + col] += static_cast<float>(projectile->GetProjectileDef().mDamage / 200.0);
@@ -317,7 +324,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		const int start = Scalars + (taskContext ? TaskContext : 0);
 		scalars[start] = state->mZombieCountDown / 4500.0;
 		scalars[start + 1] = state->mHugeWaveCountDown > 0;
-		scalars[start + 2] = state->mZombieHealthWaveStart ? static_cast<double>(state->TotalZombiesHealthInWave(state->mCurrentWave - 1)) / state->mZombieHealthWaveStart : 0.0;
+		scalars[start + 2] = !app->EnvironmentFogMasked() && state->mZombieHealthWaveStart ? static_cast<double>(state->TotalZombiesHealthInWave(state->mCurrentWave - 1)) / state->mZombieHealthWaveStart : 0.0;
 		scalars[start + 3] = state->mSunCountDown / 1224.0;
 		scalars[start + 4] = pending / 200.0;
 		scalars[start + 5] = std::min(1.0, (state->mMainCounter - history.waveTick) / 3000.0);
@@ -429,7 +436,7 @@ static float IdentityLinear(const float* input, const float* weight, int count, 
 
 void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vector<float>& scalars)
 {
-	Convolve(board, Channels + (v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
+	Convolve(board, Channels + (fogChannel ? 10 : v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
 	Convolve(hidden, width, 3, 3, 2, scratch, false);
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
 	if (rowPool)

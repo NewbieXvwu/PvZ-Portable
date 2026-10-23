@@ -246,6 +246,7 @@ def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
         **({"v2": obs["v2"]} if "v2" in obs else {}),
+        **({"fog_amount": obs["fog_amount"]} if "fog_amount" in obs else {}),
         # 只有原版传送带开局的观测带这个键；旧任务/旧档案的帧逐字节不变。
         **({"conveyor_start": obs["conveyor_start"]} if obs.get("conveyor_start") else {}),
     }
@@ -275,6 +276,8 @@ def training_task_kwargs(task: dict, seed: int | None = None) -> dict:
     # 原版传送带开局（task20）：任务不带卡组，只带这个字段。
     if task.get("conveyor_start"):
         extra["conveyor_start"] = task["conveyor_start"]
+    if task.get("fog_observation"):
+        extra["fog_observation"] = task["fog_observation"]
     seeds = task.get("seeds") or []
     actual_seed = seed if seed is not None else (seeds[0] if seeds else 0)
     from pvz_tasks import deck_for_seed
