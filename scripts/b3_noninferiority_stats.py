@@ -141,7 +141,7 @@ def main():
         part['seeds'] = [seeds[0], seeds[-1]]
         report['families'][name] = part
     if all_games:
-        report['pooled'] = summarize(all_games, formal=True)
+        report['pooled'] = summarize(all_games, formal=len(all_games) == 256)
     summary_path = args.data / 'compare_summary.json'
     compared = json.loads(summary_path.read_text()) if summary_path.exists() else []
     report['strict_replay_frames'] = int(sum(r['strict_replay_frames'] for r in compared))
