@@ -1,5 +1,5 @@
 {
-  "status": "in_progress",
+  "status": "complete",
   "teacher_runner_pid": 169780,
   "teacher_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-status.json",
   "deploy_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/deploy-gate-status.json",
@@ -15,13 +15,9 @@
   },
   "first_game_roots_futures_actions_match_original_vcpp_after": true,
   "post_adapter_unit_tests": 19,
-  "pending": [
-    "finish 96 fresh after games",
-    "required identical-root shadows and passing comparison",
-    "strict independent audit and final A delivery summary"
-  ],
+  "pending": [],
   "deploy_gate_status": "passed",
-  "teacher_gate_status": "running after, original runner retained",
+  "teacher_gate_status": "passed; original runner finished all four phases naturally, exit 0",
   "teacher_resume_command_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-command.json",
   "teacher_expected_valid_games": {
     "before": 96,
@@ -49,7 +45,20 @@
     "cpu_ratio": 0.5830021370063552
   },
   "independent_audit_tool": "scripts/audit_zones_teacher.py",
-  "strict_audit_rejects_current_incomplete_evidence": true,
+  "strict_audit_requires_complete_evidence": true,
+  "final_teacher_audit": {
+    "report": "MEMORY/docs/task50-a-teacher-audit.json",
+    "status": "passed",
+    "valid_games": {"before": 96, "after": 96, "shadow": 1},
+    "evidence_files": 386,
+    "missing_count": 0,
+    "task_order": ["day_l7_train_d7_m150", "night_l14_train_n10", "pool_l21_train_p9k"],
+    "teacher_same": [7042, 12235, 4495],
+    "teacher_points": [7042, 12236, 4495],
+    "cpu_ratio_excluding_noise": [0.633882416206157, 0.6560687874807571, 0.5553866323902025],
+    "wins_before": [32, 32, 17],
+    "wins_after": [32, 32, 17]
+  },
   "reviewed_takeover_commits": [
     "1cc97265",
     "3cf05630",

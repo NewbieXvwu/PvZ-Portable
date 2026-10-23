@@ -1,6 +1,6 @@
 {
-  "status": "pending_teacher_gate",
-  "audited_head": "e9088e2c846f0f99511212fa9f095fc2cc071c59",
+  "status": "complete",
+  "audited_head": "f07fbbd5f911bdb777f3a8186b14fb6da0ffc14b",
   "merges": {
     "pvz_env_merge": {
       "commit": "8df7fa90e3d95d8593e4d4712c681dccee78d610",
@@ -33,10 +33,13 @@
   "post_build_changes_are_diagnostics_or_docs": true,
   "post_build_files": [
     "MEMORY/2026-10-23.md",
+    "MEMORY/2026-10-24.md",
     "MEMORY/docs/task50-a-build.json",
+    "MEMORY/docs/task50-a-completion-audit.json",
     "MEMORY/docs/task50-a-deploy-gates.json",
     "MEMORY/docs/task50-a-dry-run.json",
     "MEMORY/docs/task50-a-progress.json",
+    "MEMORY/docs/task50-a-teacher-audit.json",
     "MEMORY/docs/task50-zones-deploy.md",
     "scripts/audit_zones_teacher.py",
     "scripts/profile_value_engine.py",
@@ -60,12 +63,25 @@
   },
   "frozen_teacher_inputs_revalidated": 17,
   "tracked_ignored_files": 0,
-  "pending": [
-    "96 valid fresh before games and 96 after games",
-    "required identical-root shadows and passing comparison.json",
-    "strict independent teacher audit",
-    "final [A] summary and push"
-  ],
+  "teacher_gate": {
+    "status": "passed",
+    "runner_exit_code": 0,
+    "completed_phases": ["before", "after", "shadow", "compare"],
+    "valid_fresh_games": {"before": 96, "after": 96, "shadow": 1},
+    "strict_independent_audit": "MEMORY/docs/task50-a-teacher-audit.json",
+    "evidence_files": 386,
+    "missing_count": 0,
+    "evidence_manifest_sha256": "3789e576fa76da09b5c42923a26351863010087f600f029fc9f855ca38910755",
+    "task_order": ["day_l7_train_d7_m150", "night_l14_train_n10", "pool_l21_train_p9k"],
+    "teacher_same": [7042, 12235, 4495],
+    "teacher_points": [7042, 12236, 4495],
+    "cpu_ratio_excluding_noise": [0.633882416206157, 0.6560687874807571, 0.5553866323902025],
+    "wins_before": [32, 32, 17],
+    "wins_after": [32, 32, 17],
+    "search_flag_differences": 0,
+    "cpu_measurement": "Both arms use identical external worker getrusage and engine /proc accounting, minus separately measured future-noise CPU; ratios apply to these fresh paired games."
+  },
+  "pending": [],
   "qc_restart_command_documented_in": "MEMORY/docs/task50-zones-deploy.md",
   "production_sessions_operated_on": false
 }
