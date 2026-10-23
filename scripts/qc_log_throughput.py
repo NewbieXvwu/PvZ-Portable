@@ -23,6 +23,7 @@ DONE=re.compile('^'+STAMP+r' round (?P<round>\d+) (?P<label>\S+) (?P<task>\S+) m
 WORKERS=re.compile('^'+STAMP+r' round \d+ (?P<label>\S+): workers=(?P<workers>\d+)/(?P<upper>\d+) \(MemAvailable (?P<memory>[\d.]+|n/a)(?: GiB)?, per-worker (?P<per_worker>[\d.]+|unmeasured)(?: GiB)?\)$')
 ROUND=re.compile('^'+STAMP+r' round (?P<round>\d+) done: (?P<groups>\d+) groups, (?P<games>\d+) games,')
 BUILD=re.compile(r'^INFO: BuildNum: (\d+)$')
+PACK=re.compile('^'+STAMP+r' pack (?P<labels>\d+) labels (?P<seconds>\d+)s rc=(?P<rc>-?\d+)(?: .*)?$')
 
 
 def stamp(value: str) -> float:
@@ -31,9 +32,14 @@ def stamp(value: str) -> float:
 
 
 def parse(lines, cutoff: float) -> dict:
-    runs=[];rounds=[];orphans=[];pending=None;workers=None;seen=set()
+    runs=[];rounds=[];orphans=[];packs=[];pending=None;workers=None;seen=set()
     for index,text in enumerate(lines):
         line=text.strip()
+        if match:=PACK.match(line):
+            raw=match.groupdict()
+            packs.append(dict(line=index,ended_at=stamp(raw['time']),wall_seconds=int(raw['seconds']),
+                              labels=int(raw['labels']),returncode=int(raw['rc'])))
+            continue
         if match:=WORKERS.match(line):
             workers=match.groupdict();continue
         if match:=START.match(line):
@@ -96,7 +102,13 @@ def parse(lines, cutoff: float) -> dict:
             round_['cycle_invalid']='overlapping or invalid chronology';continue
         collection=sum(r['wall_seconds'] for r in group)
         worker_hours=sum(r['workers']*r['wall_seconds'] for r in group)/3600
+        phase_events=[p for p in packs if p['line']>round_['line'] and
+                      (next_start is None or p['line']<next_start[0])]
+        pack_failed=any(p['returncode']!=0 for p in phase_events)
         round_.update(started_at=start,cycle_end=end,cycle_complete=next_start is not None,
+                      cycle_status=('closed_calendar' if next_start is not None else 'right_censored')+
+                                   ('_with_pack_failure' if pack_failed else ''),
+                      pack_events=phase_events,pack_failed=pack_failed,
                       cycle_end_source=next_start[2] if next_start else 'right_censor_cutoff',
                       cycle_wall_seconds=end-start,collection_wall_seconds=collection,
                       new_valid_games=sum(r['new_valid_games'] for r in group),worker_hours=worker_hours,
@@ -104,7 +116,7 @@ def parse(lines, cutoff: float) -> dict:
                       cycle_games_per_hour_or_upper_bound=sum(r['new_valid_games'] for r in group)*3600/(end-start),
                       collection_games_per_worker_hour=sum(r['new_valid_games'] for r in group)/worker_hours,
                       noncollection_seconds_lower_bound=max(0,end-start-collection))
-    return dict(runs=runs,rounds=rounds,orphan_starts=orphans,cutoff=cutoff)
+    return dict(runs=runs,rounds=rounds,orphan_starts=orphans,pack_events=packs,cutoff=cutoff)
 
 
 def aggregate(runs: list[dict]) -> list[dict]:
@@ -174,6 +186,7 @@ def main():
     result['notes']=['Only complete invocation segments with matching start/final progress are counted.',
                      'Cumulative controller games are retained only as audit data.',
                      'Open cycles are right-censored: their throughput is an upper bound.',
+                     'cycle_complete closes calendar boundaries only; pack_failed/cycle_status disclose failed packing and restart overhead.',
                      'Worker/memory/BuildNum missing from the source remain unknown.',
                      'No causal ratio is implied across different task mixtures or versions.']
     (folder/'analysis.json').write_text(json.dumps(result,indent=2,allow_nan=False)+'\n')

@@ -48,6 +48,31 @@ class ReconstructionTest(unittest.TestCase):
         r=log.parse(lines,0)['rounds'][0]
         self.assertTrue(r['cycle_complete']);self.assertEqual(r['cycle_wall_seconds'],3600)
 
+    def test_failed_pack_and_restart_close_calendar_without_claiming_pack_success(self):
+        lines=self.segment()+['2026-10-23T10:10:00 round 1 done: 1 groups, 48 games, changes=0',
+                              '2026-10-23T10:50:00 pack 202 labels 2400s rc=-15 ',
+                              '2026-10-23T11:00:00 round 2 next: workers=2/16 (MemAvailable 8.0 GiB, per-worker 0.5 GiB)',
+                              '48 games on 2 workers']
+        r=log.parse(lines,log.stamp('2026-10-23T11:10:00'))['rounds'][0]
+        self.assertTrue(r['cycle_complete']);self.assertTrue(r['pack_failed'])
+        self.assertEqual(r['cycle_status'],'closed_calendar_with_pack_failure')
+        self.assertEqual(r['pack_events'][0]['returncode'],-15)
+        self.assertEqual(r['cycle_wall_seconds'],3600)
+
+    def test_failed_pack_without_restart_is_still_censored_and_failed(self):
+        lines=self.segment()+['2026-10-23T10:10:00 round 1 done: 1 groups, 48 games, changes=0',
+                              '2026-10-23T10:50:00 pack 202 labels 2400s rc=1 error']
+        r=log.parse(lines,log.stamp('2026-10-23T11:00:00'))['rounds'][0]
+        self.assertFalse(r['cycle_complete']);self.assertTrue(r['pack_failed'])
+        self.assertEqual(r['cycle_status'],'right_censored_with_pack_failure')
+
+    def test_later_pack_failure_does_not_pollute_prior_cycle(self):
+        lines=self.segment()+['2026-10-23T10:10:00 round 1 done: 1 groups, 48 games, changes=0']
+        lines+=self.segment(hour='11',label='next')
+        lines+=['2026-10-23T11:50:00 pack 202 labels 2400s rc=-15']
+        r=log.parse(lines,log.stamp('2026-10-23T12:00:00'))['rounds'][0]
+        self.assertFalse(r['pack_failed']);self.assertEqual(r['pack_events'],[])
+
     def test_durable_duplicate_rows_refute_a_complete_log(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder=Path(tmp)/'reuse_48';folder.mkdir()

@@ -1,0 +1,644 @@
+{
+  "scope": "Completed deploy2+cq collection experiment; task51 remains in progress",
+  "workers": 2,
+  "multiplier": 1.5,
+  "games_per_arm_per_task": 16,
+  "source_commits": {
+    "old": "1b89bfa92554602ff83a44bd969de7ac532894ba",
+    "cq": "26abefe09c790541046cc20a4344a2f8a995a5c9"
+  },
+  "source_python_sha256": {
+    "old": "10595fc8c9a647bcef19eb2fd5941cfd49aa82c3e2a0ddbd028c1bb0fa735fec",
+    "cq": "ae3635d9a9bea05808f18ad901e5f8f5a9846f9971b73fec2aecd82e756ec00e"
+  },
+  "input_sha256": {
+    "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/build-old/pvz-portable": "dd03838136240fc4c1af36205ce3a8a4a486fc54ca5e1ba82ed23b796e36e2cb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable": "bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51/collection-manifest.json": "c931d83d81614d59eb7e899d5003135d05f42a63ccfc5083238f465cc60b83c4"
+  },
+  "plan_sha256": "d4226a1f0b73c7cab3729652bca471acf0f20c4ec0a5fdfae33eca66bd9b8fac",
+  "full_result_sha256": "46e603d56631d3240a3e845bb7dee691de2d107b2603cdfcd5d5fcd54147d69c",
+  "archive_count": 128,
+  "decoded_frames": 113910,
+  "archive_audit_sha256": "5bf14bbecf18780d9c983cc6a8b0cc05c95ac299e797ea3f36387149e2be71c7",
+  "overall": {
+    "old": {
+      "games": 64,
+      "wall_seconds": 5925.559501377997,
+      "games_per_hour": 38.882404260124325
+    },
+    "cq": {
+      "games": 64,
+      "wall_seconds": 3901.1790582090034,
+      "games_per_hour": 59.05906818483092
+    }
+  },
+  "throughput_ratio": 1.5189150287550166,
+  "classification": "1.5-2.0",
+  "tasks": {
+    "day_l7_train_d7_m150": {
+      "throughput_ratio_cq_over_old": 1.2417131427391455,
+      "paired_block_ratios": [
+        {
+          "block": 0,
+          "throughput_ratio_cq_over_old": 1.208213378090326
+        },
+        {
+          "block": 1,
+          "throughput_ratio_cq_over_old": 1.275209961013643
+        }
+      ],
+      "trajectory_differences": [],
+      "old": {
+        "games": 16,
+        "wall_seconds": 1723.0651717629953,
+        "games_per_hour": 33.42879941161203,
+        "games_per_worker_hour": 16.714399705806017,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_0_old_0",
+            "wall_seconds": 838.2527193679998,
+            "cpu_seconds": 1620.5610880000002,
+            "wins": 7,
+            "samples": 418,
+            "mem_available_bytes": {
+              "min": 11834695680,
+              "max": 14653534208
+            },
+            "tree_rss_bytes": {
+              "min": 7516160,
+              "max": 1762689024
+            },
+            "load1": {
+              "min": 16.46044921875,
+              "max": 23.0888671875
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "f60d8112e564f6bbd0f77abc03ca9f88bf3120520361ecaae605b8634cb92495"
+          },
+          {
+            "block": 1,
+            "stage": "q51_0_old_1",
+            "wall_seconds": 884.8124523949955,
+            "cpu_seconds": 1685.293720999999,
+            "wins": 8,
+            "samples": 441,
+            "mem_available_bytes": {
+              "min": 9544454144,
+              "max": 12705054720
+            },
+            "tree_rss_bytes": {
+              "min": 8105984,
+              "max": 1779691520
+            },
+            "load1": {
+              "min": 17.0751953125,
+              "max": 21.41162109375
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "712d1475cc0fd698f64c78b7c4dc96a3c901d770db52e75749393b3be5b40b9f"
+          }
+        ],
+        "wins": 15,
+        "decisions": 19518,
+        "cpu_seconds": 3305.8548089999995
+      },
+      "cq": {
+        "games": 16,
+        "wall_seconds": 1387.651553693002,
+        "games_per_hour": 41.50897957538927,
+        "games_per_worker_hour": 20.754489787694634,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_0_cq_0",
+            "wall_seconds": 693.7952637910057,
+            "cpu_seconds": 1301.832149,
+            "wins": 7,
+            "samples": 346,
+            "mem_available_bytes": {
+              "min": 10492653568,
+              "max": 14461644800
+            },
+            "tree_rss_bytes": {
+              "min": 7393280,
+              "max": 2254082048
+            },
+            "load1": {
+              "min": 19.30224609375,
+              "max": 26.5107421875
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "18931af3f81f1dff340fd7f0e993addf6d40381af5c9af30291bc805d446fc59"
+          },
+          {
+            "block": 1,
+            "stage": "q51_0_cq_1",
+            "wall_seconds": 693.8562899019962,
+            "cpu_seconds": 1272.8432720000003,
+            "wins": 8,
+            "samples": 346,
+            "mem_available_bytes": {
+              "min": 10625417216,
+              "max": 12291055616
+            },
+            "tree_rss_bytes": {
+              "min": 7405568,
+              "max": 2234032128
+            },
+            "load1": {
+              "min": 19.650390625,
+              "max": 30.2099609375
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "8701b650250ea146d0a4eb7bad28f55ec1f312eadfa5d7ff4e4e6a8352acbf8d"
+          }
+        ],
+        "wins": 15,
+        "decisions": 19518,
+        "cpu_seconds": 2574.6754210000004
+      }
+    },
+    "night_l14_train_n10_m150": {
+      "throughput_ratio_cq_over_old": 1.9061684715648968,
+      "paired_block_ratios": [
+        {
+          "block": 0,
+          "throughput_ratio_cq_over_old": 1.9929283883452413
+        },
+        {
+          "block": 1,
+          "throughput_ratio_cq_over_old": 1.8033621219645828
+        }
+      ],
+      "trajectory_differences": [],
+      "old": {
+        "games": 16,
+        "wall_seconds": 1526.6417618689957,
+        "games_per_hour": 37.72987313636896,
+        "games_per_worker_hour": 18.86493656818448,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_1_old_0",
+            "wall_seconds": 865.6183060559997,
+            "cpu_seconds": 1507.631497999999,
+            "wins": 0,
+            "samples": 432,
+            "mem_available_bytes": {
+              "min": 6635450368,
+              "max": 10583097344
+            },
+            "tree_rss_bytes": {
+              "min": 6291456,
+              "max": 1756303360
+            },
+            "load1": {
+              "min": 17.1591796875,
+              "max": 21.96240234375
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "94878d5b48a25cfb09f27285dd47f528ed5983c52ad587ec60e4bde42dcb38cd"
+          },
+          {
+            "block": 1,
+            "stage": "q51_1_old_1",
+            "wall_seconds": 661.023455812996,
+            "cpu_seconds": 1179.9922599999998,
+            "wins": 0,
+            "samples": 330,
+            "mem_available_bytes": {
+              "min": 6443425792,
+              "max": 10042163200
+            },
+            "tree_rss_bytes": {
+              "min": 5885952,
+              "max": 1755496448
+            },
+            "load1": {
+              "min": 17.97607421875,
+              "max": 22.19677734375
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "43702cadb7099542412cc5e92f24ee02a4378b35987f0f4ebc8a2f68c78afb5a"
+          }
+        ],
+        "wins": 0,
+        "decisions": 16444,
+        "cpu_seconds": 2687.623757999999
+      },
+      "cq": {
+        "games": 16,
+        "wall_seconds": 800.8955056400009,
+        "games_per_hour": 71.91949460868987,
+        "games_per_worker_hour": 35.95974730434494,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_1_cq_0",
+            "wall_seconds": 434.34491230000276,
+            "cpu_seconds": 761.524075000001,
+            "wins": 0,
+            "samples": 217,
+            "mem_available_bytes": {
+              "min": 9265758208,
+              "max": 10683187200
+            },
+            "tree_rss_bytes": {
+              "min": 7401472,
+              "max": 2184290304
+            },
+            "load1": {
+              "min": 17.05224609375,
+              "max": 20.228515625
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "2f4761ce654eb0de54fa3401843225c25c4045979bd752d9f21e8a6e1a295cfc"
+          },
+          {
+            "block": 1,
+            "stage": "q51_1_cq_1",
+            "wall_seconds": 366.55059333999816,
+            "cpu_seconds": 653.09518,
+            "wins": 0,
+            "samples": 183,
+            "mem_available_bytes": {
+              "min": 8472903680,
+              "max": 10114347008
+            },
+            "tree_rss_bytes": {
+              "min": 7319552,
+              "max": 2172338176
+            },
+            "load1": {
+              "min": 17.97607421875,
+              "max": 22.40478515625
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "60b8a00facd07f70ce5197f29a99fb52daae02dfa8e3beff49f7f99c7cab06d3"
+          }
+        ],
+        "wins": 0,
+        "decisions": 16444,
+        "cpu_seconds": 1414.619255000001
+      }
+    },
+    "pool_l24_train_p9k_m150": {
+      "throughput_ratio_cq_over_old": 3.257698127212768,
+      "paired_block_ratios": [
+        {
+          "block": 0,
+          "throughput_ratio_cq_over_old": 3.148121534943204
+        },
+        {
+          "block": 1,
+          "throughput_ratio_cq_over_old": 3.3631667980584266
+        }
+      ],
+      "trajectory_differences": [],
+      "old": {
+        "games": 16,
+        "wall_seconds": 439.60553845499817,
+        "games_per_hour": 131.02655667723448,
+        "games_per_worker_hour": 65.51327833861724,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_2_old_0",
+            "wall_seconds": 208.35186852599873,
+            "cpu_seconds": 396.8632030000011,
+            "wins": 0,
+            "samples": 104,
+            "mem_available_bytes": {
+              "min": 9039335424,
+              "max": 9975984128
+            },
+            "tree_rss_bytes": {
+              "min": 7905280,
+              "max": 1748742144
+            },
+            "load1": {
+              "min": 19.85107421875,
+              "max": 22.45556640625
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "9f2653691d7569ebd8ce7ed48b7016d68aaff8ae465cfdbb7ade39ec951d9e5a"
+          },
+          {
+            "block": 1,
+            "stage": "q51_2_old_1",
+            "wall_seconds": 231.25366992899944,
+            "cpu_seconds": 414.041332,
+            "wins": 0,
+            "samples": 116,
+            "mem_available_bytes": {
+              "min": 9290272768,
+              "max": 10342641664
+            },
+            "tree_rss_bytes": {
+              "min": 7598080,
+              "max": 1750814720
+            },
+            "load1": {
+              "min": 19.302734375,
+              "max": 21.427734375
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "a262a43436b485bad7ead00cd531f25439801b641b3fb99d5c2aa5ed5e866768"
+          }
+        ],
+        "wins": 0,
+        "decisions": 6339,
+        "cpu_seconds": 810.904535000001
+      },
+      "cq": {
+        "games": 16,
+        "wall_seconds": 134.94360781399882,
+        "games_per_hour": 426.8449683025643,
+        "games_per_worker_hour": 213.42248415128216,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_2_cq_0",
+            "wall_seconds": 66.18291772199882,
+            "cpu_seconds": 127.73893899999928,
+            "wins": 0,
+            "samples": 33,
+            "mem_available_bytes": {
+              "min": 9182031872,
+              "max": 10582061056
+            },
+            "tree_rss_bytes": {
+              "min": 9732096,
+              "max": 2014363648
+            },
+            "load1": {
+              "min": 19.55517578125,
+              "max": 20.7880859375
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "494b77308d2ccb194a6fdd50f5da8317a380127ae5edf6fea1b6e58ef109ee7d"
+          },
+          {
+            "block": 1,
+            "stage": "q51_2_cq_1",
+            "wall_seconds": 68.760690092,
+            "cpu_seconds": 128.96146100000067,
+            "wins": 0,
+            "samples": 35,
+            "mem_available_bytes": {
+              "min": 9206927360,
+              "max": 10209464320
+            },
+            "tree_rss_bytes": {
+              "min": 7413760,
+              "max": 2038136832
+            },
+            "load1": {
+              "min": 20.423828125,
+              "max": 21.73388671875
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "416c66abae9e4572ecfad37d4f9224054201350ddf9ff3d6d10269dfbeb784da"
+          }
+        ],
+        "wins": 0,
+        "decisions": 6339,
+        "cpu_seconds": 256.70039999999995
+      }
+    },
+    "day_l10_orig_train_m150": {
+      "throughput_ratio_cq_over_old": 1.4174199683282862,
+      "paired_block_ratios": [
+        {
+          "block": 0,
+          "throughput_ratio_cq_over_old": 1.477998525500872
+        },
+        {
+          "block": 1,
+          "throughput_ratio_cq_over_old": 1.3639133639719088
+        }
+      ],
+      "trajectory_differences": [],
+      "old": {
+        "games": 16,
+        "wall_seconds": 2236.2470292910075,
+        "games_per_hour": 25.75744058931711,
+        "games_per_worker_hour": 12.878720294658555,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_3_old_0",
+            "wall_seconds": 1093.6376667650038,
+            "cpu_seconds": 2178.9685899999986,
+            "wins": 8,
+            "samples": 545,
+            "mem_available_bytes": {
+              "min": 10236362752,
+              "max": 12017819648
+            },
+            "tree_rss_bytes": {
+              "min": 8110080,
+              "max": 1792487424
+            },
+            "load1": {
+              "min": 15.10107421875,
+              "max": 18.83935546875
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "c1ca234ee0cd99950e77df62d3742857975a41d01678c3a8a084039dcfd74acc"
+          },
+          {
+            "block": 1,
+            "stage": "q51_3_old_1",
+            "wall_seconds": 1142.6093625260037,
+            "cpu_seconds": 2220.280999999998,
+            "wins": 7,
+            "samples": 570,
+            "mem_available_bytes": {
+              "min": 10526777344,
+              "max": 13526151168
+            },
+            "tree_rss_bytes": {
+              "min": 6574080,
+              "max": 1768607744
+            },
+            "load1": {
+              "min": 15.859375,
+              "max": 19.13330078125
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "bfd67d4b86430d9399b62171f71d6e057202a4ea3712efe7286d3d0ea1f857de"
+          }
+        ],
+        "wins": 15,
+        "decisions": 14590,
+        "cpu_seconds": 4399.249589999997
+      },
+      "cq": {
+        "games": 16,
+        "wall_seconds": 1577.6883910620018,
+        "games_per_hour": 36.50911062432757,
+        "games_per_worker_hour": 18.254555312163784,
+        "stages": [
+          {
+            "block": 0,
+            "stage": "q51_3_cq_0",
+            "wall_seconds": 739.9450323500059,
+            "cpu_seconds": 1414.026445,
+            "wins": 8,
+            "samples": 369,
+            "mem_available_bytes": {
+              "min": 8882307072,
+              "max": 11189432320
+            },
+            "tree_rss_bytes": {
+              "min": 6201344,
+              "max": 2204073984
+            },
+            "load1": {
+              "min": 15.10107421875,
+              "max": 21.6904296875
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "8250c11a35590d3811cffbe98614eea8d9b0bb9cf1d6f5b9305e5ce08e69e5e3"
+          },
+          {
+            "block": 1,
+            "stage": "q51_3_cq_1",
+            "wall_seconds": 837.7433587119958,
+            "cpu_seconds": 1598.818753000002,
+            "wins": 7,
+            "samples": 418,
+            "mem_available_bytes": {
+              "min": 10355023872,
+              "max": 13468913664
+            },
+            "tree_rss_bytes": {
+              "min": 8601600,
+              "max": 2179084288
+            },
+            "load1": {
+              "min": 16.28076171875,
+              "max": 28.09228515625
+            },
+            "max_sampled_engine_processes": 2,
+            "timing_sha256": "071c13e247b430a9f8588852a617cedfa70ea3336dac55a3961504a263cc59e1"
+          }
+        ],
+        "wins": 15,
+        "decisions": 14590,
+        "cpu_seconds": 3012.845198000002
+      }
+    }
+  },
+  "pending": [
+    "task50 full gates and zones+deploy3 controlled comparison",
+    "same four controlled families/multiplier cycle evidence; historical shared-cycle allocation is separate"
+  ],
+  "gap_to_2x_seconds": 938.3993075200051,
+  "gap_by_task_seconds": {
+    "day_l7_train_d7_m150": 526.1189678115043,
+    "night_l14_train_n10_m150": 37.57462470550308,
+    "pool_l24_train_p9k_m150": -84.85916141350026,
+    "day_l10_orig_train_m150": 459.564876416498
+  },
+  "production_calendar_window": {
+    "history_sha256": "6d2aeebafb21bc31cfd4b11aab1eff7f3c3ee4abd8f77a988f847d3a739d74b6",
+    "old_cycle": {
+      "round": 1,
+      "line": 520966,
+      "ended_at": 1792704450.0,
+      "planned_games": 768,
+      "groups": [
+        222444,
+        242366,
+        262273,
+        282182,
+        302086,
+        321994,
+        341892,
+        361789,
+        381686,
+        401583,
+        421480,
+        441377,
+        461274,
+        481171,
+        501068,
+        520965
+      ],
+      "complete_collection": true,
+      "started_at": 1792680753.0,
+      "cycle_end": 1792704450.0,
+      "cycle_complete": true,
+      "cycle_status": "closed_calendar",
+      "pack_events": [],
+      "pack_failed": false,
+      "cycle_end_source": "next_completion_start",
+      "cycle_wall_seconds": 23697.0,
+      "collection_wall_seconds": 23697,
+      "new_valid_games": 768,
+      "worker_hours": 26.33,
+      "collection_games_per_hour": 116.67299658184581,
+      "cycle_games_per_hour_or_upper_bound": 116.67299658184581,
+      "collection_games_per_worker_hour": 29.168249145461452,
+      "noncollection_seconds_lower_bound": 0
+    },
+    "new_cycle": {
+      "round": 2,
+      "line": 972319,
+      "ended_at": 1792759179.0,
+      "planned_games": 768,
+      "groups": [
+        913033,
+        917040,
+        921049,
+        925058,
+        929084,
+        932816,
+        936830,
+        940805,
+        944567,
+        948579,
+        952587,
+        956594,
+        960328,
+        964304,
+        968311,
+        972318
+      ],
+      "complete_collection": true,
+      "started_at": 1792750769.0,
+      "cycle_end": 1792780606.0,
+      "cycle_complete": true,
+      "cycle_status": "closed_calendar_with_pack_failure",
+      "pack_events": [
+        {
+          "line": 972320,
+          "ended_at": 1792780498.0,
+          "wall_seconds": 21319,
+          "labels": 202,
+          "returncode": -15
+        }
+      ],
+      "pack_failed": true,
+      "cycle_end_source": "next_worker_log",
+      "cycle_wall_seconds": 29837.0,
+      "collection_wall_seconds": 8410,
+      "new_valid_games": 768,
+      "worker_hours": 36.52027777777778,
+      "collection_games_per_hour": 328.7514863258026,
+      "cycle_games_per_hour_or_upper_bound": 92.66347152863894,
+      "collection_games_per_worker_hour": 21.029412883253595,
+      "noncollection_seconds_lower_bound": 21427.0
+    },
+    "ratio": 0.7942152361162315,
+    "note": "Different task mixtures/workers; current pack failed with -15 and restart/probe is included."
+  }
+}
