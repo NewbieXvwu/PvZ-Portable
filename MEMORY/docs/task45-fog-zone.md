@@ -53,6 +53,8 @@
 
 ## 结果
 
+- 2026-10-24 最终门禁修复：诊断 `ROLLOUT_PREDICT` 响应可能先于追踪文件关闭，导致即时读到截断JSON；`PvZEnv.rollout_predict(trace_path=...)` 增加只读OBS同步屏障，保留冻结引擎与普通推理路径。真实雾观测/特征逐位对齐14项与延迟关闭文件流回归1项通过，完整门禁重跑中。
+
 - 2026-10-24 追加E复现核验：在隔离目录重新计算四关×两臂8个固定分叉，并加首个合法坚果分叉，9/9终局、v4/公开叶、终态物理SHA、完整解压老师动作链精确一致，原证据只读；见 [复现证明](task45-fog-terminal-repro.json) 与 `scripts/fog_terminal_repro_check.py`。最终整套测试及含复现的CPU总账随后补记。
 
 <!-- 追加E-complete -->

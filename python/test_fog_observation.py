@@ -115,6 +115,34 @@ def test_fog_channel_zero_for_old_frames():
         fog_channel({'fog_amount': [[0]]})
 
 
+def test_predict_trace_is_complete_when_response_precedes_stream_close(tmp_path):
+    trace = tmp_path / 'features.jsonl'
+    env = PvZEnv(RESOURCE)
+    env._reset_done = True
+    env._tick = 8000
+    env._rollout_version = 2
+    prediction = {'ok': True, 'action': {'type': 'wait', 'ticks': 60}}
+    commands = []
+
+    def command(text):
+        commands.append(text)
+        if text.startswith('ROLLOUT_PREDICT '):
+            if ' TRACE ' in text:
+                trace.write_text('{"board":[')  # Child has replied, but still owns its stream.
+            return prediction
+        assert text == 'OBS'
+        trace.write_text('{"board":[0]}\n')
+        return {'ok': True}
+
+    env._command = command
+    assert env.rollout_predict(trace_path=trace) == prediction
+    assert json.loads(trace.read_text()) == {'board': [0]}
+    assert env._tick == 8000
+    commands.clear()
+    assert env.rollout_predict() == prediction
+    assert len(commands) == 1  # Ordinary inference has no additional round trip.
+
+
 @engine
 def test_new_channel_preserves_all_v2_feature_bits_and_has_distinct_cache_signature():
     from pvz_frame_store import encoder_signature
