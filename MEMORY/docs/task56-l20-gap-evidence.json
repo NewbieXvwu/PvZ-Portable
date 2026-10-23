@@ -1,0 +1,134 @@
+{
+  "status": "incomplete",
+  "inventory_source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/inventory.json",
+  "inventory_sha256": "7cd23c114192a8366ea0f7226041229f0da8e3d3136bb3c4387c64369a71b8c8",
+  "captured_at": "2026-10-24T06:02:46.786616+08:00",
+  "sources": {
+    "qc-state.json": {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum_state.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/qc-state.json",
+      "sha256": "61abb2911bbe792a43c5b687278587731c15a298c8626a9f1c23a01cc3106347"
+    },
+    "qc.log": {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum.log",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/qc.log",
+      "sha256": "cb1b0d0f47a1593565bf000056fb98dc56ffc5e758a28ed09a8e52c489b69307"
+    },
+    "A-command.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/train_A.command.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/A-command.json",
+      "sha256": "63a931dc3e6ed2f6017aeff5ffe9d5de6b4ecaa6f6d4123c83792e72e0bc2464"
+    },
+    "A-source-rows.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/source_rows.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/A-source-rows.json",
+      "sha256": "2dbb3ec72d1d7955d5a7b3e4c9635c661a3383d70ea34a97df4bbabfd1ce0335"
+    },
+    "ledger.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/data_ledger.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/ledger.json",
+      "sha256": "cdbf29a4dbe583010aa55e78544b6413da679f56c32606797b9befa10651efbf"
+    },
+    "dw4-inventory.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/dataset_inventory.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/dw4-inventory.json",
+      "sha256": "3b1892381f3ef424e565ce1cf6e3aa5cd6d6d1bcbe91b9d6ddb352bce1f82426"
+    }
+  },
+  "qc": {
+    "cells": {
+      "night_l20_train_n10_orig": {
+        "family": "night_l20",
+        "level": 20,
+        "mult_index": 0,
+        "last_round": 0,
+        "windows": {
+          "1.0": {
+            "recent": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "wins": 0,
+            "games": 32
+          }
+        }
+      }
+    },
+    "collected_groups": [],
+    "offsets": {
+      "night_l20_train_n10_orig": 32
+    },
+    "matching_log_lines": 0
+  },
+  "actual_training": {
+    "dw4_archives": 48816,
+    "dw4_L20_archives": 0,
+    "A_rows": 15788614,
+    "A_labels": 281,
+    "A_L20_labels": [],
+    "A_source_L20_labels": {},
+    "ledger_L20_archives": {
+      "dw4i": 0,
+      "dw5i": 0
+    },
+    "A_L14_source": {
+      "n14t1_fast_search": {
+        "archives": 64,
+        "rows": 32485,
+        "training_rows": 29430,
+        "validation_rows": 3055
+      },
+      "n14t2_fast_search": {
+        "archives": 64,
+        "rows": 32098,
+        "training_rows": 29756,
+        "validation_rows": 2342
+      }
+    }
+  },
+  "n20o1": {
+    "games": 32,
+    "wins": 0,
+    "decisions": 8695,
+    "executed_plants": 0,
+    "labelled_plants": 575,
+    "waits_with_ready_card": 8567,
+    "invalid_label_packets": 0
+  },
+  "pending": [
+    "fresh matched teacher/student diagnostic",
+    "same-state logits and probability",
+    "v2 pack and training-batch trace with L14 control",
+    "Python/native parity and final diagnosis"
+  ]
+}

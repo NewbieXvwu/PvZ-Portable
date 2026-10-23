@@ -39,5 +39,6 @@ task55 的总表（`MEMORY/docs/adventure-gap.md`）里，差距最大的一关�
 - 每完成一小步就提交、`git push origin l20gap`，在"结果"记一行；疑问写"问题"，按最佳判断继续。
 
 ## 结果
+- 2026-10-24 第一步只读来源核查：qc中L20为32局bootstrap窗口、last_round=0、offset=32，当前state.log与curriculum.log均无新L20组；不能称“持续采集”。n20o1的32档案共8695个决策，执行种植0、标签种植575；dw4冻结48816档案及task36 A的281标签/15788614行都未包含L20，A来源报告中n14t1/t2则各有约3.2万行。初步定位是入训覆盖未兑现，尚未排除编码/打包问题。KB证据见task56-l20-gap-evidence.json；下一步已冻结4seed×师生共8局诊断计划（最多2游戏、评估种子不入训），继续同状态logit与v2分段打包追踪。
 
 ## 问题
