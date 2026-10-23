@@ -32,4 +32,9 @@
 
 ## 结果
 
+- 步骤1（pool）：合并 1a99cff9。冲突三处：`make_night_panel.py` 保留主线（含 task25 n10 族与 L20 原版开局），pool 的 zone_panel 薄包装重构整份丢弃（属旧版重构，会丢后续功能）；`DESIGN.md` 主线 §14.10–14.14 不动，pool 泳池族登记改为 §14.15，`MEMORY/docs/pool-panel.md`、`task22-pool-panel.md` 里的 §14.10 引用一并改 §14.15；`MEMORY/2026-10-22.md` 两侧条目全保留，task22 两条按时间插在 task25 之后。测试（无 build/）：245 passed / 6 failed（5 个 test_cpp_rollout 因缺引擎、1 个 test_dagger_experiment_runner 环境性）/ 26 skipped，与合并前基线逐项相同。
+- 步骤2（dw5）：合并 6ab0884f（47 个提交）。CUDA：`cuda_leaf_compare.py`、`cuda_root_corpus.py` 的 modify/delete 按删除；dw5 的 CUDA 遗留单测（`test_episode_stats.py` 里读 `cuda_leaf_compare`）随模块一并删除。判死开关：`search_play.py` 保留主线 `MAX_ACTIONS` 与无条件 C++ rollout，丢弃 `args.max_actions`/`--cpp-rollouts`；`sim_skip_agreement.py` 删 `cpp_rollouts` 开关、保留 dw5 的类型计数。`unified_panel.py` 按“主线压力/课程结构 + dw5 `--version`/`--pool-manifest`/v2”合；`make_night_panel.py` 保留主线；`zone_panel.py` 自动合并后同时保留 pool 核心与 dw5 的 Family 扩展（night 54 / pool 35 任务冒烟通过）。DESIGN：主线 §14.10–14.14 不动，泳池 §14.15、dw5 统一面板v2 §14.16（重复泳池小节删除），`task27-dw5i.md` 等引用同步。两份日志两侧条目按提交时间归并、全保留。测试（无 build/）：256 passed / 6 failed（5 个缺引擎 + 1 个环境性）/ 26 skipped / 63 subtests，失败项与基线同类、无新增。
+- 步骤3（引擎）：在 merge41 工作树单独 `cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j4`（未碰主工作区 build），全套测试 264 passed / 1 failed（仅 `test_dagger_experiment_runner.py::...only_own_parent_and_child`，与主线同一条 Mac 进程树环境性失败）/ 23 skipped / 111 subtests；5 个 `test_cpp_rollout` 全部通过，无新增失败。
+- 步骤4（收尾）：两个合并提交均为 `--no-ff`（pool `1a99cff9`、dw5 `6ab0884f`），`merge41` 已推送且本地与远端一致，工作树干净；未推 `pvz-env`。
+
 ## 问题

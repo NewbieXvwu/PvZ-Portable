@@ -487,6 +487,7 @@ static void RunEnvironment(LawnApp* app)
 			if (ok && !tracePath.empty()) { trace.open(tracePath); ok = trace.good(); }
 			int decisions = 0, mowersLeft = 0, estimatedResult = -1, startTick = 0;
 			std::array<int, 10> planted{};
+			std::array<int, 54> plantedByType{};
 			double simulationSeconds = 0, networkSeconds = 0;
 			if (ok)
 			{
@@ -522,6 +523,18 @@ static void RunEnvironment(LawnApp* app)
 					}
 					const auto start = std::chrono::steady_clock::now();
 					bool accepted = true;
+					int plantedType = -1;
+					int plantSlot = action.packet;
+					if (isFirst && actionCommand == "PLANT")
+					{
+						std::istringstream arguments(actionArguments);
+						arguments >> plantSlot;
+					}
+					if ((!isFirst || actionCommand == "PLANT") && plantSlot >= 0 && plantSlot < app->mBoard->mSeedBank->mNumPackets)
+					{
+						const SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[plantSlot];
+						plantedType = static_cast<int>(packet.mPacketType == SeedType::SEED_IMITATER ? packet.mImitaterType : packet.mPacketType);
+					}
 					if (isFirst)
 					{
 						std::istringstream arguments(actionArguments);
@@ -542,7 +555,11 @@ static void RunEnvironment(LawnApp* app)
 						else app->EnvironmentWaitUntil(60, 0);
 					}
 					if (!accepted) { app->EnvironmentWait(60); priorPlant = false; }
-					if (priorPlant) ++planted[action.packet];
+					if (priorPlant)
+					{
+						++planted[action.packet];
+						if (plantedType >= 0 && plantedType < static_cast<int>(plantedByType.size())) ++plantedByType[plantedType];
+					}
 					priorTick = tick;
 					const int now = app->mBoard->mMainCounter;
 					const uint32_t produced = app->mBoard->mSunMoneyProduced - producedBefore;
@@ -596,9 +613,13 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
 				<< ",\"observation\":" << observation
 				<< ",\"estimated_result\":" << estimatedResult
-				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted\":[";
+				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted_slots\":[";
 			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << planted[index];
-			std::cout << "],\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds
+			std::cout << "],\"planted_types\":{";
+			bool firstType = true;
+			for (size_t index = 0; index < plantedByType.size(); ++index)
+				if (plantedByType[index]) { std::cout << (firstType ? "" : ",") << '\"' << index << "\":" << plantedByType[index]; firstType = false; }
+			std::cout << "},\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds
 				<< ",\"net_calls\":" << rollout.NetworkCalls() << ",\"ticks\":" << app->mBoard->mMainCounter - startTick << ",\"substeps\":[";
 			for (size_t index = 0; index < substeps.size(); ++index)
 				std::cout << (index ? ",[" : "[") << substeps[index].first << ',' << substeps[index].second << ']';

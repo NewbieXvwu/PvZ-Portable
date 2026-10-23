@@ -1,0 +1,242 @@
+"""Audit every task27 deliverable against raw records, then write the unified comparison."""
+from collections import Counter, defaultdict
+import json
+from pathlib import Path
+from task27_common import ROOT, MAIN, OUT, read, write, sha, record
+from run_dw5_study import verify
+from unified_panel import summarize
+from pvz_episode_stats import planted_slots
+
+
+def compare_legacy_games(before_folder, after_folder, pairs):
+    """Compare behavior across the requested slot/type telemetry rename."""
+    ignored={'seconds','planted','planted_slots','planted_types','planted_by_type'}
+    matched=0
+    for left,right in pairs:
+        games=[]
+        for folder,name in ((before_folder,left),(after_folder,right)):
+            rows=[json.loads(line) for line in (folder/name/'games.jsonl').read_text().splitlines()]
+            normalized={row['seed']:{**{k:v for k,v in row.items() if k not in ignored},
+                                     'planted_slots':planted_slots(row)} for row in rows}
+            assert len(normalized)==len(rows), ('duplicate seed',folder,name)
+            games.append(normalized)
+        assert games[0]==games[1], ('legacy behavior changed',left,right)
+        matched+=len(games[0])
+    return matched
+
+
+def audit_panel(folder, version, model_hash, executable_hash=None):
+    manifest=read(OUT/f'unified_{version}.json');panel=read(folder/'panel.json')
+    assert panel['complete'] and panel['model_sha256']==model_hash
+    assert panel['executable_sha256']==(executable_hash or sha(ROOT/'build/pvz-portable'))
+    assert panel['manifest_sha256']==sha(OUT/f'unified_{version}.json')
+    assert len(panel['tasks'])==(34 if version=='v2' else 29)
+    for task in manifest['tasks']:
+        name=task['task_id'];group=manifest['groups'][name];n=64 if group in ('heldout','pool') else 128
+        actual=summarize(folder/name,task,task['seeds'][:n],plant_types=True);actual['group']=group
+        assert actual==next(row for row in panel['tasks'] if row['task_id']==name)
+        assert read(folder/'resources'/(name+'.result.json'))['returncode']==0
+        config=read(folder/name/'config.json')
+        assert config['arms']=='fast' and config['workers']=='4'
+        contract=read(folder/'resources'/(name+'.contract.json'))
+        assert contract['model_sha256']==model_hash and contract['executable_sha256']==panel['executable_sha256']
+        assert contract['manifest_sha256']==panel['manifest_sha256'] and contract['seeds']==task['seeds'][:n]
+    for group,stats in panel['groups'].items():
+        part=[r for r in panel['tasks'] if r['group']==group]
+        assert stats['games']==sum(r['games'] for r in part) and stats['won']==sum(r['won'] for r in part)
+        assert abs(stats['mean_win_rate']-sum(r['win_rate'] for r in part)/len(part))<1e-12
+        counts=Counter()
+        for row in part:counts.update(row['planted_by_type_total'])
+        assert dict(counts)==stats['planted_by_type_total']
+    assert sum(t['games'] for t in panel['tasks'])==(3264 if version=='v2' else 2944)
+    return panel
+
+
+def main():
+    plan=read(OUT/'study_plan.json');verify(plan,files=True)
+    engineering=read(ROOT/'MEMORY/docs/task27-panel-engineering.json')
+    assert engineering['complete'] and engineering['tests']==24 and engineering['v1_matches_task23']
+    instrumentation=read(ROOT/'MEMORY/docs/task27-step0.json')
+    assert instrumentation['complete'] and instrumentation['unit_tests']==12
+    smoke=read(OUT/'step0/type_count_check/complete.json')
+    assert smoke==instrumentation['smoke'] and smoke['complete']
+    assert smoke['executable_sha256']==sha(ROOT/'build/pvz-portable')
+    assert {c['task'] for c in smoke['checks']}=={'night_l12_eval_n10','day_l10_orig_eval','pool_l21_eval_p9k'}
+    assert all(c['legacy_outcome_identical'] and c['native_vs_archived_actions_equal'] for c in smoke['checks'])
+    zones=read(ROOT/'MEMORY/docs/task27-zone-comparison.json')
+    assert zones['passed'] and [c['tasks'] for c in zones['comparisons']]==[54,9,35]
+    assert all(c['passed'] and not c['changed'] and c['task_order_equal'] for c in zones['comparisons'])
+    # Verify shared manifests still have the exact contents that the comparison audited.
+    for comparison in zones['comparisons']:
+        assert sha(Path(comparison['current']))==comparison['current_sha256']
+        assert sha(Path(comparison['generated']))==comparison['generated_sha256']
+    training=read(OUT/'training_complete.json');model=OUT/'dw5i_s1/model.pt'
+    assert training['complete'] and training['model_sha256']==sha(model)
+    assert training['resources']==read(OUT/'training_s1.result.json') and training['resources']['returncode']==0
+    assert read(OUT/'training_s1.command.json')['command']==plan['training_command']
+    rows=read(OUT/'dw5i_s1/source_rows.json');metrics=read(OUT/'dw5i_s1/metrics.json')
+    assert sha(OUT/'dw5i_s1/source_rows.json')==training['source_rows_sha256']
+    assert rows['rows']==training['rows']==metrics['data_memory']['rows']
+    assert {k:v['archives'] for k,v in rows['sources'].items()}==plan['archive_counts']
+    import torch
+    checkpoint=torch.load(model,map_location='cpu',weights_only=True)
+    assert checkpoint['history']==metrics['history'] and [h['epoch'] for h in metrics['history']]==list(range(1,13))
+    assert checkpoint['packet_head']=='identity' and checkpoint['row_pool']
+    assert checkpoint['state_dict']['trunk.0.weight'].shape[0]==64
+    assert checkpoint['labels'].split(',')==plan['labels']
+    assert all(torch.isfinite(v).all() for v in checkpoint['state_dict'].values())
+    upload=read(OUT/'upload.json')
+    assert upload['download_verified'] and upload['model_sha256']==sha(model)
+    assert upload['path']=='transfer/dw5i_s1_model.pt'
+    from import_dw4_transfer import hf_environment
+    from huggingface_hub import HfApi
+    hf_environment()
+    remote=next(e for e in HfApi().model_info(upload['repo'],revision=upload['revision'],files_metadata=True).siblings
+                if e.rfilename==upload['path'])
+    assert remote.lfs and remote.lfs.sha256==sha(model)
+    native=read(OUT/'native_parity.json')
+    assert native['passed'] and native['states']==256 and native['width']==64
+    assert native['model_sha256']==sha(model) and native['executable_sha256']==sha(ROOT/'build/pvz-portable')
+    assert read(OUT/'native_parity.result.json')['returncode']==0
+    references=read(OUT/'pretraining_plan.json')
+    panels={name:audit_panel(OUT/f'baseline_v2_{name}','v2',references['models_sha256'][name],
+                            references.get('historical_reference_executable_sha256',{}).get(name))
+            for name in ('dw4i_s1','identity')}
+    new={v:audit_panel(OUT/f'panel_dw5i_{v}',v,sha(model)) for v in ('v1','v2')}
+    common_ids=set(t['task_id'] for t in new['v1']['tasks']) & set(t['task_id'] for t in new['v2']['tasks'])
+    matched_games=0
+    pairs=[(name,name) for name in sorted(common_ids)] + [('night_l20_eval_n9_orig','night_l20_eval_n10_orig')]
+    for left,right in pairs:
+        games=[]
+        for version,name in (('v1',left),('v2',right)):
+            games.append({r['seed']:{k:v for k,v in r.items() if k!='seconds'} for r in
+                          map(json.loads,(OUT/f'panel_dw5i_{version}'/name/'games.jsonl').read_text().splitlines())})
+        assert games[0]==games[1], ('same task changed across panel versions',left,right)
+        matched_games+=len(games[0])
+    old_v1_path=MAIN/'.claude/worktrees/dw4/artifacts/task23/panel_dw4i_s1/panel.json'
+    old_v1=read(old_v1_path);old_manifest=read(OUT/'unified_v1.json')
+    assert old_v1['complete'] and old_v1['model_sha256']==references['models_sha256']['dw4i_s1']
+    assert old_v1['manifest_sha256']==sha(OUT/'unified_v1.json')
+    for task in old_manifest['tasks']:
+        group=old_manifest['groups'][task['task_id']];n=64 if group=='heldout' else 128
+        actual=summarize(old_v1_path.parent/task['task_id'],task,task['seeds'][:n]);actual['group']=group
+        assert actual==next(r for r in old_v1['tasks'] if r['task_id']==task['task_id'])
+    legacy_pairs=[(t['task_id'],t['task_id']) for t in panels['dw4i_s1']['tasks']
+                  if t['group'] in ('day','heldout')]
+    legacy_pairs.append(('night_l20_eval_n9_orig','night_l20_eval_n10_orig'))
+    legacy_games=0
+    for old_name,new_name in legacy_pairs:
+        before={r['seed']:{k:v for k,v in r.items() if k!='seconds'} for r in
+                map(json.loads,(old_v1_path.parent/old_name/'games.jsonl').read_text().splitlines())}
+        after={r['seed']:{k:v for k,v in r.items() if k not in ('seconds','planted_by_type')} for r in
+               map(json.loads,(OUT/'baseline_v2_dw4i_s1'/new_name/'games.jsonl').read_text().splitlines())}
+        assert before==after, ('legacy behavior changed',old_name,new_name)
+        legacy_games+=len(before)
+    old_identity_path=old_v1_path.parent.parent/'baseline_identity/panel.json'
+    old_identity=read(old_identity_path)
+    assert old_identity['complete'] and old_identity['model_sha256']==references['models_sha256']['identity']
+    assert old_identity['manifest_sha256']==sha(OUT/'unified_v1.json')
+    for left,_ in legacy_pairs:
+        task=next(t for t in old_manifest['tasks'] if t['task_id']==left)
+        group=old_manifest['groups'][left];n=64 if group=='heldout' else 128
+        actual=summarize(old_identity_path.parent/left,task,task['seeds'][:n]);actual['group']=group
+        assert actual==next(t for t in old_identity['tasks'] if t['task_id']==left)
+    legacy_identity_games=compare_legacy_games(old_identity_path.parent,OUT/'baseline_v2_identity',legacy_pairs)
+    dead=read(ROOT/'MEMORY/docs/task27-dead-decks.json')
+    assert set(dead)=={'day_l7_eval_d7p_holdout3','day_l8_eval_d7p_holdout1','day_l9_eval_d7p_holdout1'}
+    for name,data in dead.items():
+        folder=OUT/'dead_decks'/name;game_rows=[json.loads(l) for l in (folder/'games.jsonl').read_text().splitlines()]
+        assert data['games']==len(game_rows)==16 and data['won']==sum(r['won'] for r in game_rows)
+        assert sha(folder/'games.jsonl')==data['games_sha256']
+        assert {r['seed'] for r in game_rows}==set(range(30000,30016))
+        cfg=read(folder/'config.json')
+        assert cfg['dagger_beta']=='1.0' and cfg['verify_samples']=='9' and cfg['student_candidates']=='2'
+        assert cfg['static_value']==str(MAIN/'artifacts/hard/value_branch1/model.pt') and cfg['workers']=='4'
+        assert read(OUT/('dead_'+name+'.result.json'))['returncode']==0
+    source_groups=defaultdict(Counter)
+    base_labels=set(read(ROOT/'MEMORY/docs/task23-study-plan.json')['labels'])
+    for label,stats in rows['sources'].items():
+        group='dw4i_labels' if label in base_labels else 'q102' if label in plan['q102_labels'] else 'q103' if label in plan['q103_labels'] else 'mac_new'
+        source_groups[group].update({key:stats[key] for key in ('archives','rows','training_rows','validation_rows')})
+    full=dict(complete=True,study_plan=plan,training=training,metrics=metrics,source_rows=rows,
+              upload=upload,native_parity=native,v2_references=panels,dw5i_panels=new,
+              historical_dw4i_v1=old_v1,historical_identity_v1=old_identity,dead_decks=dead)
+    write(OUT/'results.json',full)
+    compact=dict(complete=True,full_results_path=str(OUT/'results.json'),full_results_sha256=sha(OUT/'results.json'),
+                 study_plan_sha256=sha(OUT/'study_plan.json'),training=training,upload=upload,
+                 source_groups={k:dict(v) for k,v in source_groups.items()},
+                 v2={name:dict(groups=p['groups'],tasks=[{k:t[k] for k in ('task_id','games','won','win_rate')} for t in p['tasks']])
+                     for name,p in {**panels,'dw5i_s1':new['v2']}.items()},
+                 v1={name:dict(groups=p['groups'],tasks=[{k:t[k] for k in ('task_id','games','won','win_rate')} for t in p['tasks']])
+                     for name,p in {'dw4i_s1':old_v1,'dw5i_s1':new['v1']}.items()},
+                 native_states=native['states'],v1_v2_identical_task_games=matched_games,
+                 legacy_dw4i_identical_task_games=legacy_games,
+                 legacy_identity_identical_task_games=legacy_identity_games,
+                 retained_reference_executable_sha256=references.get('historical_reference_executable_sha256',{}),
+                 instrumentation_sha256=sha(ROOT/'MEMORY/docs/task27-step0.json'),
+                 dead={name:{k:d[k] for k in ('deck','games','won','loss_waves','nearest_terminal_zombie_types','conclusion')} for name,d in dead.items()},
+                 caveats=['One fixed training seed and final epoch; no seed/epoch selection or default promotion.',
+                          'V1 and V2 use different night decks; compare models within each version.',
+                          'Source rows grouped by label; expanded old labels remain in dw4i_labels.',
+                          'Zero wins in 16 teacher games flags structural weakness; not proof of impossibility.',
+                          'Terminal nearest zombies describe surviving threats, not instrumented killers.',
+                          'Historical dw4i v1 uses its original binary; additive telemetry checked against legacy outcomes.'])
+    target=ROOT/'MEMORY/docs/task27-results.json';write(target,compact);assert target.stat().st_size<100_000
+    lines=['## task27：面板v2与第二次合训dw5i','',
+           'v1保持旧29任务；v2改为夜间n10九关并加泳池p9k五关，共34任务/3264局。只报告各区域任务平均胜率，不把版本之间的夜间变化当成模型收益。', '',
+           '| v2 区域 | identity_dw3_s1 | dw4i_s1 | dw5i_s1 | dw5−dw4 |',
+           '|---|---:|---:|---:|---:|']
+    for group in ('day','heldout','night','pool'):
+        stats=[p['groups'][group] for p in (panels['identity'],panels['dw4i_s1'],new['v2'])]
+        lines.append('| '+group+' | '+' | '.join(f"{s['won']}/{s['games']} ({s['mean_win_rate']:.2%})" for s in stats)+f" | {100*(stats[2]['mean_win_rate']-stats[1]['mean_win_rate']):+.2f}pp |")
+    lines += ['', '| v2 任务 | 旧identity | dw4i_s1 | dw5i_s1 |','|---|---:|---:|---:|']
+    for row in new['v2']['tasks']:
+        name=row['task_id'];results=[next(t for t in p['tasks'] if t['task_id']==name) for p in (panels['identity'],panels['dw4i_s1'])]+[row]
+        lines.append('| '+name+' | '+' | '.join(f"{r['won']}/{r['games']}" for r in results)+' |')
+    early={}
+    for name,panel in {**panels,'dw5i_s1':new['v2']}.items():
+        selected=[r for r in panel['tasks'] if r['task_id'] in {f'day_l{n}_eval_d7' for n in (1,3,4,6)}]
+        early[name]=dict(won=sum(r['won'] for r in selected),games=sum(r['games'] for r in selected))
+    lines += ['', '白天早关L1/3/4/6单独合计：'+'；'.join(f"{name} {s['won']}/{s['games']} ({s['won']/s['games']:.2%})" for name,s in early.items())+'。早关是否恢复，以这个预先指定的四关合计及逐关列判断。','',
+              '| v1 区域（历史可比） | dw4i_s1 | dw5i_s1 |','|---|---:|---:|']
+    for group in ('day','heldout','night'):
+        lines.append('| '+group+' | '+' | '.join(f"{p['groups'][group]['won']}/{p['groups'][group]['games']} ({p['groups'][group]['mean_win_rate']:.2%})" for p in (old_v1,new['v1']))+' |')
+    lines += ['', '| v1 任务 | dw4i_s1 | dw5i_s1 |','|---|---:|---:|']
+    for row in new['v1']['tasks']:
+        before=next(t for t in old_v1['tasks'] if t['task_id']==row['task_id'])
+        lines.append(f"| {row['task_id']} | {before['won']}/{before['games']} | {row['won']}/{row['games']} |")
+    early_delta=early['dw5i_s1']['won']-early['identity']['won']
+    recovery='达到旧identity的点估计' if early_delta>=0 else '仍未达到旧identity的点估计'
+    changed={g:100*(new['v2']['groups'][g]['mean_win_rate']-panels['dw4i_s1']['groups'][g]['mean_win_rate'])
+             for g in ('day','heldout','night','pool')}
+    lines += ['', f"本次结果判断：早关合计{recovery}（相差{early_delta:+d}/512局）；相对dw4i_s1，v2夜间n10变化{changed['night']:+.2f}pp、泳池{changed['pool']:+.2f}pp、白天{changed['day']:+.2f}pp、留出{changed['heldout']:+.2f}pp。这些是固定单seed和固定评估种子的描述性差异，不是总体非劣或因果归因证明。",'',
+              f"v1/v2共有任务及两个同语义的原版L20任务，逐seed除seconds外{matched_games}局记录完全一致；版本切换没有改变这些局的策略行为。"]
+    lines += [f"参考dw4i_s1的白天/留出及原版L20与task23旧二进制记录逐seed核对，{legacy_games}局除耗时和新增类型计数外完全相同。"]
+    lines += [f"旧identity对照使用第0步后的新构建；与task23旧构建的共同任务逐seed比较，{legacy_identity_games}局除耗时和种植统计键改名外，全部记录及槽计数完全一致。"]
+    lines += ['', '| 全零留出诊断 | 卡组 | 老师胜局 | 输局波数 |','|---|---|---:|---|']
+    for name,d in dead.items():lines.append(f"| {name} | {d['deck']} | {d['won']}/16 | {d['loss_waves']} |")
+    from pvz_constants import ZOMBIE_NAME
+    for name,d in dead.items():
+        threats='、'.join(f"{ZOMBIE_NAME.get(int(kind),kind)}{count}局" for kind,count in d['nearest_terminal_zombie_types'].items())
+        lines.append(f"{name}输局终局最靠前的存活僵尸：{threats}。")
+    lines += ['', '老师参数照queue103的run，仅改beta=1实际执行搜索，每套前16评估seed。逐局最后存活僵尸类型和距离见诊断JSON；最近僵尸不是经埋点确认的致死者。0/16提示卡组结构性弱点，留出集合本次保持不变，由主控决定是否另开任务族替换。','',
+              f"训练语料在q103完整{plan['q103_full_rounds']}轮后冻结：{plan['archives']}档案/{len(plan['labels'])}标签，原dw4i全部48816份逐文件哈希保持；q102全部、指定q103完整轮次、已上传未导入Mac档案只增不改导入。不选赢局，不纳入评估种子。",'',
+              '| 实际来源（按标签） | 档案 | 保留行 | 训练行 | 验证行 |','|---|---:|---:|---:|---:|']
+    for group,s in source_groups.items():lines.append(f"| {group} | {s['archives']} | {s['rows']} | {s['training_rows']} | {s['validation_rows']} |")
+    resources=training['resources'];epoch_seconds=sum(h['seconds'] for h in metrics['history'])
+    lines += ['', f"64宽identity+row_pool、seed1从头原12epoch；实际{rows['rows']}行，加载{metrics['load_seconds']:.1f}s、epoch训练+验证合计{epoch_seconds:.1f}s、总墙钟{resources['wall_s']:.1f}s。子树RSS求和峰{resources['peak_rss_kib']/1024**2:.2f}GiB（共享页可能重复），最低可用{resources['minimum_available_kib']/1024**2:.2f}GiB；模型{training['model_bytes']}字节。训练服从外部训练让卡与2/3GiB内存暂停守卫。",'',
+              'C++与Python已在白天/夜间n10/原版传送带/泳池共256个真实状态核对，各头argmax与实际动作完全一致，并通过既定绝对+相对+实测浮点噪声容差。种植计数按每次成功动作前的真实类型累计；传送带没有用初始卡组翻译总槽计数。','',
+              '第0步按主控追加需求，将新记录统一为planted_types与planted_slots，并修same_type的类型比较；公用读取器对无法恢复的旧传送带槽计数返回未知。首份dw4i v2在该追加步骤前已完成，保留其原始记录/原二进制SHA，不伪装为新构建重跑；初版真实类型计数经共用读取器兼容，且新旧构建三场完整C++/Python对局的计数与结果完全一致。','',
+              f"HF `{upload['path']}`，固定revision `{upload['revision']}` 已回读SHA一致。完整本地结果 `{OUT/'results.json'}`，SHA256 `{sha(OUT/'results.json')}`；模型、原始对局、档案和大JSON不入git。见[KB核验结果](task27-results.json)、[训练冻结计划](task27-study-plan.json)、[留出诊断](task27-dead-decks.json)。",'',
+              '仅一个固定训练种子、使用第12epoch；不按最优seed/epoch挑选，不宣称总体非劣，不改默认/生产模型。q103和其他tmux队列未修改，主stage4清单只读。']
+    report=ROOT/'MEMORY/docs/unified-panel.md';text=report.read_text().split('\n## task27：面板v2与第二次合训dw5i')[0].rstrip()
+    report.write_text(text+'\n\n'+'\n'.join(lines)+'\n')
+    book=ROOT/'MEMORY/docs/task27-dw5i.md';text=book.read_text()
+    issue='- 三套全零留出老师诊断：'+ '；'.join(f"{n} {d['won']}/16，卡组{d['deck']}" for n,d in dead.items())+'。若老师全败，列为结构性弱卡组嫌疑，留出不自行替换，由主控决定。\n'
+    if issue not in text:text=text.replace('## 问题\n','## 问题\n\n'+issue);book.write_text(text)
+    verify(plan)
+    record('4最终核验完成：两参考v2及dw5i的v2/v1共12736局逐任务原始seed/胜局/类型计数与全部退出码通过；48局beta1留出诊断、冻结语料/原12epoch/256状态原生对拍/HF固定版本交付均齐，统一报告已更新，不改默认。',target,report)
+    write(OUT/'complete.json',dict(complete=True,results_sha256=sha(target),full_results_sha256=sha(OUT/'results.json')))
+
+
+if __name__=='__main__':main()

@@ -24,7 +24,7 @@
    老师 = identity 学生 + 搜索，参数照 `~/pvz-logs/queue101.sh` 里的 `run()`（但老师基线用 `--dagger-beta 1`：搜索实际执行；`--rollout-policy` 用
    `~/PvZ-search/artifacts/student/identity_dw3_s1/model.pt`，CPU，不开 CUDA）。
    Python `~/.venvs/ml/bin/python3`，资源目录 `~/.cache/pvz-research-resources`。
-4. DESIGN 在 §14.9 之后登记新任务族（§14.10）。
+4. DESIGN 在 §14.9 之后登记新任务族（§14.15）。
 
 ## 交付
 - `MEMORY/docs/pool-panel.md`：面板定义、特殊关、三套卡组 × 5 关的老师 / 学生表，写清哪套卡组老师赢得最多、学生离老师多远。
@@ -37,4 +37,31 @@
 
 ## 结果
 
+- 2026-10-22 第一步（清单）：`make_night_panel.py` 的通用逻辑抽到 `scripts/zone_panel.py`（按区生成：`Zone` + `Family`），`make_night_panel.py` 变薄包装且 `--combined` 输出与 task21 逐字节相同（cmp 通过）；新增 `scripts/make_pool_panel.py`，生成 `artifacts/stage4/pool_panel.json`（不进 git）：27 个任务（L21–24、26–30 × 3 套卡组，各 1024 种子 30000–31023）。L25（3-5）源码核对是 **Little Trouble**（`IsLittleTroubleLevel`，传送带 + 僵尸点数×4 + 半尺寸 1/4 血），默认排除；L30（3-10）是 mini-boss 传送带，收进来并标注。三套卡组均过 AGENTS §8 核对（水路有睡莲 16、香蒲 43 由 `profile_for_deck` 声明所有权、长度 9、无重复）。
+
+- 2026-10-22 第二步（学生）：identity 学生 64 局/关 × 5 关（L21–24、26）× 3 套卡组 = 960 局。对照 0/320、p9 18/320（5.6%）、p9k 19/320（5.9%）；平均到达波数 11.0–11.5（对照）对 13.1–16.6（p9/p9k）。报告 `MEMORY/docs/pool-panel.md` 已写面板定义、特殊关、卡组核对与学生表（老师表当时未跑完，第四步已补）。
+
+- 2026-10-22 第三步（登记）：DESIGN §14.15 登记三个任务族（`pool_l*_eval` / `_p9` / `_p9k`），写清地形、种子、特殊关（3-5 Little Trouble 不收、3-10 mini-boss 传送带收）、卡组核对与“老师用 identity 推演”。
+
+- 2026-10-22 第四步（老师）：identity 推演 + 搜索（`--dagger-beta 1`，`--workers 2`）16 局/关 × 5 关 × 3 套 = 240 局。对照 13/80（16.3%）、p9 23/80（28.8%）、p9k 25/80（31.3%）。**p9k 最多但 p9/p9k 在噪声内**（差 2 局，区间大幅重叠），两套 p9 系都明显好于对照；学生 5.6–5.9% 对老师 29–31%，差约 23–25pp。40 波的 L24 是师生共同天花板（老师 0/1/4，学生 0/0/2）。报告 `MEMORY/docs/pool-panel.md` 已完成（§4.2 老师表、§4.3 结论）。
+
+- 2026-10-22 第二步（主控追加，定 p9k）：`zone_panel.Family` 加 `exclude_levels`（训练族可按族排关）；`make_pool_panel.py --combined` 现在写 **35 个任务** = eval / eval_p9 / eval_p9k 各 9 关 + `pool_lN_train_p9k` 8 关（L21–24、26–29；L30 mini-boss 与 L25 不收），训练种子 `2000000+(N−21)·10000` 起每关 8192（2000000–2088191）。自查：训练段与评估段交集 0、任务内无重复、与 1500000/1600000/1800000–1878191/1900000–1998191 各段不重叠；夜间 `--combined` 回归仍逐字节相同。清单已拷到 `~/PvZ-search/artifacts/stage4/pool_panel.json`（cmp 相同）。DESIGN §14.15 已登记 p9k 决定与训练族，报告加 §7。
+
 ## 问题
+
+- **解锁列会误报香蒲 43**：`LawnApp::GetAwardSeedForLevel` 不含升级植物，所以对照/p9 的 43 在 L21–L30 一律显示“未解锁”。
+  这不是运行问题（所有权由 `pvz_tasks.profile_for_deck` 声明、`playthrough = 2` 时 `GetSeedsAvailable()` 返回 49），
+  但报告里必须解释，否则会被读成非法卡组。p9k 的 19 在 L21–L22 也显示“未解锁”，同理只是首轮奖励列表的边界。
+- **L25（3-5）没有卡组语义**：Little Trouble 是传送带 + 全僵尸点数 ×4 + 半尺寸 1/4 血，与 2-5 打地鼠同类，
+  本面板不收；要评估它需要另开“传送带 / 小游戏”任务族（与 task20 的 conveyor 线同源）。
+- **p9 与 p9k 的 2 局差不可判**：每关 16 局的老师样本，80 局总量下 23/80 与 25/80 的 95% 区间大幅重叠。
+  如果主控要在两者之间选，建议要么按“哪套更适合采集”定性选，要么把两套都在更多关卡/种子上再跑一轮；
+  本任务按任务书停在 16 局，不自行加量。
+
+## 第二步（主控 2026-10-22 09:40 追加）：定泳池卡组 p9k，准备采集
+老师 control 13/80、p9 23/80、p9k 25/80。泳池对老师也难，主因多半是老师的推演学生没见过泳池；夜间的经验是一轮采集 + 训练后学生就超过了
+当时量到的老师水平（老师随学生一起变强）。所以不再比卡组，**泳池卡组定为 p9k `[0,1,2,3,4,5,7,16,19]`**，直接开始采集。
+1. 生成器加训练任务族 `pool_lN_train_p9k`（普通泳池关，特殊关照你第一步的结论处理），字段同 `pool_lN_eval_p9k`，
+   训练种子 `2000000 + (N−21)·10000` 起每关 8192 个（生成时自查与所有已有段不重叠），DESIGN §14.15 登记。
+2. 重新生成泳池清单（含 eval / eval_p9 / eval_p9k / train_p9k），**另拷一份到 `~/PvZ-search/artifacts/stage4/pool_panel.json`**（主控的采集队列读这份）。
+3. 提交、`git push origin pool`，在“结果”记一行，然后停下。
