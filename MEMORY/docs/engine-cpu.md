@@ -210,6 +210,10 @@ grep -c fprofile-generate build/build.ninja
 
 ## 仍需完成
 
+### 公开坐标格式化候选（待整引擎验收）
+
+`scripts/prototypes/bench_public_coordinate.cpp` 对比公开编码使用的 stream/stod 与 `to_chars(general, 6)` / `from_chars`。固定种子生成任意有限 float 位型（引擎坐标和速度都是 float，提升到 double），再覆盖整数附近与左侧边界，共 **1,017,346** 个样本，double 结果（含负零）逐位相同。三轮交替 CPU 秒分别为 stream 0.5862/0.5763/0.5701、chars 0.1289/0.1413/0.1340；中位数单函数加速 **4.30×**。这尚未进入生产，不能外推整引擎收益；v2 Features 每次提取坐标/速度均走该函数，是下一项整条推演候选。
+
 ### 分块手写 SIMD 对照：拒绝替换 BLAS
 
 `scripts/bench_conv_kernels.py` / `.cpp` 是独立实验，不链接进游戏。读取固定清单 64 个真实 root（全部包含 v2 字段），从学生模型构造三层卷积各 64 个输入；第一层沿用稀疏通道选择，后两层为稠密。两条路径共享相同 im2col 与权重矩阵：显式 SSE 的 4 输出通道 × 4 单元分块累加，对照单线程 OpenBLAS SGEMM。`-O3 -ffp-contract=off`，交替先后顺序三轮，每个输入重复 30 次，按进程 CPU 时间测量。
