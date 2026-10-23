@@ -121,7 +121,8 @@ def main() -> None:
     p.add_argument('--v4', type=Path, default=ROOT / 'artifacts/task30/v4/model.pt')
     p.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     p.add_argument('--games', type=int, default=4)
-    p.add_argument('--seed-offset', type=int, default=0)
+    p.add_argument('--seed-offset', type=int, default=0,
+                   help='index into the task seed list (the eval panels hold 30000..31023, so 992 = 30992)')
     p.add_argument('--workers', type=int, default=4)
     p.add_argument('--limit', type=int, default=80, help='per worker decision cap')
     p.add_argument('--sample', type=int, default=200)
