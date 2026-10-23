@@ -150,13 +150,20 @@ def test_pipeline_wait_checks_process_identity_without_restarting():
 
 def test_confirmation_jobs_cannot_write_into_screen_namespace(tmp_path,monkeypatch):
     import critical_forks_data as data
-    candidates=[dict(index=i,v4=.1,means={m:float(i) for m in data.METRICS}) for i in (0,1)]
+    candidates=[dict(index=i,action={'type':'plant' if i else 'wait'},v4=.1,
+                     means={m:float(i) for m in data.METRICS}) for i in (0,1)]
     group=dict(job={'id':'root'},candidates=candidates,student_index=0)
     monkeypatch.setattr(data,'screen_summary',lambda *args:([group],{}))
     selection=data.confirmation_plan(dict(out=str(tmp_path),confirm_futures=16,
                   protocol={'confirmation':{'mean_gap':{m:.1 for m in data.METRICS}}}),[])
     assert selection['jobs'][0]['stage']=='confirm'
     assert selection['jobs'][0]['indices']==[0,1] and selection['labels']==32
+    candidates.append(dict(index=2,action={'type':'shovel'},v4=.1,
+                           means={m:2. for m in data.METRICS}))
+    selection=data.confirmation_plan(dict(out=str(tmp_path),confirm_futures=16,
+                  protocol={'confirmation':{'mean_gap':{m:.1 for m in data.METRICS}}}),[])
+    assert selection['jobs'][0]['indices']==[0,1]
+    assert selection['unrepresented_global_bests'][0]['candidate']==2
 
 
 def test_value_pairs_keep_metrics_futures_and_leaf_boundaries_separate():
@@ -170,3 +177,20 @@ def test_value_pairs_keep_metrics_futures_and_leaf_boundaries_separate():
     assert len(pairs)==4
     assert {p['metric']:p['winner_row'] for p in pairs}==dict(won=0,wave=1,tick=0,mowers_used=0)
     assert all({p['winner_row'],p['loser_row']}=={0,1} for p in pairs)
+
+
+def test_repro_checks_semantics_instead_of_gzip_timestamps(tmp_path):
+    from task53_repro import semantic_compare
+    fields=('identity','outcome','v4_short','short_leaf','post_action_frame','teacher_leaf',
+            'terminal_engine_sha256','checks')
+    a,b=tmp_path/'a.gz',tmp_path/'b.gz'
+    for path,mtime in ((a,1),(b,2)):
+        with gzip.GzipFile(filename=str(path),mode='wb',mtime=mtime) as stream:stream.write(b'{"decision":0}\n')
+    original={k:1 for k in fields};repeated=dict(original)
+    assert a.read_bytes()!=b.read_bytes()
+    assert semantic_compare(original,repeated,a,b)['full_teacher_trace_equal']
+    repeated['outcome']=0
+    with pytest.raises(ValueError,match='outcome'):semantic_compare(original,repeated,a,b)
+    repeated['outcome']=1
+    with gzip.open(b,'wb') as stream:stream.write(b'{"decision":1}\n')
+    with pytest.raises(ValueError,match='teacher_trace'):semantic_compare(original,repeated,a,b)

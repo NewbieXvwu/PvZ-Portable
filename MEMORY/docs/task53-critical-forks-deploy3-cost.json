@@ -1,0 +1,13 @@
+{
+ "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c3n18n10qm100_48",
+ "task_id": "night_l18_train_n10q",
+ "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+ "games": 48,
+ "cpu_seconds_sample_integral": 4644.38,
+ "projected_768_game_cpu_seconds": 74310.08,
+ "projected_15_percent_cpu_seconds": 11146.512,
+ "raw_metrics": "/home/newbiexvwu/pvz-logs/metrics/search_play-232706.jsonl",
+ "metrics_sha256": "ec84fd31c20e29179eef24661bba46fae00d6df9d9a947ffd84da23367ec01ad",
+ "config_sha256": "aba251d1c597dd2112d1fedab25cb4f84458cf661ef249b83ed3010233a31cc8",
+ "scope": "current deploy3 night group only; projection is not a measured mixed-terrain round; retain separately from frozen complete deploy2 round"
+}

@@ -98,10 +98,14 @@ def screen_summary(plan,jobs):
 
 
 def confirmation_plan(plan,jobs):
-    groups,_=screen_summary(plan,jobs);selected=[]
+    groups,_=screen_summary(plan,jobs);selected=[];unrepresented=[]
     for g in groups:
         candidates=g['candidates']
-        best=max(candidates,key=lambda c:(c['means']['won'],c['means']['wave'],c['means']['tick'],-c['means']['mowers_used'],-c['index']))
+        rank=lambda c:(c['means']['won'],c['means']['wave'],c['means']['tick'],-c['means']['mowers_used'],-c['index'])
+        global_best=max(candidates,key=rank)
+        if global_best['action']['type'] not in ('plant','wait'):
+            unrepresented.append(dict(root=g['job']['id'],candidate=global_best['index'],action=global_best['action']))
+        best=max([c for c in candidates if c['action']['type'] in ('plant','wait')],key=rank)
         if best['index']==g['student_index']:
             continue
         student=next(c for c in candidates if c['index']==g['student_index'])
@@ -112,7 +116,8 @@ def confirmation_plan(plan,jobs):
         selected.append(dict(g['job'],stage='confirm',indices=sorted({best['index'],g['student_index']}),
                              samples=plan['confirm_futures']))
     value=dict(jobs=selected,labels=sum(len(j['indices'])*j['samples'] for j in selected),
-               selection='one lexicographic terminal win/wave/tick/mower challenger per root; screen data only',
+               selection='one lexicographic terminal win/wave/tick/mower challenger among student-representable plant/wait actions per root; screen data only',
+               unrepresented_global_bests=unrepresented,
                future_independence='confirm namespace disjoint from screen; common world/search seeds within each root')
     f.save(Path(plan['out'])/'confirmation.json',value)
     return value
@@ -148,7 +153,8 @@ def confirm_summary(plan):
         related=[t for t in tests if t['root']==g['job']['id']]
         good=[t for t in related if t['p_holm']<=cfg['alpha'] and t['mean_gain']>=cfg['mean_gap'][t['metric']]]
         # Keep terminal dimensions separate; do not trade a material regression for a scalar reward.
-        if good and all(t['mean_gain']>=-cfg['mean_gap'][t['metric']] for t in related):
+        if (good and next(t['mean_gain'] for t in related if t['metric']=='won')>=0
+                and all(t['mean_gain']>=-cfg['mean_gap'][t['metric']] for t in related)):
             evidence=min(good,key=lambda t:t['p_holm'])
             c=next(c for c in g['candidates'] if c['index']!=g['student_index'])
             corrections.append(dict(root=g['job']['id'],job=g['job'],action=c['action'],plant_type=c['plant_type'],
