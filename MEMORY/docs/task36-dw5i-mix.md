@@ -96,6 +96,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，31 订正第 30 条的余量估计：B 真正开始训练时（RSS 10.9 GB，映射页为主）抽取的**匿名内存约 2.5 GiB**，加上外部负载同时上涨，`MemAvailable` 在 elapsed 120 s 最低到 **9,588,464 KiB（9.14 GiB）**，低于 10 GiB 地板约 0.86 GiB；训练器按 `<10 GiB` 自暂停 173 个采样（约 3 分钟）后恢复，03:34 起稳定在 10.3–10.8 GiB、paused=false，训练继续。结论：12.5 GiB 门禁能启动但不保证启动后仍 ≥10 GiB，**下次（若需重启）应等到 ≥13.5 GiB**。本次不中断 B：暂停态虽占约 2.3 GiB 匿名内存，但已能自行恢复；若再次出现持续下行（<9.5 GiB 且 paused 超过 10 分钟）则停掉重排。
 
+- 2026-10-24，32 停掉 B 并把门禁提到 13.5 GiB：B 跑到 **epoch 7/12** 时，外部负载（zones task50、roof、cq search_play、qcbench/qcpipe、CodeBuddy 会话等十余个进程）把它反复压低——整段运行 71.7 min 中有 **33.5 min** `MemAvailable` <10 GiB，最低 **8,014,824 KiB（7.64 GiB）**；暂停态仍持 ~2.3 GiB 匿名内存，继续等会长期占用课程采集要的内存。按第 31 条约定停掉流水线 221689 与训练器 222044（T 态，先 SIGCONT 再 SIGTERM），空闲回到 **11.24 GiB**。训练器只在结束时写 `model.pt`，所以 7 个 epoch 作废、B 必须重跑（`dw5i_B_s1/` 只有 `source_rows.json`，无半成品模型）。启动器重写并重新 armed（pid 237594）：空闲连续 4 次 **≥13.5 GiB**（实测 B 抽取约 2.5 GiB，12.5 GiB 门禁下首发仍跌到 9.14 GiB）、C: ≥15 GiB、且没有 B 流水线在跑，才启动 `run_task36_mix.py --plan B --workers 2`。
+
 
 
 ## 问题
