@@ -143,6 +143,36 @@ class EngineBenchGateTest(unittest.TestCase):
             row['network_seconds'] = 0
         self.assertEqual(bench.summarize_games(rows, 2)['mean_network_seconds'], 0)
 
+    def test_games_pairs_the_two_binaries_and_reports_cpu_per_game(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            args = argparse.Namespace(out=root, manifest=root / "manifest.json", task=["day"],
+                                      seed_offset=0, games=2, workers=2,
+                                      executable=root / "new", compare=root / "old")
+            rows = [dict(seed=i, won=True, seconds=9, decisions=10) for i in range(2)]
+            spent = [{"cpu_seconds": 20.0, "wall_seconds": 40.0}, {"cpu_seconds": 40.0, "wall_seconds": 80.0}]
+            with patch.object(bench, "run_games", side_effect=[(rows, spent[0]), (rows, spent[1])]) as run:
+                report = bench.games(args)
+            self.assertEqual([call.args[1] for call in run.call_args_list], ["day", "day"])
+            self.assertEqual(report["tasks"][0]["cpu_ratio_old_over_new"], 2.0)
+            self.assertEqual(report["tasks"][0]["new"]["cpu_seconds_per_game"], 10.0)
+            self.assertEqual(report["tasks"][0]["differing_seeds"], [])
+            self.assertTrue((root / "engine_games.json").exists())
+
+    def test_games_flags_seeds_whose_outcome_differs(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            args = argparse.Namespace(out=root, manifest=root / "manifest.json", task=["day"],
+                                      seed_offset=0, games=2, workers=2,
+                                      executable=root / "new", compare=root / "old")
+            new_rows = [dict(seed=1, won=True, seconds=9, decisions=10),
+                        dict(seed=2, won=False, seconds=9, decisions=10)]
+            old_rows = [dict(new_rows[0]), dict(new_rows[1], won=True)]
+            spent = {"cpu_seconds": 10.0, "wall_seconds": 10.0}
+            with patch.object(bench, "run_games", side_effect=[(new_rows, spent), (old_rows, spent)]):
+                report = bench.games(args)
+            self.assertEqual(report["tasks"][0]["differing_seeds"], [2])
+
 
 if __name__ == "__main__":
     unittest.main()
