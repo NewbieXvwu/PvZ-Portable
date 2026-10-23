@@ -65,7 +65,6 @@ def check_cpp(args) -> None:
             memo = {}
             if args.cpp_mode == "search":
                 stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
-                search_play._W["cpp_rollouts"] = args.cpp_rollouts
                 profile = cProfile.Profile() if args.profile else None
                 if profile: profile.enable()
                 started = time.perf_counter()
@@ -93,13 +92,13 @@ def check_cpp(args) -> None:
                     root = env.snapshot()
                     times = {}
                     for cpp in (False, True):
-                        search_play._W["cpp_rollouts"] = cpp
                         search_play._W["rollout_metrics"] = {}
                         started = time.perf_counter()
                         for repeat in range(args.repeats):
                             env.restore(root)
                             env.reseed(seed * 1000 + repeat)
-                            search_play._rollout_policy(env, obs, action, obs["tick"] + 3000)
+                            (search_play._rollout_policy if cpp else search_play._python_rollout_reference)(
+                                env, obs, action, obs["tick"] + 3000)
                         times["cpp" if cpp else "python"] = time.perf_counter() - started
                         if cpp: print(json.dumps(search_play._W["rollout_metrics"]), flush=True)
                     env.restore(root)
@@ -119,7 +118,7 @@ def check_cpp(args) -> None:
                     profile.dump_stats(str(args.profile))
                     pstats.Stats(profile).strip_dirs().sort_stats("cumulative").print_stats(35)
                 print(json.dumps({"environment_profile": env._command("ENV_PROFILE")}), flush=True)
-                print(json.dumps({"seed": seed, "cpp": args.cpp_rollouts, "seconds": seconds, "won": obs["result"] == 1,
+                print(json.dumps({"seed": seed, "seconds": seconds, "won": obs["result"] == 1,
                                   "decisions": decision, "searched": stats["searched"], "overrides": stats["overrides"],
                                   "rollout_metrics": search_play._W.get("rollout_metrics")}), flush=True)
         if args.cpp_mode == "frames":
@@ -215,7 +214,6 @@ def main() -> None:
     p.add_argument("--executable", default=str(ROOT / "build" / "pvz-portable"))
     p.add_argument("--resource-dir", default="/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")
     p.add_argument("--cpp-mode", choices=("frames", "throughput", "search"))
-    p.add_argument("--cpp-rollouts", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--value", default="/Users/newbiexvwu/PvZAgent/artifacts/value_net/v2/model.pt")
     p.add_argument("--mask", type=int, default=21)
     p.add_argument("--repeats", type=int, default=100)
@@ -226,7 +224,6 @@ def main() -> None:
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True)
     p.add_argument("--samples", type=int, default=4)
     p.add_argument("--horizon", type=int, default=3000)
-    p.set_defaults(margin=.02)
     args = p.parse_args()
     torch.set_num_threads(1)
     if args.cpp_mode:

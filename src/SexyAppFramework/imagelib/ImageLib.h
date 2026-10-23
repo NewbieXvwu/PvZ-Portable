@@ -53,6 +53,9 @@ bool WritePNGImage(const std::string& theFileName, Image* theImage);
 bool WriteTGAImage(const std::string& theFileName, Image* theImage);
 extern int gAlphaComposeColor;
 extern bool gAutoLoadAlpha;
+// Headless: read each image's dimensions and skip the pixels. Nothing draws in -env mode, but the board
+// code does read a few image widths, so the images still have to exist with the right size (task32).
+extern bool gSizeOnly;
 extern bool gIgnoreJPEG2000Alpha;  // I've noticed alpha in jpeg2000's that shouldn't have alpha so this defaults to true
 
 Image* GetImage(const std::string& theFileName, bool lookForAlphaImage = true);

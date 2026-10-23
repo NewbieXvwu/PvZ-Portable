@@ -22,6 +22,7 @@ class StressPreflightTest(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertTrue(json.loads(result.stdout)["refused"])
 
+    @unittest.skipUnless(Path('/proc/meminfo').exists(), 'needs Linux /proc')
     def test_finds_a_process_by_cmdline(self):
         fake = subprocess.Popen(["bash", "-c", "exec -a train_rollout_policy.py sleep 30"])
         try:
@@ -46,6 +47,7 @@ class StressPreflightTest(unittest.TestCase):
                                                stress.COLLECTION))
         self.assertFalse(stress.command_matches("/usr/bin/earlyoom --prefer python3", stress.TRAINING))
 
+    @unittest.skipUnless(Path('/proc/meminfo').exists(), 'needs Linux /proc')
     def test_meminfo_and_timing(self):
         total, available = stress.meminfo()
         self.assertGreater(total, 0)

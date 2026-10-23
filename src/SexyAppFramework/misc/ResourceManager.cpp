@@ -694,7 +694,7 @@ bool ResourceManager::DoLoadImage(ImageRes *theRes)
 	if (aGLImage == nullptr)
 		return Fail(std::format("Failed to load image: {}", theRes->mPath));
 
-	if (isNew)
+	if (isNew && !ImageLib::gSizeOnly)      // headless: there are no pixels to compose into
 	{
 		if (!theRes->mAlphaImage.empty())
 		{

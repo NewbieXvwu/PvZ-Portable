@@ -120,11 +120,11 @@ def play(plan,model,task,seeds,dest,*,teacher=False,beta=0,frames=None,label=Non
         '--arms','fast_search' if teacher else 'fast','--out',str(dest),'--max-actions',str(max_actions)]
     if teacher:
         command += ['--static-value',plan['models']['static'],'--samples','3','--halving',
-            '--verify-samples','9','--student-candidates','2','--candidate-generator','static',
+            '--verify-samples','9','--student-candidates','2',
             '--per-card','1','--horizon','2500','--margin','.02','--min-gap','300',
             '--rollout-sim-skip','61','--dagger-beta',str(beta)]
     if frames:
-        command += ['--frames',str(frames),'--frames-label',label,'--frames-format','npz']
+        command += ['--frames',str(frames),'--frames-label',label,]
     tag='t20_'+dest.name
     result=run(command,tag)
     rows=[json.loads(v) for v in (dest/'games.jsonl').read_text().splitlines()]

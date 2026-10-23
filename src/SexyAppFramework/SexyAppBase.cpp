@@ -3377,6 +3377,7 @@ static inline int64_t DemoWallSeconds(const tm& theTM)
 void SexyAppBase::Init()
 {
 	mPrimaryThreadId = std::this_thread::get_id();
+	ImageLib::gSizeOnly = mHeadlessMode;   // -env never draws; the image sizes are all the logic reads
 
 	if (mShutdown)
 		return;
@@ -3589,6 +3590,13 @@ Sexy::GLImage* SexyAppBase::GetImage(const std::string& theFileName, bool commit
 		return nullptr;
 
 	GLImage* anImage = new GLImage(mGLInterface.get());
+	if (aLoadedImage->mBits == nullptr)     // headless: sizes only, so there is nothing to copy or upload
+	{
+		anImage->mWidth = aLoadedImage->mWidth;
+		anImage->mHeight = aLoadedImage->mHeight;
+		anImage->mFilePath = theFileName;
+		return anImage;
+	}
 	anImage->SetBits(aLoadedImage->GetBits(), aLoadedImage->GetWidth(), aLoadedImage->GetHeight(), commitBits);
 	anImage->mFilePath = theFileName;
 #ifdef LOW_MEMORY
