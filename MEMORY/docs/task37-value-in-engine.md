@@ -29,6 +29,7 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。持续压榨：做完上面几项后，用 profile 找 Python 侧剩下的最大项继续，连续 3 项收益 < 2% 才停。
 
 ## 结果
+- 2026-10-23（Codex复核接回）：逐提交复核cf55d1d3..c375a489，唯一生产代码变更为4fd750d5的植物/僵尸逐项float32舍入，符合当前NumPy语义；独立核对Board门禁JSON与当前引擎/corpus/模型SHA256一致，v3/v4各四场景256帧全过。确认旧交接PID均已消失，v4当前完整37/96、输入SHA全部未变；保留37份全长trace/result，作废night/pool index12的中断输出，从原串行脚本续跑before→after→shadow→compare（最多2游戏）。v4叶值/状态、Board、快照与门禁等11项复核测试通过；正式CPU/老师验收尚未完成。
 - 2026-10-23（GLM 18:25 移交）：v4整臂门禁链 before→after→shadow→compare 运行中，改前34/96（截至18:19 day/night基本全胜、pool约半数），预计改前~21:20完成；期间修复board-replay门禁1 ULP特征舍入差异（numpy逐项f32舍入vs double累加），修复后1024帧×v3/v4全过（特征0.0、logit≤3.82e-6，提交4fd750d5）。全部代码改动已提交推送（HEAD=a6572fac），工作区干净。
 - 移交注意：后台链不要杀——入口 bash artifacts/task37/run_teacher32_v4.sh（PID 75751）→ check_value_teacher.py --phase before（PID 75754）→ 2个 profile_value_engine.py 驱动（PID 84548、84553）+ 2个 baseline-engine（PID 84968、84970，短暂存续随局更换）；日志 artifacts/task37/teacher32-v4.log，输出 artifacts/task37/teacher32-v4/。改前完成后自动接 after（build/pvz-portable 已含ULP修复）→ shadow → compare，比较门禁自动落 comparison.json（三硬门：一致率≥噪声底线、胜负配对二项、CPU≤基线×1.02）。
 - 下一步（Codex 接手）：compare 完成后核验 teacher32-v4/comparison.json 三任务全 passed，把结果写进 MEMORY/docs/value-in-engine.md 与本任务书；若 shadow 阶段触发（同root分歧局）确认其 roots 与改前逐点配对；v3 的 teacher32-recovery 改前96局保留为过渡证据，不再投入。
@@ -49,7 +50,7 @@
 - 已解决：最初缺少task33报告/工具；恢复时已读origin/pvz-env的hotpath-audit全文，并在b306875a补入原版hotpath_profile，正式三任务同工具对照正在执行。
 - 已解决：最初缺少task30的v4编码，已从14713bd4移入必要依赖，不另造编码。
 - 源码确认：EnvironmentPlant / EnvironmentShovel 本身推进 0 tick，STATIC_SCORES 不额外等待。旧编码须保留 SEED_NONE=-1 写入 scalar[4]/[58] 的历史行为；新编码跳过空槽并按植物身份聚合重复卡。
-- 覆盖审计补项：全量真实帧前向门禁须与直接Board编码区分；1024个固定档案采样点的端到端Board重放校验已准备，尚未运行，不记为通过。
+- 已解决：1024个固定档案采样点的端到端Board重放在4fd750d5修复逐项float32舍入后通过（v3/v4各1024帧，特征逐位相同、logit最大3.82e-6），Codex接回复核了当前二进制/模型/corpus哈希。
 
 ## 主控追加（2026-10-23 09:50）：总 CPU 硬门槛
 - task33 的 cb-audit（audit 分支 `scripts/hotpath_branch.py`、`hotpath-audit.md` §17 第 10 项）实测：torch 批 18 的价值网前向 93–107 µs/分支，单线程朴素 C++ 卷积比 torch（MKL 多线程）慢 3–6 倍；你自己也测到引擎 100.58→174.57 s。

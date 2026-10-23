@@ -5,7 +5,7 @@
 
 静态候选语义：从 root 恢复、执行动作、立即打分；种植和铲除推进 0 tick。静态收入使用根观测的 sun_income_rate，而非分支累计收入。叶子收入使用完整推演的 6000 tick 窗口（保留决策边界和终点裁剪）。
 
-已通过：四场景各256帧的Python特征→C++前向、v3/branch1/v4 logits <1e-5；1028帧基线/新引擎动作重放；128个早期局面的Board编码；真实v3/v4叶值与完整状态。待验收：固定1024帧的直接Board编码/前向端到端重放；三任务各32局beta=1配对及各自噪声底线、总CPU≤基线102%、同工具耗时/RSS；连续三项收益<2%后停止。
+当前契约按主控追加D：叶子价值使用v4/编码2，静态branch1保持既有实现。已通过：v3/v4各1024个固定档案局面的直接Board编码逐位一致、logit <1e-5；三模型Python特征→C++前向；1028帧基线/新引擎动作重放；真实v3/v4叶值与完整状态。待验收：v4三任务各32局beta=1配对及各自噪声底线、总CPU≤同权重基线102%、同工具耗时/RSS；正式数据复核三项收益<2%的停止条件。
 
 已实现独立 `EnvironmentValueNet`，未改 `EnvironmentRollout.cpp`，无共用数学工具需要协调。PVZVN001 头为 magic[8] + little-endian uint32 width / encoder_version / context_dim，参数按 ValueNet.state_dict 顺序 float32。上下文维度仅接受 0/35，拒绝坏头、截断、非有限数及尾随数据。
 
@@ -84,6 +84,19 @@ Python剩余开销原型（`scripts/bench_value_python.py`）：按现有pressur
 
 后两项假定缓存命中零成本，是样本耗时外推的乐观上限，不是整局A/B加速。原cProfile里整个ranked_plants也仅2.068s CPU（约0.95%总CPU），进一步支撑“不值得引入状态缓存”的判断。没有为小于2%的收益改动生产实现。等正式同工具数据回来，再核对三项停止条件。
 
-正式验收正在运行：忽略目录 `artifacts/task37/teacher32-recovery`，before阶段2个worker，按种子交错跑三任务，共96局。对应日志 `artifacts/task37/teacher32-recovery-before.log`。脚本完整参数以before-plan.json与任务工具为准；完成后同样参数跑 `--phase after`、`--phase shadow`（无轨迹分歧自动跳过影子游戏）、`--phase compare`。不要与其他引擎测试并行。所有结论仍以最终完整comparison.json为准。
+追加D之前的过渡验收：忽略目录 `artifacts/task37/teacher32-recovery`，before阶段2个worker，按种子交错跑三任务，共96局，现已完成。对应日志 `artifacts/task37/teacher32-recovery-before.log`。追加D后切换v4新目录，旧v3不继续after。正式阶段仍需 `--phase after`、`--phase shadow`（无轨迹分歧自动跳过影子游戏）、`--phase compare`。不要与其他引擎测试并行。所有结论以最终v4完整comparison.json为准。
 
-覆盖审计补项：已有真实帧前向工具把Python编码的特征文件交给C++，因此只证明网络前向；不能把早期128局面的Board oracle推及整局。新增 `scripts/check_value_board_replay.py`，读取同一份固定frame-oracle-sparse.json（四场景各8档案、每档32帧），只按档案元数据/初始手牌与动作重放，不使用现行deck规则。每个采样点先要求重放后的Python输入与档案输入逐位相同，再要求C++直接Board输出特征逐位相同、与Python批32参考的logit误差<1e-5。两种编码各1024帧；未完成时不写成功结果。3项档案语义测试通过（升级所有权、传送带空卡组、显式旧任务字段）；真实运行安排在before阶段全部退出之后，使用1个游戏进程，通过后接after/shadow/compare。当前尚未执行此补项。
+覆盖审计补项：已有真实帧前向工具把Python编码的特征文件交给C++，因此只证明网络前向；不能把早期128局面的Board oracle推及整局。新增 `scripts/check_value_board_replay.py`，读取同一份固定frame-oracle-sparse.json（四场景各8档案、每档32帧），只按档案元数据/初始手牌与动作重放，不使用现行deck规则。每个采样点先要求重放后的Python输入与档案输入逐位相同，再要求C++直接Board输出特征逐位相同、与Python批32参考的logit误差<1e-5。两种编码各1024帧；未完成时不写成功结果。3项档案语义测试通过（升级所有权、传送带空卡组、显式旧任务字段）；真实运行安排在before阶段全部退出之后，使用1个游戏进程。该补项的完成结果见下方CodeBuddy修复与接回复核记录。
+
+CodeBuddy接手结果与Codex复核（2026-10-23）：4fd750d5修正了直接Board编码的一处语义偏差：当前NumPy对 `float32_cell += Python_scalar` 先把每项转成float32、再以float32相加；原C++将cell与double项相加后才舍入。同格多只僵尸时可相差1 ULP。植物健康比例与僵尸血量两处均显式先转float32，未改仿真或学生网络。补充门禁随后完成，接回时重新核验完整JSON、当前引擎/corpus/模型SHA256全部吻合：
+
+| 直接Board→特征→前向 | 白天256帧 | 夜间256帧 | 泳池256帧 | 原版传送带256帧 |
+|---|---:|---:|---:|---:|
+| v3编码1，max logit误差 | 1.43e-6 | 9.57e-7 | 9.57e-7 | 2.87e-6 |
+| v4编码2，max logit误差 | 1.91e-6 | 1.43e-6 | 1.91e-6 | 3.82e-6 |
+
+全部2048个模型/局面组合的Board特征与档案Python输入逐位相同（最大误差0）。v4、学生与静态网的实际文件由门禁plan锁定；v4 SHA256为 `14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d`。
+
+按追加D，正式证据改用 `artifacts/task37/teacher32-v4`；旧v3的before 96局仅保留为过渡证据，不继续运行v3 after。v4改前源码是c790588d加唯一必要的版本化输入改动：`_values`导入 `encode_frame`，并将 `featurize(f)` 替换为 `encode_frame(f, net.encoder_version)`。v1仍委托冻结featurize，v4走既有编码2；不改搜索参数或候选数。该基线源码SHA256为 `9b53eee56fc24db197d14e472e6e41d3c1484a0bdce328b590bf0be5157b7258`，引擎仍为原c790588d二进制。静态branch1继续用编码1，两端权重完全相同。
+
+Codex接回时旧交接runner/worker/游戏PID均已消失；v4完整结果实为37/96（不是交接文字中的34），37份trace长度均与decisions一致，全部冻结输入哈希未变。night/pool index12无result的中断产物已标为不可用，续跑时完整重打。已从原 `run_teacher32_v4.sh` 接续before→after→shadow→compare、两worker；结果日志追加保存，不重新执行完整37局。接回验证11项全过，包含真实v4叶值/完整状态与快照/Board/验收器测试。最终仍以v4完整comparison.json为准，尚未通过整臂验收。
