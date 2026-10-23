@@ -28,11 +28,12 @@ import os
 from pathlib import Path
 import sys
 import time
+import zipfile
 
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
-from pvz_frame_store import encoder_signature, write_frames_from_source  # noqa: E402
+from pvz_frame_store import encoder_signature, save_arrays, write_frames_from_source  # noqa: E402
 
 
 def parse_frames(source: bytes) -> list[dict]:
@@ -131,6 +132,121 @@ def convert_one(job: tuple[str, float, bool, bool]) -> dict:
     return result
 
 
+def archive_arrays(path: Path) -> dict:
+    with np.load(path, allow_pickle=False) as stored:
+        return {name: stored[name] for name in stored.files}
+
+
+def arrays_equal(before: dict, after: dict) -> str | None:
+    if set(before) != set(after):
+        return "keys-differ"
+    for name, array in before.items():
+        other = after[name]
+        if array.dtype != other.dtype or array.shape != other.shape:
+            return f"{name}-dtype-shape"
+        if not np.array_equal(array, other, equal_nan=array.dtype.kind == "f"):
+            return f"{name}-values"
+    return None
+
+
+def recompress_one(job: tuple[str, float, bool]) -> dict:
+    """Rewrite a deflated npz as LZMA, byte-identical in every array."""
+    path_text, min_age, dry_run = job
+    path = Path(path_text)
+    result = {"path": path_text, "status": "skipped", "before": 0, "after": 0, "reason": ""}
+    try:
+        stat = path.stat()
+    except FileNotFoundError:
+        result["reason"] = "missing"
+        return result
+    result["before"] = stat.st_size
+    if time.time() - stat.st_mtime < min_age:
+        result["reason"] = "recent"
+        return result
+    try:
+        with zipfile.ZipFile(path) as archive:
+            methods = {info.compress_type for info in archive.infolist()}
+    except zipfile.BadZipFile:
+        result["reason"] = "not-a-zip"
+        return result
+    if zipfile.ZIP_LZMA in methods and zipfile.ZIP_DEFLATED not in methods:
+        result["status"] = "already"
+        return result
+    if zipfile.ZIP_STORED in methods:
+        # Training packs are ZIP_STORED so np.load(mmap_mode="r") can map them; leave them alone.
+        result["reason"] = "stored (pack)"
+        return result
+    if dry_run:
+        result["status"] = "would-recompress"
+        return result
+    try:
+        before = archive_arrays(path)
+    except Exception as error:  # noqa: BLE001
+        result.update(status="failed", reason=f"unreadable: {error}")
+        return result
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp.npz")
+    try:
+        save_arrays(temporary, **before)
+        problem = arrays_equal(before, archive_arrays(temporary))
+        if problem is not None:
+            result.update(status="failed", reason=problem)
+            return result
+        os.replace(temporary, path)
+    except Exception as error:  # noqa: BLE001
+        result.update(status="failed", reason=f"write: {error}")
+        return result
+    finally:
+        temporary.unlink(missing_ok=True)
+    result.update(status="recompressed", after=path.stat().st_size)
+    return result
+
+
+def recompress_main(args) -> int:
+    started = time.time()
+    files = []
+    for root in args.data:
+        files.extend(sorted(root.rglob("*.npz")))
+    files = sorted(set(files))
+    total = sum(path.stat().st_size for path in files)
+    print(f"{len(files)} npz files, {total / 2 ** 30:.2f} GiB", flush=True)
+    jobs = [(str(path), args.min_age_minutes * 60, args.dry_run) for path in files]
+    results = []
+    with ProcessPoolExecutor(max_workers=args.jobs) as pool:
+        for index, result in enumerate(pool.map(recompress_one, jobs, chunksize=8), 1):
+            results.append(result)
+            if index % 500 == 0 or index == len(jobs):
+                done = [r for r in results if r["status"] == "recompressed"]
+                print(f"{index}/{len(jobs)}  recompressed {len(done)}  "
+                      f"{sum(r['before'] for r in done) / 2 ** 20:.0f} -> "
+                      f"{sum(r['after'] for r in done) / 2 ** 20:.0f} MiB", flush=True)
+    by_status: dict[str, int] = {}
+    for result in results:
+        by_status[result["status"]] = by_status.get(result["status"], 0) + 1
+    done = [r for r in results if r["status"] == "recompressed"]
+    before = sum(r["before"] for r in done)
+    after = sum(r["after"] for r in done)
+    summary = {
+        "mode": "recompress",
+        "files": len(results),
+        "by_status": by_status,
+        "before_bytes": before,
+        "after_bytes": after,
+        "ratio": (after / before) if before else None,
+        "freed_bytes": before - after,
+        "dry_run": bool(args.dry_run),
+        "seconds": round(time.time() - started, 1),
+        "failures": [{"path": r["path"], "reason": r["reason"]} for r in results if r["status"] == "failed"],
+    }
+    print(json.dumps({key: summary[key] for key in
+                      ("files", "by_status", "before_bytes", "after_bytes", "ratio", "freed_bytes", "seconds")},
+                     ensure_ascii=False, indent=2), flush=True)
+    if args.report is not None:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+        print(f"report {args.report}", flush=True)
+    return 1 if summary["failures"] else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--data", type=Path, action="append", required=True,
@@ -140,10 +256,15 @@ def main() -> int:
                         help="skip archives modified more recently than this (live collectors)")
     parser.add_argument("--delete", action="store_true", help="delete the JSONL after it verifies")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--recompress", action="store_true",
+                        help="rewrite deflated npz archives as LZMA (every array verified equal); packs stay ZIP_STORED")
     parser.add_argument("--report", type=Path, default=None)
     parser.add_argument("--manifest", type=Path, default=None,
                         help="where to write the converted/deleted list (gzip text)")
     args = parser.parse_args()
+
+    if args.recompress:
+        return recompress_main(args)
 
     started = time.time()
     sources = []
