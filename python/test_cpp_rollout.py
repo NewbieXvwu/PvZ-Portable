@@ -24,6 +24,16 @@ RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/
 BINARY = Path(os.environ.get("PVZ_EXECUTABLE", ROOT / "build/pvz-portable"))
 
 
+def _full_rollout(env, obs, first, until, root, seed):
+    """Physical-state oracle uses full observations; search now returns scored leaves."""
+    if search_play._W.get("cpp_rollouts"):
+        return env.rollout(first, until, sim_skip=search_play._W.get("rollout_sim_skip", 0),
+                           snapshot_id=root, seed=seed, student_history=search_play._W.get("student_history"))
+    from unittest.mock import patch
+    with patch.object(env, "leaf_values", return_value=[0.0]):
+        return search_play._rollout_policy(env, obs, first, until, root, seed)
+
+
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / "main.pak").is_file(), "requires simulator and game resources")
 
 def _build_up(obs: dict) -> dict:
@@ -136,7 +146,7 @@ class CppRolloutTest(unittest.TestCase):
                     bits += expected.numel()
                 compared += 1
             if until:
-                expected = search_play._rollout_policy(self.env, self.obs, first, until, root, seed)
+                expected = _full_rollout(self.env, self.obs, first, until, root, seed)
                 self.assertEqual(_frame(actual), _frame(expected))
         self.assertGreater(compared, 50)
         print(json.dumps({"obs": version, "trajectory_decisions": compared, "equal_float32": bits}), flush=True)
@@ -149,11 +159,11 @@ class CppRolloutTest(unittest.TestCase):
         search_play._W.update(fast=self.net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=21)
         self.addCleanup(search_play._W.clear)
         first = {"type": "wait", "ticks": 60, "until": "timeout"}
-        expected = search_play._rollout_policy(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
+        expected = _full_rollout(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
         expected_frame = _frame(expected)
         expected_history = self.env._sun_production_history.copy()
         search_play._W["cpp_rollouts"] = True
-        actual = search_play._rollout_policy(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
+        actual = _full_rollout(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
         self.assertEqual(_frame(actual), expected_frame)
         self.assertEqual(self.env._sun_production_history, expected_history)
         restored = self.env.restore(root)
@@ -184,9 +194,9 @@ class CppRolloutTest(unittest.TestCase):
         search_play._W.update(fast=self.net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=0)
         self.addCleanup(search_play._W.clear)
         until = self.obs["tick"] + 1200
-        expected = search_play._rollout_policy(self.env, self.obs, first, until, root, 4242)
+        expected = _full_rollout(self.env, self.obs, first, until, root, 4242)
         search_play._W["cpp_rollouts"] = True
-        actual = search_play._rollout_policy(self.env, self.obs, first, until, root, 4242)
+        actual = _full_rollout(self.env, self.obs, first, until, root, 4242)
         self.assertEqual(_frame(actual), _frame(expected))
 
 

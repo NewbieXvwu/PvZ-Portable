@@ -22,8 +22,7 @@ class GeneratorTest(unittest.TestCase):
         stats = {'searched': 0, 'overrides': 0, 'override_kinds': Counter()}
         with patch.dict(t._W, {'fast': object(), 'student_frame': {'tick': 60}}, clear=True), \
              patch.dict(sys.modules, {'pvz_rollout_policy': SimpleNamespace(ranked_plants=Mock(return_value=ranked))}), \
-             patch.object(t, '_static_frames', side_effect=AssertionError('static branches forbidden')), \
-             patch.object(t, '_values', side_effect=AssertionError('static scoring forbidden')), \
+             patch.object(t, '_static_scores', side_effect=AssertionError('static branches forbidden')), \
              patch.object(t, '_halving_choice', side_effect=lambda *a: a[3]) as halve:
             candidates = t._search(env, {'tick':60, 'legal_actions': {'plants':plants}}, policy, args, 17, stats)
             self.assertEqual(halve.call_count, 1)

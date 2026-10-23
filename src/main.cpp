@@ -551,8 +551,9 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << '}' << std::endl << std::setprecision(6);
 			continue;
 		}
-		else if (command == "ROLLOUT")
+		else if (command == "ROLLOUT" || command == "ROLLOUT_VALUE")
 		{
+			const bool scoreValue = command == "ROLLOUT_VALUE";
 			int untilTick = 0, mask = 0, maxActions = 0, eventWait = 0, historyStart = 0, historyCount = 0;
 			int rootId = 0;
 			int64_t seed = -1;
@@ -561,7 +562,7 @@ static void RunEnvironment(LawnApp* app)
 			std::ofstream trace;
 			std::deque<std::pair<int, uint32_t>> history;
 			ok = static_cast<bool>(input >> rootId >> seed >> untilTick >> mask >> maxActions >> eventWait >> first >> historyStart >> historyCount) &&
-				rollout.Loaded() && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
+				rollout.Loaded() && (!scoreValue || valueNets[0].Loaded()) && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
 				maxActions > 0 && maxActions <= 1000000 && (eventWait == 0 || eventWait == 1) && historyCount >= 0 && historyCount <= 100000 &&
 				rootId >= 0 && (rootId == 0 || snapshots.contains(rootId)) && seed >= -1 && seed <= UINT32_MAX;
 			if (ok && rootId) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
@@ -686,6 +687,28 @@ static void RunEnvironment(LawnApp* app)
 				if (trace.is_open()) { trace.flush(); ok = trace.good(); }
 			}
 			actionSeconds += simulationSeconds;
+			if (scoreValue)
+			{
+				double value = 0;
+				if (ok)
+				{
+					const int now = app->mBoard->mMainCounter;
+					double produced = 0;
+					for (auto sample : history) if (sample.first >= now - 6000) produced += sample.second;
+					const int elapsed = std::max(0, std::min(6000, now - historyStart));
+					if (estimatedResult >= 0) value = estimatedResult;
+					else if (app->EnvironmentTerminal()) value = app->mBoardResult == BoardResult::BOARDRESULT_WON ? 1.0 : 0.0;
+					else value = valueNets[0].Predict(app, elapsed ? produced * 1000.0 / elapsed : 0.0);
+				}
+				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
+					<< ",\"observation\":{\"tick\":" << (app->mBoard ? app->mBoard->mMainCounter : 0)
+					<< ",\"wave_timer\":0,\"terminal\":" << (app->EnvironmentTerminal() ? "true" : "false")
+					<< ",\"result\":" << static_cast<int>(app->mBoardResult) << ",\"value\":" << std::setprecision(9) << value;
+				if (estimatedResult >= 0) std::cout << ",\"rollout_result\":" << estimatedResult;
+				std::cout << "},\"decisions\":" << decisions << ",\"simulation_seconds\":" << simulationSeconds
+					<< ",\"network_seconds\":" << networkSeconds << "}" << std::endl << std::setprecision(6);
+				continue;
+			}
 			const auto observationStart = std::chrono::steady_clock::now();
 			const std::string observation = app->mBoard ? app->EnvironmentLeanObservation() : "null";
 			observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();

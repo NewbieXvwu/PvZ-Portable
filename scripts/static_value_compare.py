@@ -27,9 +27,11 @@ def key(a):
 
 def init(args):
     import search_play as t
-    from pvz_value_net import load_value_net
-    t._init_worker(args.value,args.student,61,True,args.desktop)
-    t._W['static_models']={'desktop':t._W['static_vnet'],'mac':load_value_net(args.mac)}
+    keep, paths = t._export_values(args.value, args.desktop)
+    mac_keep, mac_paths = t._export_values(args.value, args.mac)
+    t._init_worker(paths[0],args.student,61,True,paths[1])
+    t._W.update(value_keep=keep, mac_keep=mac_keep,
+                static_models={'desktop':paths[1], 'mac':mac_paths[1]})
 
 
 def open_game(seed,args):
@@ -46,6 +48,9 @@ def open_game(seed,args):
     try:
         obs,_=env.reset(deck=tuple(kw['deck']),task=task)
         env.load_rollout_net(t._W['rollout_file'])
+        env.load_value_net(t._W['value_files'][0])
+        env.load_value_net(t._W['static_models']['desktop'], static=True)
+        t._W['env'] = env
     except BaseException:
         env.close()
         raise
@@ -89,7 +94,7 @@ def generate(seed,args):
 
 def normal(env,obs,policy,args,D,name):
     import search_play as t
-    t._W['static_vnet']=t._W['static_models'][name]
+    env.load_value_net(t._W['static_models'][name], static=True)
     original=t._halving_choice;captured=[]
     def record(*pos):
         captured.extend(deepcopy(pos[3]))
@@ -138,15 +143,13 @@ def evaluate(env,obs,policy,args,seed,point):
     root=env.snapshot()
     try:
         plants=[{'type':'plant',**{k:a[k] for k in ('packet','row','col')}} for a in obs['legal_actions']['plants']]
-        static=t._static_frames(env,root,plants,obs.get('sun_income_rate'))
-        assert len(static)==len(plants)
         static_scores={};lookup={}
         for name in ('mac','desktop'):
-            t._W['static_vnet']=t._W['static_models'][name]
-            scores=t._values([f for _,f in static],static=True)
-            static_scores[name]=list(zip(scores,[a for a,_ in static]))
+            env.load_value_net(t._W['static_models'][name], static=True)
+            static_scores[name]=t._static_scores(env,root,plants,obs.get('sun_income_rate'))
+            assert len(static_scores[name])==len(plants)
             lookup[name]={key(a):v for v,a in static_scores[name]}
-            lookup[name][key(t.NOOP)]=t._values([_frame(obs)],static=True)[0]
+            lookup[name][key(t.NOOP)]=t._static_scores(env,root,[dict(type='wait',ticks=0)],obs.get('sun_income_rate'))[0][0]
         actions=pool_actions(static_scores,arms,plants,20261020+D)
         keys={key(a) for a in actions}
         assert len(actions)==len(keys) and all(key(a) in keys for v in arms.values() for a in v['candidates'])

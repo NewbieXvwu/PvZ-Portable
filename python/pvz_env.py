@@ -782,7 +782,7 @@ class PvZEnv:
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
                 sim_skip: int = 0, max_actions: int = 1000000,
                 snapshot_id: int | None = None, seed: int | None = None,
-                student_history=None, trace_path=None) -> dict[str, Any]:
+                student_history=None, trace_path=None, score_value: bool = False) -> dict[str, Any]:
         """Run the greedy student entirely in C++ and return its leaf (0 = whole game).
 
         None selects the first action with the student, with fresh previous-action context.
@@ -826,7 +826,8 @@ class PvZEnv:
             saved = self._sun_history_snapshots[snapshot_id]
             history, history_start = saved[0], saved[1]
         samples = " ".join(f"{tick} {amount}" for tick, amount in history)
-        response = self._command(f"ROLLOUT {snapshot_id or 0} {seed if seed is not None else -1} "
+        command = "ROLLOUT_VALUE" if score_value else "ROLLOUT"
+        response = self._command(f"{command} {snapshot_id or 0} {seed if seed is not None else -1} "
                                  f"{until_tick} {sim_skip} {max_actions} {int(event_wait)} {token} "
                                  f"{history_start} {len(history)} {samples}".rstrip()
                                  + self._student_options(student_history, trace_path))
@@ -835,6 +836,9 @@ class PvZEnv:
             raise RuntimeError(f"simulator rejected ROLLOUT (binary older than this wrapper?): {response}")
         if response.get("estimated_result", -1) >= 0:
             observation["rollout_result"] = response["estimated_result"]
+        if score_value:
+            # Search immediately restores a root; no exported leaf or Python income history is needed.
+            return observation
         self._sun_production_history = deque(history)
         self._sun_history_start_tick = history_start
         for tick, produced in response["substeps"]:

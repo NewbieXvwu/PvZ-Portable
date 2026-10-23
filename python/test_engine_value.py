@@ -18,6 +18,51 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(os.environ.get("PVZ_TEST_RESOURCE_DIR"), "set PVZ_TEST_RESOURCE_DIR to run engine oracle")
 class EngineValueTest(unittest.TestCase):
+    def test_scored_rollout_matches_python_leaf_and_preserves_state(self):
+        from pvz_rollout_policy import load_student, export_student
+        from pvz_value_net import load_value_net
+        student_path = os.environ.get("PVZ_TEST_STUDENT")
+        value_path = os.environ.get("PVZ_TEST_VALUE")
+        if not student_path or not value_path:
+            self.skipTest("set PVZ_TEST_STUDENT/PVZ_TEST_VALUE for trained rollout oracle")
+        torch.set_num_threads(1)
+        net = load_value_net(value_path)
+        with tempfile.TemporaryDirectory() as tmp, PvZEnv(
+                os.environ["PVZ_TEST_RESOURCE_DIR"],
+                executable=os.environ.get("PVZ_TEST_EXECUTABLE", str(ROOT / "build/pvz-portable"))) as env:
+            export_student(load_student(student_path), Path(tmp) / "student.bin")
+            export_value_net(net, Path(tmp) / "value.bin")
+            env.load_rollout_net(Path(tmp) / "student.bin")
+            env.load_value_net(Path(tmp) / "value.bin")
+            for level in (7, 14, 21, 10):
+                deck = (0, 1, 2, 3, 4, 5, 16) if level == 21 else (0, 1, 2, 3, 4, 5)
+                task = TaskSpec(level=level, seed=37000+level,
+                                profile=PlayerProfileContext(seed_slot_count=len(deck)),
+                                conveyor_start="original" if level == 10 else None)
+                env.reset(deck=() if level == 10 else deck, task=task)
+                env.rollout(None, 4000)
+                root = env.snapshot()
+                for mask in (0, 61):
+                    leaf = env.rollout(None, 9000, sim_skip=mask, snapshot_id=root, seed=1700)
+                    full = env.observe()
+                    if leaf["terminal"]:
+                        expected = float(leaf["result"] == 1)
+                    else:
+                        b, s = encode_frame(_frame(leaf), net.encoder_version)
+                        if net.context:
+                            s = torch.cat([s, torch.from_numpy(observation_context(full))])
+                        with torch.inference_mode():
+                            expected = torch.sigmoid(net(b[None], s[None])).item()
+                    scored = env.rollout(None, 9000, sim_skip=mask, snapshot_id=root, seed=1700, score_value=True)
+                    self.assertLess(abs(scored["value"] - expected), 1e-5)
+                    # Observation comparison includes dynamics, counters and legal actions.
+                    # Income is wrapper state, intentionally not adopted by the score-only command.
+                    after = env.observe()
+                    full.pop("sun_income_rate", None); after.pop("sun_income_rate", None)
+                    self.assertEqual(full, after)
+                env.restore(root)
+                env.release_snapshot(root)
+
     def test_board_logits_static_rejections_and_restore(self):
         torch.set_num_threads(1)
         maxima = {"features": 0.0, "logits": 0.0, "static": 0.0}

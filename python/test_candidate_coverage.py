@@ -28,8 +28,7 @@ class CoverageTest(unittest.TestCase):
             worker={'fast':object(),'student_frame':{},'context':np.zeros(1)}
             if enabled:worker.update(coverage=object(),coverage_budget=2)
             with patch.dict(teacher._W,worker,clear=True), \
-                 patch.object(teacher,'_static_frames',side_effect=lambda env,root,a,income:[(x,{}) for x in a]), \
-                 patch.object(teacher,'_values',side_effect=lambda frames,**kw:[1.]*len(frames)), \
+                 patch.object(teacher,'_static_scores',side_effect=lambda env,root,a,income:[(1.,x) for x in a]), \
                  patch.object(teacher,'_halving_choice',side_effect=capture), \
                  patch('pvz_rollout_policy.ranked_plants',return_value=ranked) as rank, \
                  patch('pvz_candidate_coverage.features',return_value=(np.zeros(1),np.zeros((5,2)))), \

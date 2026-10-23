@@ -42,7 +42,7 @@ class SearchScheduleTest(unittest.TestCase):
 
             with patch.dict(search_play._W, {"cuda": client}, clear=True), \
                  patch("render_episode._frame", side_effect=lambda frame: frame), \
-                 patch.object(search_play, "_values", side_effect=lambda frames, **kw: [0.5] * len(frames)), \
+                 patch.object(search_play, "_static_scores", side_effect=lambda env, root, actions, income: [(0.5,a) for a in actions]), \
                  patch.object(search_play, "_continuations", side_effect=continue_jobs), \
                  patch.object(search_play, "_leaf_values", side_effect=lambda leaves: [leaf["score"] for leaf in leaves]):
                 stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}

@@ -22,7 +22,9 @@ sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 
 def init(args):
     import search_play as teacher
-    teacher._init_worker(args.value, args.student, 61, True, args.static_value,
+    keep, paths = teacher._export_values(args.value, args.static_value)
+    teacher._W['value_keep'] = keep
+    teacher._init_worker(paths[0], args.student, 61, True, paths[1],
                          coverage_path=args.model if args.mode == 'audit' else None)
 
 
@@ -56,6 +58,9 @@ def game(points, args):
     try:
         obs, _ = env.reset(deck=tuple(kw['deck']), task=task)
         env.load_rollout_net(teacher._W['rollout_file'])
+        env.load_value_net(teacher._W['value_files'][0])
+        env.load_value_net(teacher._W['value_files'][1], static=True)
+        teacher._W['env'] = env
         for i in range(max(selected)):
             assert physical(_frame(obs)) == physical(frames[i]), (p['seed'], i)
             if i+1 in selected:
@@ -117,9 +122,8 @@ def collect(env, obs, policy, args, seed, point):
     actions = [{'type':'plant', **{k:a[k] for k in ('packet','row','col')}} for a in legal] + [teacher.NOOP]
     root = env.snapshot()
     try:
-        static = teacher._static_frames(env, root, actions[:-1], obs.get('sun_income_rate'))
-        scored = list(zip(teacher._values([f for _, f in static], static=True), [a for a, _ in static]))
-        scored.append((teacher._values([_frame(obs)], static=True)[0], teacher.NOOP))
+        scored = teacher._static_scores(env, root, actions[:-1], obs.get('sun_income_rate'))
+        scored.append((teacher._static_scores(env,root,[dict(type='wait',ticks=0)],obs.get('sun_income_rate'))[0][0], teacher.NOOP))
         ranked = ranked_plants(teacher._W['fast'], teacher._W['student_frame'],
                                teacher._W.get('student_previous_frame'), legal,
                                context=teacher._W['context'], history=teacher._W['student_history'])

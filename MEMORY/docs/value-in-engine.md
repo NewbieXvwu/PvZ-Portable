@@ -10,3 +10,19 @@
 已实现独立 `EnvironmentValueNet`，未改 `EnvironmentRollout.cpp`，无共用数学工具需要协调。PVZVN001 头为 magic[8] + little-endian uint32 width / encoder_version / context_dim，参数按 ValueNet.state_dict 顺序 float32。上下文维度仅接受 0/35，拒绝坏头、截断、非有限数及尾随数据。
 
 首次 oracle：`python/test_engine_value.py`，双编码 × L7/L14/L21/原版L10 ×16时点（128个局面，随机 width64 上下文网络）；Board 特征最大误差 0（逐位相同），logit 最大误差 7.48e-9，静态概率最大误差 6.01e-8。检查非法候选空值、0 tick种植、分叉后 root 恢复相同。该测试尚不替代真实 frames_v2 各256帧及训练权重验收。
+
+搜索替换：`_values` / `_static_frames` 删除；静态候选一次只返回概率，CPU推演 `ROLLOUT_VALUE` 在原循环结束后按同一收入窗口打分，不构造叶子JSON和substeps响应。driver 导出一次，worker 只保留两个权重文件路径。学生 Python 执行网络仍保留。相关诊断接口同步迁移。CUDA外部叶子走引擎FEATURES接口，现有CUDA叶子缺少编码2场景/墓碑字段，因此明确拒绝编码2（原路径也未支持v4）；正式CPU路径支持两版。
+
+训练 v3 推演 oracle：L7/L14/L21/原版L10，mask0与61，固定root/未来种子；Python叶子概率与引擎概率误差均<1e-5，打分模式与完整观测模式的全部叶子状态相同。搜索相关32项单测通过。
+
+首局诊断（同 seed1800000，L7原版难度，配方queue103、beta1；不是最终压力验收）：
+
+| 指标 | 改前 | 朴素C++ |
+|---|---:|---:|
+| worker CPU s | 16.46 | 3.74 |
+| engine CPU s | 100.58 | 174.57 |
+| wall s | 115.6 | 243.8 |
+| 决策/搜索/覆盖 | 997/195/6 | 997/195/6 |
+| 胜/波数/小车消耗 | 胜/30/1 | 胜/30/1 |
+
+同期有其他代理和本分支全量测试，wall不可直接归因；CPU仍显示显著回退，尚不能验收速度。下一步拆分价值卷积与特征计时并优化。实际 worker 运行RSS观察：旧约373576 KiB、新约344456 KiB；引擎约214120→215552 KiB，最终要补统一采样峰值。

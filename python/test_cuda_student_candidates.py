@@ -41,7 +41,7 @@ class StudentCandidatesTest(unittest.TestCase):
                     patch.dict(search_play._W, {"cuda": object() if backend == "cuda" else None,
                         "fast": object(), "student_frame": {"tick": 60}}, clear=True), \
                     patch("render_episode._frame", side_effect=lambda obs: obs.copy()), \
-                    patch.object(search_play, "_values", side_effect=lambda frames, **kw: [f["static"] for f in frames]), \
+                    patch.object(search_play, "_static_scores", side_effect=lambda env, root, actions, income: [(1.0-a["col"]/10,a) for a in actions]), \
                     patch.object(search_play, "_continuations", side_effect=continuations), \
                     patch.object(search_play, "_leaf_values", side_effect=values):
                 action = search_play._search(env, {"tick": 60, "legal_actions": {"plants": plants}},

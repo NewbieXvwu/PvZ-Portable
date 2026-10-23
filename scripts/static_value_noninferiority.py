@@ -41,7 +41,7 @@ def measured_arm(env, obs, policy, args, seed):
 def mac_candidates(env, obs, policy, args, seed):
     """Preserve the original reference pool without running a third light arm."""
     import search_play as t
-    old_halve, old_static = t._halving_choice, t._W['static_vnet']
+    old_halve = t._halving_choice
     candidates = []
     def capture(*pos):
         candidates.extend(deepcopy(pos[3]))
@@ -49,10 +49,11 @@ def mac_candidates(env, obs, policy, args, seed):
     stats = {'searched': 0, 'overrides': 0, 'override_kinds': Counter()}
     try:
         t._halving_choice = capture
-        t._W['static_vnet'] = t._W['static_models']['mac']
+        env.load_value_net(t._W['static_models']['mac'], static=True)
         t._search(env, obs, policy, args, seed, stats)
     finally:
-        t._halving_choice, t._W['static_vnet'] = old_halve, old_static
+        t._halving_choice = old_halve
+        env.load_value_net(t._W['static_models']['desktop'], static=True)
     assert candidates and stats['searched'] == 1 and not stats.get('halving_rollouts')
     return candidates
 
@@ -66,12 +67,11 @@ def heavy_reference(env, obs, policy, args, D, arms):
             'candidates': mac_candidates(env, obs, policy, args, D)}}
         plants = [{'type': 'plant', **{k: a[k] for k in ('packet', 'row', 'col')}}
                   for a in obs['legal_actions']['plants']]
-        frames = t._static_frames(env, root, plants, obs.get('sun_income_rate'))
-        assert len(frames) == len(plants)
         scores = {}
         for name in ('mac', 'desktop'):
-            t._W['static_vnet'] = t._W['static_models'][name]
-            scores[name] = list(zip(t._values([f for _, f in frames], static=True), [a for a, _ in frames]))
+            env.load_value_net(t._W['static_models'][name], static=True)
+            scores[name] = t._static_scores(env, root, plants, obs.get('sun_income_rate'))
+            assert len(scores[name]) == len(plants)
         pool = common.pool_actions(scores, reference_arms, plants, 20261020 + D)
         actions = {common.key(a): a for a in pool}
         for arm in arms.values():
@@ -102,7 +102,7 @@ def heavy_reference(env, obs, policy, args, D, arms):
                 'verification_continuations': 36 * bool(stats.get('last_verification')),
                 'verification': stats.get('last_verification')}
     finally:
-        t._W['static_vnet'] = t._W['static_models']['desktop']
+        env.load_value_net(t._W['static_models']['desktop'], static=True)
         env.restore(root)
         env.release_snapshot(root)
 
@@ -110,7 +110,7 @@ def heavy_reference(env, obs, policy, args, D, arms):
 def evaluate(env, obs, policy, args, seed, point):
     import search_play as t
     D = seed * 10000 + point['decision'] - 1
-    t._W['static_vnet'] = t._W['static_models']['desktop']
+    env.load_value_net(t._W['static_models']['desktop'], static=True)
     arms = {}
     order = ('A', 'B3') if (seed + point['decision']) % 2 == 0 else ('B3', 'A')
     for name in order:

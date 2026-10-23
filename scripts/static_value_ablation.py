@@ -98,7 +98,7 @@ def evaluate(env, obs, policy, args, seed, point):
     frozen = json.loads(source.read_text())
     assert common.key(policy) == common.key(frozen['policy'])
     D = seed * 10000 + point['decision'] - 1
-    t._W['static_vnet'] = t._W['static_models']['desktop']
+    env.load_value_net(t._W['static_models']['desktop'], static=True)
     arms = {}
     for name, (generator, count) in ARMS.items():
         arm_args = SimpleNamespace(**vars(args))
