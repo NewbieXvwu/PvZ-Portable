@@ -6,6 +6,7 @@ seeds are excluded globally, and early stopping is split by environment seed.
 """
 from __future__ import annotations
 import argparse
+import hashlib
 from collections import defaultdict
 import json
 from pathlib import Path
@@ -22,6 +23,38 @@ from value_widen_audit import cohort, seed_key
 
 def held(seed):
     return int(seed_key(int(seed))[:8],16)%10==0
+
+
+def require_training_memory():
+    available=int(next(line.split()[1] for line in Path('/proc/meminfo').read_text().splitlines()
+                       if line.startswith('MemAvailable:')))*1024
+    if available < 10*1024**3:
+        raise RuntimeError(f'value training requires MemAvailable >= 10 GiB; got {available/1024**3:.2f} GiB')
+    print(f'MemAvailable: {available/1024**3:.2f} GiB (gate 10 GiB)',flush=True)
+
+
+def gather(parts,ends,key,indices,dtype):
+    shape=parts[0][key].shape[1:] if key in parts[0] else ()
+    out=torch.empty((len(indices),*shape),dtype=dtype)
+    part_ids=np.searchsorted(ends,indices,side='right')
+    for part_id in np.unique(part_ids):
+        dst=np.flatnonzero(part_ids==part_id);src=indices[dst]-(ends[part_id-1] if part_id else 0)
+        part=parts[part_id]
+        if key in part:out[dst]=part[key][torch.from_numpy(src)].to(dtype)
+        elif key=='kind':out[dst]=0 # Legacy L7 dumps contain leaves only.
+        elif key=='packet':out[dst]=-2
+        else:raise KeyError(key)
+    return out
+
+
+def score_rows(model,data,indices,batch_size,device):
+    prediction=torch.empty(len(indices))
+    model=model.to(device).eval()
+    with torch.inference_mode():
+        for first in range(0,len(indices),batch_size):
+            pick=indices[first:first+batch_size];b,s,_=data.batch(pick)
+            prediction[first:first+len(pick)]=torch.sigmoid(model(b.to(device),s.to(device))).cpu()
+    return prediction
 
 
 def prepare(args):
@@ -122,6 +155,10 @@ class Branches:
             scalars[dst,SCALARS+6:]=old[:,SCALARS:];won[dst]=d['won'][src].float()
         return boards,scalars,won
 
+    def rows(self,indices):
+        return {k:gather(self.parts,self.ends,k,indices,torch.float32 if k=='won' else torch.long)
+                for k in ('won','seed','position','candidate','packet','kind')}
+
 
 class Decisions:
     """Decision-level dumps (value_ranking_check.py --dump-shards) as encoder-v2 training rows.
@@ -146,12 +183,7 @@ class Decisions:
         if not len(self.fit) or not len(self.val):raise ValueError('decision seed split is empty')
 
     def _gather(self,key,indices,dtype):
-        out=torch.empty((len(indices),*self.parts[0][key].shape[1:]),dtype=dtype)
-        part_ids=np.searchsorted(self.ends,indices,side='right')
-        for part_id in np.unique(part_ids):
-            dst=np.flatnonzero(part_ids==part_id);src=indices[dst]-(self.ends[part_id-1] if part_id else 0)
-            out[dst]=self.parts[part_id][key][torch.from_numpy(src)].to(dtype)
-        return out
+        return gather(self.parts,self.ends,key,indices,dtype)
 
     def batch(self,indices):
         return (self._gather('boards',indices,torch.float32),self._gather('scalars_v2',indices,torch.float32),
@@ -176,6 +208,7 @@ def initialize(path):
 
 
 def train(args):
+    require_training_memory()
     if args.device=='cuda':
         # The task explicitly reserves GPU training for after dw5i finishes.
         result=__import__('subprocess').run(['pgrep','-f','train_rollout_policy.py'],capture_output=True,text=True)
@@ -259,14 +292,20 @@ def train(args):
         # The number the branch corpus is judged by (train_value_branches.pair_accuracy), on the
         # held-out decision seeds, split into leaves and the board right after planting.
         from train_value_branches import pair_accuracy
-        rows=decisions.rows(val_d);db,ds,_=decisions.batch(val_d)
         report={}
-        for name,model in (('v5',net),('init',load_value_net(args.init))):
-            model=model.to(args.device).eval()
-            with torch.inference_mode():
-                pred=torch.sigmoid(model(db.to(args.device),ds.to(args.device))).cpu()
-            report[name]=dict(leaves=pair_accuracy(pred,rows,(rows['kind']==0).nonzero().flatten(),args.pair_min_gap),
-                              cells=pair_accuracy(pred,rows,(rows['kind']==1).nonzero().flatten(),args.pair_min_gap,by_packet=True))
+        # Report the saved best epoch, not the last early-stopping epoch. Use all
+        # held-out rows in batches: row subsampling can split a candidate's futures.
+        for name,path in (('v5',args.out/'model.pt'),('init',args.init)):
+            model=load_value_net(path)
+            cohorts={}
+            for group,data in (('pool_decision',decisions),('day_l7_branch',branches)):
+                indices=data.val;rows=data.rows(indices)
+                pred=score_rows(model,data,indices,args.batch_size,args.device)
+                cohorts[group]=dict(rows=len(indices),seeds=len(set(rows['seed'].tolist())),
+                    leaves=pair_accuracy(pred,rows,(rows['kind']==0).nonzero().flatten(),args.pair_min_gap),
+                    cells=pair_accuracy(pred,rows,(rows['kind']==1).nonzero().flatten(),args.pair_min_gap,by_packet=True))
+            report[name]=dict(**cohorts['pool_decision'],cohorts=cohorts,checkpoint=str(path),
+                              checkpoint_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest())
         (args.out/'pair_accuracy.json').write_text(json.dumps(report,indent=1));print(json.dumps(report,indent=1),flush=True)
 
 
