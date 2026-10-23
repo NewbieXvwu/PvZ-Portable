@@ -86,6 +86,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，26 A 模型 HF 交付（B 仍等内存门禁）：`transfer/dw5i_A_s1_model.pt` 上传后固定远端 revision **1da20c13683d0ffaadea26b339b72ac35bd88afb** 回读，LFS sha256 与文件回读 SHA256 均等于本地 **32724b8e2bb12b7966d899a03f1e3bfac6eb695c33b15ad6d10678ec659df7e7**（705,774 B），与 `complete_A.json` 一致；记录 `artifacts/task36/hf_A.json`。模型不入 git，仓库名来自 `$PVZ_HF_REPO`。
 
+- 2026-10-24，27 修正 B 门禁阈值 10.5→12.5 GiB（pid 198574）：第 23 条的 10.5 GiB 不足以守住 10 GiB 地板——B 训练时约 **2.3 GB 匿名内存**（第 23 条实测的 Pss_Anon），在空余 10.5 GiB 时启动会把系统 MemAvailable 压到约 8.2 GiB 并触发训练器自身的 `<10 GiB` 暂停，等于再次制造“暂停且占内存”。A 的实测（最低 av 11.15 GiB、峰值 RSS 11.68 GB 中大部分为可回收映射页）说明空闲需 ≥12.5 GiB 才能在启动后保持 ≥10 GiB。据此 `autostart_B2.sh` 改为连续 4 次 ≥12.5 GiB（30 s 间隔）+ C: ≥15 GiB 才启动，其余不变。当前空闲 8.7–10.1 GiB，仍在外部队列（zones task50、cq 整库 pack、llmcand、v5 teacher、fog、qcbench）之下等待。
+
 
 
 ## 问题
