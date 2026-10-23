@@ -166,18 +166,30 @@ def verify(recipe_path, out):
         command[command.index('--source-row-report')+1] = str(out/'legacy/source_rows.json')
     (out/'legacy').mkdir(parents=True,exist_ok=True)
     payload = None
+    payload_key = None
     observations = []
     real_load = baseline['load']
+    def freeze(value):
+        if isinstance(value, dict):
+            return tuple(sorted((key,freeze(item)) for key,item in value.items()))
+        if isinstance(value, (set,frozenset)):
+            return tuple(sorted(freeze(item) for item in value))
+        if isinstance(value, (list,tuple)):
+            return tuple(freeze(item) for item in value)
+        return str(value) if isinstance(value, Path) else value
     def cached_load(*args, **kwargs):
-        nonlocal payload
+        nonlocal payload, payload_key
         observer = kwargs.pop('row_observer',None)
+        key = freeze((args, kwargs))
         if payload is None:
+            payload_key = key
             def capture(path, rows):
                 observations.append((path,rows.copy()))
                 if observer is not None:
                     observer(path,rows)
             payload = real_load(*args,**kwargs,row_observer=capture)
         else:
+            assert key == payload_key, 'recipe and legacy requested different training rows'
             if observer is not None:
                 for path,rows in observations:
                     observer(path,rows)
@@ -219,6 +231,7 @@ def verify(recipe_path, out):
         result = dict(recipe=str(recipe_path), recipe_sha256=hashlib.sha256(recipe_path.read_bytes()).hexdigest(),
             legacy_revision='6fdee2af', source_command_sha256=recipe['provenance']['source_sha256'],
             steps=200,rows=len(payload[2]),archives=len(observations),
+            loader_call_sha256=hashlib.sha256(repr(payload_key).encode()).hexdigest(),
             labels=dict(Counter(path.parent.name for path,_ in observations)),
             full_corpus=True,original_schedule=True,field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
             maximum_loss_error=max(errors),passed=max(errors)<=1e-6,

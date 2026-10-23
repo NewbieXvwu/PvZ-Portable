@@ -1,0 +1,33 @@
+{
+  "baseline_revision": "6fdee2af",
+  "baseline_loader_fingerprints": {
+    "load": "042a85f8de71b8c9ba4fa711e300f26277a8c35478089ba8764b2812ab3266c2",
+    "CompactBoards": "52122d0c9d5f2359f282ab853119630fc21d83c8658e3ccd75ec7e08ad9f944c",
+    "_board_store": "7512d5ec25aa0998af52c93d654cdc99f634ac72958bf3bf66d23f827d0f709a",
+    "_episode_context": "e401a1bc252b7afd15afb816bb059ba728b6bc74cebc399f7174a739c5a860da"
+  },
+  "current_loader_identical": true,
+  "original_runs": {
+    "dw4i": {
+      "original_revision": "fbd24256b38a3086a27bad4fb664080a360338b7",
+      "original_script_sha256": "2b7e91e691b85f420f313010115a42d81b72fda7b40e139077741fc75d52bf17",
+      "loader_identical": true,
+      "batch_loss_identical": true,
+      "epoch_loop_identical_excluding_telemetry": true
+    },
+    "dw5i": {
+      "original_revision": "fbd24256b38a3086a27bad4fb664080a360338b7",
+      "original_script_sha256": "2b7e91e691b85f420f313010115a42d81b72fda7b40e139077741fc75d52bf17",
+      "loader_identical": true,
+      "batch_loss_identical": true,
+      "epoch_loop_identical_excluding_telemetry": true
+    },
+    "identity_dw3_s1": {
+      "original_revision": "c1a59875c439faeeaba1e6bd50b77bf641cbd3f6",
+      "original_script_sha256": "7c32d66903d132e719a213922705b800b9b8d1a2c604c8daf6816c5ef689ba8e",
+      "loader_identical": true,
+      "batch_loss_identical": true,
+      "epoch_loop_identical_excluding_telemetry": true
+    }
+  }
+}
