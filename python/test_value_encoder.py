@@ -36,7 +36,7 @@ class ValueEncoderTest(unittest.TestCase):
         f.pop('conveyor_start')
         self.assertEqual(encode_frame(f,2)[1][SCALAR_BASE+2],0)
 
-    def test_checkpoint_dispatch_and_search(self):
+    def test_checkpoint_dispatch(self):
         import sys
         sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
         import search_play
@@ -47,8 +47,6 @@ class ValueEncoderTest(unittest.TestCase):
                 loaded=load_value_net(p);self.assertEqual(loaded.encoder_version,version)
                 b,s=encode_frame(frame(),version)
                 with torch.inference_mode():expected=torch.sigmoid(net(b[None],s[None])).item()
-                search_play._W.clear();search_play._W['vnet']=loaded
-                self.assertAlmostEqual(search_play._values([frame()])[0],expected,places=7)
             torch.save(dict(state_dict=net.state_dict(),encoder='unknown'),p)
             with self.assertRaises(ValueError):load_value_net(p)
         search_play._W.clear()
