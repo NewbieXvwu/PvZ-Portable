@@ -1,0 +1,193 @@
+{
+  "status": "incomplete",
+  "preregistration_commit": "bf16ab65",
+  "implementation_commit": "5eacbe8a",
+  "plan": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/plan.json",
+    "sha256": "707c29d8090adfbf2e6da98cb684f4efd35e37b8611a451f9cb314a6dbe22f29",
+    "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084"
+  },
+  "calibration": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/calibration.json",
+    "sha256": "73cbfde509ed20d548914fa303f2960b391a2d94f069c1e891d0e0fe18c0fd7c",
+    "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084",
+    "quantile": 0.25,
+    "counts": {
+      "day": 1110,
+      "roof": 627,
+      "fog": 390
+    },
+    "thresholds": {
+      "day": 0.9504686595,
+      "roof": 0.0222835867,
+      "fog": 0.00042195777475
+    },
+    "games": [
+      {
+        "family": "day",
+        "seed": 52010000,
+        "won": true,
+        "final_wave": 30,
+        "decisions": 916,
+        "searched": 174,
+        "trace_sha256": "48e700c1cb1bb45da1788b8d8778ad8050e14ef15c64a5d343d3d8043b7bc8bf",
+        "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084"
+      },
+      {
+        "family": "day",
+        "seed": 52010001,
+        "won": true,
+        "final_wave": 30,
+        "decisions": 1015,
+        "searched": 196,
+        "trace_sha256": "5653a6d1a50ed3da1564e3eed0f0f51665e8b4a0b60c68faad2163050f0c7b23",
+        "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084"
+      },
+      {
+        "family": "fog",
+        "seed": 52012000,
+        "won": false,
+        "final_wave": 9,
+        "decisions": 436,
+        "searched": 54,
+        "trace_sha256": "2ead32739e129b87cda257eaf37ee4e289df0bad2e637e193796cbeef770bb36",
+        "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084"
+      },
+      {
+        "family": "fog",
+        "seed": 52012001,
+        "won": false,
+        "final_wave": 9,
+        "decisions": 485,
+        "searched": 76,
+        "trace_sha256": "12d3d1dd0957f48cebf0883a91cb87f7cd4dec541431070c50e57b1c76b55618",
+        "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084"
+      },
+      {
+        "family": "roof",
+        "seed": 52011000,
+        "won": false,
+        "final_wave": 7,
+        "decisions": 321,
+        "searched": 55,
+        "trace_sha256": "d3f5b41e7d5cc136c5145974266fdec42cc5019fae4b368ce24ca49ca9090bc4",
+        "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084"
+      },
+      {
+        "family": "roof",
+        "seed": 52011001,
+        "won": true,
+        "final_wave": 20,
+        "decisions": 850,
+        "searched": 154,
+        "trace_sha256": "76c195b8bdc149d433cfe6faffc40723617da6a7382a10f001fdd1d4f080855f",
+        "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084"
+      }
+    ]
+  },
+  "tests": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/search-tests.log",
+    "sha256": "00e36032544ada270112c92fd7dc49fdf3dc43e57cd52ed7fd6081c5ae36dc09",
+    "passed": 33
+  },
+  "protocol": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/protocol.json",
+    "sha256": "9790889022d9c2f29bb6588278a941563797a1bc1070a5dcda8e82c558c2a1e7",
+    "result": {
+      "position": "97b10e5d346ba33293fb56c5920f7218a92a86bfbb2d86efd2b6c9d92b43bc3d",
+      "counts": {
+        "returned": 3,
+        "malformed": 0,
+        "illegal": 0,
+        "excess": 0,
+        "duplicates": 0,
+        "valid": 3
+      },
+      "usage": {
+        "promptTokenCount": 3116,
+        "candidatesTokenCount": 132,
+        "totalTokenCount": 3579,
+        "thoughtsTokenCount": 331
+      },
+      "model_version": "gemini-3.8-flash-n",
+      "finish_reason": "STOP",
+      "actions": [
+        {
+          "type": "plant",
+          "packet": 1,
+          "row": 2,
+          "col": 0
+        },
+        {
+          "type": "plant",
+          "packet": 4,
+          "row": 4,
+          "col": 3
+        },
+        {
+          "type": "plant",
+          "packet": 0,
+          "row": 4,
+          "col": 0
+        }
+      ],
+      "cache_replay_without_request": true
+    }
+  },
+  "roof_oracle": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/roof-oracle.json",
+    "sha256": "27e3ed0495aabcbfee355a6820025625e016b275d42752eb2cfa55c7cb248dcb",
+    "result": {
+      "seed": 52011000,
+      "root_replay_frames": 321,
+      "points": [
+        {
+          "decision": 0,
+          "logit_error": 4.814721679125e-07,
+          "feature_error": 0.0
+        },
+        {
+          "decision": 20,
+          "logit_error": 4.769030761408999e-07,
+          "feature_error": 0.0
+        },
+        {
+          "decision": 40,
+          "logit_error": 4.784729004114752e-07,
+          "feature_error": 0.0
+        },
+        {
+          "decision": 80,
+          "logit_error": 4.7513061485204844e-07,
+          "feature_error": 0.0
+        },
+        {
+          "decision": 120,
+          "logit_error": 4.098510864025684e-09,
+          "feature_error": 0.0
+        },
+        {
+          "decision": 160,
+          "logit_error": 1.7047119271751399e-09,
+          "feature_error": 0.0
+        },
+        {
+          "decision": 240,
+          "logit_error": 4.981689727401317e-09,
+          "feature_error": 0.0
+        },
+        {
+          "decision": 300,
+          "logit_error": 3.272704773849e-09,
+          "feature_error": 0.0
+        }
+      ],
+      "passed": true
+    }
+  },
+  "pending": [
+    "144 formal games (3 families x 16 seeds x 3 arms)",
+    "paired comparison and cost/legality/selection analysis",
+    "final recommendation and requirement audit"
+  ]
+}
