@@ -30,4 +30,9 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 ## 结果
 
+- 2026-10-23，1逐关配对：新增 scripts/task36_paired_compare.py，按评估种子配对 dw4i_s1 与 dw5i_s1 的 v2 逐局记录（两版同一冻结清单、种子集合完全相同）。夜间9关 818→711/1152（−9.29pp，仅A 200 / 仅B 93，McNemar 精确 p=3.8e-10）；早关 L1/3/4/6 478→468/512（−1.95pp，40/30，p=0.28，单看这两版属噪声范围）；identity 对 dw5i 早关 505→468（p=1.2e-7）。夜间逐关 p 值：L11 0.016、L12 0.032、L13 0.021、L14 0.005、L16 0.0001、L17 0.50、L18 0.0003、L19 0.003、L20 两版均 0/128。
+
+- 2026-10-23，2数据配比账：新增 scripts/task36_data_ledger.py，按训练器原样重放 wait 行采样（random.Random(0)、每帧一次抽样、档案顺序同 frame_paths），逐标签保留行数与两次真实训练完全吻合（dw4i 13643901 行 / dw5i 15788614 行，与 task23 表、source_rows.json 总数逐一相等）。标签归属：区取自每份 meta.json 的 context.level（background_for_level），来源按 artifacts/task27/mac_import.json 的 117 个 Mac 包 + _m 后缀 + z15 前缀判定，卡组族按标签规则。夜间：dw5i 训练集 11.0%（1740770 行）里 **n9 占 82.4%**（1434026 行，其中 Mac 1028707 行 = 59.1%），n10 只占 17.6%（306744 行）；dw4i 夜间仅 1.7% 且全是 n9。白天：identity_base 仍占 73.1%，早关 L1/3/4/6 只有 82097 行 = 白天的 0.6%、全部的 0.52%。泳池 192679 行 = 1.2%。完整逐标签账 artifacts/task36/data_ledger.json（395 KB，不入 git）。
+
+
 ## 问题
