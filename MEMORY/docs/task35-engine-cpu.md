@@ -113,6 +113,17 @@
 
 36. **停止条件已满足**（详见 `engine-cpu.md` 的“停止条件评估”）：连续三项 <2%（坐标 ≈1%、观察序列化 1.0116 已回退、等待去重测不出），且前 15 名逐项查过没有可证明“不影响逻辑”的无用功。本机 load 从 22 涨到 35，2% 以下已无法用吞吐判定。引擎内 CPU 累计 82.0k → 152.9k tick/CPU-s（约 1.86×），整局四族几何平均 1.67×；距 2.0× 只剩搜索预算、锁步+共享快照（上限 +10%）、GPU 三条路，都不属于引擎微优化。
 
+[E] **上线二进制已构建并过门禁（2026-10-23 16:34）**
+
+- **perf 合并提交 `f2ae755a`**（第一父 `cf50eb86`，合入 `origin/pvz-env` = `e6c68f3a`，131 个提交：vnet 价值网 v4 / 编码 v2 / `train_rollout_policy` NaN 修复）。唯一冲突 `MEMORY/2026-10-23.md`（append-only 日志），两侧条目都保留；本分支的 LTO/PGO/mimalloc、reanim 空轨道跳过、等待循环代际戳表、公开坐标 `to_chars`、`replay_gate_version 2` 全部保留。已 push 到 `origin/perf`。
+- **pytest**：`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources PYTHONPATH=/usr/lib/python3/dist-packages /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest python -q` → **315 passed, 0 failed**。不设 `PVZ_RESOURCE_DIR` 时 5 项 `test_cpp_rollout` 失败（引擎找不到资源），设上即全过；**没有 Mac 专属跳过**。
+- **deploy2 工作树**：`/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2`，detached `f2ae755ab0fc2e4b617ebf56b5bcea491a89cf0d`；`artifacts/perf/engine_roots.json` 已从 perf 拷入；`JOBS=8 bash scripts/build_pgo.sh bench` 两阶段跑完，`grep -c fprofile-generate build/build.ninja` = **0**，140 个 `.gcda`。二进制 `/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable`，sha256 `bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef`。
+- **门禁（deploy2 对 `deploy` 的二进制 `2a8dc97c`）**：
+  - 整局逐帧重放（gate v2）：**两边各自 0 差异** —— 白天 L7 953 帧、原版传送带 L10 877 帧、夜间 L12 531 帧、泳池 L24 464 帧；同种子重复推演 4/4 一致。
+  - 64 root 叶摘要：`compare` 内置断言通过，`correctness: all rollout states and logical statistics identical`；配对 4 轮比值中位数 **0.9812**（a 126,204 vs b 123,831 tick/CPU-s，噪声内，deploy2 略快）。
+  - 没有差异需要归因到 v4 合并。
+- **未触碰** `deploy` 工作树（只执行了它的二进制）与 tmux `qc`。切换由主控做。
+
 ## 问题
 
 - **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。
