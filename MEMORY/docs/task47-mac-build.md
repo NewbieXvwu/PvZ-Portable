@@ -34,4 +34,30 @@
 
 ## 结果
 
+1. 普通 Release 已用 AppleClang 21、Ninja `-j4` 构建并进入协议 v4。初版静态 mimalloc 丢失 macOS zone 注册对象，启动时报错释放非所属指针，Apple 链接增加 `-force_load` 后恢复正常。固定对照保存在 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/macbuild/artifacts/perf/task47/pvz-release`。全套测试修复前 25 failed / 316 passed / 9 skipped，修复后 1 failed / 340 passed / 9 skipped（既有 Linux `/proc` 内存监控测试），采集进程保持运行。配对基线待补齐四族存档。
+
+2. 修复基准在 Mac 上读取 `/proc/<pid>/stat` 永远返回 0 CPU 秒的问题，macOS 改用系统 `ps` 累计 CPU 时间，Linux 路径保持原样。学生、价值网和资源路径支持环境变量传入，保留台式机默认值，14 项既有及新增基准回归全部通过。
+
+3. task35 同一份 16 存档 / 64 root 经 HF `transfer/task47/` 同步至本树，旧 view 对普通 Release 四轮交替配对（每 root 3 推演）：135,752 → 261,964 tick/CPU-s，比值中位数 **1.923×**（1.582 / 1.916 / 1.929 / 1.930）。完整叶观测与共有逻辑统计全部一致。旧协议缺 `planted_slots/planted_types`，本次旧构建基线的临时驱动只排除这两项，仓库正式门禁保持完整，后续 PGO 对 Release 使用全部字段。证据 `artifacts/perf/task47/release_vs_view{.json,_rounds/}`。整局三轮配对基线继续运行。
+
+4. LTO 选择：同源码独立 full 构建对普通 Release 的 thin 构建，64 root × 9 推演、四轮交替，full/thin 吞吐比中位数 **0.987**（0.981 / 0.969 / 1.011 / 0.993），保留 AppleClang 默认 `-flto=thin`。所有完整叶观测及逻辑统计相同。普通 Release 四个存档整局重放 **953 / 877 / 531 / 464 帧，0 差异**，同种子重复推演 4/4 一致。证据 `artifacts/perf/task47/full_vs_thin{.json,_rounds/}` 与 `replay_release.json`。
+
+5. `CMakeLists.txt` 与同一个 `scripts/build_pgo.sh` 已按实际 CMake 编译器分支接入 Clang PGO。`JOBS=4` 完整执行 instr-generate → 原 64 root bench 工作负载 → `xcrun llvm-profdata merge` → instr-use，profile 含 5197 个函数 / 36588 个块。实际使用自定义目录 `artifacts/perf/task47/pgo/engine.profdata`，最终 Ninja 生成标志计数为 0、使用标志正确，GCC 原有编译/链接 flag 行逐字保留。最终二进制 SHA256 `cfa3f51f0210fd4a6c735a7b1ca00ad204c7a315116c147a117ef556379fd7e8`，完整门禁运行中。
+
+6. PGO 正式门禁全部通过：四族整局重放 **953 / 877 / 531 / 464 帧，0 差异**，同种子重复推演 4/4 一致。PGO 对同机普通 Release，四轮 64 root × 3 推演的全部完整叶观测和逻辑统计逐位相同，吞吐 238,781 → 301,425 tick/CPU-s，配对比值中位数 **1.262×**（1.234 / 1.198 / 1.290 / 1.329）。可供主控在标签边界切换的固定二进制为 **`/Users/newbiexvwu/PvZAgent/.claude/worktrees/macbuild/artifacts/perf/task47/pvz-pgo`**（SHA256 见第 5 条），没有改动运行中的采集脚本。证据 `replay_pgo.json`、`pgo_vs_release{.json,_rounds/}`。四族各 8 局整局吞吐验收开始。
+
+7. 白天 L7 d7 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 7 胜）。CPU 秒/局由旧 view **102.263** 降至 PGO **44.019**，吞吐 **2.323×**。证据 `artifacts/perf/task47/pgo_games_day/engine_games.json`。
+
+8. 普通 Release 对旧 view 的整局基线三轮完成（每轮四族各 1 局，同种子）。按白天 / 夜间 / 泳池 / 传送带顺序，CPU 秒/局中位数为 **84.414→58.532 / 139.205→66.140 / 26.668→13.846 / 172.266→105.846**，配对吞吐比中位数为 **1.454× / 2.055× / 1.932× / 1.628×**。三轮所有种子的胜负、最终波次与决策数一致。证据 `artifacts/perf/task47/release_games_r{1,2,3}/engine_games.json`、`release_games_summary.json`。
+
+9. 泳池 L24 p9k 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 0 胜）。CPU 秒/局由旧 view **25.425** 降至 PGO **10.356**，吞吐 **2.455×**。证据 `artifacts/perf/task47/pgo_games_pool/engine_games.json`。
+
+10. 夜间 L14 n10 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 0 胜）。CPU 秒/局由旧 view **65.582** 降至 PGO **33.044**，吞吐 **1.985×**。证据 `artifacts/perf/task47/pgo_games_night/engine_games.json`。
+
+11. 传送带 L10 orig 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 7 胜）。CPU 秒/局由旧 view **132.040** 降至 PGO **66.438**，吞吐 **1.987×**。至此四族各 8 局共 32 对全部验收，等局数汇总 CPU 秒/局 **81.328→38.464**，整体吞吐 **2.114×**。证据 `artifacts/perf/task47/pgo_games_conveyor/engine_games.json`，其余三族见第 7、9、10 条。
+
+12. 最终固定 PGO 构建运行全套测试：**1 failed / 341 passed / 9 skipped / 133 subtests passed**（27.99 秒），比普通 Release 多通过新增 Mac CPU 计时回归，失败仍仅为同一个既有 Linux `/proc` 监控用例，没有新增失败。证据 `artifacts/perf/task47/pytest_pgo.log`。交付二进制与最终 `build/pvz-portable` 的 SHA256 一致。收尾时原采集 PID 64608 仍运行，采集脚本未修改。六项步骤全部完成。
+
 ## 问题
+
+- Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。task35 的四族基准清单与全部存档已经 HF 同步完成。
