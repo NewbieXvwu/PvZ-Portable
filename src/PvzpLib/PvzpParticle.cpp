@@ -637,7 +637,6 @@ bool PvzpParticleEmitter::UpdateParticle(PvzpParticle* theParticle)
 		mParticleSystem->mParticleHolder->mParticles.DataArrayTryToGet(theParticle->mCrossFadeParticleID) == nullptr)
 		return false;  // the cross-fade source is gone; the particle can be deleted
 
-	theParticle->mParticleTimeValue = theParticle->mParticleAge / (static_cast<float>(theParticle->mParticleDuration) - 1);
 	if (gEnvSimSkip & ENV_LIGHT_ANIMATION)
 	{
 		// Nothing below this point is observable in the headless environment: the fields, the
@@ -645,10 +644,12 @@ bool PvzpParticleEmitter::UpdateParticle(PvzpParticle* theParticle)
 		// it decides when the particle dies, and a death can spawn a cross-fade emitter, which
 		// draws from the shared RNG.  Keeping the age bookkeeping keeps that stream identical
 		// (2026-10-23: 64/64 rollout roots bit-identical, every replayed episode frame-identical).
+		// The normalized time value is a float divide per particle per tick that only the
+		// renderer and the skipped field maths read, so it is not computed either.
 		theParticle->mParticleAge++;
-		theParticle->mParticleLastTimeValue = theParticle->mParticleTimeValue;
 		return true;
 	}
+	theParticle->mParticleTimeValue = theParticle->mParticleAge / (static_cast<float>(theParticle->mParticleDuration) - 1);
 	for (int i = 0; i < mEmitterDef->mParticleFields.count; i++)
 		UpdateParticleField(theParticle, &mEmitterDef->mParticleFields.Fields[i], theParticle->mParticleTimeValue, i);
 	theParticle->mPosition += theParticle->mVelocity;

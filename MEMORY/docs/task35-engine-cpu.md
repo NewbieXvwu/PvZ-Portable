@@ -54,4 +54,11 @@
 
 9. **im2col 按行整段拷贝**：3×3/1×5 卷积的 im2col 原来逐格判断边界再赋值，改成先算出行内连续区间、`memcpy` 整段（值完全相同）。**+2.4%**（配对 A/B 4 轮中位数 0.977），叶摘要与逐帧重放不变。
 
+10. **Codex 补齐独立验收夹具**：`bench_engine.py` 保存全部叶观测/逻辑统计摘要，跨 A/B 与轮次逐条校验、差异立即失败，各轮证据和汇总分别落盘；整局读 `games.jsonl`，默认/最多 2 worker，拒绝不足局数。`test_engine_bench` 7 项回归测试通过。已建立 `engine-cpu.md`，汇集既有测速与采样前 15，明确旧摘要只有 16/192 条、整局基线只有 2/8，尚不能宣称全部验收完成。原 CodeBuddy 在同树运行，未接管其 7 个 C++ 实验文件。
+
+10. **六项热点微优化（合计 +8.3%）**：① `DataArray<T>::Iterator::operator++` 按 64 位字一次跳 4 个空槽（剖面里 projectile/coin 的三个实例合计 6.1%）；② `Zombie::IsTangleKelpTarget` 记住海藻槽位，不再每 tick 遍历全部植物（3.3%）；③ `Reanimation::Update` 的 `SECONDS_PER_UPDATE*mAnimRate/mFrameCount` 按两个输入缓存（2.1%），轨道循环加预取；④ `Convolve` 的零通道判定改成 64 位按字或（0.7%）；⑤ im2col 的连续区间按 10/9/8 固定长度内联拷贝（变长 memcpy 的 PLT 往返 3.1%）；⑥ `Plant::Update` 把普通对局分支提到最前，粒子归一化时间值不再计算。**+8.3%**（配对 A/B 3 轮比值中位数 0.924，189.2k vs 177.0k tick/CPU-s；单项都在 1–3% 量级，低于本机 ±5% 噪声，故按批测）。验收：64 个 root 叶摘要**逐位相同**（a/b 两份 compare 记录逐族比对）、4 个存档整局逐帧重放 0 差异、同种子 rollout 可复现。
+   - 构建注记：`build/` 曾被留在 PGO 第一阶段（`-fprofile-generate`），此时测出来比 step9 慢 1.77×；重新走完 `scripts/build_pgo.sh` 第二阶段才得到上面的数字。以后换手前先确认 `build/build.ninja` 里 `fprofile-generate` 计数为 0。
+
 ## 问题
+
+- Codex 核验：现构建的 `test_identity_cpp.IdentityCppTest.test_random_identity_heads_on_real_positions` 失败，packet logits 最大绝对误差 0.1854288（允许 1e-5）。`EnvironmentRollout::Load` 未清空转置卷积核/packet double 权重缓存，需要复现模型重载并修复。旧摘要与单模型重放不能替代这项验收。

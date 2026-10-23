@@ -317,6 +317,24 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	}
 }
 
+// A float is zero exactly when its bit pattern is zero, so a channel of the observation is
+// empty when the bitwise OR of its cells is zero.  Testing 64 bits at a time replaced a
+// per-cell value comparison (0.7% of the rollout CPU on 2026-10-23).  Unlike the value test
+// this also counts -0.0f as non-zero, which only ever adds an all-zero channel to the
+// convolution and therefore cannot change the result.
+static bool CellsAreEmpty(const float* theCells)
+{
+	constexpr int Words = EnvironmentRollout::Cells * static_cast<int>(sizeof(float)) / static_cast<int>(sizeof(uint64_t));
+	uint64_t aBits = 0;
+	for (int word = 0; word < Words; ++word)
+	{
+		uint64_t aWord;
+		std::memcpy(&aWord, theCells + word * (sizeof(uint64_t) / sizeof(float)), sizeof(aWord));
+		aBits |= aWord;
+	}
+	return aBits == 0;
+}
+
 void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels, int kernelRows, int kernelCols,
 	int layer, std::vector<float>& output, bool sparse)
 {
@@ -324,8 +342,7 @@ void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels,
 	const auto& bias = weights[layer + 1];
 	activeChannels.clear();
 	for (int channel = 0; channel < channels; ++channel)
-		if (!sparse || std::any_of(input.data() + channel * Cells, input.data() + (channel + 1) * Cells,
-			[](float value) { return value != 0.0f; })) activeChannels.push_back(channel);
+		if (!sparse || !CellsAreEmpty(input.data() + channel * Cells)) activeChannels.push_back(channel);
 	const int count = static_cast<int>(activeChannels.size()) * kernelRows * kernelCols;
 	const size_t needed = static_cast<size_t>(count) * Cells;
 	// im2col writes every in-bounds cell of every feature; the padding border must be zero.  It
@@ -343,12 +360,28 @@ void EnvironmentRollout::Convolve(const std::vector<float>& input, int channels,
 			{
 				const int deltaRow = kernelRow - kernelRows / 2, deltaCol = kernelCol - kernelCols / 2;
 				// The in-bounds columns of a row are one contiguous run: copy it as a run instead of
-				// testing every cell (this im2col was 5.2% of the rollout CPU on 2026-10-23).
+				// testing every cell (this im2col was 5.2% of the rollout CPU on 2026-10-23).  The
+				// run is the full ten-float row for every interior kernel column, and a variable
+				// length memcpy costs a PLT round trip (~9 ns for 40 bytes, 3.1% of the rollout CPU
+				// on 2026-10-23); the fixed-size copy is inlined as two vector moves.
 				const int colStart = std::max(0, -deltaCol), colEnd = std::min(10, 10 - deltaCol);
-				const size_t run = static_cast<size_t>(colEnd - colStart) * sizeof(float);
-				for (int row = std::max(0, -deltaRow); row < std::min(6, 6 - deltaRow); ++row)
-					std::memcpy(&columns[feature * Cells + row * 10 + colStart],
-						&input[channel * Cells + (row + deltaRow) * 10 + colStart + deltaCol], run);
+				const int rowBegin = std::max(0, -deltaRow), rowEnd = std::min(6, 6 - deltaRow);
+				const int run = colEnd - colStart;
+				for (int row = rowBegin; row < rowEnd; ++row)
+				{
+					float* dest = &columns[feature * Cells + row * 10 + colStart];
+					const float* source = &input[channel * Cells + (row + deltaRow) * 10 + colStart + deltaCol];
+					// A 3x3 kernel only ever leaves 10 or 9 in-bounds columns and a 1x5 kernel 10, 9
+					// or 8, so the run length is one of three values: copy it with a constant size so
+					// the compiler inlines the copy instead of calling memcpy (~9 ns a call).
+					switch (run)
+					{
+					case 10: std::memcpy(dest, source, 10 * sizeof(float)); break;
+					case 9: std::memcpy(dest, source, 9 * sizeof(float)); break;
+					case 8: std::memcpy(dest, source, 8 * sizeof(float)); break;
+					default: std::memcpy(dest, source, static_cast<size_t>(run) * sizeof(float)); break;
+					}
+				}
 				if (transpose)
 					for (int target = 0; target < width; ++target)
 						kernelBuffer[target * count + feature] = kernel[((target * channels + channel) * kernelRows + kernelRow) * kernelCols + kernelCol];

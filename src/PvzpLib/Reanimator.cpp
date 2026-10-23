@@ -478,7 +478,13 @@ void Reanimation::Update()
 
 	PVZP_ASSERT(std::isfinite(mAnimRate));
 	mLastFrameTime = mAnimTime;  // save the previous loop position
-	mAnimTime += SECONDS_PER_UPDATE * mAnimRate / mFrameCount;  // advance the loop position
+	if (mAnimRate != mAnimStepRate || mFrameCount != mAnimStepFrames)
+	{
+		mAnimStepRate = mAnimRate;
+		mAnimStepFrames = mFrameCount;
+		mAnimStep = SECONDS_PER_UPDATE * mAnimRate / mFrameCount;  // same expression, evaluated once
+	}
+	mAnimTime += mAnimStep;  // advance the loop position
 
 	if (mAnimRate > 0)
 	{
@@ -587,14 +593,23 @@ void Reanimation::Update()
 			BuildEnvTrackCache();
 		// Read the live mask after each callback: newly attached higher tracks must
 		// still run this frame, while lower tracks wait until the next, as before.
-		for (int i = NextEnvTrack(0); i < mDefinition->mTracks.count; i = NextEnvTrack(i + 1))
+		for (int i = NextEnvTrack(0); i < mDefinition->mTracks.count; )
 		{
+			// The active tracks of a reanimation are scattered over its track-instance array, so
+			// each step is a cold read of a ~100 byte record; pull in the next one while this
+			// one is being updated (a hint only, the mask is read again below).
+#if defined(__GNUC__) || defined(__clang__)
+			const int aPrefetch = NextEnvTrack(i + 1);
+			if (aPrefetch < mDefinition->mTracks.count)
+				__builtin_prefetch(&mTrackInstances[aPrefetch], 1, 1);
+#endif
 			updateTrack(i);
 			const auto& aTrack = mTrackInstances[i];
 			const uint64_t aBit = uint64_t{1} << (i % 64);
 			if (!(mEnvTrackPermanent[i / 64] & aBit) && aTrack.mBlendCounter <= 0 &&
 				aTrack.mAttachmentID == AttachmentID::ATTACHMENTID_NULL && !mDefinition->mTracks.tracks[i].mIsAttacher)
 				mEnvTrackActive[i / 64] &= ~aBit;
+			i = NextEnvTrack(i + 1);  // after the callback: it may have activated a higher track
 		}
 	}
 	else
