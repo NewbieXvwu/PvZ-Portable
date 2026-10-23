@@ -70,6 +70,10 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，18 解包与训练冒烟通过：`e39ba7cbc076380a.npz` 解包为 `.npz.d/`（37 个成员、payload 合计 8,744,063,511 B，逐成员 SHA256 与包内相同，47 s）。包本身实际 **8,744,068,761 B**；第 16 条写的 7,530,006,217 B 有误，以此为准。首跑 20 步在 `weight[rows] *= ...` 处 SIGSEGV：npz 装载时这些数组是可写匿名内存，而 mmap 的 `.d` 数组只读；已改为只给 weight 做一次可写副本（float32，63.2 MB，训练要按行就地加权，映射包保持只读不被污染）。重跑 20 步 rc=0（epoch 1 train_loss 0.02194、val_loss 7.44、47 s），采样最低 **MemAvailable 13.88 GiB**（进程峰值 RSS 10.15 GiB，但为文件后备页，内核可回收），远高于 10 GiB 地板。修复后复核 weight/plant/board_values 的 payload SHA 未变。下一步：重跑 A 流水线（复用已解包目录）。
 
+- 2026-10-23，19 重跑 A 流水线：23:13 启动 `run_task36_mix.py --plan A --workers 2`（pid 167275，日志 `/home/newbiexvwu/pvz-logs/mix_A4.out`；train 步输出 `artifacts/task36/train_A.txt`，资源采样 `train_A.resources.jsonl`）。pack 步命中缓存（`build: cached`），训练器读已解包的 `.npz.d/`。train 步仍挂 `<10 GiB` 暂停门禁，panel 随后串行执行；B 自动接续（autostart_B pid 64717）保持待命。
+
+
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
