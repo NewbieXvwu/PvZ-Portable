@@ -52,6 +52,8 @@
 
 9. 泳池 L24 p9k 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 0 胜）。CPU 秒/局由旧 view **25.425** 降至 PGO **10.356**，吞吐 **2.455×**。证据 `artifacts/perf/task47/pgo_games_pool/engine_games.json`。
 
+10. 夜间 L14 n10 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 0 胜）。CPU 秒/局由旧 view **65.582** 降至 PGO **33.044**，吞吐 **1.985×**。证据 `artifacts/perf/task47/pgo_games_night/engine_games.json`。
+
 ## 问题
 
 - Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。task35 的四族基准清单与全部存档已经 HF 同步完成。
