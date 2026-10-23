@@ -56,6 +56,11 @@
   `.../scripts/pack_training_rows.py --data /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2 --labels <186 个标签> --wait-keep 0.1 --obs v2 --packet-head identity --aux-horizon 0 --cells --label-weight <33 个 z13–z16 标签=1.5> --prune`。
   dry run 现在会打印这条命令（此前只打印分配表），便于在一轮开跑前核对行参数。已 push `origin/recipe`。
 
+- 2026-10-23 **[fix]**（按 17:50 审查）：
+  1. **配方路径改仓库相对**：`recipes/*.json` 的 `data`/`out`/`cache_dir`/`read_cache_dir`/`manifest`/`value`/`executable` 等全部改成相对仓库根的写法，`pvz_recipe.load_recipe` 载入时解析成绝对路径（新增 `repository_root()` + `resolve_paths()`）。仓库根 = 当前 checkout；从 `<checkout>/.claude/worktrees/<名>` 里的工作树运行时解析到它所属的那个 checkout，所以本工作树删掉后配方仍有效，Mac 上同一条相对路径也成立。训练配方 `out` 改为正式产物位置（`artifacts/student/dw4i_s1`、`dw5i_s1`、`identity_dw3_s1`），对拍/试跑用 `--out` 覆盖；`cache_dir` 改为 `artifacts/student/recipe_cache/<名>`。唯一保留绝对值的是面板配方的 `resource_dir`（游戏资源在仓库外的本机缓存，跨机器本来就要改）；`provenance.original_*` 按原文保留。
+  2. **测试平台假设**：`test_metrics.py` 的两项 `/proc` 测试加 `skipUnless(/proc/meminfo)`；`test_recipe.py::test_full_200_step_observer_with_source_row_report` 固定 `device='cpu'`（测的是对拍逻辑，确定性算子没有 MPS 实现）；`test_historical_recipes_resolve_all_training_settings` 改为断言配方文件里没有绝对路径、解析结果相对 `repository_root()`。原先 "相对路径必须报错" 的那条用例改成空路径报错。
+  验证：建好引擎后 `PVZ_RESOURCE_DIR=... python -m pytest python -q` → **339 passed / 133 subtests passed / 0 failed / 0 skipped**（本机 Linux）。课程 dry run 的 pack 命令与 `recipes/dw4i.json` 仍逐项相同（`--data` 解析回同一个 frames 树，唯一额外参数仍是控制器自己的 `--prune`）。已 push `origin/recipe`（`fa59d68a`）。
+
 ## 问题
 - 本分支缺 hotpath-audit.md；已 fetch 并完整读取 origin/audit 对应报告（含 §6），依据 task33 批准清单删除训练 EMA/全候选软目标入口，保留 cell soft temperature、width 与旧模型元数据。退役前标记 retire-recipe-training-flags-20261023。
 
