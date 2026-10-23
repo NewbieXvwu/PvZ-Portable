@@ -78,7 +78,7 @@ cd /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff
 
 | 输入 | SHA256 |
 |---|---|
-| `scripts/cutoff_agreement.py` | `b0c80e0793c8a022d92f494a4895334d964a617e17c3313837af1492a3ba3cbd` |
+| `scripts/cutoff_agreement.py` | `68e32842102ee4832f29a60378274b41cf4b2d716418bdb70726fd3ff8868dd2` |
 | `scripts/search_play.py` | `d04eaa3643477c86f749df25515a395686b36819d85c69c4302777a45754c340` |
 | `scripts/search_agreement_stats.py` | `5353107d891b8701bbef8d25e759bbada755f3fe932016b575db8820ec27a4bb` |
 | `scripts/render_episode.py` | `e64f1c249f4946a9bb2da56bbbf926095e654488ebe44c4f551e272e3c278b75` |
@@ -95,3 +95,5 @@ cd /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff
 PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 scripts/cutoff_agreement.py --workers 2
 # -> artifacts/task40/agreement.json、artifacts/task40/agreement.log
 ```
+
+> 2026-10-23 11:02 首跑在第 6 局因引擎瞬时退出（`SimulatorExited` → `BrokenPipe`）整池失败，前 5 局明细未落盘（汇总见 `artifacts/task40/agreement_run1_crash.log`）。11:09 起加固为单局重试（`--retries 2`）+ 每局落盘 `artifacts/task40/agreement_parts/` + 断点续跑；三臂、种子、参数、判据均不变。上表脚本 SHA 为新版本。

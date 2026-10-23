@@ -176,6 +176,9 @@
 - 2026-10-23 10:11 第 3 步正式验收启动：`PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 scripts/cutoff_agreement.py --workers 2`（4 族 × 16 局 = 64 局，2 个游戏进程；输出 `artifacts/task40/agreement.json`、`agreement.log`）。
 - 2026-10-23 10:34 验收进度：前 2 局完成（day_l7 seed 30000 负、206 个搜索点、1311 s；seed 30001 胜、254 个搜索点、1352 s）。单局约 22 min（qc 16 worker 同时在跑）；cutoff 早停分布与第 1 步同向：胜局 54% 在 2000 tick 前收手，负局仅 1.6%（局面一直不确定）。按此速度 64 局约 12 h，继续后台跑。
 - 2026-10-23 10:37 跑中输入复核：学生 `122703…`、价值网 `5171db…`、分叉网 `248584…`、引擎 `7508e8…` 四个 SHA256 与 09:47 登记值逐位一致；引擎 mtime 08:16（早于启动），无被其他会话替换迹象。
+- 2026-10-23 11:02 第一次正式跑失败：第 6 局 cutoff 臂某检查点推演时引擎管道关闭（`SimulatorExited`，当时 `poll()` 为 None，随后写管道 `BrokenPipe`），multiprocessing 整池 exit 1。已完成 5 局的明细只在内存里，全部丢失（日志另存 `artifacts/task40/agreement_run1_crash.log`）。dmesg 无 pvz-portable segfault，earlyoom 无击杀记录（11:03 可用内存反升到 22 GiB，应是别的负载结束），原因未定，按瞬时故障处理。
+- 2026-10-23 11:09 harness 加固后重跑（统计口径不变：三臂、同种子、同参数、同判据）：① 单局捕获 `SimulatorExited/BrokenPipe/ConnectionError/EOFError/TimeoutError`，杀掉旧引擎、重建、从头重跑该局（`--retries 2`）；② 每局完成即原子写 `artifacts/task40/agreement_parts/<family>_<seed>.json`；③ 启动时按落盘文件跳过已完成局（`--rerun` 强制重算）；④ 重试用尽仍失败则写 `error` 占位、不进 rows，`minimum_games` 仍是 64，门禁只会更严。自检：SIGKILL 引擎后 `_recover()` 重建并成功 reset。脚本 SHA256 更新为 `68e32842102ee4832f29a60378274b41cf4b2d716418bdb70726fd3ff8868dd2`（其余输入不变）。
+- 2026-10-23 11:10 第二次正式跑启动（同命令，`--workers 2`）；首跑日志保留为 `agreement_run1_crash.log`。
 
 ## 问题
 

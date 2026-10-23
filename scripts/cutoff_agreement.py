@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import json
 import multiprocessing as mp
+import os
 import sys
 import tempfile
 import time
@@ -51,27 +52,33 @@ FAMILIES = {
 _W: dict = {}
 
 
+def _open_env(args, binary):
+    from pvz_event_env import EventWaitEnv
+    env = EventWaitEnv(args.resource_dir, executable=args.executable, headless=True)
+    env.load_rollout_net(binary)
+    return env
+
+
 def _init(args) -> None:
     import os
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     import torch
     torch.set_num_threads(1)
-    from pvz_event_env import EventWaitEnv
     from pvz_rollout_policy import load_student, export_student
     from pvz_value_net import load_value_net
     import search_play
     net = load_student(args.policy)
-    env = EventWaitEnv(args.resource_dir, executable=args.executable, headless=True)
     temporary = tempfile.TemporaryDirectory(prefix="pvz-cutoff-agreement-")
     binary = Path(temporary.name) / "student.bin"
     export_student(net, binary)
-    env.load_rollout_net(binary)
+    env = _open_env(args, binary)
     search_play._W.update(fast=net, vnet=load_value_net(args.value),
                           static_vnet=load_value_net(args.static_value),
                           lean_rollouts=True, batch_waits=True,
                           rollout_sim_skip=args.rollout_sim_skip)
-    _W.update(env=env, net=net, args=args, temporary=temporary, search_play=search_play,
+    _W.update(env=env, net=net, args=args, temporary=temporary, binary=binary,
+              search_play=search_play,
               original_rollout=search_play._rollout_policy,
               original_score=search_play._score_terminal_or_value)
 
@@ -134,7 +141,80 @@ def _install(exact: bool) -> None:
     search_play._score_terminal_or_value = _W["original_score"] if exact else _cutoff_score
 
 
+def _kill_env(env) -> None:
+    """Drop a dead engine without env.close(): its wait() has no timeout."""
+    process = getattr(env, "_process", None)
+    try:
+        if process is not None and process.poll() is None:
+            process.kill()
+            process.wait(timeout=10)
+    except Exception:
+        pass
+    temporary = getattr(env, "_temporary_save", None)
+    if temporary is not None:
+        try:
+            temporary.cleanup()
+        except Exception:
+            pass
+        env._temporary_save = None
+    env._process = None
+
+
+def _recover() -> None:
+    """Replace the worker's engine after SimulatorExited/BrokenPipe and forget per-game state."""
+    _install(exact=True)
+    _kill_env(_W["env"])
+    _W["env"] = _open_env(_W["args"], _W["binary"])
+
+
+def _part_path(args, family: str, seed: int) -> Path:
+    return args.parts / f"{family}_{seed}.json"
+
+
+def _needs_run(args, job: dict) -> bool:
+    if args.rerun:
+        return True
+    path = _part_path(args, job["family"], job["seed"])
+    if not path.is_file():
+        return True
+    try:
+        return bool(json.loads(path.read_text()).get("error"))
+    except ValueError:
+        return True
+
+
+def _write_part(args, result: dict) -> None:
+    path = _part_path(args, result["family"], result["seed"])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(".tmp")
+    temporary.write_text(json.dumps(result) + "\n")
+    os.replace(temporary, path)
+
+
 def _play(job: dict) -> dict:
+    from pvz_env import SimulatorExited
+    args = _W["args"]
+    attempts = 1 + max(0, args.retries)
+    result = None
+    for attempt in range(1, attempts + 1):
+        try:
+            result = _play_once(job)
+            break
+        except (SimulatorExited, BrokenPipeError, ConnectionError, EOFError, TimeoutError) as exc:
+            print(f"{time.strftime('%H:%M:%S')} engine died {attempt}/{attempts} "
+                  f"{job['family']} seed {job['seed']}: {type(exc).__name__}: {exc}", flush=True)
+            if attempt == attempts:
+                result = {"family": job["family"], "seed": job["seed"], "rows": [],
+                          "won": None, "final_wave": None, "decisions": 0, "rollouts": 0,
+                          "cutoff_stops": {}, "seconds_total": 0.0, "seconds_arms": {},
+                          "error": f"{type(exc).__name__}: {exc}"}
+                break
+            _recover()
+    _write_part(args, result)
+    return result
+
+
+def _play_once(job: dict) -> dict:
     import torch
     import search_play
     family, seed = job["family"], job["seed"]
@@ -228,6 +308,9 @@ def main() -> None:
     p.add_argument("--min-gap", type=int, default=300)
     p.add_argument("--rollout-sim-skip", type=int, default=61)
     p.add_argument("--max-actions", type=int, default=3000)
+    p.add_argument("--retries", type=int, default=2, help="restart the game after an engine death")
+    p.add_argument("--parts", type=Path, default=ROOT / "artifacts" / "task40" / "agreement_parts")
+    p.add_argument("--rerun", action="store_true", help="ignore per-game files already on disk")
     p.add_argument("--out", type=Path, default=ROOT / "artifacts" / "task40" / "agreement.json")
     args = p.parse_args()
 
@@ -240,34 +323,44 @@ def main() -> None:
             raise SystemExit(f"{family}: task has {len(seeds)} seeds at offset {args.seed_offset}, need {args.seeds}")
         jobs += [{"family": family, "seed": int(seed)} for seed in seeds]
     started = time.time()
-    start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
-    with mp.get_context(start_method).Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
-        results = []
-        for index, result in enumerate(pool.imap_unordered(_play, jobs), 1):
-            results.append(result)
-            print(f"{time.strftime('%H:%M:%S')} {index}/{len(jobs)} {result['family']} seed {result['seed']} "
-                  f"won={result['won']} searches={len(result['rows'])} stops={result['cutoff_stops']} "
-                  f"seconds={result['seconds_total']}", flush=True)
+    pending = [job for job in jobs if _needs_run(args, job)]
+    if len(pending) < len(jobs):
+        print(f"resume: {len(jobs) - len(pending)}/{len(jobs)} games already on disk", flush=True)
+    if pending:
+        start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
+        with mp.get_context(start_method).Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
+            for index, result in enumerate(pool.imap_unordered(_play, pending), 1):
+                print(f"{time.strftime('%H:%M:%S')} {index}/{len(pending)} {result['family']} "
+                      f"seed {result['seed']} won={result['won']} searches={len(result['rows'])} "
+                      f"stops={result['cutoff_stops']} seconds={result['seconds_total']}", flush=True)
+    results = [json.loads(_part_path(args, job["family"], job["seed"]).read_text()) for job in jobs]
     rows = [row for result in results for row in result["rows"]]
     from search_agreement_stats import agreement_intervals
     stops: dict[str, int] = {}
     for result in results:
         for stop, count in result["cutoff_stops"].items():
             stops[str(stop)] = stops.get(str(stop), 0) + count
+    errors = [{"family": result["family"], "seed": result["seed"], "error": result["error"]}
+              for result in results if result.get("error")]
     summary = {"config": {key: str(value) for key, value in vars(args).items()},
                "checkpoints": list(CUTOFF_AT), "theta": CUTOFF_THETA,
-               "games": len(results), "searches": len(rows),
+               "games": len(results), "games_completed": sum(1 for result in results if result["rows"]),
+               "searches": len(rows), "errors": errors,
                "seeds": [job["seed"] for job in jobs],
                "cutoff_stops": dict(sorted(stops.items(), key=lambda item: int(item[0]))),
                "seconds": round(time.time() - started, 1),
-               "summary": agreement_intervals(rows, margin=0.03, minimum_games=len(results)),
                "per_family": {}, "games_detail": [{key: result[key] for key in
                                                    ("family", "seed", "won", "final_wave", "decisions",
                                                     "rollouts", "cutoff_stops",
                                                     "seconds_total", "seconds_arms")} for result in results]}
+    # A game whose engine died after every retry has no rows; keeping minimum_games at the
+    # pre-registered count makes the gate fail instead of silently passing on fewer games.
+    summary["summary"] = (agreement_intervals(rows, margin=0.03, minimum_games=len(results))
+                          if rows else {"error": "no paired search points"})
     for family in sorted({result["family"] for result in results}):
         part = [row for row in rows if row["family"] == family]
-        summary["per_family"][family] = agreement_intervals(part, margin=0.03, minimum_games=args.seeds)
+        summary["per_family"][family] = (agreement_intervals(part, margin=0.03, minimum_games=args.seeds)
+                                         if part else {"error": "no paired search points"})
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({"summary": summary, "rows": rows}, indent=1) + "\n")
     print(json.dumps({key: summary[key] for key in ("games", "searches", "seconds", "summary")}, indent=1))
