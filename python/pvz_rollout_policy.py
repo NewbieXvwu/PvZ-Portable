@@ -28,6 +28,7 @@ EXTRA = 2               # previous action was a plant; ticks since the previous 
 WAIT = {"type": "wait", "ticks": 60, "until": "timeout"}
 
 
+# LEGACY(conveyor-start-key): only the L10 conveyor tasks carry the key.
 def packet_features(frame: dict) -> torch.Tensor:
     """Public per-slot [plant type, active, cooldown progress, affordable]; -1 marks an empty slot.
 
@@ -40,7 +41,6 @@ def packet_features(frame: dict) -> torch.Tensor:
     # SeedPacket::CanPickUp skips the sun check when the board has a conveyor bank, so the
     # nominal packet cost is not a budget gate there. This is the engine's own flag, not a
     # Python "conveyor is free" rule; tasks without it keep the nominal-cost comparison.
-    # LEGACY(conveyor-start-key): only the L10 conveyor tasks carry the key.
     free_cards = frame.get('conveyor_start') == 'original'
     for slot, kind, active, cooldown, refresh, cost in frame['packets']:
         if not 0 <= slot < PACKETS or kind < 0:

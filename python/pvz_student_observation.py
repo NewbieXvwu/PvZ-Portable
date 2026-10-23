@@ -5,7 +5,6 @@ import torch
 from pvz_value_net import CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of
 
 SPEED_SCALE = 1.0
-# LEGACY(obs-versions): v1/v2lite/v2 are frozen; new observations get a new key, never a change here.
 OBS_EXTRA = {"v1": (0, 0), "v2lite": (4, 1), "v2": (9, 7)}
 
 

@@ -31,6 +31,40 @@ def sample() -> dict:
 
 
 class ContainerTest(unittest.TestCase):
+    def test_historical_encoder_and_packet_signatures_stay_frozen(self):
+        import hashlib
+        import inspect
+        from unittest.mock import patch
+        import pvz_frame_store as store
+        import pvz_rollout_policy as policy
+
+        expected = {
+            'v1': '5c34482620514a7434e638058f9b75d05e51a8aa9c18b634a8f80e4dd424f008',
+            'v2lite': 'b6020e4131d35d7ff9ef0fb0996f877e6f3ffd2122045a65bd5e87be2c065aa5',
+            'v2': '5031d93614db9ecff271dcaa6aa8645d7a799452f170e5ebf699cc2fb8c1df91',
+        }
+        store.encoder_signature.cache_clear()
+        self.assertEqual({obs: store.encoder_signature(obs) for obs in expected}, expected)
+        packet_source = (inspect.getsource(policy.packet_features) + inspect.getsource(store.encode_packets)
+                         + str((policy.PACKETS, policy.PlantTypes)))
+        self.assertEqual(hashlib.sha256(packet_source.encode()).hexdigest(),
+                         'c84d95592bfecadbb64fe2726fa22798defe3ff845c2d40b3f120eefe26821ce')
+        # Old bytes must hit both caches without invoking the encoder or writer.
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            source = root / 'frames.jsonl'
+            source.write_bytes(b'{"tick":0}\n')
+            key = hashlib.sha256(str(source.resolve()).encode()).hexdigest() + '.npz'
+            caches = root / 'cache'
+            for subdir, signature in [('v2', expected['v2']), ('packets', packet_source)]:
+                target = caches / subdir / key
+                target.parent.mkdir(parents=True)
+                digest = hashlib.sha256(signature.encode() + source.read_bytes()).hexdigest()
+                np.savez(target, digest=digest)
+            with patch.object(store, '_save', side_effect=AssertionError('rewrote a valid historical cache')):
+                self.assertEqual(store.cache_episode(source, caches, 'v2'), caches / 'v2' / key)
+                self.assertEqual(store.cache_packets(source, caches), caches / 'packets' / key)
+
     def test_archive_is_lzma_and_round_trips_every_dtype(self):
         arrays = sample()
         with tempfile.TemporaryDirectory() as temp:
