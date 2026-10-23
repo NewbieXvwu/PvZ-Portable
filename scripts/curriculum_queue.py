@@ -422,21 +422,6 @@ def pack_command(args, labels: list[str]) -> list[str]:
             '--cache-dir', str(recipe['cache_dir'] or (args.frames / '.feature_cache')), '--prune']
 
 
-def write_pack(args, state: dict) -> None:
-    """Build/reuse label segments for one saved snapshot (called by the background trainer)."""
-    recipe = load_recipe(args.recipe, 'training')
-    labels = pack_labels(state, ','.join(recipe['labels']))
-    if not labels:
-        return
-    started = time.time()
-    result = subprocess.run(pack_command(args, labels), cwd=ROOT, capture_output=True, text=True)
-    summary = ' | '.join(result.stdout.strip().splitlines())
-    log_line(args.log, f'pack {len(labels)} labels {time.time() - started:.0f}s rc={result.returncode} {summary}')
-    if result.returncode != 0:
-        log_line(args.log, f'pack failed: {result.stderr.strip()[-2000:]}')
-        raise RuntimeError(f'pack_training_rows exited {result.returncode}')
-
-
 class TrainingPipeline:
     """One durable, serial pack/train queue, overlapping the foreground game groups.
 
@@ -455,7 +440,6 @@ class TrainingPipeline:
         self.lock_fd = None
         self.failed = False
         self.futures = []
-        self.collector_bytes = DEFAULT_WORKER_BYTES
         if state.get('student'):
             model = Path(state['student'])
             if not model.is_file():
@@ -471,7 +455,7 @@ class TrainingPipeline:
         # allow a third copy and 2 GiB for Python, optimizer and host batches. At least 4 GiB
         # also covers two parallel pack builders (2 GiB each). MemAvailable already reflects
         # any current backend RSS; only its unconsumed headroom is subtracted from collection.
-        compact_bytes = sum(p.stat().st_size for p in (self.args.frames / 'packs/segments').glob('*.npz'))
+        compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
         return max(4 * GIB, 3 * compact_bytes + 2 * GIB)
 
     def reservation(self):
@@ -490,7 +474,7 @@ class TrainingPipeline:
             return
         recipe = load_recipe(self.args.recipe, 'training')
         recipe['labels'] = pack_labels(self.state, ','.join(recipe['labels']))
-        recipe['data'] = str(self.args.frames)
+        recipe['data'] = str(self.directory / 'frames')
         folder = self.directory / f'round_{round_index:06d}'
         recipe['out'] = str(folder / 'student')
         recipe['cache_dir'] = str(self.directory / 'cache')
@@ -504,6 +488,37 @@ class TrainingPipeline:
         save_state(self.args.state, self.state)  # durable before the worker is submitted
         log_line(self.args.log, f'background round {round_index} queued: {path}')
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
+
+    def _prepare_corpus(self, labels):
+        """An append-only local view of recipe archives + collected archives, without copying bytes.
+
+        Production frames_v2 historically lacks two recipe labels. Never silently train a
+        smaller corpus: merge both roots per archive (collection wins duplicates), and reject
+        labels absent from both. Each link is an episode directory; all packs/cache stay local.
+        """
+        from pvz_frame_store import frame_paths
+        base = Path(load_recipe(self.args.recipe, 'training')['data'])
+        sources = [base] if base == self.args.frames else [base, self.args.frames]
+        wanted = set(labels)
+        catalog = {}
+        for source in sources:
+            for path in frame_paths(source):
+                if path.parent.name in wanted:
+                    catalog[path.parent.relative_to(source)] = path.parent.resolve()
+        missing = wanted - {relative.name for relative in catalog}
+        if missing:
+            raise RuntimeError(f'no archives for labels in recipe or collection roots: {sorted(missing)}')
+        view = self.directory / 'frames'
+        for relative, source in sorted(catalog.items()):
+            target = view / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            if target.is_symlink():
+                if target.resolve() != source:
+                    raise RuntimeError(f'archive source changed for pinned corpus: {target}')
+            elif target.exists():
+                raise RuntimeError(f'corpus view expects an archive link: {target}')
+            else:
+                target.symlink_to(source, target_is_directory=True)
 
     def _command(self, command, log):
         with log.open('a') as output:
@@ -523,8 +538,9 @@ class TrainingPipeline:
         last_log = 0
         while True:
             available = mem_available_bytes()
-            # The forecast also covers one collector worker before the next group starts.
-            required = MEMORY_RESERVE_BYTES + self.estimate_peak() + self.collector_bytes
+            # Current game workers are already excluded from MemAvailable. Future groups
+            # separately subtract reservation(), so adding their RSS here would count twice.
+            required = MEMORY_RESERVE_BYTES + self.estimate_peak()
             if available is None or available >= required:
                 return
             if time.monotonic() - last_log > 30:
@@ -554,6 +570,7 @@ class TrainingPipeline:
                 local_args = copy.copy(self.args)
                 local_args.recipe = recipe_path
                 recipe = load_recipe(recipe_path, 'training')
+                local_args.frames = Path(recipe['data'])
                 report = {'round': job['round'], 'model': job['model']}
                 for phase, command in (
                     ('pack', pack_command(local_args, recipe['labels'])),
@@ -562,6 +579,8 @@ class TrainingPipeline:
                     self._admit()
                     report[phase + '_started'] = time.time()
                     log_line(self.args.log, f'background round {job["round"]} {phase} started')
+                    if phase == 'pack':
+                        self._prepare_corpus(recipe['labels'])
                     self._command(command, folder / f'{phase}.log')
                     report[phase + '_finished'] = time.time()
                     log_line(self.args.log, f'background round {job["round"]} {phase} done: '
@@ -609,7 +628,9 @@ def log_line(path: Path, message: str) -> None:
 def save_state(path: Path, state: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     state['updated'] = datetime.now().isoformat(timespec='seconds')
-    path.write_text(json.dumps(state, indent=1) + '\n')
+    temporary = path.with_suffix(path.suffix + '.building')
+    temporary.write_text(json.dumps(state, indent=1) + '\n')
+    temporary.replace(path)
 
 
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
@@ -794,7 +815,6 @@ def main() -> None:
                     log_line(args.log, f'round {state["round"] + 1}: stop flag seen before the worker probe; stopping')
                     break
                 per_worker = startup_worker_estimate(args, plan)
-                args.pipeline.collector_bytes = per_worker or DEFAULT_WORKER_BYTES
             if not run_round(args, state, plan, changes, per_worker):
                 break
     finally:

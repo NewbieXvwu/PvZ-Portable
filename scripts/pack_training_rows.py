@@ -1,22 +1,17 @@
-"""Pack immutable per-label training rows and publish a small corpus index (task49).
+"""Immutable per-label training packs with an atomic corpus index (task49).
 
-Why: a training run used to decompress 25 M rows x 13.8 KB (345 GB) out of 21 056 per-game
-frames.npz files and compress every row into CSR again -- on every run, because neither the
-decompressed rows nor the CSR were kept. Measured 2026-10-23: 48 598 rows/s with --cache-dir and 8
-precompute workers (1.28 M rows in 32 s, 13.6 M rows ~280 s), and the packed file reads back in
-0.17 s. This writes what the trainer wants, once: the CSR boards and scalars, the labels, the
-search targets, the per-row seed and the per-row archive position, in archive order.
+Only new/changed label segments are built; row options and source fingerprints identify
+segments. --precompute-workers builds labels in parallel under the memory cap. The trainer
+reads the small index and restores global archive order from compact segments, without
+reading game frames. Version 2 uses independent seed=0 wait-sampling streams per label;
+adding another label never changes an existing segment's rows. This intentionally changes
+v1's cross-label sampling; v1 packs are never reused as v2.
 
-The trainer (train_rollout_policy.load) reads only packs. The archives are read here and nowhere
-else; that is the LEGACY side of the pair -- an archive written before packs still works, through
-this tool.
+pack_monolithic is the full-build reference for verification, with identical row semantics.
+The production CLI always writes segments; there is no alternate packing mode.
 
-  python3 scripts/pack_training_rows.py --data DIR --labels a,b
-  python3 scripts/pack_training_rows.py --data DIR --labels a,b --verify DIR/packs/x.npz
-
-Options that change the rows (--wait-keep, --obs, --cells, --aux-horizon, --packet-head, --context,
---label-weight) are part of the pack key: the trainer looks for the pack of exactly its own options
-and prints the command to run when it is missing.
+  python3 /absolute/repo/scripts/pack_training_rows.py --data /absolute/frames --labels a,b
+  python3 /absolute/repo/scripts/pack_training_rows.py --data /absolute/frames --labels a,b --verify --out /absolute/pack.npz
 """
 from __future__ import annotations
 
@@ -473,11 +468,6 @@ def assert_payload_equal(expected, actual, batch_size=64):
                 a, b = a.astype(np.int32), b.astype(np.int32)
             if a.shape != b.shape or a.dtype != b.dtype or a.tobytes() != b.tobytes():
                 raise AssertionError(f'column {column}, rows {start}:{start + batch_size} differ')
-
-
-def _same_store(read: dict, prefix: str, store) -> bool:
-    return all(np.array_equal(read[prefix + "_" + key], value)
-               for key, value in _store_arrays(store).items())
 
 
 def main() -> None:

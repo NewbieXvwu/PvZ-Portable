@@ -324,11 +324,6 @@ class ValueStore:
         return self.counts.nbytes + self.slots.nbytes + self.values.nbytes + self.offsets.nbytes
 
 
-# Packs stay mapped for the whole run: the arrays are memmaps into the file, and closing the NpzFile
-# would drop the handle the mappings were opened from.
-_OPEN_PACKS: list = []
-
-
 def _pack_flags(options: dict) -> str:
     import shlex
     return shlex.join(pack_flags(options))
@@ -339,9 +334,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
          row_observer=None, packet_head: str = "slot"):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
-    One sequential pass over one file, with the CSR already built, instead of decompressing 21 056
-    archives and rebuilding it on every run (task33). The collection step writes the pack; a label set
-    without one says which command to run.
+    Read the corpus index and immutable label segments, merging CSR slices in archive order.
+    The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
                            sources=archive_fingerprint(data, labels))

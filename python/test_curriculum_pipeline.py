@@ -21,6 +21,10 @@ def setup(root):
                            recipe=recipe, python=Path(sys.executable), rollout_policy=root / 'initial.pt',
                            workers=2, stop_flag=root / 'stop', out=root / 'runs')
     args.rollout_policy.write_bytes(b'initial')
+    for label in ('base', 'c1a_fast_search', 'c1b_fast_search', 'c2a_fast_search', 'c2b_fast_search'):
+        archive = args.frames / 'seed_1' / label
+        archive.mkdir(parents=True)
+        (archive / 'frames.jsonl').write_text('{}\n')
     cells = {name: dict(windows={}) for name in ('a', 'b')}
     state = dict(round=0, log=[], cells=cells, offsets={})
     return args, state
@@ -124,5 +128,32 @@ def test_memory_forecast_counts_only_background_headroom():
             with patch.object(queue, '_proc_table', return_value={123: (1, queue.GIB), 124: (123, queue.GIB)}):
                 assert pipeline.reservation() == 2 * queue.GIB
             pipeline.futures.clear()
+        finally:
+            pipeline.close()
+
+
+def test_recipe_and_collection_sources_merge_without_copying_or_dropping_labels():
+    with tempfile.TemporaryDirectory() as folder:
+        root = Path(folder)
+        args, state = setup(root)
+        base = root / 'recipe_frames/seed_2/base'
+        base.mkdir(parents=True)
+        (base / 'frames.jsonl').write_text('{"from_recipe":true}\n')
+        recipe = json.loads(args.recipe.read_text())
+        recipe['data'] = str(root / 'recipe_frames')
+        write_recipe(args.recipe, recipe)
+        pipeline = queue.TrainingPipeline(args, state)
+        try:
+            pipeline._prepare_corpus(['base', 'c1a_fast_search'])
+            view = pipeline.directory / 'frames'
+            assert (view / 'seed_2/base').is_symlink()
+            assert (view / 'seed_2/base').resolve() == base
+            assert (view / 'seed_1/base').resolve() == args.frames / 'seed_1/base'
+            assert (view / 'seed_1/c1a_fast_search/frames.jsonl').read_bytes() == b'{}\n'
+            try:
+                pipeline._prepare_corpus(['missing'])
+                assert False, 'missing labels must fail'
+            except RuntimeError as error:
+                assert 'missing' in str(error)
         finally:
             pipeline.close()
