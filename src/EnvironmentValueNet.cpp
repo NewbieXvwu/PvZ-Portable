@@ -49,6 +49,8 @@ void EnvironmentValueNet::Load(const std::string& path)
 	first.resize(width * Cells); second.resize(width * Cells);
 	joined.resize(width * 8); scalarHidden.resize(width); hidden.resize(width);
 	columns.reserve(std::max(Channels, width) * 9 * Cells);
+	kernelBuffer.reserve(width * Channels * 9);
+	activeChannels.reserve(Channels);
 }
 
 void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<float>& b, std::vector<float>& s) const
@@ -124,20 +126,34 @@ void EnvironmentValueNet::Convolve(const std::vector<float>& input, int channels
 	std::vector<float>& output)
 {
 	const auto started = std::chrono::steady_clock::now();
-	const int count = channels * kernelRows * 3;
-	columns.resize(count * Cells);
+	const float* kernel = weights[layer].data();
+	activeChannels.clear();
 	for (int ch = 0; ch < channels; ++ch)
+		if (layer != 0 || std::any_of(input.data() + ch * Cells, input.data() + (ch + 1) * Cells,
+			[](float x) { return x != 0.0f; })) activeChannels.push_back(ch);
+	const int count = activeChannels.size() * kernelRows * 3;
+	if (layer == 0)
+	{
+		kernelBuffer.resize(width * count);
+		for (int out = 0; out < width; ++out)
+			for (size_t index = 0; index < activeChannels.size(); ++index)
+				std::copy_n(kernel + (out * channels + activeChannels[index]) * kernelRows * 3, kernelRows * 3,
+					kernelBuffer.data() + out * count + index * kernelRows * 3);
+		kernel = kernelBuffer.data();
+	}
+	columns.resize(count * Cells);
+	for (size_t index = 0; index < activeChannels.size(); ++index)
 		for (int kr = 0; kr < kernelRows; ++kr)
 			for (int kc = 0; kc < 3; ++kc)
 				for (int row = 0; row < 6; ++row)
 					for (int col = 0; col < 10; ++col)
 					{
 						const int r = row + kr - kernelRows / 2, c = col + kc - 1;
-						columns[((ch * kernelRows + kr) * 3 + kc) * Cells + row * 10 + col] =
-							r >= 0 && r < 6 && c >= 0 && c < 10 ? input[ch * Cells + r * 10 + c] : 0.0f;
+						columns[((index * kernelRows + kr) * 3 + kc) * Cells + row * 10 + col] =
+							r >= 0 && r < 6 && c >= 0 && c < 10 ? input[activeChannels[index] * Cells + r * 10 + c] : 0.0f;
 					}
 	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, width, Cells, count, 1.0f,
-		weights[layer].data(), count, columns.data(), Cells, 0.0f, output.data(), Cells);
+		kernel, std::max(1, count), columns.data(), Cells, 0.0f, output.data(), Cells);
 	for (int ch = 0; ch < width; ++ch)
 		for (int cell = 0; cell < Cells; ++cell)
 			output[ch * Cells + cell] = std::max(0.0f, output[ch * Cells + cell] + weights[layer + 1][ch]);

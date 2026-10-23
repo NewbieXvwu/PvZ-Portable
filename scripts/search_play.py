@@ -710,12 +710,14 @@ def _play(job: dict) -> dict:
     env = _W.get("env")
     if env is None:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
-        env.load_value_net(_W["value_files"][0])
-        env.load_value_net(_W["value_files"][1], static=True)
         if _W.get("cpp_rollouts"):
             env.load_rollout_net(_W["rollout_file"])
         if _W.get("rollout_sim_skip", 0) & 256:
             env.require_sparse_tracks()
+    if job["arm"] == "fast_search" and not getattr(env, "_teacher_value_loaded", False):
+        env.load_value_net(_W["value_files"][0])
+        env.load_value_net(_W["value_files"][1], static=True)
+        env._teacher_value_loaded = True
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})

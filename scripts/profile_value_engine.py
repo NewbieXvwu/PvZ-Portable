@@ -23,6 +23,9 @@ def main():
     parser.add_argument("--executable", required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--noise-every", type=int, default=0)
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--task-id")
+    parser.add_argument("--seed-offset", type=int)
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     spec = importlib.util.spec_from_file_location("profiled_teacher", args.code)
@@ -37,6 +40,9 @@ def main():
             except (ValueError, SyntaxError):
                 pass
     config.update(executable=args.executable, out=args.out, frames=None, measure_cpu=True)
+    for key in ("manifest", "task_id", "seed_offset"):
+        if getattr(args, key) is not None:
+            config[key] = getattr(args, key)
     config = SimpleNamespace(**config)
     from render_episode import load_training_task
     from pvz_env import PvZEnv
