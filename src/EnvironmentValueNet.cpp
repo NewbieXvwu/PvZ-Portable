@@ -57,11 +57,12 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 {
 	Board* state = app->mBoard;
 	b.assign(Channels * Cells, 0.0f); s.assign(ScalarCount(), 0.0f);
-	// numpy's cell += double performs a double addition followed by a float32 store.
+	// numpy's cell += scalar casts each term to float32 first, then accumulates in float32;
+	// rounding the term before the add is what reproduces that bit-exactly.
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 			b[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] +=
-				static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth);
+				static_cast<float>(static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth));
 	for (Zombie* zombie : state->mZombies)
 	{
 		if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6) continue;
@@ -71,7 +72,7 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 		if (std::abs(x - boundary) < 0.001) x = EnvironmentWaitEvents::RenderedPublicCoordinate(x);
 		const int cell = zombie->mRow * 10 + std::clamp(static_cast<int>(std::floor((x - 40.0) / 80.0)), 0, 9);
 		b[(54 + std::min(static_cast<int>(zombie->mZombieType), 33)) * Cells + cell] +=
-			(zombie->mBodyHealth + zombie->mHelmHealth + zombie->mShieldHealth) / 200.0;
+			static_cast<float>((zombie->mBodyHealth + zombie->mHelmHealth + zombie->mShieldHealth) / 200.0);
 		b[88 * Cells + cell] += zombie->mIsEating;
 		b[89 * Cells + cell] += zombie->mChilledCounter > 0;
 	}
