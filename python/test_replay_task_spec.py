@@ -89,6 +89,14 @@ class LoadTrainingTask(unittest.TestCase):
         task = dict(TASK, preplanted=[])
         self.assertNotIn("preplanted", render_episode.training_task_kwargs(task)["task_extra"])
 
+    def test_fog_mode_replays_from_archive_without_changing_legacy_tasks(self) -> None:
+        from episode_query import _replay_task_extra
+        self.assertNotIn('fog_observation', _replay_task_extra(TASK))
+        for mode in ('human', 'xray'):
+            saved = dict(TASK, fog_observation=mode)
+            self.assertEqual(_replay_task_extra(saved)['fog_observation'], mode)
+            self.assertEqual(render_episode.training_task_kwargs(saved)['task_extra']['fog_observation'], mode)
+
 
 class ReplayRefusesTheWrongDeck(unittest.TestCase):
     """学生回放不带检查点或卡组时必须报错，而不是悄悄用别的卡组跑完。"""

@@ -756,7 +756,8 @@ def _replay_task_extra(task: dict) -> dict:
     return {"wave_cap": task.get("wave_cap"),
             "zombie_count_multiplier": task.get("zombie_count_multiplier"),
             "preplanted": tuple(tuple(p) for p in task.get("preplanted") or ()),
-            **({"conveyor_start": task["conveyor_start"]} if task.get("conveyor_start") else {})}
+            **({"conveyor_start": task["conveyor_start"]} if task.get("conveyor_start") else {}),
+            **({"fog_observation": task["fog_observation"]} if task.get("fog_observation") else {})}
 
 
 def _run_variant(meta: dict, override: dict, resource_dir: str,

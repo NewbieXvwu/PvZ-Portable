@@ -424,6 +424,7 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
         "task": {"level": level, "seed": seed, "playthrough": 2,
                  "deck": list(deck), "policy": policy,
                  **({"conveyor_start": task.conveyor_start} if task.conveyor_start else {}),
+                 **({"fog_observation": task.fog_observation} if task.fog_observation else {}),
                  **({"wave_cap": task.wave_cap,
                      "zombie_count_multiplier": task.zombie_count_multiplier}
                     if (task.wave_cap or task.zombie_count_multiplier != 1.0) else {}),

@@ -29,9 +29,10 @@ def phase(folder):
                 loss=diagnostic['loss'], openings=diagnostic['opening_plant_positions']))
         cells.append(dict(task_id=cell['task_id'], arm=cell['arm'], games=len(rows),
                           won=sum(r['won'] for r in rows), teacher_agreement=dict(agreement),
-                          opening_plants=dict(counts), positions=[dict(type=k, row=r, col=c, count=n)
+                          opening_plants={kind: counts[kind] for kind in (22, 25, 27)}, positions=[dict(type=k, row=r, col=c, count=n)
                            for (k, r, c), n in sorted(positions.items())]))
     return dict(manifest_sha256=plan['manifest_sha256'], models=plan['models'],
+                engine_revision_history=plan.get('engine_revision_history', []),
                 complete=len(cells) == len(plan['cells']) and len(games) == len(plan['cells']) * 16,
                 cells=cells, games=games)
 
@@ -42,6 +43,18 @@ def memory():
         return None
     result = dict(same_data=json.loads((folder / 'same-data-audit.json').read_text()),
                    resource_gate=json.loads((folder / 'resource_gate.json').read_text()))
+    import re
+    import hashlib
+    result['training'] = {}
+    result['collection_engine_sha256'] = json.loads((ARTIFACTS / 'cold/plan.json').read_text())['models']['executable']['sha256']
+    result['evaluation_engine_sha256'] = hashlib.sha256((ROOT / 'build/pvz-portable').read_bytes()).hexdigest()
+    for name in ('current', 'stack4'):
+        log = (folder / f'{name}-train.log').read_text()
+        rss = re.findall(r'Maximum resident set size \(kbytes\):\s*(\d+)', log)
+        elapsed = re.findall(r'Elapsed \(wall clock\) time \(h:mm:ss or m:ss\):\s*(\S+)', log)
+        result['training'][name] = dict(peak_rss_bytes=int(rss[-1]) * 1024,
+               elapsed=elapsed[-1], model_sha256=hashlib.sha256((folder / name / 'model.pt').read_bytes()).hexdigest(),
+               recipe=json.loads((folder / f'{name}.json').read_text()))
     path = folder / 'evaluation.jsonl'
     if path.exists():
         rows = [json.loads(line) for line in path.read_text().splitlines()]
@@ -66,6 +79,25 @@ def main():
                   memory=memory())
     if (ARTIFACTS / 'deck-diagnostic/summary.json').exists():
         result['deck_diagnostic'] = phase(ARTIFACTS / 'deck-diagnostic')
+    result['recommendation'] = dict(eligible_levels=[], starting_multiplier=None,
+        observation='retain both experimental arms; the all-loss floor does not select a final mode',
+        reason='cold teachers below 50%; opening-card and half-multiplier controls did not clear the gate',
+        memory='no observed win-rate benefit; small same-data pilot cannot establish memory is useless',
+        production_queue_changed=False)
+    result['measurement_definitions'] = dict(
+        agreement='cold student vs final teacher type/packet/row/col, not supervised held-out accuracy',
+        fog_enemy_row='overrides_hidden_enemy_row counts enemies in physically foggy grid cells; '
+                      'these are actually hidden only in the human arm',
+        origin='first privileged diagnostic sample in a fog cell; not proof fog caused the loss',
+        return_behavior='plantings within 600 ticks after fog reappears; seen rows from the last fully clear observation')
+    result['validation'] = dict(nonfog_frames=sum(r['frames'] for r in result['nonfog_replay']),
+           nonfog_differences=sum(r['differences'] for r in result['nonfog_replay']),
+           native=(ARTIFACTS / 'native-tests.txt').read_text().strip())
+    test_log = ARTIFACTS / 'pytest-delivery.log'
+    if test_log.exists():
+        import re
+        lines = re.findall(r'\d+ passed[^\n]*', test_log.read_text())
+        result['validation']['python_tests'] = lines[-1] if lines else 'running'
     path = ROOT / 'MEMORY/docs/task45-fog-results.json'
     path.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(f'wrote {path}: {path.stat().st_size} bytes')

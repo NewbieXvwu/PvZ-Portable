@@ -158,7 +158,7 @@ def evaluate_game(job):
         opacity = sum(map(sum, obs['fog_amount']))
         if blover and opacity == 0:
             clear = True
-            recently_visible_rows.update(z['row'] for z in obs['zombies'] if z['on_board'])
+            recently_visible_rows = {z['row'] for z in obs['zombies'] if z['on_board']}
         elif blover and clear and opacity > 0:
             returns.append(dict(tick=obs['tick'], seen_rows=sorted(recently_visible_rows)))
             clear, blover = False, False
