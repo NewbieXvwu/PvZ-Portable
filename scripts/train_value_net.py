@@ -144,7 +144,7 @@ def auc(scores: np.ndarray, labels: np.ndarray) -> float | None:
     return float((ranks[labels == 1].sum() - pos * (pos + 1) / 2) / (pos * neg))
 
 
-def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: int) -> ValueNet:
+def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: int, metrics=None) -> ValueNet:
     """Train on ``train_games``; 15% of their seeds are held out for early stopping."""
     torch.manual_seed(seed); random.seed(seed)
     game_of = t["game_of"].numpy()
@@ -174,6 +174,8 @@ def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: 
                 loss = (F.binary_cross_entropy_with_logits(logits, y, reduction="none") * w).sum() / w.sum()
             if train:
                 opt.zero_grad(); loss.backward(); opt.step()
+                if metrics is not None:
+                    metrics.advance(step=1, rows=len(batch))
             total += loss.item() * float(w.sum()); wsum += float(w.sum())
         return total / wsum
 
@@ -243,6 +245,9 @@ def main() -> None:
     p.add_argument("--context", action="store_true",
                    help="also feed the zombie-count multiplier and the level's zombie roster (DESIGN.md §14.3)")
     args = p.parse_args()
+    from pvz_metrics import Metrics
+    metrics = Metrics("train_value_net", training=True).start()
+    metrics.update(step=0, rows=0)
     FRAME_STRIDE = args.frame_stride
     CONTEXT = args.context
     started = time.time()
@@ -258,7 +263,7 @@ def main() -> None:
     oof = np.full(len(t["eval_rows"]), np.nan)
     for fold in range(args.folds):
         train_games = {i for i, g in enumerate(games) if fold_of_seed[g["seed"]] != fold}
-        model = train_model(t, train_games, args.device, args.epochs, seed=fold)
+        model = train_model(t, train_games, args.device, args.epochs, seed=fold, metrics=metrics)
         held = [k for k, (g, _w, _i) in enumerate(t["eval_rows"]) if g not in train_games]
         oof[held] = predict(model, t["eval_boards"][held], t["eval_scalars"][held], args.device)
         print(f"fold {fold} done ({time.time() - started:.0f}s)", flush=True)
@@ -277,7 +282,7 @@ def main() -> None:
         by_checkpoint[ck] = per_wave_report(games, sub_rows, {n: s[ks] for n, s in scores.items()}, 0, rng)
 
     # Final model on every seed, for later use by search.
-    final = train_model(t, set(range(len(games))), args.device, args.epochs, seed=99)
+    final = train_model(t, set(range(len(games))), args.device, args.epochs, seed=99, metrics=metrics)
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save({"state_dict": final.state_dict(), "encoder": "pvz_value_net.featurize v1", "context": CONTEXT,
                 "trained_on": sorted({g["seed"] for g in games}), "games": len(games)},

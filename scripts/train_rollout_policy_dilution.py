@@ -13,6 +13,7 @@ import time
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'python')]
+from pvz_recipe import load_recipe
 
 
 def foreign_trainers():
@@ -95,9 +96,11 @@ def main():
             time.sleep(10)
         print(json.dumps({'starting_job':job['name'],'seed':job['seed']}),flush=True)
         start=time.monotonic()
-        command=[str(ROOT/'scripts/train_rollout_policy.py'),*plan['common_args'],
-                 '--labels',','.join(plan['cohorts'][job['cohort']]['labels']),
-                 '--seed',str(job['seed']),'--out',str(dest),*job.get('extra_args',[])]
+        recipe_path = Path(job['recipe'])
+        recipe = load_recipe(recipe_path, 'training')
+        assert recipe['labels'] == plan['cohorts'][job['cohort']]['labels']
+        assert recipe['seed'] == job['seed'] and Path(recipe['out']) == dest
+        command=[str(ROOT/'scripts/train_rollout_policy.py'), '--recipe', str(recipe_path)]
         old=sys.argv
         try:
             sys.argv=command

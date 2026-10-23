@@ -119,7 +119,8 @@ def _freeze_startup() -> None:
 
 
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0,
-                 static_value_path: str | None = None) -> None:
+                 static_value_path: str | None = None, metrics_counters=None) -> None:
+    _W["metrics_counters"] = metrics_counters
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
     _W.update(lean_rollouts=True, rollout_sim_skip=rollout_sim_skip, batch_waits=True)
@@ -678,6 +679,9 @@ def _play(job: dict) -> dict:
                     frame["label"] = label        # last field: train_rollout_policy scans for it
                 frames.append(_frame_json(frame))
             decisions += 1
+            counters = _W.get("metrics_counters")
+            if counters is not None and decisions % 32 == 0:
+                counters[job['metrics_index'] * 2 + 1] = decisions
             if not obs["terminal"]:      # a won level fires the remaining mowers; count before that
                 mowers_left = ready_mowers(obs)
             if done:
@@ -725,6 +729,11 @@ def _play(job: dict) -> dict:
             "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
     _release_freed_memory()      # this game's archives are written; its buffers are garbage now
+    counters = _W.get("metrics_counters")
+    if counters is not None:
+        # Each job owns its slots. A killed worker cannot strand a shared lock.
+        counters[job['metrics_index'] * 2] = 1
+        counters[job['metrics_index'] * 2 + 1] = decisions
     return result
 
 
@@ -805,23 +814,28 @@ def main() -> None:
         _load_nets(args.value, args.rollout_policy, args.static_value)
         _freeze_startup()
     started = time.time()
-    # Workers stay alive for the whole run. They used to be recycled after every game (task18) so
-    # that a worker never paid for the high-water of the games before it; the price was a fork, an
-    # engine process, its resource load and the rollout-net upload per game, 1.62 s of 2.76 s on a
-    # student-only game (task33, 8 games: 2.76 -> 1.13 s, RSS 111 -> 153 MB and flat after the
-    # second game; a search game is 117 -> 116 s at 138 MB either way). RESET_V2 rebuilds the board
-    # from the seed, so the games are identical; only the process cost goes away.
-    with results_path.open("a") as out, mp.get_context(start_method).Pool(
-            args.workers, initializer=_init_worker, maxtasksperchild=None,
-            initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.static_value)) as pool:
-        for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
-            out.write(json.dumps(res) + "\n"); out.flush()
-            if i % 10 == 0 or i == len(jobs):
-                print(f"{i}/{len(jobs)} ({time.time() - started:.0f}s)", flush=True)
-        # A graceful join runs worker finalizers and reaps their simulator children. The parent's
-        # RUSAGE_CHILDREN now includes all worker startup, games and teardown, exactly once.
-        pool.close()
-        pool.join()
+    counters = mp.get_context(start_method).RawArray("q", len(jobs) * 2)
+    for index, job in enumerate(jobs):
+        job['metrics_index'] = index
+    metrics = None
+    try:
+        with results_path.open("a") as out, mp.get_context(start_method).Pool(
+                args.workers, initializer=_init_worker, maxtasksperchild=None,
+                initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.static_value, counters)) as pool:
+            from pvz_metrics import Metrics
+            metrics = Metrics("search_play", progress_source=lambda: dict(
+                games=sum(counters[::2]), decisions=sum(counters[1::2]))).start()
+            for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
+                out.write(json.dumps(res) + "\n"); out.flush()
+                if i % 10 == 0 or i == len(jobs):
+                    print(f"{i}/{len(jobs)} ({time.time() - started:.0f}s)", flush=True)
+            # A graceful join runs worker finalizers and reaps their simulator children. The parent's
+            # RUSAGE_CHILDREN now includes all worker startup, games and teardown, exactly once.
+            pool.close()
+            pool.join()
+    finally:
+        if metrics is not None:
+            metrics.close()
     summarize(results_path)
 
 

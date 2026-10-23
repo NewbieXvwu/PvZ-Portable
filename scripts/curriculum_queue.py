@@ -12,8 +12,8 @@
 3. **落盘**：状态 json（默认 `~/pvz-logs/curriculum_state.json`），每轮一行日志；
    偏移在**跑之前**写进状态，崩溃/中断不会重采同一批种子。
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
-5. **打包**：每轮结束把“本队列写过的全部标签 + `--pack-labels`”打成训练包（task33 第 2 项），
-   并删掉被它取代的旧包。训练端只读包，行选项必须与训练命令一致（它们是包键的一部分）。
+5. **打包**：每轮结束把“本队列写过的全部标签 + `--recipe` 的来源标签”打成训练包（task33 第 2 项），
+   并删掉被它取代的旧包。训练端只读包，行选项统一从训练配方解析（它们是包键的一部分）。
 
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
@@ -47,6 +47,9 @@ MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
+from pvz_recipe import load_recipe, training_row_options
+from pvz_training_pack import pack_flags, pack_options
+from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
 FRONTIER_LOW = 0.5
@@ -404,24 +407,13 @@ def pack_labels(state: dict, extra: str = '') -> list[str]:
 
 
 def pack_command(args, labels: list[str]) -> list[str]:
-    """argv of the packer for this label set (task33 item 2: the trainer reads only packs).
-
-    The row options are part of the pack key, so they must equal the training command's
-    --wait-keep / --obs / --packet-head / --aux-horizon / --cells / --context / --label-weight;
-    when they differ the trainer prints the packer command it wants.
-    """
+    """Pack the same row options the trainer resolves from this recipe."""
+    recipe = load_recipe(args.recipe, 'training')
+    options = pack_options(**training_row_options(recipe, labels))
     python = str(args.python) if args.python.exists() else sys.executable
-    command = [python, str(ROOT / 'scripts/pack_training_rows.py'),
-               '--data', str(args.frames), '--labels', ','.join(labels),
-               '--wait-keep', repr(args.pack_wait_keep), '--obs', args.pack_obs,
-               '--packet-head', args.pack_packet_head, '--aux-horizon', str(args.pack_aux_horizon),
-               '--prune']
-    for flag, on in (('--cells', args.pack_cells), ('--context', args.pack_context)):
-        if on:
-            command.append(flag)
-    if args.pack_label_weight:
-        command += ['--label-weight', args.pack_label_weight]
-    return command
+    return [python, str(ROOT / 'scripts/pack_training_rows.py'),
+            '--data', str(args.frames), '--labels', ','.join(sorted(labels)),
+            *pack_flags(options), '--prune']
 
 
 def write_pack(args, state: dict) -> None:
@@ -432,7 +424,8 @@ def write_pack(args, state: dict) -> None:
     labels so far and prunes the packs it supersedes. A failed pack is fatal -- it is raised after
     the round is saved, so the collected games are never lost.
     """
-    labels = pack_labels(state, args.pack_labels)
+    recipe = load_recipe(args.recipe, 'training')
+    labels = pack_labels(state, ','.join(recipe['labels']))
     if not labels:
         return
     started = time.time()
@@ -503,6 +496,11 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             rows = [json.loads(line) for line in (folder / 'games.jsonl').read_text().splitlines() if line.strip()]
             games = len(rows)
             wins = sum(1 for row in rows if row.get('won'))
+        metrics = getattr(args, 'metrics', None)
+        if metrics is not None:
+            args.metrics_games += games
+            args.metrics_decisions += sum(row.get('decisions', 0) for row in rows)
+            metrics.update(games=args.metrics_games, decisions=args.metrics_decisions, round=round_index)
         bucket = state['cells'][item['base']]['windows'].setdefault(
             str(item['multiplier']), {'recent': [], 'wins': 0, 'games': 0})
         bucket['recent'] = (bucket['recent'] + [1 if row.get('won') else 0
@@ -569,18 +567,13 @@ def main() -> None:
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
     parser.add_argument('--dry-run', action='store_true')
-    pack = parser.add_argument_group(
-        'training pack (task33)', 'the row options are part of the pack key: they must equal the training command')
-    pack.add_argument('--pack-labels', default='',
-                      help='comma separated base labels the training corpus also has (default: only what this queue wrote)')
-    pack.add_argument('--pack-wait-keep', type=float, default=1.0)
-    pack.add_argument('--pack-obs', choices=['v1', 'v2lite', 'v2'], default='v1')
-    pack.add_argument('--pack-packet-head', choices=['slot', 'identity'], default='slot')
-    pack.add_argument('--pack-aux-horizon', type=int, default=8)
-    pack.add_argument('--pack-cells', action='store_true')
-    pack.add_argument('--pack-context', action='store_true')
-    pack.add_argument('--pack-label-weight', default='')
+    parser.add_argument('--recipe', type=Path, default=ROOT / 'recipes/dw4i.json',
+                        help='training recipe for the collection student; supplies every pack row option')
     args = parser.parse_args()
+    try:
+        load_recipe(args.recipe, 'training')
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
     if args.workers < 1:
         parser.error('--workers must be positive')
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
@@ -605,7 +598,15 @@ def main() -> None:
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
+        # The pack command this controller would run at the end of the round: reviewable before
+        # a round is spent, and the only place the recipe's row options become a real command.
+        labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
+        if labels:
+            print('pack: ' + ' '.join(pack_command(args, labels)))
         return
+    args.metrics = Metrics("curriculum_queue").start()
+    args.metrics.update(games=0, decisions=0, round=state["round"])
+    args.metrics_games = args.metrics_decisions = 0
     per_worker = -1          # -1 = 还没测；0 = 平台无 /proc，按 --workers 上限跑
     for _ in range(args.rounds):
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
@@ -618,6 +619,8 @@ def main() -> None:
             per_worker = startup_worker_estimate(args, plan)
         if not run_round(args, state, plan, changes, per_worker):
             break
+
+    args.metrics.close()
 
 
 if __name__ == '__main__':

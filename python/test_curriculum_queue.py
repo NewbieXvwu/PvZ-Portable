@@ -123,22 +123,58 @@ class CurriculumRulesTest(unittest.TestCase):
         self.assertEqual(pack_labels(state, 'base_b,base_a'),
                          ['base_a', 'base_b', 'c1d7m150', 'c2d7m125'])
 
-    def test_pack_command_carries_the_row_options(self):
-        args = SimpleNamespace(python=Path('/nonexistent/python'), frames=Path('/frames'),
-                               pack_wait_keep=0.1, pack_obs='v2', pack_packet_head='identity',
-                               pack_aux_horizon=8, pack_cells=True, pack_context=True,
-                               pack_label_weight='old=0.5')
-        command = pack_command(args, ['b', 'a'])
-        self.assertEqual(command[0], sys.executable)
-        self.assertEqual(command[1], str(ROOT / 'scripts/pack_training_rows.py'))
-        self.assertEqual(command[command.index('--labels') + 1], 'b,a')
-        self.assertEqual(command[command.index('--wait-keep') + 1], '0.1')
-        self.assertEqual(command[command.index('--obs') + 1], 'v2')
-        self.assertEqual(command[command.index('--packet-head') + 1], 'identity')
-        self.assertEqual(command[command.index('--label-weight') + 1], 'old=0.5')
-        self.assertIn('--cells', command)
-        self.assertIn('--context', command)
-        self.assertIn('--prune', command)
+    def test_recipe_pack_command_matches_actual_trainer_load_request(self):
+        import argparse
+        import json
+        from unittest.mock import patch
+        import train_rollout_policy as trainer
+        import pack_training_rows as packer
+        from pvz_recipe import load_recipe, training_row_options, write_recipe
+        from pvz_training_pack import pack_options
+
+        class Loaded(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            variants = [load_recipe(ROOT / f'recipes/{name}.json')
+                        for name in ('dw4i', 'dw5i', 'identity_dw3_s1')]
+            variants.append(dict(variants[0], context=True, aux_weight=1.0, aux_horizon=3,
+                                 cell_soft_weight=0.0))
+            for i, recipe in enumerate(variants):
+                with self.subTest(variant=i):
+                    recipe.update(out=str(root / f'out{i}'), data=str(root / 'frames'))
+                    path = root / f'recipe{i}.json'
+                    write_recipe(path, recipe)
+                    args = SimpleNamespace(python=Path('/nonexistent/python'),
+                                           frames=root / 'frames', recipe=path)
+                    command = pack_command(args, recipe['labels'])
+                    self.assertEqual(command[0], sys.executable)
+                    with patch.object(sys, 'argv', command[1:]), \
+                         patch.object(packer, 'archive_fingerprint', return_value='same-sources'), \
+                         patch.object(packer, 'pack', return_value=root / 'pack.npz') as build, \
+                         patch.object(packer, 'prune', return_value=[]):
+                        packer.main()
+                    packed_options = build.call_args.args[1]
+                    with patch.object(sys, 'argv', ['trainer', '--recipe', str(path)]), \
+                         patch.object(trainer, 'Metrics'), \
+                         patch.object(trainer, 'load', side_effect=Loaded) as load:
+                        with self.assertRaises(Loaded):
+                            trainer.main()
+                    requested = dict(load.call_args.kwargs)
+                    requested.pop('row_observer')
+                    self.assertEqual(requested, training_row_options(load_recipe(path)))
+                    expected = pack_options(**requested, sources='same-sources')
+                    self.assertEqual(packed_options, expected)
+                    self.assertEqual(load.call_args.args[0], args.frames)
+                    self.assertIn('--prune', command)
+
+    def test_removed_pack_flags_are_not_exposed(self):
+        import subprocess
+        result = subprocess.run([sys.executable, str(ROOT / 'scripts/curriculum_queue.py'), '--help'],
+                                capture_output=True, text=True, check=True)
+        self.assertIn('--recipe', result.stdout)
+        self.assertNotIn('--pack-', result.stdout)
 
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')

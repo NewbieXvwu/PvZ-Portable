@@ -21,6 +21,8 @@ guard.OUT = OUT
 MODELS = {'identity': Path(read(BASE/'study_plan.json')['reference_models']['identity']),
           'dw4i_s1': BASE/'dw4i_s1/model.pt', 'dw4i_s2': BASE/'dw4i_s2/model.pt'}
 
+from pvz_recipe import materialize_recipe
+
 
 def prepare():
     path = OUT/'plan.json'
@@ -57,11 +59,10 @@ def prepare():
         extras.append(entry)
     selected += extras
     write(OUT/'historical_selection.json', selected)
-    command = list(original['training_commands'][0])
-    command[command.index('--out')+1] = str(OUT/'width128_s1')
-    command[command.index('--source-row-report')+1] = str(OUT/'width128_s1/source_rows.json')
-    assert '--width' not in command and '--init' not in command and '--max-steps' not in command
-    command += ['--width','128']
+    recipe = materialize_recipe(ROOT/'recipes/dw4i.json', OUT/'width128.recipe.json',
+                                data=BASE/'training_frames', out=OUT/'width128_s1',
+                                cache_dir=OUT/'cache', width=128)
+    command = [guard.PYTHON, str(ROOT/'scripts/train_rollout_policy.py'), '--recipe', str(recipe)]
     plan = dict(registered_at=datetime.now(ZoneInfo('Asia/Shanghai')).isoformat(), original_plan_sha256=sha(BASE/'study_plan.json'),
                 comparison_models={k:str(v) for k,v in MODELS.items()}, comparison_sha256={k:sha(v) for k,v in MODELS.items()},
                 historical_selection_sha256=sha(OUT/'historical_selection.json'), historical_archives=len(selected),
@@ -225,7 +226,7 @@ def main(phase):
     write(OUT/'capacity_loss_plan.json',capacity_plan)
     losses(capacity_plan,OUT/'historical_selection.json','capacity_historical_losses',OUT/'capacity_loss_plan.json')
     losses(capacity_plan,OUT/'current_selection.json','capacity_current_losses',OUT/'capacity_loss_plan.json')
-    command = [guard.PYTHON,str(ROOT/'scripts/unified_panel.py'),'--rollout-policy',str(OUT/'width128_s1/model.pt'),
+    command = [guard.PYTHON,str(ROOT/'scripts/unified_panel.py'),'--recipe',str(ROOT/'recipes/panel_v1.json'),'--rollout-policy',str(OUT/'width128_s1/model.pt'),
                '--out',str(OUT/'panel_width128_s1')]
     # unified_panel itself has the same 2/3GiB guard and full resume contracts.
     log = OUT/'panel_width128_s1.txt'

@@ -46,3 +46,16 @@ def pack_path(data: Path, options: dict) -> Path:
     return Path(data) / "packs" / f"{key}.npz"
 
 
+
+
+def pack_flags(options: dict) -> list[str]:
+    """Packer argv for a row contract; also used in missing-pack diagnostics."""
+    flags = ['--wait-keep', str(options['wait_keep']), '--obs', options['obs'],
+             '--packet-head', options['packet_head'], '--aux-horizon', str(options['aux_horizon'])]
+    if options['cells']:
+        flags.append('--cells')
+    if options['with_context']:
+        flags.append('--context')
+    if options['label_weight']:
+        flags += ['--label-weight', ','.join(f'{k}={v}' for k,v in options['label_weight'].items())]
+    return flags

@@ -1,0 +1,17 @@
+{
+  "collection": {
+    "games": 3,
+    "won": 3,
+    "decisions": 3452,
+    "workers": 2,
+    "metrics_path": "/home/newbiexvwu/pvz-logs/metrics/search_play-16320.jsonl",
+    "metric_progress_matches": true,
+    "elapsed_seconds": 6.623003629999857
+  },
+  "panel": {
+    "tasks": 1,
+    "games": 1,
+    "won": 1,
+    "complete": false
+  }
+}

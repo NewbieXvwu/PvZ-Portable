@@ -4,8 +4,7 @@ Data: episode archives whose frames carry the executed action (``frames[i]["acti
 frame i). Input is frame i-1, target is the action at frame i. Split by environment seed.
 
 Usage:
-  python scripts/train_rollout_policy.py --data artifacts/value_net/episodes --labels u84_greedy,u84_sampled \
-      --out artifacts/rollout_policy/v1
+  python /absolute/path/scripts/train_rollout_policy.py --recipe /absolute/path/recipes/dw4i.json
 """
 from __future__ import annotations
 
@@ -26,9 +25,12 @@ sys.path.insert(0, str(ROOT / "python"))
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
+from pvz_recipe import training_args, training_row_options, write_recipe  # noqa: E402
+from pvz_metrics import Metrics  # noqa: E402
+from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
 from pvz_frame_store import CELL_CANDIDATES  # noqa: E402
-from pvz_training_pack import archive_fingerprint, pack_options, pack_path  # noqa: E402
+from pvz_training_pack import archive_fingerprint, pack_flags, pack_options, pack_path  # noqa: E402
 
 
 def _episode_context(path: Path) -> np.ndarray:
@@ -235,6 +237,7 @@ class CandidateStore:
         selected = np.asarray(idx)
         counts = self.counts[selected].astype(np.int64)
         output = np.full((len(selected), CELL_CANDIDATES, 3), np.nan, dtype=np.float16)
+        output[:, :, :2] = -1  # match candidate_cells padding; cell indices must stay finite
         if counts.sum():
             starts = self.offsets[selected]
             positions = np.arange(counts.sum()) + np.repeat(starts - (np.cumsum(counts) - counts), counts)
@@ -327,22 +330,8 @@ _OPEN_PACKS: list = []
 
 
 def _pack_flags(options: dict) -> str:
-    flags = []
-    if options["wait_keep"] != 1.0:
-        flags += ["--wait-keep", str(options["wait_keep"])]
-    if options["obs"] != "v1":
-        flags += ["--obs", options["obs"]]
-    if options["cells"]:
-        flags.append("--cells")
-    if options["aux_horizon"]:
-        flags += ["--aux-horizon", str(options["aux_horizon"])]
-    if options["packet_head"] != "slot":
-        flags += ["--packet-head", options["packet_head"]]
-    if options["with_context"]:
-        flags.append("--context")
-    if options["label_weight"]:
-        flags += ["--label-weight", ",".join(f"{key}={value}" for key, value in options["label_weight"].items())]
-    return " ".join(flags)
+    import shlex
+    return shlex.join(pack_flags(options))
 
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
@@ -395,51 +384,16 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None):
     return result
 
 
-def main() -> None:
+def main(*, step_observer=None) -> None:
+    # task34: train after collection, but before the controller and the WSL access path.
+    set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--data", type=Path, required=True)
-    p.add_argument("--labels", default="u84_greedy,u84_sampled")
-    p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--epochs", type=int, default=12)
-    p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
-    p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
-    p.add_argument("--seed", type=int, default=None, help="torch seed for init and shuffling")
-    p.add_argument("--width", type=int, default=64, help="channels of the net (smaller = faster rollouts)")
-    p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
-    p.add_argument("--packet-balance", type=float, default=0.0,
-                   help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
-    p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
-    p.add_argument("--row-pool", action="store_true", help="broadcast learned per-row mean/max features")
-    p.add_argument('--packet-head', choices=['slot', 'identity'], default='slot')
-    p.add_argument("--aux-weight", type=float, default=0.0, help="row damage prediction BCE weight (0 = off)")
-    p.add_argument("--aux-horizon", type=int, default=8, help="future decision points for row damage labels")
-    p.add_argument("--context", action="store_true",
-                   help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
-    p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1", help="student feature version")
-    p.add_argument("--soft-temperature", type=float, default=0.05,
-                   help="temperature of the cell-level soft labels (--cell-soft-weight), in win-probability units")
-    p.add_argument("--cell-soft-weight", type=float, default=0.0,
-                   help="cell-level soft labels: on planted rows whose search compared >= 2 cells of the labelled card, "
-                        "add KL(softmax(cell values / --soft-temperature) || student cell distribution over those cells). "
-                        "The hard label teaches only the chosen cell; this also teaches how much worse the other cells were")
-    p.add_argument("--spread-weight", type=float, default=0.0,
-                   help="cost-weighted imitation: a searched row (>= 2 candidates) weighs (1 + x * spread / mean spread) / (1 + x) (at most --spread-cap), "
-                        "spread = best minus worst candidate value, so decisions where the choice matters count more")
-    p.add_argument("--spread-cap", type=float, default=5.0, help="upper bound of the --spread-weight factor")
-    p.add_argument("--save-epochs", type=int, default=0,
-                   help="also keep the last N epochs as epoch_XX.pt (candidates for scripts/select_student.py)")
-    p.add_argument("--lr-schedule", choices=["constant", "cosine"], default="constant",
-                   help="cosine: learning rate falls from 2e-3 to 0 over the run (per batch), so the final weights are not "
-                        "a snapshot of a still-bouncing optimiser; constant = the old behaviour")
-    p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
-    p.add_argument("--row-weights", type=Path, help="optional checksummed per-row experiment manifest; cached rows required, default off")
-    p.add_argument('--source-row-report', type=Path, help='optional actual retained row counts by source; cached rows required')
-    p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")
-    args = p.parse_args()
-    if args.aux_weight < 0 or args.aux_horizon < 1:
-        p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
-    if args.max_steps is not None and args.max_steps<=0:
-        p.error("--max-steps must be positive")
+    args = training_args(p)
+    torch.set_num_threads(args.threads)
+    args.out.mkdir(parents=True, exist_ok=True)
+    write_recipe(args.out / "recipe.resolved.json", args.resolved_recipe)
+    metrics = Metrics("train_rollout_policy", training=True).start()
+    metrics.update(step=0, rows=0, phase="loading")
     row_plan = None
     if args.row_weights:
         from pvz_training_rows import RowWeights
@@ -456,18 +410,13 @@ def main() -> None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    loaded = load(args.data, set(args.labels.split(",")), args.wait_keep, label_weight,
-                  with_context=args.context, obs=args.obs,
-                  cells=bool(args.cell_soft_weight),
-                  aux_horizon=args.aux_horizon if args.aux_weight else 0,
-                  row_observer=observer, packet_head=args.packet_head)
+    loaded = load(args.data, **training_row_options(args.resolved_recipe), row_observer=observer)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started
-    seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
-    val_seeds = set(seeds[: len(seeds) // 10])
-    # np.fromiter skips the ~8 bytes a row that a python list of bools costs on the way to the tensor (task32).
+    seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
+    val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
     is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
     if row_plan:
         row_plan.finish(len(plant), is_val.numpy())
@@ -520,7 +469,7 @@ def main() -> None:
             weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
         net.load_state_dict(weights)
     net = net.to(args.device)
-    opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
+    opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
 
@@ -568,10 +517,11 @@ def main() -> None:
                          "cell_acc": float((out["cell"][planted].argmax(1) == c[planted]).float().mean()) if planted.any() else 0.0}
         return loss, stats
 
-    # int32 halves the two index tensors a row (perm is a second copy of train_idx); every use is a gather (task32).
+    if not is_val.any() or is_val.all():
+        raise ValueError("recipe split must produce nonempty training and validation sets")
     train_idx = torch.nonzero(~is_val).squeeze(1).to(torch.int32)
     val_idx = torch.nonzero(is_val).squeeze(1).to(torch.int32)
-    steps = args.epochs * -(-len(train_idx) // 2048)
+    steps = args.epochs * -(-len(train_idx) // args.batch_size)
     if args.max_steps is not None:
         if args.max_steps>steps:
             p.error("--max-steps exceeds the requested epochs")
@@ -586,32 +536,42 @@ def main() -> None:
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
                 "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
-                "history": list(history),
+                # Historical reports compare these metadata keys; both experiments are retired.
+                "soft_weight": 0.0, "ema": 0.0,
+                "history": list(history), "recipe": args.resolved_recipe, "recipe_sha256": args.recipe_sha256,
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
 
     completed_steps=0
+    completed_rows=0
+    metrics.update(phase="training")
     for epoch in range(1, args.epochs + 1):
         epoch_started = time.perf_counter()
+        metrics.update(phase="training")
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
         train_loss = 0.0
-        for start in range(0, len(perm), 2048):
-            loss, _ = batch_loss(perm[start:start + 2048], True)
-            train_loss += float(loss.detach()) * len(perm[start:start + 2048])
+        for start in range(0, len(perm), args.batch_size):
+            loss, _ = batch_loss(perm[start:start + args.batch_size], True)
+            if step_observer is not None:
+                step_observer(completed_steps + 1, float(loss.detach()))
+            train_loss += float(loss.detach()) * len(perm[start:start + args.batch_size])
             opt.zero_grad(); loss.backward(); opt.step()
             if schedule is not None:
                 schedule.step()
             completed_steps+=1
+            completed_rows += len(perm[start:start + args.batch_size])
+            metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
             if completed_steps>=steps:
                 break
+        metrics.update(phase="validation")
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
         # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
         # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
         with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(1024)]
+            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(args.validation_batch_size)]
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
@@ -627,6 +587,8 @@ def main() -> None:
     torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
                                                        "load_seconds": load_seconds, "data_memory": memory}, indent=1))
+    metrics.update(phase="complete")
+    metrics.close()
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
 
 

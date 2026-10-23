@@ -13,6 +13,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import dagger_experiment_runner as guard
+from pvz_recipe import load_recipe, materialize_recipe
 
 OUT = ROOT / 'artifacts/task19'
 SOURCE = Path.home() / 'PvZ-search'
@@ -65,28 +66,21 @@ def prepare():
     target = OUT / 'validation_plan.json'
     if target.exists():
         return json.loads(target.read_text())
-    logs = Path.home() / 'pvz-logs'
-    base = re.search(r'^BASE="([^"]*)"', (logs / 'queue66.sh').read_text(), re.M).group(1).split()
-    extension = re.search(r'^BASE="\$BASE ([^"]*)"', (logs / 'queue99.sh').read_text(), re.M).group(1).split()
-    labels = [v + '_fast_search' for v in base + extension]
-    assert len(labels) == len(set(labels)) and all(re.fullmatch(r'[a-z0-9]+_fast_search', v) for v in labels)
-    weights = ','.join(v + '=1.5' for v in labels if v.startswith(('z13', 'z14', 'z15', 'z16')))
+    labels = load_recipe(ROOT/'recipes/identity_dw3_s1.json')['labels']
     manifest = OUT / 'day_panel_frozen.json'
     shutil.copyfile(SOURCE / 'artifacts/stage4/day_panel.json', manifest)
     counts = {v: len(list((SOURCE / 'artifacts/student/frames_v2').glob('*/' + v + '/frames.npz'))) for v in labels}
     assert all(counts.values()), counts
     source_names = ['scripts/train_rollout_policy.py', 'python/pvz_rollout_policy.py',
-                    'python/pvz_value_net.py', 'python/pvz_student_observation.py', 'python/pvz_frame_store.py']
-    command = [guard.PYTHON, 'scripts/train_rollout_policy.py', '--data', str(SOURCE / 'artifacts/student/frames_v2'),
-               '--labels', ','.join(labels), '--out', str(OUT / 'identity_dw3_s1'), '--packet-balance', '.5',
-               '--pool', 'meanmax', '--wait-keep', '.1', '--obs', 'v2', '--cache-dir', str(OUT / 'cache'),
-               '--read-cache-dir', str(SOURCE / 'artifacts/student/v2_cache'), '--precompute-workers', '8',
-               '--spread-weight', '8', '--spread-cap', '10', '--seed', '1', '--device', 'cuda',
-               '--lr-schedule', 'cosine', '--cell-soft-weight', '3', '--label-weight', weights,
-               '--row-pool', '--packet-head', 'identity']
+                    'python/pvz_value_net.py', 'python/pvz_student_observation.py', 'python/pvz_frame_store.py',
+                    'python/pvz_recipe.py', 'recipes/identity_dw3_s1.json']
+    recipe = materialize_recipe(ROOT/'recipes/identity_dw3_s1.json', OUT/'training.recipe.json',
+                                data=SOURCE/'artifacts/student/frames_v2', out=OUT/'identity_dw3_s1',
+                                cache_dir=OUT/'cache')
+    command = [guard.PYTHON, str(ROOT/'scripts/train_rollout_policy.py'), '--recipe', str(recipe)]
     plan = dict(registered_at=datetime.now(timezone.utc).isoformat(), training_seed=1, labels=labels,
                 archive_counts=counts, command=command, training_sources={v: sha(ROOT / v) for v in source_names},
-                queue_sources={v: sha(logs / v) for v in ('queue66.sh', 'queue99.sh')},
+                recipe_sha256=sha(recipe),
                 manifest=str(manifest), manifest_sha256=sha(manifest),
                 task_ids=[f'day_l{level}_eval{suffix}' for suffix in ('_d7', '') for level in (7, 8, 9, 10)],
                 evaluation_seeds=list(range(30000, 30256)), workers=4,
@@ -97,6 +91,8 @@ def prepare():
 
 
 def verify(plan):
+    if 'recipe_sha256' in plan:
+        assert sha(OUT/'training.recipe.json') == plan['recipe_sha256']
     for name, digest in plan['training_sources'].items():
         assert sha(ROOT / name) == digest, name
     assert sha(plan['manifest']) == plan['manifest_sha256']
