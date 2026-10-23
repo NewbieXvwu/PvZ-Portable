@@ -849,9 +849,118 @@
    "initial_ready_mowers": 0,
    "root_sha256": "dee22267bfaf54c86018deba3a3910355b0568d93df6a97dcc9f609b8aa8d7cb",
    "search_trace_sha256": "c098ad17d90903cc3524f2bba7f6a1074f16f85d4b57f45b9567b6c4bfa87b79"
+  },
+  {
+   "cell": "l43-archive-45000000",
+   "root": 80,
+   "labels": 144,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 1307,
+      "correct": 672.0,
+      "value_ties": 2,
+      "accuracy": 0.5141545524100994
+     },
+     "v4_strict": {
+      "pairs": 1307,
+      "correct": 672.0,
+      "value_ties": 2,
+      "accuracy": 0.5141545524100994
+     },
+     "v4_nonterminal": {
+      "pairs": 1307,
+      "correct": 672.0,
+      "value_ties": 2,
+      "accuracy": 0.5141545524100994
+     },
+     "teacher_path_v4": {
+      "pairs": 1307,
+      "correct": 680.5,
+      "value_ties": 1,
+      "accuracy": 0.5206579954093343
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 1802,
+      "correct": 1129.5,
+      "value_ties": 1,
+      "accuracy": 0.626803551609323
+     },
+     "v4_strict": {
+      "pairs": 2187,
+      "correct": 1315.5,
+      "value_ties": 1,
+      "accuracy": 0.6015089163237312
+     },
+     "v4_nonterminal": {
+      "pairs": 1802,
+      "correct": 1129.5,
+      "value_ties": 1,
+      "accuracy": 0.626803551609323
+     },
+     "teacher_path_v4": {
+      "pairs": 1802,
+      "correct": 987.5,
+      "value_ties": 1,
+      "accuracy": 0.5480022197558269
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 2426,
+      "correct": 1466.5,
+      "value_ties": 3,
+      "accuracy": 0.6044929925803793
+     },
+     "v4_strict": {
+      "pairs": 2556,
+      "correct": 1536.5,
+      "value_ties": 3,
+      "accuracy": 0.6011345852895149
+     },
+     "v4_nonterminal": {
+      "pairs": 2426,
+      "correct": 1466.5,
+      "value_ties": 3,
+      "accuracy": 0.6044929925803793
+     },
+     "teacher_path_v4": {
+      "pairs": 2426,
+      "correct": 1370.5,
+      "value_ties": 1,
+      "accuracy": 0.564921681780709
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 3,
+     "improving_plant_actions": 3,
+     "production_representable_improvers": 3,
+     "candidate_generation_omission": 2,
+     "static_retained": 1,
+     "halving_pruned": 1
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 37,
+     "improving_plant_actions": 28,
+     "production_representable_improvers": 28,
+     "candidate_generation_omission": 26,
+     "static_retained": 1,
+     "halving_pruned": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 9
+    }
+   },
+   "initial_ready_mowers": 0,
+   "root_sha256": "dcf338360bb93181c8077f5bcd102aa987d2a97eddcb30cf98370ebdea091cd4",
+   "search_trace_sha256": "a2db4c2149f1e86f37697c68fb992aaa16fea21e5c809deb6e8d6b5093bde37c"
   }
  ],
- "scope": "first seven complete roots only; not a complete-panel or general roof conclusion",
+ "scope": "first eight complete roots, including every preregistered non-L45 named point; full seven-level/two-seed panel incomplete",
  "selection_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
  "checks": "per-root exact complete candidate/future coverage, full identity/input hashes, true terminal and complete teacher action chains; real four-audit report paths passed",
  "bootstrap_guard": "fewer than two informative level/reset-seed clusters => interval null, including duplicated roots from the same reset seed",
@@ -871,5 +980,47 @@
   "l49-student-45000000": 0,
   "l49-student-45000001": 0
  },
- "mower_validation_complete_labels": 748
+ "mower_validation_complete_labels": 892,
+ "marked_point_coverage": {
+  "status": "complete within preregistered non-L45 scope",
+  "points": [
+   {
+    "level": 42,
+    "decision_1based": 127,
+    "tick": 7020,
+    "labels": 156
+   },
+   {
+    "level": 42,
+    "decision_1based": 254,
+    "tick": 13920,
+    "labels": 124
+   },
+   {
+    "level": 43,
+    "decision_1based": 81,
+    "tick": 4440,
+    "labels": 144
+   },
+   {
+    "level": 43,
+    "decision_1based": 537,
+    "tick": 28500,
+    "labels": 76
+   },
+   {
+    "level": 44,
+    "decision_1based": 1,
+    "tick": 0,
+    "labels": 122
+   },
+   {
+    "level": 44,
+    "decision_1based": 196,
+    "tick": 11039,
+    "labels": 120
+   }
+  ],
+  "labels": 742
+ }
 }
