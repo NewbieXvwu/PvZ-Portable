@@ -1,0 +1,451 @@
+{
+ "status": "evidence_and_formats_verified",
+ "roots": 47,
+ "episodes": 24,
+ "candidates": 3241,
+ "screen_labels": 9723,
+ "confirm_labels": 384,
+ "all_future_seeds_unique": true,
+ "future_seed_count": 666,
+ "exact_terminal_and_trace_coverage": true,
+ "frozen_inputs_unchanged": true,
+ "training": {
+  "old_rows": 3072,
+  "all_new_rows": 7,
+  "new_training_rows": 7,
+  "original_registration_settings_unchanged": true,
+  "metadata_only_revision_verified": true,
+  "registered_step_cap_preserved": 64,
+  "step_resolution": {
+   "registered_recipe_sha256": "1863fbb14becccc7f46b12e684bfbcc2f7ec8cd8ce391951999464d9e80164a5",
+   "registered_step_cap": 64,
+   "epochs": 2,
+   "training_rows": 2823,
+   "validation_rows": 256,
+   "batch_size": 256,
+   "effective_steps": 24,
+   "effective_recipe_sha256": "9dd875c35c7e7f5eee9cd1dd4edca08eb1e46dcba5d643f6ead2d26d38cf1c07",
+   "rule": "min(registered upper bound, epochs * ceil(actual training rows / batch size)); all other settings unchanged"
+  },
+  "optimizer_steps": 24,
+  "changed_parameter_tensors": 21,
+  "root_input_and_incumbent_action_parity": [
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d733",
+    "label": {
+     "type": "plant",
+     "packet": 1,
+     "row": 4,
+     "col": 3
+    },
+    "incumbent": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate_matches_label": false
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d487",
+    "label": {
+     "type": "plant",
+     "packet": 5,
+     "row": 5,
+     "col": 0
+    },
+    "incumbent": {
+     "type": "plant",
+     "packet": 5,
+     "col": 3,
+     "row": 1
+    },
+    "candidate": {
+     "type": "plant",
+     "packet": 5,
+     "col": 3,
+     "row": 1
+    },
+    "candidate_matches_label": false
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d445",
+    "label": {
+     "type": "plant",
+     "packet": 1,
+     "row": 5,
+     "col": 1
+    },
+    "incumbent": {
+     "type": "plant",
+     "packet": 4,
+     "col": 4,
+     "row": 0
+    },
+    "candidate": {
+     "type": "plant",
+     "packet": 4,
+     "col": 4,
+     "row": 0
+    },
+    "candidate_matches_label": false
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d779",
+    "label": {
+     "type": "plant",
+     "packet": 0,
+     "row": 1,
+     "col": 0
+    },
+    "incumbent": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate_matches_label": false
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d777",
+    "label": {
+     "type": "plant",
+     "packet": 0,
+     "row": 1,
+     "col": 0
+    },
+    "incumbent": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate_matches_label": false
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d581",
+    "label": {
+     "type": "plant",
+     "packet": 3,
+     "row": 5,
+     "col": 0
+    },
+    "incumbent": {
+     "type": "plant",
+     "packet": 7,
+     "col": 8,
+     "row": 2
+    },
+    "candidate": {
+     "type": "plant",
+     "packet": 7,
+     "col": 8,
+     "row": 2
+    },
+    "candidate_matches_label": false
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d468",
+    "label": {
+     "type": "plant",
+     "packet": 3,
+     "row": 5,
+     "col": 1
+    },
+    "incumbent": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "candidate_matches_label": false
+   }
+  ]
+ },
+ "evaluation": {
+  "pairs": 192,
+  "games": 384,
+  "complete_and_model_hashes_verified": true
+ },
+ "v5_reader": {
+  "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/scripts/train_value_widen.py",
+  "sha256": "9be989425144c830223aa2e59994a26236e5d887c3526039102db013a35fd67a",
+  "shards": 47,
+  "rows": 11211,
+  "training_rows": 8716,
+  "validation_rows": 2495,
+  "real_batch_loaded": true,
+  "terrain_views": {
+   "day": {
+    "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/by-terrain/day",
+    "shards": 15
+   },
+   "night": {
+    "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/by-terrain/night",
+    "shards": 16
+   },
+   "pool": {
+    "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/by-terrain/pool",
+    "shards": 16
+   }
+  },
+  "pool_only_batch_loaded": true,
+  "pool_export_held_out_seeds": [],
+  "parser_validation_control": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/l21_dump/seed_2000000.pt",
+   "sha256": "6c108d6a40a14138e1560b876628d173ef723a39d65c6212e2e6467207f3330b",
+   "format_check_only": true
+  },
+  "pool_split_note": "Use new pool shards as additional training data alongside task43 existing held-out corpus; parser control is not exported or trained here."
+ },
+ "ranking_pairs": {
+  "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/pairs.jsonl.gz",
+  "sha256": "cf71a2672b9d34fa3e3413597da5f765080b00e3f7288bde0f53f03da6c7fad6",
+  "by_metric": {
+   "wave": 22933,
+   "tick": 18388,
+   "won": 21383,
+   "mowers_used": 659
+  },
+  "note": "same seed/root/future/kind; metrics kept separate; wave/tick/mower preferences are never substituted for binary won labels"
+ },
+ "cpu_seconds_metered": 14281.168473,
+ "active_game_pids": [],
+ "source_cohorts": {
+  "day": [
+   "qc_latest_complete_round"
+  ],
+  "night": [
+   "qc_latest_complete_round"
+  ],
+  "pool": [
+   "independent_p9k_teacher_round3"
+  ]
+ },
+ "mower_convention": "same as formal search_play: last nonterminal ready-mower count; winning cleanup does not count as consumed mowers",
+ "v4_agreement_support": {
+  "day": {
+   "won": {
+    "all_pairs": {
+     "informative_games": 3,
+     "informative_roots": 5
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 1,
+     "informative_roots": 1
+    }
+   },
+   "wave": {
+    "all_pairs": {
+     "informative_games": 4,
+     "informative_roots": 5
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 2,
+     "informative_roots": 2
+    }
+   },
+   "tick": {
+    "all_pairs": {
+     "informative_games": 5,
+     "informative_roots": 5
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 2,
+     "informative_roots": 2
+    }
+   },
+   "mowers_used": {
+    "all_pairs": {
+     "informative_games": 0,
+     "informative_roots": 0
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 0,
+     "informative_roots": 0
+    }
+   }
+  },
+  "night": {
+   "won": {
+    "all_pairs": {
+     "informative_games": 0,
+     "informative_roots": 0
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 0,
+     "informative_roots": 0
+    }
+   },
+   "wave": {
+    "all_pairs": {
+     "informative_games": 1,
+     "informative_roots": 2
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 1,
+     "informative_roots": 1
+    }
+   },
+   "tick": {
+    "all_pairs": {
+     "informative_games": 4,
+     "informative_roots": 4
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 1,
+     "informative_roots": 1
+    }
+   },
+   "mowers_used": {
+    "all_pairs": {
+     "informative_games": 1,
+     "informative_roots": 1
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 0,
+     "informative_roots": 0
+    }
+   }
+  },
+  "pool": {
+   "won": {
+    "all_pairs": {
+     "informative_games": 2,
+     "informative_roots": 2
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 1,
+     "informative_roots": 1
+    }
+   },
+   "wave": {
+    "all_pairs": {
+     "informative_games": 5,
+     "informative_roots": 5
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 3,
+     "informative_roots": 3
+    }
+   },
+   "tick": {
+    "all_pairs": {
+     "informative_games": 6,
+     "informative_roots": 6
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 3,
+     "informative_roots": 3
+    }
+   },
+   "mowers_used": {
+    "all_pairs": {
+     "informative_games": 1,
+     "informative_roots": 1
+    },
+    "nonterminal_v4_only": {
+     "informative_games": 1,
+     "informative_roots": 1
+    }
+   }
+  }
+ },
+ "v4_support_screen_summary_sha256": "2f8d7097f86dcadf7982d1eeb0109314fefa2f41de68e4c21365fd6eefee5ae8",
+ "confirmed_correction_formal_search_audit": [
+  {
+   "root": "v2-night-3320126-c2n13n10qm100-d733",
+   "searched": false,
+   "static_selected": null,
+   "candidate": null,
+   "halving_pruned": null,
+   "chosen": false
+  },
+  {
+   "root": "v2-pool-2020151-p23dag3-d487",
+   "searched": true,
+   "static_selected": false,
+   "candidate": false,
+   "halving_pruned": false,
+   "chosen": false
+  },
+  {
+   "root": "v2-pool-2070134-p28dag3-d445",
+   "searched": true,
+   "static_selected": false,
+   "candidate": false,
+   "halving_pruned": false,
+   "chosen": false
+  },
+  {
+   "root": "v2-day-2510303-c2d8d7qm100-d779",
+   "searched": true,
+   "static_selected": false,
+   "candidate": true,
+   "halving_pruned": true,
+   "chosen": false
+  },
+  {
+   "root": "v2-day-2510303-c2d8d7qm100-d777",
+   "searched": false,
+   "static_selected": null,
+   "candidate": null,
+   "halving_pruned": null,
+   "chosen": false
+  },
+  {
+   "root": "v2-pool-2010165-p22dag3-d581",
+   "searched": true,
+   "static_selected": false,
+   "candidate": false,
+   "halving_pruned": false,
+   "chosen": false
+  },
+  {
+   "root": "v2-pool-2050149-p26dag3-d468",
+   "searched": true,
+   "static_selected": true,
+   "candidate": true,
+   "halving_pruned": true,
+   "chosen": false
+  }
+ ],
+ "formal_search_audits": {
+  "roots": 47,
+  "searched": 27,
+  "not_eligible_under_formal_search": 20,
+  "complete_search_fields_for_all_executed_searches": true
+ },
+ "artifact_bytes": 399537649,
+ "full_python_tests": {
+  "passed": 431,
+  "skipped": 1,
+  "subtests_passed": 133,
+  "log": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/delivery-tests-fixed.log",
+  "skipped_reason": "legacy StudentObservationTest hardcodes this worktree build/pvz-portable; native feature parity is separately covered against required deploy3",
+  "fixed_trace_test_synchronization": true,
+  "frozen_environment_and_engine_unchanged": true
+ },
+ "actual_isolated_reproduction": {
+  "cases": 5,
+  "pool_actor_archives": 8,
+  "pool_actor_prefix_decisions": 3986
+ },
+ "conservative_cost_target_met": false
+}

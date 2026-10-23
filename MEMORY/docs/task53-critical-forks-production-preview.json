@@ -13,6 +13,10 @@
  },
  "forecast_cpu_seconds": 3525.0260949999865,
  "forecast_share": 0.047436715113211916,
+ "fixed_overhead_cpu_seconds": 250.0,
+ "forecast_total_cpu_seconds": 3775.0260949999865,
+ "forecast_total_share": 0.050800996244385506,
+ "scope": "label screening and independent confirmation plus fixed overhead; task49 full training and promotion evaluation are accounted separately",
  "root_ids": [
   "v2-night-3360022-c2n17n10qm100-d1744",
   "v2-night-2260425-c2n17n10m100-d1539",

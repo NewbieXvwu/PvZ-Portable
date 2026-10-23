@@ -48,6 +48,10 @@ def verify(plan):
                 seeds.extend(f.future_seed(j['id'],stage,k,search) for search in (False,True))
     assert len(set(seeds))==len(seeds),'future seed collision'
     exported=f.load(out/'export.json');registration=f.load(out/'training-registration.json')
+    prerepair=f.load(out/'frozen/training-registration-before-metadata-repair.json')
+    assert registration['replay']==prerepair['replay'] and registration['evaluation']==prerepair['evaluation']
+    assert {k:v for k,v in registration['recipe'].items() if k!='provenance'}=={
+        k:v for k,v in prerepair['recipe'].items() if k!='provenance'}
     recipe=f.load(out/'training/recipe.json');base=registration['recipe']
     assert all(recipe[k]==v for k,v in base.items() if k not in ('labels','label_weight'))
     assert set(recipe['labels'])==set(exported['labels']) and recipe['label_weight']==exported['label_weight']
@@ -134,14 +138,38 @@ def verify(plan):
         assert old==root['student_action'],'training frame/history differs from live student root'
         matches.append(dict(root=job['id'],label=correction['action'],incumbent=old,candidate=new,
                             candidate_matches_label=new==correction['action']))
+    support={}
+    for terrain in ('day','night','pool'):
+        subset=[g for g in groups if g['job']['terrain']==terrain];support[terrain]={}
+        for metric,gap in plan['protocol']['confirmation']['mean_gap'].items():
+            support[terrain][metric]={}
+            for label,nonterminal in [('all_pairs',False),('nonterminal_v4_only',True)]:
+                usable=[g for g in subset if data.rank_counts(g,metric,gap,nonterminal)['pairs']]
+                support[terrain][metric][label]=dict(informative_games=len({g['job']['archive'] for g in usable}),
+                                                    informative_roots=len(usable))
+    search_audits=[f.load(out/'roots'/j['id']/'search.json') for j in plan['jobs']]
+    assert all({'static_scores','static_selected','candidates','halving_counts','halving_pruned'}<=s.keys()
+               for s in search_audits if s['searched'])
+    correction_search=[]
+    for correction in confirmed['corrections']:
+        s=f.load(out/'roots'/correction['root']/'search.json');action=correction['action']
+        correction_search.append(dict(root=correction['root'],searched=s['searched'],
+            static_selected=action in s.get('static_selected',[]) if s['searched'] else None,
+            candidate=action in s.get('candidates',[]) if s['searched'] else None,
+            halving_pruned=action in s.get('halving_pruned',[]) if s['searched'] else None,chosen=s['chosen']==action))
     value=dict(status='evidence_and_formats_verified',roots=47,episodes=24,candidates=3241,screen_labels=9723,
         confirm_labels=confirmed['labels'],all_future_seeds_unique=True,future_seed_count=len(seeds),
         exact_terminal_and_trace_coverage=True,frozen_inputs_unchanged=True,
         training=dict(old_rows=3072,all_new_rows=len(exported['student_corrections']),new_training_rows=train_corrections,
+                      original_registration_settings_unchanged=True,metadata_only_revision_verified=True,
                       registered_step_cap_preserved=recipe['max_steps'],step_resolution=resolution,
                       optimizer_steps=checkpoint['optimizer_steps'],changed_parameter_tensors=changed,
                       root_input_and_incumbent_action_parity=matches),
         evaluation=dict(pairs=192,games=384,complete_and_model_hashes_verified=True),
+        v4_agreement_support=support,
+        formal_search_audits=dict(roots=len(search_audits),searched=sum(s['searched'] for s in search_audits),
+            complete_search_fields_for_all_executed_searches=True),
+        confirmed_correction_formal_search_audit=correction_search,
         v5_reader=dict(path=str(reader_path),sha256=f.sha(reader_path),shards=len(shards),
                        rows=sum(v['rows'] for v in exported['value_files']),
                        training_rows=len(loaded.fit),validation_rows=len(loaded.val),real_batch_loaded=True,

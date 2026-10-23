@@ -182,7 +182,8 @@ def production_preview():
     reference=min(legacy['qc_cpu_seconds'],current['projected_768_game_cpu_seconds']);budget=.15*reference
     prices={g['job']['id']:1.5*(sum(c['cpu_seconds'] for c in g['candidates'])+
                  32*max(c['cpu_seconds']/g['samples'] for c in g['candidates']))+12 for g in raw['groups']}
-    selected,predicted=budget_roots(plan['jobs'],prices,budget,legacy['production_root_quota'],
+    fixed_overhead=250.
+    selected,predicted=budget_roots(plan['jobs'],prices,budget-fixed_overhead,legacy['production_root_quota'],
                                     round_index=legacy['qc_round'])
     preview=deepcopy(plan);preview.update(jobs=selected,out=str(OUT/'production-preview/round_000002'),
                                         cpu_budget_seconds=budget)
@@ -192,6 +193,9 @@ def production_preview():
         budget_fraction=.15,budget_cpu_seconds=budget,selected_roots=len(selected),
         selected_by_terrain=dict(Counter(j['terrain'] for j in selected)),
         forecast_cpu_seconds=predicted,forecast_share=predicted/reference,
+        fixed_overhead_cpu_seconds=fixed_overhead,forecast_total_cpu_seconds=predicted+fixed_overhead,
+        forecast_total_share=(predicted+fixed_overhead)/reference,
+        scope='label screening and independent confirmation plus fixed overhead; task49 full training and promotion evaluation are accounted separately',
         root_ids=[j['id'] for j in selected],per_root_forecast={j['id']:prices[j['id']] for j in selected},
         plan=str(path),plan_sha256=forks.sha(path),
         tradeoff='Less data per round; cost ordering within rotated terrain/reason strata can favour cheaper/shorter continuations. All legal actions and 16 confirmation futures remain intact. No empty-root budget success.',

@@ -1,0 +1,210 @@
+{
+ "status": "complete",
+ "cases": [
+  {
+   "root": "v2-day-2520360-c2d9d7qm100-d1012",
+   "candidate": 0,
+   "reason": "first frozen root per terrain; wait",
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short",
+     "short_leaf",
+     "post_action_frame",
+     "teacher_leaf",
+     "terminal_engine_sha256",
+     "checks"
+    ],
+    "full_teacher_trace_equal": true
+   },
+   "original_sha256": "60b87d657e187e18564073e05ed1a47db1a3f3a5bc1a2113d3b5bd414064f946",
+   "reproduced_sha256": "d747064c691d8d8e7fadd4751b182aaf4d10a733b04d4edd23493d005d7af9fe"
+  },
+  {
+   "root": "v2-night-3360022-c2n17n10qm100-d1715",
+   "candidate": 0,
+   "reason": "first frozen root per terrain; wait",
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short",
+     "short_leaf",
+     "post_action_frame",
+     "teacher_leaf",
+     "terminal_engine_sha256",
+     "checks"
+    ],
+    "full_teacher_trace_equal": true
+   },
+   "original_sha256": "0cc601a7af12c6538e4b56ce03dd346842011b369266ccbbabd7ca5d1ed08471",
+   "reproduced_sha256": "c578009b5c6bd8f7302daa25df4650e945c3418664e36cafe935579b2204f71a"
+  },
+  {
+   "root": "v2-pool-2000170-p21dag3-d414",
+   "candidate": 0,
+   "reason": "first frozen root per terrain; wait",
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short",
+     "short_leaf",
+     "post_action_frame",
+     "teacher_leaf",
+     "terminal_engine_sha256",
+     "checks"
+    ],
+    "full_teacher_trace_equal": true
+   },
+   "original_sha256": "67d79612525c9b4f7449feb16be7f6e27840ca1ac12294d6ffccf39a1707ccff",
+   "reproduced_sha256": "b888c8cd8ec60d2260522293313f43f7c33ac9f64e13ca212871efb27a1757aa"
+  },
+  {
+   "root": "v2-day-2500356-c2d7d7qm100-d1097",
+   "candidate": 1,
+   "reason": "first legal plant action in frozen order",
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short",
+     "short_leaf",
+     "post_action_frame",
+     "teacher_leaf",
+     "terminal_engine_sha256",
+     "checks"
+    ],
+    "full_teacher_trace_equal": true
+   },
+   "original_sha256": "9b137274488907a1d04c687edf976801da7fe3dc14a24efbe836fc83731cc298",
+   "reproduced_sha256": "b4b24145da5da948cca9f73de0bb9c68535275f0f51f4d8154b2a1330b3020b2"
+  },
+  {
+   "root": "v2-day-2520360-c2d9d7qm100-d1012",
+   "candidate": 1,
+   "reason": "first legal shovel action in frozen order",
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short",
+     "short_leaf",
+     "post_action_frame",
+     "teacher_leaf",
+     "terminal_engine_sha256",
+     "checks"
+    ],
+    "full_teacher_trace_equal": true
+   },
+   "original_sha256": "9e2c0b16663dc313c0431bd5c3f4fa217185a3dc89def841265ff30e89064536",
+   "reproduced_sha256": "ad5c46d725c9b2acdd1ad8bf2aba8a053581fdd0a9a9bdc1dd20eeb56a86ca28"
+  }
+ ],
+ "case_count": 5,
+ "fresh_directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/repro/1792791493",
+ "comparison": "exact input/physics/leaf/outcome/full teacher actions; exclude CPU and gzip timestamps",
+ "original_evidence_read_only": true,
+ "inputs": {
+  "rollout_policy": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+   "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+  },
+  "value": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+  },
+  "static_value": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "executable": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+   "sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327"
+  },
+  "collector": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/critical_forks.py",
+   "sha256": "c83d67e9182a74f41556e3d27ca27b35cd83cd2712f9feb1438c58971e7518fd"
+  },
+  "search": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/search_play.py",
+   "sha256": "e3b4b943b4579bb93e62b511048a54fde93d462cdc23c4da754c948de037805c"
+  },
+  "env": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/python/pvz_env.py",
+   "sha256": "4383428452d034b024a4dfb1ebf9dbb4f670174934dba6dda788c80c6a3eec18"
+  },
+  "student_features": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/python/pvz_student_observation.py",
+   "sha256": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5"
+  }
+ },
+ "cpu_seconds_metered_after": 14083.178544999999,
+ "pool_actor_prefixes": [
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search",
+   "decision_count": 419,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  },
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+   "decision_count": 590,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  },
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+   "decision_count": 494,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  },
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search",
+   "decision_count": 432,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  },
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+   "decision_count": 515,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  },
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+   "decision_count": 654,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  },
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+   "decision_count": 458,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  },
+  {
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search",
+   "decision_count": 424,
+   "student_actions_checked": true,
+   "all_student_actions_exact": true,
+   "all_public_prefix_frames_exact": true,
+   "source": "independent_p9k_teacher_round3"
+  }
+ ]
+}

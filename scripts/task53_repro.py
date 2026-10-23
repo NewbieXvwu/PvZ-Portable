@@ -31,7 +31,8 @@ def checked_replay(job):
     try:result=ORIGINAL_REPLAY(job)
     finally:f.TEACHER._fast_action=original
     f.save(Path(f.PLAN['out'])/'roots'/job['id']/'prefix-actor.json',dict(
-        archive=job['archive'],decision_count=index,all_student_actions_exact=True,
+        archive=job['archive'],decision_count=index,student_actions_checked=bool(job.get('student_executed')),
+        all_student_actions_exact=True if job.get('student_executed') else None,
         all_public_prefix_frames_exact=True,source=job['source']))
     return result
 
@@ -125,6 +126,7 @@ def run(plan):
                original_evidence_read_only=True,inputs=plan['inputs'],cpu_seconds_metered_after=f.spent_cpu(actual))
     value['pool_actor_prefixes']=[f.load(replica/'roots'/job['id']/'prefix-actor.json') for job in pool_prefixes.values()]
     assert len(value['pool_actor_prefixes'])==8
+    assert all(p['student_actions_checked'] and p['all_student_actions_exact'] for p in value['pool_actor_prefixes'])
     f.save(ROOT/'MEMORY/docs/task53-critical-forks-repro.json',value)
     print('REPRODUCED',len(proof),'fresh isolated cases',flush=True)
 
