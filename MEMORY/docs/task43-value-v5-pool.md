@@ -44,4 +44,42 @@
 
 ## 结果
 
+### 1. 通道说明（2026-10-23，CodeBuddy）
+
+**采集器是现成的**：`scripts/value_ranking_check.py`（DESIGN §14.6 第二段）。做法：
+从学生真实局面出发（`--rollout-policy`），在每个被抽中的决策（`--position-rate`）枚举候选
+= 等待 + 每张可种卡片的 `--cells` 个学生最中意格子（+ `--random-cells` 个随机合法格）；
+每个候选在 C++ 引擎里从**同一快照**推演 `--samples` 次，所有候选**共用同一批随机未来**
+（`seed*1000+index*50+k`），每次推到 `--horizon`（默认 3000 tick）取叶子，再让学生续走到终局取结果。
+一次决策因此给出「每个候选的叶子 → 该次运行的真实胜负」——相邻样本只差一步棋和随机未来，
+正是搜索实际要回答的问题。
+
+**落盘**：`--dump-shards DIR` 每个种子一个 torch 文件（`--dump` 是单文件，全在父进程内存里，不划算）：
+
+| 键 | 形状 | 含义 |
+|---|---|---|
+| boards | float16 [N,92,6,10] | 叶子（kind 0）或种下瞬间的盘面（kind 1） |
+| scalars | float32 [N,148] | v1 `featurize`(113) + 任务上下文(35) |
+| won | float32 [N] | kind 0 = 该次运行的终局胜负；kind 1 = 该候选全部运行的平均 |
+| seed / position / candidate / packet / kind | int64 [N] | 分组键；同一 (seed,position) 是一个决策 |
+| config | dict[str,str] | 含 `task_id`、`rollout_policy`、`samples`、`horizon` 等，可追溯 |
+
+**能不能直接进 v4 的训练入口**：`train_value_branches.py` 能读（按 (seed,position) 算成对一致率），
+但 `train_value_widen.py` 有四处挡路，第 3 步补：
+
+1. `initialize()` 只接受 encoder v1 检查点热启动；v4 是 v2（`scalar.0.weight` 154 列）→ 改成直接 `load_value_net`。
+2. `Branches.__init__` 硬性要求 dump 的 `config['task_id']` 以 `day_l7_` 开头，泳池 dump 会被直接拒。
+3. `Branches.batch` 把 6 个场景标量（夜/泳池/雾/屋顶/传送带/坟头）补 0。对 L7 白天正确，
+   对 L21 泳池会把「泳池=1」抹成 0，等于喂分布外输入；dump 现在只存 v1 标量，场景位没落盘。
+   → 采集时在 dump 里**加法式**多存一份 v2 标量（`encode_frame(f,2)`，154 维），v1 行不动，
+   `train_value_branches.py` 不受影响。
+4. 混训比例：`--branch-fraction` 只有一个来源旋钮；第 3 步按来源拆（泳池决策对 : 既有各区数据 = 1:1）。
+
+**标签粒度**：整局标签（`generate_value_data.py` 与 `train_value_widen.py` 的 episode 行）是泳池 0/256 的来源；
+决策级 dump 的 kind 0 每行是「这一步 + 这次随机未来」的终局，是本次要换的粒度。
+
+**评估工具**：`value_leaf_dispersion.py`（`search_play --leaf-probe` 的 std / top1−top2 / 推翻率）与
+`value_widen_ab.py`（同种子配对、McNemar 精确检验）。两者的臂名写死 v3/v4、引擎路径写死
+`ROOT/build/pvz-portable`，第 4 步按任务书要求（deploy2 的 PGO 二进制、v5 对 v4）做最小改动并提交。
+
 ## 问题
