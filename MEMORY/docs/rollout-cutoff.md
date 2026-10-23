@@ -110,7 +110,7 @@ PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/workt
 - 族与种子：同第 3 步 4 族，每族 `seeds` 30000–30063 共 64 局（4×64 = 256 对，512 次对局），2 workers。
 - 判据：按种子配对的胜负差（cutoff − exact），整局（种子）成组 bootstrap 20000 次、seed 20261019；**95% 区间下界 ≥ −3pp** 且 256 对齐全；分族 64 对只报告。脚本 `scripts/cutoff_strength.py`（静态检查通过，尚未实战）。
 - 成本实测估计：历史 beta=1 老师跑（`artifacts/day_panel/teacher_l7_d7_64`，64 局）决策 1,054/局、实际搜索 203/局；第 3 步 33 局 part 实测 exact 0.96 s/搜索、cutoff 2.40 s/搜索（qc 满载下）。按搜索点估 4 族 × 64 seed 约 60–65 h 游戏时间，2 workers ≈ 30–33 h 墙钟。
-- 输入 SHA256：`scripts/cutoff_strength.py` `048b48cc279bbd67444d676f0d0b0226390c5c5813e094310d3dd09c310d9ab9`；学生/价值网/分叉网/引擎/清单同第 3 步表（引擎 `7508e8…`）。
+- 输入 SHA256：`scripts/cutoff_strength.py` `04a190e24e7efbde23d3aca8490a6be341dbcf9d7b87624eb65d1bcd04a4cfcb`；学生/价值网/分叉网/引擎/清单同第 3 步表（引擎 `7508e8…`）。实现与生产 `search_play` 的 beta=1 循环逐点对齐，包括搜索后写 `fast_state["action"] = 执行动作`（下一帧特征与搜索触发门都读到执行动作）。
 
 ```bash
 # 校准（质量关结束后先跑 1 个种子 = 2 局，量单局耗时；临时 parts 不污染正式结果）

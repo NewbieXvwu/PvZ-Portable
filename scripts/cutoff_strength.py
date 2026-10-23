@@ -62,6 +62,7 @@ def _play_once(job: dict) -> dict:
             finally:
                 ca._install(exact=True)
                 search_seconds += time.perf_counter() - before
+            fast_state["action"] = action
             obs, _r, done, _t, info = env.step(action)
             if not info.get("ok"):
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
