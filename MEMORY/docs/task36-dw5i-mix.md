@@ -56,6 +56,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，11 自动启动器就位：task40 第四跑 16:19 仍在 20/64（日志 16:03 后无新局，单局约 31 分钟、2 引擎），预计还要数小时。为不空耗，artifacts/task36/autostart_A.sh（setsid 常驻，pid 64205）在 cutoff_agreement 全部退出、MemAvailable 连续 4 次 ≥10.5 GiB（间隔 30 s）且 C: 余量 ≥15 GiB 后自行启动 run_task36_mix.py --plan A --workers 2（日志 /home/newbiexvwu/pvz-logs/mix_A3.out），15 s 后挂 pack_gate2；等待期间 cutoff 若重新出现则从头等。启动事件写 artifacts/task36/autostart_A.log。
 
+- 2026-10-23，12 B 自动接续就位：artifacts/task36/autostart_B.sh（setsid，pid 64717）只在 complete_A.json 写出且 A 流水线（含 panel）完全退出后启动 run_task36_mix.py --plan B --workers 2（复用同一个包，日志 /home/newbiexvwu/pvz-logs/mix_B.out）；A 失败（流水线消失且无 complete_A.json）则不启动。panel 串行避免超过 2 个游戏进程。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
