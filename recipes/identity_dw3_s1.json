@@ -57,8 +57,8 @@
   "lr_schedule": "cosine",
   "init": null,
   "cache": true,
-  "cache_dir": "/home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/artifacts/task38/cache/identity_dw3_s1",
-  "read_cache_dir": "/home/newbiexvwu/PvZ-search/artifacts/student/v2_cache",
+  "cache_dir": "artifacts/student/recipe_cache/identity_dw3_s1",
+  "read_cache_dir": "artifacts/student/v2_cache",
   "dense_boards": false,
   "row_weights": null,
   "source_row_report": false,
@@ -89,7 +89,7 @@
     "original_source_row_report": "",
     "notes": "Only writable output/cache paths moved to recipe worktree; all training settings extracted with the original argparse parser."
   },
-  "data": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2",
+  "data": "artifacts/student/frames_v2",
   "labels": [
     "z13dag3_fast_search",
     "z15dag3_fast_search",
@@ -174,7 +174,7 @@
     "d10dag5_fast_search",
     "d10dag6_fast_search"
   ],
-  "out": "/home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/artifacts/task38/runs/identity_dw3_s1",
+  "out": "artifacts/student/identity_dw3_s1",
   "schema_version": 1,
   "kind": "training"
 }

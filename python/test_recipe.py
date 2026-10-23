@@ -1,10 +1,12 @@
 import argparse
 import copy
+import json
 from pathlib import Path
 import tempfile
 import unittest
 
-from pvz_recipe import load_recipe, training_args, panel_args, materialize_recipe, validate, write_recipe
+from pvz_recipe import (load_recipe, repository_root, training_args, panel_args, materialize_recipe,
+                        validate, write_recipe)
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,7 +23,7 @@ class RecipeTests(unittest.TestCase):
                 validate({**self.base(), **update})
 
     def test_reject_bad_types_ranges_versions_and_paths(self):
-        for update in [dict(schema_version=2), dict(data=None), dict(out='relative'),
+        for update in [dict(schema_version=2), dict(data=None), dict(out=''),
                        dict(epochs=True), dict(epochs=0), dict(wait_keep=0), dict(wait_keep=2),
                        dict(labels=['one', 'one']), dict(row_pool='false'), dict(packet_head='other'),
                        dict(validation=dict(fraction=1)), dict(optimizer=dict(betas=[1,.9])),
@@ -108,7 +110,9 @@ class RecipeTests(unittest.TestCase):
             with patch.object(verifier, 'audit_source', return_value={}), \
                  patch.object(verifier, 'foreign_trainers', return_value=[]), \
                  patch.object(verifier, 'audit_corpus', return_value={'fixture':True}):
-                verifier.verify(path, out)
+                # CPU: this exercises the parity logic, not the device, and deterministic kernels
+                # have no MPS implementation.
+                verifier.verify(path, out, 'cpu')
             evidence = json.loads((out / 'parity.json').read_text())
             self.assertTrue(evidence['passed'])
             self.assertEqual(evidence['steps'], 200)
@@ -147,8 +151,15 @@ class RecipeTests(unittest.TestCase):
             self.assertEqual(recipe['seed'], 1)
             self.assertEqual(recipe['packet_head'], 'identity')
             self.assertEqual(recipe['validation'], dict(seed=0,fraction=.1))
-            self.assertTrue(Path(recipe['out']).is_relative_to(ROOT))
-            self.assertTrue(Path(recipe['cache_dir']).is_relative_to(ROOT))
+            root = repository_root()
+            self.assertTrue(Path(recipe['out']).is_relative_to(root))
+            self.assertTrue(Path(recipe['cache_dir']).is_relative_to(root))
+            self.assertTrue(Path(recipe['data']).is_relative_to(root))
+            # The file itself must stay portable: nothing inside the repository is absolute,
+            # so the recipe survives deleting a worktree and moving to another machine.
+            document = json.loads((ROOT/f'recipes/{name}.json').read_text())
+            for field in ('data', 'out', 'cache_dir', 'read_cache_dir'):
+                self.assertFalse(Path(document[field]).is_absolute(), f'{name}.{field}')
             self.assertEqual(validate(copy.deepcopy(recipe)), recipe)
 
 

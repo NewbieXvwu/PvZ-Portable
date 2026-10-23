@@ -12,7 +12,11 @@ from unittest.mock import patch
 from pvz_metrics import ActiveWindow, Metrics, process_tree, summarize
 
 
+PROC = Path('/proc/meminfo').exists()
+
+
 class MetricsTests(unittest.TestCase):
+    @unittest.skipUnless(PROC, 'requires /proc (Linux)')
     def test_live_sample_and_rates(self):
         with tempfile.TemporaryDirectory() as folder:
             metrics = Metrics('unit-test', directory=folder)
@@ -28,6 +32,7 @@ class MetricsTests(unittest.TestCase):
             self.assertGreaterEqual(last['io']['read_bytes'], first['io']['read_bytes'])
             self.assertEqual(len(metrics.path.read_text().splitlines()), 2)
 
+    @unittest.skipUnless(PROC, 'requires /proc (Linux)')
     def test_owned_child_is_in_rss_tree(self):
         child = subprocess.Popen([sys.executable, '-c',
             "import sys; print('ready', flush=True); sys.stdin.readline()"],

@@ -7,16 +7,22 @@
 
 唯一 schema/default 实现在 `python/pvz_recipe.py`，当前 `schema_version=1`。
 `kind` 为 `training` 或 `panel`。未知字段（包括 optimizer / validation / provenance 内部）、
-重复 JSON 键、错误类型、越界数字、非绝对路径均报错。完整默认值在装载时展开，
+重复 JSON 键、错误类型、越界数字、空路径均报错。完整默认值在装载时展开，
 每次运行在输出目录保存 `recipe.resolved.json`；学生检查点同时记录配方与原始配方 SHA256。
 
 训练只接受 `--recipe` 与运维覆盖 `--out`、`--device`、`--threads`、`--precompute-workers`。
 覆盖后的值也进入 resolved 配方。输出覆盖同时迁移 `source_rows.json`，不会写回历史运行目录。
-配方中的路径必须为绝对路径；跨机器使用前应修改数据/输出/缓存路径，并保存为新的配方。
+配方里的路径写**仓库相对路径**（如 `artifacts/student/dw4i_s1`），`pvz_recipe.load_recipe`
+在载入时按仓库根解析成绝对路径，所以同一份配方在任何工作树、任何机器上都指向同一处；
+没有第二种写法，也没有开关。仓库根 = 当前 checkout 的根；若从 `<checkout>/.claude/worktrees/<名>`
+（AGENTS.md §1 的约定位置）里的工作树运行，则解析到它所属的那个 checkout，这样工作树删掉后配方仍然有效。
+训练配方的 `out` 默认就是正式产物位置（`artifacts/student/<名>`），对拍/试跑用 `--out` 覆盖。
+唯一保留绝对路径的字段是面板配方的 `resource_dir`：游戏资源在仓库外的本机缓存里，跨机器本来就要改。
+`provenance` 的 `original_*` 是历史出处记录，按原文保留。
 
 | 训练字段 | 类型 / 默认 | 含义 |
 |---|---|---|
-| data / labels / out | 必填绝对路径 / 非空字符串数组 / 绝对路径 | 数据根、明确的来源标签清单、输出目录 |
+| data / labels / out | 必填仓库相对路径 / 非空字符串数组 / 仓库相对路径 | 数据根、明确的来源标签清单、输出目录（默认正式产物位置） |
 | label_weight / row_weights | 对象 `{}` / 可空绝对路径 | 标签权重、已有逐行干预清单 |
 | wait_keep / packet_balance | 1.0 / 0.0 | 等待行保留与逆频率权重 |
 | spread_weight / spread_cap | 0.0 / 5.0 | 搜索价值跨度权重 |
@@ -82,7 +88,8 @@ v2 直接读取 task27 已冻结清单，保留原任务/卡组/种子；pool �
 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/scripts/unified_panel.py --recipe /home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/recipes/panel_v2.json --workers 2
 ```
 
-本工作树需自行提供 `build/pvz-portable`，也可传 `--executable` 绝对路径。
+面板配方的 `executable` 写 `build/pvz-portable`（相对仓库根，即当前 checkout 自己的构建产物），
+跑之前要确认这个二进制与当前源码同版本；也可传 `--executable` 覆盖。
 任务子集与种子数只在配方修改；子集评估保留 `complete=false`。
 
 ## 指标字段与生命周期

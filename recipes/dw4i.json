@@ -57,8 +57,8 @@
   "lr_schedule": "cosine",
   "init": null,
   "cache": true,
-  "cache_dir": "/home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/artifacts/task38/cache/dw4i",
-  "read_cache_dir": "/home/newbiexvwu/PvZ-search/artifacts/student/v2_cache",
+  "cache_dir": "artifacts/student/recipe_cache/dw4i",
+  "read_cache_dir": "artifacts/student/v2_cache",
   "dense_boards": false,
   "row_weights": null,
   "source_row_report": true,
@@ -89,7 +89,7 @@
     "original_source_row_report": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/dw4i_s1/source_rows.json",
     "notes": "Only writable output/cache paths moved to recipe worktree; all training settings extracted with the original argparse parser."
   },
-  "data": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/training_frames",
+  "data": ".claude/worktrees/dw4/artifacts/task23/training_frames",
   "labels": [
     "z13dag3_fast_search",
     "z15dag3_fast_search",
@@ -262,7 +262,7 @@
     "n19dag2_fast_search",
     "n19dag3_fast_search"
   ],
-  "out": "/home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/artifacts/task38/runs/dw4i",
+  "out": "artifacts/student/dw4i_s1",
   "schema_version": 1,
   "kind": "training"
 }

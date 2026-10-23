@@ -1,7 +1,9 @@
 """Versioned recipes. Unknown fields (including nested ones) are errors.
 
-Paths in resolved recipes are absolute. Defaults live here, never in a second
-argparse training interface. Saved recipe.resolved.json is the run contract.
+Paths in a recipe file are relative to the repository root and are resolved when the
+recipe is loaded, so a recipe means the same thing in every worktree and on every
+machine. Defaults live here, never in a second argparse training interface. Saved
+recipe.resolved.json is the run contract and holds the resolved absolute paths.
 """
 from __future__ import annotations
 
@@ -29,6 +31,36 @@ PANEL_DEFAULTS = dict(version='v1',
     generate=False, generate_pressure=False, pressure=False, pressure_seeds=64,
     pressure_tasks='', tasks='', day_seeds=128, heldout_seeds=64, night_seeds=128,
     pool_seeds=40, task_seed_overrides={}, workers=2, provenance={})
+
+_ROOT: Path | None = None
+
+
+def repository_root() -> Path:
+    """The checkout that owns the corpus, the build and the production outputs.
+
+    Agent worktrees live at <checkout>/.claude/worktrees/<name> (AGENTS.md §1), so a run
+    started from one still describes the same artifacts/ tree the mainline uses; a
+    normal checkout is its own root. No switch: one convention, resolved on load.
+    """
+    global _ROOT
+    if _ROOT is None:
+        root = Path(__file__).resolve().parents[1]
+        if root.parent.name == 'worktrees' and root.parent.parent.name == '.claude':
+            root = root.parent.parent.parent
+        _ROOT = root
+    return _ROOT
+
+
+def resolve_paths(document):
+    """Resolve every path field against the repository root; absolute values stay as given."""
+    root = repository_root()
+    result = copy.deepcopy(document)
+    for name in PATH_FIELDS:
+        value = result.get(name)
+        if isinstance(value, str) and value and not Path(value).is_absolute():
+            result[name] = str(root / value)
+    return result
+
 
 PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir', 'row_weights',
                'manifest', 'rollout_policy', 'value', 'executable', 'resource_dir',
@@ -80,8 +112,11 @@ def validate(document, kind=None):
             raise ValueError(f'{name}: required field cannot be null')
     for name in PATH_FIELDS:
         value = result.get(name)
-        if value is not None and (not isinstance(value, str) or not Path(value).is_absolute()):
-            raise ValueError(f'{name}: expected absolute path')
+        # A recipe file names paths relative to the repository root; they become absolute on
+        # load. Absolute values are still accepted for machine-local data outside the repo
+        # (the game resources) and for an already resolved recipe.
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ValueError(f'{name}: expected a path string')
     # Provenance is descriptive, never used as training configuration.
     _object(result['provenance'], {'source_path', 'source_sha256', 'source_revision',
                                  'original_out', 'original_cache_dir', 'original_source_row_report', 'notes'}, 'provenance')
@@ -172,7 +207,7 @@ def load_recipe(path, kind=None):
                 raise ValueError(f'duplicate JSON field: {key}')
             result[key] = value
         return result
-    return validate(json.loads(path.read_text(), object_pairs_hook=unique), kind)
+    return resolve_paths(validate(json.loads(path.read_text(), object_pairs_hook=unique), kind))
 
 
 def write_recipe(path, document):
