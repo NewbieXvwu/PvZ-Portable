@@ -35,18 +35,23 @@
 
 ## 结果
 
-- 步骤2：本工作树Release构建完成；PVZ_RESOURCE_DIR指定缓存资源，全套Python **382 passed + 133 subtests passed**（66.31秒、零跳过）。分支任务逐字段审计roof318/fog366项全同，合并414项，见task50-zones-registry.json。
-- 步骤3a：新建detached deploy3于7a67066a，复制perf的64-root engine_roots.json；未改deploy/deploy2。
+- 步骤1a：合入 origin/roof 当前快照 2dcaef33；自动合并无冲突，保留屋顶全部族与种子映射，默认课程只准入 L41 r7 原版。
+
+- 步骤1b：roof 合并 a12ca704；合入 origin/fog 快照 f1dce346。雾族保留原索引8/9，roof置末且沿用独立48M段；DESIGN 雾18/19、屋顶顺延20；双方日志按提交时间交错保留。课程显式禁入全部fog族，仅准入屋顶L41。
 
 - 步骤1c：fog 合并 e9ff587a 已推送；课程/倍率定向28 passed + 4 subtests。修复种子宽度测试将独立roof误算进700k段的假设，新增所有旧族固定种子起点与roof/fog准入回归。
 
-- 步骤1b：roof 合并 a12ca704；合入 origin/fog 快照 15e947b3。雾族保留原索引8/9，roof置末且沿用独立48M段；DESIGN 雾18/19、屋顶顺延20；双方日志按提交时间交错保留。课程显式禁入全部fog族，仅准入屋顶L41。
+- 步骤2：本工作树Release构建完成；PVZ_RESOURCE_DIR指定缓存资源，全套Python **382 passed + 133 subtests passed**（66.31秒、零跳过）。分支任务逐字段审计roof318/fog366项全同，合并414项，见task50-zones-registry.json。
 
-- 步骤1a：合入 origin/roof 当前快照 2dcaef33；自动合并无冲突，保留屋顶全部族与种子映射，默认课程只准入 L41 r7 原版。
+- 步骤3a：新建detached deploy3于7a67066a，复制perf的64-root engine_roots.json；未改deploy/deploy2。
+
+- 步骤3b：deploy3 PGO两阶段成功，源7a67066a5e62cec47432eaef87c542f6782270c3；二进制SHA256 `e231cdb9f872e50a7eec55180c8ca2b156076e2f0ffaba41a4100ab10d39a12d`，140份profile，最终ninja generate=0/use=161。构建证据task50-zones-build.json。
+
+- 步骤4：门禁证据提交31697972；deploy3/deploy2四存档整局逐tick完整观测 **166138帧/引擎、0差异**；64 root×3续走=192叶摘要及逻辑统计在五轮/十次运行全部逐位相同。配对CPU吞吐比中位1.04437×，范围0.98294–1.08156×，log比值t近似95%区间0.99496–1.08425含1，噪声内无退化；见task50-zones-gates.json。新增zones_replay_gate.py可复跑当前部署对照。
 
 - 步骤5：本树清单414任务/847872种子逐卡组合法；扫描330494份JSON、835020个既有种子，重叠0。隔离状态dry run列出38组/1824局，含 `roof_l41_train_r7 mult=1 games=48` 与deploy3完整collect命令，fog cell=0；摘要task50-zones-course.json。
 
-- 步骤3b：deploy3 PGO两阶段成功，源7a67066a5e62cec47432eaef87c542f6782270c3；二进制SHA256 `e231cdb9f872e50a7eec55180c8ca2b156076e2f0ffaba41a4100ab10d39a12d`，140份profile，最终ninja generate=0/use=161。构建证据task50-zones-build.json。
+- 步骤6：交付审计通过：两次no-ff父链、双方日志全保留、DESIGN编号唯一、部署二进制/清单哈希、测试/门禁/课程证据均已复核。所有步骤新增二进制0字节、受跟踪忽略文件0；本任务游戏进程已归零，qc/deploy/deploy2未修改。审计task50-zones-completion-audit.json；提交并推送zones交主控审核。
 
 主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
 
@@ -59,3 +64,5 @@
 ## 问题
 
 - 历史fog四存档的摘要不能直接充当deploy2参考：deploy2重放L7通过，但L12第0帧已与历史摘要不同；保留原始动作/摘要，使用当前deploy2重生成完整逐tick参考，再由deploy3严格比对全字段。
+
+- 最终父链核验更正：初读origin/fog为15e947b3，merge执行时共享ref已更新为f1dce346；实际e9ff587a第二父节点为f1dce346，额外含追加D报告及诊断脚本。测试、PGO、门禁均基于该实际合并内容；任务字段审计也已对实际父节点重算，366项全同。
