@@ -173,6 +173,8 @@
   - 输入 SHA256（跑前）：`scripts/cutoff_agreement.py` `b0c80e0793c8a022d92f494a4895334d964a617e17c3313837af1492a3ba3cbd`（只比登记时多了每局进度打印）、`scripts/search_play.py` `d04eaa3643477c86f749df25515a395686b36819d85c69c4302777a45754c340`、`scripts/search_agreement_stats.py` `5353107d891b8701bbef8d25e759bbada755f3fe932016b575db8820ec27a4bb`、`scripts/render_episode.py` `e64f1c249f4946a9bb2da56bbbf926095e654488ebe44c4f551e272e3c278b75`、`python/pvz_env.py` `2d53cd18b5390b1d5b1997bcbeb97a4ff069f962fbb94538f128936a8d568e69`、`python/pvz_event_env.py` `027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89`；`day_l7_hard.json` `8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941`、`night_panel_n10.json` `f62258d7c0d254a47999120ba2456a8c02f7b7b8fbea48e42c0ef8a9b91d4ed1`、`pool_panel.json` `10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb`、conveyor `day_panel.json` `01e3ae4f437b7673b3278280e3891bfcb0f65e92ba8bddaeb7b6321713fcdc27`；学生/价值网/分叉网/引擎同第 1 步（`122703…`、`5171db…`、`248584…`、`7508e8…`）。
   - 实现自检（跑前已完成）：`artifacts/task40/cutoff_check.py` 在 day_l7 root 137/365/593/776 × seed 0–2 共 12 例上，cutoff 叶值与第 1 步测量逐位一致：不自信 root 等于 2500 值（如 root 137 seed0 `0.765421`）、自信 root 在 500 收手且等于 t=500 值（如 root 593 seed0 `0.990201`）；短推演耗时 0.013 s（500 收手）到 0.22 s（跑满），对照单条 2500 推演 0.02–0.08 s。另试过“跑满 2500 + 引擎 trace 再在 Python 打分”的版本，值与短推演相同但慢 10–20 倍，弃用。
 
+- 2026-10-23 10:11 第 3 步正式验收启动：`PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 scripts/cutoff_agreement.py --workers 2`（4 族 × 16 局 = 64 局，2 个游戏进程；输出 `artifacts/task40/agreement.json`、`agreement.log`）。
+
 ## 问题
 
 - 夜间族按任务书取 L14，而不是 bench_engine 的 L12–14 合并族。frames_v2 的 n14 档 meta 没有卡组，按首帧 packets 重建为 `[0,1,2,3,4,5,7,8,9]`（9 张，没有墓碑吞噬者 11；与 queue103 注释里的 n10 十卡组不同）——本测量按存档实际卡组回放，不自造卡组。
