@@ -1,0 +1,515 @@
+{
+  "task": "task43",
+  "date": "2026-10-23",
+  "status": "rejected",
+  "acceptance_complete": true,
+  "adoption_gates": {
+    "a": false,
+    "b": false,
+    "c": true
+  },
+  "adopt_v5": false,
+  "hf_uploaded": false,
+  "default": "v4 unchanged",
+  "model_sha256": {
+    "v4": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+    "v5": "0e164c19dd0952da85f44c08ae657fab2ff9ef265e01066b1f317a0bdd7b002e"
+  },
+  "controls": {
+    "student_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "static_sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+    "engine": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable",
+    "engine_sha256": "bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef",
+    "workers_max": 4
+  },
+  "tasks": {
+    "pool_l21_eval_p9k": {
+      "task_id": "pool_l21_eval_p9k",
+      "terrain": "pool",
+      "level": 21,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        16,
+        19
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        31000,
+        31001,
+        31002,
+        31003,
+        31004,
+        31005,
+        31006,
+        31007,
+        31008,
+        31009,
+        31010,
+        31011,
+        31012,
+        31013,
+        31014,
+        31015,
+        31016,
+        31017,
+        31018,
+        31019,
+        31020,
+        31021,
+        31022,
+        31023,
+        31024,
+        31025,
+        31026,
+        31027,
+        31028,
+        31029,
+        31030,
+        31031
+      ]
+    },
+    "day_l7_z15_eval": {
+      "task_id": "day_l7_z15_eval",
+      "terrain": "day",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "zombie_count_multiplier": 1.5,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        31000,
+        31001,
+        31002,
+        31003,
+        31004,
+        31005,
+        31006,
+        31007,
+        31008,
+        31009,
+        31010,
+        31011,
+        31012,
+        31013,
+        31014,
+        31015,
+        31016,
+        31017,
+        31018,
+        31019,
+        31020,
+        31021,
+        31022,
+        31023,
+        31024,
+        31025,
+        31026,
+        31027,
+        31028,
+        31029,
+        31030,
+        31031
+      ]
+    },
+    "night_l14_eval_n10": {
+      "task_id": "night_l14_eval_n10",
+      "terrain": "night",
+      "level": 14,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        8,
+        9,
+        11
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        31000,
+        31001,
+        31002,
+        31003,
+        31004,
+        31005,
+        31006,
+        31007,
+        31008,
+        31009,
+        31010,
+        31011,
+        31012,
+        31013,
+        31014,
+        31015,
+        31016,
+        31017,
+        31018,
+        31019,
+        31020,
+        31021,
+        31022,
+        31023,
+        31024,
+        31025,
+        31026,
+        31027,
+        31028,
+        31029,
+        31030,
+        31031
+      ]
+    }
+  },
+  "data": {
+    "seeds_collected": 64,
+    "decisions": 14922,
+    "rows": 174420,
+    "leaf_rows": 143983,
+    "leaf_wins": 1258,
+    "all_candidates_lose_decisions": 14108,
+    "all_candidates_lose_fraction": 0.9454496716257874,
+    "excluded_audit_seeds": 14,
+    "decision_fit_rows": 129992,
+    "decision_validation_rows": 7758,
+    "root_policy": "student",
+    "terminal_continuation_policy": "student",
+    "teacher_root_or_continuation_labels_collected": false
+  },
+  "training": {
+    "warm_start": "v4",
+    "epochs_completed": 6,
+    "best": {
+      "epoch": 1,
+      "fit": 0.20084420079365373,
+      "validation": 0.220185727188677,
+      "validation_components": {
+        "branch": 0.4546179063618183,
+        "episode": 0.2416468570008874,
+        "decision": 0.0389963103557684
+      }
+    },
+    "decision_fraction": 0.5,
+    "remaining_data_branch_fraction": 0.75,
+    "device": "cuda",
+    "memory_gate_gib": 10
+  },
+  "held_out_pair_accuracy": {
+    "v4": {
+      "pool_decision": {
+        "rows": 7758,
+        "seeds": 3,
+        "leaves": {
+          "pair_accuracy": 0.5555555555555556,
+          "pairs": 63,
+          "positions": 618
+        },
+        "cells": {
+          "pair_accuracy": 0.0,
+          "pairs": 0,
+          "positions": 1189
+        }
+      },
+      "day_l7_branch": {
+        "rows": 29446,
+        "seeds": 32,
+        "leaves": {
+          "pair_accuracy": 0.655788876276958,
+          "pairs": 3524,
+          "positions": 655
+        },
+        "cells": {
+          "pair_accuracy": 0.5438972162740899,
+          "pairs": 467,
+          "positions": 199
+        }
+      }
+    },
+    "v5": {
+      "pool_decision": {
+        "rows": 7758,
+        "seeds": 3,
+        "leaves": {
+          "pair_accuracy": 0.5079365079365079,
+          "pairs": 63,
+          "positions": 618
+        },
+        "cells": {
+          "pair_accuracy": 0.0,
+          "pairs": 0,
+          "positions": 1189
+        }
+      },
+      "day_l7_branch": {
+        "rows": 29446,
+        "seeds": 32,
+        "leaves": {
+          "pair_accuracy": 0.6566401816118048,
+          "pairs": 3524,
+          "positions": 655
+        },
+        "cells": {
+          "pair_accuracy": 0.5653104925053534,
+          "pairs": 467,
+          "positions": 199
+        }
+      }
+    }
+  },
+  "leaf_dispersion": {
+    "std_min": 0.02,
+    "median_top1_top2_gap_must_exceed": 0.02,
+    "seeds": [
+      31000,
+      31001,
+      31002,
+      31003
+    ],
+    "results": {
+      "pool_l24_eval_p9k": {
+        "v4": {
+          "decisions": 320,
+          "games": 4,
+          "mean_candidates": 5.39375,
+          "mean_scored": 5.39375,
+          "mean_leaf": 0.00212578125,
+          "mean_std": 0.000787871875,
+          "median_std": 0.0003455,
+          "mean_gap": 0.00087636875,
+          "median_gap": 0.00029699999999999996,
+          "share_gap_below_margin": 1.0,
+          "share_overridden": 0.0
+        },
+        "v5": {
+          "decisions": 320,
+          "games": 4,
+          "mean_candidates": 5.471875,
+          "mean_scored": 5.471875,
+          "mean_leaf": 0.003126940625,
+          "mean_std": 0.0012411874999999999,
+          "median_std": 0.000338,
+          "mean_gap": 0.001160375,
+          "median_gap": 0.000289,
+          "share_gap_below_margin": 1.0,
+          "share_overridden": 0.00625
+        },
+        "passes_prespecified_rule": false
+      },
+      "pool_l26_eval_p9k": {
+        "v4": {
+          "decisions": 320,
+          "games": 4,
+          "mean_candidates": 5.390625,
+          "mean_scored": 5.390625,
+          "mean_leaf": 0.001035359375,
+          "mean_std": 0.00029605,
+          "median_std": 0.000168,
+          "mean_gap": 0.0003026375,
+          "median_gap": 0.00012550000000000001,
+          "share_gap_below_margin": 1.0,
+          "share_overridden": 0.0
+        },
+        "v5": {
+          "decisions": 320,
+          "games": 4,
+          "mean_candidates": 5.390625,
+          "mean_scored": 5.390625,
+          "mean_leaf": 0.000482478125,
+          "mean_std": 0.00010697812499999999,
+          "median_std": 7.4e-05,
+          "mean_gap": 0.000102015625,
+          "median_gap": 5.8e-05,
+          "share_gap_below_margin": 1.0,
+          "share_overridden": 0.0
+        },
+        "passes_prespecified_rule": false
+      }
+    }
+  },
+  "paired": {
+    "pool_l21_eval_p9k": {
+      "pairs": 32,
+      "v4_wins": 21,
+      "v5_wins": 14,
+      "v5_only_wins": 4,
+      "v4_only_wins": 11,
+      "delta_wins": -7,
+      "mcnemar_exact_two_sided": 0.11846923828125,
+      "passes_prespecified_rule": false
+    },
+    "day_l7_z15_eval": {
+      "pairs": 32,
+      "v4_wins": 32,
+      "v5_wins": 32,
+      "v5_only_wins": 0,
+      "v4_only_wins": 0,
+      "delta_wins": 0,
+      "mcnemar_exact_two_sided": 1.0,
+      "passes_prespecified_rule": true
+    },
+    "night_l14_eval_n10": {
+      "pairs": 32,
+      "v4_wins": 32,
+      "v5_wins": 32,
+      "v5_only_wins": 0,
+      "v4_only_wins": 0,
+      "delta_wins": 0,
+      "mcnemar_exact_two_sided": 1.0,
+      "passes_prespecified_rule": true
+    }
+  },
+  "external_calibration": {
+    "manifest_sha256": "e92f52f30cc0fe5ef32a900c6cbcbec7e5a616f221456d43979f9432fffe4fc2",
+    "cohorts": {
+      "day_d7": {
+        "games": 256,
+        "wins": 182,
+        "v4": {
+          "n": 6006,
+          "predicted": 0.7365172931982583,
+          "brier": 0.13588426463571485,
+          "ece": 0.0636020157816984
+        },
+        "v5": {
+          "n": 6006,
+          "predicted": 0.7405684151209028,
+          "brier": 0.13557699583835814,
+          "ece": 0.06462464625596176
+        }
+      },
+      "day_d7p": {
+        "games": 256,
+        "wins": 172,
+        "v4": {
+          "n": 5652,
+          "predicted": 0.7336060980640865,
+          "brier": 0.09882646574971214,
+          "ece": 0.03153047123137962
+        },
+        "v5": {
+          "n": 5652,
+          "predicted": 0.7446075800908628,
+          "brier": 0.09742063415647284,
+          "ece": 0.02299290761852005
+        }
+      },
+      "day_l7_control": {
+        "games": 256,
+        "wins": 201,
+        "v4": {
+          "n": 7388,
+          "predicted": 0.686129557524559,
+          "brier": 0.12725415338139368,
+          "ece": 0.13005885611918766
+        },
+        "v5": {
+          "n": 7388,
+          "predicted": 0.6993598999119248,
+          "brier": 0.12429322398996238,
+          "ece": 0.11682851373182178
+        }
+      },
+      "night_n9_n10": {
+        "games": 256,
+        "wins": 38,
+        "v4": {
+          "n": 4028,
+          "predicted": 0.2326582502871824,
+          "brier": 0.09231681463425029,
+          "ece": 0.03671084533589646
+        },
+        "v5": {
+          "n": 4028,
+          "predicted": 0.2459393013729902,
+          "brier": 0.0892335771180769,
+          "ece": 0.028071737277713813
+        }
+      },
+      "night_original_conveyor": {
+        "games": 32,
+        "wins": 0,
+        "v4": {
+          "n": 213,
+          "predicted": 0.1410489307524581,
+          "brier": 0.05704059011204162,
+          "ece": 0.1410489307524581
+        },
+        "v5": {
+          "n": 213,
+          "predicted": 0.13398684303321604,
+          "brier": 0.053888867554837835,
+          "ece": 0.13398684303321604
+        }
+      },
+      "pool_p9k": {
+        "games": 256,
+        "wins": 0,
+        "v4": {
+          "n": 2874,
+          "predicted": 0.005054045411677598,
+          "brier": 0.00014677962466718073,
+          "ece": 0.0050540454116775975
+        },
+        "v5": {
+          "n": 2874,
+          "predicted": 0.003281850651358872,
+          "brier": 4.9965987785957433e-05,
+          "ece": 0.003281850651358872
+        }
+      }
+    },
+    "day_night_brier_all_nonworse": true,
+    "day_night_ece_all_nonworse": false
+  },
+  "next_data": "Pilot actual teacher roots/candidates and short-rollout leaves; continue each leaf with the frozen search teacher to terminal. Record policy/history/future provenance and candidate outcome differences before scaling. Reuse existing search/snapshot paths; do not revive PPO.",
+  "limitations": [
+    "32 pairs and nonsignificant McNemar do not establish noninferiority.",
+    "day/night A/B are at the 32/32 ceiling.",
+    "Pool held-out ranking has only 63 informative pairs across 3 seeds.",
+    "Lower all-loss pool Brier does not show candidate ranking recovery.",
+    "day_d7 ECE worsened slightly despite lower Brier.",
+    "This rejection applies to the measured student-root/student-continuation data version."
+  ],
+  "input_json_sha256": {
+    "artifacts/task43/ab_l21_31000/plan.json": "199174c6d41e6e66d20dfc493f404d68390dd5e6857e662892a90c520e193078",
+    "artifacts/task43/ab_l21_31000/manifest.json": "4a04575ac63ed50129c1bf4864d33aec9878227746ce62ed982cf98afcee025b",
+    "artifacts/task43/ab_l21_31000/paired.json": "07aed76bc3d53b1cf782f0a08b0c3cefcb2834fbcdf59e5df9ef5d2a0c27b9c4",
+    "artifacts/task43/ab_day_31000/plan.json": "fef3c75e707c388e0e7bbb0e3df27839fdf2b57d990ec2a5d19c890325422a95",
+    "artifacts/task43/ab_day_31000/manifest.json": "1d1a988126c325824dabbffacbbb561665ac14f9e1c26b062d118026685711a6",
+    "artifacts/task43/ab_day_31000/paired.json": "63c6d71436461ee77ed17a379bf24948fbcff036c0c2652a525f3cae528bb081",
+    "artifacts/task43/ab_night_31000/plan.json": "6447e705660d6ddb383a7ac64f49e5e0361bfa47a03ab1e25d2b532417418d4c",
+    "artifacts/task43/ab_night_31000/manifest.json": "9ea37561b4d69c72889f0d7c63b8b72348f9adfb862da31f98454278b3020d85",
+    "artifacts/task43/ab_night_31000/paired.json": "402ce4d0cc1403341408e32c739eaac4916e6df53fe1ac6460846e03a68af46e",
+    "artifacts/task43/v5/training.json": "dce00c283a3b9177b43b9956e9de3a4474c43b1de43458d9a4e05fbc474885cb",
+    "artifacts/task43/v5/pair_accuracy.json": "365a89814705214945f459597ad56f3af81e9f559a829f68b53e959ff557c633",
+    "artifacts/task43/audit_v5/metrics.json": "c9c65a6e99492d0ee4c859753002dff87daccb2d9091ed283302141f7806df5e",
+    "artifacts/task43/dispersion_31000/metrics.json": "0c3b4ce1b062372d20eca4d5a2bedf6fcfd32dd408a83cfa2072b5d410968b06"
+  }
+}
