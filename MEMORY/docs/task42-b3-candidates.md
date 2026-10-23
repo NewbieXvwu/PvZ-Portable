@@ -41,4 +41,46 @@
 
 ## 结果
 
+### 预登记（2026-10-23 09:58 台式机 CST；代码冻结 `5f5a1457`，写于任何对局之前）
+
+在现行设置上复验 task14 的 B3 非劣性。样本、口径与判据在此一次定死，冒烟与正式跑都不改。
+
+**实现**：`scripts/search_play.py` 的 `_search` 由私有 `_W["candidate_mode"]` 选候选生成，正式路径仍为 `static`（无 CLI 开关，`curriculum_queue.py` 未改）。
+- **A（现行默认）**：静态价值网每卡前 1 + 等待 + 学生原动作 + 额外 2 个不同学生动作（`--student-candidates 2`，与 `command_for` 一致）。
+- **B3（比较臂）**：学生全局前 3 个种植（按身份头概率 `ranked_plants`）+ 等待 + 学生原动作；不跑静态打分、无每卡下限。
+- 两臂其余参数相同：samples 3、horizon 2500、halving、verify-samples 9、min-gap 300、MARGIN 0.02、rollout sim-skip 61。
+
+**模型与二进制（SHA256，冻结）**
+
+| 角色 | 路径 | SHA256 |
+|---|---|---|
+| 学生 | `~/PvZ-search/artifacts/student/dw4i_s1/model.pt` | `122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375` |
+| 叶值 | `~/PvZ-search/artifacts/value_net/v3/model.pt` | `5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a` |
+| 静态价值（仅 A 与重老师池） | `~/PvZ-search/artifacts/hard/value_branch1/model.pt` | `2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314` |
+| 模拟器 | `~/PvZ-search/build/pvz-portable` | `ed98a4536912512fa17a47b299e9d72f5175c6495961502439fa147711b26034` |
+
+**样本**：四族 × 64 局 × 8 根 = 2048 点。种子 30000–30063（各族评估段 30000 起，与 task14 同口径）。
+
+| 族 | 清单 | 任务 |
+|---|---|---|
+| 白天 L7 | `~/PvZ-search/artifacts/stage4/day_panel.json` | `day_l7_eval_d7` |
+| 夜间 L14 | `~/PvZ-search/artifacts/stage4/night_panel.json` | `night_l14_eval_n10` |
+| 泳池 L24 | `~/PvZ-search/artifacts/stage4/pool_panel.json` | `pool_l24_eval_p9k` |
+| 原版传送带 L10 | `~/PvZ-search/.claude/worktrees/conveyor/artifacts/stage4/day_panel.json` | `day_l10_orig_eval` |
+
+根抽样：`Random(20261023+seed).sample(eligible, 8)`，按决策序排序。eligible 与 task14 相同：有合法种植动作，且学生本步选择种植或距上一个 eligible 根 ≥300 tick。若某局 eligible <8，该局使用全部 eligible（不重采样、不补局），点数与原因如实记录。轨迹只执行学生、不执行任何老师标注，严格重放后才测。A/B3 的测量先后按 `(seed+decision)%2` 交替，共享 `D = seed×10000 + decision − 1` 的未来。
+
+**重老师**（照 task14 定义）：仅当 A 与 B3 所选动作不同时运行；动作池 = 两臂全部候选 + 单模型静态每卡前 2 + 每卡一个随机剩余合法格，按动作键统一排序。每个池动作跑 64 个共同未来（`truthD = D + 33333333`，`(truthD×1000+k) mod 2^32`），v3 叶值；同一锚定验证（MARGIN 0.02，额外 18 个未来 × 2 个动作）。两臂同动作时标签精确抵消（差 0），不运行重老师。
+
+**统计与判据**：
+- 每个搜索点 `delta = 1[B3=重老师] − 1[A=重老师]`；同动作点 delta=0，按整局 8 点均值计入。
+- 整局为聚类单位：对 64 个局均值做 t 区间（df=63）；另做 10000 次整局 bootstrap（seed 20261023，重采样的 delta 和 / 点数和），两种 95% 区间**下界都必须 > −3pp**。
+- **四族分别判定，合并判定 = 四族全部通过**；任一族不过即 B3 不通过。合并 256 局的池化结果另报作参考。
+- 只给配对差值，不给绝对一致率（同动作根不计标签），不外推胜率。
+- 成本：每点实际续走数（halving + 验证）与 CPU 秒（Python worker user+system + 模拟器进程 user+system），按族报；重老师成本单列。
+
+**资源与停止**：最多 3 个自有游戏进程；不碰 tmux `qc` 与别的代理会话。冒烟（每族 4 局）只验管线，数据放 `artifacts/task42/smoke`，不进最终统计；正式跑放 `artifacts/task42/full`。若冒烟暴露实现缺陷，修复后重新冻结并在本文件记一行，正式样本不变。固定 2048 点，不做期中功效判断、不按结果扩样。
+
+**通过后的动作**：B3 成为老师候选唯一实现——删除静态候选路径（`--static-value`、`_static_frames`、`STATIC` 相关代码与测试），`curriculum_queue.py` 的 `DEFAULT_STATIC_VALUE` 与 `command_for` 的 `--static-value` 一并删，`--student-candidates` 默认改 3；旧路径打 tag `retire-static-candidates-20261023` 后删。不通过则只保留比较脚本，正式路径不动。
+
 ## 问题
