@@ -397,6 +397,10 @@ def percentile(values: list[float], q: float) -> float | None:
     return ordered[index]
 
 
+def rounded(value: float | None, digits: int = 5) -> float | None:
+    return None if value is None else round(value, digits)
+
+
 def report(args) -> dict:
     rows = [json.loads(line) for line in args.input.read_text().splitlines() if line.strip()]
     by_key: dict[tuple, dict] = {}
@@ -431,10 +435,10 @@ def report(args) -> dict:
                     "confident_share": round(len(confident) / len(family_rows), 4) if family_rows else None,
                     "diff_mean": round(sum(diffs) / len(diffs), 5) if diffs else None,
                     "abs_diff_mean": round(sum(abs_diffs) / len(abs_diffs), 5) if abs_diffs else None,
-                    "abs_diff_p95": round(percentile(abs_diffs, 0.95), 5),
-                    "abs_diff_max": round(max(abs_diffs), 5) if abs_diffs else None,
+                    "abs_diff_p95": rounded(percentile(abs_diffs, 0.95)),
+                    "abs_diff_max": rounded(max(abs_diffs)) if abs_diffs else None,
                     "flips": flips, "flip_rate": round(flips / len(confident), 4) if confident else None,
-                    "ticks_saved": stopped, "tick_saved_fraction": round(saved_fraction, 4),
+                    "ticks_saved": stopped, "tick_saved_fraction": rounded(saved_fraction, 4),
                 }
     # Aggregate over all families (rollout-weighted) for the recommendation.
     aggregate = {}
@@ -447,14 +451,14 @@ def report(args) -> dict:
             flips = sum(cell["flips"] for cell in cells)
             saved = sum(cell["ticks_saved"] for cell in cells)
             full_ticks = sum(value[FULL_HORIZON]["ticks"] for value in by_key.values())
-            diffs = [full["v3"] - value[horizon]["v3"] for key, value in by_key.items()
+            diffs = [value[FULL_HORIZON]["v3"] - value[horizon]["v3"] for key, value in by_key.items()
                      if horizon in value and FULL_HORIZON in value and
                      (value[horizon]["v3"] >= theta or value[horizon]["v3"] <= 1.0 - theta)]
             aggregate[horizon][theta] = {
                 "rollouts": rollouts, "confident": confident,
                 "confident_share": round(confident / rollouts, 4) if rollouts else None,
                 "diff_mean": round(sum(diffs) / len(diffs), 5) if diffs else None,
-                "abs_diff_p95": round(percentile([abs(diff) for diff in diffs], 0.95), 5),
+                "abs_diff_p95": rounded(percentile([abs(diff) for diff in diffs], 0.95)),
                 "flips": flips, "flip_rate": round(flips / confident, 4) if confident else None,
                 "tick_saved_fraction": round(saved / full_ticks, 4) if full_ticks else None,
             }
