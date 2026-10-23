@@ -1,0 +1,69 @@
+{
+  "passed": true,
+  "comparisons": [
+    {
+      "current": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+      "generated": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/zone_check/night_panel.json",
+      "current_sha256": "f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f",
+      "generated_sha256": "4e6726b5b581eb3712e2b641278d9b13378f8ba128d9bb3cb6ec8c8cd67b1029",
+      "tasks": 54,
+      "seeds": 184320,
+      "missing": [],
+      "extra": [],
+      "changed": {},
+      "task_order_equal": true,
+      "passed": true,
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/scripts/make_night_panel.py",
+        "--combined",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/zone_check/night_panel.json"
+      ]
+    },
+    {
+      "current": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10.json",
+      "generated": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/zone_check/night_panel_n10.json",
+      "current_sha256": "f62258d7c0d254a47999120ba2456a8c02f7b7b8fbea48e42c0ef8a9b91d4ed1",
+      "generated_sha256": "f62258d7c0d254a47999120ba2456a8c02f7b7b8fbea48e42c0ef8a9b91d4ed1",
+      "tasks": 9,
+      "seeds": 9216,
+      "missing": [],
+      "extra": [],
+      "changed": {},
+      "task_order_equal": true,
+      "passed": true,
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/scripts/make_night_panel.py",
+        "--deck",
+        "0,1,2,3,4,5,7,8,9,11",
+        "--suffix",
+        "_n10",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/zone_check/night_panel_n10.json"
+      ]
+    },
+    {
+      "current": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+      "generated": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/zone_check/pool_panel.json",
+      "current_sha256": "10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb",
+      "generated_sha256": "10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb",
+      "tasks": 35,
+      "seeds": 93184,
+      "missing": [],
+      "extra": [],
+      "changed": {},
+      "task_order_equal": true,
+      "passed": true,
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/scripts/make_pool_panel.py",
+        "--combined",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/zone_check/pool_panel.json"
+      ]
+    }
+  ],
+  "note": "Metadata prose may differ. Every task field, including every seed, must match. Shared files are read-only."
+}

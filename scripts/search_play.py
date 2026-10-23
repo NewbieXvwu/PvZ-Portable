@@ -525,12 +525,17 @@ def _play(job: dict) -> dict:
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
         planted: dict[int, int] = {}
+        planted_by_type: dict[int, int] = {}
+        from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
         if job["arm"] == "fast" and not args.frames:
             obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
-            planted = {index: count for index, count in enumerate(details["planted"]) if count}
+            planted = planted_slots(details)
+            planted_by_type = read_types(details,task_definition)
+            if planted_by_type is None or planted is None:
+                raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
         while not obs["terminal"] and decisions < MAX_ACTIONS:
             action = policy_choice = _fast_action(obs, fast_state)
             _W["student_history"] = fast_state.get("history")
@@ -555,6 +560,7 @@ def _play(job: dict) -> dict:
             # wall-nut takes another nut of the same type, Board::CanPlantAt) -- record what stood
             # there, so the report can say how often the teacher actually used it. Harmless for
             # ordinary plants: the legal list never offers an occupied cell without first aid.
+            planted_type = plant_type_before_action(obs,action['packet']) if action['type']=='plant' else None
             if action["type"] == "plant":
                 occupant = next((p for p in obs.get("plants") or []
                                  if p["row"] == action["row"] and p["col"] == action["col"]), None)
@@ -563,11 +569,13 @@ def _play(job: dict) -> dict:
                         "tick": obs["tick"], "row": action["row"], "col": action["col"],
                         "packet": action["packet"], "occupant": occupant.get("type"),
                         "occupant_health": occupant.get("health"),
-                        "same_type": occupant.get("type") == action["packet"]})
+                        "plant_type":planted_type,"same_type": occupant.get("type") == planted_type})
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
             if not rejected and action["type"] == "plant":
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
+                assert planted_type is not None and planted_type >= 0
+                planted_by_type[planted_type] = planted_by_type.get(planted_type, 0) + 1
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
             if frames is not None:
@@ -627,7 +635,8 @@ def _play(job: dict) -> dict:
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
-            "mowers_used": mowers_start - mowers_left, "planted": planted,
+            "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
+            "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],
             **{name: stats.get(name, 0) for name in ("rollout_batches", "rollout_lanes",
                 "halving_candidates", "halving_rollouts", "halving_selected_lanes")},

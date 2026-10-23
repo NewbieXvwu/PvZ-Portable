@@ -28,7 +28,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "python"))
 
 import pvz_constants  # noqa: E402
-from pvz_tasks import deck_for_level, terrain_covered  # noqa: E402
+from pvz_tasks import conveyor_belt_level, deck_for_level, terrain_covered  # noqa: E402
 from make_day_panel import SUN_START, unlocked_plants  # noqa: E402
 
 SEED_START = 30000
@@ -43,6 +43,10 @@ class Family:
     kind: str = "eval"          # "eval" | "train"
     note: str = ""
     exclude_levels: tuple = ()  # 这个族不收的关（如训练族不收传送带 / 小游戏关）
+    include_levels: tuple = ()
+    phase: int = 0             # later additions follow all original tasks
+    train_seed_base: int | None = None
+    conveyor_start: str | None = None
 
     @property
     def label(self) -> str:
@@ -68,10 +72,11 @@ class Zone:
     deck_check_note: str = ""
 
 
-def train_seed_start(zone: Zone, level: int) -> int:
-    if zone.train_seed_base is None:
+def train_seed_start(zone: Zone, level: int, family: Family | None = None) -> int:
+    base = family.train_seed_base if family is not None and family.train_seed_base is not None else zone.train_seed_base
+    if base is None:
         raise RuntimeError(f"{zone.key}: 没有训练段配置")
-    return zone.train_seed_base + (level - zone.first_level) * zone.train_seed_stride
+    return base + (level - zone.first_level) * zone.train_seed_stride
 
 
 def check_seed_overlap(zone: Zone, tasks: list[dict]) -> None:
@@ -80,19 +85,26 @@ def check_seed_overlap(zone: Zone, tasks: list[dict]) -> None:
     不同关卡、不同卡组共用同一段评估种子是**设计如此**（配对比较要同种子），
     所以重复只在“同一个任务内部”才算错。
     """
+    owners = {}
     for task in tasks:
         if len(set(task["seeds"])) != len(task["seeds"]):
             raise RuntimeError(f"{task['task_id']}: 任务内部有重复种子")
         if "_train_" not in task["task_id"]:
             continue
+        family = next(f for f in zone.families if f.kind == 'train' and task['task_id'] ==
+                      f"{zone.task_prefix}{task['level']}_train{f.suffix}")
+        start = train_seed_start(zone, task['level'], family)
+        if min(task['seeds']) < start or max(task['seeds']) >= start + zone.train_seed_stride:
+            raise RuntimeError(f"{task['task_id']}: 训练种子越出本关段")
+        base = family.train_seed_base if family.train_seed_base is not None else zone.train_seed_base
+        own_high = base + (zone.last_level-zone.first_level)*zone.train_seed_stride + zone.train_seeds-1
         for seed in task["seeds"]:
             for low, high in zone.reserved_seed_ranges:
-                if low <= seed <= high:
+                if low <= seed <= high and not (base <= low and high <= own_high):
                     raise RuntimeError(f"{task['task_id']}: seed {seed} 落在已用段 {low}..{high}")
-        if zone.train_seed_base is not None:
-            span = (zone.last_level - zone.first_level + 1) * zone.train_seed_stride
-            if min(task["seeds"]) < zone.train_seed_base or max(task["seeds"]) >= zone.train_seed_base + span + zone.train_seeds:
-                raise RuntimeError(f"{task['task_id']}: 训练种子越出 {zone.train_seed_base} 段")
+            if seed in owners:
+                raise RuntimeError(f"{task['task_id']}: seed {seed} 与 {owners[seed]} 重叠")
+            owners[seed] = task['task_id']
 
 
 def check_decks(zone: Zone, level: int, decks: dict[str, tuple]) -> list[str]:
@@ -131,7 +143,8 @@ def task_document(zone: Zone, level: int, deck, task_id: str, seeds: list[int]) 
 
 def family_note(zone: Zone, family: Family) -> str:
     if family.kind == "train":
-        return (f"{zone.task_prefix}*_train{family.suffix} ({zone.train_seed_base} + (N-{zone.first_level})*"
+        base=family.train_seed_base if family.train_seed_base is not None else zone.train_seed_base
+        return (f"{zone.task_prefix}*_train{family.suffix} ({base} + (N-{zone.first_level})*"
                 f"{zone.train_seed_stride}, {zone.train_seeds} each)")
     if family.suffix == "":
         return f"{zone.task_prefix}*_eval (control)"
@@ -159,16 +172,22 @@ def build_document(zone: Zone, args) -> tuple[dict, list[dict], dict]:
     def emit(family: Family, level: int) -> None:
         deck = family.deck if family.deck is not None else deck_for_level(level)
         if family.kind == "train":
-            start = train_seed_start(zone, level)
+            start = train_seed_start(zone, level, family)
             seeds = list(range(start, start + args.train_seeds))
             task_id = f"{zone.task_prefix}{level}_train{family.suffix}"
         else:
             seeds = list(range(args.seed_start, args.seed_start + args.seeds))
             task_id = f"{zone.task_prefix}{level}_eval{family.suffix}"
-        tasks.append(task_document(zone, level, deck, task_id, seeds))
+        task = task_document(zone, level, deck, task_id, seeds)
+        if family.conveyor_start:
+            if family.conveyor_start != 'original' or deck or not conveyor_belt_level(level):
+                raise RuntimeError('original conveyor task needs a conveyor level and empty deck')
+            task['conveyor_start'] = family.conveyor_start
+        tasks.append(task)
 
     def family_levels(family: Family) -> list[int]:
-        return [level for level in levels if level not in family.exclude_levels]
+        return [level for level in levels if level not in family.exclude_levels
+                and (not family.include_levels or level in family.include_levels)]
 
     # 顺序与 task21 的清单逐字节一致：对照族先跑完所有关，再按关排其余族。
     for level in family_levels(families[0]):
@@ -179,18 +198,20 @@ def build_document(zone: Zone, args) -> tuple[dict, list[dict], dict]:
                        "deck": list(deck), "unlocked": list(unlocked),
                        "not_yet_unlocked": [seed for seed in deck if seed not in unlocked],
                        "special": zone.special_notes.get(level, "")})
-    for level in levels:
-        for family in families[1:]:
-            if level in family.exclude_levels:
-                continue
-            emit(family, level)
+    for phase in sorted({family.phase for family in families[1:]}):
+        for level in levels:
+            for family in families[1:]:
+                if family.phase == phase and level in family_levels(family):
+                    emit(family, level)
 
     check_seed_overlap(zone, tasks)
 
     # AGENTS §8 卡组核对：每关 × 每副候选卡组。
     for level in levels:
         decks = {}
-        for family in zone.families:
+        for family in families:
+            if level not in family_levels(family) or family.conveyor_start:
+                continue
             deck = family.deck if family.deck is not None else deck_for_level(level)
             decks[family.label] = deck
         for message in check_decks(zone, level, decks):
@@ -231,6 +252,8 @@ def main_for(zone: Zone, argv: list[str] | None = None) -> None:
     p.add_argument("--combined", action="store_true",
                    help="一份清单里写本区的全部任务族（主控的采集队列读这份）")
     args = p.parse_args(argv)
+    if args.seeds <= 0 or not 0 < args.train_seeds <= zone.train_seed_stride:
+        p.error('seed counts must be positive; training count cannot exceed the per-level stride')
 
     document, checks, meta = build_document(zone, args)
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -258,6 +281,7 @@ def main_for(zone: Zone, argv: list[str] | None = None) -> None:
         for family in zone.families:
             if family.kind != "train":
                 continue
-            for level in [lv for lv in meta["levels"] if lv not in family.exclude_levels]:
-                start = train_seed_start(zone, level)
+            for level in [lv for lv in meta["levels"] if lv not in family.exclude_levels
+                          and (not family.include_levels or lv in family.include_levels)]:
+                start = train_seed_start(zone, level, family)
                 print(f"train{family.suffix} L{level}: {start}..{start + args.train_seeds - 1}")

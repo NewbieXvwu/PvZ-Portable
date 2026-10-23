@@ -1,0 +1,26 @@
+{
+  "complete": true,
+  "checks": [
+    {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1904096/n11dag1m_fast_search/frames.npz",
+      "sha256": "0ecc1627fc114122c404ff598548e952475b52cbe4ef348cdeadca670216c95f",
+      "rows": 526,
+      "packet_shape": [
+        526,
+        10,
+        4
+      ]
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1737520/z17dag43b_fast_search/frames.npz",
+      "sha256": "e8b8af5e89c537b5503ee5bbdb3e2bc26ca58ee9127ca10a559610bf09d4f982",
+      "rows": 1066,
+      "packet_shape": [
+        1066,
+        10,
+        4
+      ]
+    }
+  ],
+  "trained": false
+}
