@@ -133,7 +133,7 @@ def validate(document, kind=None):
             if type(result[name]) is not bool:
                 raise ValueError(f'{name}: expected boolean')
         for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),
-                                  obs=('v1', 'v2lite', 'v2', 'v2fog'), lr_schedule=('constant', 'cosine')).items():
+                                  obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4'), lr_schedule=('constant', 'cosine')).items():
             if result[name] not in choices:
                 raise ValueError(f'{name}: expected one of {choices}')
         if not isinstance(result['device'], str) or not result['device']:

@@ -288,6 +288,8 @@ def load_student(path) -> RolloutNet:
 
 def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
+    if net.obs == 'v2fogstack4':
+        raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",

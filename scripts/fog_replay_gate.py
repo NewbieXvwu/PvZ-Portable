@@ -96,6 +96,7 @@ def run(args, level):
                     check()
             assert obs['terminal'] and index == len(data['hashes'])
         return dict(level=level, frames=index, final=data['final'], differences=0,
+                    executable_sha256=hashlib.sha256(args.executable.read_bytes()).hexdigest(),
                     tape_sha256=hashlib.sha256(tape.read_bytes()).hexdigest())
 
 

@@ -121,6 +121,9 @@ def main():
         for cell in plan['cells']:
             if completed(cell):
                 continue
+            from pvz_fog import task45_engine_pids
+            if task45_engine_pids():
+                raise RuntimeError('another task45 stage has live game processes; wait before launching four')
             print('START ' + cell['task_id'] + ' ' + cell['arm'], flush=True)
             folder = Path(cell['out'])
             folder.mkdir(parents=True, exist_ok=True)

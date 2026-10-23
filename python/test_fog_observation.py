@@ -177,3 +177,27 @@ def test_blover_reveals_zombies_then_fog_returns_and_masks_again():
         actual = env.privileged_state()
         assert np.asarray(back['fog_amount']).sum() > np.asarray(clear['fog_amount']).sum()
         assert {z['id'] for z in actual['zombies']} - {z['id'] for z in back['zombies']}
+
+
+@engine
+def test_half_multiplier_is_accepted_and_scales_actual_engine_spawns():
+    import math
+    deck = deck_for_level(31)
+    with PvZEnv(RESOURCE, executable=BINARY) as env:
+        obs, _ = env.reset(deck=deck, task=TaskSpec(level=31, seed=450031,
+              profile=profile_for_deck(deck), zombie_count_multiplier=.5,
+              fog_observation='xray'))
+        assert obs['zombie_count_multiplier'] == .5
+        original = [len(env.critic_inputs(wave)['wave_zombies']) for wave in range(6)]
+        previous_ids = set()
+        actual = []
+        while obs['wave'] < 6 and not obs['terminal']:
+            before = obs['wave']
+            obs, *_ = env.step(dict(type='wait', ticks=1))
+            identities = {z['id'] for z in obs['zombies']}
+            if obs['wave'] > before:
+                actual.append(len(identities - previous_ids))
+            previous_ids = identities
+        assert len(actual) == 6
+        assert actual == [math.floor(n * .5 + .5) for n in original]
+        assert sum(actual) < sum(original)

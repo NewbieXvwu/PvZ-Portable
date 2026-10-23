@@ -194,7 +194,7 @@ def encode_student_frames(frames: list[dict], source: bytes, obs: str) -> dict:
 
 
 # LEGACY(obs-versions): the signature freezes which encoder wrote an archive, so v1/v2lite/v2 stay readable.
-@lru_cache(maxsize=4)
+@lru_cache(maxsize=5)
 def encoder_signature(obs: str = "v1") -> str:
     import pvz_rollout_policy
     import pvz_value_net
@@ -207,7 +207,7 @@ def encoder_signature(obs: str = "v1") -> str:
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
     if obs == "v1":
         return signature
-    if obs not in ("v2lite", "v2", "v2fog"):
+    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4"):
         raise ValueError(f"unknown student observation version: {obs}")
     # v2lite/v2 are frozen encoder semantics. Adding a new version in their shared
     # module must not invalidate all historical archives and rewrite every pack.

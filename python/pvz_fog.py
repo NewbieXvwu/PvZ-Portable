@@ -1,5 +1,23 @@
 """Read-only fog episode diagnostics, isolated from all policy inputs."""
 from collections import Counter
+from pathlib import Path
+
+
+def task45_engine_pids():
+    """Read live executables before reserving all four task45 game slots for a stage."""
+    root = Path(__file__).resolve().parents[1]
+    executables = {root / 'build/pvz-portable', root / 'artifacts/task45/baseline-engine'}
+    result = []
+    for process in Path('/proc').iterdir():
+        if not process.name.isdigit():
+            continue
+        try:
+            executable = (process / 'exe').resolve()
+        except OSError:
+            continue
+        if executable in executables:
+            result.append(int(process.name))
+    return result
 
 
 class FogEpisodeDiagnostics:
