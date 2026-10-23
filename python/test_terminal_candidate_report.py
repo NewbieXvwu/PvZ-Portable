@@ -41,3 +41,18 @@ def test_static_omission_is_separate_from_student_candidate_recovery(monkeypatch
     trace['candidates']=trace['candidates'][:1]
     got=report.attribution(group)['stages']['wave']
     assert got['candidate_generation_omission']==1
+
+
+def test_independent_repro_checks_trace_and_value_semantics(tmp_path):
+    import gzip
+    import pytest
+    from roof_terminal_repro import compare
+    original={k:{} for k in ('identity','outcome','v4_short_value','short_leaf','teacher_leaf','terminal_state_sha256','checks')}
+    a=tmp_path/'a.gz';b=tmp_path/'b.gz'
+    for path in (a,b):
+        with gzip.open(path,'wb') as stream:stream.write(b'{"chosen":"wait"}\n')
+    assert compare(original,dict(original),a,b)['teacher_action_chain_equal']
+    changed=dict(original,v4_short_value=.3)
+    with pytest.raises(ValueError,match='v4_short_value'):compare(original,changed,a,b)
+    with gzip.open(b,'wb') as stream:stream.write(b'{"chosen":"plant"}\n')
+    with pytest.raises(ValueError,match='action_chain'):compare(original,dict(original),a,b)
