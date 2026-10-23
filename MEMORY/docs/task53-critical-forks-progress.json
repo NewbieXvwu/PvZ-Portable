@@ -1,0 +1,231 @@
+{
+ "stages": {
+  "screen-complete": {
+   "day": {
+    "games": 8,
+    "roots": 15,
+    "labels": 3363,
+    "wins": 1528,
+    "v4_agreement": {
+     "won": {
+      "all_pairs": {
+       "pairs": 12144,
+       "accuracy": 0.5134634387351779,
+       "game_cluster_bootstrap_95": [
+        0.4763436790310371,
+        0.5246106936730915
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 3147,
+       "accuracy": 0.49602796313949793,
+       "game_cluster_bootstrap_95": [
+        0.49602796313949793,
+        0.49602796313949793
+       ]
+      }
+     },
+     "wave": {
+      "all_pairs": {
+       "pairs": 564,
+       "accuracy": 0.6861702127659575,
+       "game_cluster_bootstrap_95": [
+        0.24013157894736842,
+        0.9354026845637584
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 91,
+       "accuracy": 0.0989010989010989,
+       "game_cluster_bootstrap_95": [
+        0.0,
+        0.1
+       ]
+      }
+     },
+     "tick": {
+      "all_pairs": {
+       "pairs": 1098,
+       "accuracy": 0.8756830601092896,
+       "game_cluster_bootstrap_95": [
+        0.4382716049382716,
+        0.9673871824042473
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 17,
+       "accuracy": 0.11764705882352941,
+       "game_cluster_bootstrap_95": [
+        0.0,
+        0.3333333333333333
+       ]
+      }
+     },
+     "mowers_used": {
+      "all_pairs": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      },
+      "nonterminal_v4_only": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      }
+     }
+    }
+   },
+   "night": {
+    "games": 8,
+    "roots": 16,
+    "labels": 2940,
+    "wins": 0,
+    "v4_agreement": {
+     "won": {
+      "all_pairs": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      },
+      "nonterminal_v4_only": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      }
+     },
+     "wave": {
+      "all_pairs": {
+       "pairs": 2201,
+       "accuracy": 0.5154475238527941,
+       "game_cluster_bootstrap_95": [
+        0.5154475238527941,
+        0.5154475238527941
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 20,
+       "accuracy": 0.3,
+       "game_cluster_bootstrap_95": [
+        0.3,
+        0.3
+       ]
+      }
+     },
+     "tick": {
+      "all_pairs": {
+       "pairs": 435,
+       "accuracy": 0.8540229885057471,
+       "game_cluster_bootstrap_95": [
+        0.5,
+        0.9835164835164835
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 6,
+       "accuracy": 0.16666666666666666,
+       "game_cluster_bootstrap_95": [
+        0.16666666666666666,
+        0.16666666666666666
+       ]
+      }
+     },
+     "mowers_used": {
+      "all_pairs": {
+       "pairs": 45,
+       "accuracy": 0.5,
+       "game_cluster_bootstrap_95": [
+        0.5,
+        0.5
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      }
+     }
+    }
+   },
+   "pool": {
+    "games": 8,
+    "roots": 16,
+    "labels": 3420,
+    "wins": 5,
+    "v4_agreement": {
+     "won": {
+      "all_pairs": {
+       "pairs": 250,
+       "accuracy": 0.816,
+       "game_cluster_bootstrap_95": [
+        0.5,
+        0.9759036144578314
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 166,
+       "accuracy": 0.9759036144578314,
+       "game_cluster_bootstrap_95": [
+        0.9759036144578314,
+        0.9759036144578314
+       ]
+      }
+     },
+     "wave": {
+      "all_pairs": {
+       "pairs": 1585,
+       "accuracy": 0.6211356466876972,
+       "game_cluster_bootstrap_95": [
+        0.5056657223796034,
+        0.8080357142857143
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 1298,
+       "accuracy": 0.6016949152542372,
+       "game_cluster_bootstrap_95": [
+        0.5056657223796034,
+        0.7892156862745098
+       ]
+      }
+     },
+     "tick": {
+      "all_pairs": {
+       "pairs": 1728,
+       "accuracy": 0.5532407407407407,
+       "game_cluster_bootstrap_95": [
+        0.4155112651646447,
+        0.8
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 1420,
+       "accuracy": 0.5225352112676056,
+       "game_cluster_bootstrap_95": [
+        0.3895809739524349,
+        0.7602040816326531
+       ]
+      }
+     },
+     "mowers_used": {
+      "all_pairs": {
+       "pairs": 166,
+       "accuracy": 0.024096385542168676,
+       "game_cluster_bootstrap_95": [
+        0.024096385542168676,
+        0.024096385542168676
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 166,
+       "accuracy": 0.024096385542168676,
+       "game_cluster_bootstrap_95": [
+        0.024096385542168676,
+        0.024096385542168676
+       ]
+      }
+     }
+    }
+   }
+  }
+ }
+}
