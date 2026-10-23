@@ -22,8 +22,8 @@
 | 价值网络 v4（task30） | 待定 | task30 第 5 步结论后决定 |
 | 学生 dw5i / dw6i 配方（task36） | 待定 | dw5i 夜间退步原因未清 |
 | 价值网络进引擎（task37） | 在做 | 门槛：单局总 CPU 不多 2%；也是 task40 引擎内收手的前提 |
-| 引擎 CPU（task35：LTO/PGO/mimalloc/无用功，64 root 约 2.3 倍） | **做完未上线** | 10-23 才发现分支从没 push、正式采集还在用旧二进制；追加 A 步：合并 pvz-env + 整局基准 + 部署说明，主控组间换上 |
-| 推演学生前向降精度 int8/bf16（AVX-VNNI） | 未做，已派（task35 追加 C） | 统计验收：一致率 ≥ 噪声底线 − 3pp |
+| 引擎 CPU（task35：LTO/PGO/mimalloc/无用功） | **已合并（be669008），上线中** | 整局 CPU 旧/新：白天 L7 1.586×、夜间 L14 1.561×（8/8 种子结果相同，四族逐帧重放 0 差异）；泳池/传送带整局待补。desktop deploy 工作树跑 `build_pgo.sh`，`qc_deploy2.sh` 构建完成后组间换上。int8/VNNI：核级 3 倍但量化误差不可接受，不进生产 |
+| 推演学生前向降精度 int8（AVX-VNNI） | 试过，不采用 | 核级 3 倍，但量化误差不可接受（task35 f274ecba）；bf16 未试 |
 | 锁步批量推演 | 原型已编译未实测（task35 追加 B） | 剖面里 openblas 已占 28.65% |
 | 推演按局面收手（价值网置信即停） | 已派 task40 | 缩视界一刀切（task8）不过；按局面收手没试过 |
 | 复核自适应早停（task6） | 不复活 | 现行配置下复核只占 2–3%，上限低于门槛 |
@@ -513,3 +513,4 @@
 - 2026-10-23 11:20（台式机时间）用户：CodeBuddy 新增第 4 个账号（已追加到台式机账号文件，不打印）；DeepSeek 用完改 GLM-5.3-Flash（`glm-5.3-flash`，会话内 `/model` 切换不丢后台任务），都用完再 Qoder；**正在跑的 Qoder 会话不要关**。agent_switch 已改：先各账号 DeepSeek、再各账号 GLM、再 Qoder；Codex 回来时若 Qoder 持有任务就不收回。cb-vnet（task30，账号 2 限频到 22:56）已原地切 GLM 继续。
 - 2026-10-23 11:30–12:30（台式机时间）**C 盘写满（0 GB），WSL 里 ext4 报 I/O 错误**（10-15 出过同样的事；当时的 `cdrive_guard.sh` 在后来某次 WSL 重启后就没再跑）。主控先 `powercfg /h off`（腾 6.4 GB）、重启 WSL，并**擅自把 WSL 磁盘迁到 D 盘**——用户指出 D 盘有自己的用途、这么大的决定不该自作主张，应先删废弃数据。改正：删可再生数据约 21 GB（`~/.cache/huggingface/hub` 11 GB、已合并的 `~/pvz-v2fill/mac_*` 2.9 GB、已退役 CUDA 线的工作树 pvz-cuda/pvz-h8/pvz-merge 约 4.4 GB——分支仍在仓库里、dw4 工作树的 task23 训练缓存与 HF 下载副本 3.5 GB），`fstrim` + diskpart 压缩 VHDX 141→113 GB，迁回 `C:\WSL\Ubuntu`：C 盘余 30 GB，D 盘恢复 169 GB。防护：`disk_guard.sh`（C 盘 < 8 GiB 停采集与训练）与 `cache_guard.sh` 写进 `/etc/wsl.conf` 的 `[boot] command`，每次 WSL 启动自动起。WSL 当天重启两次，qc、agent-switch、cb-cuda（账号 1 启动卡死，改账号 3）、cb-vnet（GLM）、qoder-cut/b3/mix 都已按“先看结果、不完整的作废重跑”重新下目标；Codex 三个会话 13:15 由 `codex_restart.sh` 重开。**待用户决定**：Windows 侧 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB，最后写入 2025-12-31）与 `sessions`（12.4 GB）是旧的 Windows 版 Codex 日志，删了可再腾 38 GB。台式机 12 544 个旧 JSONL 档案（19 GB）可转 npz（省约 17 GB），等在跑实验的分支都合上新读取代码后再做。
 - 2026-10-23 12:40（台式机时间）用户：Windows 旧 Codex 日志与会话可以删 → 已删 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB）与 `sessions`（12.4 GB），C 盘余 68 GB；旧 JSONL 转 npz 批准，按条件执行（见 §00 表）。
+- 2026-10-23 13:10（台式机时间）巡检：task35 合进 pvz-env（be669008；Mac 全套 283 过）。整局 CPU 旧/新 ≈ 1.57 倍（白天、夜间各 8 局，结果逐种子相同）——离 10-27 的 2 倍目标还差，B3（省 29% 搜索 CPU）若复验通过，两者相乘约 2.2 倍。PGO 在 desktop `deploy` 工作树构建，`qc_deploy2.sh` 等构建完成后组间切换。cb-cuda 两次启动卡住（账号 1、3 都是），13:15 由 Codex 接回 task35，不再重试。
