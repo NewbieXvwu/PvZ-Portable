@@ -47,6 +47,7 @@
 - 2026-10-23：已拉取并纳入追加 A；修复 Mac 上 mimalloc 与 libc++ 分配/释放冲突导致的启动 SIGABRT，Mac 使用系统分配器。`-j4` 编译成功，基线测试 323 passed / 26 skipped / 1 failed（既有 `test_low_memory_pauses_and_resumes_only_own_parent_and_child`，Mac 缺少其 Linux 进程内存统计）。
 - 2026-10-23：原生窗口录制、逐 tick 哈希重放与 frames_v2 导出贯通，备注仅存 meta；来源权重由配方 `source_weight` 指定。相关测试30通过；可见窗口180 tick（含种植/铲除）重放一致，4份既有整局动作带在修改前后完整观测摘要一致（1298/1242/1121/1313帧）。
 - 2026-10-23：追加 A 已落地：DESIGN §14.18 登记L31–34共10个独立任务族，完整卡组与种子存 `configs/human_demo_tasks.json`，十套均经对应profile的解锁查询和整组检查（香蒲所有权43已验证）。`human-demo.md` 写好十局计划、启动命令和备注说明，供主控审阅。示范第N步起点接入search_play，后续合法示范种植进入搜索候选，老师续局保留来源与备注；episode_query可直接反事实重放及保存衍生动作带。3项端到端测试通过，覆盖终局波数/结果、来源权重、起点搜索与反事实再重放；最后构建的4局旧存档仍为零差异。
+- 2026-10-23 [close]：全套 `python3 -m pytest python -q -p no:cacheprovider` 为326 passed / 26 skipped / 1 failed / 133 subtests passed，较修复Mac启动后的基线新增3项通过，失败仍只有原有进程内存统计用例。最后`-j4`构建成功，4局非录制路径共4974帧的新旧引擎完整观测摘要相同，git跟踪的ignored产物为0。代码和计划已推送demo；真人示范计划待主控审阅，尚未采集正式示范局。
 
 ## 问题
 
