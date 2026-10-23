@@ -158,6 +158,11 @@
 凑不满 32 对。改成从 30992 起（32 个，含 31000 之后全部 24 个），与 v4 那轮 A/B 用的 30000 起不重叠。
 另：`--seed-offset` 是**列表下标**不是种子值（31000 会被当成第 31000 个种子，直接报“种子不够”）。
 
+### 6. 交接结论（18:20，CodeBuddy → Codex）
+
+第 1–2 步做完：通道说明、L21 决策级采集（64 种子；62 个已落盘，最后两局跑完会自己写 `artifacts/task43/l21.json`；dump 在 `artifacts/task43/l21_dump`，约 1.5 GB，不进 git）、v4 外部校准基线、三条验收的同种子清单。
+第 3 步代码已就绪并跑通冒烟（v4 热启动 + 决策级混训 + 分区成对一致率），但 **v5 还没训**；第 4 步一条都没跑。
+
 ## 问题
 
 ### 问题 1：L21 的叶子标签几乎全负，决策级粒度只把常数拆成「0.35% 的 1」
@@ -172,3 +177,9 @@
 - 待定：先按计划采满并训练，用验收 (a) 的离散度判定；若不过，下一步应补「老师续走」的标签
   （每个候选后面接搜索决策，代价约为现在的 N 倍）或波次次级真值（`report()` 里 `wave_pairs` 已有，
   0.536 成对一致率，v4 对波次仍有弱信号）。
+
+### 问题 2：交接时的下一步（3 行）
+
+- 训练：`train_value_widen.py train --out artifacts/task43/v5 --data .../student/frames_v2 --audit-manifest .../vnet/artifacts/task30/full_audit_manifest.json --init artifacts/value_net/v4/model.pt --decision-data artifacts/task43/l21_dump --decision-fraction 0.5 --device cuda`（语料 memmap 已软链进 `artifacts/task43/v5/`；MemAvailable 现约 12 GiB，过 10 GiB 门禁）。
+- 验收：先 (a) `value_leaf_dispersion.py run --v3 v4 --v4 v5 --seed-offset 992 --games 4 --workers 4 --executable .../deploy2/build/pvz-portable`，再 (b)(c) 用已冻结的 `artifacts/task43/ab_{l21,day,night}/plan.json` 跑 `value_widen_ab.py v3|v4|report`。
+- 若 (a) 不过：问题在标签源（学生续走只有 0.6% 胜率、94% 局面候选无差），下一步补**老师续走**的标签或波次次级真值，不要靠加关加种子。
