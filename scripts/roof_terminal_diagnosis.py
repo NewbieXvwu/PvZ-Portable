@@ -56,6 +56,27 @@ def render():
         lines.append(f"| {label} | {percentage(v['accuracy'])} / {v['pairs']} | {ci} | "
             f"{percentage(m['v4_strict']['accuracy'])} | {percentage(m['v4_nonterminal']['accuracy'])} | "
             f"{percentage(m['teacher_path_v4']['accuracy'])} |")
+    examples=[]
+    for cause in ('initial_margin_blocked','verification_rejected'):
+        for g in data['groups']:
+            if not any(g['attribution']['stages'][metric].get(cause,0) for metric in ('won','wave','tick')):continue
+            trace=g['attribution']['formal_trace'];best=trace['best_index'];anchor=trace['student_index']
+            action=trace['candidates'][best]
+            challenger=next(c for c in g['candidates'] if d.jkey(c['action'])==d.jkey(action))
+            student=g['candidates'][g['student_position']]
+            before=trace['before_verification_values'][best]-trace['before_verification_values'][anchor]
+            after=trace['after_verification_values'][best]-trace['after_verification_values'][anchor]
+            a=challenger['means'];b=student['means']
+            description=f"植物{challenger['plant_type']} r{action['row']}c{action['col']}" if action['type']=='plant' else action['type']
+            examples.append(f"| L{g['cell']['level']} / {g['point']['decision']+1} / {g['point']['tick']} | "
+                f"{'初始门槛' if cause=='initial_margin_blocked' else '追加核验'} | {description} | "
+                f"{before:.6f} / {after:.6f} | {percentage(b['won'])}→{percentage(a['won'])} | "
+                f"{b['wave']:.1f}→{a['wave']:.1f} | {b['tick']:.1f}→{a['tick']:.1f} |")
+            break
+    if examples:
+        lines+=['','实际阻断案例：分差取该根生产搜索追踪，终局均值取独立的共同未来，两者不混作同一批短叶。', '',
+            '| 关卡 / 决策（1起） / tick | 阻断阶段 | 挑战动作（r/c 从0起） | 核验前 / 后叶值分差 | 胜率：学生→候选 | 末波：学生→候选 | 终 tick：学生→候选 |',
+            '|---|---|---|---:|---:|---:|---:|',*examples]
     lines+=['','老师路径辅助叶与正式 2500 tick 学生叶是不同对象，分别报告；短叶已终局者用真实胜负评分。'
         '末波和终 tick 不替代胜负：更晚死亡不自动等于更高获胜率。','',
         '## 分关卡与选中点','',

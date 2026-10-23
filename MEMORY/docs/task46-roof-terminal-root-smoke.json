@@ -326,9 +326,203 @@
    },
    "root_sha256": "399c21d2c12f217be727a5a780ffa579a020fc7b7da3aad6a5658b9f025faf81",
    "search_trace_sha256": "9f2b8a46dabafd3778ce42984488d451d0126b7612ac0d3d81f19ec13f78c417"
+  },
+  {
+   "cell": "l44-archive-45000000",
+   "root": 0,
+   "labels": 122,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 1653,
+      "correct": 763.0,
+      "value_ties": 8,
+      "accuracy": 0.4615849969751966
+     },
+     "v4_strict": {
+      "pairs": 1757,
+      "correct": 821.0,
+      "value_ties": 8,
+      "accuracy": 0.46727376209447924
+     },
+     "v4_nonterminal": {
+      "pairs": 1653,
+      "correct": 763.0,
+      "value_ties": 8,
+      "accuracy": 0.4615849969751966
+     },
+     "teacher_path_v4": {
+      "pairs": 1653,
+      "correct": 763.0,
+      "value_ties": 8,
+      "accuracy": 0.4615849969751966
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1752,
+      "correct": 806.5,
+      "value_ties": 7,
+      "accuracy": 0.4603310502283105
+     },
+     "v4_strict": {
+      "pairs": 1830,
+      "correct": 849.0,
+      "value_ties": 8,
+      "accuracy": 0.4639344262295082
+     },
+     "v4_nonterminal": {
+      "pairs": 1752,
+      "correct": 806.5,
+      "value_ties": 7,
+      "accuracy": 0.4603310502283105
+     },
+     "teacher_path_v4": {
+      "pairs": 1752,
+      "correct": 806.5,
+      "value_ties": 7,
+      "accuracy": 0.4603310502283105
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 50,
+     "production_representable_improvers": 41,
+     "halving_pruned": 3,
+     "improving_plant_actions": 40,
+     "candidate_generation_omission": 36,
+     "static_retained": 2,
+     "initial_margin_blocked": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 9
+    },
+    "tick": {
+     "observed_improvers": 49,
+     "production_representable_improvers": 40,
+     "halving_pruned": 3,
+     "improving_plant_actions": 39,
+     "candidate_generation_omission": 35,
+     "static_retained": 2,
+     "initial_margin_blocked": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 9
+    }
+   },
+   "root_sha256": "82c79208df16f180910b6eb4b2a226a2f6eae9178dd8da18584f7982f58dcc92",
+   "search_trace_sha256": "e53849f301f6be67f5fcb022345538e799022f1a7b40e96a1d982283a18da2bc",
+   "margin_example": {
+    "student": {
+     "type": "plant",
+     "packet": 6,
+     "col": 4,
+     "row": 0
+    },
+    "challenger": {
+     "type": "plant",
+     "packet": 1,
+     "col": 2,
+     "row": 3
+    },
+    "initial_v4_values": [
+     0.012393057035903135,
+     0.015595233378310999
+    ],
+    "initial_v4_gain": 0.0032021763424078635,
+    "margin": 0.02,
+    "chosen": {
+     "type": "plant",
+     "packet": 6,
+     "col": 4,
+     "row": 0
+    },
+    "futures": [
+     {
+      "k": 0,
+      "student": {
+       "won": false,
+       "terminal": true,
+       "result": 2,
+       "tick": 15285,
+       "wave": 6,
+       "decisions": 278,
+       "searched": 53,
+       "overrides": 0,
+       "mowers_used": 0,
+       "final_sun": 0
+      },
+      "challenger": {
+       "won": false,
+       "terminal": true,
+       "result": 2,
+       "tick": 35663,
+       "wave": 18,
+       "decisions": 674,
+       "searched": 117,
+       "overrides": 8,
+       "mowers_used": 0,
+       "final_sun": 100
+      }
+     },
+     {
+      "k": 1,
+      "student": {
+       "won": false,
+       "terminal": true,
+       "result": 2,
+       "tick": 34270,
+       "wave": 14,
+       "decisions": 628,
+       "searched": 116,
+       "overrides": 0,
+       "mowers_used": 0,
+       "final_sun": 50
+      },
+      "challenger": {
+       "won": false,
+       "terminal": true,
+       "result": 2,
+       "tick": 61340,
+       "wave": 29,
+       "decisions": 1152,
+       "searched": 212,
+       "overrides": 35,
+       "mowers_used": 0,
+       "final_sun": 75
+      }
+     }
+    ]
+   }
   }
  ],
- "scope": "first three complete roots only; not a complete-panel or general roof conclusion",
+ "scope": "first four complete roots only; not a complete-panel or general roof conclusion",
  "selection_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
  "checks": "per-root exact complete candidate/future coverage, full identity/input hashes, true terminal and complete teacher action chains; real four-audit report paths passed",
  "bootstrap_guard": "fewer than two informative level/reset-seed clusters => interval null, including duplicated roots from the same reset seed"
