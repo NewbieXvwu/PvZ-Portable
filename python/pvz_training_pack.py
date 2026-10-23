@@ -46,3 +46,84 @@ def pack_path(data: Path, options: dict) -> Path:
     return Path(data) / "packs" / f"{key}.npz"
 
 
+CHUNK_BYTES = 1 << 26
+
+
+def mapped_dir(pack: Path) -> Path:
+    """The mmap-friendly unpacking of a pack: one .npy per member, next to the archive."""
+    return Path(str(pack) + ".d")
+
+
+def _read_header(source):
+    """Shape, order and dtype of one .npy stream, leaving the stream right before the payload."""
+    import numpy as np
+    version = np.lib.format.read_magic(source)
+    if version == (1, 0):
+        return np.lib.format.read_array_header_1_0(source)
+    return np.lib.format.read_array_header_2_0(source)
+
+
+def _payload_sha(source) -> str:
+    """SHA256 of the payload after the .npy header, streamed (a 2.4 GB member must not be read in one go)."""
+    _read_header(source)
+    digest = hashlib.sha256()
+    for chunk in iter(lambda: source.read(CHUNK_BYTES), b""):
+        digest.update(chunk)
+    return digest.hexdigest()
+
+
+def unpack(pack: Path, dest: Path | None = None, check: bool = True) -> dict:
+    """Decompress every zip member into its own .npy and verify payload identity.
+
+    np.load(..., mmap_mode='r') cannot map zip members: reading them puts ~9 GB of arrays in anonymous
+    memory, which defeats the 10 GiB MemAvailable floor. The .npy pages written here are file-backed and
+    reclaimable, so the trainer keeps its footprint evictable.
+    """
+    import zipfile
+
+    import numpy as np
+
+    pack = Path(pack)
+    dest = Path(dest) if dest is not None else mapped_dir(pack)
+    dest.mkdir(parents=True, exist_ok=True)
+    digests = {}
+    with zipfile.ZipFile(pack) as archive:
+        for name in archive.namelist():
+            with archive.open(name) as source:
+                shape, fortran, dtype = _read_header(source)
+                if dtype.kind == "O":
+                    raise ValueError(f"{name}: object members cannot be unpacked")
+                count = int(np.prod(shape)) if shape else 1
+                target = dest / name
+                array = np.lib.format.open_memmap(target, mode="w+", dtype=dtype, shape=shape,
+                                                  fortran_order=bool(fortran))
+                if count * dtype.itemsize <= CHUNK_BYTES:
+                    payload = source.read(count * dtype.itemsize)
+                    if len(payload) != count * dtype.itemsize:
+                        raise EOFError(f"{name}: truncated member")
+                    array[...] = np.frombuffer(payload, dtype=dtype).reshape(shape, order="F" if fortran else "C")
+                else:
+                    flat = array.reshape(-1, order="F" if fortran else "C")
+                    done, step = 0, CHUNK_BYTES // dtype.itemsize
+                    while done < count:
+                        width = min(step, count - done)
+                        payload = source.read(width * dtype.itemsize)
+                        if len(payload) != width * dtype.itemsize:
+                            raise EOFError(f"{name}: truncated member")
+                        flat[done:done + width] = np.frombuffer(payload, dtype=dtype)
+                        done += width
+                array.flush()
+                del array
+            with open(target, "rb") as source:
+                payload = _payload_sha(source)
+            if check:
+                with archive.open(name) as source:
+                    expected = _payload_sha(source)
+                if expected != payload:
+                    raise ValueError(f"{name}: unpacked payload differs from the pack")
+            digests[name] = payload
+    (dest / "manifest.json").write_text(json.dumps({"pack": pack.name, "members": digests}, indent=1) + "\n")
+    return digests
+
+
+

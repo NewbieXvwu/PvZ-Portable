@@ -66,6 +66,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，16 A 打包完成并校验：22:51 生成 `artifacts/task27/training_frames/packs/e39ba7cbc076380a.npz`（7,530,006,217 B），包内 37 个成员、15,788,614 行（与预期一致）、56,784 个来源标签。最终组装窗口（22:42–22:51）暂停了 pack_gate2：父进程 RSS 峰值约 6.9 GB，采样到的 MemAvailable 最低 9.76 GiB（22:42，低于 10 GiB 地板约 0.25 GiB、26 s 内回升），随后维持 10–10.5 GiB。若不让它写完，SIGSTOP 会把已分配的 ~7 GB 冻结，而 cq 整库 pack 预计还要约 20 h，A 会整夜卡住 —— 权衡后选择让它写完并立即释放。当前 8.2 GiB 主要由 cq 的 16 个引擎 + cq pack 占用；train 步自带 `<10 GiB` 暂停门禁，内存回升后再开始训练。
 
+- 2026-10-23，17 训练首跑暴露装载死锁并修复：`np.load(npz, mmap_mode='r')` 对 zip 成员不映射，训练器把 8.79 GB 语料读成匿名内存；guard 在 MemAvailable <10 GiB 时 SIGSTOP，可它自己的 8.79 GB 不释放，MemAvailable 永远回不到 10 GiB，训练被永久暂停（`artifacts/task36/train_A.resources.jsonl` 633–724 s：av 5.98 GiB、rss 8.77 GiB、paused=true、external_busy=true）。已停 A 流水线 127487 与训练器 155634，释放 8.8 GB（av 回到约 12.2 GiB）。修复：`pvz_training_pack.unpack` 把包解成 `<pack>.d/` 下每成员一个 `.npy`（流式写、64 MiB 分块、按 payload SHA256 对包内成员校验、写 `manifest.json`），`read_pack` 优先读该目录并用 `mmap_mode='r'`，页为文件后备、可回收；新增 `scripts/unpack_training_pack.py`。合成包往返测试通过（C/F 序、0 维标量、空数组、U 字符串）。下一步：解包 `e39ba7cbc076380a.npz` 后重跑 A。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑

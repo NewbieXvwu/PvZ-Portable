@@ -330,6 +330,29 @@ class ValueStore:
 _OPEN_PACKS: list = []
 
 
+class _MappedPack:
+    """A pack unpacked one .npy per member (python/pvz_training_pack.unpack), read like an NpzFile.
+
+    np.load(..., mmap_mode='r') ignores the mapping for zip members, so a packed run used to hold the whole
+    corpus as anonymous memory and could not give it back. These .npy files map file pages the kernel can evict.
+    """
+
+    def __init__(self, directory: Path):
+        self.directory = directory
+        self.files = sorted(path.stem for path in directory.glob("*.npy"))
+        self._opened: dict[str, np.ndarray] = {}
+
+    def __getitem__(self, key: str) -> np.ndarray:
+        if key not in self._opened:
+            path = self.directory / f"{key}.npy"
+            try:
+                array = np.load(path, mmap_mode="r", allow_pickle=False)
+            except ValueError:              # object members cannot be mapped
+                array = np.load(path, allow_pickle=False)
+            self._opened[key] = array
+        return self._opened[key]
+
+
 def _pack_flags(options: dict) -> str:
     flags = []
     if options["wait_keep"] != 1.0:
@@ -370,7 +393,9 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
 
 def read_pack(path: Path, data: Path | None = None, row_observer=None):
     """The tuple load has always returned, from one packed file."""
-    stored = np.load(path, mmap_mode="r", allow_pickle=False)
+    from pvz_training_pack import mapped_dir
+    directory = mapped_dir(path)
+    stored = _MappedPack(directory) if directory.is_dir() else np.load(path, mmap_mode="r", allow_pickle=False)
     _OPEN_PACKS.append(stored)
     rows = int(stored["rows"])
     boards = CompactBoards.from_arrays(stored, "board")
