@@ -36,6 +36,7 @@
 - 每完成一小步就提交、`git push origin llmcand`，在"结果"记一行；疑问写"问题"，按最佳判断继续。
 
 ## 结果
+- 2026-10-24 02:10 可重复性复核：在 collector/finalizer 都已退出后，用冷进程重跑 `audit_llm_candidates.py` 与 `summarize`，`summary.json` 与 `independent-audit-0144.json` 的 SHA256 与首次生成逐字节相同（仍为 complete）；llmcand 已无残留游戏进程，其他工作树的进程未动。
 - 2026-10-24 02:05 验收审计：接口（只有比较 harness 安装 hook、默认候选路径不变）、两类触发、缓存、引擎合法性、144 局配对、校准隔离逐条核对通过；29 项相关测试通过（1 项需模拟器跳过）；冻结输入 SHA 复核 0 不符；`git check-ignore` 无违规，无 `-f`、无 `.pt/.npz/.log` 入 git；未碰 tmux qc，llmcand 游戏进程峰值 2。报告表由 `scripts/report_llm_candidate_study.py` 生成，新增 `python/test_llm_candidate_report.py` 守护剂量表。
 - 2026-10-24 01:55 正式测量完成：144/144 局，独立审计 312 次 LLM 事件、445 份证据文件（bundle 7553b8ff…）、缺局 0，汇总与审计配对数字逐项相同；三场地 96 对配对胜负与末波差全为 0，新增建议采用 8/510，非法 0/749，正式 277 次请求 / 1,322,163 token。finalizer 的两项待办已完成：报告与接入建议在 `MEMORY/docs/llm-candidates.md`，结论层在 `MEMORY/docs/llm-candidates-results.json`（含冻结 SHA 与逐对剂量）。建议：不接正式路径；要检验对策先验必须先换卡组（新任务族，主控决定）。
 - 2026-10-24 01:15 接手（Codex 额度耗尽，主控转交）：原 collector（pid 182286，2 worker）与 finalizer（pid 186183，等待同一 pid）都还活着，未重启、未杀、未改冻结输入；`artifacts/task52/study-v1/games` 为 90/144（三场地各 10/16 种子 × A/B_low/B_novel），校准 18 局与 plan contract 未变。剩余工作＝等 144 局齐、finalizer 汇总、人类可读报告与最终验收审计；中途胜负不作结论。
