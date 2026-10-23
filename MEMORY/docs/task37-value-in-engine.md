@@ -29,6 +29,7 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。持续压榨：做完上面几项后，用 profile 找 Python 侧剩下的最大项继续，连续 3 项收益 < 2% 才停。
 
 ## 结果
+- 2026-10-23（GLM 17:24）：遵主控追加D启动v4整臂门禁：baseline_search._values 从硬编码 featurize 改为 encode_frame(f, net.encoder_version)（v1网行为逐位不变，仅新增v4/编码2与既有context支持；baseline_search为不入git的SHA锁定证据件），新配置 teacher32-v4-profile（value=vnet工作树v4、static仍branch1）、全新输出目录 teacher32-v4 防证据混合；runner的契约防护确认会拒绝旧目录复用。串行链 before→after→shadow→compare（2 worker）已后台运行，首批2局（day/night seed0）完成且获胜，v2编码在baseline真实叶子观测无异常。v3的96局改前结果保留为过渡证据，v3 after不再单独投入。
 - 2026-10-23（GLM 17:15）：改前96局完成（day31/32胜、night30/32、pool9/32；噪声一致率905/956、1323/1533、567/624）。board-replay门禁首次失败：5668特征中1个差1 ULP——numpy逐项先把h/200舍入float32再float32累加，C++用double累加后一次舍入（同格两个同型僵尸时double舍入差1 ULP，数值实验以(500,197)复现）。修复EnvironmentValueNet.cpp两处累加（植物、僵尸血量先static_cast<float>再+=），重建后1024帧×v3/v4重跑通过：特征误差0.0、logit≤3.82e-6。管线此后接续after→shadow→compare。
 - 2026-10-23（GLM 接管 14:40）：核查全部后台链路健康——改前 runner（check_value_teacher --phase before，2 worker）21/96 进行中、续跑管线 continue_teacher_gate.py 存活且将自动执行 board-replay 门禁→after→shadow→compare（phase 参数与 before-summary 契约已对源码核验）、管线输入 build/pvz-portable 与 frame-oracle-sparse.json 均在。未杀任何进程，未新增游戏进程。
 - 2026-10-23（覆盖审计）：确认四场景各256帧现有测试是Python特征→C++前向，直接Board编码只覆盖128个早期局面，不能把两者合称全局面端到端验收。新增check_value_board_replay.py：按原固定corpus档案动作重放，先证明输入与档案相同，再比较Board特征逐位一致及v3/v4 logit<1e-5；3项档案语义测试通过，真实校验待现有96局改前阶段结束后串行执行。正式改前首个白天/夜间局均完成且获胜，进程仍正常，未重启或复制游戏任务。
