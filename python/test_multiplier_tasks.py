@@ -62,8 +62,8 @@ class MultiplierTasksTest(unittest.TestCase):
             for seed in task['seeds']:
                 self.assertNotIn(seed, owner)
                 owner[seed] = task['task_id']
-        # 每档倍率的块宽 = 族数 * 32 槽 * 每任务种子数，必须小于档间距。
-        block = len(FAMILIES) * SLOTS_PER_FAMILY * SEEDS_PER_TASK
+        # Roof uses its own 48M block; only the legacy families share the 700k stride.
+        block = sum(f[0] != 'roof' for f in FAMILIES) * SLOTS_PER_FAMILY * SEEDS_PER_TASK
         self.assertLess(block, MULT_STRIDE)
         for family_index, (_name, _key, _pattern, levels, _terrain) in enumerate(FAMILIES):
             self.assertGreater(min(seed_start(1, family_index, level) for level in levels),
@@ -86,6 +86,18 @@ class MultiplierTasksTest(unittest.TestCase):
                 self.assertGreaterEqual(right - left, SEEDS_PER_TASK)
             self.assertGreater(min(starts), max(v for k, v in old.items()
                                                 if FAMILIES[k[1]][0] != 'roof') + SEEDS_PER_TASK)
+
+    def test_merged_families_keep_preregistered_seed_starts(self):
+        legacy = ('day_d7', 'day_orig', 'night_n10', 'night_orig', 'pool_p9k',
+                  'day_d7q', 'night_n10p', 'night_n10q', 'fog_f8', 'fog_f8p')
+        for index, (family, _key, _pattern, levels, _terrain) in enumerate(FAMILIES):
+            for mult in range(6):
+                for level in levels:
+                    expected = (48000000 + mult * 100000 + (level - 41) * 2048
+                                if family == 'roof' else
+                                5000000 + mult * 700000 +
+                                (legacy.index(family) * 32 + level - 1) * 2048)
+                    self.assertEqual(seed_start(mult, index, level), expected)
 
     def test_fields_copied_and_perturbation_kept(self):
         tasks = build_variants(self.sources, seeds=32)
