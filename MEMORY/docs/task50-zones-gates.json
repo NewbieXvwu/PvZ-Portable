@@ -1,0 +1,146 @@
+{
+  "baseline": {
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable",
+    "executable_sha256": "bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef"
+  },
+  "candidate": {
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+    "executable_sha256": "e231cdb9f872e50a7eec55180c8ca2b156076e2f0ffaba41a4100ab10d39a12d"
+  },
+  "replay": {
+    "episodes": [
+      {
+        "level": 7,
+        "frames": 68517,
+        "final": {
+          "tick": 68464,
+          "wave": 30,
+          "result": 1
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "eb8ce774c99db68348d02ce686d722a06c3bb2f9e76238e36d84ee62f4fc52f9",
+        "historical_digest_differences": 0,
+        "tape_sha256": "f88b48afed74a89edc4c0f7b0d5d228d7e1ab8c78842eaace13b45ab2b62ba53"
+      },
+      {
+        "level": 12,
+        "frames": 22666,
+        "final": {
+          "tick": 22651,
+          "wave": 9,
+          "result": 2
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "24e5d410442fbce01f785236899ece7c089e2443860d093a0b5ec3df11e2b9db",
+        "historical_digest_differences": 22666,
+        "tape_sha256": "e34dc978220fa570dc86d22cb699c64d574f695c62a23e4b011db57fa9720a30"
+      },
+      {
+        "level": 21,
+        "frames": 22786,
+        "final": {
+          "tick": 22734,
+          "wave": 10,
+          "result": 2
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "c164ca06ff93c7ed1fa3ecf9ed39f406f863c01b6a80b6d0682fc5508534f15b",
+        "historical_digest_differences": 0,
+        "tape_sha256": "167963ab46a752a6c7e01e575d39df804a58343de12627178f3ab1c4158edd75"
+      },
+      {
+        "level": 10,
+        "frames": 52169,
+        "final": {
+          "tick": 52120,
+          "wave": 20,
+          "result": 1
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "350016aee2545416a67d8d261a00bb80f9292e1f12a2471aef8a39b9f4a177b8",
+        "historical_digest_differences": 0,
+        "tape_sha256": "528b19fb7455a2cde7b65bc3b0ef4e7c1569dafd9886cda389d29cb4d58d32a9"
+      }
+    ],
+    "frames_per_engine": 166138,
+    "differences": 0,
+    "projection": "all public observation fields, reset and every game tick, no fields removed",
+    "terminal_games": 4
+  },
+  "rollout": {
+    "roots_per_binary": 64,
+    "rollouts_per_root": 3,
+    "leaf_digests_per_binary_per_round": 192,
+    "paired_rounds": 5,
+    "binary_runs": 10,
+    "all_leaf_and_logical_statistics_identical": true,
+    "logical_stream_sha256": "db0b8b67c96a33aca5bb9d97e757a851f99d49bb8943fe035859f7ca68e751b2",
+    "evidence": [
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_1_a.json",
+        "sha256": "186ae7504203daf9d8a81cd22d3a6ba0a9a05a53f1facff34dc6a6e2c30e2ecd"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_1_b.json",
+        "sha256": "e2d642f26aefd86fe6bff94d0e3098aa8dd14a75938a3f194b5b70b80a66ed62"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_2_a.json",
+        "sha256": "75c84a77169c41555c81fd0fafd511ab1a3b5b27a2ca510cafbe5132c716e594"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_2_b.json",
+        "sha256": "036ad76f36987b3f3585055d61b7121539cfe4ac834df0664de988af02f8e27d"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_3_a.json",
+        "sha256": "656776a6920ed0ac26501c997ae38657f38649299ff4b95a19ea8032ef94e6a4"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_3_b.json",
+        "sha256": "b7f03d42a27f5e85b7fd88854c3ad15f3bc7948dba7e3bfafdc4787944ef9113"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_4_a.json",
+        "sha256": "fd71343b162f118b5c3dab346af84c44f030291c92b04fb4e8eecbc75e9358f2"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_4_b.json",
+        "sha256": "ea77e979cb6a3c938b8f3f913edfbabe74df646af5971883077fe95d51d54e18"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_5_a.json",
+        "sha256": "dd2abb3e0d0cd51bbe2dad69a85814c771902eaeaa80e7857d7dfa43be99e15a"
+      },
+      {
+        "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds/round_5_b.json",
+        "sha256": "2d3aa167dc90556d40c319e87e917747f98af1747b4bdbdd275581a351389343"
+      }
+    ]
+  },
+  "throughput": {
+    "a": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable",
+    "b": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+    "a_median": 158891.8,
+    "b_median": 165399.3,
+    "ratios": [
+      0.9829352448553166,
+      1.0480770139094127,
+      1.0815605336461669,
+      1.0443688140302134,
+      1.0387593984130812
+    ],
+    "ratio_median": 1.0443688140302134,
+    "correctness": "all rollout states and logical statistics identical",
+    "evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/paired-throughput_rounds",
+    "log_ratio_t_95_interval": [
+      0.9949611303028438,
+      1.0842489341272323
+    ],
+    "interpretation": "interval includes 1; no observed throughput regression"
+  }
+}
