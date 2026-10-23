@@ -26,6 +26,7 @@ import argparse
 import json
 import random
 import sys
+import tempfile
 from collections import defaultdict
 from pathlib import Path
 
@@ -35,7 +36,9 @@ import torch.nn.functional as F
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_value_net import SCALARS, ValueNet, load_value_net  # noqa: E402
+from train_rollout_policy import _spilled_array  # noqa: E402
 
 
 def predict(net: ValueNet, boards, scalars, device: str) -> torch.Tensor:
@@ -67,6 +70,8 @@ def pair_accuracy(pred, d, idx, min_gap: float, by_packet: bool = False) -> dict
 
 
 def main() -> None:
+    # task34: train after collection, but before the controller and the WSL access path.
+    set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", required=True, help="torch dumps or shard directories of value_ranking_check.py, comma separated")
     p.add_argument("--out", type=Path, required=True)
@@ -88,7 +93,26 @@ def main() -> None:
         part.setdefault("kind", torch.zeros(len(part["won"]), dtype=torch.long))
         part.setdefault("packet", torch.full((len(part["won"]),), -2, dtype=torch.long))
     keys = ("boards", "scalars", "won", "seed", "position", "candidate", "packet", "kind")
-    d = {k: torch.cat([part[k] for part in parts]) if len(parts) > 1 else parts[0][k] for k in keys}
+    # Boards and scalars are ~all of the dump. torch.cat would copy them out of the mmap and double the
+    # resident set, so they are concatenated into a file that is mapped back and can be reclaimed (task32).
+    rows = tempfile.TemporaryDirectory(prefix="pvz-branch-rows-")
+
+    def concatenated(key):
+        if len(parts) == 1:
+            return parts[0][key]
+        if key not in ("boards", "scalars"):
+            return torch.cat([part[key] for part in parts])
+        total = sum(len(part[key]) for part in parts)
+        store = _spilled_array(Path(rows.name), key, parts[0][key].numpy().dtype,
+                               (total, *parts[0][key].shape[1:]))
+        offset = 0
+        for part in parts:
+            block = part[key].numpy()
+            store[offset:offset + len(block)] = block
+            offset += len(block)
+        return torch.from_numpy(store)
+
+    d = {k: concatenated(k) for k in keys}
     del parts
     d["won"] = d["won"].float()
     seeds = sorted(set(d["seed"].tolist()))

@@ -1399,7 +1399,9 @@ void ReanimatorLoadDefinitions(const ReanimationParams* theReanimationParamArray
 	{
 		const ReanimationParams* aReanimationParams = &theReanimationParamArray[i];
 		PVZP_ASSERT(aReanimationParams->mReanimationType == i);
-		if (DefinitionIsCompiled(aReanimationParams->mReanimFileName))
+		// Headless reads a definition the first time a reanimation needs it: nothing draws, and the eager
+		// pass holds ~25 MB per process for the types a level never uses (task32).
+		if (!gSexyAppBase->mHeadlessMode && DefinitionIsCompiled(aReanimationParams->mReanimFileName))
 			ReanimatorEnsureDefinitionLoaded(aReanimationParams->mReanimationType, true);
 	}
 }

@@ -8,9 +8,10 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
-from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, MIN_SAMPLES,
-                              PROMOTE_ABOVE, WINDOW, adjust, allocate, label_for,
-                              parse_task_id, plan_round, rate)
+from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
+                              MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
+                              command_for, label_for, pack_command, pack_labels, parse_task_id,
+                              plan_round, rate, startup_worker_estimate, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -101,7 +102,8 @@ class CurriculumRulesTest(unittest.TestCase):
             original = queue.STOP_FLAG
             queue.STOP_FLAG = flag
             try:
-                args = SimpleNamespace(log=Path(tmp) / 'log', state=Path(tmp) / 'state.json', out=Path(tmp))
+                args = SimpleNamespace(log=Path(tmp) / 'log', state=Path(tmp) / 'state.json', out=Path(tmp),
+                                       workers=2)
                 state = dict(round=0, cells={}, offsets={}, log=[])
                 plan = [dict(base='x', multiplier=1.0, task_id='t', offset=0, games=2,
                              manifest='/m', label='l')]
@@ -111,9 +113,77 @@ class CurriculumRulesTest(unittest.TestCase):
             finally:
                 queue.STOP_FLAG = original
 
+    def test_pack_labels_union_the_log_and_the_base_corpus(self):
+        state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
+                         {'groups': [{'label': 'c2d7m125'}, {'label': 'c1d7m150'}]}]}
+        self.assertEqual(pack_labels(state), ['c1d7m150', 'c2d7m125'])
+        self.assertEqual(pack_labels(state, 'base_b,base_a'),
+                         ['base_a', 'base_b', 'c1d7m150', 'c2d7m125'])
+
+    def test_pack_command_carries_the_row_options(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), frames=Path('/frames'),
+                               pack_wait_keep=0.1, pack_obs='v2', pack_packet_head='identity',
+                               pack_aux_horizon=8, pack_cells=True, pack_context=True,
+                               pack_label_weight='old=0.5')
+        command = pack_command(args, ['b', 'a'])
+        self.assertEqual(command[0], sys.executable)
+        self.assertEqual(command[1], str(ROOT / 'scripts/pack_training_rows.py'))
+        self.assertEqual(command[command.index('--labels') + 1], 'b,a')
+        self.assertEqual(command[command.index('--wait-keep') + 1], '0.1')
+        self.assertEqual(command[command.index('--obs') + 1], 'v2')
+        self.assertEqual(command[command.index('--packet-head') + 1], 'identity')
+        self.assertEqual(command[command.index('--label-weight') + 1], 'old=0.5')
+        self.assertIn('--cells', command)
+        self.assertIn('--context', command)
+        self.assertIn('--prune', command)
+
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')
         self.assertEqual(label_for(1, 'night_l12_train_n10', 1.0), 'c1n12n10m100')
+
+
+class WorkerCountTest(unittest.TestCase):
+    def test_scales_with_available_memory(self):
+        per_worker = 900 * 1024 ** 2          # 0.9 GiB
+        self.assertEqual(worker_count(20 * GIB, per_worker, 16), 15)    # (20-6)/0.9 = 15.5
+        self.assertEqual(worker_count(10 * GIB, per_worker, 16), 4)     # (10-6)/0.9 = 4.4
+        self.assertEqual(worker_count(28 * GIB, 512 * 1024 ** 2, 8), 8)  # 上限
+        self.assertEqual(worker_count(4 * GIB, per_worker, 16), 1)      # 低于保留也不为 0
+        self.assertEqual(MEMORY_RESERVE_BYTES, 6 * GIB)
+
+    def test_unknown_memory_or_estimate_keeps_the_upper_limit(self):
+        self.assertEqual(worker_count(None, 900 * 1024 ** 2, 16), 16)   # 没有 /proc
+        self.assertEqual(worker_count(20 * GIB, 0, 16), 16)             # 没有实测值
+
+    def test_descendant_rss_excludes_root_and_unrelated(self):
+        table = {1: (0, 100), 10: (1, 1000), 11: (10, 500), 12: (1, 200), 20: (0, 9000)}
+        self.assertEqual(_descendant_rss(1, table), 1700)
+
+    def test_command_for_overrides_probe_workers_frames_and_out(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), workers=16,
+                               rollout_policy=Path('/m/student.pt'), static_value=Path('/m/static.pt'),
+                               value=Path('/m/value.pt'), executable=Path('/m/pvz-portable'),
+                               resource_dir=Path('/m/resources'), frames=Path('/m/frames'),
+                               out=Path('/m/out'))
+        command = command_for(args, Path('/m/panel.json'), 'day_l7', 5, 1, 'oomprobe',
+                              workers=1, frames=Path('/tmp/probe-frames'), out=Path('/tmp/probe'))
+        self.assertEqual(command[command.index('--workers') + 1], '1')
+        self.assertEqual(command[command.index('--frames') + 1], '/tmp/probe-frames')
+        self.assertEqual(command[command.index('--out') + 1], '/tmp/probe/oomprobe_1')
+        self.assertEqual(command[command.index('--seed-offset') + 1], '5')
+
+    def test_startup_estimate_without_probe(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            args = SimpleNamespace(log=Path(tmp) / 'log')
+            original = queue.mem_available_bytes
+            try:
+                queue.mem_available_bytes = lambda: None       # 没有 /proc
+                self.assertEqual(startup_worker_estimate(args, []), 0)
+                queue.mem_available_bytes = lambda: 20 * GIB  # 有内存但没有计划
+                self.assertEqual(startup_worker_estimate(args, []), queue.DEFAULT_WORKER_BYTES)
+            finally:
+                queue.mem_available_bytes = original
 
 
 if __name__ == '__main__':
