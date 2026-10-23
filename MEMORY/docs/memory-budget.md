@@ -182,3 +182,42 @@ PVZ_NO_POPUP=1 python3 scripts/engine_replay_compare.py \
    与贴图相比不值得改，且 `PoolEffect` 在 `Board::Update` 里每帧建粒子，要跳过它得动更新循环。
 3. **训练现场的 1.6 GB**（torch + 一次 2048 行前向/反向的激活）没动：它不随数据量增长，
    再压要改 batch 或做检查点，前者改配方、后者实测无收益（见 5.3）。
+
+## 7. 磁盘存量（档案与日志，2026-10-23）
+
+内存账本之外的存量账。两项都**不丢字节**：转换后的 npz 里存着原始 JSON 文本，轮转后的
+`.gz` + 明文尾巴拼起来就是完整日志。
+
+### 7.1 旧 JSONL 档案 → frames.npz
+
+```bash
+# Mac（全量，先 --dry-run 看清单）
+python3 scripts/convert_frames_npz.py --data /Users/newbiexvwu/PvZAgent/artifacts --jobs 4 --dry-run
+python3 scripts/convert_frames_npz.py --data /Users/newbiexvwu/PvZAgent/artifacts --jobs 4 --delete \
+    --report MEMORY/docs/frames-npz-report.json --manifest MEMORY/docs/frames-npz-converted.txt.gz
+
+# 台式机（WSL）：同一条命令，换 --data
+python3 scripts/convert_frames_npz.py --data ~/PvZAgent/artifacts --jobs 4 --dry-run
+```
+
+删原文件前逐档过五道校验：npz 里存的字节与 JSONL 原文逐字节相同、每一帧解析出的 dict 全等、
+行索引恰好等于有标签且未被拒的帧号、`encoder` 签名是当前版本、六个数组的行数与行索引一致。
+默认跳过 60 分钟内改过的档案（不碰正在写的采集）。`--delete` 只删已通过校验的那些，
+每个删掉的文件（原大小 / npz 大小 / 状态 / 路径）记在 manifest 里。
+
+### 7.2 日志轮转
+
+```bash
+# Mac
+python3 scripts/rotate_logs.py --root /Users/newbiexvwu/PvZAgent/artifacts --dry-run
+python3 scripts/rotate_logs.py --root /Users/newbiexvwu/PvZAgent/artifacts
+
+# 台式机（WSL）
+python3 scripts/rotate_logs.py --root ~/PvZAgent/artifacts
+```
+
+默认 `--min-mb 2 --keep-mb 1`：超过 2 MB 的日志把"除最后 1 MB 之外"的部分压进
+`<name>.log.gz`（每次轮转追加一个 gzip member，所以长期写的日志最终是一个 .gz），
+最后 1 MB 留明文给 `tail`/`grep`，切点对齐到行首。改过 120 分钟内的文件跳过（可能还在写）。
+2026-10-23 实测：104 个文件 463.3 MB → 明文 109.0 MB + gz 28.8 MB，**省 325.5 MB（70%）**，
+9 个正在写的跳过。
