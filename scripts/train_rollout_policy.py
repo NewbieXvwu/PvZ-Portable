@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT / "python"))
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
+from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
 from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, cache_packets, cache_identity_scene, candidate_cells, frame_bytes,  # noqa: E402
                               frame_paths, read_frames, row_damage_labels, target_values)
@@ -275,6 +276,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
 
 
 def main() -> None:
+    # task34: train after collection, but before the controller and the WSL access path.
+    set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", type=Path, required=True)
     p.add_argument("--labels", default="u84_greedy,u84_sampled")
