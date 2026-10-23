@@ -28,6 +28,8 @@
 
 四族为白天 L7 d7、夜间 L14 n10、泳池 L24 p9k、原版传送带 L10。每族每臂 16 局，固定同倍率、同任务定义与同 16 种子，命令从各自快照的 `curriculum_queue.command_for` 生成，保留归档开销。采用两块各 8 局的 ABBA/BAAB 顺序，控制整个任务同时最多 2 个游戏进程；所有输出独立标签，拒绝把已有局数混入计时。具体清单、模型/代码/引擎 SHA 与命令将在运行前冻结。
 
+清单已冻结：四族均 **1.5 倍率**，原 multiplier panel offset64 起16种子，8局×两块，每臂每族16局，共128局；工具 [bench_qc_collection.py](../../scripts/bench_qc_collection.py)。旧引擎 SHA256 `dd03838136240fc4c1af36205ce3a8a4a486fc54ca5e1ba82ed23b796e36e2cb`，deploy2 SHA256 `bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef`。命令、种子与全部输入 SHA 在 ignored `artifacts/task51/collection-plan.json`；6项证据门禁测试通过。每条子命令记录墙钟、CPU、MemAvailable/RSS/load，等待采用进程终止事件，不把2秒遥测轮询间隔加成尾部耗时。
+
 ## 结果
 
 历史有效局数还原、受控采集及完整轮间比值待补齐。判据保持 ≥2.0 / 1.5–2.0 / <1.5，不因现有单项基准提前判档。

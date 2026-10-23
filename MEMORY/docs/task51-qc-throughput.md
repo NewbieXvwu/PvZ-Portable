@@ -41,6 +41,8 @@
 
 - 口径与版本复核：已建立 `qc-throughput-20261027.md`。发现控制器复用标签后 `games` 是累计值、config 也被覆盖，历史吞吐需按每次启动的真实新增局与 worker 还原。10-22 旧版锁定 `1b89bfa9`（cq reflog + BuildNum 2074），现存 cq 二进制已被重建，不能当旧版；本树已冻结旧源码/Python及 cq `26abefe0` 快照，正在本树 `build-old/` 用 4 个编译任务构建，无游戏进程。受控对照保留正式归档、workers=2、各族各臂16局与交替顺序；所有比值尚待实测。
 
+- 旧版构建与受控清单完成：`build-old/pvz-portable` SHA256 `dd03838136240fc4c1af36205ce3a8a4a486fc54ca5e1ba82ed23b796e36e2cb`；正式控制为四族 **1.5 倍率**、原清单 offset64 的16种子，每臂两块8局、ABBA/BAAB、固定2 worker，合计16条命令/128局，真实帧归档隔离落盘。`bench_qc_collection.py` 从旧/新原始 `command_for` 生成命令，冻结模型/引擎/清单/Python SHA，完整性要求精确种子集合及真实归档；6项无游戏证据门禁通过，旧产物不会混入本轮计时。清单在 ignored `artifacts/task51/collection-plan.json`，下一步执行正式链并还原历史日志。
+
 ## 问题
 
 - 历史 `games` 累计与最终 config 覆盖会伪造高吞吐，不能直接拿日志所报总局数/本次秒数。旧 v3/新 v4 是生产方案差异，必须披露；不兼容旧版的 v4 不能通过偷偷补编码代码来“修”旧基线。task50 的追加 A 完整老师门禁仍在进行，deploy3 只在该任务完成后纳入正式对照。
