@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import math
 import os
 from collections import deque
 from contextlib import contextmanager
@@ -652,6 +653,51 @@ class PvZEnv:
         """
         if not self._command(f"OBS_LEAN {1 if lean else 0}").get("ok"):
             raise RuntimeError("simulator rejected OBS_LEAN (binary older than this wrapper?)")
+
+    def load_value_net(self, path: str | os.PathLike[str], *, static: bool = False) -> None:
+        filename = str(Path(path).resolve())
+        if "\n" in filename or "\r" in filename:
+            raise ValueError("value network path must not contain newlines")
+        if not self._command(f"LOAD_VALUE_NET {int(static)} {json.dumps(filename)}").get("ok"):
+            raise RuntimeError(f"simulator rejected value network: {filename}")
+
+    def leaf_values(self, *, income: float | None = None, static: bool = False,
+                    trace_path: str | os.PathLike[str] | None = None) -> list[float]:
+        """Score the current Board without exporting an observation; optional feature trace for tests."""
+        if income is None:
+            income = self._annotate_observation({"tick": self._tick, "wave_timer": 0})["sun_income_rate"]
+        if not math.isfinite(income):
+            raise ValueError("income must be finite")
+        suffix = f" {json.dumps(str(Path(trace_path).resolve()))}" if trace_path is not None else ""
+        response = self._command(f"LEAF_VALUES {int(static)} BOARD {income:.17g}" + suffix)
+        if not response.get("ok") or len(response.get("values", [])) != 1:
+            raise RuntimeError(f"simulator rejected LEAF_VALUES: {response}")
+        return response["values"]
+
+    def leaf_feature_values(self, path: str | os.PathLike[str], count: int, *, static: bool = False) -> list[float]:
+        """Score a float32 feature file produced by an external simulator or an oracle test."""
+        if type(count) is not int or not 1 <= count <= 4096:
+            raise ValueError("feature count must be from 1 to 4096")
+        response = self._command(f"LEAF_VALUES {int(static)} FEATURES {count} {json.dumps(str(Path(path).resolve()))}")
+        if not response.get("ok") or len(response.get("values", [])) != count:
+            raise RuntimeError(f"simulator rejected LEAF_VALUES: {response}")
+        return response["values"]
+
+    def static_scores(self, snapshot_id: int, actions: list[dict[str, Any]], income: float) -> list[float | None]:
+        """Restore, act, score each branch in the engine; rejected actions return None in place."""
+        if type(snapshot_id) is not int or snapshot_id not in self._sun_history_snapshots:
+            raise ValueError("snapshot_id must refer to a live snapshot")
+        if not math.isfinite(income):
+            raise ValueError("income must be finite")
+        if not actions:
+            return []
+        if len(actions) > 1024:
+            raise ValueError("STATIC_SCORES accepts at most 1024 actions")
+        tokens = " ".join(branch_action_token(action) for action in actions)
+        response = self._command(f"STATIC_SCORES {snapshot_id} {income:.17g} {len(actions)} {tokens}")
+        if not response.get("ok") or len(response.get("values", [])) != len(actions):
+            raise RuntimeError(f"simulator rejected STATIC_SCORES: {response}")
+        return response["values"]
 
     def load_rollout_net(self, path: str | os.PathLike[str]) -> None:
         """Load weights exported by pvz_rollout_policy.export_student in this simulator process."""

@@ -28,6 +28,7 @@
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
 #include "EnvironmentRollout.h"
+#include "EnvironmentValueNet.h"
 #include "CudaExport.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
@@ -363,6 +364,7 @@ static void RunEnvironment(LawnApp* app)
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
 	EnvironmentRollout rollout;
+	EnvironmentValueNet valueNets[2]; // leaf, static
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
@@ -416,6 +418,99 @@ static void RunEnvironment(LawnApp* app)
 		{
 			const std::string pool = app->EnvironmentDeckPool();
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ',' << pool.substr(1) << std::endl;
+			continue;
+		}
+		else if (command == "LOAD_VALUE_NET")
+		{
+			int slot = -1;
+			std::string path, extra;
+			if (input >> slot >> std::quoted(path) && (slot == 0 || slot == 1) && !(input >> extra))
+			{
+				try { valueNets[slot].Load(path); ok = true; }
+				catch (const std::exception& error) { std::cerr << error.what() << std::endl; }
+			}
+			minimalResponse = true;
+		}
+		else if (command == "LEAF_VALUES")
+		{
+			// Board mode scores without serializing the board. Feature-file mode also serves
+			// external simulator leaves and the Python oracle; it runs the same forward.
+			int slot = -1, count = 0;
+			double income = 0;
+			std::string mode, path, extra;
+			ok = static_cast<bool>(input >> slot >> mode) && slot >= 0 && slot < 2 && valueNets[slot].Loaded();
+			std::vector<float> logits;
+			if (ok && mode == "BOARD")
+			{
+				ok = static_cast<bool>(input >> income) && std::isfinite(income) && app->mBoard;
+				if (input >> std::quoted(path)) { if (input >> extra) ok = false; }
+				if (ok)
+				{
+					std::vector<float> board, scalars;
+					valueNets[slot].Features(app, income, board, scalars);
+					logits.push_back(valueNets[slot].Logit(board, scalars));
+					if (!path.empty())
+					{
+						std::ofstream trace(path, std::ios::binary);
+						trace.write(reinterpret_cast<const char*>(board.data()), board.size() * sizeof(float));
+						trace.write(reinterpret_cast<const char*>(scalars.data()), scalars.size() * sizeof(float));
+						ok = trace.good();
+					}
+				}
+			}
+			else if (ok && mode == "FEATURES")
+			{
+				ok = static_cast<bool>(input >> count >> std::quoted(path)) && count > 0 && count <= 4096 && !(input >> extra);
+				if (ok)
+				{
+					std::ifstream features(path, std::ios::binary);
+					std::vector<float> board(EnvironmentValueNet::Channels * EnvironmentValueNet::Cells), scalars(valueNets[slot].ScalarCount());
+					for (int index = 0; ok && index < count; ++index)
+					{
+						features.read(reinterpret_cast<char*>(board.data()), board.size() * sizeof(float));
+						features.read(reinterpret_cast<char*>(scalars.data()), scalars.size() * sizeof(float));
+						ok = features.good() && std::all_of(board.begin(), board.end(), [](float x) { return std::isfinite(x); }) &&
+							std::all_of(scalars.begin(), scalars.end(), [](float x) { return std::isfinite(x); });
+						if (ok) logits.push_back(valueNets[slot].Logit(board, scalars));
+					}
+					ok = ok && features.peek() == std::char_traits<char>::eof();
+				}
+			}
+			else ok = false;
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"logits\":[" << std::setprecision(9);
+			for (size_t i = 0; ok && i < logits.size(); ++i) std::cout << (i ? "," : "") << logits[i];
+			std::cout << "],\"values\":[";
+			for (size_t i = 0; ok && i < logits.size(); ++i) std::cout << (i ? "," : "") << EnvironmentValueNet::Probability(logits[i]);
+			std::cout << "]}" << std::endl << std::setprecision(6);
+			continue;
+		}
+		else if (command == "STATIC_SCORES")
+		{
+			int count = 0;
+			double income = 0;
+			std::string extra;
+			ok = static_cast<bool>(input >> snapshotId >> income >> count) && snapshots.contains(snapshotId) &&
+				std::isfinite(income) && count > 0 && count <= 1024 && valueNets[1].Loaded();
+			std::vector<std::string> specs;
+			for (int i = 0; ok && i < count; ++i)
+			{
+				std::string spec, actionCommand, actionArguments;
+				ok = static_cast<bool>(input >> spec) && DecodeBranchAction(spec, actionCommand, actionArguments);
+				if (ok) specs.push_back(spec);
+			}
+			ok = ok && !(input >> extra);
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"values\":[" << std::setprecision(9);
+			for (int i = 0; ok && i < count; ++i)
+			{
+				if (i) std::cout << ',';
+				bool branchOk = RestoreEnvironmentSnapshot(app, snapshots.at(snapshotId));
+				std::string actionCommand, actionArguments;
+				if (branchOk) branchOk = DecodeBranchAction(specs[i], actionCommand, actionArguments);
+				if (branchOk) { std::istringstream arguments(actionArguments); branchOk = ExecuteEnvironmentAction(app, actionCommand, arguments); }
+				if (branchOk) std::cout << valueNets[1].Predict(app, income);
+				else std::cout << "null";
+			}
+			std::cout << "]}" << std::endl << std::setprecision(6);
 			continue;
 		}
 		else if (command == "LOAD_ROLLOUT_NET")

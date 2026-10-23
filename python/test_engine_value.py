@@ -1,0 +1,84 @@
+"""Python oracle for the engine value encoder, forward and static branching (one game process)."""
+import json
+import os
+from pathlib import Path
+import tempfile
+import unittest
+
+import numpy as np
+import torch
+
+from export_value_net import export_value_net
+from pvz_env import PvZEnv, TaskSpec, PlayerProfileContext
+from pvz_value_net import ValueNet, encode_frame, observation_context
+from render_episode import _frame
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+@unittest.skipUnless(os.environ.get("PVZ_TEST_RESOURCE_DIR"), "set PVZ_TEST_RESOURCE_DIR to run engine oracle")
+class EngineValueTest(unittest.TestCase):
+    def test_board_logits_static_rejections_and_restore(self):
+        torch.set_num_threads(1)
+        maxima = {"features": 0.0, "logits": 0.0, "static": 0.0}
+        with tempfile.TemporaryDirectory() as tmp, PvZEnv(
+                os.environ["PVZ_TEST_RESOURCE_DIR"],
+                executable=os.environ.get("PVZ_TEST_EXECUTABLE", str(ROOT / "build/pvz-portable"))) as env:
+            for version in (1, 2):
+                torch.manual_seed(37)
+                net = ValueNet(64, context=True, encoder_version=version).eval()
+                export_value_net(net, Path(tmp) / "value.bin")
+                env.load_value_net(Path(tmp) / "value.bin")
+                env.load_value_net(Path(tmp) / "value.bin", static=True)
+                for level in (7, 14, 21, 10):
+                    deck = (0, 1, 2, 3, 4, 5, 16) if level == 21 else (0, 1, 2, 3, 4, 5)
+                    kwargs = dict(deck=deck, task=TaskSpec(level=level, seed=3700 + level,
+                                  profile=PlayerProfileContext(seed_slot_count=len(deck))))
+                    if level == 10:
+                        kwargs.update(deck=(), task=TaskSpec(level=level, seed=3700 + level,
+                                      conveyor_start="original"))
+                    obs, _ = env.reset(**kwargs)
+                    for step in range(16):
+                        board, scalars = encode_frame(_frame(obs), version)
+                        scalars = torch.cat([scalars, torch.from_numpy(observation_context(obs))])
+                        env.leaf_values(trace_path=Path(tmp) / "trace.bin")
+                        actual = np.fromfile(Path(tmp) / "trace.bin", dtype="<f4")
+                        expected = np.concatenate([board.flatten().numpy(), scalars.numpy()])
+                        maxima["features"] = max(maxima["features"], float(np.max(np.abs(actual - expected))))
+                        np.testing.assert_array_equal(actual, expected)
+                        with torch.inference_mode():
+                            logit = net(board[None], scalars[None]).item()
+                        actual_logit = env._last_response["logits"][0]
+                        maxima["logits"] = max(maxima["logits"], abs(logit - actual_logit))
+                        self.assertLess(abs(logit - actual_logit), 1e-5)
+                        root = env.snapshot()
+                        actions = [{"type": "plant", **a} for a in (obs.get("legal_actions") or {}).get("plants", [])[:8]]
+                        actions += [{"type": "plant", "packet": 99, "row": 0, "col": 0}]
+                        income = obs["sun_income_rate"]
+                        scores = env.static_scores(root, actions, income)
+                        self.assertIsNone(scores[-1])
+                        branches = env.branch_snapshot(root, actions, retain_snapshots=False)
+                        for score, branch in zip(scores, branches):
+                            if not branch.get("ok"):
+                                self.assertIsNone(score)
+                                continue
+                            frame = _frame(branch["observation"])
+                            self.assertEqual(frame["tick"], obs["tick"])
+                            frame["sun_income_rate"] = income
+                            b, s = encode_frame(frame, version)
+                            s = torch.cat([s, scalars[-35:]])
+                            with torch.inference_mode():
+                                expected_score = torch.sigmoid(net(b[None], s[None])).item()
+                            maxima["static"] = max(maxima["static"], abs(score - expected_score))
+                            self.assertLess(abs(score - expected_score), 1e-6)
+                        restored = env.restore(root)
+                        self.assertEqual(_frame(restored), _frame(obs))
+                        env.release_snapshot(root)
+                        obs, _, done, _, _ = env.step({"type": "wait", "ticks": 120})
+                        if done:
+                            break
+        print("engine_value_oracle", json.dumps(maxima))
+
+
+if __name__ == "__main__":
+    unittest.main()
