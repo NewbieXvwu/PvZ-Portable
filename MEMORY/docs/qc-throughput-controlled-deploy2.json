@@ -1,5 +1,5 @@
 {
-  "scope": "Completed deploy2+cq collection experiment; task51 remains in progress",
+  "scope": "Completed deploy2+cq collection and supplementary cohort pack; deploy3 follow-up delivered separately.",
   "workers": 2,
   "multiplier": 1.5,
   "games_per_arm_per_task": 16,
@@ -538,8 +538,7 @@
     }
   },
   "pending": [
-    "task50 full gates and zones+deploy3 controlled comparison",
-    "same four tasks/multiplier continuous production cycle with historical corpus remains unobserved; selected-cohort cold-pack stage sums are supplementary"
+    "Same four-task/multiplier full-corpus continuous production-cycle evidence is unavailable in historical logs; small-cohort stage sums do not substitute for it."
   ],
   "gap_to_2x_seconds": 938.3993075200051,
   "gap_by_task_seconds": {
