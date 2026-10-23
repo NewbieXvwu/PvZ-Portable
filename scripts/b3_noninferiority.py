@@ -358,7 +358,9 @@ def main():
     p.add_argument('--student', default=str(MAIN / 'artifacts/student/dw4i_s1/model.pt'))
     p.add_argument('--value', default=str(MAIN / 'artifacts/value_net/v3/model.pt'))
     p.add_argument('--static-value', default=str(MAIN / 'artifacts/hard/value_branch1/model.pt'))
-    p.add_argument('--executable', default=str(MAIN / 'build/pvz-portable'))
+    # Frozen copy of the in-service qc build (the Oct 18 main build lacks rollout_version >= 3,
+    # which the current v2 student needs). Recorded in the task42 pre-registration.
+    p.add_argument('--executable', default=str(ROOT / 'artifacts/task42/pvz-portable'))
     p.add_argument('--resource-dir', default=str(Path.home() / '.cache/pvz-research-resources'))
     args = p.parse_args()
     if not 1 <= args.workers <= 3:

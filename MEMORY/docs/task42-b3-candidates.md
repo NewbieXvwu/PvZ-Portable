@@ -57,7 +57,9 @@
 | 学生 | `~/PvZ-search/artifacts/student/dw4i_s1/model.pt` | `122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375` |
 | 叶值 | `~/PvZ-search/artifacts/value_net/v3/model.pt` | `5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a` |
 | 静态价值（仅 A 与重老师池） | `~/PvZ-search/artifacts/hard/value_branch1/model.pt` | `2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314` |
-| 模拟器 | `~/PvZ-search/build/pvz-portable` | `ed98a4536912512fa17a47b299e9d72f5175c6495961502439fa147711b26034` |
+| 模拟器 | `~/PvZ-search/.claude/worktrees/b3/artifacts/task42/pvz-portable`（qc 在役构建的冻结副本） | `7508e840ec19d0ef6f91d55f4052cf17846a82df7eb24e235fab2aa9b1aefe65` |
+
+> 2026-10-23 10:00 冒烟前修正（样本与判据不变）：`~/PvZ-search/build/pvz-portable`（SHA `ed98…6034`）缺 `rollout_version >= 3`，当前 v2 学生 `dw4i_s1` 无法载入 rollout 网；改用 qc 队列在役的 `cq/build/pvz-portable` 同一份字节的冻结副本（复制到本工作树 `artifacts/task42/`，SHA 见上表）。单局管线已用该副本通过。
 
 **样本**：四族 × 64 局 × 8 根 = 2048 点。种子 30000–30063（各族评估段 30000 起，与 task14 同口径）。
 
@@ -82,5 +84,8 @@
 **资源与停止**：最多 3 个自有游戏进程；不碰 tmux `qc` 与别的代理会话。冒烟（每族 4 局）只验管线，数据放 `artifacts/task42/smoke`，不进最终统计；正式跑放 `artifacts/task42/full`。若冒烟暴露实现缺陷，修复后重新冻结并在本文件记一行，正式样本不变。固定 2048 点，不做期中功效判断、不按结果扩样。
 
 **通过后的动作**：B3 成为老师候选唯一实现——删除静态候选路径（`--static-value`、`_static_frames`、`STATIC` 相关代码与测试），`curriculum_queue.py` 的 `DEFAULT_STATIC_VALUE` 与 `command_for` 的 `--static-value` 一并删，`--student-candidates` 默认改 3；旧路径打 tag `retire-static-candidates-20261023` 后删。不通过则只保留比较脚本，正式路径不动。
+
+**进度**
+- 10:00 单局管线（`day_l7` seed 30000）通过：8/8 点写出，1 个分歧触发重老师（池 20）；B3 每点候选 4、A 5–11，未发现实现缺陷。
 
 ## 问题
