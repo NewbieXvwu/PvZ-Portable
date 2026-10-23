@@ -51,7 +51,7 @@
 
 ## 结果
 
-- **终验完成**：全部6步及条件引擎门禁已核对，422个有效评估局有结果；原版课程仅L41准入（老师15/16），L43的0.5诊断14/16支持后续低倍率方案，当前未覆盖原版训练族。全Python360项+133子测试通过。逐项证据见 [task46-roof-completion-audit.json](task46-roof-completion-audit.json)。
+- **第一阶段终验完成**：全部6步及条件引擎门禁已核对，422个有效评估局有结果；原版课程仅L41准入（老师15/16），L43的0.5诊断14/16支持后续低倍率方案，当前未覆盖原版训练族。全Python360项+133子测试通过。逐项证据见 [task46-roof-completion-audit.json](task46-roof-completion-audit.json)。
 
 - 第 1 步完成：本工作树引擎编译、九关无头终局与卡池/整组检查/动作观测盘点通过；详见下表。
 
@@ -204,6 +204,8 @@
 
 - 第二阶段第1步完成：L42–L49原版r7各4局实际老师、L42–L45各1局学生对照，共36份完整存档/26410个决策；全部terminal、非法动作0、Python/原生动作错位0、普通植物缺花盆种植0。20份L42–L45重录与第一阶段胜负/波数/tick/种植/搜索推翻完全一致。各次种植与火力变化、阳光、越界僵尸见 [时间线结论层](task46-roof-timelines.json)；完整逐决策JSONL/NPZ留在ignored artifacts/task46/phase2。L46本批老师1/4，其余七关0/4；四局样本不作新课程准入证据。
 - 第二阶段来源审计：dw4i_s1冻结48816份训练档案逐一复核来源meta哈希，全部一致、无缺档、无未知level，屋顶41–49档案0；见 [训练覆盖](task46-roof-training-coverage.json)。完整Python **362 passed + 133 subtests passed**；教师反事实改为原老师前缀+同学生续走，并重跑原动作基线，工具显示终tick，两个专门语义测试通过。L44 seed45000003末有25已生成未入账阳光，区分引擎AddCoin产出计数与银行余额，未强行抹平收支。
+
+- 第二阶段第2步完成：L42–L45各1份实际老师完整档案已送四个隔离Gemini会话；首轮与反事实补充原文均保留于 [原文索引](teacher-diag-roof-l4x.md)。独立复验8个决策点/19条分支，分叉前全部公共物理帧精确一致、候选均合法；数值 task46-roof-whatif-verified.json。原文存在L45无蹦极/种植扣阳光、株数与估值网职责等错误，均在 teacher-diag-roof-review.md逐条纠正；原文哈希与最终回答逐字后缀校验见 task46-roof-teacher-provenance.json。
 
 ## 问题
 

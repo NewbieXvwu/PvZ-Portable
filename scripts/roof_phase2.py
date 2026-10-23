@@ -160,12 +160,15 @@ def summarize():
         # Board::AddCoin increments produced before Coin::Update credits the bank.
         # A terminal frame can still contain a newly generated, uncredited sun.
         credited = rows[-1]['after_sun'] - rows[0]['sun'] + spent
-        assert 0 <= credited <= produced
+        initial_pending = frames[0]['v2']['sun_pending']
+        final_pending = frames[-1]['v2']['sun_pending']
+        assert rows[0]['sun'] + initial_pending + produced - spent == rows[-1]['after_sun'] + final_pending
         entry = dict(level=cell[0], seed=cell[1], policy=cell[2], outcome=meta['outcome'],
             archive=str(out), archive_sha256=sha(out / 'frames.npz'),
             timeline_sha256=sha(out / 'timeline.jsonl'), decisions=len(rows),
             initial_sun=rows[0]['sun'], final_sun=rows[-1]['after_sun'], produced=produced, spent=spent,
             credited_by_bank_balance=credited, generated_minus_credited=produced-credited,
+            initial_pending_sun=initial_pending, terminal_pending_sun=final_pending,
             sun_max=max(max(x['sun'], x['after_sun']) for x in rows),
             native_mismatches=[x['decision'] for x in rows if not x['native_matches']],
             types=dict(Counter(p['type'] for p in accepted)), plantings=plants,
@@ -184,6 +187,18 @@ def summarize():
                 mean_std=statistics.mean(x['std'] for x in leaves),
                 median_top_gap=statistics.median(x['top1_top2'] for x in leaves),
                 share_top_gap_at_most_002=sum(x['top1_top2'] <= .02 for x in leaves) / len(leaves))
+        advantages = []
+        for before, after in zip(rows, frames[1:]):
+            action = before['student_action']
+            identity = (action.get('packet', -1), action.get('row', -1), action.get('col', -1))
+            targets = after.get('targets') or []
+            anchor = next((t[3] for t in targets if tuple(t[:3]) == identity), None)
+            if anchor is not None:
+                advantages.append(max(t[3] for t in targets) - anchor)
+        entry['rounded_anchor_advantages'] = dict(
+            scope='finite halving candidate means rounded to 4dp, best minus student; before extra verification',
+            roots=len(advantages), maximum=max(advantages, default=None),
+            share_at_most_002=sum(x <= .02 + 1e-8 for x in advantages) / len(advantages) if advantages else None)
         entry['terminal_outside_zombies'] = [z for z in meta['outcome']['final_zombies'] if z['x'] < 0]
         entry['sun_at_each_wave'] = [dict(tick=x['tick'], wave=x['wave'], sun=x['sun'])
             for i, x in enumerate(rows) if i == 0 or x['wave'] != rows[i-1]['wave']]
