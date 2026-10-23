@@ -221,3 +221,11 @@ python3 scripts/rotate_logs.py --root ~/PvZAgent/artifacts
 最后 1 MB 留明文给 `tail`/`grep`，切点对齐到行首。改过 120 分钟内的文件跳过（可能还在写）。
 2026-10-23 实测：104 个文件 463.3 MB → 明文 109.0 MB + gz 28.8 MB，**省 325.5 MB（70%）**，
 9 个正在写的跳过。
+
+**2026-10-23 实测（Mac，`--jobs 4 --delete`）**：6 658 个档案（另有 1 个教师诊断档在第 13 步冒烟时已转换删除，
+共 6 659）全部通过五道校验后删原文件，**失败 0**；7 509 703 263 B JSONL（7.00 GiB）→ 563 481 079 B npz（537 MiB），
+**7.50%**，省 6.95 GB，耗时 196 s。`artifacts` 从 11 GB 降到 6.2 GB（含 §7.2 的日志轮转）。转换后 Mac 上
+`frames.jsonl` 剩 0 个；读取端实测：`read_frames(npz)` 与原文逐帧全等（577 帧样本）、`frame_path` 优先选 npz、
+`cache_episode` 直接复用 npz 里的行缓存不再重算。逐档清单（原大小 / npz 大小 / 状态 / 路径）在
+`MEMORY/docs/frames-npz-converted.txt.gz`（6 658 行，sha256 见 `MEMORY/docs/frames-npz-report.json`）。
+台式机尚未转换，命令同上。
