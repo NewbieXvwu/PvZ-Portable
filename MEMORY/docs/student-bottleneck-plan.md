@@ -22,7 +22,7 @@
 | 价值网络 v4（task30） | 待定 | task30 第 5 步结论后决定 |
 | 学生 dw5i / dw6i 配方（task36） | 待定 | dw5i 夜间退步原因未清 |
 | 价值网络进引擎（task37） | 在做 | 门槛：单局总 CPU 不多 2%；也是 task40 引擎内收手的前提 |
-| 引擎 CPU（task35：LTO/PGO/mimalloc/无用功） | **已合并（be669008），上线中** | 整局 CPU 旧/新：白天 L7 1.586×、夜间 L14 1.561×（8/8 种子结果相同，四族逐帧重放 0 差异）；泳池/传送带整局待补。desktop deploy 工作树跑 `build_pgo.sh`，`qc_deploy2.sh` 构建完成后组间换上。int8/VNNI：核级 3 倍但量化误差不可接受，不进生产 |
+| 引擎 CPU（task35：LTO/PGO/mimalloc/无用功） | **在役（qc 14:08 起用 PGO 引擎）** | 整局 CPU 旧/新：白天 L7 1.586×、夜间 L14 1.561×（8/8 种子结果相同，四族逐帧重放 0 差异）；泳池/传送带整局待补。desktop deploy 工作树跑 `build_pgo.sh`，`qc_deploy2.sh` 构建完成后组间换上。int8/VNNI：核级 3 倍但量化误差不可接受，不进生产 |
 | 推演学生前向降精度 int8（AVX-VNNI） | 试过，不采用 | 核级 3 倍，但量化误差不可接受（task35 f274ecba）；bf16 未试 |
 | 锁步批量推演 | 原型已编译未实测（task35 追加 B） | 剖面里 openblas 已占 28.65% |
 | 推演按局面收手（价值网置信即停） | 已派 task40 | 缩视界一刀切（task8）不过；按局面收手没试过 |
@@ -515,3 +515,4 @@
 - 2026-10-23 12:40（台式机时间）用户：Windows 旧 Codex 日志与会话可以删 → 已删 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB）与 `sessions`（12.4 GB），C 盘余 68 GB；旧 JSONL 转 npz 批准，按条件执行（见 §00 表）。
 - 2026-10-23 13:10（台式机时间）巡检：task35 合进 pvz-env（be669008；Mac 全套 283 过）。整局 CPU 旧/新 ≈ 1.57 倍（白天、夜间各 8 局，结果逐种子相同）——离 10-27 的 2 倍目标还差，B3（省 29% 搜索 CPU）若复验通过，两者相乘约 2.2 倍。PGO 在 desktop `deploy` 工作树构建，`qc_deploy2.sh` 等构建完成后组间切换。cb-cuda 两次启动卡住（账号 1、3 都是），13:15 由 Codex 接回 task35，不再重试。
 - 2026-10-23 14:10（台式机时间）巡检：**B3 复验不过**（夜间 −3.32pp、泳池 −6.05pp），正式路径不动；省的 CPU 太大（池化 −42.9%），派第二轮 B4/B5（qoder-b3 继续，不关）。PGO 构建第二次失败：合并 dw5 后引擎推演统计 `planted` 改成 `planted_slots`/`planted_types`，`bench_engine.py` 没跟上 → 修好（2a8dc97c）重跑，`qc_deploy2.sh` 照旧等构建完成。Codex 13:52 又到 5 小时上限（18:16 恢复，三个会话一小时就用完）：task35 由 agent_switch 交 CodeBuddy 账号 1；task37/38 由 `cb_takeover_1410.sh` 交 CodeBuddy 账号 0/3，18:20 自动交回 Codex。
+- 2026-10-23 14:45（台式机时间）巡检：**qc 14:08 起换上 task35 的 PGO 引擎**（deploy 工作树，`qc_deploy2.sh`）。Qoder 三个会话（cut/b3/mix）14:3x 到当日额度上限——按用户要求**不关**，任务转 CodeBuddy GLM-5.3-Flash：cb-b3（账号 1）task42 第二轮、cb-mix2（账号 3）task36、cb-cut（账号 2）task40；cb-vcpp（账号 0）DeepSeek 限频，原地切 GLM。明天 Qoder 额度回来时再定谁继续（两边不能同时改一个工作树）。可用内存 7–10 GB（task38 全量对拍 6.8 GB + 各代理实验），qc 自动降到 10–12 进程。
