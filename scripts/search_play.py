@@ -923,6 +923,8 @@ def main() -> None:
                    help="record host user/system CPU seconds for workers, simulators and owned CUDA service")
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
+    p.add_argument("--seed-list", help="explicit comma-separated seeds (overrides --seed-offset/--seeds); "
+                   "task31 uses it to sample the seeds whose perturbed deck drops one specific base card")
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
     p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
@@ -1015,7 +1017,14 @@ def main() -> None:
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
-    seeds = load_training_task(Path(args.manifest), args.task_id)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
+    task_seeds = load_training_task(Path(args.manifest), args.task_id)["seeds"]
+    if args.seed_list:
+        seeds = [int(s) for s in args.seed_list.split(',') if s.strip()]
+        unknown = [s for s in seeds if s not in set(task_seeds)]
+        if unknown:
+            p.error(f"--seed-list seeds are not in the task manifest: {unknown[:5]}")
+    else:
+        seeds = task_seeds[args.seed_offset: args.seed_offset + args.seeds]
     args.out.mkdir(parents=True, exist_ok=True)
     results_path = args.out / "games.jsonl"
     done_keys = set()
