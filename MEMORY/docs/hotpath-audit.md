@@ -373,3 +373,32 @@ lean 观测是完整观测的 **51%**（14 280 → 7 341 B），且 `render_epis
 **结论**：采集侧 Python 的油已经基本榨干（剩下的每一项都 < 2%，且都要改引擎）；
 真正还剩的大头在"数据搬运"（训练装载与旧档案格式），需要与 cb-mem / 主控分工执行。
 
+
+## 14. 删除执行记录（2026-10-23，主控 08:30 批复）
+
+Tag：`retire-cuda-20261023`（整条 CUDA 线）、`retire-flags-20261023`（开关与判死实验）。全部用 `git grep` 复查过无引用，
+文档里的旧数字一律没动。**共 101 个文件、-24 165 行 / +184 行**（一次提交）。
+
+| 线 | 删掉的东西 | 行数 |
+|---|---|---|
+| CUDA 推演后端 | `cuda/`（RolloutCuda.cu、SimCore.h、SimTick.inc、spec/ 等 30 个文件）、`src/CudaExport.{cpp,h}`、`CMake/CudaRollout.cmake`、`python/pvz_cuda_{rollout,root}.py`、9 个 `test_cuda_*.py`、`test_gpu_collection_pause.py`、11 个 `scripts/cuda_*.py` | ≈7 700 |
+| 同一条线的实验开关 | `search_play.py` 的 `--rollout-backend/--cuda-{binary,socket,lanes,gather-ms,prefetch-verify,speculative-halving}` 与它们的分支（`_cuda_continuations`、`_wait_for_gpu_pause`、speculative halving、prefetch 缓存）、`env.cuda_dump` 与引擎 `CUDA_DUMP` 命令 | ≈500 |
+| 混合采集 | `scripts/mixed_dagger_round.sh`（整个脚本只为 CPU+GPU 混合采集存在）、`scripts/task6/`（r66_*、compare_worker_mix、sparse-track 检查） | ≈1 900 |
+| 候选实验 | `--candidate-generator`、`--candidate-coverage-model/-budget`、`--shovel-candidates`、`--cpu-sparse-tracks`、`--measure-cpu`、`--cpp-rollouts`、`--frames-format`（写入分支）、`--margin`/`--max-actions`（改常量 `MARGIN=0.02`、`MAX_ACTIONS=3000`）与它们的分支 | ≈450 |
+| 判死实验 | `--ema`、`--soft-weight`（软目标全分布）及保存到 checkpoint 的两个字段；候选覆盖实验线（`pvz_candidate_coverage.py`、`train/teacher_candidate_coverage.py`、`teacher_coverage_stats.py`、对应测试）；静态价值消融线（`static_value_{ablation,compare,noninferiority}{,_stats}.py` 与 3 个测试） | ≈3 500 |
+| 观测与登记 | `python/pvz_compat.py`：`EXPERIMENTAL_FLAGS` 清空（8 个全部删除），`dense-boards` 一条随 task32 删除，`python-rollout-reference` 改成 `_python_rollout_reference` | — |
+
+**保留（按批复）**：`--resource-dir`（两台机器路径不同）；`--width`（模型结构参数，加载/定义模型要用）；
+`--soft-temperature`（`--cell-soft-weight` 仍在用，help 已改写为只讲格子级软标签）；`--frames-format` 的 jsonl **读取**路径（旧档案）。
+
+**没删、留给下一批的**：
+
+1. 引擎侧 `SIM_SKIP` 位 256（稀疏轨道）与 `pvz_env.require_sparse_tracks`——Python 侧已无调用方，但改 `src/EnvironmentRollout.cpp`
+   会和台式机 task35 撞车，按主控要求留给 task35 或主控协调后再删。
+2. 宽度 128 对照代码只存在于 `scripts/run_dw4_day_diagnosis.py`（task23 已结束的一次性 study runner）；
+   它同时包含别的阶段，整脚本删除不在本次批复范围内，列进 §6.5 的同类清单。
+3. 视界 1800、`sim_skip` 位 64 是“值”不是“开关”，代码里没有分支，删的是用法不是代码——无动作。
+
+**验收**：`python3 -m pytest python -q` → 229 passed / 24 skipped / 56 subtests，6 failed 全部是环境性
+（5 个 `test_cpp_rollout` 需要 `build/pvz-portable`，工作树里没有；1 个 `test_dagger_experiment_runner` 的导入顺序）。
+`python/test_compat_registry.py` 5 项全过。`compileall scripts python` 通过。

@@ -52,6 +52,9 @@
 - 02:00 旧档案转换逐帧核对：3001 帧 JSONL → npz → 读回，**每帧 dict 相同**（3001/3001）。启动账：每次 `search_play` 进程 1.2 s（torch 导入 0.46 s + 三个网 + 任务），每个 worker 引擎启动约 1.3 s；`export_student` 实测 0 ms、`load_student` 2 ms，所以没有可缓存的东西。
 - 01:55 压榨记录见 `MEMORY/docs/hotpath-audit.md` §13：6 项尝试、收益与阻断原因；停止条件**未满足**（第 2/3 项仍是可证明的大额冗余，但剩余工作量在 cb-mem 的 `load()` 与主工作区数据上）。
 
+- 09:10 合并完成：`origin/pvz-env`（task34 OOM 守护）与 `origin/mem`（task32 紧凑数组装载）都进了 `audit`，冲突两处——task32 文档保留 pvz-env 侧、`train_rollout_policy.py` 取 mem 侧（稠密棋盘装载随 task32 删除，`dense-boards` 的 LEGACY 登记一并移除）。281 passed / 34 skipped / 6 failed（环境性）。
+- 10:20 **删除批准全部执行**（tag `retire-cuda-20261023` / `retire-flags-20261023`）：CUDA 推演后端整体退役（`cuda/`、`src/CudaExport.*`、`CMake/CudaRollout.cmake`、`pvz_cuda_*.py`、11 个 cuda 脚本、10 个 cuda 测试、`mixed_dagger_round.sh`、`scripts/task6/`），`search_play` 的 13 个开关与分支、`train_rollout_policy` 的 `--ema` / `--soft-weight`、候选覆盖与静态价值消融两条实验线。**101 个文件、-24 165 行**。`--margin`→`MARGIN=0.02`、`--max-actions`→`MAX_ACTIONS=3000` 改常量；`--resource-dir` / `--width` / `--soft-temperature` / jsonl 读取路径按批复保留。229 passed / 6 failed（环境性）。细节见 `hotpath-audit.md` §14。
+
 ## 问题
 
 ## 追加（主控 2026-10-22 23:55，用户两点 + 主控决定）

@@ -136,7 +136,7 @@ class CppRolloutTest(unittest.TestCase):
                     bits += expected.numel()
                 compared += 1
             if until:
-                expected = search_play._rollout_policy(self.env, self.obs, first, until, root, seed)
+                expected = search_play._python_rollout_reference(self.env, self.obs, first, until, root, seed)
                 self.assertEqual(_frame(actual), _frame(expected))
         self.assertGreater(compared, 50)
         print(json.dumps({"obs": version, "trajectory_decisions": compared, "equal_float32": bits}), flush=True)
@@ -149,10 +149,9 @@ class CppRolloutTest(unittest.TestCase):
         search_play._W.update(fast=self.net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=21)
         self.addCleanup(search_play._W.clear)
         first = {"type": "wait", "ticks": 60, "until": "timeout"}
-        expected = search_play._rollout_policy(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
+        expected = search_play._python_rollout_reference(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
         expected_frame = _frame(expected)
         expected_history = self.env._sun_production_history.copy()
-        search_play._W["cpp_rollouts"] = True
         actual = search_play._rollout_policy(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
         self.assertEqual(_frame(actual), expected_frame)
         self.assertEqual(self.env._sun_production_history, expected_history)
@@ -184,8 +183,7 @@ class CppRolloutTest(unittest.TestCase):
         search_play._W.update(fast=self.net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=0)
         self.addCleanup(search_play._W.clear)
         until = self.obs["tick"] + 1200
-        expected = search_play._rollout_policy(self.env, self.obs, first, until, root, 4242)
-        search_play._W["cpp_rollouts"] = True
+        expected = search_play._python_rollout_reference(self.env, self.obs, first, until, root, 4242)
         actual = search_play._rollout_policy(self.env, self.obs, first, until, root, 4242)
         self.assertEqual(_frame(actual), _frame(expected))
 

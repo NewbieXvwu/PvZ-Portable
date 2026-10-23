@@ -29,7 +29,7 @@ LEGACY: dict[str, dict] = {
         "where": ["python/pvz_student_observation.py", "python/pvz_frame_store.py:encoder_signature"],
     },
     "jsonl-archives": {
-        "what": "frames.jsonl 旧档案的读取路径（写入分支只服务它）",
+        "what": "frames.jsonl 旧档案的读取路径（写入只产 npz）",
         "kept_for": "2026-10 以前的 JSONL 档案，whatif 重放要读（AGENTS §8 第 4 条）",
         "since": "2026-10-01",
         "remove_when": "artifacts 下不再有 frames.jsonl",
@@ -43,11 +43,11 @@ LEGACY: dict[str, dict] = {
         "where": ["python/pvz_rollout_policy.py:RolloutNet"],
     },
     "python-rollout-reference": {
-        "what": "_rollout_policy 里的纯 Python 续走实现",
-        "kept_for": "scripts/perf_rollout_check.py 用它逐帧对拍 C++ 路径",
+        "what": "纯 Python 续走实现 _python_rollout_reference（产品路径已只有 C++）",
+        "kept_for": "python/test_cpp_rollout.py 与 scripts/perf_rollout_check.py 逐帧对拍 C++ 路径",
         "since": "2026-10-16",
         "remove_when": "C++ 推演的对拍测试改用存档回放",
-        "where": ["scripts/search_play.py:_rollout_policy"],
+        "where": ["scripts/search_play.py:_python_rollout_reference"],
     },
     "conveyor-start-key": {
         "what": "观测里的 conveyor_start='original' 键与它的 free_cards 分支",
@@ -73,48 +73,10 @@ LEGACY: dict[str, dict] = {
 }
 
 # id -> {flag, script, owner, since, decide_by, why}
-EXPERIMENTAL_FLAGS: dict[str, dict] = {
-    "cuda-backend": {
-        "flag": "--rollout-backend", "script": "scripts/search_play.py",
-        "owner": "codex task4", "since": "2026-10-17", "decide_by": "2026-11-06",
-        "why": "GPU 续走从未在正式轮次启用（113 份运行配置全是 cpp）",
-    },
-    "cuda-prefetch": {
-        "flag": "--cuda-prefetch-verify", "script": "scripts/search_play.py",
-        "owner": "codex task11", "since": "2026-10-18", "decide_by": "2026-11-06",
-        "why": "与推测减半一起等 CUDA 后端定论",
-    },
-    "cuda-speculative": {
-        "flag": "--cuda-speculative-halving", "script": "scripts/search_play.py",
-        "owner": "codex task11", "since": "2026-10-18", "decide_by": "2026-11-06",
-        "why": "推测减半在 CPU 路径上没有收益，只在 GPU 批次里才有意义",
-    },
-    "candidate-generator": {
-        "flag": "--candidate-generator", "script": "scripts/search_play.py",
-        "owner": "codex task13", "since": "2026-10-18", "decide_by": "2026-11-06",
-        "why": "学生逐格候选与静态候选的比较还没做完",
-    },
-    "candidate-coverage": {
-        "flag": "--candidate-coverage-model", "script": "scripts/search_play.py",
-        "owner": "codex task11", "since": "2026-10-18", "decide_by": "2026-11-06",
-        "why": "覆盖候选开关，默认关闭（student-bottleneck-plan.md:307）",
-    },
-    "shovel-candidates": {
-        "flag": "--shovel-candidates", "script": "scripts/search_play.py",
-        "owner": "主控", "since": "2026-10-17", "decide_by": "2026-11-06",
-        "why": "铲子候选保持关闭（student-bottleneck-plan.md:151），正确形态是替换而不是先铲后种",
-    },
-    "sparse-tracks": {
-        "flag": "--cpu-sparse-tracks", "script": "scripts/search_play.py",
-        "owner": "codex task6", "since": "2026-10-17", "decide_by": "2026-11-06",
-        "why": "稀疏轨道默认关闭，等内存上限定了再决定",
-    },
-    "measure-cpu": {
-        "flag": "--measure-cpu", "script": "scripts/search_play.py",
-        "owner": "task18", "since": "2026-10-19", "decide_by": "2026-11-06",
-        "why": "只用于手工量 CPU 账，正式轮次从不设置",
-    },
-}
+# Empty since 2026-10-23: every switch that was registered here was deleted with the main-control
+# approval of hotpath-audit.md section 6.1/6.2. A new entry needs a real experiment that may be
+# withdrawn, not a way to keep two behaviours alive.
+EXPERIMENTAL_FLAGS: dict[str, dict] = {}
 
 
 def legacy_ids() -> set[str]:

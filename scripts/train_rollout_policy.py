@@ -478,10 +478,8 @@ def main() -> None:
     p.add_argument("--context", action="store_true",
                    help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
     p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1", help="student feature version")
-    p.add_argument("--soft-weight", type=float, default=0.0,
-                   help="also match the search's preference over its candidates (wait / each card): "
-                        "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")
-    p.add_argument("--soft-temperature", type=float, default=0.05, help="in win-probability units")
+    p.add_argument("--soft-temperature", type=float, default=0.05,
+                   help="temperature of the cell-level soft labels (--cell-soft-weight), in win-probability units")
     p.add_argument("--cell-soft-weight", type=float, default=0.0,
                    help="cell-level soft labels: on planted rows whose search compared >= 2 cells of the labelled card, "
                         "add KL(softmax(cell values / --soft-temperature) || student cell distribution over those cells). "
@@ -495,9 +493,6 @@ def main() -> None:
     p.add_argument("--lr-schedule", choices=["constant", "cosine"], default="constant",
                    help="cosine: learning rate falls from 2e-3 to 0 over the run (per batch), so the final weights are not "
                         "a snapshot of a still-bouncing optimiser; constant = the old behaviour")
-    p.add_argument("--ema", type=float, default=0.0,
-                   help="keep an exponential moving average of the weights with this decay (e.g. 0.999, per batch); "
-                        "validation and the saved model use the average. 0 = off (the old behaviour)")
     p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
     p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
     p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
@@ -602,9 +597,6 @@ def main() -> None:
     waits = float(weight[plant < 0.5].sum())
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
 
-    ema = (torch.optim.swa_utils.AveragedModel(net, multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(args.ema),
-                                                use_buffers=True) if args.ema else None)
-
     def batch_loss(idx, train):
         b = boards.batch(idx, args.device)
         s = scalars.batch(idx, args.device)
@@ -614,29 +606,13 @@ def main() -> None:
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
-        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
+        out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
         if args.aux_weight:
             row_loss = F.binary_cross_entropy_with_logits(out["aux"], auxiliary[idx].to(args.device), reduction="none").mean(1)
             loss = loss + args.aux_weight * (row_loss * w).sum() / denom
-        if args.soft_weight:
-            v = values[idx].to(args.device)
-            known = ~torch.isnan(v)
-            soft = known.sum(1) >= 2                     # a preference needs at least two candidates
-            if soft.any():
-                vk, kk = v[soft], known[soft]
-                # student: log p(wait) = log sigmoid(-plant), log p(card k) = log sigmoid(plant) + log softmax(packet)_k,
-                # renormalised over the candidates the search compared
-                student = torch.cat([F.logsigmoid(out["plant"][soft])[:, None] + F.log_softmax(out["packet"][soft], 1),
-                                     F.logsigmoid(-out["plant"][soft])[:, None]], dim=1)
-                student = torch.log_softmax(student.masked_fill(~kk, -1e9), 1)
-                teacher = torch.softmax((vk / args.soft_temperature).masked_fill(~kk, -1e9), 1)
-                kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~kk, 0).sum(1)
-                ws = w[soft]
-                soft_denom=ws.sum().clamp_min(1e-30) if row_plan else ws.sum()
-                loss = loss + args.soft_weight * (kl * ws).sum() / soft_denom
         if args.cell_soft_weight and planted.any():
             cd = cands[idx].to(args.device).float()                       # (B, K, 3): packet, cell, value
             same = (cd[:, :, 0] == pk[:, None].float()) & ~torch.isnan(cd[:, :, 2]) & planted[:, None]
@@ -677,11 +653,11 @@ def main() -> None:
     history = []
 
     def checkpoint() -> dict:
-        return {"state_dict": {k: v.cpu() for k, v in (net if ema is None else ema.module).state_dict().items()}, "labels": args.labels, "width": args.width,
+        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
-                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "ema": args.ema, "cell_soft_weight": args.cell_soft_weight,
+                "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
                 "history": list(history),
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
@@ -698,8 +674,6 @@ def main() -> None:
             opt.zero_grad(); loss.backward(); opt.step()
             if schedule is not None:
                 schedule.step()
-            if ema is not None:
-                ema.update_parameters(net)
             completed_steps+=1
             if completed_steps>=steps:
                 break

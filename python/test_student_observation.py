@@ -91,11 +91,13 @@ class StudentObservationTest(unittest.TestCase):
                 search_play._W.clear()
                 torch.set_num_threads(1)
                 torch.manual_seed(0)
-                search_play._W.update(fast=policy.RolloutNet(8, "meanmax", obs=version).eval(), cpp_rollouts=False)
+                search_play._W.update(fast=policy.RolloutNet(8, "meanmax", obs=version).eval())
                 search_play._W["fast"].plant.bias.data.fill_(2)
+                search_play._W["rollout_file"] = str(directory / f"{version}.bin")
+                policy.export_student(search_play._W["fast"], search_play._W["rollout_file"])
                 args = SimpleNamespace(manifest=str(manifest), task_id="test", resource_dir=str(RESOURCE),
-                                       frames=str(directory / version), frames_label="test", frames_format="npz",
-                                       rollout_policy=str(checkpoint), dagger_beta=1.0, max_actions=3000)
+                                       frames=str(directory / version), frames_label="test",
+                                       rollout_policy=str(checkpoint), dagger_beta=1.0)
                 recorded = []
                 decision = [0]
                 deciding = [False]
@@ -171,7 +173,7 @@ class StudentObservationTest(unittest.TestCase):
                     from pvz_value_net import ValueNet
                     torch.save({"state_dict": ValueNet().state_dict()}, value)
                     search_play._init_worker(str(value), str(checkpoint))
-                    self.assertTrue(search_play._W["cpp_rollouts"])
+                    self.assertTrue(Path(search_play._W["rollout_file"]).is_file())
             print(json.dumps(recorded_count), flush=True)
 
 
