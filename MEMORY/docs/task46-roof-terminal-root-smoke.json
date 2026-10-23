@@ -1,0 +1,128 @@
+{
+ "status": "partial-panel",
+ "validated_complete_roots": [
+  {
+   "cell": "l42-archive-45000000",
+   "root": 253,
+   "labels": 124,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 232,
+      "correct": 106,
+      "value_ties": 0,
+      "accuracy": 0.45689655172413796
+     },
+     "v4_strict": {
+      "pairs": 232,
+      "correct": 106,
+      "value_ties": 0,
+      "accuracy": 0.45689655172413796
+     },
+     "v4_nonterminal": {
+      "pairs": 232,
+      "correct": 106,
+      "value_ties": 0,
+      "accuracy": 0.45689655172413796
+     },
+     "teacher_path_v4": {
+      "pairs": 232,
+      "correct": 157,
+      "value_ties": 0,
+      "accuracy": 0.6767241379310345
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 738,
+      "correct": 393,
+      "value_ties": 0,
+      "accuracy": 0.532520325203252
+     },
+     "v4_strict": {
+      "pairs": 1389,
+      "correct": 701,
+      "value_ties": 0,
+      "accuracy": 0.5046796256299496
+     },
+     "v4_nonterminal": {
+      "pairs": 738,
+      "correct": 393,
+      "value_ties": 0,
+      "accuracy": 0.532520325203252
+     },
+     "teacher_path_v4": {
+      "pairs": 738,
+      "correct": 444,
+      "value_ties": 0,
+      "accuracy": 0.6016260162601627
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1528,
+      "correct": 722,
+      "value_ties": 0,
+      "accuracy": 0.4725130890052356
+     },
+     "v4_strict": {
+      "pairs": 1891,
+      "correct": 889,
+      "value_ties": 0,
+      "accuracy": 0.4701216287678477
+     },
+     "v4_nonterminal": {
+      "pairs": 1528,
+      "correct": 722,
+      "value_ties": 0,
+      "accuracy": 0.4725130890052356
+     },
+     "teacher_path_v4": {
+      "pairs": 1528,
+      "correct": 774,
+      "value_ties": 0,
+      "accuracy": 0.506544502617801
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 4,
+     "production_representable_improvers": 1,
+     "halving_pruned": 1,
+     "outside_production_action_space": 3
+    },
+    "wave": {
+     "observed_improvers": 14,
+     "production_representable_improvers": 9,
+     "halving_pruned": 2,
+     "improving_plant_actions": 8,
+     "candidate_generation_omission": 7,
+     "outside_production_action_space": 5
+    },
+    "tick": {
+     "observed_improvers": 35,
+     "production_representable_improvers": 25,
+     "halving_pruned": 2,
+     "improving_plant_actions": 24,
+     "candidate_generation_omission": 22,
+     "static_retained": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 10
+    }
+   }
+  }
+ ],
+ "scope": "only first complete root; not a complete formal panel or final roof conclusion",
+ "root_sha256": "5345aac790f0d30ccbe0699701a26955b259b59985f23b88f26b9221f2194255",
+ "search_trace_sha256": "49669659b96968a65ada574b91002a93e851d3087f5c358dcf266f059b375dbe",
+ "selection_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
+ "candidate_types": {
+  "wait": 1,
+  "plant": 38,
+  "shovel": 23
+ },
+ "tick": 13920,
+ "common_futures_per_candidate": 2,
+ "checks": "exact candidate set/future indices, full identities/input hashes, true terminal outcomes and complete gzip teacher action chains passed; attribution/ranking ran on actual complete root"
+}
