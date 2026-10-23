@@ -227,3 +227,31 @@ def test_longer_winning_completion_is_not_a_survival_correction(tmp_path,monkeyp
     for candidate in candidates:
         for outcome in candidate['outcomes']:outcome['won']=False
     assert len(data.confirm_summary(plan)['corrections'])==1
+
+
+def test_registered_micro_recipe_uses_the_existing_strict_schema():
+    from pvz_recipe import validate
+    recipe=forks.load(ROOT/'MEMORY/docs/task53-critical-forks-finetune.json')
+    valid=validate(recipe,'training')
+    assert valid['epochs']==2 and valid['max_steps']==64
+    assert valid['optimizer']['lr']==.0001 and valid['init'].endswith('/dw4i_s1/model.pt')
+
+
+def test_resume_training_uses_completed_artifacts_without_recollecting(tmp_path,monkeypatch):
+    import task53_pipeline as pipeline
+    monkeypatch.setattr(pipeline,'OUT',tmp_path)
+    monkeypatch.setattr(sys,'argv',['task53_pipeline.py','/absolute/plan.json','resume-training'])
+    plan={'jobs':[]};confirmed={'status':'complete'}
+    forks.save(tmp_path/'published-export-complete.json',{'head':'already-published'})
+    forks.save(tmp_path/'confirmation-results.json',confirmed)
+    exported={'confirmation_sha256':forks.sha(tmp_path/'confirmation-results.json')}
+    forks.save(tmp_path/'export.json',exported)
+    monkeypatch.setattr(forks,'check_plan',lambda path:plan)
+    monkeypatch.setattr(pipeline.data,'screen_summary',lambda *args:([],{'day':{'roots':1}}))
+    monkeypatch.setattr(pipeline.data,'confirm_summary',lambda *args:confirmed)
+    calls=[]
+    monkeypatch.setattr(pipeline,'train_evaluate_report',lambda *args:calls.append(args))
+    monkeypatch.setattr(forks,'run',lambda *args:pytest.fail('completed collection must not restart'))
+    monkeypatch.setattr(pipeline,'alive',lambda *args:pytest.fail('no live screen wait on completed export'))
+    pipeline.main()
+    assert len(calls)==1 and calls[0][0]==plan and calls[0][2:]==(confirmed,exported)

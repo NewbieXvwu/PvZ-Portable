@@ -40,8 +40,9 @@ def register_training():
                   wait_keep=1.,max_steps=64,batch_size=256,validation_batch_size=512,
                   cache_dir=str(OUT/'training/cache'),read_cache_dir=None,source_row_report=True)
     recipe['optimizer']['lr']=.0001
-    recipe['provenance']=dict(task='task53',parent_recipe_sha256=forks.sha(ROOT/'recipes/dw4i.json'),
-                              additional_rows='only independently confirmed critical-fork corrections; labels/weights from export manifest')
+    recipe['provenance']=dict(source_path=str(ROOT/'recipes/dw4i.json'),
+        source_sha256=forks.sha(ROOT/'recipes/dw4i.json'),
+        notes='task53: only independently confirmed correction rows added to the fixed replay recipe; labels/weights from export manifest')
     forks.save(ROOT/'MEMORY/docs/task53-critical-forks-finetune.json',recipe)
     forks.save(OUT/'training-registration.json',dict(recipe=recipe,replay=replay,evaluation=evaluation,
                comparison='frozen dw4i_s1 vs one fixed finetune; same 192 evaluation resets, 64 per terrain',
@@ -199,6 +200,30 @@ def production_preview():
     print('PRODUCTION DRY RUN',len(selected),'roots;',predicted,'CPU seconds;',predicted/reference,'share')
 
 
+def repair_recipe_metadata():
+    """Metadata-only compatibility repair, preserving the original registered settings."""
+    from pvz_recipe import validate
+    registration_path=OUT/'training-registration.json';registration=forks.load(registration_path)
+    if (OUT/'training/model/model.pt').exists():raise RuntimeError('repair before training')
+    previous_sha=forks.sha(registration_path)
+    frozen=OUT/'frozen/training-registration-before-metadata-repair.json'
+    if not frozen.exists():frozen.parent.mkdir(parents=True,exist_ok=True);frozen.write_bytes(registration_path.read_bytes())
+    provenance=dict(source_path=str(ROOT/'recipes/dw4i.json'),source_sha256=forks.sha(ROOT/'recipes/dw4i.json'),
+        notes='task53: fixed pre-registered replay plus independently confirmed corrections; descriptive provenance field names repaired before training, no training settings changed')
+    for path in [ROOT/'MEMORY/docs/task53-critical-forks-finetune.json',OUT/'training/recipe.json']:
+        recipe=forks.load(path);old=deepcopy(recipe);recipe['provenance']=provenance
+        assert {k:v for k,v in recipe.items() if k!='provenance'}=={k:v for k,v in old.items() if k!='provenance'}
+        validate(recipe,'training');forks.save(path,recipe)
+    registration['recipe']['provenance']=provenance
+    registration.setdefault('metadata_revisions',[]).append(dict(previous_registration_sha256=previous_sha,
+        training_settings_unchanged=True,reason='existing recipe schema only accepts descriptive source_path/source_sha256/notes'))
+    forks.save(registration_path,registration)
+    path=ROOT/'MEMORY/docs/task53-critical-forks-training-panel.json';panel=forks.load(path)
+    panel['registration_sha256']=forks.sha(registration_path);panel['metadata_revisions']=registration['metadata_revisions']
+    forks.save(path,panel)
+    print('METADATA REPAIRED; hyperparameters, replay rows, new rows and evaluation resets unchanged')
+
+
 def prepare():
     from pvz_frame_store import frame_path, read_frames
     from render_episode import load_training_task, training_task_kwargs
@@ -292,7 +317,7 @@ def prepare():
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training','refine-selection','cost-gate','production-preview'])
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training','refine-selection','cost-gate','production-preview','repair-recipe-metadata'])
     args=p.parse_args()
     if args.stage=='prepare':
         prepare()
@@ -304,6 +329,8 @@ def main():
         cost_gate()
     elif args.stage=='production-preview':
         production_preview()
+    elif args.stage=='repair-recipe-metadata':
+        repair_recipe_metadata()
     else:
         if list((OUT/'roots').glob('*/screen_[0-9]*.json')) or list((OUT/'roots').glob('*/confirm_[0-9]*.json')):
             raise RuntimeError('terminal labels exist; frozen inputs cannot be changed')

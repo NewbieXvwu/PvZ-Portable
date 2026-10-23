@@ -12,6 +12,28 @@ import time
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'python')]
 import critical_forks as f
+ORIGINAL_REPLAY=f.replay
+
+
+def checked_replay(job):
+    """An observer only: verify every beta=0 archived action against today's frozen student."""
+    from pvz_frame_store import frame_path,read_frames
+    frames=read_frames(frame_path(Path(job['archive'])))
+    original=f.TEACHER._fast_action;index=0
+    def predict(obs,state):
+        nonlocal index
+        action=original(obs,state)
+        if job.get('student_executed') and action!=frames[index+1]['action']:
+            raise ValueError(f'archived beta=0 student differs at decision {index+1}')
+        index+=1
+        return action
+    f.TEACHER._fast_action=predict
+    try:result=ORIGINAL_REPLAY(job)
+    finally:f.TEACHER._fast_action=original
+    f.save(Path(f.PLAN['out'])/'roots'/job['id']/'prefix-actor.json',dict(
+        archive=job['archive'],decision_count=index,all_student_actions_exact=True,
+        all_public_prefix_frames_exact=True,source=job['source']))
+    return result
 
 
 def semantic_compare(original,repeated,a,b):
@@ -71,6 +93,13 @@ def run(plan):
     for case in cases:
         job=grouped.setdefault(case['job']['id'],dict(case['job'],indices=[],samples=1,stage='screen'))
         if case['index'] not in job['indices']:job['indices'].append(case['index'])
+    pool_prefixes={}
+    for job in plan['jobs']:
+        if job['terrain']=='pool' and (job['archive'] not in pool_prefixes or job['decision']>pool_prefixes[job['archive']]['decision']):
+            pool_prefixes[job['archive']]=job
+    for job in pool_prefixes.values():
+        if job['id'] not in grouped:
+            grouped[job['id']]=dict(job,indices=[],samples=1,stage='screen',inspect_only=True)
     repeat['jobs']=[dict(job,indices=sorted(job['indices'])) for job in grouped.values()]
     repeat['cpu_budget_seconds']=plan['cpu_budget_seconds']-f.spent_cpu(actual)-250
     if repeat['cpu_budget_seconds']<=0:raise RuntimeError('no reserved CPU for final reproducibility')
@@ -79,8 +108,10 @@ def run(plan):
     ledger=actual/'runs'/f'{int(time.time())}-repro';ledger.mkdir(parents=True)
     before=f.cpu()
     try:
+        f.replay=checked_replay
         f.run(repeat,repeat['jobs'],'repro')
     finally:
+        f.replay=ORIGINAL_REPLAY
         f.save(ledger/'complete.json',dict(cpu_seconds=f.cpu()-before))
     proof=[]
     for case in cases:
@@ -92,6 +123,8 @@ def run(plan):
     value=dict(status='complete',cases=proof,case_count=len(proof),fresh_directory=str(replica),
                comparison='exact input/physics/leaf/outcome/full teacher actions; exclude CPU and gzip timestamps',
                original_evidence_read_only=True,inputs=plan['inputs'],cpu_seconds_metered_after=f.spent_cpu(actual))
+    value['pool_actor_prefixes']=[f.load(replica/'roots'/job['id']/'prefix-actor.json') for job in pool_prefixes.values()]
+    assert len(value['pool_actor_prefixes'])==8
     f.save(ROOT/'MEMORY/docs/task53-critical-forks-repro.json',value)
     print('REPRODUCED',len(proof),'fresh isolated cases',flush=True)
 

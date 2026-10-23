@@ -154,6 +154,10 @@ def after_screen(plan):
             value_rows=sum(r['rows'] for r in exported['value_files'])),
         f"正式导出{len(exported['student_corrections'])}条可训纠正及{sum(r['rows'] for r in exported['value_files'])}条价值状态行；检查点/分片只留ignored产物目录。",
         extra=['MEMORY/docs/task53-critical-forks-export.json'])
+    return train_evaluate_report(plan,by_terrain,confirmed,exported)
+
+
+def train_evaluate_report(plan,by_terrain,confirmed,exported):
     if not exported['student_corrections']:
         f.save(OUT/'pipeline-needs-more-data.json',dict(reason='No independently confirmed student-representable corrections; do not substitute replay-only finetuning.'))
         return
@@ -177,7 +181,8 @@ def after_screen(plan):
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path);a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path)
+    p.add_argument('stage',nargs='?',choices=['run','resume-training'],default='run');a=p.parse_args()
     plan=f.check_plan(a.plan)
     with (OUT/'pipeline.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -186,6 +191,13 @@ def main():
         start=Path(f'/proc/{os.getpid()}/stat').read_text().rsplit(')',1)[1].split()[19]
         f.save(OUT/'pipeline-controller.json',dict(pid=os.getpid(),start_ticks=start,
                plan=str(a.plan),source_sha256=f.sha(__file__)))
+        if a.stage=='resume-training':
+            if not (OUT/'published-export-complete.json').exists():raise RuntimeError('complete audited export required')
+            _,by_terrain=data.screen_summary(plan,plan['jobs']);confirmed=data.confirm_summary(plan)
+            exported=f.load(OUT/'export.json')
+            if exported['confirmation_sha256']!=f.sha(OUT/'confirmation-results.json'):
+                raise RuntimeError('confirmation/export evidence changed')
+            return train_evaluate_report(plan,by_terrain,confirmed,exported)
         watch=f.load(OUT/'watch-screen.json');run=Path(watch['run'])
         while alive(watch['pid'],watch['start_ticks']):
             print('WAIT VERIFIED SCREEN',watch['pid'],f.spent_cpu(OUT),flush=True);time.sleep(20)

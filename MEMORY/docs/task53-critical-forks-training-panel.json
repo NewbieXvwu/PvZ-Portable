@@ -7620,5 +7620,12 @@
    "source_episode": "pool-2080175-p29dag3"
   }
  ],
- "registration_sha256": "2947bceea3c69617f1871377335ca792aadd1b980b391357c2db6c865bf3e40f"
+ "registration_sha256": "62ff408ae12fb7a0f396c685c69f7290044381b25c5f3d3ef9cecffffb5cbcbc",
+ "metadata_revisions": [
+  {
+   "previous_registration_sha256": "2947bceea3c69617f1871377335ca792aadd1b980b391357c2db6c865bf3e40f",
+   "training_settings_unchanged": true,
+   "reason": "existing recipe schema only accepts descriptive source_path/source_sha256/notes"
+  }
+ ]
 }

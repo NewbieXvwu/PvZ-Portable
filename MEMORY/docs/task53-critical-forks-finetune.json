@@ -47,9 +47,9 @@
   "fraction": 0.1
  },
  "provenance": {
-  "task": "task53",
-  "parent_recipe_sha256": "d5d19464768d38d0fd5a2a382e06503271e693df831089a5553d79d9175ffddc",
-  "additional_rows": "only independently confirmed critical-fork corrections; labels/weights from export manifest"
+  "source_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/recipes/dw4i.json",
+  "source_sha256": "d5d19464768d38d0fd5a2a382e06503271e693df831089a5553d79d9175ffddc",
+  "notes": "task53: fixed pre-registered replay plus independently confirmed corrections; descriptive provenance field names repaired before training, no training settings changed"
  },
  "data": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/frames",
  "labels": [
