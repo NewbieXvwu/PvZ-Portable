@@ -2,7 +2,7 @@
 
 先读仓库根目录 `AGENTS.md`（优先级最高），再读 `MEMORY/docs/student-bottleneck-plan.md` 末尾 10-22 的几条、
 `MEMORY/docs/task23-dw4i-unified-panel.md`（你上一个任务，含第 5、6 步结论）、`MEMORY/docs/unified-panel.md`、
-`MEMORY/docs/task25-night-n10.md`、DESIGN §14.7–§14.11。
+`MEMORY/docs/task25-night-n10.md`、DESIGN §14.7–§14.9、§14.15、§14.16。
 
 ## 背景
 task23 已合进 pvz-env（25b1672a）。决定：**宽度保持 64，不上 MoE**（128 宽留出与夜间反而掉、推演慢 3.1 倍）；
@@ -125,7 +125,7 @@ q102 已停（夜间 n9 弱关、泳池第 1 轮、d7p）。下一个模型 dw5i
 
 - 训练已加载全部15788614行；监看training_s1.txt、training_s1.resources.jsonl与complete.json，不重跑冻结或训练。内存<2GiB会暂停、>=3GiB自动恢复，已实际触发一次；瞬时暂停状态以资源日志为准。外部cq采集队列不动。
 
-- 现用 night_panel_n10.json 的 L20 是旧初始牌变体 night_l20_eval_n10，按任务要求逐字段复现并保留主文件。v2 将从54项合并清单选 night_l20_eval_n10_orig（空槽原版），两者不混用。泳池登记与统一面板均曾占 §14.10，本次保留统一面板为 §14.10、泳池改 §14.11。
+- 现用 night_panel_n10.json 的 L20 是旧初始牌变体 night_l20_eval_n10，按任务要求逐字段复现并保留主文件。v2 将从54项合并清单选 night_l20_eval_n10_orig（空槽原版），两者不混用。泳池登记与统一面板均曾占 §14.10，本次保留统一面板为 §14.10、泳池改 §14.15（合并进主线后顺延编号）。
 
 ## 第 0 步（主控 2026-10-22 15:45 追加，先于其他步骤做）：种植统计改按植物类型记录
 用户指出：对局汇总里的 `planted` 按**卡槽序号**计数，与“按植物身份”的设计方向不一致（传送带关槽位会移动，槽号连跨局都不可比）。动作接口按槽号（和人点卡槽一样）不改，**统计与报告**改成按类型：

@@ -2,13 +2,16 @@
 from functools import lru_cache
 import hashlib
 import inspect
+import io
 import json
 from pathlib import Path
 import tempfile
 import re
+import zipfile
 
 import numpy as np
 
+# LEGACY(jsonl-archives): the JSONL half of the glob is for archives written before frames.npz.
 def frame_paths(data: Path):
     paths = {path.parent: path for path in data.glob("*/*/frames.jsonl")}
     paths.update({path.parent: path for path in data.glob("*/*/frames.npz")})
@@ -20,6 +23,7 @@ def frame_path(archive: Path) -> Path:
     return binary if binary.is_file() else archive / "frames.jsonl"
 
 
+# LEGACY(jsonl-archives): text archives are read, never written, from here on.
 def frame_bytes(path: Path) -> bytes:
     if path.suffix == ".npz":
         with np.load(path, allow_pickle=False) as stored:
@@ -120,6 +124,7 @@ def cache_candidates(path: Path, directory: Path) -> Path:
     return target
 
 
+# LEGACY(aux-labels): side cache of the auxiliary damage head (task16 experiment).
 def cache_aux(path: Path, directory: Path, horizon: int) -> Path:
     source = frame_bytes(path)
     signature = inspect.getsource(row_damage_labels) + inspect.getsource(cache_aux) + str(horizon)
@@ -188,6 +193,7 @@ def encode_student_frames(frames: list[dict], source: bytes, obs: str) -> dict:
     return encoded
 
 
+# LEGACY(obs-versions): the signature freezes which encoder wrote an archive, so v1/v2lite/v2 stay readable.
 @lru_cache(maxsize=3)
 def encoder_signature(obs: str = "v1") -> str:
     import pvz_rollout_policy
@@ -208,12 +214,21 @@ def encoder_signature(obs: str = "v1") -> str:
                            + inspect.getsource(encode_student_frames)).encode()).hexdigest()
 
 
+# LZMA instead of zlib: on a sample of 12 archives, ZIP_LZMA is 59.6% of np.savez_compressed
+# (235 KB -> 140 KB per episode), because the frames JSON is the bulk and LZMA models its repetition
+# across the whole file. Reading costs 12 ms instead of 4 ms per archive and writing 0.63 s instead
+# of 0.06 s, both negligible next to one game. np.load reads it without any change (zipfile handles
+# the codec); packs keep ZIP_STORED in scripts/pack_training_rows.py so they can be memory-mapped.
 def _save(path: Path, **arrays):
     path.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(dir=path.parent, suffix=".npz", delete=False) as temporary:
         temporary_path = Path(temporary.name)
         try:
-            np.savez_compressed(temporary, **arrays)
+            with zipfile.ZipFile(temporary, "w", compression=zipfile.ZIP_LZMA) as archive:
+                for name, array in arrays.items():
+                    buffer = io.BytesIO()
+                    np.lib.format.write_array(buffer, np.asarray(array), allow_pickle=False)
+                    archive.writestr(name + ".npy", buffer.getvalue())
             temporary.close()
             temporary_path.replace(path)
         finally:
@@ -281,6 +296,11 @@ def write_frames_from_source(path: Path, source: bytes) -> None:
         return
     _save(path, frames=np.frombuffer(source, dtype=np.uint8), encoder=encoder_signature(),
           **encode_frames_from_source(source))
+
+
+def save_arrays(path: Path, **arrays) -> None:
+    """Write an archive/cache npz verbatim -- the same container _save uses (LZMA)."""
+    _save(path, **arrays)
 
 
 def write_frames(path: Path, frames: list[dict]):

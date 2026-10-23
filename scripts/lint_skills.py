@@ -87,7 +87,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
 # 动作写法**复用** episode_query 的解析器。曾经在别处重写过一份类似的裁剪逻辑，
 # 结果和策略漂移、差点删掉续跑要用的检查点（见 AGENTS.md §3）——
 # 同一个坑不踩第二次：格式只允许有一份实现。
-from episode_query import _parse_action  # noqa: E402
+from episode_query import _hand_at, _parse_action  # noqa: E402
 
 EVIDENCE_BLOCK = re.compile(r"```pvz-evidence[ \t]*\n(.*?)```", re.S)
 FRONTMATTER = re.compile(r"\A---[ \t]*\n(.*?)\n---[ \t]*\n", re.S)
@@ -191,13 +191,18 @@ def _parse_point(raw: str, where: str) -> dict[str, str]:
             "before": before, "after": after, "result": result}
 
 
-def _load_actions(archive: Path) -> list:
-    """读存档，返回每个决策点当时**真实做出**的动作（第 0 项是初始帧，动作为 null）。"""
+def _load_actions(archive: Path) -> tuple[list, list]:
+    """读存档，返回 (每个决策点当时**真实做出**的动作, 帧列表)。第 0 项是初始帧，动作为 null。
+
+    帧列表用来取那一步的手牌（`episode_query._hand_at`）：证据里写的是植物，存档里记的是卡槽号，
+    两者只能按当时的手牌对照（传送带关 deck 为空，换卡组的任务槽号不对应同一种植物）。
+    """
     from pvz_frame_store import frame_path, read_frames
-    frames = frame_path(archive)
-    if not frames.is_file():
+    path = frame_path(archive)
+    if not path.is_file():
         raise BadEvidence(f"{archive} 下没有 frames.jsonl 或 frames.npz")
-    return [frame.get("action") for frame in read_frames(frames)]
+    frames = list(read_frames(path))
+    return [frame.get("action") for frame in frames], frames
 
 
 def _norm(action) -> tuple | None:
@@ -313,7 +318,7 @@ def lint_skill(skill_dir: Path, check_archives: bool = True) -> tuple[list[str],
                 fails.append(f"决策 {p['decision']} 的存档不存在：{archive}")
                 continue
             try:
-                actions = _load_actions(archive)
+                actions, frames = _load_actions(archive)
             except BadEvidence as exc:
                 fails.append(str(exc))
                 continue
@@ -328,7 +333,10 @@ def lint_skill(skill_dir: Path, check_archives: bool = True) -> tuple[list[str],
                 fails.append(f"决策 {idx} 在存档里没有动作（初始帧），不能当反事实的靶子")
                 continue
             try:
-                claimed = _norm(_parse_action(p["before"]))
+                meta_path = archive / "meta.json"
+                deck = (json.loads(meta_path.read_text(encoding="utf-8")).get("task") or {}).get("deck") \
+                    if meta_path.is_file() else None
+                claimed = _norm(_parse_action(p["before"], _hand_at(frames, idx, deck)))
             except Exception:  # noqa: BLE001 —— 上面已经报过写法错，这里不重复
                 continue
             if claimed != _norm(actual):
@@ -362,7 +370,7 @@ def lint_skill(skill_dir: Path, check_archives: bool = True) -> tuple[list[str],
             fails.append(f"第 {i} 条 counterpoint 的存档不存在：{archive}")
             continue
         try:
-            actions = _load_actions(archive)
+            actions, _frames = _load_actions(archive)
         except BadEvidence as exc:
             fails.append(f"第 {i} 条 counterpoint：{exc}")
             continue

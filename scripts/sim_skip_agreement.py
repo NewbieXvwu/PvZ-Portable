@@ -21,8 +21,6 @@ Usage:
       --task-id night_l12_n1_eval --policy artifacts/fast_ppo/night_n1_full/model_iter100.pt
   python3 scripts/sim_skip_agreement.py search --mask 21 --seeds 6 --workers 3
   python3 scripts/sim_skip_agreement.py search --mask 0 --approx-samples 2 --seeds 6 --workers 3
-  python3 scripts/sim_skip_agreement.py search --mask 0 --cuda-rollouts --seeds 6 --workers 2
-        ^ the GPU arm: same candidates, same futures, same horizon, only the continuation engine differs.
 """
 from __future__ import annotations
 
@@ -57,28 +55,17 @@ def _init(args) -> None:
     from pvz_rollout_policy import load_student, export_student
     net = load_student(args.policy)
     _W.update(net=net, args=args, env=EventWaitEnv(args.resource_dir, executable=args.executable, headless=True))
-    if args.cpp_rollouts or args.base_cpp_rollouts:
-        import tempfile
-        _W["temporary"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-agreement-")
-        binary = Path(_W["temporary"].name) / "student.bin"
-        export_student(net, binary)
-        _W["env"].load_rollout_net(binary)
+    import tempfile
+    _W["temporary"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-agreement-")
+    binary = Path(_W["temporary"].name) / "student.bin"
+    export_student(net, binary)
+    _W["env"].load_rollout_net(binary)
     if args.mode == "search":
         import search_play
         from pvz_value_net import load_value_net
         search_play._W.update(fast=net, vnet=load_value_net(args.value), lean_rollouts=True, batch_waits=True)
         if args.static_value:
             search_play._W['static_vnet'] = load_value_net(args.static_value)
-        if args.cuda_rollouts:
-            # The GPU arm needs a place to drop the root it is about to continue (`env.cuda_dump` must run
-            # right after `env.restore`, because the income-window history lives in Python).
-            import tempfile
-            from pvz_cuda_rollout import CudaRolloutClient
-            temporary = tempfile.TemporaryDirectory(prefix="pvz-cuda-dump-")
-            _W["cuda_dump_tmp"] = temporary
-            search_play._W["cuda_dump_tmp"] = temporary
-            search_play._W["cuda_dump"] = str(Path(temporary.name) / "root.cudaroot")
-            _W["cuda_client"] = CudaRolloutClient(args.cuda_socket)
         if args.approx_static_value:
             _W['reference_static_vnet'] = search_play._W.get('static_vnet', search_play._W['vnet'])
             _W['approx_static_vnet'] = load_value_net(args.approx_static_value)
@@ -124,7 +111,7 @@ def _play_game(job: tuple[int, int, bool]) -> dict:
     mowers_start = mowers_left = ready_mowers(obs)
     planted = {}
     types = {}
-    if approximate and _W["args"].cpp_rollouts:
+    if approximate:
         obs = env.rollout(None, 0, sim_skip=mask, max_actions=_W["args"].max_actions)
         details = env._last_response
         env.set_sim_skip(0)
@@ -194,13 +181,9 @@ def _search_decisions(seed: int) -> list[dict]:
     dagger = random.Random(seed) if args.dagger_beta else None
     stream = (args.jsonl_dir / f"seed_{seed}.jsonl").open("x", buffering=1) if args.jsonl_dir else None
 
-    def run(decision_seed: int, mask: int, policy_action: dict, config, cpp=False,
-            cuda=False) -> tuple[dict, list, float, dict | None, dict]:
+    def run(decision_seed: int, mask: int, policy_action: dict, config) -> tuple[dict, list, float, dict | None, dict]:
         stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
         search_play._W["rollout_sim_skip"] = mask
-        search_play._W["cpp_rollouts"] = cpp
-        # The GPU arm swaps only the continuation engine: same candidates, same futures, same horizon.
-        search_play._W["cuda"] = _W["cuda_client"] if cuda else None
         if args.approx_static_value:
             search_play._W['static_vnet'] = _W['approx_static_vnet'] if config is approx_sargs else _W['reference_static_vnet']
         started = time.perf_counter()
@@ -208,7 +191,6 @@ def _search_decisions(seed: int) -> list[dict]:
             chosen = search_play._search(env, obs, policy_action, config, decision_seed, stats)
         finally:
             search_play._W["rollout_sim_skip"] = 0
-            search_play._W["cuda"] = None
         audit = {"student_candidates": config.student_candidates, "verify_samples": config.verify_samples,
                  "horizon": config.horizon, "rollout_mask": mask,
                  "student_candidates_added": stats.get("student_candidate_added", 0),
@@ -225,25 +207,21 @@ def _search_decisions(seed: int) -> list[dict]:
         if searches:
             last_search_tick = obs["tick"]
             decision_seed = seed * 10000 + decisions
-            lanes_before = _W["cuda_client"].lanes if args.cuda_rollouts else 0
-            runs = [(args.base_mask, sargs, args.base_cpp_rollouts, False),
-                    (args.mask, approx_sargs, args.cpp_rollouts, args.cuda_rollouts)]
-            runs.append((args.base_mask, sargs, args.base_cpp_rollouts, False))
+            runs = [(args.base_mask, sargs), (args.mask, approx_sargs), (args.base_mask, sargs)]
             order = [0, 1, 2] if args.label_noise else ([0, 1, 2] if len(rows) % 2 == 0 else [1, 0, 2])
             if args.label_noise:
                 rotation = len(rows) % 3
                 order = order[rotation:] + order[:rotation]
-                runs[1] = (args.base_mask, approx_sargs, args.base_cpp_rollouts, False)
+                runs[1] = (args.base_mask, approx_sargs)
             offsets = [0, 15_555_557 if args.label_noise else 0, 7_777_777]
             if args.label_noise:
                 for samples in args.verify_samples:
-                    runs.append((args.base_mask, ap.Namespace(**{**vars(sargs), "verify_samples": samples}),
-                                 args.base_cpp_rollouts, False))
+                    runs.append((args.base_mask, ap.Namespace(**{**vars(sargs), "verify_samples": samples})))
                     offsets.append(0)
                 order = list(range(len(runs)))
                 rotation = len(rows) % len(runs)
                 order = order[rotation:] + order[:rotation]
-            results = {index: run(decision_seed + offsets[index], runs[index][0], action, runs[index][1], runs[index][2], runs[index][3])
+            results = {index: run(decision_seed + offsets[index], runs[index][0], action, runs[index][1])
                        for index in order}
             exact, exact_totals, t_exact, _best = results[0][:4]
             approx, approx_totals, t_approx, _best = results[1][:4]
@@ -255,8 +233,7 @@ def _search_decisions(seed: int) -> list[dict]:
                              "other_totals": other_totals, "seconds_exact": round(t_exact, 3),
                              "seconds_approx": round(t_approx, 3),
                              "teacher_audit": {"reference": results[0][4], "approximate": results[1][4],
-                                               "other_futures": results[2][4]},
-                             "cuda_lanes": (_W["cuda_client"].lanes - lanes_before) if args.cuda_rollouts else 0})
+                                               "other_futures": results[2][4]}})
                 if args.label_noise:
                     rows[-1] = {"seed": seed, "decision": decisions, "tick": obs["tick"], "wave": obs["wave"],
                                 "student": action, "margin": args.margin,
@@ -342,9 +319,6 @@ def summarize_search(rows: list[dict], mask: int) -> dict:
     t_approx = sum(r["seconds_approx"] for r in rows)
     return {
         "mask": mask, "searches": n,
-        # How many of those searches the GPU arm actually ran on the GPU (a root the shared core does not
-        # cover falls back to the C++ engine, which would silently raise the agreement).
-        "gpu_covered_searches": sum(1 for r in rows if r.get("cuda_lanes")),
         "approx_agrees_with_exact": round(sum(key(r["exact"]) == key(r["approx"]) for r in rows) / n, 4),
         "noise_floor_exact_vs_other_futures": round(
             sum(key(r["exact"]) == key(r["exact_other_futures"]) for r in rows) / n, 4),
@@ -364,14 +338,6 @@ def main() -> None:
     p.add_argument("--mask", type=int, required=True)
     p.add_argument("--base-mask", type=int, default=0)
     p.add_argument("--base-halving", action="store_true", help="search mode: reference teacher uses halving")
-    p.add_argument("--base-cpp-rollouts", action="store_true", help="reference teacher also uses native rollouts")
-    p.add_argument("--cpp-rollouts", action="store_true", help="approximate arm uses native student rollouts")
-    p.add_argument("--cuda-rollouts", action="store_true",
-                   help="search mode: approximate arm continues on the GPU (build/rollout_cuda --serve)")
-    p.add_argument("--cuda-socket", help="an already-running GPU server; by default start one here")
-    p.add_argument("--cuda-binary", default=str(ROOT / "build/rollout_cuda"))
-    p.add_argument("--cuda-lanes", type=int, default=2048)
-    p.add_argument("--cuda-gather-ms", type=int, default=80)
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
     p.add_argument("--workers", type=int, default=3)
@@ -407,9 +373,6 @@ def main() -> None:
     args = p.parse_args()
     if args.student_candidates < 0 or args.search_verify_samples < 0:
         p.error("--student-candidates and --search-verify-samples must be nonnegative")
-    if args.cuda_rollouts:
-        if args.mode != "search":
-            p.error("--cuda-rollouts is a search-mode arm")
     if not 0 <= args.dagger_beta <= 1:
         p.error("--dagger-beta must be between 0 and 1")
     if args.label_noise and (args.mode != "search" or args.jsonl_dir is None):
@@ -425,58 +388,31 @@ def main() -> None:
     seeds = load_training_task(args.manifest, args.task_id)["seeds"][args.seed_offset: args.seed_offset + args.seeds]
     if len(seeds) != args.seeds:
         p.error("requested seed range exceeds the manifest")
-    cuda_keep = cuda_server = cuda_log = None
-    cuda_report = ""
-    if args.cuda_rollouts and not args.cuda_socket:
-        import tempfile
-        from pvz_cuda_rollout import serve_policy
-        cuda_keep = tempfile.TemporaryDirectory(prefix="pvz-cuda-agreement-")
-        cuda_log = Path(cuda_keep.name) / "cuda_server.log"
-        with cuda_log.open("w+") as handle:
-            cuda_server, args.cuda_socket = serve_policy(args.cuda_binary, args.policy, cuda_keep.name,
-                                                         lanes=args.cuda_lanes,
-                                                         gather_ms=args.cuda_gather_ms,
-                                                         start_timeout_ms=600000, log=handle)
-    try:
-        with mp.get_context("spawn").Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
-            if args.mode == "games":
-                jobs = [(s, m, approximate) for s in seeds for m, approximate in ((args.base_mask, False), (args.mask, True))]
-                results = list(pool.imap_unordered(_play_game, jobs))
-                summary = summarize_games(results, args.mask)
+    with mp.get_context("spawn").Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
+        if args.mode == "games":
+            jobs = [(s, m, approximate) for s in seeds for m, approximate in ((args.base_mask, False), (args.mask, True))]
+            results = list(pool.imap_unordered(_play_game, jobs))
+            summary = summarize_games(results, args.mask)
+        else:
+            results = []
+            completed = 0
+            for rows in pool.imap_unordered(_search_decisions, seeds):
+                results.extend(rows)
+                completed += 1
+                partial = summarize_search(results, args.mask) if results else {"searches": 0}
+                print(json.dumps({"completed_seeds": completed, "total_seeds": len(seeds),
+                                  "partial": partial}), flush=True)
+                if args.out:
+                    args.out.parent.mkdir(parents=True, exist_ok=True)
+                    args.out.with_suffix(".partial.json").write_text(json.dumps(
+                        {"completed_seeds": completed, "total_seeds": len(seeds),
+                         "summary": partial, "results": results}) + "\n")
+            if args.label_noise:
+                from label_noise import read_rows, summarize
+                summary = summarize(read_rows(sorted(args.jsonl_dir.glob("seed_*.jsonl"))))
             else:
-                results = []
-                completed = 0
-                for rows in pool.imap_unordered(_search_decisions, seeds):
-                    results.extend(rows)
-                    completed += 1
-                    partial = summarize_search(results, args.mask) if results else {"searches": 0}
-                    print(json.dumps({"completed_seeds": completed, "total_seeds": len(seeds),
-                                      "partial": partial}), flush=True)
-                    if args.out:
-                        args.out.parent.mkdir(parents=True, exist_ok=True)
-                        args.out.with_suffix(".partial.json").write_text(json.dumps(
-                            {"completed_seeds": completed, "total_seeds": len(seeds),
-                             "summary": partial, "results": results}) + "\n")
-                if args.label_noise:
-                    from label_noise import read_rows, summarize
-                    summary = summarize(read_rows(sorted(args.jsonl_dir.glob("seed_*.jsonl"))))
-                else:
-                    summary = summarize_search(results, args.mask)
-    finally:
-        if cuda_server is not None:
-            import subprocess
-            try:
-                # Closing the workers' sockets is what shuts the server down; a server that outlives the
-                # measurement would hold its VRAM away from the formal experiments.
-                cuda_server.wait(timeout=30)
-            except subprocess.TimeoutExpired:
-                cuda_server.terminate()
-            cuda_server.stdout.close()
-            cuda_report = cuda_log.read_text(errors="replace").strip()
-            cuda_keep.cleanup()
+                summary = summarize_search(results, args.mask)
     summary.update(task_id=args.task_id, policy=str(args.policy), approx_per_card=args.approx_per_card,
-                   cpp_rollouts=args.cpp_rollouts, base_cpp_rollouts=args.base_cpp_rollouts,
-                   cuda_rollouts=args.cuda_rollouts, cuda_server=cuda_report,
                    base_halving=args.base_halving, static_value=args.static_value, base_mask=args.base_mask,
                    approx_static_value=args.approx_static_value,
                    approx_halving=False if args.label_noise else args.approx_halving or args.base_halving,
@@ -487,8 +423,6 @@ def main() -> None:
                    margin=args.margin, dagger_beta=args.dagger_beta, label_noise=args.label_noise,
                    high_samples=args.high_samples, horizon=args.horizon, seed_offset=args.seed_offset,
                    workers=args.workers, seeds=seeds, complete=True,
-                   cuda_binary_sha256=(hashlib.sha256(Path(args.cuda_binary).read_bytes()).hexdigest()
-                                       if args.cuda_rollouts else None),
                    policy_sha256=hashlib.sha256(Path(args.policy).read_bytes()).hexdigest(),
                    value_sha256=hashlib.sha256(Path(args.value).read_bytes()).hexdigest(),
                    executable_sha256=hashlib.sha256(Path(args.executable).read_bytes()).hexdigest()[:16])

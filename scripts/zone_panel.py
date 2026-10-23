@@ -13,7 +13,7 @@
 清单和报告里标注语义）。卡组核对（AGENTS §8）在 `check_decks` 里做：地形覆盖、
 升级植物所有权、长度与去重；不合法直接报错，不会写进清单。
 
-用法见薄包装 `scripts/make_night_panel.py` / `scripts/make_pool_panel.py`。
+用法见薄包装 `scripts/make_pool_panel.py`（task21 的夜间面板早于本核心，仍保留原实现）。
 """
 from __future__ import annotations
 

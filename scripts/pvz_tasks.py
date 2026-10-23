@@ -115,16 +115,32 @@ def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
     additions = sorted(set(pool) - set(base))
     if len(additions) < max(swaps):
         raise ValueError('not enough new eligible plants for the requested swaps')
+    # task31: cards measured to be structurally necessary (engine-agnostic, data-driven table).
+    # A kept card's slot is never a replacement target; everything else is unchanged.
+    keep = tuple(sorted(set(spec.get('keep_plants', []))))
+    if any(card not in base for card in keep):
+        raise ValueError('keep_plants must be cards of the base deck')
+    replaceable = [slot for slot, card in enumerate(base) if card not in keep]
+    if len(replaceable) < max(swaps):
+        raise ValueError('not enough replaceable slots after keep_plants')
     excluded = {tuple(sorted(deck)) for deck in spec.get('excluded_decks', [])}
+    # task28: whole-deck OnStartButton warnings (no sun producer, pool without an aquatic plant,
+    # roof without a flower pot, ...).  The list is produced by the engine query
+    # PvZEnv.deck_warnings over every deck this perturbation can generate; nothing is re-derived here.
+    warned = {tuple(sorted(deck)) for deck in spec.get('engine_warned_decks', [])}
+    if spec.get('require_no_warnings') and 'engine_warned_decks' not in spec:
+        raise ValueError('require_no_warnings needs the engine_warned_decks table')
     rng = random.Random(int(seed))
     for _ in range(4096):
         n = rng.choice(swaps)
-        slots = rng.sample(range(len(base)), n)
+        slots = rng.sample(replaceable, n)
         new = rng.sample(additions, n)
         deck = list(base)
         for slot, plant in zip(slots, new):
             deck[slot] = plant
         if not terrain_covered(task['level'], deck) or tuple(sorted(deck)) in excluded:
+            continue
+        if tuple(sorted(deck)) in warned:
             continue
         if any(warnings.get(plant, 1) for plant in deck):
             continue

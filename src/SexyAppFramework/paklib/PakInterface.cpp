@@ -24,6 +24,10 @@
 
 #include <algorithm>
 #include <filesystem>
+#if !defined(_WIN32)
+#include <sys/mman.h>
+#include <unistd.h>
+#endif
 #include "Common.h"
 #include "PakInterface.h"
 #include "fcaseopen/fcaseopen.h"
@@ -42,6 +46,77 @@ PakInterface* gPakInterface = new PakInterface();
 PakInterface::PakInterface()
 {
 }
+
+#ifndef LOW_MEMORY
+// The pak is a read-only ~45 MB blob that every worker needs and none of them writes: map it instead of
+// reading a private copy, and decode the XOR on the way out. The pages the loader never touches (most of
+// the image data, now that headless decodes sizes only) stay on disk and are shared by every process.
+static bool OpenPakStorage(const std::string& theFileName, void** theData, size_t* theSize, bool* isMapped)
+{
+	FILE* aFileHandle = fcaseopen(theFileName.c_str(), "rb");
+	if (aFileHandle == nullptr)
+		return false;
+
+	fseek(aFileHandle, 0, SEEK_END);
+	long aLength = ftell(aFileHandle);
+	fseek(aFileHandle, 0, SEEK_SET);
+	if (aLength <= 0)
+	{
+		fclose(aFileHandle);
+		return false;
+	}
+
+#if !defined(_WIN32)
+	if (void* aMapping = mmap(nullptr, static_cast<size_t>(aLength), PROT_READ, MAP_PRIVATE, fileno(aFileHandle), 0);
+		aMapping != MAP_FAILED)
+	{
+		fclose(aFileHandle);
+		*theData = aMapping;
+		*theSize = static_cast<size_t>(aLength);
+		*isMapped = true;
+		return true;
+	}
+#endif
+
+	void* aCopy = malloc(static_cast<size_t>(aLength));
+	bool aRead = aCopy != nullptr && fread(aCopy, 1, static_cast<size_t>(aLength), aFileHandle) == static_cast<size_t>(aLength);
+	fclose(aFileHandle);
+	if (!aRead)
+	{
+		free(aCopy);
+		return false;
+	}
+
+	*theData = aCopy;
+	*theSize = static_cast<size_t>(aLength);
+	*isMapped = false;
+	return true;
+}
+
+PakCollection::~PakCollection()
+{
+#if !defined(_WIN32)
+	if (mMapped)
+	{
+		munmap(mDataPtr, mSize);
+		return;
+	}
+#endif
+	free(mDataPtr);
+}
+
+size_t PakCollection::ReadAt(void* thePtr, int theOffset, int theSize)
+{
+	if (theOffset < 0 || theSize <= 0 || static_cast<size_t>(theOffset) >= mSize)
+		return 0;
+
+	size_t aSize = std::min(static_cast<size_t>(theSize), mSize - static_cast<size_t>(theOffset));
+	memcpy(thePtr, static_cast<uint8_t*>(mDataPtr) + theOffset, aSize);
+	for (auto& aByte : std::span{static_cast<uint8_t*>(thePtr), aSize})
+		aByte ^= 0xF7;
+	return aSize;
+}
+#endif
 
 PakInterface::~PakInterface()
 {
@@ -84,6 +159,7 @@ std::string PakInterface::NormalizePakPath(std::string_view theFileName)
 
 bool PakInterface::AddPakFile(const std::string& theFileName)
 {
+#ifdef LOW_MEMORY
 	FILE *aFileHandle = fcaseopen(theFileName.c_str(), "rb");
 	if (!aFileHandle)
 		return false;
@@ -92,25 +168,17 @@ bool PakInterface::AddPakFile(const std::string& theFileName)
 	size_t aFileSize = ftell(aFileHandle);
 	fseek(aFileHandle, 0, SEEK_SET);
 
-#ifdef LOW_MEMORY
 	mPakCollectionList.emplace_back(aFileHandle);
 #else
-	mPakCollectionList.emplace_back(aFileSize);
+	void* aData = nullptr;
+	size_t aFileSize = 0;
+	bool aMapped = false;
+	if (!OpenPakStorage(theFileName, &aData, &aFileSize, &aMapped))
+		return false;
+
+	mPakCollectionList.emplace_back(aData, aFileSize, aMapped);
 #endif
 	PakCollection* aPakCollection = &mPakCollectionList.back();
-
-#ifndef LOW_MEMORY
-	if (fread(aPakCollection->mDataPtr, 1, aFileSize, aFileHandle) != aFileSize)
-	{
-		fclose(aFileHandle);
-		return false;
-	}
-	fclose(aFileHandle);
-
-	auto *aDataPtr = static_cast<uint8_t *>(aPakCollection->mDataPtr);
-	for (size_t i = 0; i < aFileSize; i++)
-		*aDataPtr++ ^= 0xF7;
-#endif
 
 	std::string aPakKey = NormalizePakPath(theFileName);
 	auto aEmplaceResult = mPakRecordMap.emplace(aPakKey, PakRecord());
@@ -335,10 +403,9 @@ static size_t ReadRecordBytes(PFILE* theFile, void* thePtr, int theSize)
 #else
 	int aSizeBytes = std::min(theSize, theFile->mRecord->mSize - theFile->mPos);
 
-	uchar* src = (uchar*) theFile->mRecord->mCollection->mDataPtr + theFile->mRecord->mStartPos + theFile->mPos;
-	memcpy(thePtr, src, aSizeBytes);
-	theFile->mPos += aSizeBytes;
-	return aSizeBytes;
+	size_t aRead = theFile->mRecord->mCollection->ReadAt(thePtr, theFile->mRecord->mStartPos + theFile->mPos, aSizeBytes);
+	theFile->mPos += static_cast<int>(aRead);
+	return aRead;
 #endif
 }
 

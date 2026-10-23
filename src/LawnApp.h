@@ -258,6 +258,8 @@ public:
 	std::string					EnvironmentObservation(bool privileged = false);
 	std::string					EnvironmentLeanObservation();
 	std::string                     EnvironmentDeckOptions();
+	std::string                     EnvironmentDeckWarnings(const std::vector<int>& theDeck);
+	std::string                     EnvironmentDeckPool();
 	bool						EnvironmentAnyLegalPlant();
 	void							Start() override;
 	Dialog*							NewDialog(int theDialogId, bool isModal, const std::string& theDialogHeader, const std::string& theDialogLines, const std::string& theDialogFooter, int theButtonMode) override;

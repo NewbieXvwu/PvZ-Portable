@@ -1,9 +1,5 @@
 """Identity statistics stay valid across reordered decks and moving conveyor slots."""
 import unittest
-import tempfile
-import json
-import sys
-from pathlib import Path
 from pvz_episode_stats import planted_by_type, planted_slots, plant_type_before_action
 
 
@@ -58,23 +54,6 @@ class EpisodeStatsTest(unittest.TestCase):
         self.assertEqual(plant_type_before_action(before,0),11)
         self.assertEqual(plant_type_before_action(after,0),9)
         self.assertEqual(plant_type_before_action({'packets':[{'index':0,'type':48,'imitater_type':3}]},0),3)
-
-    def test_cuda_legacy_slot_abi_is_translated_only_with_real_context(self):
-        sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-        from cuda_leaf_compare import RECORD,FIELDS,read_gpu,read_cpu
-        with tempfile.TemporaryDirectory() as temporary:
-            root=Path(temporary);gpu=root/'gpu.bin'
-            gpu.write_bytes(RECORD.pack(*([0]*len(FIELDS)+[0,0,0,0,0,0,0,0,4,0]+[0]*6)))
-            self.assertIsNone(read_gpu(gpu)[0]['planted_types'])
-            self.assertEqual(read_gpu(gpu,{'level':14,'deck':[0,1,2,3,4,5,7,8,9]})[0]['planted_types'],{'9':4})
-            self.assertIsNone(read_gpu(gpu,{'level':20,'deck':[0,1,2,3,4,5,7,8,9]})[0]['planted_types'])
-            cpu=root/'cpu.jsonl'
-            record={key:0 for key in ('root','decisions','net_calls','ticks','end_tick','result','sun','wave',
-                                      'zombies','plants','plants_planted','mowers_left','future')}
-            record.update(planted_by_type=[0,0,0,0,0,0,0,0,4,0],row_min_zombie_x=[0]*6)
-            cpu.write_text(json.dumps(record)+'\n')
-            self.assertEqual(read_cpu(cpu,{'level':14,'deck':[0,1,2,3,4,5,7,8,9]})[0]['planted_types'],{'9':4})
-            self.assertIsNone(read_cpu(cpu,{'level':20,'deck':[0,1,2,3,4,5,7,8,9]})[0]['planted_types'])
 
 
 if __name__=='__main__':unittest.main()

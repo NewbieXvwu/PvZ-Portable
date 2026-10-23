@@ -4,15 +4,9 @@ project(pvz-portable LANGUAGES C CXX)
 
 # One game on every machine: arm64 clang fuses a*b+c into a single FMA by default and x86-64 builds have no FMA,
 # so Mac archives drifted from the desktop's (2026-10-19: a pole vaulter at x 599.843 vs 599.882, frame 413).
-# Off on Mac, a no-op for the desktop's GCC; the CUDA service keeps nvcc's own settings.
+# Off on Mac, a no-op for the desktop's GCC.
 if(NOT MSVC)
 	add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-ffp-contract=off>)
-endif()
-
-# Opt-in: the normal portable build does not inspect or require a CUDA installation.
-option(PVZ_CUDA_ROLLOUT "Build the optional CUDA continuation service" OFF)
-if(PVZ_CUDA_ROLLOUT)
-	include(CMake/CudaRollout.cmake)
 endif()
 
 include(CMake/ProjectVersion.cmake)
@@ -202,7 +196,6 @@ target_include_directories(pvz-portable PRIVATE
 	${PLAT_INCLUDES}
 	${PROJECT_BINARY_DIR}
 	${PROJECT_SOURCE_DIR}/src
-	${PROJECT_SOURCE_DIR}/cuda
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework/sound/SDL-Mixer-X/include
 	${SDL2_INCLUDE_DIRS}

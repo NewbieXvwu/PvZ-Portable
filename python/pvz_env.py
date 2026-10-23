@@ -16,6 +16,7 @@ from typing import Any, Iterator, Sequence
 
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
+    OOM_SCORE_WORKER,
     REPLAY_FORMAT_VERSION,
     canonical_digest,
     git_metadata,
@@ -202,6 +203,24 @@ def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]],
                                 imitater_owned=imitater_owned, first_aid_owned=bool(first_aid_owned))
 
 
+def _oom_score_engine() -> None:
+    """preexec_fn for the simulator: under memory pressure the engine dies before its worker's driver.
+
+    Runs between fork and exec, so it avoids Python's text-I/O machinery and writes the
+    number with plain os.open/os.write (the parent may hold threads and their locks).
+    """
+    try:
+        descriptor = os.open("/proc/self/oom_score_adj", os.O_WRONLY)
+    except OSError:
+        return
+    try:
+        os.write(descriptor, f"{OOM_SCORE_WORKER}\n".encode())
+    except OSError:
+        pass
+    finally:
+        os.close(descriptor)
+
+
 class PvZEnv:
     def __init__(
         self,
@@ -310,7 +329,10 @@ class PvZEnv:
             errors="replace",
             bufsize=1,
             # one simulator per worker process: a threaded BLAS would oversubscribe the cores
-            env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1")},
+            # PVZ_NO_POPUP: report fatal errors on stderr instead of a modal dialog that would hang the run
+            env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1"), "PVZ_NO_POPUP": "1"},
+            # task34: never let a full WSL take the simulator's WSL access path down with it
+            preexec_fn=_oom_score_engine if os.name == "posix" else None,
         )
         ready = self._read_message()
         self._rollout_version = ready.get("rollout_version", 0)
@@ -650,6 +672,7 @@ class PvZEnv:
             raise ValueError("rollout network path must not contain newlines")
         with open(filename, "rb") as stream:
             version = stream.read(8)
+            # LEGACY(pvzrn-versions): 002-005 are older exports; 006 is the current one.
             if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004", b"PVZRN005", b"PVZRN006"):
                 raise ValueError("load_rollout_net requires an exported C++ network")
             observation = int.from_bytes(stream.read(16)[12:16], "little") if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") else 1
@@ -668,6 +691,29 @@ class PvZEnv:
         result = self._command('DECK_OPTIONS')
         if not result.get('ok'):
             raise RuntimeError('DECK_OPTIONS requires a reset board and an identity-capable simulator')
+        return result
+
+    def deck_warnings(self, deck) -> dict:
+        """Whole-deck warnings from SeedChooserScreen::OnStartButton for an arbitrary deck.
+
+        The engine runs its own CheckDeckWarnings on the reset board, so level/mode facts
+        (pool, roof, fog, zombie roster, unlocks) come from the game, not from Python.
+        """
+        cards = [int(card) for card in deck]
+        if not 0 <= len(cards) <= 10:
+            raise ValueError('deck must have 0..10 cards')
+        if any(card < 0 or card >= 64 for card in cards):
+            raise ValueError('deck cards must be seed types in 0..63')
+        result = self._command(f'DECK_WARNINGS {len(cards)}' + ''.join(f' {card}' for card in cards))
+        if not result.get('ok'):
+            raise RuntimeError('DECK_WARNINGS requires a reset board and a rebuilt simulator')
+        return result
+
+    def deck_pool(self) -> dict:
+        """CrazyDavePickSeeds' candidate cards for the current level (engine query, no pick)."""
+        result = self._command('DECK_POOL')
+        if not result.get('ok'):
+            raise RuntimeError('DECK_POOL requires a reset board and a rebuilt simulator')
         return result
 
     def _student_options(self, student_history, trace_path) -> str:
@@ -764,32 +810,6 @@ class PvZEnv:
         self._annotate_observation(observation)
         self._adopt_tick(observation)
         return observation
-
-    def cuda_dump(self, path: str | os.PathLike[str], *, write_level: bool = True,
-                  student_history=None) -> dict[str, Any]:
-        """``CUDA_DUMP``: export the current board for the GPU rollout simulator.
-
-        The file is a tag-prefixed record stream (``cuda/CudaRollout.h``): with write_level the
-        record is rewritten, the file is truncated and a ``LevelInfo`` precedes the ``RootRecord``;
-        otherwise the record is appended, so one file holds a whole set of root positions.
-        Call it right after :meth:`restore`, whose snapshot also restores the sun income history
-        that the exported position's features need (the window lives here, not in the board).
-        """
-        if not self._reset_done:
-            raise RuntimeError("call reset() before cuda_dump()")
-        filename = str(Path(path).expanduser().resolve())
-        if any(char in filename for char in ('\n', '\r')):
-            raise ValueError("cuda dump path must not contain newlines")
-        quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
-        history_start = self._sun_history_start_tick or 0
-        history = list(self._sun_production_history)
-        samples = " ".join(f"{tick} {amount}" for tick, amount in history)
-        response = self._command(f"CUDA_DUMP {quoted} {1 if write_level else 0} {history_start} "
-                                 f"{len(history)} {samples}".rstrip()
-                                 + self._student_options(student_history, None))
-        if not response.get("ok"):
-            raise RuntimeError(f"simulator rejected CUDA_DUMP: {response}")
-        return response
 
     def branch_snapshot(self, snapshot_id: int, actions: list[dict[str, Any]], *,
                         retain_snapshots: bool = True) -> list[dict[str, Any]]:

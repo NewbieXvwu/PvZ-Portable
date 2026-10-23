@@ -75,11 +75,16 @@ public:
 		return aRead;
 	}
 #else
-	void*						mDataPtr;				//+0x8: raw bytes of the whole pak
+	void*						mDataPtr;				//+0x8: raw (still XOR'd) bytes of the whole pak
+	size_t						mSize;
+	bool						mMapped;				// the bytes are a read-only file mapping, not a private copy
 
-	explicit PakCollection(size_t size) { mDataPtr = malloc(size); }
+	PakCollection(void* theData, size_t theSize, bool isMapped)
+		: mDataPtr(theData), mSize(theSize), mMapped(isMapped) {}
 
-	~PakCollection() { free(mDataPtr); }
+	~PakCollection();
+
+	size_t ReadAt(void* thePtr, int theOffset, int theSize);
 #endif
 };
 

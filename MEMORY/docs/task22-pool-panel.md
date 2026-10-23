@@ -24,7 +24,7 @@
    老师 = identity 学生 + 搜索，参数照 `~/pvz-logs/queue101.sh` 里的 `run()`（但老师基线用 `--dagger-beta 1`：搜索实际执行；`--rollout-policy` 用
    `~/PvZ-search/artifacts/student/identity_dw3_s1/model.pt`，CPU，不开 CUDA）。
    Python `~/.venvs/ml/bin/python3`，资源目录 `~/.cache/pvz-research-resources`。
-4. DESIGN 在 §14.9 之后登记新任务族（§14.10）。
+4. DESIGN 在 §14.9 之后登记新任务族（§14.15）。
 
 ## 交付
 - `MEMORY/docs/pool-panel.md`：面板定义、特殊关、三套卡组 × 5 关的老师 / 学生表，写清哪套卡组老师赢得最多、学生离老师多远。
@@ -41,11 +41,11 @@
 
 - 2026-10-22 第二步（学生）：identity 学生 64 局/关 × 5 关（L21–24、26）× 3 套卡组 = 960 局。对照 0/320、p9 18/320（5.6%）、p9k 19/320（5.9%）；平均到达波数 11.0–11.5（对照）对 13.1–16.6（p9/p9k）。报告 `MEMORY/docs/pool-panel.md` 已写面板定义、特殊关、卡组核对与学生表（老师表当时未跑完，第四步已补）。
 
-- 2026-10-22 第三步（登记）：DESIGN §14.11 登记三个任务族（`pool_l*_eval` / `_p9` / `_p9k`），写清地形、种子、特殊关（3-5 Little Trouble 不收、3-10 mini-boss 传送带收）、卡组核对与“老师用 identity 推演”。
+- 2026-10-22 第三步（登记）：DESIGN §14.15 登记三个任务族（`pool_l*_eval` / `_p9` / `_p9k`），写清地形、种子、特殊关（3-5 Little Trouble 不收、3-10 mini-boss 传送带收）、卡组核对与“老师用 identity 推演”。
 
 - 2026-10-22 第四步（老师）：identity 推演 + 搜索（`--dagger-beta 1`，`--workers 2`）16 局/关 × 5 关 × 3 套 = 240 局。对照 13/80（16.3%）、p9 23/80（28.8%）、p9k 25/80（31.3%）。**p9k 最多但 p9/p9k 在噪声内**（差 2 局，区间大幅重叠），两套 p9 系都明显好于对照；学生 5.6–5.9% 对老师 29–31%，差约 23–25pp。40 波的 L24 是师生共同天花板（老师 0/1/4，学生 0/0/2）。报告 `MEMORY/docs/pool-panel.md` 已完成（§4.2 老师表、§4.3 结论）。
 
-- 2026-10-22 第二步（主控追加，定 p9k）：`zone_panel.Family` 加 `exclude_levels`（训练族可按族排关）；`make_pool_panel.py --combined` 现在写 **35 个任务** = eval / eval_p9 / eval_p9k 各 9 关 + `pool_lN_train_p9k` 8 关（L21–24、26–29；L30 mini-boss 与 L25 不收），训练种子 `2000000+(N−21)·10000` 起每关 8192（2000000–2088191）。自查：训练段与评估段交集 0、任务内无重复、与 1500000/1600000/1800000–1878191/1900000–1998191 各段不重叠；夜间 `--combined` 回归仍逐字节相同。清单已拷到 `~/PvZ-search/artifacts/stage4/pool_panel.json`（cmp 相同）。DESIGN §14.11 已登记 p9k 决定与训练族，报告加 §7。
+- 2026-10-22 第二步（主控追加，定 p9k）：`zone_panel.Family` 加 `exclude_levels`（训练族可按族排关）；`make_pool_panel.py --combined` 现在写 **35 个任务** = eval / eval_p9 / eval_p9k 各 9 关 + `pool_lN_train_p9k` 8 关（L21–24、26–29；L30 mini-boss 与 L25 不收），训练种子 `2000000+(N−21)·10000` 起每关 8192（2000000–2088191）。自查：训练段与评估段交集 0、任务内无重复、与 1500000/1600000/1800000–1878191/1900000–1998191 各段不重叠；夜间 `--combined` 回归仍逐字节相同。清单已拷到 `~/PvZ-search/artifacts/stage4/pool_panel.json`（cmp 相同）。DESIGN §14.15 已登记 p9k 决定与训练族，报告加 §7。
 
 ## 问题
 
@@ -62,6 +62,6 @@
 老师 control 13/80、p9 23/80、p9k 25/80。泳池对老师也难，主因多半是老师的推演学生没见过泳池；夜间的经验是一轮采集 + 训练后学生就超过了
 当时量到的老师水平（老师随学生一起变强）。所以不再比卡组，**泳池卡组定为 p9k `[0,1,2,3,4,5,7,16,19]`**，直接开始采集。
 1. 生成器加训练任务族 `pool_lN_train_p9k`（普通泳池关，特殊关照你第一步的结论处理），字段同 `pool_lN_eval_p9k`，
-   训练种子 `2000000 + (N−21)·10000` 起每关 8192 个（生成时自查与所有已有段不重叠），DESIGN §14.11 登记。
+   训练种子 `2000000 + (N−21)·10000` 起每关 8192 个（生成时自查与所有已有段不重叠），DESIGN §14.15 登记。
 2. 重新生成泳池清单（含 eval / eval_p9 / eval_p9k / train_p9k），**另拷一份到 `~/PvZ-search/artifacts/stage4/pool_panel.json`**（主控的采集队列读这份）。
 3. 提交、`git push origin pool`，在“结果”记一行，然后停下。
