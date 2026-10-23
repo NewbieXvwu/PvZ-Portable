@@ -38,4 +38,6 @@
 
 ## 结果
 
+- 2026-10-23，步骤1：读完 task23/task27 导入器和两份历史报告及 journal；主检出以 `seed_*/<label>_fast_search/{frames.npz,meta.json}` 落地，HF LFS SHA256 对账后复用，独占写入且同名异内容拒绝覆盖；旧 z 轮次的冻结选择继续保留。`df -h /mnt/c` 可用约 28 GB（高于 15 GB）。下一步统一入口并迁移调用方，不动历史配方。
+
 ## 问题
