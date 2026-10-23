@@ -41,7 +41,9 @@ def run(args, executable, student_binary, value_binary, value):
                 assert not mismatches and len(snapshots) == len(entry['decisions'])
                 for index, snapshot in snapshots.items():
                     roots += 1
-                    start = env.restore(snapshot)['tick']
+                    root_observation = env.restore(snapshot)
+                    start = root_observation['tick']
+                    context = torch.from_numpy(observation_context(root_observation))
                     for seed in range(3):
                         leaf = env.rollout(None, start + 2500, sim_skip=61, snapshot_id=snapshot, seed=seed)
                         full_digest = bench._rollout_digest(leaf, env._last_response)
@@ -52,7 +54,7 @@ def run(args, executable, student_binary, value_binary, value):
                         else:
                             board, scalars = encode_frame(bench._frame(leaf), value.encoder_version)
                             if value.context:
-                                scalars = torch.cat([scalars, torch.from_numpy(observation_context(leaf))])
+                                scalars = torch.cat([scalars, context])
                             with torch.inference_mode():
                                 expected = torch.sigmoid(value(board[None], scalars[None])).item()
                         scored = env.rollout(None, start + 2500, sim_skip=61, snapshot_id=snapshot,

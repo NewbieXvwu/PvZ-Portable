@@ -17,7 +17,8 @@
   "post_adapter_unit_tests": 19,
   "pending": [
     "three tasks x32 fresh before/after teacher gate plus needed shadows and comparison",
-    "finish redeployed engine replay, paired throughput, same-v4 leaf gates",
     "final A delivery audit and summary"
-  ]
+  ],
+  "deploy_gate_status": "passed",
+  "teacher_gate_status": "running before, two workers"
 }

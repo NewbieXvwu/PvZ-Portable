@@ -63,6 +63,8 @@
 
 - [A.5] 新after首局L7×1.5完整获胜，1098决策/219搜索，worker/engine CPU=6.209/104.330秒；root/future/动作序列与vcpp正式after首局全同。适配后门禁/基准19项单测通过。独立后台runner PID167609等待部署门禁PID165726完成后，自动串行before→after→shadow→compare，每阶段最多2游戏；三任务各32局两臂全新证据尚未完成，不作通过结论。状态与待办见task50-a-progress.json。
 
+- [A.6] 新deploy3部署门禁全过：四存档 **166138帧/引擎、0差异**；64 root×3完整叶状态/逻辑统计五轮全同；同一v4/编码2权重下Release与PGO的192个完整叶/叶值摘要逐位相同，Python概率最大误差1.197e-7。配对CPU吞吐比中位1.01064×（1.00000–1.07343×），无退化；见task50-a-deploy-gates.json。正式老师门禁已自动转before、2 worker；三任务完整32局一致率/CPU结论仍待完成。
+
 主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
 
 ```bash
