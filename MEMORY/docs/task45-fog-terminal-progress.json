@@ -1577,6 +1577,148 @@
    "cpu_seconds_metered": 43132.868698,
    "selection_sha256": "ed62868a21f31dd357cc0790c9242a41197794a1305b1ca7939d4749de8bcff8",
    "note": "off-panel pilot excluded; only exact full candidate x3 future cohorts; no independent confirmation claim"
+  },
+  "interim-l34-human": {
+   "status": "cohort_complete_global_incomplete",
+   "level": 34,
+   "observation": "human",
+   "seed_count": 4,
+   "overall": {
+    "roots": 8,
+    "episodes": 4,
+    "base_seed_units": 4,
+    "candidates": 462,
+    "labels": 1386,
+    "terminal_wins": 0,
+    "separable_roots": {
+     "won": 0,
+     "wave": 7,
+     "tick": 8
+    },
+    "available_root_types": {
+     "16": 7,
+     "9": 7,
+     "3": 1,
+     "4": 2
+    },
+    "v4_favourite_types": {
+     "9": 6,
+     "3": 1,
+     "None": 1
+    },
+    "wave_favourite_types": {
+     "9": 5,
+     "3": 1,
+     "4": 2
+    },
+    "metrics": {
+     "won": {
+      "v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_strict": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_nonterminal": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "teacher_path_v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      }
+     },
+     "wave": {
+      "v4": {
+       "pairs": 2699,
+       "accuracy": 0.62726935902186,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.45032751091703055,
+        0.7814029363784666
+       ]
+      },
+      "v4_strict": {
+       "pairs": 10370,
+       "accuracy": 0.572854387656702,
+       "value_ties": 5,
+       "cluster_bootstrap_95": [
+        0.5088204038257174,
+        0.6352959277874654
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 2699,
+       "accuracy": 0.62726935902186,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.45032751091703055,
+        0.7814029363784666
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 2699,
+       "accuracy": 0.6268988514264543,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.45032751091703055,
+        0.7801794453507341
+       ]
+      }
+     },
+     "tick": {
+      "v4": {
+       "pairs": 9938,
+       "accuracy": 0.5789394244314752,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.45167705157099297,
+        0.674061433447099
+       ]
+      },
+      "v4_strict": {
+       "pairs": 13391,
+       "accuracy": 0.5641102232842954,
+       "value_ties": 6,
+       "cluster_bootstrap_95": [
+        0.4764959265848862,
+        0.6382534646852563
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 9938,
+       "accuracy": 0.5789394244314752,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.45167705157099297,
+        0.674061433447099
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 9938,
+       "accuracy": 0.5780338096196418,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.44955587962349197,
+        0.6732081911262798
+       ]
+      }
+     }
+    }
+   },
+   "selection_sha256": "ed62868a21f31dd357cc0790c9242a41197794a1305b1ca7939d4749de8bcff8",
+   "cpu_seconds_metered": 45196.985268,
+   "raw_report_sha256": "6bdd7769f7967e3b0e951e996fec0fce815788538455f1977cd2ca12a2f8ba22"
   }
  }
 }
