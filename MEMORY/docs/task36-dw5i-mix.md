@@ -64,6 +64,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，15 修正 pack_gate2 误挂外部进程：首次重启的 gate 用 `pgrep -f 'scripts/pack_training_rows.py' | head -1`，匹配到外部 cq pack（115381，组 84627）而非本分支 pack（127572）。日志显示只 attach、未 stop（av 13.8 GiB > 10 GiB）；已停 gate(127542)，模式收窄为 `/worktrees/dw5/scripts/pack_training_rows.py`，重启（pid 129627）后 attach 到 127572（组 127572）。外部 pack 仍为 R 状态，未被触碰。
 
+- 2026-10-23，16 A 打包完成并校验：22:51 生成 `artifacts/task27/training_frames/packs/e39ba7cbc076380a.npz`（7,530,006,217 B），包内 37 个成员、15,788,614 行（与预期一致）、56,784 个来源标签。最终组装窗口（22:42–22:51）暂停了 pack_gate2：父进程 RSS 峰值约 6.9 GB，采样到的 MemAvailable 最低 9.76 GiB（22:42，低于 10 GiB 地板约 0.25 GiB、26 s 内回升），随后维持 10–10.5 GiB。若不让它写完，SIGSTOP 会把已分配的 ~7 GB 冻结，而 cq 整库 pack 预计还要约 20 h，A 会整夜卡住 —— 权衡后选择让它写完并立即释放。当前 8.2 GiB 主要由 cq 的 16 个引擎 + cq pack 占用；train 步自带 `<10 GiB` 暂停门禁，内存回升后再开始训练。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
