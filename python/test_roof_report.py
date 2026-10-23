@@ -8,9 +8,18 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from roof_report import summarize
+from search_play import _final_zombies
 
 
 class RoofReportTest(unittest.TestCase):
+    def test_terminal_evidence_accepts_student_lean_and_teacher_full_boards(self):
+        common = dict(tick=9000, wave=6, sun=50, plants=[], packets=[], defenses=[], grid_items=[])
+        full = dict(common, zombies=[dict(row=1, type=2, x=-180, velocity_x=0.1,
+                    body_health=50, helm_health=100, shield_health=0, on_board=True, id=123)])
+        lean = dict(common, lean=1, zombies=[[1, 2, -180, 0.1, 150, 1, 0, 0, 0, 123]])
+        self.assertEqual(_final_zombies(full), _final_zombies(lean))
+        self.assertEqual(_final_zombies(lean), [dict(row=1, type=2, x=-180, health=150)])
+
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)

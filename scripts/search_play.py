@@ -560,6 +560,13 @@ def _frame_json(frame: dict) -> str:
     return json.dumps(frame, separators=(",", ":")) + "\n"
 
 
+def _final_zombies(obs: dict) -> list[dict]:
+    # ROLLOUT returns a lean board even when ordinary root observations are full.
+    from render_episode import _frame
+    return [dict(row=z[0], type=z[1], x=z[2], health=z[4])
+            for z in _frame(obs)['zombies'] if z[5]]
+
+
 def _play(job: dict) -> dict:
     args = job["args"]
     from collections import Counter
@@ -721,10 +728,7 @@ def _play(job: dict) -> dict:
             "wave_count": obs.get("wave_count"),
             # Public final-board evidence, including the row/type of a house breach.
             # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.
-            "final_zombies": [dict(row=z['row'], type=z['type'], x=z['x'],
-                                   health=z.get('health', sum(z.get(k, 0) for k in
-                                       ('body_health', 'helm_health', 'shield_health'))))
-                              for z in obs.get("zombies", []) if z.get("on_board")],
+            "final_zombies": _final_zombies(obs),
             "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
             "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],
