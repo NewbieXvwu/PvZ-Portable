@@ -5,7 +5,7 @@
 
 静态候选语义：从 root 恢复、执行动作、立即打分；种植和铲除推进 0 tick。静态收入使用根观测的 sun_income_rate，而非分支累计收入。叶子收入使用完整推演的 6000 tick 窗口（保留决策边界和终点裁剪）。
 
-已通过：四场景各256帧、v3/branch1/v4 logits <1e-5；1028帧动作重放；真实v3/v4叶值与完整状态。待验收：三任务各32局beta=1配对及各自噪声底线、总CPU≤基线102%、同工具耗时/RSS；连续三项收益<2%后停止。
+已通过：四场景各256帧的Python特征→C++前向、v3/branch1/v4 logits <1e-5；1028帧基线/新引擎动作重放；128个早期局面的Board编码；真实v3/v4叶值与完整状态。待验收：固定1024帧的直接Board编码/前向端到端重放；三任务各32局beta=1配对及各自噪声底线、总CPU≤基线102%、同工具耗时/RSS；连续三项收益<2%后停止。
 
 已实现独立 `EnvironmentValueNet`，未改 `EnvironmentRollout.cpp`，无共用数学工具需要协调。PVZVN001 头为 magic[8] + little-endian uint32 width / encoder_version / context_dim，参数按 ValueNet.state_dict 顺序 float32。上下文维度仅接受 0/35，拒绝坏头、截断、非有限数及尾随数据。
 
@@ -85,3 +85,5 @@ Python剩余开销原型（`scripts/bench_value_python.py`）：按现有pressur
 后两项假定缓存命中零成本，是样本耗时外推的乐观上限，不是整局A/B加速。原cProfile里整个ranked_plants也仅2.068s CPU（约0.95%总CPU），进一步支撑“不值得引入状态缓存”的判断。没有为小于2%的收益改动生产实现。等正式同工具数据回来，再核对三项停止条件。
 
 正式验收正在运行：忽略目录 `artifacts/task37/teacher32-recovery`，before阶段2个worker，按种子交错跑三任务，共96局。对应日志 `artifacts/task37/teacher32-recovery-before.log`。脚本完整参数以before-plan.json与任务工具为准；完成后同样参数跑 `--phase after`、`--phase shadow`（无轨迹分歧自动跳过影子游戏）、`--phase compare`。不要与其他引擎测试并行。所有结论仍以最终完整comparison.json为准。
+
+覆盖审计补项：已有真实帧前向工具把Python编码的特征文件交给C++，因此只证明网络前向；不能把早期128局面的Board oracle推及整局。新增 `scripts/check_value_board_replay.py`，读取同一份固定frame-oracle-sparse.json（四场景各8档案、每档32帧），只按档案元数据/初始手牌与动作重放，不使用现行deck规则。每个采样点先要求重放后的Python输入与档案输入逐位相同，再要求C++直接Board输出特征逐位相同、与Python批32参考的logit误差<1e-5。两种编码各1024帧；未完成时不写成功结果。3项档案语义测试通过（升级所有权、传送带空卡组、显式旧任务字段）；真实运行安排在before阶段全部退出之后，使用1个游戏进程，通过后接after/shadow/compare。当前尚未执行此补项。
