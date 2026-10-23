@@ -71,6 +71,8 @@ FAMILIES = (
     ('day_d7q', 'day_d7q', 'day_l{level}_train_d7q', DAY_D7Q_LEVELS, 'day'),
     ('night_n10p', 'night_n10p', 'night_l{level}_train_n10p', NIGHT_N10P_LEVELS, 'night'),
     ('night_n10q', 'night_n10q', 'night_l{level}_train_n10q', NIGHT_N10Q_LEVELS, 'night'),
+    ('fog_f8', 'fog', 'fog_l{level}_train_f8', (31, 32, 33, 34, 36, 37, 38, 39), 'fog'),
+    ('fog_f8p', 'fog', 'fog_l{level}_train_f8p', (31, 32, 33, 34, 36, 37, 38, 39), 'fog'),
 )
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
@@ -97,6 +99,7 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'day_d7q': overrides.get('day_d7q') or MAIN / 'artifacts/stage4/day_panel_d7q.json',
         'night_n10p': overrides.get('night_n10p') or MAIN / 'artifacts/stage4/night_panel_n10p.json',
         'night_n10q': overrides.get('night_n10q') or MAIN / 'artifacts/stage4/night_panel_n10q.json',
+        'fog': overrides.get('fog') or ROOT / 'artifacts/task45/fog_panel.json',
     }
 
 
@@ -213,6 +216,7 @@ def main() -> None:
     parser.add_argument('--day-d7q-manifest', type=Path)
     parser.add_argument('--night-n10p-manifest', type=Path)
     parser.add_argument('--night-n10q-manifest', type=Path)
+    parser.add_argument('--fog-manifest', type=Path)
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -220,7 +224,7 @@ def main() -> None:
     paths = source_paths({'day': args.day_manifest, 'day_orig': args.day_orig_manifest,
                           'night': args.night_manifest, 'pool': args.pool_manifest,
                           'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
-                          'night_n10q': args.night_n10q_manifest})
+                          'night_n10q': args.night_n10q_manifest, 'fog': args.fog_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests()

@@ -598,6 +598,10 @@ def main() -> None:
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
+        import shlex
+        for item in plan:
+            print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
+                  item['offset'], item['games'], item['label'])))
         # The pack command this controller would run at the end of the round: reviewable before
         # a round is spent, and the only place the recipe's row options become a real command.
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))

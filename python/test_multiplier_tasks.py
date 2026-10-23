@@ -41,6 +41,8 @@ class MultiplierTasksTest(unittest.TestCase):
                 self.sources[key][name] = source_task(
                     level, () if key.endswith('_orig') else (0, 1, 2, 3, 4, 5, 7),
                     perturb=perturb, conveyor=key.endswith('_orig'), tag='_' + key)
+                # Multiple families may share one source manifest (fog f8/f8p).
+                self.sources[key][name]['task_id'] = name
 
     def test_variant_ids_and_multipliers(self):
         tasks = build_variants(self.sources, seeds=64)
