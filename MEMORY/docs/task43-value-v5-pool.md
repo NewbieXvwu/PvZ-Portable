@@ -359,6 +359,10 @@
 
 同时要求完整64训练分片的 SHA、v2尺寸/有限性/种子/标签及计数、8验证种子的完整最佳检查点评分，以及原1312局A6上日/夜各区样本与模型SHA完整。只生成本轮 `evaluation/acceptance.json`，不跑游戏、不上传或改默认；任何证据缺失都拒绝输出成功文件。四项无需游戏的反例回归已通过，相关累计 **29 项**。当前老师采集仍用原进程继续，尚未重训/验收，不将此核对程序的测试当作实验通过。
 
+### 29. 稀疏扩量阶段 `bootstrap_gate_passed`
+
+{"approved_to_continue": true, "artifact_bytes": 2198080920, "cpu_seconds": 13113.115891999998, "effective_pairs": 271, "labels": 551, "mixed_groups": 46, "nonterminal_effective_pairs": 271, "nonterminal_labels": 489, "nonterminal_wins": 269, "projected_64_cpu_hours": 29.140257537777774, "root_groups": 96, "seeds": [2000068, 2000069, 2000070, 2000072, 2000073, 2000074, 2000076, 2000082], "status": "complete", "wins": 301}
+
 ## 问题
 
 ### 问题 3：本轮数据的 root 也来自学生轨迹，不只是续走为学生
