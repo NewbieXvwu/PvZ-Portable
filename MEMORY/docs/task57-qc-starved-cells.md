@@ -62,6 +62,21 @@
   独立 state 副本 dry run 5 轮（预算 768/组 48）：round 3-4 内 12 个饿死格全部拿到数据
   （每格 1-4 组），此后每格按 ≤4 轮周期轮转；pool_l26/27/29（学生 0 且老师未知）持续
   高频，L21-24 按老师证据降权，L24（老师 3/32）只走保底不再吸预算。
+- [x] 部署说明（主控在 qc 组边界切换，2026-10-24 写）：
+  1. 生效文件只有两个：scripts/curriculum_queue.py 与 recipes/dw4i2.json。已 diff 验证
+     cq 工作树的这两个文件改动前与 qcalloc 完全一致，把 qcalloc 版拷进 cq（或 merge
+     qcalloc 分支）即可，其余文件不用动。
+  2. 重启命令与现命令相同（--rounds 100 --workers 16 --round-games 768
+     --games-per-group 48 --manifest <cq 的 multiplier_panel.json> --executable
+     <deploy3 的 pvz-portable>），只把 --recipe 换成 <cq>/recipes/dw4i2.json。
+     新参数 --teacher-rates 有默认（~/pvz-logs/teacher_rates.json，已生成），可省略。
+  3. 切换步骤：向 ~/pvz-logs/stop_curr 写标志 → 控制器在组间停下（不杀正在跑的组）→
+     换文件重启。正在跑的 round 3 按旧计划跑完，round 4 起新分配生效；state 无需迁移
+     （last_round 语义不变）。
+  4. 控制器所在工作树必须有 stage4 面板产物（qcalloc 工作树没有 artifacts/stage4/*，
+     load_panel 会 FileNotFoundError），所以是"拷文件进 cq"，不是"从 qcalloc 启动"。
+  5. teacher_rates.json 与 state 同层不入 git；任务级更新步骤：改 levels 条目即可
+     （wins/games 或数值），只收 games>=8 的现役老师测量。
 - [x] 配方核实：TrainingPipeline.enqueue() 把 state log 标签 ∪ recipe 标签写进快照
   recipe（round_000002 快照 = 32 个 c1/c2 标签 + 170 个 dw4i 标签 = 202），
   _prepare_corpus 缺标签直接报错、不静默缩水 → qc 新组确实按普通流程进后台训练。
