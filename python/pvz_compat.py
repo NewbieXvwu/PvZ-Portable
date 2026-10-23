@@ -32,7 +32,8 @@ LEGACY: dict[str, dict] = {
         "what": "frames.jsonl 旧档案的读取路径（写入只产 npz）",
         "kept_for": "2026-10 以前的 JSONL 档案，whatif 重放要读（AGENTS §8 第 4 条）",
         "since": "2026-10-01",
-        "remove_when": "artifacts 下不再有 frames.jsonl",
+        "remove_when": "所有机器与 HF 上都不再有 frames.jsonl，且没有 whatif 存档需要重放"
+                        "（Mac 的存量已于 2026-10-23 转成 npz，台式机待转）",
         "where": ["python/pvz_frame_store.py:frame_paths", "python/pvz_frame_store.py:frame_bytes"],
     },
     "slot-packet-head": {
