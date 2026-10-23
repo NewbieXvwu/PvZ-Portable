@@ -20,7 +20,7 @@ STAMP=r'(?P<time>\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:[+-]\d\d:\d\d)?)'
 START=re.compile(r'^(\d+) games on (\d+) workers$')
 PROGRESS=re.compile(r'^(\d+)/(\d+) \((\d+)s\)$')
 DONE=re.compile('^'+STAMP+r' round (?P<round>\d+) (?P<label>\S+) (?P<task>\S+) mult=(?P<mult>\S+) offset=(?P<offset>\d+) games=(?P<games>\d+) wins=\d+ rate=\S+ rc=(?P<rc>-?\d+) (?P<seconds>\d+)s$')
-WORKERS=re.compile('^'+STAMP+r' round \d+ (?P<label>\S+): workers=(?P<workers>\d+)/\d+ \(MemAvailable (?P<memory>[\d.]+|n/a)(?: GiB)?, per-worker (?P<per_worker>[\d.]+|unmeasured)(?: GiB)?\)$')
+WORKERS=re.compile('^'+STAMP+r' round \d+ (?P<label>\S+): workers=(?P<workers>\d+)/(?P<upper>\d+) \(MemAvailable (?P<memory>[\d.]+|n/a)(?: GiB)?, per-worker (?P<per_worker>[\d.]+|unmeasured)(?: GiB)?\)$')
 ROUND=re.compile('^'+STAMP+r' round (?P<round>\d+) done: (?P<groups>\d+) groups, (?P<games>\d+) games,')
 BUILD=re.compile(r'^INFO: BuildNum: (\d+)$')
 
