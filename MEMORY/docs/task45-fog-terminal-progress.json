@@ -643,6 +643,145 @@
    "artifact_bytes": 60107150,
    "raw_audit_sha256": "af82cf94e0382ffdd3286f0c3779204c681a92b25ca0ca5433fc8df109a6ea07",
    "status": "interim_not_confirmation"
+  },
+  "interim-l32-human": {
+   "status": "cohort_complete_global_incomplete",
+   "level": 32,
+   "observation": "human",
+   "seed_count": 4,
+   "selection_sha256": "ed62868a21f31dd357cc0790c9242a41197794a1305b1ca7939d4749de8bcff8",
+   "overall": {
+    "roots": 8,
+    "episodes": 4,
+    "base_seed_units": 4,
+    "candidates": 527,
+    "labels": 1581,
+    "terminal_wins": 0,
+    "separable_roots": {
+     "won": 0,
+     "wave": 8,
+     "tick": 8
+    },
+    "available_root_types": {
+     "16": 8,
+     "9": 7,
+     "4": 4
+    },
+    "v4_favourite_types": {
+     "9": 5,
+     "4": 2,
+     "None": 1
+    },
+    "wave_favourite_types": {
+     "9": 7,
+     "4": 1
+    },
+    "metrics": {
+     "won": {
+      "v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_strict": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_nonterminal": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "teacher_path_v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      }
+     },
+     "wave": {
+      "v4": {
+       "pairs": 3124,
+       "accuracy": 0.5368117797695262,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.48296452406041446,
+        0.6016755521706016
+       ]
+      },
+      "v4_strict": {
+       "pairs": 13890,
+       "accuracy": 0.5036717062634989,
+       "value_ties": 2,
+       "cluster_bootstrap_95": [
+        0.45379653873171977,
+        0.5564089435057177
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 3124,
+       "accuracy": 0.5368117797695262,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.48296452406041446,
+        0.6016755521706016
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 3124,
+       "accuracy": 0.5368117797695262,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.48296452406041446,
+        0.6016755521706016
+       ]
+      }
+     },
+     "tick": {
+      "v4": {
+       "pairs": 13857,
+       "accuracy": 0.5185105001082485,
+       "value_ties": 2,
+       "cluster_bootstrap_95": [
+        0.4305028305028305,
+        0.5897435897435898
+       ]
+      },
+      "v4_strict": {
+       "pairs": 18161,
+       "accuracy": 0.513986013986014,
+       "value_ties": 3,
+       "cluster_bootstrap_95": [
+        0.4461685823754789,
+        0.5724825141324136
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 13857,
+       "accuracy": 0.5185105001082485,
+       "value_ties": 2,
+       "cluster_bootstrap_95": [
+        0.4305028305028305,
+        0.5897435897435898
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 13857,
+       "accuracy": 0.5185105001082485,
+       "value_ties": 2,
+       "cluster_bootstrap_95": [
+        0.4305028305028305,
+        0.5897435897435898
+       ]
+      }
+     }
+    }
+   },
+   "cpu_seconds_metered": 26357.16506
   }
  }
 }
