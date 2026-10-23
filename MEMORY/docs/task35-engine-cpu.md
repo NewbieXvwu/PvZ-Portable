@@ -137,3 +137,17 @@ A. **上线准备（最优先）**
 B. **锁步批量推演的原型实测**（第 16 条只编译了，没量）：batch=1/9 与原生串行比，分开报快照 / 前向 / 模拟；最新剖面里 libopenblas 已占 **28.65%**，是现在单项最大，这条路的上限比你当初估的高。
 C. **推演里的学生前向降精度（没派过的路）**：本机 i7-12700F 支持 AVX-VNNI。试 int8（逐通道对称量化权重、激活按层标定）或 bf16 的 GEMM，取快的。这是近似，按**统计验收**：老师决策与 fp32 的一致率不低于老师自身噪声底线（同老师换随机未来约 75%）减 3pp，64 局同种子胜率在噪声内；过了就成为唯一实现（不加开关），不过就把数字写进报告后删掉。
 D. 停止条件不变；A 做完立刻在“结果”里记一行，主控要拿它去上线。
+
+## 主控追加 E（2026-10-23 16:25）：停止条件已认可，收尾上线
+
+主控认可第 36 条的停止条件。引擎内 CPU 这条线到此为止；锁步、搜索预算、GPU 由主控另行决定，本任务不再做。剩下只有把 qc 上线后的提交（第 34/35 条：reanim 跳过空轨道 +4.2% 等）送上 qc：
+
+1. `git -C /home/newbiexvwu/PvZ-search/.claude/worktrees/perf merge --no-ff origin/pvz-env`。pvz-env 新合了 vnet（价值网 v4、编码 v2）和 `train_rollout_policy.py` 的 NaN 修复，冲突按"两边功能都留"解。用本工作树的 build 跑 `python -m pytest python -q`，要求全过；Mac 专属的除外，写清。然后 `git push origin perf:perf`。
+2. **新建部署工作树，不要碰 `deploy`**，qc 正在用它的二进制：
+   - `git -C /home/newbiexvwu/PvZ-search worktree add --detach /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2 <perf 的 HEAD>`；
+   - 把 `artifacts/perf/engine_roots.json` 从 perf 拷过去，mimalloc 的 FetchContent 若要联网就让它联；
+   - 在 deploy2 里跑 `scripts/build_pgo.sh bench`，完成后 `grep -c fprofile-generate build/build.ninja` 必须是 0。
+3. **门禁**：deploy2 的二进制对 `deploy` 的二进制，4 个存档整局逐帧重放 0 差异，64 root 叶摘要逐位相同。若有差异，先查是不是 v4 合并带来的：v4 只换叶子网络，引擎不变，叶摘要按同一个价值网比。
+4. 在"结果"写 `[E]` 一行：perf 合并提交号、deploy2 的提交号、门禁数字、二进制路径。写完本任务结束，`/goal` 可以清掉。**不碰 tmux `qc`**，切换由主控做。
+
+最多 2 个游戏进程；只用绝对路径。
