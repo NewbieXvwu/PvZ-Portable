@@ -2,6 +2,7 @@
 import hashlib
 import gzip
 import json
+import os
 from pathlib import Path
 import sys
 from types import SimpleNamespace
@@ -124,3 +125,48 @@ def test_panel_rejects_missing_future_or_root_checks(tmp_path):
     path.unlink()
     with pytest.raises(ValueError,match='incomplete/unexpected'):
         panel(plan,[job])
+
+
+def test_paired_evaluation_refuses_partial_and_keeps_unanimous_uncertainty():
+    from task53_evaluate import summary
+    evaluation=[dict(id=t,terrain=t,reset={'seed':i}) for i,t in enumerate(('day','night','pool'))]
+    rows=[dict(id=j['id'],arm=arm,won=True) for j in evaluation for arm in ('incumbent','candidate')]
+    result=summary(rows,evaluation)
+    assert result['overall']['delta_rate']==0
+    assert result['overall']['ci95'][0]<0<result['overall']['ci95'][1]
+    with pytest.raises(ValueError,match='incomplete or duplicated'):
+        summary(rows[:-1],evaluation)
+    with pytest.raises(ValueError,match='incomplete or duplicated'):
+        summary(rows+[rows[0]],evaluation)
+
+
+def test_pipeline_wait_checks_process_identity_without_restarting():
+    from task53_pipeline import alive
+    pid=os.getpid();start=Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()[19]
+    assert alive(pid,start)
+    assert not alive(pid,'wrong-start-time')
+    assert not alive(-1,start)
+
+
+def test_confirmation_jobs_cannot_write_into_screen_namespace(tmp_path,monkeypatch):
+    import critical_forks_data as data
+    candidates=[dict(index=i,v4=.1,means={m:float(i) for m in data.METRICS}) for i in (0,1)]
+    group=dict(job={'id':'root'},candidates=candidates,student_index=0)
+    monkeypatch.setattr(data,'screen_summary',lambda *args:([group],{}))
+    selection=data.confirmation_plan(dict(out=str(tmp_path),confirm_futures=16,
+                  protocol={'confirmation':{'mean_gap':{m:.1 for m in data.METRICS}}}),[])
+    assert selection['jobs'][0]['stage']=='confirm'
+    assert selection['jobs'][0]['indices']==[0,1] and selection['labels']==32
+
+
+def test_value_pairs_keep_metrics_futures_and_leaf_boundaries_separate():
+    from critical_forks_data import terminal_pairs
+    outcomes=[dict(won=True,wave=5,tick=2000,mowers_used=1),
+              dict(won=False,wave=6,tick=1000,mowers_used=2),
+              dict(won=False,wave=3,tick=500,mowers_used=1),
+              dict(won=False,wave=5,tick=1000,mowers_used=1)]
+    pairs=list(terminal_pairs(outcomes,[0,1,1,2],[0,0,1,0],[1000,1000,1000,1001],
+                             dict(won=.125,wave=.5,tick=600,mowers_used=.5)))
+    assert len(pairs)==4
+    assert {p['metric']:p['winner_row'] for p in pairs}==dict(won=0,wave=1,tick=0,mowers_used=0)
+    assert all({p['winner_row'],p['loser_row']}=={0,1} for p in pairs)

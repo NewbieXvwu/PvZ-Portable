@@ -22,6 +22,13 @@
   "flat_spread_threshold": 0.02,
   "cost_tightening": "pilot CPU only; reduce flat points and pre-breach count, then deterministic per-round game/root quota; never thin legal candidate set"
  },
+ "selection_v2": {
+  "breach_lookback_decisions": 16,
+  "flat_window_before_loss_ticks": 6000,
+  "flat_spread_threshold": 0.02,
+  "flat_quantile": 0.5,
+  "max_points_per_game": 2
+ },
  "confirmation": {
   "alpha": 0.05,
   "mean_gap": {"won": 0.125, "wave": 0.5, "tick": 600, "mowers_used": 0.5},

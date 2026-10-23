@@ -56,32 +56,38 @@ def refine_selection():
     """Separate the two root mechanisms using archive timing alone, before outcome analysis."""
     from pvz_frame_store import frame_path,read_frames
     plan=forks.load(OUT/'plan.json');jobs=[];per_episode=[]
+    params=forks.load(ROOT/'MEMORY/docs/task53-critical-forks-plan.json')['selection_v2']
+    lookback=params['breach_lookback_decisions']
+    if lookback<1 or not 0<=params['flat_quantile']<=1 or params['max_points_per_game']<1:
+        raise ValueError('invalid point selection parameters')
     if (OUT/'plan-keypoints-v2.json').exists():
         raise RuntimeError('v2 selection already frozen')
     for episode in plan['episodes']:
         frames=read_frames(frame_path(Path(episode['archive'])))
         # The loss is the final breach. The previous N decisions form its lookback window;
         # take the beginning of that window instead of the already-doomed final move.
-        decision=max(1,len(frames)-16)
-        reasons={decision:[dict(kind='before_loss_breach',lookback_decisions=16,
+        decision=max(1,len(frames)-lookback)
+        reasons={decision:[dict(kind='before_loss_breach',lookback_decisions=lookback,
                                 breach_decision=len(frames)-1)]}
         flat=[]
         for i in range(1,len(frames)):
             targets=frames[i].get('targets',[])
             vals=[a[3] for a in targets]
-            if len(vals)>=2 and max(vals)-min(vals)<.02 and frames[-1]['tick']-frames[i-1]['tick']<=6000:
+            if (len(vals)>=2 and max(vals)-min(vals)<params['flat_spread_threshold'] and
+                    frames[-1]['tick']-frames[i-1]['tick']<=params['flat_window_before_loss_ticks']):
                 flat.append((i,max(vals)-min(vals)))
         if flat:
-            i,spread=flat[len(flat)//2]
+            i,spread=flat[min(len(flat)-1,int(len(flat)*params['flat_quantile']))]
             reasons.setdefault(i,[]).append(dict(kind='flat_archived_leaf',spread=spread,
                                                 position='median in final 6000 ticks'))
-        points=[dict(decision=i,tick=frames[i-1]['tick'],reasons=reasons[i]) for i in sorted(reasons)]
+        indices=sorted(reasons)[:params['max_points_per_game']]
+        points=[dict(decision=i,tick=frames[i-1]['tick'],reasons=reasons[i]) for i in indices]
         for point in points:
             base={k:v for k,v in episode.items() if k not in ('id','points','original_outcome')}
             jobs.append(dict(**base,**point,id=f"v2-{episode['id']}-d{point['decision']}"))
         per_episode.append(dict(episode=episode['id'],points=points))
     plan['jobs']=jobs
-    plan['sampling_refinement']=dict(version=2,source_plan_sha256=forks.sha(OUT/'plan.json'),
+    plan['sampling_refinement']=dict(version=2,parameters=params,source_plan_sha256=forks.sha(OUT/'plan.json'),
         rule='16th decision before loss; median archived-flat search point in final 6000 ticks',
         reason='Initial structural inspection showed adjacent last decisions and no plant options at some final roots.',
         candidate_outcome_analysis_before_refinement=False,off_panel_pilot_labels=543,

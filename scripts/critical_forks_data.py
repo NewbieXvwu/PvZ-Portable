@@ -4,6 +4,7 @@ import argparse
 from collections import Counter,defaultdict
 from copy import deepcopy
 import json
+import gzip
 import math
 from pathlib import Path
 import random
@@ -103,7 +104,12 @@ def confirmation_plan(plan,jobs):
         best=max(candidates,key=lambda c:(c['means']['won'],c['means']['wave'],c['means']['tick'],-c['means']['mowers_used'],-c['index']))
         if best['index']==g['student_index']:
             continue
-        selected.append(dict(g['job'],indices=sorted({best['index'],g['student_index']}),
+        student=next(c for c in candidates if c['index']==g['student_index'])
+        gains={m:(-1 if m=='mowers_used' else 1)*(best['means'][m]-student['means'][m]) for m in METRICS}
+        gaps=plan['protocol']['confirmation']['mean_gap']
+        if not any(gains[m]>=gaps[m] for m in METRICS):
+            continue
+        selected.append(dict(g['job'],stage='confirm',indices=sorted({best['index'],g['student_index']}),
                              samples=plan['confirm_futures']))
     value=dict(jobs=selected,labels=sum(len(j['indices'])*j['samples'] for j in selected),
                selection='one lexicographic terminal win/wave/tick/mower challenger per root; screen data only',
@@ -149,9 +155,27 @@ def confirm_summary(plan):
                 confidence=evidence['confidence'],evidence=evidence,student_representable=c['action']['type'] in ('plant','wait')))
     value=dict(status='complete',root_count=len(groups),labels=sum(g['labels'] for g in groups),tests=tests,
                corrections=corrections,significance='independent futures; paired one-sided sign test; Holm across all roots and four metrics',
-               confidence_note='paired bootstrap probability(mean oriented gain > 0); mowers are oriented as fewer is better')
+               confidence_note='paired bootstrap probability(mean oriented gain > 0); mowers are oriented as fewer is better',
+               selection_budget=selection)
     f.save(Path(plan['out'])/'confirmation-results.json',value)
     return value
+
+
+def terminal_pairs(outcomes,candidates,kinds,positions,gaps):
+    """Separate terminal criteria and observation boundaries; never combine into a reward."""
+    by_future=defaultdict(list)
+    for index,(kind,position) in enumerate(zip(kinds,positions)):
+        by_future[(kind,position)].append(index)
+    for (kind,position),indices in by_future.items():
+        for ordinal,i in enumerate(indices):
+            for j in indices[:ordinal]:
+                if candidates[i]==candidates[j]:continue
+                for metric in METRICS:
+                    delta=float(outcomes[i][metric])-float(outcomes[j][metric])
+                    if metric=='mowers_used':delta=-delta
+                    if abs(delta)<=1e-12 or abs(delta)<gaps[metric]:continue
+                    winner,loser=(i,j) if delta>0 else (j,i)
+                    yield dict(kind=kind,position=position,metric=metric,winner_row=winner,loser_row=loser,gap=abs(delta))
 
 
 def export(plan,jobs):
@@ -183,10 +207,12 @@ def export(plan,jobs):
         evidence.append(dict(root=job['id'],label=label,row=i,confidence=correction['confidence']))
     recipe=deepcopy(registration['recipe']);recipe.update(labels=sorted(labels),label_weight=weights)
     f.save(out/'training/recipe.json',recipe)
-    value_files=[]
+    value_files=[];pair_counts=Counter();pair_path=out/'value-data/pairs.jsonl.gz'
+    pair_path.parent.mkdir(parents=True,exist_ok=True)
+    pair_stream=gzip.open(pair_path,'wt',compresslevel=1)
     for g in groups:
         job=g['job'];folder=out/'roots'/job['id'];root=f.load(folder/'root.json')
-        boards=[];scalars=[];legacy=[];won=[];positions=[];candidates=[];packets=[];state_kinds=[];kinds=[]
+        boards=[];scalars=[];legacy=[];won=[];positions=[];candidates=[];packets=[];state_kinds=[];kinds=[];outcomes=[]
         for c in g['candidates']:
             for k in range(g['samples']):
                 row=f.load(folder/f"screen_{c['index']}_{k}.json")
@@ -199,17 +225,25 @@ def export(plan,jobs):
                     boards.append(b.half());scalars.append(torch.cat([s,context]));legacy.append(torch.cat([s1,context]))
                     won.append(float(row['outcome']['won']));positions.append(job['decision']*1000+k)
                     candidates.append(c['index']);packets.append(c['action'].get('packet',-1));state_kinds.append(state_kind);kinds.append(kind)
+                    outcomes.append(row['outcome'])
         if boards:
             n=len(boards);path=out/'value-data'/f"{job['id']}.pt";path.parent.mkdir(parents=True,exist_ok=True)
             torch.save(dict(boards=torch.stack(boards),scalars=torch.stack(legacy),scalars_v2=torch.stack(scalars),
                 won=torch.tensor(won),seed=torch.full((n,),job['reset']['seed'],dtype=torch.long),
                 position=torch.tensor(positions),candidate=torch.tensor(candidates),packet=torch.tensor(packets),
                 kind=torch.tensor(kinds,dtype=torch.long),state_kind=state_kinds,
+                wave=torch.tensor([o['wave'] for o in outcomes]),tick=torch.tensor([o['tick'] for o in outcomes]),
+                mowers_used=torch.tensor([o['mowers_used'] for o in outcomes]),
                 config=dict(task_id=job['task_id'],root=job['id'],continuation_policy='frozen search teacher',samples=g['samples'])),path)
             value_files.append(dict(path=str(path),sha256=f.sha(path),rows=n,state_kinds=dict(Counter(state_kinds))))
+            for pair in terminal_pairs(outcomes,candidates,kinds,positions,plan['protocol']['confirmation']['mean_gap']):
+                pair_stream.write(json.dumps(dict(shard=path.name,**pair))+'\n');pair_counts[pair['metric']]+=1
         if f.artifact_bytes(out)>plan['artifact_budget_bytes']:raise RuntimeError('5GB limit during export')
+    pair_stream.close()
     value=dict(status='complete',student_corrections=evidence,labels=sorted(labels),label_weight=weights,
                recipe=str(out/'training/recipe.json'),value_files=value_files,
+               ranking_pairs=dict(path=str(pair_path),sha256=f.sha(pair_path),by_metric=dict(pair_counts),
+                                  note='same seed/root/future/kind; metrics kept separate; wave/tick/mower preferences are never substituted for binary won labels'),
                value_contract='task43 Decisions keys; group by kind+seed+position (root decision and common future); kind0 teacher horizon leaf, kind1 immediate candidate cell state; terminal network-bypass states excluded',
                confirmation_sha256=f.sha(out/'confirmation-results.json'))
     f.save(out/'export.json',value)
