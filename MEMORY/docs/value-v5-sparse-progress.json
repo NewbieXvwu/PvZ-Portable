@@ -1,5 +1,5 @@
 {
- "stage": "bootstrap_gate_passed",
+ "stage": "full_trajectories_complete",
  "task_complete": false,
  "training_complete": false,
  "acceptance_complete": false,
@@ -202,6 +202,15 @@
     "projected_64_cpu_hours": 29.140257537777774,
     "artifact_bytes": 2198080920,
     "approved_to_continue": true
+   }
+  },
+  {
+   "stage": "full_trajectories_complete",
+   "details": {
+    "seeds": 64,
+    "root_games_won": 26,
+    "search_roots": 8910,
+    "selected_roots": 768
    }
   }
  ],

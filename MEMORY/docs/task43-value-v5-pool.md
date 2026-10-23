@@ -371,6 +371,10 @@
 
 这是已用于扩量门禁的 **8 个 fit 种子诊断**，不是 held-out 验证，不支持“v4 排序已经足够”的结论。完整64采集、固定混训与独立8验证种子及三条实战验收继续按原方案；配方不因本次测量更改。原始离线报告在 `sparse64/bootstrap_v4_pair_accuracy.json`，结论与模型/门禁SHA已加入 [进度结论层](value-v5-sparse-progress.json)。
 
+### 31. 稀疏扩量阶段 `full_trajectories_complete`
+
+{"root_games_won": 26, "search_roots": 8910, "seeds": 64, "selected_roots": 768}
+
 ## 问题
 
 ### 问题 3：本轮数据的 root 也来自学生轨迹，不只是续走为学生
