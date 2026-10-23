@@ -100,3 +100,13 @@ CodeBuddy接手结果与Codex复核（2026-10-23）：4fd750d5修正了直接Boa
 按追加D，正式证据改用 `artifacts/task37/teacher32-v4`；旧v3的before 96局仅保留为过渡证据，不继续运行v3 after。v4改前源码是c790588d加唯一必要的版本化输入改动：`_values`导入 `encode_frame`，并将 `featurize(f)` 替换为 `encode_frame(f, net.encoder_version)`。v1仍委托冻结featurize，v4走既有编码2；不改搜索参数或候选数。该基线源码SHA256为 `9b53eee56fc24db197d14e472e6e41d3c1484a0bdce328b590bf0be5157b7258`，引擎仍为原c790588d二进制。静态branch1继续用编码1，两端权重完全相同。
 
 Codex接回时旧交接runner/worker/游戏PID均已消失；v4完整结果实为37/96（不是交接文字中的34），37份trace长度均与decisions一致，全部冻结输入哈希未变。night/pool index12无result的中断产物已标为不可用，续跑时完整重打。已从原 `run_teacher32_v4.sh` 接续before→after→shadow→compare、两worker；结果日志追加保存，不重新执行完整37局。接回验证11项全过，包含真实v4叶值/完整状态与快照/Board/验收器测试。最终仍以v4完整comparison.json为准，尚未通过整臂验收。
+
+Business会话接手核验（2026-10-23 20:35）：原链仍存活，before于20:27完成96局，after接续，无需恢复或重跑。逐份验证trace长度=decisions、searched计数、noise_points和noise_agreement与trace一致；before/after plan契约相同、所有输入和实现文件SHA256仍吻合。改前完整统计如下（CPU均已扣除额外噪声搜索，RSS取每局结束时/proc实测均值）：
+
+| v4改前，32局/任务 | 胜局 | 同老师换未来一致数 | worker CPU s/局 | 引擎CPU s/局 | worker RSS KiB | 引擎RSS KiB |
+|---|---:|---:|---:|---:|---:|---:|
+| L7 ×1.5 | 32 | 822/897（91.64%） | 16.35 | 175.24 | 583802 | 214507 |
+| L14 n10 | 32 | 1315/1544（85.17%） | 15.44 | 228.05 | 581169 | 214232 |
+| L21 p9k | 17 | 529/575（92.00%） | 8.07 | 104.53 | 578393 | 214262 |
+
+改后首个种子三个任务与改前的全长root/future序列相同，但总CPU配对比值暂为1.135/1.159/1.213，尚不能宣称加速或通过102%硬门槛。继续等待完整自由运行和必要影子结果；不改变冻结输入，不用墙钟或减小候选数替代CPU验收。hotpath原工具的rss_self_mb在Linux有单位问题，本报告始终用result.memory里的/proc KiB，不引用该字段。

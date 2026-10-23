@@ -29,6 +29,7 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。持续压榨：做完上面几项后，用 profile 找 Python 侧剩下的最大项继续，连续 3 项收益 < 2% 才停。
 
 ## 结果
+- 2026-10-23（Business新会话接手）：核对git干净且HEAD=origin/vcpp=3a65eff3；保留原runner PID86895及after PID110445（仅2游戏），未操作tmux/其他会话。v4 before已完整96/96，逐份核验trace长度、搜索/噪声计数及before/after冻结输入SHA256均通过；三任务胜32/32、32/32、17/32，噪声822/897、1315/1544、529/575。after首批同root，但总CPU暂高于基线；完整门禁未结束，不宣布通过，不重跑已完成局。
 - 2026-10-23（Codex复核接回）：逐提交复核cf55d1d3..c375a489，唯一生产代码变更为4fd750d5的植物/僵尸逐项float32舍入，符合当前NumPy语义；独立核对Board门禁JSON与当前引擎/corpus/模型SHA256一致，v3/v4各四场景256帧全过。确认旧交接PID均已消失，v4当前完整37/96、输入SHA全部未变；保留37份全长trace/result，作废night/pool index12的中断输出，从原串行脚本续跑before→after→shadow→compare（最多2游戏）。v4叶值/状态、Board、快照与门禁等11项复核测试通过；正式CPU/老师验收尚未完成。
 - 2026-10-23（GLM 18:25 移交）：v4整臂门禁链 before→after→shadow→compare 运行中，改前34/96（截至18:19 day/night基本全胜、pool约半数），预计改前~21:20完成；期间修复board-replay门禁1 ULP特征舍入差异（numpy逐项f32舍入vs double累加），修复后1024帧×v3/v4全过（特征0.0、logit≤3.82e-6，提交4fd750d5）。全部代码改动已提交推送（HEAD=a6572fac），工作区干净。
 - 移交注意：后台链不要杀——入口 bash artifacts/task37/run_teacher32_v4.sh（PID 75751）→ check_value_teacher.py --phase before（PID 75754）→ 2个 profile_value_engine.py 驱动（PID 84548、84553）+ 2个 baseline-engine（PID 84968、84970，短暂存续随局更换）；日志 artifacts/task37/teacher32-v4.log，输出 artifacts/task37/teacher32-v4/。改前完成后自动接 after（build/pvz-portable 已含ULP修复）→ shadow → compare，比较门禁自动落 comparison.json（三硬门：一致率≥噪声底线、胜负配对二项、CPU≤基线×1.02）。
