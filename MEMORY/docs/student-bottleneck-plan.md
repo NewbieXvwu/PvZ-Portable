@@ -30,7 +30,8 @@
 | 课程控制器的训练包参数 | **错配，待修（task38 追加）** | audit 合并带来的 `--pack-*` 默认 v1/槽位头/wait-keep 1.0，与现行 dw4i 配方（v2/身份头/0.1）不一致，打出来的包训练用不上；改为从配方文件取 |
 | 铲子候选（第一阶段） | 暂停 | 学生没有铲子输出；恢复条件已到（v4 10-23 定了）：v4 合进主线后派第二阶段（学生铲子头） |
 | dw5、pool 分支 | 已合并（e78c49d0） | task41；qc 组间换上 |
-| 价值网 v4（task30） | **采用，合并中**（10-23 15:40 主控定） | 第 5 步：白天 m150/m250 不掉、夜间净 +20、泳池 L21 +9；cb-vnet 做第 6 步（合主线、`DEFAULT_VALUE`→v4），审后快进并在 qc 两轮之间切换。已知限制：泳池全败区叶值压平 → v5（决策级标签）只立项 |
+| 价值网 v4（task30） | **在役（qc 16:12 起）** | pvz-env 13b1b2cf；DESIGN §14.17。已知限制：泳池全败区叶值压平 → task43（v5）|
+| 价值网 v5：泳池决策级标签（task43） | 在做（10-23 16:50 派出） | agent_switch 链（cb-cuda 先做，Codex 18:16 接手），工作树 v5；三条验收全过才建议换 |
 | 台式机旧 JSONL 档案转 npz（12 544 个、19 GB → 约 1.4 GB） | **用户已批准，等条件** | 条件：在跑实验的分支（vnet、dw5、cutoff、b3、perf、vcpp、recipe）都已合上含 task32 新读取代码的 pvz-env（d5baf16b 之后），或已跑完。然后用 cq 的 `scripts/convert_frames_npz.py --data <目录> --delete --jobs 2`（逐档五道校验后才删原文件，60 分钟内改过的跳过） |
 | 分布式采集（朋友机器） | **暂停** 10-20 | 用户评估网络问题时要求搁置；恢复条件：用户点头；pvz-f1 上我们的公钥要删 |
 
@@ -518,3 +519,4 @@
 - 2026-10-23 15:40（台式机时间）巡检：Qoder 新账号三会话 15:22 恢复（qoder-b3 续 task42 第二轮正式跑、qoder-cut 续 task40 第四跑 17/64、qoder-mix 续 task36 打包），但 `-c` 接的都是 dw5 那段对话（状态栏目录 dw5），各自按 /goal 用绝对路径做对了分支，不关。**主控定：价值网整臂换 v4**（task30 第 5 步全部过），task30 第 6 步派 cb-vnet（GLM 账号 2）：合主线、v4 唯一默认、v5 只立项；task37 追加 D：`LEAF_VALUES` 按 v4 的编码 v2 做。C 盘余 44 GB。
 
 - 2026-10-23 16:30（台式机时间）巡检：**v4 合进 pvz-env（13b1b2cf，Mac 288 过）**，`qc_deploy3.sh` 已设 stop_curr，本轮结束后 cq 快进、qc 用 v4 重启。修 `train_rollout_policy.py` 的 cell 软标签 gather：空候选 NaN 转 long 在 x86 上是 INT64_MIN（ARM 是 0），台式机 `test_identity_training` 一直失败的根因（e6c68f3a，台式机 5 过）。**task35 停止条件满足**，整局四族几何平均约 1.67×，追加 E 派 cb-cuda（合主线、deploy2 构建 PGO）。**B3 线关闭**（B4/B5 泳池不过）。到 10-27 纯 CPU 还差的部分只剩 task40（置信即停）与 task37（价值网进引擎）两条在做的；C 盘 35 GB（task38 的 parity 打包 8.7 GB，跑完要删）。
+- 2026-10-23 16:50（台式机时间）巡检：perf（task35 [E]）与 b3（task42 关闭）合进 pvz-env（e59c26ca，Mac 297 过；台式机 perf 分支 315 全过）。deploy2 的 PGO 二进制过门禁（4 存档逐帧 0 差异，叶摘要相同），`qc_deploy4.sh` 已设 stop_curr，本轮结束后 qc 切到 deploy2 引擎。派 **task43（v5）** 给 agent_switch 链。cb-recipe 遇到一次 502 网络瞬断，已让它续。
