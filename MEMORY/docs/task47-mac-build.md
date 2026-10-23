@@ -38,6 +38,8 @@
 
 2. 修复基准在 Mac 上读取 `/proc/<pid>/stat` 永远返回 0 CPU 秒的问题，macOS 改用系统 `ps` 累计 CPU 时间，Linux 路径保持原样。学生、价值网和资源路径支持环境变量传入，保留台式机默认值，14 项既有及新增基准回归全部通过。
 
+3. task35 同一份 16 存档 / 64 root 经 HF `transfer/task47/` 同步至本树，旧 view 对普通 Release 四轮交替配对（每 root 3 推演）：135,752 → 261,964 tick/CPU-s，比值中位数 **1.923×**（1.582 / 1.916 / 1.929 / 1.930）。完整叶观测与共有逻辑统计全部一致。旧协议缺 `planted_slots/planted_types`，本次旧构建基线的临时驱动只排除这两项，仓库正式门禁保持完整，后续 PGO 对 Release 使用全部字段。证据 `artifacts/perf/task47/release_vs_view{.json,_rounds/}`。整局三轮配对基线继续运行。
+
 ## 问题
 
 - Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。当前 Mac 没有 task35 的四族基准清单与全部存档，正从台式机按 HF 通道取同一份输入。
