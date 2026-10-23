@@ -197,8 +197,8 @@ def test_recipe_and_collection_sources_merge_without_copying_or_dropping_labels(
             pipeline._prepare_corpus(['base', 'c1a_fast_search'])
             view = pipeline.directory / 'frames'
             assert (view / 'seed_2/base').is_symlink()
-            assert (view / 'seed_2/base').resolve() == base
-            assert (view / 'seed_1/base').resolve() == args.frames / 'seed_1/base'
+            assert (view / 'seed_2/base').resolve() == base.resolve()
+            assert (view / 'seed_1/base').resolve() == (args.frames / 'seed_1/base').resolve()
             assert (view / 'seed_1/c1a_fast_search/frames.jsonl').read_bytes() == b'{}\n'
             try:
                 pipeline._prepare_corpus(['missing'])
