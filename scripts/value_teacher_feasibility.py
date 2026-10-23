@@ -75,7 +75,9 @@ def process_sample():
     qc = {pid for pid, (_,_,_,cmd) in processes.items()
           if '/worktrees/cq/scripts/curriculum_queue.py' in cmd and 'python' in cmd.split(' ')[0]}
     own = {pid for pid, (_,_,_,cmd) in processes.items()
-           if str(ROOT/'scripts/value_teacher_feasibility.py') in cmd and 'python' in cmd.split(' ')[0]}
+           if any(str(ROOT/'scripts'/name) in cmd for name in
+                  ('value_teacher_feasibility.py', 'value_teacher_sparse.py'))
+           and 'python' in cmd.split(' ')[0]}
     qc_members = {str(pid): p[2] for pid,p in processes.items() if below(pid,qc)}
     return dict(time=time.time(), logical_cpus=os.cpu_count(), qc_controllers=sorted(qc),
         qc_cpu_seconds_by_pid=qc_members,
@@ -100,6 +102,8 @@ def finish_teacher(env, obs, state, args, seed_base, trace_path):
                 return dict(won=obs.get('result') == 1, terminal=True, result=obs.get('result'),
                             tick=obs['tick'], wave=obs['wave'], decisions=index,
                             searched=stats['searched'], overrides=stats['overrides'])
+            if teacher._W.get('diagnostic_progress'):
+                teacher._W['diagnostic_progress']()
             proposed = teacher._fast_action(obs, state)
             teacher._W['student_history'] = state.get('history')
             chosen = teacher._search(env, obs, proposed, args, seed_base + index, stats)
@@ -144,15 +148,24 @@ def sample_root(env, obs, state, args, decision_seed, stats, directory):
     # Search mutates caches, not state/history; preserve post-search caches for the root trajectory.
     post_search = dict(teacher._W)
     directory.mkdir(parents=True, exist_ok=True)
-    write_json(directory / 'root.json', dict(decision_seed=decision_seed, common_future=common,
+    root_record = dict(decision_seed=decision_seed, common_future=common,
         root_frame=_frame(obs), root_state_sha256=root_hash, history=history_record(state),
         sun_income_history=dict(start_tick=env._sun_history_start_tick,
                                 production=list(env._sun_production_history)),
         context=teacher._W['context'].tolist(), candidates=targets, chosen=chosen,
-        search_cpu_seconds=search_cpu))
+        search_cpu_seconds=search_cpu)
+    root_path = directory / 'root.json'
+    if root_path.exists():
+        previous = json.loads(root_path.read_text())
+        for key in root_record.keys() - {'search_cpu_seconds'}:
+            if previous[key] != json.loads(json.dumps(root_record[key])):
+                raise ValueError(f'existing root differs on {key}: {root_path}')
+    write_json(root_path, root_record)
     rows = []
     try:
         for index, item in enumerate(captured):
+            if teacher._W.get('diagnostic_progress'):
+                teacher._W['diagnostic_progress']()
             before = cpu(env)
             teacher._W.clear(); teacher._W.update(baseline)
             teacher._W['student_history'] = deepcopy(state.get('history'))
@@ -175,6 +188,17 @@ def sample_root(env, obs, state, args, decision_seed, stats, directory):
             seed_base = decision_seed + 5000
             initial_history = history_record(recovered)
             leaf_frame = _frame(item['leaf'])
+            candidate_path = directory / f'candidate_{index}.json'
+            if candidate_path.exists():
+                previous = json.loads(candidate_path.read_text())
+                expected = dict(candidate=index, action=item['action'], common_future=common,
+                    continuation_seed_base=seed_base, leaf_frame=leaf_frame,
+                    leaf_state_sha256=item['state_hash'], leaf_history=initial_history,
+                    sun_income_history=dict(start_tick=item['income_start'], production=item['income']),
+                    history_checks=checks)
+                validate_existing_candidate(previous, expected)
+                rows.append(previous)
+                continue
             begin = cpu(env); wall = time.monotonic()
             outcome = finish_teacher(env, item['leaf'], recovered, args, seed_base,
                                      directory / f'candidate_{index}_teacher.jsonl')
@@ -185,7 +209,7 @@ def sample_root(env, obs, state, args, decision_seed, stats, directory):
                 history_checks=checks, outcome=outcome, replay_cpu_seconds=replay_cpu,
                 continuation_cpu_seconds=cpu(env)-begin,
                 continuation_wall_seconds=time.monotonic()-wall)
-            write_json(directory / f'candidate_{index}.json', row)
+            write_json(candidate_path, row)
             rows.append(row)
             print(json.dumps(dict(seed=decision_seed//10000, root=decision_seed%10000,
                 candidate=index, won=outcome['won'], cpu=row['continuation_cpu_seconds'])), flush=True)
@@ -202,6 +226,18 @@ def sample_root(env, obs, state, args, decision_seed, stats, directory):
         env.release_snapshot(root)
         if env._debug_state_sha256() != root_hash:
             raise RuntimeError('root state changed by label collection')
+
+
+def validate_existing_candidate(previous, expected):
+    """Resume only an identical, checked native leaf with a real terminal teacher label."""
+    for key, value in expected.items():
+        if previous[key] != json.loads(json.dumps(value)):
+            raise ValueError(f'existing candidate differs on {key}')
+    outcome = previous['outcome']
+    if outcome.get('terminal') is not True or type(outcome.get('won')) is not bool:
+        raise ValueError('existing candidate has no valid terminal label')
+    if outcome['won'] != (outcome['result'] == 1):
+        raise ValueError('existing terminal label/result disagree')
 
 
 def group_summary(rows):
