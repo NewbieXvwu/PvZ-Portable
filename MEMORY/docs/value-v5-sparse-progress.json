@@ -212,6 +212,28 @@
     "search_roots": 8910,
     "selected_roots": 768
    }
+  },
+  {
+   "stage": "collection_audit_53",
+   "details": {
+    "seeds": 53,
+    "root_groups": 636,
+    "labels": 3571,
+    "wins": 1882,
+    "nonterminal_labels": 3178,
+    "nonterminal_wins": 1741,
+    "nonterminal_effective_pairs": 1828,
+    "mixed_groups": 306,
+    "nonterminal_mixed_groups": 302,
+    "collection_cpu_hours": 31.9509,
+    "artifact_bytes": 2426866752,
+    "audit_sha256": "ae5eba16d3c857df7b00ffa6d35b7c42cc4a797f92edfb18ff7f660d96e8512b",
+    "live_processes": {
+     "pipeline": 154773,
+     "labels_controller": 180432,
+     "finish": 186193
+    }
+   }
   }
  ],
  "bootstrap_v4_pair_accuracy": {
