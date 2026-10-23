@@ -144,3 +144,9 @@ PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/workt
 - 搜索耗时（Python 慢版本，**只作诊断、不作门槛**）：cutoff/exact = 2.03×（day 1.92×、night 2.93×、pool 2.95×、original 0.50×），noise/exact = 1.00×；exact 14,718 s、cutoff 29,916 s。慢在每检查点一次引擎往返；引擎内实现才有收益，所以速度不作为本关判据。
 - 结论：质量关通过。按 18:45 预登记继续第 4 步强度关（先 1 种子校准，再 2 workers 正式跑）。
 
+### 强度关校准与启动（2026-10-23 21:07）
+
+- 校准 `day_l7` seed 30000（1 worker）：两臂均胜；`exact` 269 搜索/192.1 s，`cutoff` 253 搜索/79.1 s，pair 273.5 s，`errors=[]`，脚本输出门禁字段正常。临时产物在 `/tmp/strength_calib_parts/` 与 `/tmp/strength_calib.json`，不进入正式统计。
+- 按 273.5 s/对 外推正式跑（256 对）约 15–20 h 墙钟（2 workers），显著快于 18:50 的估计（beta=1 下学生快速动作占多数决策，搜索点数少于质量关按决策数外推的假设）。
+- 21:07 启动正式跑（PID 124400 + 2 引擎子进程）：`cutoff_strength.py --workers 2 --executable artifacts/task40/engine/pvz-portable`，脚本 `04a190e2…`、引擎 `7508e8…` 与预登记一致；输出 `artifacts/task40/strength.log`、`strength_parts/`、`strength.json`。
+
