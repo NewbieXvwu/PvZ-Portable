@@ -46,6 +46,8 @@
 
 - 步骤5：本树清单414任务/847872种子逐卡组合法；扫描330494份JSON、835020个既有种子，重叠0。隔离状态dry run列出38组/1824局，含 `roof_l41_train_r7 mult=1 games=48` 与deploy3完整collect命令，fog cell=0；摘要task50-zones-course.json。
 
+- 步骤3b：deploy3 PGO两阶段成功，源7a67066a5e62cec47432eaef87c542f6782270c3；二进制SHA256 `e231cdb9f872e50a7eec55180c8ca2b156076e2f0ffaba41a4100ab10d39a12d`，140份profile，最终ninja generate=0/use=161。构建证据task50-zones-build.json。
+
 主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
 
 ```bash
