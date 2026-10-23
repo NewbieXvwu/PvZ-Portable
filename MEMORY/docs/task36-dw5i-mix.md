@@ -80,6 +80,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，23 停掉被门禁悬挂的 B，改内存门控重排：B 自 00:42 起一直 paused（MemAvailable 9.3→6.2 GiB 持续下行；外部 cq curriculum、zones/profile_value_engine、qcbench bench、fog/deploy2 等约 13 个进程），而暂停态仍占 **2.25 GB 匿名内存**（`smaps_rollup` Pss_Anon），只会加深短缺并可能被 earlyoom（偏好 python3）选中。已 SIGTERM 训练组 188416 与流水线 188328，释放后 av 6.23→8.51 GiB。新启动器 `artifacts/task36/autostart_B2.sh`（pid 193986）只在 MemAvailable 连续 4 次 ≥10.5 GiB（30 s 间隔）且 C: ≥15 GiB 时才启动 `run_task36_mix.py --plan B --workers 2`（日志 `mix_B2.out`），避免再次“暂停且占内存”。B 复用同一包与已解包目录。
 
+- 2026-10-24，24 A 与 dw4i_s1 同种子配对（输出 `artifacts/task36/paired_dw4i_vs_A.json`）：夜间 818→755/1152（**−5.47pp**，仅A 157 / 仅B 94，p=8.4e-05）；早关 L1/3/4/6 478→481/512（+0.59pp，27/30，p=0.79）；34 个共同任务 2228→2203/3264（−0.77pp，p=0.36）。A 相对 dw4i 的显著失分全在夜间 n10 与白天 d7/d7p：night L12 104→86、L14 87→62、L19 59→40（p≤0.014），day L7 116→101、L9 112→98、L10 holdout1/2 52→35 / 54→33（p≤0.02）。**泳池是唯一大额反超**：L21 1→42、L22 1→33、L23 0→27、L24 0→12、L26 0→12（p≤5e-4），与 dw4i 训练集没有泳池数据一致。与第 22 条合看：A 的区等权配比相对 dw5i 换来夜间 +3.82pp，相对 dw4i 仍少 5.47pp（dw4i 夜间 818 是三者最高），白天的 d7/d7p 三关也是 dw4i 最强——配比在夜间内部把 n9/n10 拉平后，n9 数据量下降的代价显现。单训练种子，描述性结论。
+
 
 
 ## 问题
