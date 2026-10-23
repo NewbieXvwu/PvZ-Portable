@@ -76,6 +76,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，21 A 统一面板 v2 完成（00:41，`complete_A.json`，model SHA256 32724b8e…，row_weights SHA256 b006fbee…）：day 919/1024 = **89.7%**、heldout 403/768 = **52.5%**、night 755/1152 = **65.5%**、pool 126/320 = **39.4%**（逐关见 `panel_v2_A.txt` / `panel_dw5i_A_v2`）。与 dw5i_s1 的夜间 711/1152 相比多 44 胜（+3.8pp，待配对检验）。B 自动接续已启动（pid 188328，`mix_B.out`）；启动时外部 zones/qcbench 占内存，MemAvailable 9.0–9.5 GiB，B 的 train 步按 `<10 GiB` 门禁自行 SIGSTOP 等待（日志 `train_B.resources.jsonl`，paused=true），回升后自动继续。
 
+- 2026-10-24，22 A 与 dw5i_s1 同种子配对（`scripts/task36_paired_compare.py`，输出 `artifacts/task36/paired_dw5i_vs_A.json`）：夜间 711→755/1152（**+3.82pp**，仅A 128 / 仅B 172，p=0.0129）；早关 L1/3/4/6 468→481/512（+2.54pp，28/41，p=0.148）；全部 34 个共同任务 2258→2203/3264（**−1.69pp**，p=0.0466）。代价集中在白天普通关：L7 127→101（p=2.2e-7）、L9 115→98（p=0.0115）、L10 holdout2 60→33（p=1.1e-7）；夜间 L13 118→128、L16 114→128、L18 100→121（p≤0.002）。单训练种子，描述性结论。
+
 
 
 ## 问题
