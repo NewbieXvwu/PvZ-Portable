@@ -46,6 +46,8 @@
 
 6. PGO 正式门禁全部通过：四族整局重放 **953 / 877 / 531 / 464 帧，0 差异**，同种子重复推演 4/4 一致。PGO 对同机普通 Release，四轮 64 root × 3 推演的全部完整叶观测和逻辑统计逐位相同，吞吐 238,781 → 301,425 tick/CPU-s，配对比值中位数 **1.262×**（1.234 / 1.198 / 1.290 / 1.329）。可供主控在标签边界切换的固定二进制为 **`/Users/newbiexvwu/PvZAgent/.claude/worktrees/macbuild/artifacts/perf/task47/pvz-pgo`**（SHA256 见第 5 条），没有改动运行中的采集脚本。证据 `replay_pgo.json`、`pgo_vs_release{.json,_rounds/}`。四族各 8 局整局吞吐验收开始。
 
+7. 白天 L7 d7 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 7 胜）。CPU 秒/局由旧 view **102.263** 降至 PGO **44.019**，吞吐 **2.323×**。证据 `artifacts/perf/task47/pgo_games_day/engine_games.json`。
+
 ## 问题
 
-- Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。当前 Mac 没有 task35 的四族基准清单与全部存档，正从台式机按 HF 通道取同一份输入。
+- Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。task35 的四族基准清单与全部存档已经 HF 同步完成。
