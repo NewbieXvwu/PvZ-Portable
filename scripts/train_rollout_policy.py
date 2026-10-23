@@ -403,7 +403,11 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None):
     plant = torch.from_numpy(np.asarray(stored["plant"]))
     packet = torch.from_numpy(np.asarray(stored["packet"]))
     cell = torch.from_numpy(np.asarray(stored["cell"]))
-    weight = torch.from_numpy(np.asarray(stored["weight"]))
+    weight_array = np.asarray(stored["weight"])
+    if not weight_array.flags.writeable:
+        # training scales rows in place (packet balance, spread, row weights); a mapped pack stays untouched
+        weight_array = np.array(weight_array)
+    weight = torch.from_numpy(weight_array)
     seed_of = np.asarray(stored["seed"])
     values = ValueStore.from_arrays(stored)
     cands = CandidateStore.from_arrays(stored) if "cand_counts" in stored.files else None
