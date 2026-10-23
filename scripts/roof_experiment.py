@@ -1,5 +1,6 @@
 """task46: reproducible roof deck screening and bounded, resumable search_play runs."""
 import argparse
+import copy
 from concurrent.futures import ThreadPoolExecutor
 import json
 import os
@@ -90,6 +91,44 @@ def commands(manifest, count, arms):
     return jobs
 
 
+def prepare_followup():
+    """Apply the frozen conditional plan only to completed low-win regular cells."""
+    plan = json.loads((ROOT / 'MEMORY/docs/task46-roof-followup-plan.json').read_text())
+    formal = json.loads((OUT / 'formal_manifest.json').read_text())['tasks']
+    diagnostics, half, checks = [], [], []
+    args = settings()
+    with PvZEnv(args.resource_dir, executable=args.executable) as env:
+        for level in range(41, 45):
+            base = next(t for t in formal if t['task_id'] == f'roof_l{level}_eval_r7')
+            path = OUT / f'runs/{base["task_id"]}_teacher_16/games.jsonl'
+            rows = [json.loads(line) for line in path.read_text().splitlines()]
+            if (len(rows) != 16 or {row['seed'] for row in rows} != set(base['seeds'][:16])
+                    or not all(row['terminal'] for row in rows)):
+                raise ValueError(f'L{level}: follow-up needs the complete formal teacher cell')
+            if sum(row['won'] for row in rows) / 16 >= 0.2:
+                continue
+            diagnostic = copy.deepcopy(base)
+            diagnostic.update(task_id=f'roof_l{level}_eval_c05diag',
+                              deck=plan['deck_recheck']['deck'], seeds=plan['deck_recheck']['seeds'])
+            env.reset(deck=tuple(diagnostic['deck']), task=TaskSpec(level=level,
+                seed=diagnostic['seeds'][0], profile=profile_for_deck(tuple(diagnostic['deck']))))
+            warnings = env.deck_warnings(diagnostic['deck'])['warnings']
+            available = env.deck_options()['available_plants']
+            if warnings or not set(diagnostic['deck']) <= set(available):
+                raise ValueError(f'L{level}: c05 fails actual deck checks')
+            checks.append(dict(level=level, warnings=warnings, all_cards_unlocked=True))
+            diagnostics.append(diagnostic)
+            lowered = copy.deepcopy(base)
+            lowered.update(task_id=base['task_id'] + '_m050', zombie_count_multiplier=0.5,
+                           seeds=plan['half_multiplier']['seeds'])
+            half.append(lowered)
+    for name, tasks in [('deck_recheck_manifest', diagnostics), ('half_manifest', half)]:
+        (OUT / f'{name}.json').write_text(json.dumps(dict(schema_version=1,
+            preregistration='MEMORY/docs/task46-roof-followup-plan.json', tasks=tasks), indent=1) + '\n')
+    (OUT / 'followup_deck_checks.json').write_text(json.dumps(checks, indent=1) + '\n')
+    print(f'conditional follow-up levels: {[check["level"] for check in checks]}', flush=True)
+
+
 def run_job(job):
     label = job['label']
     env = dict(os.environ, PVZ_NO_POPUP='1', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1',
@@ -102,7 +141,7 @@ def run_job(job):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=('prepare', 'run'))
+    parser.add_argument('mode', choices=('prepare', 'prepare-followup', 'run'))
     parser.add_argument('--manifest', type=Path, default=OUT / 'pilot_manifest.json')
     parser.add_argument('--count', type=int, default=2)
     parser.add_argument('--arms', default='teacher')
@@ -111,6 +150,9 @@ def main():
     OUT.mkdir(parents=True, exist_ok=True)
     if args.mode == 'prepare':
         prepare()
+        return
+    if args.mode == 'prepare-followup':
+        prepare_followup()
         return
     jobs = commands(args.manifest, args.count, args.arms.split(','))
     (OUT / f'{args.manifest.stem}_commands.json').write_text(json.dumps(jobs, indent=1) + '\n')
