@@ -95,6 +95,8 @@
 
 27. **后续运行检查点（不代表完成）**：传送带恢复任务仍活着（`artifacts/perf/games_recovery.log`，父进程 `bench_engine.py games`，输出 `engine_games_recovery/`）；必须先核实活进程和完整 `engine_games.json`，不能因日志暂时不增而重启。B 的协议/CPU 修复已在 adcf9b3f 源码副本编译成功，build.json 的 helper/builder SHA 与当前脚本相同，待 A2 后运行 `scripts/prototypes/bench_batch_rollout.py`。完整 pytest 已用 ml Python + 追加 `/usr/lib/python3/dist-packages` 成功收集 290 项（未执行），可避开原来缺 pytest 的环境问题。坐标候选已编译到 `artifacts/perf/coordinate-candidate/pvz-portable`，正式 `build/pvz-portable` 的 SHA256 保持不变，A/B 旧臂副本为 `artifacts/perf/pvz-portable-before-coordinate`；CMake 输出目录已恢复默认（只 configure、未覆盖正式旧二进制）。两处候选源码改动（EnvironmentWaitEvents.h、bench_public_coordinate.cpp）仍未提交，百万坐标和原生契约通过，但须在槽位释放后跑候选 compare / 四族重放 / 真 perf 调用栈，再按整引擎收益决定保留；现 profile 对该函数存在 coverage-mismatch，最终保留时须重生成 PGO。
 
+28. **首层格子稀疏卷积独立实测**：`scripts/prototypes/bench_sparse_conv.cpp` 使用既有 64 个真实 root 的首层输入（仅 1.788% 格子非零），比较完整 im2col+BLAS 与直接非零输入累加（含输出布局转换，静态权重/活动通道准备均不计时）。同 CPU0、逐 root 三臂轮换九轮：BLAS / AVX2 / 普通 C++ 中位数 18.240 / 10.422 / 14.854 µs，配对耗时比中位数 0.580 / 0.824；稀疏两臂逐位相同，相对 BLAS 最大误差 5.72e-6、相对 RMS 6.62e-8。只留独立实验，未并入正式引擎，不将首层收益外推整体；可与坐标候选之后的真实剖面结合决定是否接入。传送带 A2 活进程仍在继续，未新增游戏进程。
+
 ## 问题
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。
