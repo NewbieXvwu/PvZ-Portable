@@ -264,8 +264,8 @@ def run_phase(plan, phase, seeds):
                     sample['artifact_bytes']=artifact_bytes(plan['artifact_root'])
                     monitor.write(json.dumps(sample)+'\n');monitor.flush()
                     if sample['own_engines']>4:stop_reason='own engine count exceeds four'
-                    # Stop early enough to absorb two checkpoint intervals on four single-CPU lanes.
-                    if sample['cpu_seconds']>=plan['cpu_budget_seconds']-40:stop_reason='60 CPU-hour budget reached'
+                    # Reserve shutdown/export overhead within the approved hard budget.
+                    if sample['cpu_seconds']>=plan['cpu_budget_seconds']-300:stop_reason='60 CPU-hour budget reached'
                     if sample['artifact_bytes']>plan['artifact_budget_bytes']:stop_reason='5 GB artifact budget exceeded'
                     if stop_reason:_STOP.set()
                     try:result=pending.next(timeout=5)
@@ -354,6 +354,8 @@ def export(plan):
     out=Path(plan['out']);target=out/'data';target.mkdir(exist_ok=True)
     info=[]
     for seed in plan['seeds']:
+        if artifact_bytes(plan['artifact_root'])>plan['artifact_budget_bytes']:
+            raise CollectionStop('5 GB artifact budget exceeded during export')
         boards=[];scalars=[];legacy=[];won=[];positions=[];candidates=[];packets=[]
         for root_path in sorted((out/f'seed_{seed}').glob('root_*/root.json')):
             root=json.loads(root_path.read_text());context=torch.tensor(root['context'],dtype=torch.float32)
