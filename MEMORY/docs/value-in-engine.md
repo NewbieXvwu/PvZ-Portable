@@ -120,3 +120,5 @@ v4停止条件补核：利用各任务已完成的首局轨迹，复用 `bench_v
 | 复用学生encode | 0.0362% | 0.0548% | 0.0734% |
 
 三项在这些样本上均远小于2%，继续不采纳；这是离线样本耗时外推，不是整局A/B收益，不替代正式CPU硬门槛。没有额外启动游戏，也没有改冻结源码。已把直接Board门禁（当前二进制、固定32档案、v3/v4模型哈希均重新核验）、v4完整before和上述原型的KB级结论合并到 [value-in-engine-validation.json](value-in-engine-validation.json)，显式标记整体incomplete，最终老师/CPU及v4同工具profile仍待完成。
+
+完整v4 cProfile已安排在原before→after→shadow→compare串行链退出之后执行（本地等待器，非tmux）；启动条件包含原runner退出、本分支0游戏、96+96完整结果/trace、全部冻结输入SHA及comparison.json存在。只对同一L7×1.5 seed0按同一配置分别跑改前/改后一次，关闭额外噪声搜索，输出独立目录 `artifacts/task37/v4-cprofile`，包含worker.prof/top15.txt、同源hotpath、/proc RSS/HWM及轨迹。profile CPU含采样开销，仅用来解释分项与查剩余热点，不替代正式96局CPU验收；等待器未启动游戏前不增加现有两worker的并发。
