@@ -44,6 +44,8 @@
 
 5. `CMakeLists.txt` 与同一个 `scripts/build_pgo.sh` 已按实际 CMake 编译器分支接入 Clang PGO。`JOBS=4` 完整执行 instr-generate → 原 64 root bench 工作负载 → `xcrun llvm-profdata merge` → instr-use，profile 含 5197 个函数 / 36588 个块。实际使用自定义目录 `artifacts/perf/task47/pgo/engine.profdata`，最终 Ninja 生成标志计数为 0、使用标志正确，GCC 原有编译/链接 flag 行逐字保留。最终二进制 SHA256 `cfa3f51f0210fd4a6c735a7b1ca00ad204c7a315116c147a117ef556379fd7e8`，完整门禁运行中。
 
+6. PGO 正式门禁全部通过：四族整局重放 **953 / 877 / 531 / 464 帧，0 差异**，同种子重复推演 4/4 一致。PGO 对同机普通 Release，四轮 64 root × 3 推演的全部完整叶观测和逻辑统计逐位相同，吞吐 238,781 → 301,425 tick/CPU-s，配对比值中位数 **1.262×**（1.234 / 1.198 / 1.290 / 1.329）。可供主控在标签边界切换的固定二进制为 **`/Users/newbiexvwu/PvZAgent/.claude/worktrees/macbuild/artifacts/perf/task47/pvz-pgo`**（SHA256 见第 5 条），没有改动运行中的采集脚本。证据 `replay_pgo.json`、`pgo_vs_release{.json,_rounds/}`。四族各 8 局整局吞吐验收开始。
+
 ## 问题
 
 - Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。当前 Mac 没有 task35 的四族基准清单与全部存档，正从台式机按 HF 通道取同一份输入。
