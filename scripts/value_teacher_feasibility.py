@@ -146,6 +146,8 @@ def sample_root(env, obs, state, args, decision_seed, stats, directory):
     directory.mkdir(parents=True, exist_ok=True)
     write_json(directory / 'root.json', dict(decision_seed=decision_seed, common_future=common,
         root_frame=_frame(obs), root_state_sha256=root_hash, history=history_record(state),
+        sun_income_history=dict(start_tick=env._sun_history_start_tick,
+                                production=list(env._sun_production_history)),
         context=teacher._W['context'].tolist(), candidates=targets, chosen=chosen,
         search_cpu_seconds=search_cpu))
     rows = []
@@ -179,6 +181,7 @@ def sample_root(env, obs, state, args, decision_seed, stats, directory):
             row = dict(candidate=index, action=item['action'], common_future=common,
                 continuation_seed_base=seed_base, leaf_frame=leaf_frame,
                 leaf_state_sha256=item['state_hash'], leaf_history=initial_history,
+                sun_income_history=dict(start_tick=item['income_start'], production=item['income']),
                 history_checks=checks, outcome=outcome, replay_cpu_seconds=replay_cpu,
                 continuation_cpu_seconds=cpu(env)-begin,
                 continuation_wall_seconds=time.monotonic()-wall)

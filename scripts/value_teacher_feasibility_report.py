@@ -8,6 +8,17 @@ import sys
 from value_teacher_feasibility import digest, group_summary, load_plan, write_json
 
 
+def validate_income(record, tick):
+    h = record['sun_income_history']
+    if type(h['start_tick']) is not int or not 0 <= h['start_tick'] <= tick:
+        raise ValueError('invalid income history start')
+    previous = h['start_tick']
+    for at, amount in h['production']:
+        if type(at) is not int or type(amount) is not int or not previous <= at <= tick or amount < 0:
+            raise ValueError('invalid income history event')
+        previous = at
+
+
 def report(paths):
     plans = [load_plan(p) for p in paths]
     seeds = [s for p in plans for s in p['seeds']]
@@ -39,6 +50,7 @@ def report(paths):
             for target in sorted(expected_waves):
                 root_dir = d/f'wave_{target}'
                 root = json.loads((root_dir/'root.json').read_text())
+                validate_income(root, root['root_frame']['tick'])
                 candidates = root['candidates']
                 if root['common_future'] != (root['decision_seed']*1000) % 2**32:
                     raise ValueError('root common future formula differs')
@@ -50,6 +62,7 @@ def report(paths):
                 if {x['candidate'] for x in rows} != set(range(len(candidates))):
                     raise ValueError('candidate indices do not exactly cover actual search set')
                 for row in rows:
+                    validate_income(row, row['leaf_frame']['tick'])
                     if row['action'] != candidates[row['candidate']]: raise ValueError('action differs')
                     if row['common_future'] != root['common_future']: raise ValueError('future differs')
                     if row['continuation_seed_base'] != root['decision_seed']+5000:

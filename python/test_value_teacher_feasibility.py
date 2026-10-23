@@ -61,13 +61,15 @@ class TeacherReportTest(unittest.TestCase):
         (d/'root_trajectory.jsonl').write_text('{}\n')
         actions=[dict(type='wait'),dict(type='plant')]; base=self.seed*10000+50
         write_json(self.group/'root.json',dict(decision_seed=base,common_future=base*1000%2**32,
-            candidates=actions,root_frame=dict(tick=6000)))
+            candidates=actions,root_frame=dict(tick=6000),
+            sun_income_history=dict(start_tick=0,production=[[5900,25]])))
         rows=[]
         for i,won in enumerate([True,False]):
             row=dict(candidate=i,action=actions[i],common_future=base*1000%2**32,
                 continuation_seed_base=base+5000,
                 history_checks={k:True for k in ('frame','engine_state','income','income_start')},
-                leaf_frame=dict(terminal=False),
+                leaf_frame=dict(terminal=False,tick=8500),
+                sun_income_history=dict(start_tick=0,production=[[5900,25],[8000,25]]),
                 outcome=dict(won=won,terminal=True,result=int(won),decisions=1),
                 continuation_cpu_seconds=3,replay_cpu_seconds=.5)
             rows.append(row); write_json(self.group/f'candidate_{i}.json',row)
@@ -107,6 +109,12 @@ class TeacherReportTest(unittest.TestCase):
         self.assertEqual(r['effective_pairs'],1)
         self.assertEqual(r['nonterminal_effective_pairs'],0)
         self.assertIsNone(r['cpu_seconds']['per_nonterminal_effective_pair_total'])
+
+    def test_income_context_requires_ordered_events_before_leaf(self):
+        from value_teacher_feasibility_report import report
+        f=self.group/'candidate_1.json';row=json.loads(f.read_text())
+        row['sun_income_history']['production'].append([8501,25]);self.write(f,row)
+        with self.assertRaises(ValueError):report([self.plan])
 
 
 if __name__ == '__main__': unittest.main()
