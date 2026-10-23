@@ -19,6 +19,10 @@ Between searches at least ``--min-gap`` ticks pass unless the student itself wan
 Arms: ``fast`` = the student alone, ``fast_search`` = the teacher. ``--frames`` writes per-decision archives
 for training (with ``--dagger-beta`` < 1 the student executes part of the moves, the search still labels all).
 
+The comparison harness ``scripts/b3_noninferiority.py`` can set a private ``_W["candidate_mode"] =
+"student-topk"`` (task42 B3 arm: the student's global top-k plants, wait, and its own action). There is no
+CLI flag, and the formal collection path never sets it.
+
 Continuations run in the original C++ simulator. ``--rollout-sim-skip`` is a CPU presentation-work
 bitmask: mask 29 skips colour, height, attachment matrices and messages, while preserving game ticks
 and animation lifecycle updates.
@@ -299,6 +303,28 @@ def _static_frames(env, root: int, actions: list[dict], income) -> list[tuple[di
     return out
 
 
+def _student_topk_candidates(legal: list[dict], k: int) -> tuple[list[dict], set[str]]:
+    """The student's global top-k legal plants, best first (``ranked_plants``).
+
+    Comparison arm only (scripts/b3_noninferiority.py, task42). The formal path never sets
+    ``_W["candidate_mode"]``, so this function is not reached by collection runs.
+    """
+    from pvz_rollout_policy import ranked_plants
+    if _W.get("student_frame") is None:
+        raise ValueError("student-topk candidates require the current student frame")
+    ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                           legal, context=_W.get("context"), history=_W.get("student_history"))
+    candidates, keys = [], set()
+    for _score, entry in ranked[:k]:
+        action = {"type": "plant", "packet": int(entry["packet"]),
+                  "col": int(entry["col"]), "row": int(entry["row"])}
+        key = json.dumps(action, sort_keys=True)
+        if key not in keys:
+            candidates.append(action)
+            keys.add(key)
+    return candidates, keys
+
+
 def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
     legal = (obs.get("legal_actions") or {}).get("plants") or []
     if not legal:
@@ -312,45 +338,59 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     income = obs.get("sun_income_rate")
     try:
         plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
-        static = _static_frames(env, root, plants, income)
-        scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
-                        key=lambda item: -item[0]) if static else []
-        # The best cells of *every* card, not the overall top-k: the static value net was trained on
-        # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
-        # against shooters right after planting -- only the rollout can show what they are worth.
-        by_card: dict[int, list] = {}
-        for v, a in scored:
-            by_card.setdefault(a["packet"], []).append(a)
-        candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP])
         policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
-        if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
-            candidates.append(policy_action)
+        mode = _W.get("candidate_mode", "static")
+        if mode == "student-topk":
+            # task42 B3 arm: global top-k plants by the student's own probabilities, plus wait and
+            # the student's own action. No static net, no per-card floor.
+            candidates, student_keys = _student_topk_candidates(legal, int(_W.get("student_topk", 3)))
+            candidates.append(NOOP)
+            if (policy_action["type"] == "plant"
+                    and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
+                candidates.append(policy_action)
+            stats["last_student_keys"] = student_keys
+        elif mode == "static":
+            static = _static_frames(env, root, plants, income)
+            scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
+                            key=lambda item: -item[0]) if static else []
+            # The best cells of *every* card, not the overall top-k: the static value net was trained on
+            # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
+            # against shooters right after planting -- only the rollout can show what they are worth.
+            by_card: dict[int, list] = {}
+            for v, a in scored:
+                by_card.setdefault(a["packet"], []).append(a)
+            candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP])
+            if (policy_action["type"] == "plant"
+                    and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
+                candidates.append(policy_action)
 
-        # --student-candidates k: the student's own top-k plants join the candidates
-        # (pvz_rollout_policy.ranked_plants). The static value net picks one cell per card, so a cell
-        # the student would actually pick -- or its second choice -- never gets compared; the search
-        # could only reach it indirectly by shovelling and letting the student react (learn/06).
-        # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
-        stats["last_student_keys"] = set()
-        if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
-            from pvz_rollout_policy import ranked_plants
-            present = {json.dumps(c, sort_keys=True) for c in candidates}
-            added = 0
-            student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
-                                          legal, context=_W.get("context"), history=_W.get("student_history"))
-            for _score, entry in student_ranked:
-                action = {"type": "plant", "packet": int(entry["packet"]),
-                          "col": int(entry["col"]), "row": int(entry["row"])}
-                key = json.dumps(action, sort_keys=True)
-                if key in present:
-                    continue
-                candidates.append(action)
-                present.add(key)
-                stats["last_student_keys"].add(key)
-                added += 1
-                if added >= args.student_candidates:
-                    break
-            stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
+            # --student-candidates k: the student's own top-k plants join the candidates
+            # (pvz_rollout_policy.ranked_plants). The static value net picks one cell per card, so a cell
+            # the student would actually pick -- or its second choice -- never gets compared; the search
+            # could only reach it indirectly by shovelling and letting the student react (learn/06).
+            # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
+            stats["last_student_keys"] = set()
+            if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
+                from pvz_rollout_policy import ranked_plants
+                present = {json.dumps(c, sort_keys=True) for c in candidates}
+                added = 0
+                student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                              legal, context=_W.get("context"), history=_W.get("student_history"))
+                for _score, entry in student_ranked:
+                    action = {"type": "plant", "packet": int(entry["packet"]),
+                              "col": int(entry["col"]), "row": int(entry["row"])}
+                    key = json.dumps(action, sort_keys=True)
+                    if key in present:
+                        continue
+                    candidates.append(action)
+                    present.add(key)
+                    stats["last_student_keys"].add(key)
+                    added += 1
+                    if added >= args.student_candidates:
+                        break
+                stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
+        else:
+            raise ValueError(f"unknown candidate mode {mode!r}")
 
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
