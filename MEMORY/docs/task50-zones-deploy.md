@@ -66,3 +66,10 @@
 - 历史fog四存档的摘要不能直接充当deploy2参考：deploy2重放L7通过，但L12第0帧已与历史摘要不同；保留原始动作/摘要，使用当前deploy2重生成完整逐tick参考，再由deploy3严格比对全字段。
 
 - 最终父链核验更正：初读origin/fog为15e947b3，merge执行时共享ref已更新为f1dce346；实际e9ff587a第二父节点为f1dce346，额外含追加D报告及诊断脚本。测试、PGO、门禁均基于该实际合并内容；任务字段审计也已对实际父节点重算，366项全同。
+
+## 主控追加 A（2026-10-23 23:05）：一并合 task37（价值网进引擎）与 pvz-env 新提交，重建 deploy3
+task37（分支 `vcpp`，codex2-b 已完成）：老师一致率 100% / 99.99% / 100%，**整局 CPU 降到 0.78–0.82**；报告见 `vcpp` 分支的 `MEMORY/docs/value-in-engine.md`。qc 只切一次，所以合在一起：
+1. 在 zones 依次 `git merge --no-ff origin/pvz-env`（含 task47 Mac clang PGO，GCC 路径不变）和 `git merge --no-ff origin/vcpp`。冲突两边功能都留。`search_play.py` 的叶值路径以 vcpp 的引擎内实现为准；要与 v4（编码 v2）、雾观测（human / xray）都对上。
+2. 全套测试全过。task37 的老师一致率门禁在 zones 上重跑一遍（三任务各 32 局，用 vcpp 的同一脚本）。
+3. **重建 deploy3**：它还没被 qc 用，可以重建。把 deploy3 快进 / 检出到新的 zones HEAD，`scripts/build_pgo.sh bench`，`fprofile-generate` 计数为 0。门禁同前：4 个非雾存档逐帧 0 差异、叶摘要逐位相同（同一价值网口径）、吞吐在噪声内或更快。
+4. 重新 dry run（L41 进课程），在"结果"写 `[A]` 一行：合并提交号、测试与门禁数字、deploy3 SHA、qc 重启命令。
