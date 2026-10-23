@@ -13,6 +13,10 @@ The search also uses a value net right after planting, to pick each card's cell 
 ``--cells K`` / ``--random-cells R`` add more cells per card (the student's K best, R random legal ones), and every
 plant candidate's board right after planting is scored too: ``static`` in the report compares cells of one card.
 
+Each dumped row carries ``scalars`` (the frozen v1 encoding, read by train_value_branches.py) and
+``scalars_v2`` (encoder v2, i.e. plus the six scene scalars), so the same dump can train a v2 net
+without silently zeroing "this is a pool" -- the v1 vector has no scene bits at all.
+
 With ``--dump`` the leaves themselves (features, task context, the result of that run) are also saved, as
 training data where the only difference between neighbouring samples is the move (scripts/train_value_branches.py),
 plus, per plant candidate, the board right after planting with the mean result of all its runs (kind 1; leaves are
@@ -50,7 +54,7 @@ def _init(args) -> None:
     _W["tmp"] = tempfile.TemporaryDirectory()
     weights = Path(_W["tmp"].name) / "student.bin"
     export_student(_W["student"], weights)
-    _W["env"] = EventWaitEnv(Path(args.resource_dir))
+    _W["env"] = EventWaitEnv(Path(args.resource_dir), executable=args.executable)
     _W["weights"] = weights
 
 
@@ -114,13 +118,25 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     return positions, dumped
 
 
+def _row(frame, won, seed, index, candidate, packet, kind, context):
+    """One training row. ``scalars`` is the frozen v1 encoding (train_value_branches.py reads it);
+    ``scalars_v2`` is the encoder-v2 vector -- the same numbers plus the six scene scalars (night, pool,
+    fog, roof, original conveyor, public graves), which a v1-only dump would silently zero on pool."""
+    import torch
+    from pvz_value_net import encode_frame, featurize
+    b, s = featurize(frame)
+    return (b.half().numpy(), torch.cat([s, context]).numpy(), won, seed, index, candidate, packet, kind,
+            torch.cat([encode_frame(frame, 2)[1], context]).numpy())
+
+
 def _save_dump(rows, path: Path, config: dict) -> None:
     import numpy as np
     import torch
     path.parent.mkdir(parents=True, exist_ok=True)
-    b, s, won, seed, pos, cand, packet, kind = zip(*rows)
+    b, s, won, seed, pos, cand, packet, kind, s2 = zip(*rows)
     temporary = path.with_suffix(".tmp")
-    torch.save({"boards": torch.from_numpy(np.stack(b)), "scalars": torch.from_numpy(np.stack(s)), "won": torch.tensor(won),
+    torch.save({"boards": torch.from_numpy(np.stack(b)), "scalars": torch.from_numpy(np.stack(s)),
+                "scalars_v2": torch.from_numpy(np.stack(s2)), "won": torch.tensor(won),
                 "seed": torch.tensor(seed), "position": torch.tensor(pos), "candidate": torch.tensor(cand),
                 "packet": torch.tensor(packet), "kind": torch.tensor(kind),
                 "config": {k: str(v) for k, v in config.items()}}, temporary)
@@ -166,14 +182,10 @@ def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, con
         for c, (wins, frames) in enumerate(zip(outcomes, leaves)):
             for f, w in zip(frames, wins):
                 if f is not None:
-                    b, s = featurize(f)
-                    dumped.append((b.half().numpy(), torch.cat([s, context]).numpy(), w, seed, index, c,
-                                   cands[c].get("packet", -1), 0))
+                    dumped.append(_row(f, w, seed, index, c, cands[c].get("packet", -1), 0, context))
         for c, (wins, f) in enumerate(zip(outcomes, planted)):
             if f is not None:
-                b, s = featurize(f)
-                dumped.append((b.half().numpy(), torch.cat([s, context]).numpy(), sum(wins) / len(wins), seed, index, c,
-                               cands[c]["packet"], 1))
+                dumped.append(_row(f, sum(wins) / len(wins), seed, index, c, cands[c]["packet"], 1, context))
     values, static = {}, {}
     for name, vnet in _W["values"].items():
         frames = [f for f in planted if f is not None]
@@ -281,6 +293,7 @@ def main() -> None:
     p.add_argument("--margin", type=float, default=0.02)
     p.add_argument("--workers", type=int, default=8)
     p.add_argument("--resource-dir", default="/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")
+    p.add_argument("--executable", help="engine binary; default is this worktree's build/pvz-portable")
     p.add_argument("--out", type=Path, required=True)
     dump = p.add_mutually_exclusive_group()
     dump.add_argument("--dump", type=Path, help="also save every live leaf with its result here (torch file)")
