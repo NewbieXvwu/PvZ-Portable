@@ -70,3 +70,17 @@
 1. `git -C /home/newbiexvwu/PvZ-search/.claude/worktrees/recipe merge --no-ff origin/pvz-env`，解冲突。pvz-env 新合了 v4（`DEFAULT_VALUE`→v4、`search_play.py` 编码 v2 / `--leaf-probe`）、task35、task42 和 `train_rollout_policy.py` 的 NaN 修复，两边功能都留。`curriculum_queue.py` 以本分支"打包参数从配方取"为准，同时保住主线的 v4 默认值。
 2. 用 `PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources` 跑 `python -m pytest python -q`，要求全过。再跑一次课程控制器 dry run，打印出的 pack 命令要与 qc 现行配方一致。
 3. `git push origin recipe`，在"结果"写 `[close]` 一行：合并提交号、测试数字、dry run 的 pack 命令。不碰 tmux `qc`，切换由主控做。
+
+## 主控审查（2026-10-23 17:50）：合进主线前还差两处
+主控在 Mac 上试合 recipe，pytest 结果是 4 failed / 310 passed，合并已撤回。要修的是两件事：
+
+1. **配方里写死了本工作树的绝对路径**：`recipes/*.json` 的 `out`、`cache_dir`（以及 `data`、`init`、`row_weights` 等 `PATH_FIELDS`）都指向 `/home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/artifacts/task38/...`。
+   - 这个工作树之后会删；而且 `artifacts/task38/cache` 主控 17:20 已经删了。
+   - 改法：配方里的路径一律写**仓库相对路径**（如 `artifacts/student/dw4i_s1`），由 `pvz_recipe` 在载入时按仓库根解析成绝对路径。只有一种写法，不加开关。
+   - `out` 的默认值应是正式产物位置；对拍用的输出由 `--out` 覆盖。`original_*` 这类出处字段保留原文。
+   - `test_historical_recipes_resolve_all_training_settings` 要在 Mac 上也过。
+2. **测试的平台假设**（Mac 上失败；同类测试主线的做法是按能力跳过，见 `python/test_oom_stress_test.py`）：
+   - `test_metrics.py` 的两项依赖 `/proc`：用 `skipUnless(Path('/proc/meminfo').exists())`，或者让 `pvz_metrics` 在没有 `/proc` 时给出明确的 None，测试按能力断言。
+   - `test_recipe.py::test_full_200_step_observer_with_source_row_report` 在 Mac 上走了 MPS，确定性算子不支持。测试里固定 `device='cpu'`，因为它测的是对拍逻辑，不是设备。
+
+修完后 `pytest python -q` 要求全过，再 `git push origin recipe`，在"结果"写 `[fix]` 一行。主控在 Mac 上复测后合并。
