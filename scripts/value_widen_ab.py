@@ -69,17 +69,29 @@ def run(args,arm,p):
 
 
 def report(args,p):
+    target=args.out/'paired.json'
+    target.unlink(missing_ok=True) # A failed revalidation must not leave an old success report.
+    frozen={t['task_id']:t for t in json.loads(Path(p['manifest']).read_text())['tasks']}
     out={}
     for task in p['tasks']:
-        results=[]
+        planned=frozen[task]['seeds'];expected=set(map(int,planned))
+        if len(planned)!=p['games'] or len(expected)!=p['games']:
+            raise ValueError(f'{task}: frozen plan does not contain {p["games"]} unique seeds')
+        results=[];missing={}
         for arm in ('v3','v4'):
             path=args.out/arm/task/'games.jsonl'
             rows=[json.loads(s) for s in path.read_text().splitlines()] if path.is_file() else []
-            results.append({r['seed']:bool(r['won']) for r in rows})
+            seeds=[int(r['seed']) for r in rows]
+            if len(seeds)!=len(set(seeds)):raise ValueError(f'{task} {arm}: duplicate game seeds')
+            unexpected=set(seeds)-expected
+            if unexpected:raise ValueError(f'{task} {arm}: unexpected seeds {sorted(unexpected)}')
+            missing[arm]=sorted(expected-set(seeds))
+            results.append({int(r['seed']):bool(r['won']) for r in rows})
         out[task]=paired(*results)
-    doc=dict(plan=p,complete=all(r['pairs']==p['games'] and not r['missing_old'] and not r['missing_new'] for r in out.values()),
+        out[task]['missing_expected_seeds']=missing
+    doc=dict(plan=p,complete=all(r['pairs']==p['games'] and not any(r['missing_expected_seeds'].values()) for r in out.values()),
              results=out,note='A nonsignificant difference with 32 pairs does not establish noninferiority. No defaults are changed.')
-    (args.out/'paired.json').write_text(json.dumps(doc,indent=1));print(json.dumps(doc,indent=1))
+    target.write_text(json.dumps(doc,indent=1));print(json.dumps(doc,indent=1))
 
 
 def main():
