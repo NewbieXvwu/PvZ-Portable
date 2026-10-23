@@ -2,8 +2,8 @@
 #define PVZ_ENVIRONMENT_WAIT_EVENTS_H
 
 #include <algorithm>
+#include <charconv>
 #include <set>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -75,9 +75,15 @@ inline double RenderedPublicCoordinate(double value)
 {
 	// EnvironmentObservation uses a fresh stream's default six significant digits.
 	// Comparing an unrounded private coordinate could disagree at the boundary.
-	std::ostringstream text;
-	text << value;
-	return std::stod(text.str());
+	// to_chars uses the same general format and rounding, without constructing a
+	// stream, consulting locale facets, allocating a string, or parsing via strtod.
+	char text[64];
+	const auto formatted = std::to_chars(text, text + sizeof(text), value, std::chars_format::general, 6);
+	double result = 0;
+	const auto parsed = std::from_chars(text, formatted.ptr, result);
+	if (formatted.ec != std::errc{} || parsed.ec != std::errc{})
+		throw std::out_of_range("public coordinate conversion failed");
+	return result;
 }
 
 template<class Items> bool HasNew(const Items& before, const Items& after)

@@ -10,14 +10,11 @@
 #include <random>
 #include <vector>
 
-static double Candidate(double value)
+static double Reference(double value)
 {
-	char buffer[64];
-	const auto text = std::to_chars(buffer, buffer + sizeof(buffer), value, std::chars_format::general, 6);
-	double result = 0;
-	const auto parsed = std::from_chars(buffer, text.ptr, result);
-	if (text.ec != std::errc{} || parsed.ec != std::errc{}) throw std::runtime_error("coordinate conversion failed");
-	return result;
+	std::ostringstream text;
+	text << value;
+	return std::stod(text.str());
 }
 
 int main()
@@ -35,8 +32,8 @@ int main()
 		for (int offset = -10; offset <= 10; ++offset)
 			values.push_back(static_cast<float>(boundary + offset * 0.0001));
 	for (const double value : values)
-		if (std::bit_cast<uint64_t>(Candidate(value)) !=
-			std::bit_cast<uint64_t>(EnvironmentWaitEvents::RenderedPublicCoordinate(value)))
+		if (std::bit_cast<uint64_t>(EnvironmentWaitEvents::RenderedPublicCoordinate(value)) !=
+			std::bit_cast<uint64_t>(Reference(value)))
 		{
 			std::cerr << "mismatch at " << std::hexfloat << value << '\n';
 			return 1;
@@ -51,8 +48,8 @@ int main()
 			const bool candidate = (arm + round) % 2;
 			const auto start = std::clock();
 			double total = 0;
-			for (const double value : values) total += candidate ? Candidate(value) :
-				EnvironmentWaitEvents::RenderedPublicCoordinate(value);
+			for (const double value : values) total += candidate ?
+				EnvironmentWaitEvents::RenderedPublicCoordinate(value) : Reference(value);
 			sink = total;
 			const double seconds = static_cast<double>(std::clock() - start) / CLOCKS_PER_SEC;
 			std::cout << (candidate ? "chars" : "stream") << " round=" << round << " seconds=" << seconds << '\n';
