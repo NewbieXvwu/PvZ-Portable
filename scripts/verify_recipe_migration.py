@@ -14,6 +14,8 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import shutil
+import tempfile
 import sys
 import time
 
@@ -101,6 +103,36 @@ def audit_source(recipe):
     return checked
 
 
+def seed_private_cache(recipe):
+    """Reuse verified historical cache bytes without writing to their source tree."""
+    source = Path(recipe['provenance']['original_cache_dir'])
+    target = Path(recipe['cache_dir'])
+    copied = size = 0
+    for folder in ('v2', 'identity_scene', 'packets', 'cells'):
+        base = source/folder
+        if not base.is_dir():
+            continue
+        (target/folder).mkdir(parents=True,exist_ok=True)
+        for path in base.glob('*.npz'):
+            destination = target/folder/path.name
+            if destination.exists():
+                continue
+            with tempfile.NamedTemporaryFile(dir=target/folder,suffix='.seed',delete=False) as handle:
+                temporary = Path(handle.name)
+            try:
+                shutil.copyfile(path,temporary)
+                try:
+                    # Link our private COPY atomically; never hard-link the source cache.
+                    os.link(temporary,destination)
+                    copied += 1
+                    size += path.stat().st_size
+                except FileExistsError:
+                    pass
+            finally:
+                temporary.unlink(missing_ok=True)
+    return dict(copied_files=copied,copied_bytes=size)
+
+
 class QuietMetrics:
     def __init__(self, *args, **kwargs): pass
     def start(self): return self
@@ -117,6 +149,8 @@ def verify(recipe_path, out):
     torch.set_num_threads(1)
     recipe = load_recipe(recipe_path, 'training')
     field_audit = audit_source(recipe)
+    cache_seed = seed_private_cache(recipe)
+    print(json.dumps(dict(cache_seed=cache_seed)),flush=True)
     record_path = Path(recipe['provenance']['source_path'])
     assert hashlib.sha256(record_path.read_bytes()).hexdigest() == recipe['provenance']['source_sha256']
     record = json.loads(record_path.read_text())
@@ -186,7 +220,7 @@ def verify(recipe_path, out):
             legacy_revision='6fdee2af', source_command_sha256=recipe['provenance']['source_sha256'],
             steps=200,rows=len(payload[2]),archives=len(observations),
             labels=dict(Counter(path.parent.name for path,_ in observations)),
-            full_corpus=True,original_schedule=True,field_audit=field_audit,device=recipe['device'],seed=recipe['seed'],
+            full_corpus=True,original_schedule=True,field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
             maximum_loss_error=max(errors),passed=max(errors)<=1e-6,
             torch_version=str(torch.__version__),cuda_version=torch.version.cuda,traces=traces)
         (out/'parity.json').write_text(json.dumps(result,indent=2)+'\n')

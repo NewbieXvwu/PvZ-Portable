@@ -56,6 +56,24 @@ class RecipeTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 validate({**args.resolved_recipe,'day_seed':1})
 
+    def test_parity_cache_is_a_private_copy_and_never_clobbers(self):
+        import sys
+        sys.path.insert(0,str(ROOT/'scripts'))
+        from verify_recipe_migration import seed_private_cache
+        with tempfile.TemporaryDirectory() as folder:
+            base = Path(folder)
+            source = base/'original/v2'
+            source.mkdir(parents=True)
+            (source/'entry.npz').write_bytes(b'original cached bytes')
+            recipe = dict(cache_dir=str(base/'private'),
+                          provenance=dict(original_cache_dir=str(base/'original')))
+            self.assertEqual(seed_private_cache(recipe)['copied_files'], 1)
+            destination = base/'private/v2/entry.npz'
+            self.assertNotEqual(destination.stat().st_ino, (source/'entry.npz').stat().st_ino)
+            (source/'entry.npz').write_bytes(b'changed source')
+            self.assertEqual(seed_private_cache(recipe)['copied_files'], 0)
+            self.assertEqual(destination.read_bytes(), b'original cached bytes')
+
     def test_historical_recipes_resolve_all_training_settings(self):
         for name, labels in [('dw4i',170),('dw5i',281),('identity_dw3_s1',82)]:
             recipe = load_recipe(ROOT/f'recipes/{name}.json', 'training')
