@@ -134,6 +134,14 @@ def main():
         if not args.no_profile:
             profile.disable()
         env = teacher._W["env"]
+        # Each invocation owns one fresh worker/simulator pair. Account both
+        # implementations here: current collection no longer returns host_cpu.
+        from pvz_cpu_usage import usage, process_usage, difference
+        zero = {"user_s": 0.0, "system_s": 0.0}
+        result["host_cpu"] = {
+            "worker": difference(usage(), zero),
+            "simulator": difference(process_usage(env._process.pid), zero)}
+        result["host_cpu_method"] = "fresh worker getrusage and simulator /proc, same boundary for both arms"
         if shadow is not None and len(trace) != len(shadow):
             raise AssertionError(f"shadow length mismatch: {len(trace)} != {len(shadow)}")
         engine_profile = env._command("ENV_PROFILE")

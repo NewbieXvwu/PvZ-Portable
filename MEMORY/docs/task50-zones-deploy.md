@@ -79,3 +79,5 @@ task37（分支 `vcpp`，codex2-b 已完成）：老师一致率 100% / 99.99% /
 2. 全套测试全过。task37 的老师一致率门禁在 zones 上重跑一遍（三任务各 32 局，用 vcpp 的同一脚本）。
 3. **重建 deploy3**：它还没被 qc 用，可以重建。把 deploy3 快进 / 检出到新的 zones HEAD，`scripts/build_pgo.sh bench`，`fprofile-generate` 计数为 0。门禁同前：4 个非雾存档逐帧 0 差异、叶摘要逐位相同（同一价值网口径）、吞吐在噪声内或更快。
 4. 重新 dry run（L41 进课程），在"结果"写 `[A]` 一行：合并提交号、测试与门禁数字、deploy3 SHA、qc 重启命令。
+
+- [A] 门禁工具适配：现行采集不再返回旧measure_cpu字段，首个after试跑终局后在结果落盘失败，未计有效局；profile_value_engine改为对两臂在同一边界统一读取worker getrusage与engine /proc CPU，再单独扣除换未来噪声，不恢复生产开关。正式配置及192局规模不变。
