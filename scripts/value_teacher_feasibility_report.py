@@ -74,6 +74,11 @@ def report(paths):
                 if any(saved[k] != v for k,v in summary.items()):
                     raise ValueError('group summary differs from raw outcomes')
                 if root['decision_seed']//10000 != seed: raise ValueError('root seed differs')
+                nonterminal = [x for x in rows if x['leaf_frame']['terminal'] is False]
+                nw = sum(x['outcome']['won'] for x in nonterminal)
+                summary.update(nonterminal_labels=len(nonterminal), nonterminal_wins=nw,
+                    nonterminal_effective_pairs=nw*(len(nonterminal)-nw),
+                    nonterminal_mixed=0 < nw < len(nonterminal))
                 summary.update(seed=seed,wave_target=target,root_tick=root['root_frame']['tick'])
                 groups.append(summary); by_wave[target].append(summary); labels.extend(rows)
                 for f in [root_dir/'root.json',root_dir/'summary.json',*files]: hashes[str(f)]=digest(f)
@@ -84,6 +89,7 @@ def report(paths):
     continuation_cpu = sum(x['continuation_cpu_seconds'] for x in labels)
     replay_cpu = sum(x['replay_cpu_seconds'] for x in labels)
     effective = sum(g['effective_pairs'] for g in groups)
+    nonterminal_pairs = sum(g['nonterminal_effective_pairs'] for g in groups)
     n_groups = len(groups); n_labels = len(labels); n_seeds = len(seeds)
     if not n_groups or not n_labels: raise ValueError('no completed groups')
     mixed = sum(g['mixed'] for g in groups)
@@ -112,22 +118,29 @@ def report(paths):
             elapsed_hours_at_four_reserved_cores=hours/available if available else None,
             elapsed_hours_at_observed_lane_utilization=hours/observed_capacity if observed_capacity else None,
             candidate_terminal_labels=64*groups_per_seed*n_labels/n_groups*futures,
-            effective_pairs_linear_projection=64*groups_per_seed*effective/n_groups*futures)
+            effective_pairs_linear_projection=64*groups_per_seed*effective/n_groups*futures,
+            nonterminal_effective_pairs_linear_projection=64*groups_per_seed*nonterminal_pairs/n_groups*futures)
     return dict(status='complete',seeds=sorted(seeds),root_games_won=sum(r['won'] for r in results),
         root_games=n_seeds,root_groups=n_groups,missing_targets={str(r['seed']):r['missing_wave_targets'] for r in results},
         mixed_groups=mixed,mixed_fraction=mixed/n_groups,all_loss_groups=sum(g['all_loss'] for g in groups),
         labels=n_labels,wins=sum(x['outcome']['won'] for x in labels),
         label_win_fraction=sum(x['outcome']['won'] for x in labels)/n_labels,
         effective_pairs=effective,total_candidate_pairs=sum(g['total_pairs'] for g in groups),
+        nonterminal_leaf_labels=sum(g['nonterminal_labels'] for g in groups),
+        nonterminal_leaf_wins=sum(g['nonterminal_wins'] for g in groups),
+        nonterminal_mixed_groups=sum(g['nonterminal_mixed'] for g in groups),
+        nonterminal_effective_pairs=nonterminal_pairs,
         cpu_seconds=dict(total=total_cpu,teacher_continuation=continuation_cpu,history_replay=replay_cpu,
             root_and_instrumentation=total_cpu-continuation_cpu-replay_cpu,
             per_candidate_terminal_pair_total=total_cpu/n_labels,
             per_effective_ranking_pair_total=total_cpu/effective if effective else None,
+            per_nonterminal_effective_pair_total=total_cpu/nonterminal_pairs if nonterminal_pairs else None,
             per_effective_ranking_pair_continuation=continuation_cpu/effective if effective else None),
         mean_search_roots_per_game=searched_per_seed,groups=groups,
         per_wave={str(k):dict(groups=len(v),mixed=sum(x['mixed'] for x in v),
             labels=sum(x['labels'] for x in v),wins=sum(x['wins'] for x in v),
             effective_pairs=sum(x['effective_pairs'] for x in v),
+            nonterminal_effective_pairs=sum(x['nonterminal_effective_pairs'] for x in v),
             cpu_seconds=sum(x['continuation_cpu_seconds']+x['replay_cpu_seconds'] for x in v))
             for k,v in by_wave.items()},
         resources=dict(samples=len(all_samples),max_own_engines=max_own,logical_cpus=cores,
@@ -141,6 +154,7 @@ def report(paths):
             all_search_roots_three_futures=estimate(searched_per_seed,3)),
         limitations=['One shared actual first-round future per root: observed win/loss contrasts, not precise win probabilities.',
             'Twelve intended roots in four independent games; candidate pairs and roots within a game are correlated.',
+            'Terminal short leaves bypass the value net. Nonterminal-only pairs are reported separately as the relevant ranking signal.',
             'Expansion extrapolates stratified wave samples; continuation cost varies with phase and policy state.',
             'CPU excludes parent model preload/report and small worker-init costs; includes root/continuation Python and engine plus replay/check overhead.',
             'qc CPU cores from surviving PID deltas are a lower bound; reserved16/20 cores is an allocation scenario, not a promise of throughput.'],

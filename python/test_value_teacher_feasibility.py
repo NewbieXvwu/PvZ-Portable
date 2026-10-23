@@ -67,6 +67,7 @@ class TeacherReportTest(unittest.TestCase):
             row=dict(candidate=i,action=actions[i],common_future=base*1000%2**32,
                 continuation_seed_base=base+5000,
                 history_checks={k:True for k in ('frame','engine_state','income','income_start')},
+                leaf_frame=dict(terminal=False),
                 outcome=dict(won=won,terminal=True,result=int(won),decisions=1),
                 continuation_cpu_seconds=3,replay_cpu_seconds=.5)
             rows.append(row); write_json(self.group/f'candidate_{i}.json',row)
@@ -79,6 +80,7 @@ class TeacherReportTest(unittest.TestCase):
         from value_teacher_feasibility_report import report
         r=report([self.plan])
         self.assertEqual(r['effective_pairs'],1)
+        self.assertEqual(r['nonterminal_effective_pairs'],1)
         self.assertEqual(r['mixed_fraction'],1)
         self.assertEqual(r['cpu_seconds']['per_effective_ranking_pair_total'],10)
         self.assertEqual(r['resources']['qc_mean_cpu_cores_lower_bound'],1)
@@ -96,6 +98,15 @@ class TeacherReportTest(unittest.TestCase):
         from value_teacher_feasibility_report import report
         self.write(self.out/'completed.json',dict(seeds=[self.seed+1]))
         with self.assertRaises(ValueError):report([self.plan])
+
+    def test_terminal_leaf_does_not_create_value_net_ranking_signal(self):
+        from value_teacher_feasibility_report import report
+        f=self.group/'candidate_1.json';row=json.loads(f.read_text())
+        row['leaf_frame']['terminal']=True;self.write(f,row)
+        r=report([self.plan])
+        self.assertEqual(r['effective_pairs'],1)
+        self.assertEqual(r['nonterminal_effective_pairs'],0)
+        self.assertIsNone(r['cpu_seconds']['per_nonterminal_effective_pair_total'])
 
 
 if __name__ == '__main__': unittest.main()
