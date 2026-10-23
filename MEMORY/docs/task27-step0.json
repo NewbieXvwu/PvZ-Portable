@@ -1,0 +1,66 @@
+{
+  "complete": true,
+  "unit_tests": 12,
+  "smoke": {
+    "complete": true,
+    "model_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "executable_sha256": "9507ccb55edea37518cb7591553764948f074661d958a6d5c35aff4eaa6c2778",
+    "checks": [
+      {
+        "task": "night_l12_eval_n10",
+        "seed": 30000,
+        "legacy_outcome_identical": true,
+        "native_vs_archived_actions_equal": true,
+        "plants": 256,
+        "planted_types": {
+          "1": 48,
+          "8": 66,
+          "9": 76,
+          "4": 24,
+          "3": 20,
+          "11": 4,
+          "2": 8,
+          "5": 10
+        }
+      },
+      {
+        "task": "day_l10_orig_eval",
+        "seed": 30000,
+        "legacy_outcome_identical": true,
+        "native_vs_archived_actions_equal": true,
+        "plants": 49,
+        "planted_types": {
+          "4": 5,
+          "3": 7,
+          "2": 14,
+          "0": 3,
+          "5": 6,
+          "7": 13,
+          "6": 1
+        }
+      },
+      {
+        "task": "pool_l21_eval_p9k",
+        "seed": 30000,
+        "legacy_outcome_identical": true,
+        "native_vs_archived_actions_equal": true,
+        "plants": 77,
+        "planted_types": {
+          "1": 27,
+          "19": 9,
+          "4": 9,
+          "16": 19,
+          "3": 5,
+          "0": 7,
+          "5": 1
+        }
+      }
+    ]
+  },
+  "prior_plan_sha256": "881f1511984280d0ae11a4d1a6b6e53ddd5762e177e6084b6c9ec58520d36a58",
+  "amended_plan_sha256": "a4fcd7260e848419fbe7273efa87471b861f307a6bd92831c6e8ffce0da8ec6b",
+  "retained_reference_games": 3264,
+  "retained_reference_executable_sha256": "ed6c7b5376afe386c515969bfc00a3430c05fa092e4eca3ae0b0c2aa782ed4fc",
+  "unavailable_consumer": "analyze_l20_conveyor.py is absent in dw5 and main; no unrelated worktree imported.",
+  "note": "Old raw records are immutable; exact executable/source lineage retained. The requested protocol change is isolated from policy behavior."
+}

@@ -1,0 +1,388 @@
+{
+  "complete": true,
+  "model_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+  "executable_sha256": "ed6c7b5376afe386c515969bfc00a3430c05fa092e4eca3ae0b0c2aa782ed4fc",
+  "panel_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/baseline_v2_dw4i_s1/panel.json",
+  "panel_sha256": "0446cd332cb9ce4a93b5f9eb5ede03b8a832947064849bd9c1b9ab688035180c",
+  "groups": {
+    "day": {
+      "tasks": 8,
+      "games": 1024,
+      "won": 947,
+      "mean_win_rate": 0.9248046875,
+      "planted_by_type_total": {
+        "0": 10089,
+        "1": 10615,
+        "2": 3765,
+        "3": 2691,
+        "4": 4080,
+        "5": 2765,
+        "6": 419,
+        "7": 4012
+      },
+      "planted_by_type_per_game": {
+        "0": 9.8525390625,
+        "1": 10.3662109375,
+        "2": 3.6767578125,
+        "3": 2.6279296875,
+        "4": 3.984375,
+        "5": 2.7001953125,
+        "6": 0.4091796875,
+        "7": 3.91796875
+      }
+    },
+    "heldout": {
+      "tasks": 12,
+      "games": 768,
+      "won": 461,
+      "mean_win_rate": 0.6002604166666666,
+      "planted_by_type_total": {
+        "0": 1647,
+        "1": 8145,
+        "2": 2500,
+        "3": 4915,
+        "4": 5422,
+        "5": 1926,
+        "6": 541,
+        "7": 3708,
+        "17": 542,
+        "18": 64,
+        "20": 64,
+        "21": 2170,
+        "22": 64,
+        "27": 1169,
+        "28": 398,
+        "29": 517,
+        "32": 3049,
+        "34": 690,
+        "36": 900,
+        "37": 1712,
+        "38": 944
+      },
+      "planted_by_type_per_game": {
+        "0": 2.14453125,
+        "1": 10.60546875,
+        "2": 3.2552083333333335,
+        "3": 6.399739583333333,
+        "4": 7.059895833333333,
+        "5": 2.5078125,
+        "6": 0.7044270833333334,
+        "7": 4.828125,
+        "17": 0.7057291666666666,
+        "18": 0.08333333333333333,
+        "20": 0.08333333333333333,
+        "21": 2.8255208333333335,
+        "22": 0.08333333333333333,
+        "27": 1.5221354166666667,
+        "28": 0.5182291666666666,
+        "29": 0.6731770833333334,
+        "32": 3.9700520833333335,
+        "34": 0.8984375,
+        "36": 1.171875,
+        "37": 2.2291666666666665,
+        "38": 1.2291666666666667
+      }
+    },
+    "night": {
+      "tasks": 9,
+      "games": 1152,
+      "won": 818,
+      "mean_win_rate": 0.7100694444444444,
+      "planted_by_type_total": {
+        "0": 956,
+        "1": 35584,
+        "2": 6465,
+        "3": 17481,
+        "4": 20271,
+        "5": 7570,
+        "7": 316,
+        "8": 53470,
+        "9": 59112,
+        "11": 9296,
+        "13": 3
+      },
+      "planted_by_type_per_game": {
+        "0": 0.8298611111111112,
+        "1": 30.88888888888889,
+        "2": 5.611979166666667,
+        "3": 15.174479166666666,
+        "4": 17.596354166666668,
+        "5": 6.571180555555555,
+        "7": 0.2743055555555556,
+        "8": 46.41493055555556,
+        "9": 51.3125,
+        "11": 8.069444444444445,
+        "13": 0.0026041666666666665
+      }
+    },
+    "pool": {
+      "tasks": 5,
+      "games": 320,
+      "won": 2,
+      "mean_win_rate": 0.00625,
+      "planted_by_type_total": {
+        "0": 2250,
+        "1": 6796,
+        "2": 473,
+        "3": 1261,
+        "4": 2324,
+        "5": 583,
+        "7": 139,
+        "16": 5117,
+        "19": 2146
+      },
+      "planted_by_type_per_game": {
+        "0": 7.03125,
+        "1": 21.2375,
+        "2": 1.478125,
+        "3": 3.940625,
+        "4": 7.2625,
+        "5": 1.821875,
+        "7": 0.434375,
+        "16": 15.990625,
+        "19": 6.70625
+      }
+    }
+  },
+  "tasks": [
+    {
+      "task_id": "day_l1_eval_d7",
+      "games": 128,
+      "won": 118,
+      "win_rate": 0.921875,
+      "games_sha256": "ff06d25c116e930d74c8bfd5a9fa40fbe69df95801792c82623837415ba0e89d"
+    },
+    {
+      "task_id": "day_l3_eval_d7",
+      "games": 128,
+      "won": 116,
+      "win_rate": 0.90625,
+      "games_sha256": "72dd46a5f6566ce72904d3547393d498f0bf3f7fb046f1a2ae01174497b11a4a"
+    },
+    {
+      "task_id": "day_l4_eval_d7",
+      "games": 128,
+      "won": 122,
+      "win_rate": 0.953125,
+      "games_sha256": "8e6feb9a64cd7ffd295e85aa7721d74e5ce351cccd8a46c1225ef9ce72b650d8"
+    },
+    {
+      "task_id": "day_l6_eval_d7",
+      "games": 128,
+      "won": 122,
+      "win_rate": 0.953125,
+      "games_sha256": "29817e0908d96db071f9e4cace5dfec55aa11957ca5b09a65e3c7636f95d7ee2"
+    },
+    {
+      "task_id": "day_l7_eval_d7",
+      "games": 128,
+      "won": 116,
+      "win_rate": 0.90625,
+      "games_sha256": "9fd5c3cc5d0231b5d582a0a595a329fbf1dc615484b5e9be6b6926f5c5abea0e"
+    },
+    {
+      "task_id": "day_l8_eval_d7",
+      "games": 128,
+      "won": 116,
+      "win_rate": 0.90625,
+      "games_sha256": "869abce56d6a6b0f2d8e787f614543fbdd1b0503e0900036ed03ec0d0c8564f3"
+    },
+    {
+      "task_id": "day_l9_eval_d7",
+      "games": 128,
+      "won": 112,
+      "win_rate": 0.875,
+      "games_sha256": "b6019fc0cd45b24c265fc1de2edccc45a2f13ee2a3972e20bc9aa00a2f6330ee"
+    },
+    {
+      "task_id": "day_l10_orig_eval",
+      "games": 128,
+      "won": 125,
+      "win_rate": 0.9765625,
+      "games_sha256": "ba2884a0da237024a2b97e11134d2d1990740875a09964dd6f7f6b5b6e0d264d"
+    },
+    {
+      "task_id": "day_l7_eval_d7p_holdout1",
+      "games": 64,
+      "won": 64,
+      "win_rate": 1.0,
+      "games_sha256": "80d8fc43d8fe4ee038e0cde26d5b2dc2d333b632910041a4e22ddd8d5cc518eb"
+    },
+    {
+      "task_id": "day_l7_eval_d7p_holdout2",
+      "games": 64,
+      "won": 60,
+      "win_rate": 0.9375,
+      "games_sha256": "5697afb28e04b4b13a482854fffa1b7b2e567086fcf3240fc31ef426fcd3e9ec"
+    },
+    {
+      "task_id": "day_l7_eval_d7p_holdout3",
+      "games": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "games_sha256": "31778bb5cd525b776850da9e328d60cf9483075128da49963d576b03e3cf6efc"
+    },
+    {
+      "task_id": "day_l8_eval_d7p_holdout1",
+      "games": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "games_sha256": "8dbb468293326b62e6044ddb6fd9909660ace3309b3c859aed7000bd7e6a659e"
+    },
+    {
+      "task_id": "day_l8_eval_d7p_holdout2",
+      "games": 64,
+      "won": 56,
+      "win_rate": 0.875,
+      "games_sha256": "7b851e330dd747d9af1e5e21c6783224a353a8826f7c5e43810f7db473992998"
+    },
+    {
+      "task_id": "day_l8_eval_d7p_holdout3",
+      "games": 64,
+      "won": 64,
+      "win_rate": 1.0,
+      "games_sha256": "576543a546b5ba525b6863f0cd036daa306ef6e832b78f7009bbc0c39263727d"
+    },
+    {
+      "task_id": "day_l9_eval_d7p_holdout1",
+      "games": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "games_sha256": "a3f2f6304fc38acfa4c43c21d9d221860ee9bc89066017ed1da47869d5b8716c"
+    },
+    {
+      "task_id": "day_l9_eval_d7p_holdout2",
+      "games": 64,
+      "won": 41,
+      "win_rate": 0.640625,
+      "games_sha256": "f330d1368893929b77f4da3d0642e0ed4d0e43e1a14030fb55feb6e9482ebcc8"
+    },
+    {
+      "task_id": "day_l9_eval_d7p_holdout3",
+      "games": 64,
+      "won": 11,
+      "win_rate": 0.171875,
+      "games_sha256": "31660d99b9d8da31008690345433ddcdfe0b114f8d1f31230189b1bfe5ed1802"
+    },
+    {
+      "task_id": "day_l10_eval_d7p_holdout1",
+      "games": 64,
+      "won": 52,
+      "win_rate": 0.8125,
+      "games_sha256": "5f159355271428d89d49c328aac696097e02f47f459557137057ce14a6430f22"
+    },
+    {
+      "task_id": "day_l10_eval_d7p_holdout2",
+      "games": 64,
+      "won": 54,
+      "win_rate": 0.84375,
+      "games_sha256": "c47179ecb245b4adeb3bb1148174f64711581c7fc58273960efdbdcd7d95cb16"
+    },
+    {
+      "task_id": "day_l10_eval_d7p_holdout3",
+      "games": 64,
+      "won": 59,
+      "win_rate": 0.921875,
+      "games_sha256": "df690d231ad6595a84b4a99bae038e54014cf3213e40fb32359df7566e3b3690"
+    },
+    {
+      "task_id": "night_l11_eval_n10",
+      "games": 128,
+      "won": 128,
+      "win_rate": 1.0,
+      "games_sha256": "2ce636b5c111791d742ecd37bb7b212aef85c9b78c70494d8bf5f119bfafc90b"
+    },
+    {
+      "task_id": "night_l12_eval_n10",
+      "games": 128,
+      "won": 104,
+      "win_rate": 0.8125,
+      "games_sha256": "264e888e51cd57f79189abe14d28ce73dce110ea6a2b2adb218b18fbf5ad376a"
+    },
+    {
+      "task_id": "night_l13_eval_n10",
+      "games": 128,
+      "won": 126,
+      "win_rate": 0.984375,
+      "games_sha256": "23fdd0c24a34dfb194a79f76bb95a55558100f95674b8a7172bc2c4f464dd51a"
+    },
+    {
+      "task_id": "night_l14_eval_n10",
+      "games": 128,
+      "won": 87,
+      "win_rate": 0.6796875,
+      "games_sha256": "7f56a15a170f063da96756ccb8bc04947875ab35e29805a652115f4f02be79b3"
+    },
+    {
+      "task_id": "night_l16_eval_n10",
+      "games": 128,
+      "won": 128,
+      "win_rate": 1.0,
+      "games_sha256": "e51db3129a376343a921d4a385a4ce961a5c7447f93090e735fa3ea4ca44363e"
+    },
+    {
+      "task_id": "night_l17_eval_n10",
+      "games": 128,
+      "won": 65,
+      "win_rate": 0.5078125,
+      "games_sha256": "8010dd87f261cc751335b7cc42a65c294fda39957ff9cde6aade433c2c6cba81"
+    },
+    {
+      "task_id": "night_l18_eval_n10",
+      "games": 128,
+      "won": 121,
+      "win_rate": 0.9453125,
+      "games_sha256": "7a0c3df37785966b2d3f5cd09b282569ea78e9b495e339244add13025fdacdad"
+    },
+    {
+      "task_id": "night_l19_eval_n10",
+      "games": 128,
+      "won": 59,
+      "win_rate": 0.4609375,
+      "games_sha256": "b5917a928ce94e93cb475fb65c2e5386c1c0e32231082d86c834fc0721e8de93"
+    },
+    {
+      "task_id": "night_l20_eval_n10_orig",
+      "games": 128,
+      "won": 0,
+      "win_rate": 0.0,
+      "games_sha256": "05c2d1968b22a5f94ba101fd9f7b7f944001428c4275893ae95f62318d5af7b0"
+    },
+    {
+      "task_id": "pool_l21_eval_p9k",
+      "games": 64,
+      "won": 1,
+      "win_rate": 0.015625,
+      "games_sha256": "b0a78ec7ad2fcaec9406df187db4f6aeefd6ee56d261769fdd54d6b817a11c05"
+    },
+    {
+      "task_id": "pool_l22_eval_p9k",
+      "games": 64,
+      "won": 1,
+      "win_rate": 0.015625,
+      "games_sha256": "34cd93065ee3c942c1d24e236e20860c602564ff623f9a256231447a940e9c61"
+    },
+    {
+      "task_id": "pool_l23_eval_p9k",
+      "games": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "games_sha256": "07111b1f042ebe49e7fd7737ee4a08cb7082177a5652cb230c60a9bc011c88b0"
+    },
+    {
+      "task_id": "pool_l24_eval_p9k",
+      "games": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "games_sha256": "cd2d80619c412c07f04177d4904d82e23136815deac209791499884941d4cd32"
+    },
+    {
+      "task_id": "pool_l26_eval_p9k",
+      "games": 64,
+      "won": 0,
+      "win_rate": 0.0,
+      "games_sha256": "2d3833fd9172a8f743af8248ee4904dce56077f4de546e63fdafb53c07bbab2c"
+    }
+  ],
+  "scope": "Only dw4i_s1 v2; other reference and dw5i results remain pending. This reference predates requested task0 protocol rename."
+}

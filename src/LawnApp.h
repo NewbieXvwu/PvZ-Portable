@@ -252,7 +252,7 @@ public:
 	bool							EnvironmentShovel(int col, int row);
 	void							EnvironmentWait(int ticks);
 	void							EnvironmentPresent();
-	EnvironmentWaitEvents::PublicState EnvironmentPublicWaitState();
+	void EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& theState);
 	EnvironmentWaitEvents::Result EnvironmentWaitUntil(int ticks, int condition);
 	bool							EnvironmentTerminal() const;
 	std::string					EnvironmentObservation(bool privileged = false);

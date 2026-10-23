@@ -12,9 +12,15 @@
 3. **落盘**：状态 json（默认 `~/pvz-logs/curriculum_state.json`），每轮一行日志；
    偏移在**跑之前**写进状态，崩溃/中断不会重采同一批种子。
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
+5. **打包**：每轮结束把“本队列写过的全部标签 + `--pack-labels`”打成训练包（task33 第 2 项），
+   并删掉被它取代的旧包。训练端只读包，行选项必须与训练命令一致（它们是包键的一部分）。
 
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
-帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改），并发默认 2 个游戏进程。
+帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
+每开一组前读 MemAvailable，`--workers` 只是上限，实际 worker 数按
+`(MemAvailable − 6 GiB) / 一个 worker 的实测 RSS` 取整，至少 1。每 worker 的 RSS 在
+控制器启动时用一个单 worker 的真实对局实测（Python + 引擎峰值；对局写临时目录，不占偏移）。
+非 Linux（没有 /proc）时不做缩放，直接用 `--workers`。
 
 用法：
   python3 scripts/curriculum_queue.py --dry-run                 # 第一轮分配表（用已有结果初始化）
@@ -28,8 +34,10 @@ from __future__ import annotations
 import argparse
 import glob
 import json
+import os
 import subprocess
 import sys
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -38,7 +46,8 @@ ROOT = Path(__file__).resolve().parent.parent
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from make_multiplier_tasks import FAMILIES, load_tasks, source_paths  # noqa: E402
+from make_multiplier_tasks import FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
+from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
 FRONTIER_LOW = 0.5
 FRONTIER_HIGH = 0.85
@@ -56,6 +65,106 @@ DEFAULT_STATIC_VALUE = MAIN / 'artifacts/hard/value_branch1/model.pt'
 DEFAULT_VALUE = MAIN / 'artifacts/value_net/v3/model.pt'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
+
+GIB = 1024 ** 3
+MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
+DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
+PROBE_TIMEOUT_SECONDS = 900.0
+RSS_POLL_SECONDS = 0.2
+
+
+def mem_available_bytes() -> int | None:
+    """Linux 的 MemAvailable（字节）；没有 /proc 的平台返回 None。"""
+    try:
+        text = Path('/proc/meminfo').read_text()
+    except OSError:
+        return None
+    for line in text.splitlines():
+        if line.startswith('MemAvailable:'):
+            return int(line.split()[1]) * 1024
+    return None
+
+
+def worker_count(available: int | None, per_worker: int, upper: int) -> int:
+    """clamp(⌊(MemAvailable − 6 GiB) / per_worker⌋, 1, upper)；未知内存或未实测时用上限。"""
+    if available is None or per_worker <= 0:
+        return upper
+    return max(1, min(upper, (available - MEMORY_RESERVE_BYTES) // per_worker))
+
+
+def _proc_table() -> dict[int, tuple[int, int]]:
+    """pid -> (ppid, 常驻字节)，一次扫完 /proc；没有 /proc 时为空。"""
+    try:
+        page = os.sysconf('SC_PAGE_SIZE')
+        entries = list(os.scandir('/proc'))
+    except (OSError, ValueError):
+        return {}
+    table = {}
+    for entry in entries:
+        if not entry.name.isdigit():
+            continue
+        try:
+            fields = Path(entry.path, 'stat').read_text().rsplit(')', 1)[1].split()
+            table[int(entry.name)] = (int(fields[1]), int(fields[21]) * page)
+        except (OSError, ValueError, IndexError):
+            continue
+    return table
+
+
+def _descendant_rss(root: int, table: dict[int, tuple[int, int]]) -> int:
+    """root 的所有后代（不含 root）的常驻字节之和。"""
+    children: dict[int, list[int]] = {}
+    for pid, (ppid, _rss) in table.items():
+        children.setdefault(ppid, []).append(pid)
+    total, stack = 0, list(children.get(root, ()))
+    while stack:
+        pid = stack.pop()
+        total += table[pid][1]
+        stack.extend(children.get(pid, ()))
+    return total
+
+
+def measure_worker_bytes(args, item: dict) -> int:
+    """用一个单 worker 的真实对局测一个 worker 的 Python + 引擎峰值 RSS。
+
+    对局写在临时目录，不动状态偏移，也不进帧档案；正式第一组会用同一个种子重跑。
+    """
+    with tempfile.TemporaryDirectory(prefix='pvz-oom-probe-') as tmp:
+        tmp_path = Path(tmp)
+        command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'], 1,
+                              'oomprobe', workers=1, frames=tmp_path / 'frames', out=tmp_path)
+        process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                                   text=True)
+        peak = 0
+        deadline = time.monotonic() + PROBE_TIMEOUT_SECONDS
+        while process.poll() is None:
+            peak = max(peak, _descendant_rss(process.pid, _proc_table()))
+            if time.monotonic() > deadline:
+                process.kill()
+                process.communicate()
+                raise RuntimeError(f'probe timed out after {PROBE_TIMEOUT_SECONDS:.0f}s')
+            time.sleep(RSS_POLL_SECONDS)
+        _stdout, stderr = process.communicate()
+        if process.returncode != 0:
+            raise RuntimeError(f'probe exited {process.returncode}: {stderr.strip()[-500:]}')
+        return peak
+
+
+def startup_worker_estimate(args, plan: list[dict]) -> int:
+    """控制器启动时实测一次；没有 /proc 返回 0（worker_count 会退回 --workers）。"""
+    if mem_available_bytes() is None:
+        return 0
+    if not plan:
+        return DEFAULT_WORKER_BYTES
+    started = time.time()
+    try:
+        measured = measure_worker_bytes(args, plan[0])
+    except (OSError, RuntimeError) as error:
+        log_line(args.log, f'worker probe failed ({error}); assuming {DEFAULT_WORKER_BYTES / GIB:.1f} GiB/worker')
+        return DEFAULT_WORKER_BYTES
+    log_line(args.log, f'worker estimate: {max(measured, 1) / GIB:.2f} GiB peak RSS (python+engine), '
+                       f'{time.time() - started:.0f}s probe')
+    return max(measured, 1)
 
 
 def load_panel(path: Path) -> tuple[dict[str, dict], list[float], dict[str, float], dict[str, Path]]:
@@ -92,7 +201,9 @@ def parse_task_id(task_id: str, names: dict[str, float]) -> tuple[str, float]:
 
 def training_base_ids() -> set[str]:
     ids = set()
-    for _family, _key, pattern, levels, _terrain in FAMILIES:
+    for family, _key, pattern, levels, _terrain in FAMILIES:
+        if family in SUPERSEDED:
+            continue
         for level in levels:
             ids.add(pattern.format(level=level))
     return ids
@@ -141,17 +252,54 @@ def init_from_runs(patterns: list[str], names: dict[str, float]) -> tuple[dict, 
     return windows, offsets
 
 
-def make_state(tasks: dict[str, dict], names: dict[str, float], windows: dict, offsets: dict,
-               panel: str) -> dict:
-    cells = {}
-    base_ids = training_base_ids()
+def family_of(base: str) -> str | None:
+    """训练 base id -> FAMILIES 里的族短名（`night_l12_train_n10p` -> `night_n10p`）。"""
+    for family, _key, pattern, levels, _terrain in FAMILIES:
+        if any(base == pattern.format(level=level) for level in levels):
+            return family
+    return None
+
+
+def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float],
+                    windows_from_runs: dict) -> list[str]:
+    """把状态里的格子对齐到当前训练集合；返回日志行，由调用方逐行写 curriculum.log。"""
+    lines = []
+    training = training_base_ids()
+    cells = state.setdefault('cells', {})
+    retired = state.setdefault('retired_cells', {})
+    wanted = {}
     for task_id, task in tasks.items():
         base, multiplier = parse_task_id(task_id, names)
-        if multiplier != 1.0 or base in cells or base not in base_ids:
+        if multiplier != 1.0 or base in wanted or base not in training:
+            continue
+        wanted[base] = task
+    for base in sorted(cells):
+        if base in training:
+            continue
+        retired[base] = cells.pop(base)
+        family = family_of(base)
+        reason = (f'superseded by {SUPERSEDED[family]}' if family in SUPERSEDED
+                  else 'not in the training set')
+        lines.append(f'cell retired: {base} ({reason})')
+    for base in sorted(retired):
+        if base not in training:
+            continue
+        cells[base] = retired.pop(base)
+        lines.append(f'cell restored: {base}')
+    for base, task in wanted.items():
+        if base in cells:
             continue
         cells[base] = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
-                           mult_index=0, last_round=0, windows=dict(windows.get(base, {})))
-    return dict(schema_version=1, panel=panel, round=0, cells=cells, offsets=offsets, log=[])
+                           mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
+        lines.append(f'cell added: {base}')
+    return lines
+
+
+def make_state(tasks: dict[str, dict], names: dict[str, float], windows: dict, offsets: dict,
+               panel: str) -> dict:
+    state = dict(schema_version=1, panel=panel, round=0, cells={}, offsets=offsets, log=[])
+    reconcile_cells(state, tasks, names, windows)
+    return state
 
 
 def rate(cell: dict, multiplier: float) -> float | None:
@@ -231,7 +379,9 @@ def label_for(round_index: int, base: str, multiplier: float) -> str:
     return f'c{round_index}{short}m%03d' % round(multiplier * 100)
 
 
-def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str) -> list[str]:
+def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
+                workers: int | None = None, frames: Path | None = None,
+                out: Path | None = None) -> list[str]:
     python = str(args.python) if args.python.exists() else sys.executable
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
@@ -240,9 +390,58 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--manifest', str(manifest), '--task-id', task_id,
             '--seed-offset', str(offset), '--seeds', str(games),
             '--executable', str(args.executable), '--dagger-beta', '0',
-            '--workers', str(args.workers), '--resource-dir', str(args.resource_dir),
-            '--frames', str(args.frames), '--frames-label', label,
-            '--out', str(args.out / f'{label}_{games}')]
+            '--workers', str(args.workers if workers is None else workers),
+            '--resource-dir', str(args.resource_dir),
+            '--frames', str(args.frames if frames is None else frames), '--frames-label', label,
+            '--out', str((args.out if out is None else out) / f'{label}_{games}')]
+
+
+def pack_labels(state: dict, extra: str = '') -> list[str]:
+    """Every label this queue has written so far, plus ``extra`` (the base corpus training also uses)."""
+    labels = {group['label'] for entry in state['log'] for group in entry['groups']}
+    labels.update(name for name in extra.split(',') if name)
+    return sorted(labels)
+
+
+def pack_command(args, labels: list[str]) -> list[str]:
+    """argv of the packer for this label set (task33 item 2: the trainer reads only packs).
+
+    The row options are part of the pack key, so they must equal the training command's
+    --wait-keep / --obs / --packet-head / --aux-horizon / --cells / --context / --label-weight;
+    when they differ the trainer prints the packer command it wants.
+    """
+    python = str(args.python) if args.python.exists() else sys.executable
+    command = [python, str(ROOT / 'scripts/pack_training_rows.py'),
+               '--data', str(args.frames), '--labels', ','.join(labels),
+               '--wait-keep', repr(args.pack_wait_keep), '--obs', args.pack_obs,
+               '--packet-head', args.pack_packet_head, '--aux-horizon', str(args.pack_aux_horizon),
+               '--prune']
+    for flag, on in (('--cells', args.pack_cells), ('--context', args.pack_context)):
+        if on:
+            command.append(flag)
+    if args.pack_label_weight:
+        command += ['--label-weight', args.pack_label_weight]
+    return command
+
+
+def write_pack(args, state: dict) -> None:
+    """Pack every archive this queue has written into one sequential file, at the end of a round.
+
+    The trainer never reads per-game archives (task33): this is the collector's half of that
+    contract. Packing is incremental in content, not in cost: each round rewrites the union of the
+    labels so far and prunes the packs it supersedes. A failed pack is fatal -- it is raised after
+    the round is saved, so the collected games are never lost.
+    """
+    labels = pack_labels(state, args.pack_labels)
+    if not labels:
+        return
+    started = time.time()
+    result = subprocess.run(pack_command(args, labels), cwd=ROOT, capture_output=True, text=True)
+    summary = ' | '.join(result.stdout.strip().splitlines())
+    log_line(args.log, f'pack {len(labels)} labels {time.time() - started:.0f}s rc={result.returncode} {summary}')
+    if result.returncode != 0:
+        log_line(args.log, f'pack failed: {result.stderr.strip()[-2000:]}')
+        raise SystemExit(f'pack_training_rows exited {result.returncode}')
 
 
 def log_line(path: Path, message: str) -> None:
@@ -277,7 +476,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     return plan, changes
 
 
-def run_round(args, state: dict, plan: list[dict], changes: list[str]) -> bool:
+def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool:
     """跑一轮；返回 False 表示看到停止标志。"""
     round_index = state['round'] + 1
     for item in plan:
@@ -286,8 +485,14 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str]) -> bool:
             return False
         state['offsets'][item['task_id']] = item['offset'] + item['games']
         save_state(args.state, state)          # 先占偏移，崩溃也不会重采
+        available = mem_available_bytes()
+        workers = worker_count(available, per_worker, args.workers)
+        per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
+        log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
+                           f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
+                           f'per-worker {per_worker_shown})')
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
-                              item['games'], item['label'])
+                              item['games'], item['label'], workers=workers)
         started = time.time()
         result = subprocess.run(command, cwd=ROOT)
         seconds = time.time() - started
@@ -320,6 +525,7 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str]) -> bool:
     log_line(args.log, f'round {round_index} done: {len(plan)} groups, '
                        f'{sum(item["games"] for item in plan)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
+    write_pack(args, state)          # after the state is saved: a failed pack must not lose the round
     return True
 
 
@@ -339,6 +545,8 @@ def print_plan(state: dict, plan: list[dict], changes: list[str]) -> None:
 
 
 def main() -> None:
+    # task34: die after the workers and training, but before the WSL access path.
+    set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
     parser.add_argument('--state', type=Path, default=DEFAULT_STATE)
@@ -350,7 +558,8 @@ def main() -> None:
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
-    parser.add_argument('--workers', type=int, default=2)
+    parser.add_argument('--workers', type=int, default=16,
+                        help='上限；每组实际进程数 = (MemAvailable − 6 GiB) / 实测单 worker RSS，至少 1')
     parser.add_argument('--python', type=Path, default=DEFAULT_PYTHON,
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
@@ -360,6 +569,17 @@ def main() -> None:
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
     parser.add_argument('--dry-run', action='store_true')
+    pack = parser.add_argument_group(
+        'training pack (task33)', 'the row options are part of the pack key: they must equal the training command')
+    pack.add_argument('--pack-labels', default='',
+                      help='comma separated base labels the training corpus also has (default: only what this queue wrote)')
+    pack.add_argument('--pack-wait-keep', type=float, default=1.0)
+    pack.add_argument('--pack-obs', choices=['v1', 'v2lite', 'v2'], default='v1')
+    pack.add_argument('--pack-packet-head', choices=['slot', 'identity'], default='slot')
+    pack.add_argument('--pack-aux-horizon', type=int, default=8)
+    pack.add_argument('--pack-cells', action='store_true')
+    pack.add_argument('--pack-context', action='store_true')
+    pack.add_argument('--pack-label-weight', default='')
     args = parser.parse_args()
     if args.workers < 1:
         parser.error('--workers must be positive')
@@ -374,6 +594,10 @@ def main() -> None:
                                   str(MAIN / '.claude/worktrees/*/artifacts/**/config.json')]
     if args.state.exists():
         state = json.loads(args.state.read_text())
+        # 已有状态按当前训练集合增删格子；n10q 没有旧局，除非显式给 --init-glob 否则从空窗口起步。
+        windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
+        for line in reconcile_cells(state, tasks, names, windows):
+            log_line(args.log, line)
     else:
         windows, offsets = init_from_runs(patterns, names)
         state = make_state(tasks, names, windows, offsets, str(args.manifest))
@@ -382,11 +606,17 @@ def main() -> None:
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
         return
+    per_worker = -1          # -1 = 还没测；0 = 平台无 /proc，按 --workers 上限跑
     for _ in range(args.rounds):
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
-        if not run_round(args, state, plan, changes):
+        if per_worker < 0:
+            if STOP_FLAG.exists():
+                log_line(args.log, f'round {state["round"] + 1}: stop flag seen before the worker probe; stopping')
+                break
+            per_worker = startup_worker_estimate(args, plan)
+        if not run_round(args, state, plan, changes, per_worker):
             break
 
 

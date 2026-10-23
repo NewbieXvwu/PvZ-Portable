@@ -1,0 +1,1719 @@
+{
+  "complete": true,
+  "full_results_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/results.json",
+  "full_results_sha256": "6f4b1eaeb1d5c478155182207dbbca7ad4224253edb75428f6ed59465d95a9f0",
+  "study_plan_sha256": "b8e8e9962129aa5d65c60ad6e21512d74848c196499f7dcf003b1b07820e384a",
+  "training": {
+    "complete": true,
+    "model_sha256": "a106d1a7e9d1b906cb8dad2631b3e6c9bebb0c775c7c2297449953bb008bf007",
+    "model_bytes": 705390,
+    "rows": 15788614,
+    "resources": {
+      "returncode": 0,
+      "wall_s": 3609.332127246,
+      "peak_rss_kib": 18026548,
+      "peak_swap_kib": 398896,
+      "minimum_available_kib": 5413204
+    },
+    "source_rows_sha256": "2dbb3ec72d1d7955d5a7b3e4c9635c661a3383d70ea34a97df4bbabfd1ce0335"
+  },
+  "upload": {
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "path": "transfer/dw5i_s1_model.pt",
+    "revision": "3753b178fc497e60570f8fd8755aaad830403cba",
+    "model_sha256": "a106d1a7e9d1b906cb8dad2631b3e6c9bebb0c775c7c2297449953bb008bf007",
+    "download_verified": true
+  },
+  "source_groups": {
+    "dw4i_labels": {
+      "archives": 48816,
+      "rows": 13643357,
+      "training_rows": 12273961,
+      "validation_rows": 1369396
+    },
+    "mac_new": {
+      "archives": 4640,
+      "rows": 1242786,
+      "training_rows": 1127491,
+      "validation_rows": 115295
+    },
+    "q102": {
+      "archives": 1152,
+      "rows": 310209,
+      "training_rows": 278218,
+      "validation_rows": 31991
+    },
+    "q103": {
+      "archives": 2176,
+      "rows": 592262,
+      "training_rows": 533222,
+      "validation_rows": 59040
+    }
+  },
+  "v2": {
+    "dw4i_s1": {
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 947,
+          "mean_win_rate": 0.9248046875,
+          "planted_by_type_total": {
+            "0": 10089,
+            "1": 10615,
+            "2": 3765,
+            "3": 2691,
+            "4": 4080,
+            "5": 2765,
+            "6": 419,
+            "7": 4012
+          },
+          "planted_by_type_per_game": {
+            "0": 9.8525390625,
+            "1": 10.3662109375,
+            "2": 3.6767578125,
+            "3": 2.6279296875,
+            "4": 3.984375,
+            "5": 2.7001953125,
+            "6": 0.4091796875,
+            "7": 3.91796875
+          }
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 461,
+          "mean_win_rate": 0.6002604166666666,
+          "planted_by_type_total": {
+            "0": 1647,
+            "1": 8145,
+            "2": 2500,
+            "3": 4915,
+            "4": 5422,
+            "5": 1926,
+            "6": 541,
+            "7": 3708,
+            "17": 542,
+            "18": 64,
+            "20": 64,
+            "21": 2170,
+            "22": 64,
+            "27": 1169,
+            "28": 398,
+            "29": 517,
+            "32": 3049,
+            "34": 690,
+            "36": 900,
+            "37": 1712,
+            "38": 944
+          },
+          "planted_by_type_per_game": {
+            "0": 2.14453125,
+            "1": 10.60546875,
+            "2": 3.2552083333333335,
+            "3": 6.399739583333333,
+            "4": 7.059895833333333,
+            "5": 2.5078125,
+            "6": 0.7044270833333334,
+            "7": 4.828125,
+            "17": 0.7057291666666666,
+            "18": 0.08333333333333333,
+            "20": 0.08333333333333333,
+            "21": 2.8255208333333335,
+            "22": 0.08333333333333333,
+            "27": 1.5221354166666667,
+            "28": 0.5182291666666666,
+            "29": 0.6731770833333334,
+            "32": 3.9700520833333335,
+            "34": 0.8984375,
+            "36": 1.171875,
+            "37": 2.2291666666666665,
+            "38": 1.2291666666666667
+          }
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 818,
+          "mean_win_rate": 0.7100694444444444,
+          "planted_by_type_total": {
+            "0": 956,
+            "1": 35584,
+            "2": 6465,
+            "3": 17481,
+            "4": 20271,
+            "5": 7570,
+            "7": 316,
+            "8": 53470,
+            "9": 59112,
+            "11": 9296,
+            "13": 3
+          },
+          "planted_by_type_per_game": {
+            "0": 0.8298611111111112,
+            "1": 30.88888888888889,
+            "2": 5.611979166666667,
+            "3": 15.174479166666666,
+            "4": 17.596354166666668,
+            "5": 6.571180555555555,
+            "7": 0.2743055555555556,
+            "8": 46.41493055555556,
+            "9": 51.3125,
+            "11": 8.069444444444445,
+            "13": 0.0026041666666666665
+          }
+        },
+        "pool": {
+          "tasks": 5,
+          "games": 320,
+          "won": 2,
+          "mean_win_rate": 0.00625,
+          "planted_by_type_total": {
+            "0": 2250,
+            "1": 6796,
+            "2": 473,
+            "3": 1261,
+            "4": 2324,
+            "5": 583,
+            "7": 139,
+            "16": 5117,
+            "19": 2146
+          },
+          "planted_by_type_per_game": {
+            "0": 7.03125,
+            "1": 21.2375,
+            "2": 1.478125,
+            "3": 3.940625,
+            "4": 7.2625,
+            "5": 1.821875,
+            "7": 0.434375,
+            "16": 15.990625,
+            "19": 6.70625
+          }
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "games": 128,
+          "won": 118,
+          "win_rate": 0.921875
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "games": 128,
+          "won": 112,
+          "win_rate": 0.875
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "games": 64,
+          "won": 60,
+          "win_rate": 0.9375
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "games": 64,
+          "won": 56,
+          "win_rate": 0.875
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "games": 64,
+          "won": 41,
+          "win_rate": 0.640625
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "games": 64,
+          "won": 11,
+          "win_rate": 0.171875
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "games": 64,
+          "won": 52,
+          "win_rate": 0.8125
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "games": 64,
+          "won": 54,
+          "win_rate": 0.84375
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "games": 64,
+          "won": 59,
+          "win_rate": 0.921875
+        },
+        {
+          "task_id": "night_l11_eval_n10",
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "night_l12_eval_n10",
+          "games": 128,
+          "won": 104,
+          "win_rate": 0.8125
+        },
+        {
+          "task_id": "night_l13_eval_n10",
+          "games": 128,
+          "won": 126,
+          "win_rate": 0.984375
+        },
+        {
+          "task_id": "night_l14_eval_n10",
+          "games": 128,
+          "won": 87,
+          "win_rate": 0.6796875
+        },
+        {
+          "task_id": "night_l16_eval_n10",
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "night_l17_eval_n10",
+          "games": 128,
+          "won": 65,
+          "win_rate": 0.5078125
+        },
+        {
+          "task_id": "night_l18_eval_n10",
+          "games": 128,
+          "won": 121,
+          "win_rate": 0.9453125
+        },
+        {
+          "task_id": "night_l19_eval_n10",
+          "games": 128,
+          "won": 59,
+          "win_rate": 0.4609375
+        },
+        {
+          "task_id": "night_l20_eval_n10_orig",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "pool_l21_eval_p9k",
+          "games": 64,
+          "won": 1,
+          "win_rate": 0.015625
+        },
+        {
+          "task_id": "pool_l22_eval_p9k",
+          "games": 64,
+          "won": 1,
+          "win_rate": 0.015625
+        },
+        {
+          "task_id": "pool_l23_eval_p9k",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "pool_l24_eval_p9k",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "pool_l26_eval_p9k",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        }
+      ]
+    },
+    "identity": {
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 986,
+          "mean_win_rate": 0.962890625,
+          "planted_by_type_total": {
+            "0": 11101,
+            "1": 11787,
+            "2": 3791,
+            "3": 3311,
+            "4": 4638,
+            "5": 3310,
+            "6": 407,
+            "7": 3705
+          },
+          "planted_by_type_per_game": {
+            "0": 10.8408203125,
+            "1": 11.5107421875,
+            "2": 3.7021484375,
+            "3": 3.2333984375,
+            "4": 4.529296875,
+            "5": 3.232421875,
+            "6": 0.3974609375,
+            "7": 3.6181640625
+          }
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 492,
+          "mean_win_rate": 0.640625,
+          "planted_by_type_total": {
+            "0": 3804,
+            "1": 8417,
+            "2": 2852,
+            "3": 4238,
+            "4": 4834,
+            "5": 2711,
+            "6": 522,
+            "7": 4817,
+            "17": 349,
+            "18": 64,
+            "20": 64,
+            "21": 863,
+            "22": 64,
+            "27": 653,
+            "28": 33,
+            "29": 144,
+            "32": 450,
+            "34": 170,
+            "36": 661,
+            "37": 1482,
+            "38": 221
+          },
+          "planted_by_type_per_game": {
+            "0": 4.953125,
+            "1": 10.959635416666666,
+            "2": 3.7135416666666665,
+            "3": 5.518229166666667,
+            "4": 6.294270833333333,
+            "5": 3.5299479166666665,
+            "6": 0.6796875,
+            "7": 6.272135416666667,
+            "17": 0.4544270833333333,
+            "18": 0.08333333333333333,
+            "20": 0.08333333333333333,
+            "21": 1.1236979166666667,
+            "22": 0.08333333333333333,
+            "27": 0.8502604166666666,
+            "28": 0.04296875,
+            "29": 0.1875,
+            "32": 0.5859375,
+            "34": 0.22135416666666666,
+            "36": 0.8606770833333334,
+            "37": 1.9296875,
+            "38": 0.2877604166666667
+          }
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 25,
+          "mean_win_rate": 0.021701388888888888,
+          "planted_by_type_total": {
+            "0": 521,
+            "1": 7290,
+            "2": 481,
+            "3": 1484,
+            "4": 7353,
+            "5": 385,
+            "7": 30,
+            "8": 2239,
+            "9": 2786,
+            "10": 4,
+            "11": 360,
+            "12": 10,
+            "13": 3,
+            "14": 7,
+            "15": 3
+          },
+          "planted_by_type_per_game": {
+            "0": 0.4522569444444444,
+            "1": 6.328125,
+            "2": 0.4175347222222222,
+            "3": 1.2881944444444444,
+            "4": 6.3828125,
+            "5": 0.3342013888888889,
+            "7": 0.026041666666666668,
+            "8": 1.9435763888888888,
+            "9": 2.4184027777777777,
+            "10": 0.003472222222222222,
+            "11": 0.3125,
+            "12": 0.008680555555555556,
+            "13": 0.0026041666666666665,
+            "14": 0.006076388888888889,
+            "15": 0.0026041666666666665
+          }
+        },
+        "pool": {
+          "tasks": 5,
+          "games": 320,
+          "won": 19,
+          "mean_win_rate": 0.059375,
+          "planted_by_type_total": {
+            "0": 2086,
+            "1": 9363,
+            "2": 957,
+            "3": 2018,
+            "4": 2998,
+            "5": 1492,
+            "7": 274,
+            "16": 4174,
+            "19": 1610
+          },
+          "planted_by_type_per_game": {
+            "0": 6.51875,
+            "1": 29.259375,
+            "2": 2.990625,
+            "3": 6.30625,
+            "4": 9.36875,
+            "5": 4.6625,
+            "7": 0.85625,
+            "16": 13.04375,
+            "19": 5.03125
+          }
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "games": 128,
+          "won": 127,
+          "win_rate": 0.9921875
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "games": 128,
+          "won": 120,
+          "win_rate": 0.9375
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "games": 128,
+          "won": 108,
+          "win_rate": 0.84375
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "games": 64,
+          "won": 20,
+          "win_rate": 0.3125
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "games": 64,
+          "won": 55,
+          "win_rate": 0.859375
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "games": 64,
+          "won": 58,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "games": 64,
+          "won": 43,
+          "win_rate": 0.671875
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "games": 64,
+          "won": 62,
+          "win_rate": 0.96875
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "games": 64,
+          "won": 51,
+          "win_rate": 0.796875
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "games": 64,
+          "won": 35,
+          "win_rate": 0.546875
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "games": 64,
+          "won": 42,
+          "win_rate": 0.65625
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "games": 64,
+          "won": 62,
+          "win_rate": 0.96875
+        },
+        {
+          "task_id": "night_l11_eval_n10",
+          "games": 128,
+          "won": 6,
+          "win_rate": 0.046875
+        },
+        {
+          "task_id": "night_l12_eval_n10",
+          "games": 128,
+          "won": 3,
+          "win_rate": 0.0234375
+        },
+        {
+          "task_id": "night_l13_eval_n10",
+          "games": 128,
+          "won": 3,
+          "win_rate": 0.0234375
+        },
+        {
+          "task_id": "night_l14_eval_n10",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "night_l16_eval_n10",
+          "games": 128,
+          "won": 7,
+          "win_rate": 0.0546875
+        },
+        {
+          "task_id": "night_l17_eval_n10",
+          "games": 128,
+          "won": 1,
+          "win_rate": 0.0078125
+        },
+        {
+          "task_id": "night_l18_eval_n10",
+          "games": 128,
+          "won": 2,
+          "win_rate": 0.015625
+        },
+        {
+          "task_id": "night_l19_eval_n10",
+          "games": 128,
+          "won": 3,
+          "win_rate": 0.0234375
+        },
+        {
+          "task_id": "night_l20_eval_n10_orig",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "pool_l21_eval_p9k",
+          "games": 64,
+          "won": 8,
+          "win_rate": 0.125
+        },
+        {
+          "task_id": "pool_l22_eval_p9k",
+          "games": 64,
+          "won": 4,
+          "win_rate": 0.0625
+        },
+        {
+          "task_id": "pool_l23_eval_p9k",
+          "games": 64,
+          "won": 4,
+          "win_rate": 0.0625
+        },
+        {
+          "task_id": "pool_l24_eval_p9k",
+          "games": 64,
+          "won": 2,
+          "win_rate": 0.03125
+        },
+        {
+          "task_id": "pool_l26_eval_p9k",
+          "games": 64,
+          "won": 1,
+          "win_rate": 0.015625
+        }
+      ]
+    },
+    "dw5i_s1": {
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 945,
+          "mean_win_rate": 0.9228515625,
+          "planted_by_type_total": {
+            "0": 10202,
+            "1": 10227,
+            "2": 3641,
+            "3": 2376,
+            "4": 3924,
+            "5": 2834,
+            "6": 387,
+            "7": 3755
+          },
+          "planted_by_type_per_game": {
+            "0": 9.962890625,
+            "1": 9.9873046875,
+            "2": 3.5556640625,
+            "3": 2.3203125,
+            "4": 3.83203125,
+            "5": 2.767578125,
+            "6": 0.3779296875,
+            "7": 3.6669921875
+          }
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 473,
+          "mean_win_rate": 0.6158854166666666,
+          "planted_by_type_total": {
+            "0": 1969,
+            "1": 7118,
+            "2": 2340,
+            "3": 5160,
+            "4": 4967,
+            "5": 1788,
+            "6": 512,
+            "7": 3520,
+            "17": 499,
+            "18": 64,
+            "20": 64,
+            "21": 1832,
+            "22": 64,
+            "27": 993,
+            "28": 433,
+            "29": 668,
+            "32": 3035,
+            "34": 1019,
+            "36": 917,
+            "37": 1761,
+            "38": 662,
+            "39": 3
+          },
+          "planted_by_type_per_game": {
+            "0": 2.5638020833333335,
+            "1": 9.268229166666666,
+            "2": 3.046875,
+            "3": 6.71875,
+            "4": 6.467447916666667,
+            "5": 2.328125,
+            "6": 0.6666666666666666,
+            "7": 4.583333333333333,
+            "17": 0.6497395833333334,
+            "18": 0.08333333333333333,
+            "20": 0.08333333333333333,
+            "21": 2.3854166666666665,
+            "22": 0.08333333333333333,
+            "27": 1.29296875,
+            "28": 0.5638020833333334,
+            "29": 0.8697916666666666,
+            "32": 3.9518229166666665,
+            "34": 1.3268229166666667,
+            "36": 1.1940104166666667,
+            "37": 2.29296875,
+            "38": 0.8619791666666666,
+            "39": 0.00390625
+          }
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 711,
+          "mean_win_rate": 0.6171875,
+          "planted_by_type_total": {
+            "0": 857,
+            "1": 31670,
+            "2": 5539,
+            "3": 16306,
+            "4": 19930,
+            "5": 6680,
+            "7": 254,
+            "8": 50256,
+            "9": 60379,
+            "10": 64,
+            "11": 8713,
+            "12": 20,
+            "13": 96,
+            "14": 83,
+            "15": 66
+          },
+          "planted_by_type_per_game": {
+            "0": 0.7439236111111112,
+            "1": 27.491319444444443,
+            "2": 4.808159722222222,
+            "3": 14.15451388888889,
+            "4": 17.30034722222222,
+            "5": 5.798611111111111,
+            "7": 0.2204861111111111,
+            "8": 43.625,
+            "9": 52.412326388888886,
+            "10": 0.05555555555555555,
+            "11": 7.563368055555555,
+            "12": 0.017361111111111112,
+            "13": 0.08333333333333333,
+            "14": 0.0720486111111111,
+            "15": 0.057291666666666664
+          }
+        },
+        "pool": {
+          "tasks": 5,
+          "games": 320,
+          "won": 129,
+          "mean_win_rate": 0.403125,
+          "planted_by_type_total": {
+            "0": 3412,
+            "1": 9368,
+            "2": 1797,
+            "3": 3607,
+            "4": 4374,
+            "5": 2555,
+            "7": 407,
+            "16": 8884,
+            "19": 3679
+          },
+          "planted_by_type_per_game": {
+            "0": 10.6625,
+            "1": 29.275,
+            "2": 5.615625,
+            "3": 11.271875,
+            "4": 13.66875,
+            "5": 7.984375,
+            "7": 1.271875,
+            "16": 27.7625,
+            "19": 11.496875
+          }
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "games": 128,
+          "won": 124,
+          "win_rate": 0.96875
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "games": 128,
+          "won": 112,
+          "win_rate": 0.875
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "games": 128,
+          "won": 127,
+          "win_rate": 0.9921875
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "games": 128,
+          "won": 108,
+          "win_rate": 0.84375
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "games": 128,
+          "won": 115,
+          "win_rate": 0.8984375
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "games": 128,
+          "won": 127,
+          "win_rate": 0.9921875
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "games": 64,
+          "won": 57,
+          "win_rate": 0.890625
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "games": 64,
+          "won": 63,
+          "win_rate": 0.984375
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "games": 64,
+          "won": 61,
+          "win_rate": 0.953125
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "games": 64,
+          "won": 63,
+          "win_rate": 0.984375
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "games": 64,
+          "won": 1,
+          "win_rate": 0.015625
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "games": 64,
+          "won": 54,
+          "win_rate": 0.84375
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "games": 64,
+          "won": 8,
+          "win_rate": 0.125
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "games": 64,
+          "won": 47,
+          "win_rate": 0.734375
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "games": 64,
+          "won": 60,
+          "win_rate": 0.9375
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "games": 64,
+          "won": 59,
+          "win_rate": 0.921875
+        },
+        {
+          "task_id": "night_l11_eval_n10",
+          "games": 128,
+          "won": 121,
+          "win_rate": 0.9453125
+        },
+        {
+          "task_id": "night_l12_eval_n10",
+          "games": 128,
+          "won": 89,
+          "win_rate": 0.6953125
+        },
+        {
+          "task_id": "night_l13_eval_n10",
+          "games": 128,
+          "won": 118,
+          "win_rate": 0.921875
+        },
+        {
+          "task_id": "night_l14_eval_n10",
+          "games": 128,
+          "won": 64,
+          "win_rate": 0.5
+        },
+        {
+          "task_id": "night_l16_eval_n10",
+          "games": 128,
+          "won": 114,
+          "win_rate": 0.890625
+        },
+        {
+          "task_id": "night_l17_eval_n10",
+          "games": 128,
+          "won": 71,
+          "win_rate": 0.5546875
+        },
+        {
+          "task_id": "night_l18_eval_n10",
+          "games": 128,
+          "won": 100,
+          "win_rate": 0.78125
+        },
+        {
+          "task_id": "night_l19_eval_n10",
+          "games": 128,
+          "won": 34,
+          "win_rate": 0.265625
+        },
+        {
+          "task_id": "night_l20_eval_n10_orig",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "pool_l21_eval_p9k",
+          "games": 64,
+          "won": 43,
+          "win_rate": 0.671875
+        },
+        {
+          "task_id": "pool_l22_eval_p9k",
+          "games": 64,
+          "won": 30,
+          "win_rate": 0.46875
+        },
+        {
+          "task_id": "pool_l23_eval_p9k",
+          "games": 64,
+          "won": 31,
+          "win_rate": 0.484375
+        },
+        {
+          "task_id": "pool_l24_eval_p9k",
+          "games": 64,
+          "won": 17,
+          "win_rate": 0.265625
+        },
+        {
+          "task_id": "pool_l26_eval_p9k",
+          "games": 64,
+          "won": 8,
+          "win_rate": 0.125
+        }
+      ]
+    }
+  },
+  "v1": {
+    "dw4i_s1": {
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 947,
+          "mean_win_rate": 0.9248046875
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 461,
+          "mean_win_rate": 0.6002604166666666
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 592,
+          "mean_win_rate": 0.5138888888888888
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "games": 128,
+          "won": 118,
+          "win_rate": 0.921875
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "games": 128,
+          "won": 112,
+          "win_rate": 0.875
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "games": 64,
+          "won": 60,
+          "win_rate": 0.9375
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "games": 64,
+          "won": 56,
+          "win_rate": 0.875
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "games": 64,
+          "won": 64,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "games": 64,
+          "won": 41,
+          "win_rate": 0.640625
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "games": 64,
+          "won": 11,
+          "win_rate": 0.171875
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "games": 64,
+          "won": 52,
+          "win_rate": 0.8125
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "games": 64,
+          "won": 54,
+          "win_rate": 0.84375
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "games": 64,
+          "won": 59,
+          "win_rate": 0.921875
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "games": 128,
+          "won": 128,
+          "win_rate": 1.0
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "games": 128,
+          "won": 100,
+          "win_rate": 0.78125
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "games": 128,
+          "won": 125,
+          "win_rate": 0.9765625
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "games": 128,
+          "won": 41,
+          "win_rate": 0.3203125
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "games": 128,
+          "won": 122,
+          "win_rate": 0.953125
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "games": 128,
+          "won": 2,
+          "win_rate": 0.015625
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "games": 128,
+          "won": 73,
+          "win_rate": 0.5703125
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "games": 128,
+          "won": 1,
+          "win_rate": 0.0078125
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0
+        }
+      ]
+    },
+    "dw5i_s1": {
+      "groups": {
+        "day": {
+          "tasks": 8,
+          "games": 1024,
+          "won": 945,
+          "mean_win_rate": 0.9228515625,
+          "planted_by_type_total": {
+            "0": 10202,
+            "1": 10227,
+            "2": 3641,
+            "3": 2376,
+            "4": 3924,
+            "5": 2834,
+            "6": 387,
+            "7": 3755
+          },
+          "planted_by_type_per_game": {
+            "0": 9.962890625,
+            "1": 9.9873046875,
+            "2": 3.5556640625,
+            "3": 2.3203125,
+            "4": 3.83203125,
+            "5": 2.767578125,
+            "6": 0.3779296875,
+            "7": 3.6669921875
+          }
+        },
+        "heldout": {
+          "tasks": 12,
+          "games": 768,
+          "won": 473,
+          "mean_win_rate": 0.6158854166666666,
+          "planted_by_type_total": {
+            "0": 1969,
+            "1": 7118,
+            "2": 2340,
+            "3": 5160,
+            "4": 4967,
+            "5": 1788,
+            "6": 512,
+            "7": 3520,
+            "17": 499,
+            "18": 64,
+            "20": 64,
+            "21": 1832,
+            "22": 64,
+            "27": 993,
+            "28": 433,
+            "29": 668,
+            "32": 3035,
+            "34": 1019,
+            "36": 917,
+            "37": 1761,
+            "38": 662,
+            "39": 3
+          },
+          "planted_by_type_per_game": {
+            "0": 2.5638020833333335,
+            "1": 9.268229166666666,
+            "2": 3.046875,
+            "3": 6.71875,
+            "4": 6.467447916666667,
+            "5": 2.328125,
+            "6": 0.6666666666666666,
+            "7": 4.583333333333333,
+            "17": 0.6497395833333334,
+            "18": 0.08333333333333333,
+            "20": 0.08333333333333333,
+            "21": 2.3854166666666665,
+            "22": 0.08333333333333333,
+            "27": 1.29296875,
+            "28": 0.5638020833333334,
+            "29": 0.8697916666666666,
+            "32": 3.9518229166666665,
+            "34": 1.3268229166666667,
+            "36": 1.1940104166666667,
+            "37": 2.29296875,
+            "38": 0.8619791666666666,
+            "39": 0.00390625
+          }
+        },
+        "night": {
+          "tasks": 9,
+          "games": 1152,
+          "won": 300,
+          "mean_win_rate": 0.2604166666666667,
+          "planted_by_type_total": {
+            "0": 655,
+            "1": 24183,
+            "2": 5043,
+            "3": 11449,
+            "4": 14851,
+            "5": 5404,
+            "7": 1630,
+            "8": 38301,
+            "9": 44699,
+            "10": 64,
+            "11": 194,
+            "12": 20,
+            "13": 96,
+            "14": 83,
+            "15": 66
+          },
+          "planted_by_type_per_game": {
+            "0": 0.5685763888888888,
+            "1": 20.9921875,
+            "2": 4.377604166666667,
+            "3": 9.938368055555555,
+            "4": 12.891493055555555,
+            "5": 4.690972222222222,
+            "7": 1.4149305555555556,
+            "8": 33.247395833333336,
+            "9": 38.80121527777778,
+            "10": 0.05555555555555555,
+            "11": 0.1684027777777778,
+            "12": 0.017361111111111112,
+            "13": 0.08333333333333333,
+            "14": 0.0720486111111111,
+            "15": 0.057291666666666664
+          }
+        }
+      },
+      "tasks": [
+        {
+          "task_id": "day_l1_eval_d7",
+          "games": 128,
+          "won": 124,
+          "win_rate": 0.96875
+        },
+        {
+          "task_id": "day_l3_eval_d7",
+          "games": 128,
+          "won": 112,
+          "win_rate": 0.875
+        },
+        {
+          "task_id": "day_l4_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l6_eval_d7",
+          "games": 128,
+          "won": 116,
+          "win_rate": 0.90625
+        },
+        {
+          "task_id": "day_l7_eval_d7",
+          "games": 128,
+          "won": 127,
+          "win_rate": 0.9921875
+        },
+        {
+          "task_id": "day_l8_eval_d7",
+          "games": 128,
+          "won": 108,
+          "win_rate": 0.84375
+        },
+        {
+          "task_id": "day_l9_eval_d7",
+          "games": 128,
+          "won": 115,
+          "win_rate": 0.8984375
+        },
+        {
+          "task_id": "day_l10_orig_eval",
+          "games": 128,
+          "won": 127,
+          "win_rate": 0.9921875
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout1",
+          "games": 64,
+          "won": 57,
+          "win_rate": 0.890625
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout2",
+          "games": 64,
+          "won": 63,
+          "win_rate": 0.984375
+        },
+        {
+          "task_id": "day_l7_eval_d7p_holdout3",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout1",
+          "games": 64,
+          "won": 0,
+          "win_rate": 0.0
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout2",
+          "games": 64,
+          "won": 61,
+          "win_rate": 0.953125
+        },
+        {
+          "task_id": "day_l8_eval_d7p_holdout3",
+          "games": 64,
+          "won": 63,
+          "win_rate": 0.984375
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout1",
+          "games": 64,
+          "won": 1,
+          "win_rate": 0.015625
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout2",
+          "games": 64,
+          "won": 54,
+          "win_rate": 0.84375
+        },
+        {
+          "task_id": "day_l9_eval_d7p_holdout3",
+          "games": 64,
+          "won": 8,
+          "win_rate": 0.125
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout1",
+          "games": 64,
+          "won": 47,
+          "win_rate": 0.734375
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout2",
+          "games": 64,
+          "won": 60,
+          "win_rate": 0.9375
+        },
+        {
+          "task_id": "day_l10_eval_d7p_holdout3",
+          "games": 64,
+          "won": 59,
+          "win_rate": 0.921875
+        },
+        {
+          "task_id": "night_l11_eval_n9",
+          "games": 128,
+          "won": 82,
+          "win_rate": 0.640625
+        },
+        {
+          "task_id": "night_l12_eval_n9",
+          "games": 128,
+          "won": 32,
+          "win_rate": 0.25
+        },
+        {
+          "task_id": "night_l13_eval_n9",
+          "games": 128,
+          "won": 49,
+          "win_rate": 0.3828125
+        },
+        {
+          "task_id": "night_l14_eval_n9",
+          "games": 128,
+          "won": 28,
+          "win_rate": 0.21875
+        },
+        {
+          "task_id": "night_l16_eval_n9",
+          "games": 128,
+          "won": 67,
+          "win_rate": 0.5234375
+        },
+        {
+          "task_id": "night_l17_eval_n9",
+          "games": 128,
+          "won": 5,
+          "win_rate": 0.0390625
+        },
+        {
+          "task_id": "night_l18_eval_n9",
+          "games": 128,
+          "won": 35,
+          "win_rate": 0.2734375
+        },
+        {
+          "task_id": "night_l19_eval_n9",
+          "games": 128,
+          "won": 2,
+          "win_rate": 0.015625
+        },
+        {
+          "task_id": "night_l20_eval_n9_orig",
+          "games": 128,
+          "won": 0,
+          "win_rate": 0.0
+        }
+      ]
+    }
+  },
+  "native_states": 256,
+  "v1_v2_identical_task_games": 1920,
+  "legacy_dw4i_identical_task_games": 1920,
+  "legacy_identity_identical_task_games": 1920,
+  "retained_reference_executable_sha256": {
+    "dw4i_s1": "ed6c7b5376afe386c515969bfc00a3430c05fa092e4eca3ae0b0c2aa782ed4fc"
+  },
+  "instrumentation_sha256": "da7e9bf216501e42e2687580413bc44435c972fd6c3def45b33f88aba9c9f843",
+  "dead": {
+    "day_l7_eval_d7p_holdout3": {
+      "deck": [
+        5,
+        3,
+        36,
+        7,
+        4,
+        2,
+        0
+      ],
+      "games": 16,
+      "won": 0,
+      "loss_waves": {
+        "10": 2,
+        "9": 7,
+        "11": 1,
+        "12": 3,
+        "7": 1,
+        "6": 1,
+        "13": 1
+      },
+      "nearest_terminal_zombie_types": {
+        "3": 2,
+        "0": 9,
+        "2": 4,
+        "1": 1
+      },
+      "conclusion": "\u672c\u8001\u5e0816\u5c40\u4ecd\u5168\u8d25\uff1a\u7ed3\u6784\u6027\u5f31\u5361\u7ec4\u5acc\u7591\uff0c\u4ea4\u4e3b\u63a7\u51b3\u5b9a\uff1b\u6709\u9650\u6837\u672c\u4e0d\u662f\u6570\u5b66\u4e0a\u7684\u4e0d\u53ef\u8d62\u8bc1\u660e"
+    },
+    "day_l8_eval_d7p_holdout1": {
+      "deck": [
+        3,
+        22,
+        4,
+        2,
+        7,
+        5,
+        32
+      ],
+      "games": 16,
+      "won": 0,
+      "loss_waves": {
+        "16": 1,
+        "20": 6,
+        "18": 1,
+        "19": 4,
+        "17": 3,
+        "13": 1
+      },
+      "nearest_terminal_zombie_types": {
+        "0": 7,
+        "4": 6,
+        "2": 3
+      },
+      "conclusion": "\u672c\u8001\u5e0816\u5c40\u4ecd\u5168\u8d25\uff1a\u7ed3\u6784\u6027\u5f31\u5361\u7ec4\u5acc\u7591\uff0c\u4ea4\u4e3b\u63a7\u51b3\u5b9a\uff1b\u6709\u9650\u6837\u672c\u4e0d\u662f\u6570\u5b66\u4e0a\u7684\u4e0d\u53ef\u8d62\u8bc1\u660e"
+    },
+    "day_l9_eval_d7p_holdout1": {
+      "deck": [
+        0,
+        3,
+        1,
+        7,
+        37,
+        2,
+        4
+      ],
+      "games": 16,
+      "won": 1,
+      "loss_waves": {
+        "27": 1,
+        "25": 3,
+        "22": 3,
+        "30": 3,
+        "29": 4,
+        "26": 1
+      },
+      "nearest_terminal_zombie_types": {
+        "4": 5,
+        "0": 5,
+        "3": 4,
+        "2": 1
+      },
+      "conclusion": "\u8001\u5e08\u53ef\u8d62\uff0c\u5b58\u5728\u5b66\u751f\u6cdb\u5316\u7f3a\u53e3"
+    }
+  },
+  "caveats": [
+    "One fixed training seed and final epoch; no seed/epoch selection or default promotion.",
+    "V1 and V2 use different night decks; compare models within each version.",
+    "Source rows grouped by label; expanded old labels remain in dw4i_labels.",
+    "Zero wins in 16 teacher games flags structural weakness; not proof of impossibility.",
+    "Terminal nearest zombies describe surviving threats, not instrumented killers.",
+    "Historical dw4i v1 uses its original binary; additive telemetry checked against legacy outcomes."
+  ]
+}

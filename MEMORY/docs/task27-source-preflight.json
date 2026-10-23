@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "scope": "Read-only preflight only; q103 round2 gate still required before freezing/training.",
+  "parent_archives": 48816,
+  "parent_labels": 170,
+  "parent_files_sha256_checked": 97632,
+  "parent_inventory_sha256": "3b1892381f3ef424e565ce1cf6e3aa5cd6d6d1bcbe91b9d6ddb352bce1f82426",
+  "q102_labels": 18,
+  "q102_archives": 1152,
+  "q102_seed_sets_exact": true,
+  "q102_log_sha256": "2e947ae095b7e78fcc8e9218b017265afe8e9b82e6f74ccbe93fca8ffe6c68cc",
+  "elapsed_seconds": 115.71
+}

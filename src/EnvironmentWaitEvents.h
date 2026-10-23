@@ -1,6 +1,7 @@
 #ifndef PVZ_ENVIRONMENT_WAIT_EVENTS_H
 #define PVZ_ENVIRONMENT_WAIT_EVENTS_H
 
+#include <algorithm>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -19,6 +20,24 @@ inline constexpr const char* Conditions[] = {
 	"left_zone_occupied", "plant_count_decreased"
 };
 
+// Sorted, duplicate-free sequences.  The public state is rebuilt on every tick of an event
+// wait, and `WAIT_UNTIL_LEGAL` runs up to sixty of those per decision, so a std::set paid a
+// malloc per element plus a red-black rebalance for a handful of entries.  A sorted vector
+// keeps the same iteration order, membership tests and duplicate suppression, and the
+// buffers are reused across ticks (2026-10-23: 7% of the rollout CPU sat in this path and
+// the allocator behind it).
+template <class T> void SortedInsert(std::vector<T>& theItems, const T& theItem)
+{
+	auto anIterator = std::lower_bound(theItems.begin(), theItems.end(), theItem);
+	if (anIterator == theItems.end() || *anIterator != theItem)
+		theItems.insert(anIterator, theItem);
+}
+
+template <class T> bool Contains(const std::vector<T>& theItems, const T& theItem)
+{
+	return std::binary_search(theItems.begin(), theItems.end(), theItem);
+}
+
 struct PublicState
 {
 	int tick = 0;
@@ -26,9 +45,16 @@ struct PublicState
 	int sun = 0;
 	int plantCount = 0;
 	bool terminal = false;
-	std::set<std::tuple<int, int, int>> readyPackets; // public index/type/imitater
-	std::set<std::pair<int, int>> readyDefenses; // public row/type, state == READY(1)
-	std::set<int> leftZoneZombies; // signed public IDs; on_board and rendered x <= 160
+	std::vector<std::tuple<int, int, int>> readyPackets; // public index/type/imitater
+	std::vector<std::pair<int, int>> readyDefenses; // public row/type, state == READY(1)
+	std::vector<int> leftZoneZombies; // signed public IDs; on_board and rendered x <= 160
+
+	void clear()
+	{
+		readyPackets.clear();
+		readyDefenses.clear();
+		leftZoneZombies.clear();
+	}
 };
 
 struct Result
@@ -52,10 +78,10 @@ inline double RenderedPublicCoordinate(double value)
 	return std::stod(text.str());
 }
 
-template<class Set> bool HasNew(const Set& before, const Set& after)
+template<class Items> bool HasNew(const Items& before, const Items& after)
 {
 	for (const auto& item : after)
-		if (!before.contains(item)) return true;
+		if (!Contains(before, item)) return true;
 	return false;
 }
 
@@ -85,21 +111,27 @@ Result Run(int requestedTicks, int condition, ReadPublic readPublic, Advance adv
 	Result result;
 	result.requestedTicks = requestedTicks;
 	result.condition = condition;
-	const PublicState initial = readPublic();
-	PublicState previous = initial;
-	result.triggered = Triggered(initial, initial, condition, requestedTicks == 0);
-	result.initialConditionSatisfied = condition == 4 && !initial.leftZoneZombies.empty();
+	// Two buffers, filled in place and swapped: the caller clears and refills the state it
+	// is handed, so the containers keep their capacity and a wait costs no allocation.
+	PublicState aStates[2];
+	readPublic(aStates[0]);
+	const int initialTick = aStates[0].tick;
+	int previousIndex = 0, currentIndex = 1;
+	result.triggered = Triggered(aStates[0], aStates[0], condition, requestedTicks == 0);
+	result.initialConditionSatisfied = condition == 4 && !aStates[0].leftZoneZombies.empty();
 	while (result.triggered.empty() && result.logicSteps < requestedTicks)
 	{
 		advance(); // exactly the same one-tick operation as fixed WAIT
 		++result.logicSteps;
-		PublicState current = readPublic();
+		PublicState& current = aStates[currentIndex];
+		const PublicState& previous = aStates[previousIndex];
+		readPublic(current);
 		if (current.tick < previous.tick)
 			throw std::runtime_error("event wait public clock moved backwards");
 		result.stalledClockSteps += current.tick == previous.tick;
-		result.actualTicks = current.tick - initial.tick;
+		result.actualTicks = current.tick - initialTick;
 		result.triggered = Triggered(previous, current, condition, result.logicSteps == requestedTicks);
-		previous = std::move(current);
+		std::swap(previousIndex, currentIndex);
 	}
 	result.reason = result.triggered.front();
 	return result;

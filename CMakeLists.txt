@@ -4,17 +4,46 @@ project(pvz-portable LANGUAGES C CXX)
 
 # One game on every machine: arm64 clang fuses a*b+c into a single FMA by default and x86-64 builds have no FMA,
 # so Mac archives drifted from the desktop's (2026-10-19: a pole vaulter at x 599.843 vs 599.882, frame 413).
-# Off on Mac, a no-op for the desktop's GCC; the CUDA service keeps nvcc's own settings.
+# Off on Mac, a no-op for the desktop's GCC.
 if(NOT MSVC)
 	add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-ffp-contract=off>)
 endif()
 
-# Opt-in: the normal portable build does not inspect or require a CUDA installation.
-option(PVZ_CUDA_ROLLOUT "Build the optional CUDA continuation service" OFF)
-if(PVZ_CUDA_ROLLOUT)
-	include(CMake/CudaRollout.cmake)
+# The engine process is the whole cost of collection: every decision spends its time stepping
+# ticks in here.  Link-time optimisation is what lets its small inline-heavy update functions
+# fold into their callers.  -ffp-contract=off above keeps the game bit-identical: LTO never
+# reassociates float arithmetic, and the rollout leaf digests in scripts/bench_engine.py are
+# the gate (2026-10-23: 64/64 roots identical).
+#
+# -march=native was measured and dropped: with LTO it added nothing (87.2k -> 87.2k ticks/CPU-s,
+# scripts/bench_engine.py, 3 runs each) and it would make the binary machine-specific, which the
+# identical-game guarantee across Mac and desktop does not want.
+if(NOT MSVC AND NOT EMSCRIPTEN)
+	# Line tables for the sampler in scripts/prof_sample.c: without them a profile can only say
+	# "inside Reanimation::Update", not which line.  -g1 does not change code generation.
+	add_compile_options($<$<COMPILE_LANGUAGE:C,CXX>:-g1>)
+	include(CheckIPOSupported)
+	check_ipo_supported(RESULT PVZ_IPO_SUPPORTED OUTPUT PVZ_IPO_ERROR LANGUAGES C CXX)
+	if(PVZ_IPO_SUPPORTED)
+		set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+	else()
+		message(STATUS "LTO unavailable: ${PVZ_IPO_ERROR}")
+	endif()
+	# Profile-guided optimisation.  scripts/build_pgo.sh writes the profile for this same
+	# build directory (GCC looks the .gcda up by object path, so it cannot be moved); once it
+	# is there every build uses it.  A machine without a profile still builds normally.
+	set(PVZ_PGO_DATA "${PROJECT_SOURCE_DIR}/artifacts/perf/pgo" CACHE PATH "PGO profile directory")
+	file(GLOB PVZ_PGO_FILES "${PVZ_PGO_DATA}/*.gcda")
+	if(PVZ_PGO_FILES)
+		message(STATUS "PGO: using profile in ${PVZ_PGO_DATA}")
+		# -Wno-error=coverage-mismatch: after a source change the old .gcda no longer matches;
+		# that must degrade to "no profile for this function", not fail the build.  The profile is
+		# regenerated with scripts/build_pgo.sh at the end of every optimisation round.
+		add_compile_options(-fprofile-use=${PVZ_PGO_DATA} -fprofile-correction -Wno-missing-profile
+			-Wno-error=coverage-mismatch)
+		add_link_options(-fprofile-use=${PVZ_PGO_DATA})
+	endif()
 endif()
-
 include(CMake/ProjectVersion.cmake)
 
 option(BUILD_STATIC "Statically link dependencies for a standalone exe (Windows MinGW, Linux)" OFF)
@@ -202,7 +231,6 @@ target_include_directories(pvz-portable PRIVATE
 	${PLAT_INCLUDES}
 	${PROJECT_BINARY_DIR}
 	${PROJECT_SOURCE_DIR}/src
-	${PROJECT_SOURCE_DIR}/cuda
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework
 	${PROJECT_SOURCE_DIR}/src/SexyAppFramework/sound/SDL-Mixer-X/include
 	${SDL2_INCLUDE_DIRS}
@@ -235,6 +263,24 @@ endif()
 
 if (LOW_MEMORY)
 	target_compile_definitions(pvz-portable PRIVATE LOW_MEMORY)
+endif()
+
+# Allocator.  The engine allocates and frees board objects, reanimation tracks and particles
+# constantly; the system malloc was ~7% of the rollout CPU and mimalloc removes most of it
+# (2026-10-23: 103.2k -> 111.1k ticks/CPU-s, 3 runs each, scripts/bench_engine.py).  It
+# overrides malloc process-wide, so it is linked statically and needs no runtime switch.
+# The first configure downloads it; later ones reuse build/_deps.
+if(NOT MSVC AND NOT EMSCRIPTEN)
+	include(FetchContent)
+	set(MI_OVERRIDE ON CACHE BOOL "" FORCE)
+	set(MI_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+	set(MI_BUILD_OBJECT OFF CACHE BOOL "" FORCE)
+	FetchContent_Declare(mimalloc
+		GIT_REPOSITORY https://github.com/microsoft/mimalloc
+		GIT_TAG v2.1.7
+		GIT_SHALLOW TRUE)
+	FetchContent_MakeAvailable(mimalloc)
+	target_link_libraries(pvz-portable PRIVATE mimalloc-static)
 endif()
 
 if(EMSCRIPTEN)

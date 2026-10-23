@@ -26,6 +26,30 @@ BINARY = Path(os.environ.get('PVZ_EXECUTABLE', str(ROOT / 'build/pvz-portable'))
 
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'needs local CPU build and resources')
 class IdentityCppTest(unittest.TestCase):
+    def test_reloaded_weights_match_a_fresh_engine(self):
+        torch.set_num_threads(1)
+        torch.manual_seed(35023)
+        deck = (0, 1, 2, 3, 4, 5, 7)
+        task = TaskSpec(level=9, seed=30000, profile=profile_for_deck(deck))
+        with tempfile.TemporaryDirectory() as folder:
+            paths = [Path(folder) / name for name in ('first.bin', 'second.bin')]
+            for path in paths:
+                net = RolloutNet(13, packet_head='identity', plant_embedding_dim=7).eval()
+                export_student(net, path)
+            # Identical layouts ensure a channel-set cache cannot detect the new weights.
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                env.reset(deck=deck, task=task)
+                env.load_rollout_net(paths[0])
+                env.rollout_predict()
+                env.load_rollout_net(paths[1])
+                reloaded = env.rollout_predict()
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                env.reset(deck=deck, task=task)
+                env.load_rollout_net(paths[1])
+                fresh = env.rollout_predict()
+            for key in ('plant', 'packet', 'cell_packet', 'cell', 'action'):
+                self.assertEqual(reloaded[key], fresh[key], key)
+
     def test_random_identity_heads_on_real_positions(self):
         torch.set_num_threads(1)
         torch.manual_seed(19006)
