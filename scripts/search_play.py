@@ -560,7 +560,7 @@ def _frame_json(frame: dict) -> str:
     return json.dumps(frame, separators=(",", ":")) + "\n"
 
 
-def _play(job: dict) -> dict:
+def _play(job: dict, observer=None) -> dict:
     args = job["args"]
     from collections import Counter
     import torch
@@ -621,6 +621,8 @@ def _play(job: dict) -> dict:
             if planted_by_type is None or planted is None:
                 raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
         while not obs["terminal"] and decisions < MAX_ACTIONS:
+            if observer is not None:
+                observer.before(env, obs, fast_state, decisions)
             action = policy_choice = _fast_action(obs, fast_state)
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
@@ -667,6 +669,8 @@ def _play(job: dict) -> dict:
                     fog_diagnostics.planted(planted_type, action)
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
+            if observer is not None:
+                observer.after(obs, action, policy_choice, rejected, info)
             if fog_diagnostics is not None:
                 fog_diagnostics.sample(env, obs)
             if frames is not None:
@@ -682,6 +686,8 @@ def _play(job: dict) -> dict:
                                         if abs(v) != float("inf") and c["type"] != "shovel"]
                 frame["action"] = action          # what was executed (after the search), like render_episode
                 frame["action_rejected"] = rejected
+                if observer is not None:
+                    frame["eaten"] = int((info.get("events") or {}).get("plants_eaten", 0))
                 if stats.get("last_verification"):
                     # Wall time is not part of the label: keeping it in the archive makes two runs of
                     # the same arm differ byte for byte (and the GPU schedule comparison impossible).
@@ -752,7 +758,7 @@ def _play(job: dict) -> dict:
     return result
 
 
-def main() -> None:
+def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
@@ -794,6 +800,11 @@ def main() -> None:
                    help="probability of executing the search's decision (1 = the teacher plays; < 1 = DAgger: "
                         "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
+    return p
+
+
+def main() -> None:
+    p = parser()
     args = p.parse_args()
     if args.verify_samples < 0:
         p.error("--verify-samples must be nonnegative")

@@ -1,0 +1,5542 @@
+{
+  "schema_version": 1,
+  "scope": "four matched games per acting-policy/observation arm, L31–34 first eval seed",
+  "resolution": "decision boundaries indexed by actual engine tick; no interpolated per-tick observations",
+  "firepower": "engine SUBCLASS_SHOOTER live counts by type/row, raw projectiles in timeline; no invented DPS",
+  "models": {
+    "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/build/pvz-portable": "a13665a9a916fc961ea5d0f50be5448a2eb322ecd91edd35f8bd37b1e400411f"
+  },
+  "games": [
+    {
+      "level": 31,
+      "observation": "human",
+      "policy": "teacher",
+      "seed": 39000000,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 22436,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 395,
+        "rejected_actions": 0,
+        "mowers_used": 5,
+        "plants_eaten": 6
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l31-human-teacher",
+      "archive_sha256": "4c382a03e430f63f27ec81d8f2effd6e92131f903f5f26f981c692379553640e",
+      "timeline_sha256": "7c956ac2488f96966e7c15b217f895969ad790732dc029deeadcacbd7d9e9d0f",
+      "native_checked": 395,
+      "native_mismatches": [],
+      "types": {
+        "9": 7,
+        "16": 5,
+        "4": 2
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2700,
+          "decision": 48,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5220,
+          "decision": 91,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5280,
+          "decision": 93,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7607,
+          "decision": 134,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10007,
+          "decision": 175,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10067,
+          "decision": 177,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13512,
+          "decision": 238,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15941,
+          "decision": 281,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16661,
+          "decision": 294,
+          "type": 4,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20321,
+          "decision": 356,
+          "type": 16,
+          "row": 3,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20321,
+          "decision": 357,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20696,
+          "decision": 365,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 60,
+      "produced": 345,
+      "spent": 350,
+      "final_sun": 45,
+      "initial_sun": 50,
+      "wait_ticks": 22436,
+      "wait_below100_ticks": 22436,
+      "no_economy_ticks": 0,
+      "water_plantings": 5,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 4,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5280,
+          "decision": 93,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10007,
+          "decision": 175,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13512,
+          "decision": 238,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15941,
+          "decision": 281,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20321,
+          "decision": 357,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l31_eval_f8_fast_search_16/games.jsonl",
+        "sha256": "2443a89ad544c7235170189ba73828d6c36d12f2537f0ca267f9ecb45aa089f6"
+      },
+      "search_stats": {
+        "searched": 31,
+        "overrides": 0,
+        "student_candidate_added": 62,
+        "student_candidate_best": 14,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 31,
+      "observation": "human",
+      "policy": "student",
+      "seed": 39000000,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 22436,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 395,
+        "rejected_actions": 0,
+        "mowers_used": 5,
+        "plants_eaten": 6
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l31-human-student",
+      "archive_sha256": "730f701f356aaf8dfbe4cc84b16f92c52770186452699360f8c5212614676d70",
+      "timeline_sha256": "7c956ac2488f96966e7c15b217f895969ad790732dc029deeadcacbd7d9e9d0f",
+      "native_checked": 395,
+      "native_mismatches": [],
+      "types": {
+        "9": 7,
+        "16": 5,
+        "4": 2
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2700,
+          "decision": 48,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5220,
+          "decision": 91,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5280,
+          "decision": 93,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7607,
+          "decision": 134,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10007,
+          "decision": 175,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10067,
+          "decision": 177,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13512,
+          "decision": 238,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15941,
+          "decision": 281,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16661,
+          "decision": 294,
+          "type": 4,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20321,
+          "decision": 356,
+          "type": 16,
+          "row": 3,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20321,
+          "decision": 357,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20696,
+          "decision": 365,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 60,
+      "produced": 345,
+      "spent": 350,
+      "final_sun": 45,
+      "initial_sun": 50,
+      "wait_ticks": 22436,
+      "wait_below100_ticks": 22436,
+      "no_economy_ticks": 0,
+      "water_plantings": 5,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 4,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5280,
+          "decision": 93,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10007,
+          "decision": 175,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13512,
+          "decision": 238,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15941,
+          "decision": 281,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20321,
+          "decision": 357,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l31_eval_f8_fast_16/games.jsonl",
+        "sha256": "f510926a05ad973714be0116dbfc668a365e9fbc962be47dd0a6d2087ba5b235"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": []
+    },
+    {
+      "level": 31,
+      "observation": "xray",
+      "policy": "teacher",
+      "seed": 39000000,
+      "outcome": {
+        "won": false,
+        "final_wave": 7,
+        "final_tick": 21134,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 362,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 3
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l31-xray-teacher",
+      "archive_sha256": "2f08ae718e14201826f63039e43b38c083d37f2c81498075ffec8ba974aa170c",
+      "timeline_sha256": "1617e42c2c02f081a7b0e5f903f19debdfe8230ade811caa374c9a7b0f700f9a",
+      "native_checked": 362,
+      "native_mismatches": [],
+      "types": {
+        "9": 2,
+        "16": 3
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 1800,
+          "decision": 32,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2460,
+          "decision": 44,
+          "type": 16,
+          "row": 3,
+          "col": 8,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5160,
+          "decision": 90,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7522,
+          "decision": 131,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 90,
+      "spent": 125,
+      "final_sun": 15,
+      "initial_sun": 50,
+      "wait_ticks": 21134,
+      "wait_below100_ticks": 21134,
+      "no_economy_ticks": 9098,
+      "water_plantings": 3,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 3,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 1800,
+          "decision": 32,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l31_eval_f8x_fast_search_16/games.jsonl",
+        "sha256": "289f4be2200b24295ec3517988bf617b6198ef6886648cdbbaf21e360fbb6d84"
+      },
+      "search_stats": {
+        "searched": 10,
+        "overrides": 0,
+        "student_candidate_added": 20,
+        "student_candidate_best": 2,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 31,
+      "observation": "xray",
+      "policy": "student",
+      "seed": 39000000,
+      "outcome": {
+        "won": false,
+        "final_wave": 7,
+        "final_tick": 21134,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 362,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 3
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l31-xray-student",
+      "archive_sha256": "75772e96295eaee39144acf6a576419e026d56379a2a959f2150b8f1ca575ac8",
+      "timeline_sha256": "1617e42c2c02f081a7b0e5f903f19debdfe8230ade811caa374c9a7b0f700f9a",
+      "native_checked": 362,
+      "native_mismatches": [],
+      "types": {
+        "9": 2,
+        "16": 3
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 1800,
+          "decision": 32,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2460,
+          "decision": 44,
+          "type": 16,
+          "row": 3,
+          "col": 8,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5160,
+          "decision": 90,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7522,
+          "decision": 131,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 90,
+      "spent": 125,
+      "final_sun": 15,
+      "initial_sun": 50,
+      "wait_ticks": 21134,
+      "wait_below100_ticks": 21134,
+      "no_economy_ticks": 9098,
+      "water_plantings": 3,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 3,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 1800,
+          "decision": 32,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l31_eval_f8x_fast_16/games.jsonl",
+        "sha256": "f394124f12248dd435c38de27f0029bd51d87bd13b9dce8197e97bc70468c607"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": []
+    },
+    {
+      "level": 32,
+      "observation": "human",
+      "policy": "teacher",
+      "seed": 39000100,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 23975,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 422,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 10
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l32-human-teacher",
+      "archive_sha256": "a37d9290bd00022e6efdc829520c2b00150d104db15aacf515ffc96f139d60bb",
+      "timeline_sha256": "8b558519546932cd30297474a7635bf92030856657ae42f7a9d02eb8b0806779",
+      "native_checked": 422,
+      "native_mismatches": [],
+      "types": {
+        "9": 9,
+        "16": 5,
+        "4": 5
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3480,
+          "decision": 62,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3660,
+          "decision": 66,
+          "type": 16,
+          "row": 2,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5220,
+          "decision": 93,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6840,
+          "decision": 121,
+          "type": 4,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 9870,
+          "decision": 175,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10830,
+          "decision": 192,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13230,
+          "decision": 233,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13230,
+          "decision": 234,
+          "type": 4,
+          "row": 0,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16509,
+          "decision": 290,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16509,
+          "decision": 291,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16569,
+          "decision": 293,
+          "type": 4,
+          "row": 4,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19623,
+          "decision": 345,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19623,
+          "decision": 346,
+          "type": 4,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22671,
+          "decision": 398,
+          "type": 16,
+          "row": 2,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22671,
+          "decision": 399,
+          "type": 9,
+          "row": 4,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22731,
+          "decision": 401,
+          "type": 4,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 110,
+      "produced": 440,
+      "spent": 475,
+      "final_sun": 15,
+      "initial_sun": 50,
+      "wait_ticks": 23975,
+      "wait_below100_ticks": 23795,
+      "no_economy_ticks": 60,
+      "water_plantings": 5,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 5,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3480,
+          "decision": 62,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 9870,
+          "decision": 175,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10830,
+          "decision": 192,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13230,
+          "decision": 233,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16509,
+          "decision": 290,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22671,
+          "decision": 399,
+          "type": 9,
+          "row": 4,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l32_eval_f8_fast_search_16/games.jsonl",
+        "sha256": "978048f4918ca222e2e301dbd00351a4a53733e5e4a11b6645f539f5e8bf80fe"
+      },
+      "search_stats": {
+        "searched": 58,
+        "overrides": 0,
+        "student_candidate_added": 116,
+        "student_candidate_best": 14,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [
+        {
+          "tick": 19443,
+          "sun": 110,
+          "action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "legal_cells": 34
+        },
+        {
+          "tick": 19503,
+          "sun": 110,
+          "action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "legal_cells": 34
+        },
+        {
+          "tick": 19563,
+          "sun": 110,
+          "action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "legal_cells": 34
+        },
+        {
+          "tick": 19623,
+          "sun": 110,
+          "action": {
+            "type": "plant",
+            "packet": 6,
+            "col": 2,
+            "row": 3
+          },
+          "legal_cells": 34
+        }
+      ],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 32,
+      "observation": "human",
+      "policy": "student",
+      "seed": 39000100,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 23975,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 422,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 10
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l32-human-student",
+      "archive_sha256": "fe6b78f51559767ee290f652d87b5a11f0234ce5507b6eccd47e5aebd6f0ebbc",
+      "timeline_sha256": "8b558519546932cd30297474a7635bf92030856657ae42f7a9d02eb8b0806779",
+      "native_checked": 422,
+      "native_mismatches": [],
+      "types": {
+        "9": 9,
+        "16": 5,
+        "4": 5
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3480,
+          "decision": 62,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3660,
+          "decision": 66,
+          "type": 16,
+          "row": 2,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5220,
+          "decision": 93,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6840,
+          "decision": 121,
+          "type": 4,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 9870,
+          "decision": 175,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10830,
+          "decision": 192,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13230,
+          "decision": 233,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13230,
+          "decision": 234,
+          "type": 4,
+          "row": 0,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16509,
+          "decision": 290,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16509,
+          "decision": 291,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16569,
+          "decision": 293,
+          "type": 4,
+          "row": 4,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19623,
+          "decision": 345,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19623,
+          "decision": 346,
+          "type": 4,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22671,
+          "decision": 398,
+          "type": 16,
+          "row": 2,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22671,
+          "decision": 399,
+          "type": 9,
+          "row": 4,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22731,
+          "decision": 401,
+          "type": 4,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 110,
+      "produced": 440,
+      "spent": 475,
+      "final_sun": 15,
+      "initial_sun": 50,
+      "wait_ticks": 23975,
+      "wait_below100_ticks": 23795,
+      "no_economy_ticks": 60,
+      "water_plantings": 5,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 5,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3480,
+          "decision": 62,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 9870,
+          "decision": 175,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10830,
+          "decision": 192,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13230,
+          "decision": 233,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16509,
+          "decision": 290,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 22671,
+          "decision": 399,
+          "type": 9,
+          "row": 4,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l32_eval_f8_fast_16/games.jsonl",
+        "sha256": "257f9b6234f3cede1240f62da229648651721cc46248a826ab190e926cd53294"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [
+        {
+          "tick": 19443,
+          "sun": 110,
+          "action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "legal_cells": 34
+        },
+        {
+          "tick": 19503,
+          "sun": 110,
+          "action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "legal_cells": 34
+        },
+        {
+          "tick": 19563,
+          "sun": 110,
+          "action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "legal_cells": 34
+        },
+        {
+          "tick": 19623,
+          "sun": 110,
+          "action": {
+            "type": "plant",
+            "packet": 6,
+            "col": 2,
+            "row": 3
+          },
+          "legal_cells": 34
+        }
+      ]
+    },
+    {
+      "level": 32,
+      "observation": "xray",
+      "policy": "teacher",
+      "seed": 39000100,
+      "outcome": {
+        "won": false,
+        "final_wave": 9,
+        "final_tick": 21528,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 379,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 8
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l32-xray-teacher",
+      "archive_sha256": "612eb5f298ff1e03dcd02f9c14eee6d39d3097ba213559db8906e5b4eeb0af6e",
+      "timeline_sha256": "472fd0731cb3afb37e76d1c94dabe889dabac3b37c897be8234dc7f2c6586f57",
+      "native_checked": 379,
+      "native_mismatches": [],
+      "types": {
+        "9": 9,
+        "16": 5,
+        "4": 1
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3480,
+          "decision": 62,
+          "type": 16,
+          "row": 2,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3660,
+          "decision": 66,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5220,
+          "decision": 93,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8259,
+          "decision": 145,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10668,
+          "decision": 187,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13087,
+          "decision": 229,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13496,
+          "decision": 237,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15591,
+          "decision": 273,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15951,
+          "decision": 280,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16011,
+          "decision": 282,
+          "type": 4,
+          "row": 0,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19046,
+          "decision": 335,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 21016,
+          "decision": 369,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 335,
+      "spent": 375,
+      "final_sun": 10,
+      "initial_sun": 50,
+      "wait_ticks": 21528,
+      "wait_below100_ticks": 21528,
+      "no_economy_ticks": 60,
+      "water_plantings": 5,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 5,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3660,
+          "decision": 66,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10668,
+          "decision": 187,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13087,
+          "decision": 229,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15591,
+          "decision": 273,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19046,
+          "decision": 335,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 21016,
+          "decision": 369,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l32_eval_f8x_fast_search_16/games.jsonl",
+        "sha256": "79c5717bbd97aacd988021c170f086997e5c539ef8fb8b8f3626f447b3899628"
+      },
+      "search_stats": {
+        "searched": 24,
+        "overrides": 0,
+        "student_candidate_added": 48,
+        "student_candidate_best": 5,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 32,
+      "observation": "xray",
+      "policy": "student",
+      "seed": 39000100,
+      "outcome": {
+        "won": false,
+        "final_wave": 9,
+        "final_tick": 21528,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 379,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 8
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l32-xray-student",
+      "archive_sha256": "099b36250f66697d346e189d7cba5274fac8d4fb128f087939038a447a1dc65a",
+      "timeline_sha256": "472fd0731cb3afb37e76d1c94dabe889dabac3b37c897be8234dc7f2c6586f57",
+      "native_checked": 379,
+      "native_mismatches": [],
+      "types": {
+        "9": 9,
+        "16": 5,
+        "4": 1
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3480,
+          "decision": 62,
+          "type": 16,
+          "row": 2,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3660,
+          "decision": 66,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5220,
+          "decision": 93,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8259,
+          "decision": 145,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10668,
+          "decision": 187,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13087,
+          "decision": 229,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13496,
+          "decision": 237,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15591,
+          "decision": 273,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15951,
+          "decision": 280,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16011,
+          "decision": 282,
+          "type": 4,
+          "row": 0,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19046,
+          "decision": 335,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 21016,
+          "decision": 369,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 335,
+      "spent": 375,
+      "final_sun": 10,
+      "initial_sun": 50,
+      "wait_ticks": 21528,
+      "wait_below100_ticks": 21528,
+      "no_economy_ticks": 60,
+      "water_plantings": 5,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 5,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 840,
+          "decision": 16,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 37,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3660,
+          "decision": 66,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10668,
+          "decision": 187,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13087,
+          "decision": 229,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15591,
+          "decision": 273,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19046,
+          "decision": 335,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 21016,
+          "decision": 369,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l32_eval_f8x_fast_16/games.jsonl",
+        "sha256": "8b7091c8e8ea6f6020f3e9af8e9e2aa50644b3605d7368d66f0d90eadbcb0071"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": []
+    },
+    {
+      "level": 33,
+      "observation": "human",
+      "policy": "teacher",
+      "seed": 39000200,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 21578,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 387,
+        "rejected_actions": 0,
+        "mowers_used": 5,
+        "plants_eaten": 15
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l33-human-teacher",
+      "archive_sha256": "c55202b4ea0289aeb3e03cdd876f5d1fad623698cca0e87c6766ed4e30563d58",
+      "timeline_sha256": "18afc397370af4aa42b7b4a50aa94a6247464b3ed23229388bfe1bfc077d5208",
+      "native_checked": 387,
+      "native_mismatches": [],
+      "types": {
+        "9": 17,
+        "16": 3
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5040,
+          "decision": 89,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5520,
+          "decision": 98,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6196,
+          "decision": 111,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7396,
+          "decision": 132,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8643,
+          "decision": 154,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 9795,
+          "decision": 175,
+          "type": 16,
+          "row": 3,
+          "col": 4,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10095,
+          "decision": 181,
+          "type": 9,
+          "row": 4,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11557,
+          "decision": 207,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12640,
+          "decision": 227,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13540,
+          "decision": 243,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15067,
+          "decision": 270,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15926,
+          "decision": 286,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16946,
+          "decision": 304,
+          "type": 9,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 17786,
+          "decision": 319,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18878,
+          "decision": 339,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19373,
+          "decision": 349,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 460,
+      "spent": 500,
+      "final_sun": 10,
+      "initial_sun": 50,
+      "wait_ticks": 21578,
+      "wait_below100_ticks": 21578,
+      "no_economy_ticks": 0,
+      "water_plantings": 3,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 3,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5040,
+          "decision": 89,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6196,
+          "decision": 111,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7396,
+          "decision": 132,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8643,
+          "decision": 154,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10095,
+          "decision": 181,
+          "type": 9,
+          "row": 4,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11557,
+          "decision": 207,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12640,
+          "decision": 227,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13540,
+          "decision": 243,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15067,
+          "decision": 270,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15926,
+          "decision": 286,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16946,
+          "decision": 304,
+          "type": 9,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 17786,
+          "decision": 319,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18878,
+          "decision": 339,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l33_eval_f8_fast_search_16/games.jsonl",
+        "sha256": "f77969332b473250c539947d92248cfdef8b9d191ee2a74f1f53f2e1d43907dd"
+      },
+      "search_stats": {
+        "searched": 26,
+        "overrides": 0,
+        "student_candidate_added": 52,
+        "student_candidate_best": 5,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 33,
+      "observation": "human",
+      "policy": "student",
+      "seed": 39000200,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 21578,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 387,
+        "rejected_actions": 0,
+        "mowers_used": 5,
+        "plants_eaten": 15
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l33-human-student",
+      "archive_sha256": "eb9fae7ea25746e360fd9b6c8b68a1e9df400e5c4c3c1a4534024e78243c02fe",
+      "timeline_sha256": "18afc397370af4aa42b7b4a50aa94a6247464b3ed23229388bfe1bfc077d5208",
+      "native_checked": 387,
+      "native_mismatches": [],
+      "types": {
+        "9": 17,
+        "16": 3
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5040,
+          "decision": 89,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5520,
+          "decision": 98,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6196,
+          "decision": 111,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7396,
+          "decision": 132,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8643,
+          "decision": 154,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 9795,
+          "decision": 175,
+          "type": 16,
+          "row": 3,
+          "col": 4,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10095,
+          "decision": 181,
+          "type": 9,
+          "row": 4,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11557,
+          "decision": 207,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12640,
+          "decision": 227,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13540,
+          "decision": 243,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15067,
+          "decision": 270,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15926,
+          "decision": 286,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16946,
+          "decision": 304,
+          "type": 9,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 17786,
+          "decision": 319,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18878,
+          "decision": 339,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19373,
+          "decision": 349,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 460,
+      "spent": 500,
+      "final_sun": 10,
+      "initial_sun": 50,
+      "wait_ticks": 21578,
+      "wait_below100_ticks": 21578,
+      "no_economy_ticks": 0,
+      "water_plantings": 3,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 3,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5040,
+          "decision": 89,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6196,
+          "decision": 111,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7396,
+          "decision": 132,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8643,
+          "decision": 154,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10095,
+          "decision": 181,
+          "type": 9,
+          "row": 4,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11557,
+          "decision": 207,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12640,
+          "decision": 227,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13540,
+          "decision": 243,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15067,
+          "decision": 270,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15926,
+          "decision": 286,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 16946,
+          "decision": 304,
+          "type": 9,
+          "row": 0,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 17786,
+          "decision": 319,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18878,
+          "decision": 339,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l33_eval_f8_fast_16/games.jsonl",
+        "sha256": "5355293e9c11bcbab527d799272d1976280ca2fc2e5dbf935bcd9dbf8b8e0498"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": []
+    },
+    {
+      "level": 33,
+      "observation": "xray",
+      "policy": "teacher",
+      "seed": 39000200,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 20526,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 357,
+        "rejected_actions": 0,
+        "mowers_used": 6,
+        "plants_eaten": 5
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l33-xray-teacher",
+      "archive_sha256": "cfb24bc27f93d864aa113eeaba3ecb93aa179edcdf123f28abd86b0d27f4fbd7",
+      "timeline_sha256": "066cf0cbdc8c3d07c5ef609f1bbc5db7832b3491b033ed490560aecb11306e36",
+      "native_checked": 357,
+      "native_mismatches": [],
+      "types": {
+        "9": 4,
+        "16": 2
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 0,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 0,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5040,
+          "decision": 89,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7951,
+          "decision": 139,
+          "type": 16,
+          "row": 3,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 105,
+      "spent": 150,
+      "final_sun": 5,
+      "initial_sun": 50,
+      "wait_ticks": 20526,
+      "wait_below100_ticks": 20526,
+      "no_economy_ticks": 12515,
+      "water_plantings": 2,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 2,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 0,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 0,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l33_eval_f8x_fast_search_16/games.jsonl",
+        "sha256": "0aa9e4d88fb67ab8aee61b218804ce87d1565190318a4af2e26a35f5d3552007"
+      },
+      "search_stats": {
+        "searched": 12,
+        "overrides": 0,
+        "student_candidate_added": 24,
+        "student_candidate_best": 4,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 33,
+      "observation": "xray",
+      "policy": "student",
+      "seed": 39000200,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 20526,
+        "wave_count": 20,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 357,
+        "rejected_actions": 0,
+        "mowers_used": 6,
+        "plants_eaten": 5
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l33-xray-student",
+      "archive_sha256": "695ec846a5f52c85c9a88b70439b47fe87bddcd920293ba74b1f88d1154a165c",
+      "timeline_sha256": "066cf0cbdc8c3d07c5ef609f1bbc5db7832b3491b033ed490560aecb11306e36",
+      "native_checked": 357,
+      "native_mismatches": [],
+      "types": {
+        "9": 4,
+        "16": 2
+      },
+      "plantings": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 0,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 0,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5040,
+          "decision": 89,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7951,
+          "decision": 139,
+          "type": 16,
+          "row": 3,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 50,
+      "produced": 105,
+      "spent": 150,
+      "final_sun": 5,
+      "initial_sun": 50,
+      "wait_ticks": 20526,
+      "wait_below100_ticks": 20526,
+      "no_economy_ticks": 12515,
+      "water_plantings": 2,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 2,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 0,
+          "decision": 1,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 0,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2880,
+          "decision": 51,
+          "type": 9,
+          "row": 0,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3780,
+          "decision": 67,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l33_eval_f8x_fast_16/games.jsonl",
+        "sha256": "6be7e5b13dacf076cf6d5ff9b062aeb7270a18a5c168aa935ec1bc3a9f95a515"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": []
+    },
+    {
+      "level": 34,
+      "observation": "human",
+      "policy": "teacher",
+      "seed": 39000300,
+      "outcome": {
+        "won": false,
+        "final_wave": 6,
+        "final_tick": 17005,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 306,
+        "rejected_actions": 0,
+        "mowers_used": 2,
+        "plants_eaten": 8
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l34-human-teacher",
+      "archive_sha256": "2ba779e45c367f9e618d68c32ff4ac509ae5a4d6e77ab04937f091ce19192cfe",
+      "timeline_sha256": "b67829439b81320a3acca3aa95f57ff0b29caf9c830fb18c14828240b1e3d71d",
+      "native_checked": 306,
+      "native_mismatches": [],
+      "types": {
+        "9": 10,
+        "4": 4,
+        "16": 4
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3960,
+          "decision": 70,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5100,
+          "decision": 90,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5520,
+          "decision": 98,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7537,
+          "decision": 134,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7897,
+          "decision": 141,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8557,
+          "decision": 153,
+          "type": 4,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11302,
+          "decision": 201,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11602,
+          "decision": 207,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11602,
+          "decision": 208,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12262,
+          "decision": 220,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13042,
+          "decision": 234,
+          "type": 16,
+          "row": 3,
+          "col": 4,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13462,
+          "decision": 242,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14662,
+          "decision": 263,
+          "type": 16,
+          "row": 2,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14662,
+          "decision": 264,
+          "type": 4,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15262,
+          "decision": 275,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 110,
+      "produced": 445,
+      "spent": 450,
+      "final_sun": 45,
+      "initial_sun": 50,
+      "wait_ticks": 17005,
+      "wait_below100_ticks": 17005,
+      "no_economy_ticks": 60,
+      "water_plantings": 4,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 4,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3960,
+          "decision": 70,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5100,
+          "decision": 90,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7897,
+          "decision": 141,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11302,
+          "decision": 201,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12262,
+          "decision": 220,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13462,
+          "decision": 242,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15262,
+          "decision": 275,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l34_eval_f8_fast_search_16/games.jsonl",
+        "sha256": "c2a07a4e012c5e49291c9a55a04ce44ff75fcfd705bb8756e644f0dcc8a00ebb"
+      },
+      "search_stats": {
+        "searched": 51,
+        "overrides": 0,
+        "student_candidate_added": 102,
+        "student_candidate_best": 13,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [
+        {
+          "tick": 11302,
+          "sun": 110,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 0,
+            "row": 0
+          },
+          "legal_cells": 33
+        }
+      ],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 34,
+      "observation": "human",
+      "policy": "student",
+      "seed": 39000300,
+      "outcome": {
+        "won": false,
+        "final_wave": 6,
+        "final_tick": 17005,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 306,
+        "rejected_actions": 0,
+        "mowers_used": 2,
+        "plants_eaten": 8
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l34-human-student",
+      "archive_sha256": "e12813ab260782154352256b2b8b2728f173c7c2cfd7c84adca29d25b140d069",
+      "timeline_sha256": "b67829439b81320a3acca3aa95f57ff0b29caf9c830fb18c14828240b1e3d71d",
+      "native_checked": 306,
+      "native_mismatches": [],
+      "types": {
+        "9": 10,
+        "4": 4,
+        "16": 4
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3960,
+          "decision": 70,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5100,
+          "decision": 90,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5520,
+          "decision": 98,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7537,
+          "decision": 134,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7897,
+          "decision": 141,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8557,
+          "decision": 153,
+          "type": 4,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11302,
+          "decision": 201,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11602,
+          "decision": 207,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11602,
+          "decision": 208,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12262,
+          "decision": 220,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13042,
+          "decision": 234,
+          "type": 16,
+          "row": 3,
+          "col": 4,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13462,
+          "decision": 242,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14662,
+          "decision": 263,
+          "type": 16,
+          "row": 2,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14662,
+          "decision": 264,
+          "type": 4,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15262,
+          "decision": 275,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 110,
+      "produced": 445,
+      "spent": 450,
+      "final_sun": 45,
+      "initial_sun": 50,
+      "wait_ticks": 17005,
+      "wait_below100_ticks": 17005,
+      "no_economy_ticks": 60,
+      "water_plantings": 4,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 4,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3960,
+          "decision": 70,
+          "type": 9,
+          "row": 4,
+          "col": 4,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5100,
+          "decision": 90,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7897,
+          "decision": 141,
+          "type": 9,
+          "row": 0,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 11302,
+          "decision": 201,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 12262,
+          "decision": 220,
+          "type": 9,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13462,
+          "decision": 242,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15262,
+          "decision": 275,
+          "type": 9,
+          "row": 4,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l34_eval_f8_fast_16/games.jsonl",
+        "sha256": "b0fbd2fccc1f269be039980d78426bd6f99186dcabcc61a2e4eaa39b401c3ac3"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [
+        {
+          "tick": 11302,
+          "sun": 110,
+          "action": {
+            "type": "plant",
+            "packet": 1,
+            "col": 0,
+            "row": 0
+          },
+          "legal_cells": 33
+        }
+      ]
+    },
+    {
+      "level": 34,
+      "observation": "xray",
+      "policy": "teacher",
+      "seed": 39000300,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 20454,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 365,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 9
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l34-xray-teacher",
+      "archive_sha256": "fd4386e6b2c12414dbd048e6ab42d85f29afbf7fa4178ce0b440513489cd4cdb",
+      "timeline_sha256": "e4336a07a2081a7240a15728c2fdbe097c9d0168f23cf13c6d690e31f49b3bbf",
+      "native_checked": 365,
+      "native_mismatches": [],
+      "types": {
+        "9": 9,
+        "16": 8,
+        "4": 2
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3960,
+          "decision": 70,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5400,
+          "decision": 95,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6444,
+          "decision": 114,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7837,
+          "decision": 139,
+          "type": 9,
+          "row": 1,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8017,
+          "decision": 143,
+          "type": 16,
+          "row": 2,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8797,
+          "decision": 157,
+          "type": 16,
+          "row": 2,
+          "col": 8,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10297,
+          "decision": 183,
+          "type": 16,
+          "row": 2,
+          "col": 6,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10417,
+          "decision": 186,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13430,
+          "decision": 238,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13430,
+          "decision": 239,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14603,
+          "decision": 260,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14941,
+          "decision": 267,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15234,
+          "decision": 273,
+          "type": 4,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18245,
+          "decision": 325,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19913,
+          "decision": 354,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20393,
+          "decision": 363,
+          "type": 16,
+          "row": 3,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 70,
+      "produced": 425,
+      "spent": 475,
+      "final_sun": 0,
+      "initial_sun": 50,
+      "wait_ticks": 20454,
+      "wait_below100_ticks": 20454,
+      "no_economy_ticks": 60,
+      "water_plantings": 8,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 7,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6444,
+          "decision": 114,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7837,
+          "decision": 139,
+          "type": 9,
+          "row": 1,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13430,
+          "decision": 239,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14603,
+          "decision": 260,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18245,
+          "decision": 325,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19913,
+          "decision": 354,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l34_eval_f8x_fast_search_16/games.jsonl",
+        "sha256": "c37ec5b07c702d2c1e9c0e58c272dc8b3d2e8deced2bde652630aef1e09395e1"
+      },
+      "search_stats": {
+        "searched": 32,
+        "overrides": 0,
+        "student_candidate_added": 64,
+        "student_candidate_best": 7,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": [],
+      "paired_student_all_actions_identical": true
+    },
+    {
+      "level": 34,
+      "observation": "xray",
+      "policy": "student",
+      "seed": 39000300,
+      "outcome": {
+        "won": false,
+        "final_wave": 8,
+        "final_tick": 20454,
+        "wave_count": 30,
+        "reason": "僵尸进屋",
+        "result": 2,
+        "actions": 365,
+        "rejected_actions": 0,
+        "mowers_used": 4,
+        "plants_eaten": 9
+      },
+      "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-d/l34-xray-student",
+      "archive_sha256": "cee31d19013c9b8d0614c74d9e27c2ad550c9334d1d5c1b282704c34685107e2",
+      "timeline_sha256": "e4336a07a2081a7240a15728c2fdbe097c9d0168f23cf13c6d690e31f49b3bbf",
+      "native_checked": 365,
+      "native_mismatches": [],
+      "types": {
+        "9": 9,
+        "16": 8,
+        "4": 2
+      },
+      "plantings": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 3960,
+          "decision": 70,
+          "type": 16,
+          "row": 2,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 5400,
+          "decision": 95,
+          "type": 16,
+          "row": 3,
+          "col": 2,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6444,
+          "decision": 114,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7837,
+          "decision": 139,
+          "type": 9,
+          "row": 1,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8017,
+          "decision": 143,
+          "type": 16,
+          "row": 2,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 8797,
+          "decision": 157,
+          "type": 16,
+          "row": 2,
+          "col": 8,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10297,
+          "decision": 183,
+          "type": 16,
+          "row": 2,
+          "col": 6,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 10417,
+          "decision": 186,
+          "type": 4,
+          "row": 1,
+          "col": 3,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13430,
+          "decision": 238,
+          "type": 16,
+          "row": 2,
+          "col": 0,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13430,
+          "decision": 239,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14603,
+          "decision": 260,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14941,
+          "decision": 267,
+          "type": 16,
+          "row": 3,
+          "col": 1,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 15234,
+          "decision": 273,
+          "type": 4,
+          "row": 1,
+          "col": 2,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18245,
+          "decision": 325,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19913,
+          "decision": 354,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 20393,
+          "decision": 363,
+          "type": 16,
+          "row": 3,
+          "col": 5,
+          "terrain": 3,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "sun_min": 0,
+      "sun_max": 70,
+      "produced": 425,
+      "spent": 475,
+      "final_sun": 0,
+      "initial_sun": 50,
+      "wait_ticks": 20454,
+      "wait_below100_ticks": 20454,
+      "no_economy_ticks": 60,
+      "water_plantings": 8,
+      "water_nonlily_without_base": [],
+      "max_lilypads": 7,
+      "max_cattails": 0,
+      "max_row_shooters": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "final_row_shooters": [
+        {},
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "row_shooter_changes": [
+        {
+          "tick": 0,
+          "rows": [
+            {},
+            {},
+            {},
+            {},
+            {},
+            {}
+          ]
+        }
+      ],
+      "econ_placements": [
+        {
+          "tick": 60,
+          "decision": 2,
+          "type": 9,
+          "row": 0,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2040,
+          "decision": 36,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 2940,
+          "decision": 52,
+          "type": 9,
+          "row": 4,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 6444,
+          "decision": 114,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 7837,
+          "decision": 139,
+          "type": 9,
+          "row": 1,
+          "col": 5,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 13430,
+          "decision": 239,
+          "type": 9,
+          "row": 0,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 14603,
+          "decision": 260,
+          "type": 9,
+          "row": 1,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 18245,
+          "decision": 325,
+          "type": 9,
+          "row": 1,
+          "col": 1,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        },
+        {
+          "tick": 19913,
+          "decision": 354,
+          "type": 9,
+          "row": 4,
+          "col": 0,
+          "terrain": 1,
+          "cost": 25,
+          "occupants": [],
+          "accepted": true
+        }
+      ],
+      "original_cold_match": {
+        "wave_tick_decisions_planted_types": true,
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/cold/fog_l34_eval_f8x_fast_16/games.jsonl",
+        "sha256": "5ea582be7e121f649bb3abbe5ae2bdc2d522000628c06a38f4acb2299f6d7ec1"
+      },
+      "search_stats": {
+        "searched": 0,
+        "overrides": 0,
+        "student_candidate_added": 0,
+        "student_candidate_best": 0,
+        "student_candidate_override": 0
+      },
+      "affordable_pea_decisions": []
+    }
+  ]
+}
