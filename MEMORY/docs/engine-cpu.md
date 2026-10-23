@@ -44,6 +44,28 @@
 - 根因：`EnvironmentRollout::Load` 换入新权重未清空 `kernelChannels` / `kernelBuffer` / `packetWeightDouble`。同布局与同活动通道无法感知权重已变，旧矩阵被复用。成功载入后统一清空衍生权重缓存、令 padding 计数失效、清除 packet logits 有效标记；非法载入仍保留旧模型。
 - 修复后全部 4 项 `test_identity_cpp` 通过（含新增回归）。24 配置 × 8 真实决策最大 logit 误差 **1.0430813e-7**，所有 argmax/动作一致；传送带 80 决策（79 次空槽、13 次免费卡）最大误差 **7.4505806e-8**；重载与新进程的 plant/packet/cell/action 逐项完全相同。证据 `codex_reload_before.log` / `codex_identity_after.log`（不入库）。这是缓存正确性修复，不作为新的性能增益项。
 
+## 独立锁步原型与给 task33 的接口草案
+
+原型源码在 `scripts/prototypes/batch_rollout.inc`，构建入口 `build_batch_rollout.py`，验收/计时入口 `bench_batch_rollout.py`。已从提交 `08228252` 的源码导出独立 Release/LTO 构建，产物与源码副本只放 `artifacts/perf/batch_prototype/`，正式 CMake、源码与 build 均未注入实验命令。`build.json` 记录原提交及 helper/builder SHA256。此版本不带本机 PGO，故原生串行对照也在**同一个原型二进制**内运行，绝对值不能直接冒充最终生产构建。
+
+原型的每个 lane 持有 `EnvironmentSnapshot`（含引擎 RNG/波表/计数器）、独立学生 History、6000 tick 收入窗口、前一动作上下文、子步和种植统计。轮流恢复状态、提取需要前向的输入；在一个决策边界将多个 lane 的三层卷积各合成一次 `W×K · K×(lanes×60)` SGEMM。首层使用该批输入的活动通道并集，零通道仍是零。然后将卷积输出交回现有 Encode 尾部、Heads 和 Predict 动作选择，保留原来的合法性、同分处理、等待和早期结果条件。行汇总与策略头目前仍逐 lane 执行。
+
+原型用完整快照切换单个 Board，避免新开多个游戏进程；这是正确性与可行性实验，**不建议 task33 在最终热循环中每决策序列化/恢复两次快照**。计时分别列 network / simulation / snapshot / feature CPU 与进程总 CPU；基准对同一 root、同九个未来种子运行原生串行、锁步 batch=1、锁步 batch=9，既报告批处理内部收益，也报告对原生串行的实际总成本。全量验收计划为 16 归档整局逐帧重放和 64 root × 9 未来的完整叶观测/逻辑统计比较，尚未因两个整局测试占满槽位而开始运行，当前不能宣称原型加速或验收通过。
+
+供 task33 讨论的 C++ 接口边界：
+
+```cpp
+struct RolloutLane;       // Board/effects + RNG + history + prior action + counters
+struct StudentInputs;     // board/scalars/packet info, with lane id
+struct StudentWorkspace;  // packed columns/weights/output, allocated once
+void PrepareInputs(RolloutLane&, StudentInputs&);
+void ConvolveBatch(std::span<const StudentInputs>, StudentWorkspace&);
+void FinishPrediction(RolloutLane&, const HiddenView&); // existing heads and legality
+void AdvanceToDecision(RolloutLane&);                  // existing tick/event-wait logic
+```
+
+最终 lane 上下文必须同时隔离 Board、全局 effects、共享 RNG 与静态缓存失效代数；只换 Board 指针不够。按决策轮次压紧仍存活且可种植的 lane，保留 seed/lane 顺序回填结果；不能让无合法动作的 lane 产生多余网络调用，也不能让 batch 的活动通道改变可见观测。工作区和固定权重应复用；首层并集扩大 K 的成本、尾部稀疏存活数以及细粒度快照成本都要由实测决定，不能用矩阵核上限代替整条推演收益。批量浮点结果若导致决策分叉，应按任务书统计验收，不能悄悄降低逐动作重放门槛。
+
 ## 仍需完成
 
 ### 分块手写 SIMD 对照：拒绝替换 BLAS
