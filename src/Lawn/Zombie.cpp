@@ -8431,33 +8431,32 @@ bool Zombie::IsTangleKelpTarget()
 		return true;
 
 	// Asked for every zombie by every shooter and mower on every tick, and the answer needs a walk
-	// over all plants.  Almost always there is no tangle kelp at all, so remember "this board has
-	// none".  That can only become false when a plant is allocated (mPlants.mNextKey moves) or the
-	// arrays are replaced (gBoardContentEpoch); a kelp that dies merely makes the memo pessimistic.
+	// over all plants.  Almost always there is no tangle kelp at all, so remember which slots held
+	// one.  That can only go stale when a plant is allocated (mPlants.mNextKey moves) or the arrays
+	// are replaced (gBoardContentEpoch); a kelp that dies merely makes the memo pessimistic, and a
+	// slot that was freed and reused is filtered by the seed-type check below.
 	static const Board* sBoard = nullptr;
 	static unsigned int sEpoch = 0, sNextKey = 0;
-	static bool sNoKelp = false;
+	static std::vector<int> sKelpSlots;
 	if (sBoard != mBoard || sEpoch != gBoardContentEpoch || sNextKey != mBoard->mPlants.mNextKey)
 	{
 		sBoard = mBoard;
 		sEpoch = gBoardContentEpoch;
 		sNextKey = mBoard->mPlants.mNextKey;
-		sNoKelp = true;
-		for (Plant* aPlant : mBoard->mPlants)
-			if (!aPlant->mDead && aPlant->mSeedType == SeedType::SEED_TANGLEKELP)
-			{
-				sNoKelp = false;
-				break;
-			}
+		sKelpSlots.clear();
+		for (unsigned int index = 0; index < mBoard->mPlants.mMaxUsedCount; ++index)
+			if ((mBoard->mPlants.DataArrayGetIDAt(index) & DATA_ARRAY_KEY_MASK) &&
+				mBoard->mPlants.DataArrayGetItemAt(index).mSeedType == SeedType::SEED_TANGLEKELP)
+				sKelpSlots.push_back(static_cast<int>(index));
 	}
-	if (sNoKelp)
+	if (sKelpSlots.empty())
 		return false;
 
-	for (Plant* aPlant : mBoard->mPlants)
+	const unsigned int aZombieID = mBoard->ZombieGetID(this);
+	for (int index : sKelpSlots)
 	{
-		if (aPlant->mDead)
-			continue;
-		if (aPlant->mSeedType == SeedType::SEED_TANGLEKELP && aPlant->mTargetZombieID == mBoard->ZombieGetID(this))
+		const Plant& aPlant = mBoard->mPlants.DataArrayGetItemAt(index);
+		if (!aPlant.mDead && aPlant.mSeedType == SeedType::SEED_TANGLEKELP && aPlant.mTargetZombieID == aZombieID)
 		{
 			return true;
 		}

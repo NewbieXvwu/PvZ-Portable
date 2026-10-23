@@ -210,6 +210,15 @@ public:
 	Color                           mExtraOverlayColor;
 	bool                            mEnableExtraOverlayDraw;
 	float                           mLastFrameTime;
+	// SECONDS_PER_UPDATE * mAnimRate / mFrameCount is one float divide per reanimation per
+	// tick (2.1% of the rollout CPU on 2026-10-23).  mAnimRate is a public field written from
+	// dozens of call sites, so the derived step is cached against its two inputs instead of
+	// being maintained by a setter: any write to either input invalidates it on the next tick.
+	float                           mAnimStepRate = 0.0f;
+	int32_t                         mAnimStepFrames = 0;
+	// SECONDS_PER_UPDATE is a double, so the product and the divide happen in double and
+	// only the sum is rounded back to float; the cached step keeps that exact type.
+	double                          mAnimStep = 0.0;
 	FilterEffect                    mFilterEffect;
 	bool                            mNeedsTrackUpdates = false;
 	// Runtime index only, never serialized. An escaped named track stays registered:

@@ -55,7 +55,22 @@ private:
 	bool v2 = false;
 	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
-	std::vector<float> hidden, context, scratch, columns, kernelBuffer;
+	// Every buffer the forward pass needs is allocated once in Load(): a rollout runs the
+	// network on every tick, so a per-call std::vector allocation or a full-buffer zero fill is
+	// a measurable share of the whole simulation (2026-10-23: 424 KB of kernel transposition was
+	// being rebuilt per forward).
+	std::vector<float> hidden, context, scratch, columns, kernelBuffer, rowPoolColumns;
+	std::vector<float> featureBoard, featureScalars, packetInput, packetActivation;
+	std::vector<double> packetWeightDouble, packetMatrix, packetOutput;
+	// The sparse first layer only changes its active-channel set when a plant or zombie appears
+	// or disappears; while it stays the same, the transposed kernel and the zero border of the
+	// im2col buffer are still valid, so they are not rebuilt.
+	std::vector<int> activeChannels, kernelChannels;
+	int columnsCount = -1;
+	// Predict() calls Heads(-1) and then Heads(packet) on the same context; the packet logits do
+	// not depend on the cell argument, so the second call reuses them.
+	std::array<float, 10> packetLogits{};
+	bool packetLogitsValid = false;
 	void Encode(const std::vector<float>& board, const std::vector<float>& scalars);
 	Prediction Heads(int packet);
 	void Convolve(const std::vector<float>& input, int channels, int kernelRows, int kernelCols,

@@ -121,7 +121,7 @@ def collect(plan):
                    '--manifest',str(BASE/'unified_manifest.json'),'--task-id',f'day_l{level}_eval_d7',
                    '--out',str(folder),'--workers','4','--seeds','16','--arms','fast_search',
                    '--samples','3','--horizon','2500','--min-gap','300','--margin','.02','--per-card','1',
-                   '--rollout-backend','cpp','--executable',str(ROOT/'build/pvz-portable'),
+                   '--executable',str(ROOT/'build/pvz-portable'),
                    '--resource-dir','/home/newbiexvwu/.cache/pvz-research-resources',
                    '--dagger-beta','0','--frames',str(OUT/'frames'),'--frames-label',label]
         run_stage(command, tag)

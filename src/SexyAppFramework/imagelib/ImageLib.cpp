@@ -1119,6 +1119,7 @@ Image* GetJPEGImage(const std::string& theFileName)
 
 int ImageLib::gAlphaComposeColor = 0xFFFFFF;
 bool ImageLib::gAutoLoadAlpha = true;
+bool ImageLib::gSizeOnly = false;
 bool ImageLib::gIgnoreJPEG2000Alpha = true;
 
 using ImageLoader = Image* (*)(const std::string&);
@@ -1251,6 +1252,96 @@ static void ApplyAlphaAsImage(Image* theImage, uint32_t theBaseColor)
 		aBits[i] = theBaseColor | ((aBits[i] & 0xFF) << 24);
 }
 
+// Headless: dimensions only. PNG IHDR, GIF screen descriptor, the first JPEG start-of-frame, or the TGA
+// header. The pixels are most of what an image costs and none of what the logic reads: the board asks a
+// few images for GetWidth()/GetHeight() and never touches their bits, because -env mode never draws (task32).
+static bool ReadImageSize(const std::string& theFileName, int* theWidth, int* theHeight)
+{
+	std::unique_ptr<PFILE, decltype(&p_fclose)> aFile(p_fopen(theFileName.c_str(), "rb"), &p_fclose);
+	if (aFile == nullptr)
+		return false;
+
+	unsigned char aHeader[26] = {};
+	size_t aRead = p_fread(aHeader, 1, sizeof(aHeader), aFile.get());
+	if (aRead < 10)
+		return false;
+
+	if (aHeader[0] == 0x89 && aHeader[1] == 'P' && aHeader[2] == 'N' && aHeader[3] == 'G')
+	{
+		// 8-byte signature, 4-byte chunk length, "IHDR", then width and height, big endian
+		*theWidth = (aHeader[16] << 24) | (aHeader[17] << 16) | (aHeader[18] << 8) | aHeader[19];
+		*theHeight = (aHeader[20] << 24) | (aHeader[21] << 16) | (aHeader[22] << 8) | aHeader[23];
+		return *theWidth > 0 && *theHeight > 0;
+	}
+
+	if (aHeader[0] == 'G' && aHeader[1] == 'I' && aHeader[2] == 'F')
+	{
+		*theWidth = aHeader[6] | (aHeader[7] << 8);
+		*theHeight = aHeader[8] | (aHeader[9] << 8);
+		return *theWidth > 0 && *theHeight > 0;
+	}
+
+	if (aHeader[0] == 0xFF && aHeader[1] == 0xD8)
+	{
+		// Walk the segment chain to the first start-of-frame: length, precision, height, width
+		p_fseek(aFile.get(), 2, SEEK_SET);
+		for (;;)
+		{
+			if (p_fgetc(aFile.get()) != 0xFF)
+				return false;
+			int aMarker = p_fgetc(aFile.get());
+			while (aMarker == 0xFF)
+				aMarker = p_fgetc(aFile.get());
+			if (aMarker < 0)
+				return false;
+			if (aMarker == 0xD8 || aMarker == 0x01 || (aMarker >= 0xD0 && aMarker <= 0xD7))
+				continue;
+			int aLength = (p_fgetc(aFile.get()) << 8) | p_fgetc(aFile.get());
+			if (aLength < 2)
+				return false;
+			if ((aMarker >= 0xC0 && aMarker <= 0xCF) && aMarker != 0xC4 && aMarker != 0xC8 && aMarker != 0xCC)
+			{
+				p_fgetc(aFile.get());                        // sample precision
+				*theHeight = (p_fgetc(aFile.get()) << 8) | p_fgetc(aFile.get());
+				*theWidth = (p_fgetc(aFile.get()) << 8) | p_fgetc(aFile.get());
+				return *theWidth > 0 && *theHeight > 0;
+			}
+			p_fseek(aFile.get(), aLength - 2, SEEK_CUR);
+		}
+	}
+
+	// TGA carries no signature; its header is the only option left and its size sits at bytes 12..15
+	*theWidth = aHeader[12] | (aHeader[13] << 8);
+	*theHeight = aHeader[14] | (aHeader[15] << 8);
+	return *theWidth > 0 && *theHeight > 0;
+}
+
+static bool ReadImageSizeByExt(const std::string& theBaseName, std::string_view theExt, int* theWidth, int* theHeight)
+{
+	for (const auto& [aKnownExt, aLoader] : kImageExts)
+	{
+		if (theExt.empty() || EqualsIgnoreCase(theExt, aKnownExt))
+		{
+			if (ReadImageSize(theBaseName + std::string(aKnownExt), theWidth, theHeight))
+				return true;
+		}
+	}
+	return false;
+}
+
+static Image* ReadSizedImage(const std::string& theBaseName, std::string_view theExt)
+{
+	int aWidth = 0;
+	int aHeight = 0;
+	if (!ReadImageSizeByExt(theBaseName, theExt, &aWidth, &aHeight))
+		return nullptr;
+
+	Image* anImage = new Image();
+	anImage->mWidth = aWidth;
+	anImage->mHeight = aHeight;
+	return anImage;
+}
+
 Image* ImageLib::GetImage(const std::string& theFilename, bool lookForAlphaImage)
 {
 	if (!gAutoLoadAlpha)
@@ -1270,6 +1361,31 @@ Image* ImageLib::GetImage(const std::string& theFilename, bool lookForAlphaImage
 	}
 	else
 		aFilename = theFilename;
+
+	if (gSizeOnly)
+	{
+		// The size the full path would have returned: the base image when it loads, otherwise the alpha image
+		// it falls back to (IMAGE_BLANK exists only as images/blank_.gif). Nothing in -env mode draws, so the
+		// pixels are pure cost (task32).
+		Image* anImage = ReadSizedImage(aFilename, anExt);
+		if (anImage == nullptr && lookForAlphaImage)
+		{
+			const auto slashEnd = (aLastSlashPos != std::string::npos) ? aLastSlashPos + 1 : 0;
+			const std::string alphaPath1 = theFilename.substr(0, slashEnd) + "_" +
+				theFilename.substr(slashEnd);
+
+			if (FastFileExists(alphaPath1))
+				anImage = GetImage(alphaPath1, false);
+
+			if (anImage == nullptr)
+			{
+				const std::string alphaPath2 = theFilename + "_";
+				if (FastFileExists(alphaPath2))
+					anImage = GetImage(alphaPath2, false);
+			}
+		}
+		return anImage;
+	}
 
 	// Load image, trying each supported format
 	Image* anImage = TryLoadByExt(aFilename, anExt);

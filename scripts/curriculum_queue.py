@@ -12,6 +12,8 @@
 3. **落盘**：状态 json（默认 `~/pvz-logs/curriculum_state.json`），每轮一行日志；
    偏移在**跑之前**写进状态，崩溃/中断不会重采同一批种子。
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
+5. **打包**：每轮结束把“本队列写过的全部标签 + `--recipe` 的来源标签”打成训练包（task33 第 2 项），
+   并删掉被它取代的旧包。训练端只读包，行选项统一从训练配方解析（它们是包键的一部分）。
 
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
@@ -44,7 +46,9 @@ ROOT = Path(__file__).resolve().parent.parent
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from make_multiplier_tasks import FAMILIES, load_tasks, source_paths  # noqa: E402
+from make_multiplier_tasks import FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
+from pvz_recipe import load_recipe, training_row_options
+from pvz_training_pack import pack_flags, pack_options
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
@@ -200,7 +204,9 @@ def parse_task_id(task_id: str, names: dict[str, float]) -> tuple[str, float]:
 
 def training_base_ids() -> set[str]:
     ids = set()
-    for _family, _key, pattern, levels, _terrain in FAMILIES:
+    for family, _key, pattern, levels, _terrain in FAMILIES:
+        if family in SUPERSEDED:
+            continue
         for level in levels:
             ids.add(pattern.format(level=level))
     return ids
@@ -249,17 +255,54 @@ def init_from_runs(patterns: list[str], names: dict[str, float]) -> tuple[dict, 
     return windows, offsets
 
 
-def make_state(tasks: dict[str, dict], names: dict[str, float], windows: dict, offsets: dict,
-               panel: str) -> dict:
-    cells = {}
-    base_ids = training_base_ids()
+def family_of(base: str) -> str | None:
+    """训练 base id -> FAMILIES 里的族短名（`night_l12_train_n10p` -> `night_n10p`）。"""
+    for family, _key, pattern, levels, _terrain in FAMILIES:
+        if any(base == pattern.format(level=level) for level in levels):
+            return family
+    return None
+
+
+def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float],
+                    windows_from_runs: dict) -> list[str]:
+    """把状态里的格子对齐到当前训练集合；返回日志行，由调用方逐行写 curriculum.log。"""
+    lines = []
+    training = training_base_ids()
+    cells = state.setdefault('cells', {})
+    retired = state.setdefault('retired_cells', {})
+    wanted = {}
     for task_id, task in tasks.items():
         base, multiplier = parse_task_id(task_id, names)
-        if multiplier != 1.0 or base in cells or base not in base_ids:
+        if multiplier != 1.0 or base in wanted or base not in training:
+            continue
+        wanted[base] = task
+    for base in sorted(cells):
+        if base in training:
+            continue
+        retired[base] = cells.pop(base)
+        family = family_of(base)
+        reason = (f'superseded by {SUPERSEDED[family]}' if family in SUPERSEDED
+                  else 'not in the training set')
+        lines.append(f'cell retired: {base} ({reason})')
+    for base in sorted(retired):
+        if base not in training:
+            continue
+        cells[base] = retired.pop(base)
+        lines.append(f'cell restored: {base}')
+    for base, task in wanted.items():
+        if base in cells:
             continue
         cells[base] = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
-                           mult_index=0, last_round=0, windows=dict(windows.get(base, {})))
-    return dict(schema_version=1, panel=panel, round=0, cells=cells, offsets=offsets, log=[])
+                           mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
+        lines.append(f'cell added: {base}')
+    return lines
+
+
+def make_state(tasks: dict[str, dict], names: dict[str, float], windows: dict, offsets: dict,
+               panel: str) -> dict:
+    state = dict(schema_version=1, panel=panel, round=0, cells={}, offsets=offsets, log=[])
+    reconcile_cells(state, tasks, names, windows)
+    return state
 
 
 def rate(cell: dict, multiplier: float) -> float | None:
@@ -356,6 +399,44 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--out', str((args.out if out is None else out) / f'{label}_{games}')]
 
 
+def pack_labels(state: dict, extra: str = '') -> list[str]:
+    """Every label this queue has written so far, plus ``extra`` (the base corpus training also uses)."""
+    labels = {group['label'] for entry in state['log'] for group in entry['groups']}
+    labels.update(name for name in extra.split(',') if name)
+    return sorted(labels)
+
+
+def pack_command(args, labels: list[str]) -> list[str]:
+    """Pack the same row options the trainer resolves from this recipe."""
+    recipe = load_recipe(args.recipe, 'training')
+    options = pack_options(**training_row_options(recipe, labels))
+    python = str(args.python) if args.python.exists() else sys.executable
+    return [python, str(ROOT / 'scripts/pack_training_rows.py'),
+            '--data', str(args.frames), '--labels', ','.join(sorted(labels)),
+            *pack_flags(options), '--prune']
+
+
+def write_pack(args, state: dict) -> None:
+    """Pack every archive this queue has written into one sequential file, at the end of a round.
+
+    The trainer never reads per-game archives (task33): this is the collector's half of that
+    contract. Packing is incremental in content, not in cost: each round rewrites the union of the
+    labels so far and prunes the packs it supersedes. A failed pack is fatal -- it is raised after
+    the round is saved, so the collected games are never lost.
+    """
+    recipe = load_recipe(args.recipe, 'training')
+    labels = pack_labels(state, ','.join(recipe['labels']))
+    if not labels:
+        return
+    started = time.time()
+    result = subprocess.run(pack_command(args, labels), cwd=ROOT, capture_output=True, text=True)
+    summary = ' | '.join(result.stdout.strip().splitlines())
+    log_line(args.log, f'pack {len(labels)} labels {time.time() - started:.0f}s rc={result.returncode} {summary}')
+    if result.returncode != 0:
+        log_line(args.log, f'pack failed: {result.stderr.strip()[-2000:]}')
+        raise SystemExit(f'pack_training_rows exited {result.returncode}')
+
+
 def log_line(path: Path, message: str) -> None:
     stamp = datetime.now().isoformat(timespec='seconds')
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -442,6 +523,7 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
     log_line(args.log, f'round {round_index} done: {len(plan)} groups, '
                        f'{sum(item["games"] for item in plan)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
+    write_pack(args, state)          # after the state is saved: a failed pack must not lose the round
     return True
 
 
@@ -485,7 +567,13 @@ def main() -> None:
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--recipe', type=Path, default=ROOT / 'recipes/dw4i.json',
+                        help='training recipe for the collection student; supplies every pack row option')
     args = parser.parse_args()
+    try:
+        load_recipe(args.recipe, 'training')
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
     if args.workers < 1:
         parser.error('--workers must be positive')
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
@@ -499,6 +587,10 @@ def main() -> None:
                                   str(MAIN / '.claude/worktrees/*/artifacts/**/config.json')]
     if args.state.exists():
         state = json.loads(args.state.read_text())
+        # 已有状态按当前训练集合增删格子；n10q 没有旧局，除非显式给 --init-glob 否则从空窗口起步。
+        windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
+        for line in reconcile_cells(state, tasks, names, windows):
+            log_line(args.log, line)
     else:
         windows, offsets = init_from_runs(patterns, names)
         state = make_state(tasks, names, windows, offsets, str(args.manifest))

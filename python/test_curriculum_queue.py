@@ -1,4 +1,5 @@
 """task29 第 2 步：课程控制器的元规则单测（不跑引擎、不读真实清单）。"""
+import copy
 import sys
 import tempfile
 import unittest
@@ -10,10 +11,13 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
                               MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              label_for, parse_task_id, plan_round, rate, worker_count)
+                              command_for, label_for, make_state, pack_command, pack_labels,
+                              parse_task_id, plan_round, rate, reconcile_cells,
+                              startup_worker_estimate, training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
+N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 
 
 def cell(wins, games, mult_index=0, last_round=0):
@@ -112,9 +116,161 @@ class CurriculumRulesTest(unittest.TestCase):
             finally:
                 queue.STOP_FLAG = original
 
+    def test_pack_labels_union_the_log_and_the_base_corpus(self):
+        state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
+                         {'groups': [{'label': 'c2d7m125'}, {'label': 'c1d7m150'}]}]}
+        self.assertEqual(pack_labels(state), ['c1d7m150', 'c2d7m125'])
+        self.assertEqual(pack_labels(state, 'base_b,base_a'),
+                         ['base_a', 'base_b', 'c1d7m150', 'c2d7m125'])
+
+    def test_recipe_pack_command_matches_actual_trainer_load_request(self):
+        import argparse
+        import json
+        from unittest.mock import patch
+        import train_rollout_policy as trainer
+        import pack_training_rows as packer
+        from pvz_recipe import load_recipe, training_row_options, write_recipe
+        from pvz_training_pack import pack_options
+
+        class Loaded(Exception):
+            pass
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            variants = [load_recipe(ROOT / f'recipes/{name}.json')
+                        for name in ('dw4i', 'dw5i', 'identity_dw3_s1')]
+            variants.append(dict(variants[0], context=True, aux_weight=1.0, aux_horizon=3,
+                                 cell_soft_weight=0.0))
+            for i, recipe in enumerate(variants):
+                with self.subTest(variant=i):
+                    recipe.update(out=str(root / f'out{i}'), data=str(root / 'frames'))
+                    path = root / f'recipe{i}.json'
+                    write_recipe(path, recipe)
+                    args = SimpleNamespace(python=Path('/nonexistent/python'),
+                                           frames=root / 'frames', recipe=path)
+                    command = pack_command(args, recipe['labels'])
+                    self.assertEqual(command[0], sys.executable)
+                    with patch.object(sys, 'argv', command[1:]), \
+                         patch.object(packer, 'archive_fingerprint', return_value='same-sources'), \
+                         patch.object(packer, 'pack', return_value=root / 'pack.npz') as build, \
+                         patch.object(packer, 'prune', return_value=[]):
+                        packer.main()
+                    packed_options = build.call_args.args[1]
+                    with patch.object(sys, 'argv', ['trainer', '--recipe', str(path)]), \
+                         patch.object(trainer, 'Metrics'), \
+                         patch.object(trainer, 'load', side_effect=Loaded) as load:
+                        with self.assertRaises(Loaded):
+                            trainer.main()
+                    requested = dict(load.call_args.kwargs)
+                    requested.pop('row_observer')
+                    self.assertEqual(requested, training_row_options(load_recipe(path)))
+                    expected = pack_options(**requested, sources='same-sources')
+                    self.assertEqual(packed_options, expected)
+                    self.assertEqual(load.call_args.args[0], args.frames)
+                    self.assertIn('--prune', command)
+
+    def test_removed_pack_flags_are_not_exposed(self):
+        import subprocess
+        result = subprocess.run([sys.executable, str(ROOT / 'scripts/curriculum_queue.py'), '--help'],
+                                capture_output=True, text=True, check=True)
+        self.assertIn('--recipe', result.stdout)
+        self.assertNotIn('--pack-', result.stdout)
+
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')
         self.assertEqual(label_for(1, 'night_l12_train_n10', 1.0), 'c1n12n10m100')
+
+
+class ReconcileCellsTest(unittest.TestCase):
+    """task39：已有状态按当前训练集合增删格子（不上真实状态）。"""
+
+    def panel_tasks(self, families=('n10p', 'n10q')):
+        tasks = {}
+        for family in families:
+            for level in N10_LEVELS:
+                tasks[f'night_l{level}_train_{family}'] = dict(
+                    task_id=f'night_l{level}_train_{family}', level=level, zombie_count_multiplier=1.0)
+                tasks[f'night_l{level}_train_{family}_m125'] = dict(
+                    task_id=f'night_l{level}_train_{family}_m125', level=level,
+                    zombie_count_multiplier=1.25)
+        return tasks
+
+    def n10p_state(self):
+        cells = {}
+        for index, level in enumerate(N10_LEVELS):
+            base = f'night_l{level}_train_n10p'
+            multiplier = VALUES[index % len(VALUES)]
+            cells[base] = dict(family=f'night_l{level}', level=level, mult_index=index % len(VALUES),
+                               last_round=index,
+                               windows={str(multiplier): {'recent': [1] * index + [0] * (index % 3),
+                                                          'wins': index, 'games': index + index % 3}})
+        return dict(schema_version=1, panel='panel.json', round=2, cells=cells,
+                    offsets={'night_l11_train_n10p_m125': 96, 'day_l7_train_d7_m125': 48}, log=[])
+
+    def test_adds_n10q_and_retires_n10p(self):
+        tasks = self.panel_tasks()
+        state = self.n10p_state()
+        original_cells = copy.deepcopy(state['cells'])
+        original_offsets = copy.deepcopy(state['offsets'])
+        bucket = {'1.0': {'recent': [1, 0], 'wins': 1, 'games': 2}}
+        lines = reconcile_cells(state, tasks, NAMES, {'night_l11_train_n10q': bucket})
+        self.assertEqual(len(lines), 16)                                   # 8 retired + 8 added
+        self.assertFalse(any(base.endswith('_n10p') for base in state['cells']))
+        self.assertEqual(sum(base.endswith('_n10q') for base in state['cells']), 8)
+        for level in N10_LEVELS:
+            base = f'night_l{level}_train_n10p'
+            self.assertEqual(state['retired_cells'][base], original_cells[base])   # 原样保存
+        self.assertTrue(any(line == 'cell retired: night_l11_train_n10p (superseded by night_n10q)'
+                            for line in lines))
+        added = state['cells']['night_l12_train_n10q']
+        self.assertEqual(added, dict(family='night_l12', level=12, mult_index=0, last_round=0, windows={}))
+        self.assertEqual(state['cells']['night_l11_train_n10q']['windows'], bucket)
+        self.assertEqual(state['offsets'], original_offsets)
+
+    def test_idempotent(self):
+        tasks = self.panel_tasks()
+        state = self.n10p_state()
+        reconcile_cells(state, tasks, NAMES, {})
+        snapshot = copy.deepcopy(state)
+        self.assertEqual(reconcile_cells(state, tasks, NAMES, {}), [])
+        self.assertEqual(state, snapshot)
+
+    def test_restore_when_superseded_is_cleared(self):
+        import curriculum_queue as queue
+        tasks = self.panel_tasks()
+        state = self.n10p_state()
+        reconcile_cells(state, tasks, NAMES, {})
+        retired_before = copy.deepcopy(state['retired_cells'])
+        original = queue.SUPERSEDED
+        queue.SUPERSEDED = {}
+        try:
+            lines = reconcile_cells(state, tasks, NAMES, {})
+        finally:
+            queue.SUPERSEDED = original
+        self.assertEqual(len(lines), 8)
+        self.assertTrue(all(line.startswith('cell restored: ') for line in lines))
+        self.assertEqual(state['retired_cells'], {})
+        for base, cell in retired_before.items():
+            self.assertEqual(state['cells'][base], cell)
+        self.assertEqual(sum(base.endswith('_n10q') for base in state['cells']), 8)   # n10q 不动
+
+    def test_make_state_equals_empty_state_plus_reconcile(self):
+        tasks = self.panel_tasks(('n10q',))
+        tasks['day_l7_train_d7'] = dict(task_id='day_l7_train_d7', level=7, zombie_count_multiplier=1.0)
+        windows = {'night_l11_train_n10q': {'1.0': {'recent': [1], 'wins': 1, 'games': 1}}}
+        offsets = {'night_l11_train_n10q_m125': 48}
+        made = make_state(tasks, NAMES, windows, dict(offsets), 'panel.json')
+        manual = dict(schema_version=1, panel='panel.json', round=0, cells={},
+                      offsets=dict(offsets), log=[])
+        reconcile_cells(manual, tasks, NAMES, windows)
+        self.assertEqual(made, manual)
+        self.assertIn('day_l7_train_d7', made['cells'])
+        self.assertEqual(len(made['cells']), 9)
+
+    def test_training_ids_drop_n10p_keep_n10q(self):
+        ids = training_base_ids()
+        self.assertFalse(any(base.endswith('_n10p') for base in ids))
+        self.assertEqual(sum(base.endswith('_n10q') for base in ids), 8)
 
 
 class WorkerCountTest(unittest.TestCase):
@@ -133,6 +289,32 @@ class WorkerCountTest(unittest.TestCase):
     def test_descendant_rss_excludes_root_and_unrelated(self):
         table = {1: (0, 100), 10: (1, 1000), 11: (10, 500), 12: (1, 200), 20: (0, 9000)}
         self.assertEqual(_descendant_rss(1, table), 1700)
+
+    def test_command_for_overrides_probe_workers_frames_and_out(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), workers=16,
+                               rollout_policy=Path('/m/student.pt'), static_value=Path('/m/static.pt'),
+                               value=Path('/m/value.pt'), executable=Path('/m/pvz-portable'),
+                               resource_dir=Path('/m/resources'), frames=Path('/m/frames'),
+                               out=Path('/m/out'))
+        command = command_for(args, Path('/m/panel.json'), 'day_l7', 5, 1, 'oomprobe',
+                              workers=1, frames=Path('/tmp/probe-frames'), out=Path('/tmp/probe'))
+        self.assertEqual(command[command.index('--workers') + 1], '1')
+        self.assertEqual(command[command.index('--frames') + 1], '/tmp/probe-frames')
+        self.assertEqual(command[command.index('--out') + 1], '/tmp/probe/oomprobe_1')
+        self.assertEqual(command[command.index('--seed-offset') + 1], '5')
+
+    def test_startup_estimate_without_probe(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            args = SimpleNamespace(log=Path(tmp) / 'log')
+            original = queue.mem_available_bytes
+            try:
+                queue.mem_available_bytes = lambda: None       # 没有 /proc
+                self.assertEqual(startup_worker_estimate(args, []), 0)
+                queue.mem_available_bytes = lambda: 20 * GIB  # 有内存但没有计划
+                self.assertEqual(startup_worker_estimate(args, []), queue.DEFAULT_WORKER_BYTES)
+            finally:
+                queue.mem_available_bytes = original
 
 
 if __name__ == '__main__':

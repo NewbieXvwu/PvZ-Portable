@@ -34,7 +34,9 @@
 #include "graphics/MemoryImage.h"
 #include <algorithm>
 #include <bit>
+#include <cctype>
 #include <format>
+#include <unordered_map>
 
 constexpr const int NO_BASE_POSE = -2;
 
@@ -476,7 +478,13 @@ void Reanimation::Update()
 
 	PVZP_ASSERT(std::isfinite(mAnimRate));
 	mLastFrameTime = mAnimTime;  // save the previous loop position
-	mAnimTime += SECONDS_PER_UPDATE * mAnimRate / mFrameCount;  // advance the loop position
+	if (mAnimRate != mAnimStepRate || mFrameCount != mAnimStepFrames)
+	{
+		mAnimStepRate = mAnimRate;
+		mAnimStepFrames = mFrameCount;
+		mAnimStep = SECONDS_PER_UPDATE * mAnimRate / mFrameCount;  // same expression, evaluated once
+	}
+	mAnimTime += mAnimStep;  // advance the loop position
 
 	if (mAnimRate > 0)
 	{
@@ -573,21 +581,35 @@ void Reanimation::Update()
 			AttachmentUpdateAndSetMatrix(aTrack->mAttachmentID, aOverlayMatrix);
 		}
 	};
-	if ((gEnvSimSkip & (ENV_LIGHT_ANIMATION | ENV_SPARSE_TRACKS)) ==
-		(ENV_LIGHT_ANIMATION | ENV_SPARSE_TRACKS) && mDefinition->mTracks.count <= 256)
+	// Sparse tracks used to be opt-in behind ENV_SPARSE_TRACKS.  With ENV_LIGHT_ANIMATION the
+	// per-track work of a track that is not an attacher, has no live attachment and no blend
+	// left is nothing but three loads, and a reanimation has 50-200 of those tracks: iterating
+	// them was ~13% of the rollout CPU (2026-10-23 profile).  The skip is exact by construction
+	// (those three conditions are all the body checks) and was validated action-for-action on
+	// 224 games by scripts/sim_skip_agreement.py.
+	if ((gEnvSimSkip & ENV_LIGHT_ANIMATION) && mDefinition->mTracks.count <= 256)
 	{
 		if (!mEnvTrackCacheValid)
 			BuildEnvTrackCache();
 		// Read the live mask after each callback: newly attached higher tracks must
 		// still run this frame, while lower tracks wait until the next, as before.
-		for (int i = NextEnvTrack(0); i < mDefinition->mTracks.count; i = NextEnvTrack(i + 1))
+		for (int i = NextEnvTrack(0); i < mDefinition->mTracks.count; )
 		{
+			// The active tracks of a reanimation are scattered over its track-instance array, so
+			// each step is a cold read of a ~100 byte record; pull in the next one while this
+			// one is being updated (a hint only, the mask is read again below).
+#if defined(__GNUC__) || defined(__clang__)
+			const int aPrefetch = NextEnvTrack(i + 1);
+			if (aPrefetch < mDefinition->mTracks.count)
+				__builtin_prefetch(&mTrackInstances[aPrefetch], 1, 1);
+#endif
 			updateTrack(i);
 			const auto& aTrack = mTrackInstances[i];
 			const uint64_t aBit = uint64_t{1} << (i % 64);
 			if (!(mEnvTrackPermanent[i / 64] & aBit) && aTrack.mBlendCounter <= 0 &&
 				aTrack.mAttachmentID == AttachmentID::ATTACHMENTID_NULL && !mDefinition->mTracks.tracks[i].mIsAttacher)
 				mEnvTrackActive[i / 64] &= ~aBit;
+			i = NextEnvTrack(i + 1);  // after the callback: it may have activated a higher track
 		}
 	}
 	else
@@ -1377,7 +1399,9 @@ void ReanimatorLoadDefinitions(const ReanimationParams* theReanimationParamArray
 	{
 		const ReanimationParams* aReanimationParams = &theReanimationParamArray[i];
 		PVZP_ASSERT(aReanimationParams->mReanimationType == i);
-		if (DefinitionIsCompiled(aReanimationParams->mReanimFileName))
+		// Headless reads a definition the first time a reanimation needs it: nothing draws, and the eager
+		// pass holds ~25 MB per process for the types a level never uses (task32).
+		if (!gSexyAppBase->mHeadlessMode && DefinitionIsCompiled(aReanimationParams->mReanimFileName))
 			ReanimatorEnsureDefinitionLoaded(aReanimationParams->mReanimationType, true);
 	}
 }
@@ -1578,28 +1602,50 @@ void Reanimation::AttacherSynchWalkSpeed(int theTrackIndex, Reanimation* theAtta
 	theAttachReanim->mAnimRate = aLoops * theAttachReanim->mFrameCount / aPlaceHolderSeconds;  // rate = frames to play / available time
 }
 
+// The attacher track names its reanimation as a string.  Resolving that used to std::format
+// the file name and strcasecmp the whole parameter table on every tick of every attacher
+// track; the table is fixed after startup, so each name is resolved once.
+static ReanimationType LookupReanimationType(const std::string& theName)
+{
+	static std::unordered_map<std::string, ReanimationType> sCache;
+	static const ReanimationParams* sArray = nullptr;
+	static unsigned int sSize = 0;
+	if (sArray != gReanimationParamArray || sSize != gReanimationParamArraySize)
+	{
+		sCache.clear();
+		sArray = gReanimationParamArray;
+		sSize = gReanimationParamArraySize;
+	}
+	std::string aKey = "reanim/";
+	aKey += theName;
+	aKey += ".reanim";
+	for (char& aChar : aKey) aChar = static_cast<char>(tolower(static_cast<unsigned char>(aChar)));
+	const auto aFound = sCache.find(aKey);
+	if (aFound != sCache.end())
+		return aFound->second;
+	ReanimationType aType = ReanimationType::REANIM_NONE;
+	for (unsigned int i = 0; i < gReanimationParamArraySize; i++)  // find the reanim type for this file name
+		if (strcasecmp(aKey.c_str(), gReanimationParamArray[i].mReanimFileName) == 0)
+		{
+			aType = gReanimationParamArray[i].mReanimationType;
+			break;
+		}
+	sCache.emplace(std::move(aKey), aType);
+	return aType;
+}
+
 void Reanimation::UpdateAttacherTrack(int theTrackIndex)
 {
 	ReanimatorTrackInstance* aTrackInstance = &mTrackInstances[theTrackIndex];
 	ReanimatorTransform aTransform;
 	GetCurrentTransform(theTrackIndex, &aTransform);
-	AttacherInfo aAttacherInfo;
+	// Reused, not rebuilt: ParseAttacherTrack assigns both strings, so keeping the object
+	// alive across ticks reuses their capacity instead of allocating twice per track per tick.
+	static AttacherInfo aAttacherInfo;
 	ParseAttacherTrack(aTransform, aAttacherInfo);
 
-	ReanimationType aReanimationType = ReanimationType::REANIM_NONE;
-	if (aAttacherInfo.mReanimName.size() != 0)
-	{
-		std::string aReanimFileName = std::format("reanim/{}.reanim", aAttacherInfo.mReanimName);
-		for (unsigned int i = 0; i < gReanimationParamArraySize; i++)  // find the reanim type for this file name
-		{
-			const ReanimationParams* aParams = &gReanimationParamArray[i];
-			if (strcasecmp(aReanimFileName.c_str(), aParams->mReanimFileName) == 0)
-			{
-				aReanimationType = aParams->mReanimationType;
-				break;
-			}
-		}
-	}
+	const ReanimationType aReanimationType = aAttacherInfo.mReanimName.size() != 0
+		? LookupReanimationType(aAttacherInfo.mReanimName) : ReanimationType::REANIM_NONE;
 	if (aReanimationType == ReanimationType::REANIM_NONE)  // no name set or no matching reanim found
 	{
 		AttachmentDie(aTrackInstance->mAttachmentID);

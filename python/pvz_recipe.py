@@ -25,7 +25,7 @@ TRAIN_DEFAULTS = dict(
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
     validation=dict(seed=0, fraction=.1), provenance={})
 
-PANEL_DEFAULTS = dict(
+PANEL_DEFAULTS = dict(version='v1',
     generate=False, generate_pressure=False, pressure=False, pressure_seeds=64,
     pressure_tasks='', tasks='', day_seeds=128, heldout_seeds=64, night_seeds=128,
     pool_seeds=40, task_seed_overrides={}, workers=2, provenance={})
@@ -142,6 +142,8 @@ def validate(document, kind=None):
         if (result['row_weights'] or result['source_row_report']) and not result['cache']:
             raise ValueError('row_weights/source_row_report require cache')
     else:
+        if result['version'] not in ('v1', 'v2'):
+            raise ValueError('version: expected v1 or v2')
         for name in ('generate', 'generate_pressure', 'pressure'):
             if type(result[name]) is not bool:
                 raise ValueError(f'{name}: expected boolean')
@@ -181,6 +183,16 @@ def write_recipe(path, document):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(document, indent=2, ensure_ascii=False) + '\n')
     return document
+
+
+def training_row_options(recipe, labels=None):
+    """The row contract shared by training and curriculum packing."""
+    return dict(labels=set(recipe['labels'] if labels is None else labels),
+                wait_keep=recipe['wait_keep'], label_weight=recipe['label_weight'],
+                with_context=recipe['context'], obs=recipe['obs'],
+                cells=bool(recipe['cell_soft_weight']),
+                aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
+                packet_head=recipe['packet_head'])
 
 
 def training_args(parser, argv=None):
