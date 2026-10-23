@@ -1,0 +1,33 @@
+{
+ "schema_version": 1,
+ "status": "protocol_registered_before_collection",
+ "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+ "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+ "out": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53",
+ "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+ "value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+ "static_value": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+ "workers": 4,
+ "artifact_budget_bytes": 5000000000,
+ "qc_round_games": 768,
+ "qc_cpu_share_limit": 0.15,
+ "games_per_terrain": 8,
+ "screen_futures": 3,
+ "confirm_futures": 16,
+ "selection": {
+  "pre_breach_decisions": 1,
+  "flat_points_per_game": 1,
+  "flat_window_before_loss_ticks": 6000,
+  "max_points_per_game": 2,
+  "flat_spread_threshold": 0.02,
+  "cost_tightening": "pilot CPU only; reduce flat points and pre-breach count, then deterministic per-round game/root quota; never thin legal candidate set"
+ },
+ "confirmation": {
+  "alpha": 0.05,
+  "mean_gap": {"won": 0.125, "wave": 0.5, "tick": 600, "mowers_used": 0.5},
+  "multiple_testing": "Holm over all chosen candidate vs student root/metric comparisons",
+  "confidence": "paired bootstrap probability of positive mean difference; retain signed mean difference and lower bound"
+ },
+ "source_issue": "Latest complete qc round has no pool groups; latest p9k teacher losses proposed as explicitly separate pool source. User question pending; no qc/session changes authorized.",
+ "training": "Freeze small finetuning recipe, fixed old-row replay corpus and paired evaluation seeds before terminal labels; add only exported correction rows to that fixed recipe."
+}
