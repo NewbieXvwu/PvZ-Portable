@@ -152,6 +152,8 @@ def audit(out, allow_incomplete=False):
                 auditor_sha256=sha(__file__),games_verified=games,llm_events_verified=events_count,
                 missing_games=missing,paired_comparison=comparison,
                 evidence_files=len(evidence),evidence_bundle_sha256=digest(sorted(evidence)))
+    # Keep historical checkpoint SHA references valid when the live pointer advances.
+    atomic_json(out/f'independent-audit-{games:04d}.json',result)
     atomic_json(out/'independent-audit.json',result)
     if missing and not allow_incomplete:
         raise ValueError(f'{len(missing)} formal games still missing; audit is incomplete')

@@ -195,7 +195,7 @@
     "evidence_files": 28,
     "evidence_bundle_sha256": "db5e44d635869a8e6d83c34b5b14fc4416b74a0b9a0ab19d4345593f91565961",
     "scope": "partial checkpoint only; formal 144-game acceptance remains incomplete",
-    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/independent-audit.json",
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/independent-audit-0005.json",
     "source_sha256": "16a64cc1b2c64e7ba1b77ff63b0325c7b26c26201ddbf93fea6cf1146351199a",
     "tests": {
       "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/audit-tests.log",
