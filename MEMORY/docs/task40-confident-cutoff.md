@@ -193,6 +193,7 @@
 - 2026-10-23 18:50 强度关成本实测估计（只读，不启动游戏）：① `_search` 的触发由学生 fast 动作 + `min_gap=300` 决定（`search_play.py:302-310`），beta=1 不会每决策都搜索——历史 beta=1 老师跑（`artifacts/day_panel/teacher_l7_d7_64`，64 局）决策 1,054/局、实际搜索 203/局；质量关实测 233（day_l7）/391（night_l14）搜索/局。② 质量关 33 局 part 实测 exact 0.96 s/搜索、cutoff 2.40 s/搜索（qc 16 worker 满载下）。③ 强度关每 seed 必须两局（两臂执行不同、轨迹会分叉，不能共用一局）：按上述搜索点数估 day ≈13 min、night ≈22 min、pool 与 original 介于其间；4 族 × 64 seed 共约 60–65 h 游戏时间，2 workers ≈ 30–33 h 墙钟，qc 结束后更快。成本可行，仍按预登记每族 64 局执行；启动前用 1 局小样校准。
 - 2026-10-23 18:55 强度关 harness 静态实现：新增 `scripts/cutoff_strength.py`（复用 `cutoff_agreement` 的 `_init/_reset/_install/_cutoff_rollout` 与 `search_play._search`；“beta=1”由执行搜索决策实现，非搜索决策仍执行学生 fast 动作，与 `search_play` 的 `fast_search` 循环一致；两臂各自整局、同种子、同 `decision_seed = seed*10000+decisions`；part 按 `<family>_<seed>_<arm>.json` 断点续跑；判据用按种子配对的胜负差 bootstrap）。静态检查通过：`py_compile`、`--help`、`--seeds 0` 空跑写出合法 JSON；`_bootstrap_pairs` 单元自检（64 对全同 → CI [0,0]；10/10/44 混合 → 差 0、CI [−0.1406, +0.1406]）；对局循环桩测试（桩环境/桩搜索，不启动引擎）：搜索动作确实被执行、动作被拒后回退 `wait 60`、decisions/searches/won 计数正确。**尚未实战**：质量关正在占用 2 个游戏进程（本任务上限 2），等质量关结束先跑 1 局小样校准，再按预登记启动。
 - 2026-10-23 18:58 报告文件 `MEMORY/docs/rollout-cutoff.md` 增“第 4 步：强度关”预登记节：两臂、种子、判据、成本实测估计、校准/正式命令与脚本 SHA（`048b48…`，引擎 `7508e8…`）。质量关仍在跑（34/64），不急启动。
+- 2026-10-23 18:50 中途复核（35/64，**只作预警、不作门禁**）：pool 族前 3 局 cutoff 一致率 1.000 vs noise 0.753；全体 cutoff 0.9815 vs noise 0.7344，差 +0.2471，整局成组 95% 区间 [0.2098, 0.2799]（day +0.1375 [0.0999, 0.1787]、night +0.3124 [0.2887, 0.3339]）。没有系统性变坏迹象；正式门禁仍按预登记在 64 局齐全后由脚本 `agreement.json` 计算。
 
 ## 问题
 
