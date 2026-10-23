@@ -212,6 +212,14 @@ CPU 工作口径的整局吞吐 11.6–82.3 games/h（新）对 7.7–49.6 games
 
 绝对值对照：步骤 4 记录的 114.8k tick/CPU-s 是**合并 pvz-env 之前**的源码；合并后同一夹具是 123.0k，说明 70 个提交的合并没有带来退化（+7%）。
 
+## 试过但没有收益的改动（已回退 / 不接入）
+
+| 改动 | 依据 | 实测 | 处置 |
+|---|---|---|---|
+| 观察序列化换成 `to_chars`（`JsonSink`） | perf 调用栈里 `__ostream_insert`+`num_put`+`xsputn` 合计约 3% 引擎样本 | 先证明 598,816 个 int/float 与 ostream **逐字节相同**；整引擎配对 A/B 6 轮比值中位数 **1.0116**（a 122,074 vs b 125,022 tick/CPU-s，即新版反而慢 2%），落在本机 ±9% 单轮噪声里 | **回退**。剖面份额没能兑现成吞吐，说明这 3% 的归因本身不可靠（SIGPROF 叶函数归因的已知局限） |
+| 首层格子稀疏卷积 | 首层只有 1.788% 格子非零，核级 0.58× | 与 BLAS 最大差 5.72e-6 —— **破坏逐位门禁**，只能走统计验收；而首层占卷积约 15%、卷积占整条推演约 26%，上限约 1.6% | 不接入。统计验收要 64 局同种子对照，成本远高于 1.6% 的收益 |
+| 等待循环的重复 ID 检测（排序 vector → 代际戳表） | perf 调用栈：`EnvironmentPublicWaitState` 156 样本全部来自等待循环 | 见下条结果 | 见下条结果 |
+
 ## 部署（给主控：在 cq 工作树上一次做完）
 
 本分支的引擎加速全部是**默认构建**的一部分，没有新增运行开关：LTO、PGO、mimalloc、
@@ -310,6 +318,26 @@ SIGPROF 采样，只在 rollout 阶段 armed（`PVZ_PROF_ARM_ONLY=1`），64 roo
 - **Reanimation 三行合计 7.2%**（Update 4.0 + 轨道 lambda 1.9 + NextEnvTrack 1.3）。稀疏轨道遍历本身（NextEnvTrack）已经是位图扫描，1.3% 是它自己的成本；剩下的 5.9% 是有活干的轨道在推进帧与插值，帧号决定攻击时机，不能丢。
 - **视觉三项合计 4.1%**（粒子 1.6、GetDrawPos 1.3、Plant::Animate 1.2）。逐项查过：粒子已经只做寿命记账（死亡时可能 spawn 并从共享 RNG 取数）；GetDrawPos 喂粒子生成位置；Plant::Animate 里有 `RandRangeFloat` 与闪烁倒计时。**没有一项能整块跳过而不动 RNG 流或攻击时机**，所以“前 15 里还有可证明不影响逻辑的无用功”这一条已经不成立。
 - 前 15 之外约 50% 分散在几百个函数里，单项都 < 1.2%，没有第二个可打的大矿。这是停止条件的第二条依据。
+
+### perf 调用栈采样（2026-10-23 15:00，首次拿到真实调用栈）
+
+前面所有剖面都是 SIGPROF 叶函数计数，没有调用者。这次用解包的 perf 7.0.14（`LD_LIBRARY_PATH=artifacts/perf/tools/usr/lib/x86_64-linux-gnu`）配一个 `-g -fno-omit-frame-pointer` 的独立构建 `build-prof/`（不动正式 build）：
+
+```
+perf record -F 400 -e cpu-clock:u -g --call-graph fp -o artifacts/perf/perf.data -- \
+  python3 scripts/bench_engine.py bench --executable build-prof/pvz-portable --rollouts 5
+```
+
+10,294 个样本，其中引擎进程 5,546。按调用者归因（脚本见报告脚注）得到三件 SIGPROF 看不到的事：
+
+| 被调函数 | 引擎样本 | 主要调用者 |
+|---|---:|---|
+| `Projectile::FindCollisionTarget` | 217 | 212 来自 `Projectile::CheckForCollision`（每颗投射物每 tick 扫全部僵尸） |
+| `LawnApp::EnvironmentPublicWaitState` | 156 | 153 来自 `EnvironmentWaitUntil` 的等待循环（每 tick 重建公开状态） |
+| `Zombie::GetDrawPos` | 133 | 76 来自位置偏移计算、26 来自 `Zombie::UpdateReanim` |
+| `__ostream_insert` + `num_put` + `xsputn` | ~560（≈3%） | 全部来自每次推演一次的 `EnvironmentLeanObservation` 序列化 |
+
+最后一项引出了观察序列化的 to_chars 改写（`JsonSink`）——**实测无收益，已回退**，见下面的“试过但没有收益”。`FindCollisionTarget` 与 `EnvironmentPublicWaitState` 是接下来两项候选（后者已改，见“试过但没有收益”）。
 
 ### 重启恢复后的工具与 libc 符号补全
 
