@@ -28,10 +28,13 @@ def plan(args):
     target=args.out/'plan.json'
     if target.is_file():return json.loads(target.read_text())
     tasks=[]
-    for manifest,ids in [
-        (MAIN/'artifacts/stage4/night_panel.json',['night_l14_eval_n10','night_l17_eval_n10','night_l20_eval_n10_orig']),
-        (MAIN/'artifacts/stage4/pool_panel.json',['pool_l21_eval_p9k','pool_l24_eval_p9k']),
-        (MAIN/'artifacts/stage4/day_l7_hard.json',['day_l7_z15_eval'])]:
+    # --task MANIFEST:task_id replaces the default six-task set, so a follow-up validation can
+    # freeze its own plan (e.g. the day-pressure pair) without touching the original plan.json.
+    sources=([(Path(spec.split(':',1)[0]),[spec.split(':',1)[1]]) for spec in args.task] if args.task else
+             [(MAIN/'artifacts/stage4/night_panel.json',['night_l14_eval_n10','night_l17_eval_n10','night_l20_eval_n10_orig']),
+              (MAIN/'artifacts/stage4/pool_panel.json',['pool_l21_eval_p9k','pool_l24_eval_p9k']),
+              (MAIN/'artifacts/stage4/day_l7_hard.json',['day_l7_z15_eval'])])
+    for manifest,ids in sources:
         data=json.loads(manifest.read_text())
         for task_id in ids:
             t=next(t for t in data['tasks'] if t['task_id']==task_id)
@@ -83,7 +86,9 @@ def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('phase',choices=['plan','v3','v4','report'])
     p.add_argument('--out',type=Path,required=True);p.add_argument('--v4',type=Path,required=True)
     p.add_argument('--workers',type=int,default=4);p.add_argument('--games',type=int,default=32)
-    p.add_argument('--seed-offset',type=int,default=0);a=p.parse_args()
+    p.add_argument('--seed-offset',type=int,default=0)
+    p.add_argument('--task',action='append',help='MANIFEST:task_id; replaces the default six tasks')
+    a=p.parse_args()
     if not 1<=a.workers<=4:p.error('--workers must be 1..4')
     q=plan(a)
     if a.phase in ('v3','v4'):run(a,a.phase,q)
