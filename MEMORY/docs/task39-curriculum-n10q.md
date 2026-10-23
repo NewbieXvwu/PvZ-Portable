@@ -69,5 +69,31 @@ SUPERSEDED = {'night_n10p': 'night_n10q'}
 - 第 3 步：新增 `reconcile_cells(state, tasks, names, windows_from_runs)`：新增训练格、退役非训练格到 `retired_cells`、可恢复，`offsets` 不动；`make_state` 改为空状态 + reconcile；`main` 读入已有状态后调用并逐行 `log_line`（未给 `--init-glob` 时新格从空窗口起步）。
 - 第 4 步：`python/test_curriculum_queue.py` 加 `ReconcileCellsTest` 五项（增删/原样保存/offsets 不变、幂等、撤销取代后恢复、make_state 等价、训练集合 8 个 n10q 且无 n10p）；`python3 -m unittest test_curriculum_queue test_multiplier_tasks test_keep_families` 26 项全过。
 - 主控补充：按指示 `git fetch origin` 后合并 `origin/pvz-env`（含 audit `b95d2cf7` 的 `pack_command` / `pack_labels`）；`python/test_curriculum_queue.py` 仅 import 行冲突，已合并两侧符号；合并后三模块 28 项测试全过。
+- 第 5 步（清单）：`make_multiplier_tasks.py --dry-run` 审计通过（270 任务、552,960 种子、扫描 318,803 份清单零重叠）；正式生成用 `--copy-to` 只写工作树 `artifacts/stage4/multiplier_panel.json`，主目录与 cq 工作树清单 md5 前后不变（`2057f65a…` / `4868d488…`）；工作树清单与主目录版任务 id、seeds 逐项相同，仅 `generation_audit` 的扫描计数随仓库文件变化。`~/PvZ-search/artifacts/stage4/night_panel_n10q.json` 存在（1,153,524 字节）。
+- 第 5 步（干跑）：状态副本 `~/pvz-logs/task39_tmp/state_copy.json`；`--dry-run --manifest <工作树清单> --state <副本> --log <副本目录>/curr.log --round-games 768 --games-per-group 48`。日志 8 条 `cell added … n10q`、8 条 `cell retired … n10p (superseded by night_n10q)`；计划 16 组 768 局，含 n10q、无 n10p 组；其他格倍率与状态 `mult_index` 一致（抽查 day_l1=1.75、day_l7/8/9=1.5、night_l14=1.0）。未去 `--dry-run`，未起游戏进程。计划：
+
+```
+cell                                mult   win%     n  games  label
+night_l11_train_n10q                   1      -     0     48  c2n11n10qm100
+night_l14_train_n10                    1   67.6   256     48  c2n14n10m100
+day_l9_train_d7q                       1   65.6   192     48  c2d9d7qm100
+day_l7_train_d7q                       1   75.0    96     48  c2d7d7qm100
+night_l12_train_n10                    1   78.5   256     48  c2n12n10m100
+day_l8_train_d7q                       1   79.2    96     48  c2d8d7qm100
+night_l17_train_n10                    1   52.7   256     48  c2n17n10m100
+day_l10_orig_train                  1.75      -     0     48  c2d10origm175
+day_l10_train_d7q                    1.5      -     0     48  c2d10d7qm150
+day_l1_train_d7                     1.75      -     0     48  c2d1d7m175
+day_l3_train_d7                     1.75      -     0     48  c2d3d7m175
+day_l4_train_d7                     1.75      -     0     48  c2d4d7m175
+day_l6_train_d7                     1.75      -     0     48  c2d6d7m175
+day_l7_train_d7                      1.5      -     0     48  c2d7d7m150
+day_l8_train_d7                      1.5      -     0     48  c2d8d7m150
+day_l9_train_d7                      1.5      -     0     48  c2d9d7m150
+total groups 16, games 768
+```
 
 ## 问题
+
+- `games.jsonl` 记录的是种子值本身（每行有 `seed`）：实测 `c1d7d7m125_48` 的 48 局为 5,012,336–5,012,383，正好等于 cq 清单 `day_l7_train_d7_m125` 的 offset 48–95；`c1d1d7m150_48` 为 5,500,000–5,500,047，正好等于旧 500k 档距清单 `day_l1_train_d7_m150` 的 offset 0–47。新 700k 版同名任务的 m150 段已平移到 5,712,288 / 5,700,000，状态里的 offset 会把后续局引到没打过的新段。
+- 按“清单 + `seed_offset`”取种子的是采集/复算 runner：`scripts/search_play.py`（`--seed-list` 可直接给真实种子，否则按 offset 切片）、`rollout_bench.py`、`sim_skip_agreement.py`、`value_ranking_check.py`、`cuda_tick_check.py`、`cuda_root_corpus.py`、`perf_rollout_check.py`、`generate_value_data.py`；`relabel_verify.py` 按帧目录（`seed_*`）切片。它们都是给**新局**正向选种子，不靠清单 + 偏移反推历史种子；统计/分析工具（`pair_compare.py`、`label_noise.py`、`static_value_*_stats.py` 等）都读 `row['seed']`。按要求未改。
