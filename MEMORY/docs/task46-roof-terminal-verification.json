@@ -1,0 +1,182 @@
+{
+ "status": "complete",
+ "roots": 17,
+ "labels": 1506,
+ "wins": 177,
+ "sampling_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
+ "plan_sha256": "39fc0d81af509f9b5b55d83cfa4d51f4019d5cf8675bb3057251179c9325161f",
+ "checks": "identity rebuilt from stored root/frozen plan/preregistered seeds; label, teacher action chain hash, full decision chain, terminal tick, mowers vs actual reset defenses, shared common future",
+ "failures": [],
+ "by_root": [
+  {
+   "cell": "l42-archive-45000000",
+   "root": 126,
+   "tick": 7020,
+   "labels": 156,
+   "expected": 156,
+   "wins": 46,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l42-archive-45000000",
+   "root": 253,
+   "tick": 13920,
+   "labels": 124,
+   "expected": 124,
+   "wins": 4,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l43-archive-45000000",
+   "root": 80,
+   "tick": 4440,
+   "labels": 144,
+   "expected": 144,
+   "wins": 31,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l43-archive-45000000",
+   "root": 536,
+   "tick": 28500,
+   "labels": 76,
+   "expected": 76,
+   "wins": 34,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l44-archive-45000000",
+   "root": 0,
+   "tick": 0,
+   "labels": 122,
+   "expected": 122,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l44-archive-45000000",
+   "root": 195,
+   "tick": 11039,
+   "labels": 120,
+   "expected": 120,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l42-student-45000001",
+   "root": 160,
+   "tick": 8820,
+   "labels": 92,
+   "expected": 92,
+   "wins": 15,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l43-student-45000001",
+   "root": 117,
+   "tick": 6420,
+   "labels": 58,
+   "expected": 58,
+   "wins": 16,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l44-student-45000001",
+   "root": 145,
+   "tick": 7979,
+   "labels": 92,
+   "expected": 92,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l46-student-45000000",
+   "root": 159,
+   "tick": 8820,
+   "labels": 58,
+   "expected": 58,
+   "wins": 14,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l46-student-45000001",
+   "root": 10,
+   "tick": 540,
+   "labels": 66,
+   "expected": 66,
+   "wins": 17,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l47-student-45000000",
+   "root": 158,
+   "tick": 8820,
+   "labels": 54,
+   "expected": 54,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l47-student-45000001",
+   "root": 168,
+   "tick": 9300,
+   "labels": 50,
+   "expected": 50,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l48-student-45000000",
+   "root": 148,
+   "tick": 8160,
+   "labels": 88,
+   "expected": 88,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l48-student-45000001",
+   "root": 149,
+   "tick": 8340,
+   "labels": 92,
+   "expected": 92,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l49-student-45000000",
+   "root": 151,
+   "tick": 8460,
+   "labels": 48,
+   "expected": 48,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  },
+  {
+   "cell": "l49-student-45000001",
+   "root": 13,
+   "tick": 720,
+   "labels": 66,
+   "expected": 66,
+   "wins": 0,
+   "initial_ready_mowers": 0,
+   "mowers_used_max": 0
+  }
+ ]
+}
