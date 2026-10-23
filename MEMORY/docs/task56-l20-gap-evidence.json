@@ -126,9 +126,7 @@
     "invalid_label_packets": 0
   },
   "pending": [
-    "fresh matched teacher/student diagnostic",
-    "live legal-mask probability and Python/native parity",
-    "final root-cause classification and required-data proposal"
+    "final root-cause classification, required-data proposal and delivery audit"
   ],
   "packing": {
     "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/packing.json",
@@ -473,5 +471,615 @@
         "all_supervised_losses_finite": true
       }
     }
+  },
+  "diagnostic_plan": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic-plan.json",
+    "source_sha256": "69d523fcb3c07eea50538c1670af5dcc54fd62b9ad2ecd236adb4c405a2ab1e3",
+    "task": "night_l20_eval_n10_orig",
+    "seeds": [
+      30000,
+      30001,
+      30002,
+      30003
+    ],
+    "arms": [
+      "fast",
+      "fast_search"
+    ],
+    "workers": 2,
+    "dagger_beta": 1,
+    "per_card": 1,
+    "student_candidates": 2,
+    "samples": 3,
+    "horizon": 2500,
+    "verify_samples": 9,
+    "rollout_sim_skip": 61,
+    "scope": "8 diagnostic games; eval seeds never used for training; no formal strength claim",
+    "sha256": {
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/scripts/search_play.py": "e3b4b943b4579bb93e62b511048a54fde93d462cdc23c4da754c948de037805c",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_rollout_policy.py": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_env.py": "4383428452d034b024a4dfb1ebf9dbb4f670174934dba6dda788c80c6a3eec18",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+      "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+      "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+      "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+      "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json": "f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f"
+    }
+  },
+  "native": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/native.json",
+    "source_sha256": "5bf31ca35b0d0714100557fece326a40c0c64c96bb22993e7696418601920a54",
+    "status": "complete",
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+    "executable_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+    "games": [
+      {
+        "seed": 30000,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast/frames.npz",
+        "sha256": "25ed000325387e7dd397c6c4cdbe47344d08d61d4614c030ebf37af665779419",
+        "won": false,
+        "decisions": 279,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 275,
+        "waits_with_legal_plant": 275,
+        "free_card_states": 275,
+        "empty_slot_states": 69,
+        "duplicate_states": 242
+      },
+      {
+        "seed": 30000,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+        "sha256": "092d0b14bbba6da570c4b0fd567875682b14cda16476552e1edb72ac6dce3ef8",
+        "won": true,
+        "decisions": 836,
+        "plantings": 60,
+        "planted_types": {
+          "14": 12,
+          "13": 12,
+          "15": 11,
+          "8": 4,
+          "12": 6,
+          "11": 8,
+          "10": 7
+        },
+        "waits_with_ready_card": 772,
+        "waits_with_legal_plant": 772,
+        "free_card_states": 832,
+        "empty_slot_states": 612,
+        "duplicate_states": 781
+      },
+      {
+        "seed": 30001,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30001/t56diag_fast/frames.npz",
+        "sha256": "d3171a517fc72f312e4f20becde36b871208d01168d5ba3512519993b86b3acf",
+        "won": false,
+        "decisions": 279,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 275,
+        "waits_with_legal_plant": 275,
+        "free_card_states": 275,
+        "empty_slot_states": 68,
+        "duplicate_states": 262
+      },
+      {
+        "seed": 30001,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30001/t56diag_fast_search/frames.npz",
+        "sha256": "753f557e8a613c5cb7a9e9ce4716d09c116795a9b322ae45bc4f00c039c0fd14",
+        "won": true,
+        "decisions": 901,
+        "plantings": 46,
+        "planted_types": {
+          "10": 8,
+          "12": 3,
+          "13": 5,
+          "15": 12,
+          "14": 10,
+          "8": 5,
+          "11": 3
+        },
+        "waits_with_ready_card": 842,
+        "waits_with_legal_plant": 842,
+        "free_card_states": 885,
+        "empty_slot_states": 490,
+        "duplicate_states": 825
+      },
+      {
+        "seed": 30002,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30002/t56diag_fast/frames.npz",
+        "sha256": "7af788111b0d1321e4c403a7851f5f5b3aca6b02784f3930f1c779e97c54ca4a",
+        "won": false,
+        "decisions": 237,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 233,
+        "waits_with_legal_plant": 233,
+        "free_card_states": 233,
+        "empty_slot_states": 69,
+        "duplicate_states": 227
+      },
+      {
+        "seed": 30002,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30002/t56diag_fast_search/frames.npz",
+        "sha256": "061e2ba3bc8c63d10980b3acd75a6d8ae41ea2f4af003cdf777ddfb960129eee",
+        "won": true,
+        "decisions": 976,
+        "plantings": 59,
+        "planted_types": {
+          "14": 12,
+          "15": 9,
+          "13": 9,
+          "11": 5,
+          "10": 11,
+          "12": 7,
+          "8": 6
+        },
+        "waits_with_ready_card": 907,
+        "waits_with_legal_plant": 907,
+        "free_card_states": 966,
+        "empty_slot_states": 629,
+        "duplicate_states": 945
+      },
+      {
+        "seed": 30003,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30003/t56diag_fast/frames.npz",
+        "sha256": "df16ad812a9b77996c860d37d873bfaeb3e1c33f90c52279992a7ddd41f2a963",
+        "won": false,
+        "decisions": 260,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 256,
+        "waits_with_legal_plant": 256,
+        "free_card_states": 256,
+        "empty_slot_states": 68,
+        "duplicate_states": 243
+      },
+      {
+        "seed": 30003,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30003/t56diag_fast_search/frames.npz",
+        "sha256": "7a482221bf3cea12f0649b11952ab75934d0b7e5c4ca8deab99c8ac5253a9d70",
+        "won": true,
+        "decisions": 858,
+        "plantings": 66,
+        "planted_types": {
+          "15": 14,
+          "8": 6,
+          "10": 9,
+          "12": 9,
+          "13": 3,
+          "14": 17,
+          "11": 8
+        },
+        "waits_with_ready_card": 764,
+        "waits_with_legal_plant": 764,
+        "free_card_states": 824,
+        "empty_slot_states": 647,
+        "duplicate_states": 757
+      }
+    ],
+    "frames_exact": 4634,
+    "selected_root_states": 64,
+    "model_root_pairs": 128,
+    "logits_max_abs_error": 6.103515625e-05,
+    "all_head_argmax_and_greedy_actions_equal": true,
+    "full_legal_packet_affordability_matches_engine": true,
+    "probability_scope": "rank among legal plant actions and P(plant)*P(packet|legal packets)*P(cell|legal cells); greedy decision still thresholds plant at0; preferences are not calibrated probabilities",
+    "logit_comparison_tolerance": {
+      "atol": 1e-05,
+      "rtol": 1e-05
+    }
+  },
+  "continuations": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuations.json",
+    "source_sha256": "a5ebda2bb26f78585a307395cdfeeff5314f1fe1406b312a80bb7fc2abf5ccf3",
+    "status": "complete",
+    "root_model_pairs": 8,
+    "encoded_float32_compared": 2077152,
+    "rows": [
+      {
+        "seed": 30000,
+        "model": "dw4i",
+        "root_decision": 155,
+        "root_tick": 8340,
+        "future_seed": 590000,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30000-dw4i.jsonl",
+        "trace_sha256": "b7643aec5c657de5116ff49dea6731c1274c635393a99f73293c9a0f32a99f93",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30000,
+        "model": "A",
+        "root_decision": 155,
+        "root_tick": 8340,
+        "future_seed": 590000,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30000-A.jsonl",
+        "trace_sha256": "b7643aec5c657de5116ff49dea6731c1274c635393a99f73293c9a0f32a99f93",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30001,
+        "model": "dw4i",
+        "root_decision": 152,
+        "root_tick": 8340,
+        "future_seed": 590001,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30001-dw4i.jsonl",
+        "trace_sha256": "979c53d4aadd6cad7363cdeb1eecb887bd1f498e8ae861a0b4e51991eb17b458",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30001,
+        "model": "A",
+        "root_decision": 152,
+        "root_tick": 8340,
+        "future_seed": 590001,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30001-A.jsonl",
+        "trace_sha256": "979c53d4aadd6cad7363cdeb1eecb887bd1f498e8ae861a0b4e51991eb17b458",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30002,
+        "model": "dw4i",
+        "root_decision": 153,
+        "root_tick": 8400,
+        "future_seed": 590002,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10920,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30002-dw4i.jsonl",
+        "trace_sha256": "c2217070fa4533964a306ffc97c61f5dd6f1c94ddd28b10a98825fb1f6131ad5",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30002,
+        "model": "A",
+        "root_decision": 153,
+        "root_tick": 8400,
+        "future_seed": 590002,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10920,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30002-A.jsonl",
+        "trace_sha256": "c2217070fa4533964a306ffc97c61f5dd6f1c94ddd28b10a98825fb1f6131ad5",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30003,
+        "model": "dw4i",
+        "root_decision": 173,
+        "root_tick": 9420,
+        "future_seed": 590003,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 11940,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30003-dw4i.jsonl",
+        "trace_sha256": "4b81522bb03fc50cb87dbd6ef35b51f60236ffec33e600f9d2870cd09b29c407",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30003,
+        "model": "A",
+        "root_decision": 173,
+        "root_tick": 9420,
+        "future_seed": 590003,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 11940,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30003-A.jsonl",
+        "trace_sha256": "4b81522bb03fc50cb87dbd6ef35b51f60236ffec33e600f9d2870cd09b29c407",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      }
+    ]
+  },
+  "live_teacher_states": {
+    "dw4i": {
+      "roots": 32,
+      "student_gate_calls_plant": 1,
+      "median_plant_probability": 0.0803990513086319,
+      "median_legal_plant_rank": 59.0,
+      "median_legal_joint_preference": 0.0003125847646762843,
+      "examples": [
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 25,
+          "tick": 1440,
+          "model": "dw4i",
+          "plant_logit": -1.46891928,
+          "plant_probability": 0.18710698187351227,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 1,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 97,
+            "legal_joint_preference": 3.6461945090526816e-05
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 93,
+          "tick": 5040,
+          "model": "dw4i",
+          "plant_logit": -0.651545167,
+          "plant_probability": 0.3426412045955658,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 3,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 79,
+            "legal_joint_preference": 0.00011263869472971068
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 172,
+          "tick": 9240,
+          "model": "dw4i",
+          "plant_logit": -2.1537416,
+          "plant_probability": 0.10398208349943161,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 2,
+              "col": 5,
+              "row": 2
+            },
+            "kind": 15,
+            "legal_plant_rank": 63,
+            "legal_joint_preference": 0.00046623718084945107
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 290,
+          "tick": 15840,
+          "model": "dw4i",
+          "plant_logit": -2.43410754,
+          "plant_probability": 0.0806085467338562,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 7,
+              "col": 6,
+              "row": 3
+            },
+            "kind": 15,
+            "legal_plant_rank": 65,
+            "legal_joint_preference": 0.00040788625487146865
+          }
+        }
+      ]
+    },
+    "A": {
+      "roots": 32,
+      "student_gate_calls_plant": 0,
+      "median_plant_probability": 0.08611134067177773,
+      "median_legal_plant_rank": 53.0,
+      "median_legal_joint_preference": 7.639733833252654e-05,
+      "examples": [
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 25,
+          "tick": 1440,
+          "model": "A",
+          "plant_logit": -0.044599779,
+          "plant_probability": 0.48885196447372437,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 1,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 37,
+            "legal_joint_preference": 0.00015715344472473603
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 93,
+          "tick": 5040,
+          "model": "A",
+          "plant_logit": -0.698337913,
+          "plant_probability": 0.3321806788444519,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 3,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 69,
+            "legal_joint_preference": 6.723436867080163e-06
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 172,
+          "tick": 9240,
+          "model": "A",
+          "plant_logit": -1.59185207,
+          "plant_probability": 0.16912341117858887,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 2,
+              "col": 5,
+              "row": 2
+            },
+            "kind": 15,
+            "legal_plant_rank": 108,
+            "legal_joint_preference": 1.7167206109489234e-06
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 290,
+          "tick": 15840,
+          "model": "A",
+          "plant_logit": -1.99269986,
+          "plant_probability": 0.11997151374816895,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 7,
+              "col": 6,
+              "row": 3
+            },
+            "kind": 15,
+            "legal_plant_rank": 119,
+            "legal_joint_preference": 3.1067982128508183e-06
+          }
+        }
+      ]
+    }
+  },
+  "queued_recipe": {
+    "source": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/recipe.json",
+    "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/queued-round2-recipe.json",
+    "sha256": "ea40edeac0309b872f0f631765cfc13c46cf5391269d4f5d210fdc2dfb864a0f",
+    "labels": 202,
+    "L20_labels": []
   }
 }
