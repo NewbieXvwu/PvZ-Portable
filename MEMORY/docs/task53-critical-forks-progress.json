@@ -235,6 +235,10 @@
   "export-complete": {
    "student_corrections": 7,
    "value_rows": 11211
+  },
+  "finetune-complete": {
+   "model_sha256": "b6a45ac63f4dec53f229cfc28911073174a2d46db78faae7033f1c081f5fe623",
+   "new_rows": 7
   }
  }
 }
