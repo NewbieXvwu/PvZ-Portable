@@ -1,28 +1,240 @@
 {
  "status": "incomplete",
- "as_of": "2026-10-24T05:03:35.490319+08:00",
- "method": "50 engine reset + one-tick facts; not policy wins or completed playthrough evidence",
+ "as_of": "2026-10-24T05:24:33.750777+08:00",
+ "qc_as_of": "2026-10-24T05:03:35.490319+08:00",
+ "status_method": "current dw4i original-task panel observed >=95% and n>=32; not population confidence or whole-adventure proof",
  "sources": {
-  "engine": {
+  "E": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/engine-inventory.json",
    "sha256": "b8041ae889e572c24e2aa73643917d965f21934f2e62259b4b58aa136eb99880",
-   "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
-   "executable_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327"
+   "date": "2026-10-24",
+   "note": "one process; 50 reset + one wait tick; not complete games"
   },
-  "curriculum_state": {
-   "path": "/home/newbiexvwu/pvz-logs/curriculum_state.json",
-   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/curriculum_state.json",
-   "sha256": "83e91abb3552beda3eaa37a9d79500b9eab2c8f9b4f23af4f9bcfe2caf91d100"
+  "Q": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/curriculum_state.json",
+   "sha256": "83e91abb3552beda3eaa37a9d79500b9eab2c8f9b4f23af4f9bcfe2caf91d100",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "frozen controller membership/window state",
+   "original_path": "/home/newbiexvwu/pvz-logs/curriculum_state.json"
   },
-  "curriculum_log": {
-   "path": "/home/newbiexvwu/pvz-logs/curriculum.log",
-   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/curriculum_log.log",
-   "sha256": "2983c0630ce9659aa787fa86c8f816c1a81548e49586db8219f42c67f9caea27"
+  "QL": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/curriculum_log.log",
+   "sha256": "2983c0630ce9659aa787fa86c8f816c1a81548e49586db8219f42c67f9caea27",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "beta0 collection execution, not teacher strength",
+   "original_path": "/home/newbiexvwu/pvz-logs/curriculum.log"
   },
-  "curriculum_panel": {
-   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
-   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/curriculum_panel.json",
-   "sha256": "878f996e7657f3b5f6d3c3393530c2903d8a31e48b49d2570cf18af750968420"
+  "QP": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/curriculum_panel.json",
+   "sha256": "878f996e7657f3b5f6d3c3393530c2903d8a31e48b49d2570cf18af750968420",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "414 multiplier variants; only state.cells are active",
+   "original_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+  },
+  "S27": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task27-results.json",
+   "sha256": "0719db6a75e4ae008e96b9b3eb3a78a2f02f068cd9052d8a281d9206038b4a2b",
+   "date": "2026-10-23",
+   "note": "completed task27 v2; dw4i production reference, dw5i comparison"
+  },
+  "SA0": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/complete_A.json",
+   "sha256": "59b1518fea0139c6fa2d4ce1814b060dea6db3fe11a7060b8f82dfb4db438586",
+   "date": "2026-10-24 00:41:40+0800",
+   "note": "latest completed candidate A; not deployed"
+  },
+  "SA": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/paired_dw4i_vs_A.json",
+   "sha256": "0e5ace3beb6b8338ed8675a01a9fc8e428395e91dbfc7bc4009edc1680c164f1",
+   "date": "2026-10-24T00:41:40+0800",
+   "note": "34 paired tasks, 3264 games; raw files rechecked below",
+   "raw_directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/panel_dw5i_A_v2",
+   "raw_sha256": {
+    "day_l10_eval_d7p_holdout1/games.jsonl": "b21d02c47052ba697f0287d1c661df010e33ed77f9d5e8e64e0960e1b8ac5ddc",
+    "day_l10_eval_d7p_holdout2/games.jsonl": "d6cf880565a1b4d272e56fe50e33da7d43255209c1ba4b0d9bcdc03f62f7a0e7",
+    "day_l10_eval_d7p_holdout3/games.jsonl": "a606c0e2f4a26eb9b8ab8cf1e045b45ff012a61f80493b068d07b3f83952703f",
+    "day_l10_orig_eval/games.jsonl": "7282e24501f6198e0f6cb7858b3626b40fd4bc1dc925db230c74281a8e990ef2",
+    "day_l1_eval_d7/games.jsonl": "7a29ebc49741f6545a8f49575a90f2d9bfe9463374f33d0ae7f90f7560c91e56",
+    "day_l3_eval_d7/games.jsonl": "9efa3801af399e04089159e13032f690348e5b767209bc60e4e364b29194ddd8",
+    "day_l4_eval_d7/games.jsonl": "8e7d1bcfdbaa1c99dd93aa2f54b494587b936585e8e217bcf4da7ca8df7a3a1a",
+    "day_l6_eval_d7/games.jsonl": "c31278db00d8d514e41f0e6d452ee5fc6c7a308c2697a899cbeb8a8182306e02",
+    "day_l7_eval_d7/games.jsonl": "14b9fee904c559c4aed94f7884d41f44cd70f4650c7fd98f6738d8c9462d89a9",
+    "day_l7_eval_d7p_holdout1/games.jsonl": "bda35ca5bea42486ec0633743e3158157a6ff7f435725fceebb54a66146a510b",
+    "day_l7_eval_d7p_holdout2/games.jsonl": "236ef85ef244297d23e6a5fd16484d5ed1208a5d314df89398a6d1373c69023e",
+    "day_l7_eval_d7p_holdout3/games.jsonl": "aca33e89bd34ef1b40f5a49720d960efc5ce3b0e539c7843336d2035ccb09227",
+    "day_l8_eval_d7/games.jsonl": "be84b9e2eb7c2c948f4394213b0347ee2554098e31733524325f700833f00b80",
+    "day_l8_eval_d7p_holdout1/games.jsonl": "e710379e79ea19fd0d69cb4330d8d84e1179b7fe8f840f3fccadb743bec2cfd1",
+    "day_l8_eval_d7p_holdout2/games.jsonl": "4cfa24984750d0751711c7952c655bba92e457a8ca91835c668fa9190deb2bf0",
+    "day_l8_eval_d7p_holdout3/games.jsonl": "e14eecfdbaf7d30f57940ef672acd67d974aa8fc0412d7fa69f243c874b12754",
+    "day_l9_eval_d7/games.jsonl": "da12763b417ec2ec8dec4e21cc7af9505280c69d3e628954c47e5691b32b0244",
+    "day_l9_eval_d7p_holdout1/games.jsonl": "07d6f8e781cfc0209e3923d11254d0be50cdbd578f37e48df1ef785a91c7218a",
+    "day_l9_eval_d7p_holdout2/games.jsonl": "f47cb8e3e0a65ac383984d4551a6e09228f511905ff4b1fdbe6260fca11ff225",
+    "day_l9_eval_d7p_holdout3/games.jsonl": "71934459ac40b2da0b9d1f36672bf97e4bb124f63bd6b5fe3318ee6f225fbbb8",
+    "night_l11_eval_n10/games.jsonl": "95e13178f6434fce68e7d1f354e6b143dd670e00189e653f95ca50150d549556",
+    "night_l12_eval_n10/games.jsonl": "278d754bc1827a52be59760009478a034312e24153b0d229bd594fcde7dfc73e",
+    "night_l13_eval_n10/games.jsonl": "c4ab8798d9604db1d34d26a0353fe2edbc19fab0166637dc37ed683b9dc351bb",
+    "night_l14_eval_n10/games.jsonl": "9f9932c0ac00de788c650d600c5ac82c3b83c88b114dbd08e1ad0345829209a9",
+    "night_l16_eval_n10/games.jsonl": "6d3cc7b7fec00538bbaf88bcf8650c221556f9a5a4542378b8f379cf6e96f4e3",
+    "night_l17_eval_n10/games.jsonl": "bfcfbd8c3f87433ba26bc9b9f022b0a403dd0928d6119450998ca8ae0096777e",
+    "night_l18_eval_n10/games.jsonl": "fa17ea63f484ff7f6426ed9ae500052c3a6e16bfdf8c8992bbdb03ab0cff9201",
+    "night_l19_eval_n10/games.jsonl": "b531a24410f28309d3fb67ffdfcfed824683bfcc9e42282fa84f8c578dab05d4",
+    "night_l20_eval_n10_orig/games.jsonl": "d8d2f45f11fe299f5df7c4701c73919c5ab1f6ce5e584250adac90cb97065e97",
+    "pool_l21_eval_p9k/games.jsonl": "b5d53a32716d493370b7f8f8abf037b9eb2e11fd50b64b5455e00b2a7dfaa09a",
+    "pool_l22_eval_p9k/games.jsonl": "471263396ff1ed9b249a62e4f2ab007f52021868b4ff181b443d0e71e7bf134f",
+    "pool_l23_eval_p9k/games.jsonl": "1dd6b8fe578ccb9c601f5cccc80b51e95b5464d4177bec9ce21e94d84edfda11",
+    "pool_l24_eval_p9k/games.jsonl": "56a4a314430c1c57d3c23add5ad9fd4fe75fb5a788894bc35c400c9f2117b288",
+    "pool_l26_eval_p9k/games.jsonl": "6dcdea925e6a3734c95ad08b3f790bf96fe65bf0dc79a9f06341e765279a4c39"
+   }
+  },
+  "TF": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task45-fog-results.json",
+   "sha256": "4a84b593512c253428926003931949eb42e478c5375f3e65a6a968c8a30bf2c2",
+   "date": "2026-10-23",
+   "note": "cold-start human f8; separate fast and beta1 fast_search"
+  },
+  "TR": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task46-roof-cold-start.json",
+   "sha256": "eed699c15ffda537ef6a92ab905709b7c37fdae44f9b1de9c7c7cd34d2574c68",
+   "date": "2026-10-23",
+   "note": "r7 original difficulty; L45 has overridden initial hand"
+  },
+  "TR2": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/task46-roof-timelines.json",
+   "sha256": "f99ca8ef985f3c73abdd5bb95e4b911b2697e77fff235a000d25848575aa4bc3",
+   "date": "2026-10-24",
+   "note": "fixed four-seed teacher diagnostic, not a full evaluation panel; L42-45 overlap old panel seeds"
+  },
+  "TRh": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task46-roof-half-results.json",
+   "sha256": "b164bf14b6e0ad2ac0e3f0bd5020a982968decedd140b851ba5d4569afa9f5dc",
+   "date": "2026-10-23",
+   "note": "diagnostic multiplier .5; not current qc nor original completion"
+  },
+  "TV4": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/value-widen-paired.json",
+   "sha256": "3136b94b4ccaf23917c950679f2c649efdca4a85b4459ef33db9c2581a622cd6",
+   "date": "2026-10-23",
+   "note": "beta1 v4 paired evaluation; new_wins is v4"
+  },
+  "T50": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher32-v4/comparison.json",
+   "sha256": "c213eb11251636e2d8b3d805eead342d660dbf8ad5efcb378f4558093965cfce",
+   "date": "2026-10-24",
+   "note": "fresh deployed teacher gate; training-task seeds"
+  },
+  "T52": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/summary.json",
+   "sha256": "22a67979d553af1d905f99fa6ab888df1082872f1fed28e5c9e2f4f51d9d26d2",
+   "date": "2026-10-24",
+   "note": "144 complete games; arm A is unaugmented beta1 teacher"
+  },
+  "D": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/day-panel.md",
+   "sha256": "fa4f2ea63880751b11d2d8c4cbcc4d36fd38bb70b0fd068828e37ab7413a0af1",
+   "date": "2026-10-21",
+   "note": "task17 table archived 2026-10-21 00:51+08; old v32 teacher; task20 original L10"
+  },
+  "N": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/night-panel.md",
+   "sha256": "a455c0d8fd68a171a3dd3bdcd6b69ac34aef919816fd6a838e5b7ea0edc20184",
+   "date": "2026-10-22",
+   "note": "old identity n9 teacher; NOT current n10"
+  },
+  "P": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/pool-panel.md",
+   "sha256": "95933fad948ce97815365254941a8290aafe5e26186cbc5257361af53de5de4b",
+   "date": "2026-10-22",
+   "note": "old identity p9k teacher; no modern same-model comparison"
+  },
+  "D43": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/MEMORY/docs/task43-value-v5-pool.md",
+   "sha256": "7827dbf7bada11c57237be85cfcd4ac95d1d322ccedf0dc774293fb758802e78",
+   "date": "2026-10-24",
+   "note": "first v5 rejected; round2 teacher-continuation labels in progress"
+  },
+  "D45": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/MEMORY/docs/task45-fog-terminal-diagnosis.md",
+   "sha256": "70c649db46c920c78defc3d6ac1ee85cb783ec308065f22d1c7f84212c381a86",
+   "date": "2026-10-24",
+   "note": "complete64-root terminal audit; local failure-delay improvements, no wins"
+  },
+  "D46": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/teacher-diag-roof-review.md",
+   "sha256": "a418c8d0aef80f45bf7b714a71063d8e93fc63380734edd4e7c4f1da0b0cd47e",
+   "date": "2026-10-24",
+   "note": "independent phase2 roof diagnosis, not raw LLM conclusions"
+  },
+  "D46c": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/task46-roof-training-coverage.json",
+   "sha256": "b9db5ee9b34ff8cdcf7c828916f82c05840567fdf73492b4a7ae2e05e0eaa49c",
+   "date": "2026-10-24",
+   "note": "dw4 frozen 48816 archives; no pool/fog/roof archives"
+  },
+  "D46b": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/task46-roof-terminal-root-smoke.json",
+   "sha256": "d9ba0d879b29cc03306bd4f769bae4450ae0add26da5d85071afc212d776d476",
+   "date": "2026-10-24",
+   "note": "only four complete roots; not the full17-root panel"
+  },
+  "D49": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task49-A-evidence.json",
+   "sha256": "954b6a2603e3623b2074453fb6c6b4fbf85cd45abef04c3f4adb1c4dd71e6217",
+   "date": "2026-10-24",
+   "note": "candidate promotion quality gate; two controlled demonstrations"
+  },
+  "D53": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/MEMORY/docs/task53-critical-forks.md",
+   "sha256": "3682fc7e4610b43ad501831bc8937e0b8052b890695b402ac3916557648b9aa2",
+   "date": "2026-10-24",
+   "note": "screen47 roots complete; independent16-future confirmation7 actions; training/paired evaluation not yet complete"
+  },
+  "D48": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task48-human-demo.md",
+   "sha256": "1d7e325f8d25ecf7dc15a3792f76c78585998289247dac1e77328e01b2627dbf",
+   "date": "2026-10-24",
+   "note": "human demonstration tools; ten L31-34 games planned, recordings not evidenced here"
+  },
+  "PLAN": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/student-bottleneck-plan.md",
+   "sha256": "8f0887b88074bbcb6b4e8b9050fa5240a7624ec98ed686d6c2f2c41051c79d78",
+   "date": "2026-10-24",
+   "note": "controller timeline through04:15; qc only packed before task49 pipeline deployment"
+  },
+  "R0": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
+   "sha256": "861826360161c2762c66093c93b42c992b2395db8f36f2bdd199c1f14862c8dd",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "registered tasks; does not imply qc admission or measured wins"
+  },
+  "R1": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "sha256": "f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "registered tasks; does not imply qc admission or measured wins"
+  },
+  "R2": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "sha256": "10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "registered tasks; does not imply qc admission or measured wins"
+  },
+  "R3": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task45/fog_panel.json",
+   "sha256": "df38c21db20506c14c33c99b1759e2340e6ad319ffdc39501482c8f6eebc351f",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "registered tasks; does not imply qc admission or measured wins"
+  },
+  "R4": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task46/roof_panel.json",
+   "sha256": "393004fbe47b372bb18a94aa8688166ccdffb226618b9becbc77714a7e4534d1",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "registered tasks; does not imply qc admission or measured wins"
+  },
+  "R5": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor/artifacts/stage4/day_panel.json",
+   "sha256": "01e3ae4f437b7673b3278280e3891bfcb0f65e92ba8bddaeb7b6321713fcdc27",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "registered tasks; does not imply qc admission or measured wins"
   }
  },
  "engine_predicates": {
@@ -93,13 +305,338 @@
    "line": 3165
   }
  },
+ "engine": {
+  "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+  "executable_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+  "source_sha256": {
+   "src/LawnApp.cpp": "e7362bda1dd29307032d06d6e13641958e5f5d627176b3e478eac2a75c6a7c51",
+   "src/Lawn/Board.cpp": "78090f4bf3cdd66e6145dfa40fdb8ff22abffd0906d491ef7be4893d8e9194c7",
+   "scripts/pvz_constants.py": "06ee9863b9694287b2d335c5008649eddf77b05f69c8e7f42c1137e7dddee93c"
+  },
+  "zombie_dictionary": [
+   {
+    "type": "NORMAL",
+    "enum": 0,
+    "value": 1,
+    "level": 1,
+    "wave": 1,
+    "weight": 4000,
+    "name": "ZOMBIE"
+   },
+   {
+    "type": "FLAG",
+    "enum": 1,
+    "value": 1,
+    "level": 1,
+    "wave": 1,
+    "weight": 0,
+    "name": "FLAG_ZOMBIE"
+   },
+   {
+    "type": "TRAFFIC_CONE",
+    "enum": 2,
+    "value": 2,
+    "level": 3,
+    "wave": 1,
+    "weight": 4000,
+    "name": "CONEHEAD_ZOMBIE"
+   },
+   {
+    "type": "POLEVAULTER",
+    "enum": 3,
+    "value": 2,
+    "level": 6,
+    "wave": 5,
+    "weight": 2000,
+    "name": "POLE_VAULTING_ZOMBIE"
+   },
+   {
+    "type": "PAIL",
+    "enum": 4,
+    "value": 4,
+    "level": 8,
+    "wave": 1,
+    "weight": 3000,
+    "name": "BUCKETHEAD_ZOMBIE"
+   },
+   {
+    "type": "NEWSPAPER",
+    "enum": 5,
+    "value": 2,
+    "level": 11,
+    "wave": 1,
+    "weight": 1000,
+    "name": "NEWSPAPER_ZOMBIE"
+   },
+   {
+    "type": "DOOR",
+    "enum": 6,
+    "value": 4,
+    "level": 13,
+    "wave": 5,
+    "weight": 3500,
+    "name": "SCREEN_DOOR_ZOMBIE"
+   },
+   {
+    "type": "FOOTBALL",
+    "enum": 7,
+    "value": 7,
+    "level": 16,
+    "wave": 5,
+    "weight": 2000,
+    "name": "FOOTBALL_ZOMBIE"
+   },
+   {
+    "type": "DANCER",
+    "enum": 8,
+    "value": 5,
+    "level": 18,
+    "wave": 5,
+    "weight": 1000,
+    "name": "DANCING_ZOMBIE"
+   },
+   {
+    "type": "BACKUP_DANCER",
+    "enum": 9,
+    "value": 1,
+    "level": 18,
+    "wave": 1,
+    "weight": 0,
+    "name": "BACKUP_DANCER"
+   },
+   {
+    "type": "DUCKY_TUBE",
+    "enum": 10,
+    "value": 1,
+    "level": 21,
+    "wave": 5,
+    "weight": 0,
+    "name": "DUCKY_TUBE_ZOMBIE"
+   },
+   {
+    "type": "SNORKEL",
+    "enum": 11,
+    "value": 3,
+    "level": 23,
+    "wave": 10,
+    "weight": 2000,
+    "name": "SNORKEL_ZOMBIE"
+   },
+   {
+    "type": "ZAMBONI",
+    "enum": 12,
+    "value": 7,
+    "level": 26,
+    "wave": 10,
+    "weight": 2000,
+    "name": "ZOMBONI"
+   },
+   {
+    "type": "BOBSLED",
+    "enum": 13,
+    "value": 3,
+    "level": 26,
+    "wave": 10,
+    "weight": 2000,
+    "name": "ZOMBIE_BOBSLED_TEAM"
+   },
+   {
+    "type": "DOLPHIN_RIDER",
+    "enum": 14,
+    "value": 3,
+    "level": 28,
+    "wave": 10,
+    "weight": 1500,
+    "name": "DOLPHIN_RIDER_ZOMBIE"
+   },
+   {
+    "type": "JACK_IN_THE_BOX",
+    "enum": 15,
+    "value": 3,
+    "level": 31,
+    "wave": 10,
+    "weight": 1000,
+    "name": "JACK_IN_THE_BOX_ZOMBIE"
+   },
+   {
+    "type": "BALLOON",
+    "enum": 16,
+    "value": 2,
+    "level": 33,
+    "wave": 10,
+    "weight": 2000,
+    "name": "BALLOON_ZOMBIE"
+   },
+   {
+    "type": "DIGGER",
+    "enum": 17,
+    "value": 4,
+    "level": 36,
+    "wave": 10,
+    "weight": 1000,
+    "name": "DIGGER_ZOMBIE"
+   },
+   {
+    "type": "POGO",
+    "enum": 18,
+    "value": 4,
+    "level": 38,
+    "wave": 10,
+    "weight": 1000,
+    "name": "POGO_ZOMBIE"
+   },
+   {
+    "type": "YETI",
+    "enum": 19,
+    "value": 4,
+    "level": 40,
+    "wave": 1,
+    "weight": 1,
+    "name": "ZOMBIE_YETI"
+   },
+   {
+    "type": "BUNGEE",
+    "enum": 20,
+    "value": 3,
+    "level": 41,
+    "wave": 10,
+    "weight": 1000,
+    "name": "BUNGEE_ZOMBIE"
+   },
+   {
+    "type": "LADDER",
+    "enum": 21,
+    "value": 4,
+    "level": 43,
+    "wave": 10,
+    "weight": 1000,
+    "name": "LADDER_ZOMBIE"
+   },
+   {
+    "type": "CATAPULT",
+    "enum": 22,
+    "value": 5,
+    "level": 46,
+    "wave": 10,
+    "weight": 1500,
+    "name": "CATAPULT_ZOMBIE"
+   },
+   {
+    "type": "GARGANTUAR",
+    "enum": 23,
+    "value": 10,
+    "level": 48,
+    "wave": 15,
+    "weight": 1500,
+    "name": "GARGANTUAR"
+   },
+   {
+    "type": "IMP",
+    "enum": 24,
+    "value": 10,
+    "level": 48,
+    "wave": 1,
+    "weight": 0,
+    "name": "IMP"
+   },
+   {
+    "type": "BOSS",
+    "enum": 25,
+    "value": 10,
+    "level": 50,
+    "wave": 1,
+    "weight": 0,
+    "name": "BOSS"
+   },
+   {
+    "type": "PEA_HEAD",
+    "enum": 26,
+    "value": 1,
+    "level": 99,
+    "wave": 1,
+    "weight": 4000,
+    "name": "ZOMBIE"
+   },
+   {
+    "type": "WALLNUT_HEAD",
+    "enum": 27,
+    "value": 4,
+    "level": 99,
+    "wave": 1,
+    "weight": 3000,
+    "name": "ZOMBIE"
+   },
+   {
+    "type": "JALAPENO_HEAD",
+    "enum": 28,
+    "value": 3,
+    "level": 99,
+    "wave": 10,
+    "weight": 1000,
+    "name": "ZOMBIE"
+   },
+   {
+    "type": "GATLING_HEAD",
+    "enum": 29,
+    "value": 3,
+    "level": 99,
+    "wave": 10,
+    "weight": 2000,
+    "name": "ZOMBIE"
+   },
+   {
+    "type": "SQUASH_HEAD",
+    "enum": 30,
+    "value": 3,
+    "level": 99,
+    "wave": 10,
+    "weight": 2000,
+    "name": "ZOMBIE"
+   },
+   {
+    "type": "TALLNUT_HEAD",
+    "enum": 31,
+    "value": 4,
+    "level": 99,
+    "wave": 10,
+    "weight": 2000,
+    "name": "ZOMBIE"
+   },
+   {
+    "type": "REDEYE_GARGANTUAR",
+    "enum": 32,
+    "value": 10,
+    "level": 48,
+    "wave": 15,
+    "weight": 6000,
+    "name": "REDEYED_GARGANTUAR"
+   }
+  ],
+  "reset_and_one_tick_passed": 50
+ },
+ "runtime": {
+  "student": "dw4i_s1",
+  "value": "v4",
+  "static": "branch1",
+  "dagger_beta": 0
+ },
+ "summary": {
+  "levels": 50,
+  "qc_cells": 38,
+  "qc_levels": 26,
+  "statuses": {
+   "在练": 26,
+   "未接入": 13,
+   "已过": 6,
+   "冷启动全败": 5
+  }
+ },
  "levels": [
   {
    "level": 1,
    "adventure": "1-1",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -108,6 +645,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0
    ],
@@ -115,22 +653,91 @@
     0,
     1
    ],
+   "task_family": {
+    "task_id": "day_l1_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [
     {
      "base": "day_l1_train_d7",
      "multiplier": 2.0,
-     "window_games": 240
+     "window_games": 240,
+     "latest_execution": {
+      "date": "2026-10-23T20:11:35",
+      "label": "c2d1d7m175",
+      "task": "day_l1_train_d7_m175",
+      "multiplier": 1.75,
+      "games": 48,
+      "wins": 46,
+      "source": "QL",
+      "line": 157,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 125,
+    "games": 128,
+    "task": "day_l1_eval_d7",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 118,
+    "games": 128,
+    "task": "day_l1_eval_d7",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l1_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l1_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 2,
    "adventure": "1-2",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -139,6 +746,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0
    ],
@@ -146,16 +754,42 @@
     0,
     1
    ],
+   "task_family": {
+    "task_id": "day_l2_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": "No independent modern panel. Shared engine roster/20-wave setup with L1 does not prove identical difficulty or allow copying its wins."
   },
   {
    "level": 3,
    "adventure": "1-3",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -164,6 +798,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2
@@ -173,22 +808,91 @@
     1,
     2
    ],
+   "task_family": {
+    "task_id": "day_l3_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [
     {
      "base": "day_l3_train_d7",
      "multiplier": 2.0,
-     "window_games": 240
+     "window_games": 240,
+     "latest_execution": {
+      "date": "2026-10-23T20:18:06",
+      "label": "c2d3d7m175",
+      "task": "day_l3_train_d7_m175",
+      "multiplier": 1.75,
+      "games": 48,
+      "wins": 44,
+      "source": "QL",
+      "line": 159,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 120,
+    "games": 128,
+    "task": "day_l3_eval_d7",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 116,
+    "games": 128,
+    "task": "day_l3_eval_d7",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l3_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l3_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 4,
    "adventure": "1-4",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -197,6 +901,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2
@@ -206,22 +911,86 @@
     1,
     2
    ],
+   "task_family": {
+    "task_id": "day_l4_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [
     {
      "base": "day_l4_train_d7",
      "multiplier": 2.0,
-     "window_games": 240
+     "window_games": 240,
+     "latest_execution": {
+      "date": "2026-10-23T20:23:13",
+      "label": "c2d4d7m175",
+      "task": "day_l4_train_d7_m175",
+      "multiplier": 1.75,
+      "games": 48,
+      "wins": 46,
+      "source": "QL",
+      "line": 161,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 116,
+    "games": 128,
+    "task": "day_l4_eval_d7",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 122,
+    "games": 128,
+    "task": "day_l4_eval_d7",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l4_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l4_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "已过",
+   "bottleneck": null,
+   "bottleneck_certainty": "observed panel threshold only",
+   "bottleneck_sources": [],
+   "notes": ""
   },
   {
    "level": 5,
    "adventure": "1-5",
    "kind": "bowling",
    "conveyor": true,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -230,6 +999,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2,
@@ -245,16 +1015,24 @@
     4,
     5
    ],
+   "task_family": null,
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [],
+   "notes": "No registered native task family; probe deck/reset is diagnostic only."
   },
   {
    "level": 6,
    "adventure": "1-6",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -263,6 +1041,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2,
@@ -274,22 +1053,86 @@
     2,
     3
    ],
+   "task_family": {
+    "task_id": "day_l6_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [
     {
      "base": "day_l6_train_d7",
      "multiplier": 2.0,
-     "window_games": 240
+     "window_games": 240,
+     "latest_execution": {
+      "date": "2026-10-23T20:28:53",
+      "label": "c2d6d7m175",
+      "task": "day_l6_train_d7_m175",
+      "multiplier": 1.75,
+      "games": 48,
+      "wins": 42,
+      "source": "QL",
+      "line": 163,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 120,
+    "games": 128,
+    "task": "day_l6_eval_d7",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 122,
+    "games": 128,
+    "task": "day_l6_eval_d7",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l6_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l6_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "已过",
+   "bottleneck": null,
+   "bottleneck_certainty": "observed panel threshold only",
+   "bottleneck_sources": [],
+   "notes": ""
   },
   {
    "level": 7,
    "adventure": "1-7",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -298,6 +1141,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2,
@@ -309,27 +1153,127 @@
     2,
     3
    ],
+   "task_family": {
+    "task_id": "day_l7_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [
     {
      "base": "day_l7_train_d7",
      "multiplier": 1.75,
-     "window_games": 1184
+     "window_games": 1184,
+     "latest_execution": {
+      "date": "2026-10-23T20:39:39",
+      "label": "c2d7d7m150",
+      "task": "day_l7_train_d7_m150",
+      "multiplier": 1.5,
+      "games": 48,
+      "wins": 44,
+      "source": "QL",
+      "line": 165,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "day_l7_train_d7q",
      "multiplier": 1.0,
-     "window_games": 1152
+     "window_games": 1152,
+     "latest_execution": {
+      "date": "2026-10-24T03:47:50",
+      "label": "c3d7d7qm100",
+      "task": "day_l7_train_d7q",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 34,
+      "source": "QL",
+      "line": 177,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 101,
+    "games": 128,
+    "task": "day_l7_eval_d7",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 116,
+    "games": 128,
+    "task": "day_l7_eval_d7",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 16,
+    "games": 16,
+    "task": "day_l7_eval_d7",
+    "model": "dw4i_s1 + v4",
+    "source": "T52",
+    "date": "2026-10-24",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 16,
+    "games": 16,
+    "task": "day_l7_eval_d7",
+    "model": "dw4i_s1 + v4",
+    "source": "T52",
+    "date": "2026-10-24",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [
+    {
+     "wins": 32,
+     "games": 32,
+     "task": "day_l7_train_d7_m150",
+     "model": "dw4i_s1 + v4",
+     "source": "T50",
+     "date": "2026-10-24",
+     "multiplier": 1.5,
+     "seed_scope": "training gate"
+    },
+    {
+     "wins": 64,
+     "games": 64,
+     "task": "day_l7_eval_d7",
+     "model": "v32 + search (old)",
+     "source": "D",
+     "date": "2026-10-21",
+     "multiplier": 1.0
+    }
+   ],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 8,
    "adventure": "1-8",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -338,6 +1282,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2,
@@ -349,27 +1294,107 @@
     2,
     4
    ],
+   "task_family": {
+    "task_id": "day_l8_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [
     {
      "base": "day_l8_train_d7",
      "multiplier": 1.5,
-     "window_games": 1008
+     "window_games": 1008,
+     "latest_execution": {
+      "date": "2026-10-23T04:39:30",
+      "label": "c1d8d7m125",
+      "task": "day_l8_train_d7_m125",
+      "multiplier": 1.25,
+      "games": 48,
+      "wins": 46,
+      "source": "QL",
+      "line": 23,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "day_l8_train_d7q",
      "multiplier": 1.0,
-     "window_games": 822
+     "window_games": 822,
+     "latest_execution": {
+      "date": "2026-10-23T19:10:50",
+      "label": "c2d8d7qm100",
+      "task": "day_l8_train_d7q",
+      "multiplier": 1.0,
+      "games": 258,
+      "wins": 199,
+      "source": "QL",
+      "line": 145,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 112,
+    "games": 128,
+    "task": "day_l8_eval_d7",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 116,
+    "games": 128,
+    "task": "day_l8_eval_d7",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l8_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l8_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 9,
    "adventure": "1-9",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -378,6 +1403,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2,
@@ -391,27 +1417,107 @@
     3,
     4
    ],
+   "task_family": {
+    "task_id": "day_l9_eval_d7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "source": "R0"
+   },
    "qc": [
     {
      "base": "day_l9_train_d7",
      "multiplier": 1.5,
-     "window_games": 3035
+     "window_games": 3035,
+     "latest_execution": {
+      "date": "2026-10-23T05:12:48",
+      "label": "c1d9d7m125",
+      "task": "day_l9_train_d7_m125",
+      "multiplier": 1.25,
+      "games": 48,
+      "wins": 41,
+      "source": "QL",
+      "line": 25,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "day_l9_train_d7q",
      "multiplier": 1.0,
-     "window_games": 1440
+     "window_games": 1440,
+     "latest_execution": {
+      "date": "2026-10-24T03:12:34",
+      "label": "c3d9d7qm100",
+      "task": "day_l9_train_d7q",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 33,
+      "source": "QL",
+      "line": 173,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 98,
+    "games": 128,
+    "task": "day_l9_eval_d7",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 112,
+    "games": 128,
+    "task": "day_l9_eval_d7",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l9_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l9_eval_d7",
+    "model": "v32 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 10,
    "adventure": "1-10",
    "kind": "mini_boss",
    "conveyor": true,
-   "background": "BACKGROUND_1_DAY",
    "scene": {
     "terrain": 0,
     "night": false,
@@ -420,6 +1526,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_1_DAY",
    "allowed_roster": [
     0,
     2,
@@ -433,27 +1540,95 @@
     3,
     4
    ],
+   "task_family": {
+    "task_id": "day_l10_orig_eval",
+    "deck": [],
+    "conveyor_start": "original",
+    "playthrough": 2,
+    "source": "R5"
+   },
    "qc": [
     {
      "base": "day_l10_orig_train",
      "multiplier": 2.0,
-     "window_games": 450
+     "window_games": 450,
+     "latest_execution": {
+      "date": "2026-10-23T19:52:40",
+      "label": "c2d10origm175",
+      "task": "day_l10_orig_train_m175",
+      "multiplier": 1.75,
+      "games": 48,
+      "wins": 48,
+      "source": "QL",
+      "line": 153,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "day_l10_train_d7q",
      "multiplier": 1.5,
-     "window_games": 144
+     "window_games": 144,
+     "latest_execution": {
+      "date": "2026-10-23T20:05:38",
+      "label": "c2d10d7qm150",
+      "task": "day_l10_train_d7q_m150",
+      "multiplier": 1.5,
+      "games": 48,
+      "wins": 38,
+      "source": "QL",
+      "line": 155,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 127,
+    "games": 128,
+    "task": "day_l10_orig_eval",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 125,
+    "games": 128,
+    "task": "day_l10_orig_eval",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l10_orig_eval",
+    "model": "v34 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 64,
+    "games": 64,
+    "task": "day_l10_orig_eval",
+    "model": "v34 + search (old)",
+    "source": "D",
+    "date": "2026-10-21",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "已过",
+   "bottleneck": null,
+   "bottleneck_certainty": "observed panel threshold only",
+   "bottleneck_sources": [],
+   "notes": ""
   },
   {
    "level": 11,
    "adventure": "2-1",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -462,6 +1637,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     5
@@ -471,27 +1647,90 @@
     1,
     5
    ],
+   "task_family": {
+    "task_id": "night_l11_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l11_train_n10",
      "multiplier": 1.25,
-     "window_games": 48
+     "window_games": 48,
+     "latest_execution": {
+      "date": "2026-10-22T23:14:25",
+      "label": "c1n11n10m100",
+      "task": "night_l11_train_n10",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 48,
+      "source": "QL",
+      "line": 11,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "night_l11_train_n10q",
      "multiplier": 1.0,
-     "window_games": 0
+     "window_games": 0,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 126,
+    "games": 128,
+    "task": "night_l11_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 128,
+    "games": 128,
+    "task": "night_l11_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [
+    {
+     "wins": 13,
+     "games": 16,
+     "task": "night_l11_eval_n9",
+     "model": "identity + search (old)",
+     "source": "N",
+     "date": "2026-10-22",
+     "multiplier": 1.0,
+     "same_family": false
+    }
+   ],
+   "status": "已过",
+   "bottleneck": null,
+   "bottleneck_certainty": "observed panel threshold only",
+   "bottleneck_sources": [],
+   "notes": ""
   },
   {
    "level": 12,
    "adventure": "2-2",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -500,6 +1739,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -513,27 +1753,95 @@
     4,
     5
    ],
+   "task_family": {
+    "task_id": "night_l12_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l12_train_n10",
      "multiplier": 1.0,
-     "window_games": 1280
+     "window_games": 1280,
+     "latest_execution": {
+      "date": "2026-10-23T19:05:44",
+      "label": "c2n12n10m100",
+      "task": "night_l12_train_n10",
+      "multiplier": 1.0,
+      "games": 288,
+      "wins": 225,
+      "source": "QL",
+      "line": 143,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "night_l12_train_n10q",
      "multiplier": 1.0,
-     "window_games": 0
+     "window_games": 0,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 86,
+    "games": 128,
+    "task": "night_l12_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 104,
+    "games": 128,
+    "task": "night_l12_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [
+    {
+     "wins": 11,
+     "games": 16,
+     "task": "night_l12_eval_n9",
+     "model": "identity + search (old)",
+     "source": "N",
+     "date": "2026-10-22",
+     "multiplier": 1.0,
+     "same_family": false
+    }
+   ],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 13,
    "adventure": "2-3",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -542,6 +1850,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -553,27 +1862,90 @@
     2,
     6
    ],
+   "task_family": {
+    "task_id": "night_l13_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l13_train_n10",
      "multiplier": 1.0,
-     "window_games": 0
+     "window_games": 0,
+     "latest_execution": null
     },
     {
      "base": "night_l13_train_n10q",
      "multiplier": 1.25,
-     "window_games": 192
+     "window_games": 192,
+     "latest_execution": {
+      "date": "2026-10-23T19:24:12",
+      "label": "c2n13n10qm100",
+      "task": "night_l13_train_n10q",
+      "multiplier": 1.0,
+      "games": 144,
+      "wins": 124,
+      "source": "QL",
+      "line": 149,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 128,
+    "games": 128,
+    "task": "night_l13_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 126,
+    "games": 128,
+    "task": "night_l13_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [
+    {
+     "wins": 14,
+     "games": 16,
+     "task": "night_l13_eval_n9",
+     "model": "identity + search (old)",
+     "source": "N",
+     "date": "2026-10-22",
+     "multiplier": 1.0,
+     "same_family": false
+    }
+   ],
+   "status": "已过",
+   "bottleneck": null,
+   "bottleneck_certainty": "observed panel threshold only",
+   "bottleneck_sources": [],
+   "notes": ""
   },
   {
    "level": 14,
    "adventure": "2-4",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -582,6 +1954,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -595,27 +1968,132 @@
     3,
     6
    ],
+   "task_family": {
+    "task_id": "night_l14_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l14_train_n10",
      "multiplier": 1.0,
-     "window_games": 1666
+     "window_games": 1666,
+     "latest_execution": {
+      "date": "2026-10-24T03:36:25",
+      "label": "c3n14n10m100",
+      "task": "night_l14_train_n10",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 35,
+      "source": "QL",
+      "line": 175,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "night_l14_train_n10q",
      "multiplier": 1.0,
-     "window_games": 48
+     "window_games": 48,
+     "latest_execution": {
+      "date": "2026-10-23T14:25:12",
+      "label": "c2n14n10qm100",
+      "task": "night_l14_train_n10q",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 15,
+      "source": "QL",
+      "line": 91,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 62,
+    "games": 128,
+    "task": "night_l14_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 87,
+    "games": 128,
+    "task": "night_l14_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 32,
+    "games": 32,
+    "task": "night_l14_train_n10",
+    "model": "dw4i_s1 + v4",
+    "source": "T50",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "seed_scope": "training gate"
+   },
+   "teacher_panel": {
+    "wins": 32,
+    "games": 32,
+    "task": "night_l14_train_n10",
+    "model": "dw4i_s1 + v4",
+    "source": "T50",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "seed_scope": "training gate"
+   },
+   "teacher_other_tasks": [
+    {
+     "wins": 9,
+     "games": 16,
+     "task": "night_l14_eval_n9",
+     "model": "identity + search (old)",
+     "source": "N",
+     "date": "2026-10-22",
+     "multiplier": 1.0,
+     "same_family": false
+    },
+    {
+     "wins": 31,
+     "games": 32,
+     "task": "night_l14_eval_n10",
+     "model": "dw4i_s1 + v4",
+     "source": "TV4",
+     "date": "2026-10-23",
+     "multiplier": 1.0
+    }
+   ],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 15,
    "adventure": "2-5",
    "kind": "whack",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -624,6 +2102,7 @@
     "roof": false,
     "wave_count": 8
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -636,16 +2115,24 @@
     4,
     5
    ],
+   "task_family": null,
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [],
+   "notes": "No registered native task family; probe deck/reset is diagnostic only."
   },
   {
    "level": 16,
    "adventure": "2-6",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -654,6 +2141,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -665,27 +2153,100 @@
     2,
     7
    ],
+   "task_family": {
+    "task_id": "night_l16_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l16_train_n10",
      "multiplier": 1.25,
-     "window_games": 48
+     "window_games": 48,
+     "latest_execution": {
+      "date": "2026-10-23T16:21:24",
+      "label": "c2n16n10m100",
+      "task": "night_l16_train_n10",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 48,
+      "source": "QL",
+      "line": 107,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "night_l16_train_n10q",
      "multiplier": 1.25,
-     "window_games": 144
+     "window_games": 144,
+     "latest_execution": {
+      "date": "2026-10-23T19:17:47",
+      "label": "c2n16n10qm100",
+      "task": "night_l16_train_n10q",
+      "multiplier": 1.0,
+      "games": 96,
+      "wins": 86,
+      "source": "QL",
+      "line": 147,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 128,
+    "games": 128,
+    "task": "night_l16_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 128,
+    "games": 128,
+    "task": "night_l16_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [
+    {
+     "wins": 11,
+     "games": 16,
+     "task": "night_l16_eval_n9",
+     "model": "identity + search (old)",
+     "source": "N",
+     "date": "2026-10-22",
+     "multiplier": 1.0,
+     "same_family": false
+    }
+   ],
+   "status": "已过",
+   "bottleneck": null,
+   "bottleneck_certainty": "observed panel threshold only",
+   "bottleneck_sources": [],
+   "notes": ""
   },
   {
    "level": 17,
    "adventure": "2-7",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -694,6 +2255,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -707,27 +2269,110 @@
     6,
     7
    ],
+   "task_family": {
+    "task_id": "night_l17_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l17_train_n10",
      "multiplier": 1.0,
-     "window_games": 704
+     "window_games": 704,
+     "latest_execution": {
+      "date": "2026-10-23T19:37:59",
+      "label": "c2n17n10m100",
+      "task": "night_l17_train_n10",
+      "multiplier": 1.0,
+      "games": 240,
+      "wins": 129,
+      "source": "QL",
+      "line": 151,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "night_l17_train_n10q",
      "multiplier": 1.0,
-     "window_games": 48
+     "window_games": 48,
+     "latest_execution": {
+      "date": "2026-10-23T18:28:10",
+      "label": "c2n17n10qm100",
+      "task": "night_l17_train_n10q",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 13,
+      "source": "QL",
+      "line": 135,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 64,
+    "games": 128,
+    "task": "night_l17_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 65,
+    "games": 128,
+    "task": "night_l17_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 31,
+    "games": 32,
+    "task": "night_l17_eval_n10",
+    "model": "dw4i_s1 + v4",
+    "source": "TV4",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 31,
+    "games": 32,
+    "task": "night_l17_eval_n10",
+    "model": "dw4i_s1 + v4",
+    "source": "TV4",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 18,
    "adventure": "2-8",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -736,6 +2381,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -747,27 +2393,94 @@
     2,
     8
    ],
+   "task_family": {
+    "task_id": "night_l18_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l18_train_n10",
      "multiplier": 1.25,
-     "window_games": 176
+     "window_games": 176,
+     "latest_execution": {
+      "date": "2026-10-24T02:52:36",
+      "label": "c3n18n10m100",
+      "task": "night_l18_train_n10",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 44,
+      "source": "QL",
+      "line": 171,
+      "dagger_beta": 0
+     }
     },
     {
      "base": "night_l18_train_n10q",
      "multiplier": 1.0,
-     "window_games": 48
+     "window_games": 48,
+     "latest_execution": {
+      "date": "2026-10-24T04:35:55",
+      "label": "c3n18n10qm100",
+      "task": "night_l18_train_n10q",
+      "multiplier": 1.0,
+      "games": 48,
+      "wins": 32,
+      "source": "QL",
+      "line": 184,
+      "dagger_beta": 0
+     }
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 121,
+    "games": 128,
+    "task": "night_l18_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 121,
+    "games": 128,
+    "task": "night_l18_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 19,
    "adventure": "2-9",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -776,6 +2489,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -789,27 +2503,74 @@
     6,
     8
    ],
+   "task_family": {
+    "task_id": "night_l19_eval_n10",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l19_train_n10",
      "multiplier": 1.0,
-     "window_games": 128
+     "window_games": 128,
+     "latest_execution": null
     },
     {
      "base": "night_l19_train_n10q",
      "multiplier": 1.0,
-     "window_games": 0
+     "window_games": 0,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 40,
+    "games": 128,
+    "task": "night_l19_eval_n10",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 59,
+    "games": 128,
+    "task": "night_l19_eval_n10",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "工程",
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "notes": ""
   },
   {
    "level": 20,
    "adventure": "2-10",
    "kind": "mini_boss",
    "conveyor": true,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -818,6 +2579,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2,
@@ -833,22 +2595,69 @@
     7,
     8
    ],
+   "task_family": {
+    "task_id": "night_l20_eval_n10_orig",
+    "deck": [],
+    "conveyor_start": "original",
+    "playthrough": 2,
+    "source": "R1"
+   },
    "qc": [
     {
      "base": "night_l20_train_n10_orig",
      "multiplier": 1.0,
-     "window_games": 32
+     "window_games": 32,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 128,
+    "task": "night_l20_eval_n10_orig",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 128,
+    "task": "night_l20_eval_n10_orig",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 29,
+    "games": 32,
+    "task": "night_l20_eval_n10_orig",
+    "model": "dw4i_s1 + v4",
+    "source": "TV4",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 29,
+    "games": 32,
+    "task": "night_l20_eval_n10_orig",
+    "model": "dw4i_s1 + v4",
+    "source": "TV4",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": null,
+   "bottleneck_certainty": "training/evaluation gap; not proof of simulator fault",
+   "bottleneck_sources": [],
+   "notes": ""
   },
   {
    "level": 21,
    "adventure": "3-1",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -857,6 +2666,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2
@@ -866,22 +2676,94 @@
     1,
     2
    ],
+   "task_family": {
+    "task_id": "pool_l21_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l21_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 42,
+    "games": 64,
+    "task": "pool_l21_eval_p9k",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 1,
+    "games": 64,
+    "task": "pool_l21_eval_p9k",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 17,
+    "games": 32,
+    "task": "pool_l21_train_p9k",
+    "model": "dw4i_s1 + v4",
+    "source": "T50",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "seed_scope": "training gate"
+   },
+   "teacher_panel": {
+    "wins": 17,
+    "games": 32,
+    "task": "pool_l21_train_p9k",
+    "model": "dw4i_s1 + v4",
+    "source": "T50",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "seed_scope": "training gate"
+   },
+   "teacher_other_tasks": [
+    {
+     "wins": 19,
+     "games": 32,
+     "task": "pool_l21_eval_p9k",
+     "model": "dw4i_s1 + v4",
+     "source": "TV4",
+     "date": "2026-10-23",
+     "multiplier": 1.0
+    }
+   ],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "SA",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 22,
    "adventure": "3-2",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -890,6 +2772,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -905,22 +2788,82 @@
     5,
     7
    ],
+   "task_family": {
+    "task_id": "pool_l22_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l22_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 33,
+    "games": 64,
+    "task": "pool_l22_eval_p9k",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 1,
+    "games": 64,
+    "task": "pool_l22_eval_p9k",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 5,
+    "games": 16,
+    "task": "pool_l22_eval_p9k",
+    "model": "identity + search (old)",
+    "source": "P",
+    "date": "2026-10-22",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 5,
+    "games": 16,
+    "task": "pool_l22_eval_p9k",
+    "model": "identity + search (old)",
+    "source": "P",
+    "date": "2026-10-22",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "SA",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 23,
    "adventure": "3-3",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -929,6 +2872,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -940,22 +2884,82 @@
     2,
     11
    ],
+   "task_family": {
+    "task_id": "pool_l23_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l23_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 27,
+    "games": 64,
+    "task": "pool_l23_eval_p9k",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 64,
+    "task": "pool_l23_eval_p9k",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 4,
+    "games": 16,
+    "task": "pool_l23_eval_p9k",
+    "model": "identity + search (old)",
+    "source": "P",
+    "date": "2026-10-22",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 4,
+    "games": 16,
+    "task": "pool_l23_eval_p9k",
+    "model": "identity + search (old)",
+    "source": "P",
+    "date": "2026-10-22",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "SA",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 24,
    "adventure": "3-4",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -964,6 +2968,7 @@
     "roof": false,
     "wave_count": 40
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -981,22 +2986,81 @@
     5,
     11
    ],
+   "task_family": {
+    "task_id": "pool_l24_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l24_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 12,
+    "games": 64,
+    "task": "pool_l24_eval_p9k",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 64,
+    "task": "pool_l24_eval_p9k",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 3,
+    "games": 32,
+    "task": "pool_l24_eval_p9k",
+    "model": "dw4i_s1 + v4",
+    "source": "TV4",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 3,
+    "games": 32,
+    "task": "pool_l24_eval_p9k",
+    "model": "dw4i_s1 + v4",
+    "source": "TV4",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "叶值压平",
+   "bottleneck_certainty": "v4 dispersion diagnosis covers these levels",
+   "bottleneck_sources": [
+    "TV4",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 25,
    "adventure": "3-5",
    "kind": "little_trouble",
    "conveyor": true,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -1005,6 +3069,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -1018,16 +3083,24 @@
     7,
     11
    ],
+   "task_family": null,
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [],
+   "notes": "No registered native task family; probe deck/reset is diagnostic only."
   },
   {
    "level": 26,
    "adventure": "3-6",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -1036,6 +3109,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -1049,22 +3123,81 @@
     12,
     13
    ],
+   "task_family": {
+    "task_id": "pool_l26_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l26_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 12,
+    "games": 64,
+    "task": "pool_l26_eval_p9k",
+    "model": "dw5i_A_s1 (not deployed)",
+    "source": "SA",
+    "date": "2026-10-24T00:41:40+0800",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 64,
+    "task": "pool_l26_eval_p9k",
+    "model": "dw4i_s1",
+    "source": "S27",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 2,
+    "games": 16,
+    "task": "pool_l26_eval_p9k",
+    "model": "identity + search (old)",
+    "source": "P",
+    "date": "2026-10-22",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 2,
+    "games": 16,
+    "task": "pool_l26_eval_p9k",
+    "model": "identity + search (old)",
+    "source": "P",
+    "date": "2026-10-22",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "叶值压平",
+   "bottleneck_certainty": "v4 dispersion diagnosis covers these levels",
+   "bottleneck_sources": [
+    "TV4",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 27,
    "adventure": "3-7",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -1073,6 +3206,7 @@
     "roof": false,
     "wave_count": 40
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -1090,22 +3224,50 @@
     12,
     13
    ],
+   "task_family": {
+    "task_id": "pool_l27_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l27_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "SA",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 28,
    "adventure": "3-8",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -1114,6 +3276,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -1125,22 +3288,50 @@
     2,
     14
    ],
+   "task_family": {
+    "task_id": "pool_l28_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l28_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "SA",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 29,
    "adventure": "3-9",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -1149,6 +3340,7 @@
     "roof": false,
     "wave_count": 40
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -1168,22 +3360,50 @@
     13,
     14
    ],
+   "task_family": {
+    "task_id": "pool_l29_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [
     {
      "base": "pool_l29_train_p9k",
      "multiplier": 1.0,
-     "window_games": 160
+     "window_games": 160,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "SA",
+    "D43"
+   ],
+   "notes": ""
   },
   {
    "level": 30,
    "adventure": "3-10",
    "kind": "mini_boss",
    "conveyor": true,
-   "background": "BACKGROUND_3_POOL",
    "scene": {
     "terrain": 2,
     "night": false,
@@ -1192,6 +3412,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_3_POOL",
    "allowed_roster": [
     0,
     2,
@@ -1211,16 +3432,39 @@
     13,
     14
    ],
+   "task_family": {
+    "task_id": "pool_l30_eval_p9k",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "source": "R2"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [],
+   "notes": "Registered fixed initial-hand task; native conveyor continues. Not original conveyor-start semantics."
   },
   {
    "level": 31,
    "adventure": "4-1",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1229,6 +3473,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1240,16 +3485,85 @@
     2,
     15
    ],
+   "task_family": {
+    "task_id": "fog_l31_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l31_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l31_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l31_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "T52",
+    "date": "2026-10-24",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l31_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "T52",
+    "date": "2026-10-24",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [
+    {
+     "wins": 0,
+     "games": 16,
+     "task": "fog_l31_eval_f8",
+     "model": "dw4i_s1 + v4",
+     "source": "TF",
+     "date": "2026-10-23",
+     "multiplier": 1.0
+    }
+   ],
+   "status": "冷启动全败",
+   "bottleneck": "叶值压平",
+   "bottleneck_certainty": "human/xray controls and candidate-gap diagnosis",
+   "bottleneck_sources": [
+    "TF",
+    "D45",
+    "T52"
+   ],
+   "notes": ""
   },
   {
    "level": 32,
    "adventure": "4-2",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1258,6 +3572,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1271,16 +3586,75 @@
     7,
     15
    ],
+   "task_family": {
+    "task_id": "fog_l32_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l32_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l32_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l32_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l32_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "冷启动全败",
+   "bottleneck": "叶值压平",
+   "bottleneck_certainty": "human/xray controls and candidate-gap diagnosis",
+   "bottleneck_sources": [
+    "TF",
+    "D45",
+    "T52"
+   ],
+   "notes": ""
   },
   {
    "level": 33,
    "adventure": "4-3",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1289,6 +3663,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1300,16 +3675,75 @@
     2,
     16
    ],
+   "task_family": {
+    "task_id": "fog_l33_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l33_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l33_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l33_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l33_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "冷启动全败",
+   "bottleneck": "叶值压平",
+   "bottleneck_certainty": "human/xray controls and candidate-gap diagnosis",
+   "bottleneck_sources": [
+    "TF",
+    "D45",
+    "T52"
+   ],
+   "notes": ""
   },
   {
    "level": 34,
    "adventure": "4-4",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1318,6 +3752,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1331,16 +3766,75 @@
     14,
     16
    ],
+   "task_family": {
+    "task_id": "fog_l34_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l34_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l34_eval_f8",
+    "model": "dw4i_s1",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l34_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 0,
+    "games": 16,
+    "task": "fog_l34_eval_f8",
+    "model": "dw4i_s1 + v4",
+    "source": "TF",
+    "date": "2026-10-23",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [],
+   "status": "冷启动全败",
+   "bottleneck": "叶值压平",
+   "bottleneck_certainty": "human/xray controls and candidate-gap diagnosis",
+   "bottleneck_sources": [
+    "TF",
+    "D45",
+    "T52"
+   ],
+   "notes": ""
   },
   {
    "level": 35,
    "adventure": "4-5",
    "kind": "vasebreaker",
    "conveyor": false,
-   "background": "BACKGROUND_2_NIGHT",
    "scene": {
     "terrain": 1,
     "night": true,
@@ -1349,6 +3843,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_2_NIGHT",
    "allowed_roster": [
     0,
     2
@@ -1358,16 +3853,24 @@
     1,
     2
    ],
+   "task_family": null,
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [],
+   "notes": "No registered native task family; probe deck/reset is diagnostic only."
   },
   {
    "level": 36,
    "adventure": "4-6",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1376,6 +3879,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1387,16 +3891,42 @@
     2,
     17
    ],
+   "task_family": {
+    "task_id": "fog_l36_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "TF",
+    "D45"
+   ],
+   "notes": ""
   },
   {
    "level": 37,
    "adventure": "4-7",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1405,6 +3935,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1420,16 +3951,42 @@
     15,
     17
    ],
+   "task_family": {
+    "task_id": "fog_l37_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "TF",
+    "D45"
+   ],
+   "notes": ""
   },
   {
    "level": 38,
    "adventure": "4-8",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1438,6 +3995,7 @@
     "roof": false,
     "wave_count": 20
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1449,16 +4007,42 @@
     2,
     18
    ],
+   "task_family": {
+    "task_id": "fog_l38_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "TF",
+    "D45"
+   ],
+   "notes": ""
   },
   {
    "level": 39,
    "adventure": "4-9",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1467,6 +4051,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1482,16 +4067,42 @@
     16,
     18
    ],
+   "task_family": {
+    "task_id": "fog_l39_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "TF",
+    "D45"
+   ],
+   "notes": ""
   },
   {
    "level": 40,
    "adventure": "4-10",
    "kind": "stormy_night",
    "conveyor": true,
-   "background": "BACKGROUND_4_FOG",
    "scene": {
     "terrain": 3,
     "night": true,
@@ -1500,6 +4111,7 @@
     "roof": false,
     "wave_count": 30
    },
+   "background": "BACKGROUND_4_FOG",
    "allowed_roster": [
     0,
     2,
@@ -1521,16 +4133,39 @@
     18,
     19
    ],
+   "task_family": {
+    "task_id": "fog_l40_eval_f8",
+    "deck": [
+     0,
+     9,
+     2,
+     3,
+     4,
+     5,
+     16,
+     43
+    ],
+    "playthrough": 2,
+    "fog_observation": "human",
+    "source": "R3"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [],
+   "notes": "Registered fixed initial-hand task; native conveyor continues. Not original conveyor-start semantics."
   },
   {
    "level": 41,
    "adventure": "5-1",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1539,6 +4174,7 @@
     "roof": true,
     "wave_count": 20
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1551,22 +4187,93 @@
     2,
     20
    ],
+   "task_family": {
+    "task_id": "roof_l41_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [
     {
      "base": "roof_l41_train_r7",
      "multiplier": 1.0,
-     "window_games": 0
+     "window_games": 0,
+     "latest_execution": null
     }
    ],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 8,
+    "games": 16,
+    "task": "roof_l41_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "student_current": {
+    "wins": 8,
+    "games": 16,
+    "task": "roof_l41_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_latest": {
+    "wins": 13,
+    "games": 16,
+    "task": "roof_l41_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "T52",
+    "date": "2026-10-24",
+    "multiplier": 1.0
+   },
+   "teacher_panel": {
+    "wins": 13,
+    "games": 16,
+    "task": "roof_l41_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "T52",
+    "date": "2026-10-24",
+    "multiplier": 1.0
+   },
+   "teacher_other_tasks": [
+    {
+     "wins": 15,
+     "games": 16,
+     "task": "roof_l41_eval_r7",
+     "model": "dw4i_s1 + v4",
+     "source": "TR",
+     "date": "2026-10-23",
+     "multiplier": 1.0,
+     "original_conveyor": false
+    }
+   ],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 42,
    "adventure": "5-2",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1575,6 +4282,7 @@
     "roof": true,
     "wave_count": 30
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1591,16 +4299,78 @@
     4,
     20
    ],
+   "task_family": {
+    "task_id": "roof_l42_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l42_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l42_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 4,
+    "task": "roof_l42_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": {
+    "wins": 4,
+    "games": 16,
+    "task": "roof_l42_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 43,
    "adventure": "5-3",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1609,6 +4379,7 @@
     "roof": true,
     "wave_count": 30
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1621,16 +4392,78 @@
     2,
     21
    ],
+   "task_family": {
+    "task_id": "roof_l43_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l43_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l43_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 4,
+    "task": "roof_l43_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": {
+    "wins": 2,
+    "games": 16,
+    "task": "roof_l43_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 44,
    "adventure": "5-4",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1639,6 +4472,7 @@
     "roof": true,
     "wave_count": 40
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1655,16 +4489,78 @@
     18,
     21
    ],
+   "task_family": {
+    "task_id": "roof_l44_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l44_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l44_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 4,
+    "task": "roof_l44_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l44_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_other_tasks": [],
+   "status": "冷启动全败",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 45,
    "adventure": "5-5",
    "kind": "bungee",
    "conveyor": true,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1673,6 +4569,7 @@
     "roof": true,
     "wave_count": 30
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1688,16 +4585,74 @@
     20,
     21
    ],
+   "task_family": {
+    "task_id": "roof_l45_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l45_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "student_current": {
+    "wins": 0,
+    "games": 16,
+    "task": "roof_l45_eval_r7",
+    "model": "dw4i_s1",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_latest": {
+    "wins": 0,
+    "games": 4,
+    "task": "roof_l45_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": {
+    "wins": 2,
+    "games": 16,
+    "task": "roof_l45_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR",
+    "date": "2026-10-23",
+    "multiplier": 1.0,
+    "original_conveyor": false
+   },
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [],
+   "notes": "Registered fixed initial-hand task; native conveyor continues. Not original conveyor-start semantics."
   },
   {
    "level": 46,
    "adventure": "5-6",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1706,6 +4661,7 @@
     "roof": true,
     "wave_count": 30
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1718,16 +4674,51 @@
     2,
     22
    ],
+   "task_family": {
+    "task_id": "roof_l46_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": {
+    "wins": 1,
+    "games": 4,
+    "task": "roof_l46_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 47,
    "adventure": "5-7",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1736,6 +4727,7 @@
     "roof": true,
     "wave_count": 40
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1752,16 +4744,51 @@
     21,
     22
    ],
+   "task_family": {
+    "task_id": "roof_l47_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": {
+    "wins": 0,
+    "games": 4,
+    "task": "roof_l47_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 48,
    "adventure": "5-8",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1770,6 +4797,7 @@
     "roof": true,
     "wave_count": 30
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1782,16 +4810,51 @@
     2,
     23
    ],
+   "task_family": {
+    "task_id": "roof_l48_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": {
+    "wins": 0,
+    "games": 4,
+    "task": "roof_l48_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 49,
    "adventure": "5-9",
    "kind": "ordinary",
    "conveyor": false,
-   "background": "BACKGROUND_5_ROOF",
    "scene": {
     "terrain": 4,
     "night": false,
@@ -1800,6 +4863,7 @@
     "roof": true,
     "wave_count": 40
    },
+   "background": "BACKGROUND_5_ROOF",
    "allowed_roster": [
     0,
     2,
@@ -1822,16 +4886,51 @@
     22,
     23
    ],
+   "task_family": {
+    "task_id": "roof_l49_eval_r7",
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     32,
+     35,
+     33
+    ],
+    "playthrough": 2,
+    "source": "R4"
+   },
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": {
+    "wins": 0,
+    "games": 4,
+    "task": "roof_l49_eval_r7",
+    "model": "dw4i_s1 + v4",
+    "source": "TR2",
+    "date": "2026-10-24",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "seed_scope": "45000000..45000003; overlaps cold panel"
+   },
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "在练",
+   "bottleneck": "冷启动无数据",
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "notes": ""
   },
   {
    "level": 50,
    "adventure": "5-10",
    "kind": "boss",
    "conveyor": true,
-   "background": "BACKGROUND_6_BOSS",
    "scene": {
     "terrain": 5,
     "night": true,
@@ -1840,6 +4939,7 @@
     "roof": true,
     "wave_count": 40
    },
+   "background": "BACKGROUND_6_BOSS",
    "allowed_roster": [
     0,
     2,
@@ -1863,16 +4963,23 @@
     23,
     25
    ],
+   "task_family": null,
    "qc": [],
-   "engine_reset_ok": true,
-   "engine_one_tick_ok": true
+   "student_latest": null,
+   "student_current": null,
+   "teacher_latest": null,
+   "teacher_panel": null,
+   "teacher_other_tasks": [],
+   "status": "未接入",
+   "bottleneck": null,
+   "bottleneck_certainty": "current-model training coverage or unmeasured level; not a proof of impossibility",
+   "bottleneck_sources": [],
+   "notes": "No registered native task family; probe deck/reset is diagnostic only."
   }
  ],
  "pending": [
-  "latest student and beta1 teacher evidence",
-  "current deck family audit",
-  "special action and observation gaps",
-  "bottleneck classification",
-  "priority recommendation and completion verification"
+  "special action/observation audit",
+  "evidence-linked bottleneck notes and priority proposal",
+  "completion verification"
  ]
 }
