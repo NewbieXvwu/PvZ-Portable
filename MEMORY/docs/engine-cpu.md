@@ -141,6 +141,26 @@ im2col，只比矩阵核。激活按层标定（整张输入张量一个 u8 尺�
 
 合并后构建相对 step9 二进制的配对比值中位数 **0.92**（4 轮，单轮 1.175 / 0.785 / 0.933 / 0.909，噪声大），
 即合并+第 11–13 项之后比 step9 快约 8%。
+## 整局基准：新旧构建同种子对照（A2）
+
+验收数字是**正式采集的整局吞吐**，不是 64 root 的 tick 率，所以这里用 `scripts/bench_engine.py games`：
+同一个 `search_play`、同一份任务清单（`cq/artifacts/stage4/multiplier_panel.json`）、同一批种子（offset 0、每族 8 局），
+先新构建后旧构建，逐族取比值。参数照 qc 的 `command_for`（`--verify-samples 9 --student-candidates 2`、
+`--static-value value_branch1`、`--value v3`、`--dagger-beta 0`、`--workers 2`），但**不写 frames 归档**：
+归档是采集端的成本（task33 负责），两边都不写，比的是引擎 CPU。
+
+计时口径：`RUSAGE_CHILDREN` 的 CPU 秒（worker 池与其引擎子进程都算在内）。本机长期被采集队列占满（load 21–32），
+wall 会被抢占放大，CPU 秒才是能跨构建比较的量。
+
+| 任务族（m150） | 新构建 CPU s/局 | 旧构建 CPU s/局 | 旧/新 | 新 games/h | 旧 games/h | 逐种子结果 |
+|---|---:|---:|---:|---:|---:|---|
+| 白天 L7 `day_l7_train_d7_m150` | 149.3 | 236.7 | **1.586×** | 24.12 | 15.21 | 8/8 相同（全胜，1213 决策） |
+| 夜间 L14 `night_l14_train_n10_m150` | 待填 | 待填 | | | | |
+| 泳池 L24 `pool_l24_train_p9k_m150` | 待填 | 待填 | | | | |
+| 传送带 L10 `day_l10_orig_train_m150` | 待填 | 待填 | | | | |
+
+旧构建是 `cq` 工作树的二进制（`pvz-env` 合并前，只读、未重编）。逐种子结果（胜/负、末波、决策数）两边完全一致，
+所以比值不是“新构建少算了什么”换来的。
 ## 部署（给主控：在 cq 工作树上一次做完）
 
 本分支的引擎加速全部是**默认构建**的一部分，没有新增运行开关：LTO、PGO、mimalloc、

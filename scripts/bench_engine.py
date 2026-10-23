@@ -605,8 +605,9 @@ def games(args) -> dict:
         old_seeds = {int(row["seed"]): row for row in entry["old"]["rows"]}
         entry["differing_seeds"] = [seed for seed in sorted(new_seeds) if new_seeds[seed] != old_seeds.get(seed)]
         report["tasks"].append(entry)
-        print(json.dumps({key: entry[key] for key in ("task_id", "cpu_ratio_old_over_new",
-                          "games_per_hour_new", "games_per_hour_old", "differing_seeds")}), flush=True)
+        # Print the whole entry, not just the ratio: a killed run must still leave the numbers
+        # of the tasks it did finish in the log.
+        print(json.dumps(entry), flush=True)
     (out / "engine_games.json").write_text(json.dumps(report, indent=1) + "\n")
     print(f"-> {out / 'engine_games.json'}")
     return report
