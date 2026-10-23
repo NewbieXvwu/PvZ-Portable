@@ -182,7 +182,7 @@ def report():
         g=group(job,samples=job['samples']);g['attribution']=attribution(g);groups.append(g)
     value=dict(schema_version=1,status='complete',sampling_sha256=diag.sha(OUT/'selection-active.json'),
         overall=aggregate(groups),by_level={},groups=groups,
-        cpu_seconds_metered=diag.spent_cpu(),cpu_allowance_seconds=600,
+        cpu_seconds_metered=diag.spent_cpu(),cpu_allowance_seconds=1200,
         frozen_inputs=diag.check_plan(),raw_directory=str(OUT/'episodes'),
         inference_limit='Only preregistered root/common-future cohort; report wins/wave/tick separately. Terminal continuation is frozen teacher, short v4 leaf is 2500-tick student.')
     for level in diag.check_plan()['spec']['levels']:
