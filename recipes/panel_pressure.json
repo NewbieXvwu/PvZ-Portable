@@ -25,5 +25,6 @@
   "day_orig_manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor/artifacts/stage4/day_panel.json",
   "pool_manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
   "pressure_manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/recipe/artifacts/task29/pressure_manifest.json",
-  "rollout_policy": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/dw5i_s1/model.pt"
+  "rollout_policy": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/dw5i_s1/model.pt",
+  "version": "v1"
 }

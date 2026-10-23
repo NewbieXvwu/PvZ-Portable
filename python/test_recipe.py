@@ -74,6 +74,46 @@ class RecipeTests(unittest.TestCase):
             self.assertEqual(seed_private_cache(recipe)['copied_files'], 0)
             self.assertEqual(destination.read_bytes(), b'original cached bytes')
 
+    def test_full_200_step_observer_with_source_row_report(self):
+        import hashlib
+        import json
+        import sys
+        from unittest.mock import patch
+        sys.path.insert(0, str(ROOT / 'scripts'))
+        from test_identity_training import IdentityTrainingTest
+        import verify_recipe_migration as verifier
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            IdentityTrainingTest().fixture(root / 'data')
+            source = root / 'command.json'
+            command = ['python', str(ROOT / 'scripts/train_rollout_policy.py'),
+                       '--data', str(root / 'data'), '--labels', 'example', '--out', str(root / 'old'),
+                       '--cache-dir', str(root / 'cache'), '--precompute-workers', '1',
+                       '--epochs', '205', '--width', '8', '--seed', '1', '--obs', 'v2',
+                       '--packet-head', 'identity', '--pool', 'meanmax', '--row-pool',
+                       '--packet-balance', '.5', '--cell-soft-weight', '3', '--spread-weight', '8',
+                       '--source-row-report', str(root / 'old/source_rows.json')]
+            source.write_text(json.dumps(dict(command=command)))
+            recipe = dict(schema_version=1, kind='training', data=str(root / 'data'),
+                          labels=['example'], out=str(root / 'new'), cache_dir=str(root / 'cache'),
+                          epochs=205, width=8, seed=1, obs='v2', packet_head='identity', pool='meanmax',
+                          row_pool=True, packet_balance=.5, cell_soft_weight=3, spread_weight=8,
+                          source_row_report=True, provenance=dict(source_path=str(source),
+                          source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                          original_cache_dir=str(root / 'absent')))
+            path = root / 'recipe.json'
+            write_recipe(path, recipe)
+            out = root / 'parity'
+            out.mkdir()
+            with patch.object(verifier, 'audit_source', return_value={}), \
+                 patch.object(verifier, 'foreign_trainers', return_value=[]):
+                verifier.verify(path, out)
+            evidence = json.loads((out / 'parity.json').read_text())
+            self.assertTrue(evidence['passed'])
+            self.assertEqual(evidence['steps'], 200)
+            self.assertEqual(len(evidence['traces']['legacy']['losses']), 200)
+            self.assertEqual(len(evidence['traces']['recipe']['losses']), 200)
+
     def test_historical_recipes_resolve_all_training_settings(self):
         for name, labels in [('dw4i',170),('dw5i',281),('identity_dw3_s1',82)]:
             recipe = load_recipe(ROOT/f'recipes/{name}.json', 'training')

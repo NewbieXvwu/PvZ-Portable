@@ -10,6 +10,7 @@ import ast
 from collections import Counter
 import gc
 import hashlib
+import inspect
 import json
 import os
 from pathlib import Path
@@ -60,7 +61,7 @@ def legacy_module(revision, parse_only=False):
             for statement in ast.walk(node):
                 if isinstance(statement, ast.For) and isinstance(statement.target, ast.Name) and statement.target.id == 'start':
                     # Observer at the same point as the recipe trainer: immediately after loss calculation.
-                    statement.body.insert(1, ast.parse('observer(completed_steps + 1, float(loss.detach()))').body[0])
+                    statement.body.insert(1, ast.parse('loss_observer(completed_steps + 1, float(loss.detach()))').body[0])
     scope = {'__file__':str(ROOT/'scripts/train_rollout_policy.py'), '__name__':'historical_training'}
     exec(compile(ast.fix_missing_locations(tree), '<historical-training>', 'exec'), scope)
     return scope
@@ -156,6 +157,7 @@ def verify(recipe_path, out):
     record = json.loads(record_path.read_text())
     baseline = legacy_module('6fdee2af')
     baseline['Metrics'] = QuietMetrics
+    original_metrics, original_load, original_argv = current.Metrics, current.load, sys.argv
     current.Metrics = QuietMetrics
     command = record['command'][1:]
     command[0] = str(ROOT/'scripts/train_rollout_policy.py')
@@ -168,7 +170,8 @@ def verify(recipe_path, out):
     payload = None
     payload_key = None
     observations = []
-    real_load = baseline['load']
+    legacy_signature = inspect.signature(baseline['load'])
+    current_signature = inspect.signature(current.load)
     def freeze(value):
         if isinstance(value, dict):
             return tuple(sorted((key,freeze(item)) for key,item in value.items()))
@@ -177,26 +180,65 @@ def verify(recipe_path, out):
         if isinstance(value, (list,tuple)):
             return tuple(freeze(item) for item in value)
         return str(value) if isinstance(value, Path) else value
-    def cached_load(*args, **kwargs):
+    def cached_load(mode, *args, **kwargs):
         nonlocal payload, payload_key
-        observer = kwargs.pop('row_observer',None)
-        key = freeze((args, kwargs))
+        signature = legacy_signature if mode == 'legacy' else current_signature
+        request = signature.bind(*args, **kwargs)
+        request.apply_defaults()
+        fields = dict(request.arguments)
+        observer = fields.pop('row_observer', None)
+        # Compare every semantic loader argument across both interfaces. Cache and
+        # representation controls disappeared with task33; they do not select rows.
+        for field in ('cache_dir', 'read_cache_dir', 'precompute_workers', 'dense_boards'):
+            fields.pop(field, None)
+        key = freeze(fields)
         if payload is None:
             payload_key = key
+            from pack_training_rows import pack
+            from pvz_training_pack import archive_fingerprint, pack_options
+            data = fields.pop('data')
+            options = pack_options(**fields, sources=archive_fingerprint(data, fields['labels']))
+            packed = out / 'rows.npz'
+            # A restart never trusts an incomplete pack; build to a temporary name,
+            # then publish only after np.savez has closed it successfully.
+            temporary = out / 'rows.building.npz'
+            pack(data, options, Path(recipe['cache_dir']), 1,
+                 Path(recipe['read_cache_dir']) if recipe['read_cache_dir'] else None, temporary)
+            os.replace(temporary, packed)
             def capture(path, rows):
-                observations.append((path,rows.copy()))
+                observations.append((path, rows.copy()))
                 if observer is not None:
-                    observer(path,rows)
-            payload = real_load(*args,**kwargs,row_observer=capture)
+                    observer(path, rows)
+            payload = current.read_pack(packed, data, capture)
         else:
             assert key == payload_key, 'recipe and legacy requested different training rows'
             if observer is not None:
-                for path,rows in observations:
-                    observer(path,rows)
+                for path, rows in observations:
+                    observer(path, rows)
         result = list(payload)
-        result[5] = result[5].clone()  # packet/spread weighting is in-place; every run starts fresh
+        result[5] = result[5].clone()  # each run starts before in-place weighting
+        if mode == 'legacy':
+            # Storage-only adapters reconstruct the historical tensor dtypes and
+            # dense value matrix. No historical loss, weights or optimizer is edited.
+            import numpy as np
+            result[2] = result[2].float()
+            result[3] = result[3].long()
+            result[4] = result[4].long()
+            values = payload[7]
+            dense = np.full((len(result[2]), current.PACKETS + 1), np.nan, np.float32)
+            for start in range(0, len(dense), 65536):
+                dense[start:start + 65536] = values[np.arange(start, min(start + 65536, len(dense)))].numpy()
+            result[7] = torch.from_numpy(dense)
+            class HistoricalPackets:
+                def __init__(self, store): self.store = store
+                def __getitem__(self, index): return self.store[index]
+                def numel(self): return len(result[2]) * current.PACKETS * 4
+                def element_size(self): return 4
+            if recipe['packet_head'] == 'identity':
+                result[-1] = HistoricalPackets(result[-1])
         return tuple(result)
-    baseline['load'] = current.load = cached_load
+    baseline['load'] = lambda *a, **kw: cached_load('legacy', *a, **kw)
+    current.load = lambda *a, **kw: cached_load('recipe', *a, **kw)
     traces = {}
     sampler = Metrics('recipe_parity_'+recipe_path.stem, training=True).start()
     sampler.update(step=0, phase='loading')
@@ -217,7 +259,7 @@ def verify(recipe_path, out):
             started = time.monotonic()
             try:
                 if name == 'legacy':
-                    baseline['observer'] = observe
+                    baseline['loss_observer'] = observe
                     baseline['main']()
                 else:
                     current.main(step_observer=observe)
@@ -233,7 +275,7 @@ def verify(recipe_path, out):
             steps=200,rows=len(payload[2]),archives=len(observations),
             loader_call_sha256=hashlib.sha256(repr(payload_key).encode()).hexdigest(),
             labels=dict(Counter(path.parent.name for path,_ in observations)),
-            full_corpus=True,original_schedule=True,field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
+            full_corpus=True,original_schedule=True,shared_storage='task33 compact pack; historical tensor views restored',field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
             maximum_loss_error=max(errors),passed=max(errors)<=1e-6,
             torch_version=str(torch.__version__),cuda_version=torch.version.cuda,traces=traces)
         (out/'parity.json').write_text(json.dumps(result,indent=2)+'\n')
@@ -241,6 +283,7 @@ def verify(recipe_path, out):
         assert result['passed']
     finally:
         sampler.close()
+        current.Metrics, current.load, sys.argv = original_metrics, original_load, original_argv
 
 
 def main():
@@ -251,6 +294,7 @@ def main():
     if not args.recipe.is_absolute() or not args.out.is_absolute():
         parser.error('all paths must be absolute')
     args.out.mkdir(parents=True,exist_ok=True)
+    (args.out/'parity.json').unlink(missing_ok=True)
     verify(args.recipe,args.out)
 
 

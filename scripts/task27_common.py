@@ -8,7 +8,7 @@ import subprocess
 import sys
 from zoneinfo import ZoneInfo
 
-ROOT = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5')
+ROOT = Path(__file__).resolve().parents[1]
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 OUT = ROOT/'artifacts/task27'
 PYTHON = '/home/newbiexvwu/.venvs/ml/bin/python3'

@@ -9,6 +9,7 @@ import time
 from zoneinfo import ZoneInfo
 from task27_common import ROOT, MAIN, OUT, PYTHON, guard, trainers, read, write, sha, record, run_stage
 from import_task27_mac import refresh
+from pvz_recipe import materialize_recipe
 
 OLD = MAIN/'.claude/worktrees/dw4/artifacts/task23'
 
@@ -106,11 +107,10 @@ def freeze():
     assert actual == expected
     write(OUT/'dataset_inventory.json',inventory)
     labels = previous['labels'] + sorted(set(counts)-set(previous['labels']))
-    command = list(previous['training_commands'][0]);command[1]=str(ROOT/'scripts/train_rollout_policy.py')
-    for flag,value in {'--data':str(mirror),'--labels':','.join(labels),'--out':str(OUT/'dw5i_s1'),
-                       '--cache-dir':str(OUT/'cache'),'--source-row-report':str(OUT/'dw5i_s1/source_rows.json')}.items():
-        command[command.index(flag)+1]=value
-    assert '--init' not in command and '--max-steps' not in command and '--width' not in command
+    recipe = materialize_recipe(ROOT/'recipes/dw5i.json', OUT/'recipes/dw5i_s1.json',
+                                data=str(mirror), labels=labels, out=str(OUT/'dw5i_s1'),
+                                cache_dir=str(OUT/'cache'), source_row_report=True)
+    command = [PYTHON, str(ROOT/'scripts/train_rollout_policy.py'), '--recipe', str(recipe)]
     source_paths = ['scripts/run_dw5_study.py','scripts/import_task27_mac.py','scripts/report_dw5_study.py',
                     'scripts/train_rollout_policy.py','python/pvz_frame_store.py','python/pvz_rollout_policy.py',
                     'python/pvz_training_rows.py','python/pvz_student_observation.py','scripts/check_capacity_native.py']
@@ -122,7 +122,7 @@ def freeze():
                 archive_counts=dict(counts),group_archives=dict(Counter(r['group'] for r in inventory)),
                 q103_full_rounds=full_rounds,q103_labels=sorted(set(desktop)-q102.keys()),q102_labels=sorted(q102),
                 queue_logs_sha256={str(q):__import__('hashlib').sha256(text.encode()).hexdigest() for q,text in logs.items()},
-                mac_import_sha256=sha(OUT/'mac_import.json'),mac_revision=mac['revision'],training_command=command,
+                mac_import_sha256=sha(OUT/'mac_import.json'),mac_revision=mac['revision'],training_command=command,recipe_sha256=sha(recipe),
                 sources={p:sha(ROOT/p) for p in source_paths},seed=1,width=64,epochs=12,
                 policy='All requested sources; no win filtering, no best seed/epoch selection, no default promotion.')
     write(path,data)
@@ -209,9 +209,10 @@ def main():
              '--tasks','day_l9_eval_d7,night_l12_eval_n10,day_l10_orig_eval,pool_l21_eval_p9k']
     run_stage(command,'native_parity');assert read(OUT/'native_parity.json')['passed']
     for version in ('v2','v1'):
-        command=[PYTHON,str(ROOT/'scripts/unified_panel.py'),'--version',version,
-                 '--manifest',str(OUT/f'unified_{version}.json'),'--rollout-policy',str(OUT/'dw5i_s1/model.pt'),
-                 '--out',str(OUT/f'panel_dw5i_{version}')]
+        recipe = materialize_recipe(ROOT/f'recipes/panel_{version}.json', OUT/f'recipes/panel_dw5i_{version}.json',
+                                    version=version, manifest=str(OUT/f'unified_{version}.json'),
+                                    rollout_policy=str(OUT/'dw5i_s1/model.pt'), out=str(OUT/f'panel_dw5i_{version}'))
+        command = [PYTHON, str(ROOT/'scripts/unified_panel.py'), '--recipe', str(recipe)]
         run_stage(command,'panel_dw5i_'+version);verify(data)
         marker=OUT/f'panel_{version}_complete.json'
         if not marker.exists():

@@ -6,7 +6,6 @@
     "_board_store": "7512d5ec25aa0998af52c93d654cdc99f634ac72958bf3bf66d23f827d0f709a",
     "_episode_context": "e401a1bc252b7afd15afb816bb059ba728b6bc74cebc399f7174a739c5a860da"
   },
-  "current_loader_identical": true,
   "original_runs": {
     "dw4i": {
       "original_revision": "fbd24256b38a3086a27bad4fb664080a360338b7",
@@ -29,5 +28,8 @@
       "batch_loss_identical": true,
       "epoch_loop_identical_excluding_telemetry": true
     }
-  }
+  },
+  "audited_recipe_revision": "a35af34deecf71b966157edf71735040fbddc331",
+  "loader_identical_at_audited_revision": true,
+  "post_merge_note": "task33 replaced the runtime loader with compact packs. The historical source fingerprints remain provenance evidence; the migration verifier restores historical tensor views over a shared compact pack and compares semantic load requests."
 }

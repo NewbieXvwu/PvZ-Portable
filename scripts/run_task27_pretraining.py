@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 from task27_common import ROOT, MAIN, OUT, PYTHON, read, write, sha, record, run_stage
 from unified_panel import summarize
 from pvz_frame_store import read_frames
+from pvz_recipe import materialize_recipe
 
 MODELS = {'dw4i_s1':MAIN/'artifacts/student/dw4i_s1/model.pt',
           'identity':MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt'}
@@ -105,8 +106,10 @@ def diagnose(data):
 def references(data):
     for name,model in MODELS.items():
         target = OUT/f'baseline_v2_{name}'
-        command = [PYTHON,str(ROOT/'scripts/unified_panel.py'),'--version','v2',
-                   '--manifest',str(OUT/'unified_v2.json'),'--rollout-policy',str(model),'--out',str(target)]
+        recipe = materialize_recipe(ROOT/'recipes/panel_v2.json', OUT/f'recipes/reference_{name}_v2.json',
+                                    version='v2', manifest=str(OUT/'unified_v2.json'),
+                                    rollout_policy=str(model), out=str(target))
+        command = [PYTHON, str(ROOT/'scripts/unified_panel.py'), '--recipe', str(recipe)]
         run_stage(command,'baseline_v2_'+name);verify(data)
         panel = read(target/'panel.json'); manifest = read(OUT/'unified_v2.json')
         assert panel['complete'] and len(panel['tasks']) == 34 and sum(t['games'] for t in panel['tasks']) == 3264
