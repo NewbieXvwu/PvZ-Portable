@@ -4,6 +4,7 @@ import argparse
 from collections import Counter, defaultdict
 from copy import deepcopy
 import json
+import math
 from pathlib import Path
 import random
 import sys
@@ -93,6 +94,53 @@ def refine_selection():
         **plan['sampling_refinement'],inputs=plan['inputs'],jobs=jobs,
         plan_sha256=forks.sha(OUT/'plan-keypoints-v2.json')))
     print('FROZEN V2',len(jobs),'roots; pilot',[(j['terrain'],j['decision'],j['tick']) for j in pilot])
+
+
+def cost_gate():
+    """Only timing and candidate counts enter this gate; candidate outcomes are not read."""
+    plan=forks.load(OUT/'plan-keypoints-v2.json')
+    state=forks.load(OUT/'qc-state-snapshot.json');groups=state['log'][-1]['groups']
+    runs=[MAIN/'artifacts/hard'/f"{g['label']}_{g['games']}" for g in groups]
+    start=min((r/'config.json').stat().st_mtime for r in runs)
+    end=max((r/'games.jsonl').stat().st_mtime for r in runs)
+    qc_cpu=0.;metrics=[]
+    for path in Path('/home/newbiexvwu/pvz-logs/metrics').glob('curriculum_queue-*.jsonl'):
+        measured=0.
+        for line in path.read_text().splitlines():
+            row=json.loads(line);stop=row['timestamp'];duration=row.get('interval_s',0)
+            overlap=max(0,min(end,stop)-max(start,stop-duration))
+            measured+=overlap*(row.get('tree_cpu_percent') or 0)/100
+        if measured:
+            qc_cpu+=measured;metrics.append(dict(path=str(path),sha256=forks.sha(path),cpu_seconds=measured))
+    games=sum(g['games'] for g in groups)
+    if games!=768 or qc_cpu<=0:raise ValueError('missing 768-game qc CPU reference')
+    rates={};pilot=forks.load(OUT/'pilot-v2.json')['jobs']
+    for job in pilot:
+        folder=OUT/'roots'/job['id'];marker=forks.load(folder/'screen-complete.json')
+        times=[forks.load(p)['cpu_seconds'] for p in folder.glob('screen_[0-9]*.json')]
+        if len(times)!=marker['labels']:raise ValueError('incomplete timing pilot')
+        rates[job['terrain']]=sum(times)/len(times)
+    estimates=[]
+    for job in plan['jobs']:
+        n=len(forks.load(OUT/'roots'/job['id']/'root.json')['candidates'])
+        # Reserve confirmation of challenger/student in all 16 new futures, plus two replays.
+        estimate=1.5*(3*n+32)*rates[job['terrain']]+12
+        estimates.append(dict(id=job['id'],terrain=job['terrain'],candidates=n,forecast_cpu_seconds=estimate))
+    budget=qc_cpu*.15;spent=forks.spent_cpu(OUT);forecast=spent+sum(e['forecast_cpu_seconds'] for e in estimates)+250
+    value=dict(qc_round=state['round'],qc_games=games,qc_cpu_seconds=qc_cpu,
+        qc_reference_window_unix=[start,end],metrics=metrics,
+        qc_measurement='read-only curriculum process-tree CPU sample integration over frozen complete round; final exiting children between samples can be missed, making this reference conservative',
+        qc_reference_engine='deploy2 (engine used by the frozen qc round); task53 collection uses required deploy3',
+        cpu_budget_seconds=budget,cpu_already_spent=spent,label_cpu_seconds_by_terrain=rates,
+        per_point=estimates,forecast_total_cpu_seconds=forecast,forecast_share=forecast/qc_cpu,
+        approved=forecast<=budget,production_root_quota=math.floor(budget/max(e['forecast_cpu_seconds'] for e in estimates)),
+        production_policy='768-game round: select a deterministic loss-root reservoir, cap by root quota and accumulated forecast; stop collection at measured 15% CPU. Do not process every loss root.')
+    forks.save(ROOT/'MEMORY/docs/task53-critical-forks-cost.json',value)
+    if not value['approved']:
+        raise RuntimeError('forecast exceeds 15%; tighten selection before full labels')
+    plan['cpu_budget_seconds']=budget;plan['cost_gate']=value
+    forks.save(OUT/'plan-budgeted.json',plan)
+    print('COST GATE',forecast,'/',budget,'CPU seconds;',round(value['forecast_share']*100,2),'% qc CPU')
 
 
 def prepare():
@@ -188,7 +236,7 @@ def prepare():
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training','refine-selection'])
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training','refine-selection','cost-gate'])
     args=p.parse_args()
     if args.stage=='prepare':
         prepare()
@@ -196,6 +244,8 @@ def main():
         register_training()
     elif args.stage=='refine-selection':
         refine_selection()
+    elif args.stage=='cost-gate':
+        cost_gate()
     else:
         if list((OUT/'roots').glob('*/screen_[0-9]*.json')) or list((OUT/'roots').glob('*/confirm_[0-9]*.json')):
             raise RuntimeError('terminal labels exist; frozen inputs cannot be changed')

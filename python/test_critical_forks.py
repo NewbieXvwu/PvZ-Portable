@@ -1,5 +1,6 @@
 """Archive forks retain full action coverage, history and precise supervision identity."""
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import sys
@@ -87,3 +88,39 @@ def test_invalid_training_row_identity_rejected(tmp_path,rows):
     (tmp_path/'meta.json').write_text(json.dumps({'training_rows':rows}))
     with pytest.raises(ValueError,match='sorted unique positive'):
         training_rows(tmp_path/'frames.npz')
+
+
+def test_confirmation_statistics_require_fresh_directional_evidence_and_use_magnitudes():
+    from critical_forks_data import sign_p,bootstrap_difference
+    assert sign_p([0]*16)==1.
+    assert sign_p([1]*16)==1/65536
+    assert sign_p([-1]*16)==1.
+    balanced=bootstrap_difference([1]*8+[-1]*8)
+    stronger=bootstrap_difference([10]*8+[-1]*8)
+    assert balanced['mean_gain']==0 and .3<balanced['confidence']<.5
+    assert stronger['mean_gain']==4.5 and stronger['confidence']>.95
+
+
+def test_panel_rejects_missing_future_or_root_checks(tmp_path):
+    from critical_forks_data import panel
+    job=dict(id='root',decision=1,frames_sha256='archive',archive='/original',terrain='day')
+    plan=dict(out=str(tmp_path),inputs={},screen_futures=2);forks.PLAN=plan
+    folder=tmp_path/'roots/root';folder.mkdir(parents=True)
+    actions=[dict(type='wait',ticks=60,until='timeout')]
+    forks.save(folder/'root.json',dict(candidates=actions,student_action=actions[0],frame={'packets':[],'tick':0}))
+    forks.save(folder/'screen-complete.json',dict(indices=[0],samples=2,labels=2))
+    for k in range(2):
+        path=folder/f'screen_0_{k}.json';trace=path.with_suffix('.jsonl.gz')
+        with gzip.open(trace,'wt') as out:out.write('')
+        row=dict(identity=forks.identity(job,actions[0],0,'screen',k),
+                 outcome=dict(terminal=True,result=2,won=False,mowers_used=1,tick=100,wave=5,decisions=0),
+                 checks={n:True for n in ('root','income','history','legal','terminal','strict_actions')},
+                 trace_sha256=forks.sha(trace),v4_short=0.,short_leaf={'terminal':True},cpu_seconds=.1)
+        forks.save(path,row)
+    assert panel(plan,[job])[0]['labels']==2
+    path=folder/'screen_0_1.json';row=forks.load(path);row['checks']={};forks.save(path,row)
+    with pytest.raises(ValueError,match='missing or failed'):
+        panel(plan,[job])
+    path.unlink()
+    with pytest.raises(ValueError,match='incomplete/unexpected'):
+        panel(plan,[job])
