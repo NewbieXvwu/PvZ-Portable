@@ -45,7 +45,9 @@ def bucket(rank, status):
 
 def init(args):
     import search_play as t
-    t._init_worker(args.value, args.student, 61, args.static_value)
+    keep, paths = t._export_values(args.value, args.static_value)
+    t._W["value_keep"] = keep
+    t._init_worker(paths[0], args.student, 61, paths[1])
 
 
 def ranks_for_seed(family_name, seed, points, data, args):

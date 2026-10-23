@@ -57,6 +57,8 @@
 
 - [A.2] pvz-env合并8df7fa90；合入vcpp实际快照8e1f91f76b56c690b4b3a5c3134594a8b5f16d5b。保留CPU专用路径、雾human/xray、指标与worker复用，价值叶子/静态候选改用引擎实现，旧CUDA文件保持删除。直接Board价值编码补接雾可见性，新增双编码/双观测/静态/推演真实引擎回归。
 
+- [A.3] vcpp合并6b840b1e已推送；本树Release重建完成，全套 **395 passed + 133 subtests passed**（85.71秒，零跳过），含双编码×human/xray直接Board逐位特征、静态与叶值回归。诊断/重标注调用已迁移到导出价值权重接口；老师门禁冻结原task37配置、旧源码/旧二进制，三任务各32局两臂全部新跑，不复用旧局。见task50-a-validation.json。
+
 主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
 
 ```bash

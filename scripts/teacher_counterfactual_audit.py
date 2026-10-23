@@ -189,7 +189,7 @@ def worker_init(args):
     import search_play as teacher
     keep, paths = teacher._export_values(args.value, args.static_value)
     teacher._W['value_keep'] = keep
-    teacher._init_worker(paths[0],args.student,61,True,paths[1])
+    teacher._init_worker(paths[0],args.student,61,paths[1])
 
 
 def score(args):

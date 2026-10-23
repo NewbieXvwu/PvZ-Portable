@@ -30,9 +30,10 @@ def collect_search(resource_dir, seed, checkpoint, manifest, task_id, value, sta
         args = sp.parser().parse_args(cmd[2:])
         args.dagger_beta = 1
         observer = Timeline(timeline or temp/'timeline.jsonl')
+        keep, paths = sp._export_values(str(value), str(static_value or value))
         try:
-            sp._load_nets(str(value), str(checkpoint), str(static_value or value))
-            sp._init_worker(str(value), str(checkpoint), args.rollout_sim_skip, str(static_value or value))
+            sp._load_nets(paths[0], str(checkpoint), paths[1])
+            sp._init_worker(paths[0], str(checkpoint), args.rollout_sim_skip, paths[1])
             result = sp._play(dict(seed=seed, arm=arm, args=args), observer=observer)
         finally:
             observer.close()
@@ -40,6 +41,7 @@ def collect_search(resource_dir, seed, checkpoint, manifest, task_id, value, sta
             if sp._W.get('rollout_tmp'):
                 sp._W['rollout_tmp'].cleanup()
             sp._W.clear()
+            keep.cleanup()
         archive = temp/'frames'/f'seed_{seed}'/f'capture_{arm}'
         meta = json.loads((archive/'meta.json').read_text())
         frames = read_frames(frame_path(archive))

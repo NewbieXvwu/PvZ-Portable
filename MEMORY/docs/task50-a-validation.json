@@ -1,0 +1,25 @@
+{
+  "pvz_env_merge": "8df7fa90e3d95d8593e4d4712c681dccee78d610",
+  "pvz_env_source": "9b8ae8b1",
+  "vcpp_merge": "6b840b1ef4e928e50168b9c9b1254d6d9660ad1d",
+  "vcpp_source": "8e1f91f76b56c690b4b3a5c3134594a8b5f16d5b",
+  "tests": 395,
+  "subtests": 133,
+  "skipped": 0,
+  "seconds": 85.71,
+  "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/build/pvz-portable",
+  "binary_sha256": "a584efb5509ba626a47e7addbc05e7bbd57dbdb27b04465f302bf35ba8a87a01",
+  "new_coverage": "fog human/xray, value encoder 1/2, Board feature bits, static branches and scored rollouts",
+  "teacher_gate": {
+    "script": "scripts/check_value_teacher.py",
+    "fresh_games_per_task_per_arm": 32,
+    "tasks": [
+      "day_l7_train_d7_m150",
+      "night_l14_train_n10",
+      "pool_l21_train_p9k"
+    ],
+    "out": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher32-v4",
+    "baseline_source_sha256": "9b53eee56fc24db197d14e472e6e41d3c1484a0bdce328b590bf0be5157b7258",
+    "baseline_binary_sha256": "724f3f707b2b717c09cdeeab432b68fbe56f606a23ac6889d2fbbe5a9a73db49"
+  }
+}
