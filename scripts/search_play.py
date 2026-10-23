@@ -624,9 +624,12 @@ def _play(job: dict) -> dict:
             action = policy_choice = _fast_action(obs, fast_state)
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
+                searched_before = stats['searched']
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
+                if fog_diagnostics is not None:
+                    fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
                 if action["type"] == "shovel":
                     stats["shovels"] += 1
                     cell = next((p for p in obs.get("plants") or []

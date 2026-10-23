@@ -47,6 +47,7 @@ class Family:
     phase: int = 0             # later additions follow all original tasks
     train_seed_base: int | None = None
     conveyor_start: str | None = None
+    fog_observation: str | None = None
 
     @property
     def label(self) -> str:
@@ -70,6 +71,9 @@ class Zone:
     train_seeds: int = 8192
     reserved_seed_ranges: tuple = ()
     deck_check_note: str = ""
+    eval_seed_base: int = SEED_START
+    eval_seeds: int = SEEDS_PER_LEVEL
+    eval_seed_stride: int = 0
 
 
 def train_seed_start(zone: Zone, level: int, family: Family | None = None) -> int:
@@ -176,9 +180,12 @@ def build_document(zone: Zone, args) -> tuple[dict, list[dict], dict]:
             seeds = list(range(start, start + args.train_seeds))
             task_id = f"{zone.task_prefix}{level}_train{family.suffix}"
         else:
-            seeds = list(range(args.seed_start, args.seed_start + args.seeds))
+            start = args.seed_start + (level - zone.first_level) * zone.eval_seed_stride
+            seeds = list(range(start, start + args.seeds))
             task_id = f"{zone.task_prefix}{level}_eval{family.suffix}"
         task = task_document(zone, level, deck, task_id, seeds)
+        if family.fog_observation:
+            task['fog_observation'] = family.fog_observation
         if family.conveyor_start:
             if family.conveyor_start != 'original' or deck or not conveyor_belt_level(level):
                 raise RuntimeError('original conveyor task needs a conveyor level and empty deck')
@@ -238,8 +245,8 @@ def build_document(zone: Zone, args) -> tuple[dict, list[dict], dict]:
 def main_for(zone: Zone, argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=zone.purpose, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--out", type=Path, default=zone.default_out)
-    p.add_argument("--seeds", type=int, default=SEEDS_PER_LEVEL)
-    p.add_argument("--seed-start", type=int, default=SEED_START)
+    p.add_argument("--seeds", type=int, default=zone.eval_seeds)
+    p.add_argument("--seed-start", type=int, default=zone.eval_seed_base)
     p.add_argument("--train-seeds", type=int, default=zone.train_seeds)
     p.add_argument("--skip", type=int, action="append", default=[],
                    help="不收的关卡（默认见各区的 excluded）")
