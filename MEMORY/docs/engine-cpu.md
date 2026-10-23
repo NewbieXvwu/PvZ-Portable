@@ -39,6 +39,8 @@
 
 ## 增强夹具复核与模型重载修复
 
+重启后审计另发现事件等待复用 bug：`PublicState::clear()` 未清 `plantCount`，真实读取器每次累加存活植物会在缓冲复用后漏掉植物减少条件。新增原地清空/累加场景，在第 2 tick 从 3 株减到 2 株：修复前断言失败，清空全部标量后 12 项 C++ 契约、20 项 Python 等待测试通过。现有 timeout 重放和 rollout 不覆盖条件 5，不能代替该回归；该修复不计性能收益。正式构建重放补验待当前 A2 计时结束后执行。
+
 - `18a58d42` 构建相对 step9：192/192 条完整叶观测和逻辑统计联合摘要相同，16 个归档共 11,475 个决策帧重放 0 差异、16/16 同种子重复 rollout 一致。本地证据：`artifacts/perf/codex_full_gate_step9_current{,_rounds/}` 与 `codex_replay_16.json`。一轮测速比值 1.1298，前一轮为 1.0074，负载波动明显；这里用于补正确性证据，不替代原会话多轮收益结论。
 - 修复前运行既有 24 配置 identity 测试：7/10 packet logits 超出 1e-5，最大绝对误差 0.1854288。新增“同布局换权重 → 与新进程比较”回归也失败：plant logit 为 0.0540556535 vs 0.0564118475。
 - 根因：`EnvironmentRollout::Load` 换入新权重未清空 `kernelChannels` / `kernelBuffer` / `packetWeightDouble`。同布局与同活动通道无法感知权重已变，旧矩阵被复用。成功载入后统一清空衍生权重缓存、令 padding 计数失效、清除 packet logits 有效标记；非法载入仍保留旧模型。

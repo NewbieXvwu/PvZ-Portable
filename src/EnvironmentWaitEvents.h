@@ -51,6 +51,8 @@ struct PublicState
 
 	void clear()
 	{
+		tick = wave = sun = plantCount = 0;
+		terminal = false;
 		readyPackets.clear();
 		readyDefenses.clear();
 		leftZoneZombies.clear();

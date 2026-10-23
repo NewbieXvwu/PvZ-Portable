@@ -53,5 +53,14 @@ int main()
 	try { Run(1, 0, [&](PublicState& out) { out = state; }, [&] { --state.tick; }); }
 	catch (const std::runtime_error&) { rejected = true; }
 	assert(rejected);
-	std::cout << "native wait reducer: 11 contract scenarios passed\n";
+	// Mirror EnvironmentPublicWaitState's in-place refill, including reuse after
+	// two reads. Assignment-only readers above conceal stale scalar counters.
+	int tick = 0;
+	result = Run(5, 5, [&](PublicState& out) {
+		out.clear();
+		out.tick = tick;
+		for (int plant = 0; plant < (tick < 2 ? 3 : 2); ++plant) ++out.plantCount;
+	}, [&] { ++tick; });
+	assert(result.reason == "condition" && result.logicSteps == 2);
+	std::cout << "native wait reducer: 12 contract scenarios passed\n";
 }
