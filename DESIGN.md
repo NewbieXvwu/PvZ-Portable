@@ -879,3 +879,5 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 **课程可用性**：`CURRICULUM_LEVELS['roof']=(41,)`，原版老师完整16局≥50%才放行。L42–44及未测胜率的L46–49暂缓，L45不入普通课程；[准入表](MEMORY/docs/task46-roof-admission.json)。两份隔离状态dry run已列出L41原版与m125的cell及collect命令（[命令证据](MEMORY/docs/task46-roof-course-check.json)）。本分支没有启动qc采集、修改tmux或生产队列状态；何时采由主控决定。
 
 **引擎与测试**：0.5诊断发现Python允许0.1–10而C++ reset最低1.0，仅将 `EnvironmentReset` 下限对齐0.1。原版320局仍按旧引擎身份冻结，新引擎按 [修订](MEMORY/docs/task46-roof-engine-amendment.json) 在门禁后才用于低倍率。L1–49逐决策公开/隐藏状态共28999帧零差，其中非屋顶25113帧；L35砸罐比较2001状态后达上限，其他48关到终局（[重放证据](MEMORY/docs/task46-roof-engine-gate.json)）。已有C++12契约场景/220490坐标逐位测试通过，全Python360项+133子测试通过，实际0.5 reset/波次计数回归通过（[验收记录](MEMORY/docs/task46-roof-validation.json)）。
+
+**task46追加A第二阶段（2026-10-23）**：已完成L42–49原版r7各4局实际老师及L42–45各1局学生的逐决策时间线；[独立复核](MEMORY/docs/teacher-diag-roof-review.md)包含四份LLM原文的错误纠正、8点19分支逐帧反事实复验及数据需求。dw4i冻结48816训练档案中屋顶0份，执行合法性/原生动作对照无异常；早输样本存在低叶值分差，后期部分关搜索能纠正，尚不能确证缺群伤/伞是结构性卡组问题，未换族。L45是固定初始手牌的免费传送带变体，不能按阳光经济或原版空手牌开局解释。主控追加A已明确：0.5只作诊断，**不设为采集起点**，本阶段不启动或修改qc。

@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "scope": "task46 appendix A second phase only",
+  "complete": true,
+  "requirements": {
+    "A1_quantitative_timelines": {
+      "teacher_games": 32,
+      "student_controls": 4,
+      "levels": [
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49
+      ],
+      "decisions": 26410,
+      "terminal": 36,
+      "native_mismatches": 0,
+      "illegal_actions": 0,
+      "nonpot_plantings": 0,
+      "cold_start_matches": 20,
+      "sun_bank_plus_pending_conserved": 36,
+      "evidence": "task46-roof-timelines.json"
+    },
+    "A2_llm_and_independent_review": {
+      "isolated_sessions": 4,
+      "levels": [
+        42,
+        43,
+        44,
+        45
+      ],
+      "verbatim_suffix_and_hash_verified": true,
+      "review": "teacher-diag-roof-review.md",
+      "index": "teacher-diag-roof-l4x.md",
+      "independent_decision_points": 8,
+      "replayed_branches": 19,
+      "all_prebranch_public_frames_exact": true,
+      "all_actions_accepted": true,
+      "evidence": "task46-roof-whatif-verified.json"
+    },
+    "A3_classification_and_data": {
+      "evidence": "teacher-diag-roof-review.md",
+      "classes": [
+        "deck hypotheses unproven; no family changed",
+        "roof training source coverage: 0/48816",
+        "low finite candidate differences in some early losses, corrections in other games",
+        "execution checks clean; L45 free conveyor and initial-hand semantics separated"
+      ],
+      "no_lower_multiplier_collection_start": true,
+      "required_data_specified": true
+    },
+    "A4_delivery_and_limits": {
+      "concurrent_capture_workers": 4,
+      "isolated_teacher_workers": 4,
+      "each_worker_game_processes": 1,
+      "independent_replay_workers": 1,
+      "phases_sequential": true,
+      "current_roof_game_pids": [],
+      "qc_source_unchanged": true,
+      "engine_source_unchanged": true,
+      "commits_pushed": [
+        "44bcc282",
+        "a8a38079",
+        "9a95e5a8",
+        "5741dd2a"
+      ]
+    }
+  },
+  "tests": {
+    "full_python": "362 passed + 133 subtests passed",
+    "log_sha256": "603929a7036a19748609fe39090556e54cc108bce4c34b531bb948daaddbe647",
+    "diagnostic_scripts_compile": true,
+    "changed_markdown_local_links_missing": []
+  },
+  "evidence_sha256": {
+    "task46-roof-phase2-plan.json": "faf3264adc4b92d86795f6fdf836683657a610781fca52c0afb08b4f7dbbd9bb",
+    "task46-roof-timelines.json": "f99ca8ef985f3c73abdd5bb95e4b911b2697e77fff235a000d25848575aa4bc3",
+    "task46-roof-training-coverage.json": "b9db5ee9b34ff8cdcf7c828916f82c05840567fdf73492b4a7ae2e05e0eaa49c",
+    "task46-roof-teacher-provenance.json": "269b5e2b7a1a0498d01398853bcac9b654b40a3e7470f63f518938aad7677712",
+    "task46-roof-whatif-verified.json": "403e23a008085e5371eaa2a0914b6bbf2e43e9eb51187ca8df013b00c6754c23",
+    "teacher-diag-roof-review.md": "a418c8d0aef80f45bf7b714a71063d8e93fc63380734edd4e7c4f1da0b0cd47e"
+  }
+}
