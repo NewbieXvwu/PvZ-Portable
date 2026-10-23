@@ -319,5 +319,74 @@
     "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
     "engine_sha256": "bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef",
     "engine_source_ref": "f2ae755a"
+  },
+  "additional_rounds": [
+    {
+      "label": "p21w5m",
+      "level": 21,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 43469,
+      "archive_sha256": "f3b7a5e437a1ba2f15e6b84135e43c6f85be38b0012e013e9417ffac684f4ebc",
+      "local_ledger_sha256": "26f742d1b28f21a968d96354e64a492be01e45d2d4c21bbfc40f9169645ac90b"
+    },
+    {
+      "label": "p22w5m",
+      "level": 22,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 54909,
+      "archive_sha256": "26f89efbe3884e5a7fa115bde9d5ba694c4a6d971ea98b3d4cc42bcc77977dea",
+      "local_ledger_sha256": "dfb4ea1f93a109827c816fbe004f42ce55535aab277ff12d4cb4239bf96cf114"
+    },
+    {
+      "label": "p23w5m",
+      "level": 23,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 51789,
+      "archive_sha256": "8194e5a129bf1187eca42c1ea64d2e013cfba99185b01eb2618bfc7e508d99bd",
+      "local_ledger_sha256": "1350762ef90d203ff91e27b71d06a10b653ddc24ef226b78e8e67b93777cb25c"
+    },
+    {
+      "label": "p24w5m",
+      "level": 24,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 61402,
+      "archive_sha256": "369ff012ae56cb08367468227bbcbc4c55a23742d5c0352d45b1a800f71c24e8",
+      "local_ledger_sha256": "6d5d4f734b84c8099f2166aac0c391d0f50273d6cf69971417d5c56a1229dd6e"
+    },
+    {
+      "label": "p26w5m",
+      "level": 26,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 46627,
+      "archive_sha256": "eb35a82f663d78e268523fd6b7a31786be892b8fb82d96c1699f3516b18b4dd2",
+      "local_ledger_sha256": "f596b1e64f5eda3aa6031b8a2c97fd86d15b2cd82d91fd3206906f8fb716b8cd"
+    }
+  ],
+  "additional_totals": {
+    "labels": 5,
+    "episodes": 240,
+    "archives": 240,
+    "rows": 258196
+  },
+  "incremental_check": {
+    "checked_at": "2026-10-23T18:42:58.792446+08:00",
+    "revision": "3ab8fffa77134f3bbf5040c91a6aa35ca981f12f",
+    "selected_labels": 37,
+    "reused_verified_labels": 32,
+    "existing_labels_redownloaded": 0,
+    "added_labels": [
+      "p21w5m",
+      "p22w5m",
+      "p23w5m",
+      "p24w5m",
+      "p26w5m"
+    ],
+    "added_files": 480,
+    "additional_metadata_rows_and_sha256_independently_verified": true
   }
 }
