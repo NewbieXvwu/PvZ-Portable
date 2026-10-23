@@ -53,4 +53,25 @@
 
 ## 结果
 
+- 2026-10-23 步骤 1：本树 Release 基线构建通过；`audit_fog_zone.py` 逐关 reset + 无动作终局探测完成，L31–34/36–40 全部能无头 reset 并到达输局终态；L35 是砸罐子，纯等待 240000 tick 不终局，排除。全部整组 `deck_warnings` 为空，`deck_pool` 已逐关查询；原始证据在本机 `artifacts/task45/inventory.json`（不入 git，可用脚本重现）。卡组 L31–34/36–40 为 `[0,9,2,3,4,5,16,43]`，L35 按夜间地形为 `[0,1,9,2,3,4,5]`。香蒲所有权由 `profile_for_deck` 声明。此探测只证明能跑至终态，不是通关能力评估。
+
+引擎 `loadout_context.zombie_roster` + `pvz_constants.zombie_defs()` 直接查询（seed 450031，playthrough 2）：
+
+| 关 | 引擎僵尸 ID / 类型 | 无动作终局波数 |
+|---|---|---|
+| 31 | 0 NORMAL, 2 TRAFFIC_CONE, 15 JACK_IN_THE_BOX | 8/20 |
+| 32 | 0 NORMAL, 2 TRAFFIC_CONE, 7 FOOTBALL, 15 JACK_IN_THE_BOX | 8/30 |
+| 33 | 0 NORMAL, 2 TRAFFIC_CONE, 16 BALLOON | 7/20 |
+| 34 | 0 NORMAL, 2 TRAFFIC_CONE, 14 DOLPHIN_RIDER, 16 BALLOON | 8/30 |
+| 35 | 0 NORMAL, 2 TRAFFIC_CONE | 0/30（未终局） |
+| 36 | 0 NORMAL, 2 TRAFFIC_CONE, 17 DIGGER | 8/20 |
+| 37 | 0 NORMAL, 2 TRAFFIC_CONE, 4 PAIL, 15 JACK_IN_THE_BOX, 17 DIGGER | 8/30 |
+| 38 | 0 NORMAL, 2 TRAFFIC_CONE, 18 POGO | 8/20 |
+| 39 | 0 NORMAL, 2 TRAFFIC_CONE, 4 PAIL, 16 BALLOON, 18 POGO | 8/30 |
+| 40 | 0 NORMAL, 2 TRAFFIC_CONE, 4 PAIL, 15 JACK_IN_THE_BOX, 16 BALLOON, 17 DIGGER, 18 POGO, 19 YETI | 7/30 |
+
+观测盘点：完整和 lean 的 `zombies` 都暴露雾中僵尸的位置、类型、血量、速度、状态、ID；`v2.zombies` 再暴露持物/护甲；`v2.wave_health` / `wave_start_health` 与 `enemy_zombies_on_screen` 是全体聚合。植物/弹道的 `target_zombie_id` 也可能指向隐藏目标；C++ `EnvironmentRollout::Features` 直接读 Board（不能只改 JSON）。`PRIV.hidden` 属明确的诊断特权数据，不作为政策输入。公开卡组页的 `zombie_roster` 只表示本关可能出现的类型，保留。
+
 ## 问题
+
+- 源码实测修正：L40 为 `IsStormyNightLevel()`，虽背景是 FOG，但 `StageHasFog()` 为 false；是暴风雨传送带特例，评估另标注，不纳入普通雾区训练。L35 砸罐子不纳入该族。dw5i_s1 本机无文件，冷启动按任务书允许使用现有 dw4i_s1。
