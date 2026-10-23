@@ -1,0 +1,63 @@
+{
+ "epochs": 2,
+ "device": "cuda",
+ "threads": 1,
+ "precompute_workers": 1,
+ "wait_keep": 1.0,
+ "seed": 1,
+ "width": 64,
+ "label_weight": {},
+ "packet_balance": 0.5,
+ "pool": "meanmax",
+ "row_pool": true,
+ "packet_head": "identity",
+ "aux_weight": 0.0,
+ "aux_horizon": 8,
+ "context": false,
+ "obs": "v2",
+ "soft_temperature": 0.05,
+ "cell_soft_weight": 3.0,
+ "spread_weight": 8.0,
+ "spread_cap": 10.0,
+ "save_epochs": 0,
+ "lr_schedule": "cosine",
+ "init": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+ "cache": true,
+ "cache_dir": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/cache",
+ "read_cache_dir": null,
+ "dense_boards": false,
+ "row_weights": null,
+ "source_row_report": true,
+ "max_steps": 64,
+ "batch_size": 256,
+ "validation_batch_size": 512,
+ "optimizer": {
+  "name": "AdamW",
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "amsgrad": false
+ },
+ "validation": {
+  "seed": 0,
+  "fraction": 0.1
+ },
+ "provenance": {
+  "task": "task53",
+  "parent_recipe_sha256": "d5d19464768d38d0fd5a2a382e06503271e693df831089a5553d79d9175ffddc",
+  "additional_rows": "only independently confirmed critical-fork corrections; labels/weights from export manifest"
+ },
+ "data": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/frames",
+ "labels": [
+  "replay_day",
+  "replay_night",
+  "replay_pool"
+ ],
+ "out": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/model",
+ "schema_version": 1,
+ "kind": "training"
+}

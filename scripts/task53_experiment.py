@@ -15,6 +15,42 @@ import critical_forks as forks
 OUT = ROOT/'artifacts/task53'
 
 
+def register_training():
+    """Freeze the unchanged replay sample and all optimizer/evaluation choices before labels."""
+    from pvz_frame_store import frame_path,read_frames
+    if list((OUT/'roots').glob('*/screen_[0-9]*.json')):
+        raise RuntimeError('register recipe before terminal labels')
+    plan=forks.load(OUT/'plan.json');rng=random.Random(5301);replay=[];evaluation=[]
+    for index,e in enumerate(plan['episodes']):
+        frames=read_frames(frame_path(Path(e['archive'])))
+        valid=[i for i in range(1,len(frames)) if not frames[i].get('action_rejected') and
+               (frames[i].get('label') or frames[i].get('action',{})).get('type') in ('plant','wait')]
+        rows=sorted(rng.sample(valid,min(128,len(valid))))
+        replay.append(dict(archive=e['archive'],frames_sha256=e['frames_sha256'],rows=rows,
+                           label='replay_'+e['terrain'],seed=e['reset']['seed']))
+        for offset in range(8):
+            reset=deepcopy(e['reset']);reset['seed']=53000000+index*100+offset
+            evaluation.append(dict(id=f"{e['id']}-eval-{offset}",terrain=e['terrain'],
+                                   reset=reset,source_episode=e['id']))
+    recipe=forks.load(ROOT/'recipes/dw4i.json')
+    recipe.update(data=str(OUT/'training/frames'),out=str(OUT/'training/model'),
+                  init=plan['teacher']['rollout_policy'],labels=['replay_day','replay_night','replay_pool'],
+                  label_weight={},epochs=2,device='cuda',seed=1,threads=1,precompute_workers=1,
+                  wait_keep=1.,max_steps=64,batch_size=256,validation_batch_size=512,
+                  cache_dir=str(OUT/'training/cache'),read_cache_dir=None,source_row_report=True)
+    recipe['optimizer']['lr']=.0001
+    recipe['provenance']=dict(task='task53',parent_recipe_sha256=forks.sha(ROOT/'recipes/dw4i.json'),
+                              additional_rows='only independently confirmed critical-fork corrections; labels/weights from export manifest')
+    forks.save(ROOT/'MEMORY/docs/task53-critical-forks-finetune.json',recipe)
+    forks.save(OUT/'training-registration.json',dict(recipe=recipe,replay=replay,evaluation=evaluation,
+               comparison='frozen dw4i_s1 vs one fixed finetune; same 192 evaluation resets, 64 per terrain',
+               input_plan_sha256=forks.sha(OUT/'plan.json')))
+    forks.save(ROOT/'MEMORY/docs/task53-critical-forks-training-panel.json',dict(
+               replay_rows=sum(len(r['rows']) for r in replay),replay=replay,evaluation=evaluation,
+               registration_sha256=forks.sha(OUT/'training-registration.json')))
+    print('REGISTERED',sum(len(r['rows']) for r in replay),'old replay rows;',len(evaluation),'paired evaluation seeds')
+
+
 def prepare():
     from pvz_frame_store import frame_path, read_frames
     from render_episode import load_training_task, training_task_kwargs
@@ -108,8 +144,26 @@ def prepare():
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare'])
-    p.parse_args();prepare()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training'])
+    args=p.parse_args()
+    if args.stage=='prepare':
+        prepare()
+    elif args.stage=='register-training':
+        register_training()
+    else:
+        if list((OUT/'roots').glob('*/screen_[0-9]*.json')) or list((OUT/'roots').glob('*/confirm_[0-9]*.json')):
+            raise RuntimeError('terminal labels exist; frozen inputs cannot be changed')
+        plan=forks.load(OUT/'plan.json');changes=[]
+        for name,record in plan['inputs'].items():
+            current=forks.sha(record['path'])
+            if current!=record['sha256']:
+                changes.append(dict(input=name,before=record['sha256'],after=current));record['sha256']=current
+        plan.setdefault('setup_revisions',[]).append(dict(before_any_terminal_labels=True,changes=changes))
+        forks.save(OUT/'plan.json',plan)
+        path=ROOT/'MEMORY/docs/task53-critical-forks-sources.json';sources=forks.load(path)
+        sources.update(frozen_inputs=plan['inputs'],collector_plan_sha256=forks.sha(OUT/'plan.json'))
+        forks.save(path,sources)
+        print('REFRESHED SETUP',changes)
 
 
 if __name__=='__main__':main()

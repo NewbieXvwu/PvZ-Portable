@@ -249,7 +249,12 @@ def audit_search(env, obs, state, args, seed, last_search):
     try:
         TEACHER._static_scores = static; TEACHER._verified_choice = verified
         chosen = TEACHER._search(env, obs, state['action'], args, seed, stats)
-        trace.update(chosen=chosen, searched=bool(stats['searched']), margin=TEACHER.MARGIN)
+        trace.update(chosen=chosen, searched=bool(stats['searched']), margin=TEACHER.MARGIN, audit_schema=1)
+        by_packet = {}
+        for entry in sorted(trace.get('static_scores', []), key=lambda e:-e['value']):
+            by_packet.setdefault(entry['action']['packet'], []).append(entry['action'])
+        trace['static_selected'] = [a for values in by_packet.values() for a in values[:args.per_card]]
+        trace['student_added'] = sorted(stats.get('last_student_keys', set()))
         trace['halving_pruned'] = [a for a, n, v in zip(trace.get('candidates', []),
              trace.get('halving_counts', []), trace.get('pre_verification_values', []))
              if n < args.samples or v is None]
@@ -326,7 +331,7 @@ def collect_job(job):
         if path.exists() and load(path) != json.loads(json.dumps(record)):
             raise ValueError('root changed')
         save(path, record)
-        if not (folder/'search.json').exists():
+        if not (folder/'search.json').exists() or 'audit_schema' not in load(folder/'search.json'):
             save(folder/'search.json', audit_search(env, obs, state, args,
                  job['reset']['seed']*10000+job['decision']-1, last_search))
         if job.get('inspect_only'):
@@ -359,11 +364,13 @@ def collect_job(job):
                 after, *_, info = env.step(action)
                 if not info.get('ok'):
                     raise ValueError('engine legal candidate rejected')
+                post_action = _frame(after)
                 if not after['terminal']:
                     left = sum(d['state'] == 1 for d in after.get('defenses', []))
                 outcome, leaf = finish_teacher(env, after, actual_state, args, expected['search_future'],
                                               trace, initial_mowers, left, obs['tick']+args.horizon)
                 row = dict(identity=expected, outcome=outcome, v4_short=float(short_value), short_leaf=short_frame,
+                     post_action_frame=post_action,
                      teacher_leaf=leaf, terminal_engine_sha256=env._debug_state_sha256(), trace_sha256=sha(trace),
                      checks=dict(root=True, income=True, history=True, legal=True, terminal=True, strict_actions=True),
                      cpu_seconds=cpu(env)-started)
@@ -384,7 +391,7 @@ def run(plan, jobs, phase):
     out = Path(plan['out']); out.mkdir(parents=True, exist_ok=True)
     with (out/'collector.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        run_dir = out/'runs'/f'{int(time.time())}-{phase}'; run_dir.mkdir()
+        run_dir = out/'runs'/f'{int(time.time())}-{phase}'; run_dir.mkdir(parents=True)
         own_start = cpu(); stop = mp.get_context('fork').Event()
         import search_play as teacher
         value_keep, values = teacher._export_values(plan['teacher']['value'], plan['teacher']['static_value'])

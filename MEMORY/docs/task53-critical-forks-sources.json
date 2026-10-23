@@ -1288,7 +1288,7 @@
   },
   "collector": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/critical_forks.py",
-   "sha256": "ca9fc25cbc1cd7b7ab4e9dbb119fe913ccb1953e0ae76054cc736ff2f2349d53"
+   "sha256": "22a8e73417094d8703b7772a41faf3218df496ff704a8ff5ce3fc94da6355733"
   },
   "search": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/search_play.py",
@@ -1303,5 +1303,5 @@
    "sha256": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5"
   }
  },
- "collector_plan_sha256": "bf700dffcd5aa43ed9a55eaa8edab9380b45725a52da388957ebd8ecfb0fc18c"
+ "collector_plan_sha256": "a715f81d9448020a4eeb24c7457102dbb421b3e93967b7b85f88d7a53a95661b"
 }
