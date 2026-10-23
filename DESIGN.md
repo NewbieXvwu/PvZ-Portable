@@ -739,6 +739,8 @@ task26 的结论是：2-10（原版传送带）发得到的 7 种卡里，大喷
 输出每关“胜率过 50% 的最大倍率”（最高档仍 > 50% 记 `≥`，1.0 都没过记 `—`）。
 清单与结果默认 `artifacts/task29/pressure_manifest.json` / `pressure.json` / `pressure.md`（不进 git）。
 
+**种子段平移（task39 记录）**：task31 加第 8 族时档距从 500k 加宽到 700k，之前生成的倍率种子整体平移；课程控制器按 task_id 记录偏移、继续取新段里没打过的种子，不会重复，历史 `games.jsonl` 里记的是种子值本身。
+
 ### 14.14 扰动卡组的“保留卡”：判据、夜间实测表与新族 `night_lN_train_n10q`（task31，2026-10-22 登记，AGENTS.md §8 第 4 条）
 
 **为什么**：扰动族每个种子换掉 1–2 张底卡。有些底卡换掉之后**连老师也基本赢不了**（结构性输局），
@@ -791,4 +793,7 @@ L7–L10 各 0/8192 个种子会换掉它（换掉它 = 没有产阳光植物，
 - 清单 `artifacts/stage4/night_panel_n10q.json`（工作树与 `~/PvZ-search/artifacts/stage4/` 各一份，都不进 git），
   生成器 `scripts/make_night_n10q.py`，静态检查 `python/test_keep_families.py`。
 - 倍率变体已加进 `scripts/make_multiplier_tasks.py`：族数 7 → 8，每档块宽 524,288 已超过原档距 500,000，
-  档距加宽到 700,000（够再加一个族）；倍率族还没开过采集局，无数据迁移。
+  档距加宽到 700,000（够再加一个族）；倍率族在加宽前已跑过少量 `_m125`/`_m150` 的局，偏移按 task_id 继续，
+  不会重复（见 §14.13 种子段平移）。
+- 课程控制器从 task39 起用 n10q 取代 n10p（`SUPERSEDED`），n10p 格子进 `retired_cells`；n10p 的清单、
+  种子段、数据与评估全部保留。

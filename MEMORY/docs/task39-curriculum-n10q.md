@@ -92,6 +92,7 @@ day_l8_train_d7                      1.5      -     0     48  c2d8d7m150
 day_l9_train_d7                      1.5      -     0     48  c2d9d7m150
 total groups 16, games 768
 ```
+- 第 6 步：DESIGN §14.13 末尾加种子段平移说明；§14.14 末尾加“task39 起 n10q 取代 n10p（`SUPERSEDED`），n10p 格子进 `retired_cells`”，并把旧的“倍率族还没开过采集局”改为已跑过 `_m125`/`_m150`；提交并推送 `curr39`。
 
 ## 问题
 
