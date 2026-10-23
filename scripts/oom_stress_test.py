@@ -209,8 +209,11 @@ def main() -> int:
 
     alive = {name: [pid for pid in pids if Path(f"/proc/{pid}").exists()] for name, pids in watched.items()}
     late_available = meminfo()[1]
+    # A kill can land between two 50 ms polls; the per-poll minimum still proves the box was
+    # pushed below the threshold, while latency is only meaningful if the poll caught it live.
+    pressure_observed = minimum < threshold
     passed = (
-        pressure_at is not None
+        pressure_observed
         and latency is not None
         and latency["tmux_new_session"]["seconds"] < LATENCY_LIMIT
         and latency["bash_true"]["seconds"] < LATENCY_LIMIT
@@ -219,7 +222,7 @@ def main() -> int:
         and all(alive[name] == pids for name, pids in watched.items())
     )
     print(json.dumps(dict(
-        passed=passed, mem_total_gib=round(mem_total / GIB, 1),
+        passed=passed, pressure_observed=pressure_observed, mem_total_gib=round(mem_total / GIB, 1),
         mem_available_start_gib=round(available / GIB, 1),
         minimum_available_gib=round(minimum / GIB, 2),
         minimum_available_percent=round(100 * minimum / mem_total, 2),

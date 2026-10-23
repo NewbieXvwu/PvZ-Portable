@@ -36,6 +36,7 @@
 - 10-22 23:57 报告写入 `MEMORY/notes/desktop.md` 新节“内存打满时的防护（2026-10-23）”：分数表、earlyoom 安装与参数、控制器并发公式与实测方法；压力测试结果待批准后补。
 - 10-23 00:04 主控答复：批准压测，但由主控开时间窗——qc 在组间停下（`~/pvz-logs/curriculum.log` 出现 stop flag 行、`pgrep -f curriculum_queue` 为空）、确认无训练后，在 `~/pvz-logs/` 创建 `oom_window_open`。本会话已挂后台监视等该文件；出现即跑一次，结果写回本文与 `desktop.md` 并提交，然后删 `oom_window_open`、建 `oom_window_done`。等待期间补了压测预检（默认拒绝、按 cmdline 找进程、计时）3 项与控制器探测命令 / 启动估计 2 项单测（相关单测共 16 项全过），并用 qc 的 `multiplier_panel` + 状态副本跑 `--dry-run` 正常（5 组 / 240 局）；`python/test_env_protocol.py` + `python/test_shared_helpers.py` 42 项回归也通过。`mem_guard.py` 不写：earlyoom 已装好，任务书的等价守护只用于“不能装”分支，避免第二份守护抢杀。
 - 10-23 08:07 修复压测预检误判（跑之前发现）：`matching_processes` 原先按 cmdline 子串匹配，earlyoom 的 `--prefer '(pvz-portable|search_play|python3)'` 会一直被当成“采集在跑”而拒绝。改为按 argv token 的 basename 精确匹配，新增 earlyoom 命令行回归测试；实测当前匹配列表只剩 qc 控制器 / `search_play` / 引擎，earlyoom 不再命中。压测单测 4 项、task34+回归共 61 项全过。
+- 10-23 08:08 压测输出加 `pressure_observed`：按每 50 ms 采样的最小值判断是否确实低于 5%（杀进程可能恰好落在两次轮询之间），latency 仍只在轮询当场捕捉到 <5% 时测；62 项测试全过。
 
 ## 问题
 - （已答复）压测批准，等待主控创建 `~/pvz-logs/oom_window_open`；本会话后台监视中。原请求：在训练结束后跑 `python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/oom/scripts/oom_stress_test.py --i-know`；当前 dw5i 训练已结束、qc 正在跑第 2 轮，需主控在组间停 qc 并开窗。
