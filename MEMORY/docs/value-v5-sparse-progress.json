@@ -281,5 +281,22 @@
   },
   "model_sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
   "gate_sha256": "45901f229f8f2bce5bdd8bc34e310ba3945c23e02d810ddb6721cbb900d58b12"
+ },
+ "raw_audit_48": {
+  "observed_at": "2026-10-24 06:18:15",
+  "seed_count": 48,
+  "root_groups": 576,
+  "labels": 3238,
+  "wins": 1732,
+  "mixed_groups": 279,
+  "nonterminal_labels": 2877,
+  "nonterminal_wins": 1601,
+  "nonterminal_pairs": 1657,
+  "nonterminal_mixed_groups": 276,
+  "whole_collection_cpu_hours_at_observation": 28.916478764166666,
+  "artifact_bytes_at_observation": 2400546861,
+  "receipt": "artifacts/task43/sparse64/audit_48.json",
+  "receipt_sha256": "6df99bf5147c10a9609e104f5bb23ff12a0ee86e1c7cbbf15a2fa3feb83737f4",
+  "purpose": "raw data integrity; no model scoring or recipe changes"
  }
 }
