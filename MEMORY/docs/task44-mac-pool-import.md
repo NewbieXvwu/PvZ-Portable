@@ -42,6 +42,8 @@
 
 - 2026-10-23，步骤2：统一入口 `/home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/scripts/import_mac_labels.py` 已实现 z/d/n/p 标签表、历史账本迁移、LFS SHA256 校验、原子独占写入、逐标签 journal、冻结 z 选择与 15 GiB 磁盘余量门禁；调用方已迁移，旧 task23/task27 导入脚本删除。假 HF + 小 tgz 单测 11 过，调用方编译检查通过。
 
+- 2026-10-23，步骤6：`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest /home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/python -q` 全过：333 passed / 111 subtests passed，62.39 秒，无跳过。使用与本分支 `src/`、`CMakeLists.txt` 无差异的 `f2ae755a` deploy2 二进制副本（仅复制到本工作树 ignored build，未修改 deploy2）。
+
 ## 问题
 
 - task23/task27 的历史 study-plan JSON 仍记录原脚本名及其 SHA256，这是冻结证据，保留原样；可执行调用方全部迁移到统一入口，旧脚本已删。统一入口只读取导出的 `HF_TOKEN` / `PVZ_HF_REPO`，不再自行读取 shell 配置。
