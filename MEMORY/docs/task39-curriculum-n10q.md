@@ -93,8 +93,10 @@ day_l9_train_d7                      1.5      -     0     48  c2d9d7m150
 total groups 16, games 768
 ```
 - 第 6 步：DESIGN §14.13 末尾加种子段平移说明；§14.14 末尾加“task39 起 n10q 取代 n10p（`SUPERSEDED`），n10p 格子进 `retired_cells`”，并把旧的“倍率族还没开过采集局”改为已跑过 `_m125`/`_m150`；提交并推送 `curr39`。
+- 种子核对：`games.jsonl` 每行有真实 `seed` 字段；`c1d7d7m125_48` 的 48 局为 5,012,336–5,012,383（= 旧 cq 清单该任务 offset 48–95），`c1d1d7m150_48` 为 5,500,000–5,500,047（= 旧清单 m150 段 offset 0–47）；未发现靠“清单 + 偏移”反推历史种子的工具（runner 都是给新局正向选种，详见“问题”）。
 
 ## 问题
 
 - `games.jsonl` 记录的是种子值本身（每行有 `seed`）：实测 `c1d7d7m125_48` 的 48 局为 5,012,336–5,012,383，正好等于 cq 清单 `day_l7_train_d7_m125` 的 offset 48–95；`c1d1d7m150_48` 为 5,500,000–5,500,047，正好等于旧 500k 档距清单 `day_l1_train_d7_m150` 的 offset 0–47。新 700k 版同名任务的 m150 段已平移到 5,712,288 / 5,700,000，状态里的 offset 会把后续局引到没打过的新段。
 - 按“清单 + `seed_offset`”取种子的是采集/复算 runner：`scripts/search_play.py`（`--seed-list` 可直接给真实种子，否则按 offset 切片）、`rollout_bench.py`、`sim_skip_agreement.py`、`value_ranking_check.py`、`cuda_tick_check.py`、`cuda_root_corpus.py`、`perf_rollout_check.py`、`generate_value_data.py`；`relabel_verify.py` 按帧目录（`seed_*`）切片。它们都是给**新局**正向选种子，不靠清单 + 偏移反推历史种子；统计/分析工具（`pair_compare.py`、`label_noise.py`、`static_value_*_stats.py` 等）都读 `row['seed']`。按要求未改。
+- 其余无未决问题。
