@@ -46,7 +46,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from make_multiplier_tasks import FAMILIES, load_tasks, source_paths  # noqa: E402
+from make_multiplier_tasks import FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
 FRONTIER_LOW = 0.5
@@ -201,7 +201,9 @@ def parse_task_id(task_id: str, names: dict[str, float]) -> tuple[str, float]:
 
 def training_base_ids() -> set[str]:
     ids = set()
-    for _family, _key, pattern, levels, _terrain in FAMILIES:
+    for family, _key, pattern, levels, _terrain in FAMILIES:
+        if family in SUPERSEDED:
+            continue
         for level in levels:
             ids.add(pattern.format(level=level))
     return ids
@@ -250,17 +252,54 @@ def init_from_runs(patterns: list[str], names: dict[str, float]) -> tuple[dict, 
     return windows, offsets
 
 
-def make_state(tasks: dict[str, dict], names: dict[str, float], windows: dict, offsets: dict,
-               panel: str) -> dict:
-    cells = {}
-    base_ids = training_base_ids()
+def family_of(base: str) -> str | None:
+    """训练 base id -> FAMILIES 里的族短名（`night_l12_train_n10p` -> `night_n10p`）。"""
+    for family, _key, pattern, levels, _terrain in FAMILIES:
+        if any(base == pattern.format(level=level) for level in levels):
+            return family
+    return None
+
+
+def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float],
+                    windows_from_runs: dict) -> list[str]:
+    """把状态里的格子对齐到当前训练集合；返回日志行，由调用方逐行写 curriculum.log。"""
+    lines = []
+    training = training_base_ids()
+    cells = state.setdefault('cells', {})
+    retired = state.setdefault('retired_cells', {})
+    wanted = {}
     for task_id, task in tasks.items():
         base, multiplier = parse_task_id(task_id, names)
-        if multiplier != 1.0 or base in cells or base not in base_ids:
+        if multiplier != 1.0 or base in wanted or base not in training:
+            continue
+        wanted[base] = task
+    for base in sorted(cells):
+        if base in training:
+            continue
+        retired[base] = cells.pop(base)
+        family = family_of(base)
+        reason = (f'superseded by {SUPERSEDED[family]}' if family in SUPERSEDED
+                  else 'not in the training set')
+        lines.append(f'cell retired: {base} ({reason})')
+    for base in sorted(retired):
+        if base not in training:
+            continue
+        cells[base] = retired.pop(base)
+        lines.append(f'cell restored: {base}')
+    for base, task in wanted.items():
+        if base in cells:
             continue
         cells[base] = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
-                           mult_index=0, last_round=0, windows=dict(windows.get(base, {})))
-    return dict(schema_version=1, panel=panel, round=0, cells=cells, offsets=offsets, log=[])
+                           mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
+        lines.append(f'cell added: {base}')
+    return lines
+
+
+def make_state(tasks: dict[str, dict], names: dict[str, float], windows: dict, offsets: dict,
+               panel: str) -> dict:
+    state = dict(schema_version=1, panel=panel, round=0, cells={}, offsets=offsets, log=[])
+    reconcile_cells(state, tasks, names, windows)
+    return state
 
 
 def rate(cell: dict, multiplier: float) -> float | None:
@@ -555,6 +594,10 @@ def main() -> None:
                                   str(MAIN / '.claude/worktrees/*/artifacts/**/config.json')]
     if args.state.exists():
         state = json.loads(args.state.read_text())
+        # 已有状态按当前训练集合增删格子；n10q 没有旧局，除非显式给 --init-glob 否则从空窗口起步。
+        windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
+        for line in reconcile_cells(state, tasks, names, windows):
+            log_line(args.log, line)
     else:
         windows, offsets = init_from_runs(patterns, names)
         state = make_state(tasks, names, windows, offsets, str(args.manifest))
