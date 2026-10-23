@@ -242,7 +242,12 @@ def main() -> None:
     started = time.time()
     start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
     with mp.get_context(start_method).Pool(args.workers, initializer=_init, initargs=(args,)) as pool:
-        results = list(pool.imap_unordered(_play, jobs))
+        results = []
+        for index, result in enumerate(pool.imap_unordered(_play, jobs), 1):
+            results.append(result)
+            print(f"{time.strftime('%H:%M:%S')} {index}/{len(jobs)} {result['family']} seed {result['seed']} "
+                  f"won={result['won']} searches={len(result['rows'])} stops={result['cutoff_stops']} "
+                  f"seconds={result['seconds_total']}", flush=True)
     rows = [row for result in results for row in result["rows"]]
     from search_agreement_stats import agreement_intervals
     stops: dict[str, int] = {}
