@@ -174,6 +174,7 @@
   - 实现自检（跑前已完成）：`artifacts/task40/cutoff_check.py` 在 day_l7 root 137/365/593/776 × seed 0–2 共 12 例上，cutoff 叶值与第 1 步测量逐位一致：不自信 root 等于 2500 值（如 root 137 seed0 `0.765421`）、自信 root 在 500 收手且等于 t=500 值（如 root 593 seed0 `0.990201`）；短推演耗时 0.013 s（500 收手）到 0.22 s（跑满），对照单条 2500 推演 0.02–0.08 s。另试过“跑满 2500 + 引擎 trace 再在 Python 打分”的版本，值与短推演相同但慢 10–20 倍，弃用。
 
 - 2026-10-23 10:11 第 3 步正式验收启动：`PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 scripts/cutoff_agreement.py --workers 2`（4 族 × 16 局 = 64 局，2 个游戏进程；输出 `artifacts/task40/agreement.json`、`agreement.log`）。
+- 2026-10-23 10:34 验收进度：前 2 局完成（day_l7 seed 30000 负、206 个搜索点、1311 s；seed 30001 胜、254 个搜索点、1352 s）。单局约 22 min（qc 16 worker 同时在跑）；cutoff 早停分布与第 1 步同向：胜局 54% 在 2000 tick 前收手，负局仅 1.6%（局面一直不确定）。按此速度 64 局约 12 h，继续后台跑。
 
 ## 问题
 
