@@ -229,3 +229,20 @@ python3 scripts/rotate_logs.py --root ~/PvZAgent/artifacts
 `cache_episode` 直接复用 npz 里的行缓存不再重算。逐档清单（原大小 / npz 大小 / 状态 / 路径）在
 `MEMORY/docs/frames-npz-converted.txt.gz`（6 658 行，sha256 见 `MEMORY/docs/frames-npz-report.json`）。
 台式机尚未转换，命令同上。
+
+### 7.3 档案容器：zlib → LZMA
+
+`python/pvz_frame_store.py:_save` 现在写 `ZIP_LZMA`（原来 `np.savez_compressed` 是 zlib）。
+一局档案里 72% 的字节是 frames JSON（每帧一行状态），LZMA 能跨整局建模重复，12 档样本上
+**235 KB → 140 KB（59.6%）**。`np.load` 不用改（zipfile 解码），训练包保持 `np.savez` 的
+`ZIP_STORED`（`read_pack` 要 `mmap_mode`），`python/test_frame_store_container.py` 钉住这两条。
+
+```bash
+# 存量一次性重压（逐档把所有数组读出来重写，逐个数组 dtype/形状/值全等才原子替换）
+python3 scripts/convert_frames_npz.py --data /Users/newbiexvwu/PvZAgent/artifacts --recompress --jobs 8
+```
+
+**2026-10-23 实测**：30 120 个 npz 里 22 205 个被重压（7 915 个跳过：训练包是 ZIP_STORED、
+已重压过的、120 分钟内改过的），**5 195 921 622 B → 3 105 601 019 B（59.8%），省 2.09 GB，失败 0**，
+8 并发 1 970 s。代价：写一局档案 0.055 → 0.63 s、读一档 4.4 → 12 ms（一局游戏几十秒到几分钟）。
+`artifacts` 总计 **11 GB → 4.3 GB**（7.1 转换 + 7.2 日志 + 7.3 LZMA）。
