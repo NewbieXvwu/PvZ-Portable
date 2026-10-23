@@ -110,19 +110,119 @@
      "leaf_ranking_not_top": 1,
      "outside_production_action_space": 10
     }
-   }
+   },
+   "root_sha256": "5345aac790f0d30ccbe0699701a26955b259b59985f23b88f26b9221f2194255",
+   "search_trace_sha256": "49669659b96968a65ada574b91002a93e851d3087f5c358dcf266f059b375dbe"
+  },
+  {
+   "cell": "l43-archive-45000000",
+   "root": 536,
+   "labels": 76,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 437,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.4759725400457666
+     },
+     "v4_strict": {
+      "pairs": 437,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.4759725400457666
+     },
+     "v4_nonterminal": {
+      "pairs": 437,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.4759725400457666
+     },
+     "teacher_path_v4": {
+      "pairs": 437,
+      "correct": 121,
+      "value_ties": 0,
+      "accuracy": 0.2768878718535469
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 137,
+      "correct": 104,
+      "value_ties": 0,
+      "accuracy": 0.7591240875912408
+     },
+     "v4_strict": {
+      "pairs": 262,
+      "correct": 153,
+      "value_ties": 0,
+      "accuracy": 0.583969465648855
+     },
+     "v4_nonterminal": {
+      "pairs": 137,
+      "correct": 104,
+      "value_ties": 0,
+      "accuracy": 0.7591240875912408
+     },
+     "teacher_path_v4": {
+      "pairs": 137,
+      "correct": 84,
+      "value_ties": 0,
+      "accuracy": 0.6131386861313869
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 636,
+      "correct": 311,
+      "value_ties": 0,
+      "accuracy": 0.4889937106918239
+     },
+     "v4_strict": {
+      "pairs": 703,
+      "correct": 343,
+      "value_ties": 0,
+      "accuracy": 0.4879089615931721
+     },
+     "v4_nonterminal": {
+      "pairs": 636,
+      "correct": 311,
+      "value_ties": 0,
+      "accuracy": 0.4889937106918239
+     },
+     "teacher_path_v4": {
+      "pairs": 636,
+      "correct": 276,
+      "value_ties": 0,
+      "accuracy": 0.4339622641509434
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 7,
+     "improving_plant_actions": 1,
+     "production_representable_improvers": 1,
+     "static_retained": 1,
+     "halving_pruned": 1,
+     "outside_production_action_space": 6
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 25,
+     "production_representable_improvers": 3,
+     "verification_rejected": 1,
+     "improving_plant_actions": 2,
+     "static_retained": 2,
+     "halving_pruned": 2,
+     "outside_production_action_space": 22
+    }
+   },
+   "root_sha256": "9132f380d279f9d357ac3d27fe5b217cbca2dd0761849c812700a102311626ac",
+   "search_trace_sha256": "47f5df3566152dfc91264938a17e5a780f21f9f941d24a2a7f11de00b4cf3d54"
   }
  ],
- "scope": "only first complete root; not a complete formal panel or final roof conclusion",
- "root_sha256": "5345aac790f0d30ccbe0699701a26955b259b59985f23b88f26b9221f2194255",
- "search_trace_sha256": "49669659b96968a65ada574b91002a93e851d3087f5c358dcf266f059b375dbe",
+ "scope": "first two complete roots only; no complete-panel or general roof conclusion",
  "selection_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
- "candidate_types": {
-  "wait": 1,
-  "plant": 38,
-  "shovel": 23
- },
- "tick": 13920,
- "common_futures_per_candidate": 2,
- "checks": "exact candidate set/future indices, full identities/input hashes, true terminal outcomes and complete gzip teacher action chains passed; attribution/ranking ran on actual complete root"
+ "checks": "per-root exact complete candidate/future coverage, full identity/input hashes, true terminal and complete teacher action chains; real four-audit report paths passed"
 }
