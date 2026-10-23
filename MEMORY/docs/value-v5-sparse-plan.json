@@ -264,6 +264,11 @@
    "night_l14_eval_n10"
   ],
   "baseline": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
-  "default_change": false
+  "default_change": false,
+  "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/evaluation/manifest_31032.json",
+  "manifest_sha256": "e2f01f179df98ab80c8dba4142361693371c361c7b6b30ca0037ad188cd0845b",
+  "calibration_manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/evaluation/A6_manifest.json",
+  "calibration_manifest_sha256": "b5292f6178deb25b764b746c17e7dc9b5f927af45235605161e931f68e71c528",
+  "calibration_sample_count": 1312
  }
 }
