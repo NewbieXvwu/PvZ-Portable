@@ -237,6 +237,16 @@ def test_registered_micro_recipe_uses_the_existing_strict_schema():
     assert valid['optimizer']['lr']==.0001 and valid['init'].endswith('/dw4i_s1/model.pt')
 
 
+def test_registered_step_upper_bound_preserves_epochs_and_small_corpus():
+    from task53_pipeline import effective_step_cap
+    recipe=dict(epochs=2,batch_size=256,max_steps=64)
+    assert effective_step_cap(recipe,2823)==24
+    assert effective_step_cap(recipe,100000)==64
+    assert effective_step_cap(dict(recipe,max_steps=None),2823)==24
+    assert recipe['max_steps']==64
+    with pytest.raises(ValueError,match='nonempty'):effective_step_cap(recipe,0)
+
+
 def test_resume_training_uses_completed_artifacts_without_recollecting(tmp_path,monkeypatch):
     import task53_pipeline as pipeline
     monkeypatch.setattr(pipeline,'OUT',tmp_path)

@@ -67,6 +67,36 @@ def command_metered(command,phase):
     return run
 
 
+def effective_step_cap(recipe,training_rows):
+    """Interpret the registered 'two epochs, at most 64 steps' without extending it."""
+    if training_rows<1:raise ValueError('nonempty training split required')
+    natural=recipe['epochs']*((training_rows+recipe['batch_size']-1)//recipe['batch_size'])
+    cap=recipe['max_steps']
+    return natural if cap is None else min(cap,natural)
+
+
+def resolve_training_cap():
+    """Resolve the upper bound from the unchanged actual rows before any optimizer step."""
+    import random
+    from copy import deepcopy
+    from pvz_recipe import load_recipe,training_row_options
+    from train_rollout_policy import load
+    source=OUT/'training/recipe.json';recipe=load_recipe(source)
+    rows=load(Path(recipe['data']),**training_row_options(recipe))
+    seeds=sorted(set(rows[6]));random.Random(recipe['validation']['seed']).shuffle(seeds)
+    held=set(seeds[:int(len(seeds)*recipe['validation']['fraction'])])
+    training_rows=sum(seed not in held for seed in rows[6])
+    effective=deepcopy(recipe);effective['max_steps']=effective_step_cap(recipe,training_rows)
+    path=OUT/'training/recipe.effective.json'
+    f.save(path,effective)
+    f.save(OUT/'training/step-resolution.json',dict(registered_recipe_sha256=f.sha(source),
+        registered_step_cap=recipe['max_steps'],epochs=recipe['epochs'],training_rows=training_rows,
+        validation_rows=len(rows[6])-training_rows,batch_size=recipe['batch_size'],
+        effective_steps=effective['max_steps'],effective_recipe_sha256=f.sha(path),
+        rule='min(registered upper bound, epochs * ceil(actual training rows / batch size)); all other settings unchanged'))
+    print('RESOLVED',training_rows,'training rows;',effective['max_steps'],'optimizer steps',flush=True)
+
+
 def report(plan,by_terrain,confirmation,exported,evaluation):
     from pvz_constants import PLANT_NAME
     cost=f.load(ROOT/'MEMORY/docs/task53-critical-forks-cost.json');spent=f.spent_cpu(OUT)
@@ -82,7 +112,8 @@ def report(plan,by_terrain,confirmation,exported,evaluation):
         counts[t]['action_types'][label]=counts[t]['action_types'].get(label,0)+1
     results=dict(status='experiment_complete_pending_final_delivery_audit',frozen_inputs=plan['inputs'],
         by_terrain=by_terrain,correction_counts=counts,confirmation=confirmation,
-        training=dict(recipe=str(OUT/'training/recipe.json'),recipe_sha256=f.sha(OUT/'training/recipe.json'),
+        training=dict(recipe=str(OUT/'training/recipe.effective.json'),recipe_sha256=f.sha(OUT/'training/recipe.effective.json'),
+                      registered_recipe_sha256=f.sha(OUT/'training/recipe.json'),step_resolution=f.load(OUT/'training/step-resolution.json'),
                       model=str(OUT/'training/model/model.pt'),model_sha256=f.sha(OUT/'training/model/model.pt'),
                       new_rows=len(exported['student_corrections']),old_replay_rows=3072),
         paired_evaluation={k:v for k,v in evaluation.items() if k not in ('paired','contract')},
@@ -166,7 +197,8 @@ def train_evaluate_report(plan,by_terrain,confirmed,exported):
     recipe=load_recipe(OUT/'training/recipe.json');options=pack_options(**training_row_options(recipe))
     command_metered([sys.executable,str(ROOT/'scripts/pack_training_rows.py'),'--data',recipe['data'],
         '--labels',','.join(recipe['labels']),'--cache-dir',recipe['cache_dir'],'--precompute-workers','1',*pack_flags(options)],'pack')
-    command_metered([sys.executable,str(ROOT/'scripts/train_rollout_policy.py'),'--recipe',str(OUT/'training/recipe.json')],'finetune')
+    command_metered([sys.executable,str(Path(__file__).resolve()),str(OUT/'plan-budgeted.json'),'resolve-training-cap'],'resolve-training-cap')
+    command_metered([sys.executable,str(ROOT/'scripts/train_rollout_policy.py'),'--recipe',str(OUT/'training/recipe.effective.json')],'finetune')
     model=OUT/'training/model/model.pt'
     if not model.exists():raise RuntimeError('finetune checkpoint absent')
     publish('finetune-complete',dict(model_sha256=f.sha(model),new_rows=len(exported['student_corrections'])),
@@ -182,8 +214,9 @@ def train_evaluate_report(plan,by_terrain,confirmed,exported):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path)
-    p.add_argument('stage',nargs='?',choices=['run','resume-training'],default='run');a=p.parse_args()
+    p.add_argument('stage',nargs='?',choices=['run','resume-training','resolve-training-cap'],default='run');a=p.parse_args()
     plan=f.check_plan(a.plan)
+    if a.stage=='resolve-training-cap':return resolve_training_cap()
     with (OUT/'pipeline.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         if (OUT/'pipeline-complete.json').exists():raise RuntimeError('pipeline already completed')

@@ -58,7 +58,14 @@ def verify(plan):
     assert train_corrections>0,'new corrections must participate in training, not only validation'
     checkpoint=torch.load(out/'training/model/model.pt',map_location='cpu',weights_only=False)
     original=torch.load(plan['teacher']['rollout_policy'],map_location='cpu',weights_only=False)
-    assert checkpoint['recipe_sha256']==f.sha(out/'training/recipe.json')
+    effective=f.load(out/'training/recipe.effective.json');resolution=f.load(out/'training/step-resolution.json')
+    assert {k:v for k,v in effective.items() if k!='max_steps'}=={k:v for k,v in recipe.items() if k!='max_steps'}
+    from task53_pipeline import effective_step_cap
+    assert effective['max_steps']==effective_step_cap(recipe,sum(v['training_rows'] for v in source['sources'].values()))
+    assert resolution['registered_recipe_sha256']==f.sha(out/'training/recipe.json')
+    assert resolution['effective_recipe_sha256']==f.sha(out/'training/recipe.effective.json')
+    assert checkpoint['recipe_sha256']==resolution['effective_recipe_sha256']
+    assert checkpoint['optimizer_steps']==effective['max_steps']
     assert checkpoint['optimizer_steps']>0
     changed=sum(not torch.equal(v,original['state_dict'][k]) for k,v in checkpoint['state_dict'].items()
                 if k in original['state_dict'])
@@ -131,6 +138,7 @@ def verify(plan):
         confirm_labels=confirmed['labels'],all_future_seeds_unique=True,future_seed_count=len(seeds),
         exact_terminal_and_trace_coverage=True,frozen_inputs_unchanged=True,
         training=dict(old_rows=3072,all_new_rows=len(exported['student_corrections']),new_training_rows=train_corrections,
+                      registered_step_cap_preserved=recipe['max_steps'],step_resolution=resolution,
                       optimizer_steps=checkpoint['optimizer_steps'],changed_parameter_tensors=changed,
                       root_input_and_incumbent_action_parity=matches),
         evaluation=dict(pairs=192,games=384,complete_and_model_hashes_verified=True),
