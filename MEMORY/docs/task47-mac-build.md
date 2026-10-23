@@ -40,6 +40,8 @@
 
 3. task35 同一份 16 存档 / 64 root 经 HF `transfer/task47/` 同步至本树，旧 view 对普通 Release 四轮交替配对（每 root 3 推演）：135,752 → 261,964 tick/CPU-s，比值中位数 **1.923×**（1.582 / 1.916 / 1.929 / 1.930）。完整叶观测与共有逻辑统计全部一致。旧协议缺 `planted_slots/planted_types`，本次旧构建基线的临时驱动只排除这两项，仓库正式门禁保持完整，后续 PGO 对 Release 使用全部字段。证据 `artifacts/perf/task47/release_vs_view{.json,_rounds/}`。整局三轮配对基线继续运行。
 
+4. LTO 选择：同源码独立 full 构建对普通 Release 的 thin 构建，64 root × 9 推演、四轮交替，full/thin 吞吐比中位数 **0.987**（0.981 / 0.969 / 1.011 / 0.993），保留 AppleClang 默认 `-flto=thin`。所有完整叶观测及逻辑统计相同。普通 Release 四个存档整局重放 **953 / 877 / 531 / 464 帧，0 差异**，同种子重复推演 4/4 一致。证据 `artifacts/perf/task47/full_vs_thin{.json,_rounds/}` 与 `replay_release.json`。
+
 ## 问题
 
 - Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。当前 Mac 没有 task35 的四族基准清单与全部存档，正从台式机按 HF 通道取同一份输入。
