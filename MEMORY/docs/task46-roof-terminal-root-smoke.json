@@ -525,5 +525,22 @@
  "scope": "first four complete roots only; not a complete-panel or general roof conclusion",
  "selection_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
  "checks": "per-root exact complete candidate/future coverage, full identity/input hashes, true terminal and complete teacher action chains; real four-audit report paths passed",
- "bootstrap_guard": "fewer than two informative level/reset-seed clusters => interval null, including duplicated roots from the same reset seed"
+ "bootstrap_guard": "fewer than two informative level/reset-seed clusters => interval null, including duplicated roots from the same reset seed",
+ "initial_ready_mowers_by_selected_cell": {
+  "l42-archive-45000000": 0,
+  "l43-archive-45000000": 0,
+  "l44-archive-45000000": 0,
+  "l42-student-45000001": 0,
+  "l43-student-45000001": 0,
+  "l44-student-45000001": 0,
+  "l46-student-45000000": 0,
+  "l46-student-45000001": 0,
+  "l47-student-45000000": 0,
+  "l47-student-45000001": 0,
+  "l48-student-45000000": 0,
+  "l48-student-45000001": 0,
+  "l49-student-45000000": 0,
+  "l49-student-45000001": 0
+ },
+ "mower_validation_complete_labels": 442
 }

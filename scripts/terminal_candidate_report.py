@@ -90,6 +90,7 @@ def group(job,stage='screen',samples=3,indices=None):
     if complete!=dict(indices=indices,samples=samples,labels=len(expected),root_restored=True):
         raise ValueError('completion marker does not match exact panel')
     packets={p[0]:p[1] for p in root['root_frame']['packets']};candidates=[];run_rows=[]
+    initial_ready_mowers=diag.ready(diag.trajectory_first_frame(cell))
     for index in indices:
         rows=[]
         for k in range(samples):
@@ -99,7 +100,7 @@ def group(job,stage='screen',samples=3,indices=None):
                 search_seed_base=diag.future_seed(cell['id'],point['decision'],k,stage+'-teacher-search'),
                 stage=stage,k=k,inputs_sha256=plan['sha256'])
             diag.validate_label(row,identity,folder/f'{stage}_{index}_{k}.jsonl.gz')
-            if row['outcome']['tick']<point['tick'] or not 0<=row['outcome']['mowers_used']<=6:
+            if row['outcome']['tick']<point['tick'] or not 0<=row['outcome']['mowers_used']<=initial_ready_mowers:
                 raise ValueError('invalid terminal tick or mowers')
             if not all(math.isfinite(row[key]) and 0<=row[key]<=1 for key in ['v4_short_value']):
                 raise ValueError('invalid v4 probability')
@@ -124,6 +125,7 @@ def group(job,stage='screen',samples=3,indices=None):
              v4_nonterminal=pair_counts(truth,v4,threshold,[c['short_all_nonterminal'] for c in candidates]),
              teacher_path_v4=pair_counts(truth,[c['teacher_path_v4'] for c in candidates],threshold))
     return dict(cell=cell,point=point,stage=stage,samples=samples,labels=len(run_rows),candidates=candidates,
+         initial_ready_mowers=initial_ready_mowers,
          terminal_wins=sum(r['outcome']['won'] for r in run_rows),student_index=student_index,
          student_position=candidate_positions[student_index],best=best,v4_best=v4_best,pair_metrics=metrics)
 
@@ -196,6 +198,7 @@ def report():
     diag.save(OUT/'screen-report.json',value)
     compact={k:v for k,v in value.items() if k!='groups'}
     compact['root_summaries']=[dict(cell=g['cell'],point=g['point'],labels=g['labels'],
+        initial_ready_mowers=g['initial_ready_mowers'],
         student=g['candidates'][g['student_position']],best={m:g['candidates'][g['best'][m]] for m in THRESHOLDS},
         v4_favourite=g['candidates'][g['v4_best']],pair_metrics=g['pair_metrics'],
         attribution=g['attribution']['stages']) for g in groups]
