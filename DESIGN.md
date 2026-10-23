@@ -846,3 +846,11 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 ### 14.17 价值网络叶子默认换 v4（task30，2026-10-23）
 
 老师叶子价值网络默认由 `value_net/v3` 改为 `value_net/v4`（编码 v2：空槽跳过、传送带免费与同类手牌聚合、公开场景/坟头标量；`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 与 `scripts/unified_panel.py` 的 `--value` 默认同步改）。依据：[value-widen.md 第 5 步](MEMORY/docs/value-widen.md)——同种子配对下白天 m150/m250 不掉（m250 L7 净 +2、L10 净 0）、夜间 96 对净 +20、泳池 L21 净 +9、L24 净 0；静态估值仍用 `value_branch1`。已知限制：全败泳池区叶值压平（修法另立 v5）；v4 不入 git，走 HF `transfer/value_v4.pt`（SHA256 回验一致）。
+
+### 14.18 屋顶区 roof 冷启动与任务族（task46，2026-10-23 预登记）
+
+- 范围 L41–L49，排除 L50/Boss。对照 `roof_lN_eval` 保留原 `deck_for_level` 的 `[0,1,2,3,4,5,33]`；新卡组另登记 `roof_lN_eval_r7` / `roof_lN_train_r7`，不覆盖旧族。最终 r7 由老师筛选后冻结，筛选过程不当正式评估。卡组规则仅由 `pvz_tasks.deck_for_level` 实现。
+- 选卡预登记：[task46-roof-plan.json](MEMORY/docs/task46-roof-plan.json)。引擎九关共同 Crazy Dave 池上替换原卡组恰 1/2 张，`Random(46)` 打乱候选集合，取前 16 个地形覆盖且九关整组零警告的候选。L41、种子 44000000/44000001，每副老师 2 局，按胜局数→平均终局波数/总波数→候选 id 排序；至少有实际胜局才称“老师可赢”。
+- 正式评估预留 **45000000–45000031**，每关每卡组 32 种子；L41–L45 本阶段老师与学生各取前 16 种子做配对比较。dw4i_s1（本机无 dw5i_s1）+ 叶值 v4 + 静态 branch1，参数照 `curriculum_queue.command_for`（verify=9，student-candidates=2），老师 beta=1，学生 beta=0/fast；不把 beta=0 的搜索标注当老师胜率。模型与引擎哈希冻结在计划中。
+- 训练预留 **46000000 + (N−41)×10000**，每关 8192；筛选与评估段均独立。倍率接入时保持旧八族种子不变，roof 使用独立槽，避免 L41–49 超过旧 32 槽宽时串族；task45 的雾族由对方维护。
+- L45 是 Bungee Blitz 传送带，卡组只描述初始手牌；必须单列语义。L41–49 均白天，预置盆 L41 c0–4 / L42 c0–3 / 其余 c0–2。没有加新动作头，玉米加农炮落点仍是缺口。未改引擎。

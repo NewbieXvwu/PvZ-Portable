@@ -717,6 +717,14 @@ def _play(job: dict) -> dict:
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
+            "final_tick": obs["tick"], "terminal": bool(obs.get("terminal")),
+            "wave_count": obs.get("wave_count"),
+            # Public final-board evidence, including the row/type of a house breach.
+            # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.
+            "final_zombies": [dict(row=z['row'], type=z['type'], x=z['x'],
+                                   health=z.get('health', sum(z.get(k, 0) for k in
+                                       ('body_health', 'helm_health', 'shield_health'))))
+                              for z in obs.get("zombies", []) if z.get("on_board")],
             "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
             "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],
