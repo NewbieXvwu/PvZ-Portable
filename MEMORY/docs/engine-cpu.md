@@ -1,6 +1,6 @@
 # task35 引擎 CPU 性能记录
 
-本报告尚未完成；任务与停止条件见 [task35-engine-cpu.md](task35-engine-cpu.md)。工作树为 `/home/newbiexvwu/PvZ-search/.claude/worktrees/perf`，分支 `perf`。原 CodeBuddy 仍在同树进行 C++ 实验；Codex 先补独立的基准与验收环节，不接管其未提交的 7 个 C++ 文件，也不操作会话或队列。
+本报告尚未完成；任务与停止条件见 [task35-engine-cpu.md](task35-engine-cpu.md)。工作树为 `/home/newbiexvwu/PvZ-search/.claude/worktrees/perf`，分支 `perf`。接手审计时原 CodeBuddy 仍在同树进行 C++ 实验，Codex 先补独立的基准与验收环节；其 7 个 C++ 文件随后由原会话提交为 `18a58d42`。未操作其他会话或队列。
 
 ## 基准与证据边界
 
@@ -31,14 +31,17 @@
 
 整局基线 `artifacts/perf/search_base/games.jsonl` 只有种子 30000/30001 两局，分别 98.7/133.9 秒、966/1121 决策；合计 111.45 ms/决策、30.95 games/h（串行工作量口径）。这是 **2/8 局的部分结果**，不能作为完成的整局基线。旧脚本误读 `results.jsonl` 已修正。
 
-## 正确性问题
+## 增强夹具复核与模型重载修复
 
-现构建运行 `test_identity_cpp.IdentityCppTest.test_random_identity_heads_on_real_positions` 失败：7/10 packet logits 超出 1e-5，最大绝对误差 0.1854288。`EnvironmentRollout::Load` 换入新权重时未清空 `kernelChannels` / `kernelBuffer` / `packetWeightDouble` 等衍生缓存，是明确的代码疑点；需要专门复现模型重载并修复，再跑原 24 配置测试。此失败尚未归因于单项优化，也不能用同模型的 rollout 一致性替代该验收。
+- `18a58d42` 构建相对 step9：192/192 条完整叶观测和逻辑统计联合摘要相同，16 个归档共 11,475 个决策帧重放 0 差异、16/16 同种子重复 rollout 一致。本地证据：`artifacts/perf/codex_full_gate_step9_current{,_rounds/}` 与 `codex_replay_16.json`。一轮测速比值 1.1298，前一轮为 1.0074，负载波动明显；这里用于补正确性证据，不替代原会话多轮收益结论。
+- 修复前运行既有 24 配置 identity 测试：7/10 packet logits 超出 1e-5，最大绝对误差 0.1854288。新增“同布局换权重 → 与新进程比较”回归也失败：plant logit 为 0.0540556535 vs 0.0564118475。
+- 根因：`EnvironmentRollout::Load` 换入新权重未清空 `kernelChannels` / `kernelBuffer` / `packetWeightDouble`。同布局与同活动通道无法感知权重已变，旧矩阵被复用。成功载入后统一清空衍生权重缓存、令 padding 计数失效、清除 packet logits 有效标记；非法载入仍保留旧模型。
+- 修复后全部 4 项 `test_identity_cpp` 通过（含新增回归）。24 配置 × 8 真实决策最大 logit 误差 **1.0430813e-7**，所有 argmax/动作一致；传送带 80 决策（79 次空槽、13 次免费卡）最大误差 **7.4505806e-8**；重载与新进程的 plant/packet/cell/action 逐项完全相同。证据 `codex_reload_before.log` / `codex_identity_after.log`（不入库）。这是缓存正确性修复，不作为新的性能增益项。
 
 ## 仍需完成
 
-1. 协调原会话退出后接续 7 个未提交 C++ 文件，逐项 A/B 验证和提交；目前不能把它们合成一个已验收的优化。
-2. 用完整观测/统计门禁补验现构建与上个提交，16 局动作逐帧重放；修复模型重载问题。
+1. 原会话已提交 `18a58d42` 的六项微优化（其报告 +8.3% 为合计，单项收益未独立证实）；继续在此基础上找下一项，避免重复实验。
+2. 模型重载修复已补验：修复前后 192 条完整叶观测与逻辑统计全部相同（`codex_reload_compare.json`，单轮比值 1.0236，不计作性能收益），修复后另跑 16 局 11,475 帧零差异且同种子重复推演一致（`codex_replay_after_reload_16.json`）。
 3. 完成基线与最终构建的同种子 8 局整局指标。缺失时不填写模拟推算值。
 4. 学生前向 SIMD 与 BLAS 对照、前向减半目标的实测证据仍需核实。
 5. 锁步多推演 batch 原型、实测加速比与给 task33 的接口草案尚未提交。

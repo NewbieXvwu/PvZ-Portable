@@ -124,6 +124,14 @@ void EnvironmentRollout::Load(const std::string& path)
 	v2lite = observation == 2;
 	v2 = observation == 3;
 	weights = std::move(loaded);
+	// LOAD_ROLLOUT_NET can replace a model in an existing process, including with
+	// another model of the same layout. Channel sets and dimensions do not identify
+	// weights: invalidate every derived weight/padding cache on a successful load.
+	kernelChannels.clear();
+	kernelBuffer.clear();
+	packetWeightDouble.clear();
+	columnsCount = -1;
+	packetLogitsValid = false;
 	hidden.resize(Cells * width);
 	scratch.resize(Cells * width);
 	context.resize(nextContext);
