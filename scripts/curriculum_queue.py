@@ -62,7 +62,7 @@ STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = MAIN / 'artifacts/student/dw4i_s1/model.pt'
 DEFAULT_STATIC_VALUE = MAIN / 'artifacts/hard/value_branch1/model.pt'
-DEFAULT_VALUE = MAIN / 'artifacts/value_net/v3/model.pt'
+DEFAULT_VALUE = MAIN / 'artifacts/value_net/v4/model.pt'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
 

@@ -87,6 +87,8 @@
 - 2026-10-23 18:20 [step5-c] m250 v3 臂两关 32/32 完成（断点续跑计入原有 16 局）：L7 0/32 胜（m250 压穿老师，两臂预计都顶不住，配对只能证等劣）、L10 32/32 全胜（m250 仍有余力）。v4 臂同种子已启动（workers=4）。
 - 2026-10-23 23:30 [step5-d] m250 配对完成（两臂各 32/32，complete=true）：L7 v3 0/32 vs v4 2/32（净 +2，p=0.5，无 v4 受损局）、L10 两臂 32/32 顶格（净 0，p=1.0）。m150+m250 判据全部满足，白天压力验证通过，value-widen.md 结论节已补记并移除回退条款。第 5 步三项验证全部完成，建议不变：整臂换 v4。
 
+- 2026-10-24 00:30 [step6] 整臂换 v4 完成。合并：`git merge --no-ff origin/pvz-env` → 合并提交 `335bfc48`（主线 203 个提交进 vnet）。冲突 4 处按主控规则解：两份 MEMORY 日志两侧条目全保留（10-23 的 vnet 12:20 条目按时间插到 task27:4 之后、task35 之前）；任务书以 vnet 侧为准（主线副本是旧快照）；`search_play.py` 以主线结构为准——CUDA 叶子块与 CUDA 服务启动随 `encoder_version != 1` 保护一起删、`--margin` 不恢复，只把 `encode_frame(f, net.encoder_version)` 与 `--leaf-probe/--leaf-probe-limit` 落回主线（语法校验通过，全文无 cuda/rollout_backend 残留）。默认值：`curriculum_queue.py DEFAULT_VALUE` 与 `unified_panel.py --value` → `value_net/v4`；DESIGN 新增 §14.17（依据链 value-widen.md 第 5 步）；`check_panel_type_counts.py` 等历史夹具与任务 27 溯源脚本不动。v4 已复制到主检出 `/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt`，SHA256 `14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d` 与 HF 回验值一致。测试：`pytest python -q`（资源目录 `PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources`）= **312 passed / 1 failed / 111 subtests passed**；唯一失败 `test_identity_training.py::test_cpu_training_checkpoint_is_loadable`（`train_rollout_policy.py:549` 空候选哨兵索引越界）在合并前主线 origin/pvz-env (deac6118) 临时 worktree 上同样失败——非本次合并引入。冒烟：合并重建引擎后用主检出 v4 跑 `day_l7_train_d7_m150` 1 局（1 个游戏进程），seed 5512288 胜、30 波、exit 0——C++ 推演路径 + 编码 v2 叶子可用。v5 立项节已写入 value-widen.md（只写不跑）。
+
 ## 第 6 步：采用 v4 并合进主线（主控 2026-10-23 15:40 追加）
 
 **主控决定：整臂换 v4**（不分区）。依据是 value-widen.md 第 5 步：白天 m150/m250 不掉，夜间 96 对净 +20，泳池 L21 +9，L24 净 0。泳池全败区叶值压平是已知限制，修法另开 v5（见第 4 条），不挡这次换。
