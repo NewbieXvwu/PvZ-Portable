@@ -38,6 +38,7 @@
 
 ## 结果
 
+- 2026-10-23 [全量测试]：本工作树独立 Release 引擎构建完成；`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest /home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/python -q` → **356 passed / 133 subtests passed / 0 failed / 0 skipped**（49.60s）。预验收按独立停止标志正常组间退出，进程监测峰值 2；修正版完整 32 局已在 `artifacts/task49/acceptance/` 启动（PID 157083），未重启 qc。
 - 2026-10-23 [内存预验收修正]：实测捕获小语料冷启动预算过大导致后台等待，按实际语料体积收紧预测峰值并同步限制标签进程数；27 项相关回归（4 subtests）通过，多进程回归现明确断言真实 spawn 2 个标签构建进程。已补数据契约、学生滞后影响、主控组间部署与首次重建说明；完整 32 局修正版验收待运行。
 - 2026-10-23 [语料与验收工具]：生产只读核查发现请求的 202 个标签里 `frames_v2` 缺 `d10orig1_fast_search` / `d10orig2_fast_search`；后台现以状态目录内的链接视图合并配方来源和课程来源（按档案去重、采集优先），包/缓存都写独立目录。新增双来源/缺失标签门禁，以及可重跑的 `verify_training_segments.py`（真实两 epoch）与 `verify_curriculum_overlap.py`（32 局/时间重叠/组间换学生/段复用审计）；27 项相关测试（4 subtests）通过。删除已无调用的旧同步打包包装函数，避免保留第二条调度路径。
 - 2026-10-23 [重叠调度]：轮尾改为保存独立配方快照、入后台串行 pack→train 队列，前台直接采下一轮；成功学生只在组边界启用并记录每组来源模型。加入失败落盘/重启续训、不可变模型、内存峰值预留与独立 stop flag；24 项课程/流水线测试（4 subtests）通过，包含两个后台阶段都与前台重叠、组内不换模型、失败重试和内存不重复扣 RSS。真实 2×8×2 验收已在本工作树 `artifacts/task49/smoke/` 启动，自有游戏进程上限 2。
