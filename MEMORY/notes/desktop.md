@@ -95,5 +95,6 @@ EARLYOOM_ARGS="-m 5 -s 50 -r 300 --prefer '(pvz-portable|search_play|python3)' -
 - 压力测试脚本 `scripts/oom_stress_test.py`：默认拒绝，必须 `--i-know`；即使给了也再拒绝
   训练在跑 / 采集在跑 / 可用 < 12 GiB。它起 2 个分数 1000 的假 worker 把 MemAvailable 压到 5%，
   量 `tmux new-session -d` 和 `bash -c true` 的延迟（<2 s 为通过），并验证死的是假 worker、
-  init/sshd/tmux/earlyoom 都活着。**待主控批准后运行，结果补在这一节。**
+  init/sshd/tmux/earlyoom 都活着。**主控已批准，等待主控创建 `~/pvz-logs/oom_window_open`
+  时间窗（qc 组间停、无训练）；本会话监视中，结果补在这一节。**
 
