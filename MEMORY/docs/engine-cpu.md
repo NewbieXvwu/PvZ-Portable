@@ -198,6 +198,20 @@ CPU 工作口径的整局吞吐 11.6–82.3 games/h（新）对 7.7–49.6 games
 - **锁步在这份原型里是净亏**：batch9 的总 CPU 是 native 的 **2.79 倍**（12.52 → 34.87 s）。主因是每 lane 各自快照/还原（37.1 ms/条，占 batch9 的 61%），而模拟段（13.7 ms/lane）完全不因合批变小。
 - **批量本身有效，但幅度有限**：batch1 → batch9 的网络段 **1.214×**（10.74 → 8.84 ms/lane）。两条 batch 臂的每 lane 网络仍比 native 串行（7.41 ms）慢 19% —— 因为 im2col 还是按 lane 单独做，只有 GEMM 合批。
 - **给 task33 的结论**：这条路的收益上限就是网络段占整条推演的份额（**34%**），其中 GEMM 约占整条推演的 28%。要让锁步值钱，必须同时做到 ① 各 lane 共享同一份快照（写时复制或按 lane 回放增量），② im2col 也按 lane 合批；否则不如串行。即便 ①② 都做到，也只能压缩那 34%，**单靠 B 不可能把整局吞吐推到 2.0×**。
+## 最终构建验收（2026-10-23 14:40，合并 pvz-env 后的源码）
+
+`JOBS=8 bash scripts/build_pgo.sh bench` 两阶段重走，`grep -c fprofile-generate build/build.ninja` = **0**（profile-use 阶段）。三项门禁：
+
+| 门禁 | 命令 | 结果 |
+|---|---|---|
+| 整局逐帧重放（gate v2） | `bench_engine.py replay` | 四族 953 / 877 / 531 / 464 帧，**0 差异**；同种子重复推演 4/4 一致 |
+| 64 root 吞吐 | `bench_engine.py bench --rollouts 3` | 484,620 tick / 3.94 CPU-s = **123,000 tick/CPU-s**，20.5 ms/推演，网络占比 38.7% |
+| 配对 A/B（改前二进制） | `bench_engine.py compare --rounds 4` | 比值中位数 **0.987**（本机噪声内），`correctness: all rollout states and logical statistics identical` |
+
+网络占比按族差别很大：夜间 L12 63.6%（模拟段几乎为 0，雾/夜间没有持续交战）、传送带 L10 32.4%、白天 L7 39.4%、泳池 L24 35.2%。这解释了为什么 A2 的整局比值各族不同——族里“学生前向 vs 引擎模拟”的比例不一样。
+
+绝对值对照：步骤 4 记录的 114.8k tick/CPU-s 是**合并 pvz-env 之前**的源码；合并后同一夹具是 123.0k，说明 70 个提交的合并没有带来退化（+7%）。
+
 ## 部署（给主控：在 cq 工作树上一次做完）
 
 本分支的引擎加速全部是**默认构建**的一部分，没有新增运行开关：LTO、PGO、mimalloc、
