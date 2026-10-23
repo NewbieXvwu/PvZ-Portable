@@ -133,6 +133,10 @@ def summarize(plan):
 
 
 def run(stage):
+    raise RuntimeError("Task45 追加 D pauses the ladder and student comparisons; main-controller approval required to resume")
+
+
+def _paused_run(stage):
     plan = load(OUT / stage / 'plan.json')
     assert sha(plan['manifest']) == plan['manifest_sha256']
     for info in plan['inputs'].values():
