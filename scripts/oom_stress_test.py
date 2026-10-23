@@ -53,6 +53,15 @@ def meminfo() -> tuple[int, int]:
     return values["MemTotal"], values["MemAvailable"]
 
 
+def command_matches(command: str, needles: tuple[str, ...]) -> bool:
+    """An argv token's basename is exactly one of the needles.
+
+    Plain substring matching would count earlyoom itself as collection because its
+    ``--prefer '(pvz-portable|search_play|python3)'`` contains both names.
+    """
+    return any(Path(token).name in needles for token in command.split())
+
+
 def matching_processes(needles: tuple[str, ...]) -> list[tuple[int, str]]:
     found = []
     for entry in Path("/proc").iterdir():
@@ -62,7 +71,7 @@ def matching_processes(needles: tuple[str, ...]) -> list[tuple[int, str]]:
             command = (entry / "cmdline").read_bytes().replace(b"\0", b" ").decode(errors="replace")
         except OSError:
             continue
-        if any(needle in command for needle in needles):
+        if command_matches(command, needles):
             found.append((int(entry.name), command.strip()))
     return found
 

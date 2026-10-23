@@ -23,7 +23,7 @@ class StressPreflightTest(unittest.TestCase):
         self.assertTrue(json.loads(result.stdout)["refused"])
 
     def test_finds_a_process_by_cmdline(self):
-        fake = subprocess.Popen(["bash", "-c", "exec -a fake_train_rollout_policy.py sleep 30"])
+        fake = subprocess.Popen(["bash", "-c", "exec -a train_rollout_policy.py sleep 30"])
         try:
             deadline = time.monotonic() + 5
             found = []
@@ -36,6 +36,15 @@ class StressPreflightTest(unittest.TestCase):
         finally:
             fake.kill()
             fake.wait()
+
+    def test_earlyoom_cmdline_is_not_collection(self):
+        line = ("/usr/bin/earlyoom -m 5 -s 50 -r 300 "
+                "--prefer (pvz-portable|search_play|python3) --avoid (init|sshd|tmux)")
+        self.assertFalse(stress.command_matches(line, stress.COLLECTION))
+        self.assertTrue(stress.command_matches("/x/build/pvz-portable --level 1", stress.COLLECTION))
+        self.assertTrue(stress.command_matches("python3 /x/scripts/search_play.py --workers 4",
+                                               stress.COLLECTION))
+        self.assertFalse(stress.command_matches("/usr/bin/earlyoom --prefer python3", stress.TRAINING))
 
     def test_meminfo_and_timing(self):
         total, available = stress.meminfo()
