@@ -634,7 +634,10 @@
      }
     ]
    },
-   "screen_labels_saved": 4340,
+   "screen_labels_saved": 4266,
+   "raw_labels_including_pilot": 4340,
+   "outside_panel_pilot_labels_excluded": 74,
+   "counting_note": "Corrected to the 64 frozen roots; pilot labels outside the final selection do not count toward 12372. Pilot completion markers with samples=1 are not formal root completion.",
    "screen_labels_planned": 12372,
    "cpu_seconds_metered": 16185.850853,
    "artifact_bytes": 60107150,
