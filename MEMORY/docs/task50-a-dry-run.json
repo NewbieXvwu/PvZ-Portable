@@ -1,0 +1,6 @@
+{
+  "roof_cell": "roof_l41_train_r7                      1      -     0     48  c1roofl41r7m100",
+  "command": "collect: /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/scripts/search_play.py --rollout-policy /home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt --verify-samples 9 --student-candidates 2 --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task46/roof_panel.json --task-id roof_l41_train_r7 --seed-offset 0 --seeds 48 --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable --dagger-beta 0 --workers 2 --resource-dir /home/newbiexvwu/.cache/pvz-research-resources --frames /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/dry-frames --frames-label c1roofl41r7m100 --out /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/dry-runs/c1roofl41r7m100_48",
+  "summary": "total groups 38, games 1824",
+  "fog_cells": 0
+}

@@ -59,6 +59,8 @@
 
 - [A.3] vcpp合并6b840b1e已推送；本树Release重建完成，全套 **395 passed + 133 subtests passed**（85.71秒，零跳过），含双编码×human/xray直接Board逐位特征、静态与叶值回归。诊断/重标注调用已迁移到导出价值权重接口；老师门禁冻结原task37配置、旧源码/旧二进制，三任务各32局两臂全部新跑，不复用旧局。见task50-a-validation.json。
 
+- [A.4] deploy3重建PGO成功，源2b743c62；SHA256 `0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327`，141份profile，generate=0/use=162。部署门禁正在重新执行。新dry run仍38组/1824局，L41原版48局、引擎deploy3，fog cell=0；见task50-a-build.json / task50-a-dry-run.json。
+
 主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
 
 ```bash
