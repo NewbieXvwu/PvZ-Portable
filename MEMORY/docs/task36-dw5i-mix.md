@@ -39,6 +39,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，2数据配比账：新增 scripts/task36_data_ledger.py，按训练器原样重放 wait 行采样（random.Random(0)、每帧一次抽样、档案顺序同 frame_paths），逐标签保留行数与两次真实训练完全吻合（dw4i 13643901 行 / dw5i 15788614 行，与 task23 表、source_rows.json 总数逐一相等）。标签归属：区取自每份 meta.json 的 context.level（background_for_level），来源按 artifacts/task27/mac_import.json 的 117 个 Mac 包 + _m 后缀 + z15 前缀判定，卡组族按标签规则。夜间：dw5i 训练集 11.0%（1740770 行）里 **n9 占 82.4%**（1434026 行，其中 Mac 1028707 行 = 59.1%），n10 只占 17.6%（306744 行）；dw4i 夜间仅 1.7% 且全是 n9。白天：identity_base 仍占 73.1%，早关 L1/3/4/6 只有 82097 行 = 白天的 0.6%、全部的 0.52%。泳池 192679 行 = 1.2%。完整逐标签账 artifacts/task36/data_ledger.json（395 KB，不入 git）。
 
+- 2026-10-23，5新装载验收（task33 §15“验收一”）：取方案 A 的 2 个标签（d8p2m、d8p3m）打包（61,069 行、29.0 MB、打包 92 s、峰值 746 MB）。旧装载（合并前 31983784，独立工作树 /tmp/task36-premerge）与新装载同 seed 各训完整 8 epoch：**8/8 epoch 的 train_loss 完全相同**（7.452075576 → 2.148049681），**21/21 state_dict 张量 `torch.equal` 全真**（scripts/task36_loader_parity.py）。唯一差异是 val 指标（val_loss/type_acc/packet_acc/cell_acc/plant_recall，8 epoch 全差）：合并后的训练器把验证分块从 `split(4096)` 改成 `split(1024)`，是评估代码差异，与装载/行顺序无关。峰值 RSS：旧 1,547,008 KB（1.48 GiB）→ 新 1,393,356 KB（1.33 GiB），仅 2 标签子集。
+
 
 ## 问题
 
