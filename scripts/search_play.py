@@ -428,6 +428,16 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         else:
             raise ValueError(f"unknown candidate mode {mode!r}")
 
+        present = {json.dumps(candidate, sort_keys=True) for candidate in candidates}
+        legal_keys = {json.dumps(plant, sort_keys=True) for plant in plants}
+        for tick, action in _W.get('demo_actions', ()):
+            key = json.dumps(action, sort_keys=True)
+            if tick >= obs['tick'] and key in legal_keys:
+                if key not in present:
+                    candidates.append(action)
+                    stats['demo_candidate_added'] = stats.get('demo_candidate_added', 0) + 1
+                break
+
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
         # One candidate at a time, terminal futures first: the order the labels were produced in.
@@ -585,7 +595,24 @@ def _play(job: dict) -> dict:
     stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
              "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
     try:
-        obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+        demo_archive = getattr(args, 'demo_archive', None)
+        prefix = []
+        _W['demo_actions'] = []
+        if demo_archive:
+            from dataclasses import asdict
+            from human_demo import replay
+            demo_meta = json.loads((Path(demo_archive) / 'meta.json').read_text())
+            if (demo_meta['task']['id'] != args.task_id or demo_meta['task']['deck'] != list(kw['deck']) or
+                    demo_meta['environment_task'] != json.loads(json.dumps(asdict(task)))):
+                raise ValueError('demonstration task, deck, seed or environment differs from the manifest')
+            obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision)
+            from pvz_frame_store import frame_path, read_frames
+            demo_frames = read_frames(frame_path(Path(demo_archive)))
+            _W['demo_actions'] = [(before['tick'], after['action'])
+                                  for before, after in zip(demo_frames, demo_frames[1:])
+                                  if (after.get('action') or {}).get('type') == 'plant']
+        else:
+            obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         from pvz_value_net import observation_context
         _W["context"] = observation_context(obs)
         task_context = {"level": kw["level"], "multiplier": obs.get("zombie_count_multiplier", 1.0),
@@ -596,6 +623,14 @@ def _play(job: dict) -> dict:
         # objects for the whole game (task18).
         frames = [_frame_json(_frame(obs))] if args.frames else None
         fast_state = {}
+        if prefix:
+            fast_state['frame'] = prefix[-2] if len(prefix) > 1 else None
+            fast_state['action'] = prefix[-1].get('action')
+            if _W['fast'].obs != 'v1':
+                from pvz_student_observation import StudentHistory
+                fast_state['history'] = StudentHistory(_W['fast'].obs)
+                for frame in prefix[:-1]:
+                    fast_state['history'].extra(frame)
         _W["student_history"] = None
         # DAgger (DESIGN.md §14.6): the search still labels every decision, but with probability
         # 1 - dagger_beta the student's own action is executed, so the archive covers the positions the
@@ -699,7 +734,7 @@ def _play(job: dict) -> dict:
                                  "".join(frames).encode())
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
-        if 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original':
+        if demo_archive or 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original':
             import hashlib
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
                                 policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
@@ -712,6 +747,9 @@ def _play(job: dict) -> dict:
             archive_outcome.update(final_tick=obs['tick'], wave_count=_frame(obs)['scene'].get('wave_count', 0),
                                    reason='win' if obs.get('result') == 1 else 'not_won')
         (archive / "meta.json").write_text(json.dumps({
+            "label_source": "teacher",
+            **({"demo_archive": str(Path(demo_archive).resolve()), "demo_decision": args.demo_decision,
+                "demo_note": demo_meta.get('note', '')} if demo_archive else {}),
             "task": archive_task,
             "context": task_context,
             "outcome": archive_outcome}))
@@ -725,6 +763,7 @@ def _play(job: dict) -> dict:
             "student_candidate_added": stats["student_candidate_added"],
             "student_candidate_best": stats["student_candidate_best"],
             "student_candidate_override": stats["student_candidate_override"],
+            "demo_candidate_added": stats.get('demo_candidate_added', 0),
             "shovel_events": stats.get("shovel_events", []),
             "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
@@ -745,6 +784,8 @@ def main() -> None:
                    "(default --value)")
     p.add_argument("--manifest", required=True)
     p.add_argument("--task-id", required=True)
+    p.add_argument("--demo-archive", type=Path, help="verified human demonstration used as the starting state")
+    p.add_argument("--demo-decision", type=int, default=1, help="start immediately before this demo decision")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
@@ -796,6 +837,14 @@ def main() -> None:
             p.error(f"--seed-list seeds are not in the task manifest: {unknown[:5]}")
     else:
         seeds = task_seeds[args.seed_offset: args.seed_offset + args.seeds]
+    if args.demo_archive:
+        demo = json.loads((args.demo_archive / 'meta.json').read_text())
+        if not demo.get('verified'):
+            p.error('verify the human demonstration before starting a teacher game')
+        seed = demo['task']['seed']
+        if seed not in seeds:
+            p.error('demonstration seed is outside the selected manifest seeds')
+        seeds = [seed]
     args.out.mkdir(parents=True, exist_ok=True)
     results_path = args.out / "games.jsonl"
     done_keys = set()

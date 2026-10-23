@@ -1101,6 +1101,11 @@ static void RunEnvironment(LawnApp* app)
 			continue;
 		}
 
+		if (demo && ok && (command == "PLANT" || command == "SHOVEL"))
+		{
+			human.packet = -1;
+			human.shovel = false;
+		}
 		const auto observationStart = std::chrono::steady_clock::now();
 		const double executionSeconds = std::chrono::duration<double>(observationStart - commandStart).count();
 		if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "WAIT_EVENT_V1" || command == "WAIT_UNTIL_LEGAL")

@@ -761,6 +761,12 @@ def _replay_task_extra(task: dict) -> dict:
 
 def _run_variant(meta: dict, override: dict, resource_dir: str,
                  prefix: list | None = None) -> dict:
+    if meta.get('label_source') in ('human', 'counterfactual'):
+        from human_demo import replay
+        from pvz_event_env import EventWaitEnv
+        with EventWaitEnv(resource_dir) as env:
+            _, changed, _ = replay(env, Path(meta['_archive']), overrides=override)
+        return changed['outcome']
     t = meta["task"]
     rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
                   4000, t.get("deck"), override=override, prefix_actions=prefix,
@@ -778,6 +784,9 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     deck = meta["task"].get("deck") or []
     task = meta["task"]
     t = task
+    human = meta.get('label_source') in ('human', 'counterfactual')
+    if human:
+        meta = {**meta, '_archive': str(archive)}
     if decision < 1 or decision >= len(frames):
         return f"（决策序号要在 1–{len(frames) - 1} 之间）"
     hand = _hand_at(frames, decision, deck)   # 这一步的卡槽 → 植物；deck 只留给重放用
@@ -802,6 +811,8 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
          "不是照抄原局录下的那串动作。所以结果反映的是「改了这一步之后，"
          "策略会怎么接着打」，不是「只改这一步、后面硬按原剧本走」。",
          ""]
+    if human:
+        L[2] = f'重放方式：逐 tick 重放示范，只替换第 {decision} 步，随后继续执行原局录下的操作。'
 
     cands: list[dict] = []
     for raw in raw_actions:
@@ -819,12 +830,19 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
                 "  想省事就用 --enumerate：输出左列可以直接复制当 --try。",
             ])
     if enumerate_:
-        probe = collect(resource_dir, meta["task"]["seed"], meta["task"]["level"],
+        if human:
+            from human_demo import replay
+            from pvz_event_env import EventWaitEnv
+            with EventWaitEnv(resource_dir) as env:
+                observation, _, _ = replay(env, archive, decision=decision)
+            legal = observation.get('legal_actions') or {}
+        else:
+            probe = collect(resource_dir, meta["task"]["seed"], meta["task"]["level"],
                         meta["task"]["policy"], 4000, deck,
                         capture_legal_at=decision, prefix_actions=prefix,
                         checkpoint=meta["task"].get("checkpoint"),
                         task_extra=_replay_task_extra(task))
-        legal = probe.get("legal_at") or {}
+            legal = probe.get("legal_at") or {}
         for p in (legal.get("plants") or []):
             if row_filter is not None and p["row"] != row_filter:
                 continue
@@ -879,22 +897,29 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         if save_best and results:
             top = results[0]
             out = Path(save_best)
-            rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
+            if human:
+                from human_demo import replay, verify
+                from pvz_event_env import EventWaitEnv
+                with EventWaitEnv(resource_dir) as env:
+                    replay(env, archive, overrides={decision: top[1]}, save=out)
+                verify(out, resource_dir)
+            else:
+                rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
                           4000, deck, override={decision: top[1]}, prefix_actions=prefix,
                           checkpoint=t.get("checkpoint"), task_extra=_replay_task_extra(t))
-            out.mkdir(parents=True, exist_ok=True)
-            (out / "meta.json").write_text(json.dumps(
-                {"schema": SCHEMA,
-                 "task": {**t,
-                          "note": f"反事实：第 {decision} 步改为 "
-                                  f"{_action_text(top[1], hand)}"},
-                 "outcome": rec["outcome"], "totals": rec["totals"],
-                 "frame_count": len(rec["frames"])},
-                ensure_ascii=False, indent=2), encoding="utf-8")
-            with (out / "frames.jsonl").open("w", encoding="utf-8") as fh:
-                for fr in rec["frames"]:
-                    fh.write(json.dumps(fr, ensure_ascii=False,
-                                        separators=(",", ":")) + "\n")
+                out.mkdir(parents=True, exist_ok=True)
+                (out / "meta.json").write_text(json.dumps(
+                    {"schema": SCHEMA,
+                     "task": {**t,
+                              "note": f"反事实：第 {decision} 步改为 "
+                                      f"{_action_text(top[1], hand)}"},
+                     "outcome": rec["outcome"], "totals": rec["totals"],
+                     "frame_count": len(rec["frames"])},
+                    ensure_ascii=False, indent=2), encoding="utf-8")
+                with (out / "frames.jsonl").open("w", encoding="utf-8") as fh:
+                    for fr in rec["frames"]:
+                        fh.write(json.dumps(fr, ensure_ascii=False,
+                                            separators=(",", ":")) + "\n")
             L.append(f"  最好的那个已存档到 {out} —— 可以接着用 lane / narrative / "
                      f"frame 查它，和原局对照。")
     else:

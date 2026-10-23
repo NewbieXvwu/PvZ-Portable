@@ -846,3 +846,9 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 ### 14.17 价值网络叶子默认换 v4（task30，2026-10-23）
 
 老师叶子价值网络默认由 `value_net/v3` 改为 `value_net/v4`（编码 v2：空槽跳过、传送带免费与同类手牌聚合、公开场景/坟头标量；`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 与 `scripts/unified_panel.py` 的 `--value` 默认同步改）。依据：[value-widen.md 第 5 步](MEMORY/docs/value-widen.md)——同种子配对下白天 m150/m250 不掉（m250 L7 净 +2、L10 净 0）、夜间 96 对净 +20、泳池 L21 净 +9、L24 净 0；静态估值仍用 `value_branch1`。已知限制：全败泳池区叶值压平（修法另立 v5）；v4 不入 git，走 HF `transfer/value_v4.pt`（SHA256 回验一致）。
+
+### 14.18 人类示范任务族（task48，2026-10-23）
+
+固定清单 `configs/human_demo_tasks.json`，二周目、倍率1.0、每关同种子20261000+关号，与既有雾区训练族分别保存。L31登记 `demo_fog_31_fume` / `demo_fog_31_burst`，L32登记 `demo_fog_32_magnet` / `demo_fog_32_freeze`，L33与L34分别登记 `demo_fog_N_cactus` / `demo_fog_N_blover` / `demo_fog_N_cattail`（N=33、34）。各族完整十卡顺序以该清单为准，计划与中文卡名见 [human-demo.md](MEMORY/docs/human-demo.md)。录制前按对应 profile 查询引擎解锁植物并执行整组检查，香蒲所有权由 `profile_for_deck` 声明，旧任务与旧存档卡组不变。
+
+`human_demo.py` 使用原生窗口、逐tick动作带与状态哈希，原始局标记 `label_source: human`，可选 `note` 仅存meta。验证通过后导出frames_v2，配方 `train.source_weight` 按来源乘权。`search_play.py --demo-archive ... --demo-decision N` 精确恢复第N步前局面并由老师接管，示范中的后续合法种植动作进入候选，使用既有推演评分。老师续局记为teacher，保留起点与示范备注用于分析。原始示范与npz不入git，走HF transfer。

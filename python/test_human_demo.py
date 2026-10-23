@@ -4,6 +4,8 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -38,6 +40,19 @@ class HumanDemoTest(unittest.TestCase):
             self.assertTrue(report['verified'])
             self.assertEqual(report['tick'], 75)
             with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                changed, changed_meta, _ = replay(env, archive, overrides={2: dict(type='wait', ticks=5)},
+                                                 save=root / 'changed')
+                self.assertEqual(changed['tick'], 20)
+                self.assertFalse(changed_meta['outcome']['override_rejected'])
+            self.assertTrue(verify(root / 'changed', RESOURCE, BINARY)['verified'])
+            self.assertEqual(json.loads((root / 'changed/meta.json').read_text())['label_source'], 'counterfactual')
+            from episode_query import _whatif
+            meta = json.loads((archive / 'meta.json').read_text())
+            raw_frames = read_frames(archive / 'frames.jsonl')
+            text = _whatif(archive, meta, raw_frames, 2, ['wait:5'], str(RESOURCE), False, None, 1, None)
+            self.assertNotIn('重放失败', text)
+            self.assertIn('随后继续执行原局录下的操作', text)
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
                 obs, meta, prefix = replay(env, archive, decision=3)
                 self.assertEqual(obs['tick'], prefix[-1]['tick'])
                 state_hash = env.state_hash()
@@ -67,6 +82,62 @@ class HumanDemoTest(unittest.TestCase):
             (archive / 'ticks.jsonl').write_text('\n'.join(lines) + '\n')
             with self.assertRaisesRegex(RuntimeError, 'operation 5'):
                 verify(archive, RESOURCE, BINARY)
+
+    def test_teacher_starts_at_demo_and_scores_demo_candidate(self):
+        import torch
+        import search_play
+        from pvz_rollout_policy import RolloutNet, export_student
+        from pvz_value_net import ValueNet
+        torch.set_num_threads(1)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / 'raw'
+            deck = [0, 1, 2, 3, 4, 5]
+            task = TaskSpec(level=1, seed=271, profile=profile_for_deck(deck), wave_cap=1)
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                recorder = Recorder(env, archive, 'demo_test', deck, task)
+                recorder.step(dict(type='wait', ticks=10))
+                recorder.step(dict(type='plant', packet=1, row=2, col=0))
+                recorder.close()
+                net = RolloutNet(width=13, obs='v2lite').eval()
+                with torch.no_grad():
+                    net.plant.bias.fill_(-100)
+                checkpoint = root / 'student.pt'
+                torch.save(dict(state_dict=net.state_dict(), obs='v2lite'), checkpoint)
+                native = root / 'student.bin'
+                export_student(net, native)
+                env.load_rollout_net(native)
+                manifest = root / 'tasks.json'
+                manifest.write_text(json.dumps(dict(tasks=[dict(task_id='demo_test', level=1,
+                                        seeds=[271], deck=deck, wave_cap=1)])))
+                args = SimpleNamespace(manifest=manifest, task_id='demo_test', resource_dir=RESOURCE,
+                                       demo_archive=archive, demo_decision=2, frames=root / 'teacher',
+                                       frames_label='demo', dagger_beta=1.0, rollout_policy=checkpoint,
+                                       min_gap=0, per_card=1, halving=False, samples=1, horizon=60)
+                with patch.dict(search_play._W, dict(env=env, fast=net, vnet=ValueNet(width=8).eval()), clear=True), \
+                     patch.object(search_play, 'MAX_ACTIONS', 1), patch.object(search_play, '_static_frames', return_value=[]):
+                    result = search_play._play(dict(args=args, seed=271, arm='fast_search'))
+                self.assertEqual(result['searched'], 1)
+                self.assertEqual(result['demo_candidate_added'], 1)
+            teacher = root / 'teacher/seed_271/demo_fast_search'
+            frames = read_frames(teacher / 'frames.npz')
+            self.assertEqual(frames[0]['tick'], 10)
+            self.assertIn([1, 2, 0], [target[:3] for target in frames[1]['targets']])
+            self.assertEqual(json.loads((teacher / 'meta.json').read_text())['label_source'], 'teacher')
+
+    def test_terminal_recording_replays_final_wave_and_result(self):
+        with tempfile.TemporaryDirectory() as directory:
+            archive = Path(directory) / 'raw'
+            deck = [0, 1, 2, 3, 4, 5]
+            task = TaskSpec(level=1, seed=271, profile=profile_for_deck(deck), wave_cap=1)
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                recorder = Recorder(env, archive, 'demo_terminal', deck, task)
+                recorder.step(dict(type='wait', ticks=20000))
+                self.assertTrue(recorder.observation['terminal'])
+                result, wave = recorder.observation['result'], recorder.observation['wave']
+                recorder.close()
+            report = verify(archive, RESOURCE, BINARY)
+            self.assertEqual((report['result'], report['wave']), (result, wave))
 
 
 if __name__ == '__main__':

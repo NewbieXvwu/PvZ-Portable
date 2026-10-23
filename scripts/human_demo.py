@@ -16,7 +16,7 @@ from pvz_env import PlayerProfileContext, TaskSpec
 from pvz_event_env import EventWaitEnv
 from pvz_frame_store import frame_path, read_frames, write_frames
 from pvz_tasks import profile_for_deck
-from render_episode import _frame
+from render_episode import _frame, load_training_task, training_task_kwargs
 
 
 def reset_archive(env, meta):
@@ -28,17 +28,23 @@ def reset_archive(env, meta):
 
 
 class Recorder:
-    def __init__(self, env, archive: Path, task_id: str, deck, task: TaskSpec, note: str = ''):
-        archive.mkdir(parents=True, exist_ok=False)
+    def __init__(self, env, archive: Path, task_id: str, deck, task: TaskSpec, note: str = '',
+                 label_source: str = 'human'):
         self.env, self.archive = env, archive
+        self.label_source = label_source
         env.begin_demo()
         self.observation, _ = env.reset(deck=deck, task=task)
+        options = env.deck_options()
+        warnings = env.deck_warnings(deck)['warnings']
+        if set(deck) - set(options['available_plants']) or warnings:
+            raise ValueError(f'deck contains locked plants or engine warnings: {warnings}')
+        archive.mkdir(parents=True, exist_ok=False)
         self.operations = 0
         self.events = {}
         self.last_tick = self.observation['tick']
         self.last_operation = 0
         self.frame_count = 0
-        self.meta = dict(schema='episode_archive_v1', label_source='human', note=note,
+        self.meta = dict(schema='episode_archive_v1', label_source=label_source, note=note,
                          task=dict(id=task_id, level=task.level, seed=task.seed, deck=list(deck),
                                    policy='human', playthrough=task.playthrough,
                                    zombie_count_multiplier=task.zombie_count_multiplier,
@@ -48,9 +54,11 @@ class Recorder:
                          engine_dirty=env.episode['source_dirty'],
                          executable_sha256=hashlib.sha256(env.executable.read_bytes()).hexdigest(),
                          resource_sha256=env.episode['resource_sha256'],
+                         context=dict(level=task.level, multiplier=task.zombie_count_multiplier,
+                                      roster=self.observation['loadout_context']['zombie_roster']),
                          properties_partner_sha256=env.episode['properties_partner_sha256'],
                          hash_schema='portable_snapshot_v1_without_draw_statistics',
-                         initial_state_hash=env._last_response['state_hash'],
+                         initial_state_hash=env.state_hash(),
                          sun_collection='environment_auto', verified=False)
         self.tape = (archive / 'ticks.jsonl').open('w', encoding='utf-8', buffering=1)
         self.frames = (archive / 'frames.jsonl').open('w', encoding='utf-8', buffering=1)
@@ -59,7 +67,7 @@ class Recorder:
 
     def _frame(self, action, rejected=False):
         frame = _frame(self.observation)
-        frame.update(action=action, action_rejected=rejected, label_source='human', operation=self.operations)
+        frame.update(action=action, action_rejected=rejected, label_source=self.label_source, operation=self.operations)
         if action and action['type'] not in ('plant', 'wait'):
             frame['input_action'] = frame['action']
             frame['action'] = None
@@ -94,6 +102,7 @@ class Recorder:
     def _step(self, action):
         before = self.observation['tick']
         self.observation, _, _, _, info = self.env.step(action)
+        self.last_info = info
         self.operations += 1
         self.tape.write(json.dumps(dict(action=action, tick=before, end_tick=self.observation['tick'],
                                         ok=info['ok'], state_hash=self.env._last_response['state_hash']),
@@ -113,27 +122,64 @@ class Recorder:
         self._save_meta()
 
 
-def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None):
+def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
+           save: Path | None = None):
     meta = json.loads((archive / 'meta.json').read_text())
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
     stop = frames[decision - 1]['operation'] if decision is not None else meta['operations']
     obs = reset_archive(env, meta)
+    recorder = None
+    if save is not None:
+        config = dict(meta['environment_task'])
+        config['profile'] = PlayerProfileContext(**config['profile'])
+        config['preplanted'] = tuple(tuple(plant) for plant in config.get('preplanted', ()))
+        recorder = Recorder(env, save, meta['task']['id'], meta['task']['deck'], TaskSpec(**config),
+                            meta.get('note', ''), label_source='counterfactual')
+        obs = recorder.observation
     if env._last_response['state_hash'] != meta['initial_state_hash']:
         raise RuntimeError('demonstration initial state hash differs')
-    replacements = {frames[index]['operation']: action for index, action in (overrides or {}).items()}
+    replacements = {frames[index - 1]['operation'] + 1: (frames[index]['operation'], action)
+                    for index, action in (overrides or {}).items()}
     diverged = False
+    rejected = False
+    events = {}
+    changed_frames = [_frame(obs)] if overrides else None
+    frame_operations = {frame['operation'] for frame in frames}
+    mowers = sum(defense['state'] == 1 for defense in obs.get('defenses') or [])
+    mowers_left = mowers
+    skip_until = 0
     with (archive / 'ticks.jsonl').open() as stream:
         for operation, line in enumerate(stream, 1):
             if operation > stop:
                 break
+            if operation <= skip_until:
+                continue
             entry = json.loads(line)
             if not diverged and obs['tick'] != entry['tick']:
                 raise RuntimeError(f'demonstration tick differs at operation {operation}')
-            action = replacements.get(operation, entry['action'])
+            action = entry['action']
+            if operation in replacements:
+                skip_until, action = replacements[operation]
             diverged |= operation in replacements
-            obs, _, _, _, info = env.step(action)
+            if recorder is None:
+                obs, _, _, _, info = env.step(action)
+            else:
+                before_events = dict(recorder.events)
+                obs = recorder.step(action)
+                info = dict(ok=recorder.last_info['ok'], events={name: value - before_events.get(name, 0)
+                                                               for name, value in recorder.events.items()})
+            rejected |= operation in replacements and not info['ok']
+            for name, value in info['events'].items():
+                events[name] = events.get(name, 0) + value
+            if not obs['terminal']:
+                mowers_left = sum(defense['state'] == 1 for defense in obs.get('defenses') or [])
+            if changed_frames is not None and (operation in replacements or operation in frame_operations or obs['terminal']):
+                frame = _frame(obs)
+                frame.update(action=action if action['type'] in ('plant', 'wait') else None,
+                             action_rejected=not info['ok'], label_source='counterfactual')
+                changed_frames.append(frame)
             if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick'] or
                                  env._last_response['state_hash'] != entry['state_hash']):
                 raise RuntimeError(f'demonstration state hash differs at operation {operation}, tick {obs["tick"]}')
@@ -143,6 +189,18 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
         outcome = meta['outcome']
         if (obs['tick'], obs['wave'], obs['result']) != (outcome['final_tick'], outcome['final_wave'], outcome['result']):
             raise RuntimeError('demonstration terminal outcome differs')
+    if overrides:
+        if recorder is not None:
+            recorder.meta['source_archive'] = str(archive.resolve())
+            recorder.meta['overrides'] = overrides
+            recorder.close()
+        meta = {**meta, 'label_source': 'counterfactual', 'totals': events,
+                'outcome': dict(won=obs['result'] == 1, result=obs['result'], final_wave=obs['wave'],
+                                wave_count=obs['wave_count'], final_tick=obs['tick'],
+                                reason='通关' if obs['result'] == 1 else '僵尸进屋' if obs['terminal'] else '中途结束',
+                                mowers_used=mowers - mowers_left, plants_eaten=events.get('plants_eaten', 0),
+                                override_rejected=rejected)}
+        return obs, meta, changed_frames
     return obs, meta, frames[:decision] if decision is not None else frames
 
 
@@ -188,11 +246,12 @@ def main():
     if args.command == 'export':
         print(export(args.archive, args.out))
         return
-    spec = next(task for task in json.loads(args.manifest.read_text())['tasks'] if task['id'] == args.task)
-    deck = spec['deck']
-    seed = spec['seeds'][0] if args.seed is None else args.seed
-    task = TaskSpec(level=spec['level'], seed=seed, playthrough=2, profile=profile_for_deck(deck),
-                    zombie_count_multiplier=spec.get('zombie_count_multiplier', 1.0))
+    spec = load_training_task(args.manifest, args.task)
+    kw = training_task_kwargs(spec, args.seed)
+    deck, seed = kw['deck'], kw['seed']
+    task = TaskSpec(level=kw['level'], seed=seed, playthrough=2,
+                    profile=profile_for_deck(deck, kw['first_aid_owned']),
+                    **{key: value for key, value in kw['task_extra'].items() if value is not None})
     archive = args.out / f'seed_{seed}' / args.task
     with EventWaitEnv(args.resource_dir, executable=args.executable, headless=False) as env:
         recorder = Recorder(env, archive, args.task, deck, task, args.note)

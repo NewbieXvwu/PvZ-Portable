@@ -1,0 +1,14 @@
+{
+  "tasks": [
+    {"task_id":"demo_fog_31_fume","level":31,"seeds":[20261031],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,3,25]},
+    {"task_id":"demo_fog_31_burst","level":31,"seeds":[20261031],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,20,27]},
+    {"task_id":"demo_fog_32_magnet","level":32,"seeds":[20261032],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,31,3]},
+    {"task_id":"demo_fog_32_freeze","level":32,"seeds":[20261032],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,14,20]},
+    {"task_id":"demo_fog_33_cactus","level":33,"seeds":[20261033],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,26,25]},
+    {"task_id":"demo_fog_33_blover","level":33,"seeds":[20261033],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,27,7]},
+    {"task_id":"demo_fog_33_cattail","level":33,"seeds":[20261033],"zombie_count_multiplier":1.0,"deck":[9,8,16,43,10,31,3,17,19,25]},
+    {"task_id":"demo_fog_34_cactus","level":34,"seeds":[20261034],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,26,25]},
+    {"task_id":"demo_fog_34_blover","level":34,"seeds":[20261034],"zombie_count_multiplier":1.0,"deck":[9,8,10,16,23,17,19,2,27,7]},
+    {"task_id":"demo_fog_34_cattail","level":34,"seeds":[20261034],"zombie_count_multiplier":1.0,"deck":[9,8,16,43,10,31,23,17,19,25]}
+  ]
+}
