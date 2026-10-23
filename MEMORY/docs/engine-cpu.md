@@ -270,6 +270,33 @@ grep -c fprofile-generate build/build.ninja
 
 ## 历史采样前 15
 
+### prof_current（4931 样本，2026-10-23 14:32，当前构建）
+
+SIGPROF 采样，只在 rollout 阶段 armed（`PVZ_PROF_ARM_ONLY=1`），64 root × 15 条推演、horizon 2500、sim-skip 61。原始样本 `artifacts/perf/pcs_current.bin`，解析 `artifacts/perf/prof_current_symbols.json`。
+
+| 函数或动态符号 | 占比 |
+|---|---:|
+| [libopenblas] sgemm_kernel_HASWELL | 20.1% |
+| Reanimation::Update | 4.0% |
+| DataArray<Zombie>::Iterator::operator++ | 2.5% |
+| [libopenblas] sgemm_oncopy_HASWELL | 2.2% |
+| Sexy::MTRand::NextNoAssert | 2.1% |
+| EnvironmentRollout::Convolve | 2.0% |
+| operator（Reanimator.cpp 轨道 lambda） | 1.9% |
+| [libopenblas] sgemm_itcopy_HASWELL | 1.7% |
+| PvzpParticleEmitter::UpdateParticle | 1.6% |
+| [libopenblas] dgemm_kernel_HASWELL | 1.6% |
+| Reanimation::NextEnvTrack | 1.3% |
+| [libopenblas] dgemm_incopy_HASWELL | 1.3% |
+| Zombie::GetDrawPos | 1.3% |
+| [libc] __memset_avx2_unaligned_erms | 1.2% |
+| Plant::Animate | 1.2% |
+
+- **BLAS 合计 26.9%**（kernel 20.1 + 打包 5.2 + dgemm 1.6 中含打包）。打包占 5.2% 是唯一“可以靠接口绕掉”的部分，而它只在合批时才省得下来（B 已测：单条推演内省不掉）。
+- **Reanimation 三行合计 7.2%**（Update 4.0 + 轨道 lambda 1.9 + NextEnvTrack 1.3）。稀疏轨道遍历本身（NextEnvTrack）已经是位图扫描，1.3% 是它自己的成本；剩下的 5.9% 是有活干的轨道在推进帧与插值，帧号决定攻击时机，不能丢。
+- **视觉三项合计 4.1%**（粒子 1.6、GetDrawPos 1.3、Plant::Animate 1.2）。逐项查过：粒子已经只做寿命记账（死亡时可能 spawn 并从共享 RNG 取数）；GetDrawPos 喂粒子生成位置；Plant::Animate 里有 `RandRangeFloat` 与闪烁倒计时。**没有一项能整块跳过而不动 RNG 流或攻击时机**，所以“前 15 里还有可证明不影响逻辑的无用功”这一条已经不成立。
+- 前 15 之外约 50% 分散在几百个函数里，单项都 < 1.2%，没有第二个可打的大矿。这是停止条件的第二条依据。
+
 ### 重启恢复后的工具与 libc 符号补全
 
 已从 `archive.ubuntu.com` 下载与 apt 元数据校验一致的 perf/valgrind/libc debug 包，只解包到 `artifacts/perf/tools/`，未改系统安装。perf 7.0.14 的 `cpu-clock:u` 调用栈探针成功，valgrind 3.26.0 可运行；下一次游戏采样可用真正的 `perf record`。`prof_symbolize.py --debug-root <解包的 usr/lib/debug>` 按 ELF build ID 匹配符号，旧 5752 点数据重解析后前 15 如下。这仍是历史 4de38495 的采样，不冒充当前构建剖面。
