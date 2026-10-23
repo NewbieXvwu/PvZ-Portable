@@ -35,6 +35,9 @@
 
 ## 结果
 
+- 步骤2：本工作树Release构建完成；PVZ_RESOURCE_DIR指定缓存资源，全套Python **382 passed + 133 subtests passed**（66.31秒、零跳过）。分支任务逐字段审计roof318/fog366项全同，合并414项，见task50-zones-registry.json。
+- 步骤3a：新建detached deploy3于7a67066a，复制perf的64-root engine_roots.json；未改deploy/deploy2。
+
 - 步骤1c：fog 合并 e9ff587a 已推送；课程/倍率定向28 passed + 4 subtests。修复种子宽度测试将独立roof误算进700k段的假设，新增所有旧族固定种子起点与roof/fog准入回归。
 
 - 步骤1b：roof 合并 a12ca704；合入 origin/fog 快照 15e947b3。雾族保留原索引8/9，roof置末且沿用独立48M段；DESIGN 雾18/19、屋顶顺延20；双方日志按提交时间交错保留。课程显式禁入全部fog族，仅准入屋顶L41。

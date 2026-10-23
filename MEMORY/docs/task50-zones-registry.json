@@ -1,0 +1,32 @@
+{
+  "families": [
+    "day_d7",
+    "day_orig",
+    "night_n10",
+    "night_orig",
+    "pool_p9k",
+    "day_d7q",
+    "night_n10p",
+    "night_n10q",
+    "fog_f8",
+    "fog_f8p",
+    "roof"
+  ],
+  "tasks": 414,
+  "comparisons": [
+    {
+      "revision": "2dcaef33",
+      "tasks_identical": 318,
+      "differences": []
+    },
+    {
+      "revision": "15e947b3",
+      "tasks_identical": 366,
+      "differences": []
+    }
+  ],
+  "admitted_roof": [
+    "roof_l41_train_r7"
+  ],
+  "admitted_fog": []
+}
