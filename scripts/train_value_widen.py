@@ -123,8 +123,51 @@ class Branches:
         return boards,scalars,won
 
 
+class Decisions:
+    """Decision-level dumps (value_ranking_check.py --dump-shards) as encoder-v2 training rows.
+
+    One dump per seed; each row is (board, encoder-v2 scalars, result of that run, seed, position,
+    candidate, packet, kind). Neighbours differ by the move and by the random future, so the label
+    answers the question the search asks, not "which game is this". Only dumps whose task_id starts
+    with ``prefix`` are accepted, so a day/pool mix cannot slip in by accident.
+    """
+    def __init__(self,paths,excluded,prefix):
+        self.parts=[];self.ends=[];self.fit=[];self.val=[];self.seeds=set();offset=0
+        for path in paths:
+            d=torch.load(path,map_location='cpu',weights_only=False,mmap=True)
+            task=d.get('config',{}).get('task_id','')
+            if not task.startswith(prefix):raise ValueError(f'{path}: task {task!r} does not start with {prefix!r}')
+            if 'scalars_v2' not in d:raise ValueError(f'{path}: dump has no scalars_v2 (recollect it)')
+            if d['scalars_v2'].shape[1]!=SCALARS+6+CONTEXT:raise ValueError(f'{path}: scalars_v2 is not SCALARS+6+CONTEXT wide')
+            seed=d['seed'].numpy();mask=~np.isin(seed,list(excluded));stop=np.array([held(v) for v in seed])
+            self.fit.extend((np.flatnonzero(mask&~stop)+offset).tolist());self.val.extend((np.flatnonzero(mask&stop)+offset).tolist())
+            self.seeds.update(int(v) for v in seed[mask]);self.parts.append(d);offset+=len(seed);self.ends.append(offset)
+        self.fit=np.array(self.fit,dtype=np.int64);self.val=np.array(self.val,dtype=np.int64)
+        if not len(self.fit) or not len(self.val):raise ValueError('decision seed split is empty')
+
+    def _gather(self,key,indices,dtype):
+        out=torch.empty((len(indices),*self.parts[0][key].shape[1:]),dtype=dtype)
+        part_ids=np.searchsorted(self.ends,indices,side='right')
+        for part_id in np.unique(part_ids):
+            dst=np.flatnonzero(part_ids==part_id);src=indices[dst]-(self.ends[part_id-1] if part_id else 0)
+            out[dst]=self.parts[part_id][key][torch.from_numpy(src)].to(dtype)
+        return out
+
+    def batch(self,indices):
+        return (self._gather('boards',indices,torch.float32),self._gather('scalars_v2',indices,torch.float32),
+                self._gather('won',indices,torch.float32))
+
+    def rows(self,indices):
+        return {k:self._gather(k,indices,torch.float32 if k=='won' else torch.long)
+                for k in ('won','seed','position','candidate','packet','kind')}
+
+
 def initialize(path):
     old=load_value_net(path)
+    if old.encoder_version==2:
+        # v4 already is the v2 architecture (scalar layer is SCALARS+6+CONTEXT wide): warm start is a copy.
+        if not old.context:raise ValueError('warm start requires a context value net')
+        return old
     if old.encoder_version!=1 or not old.context:raise ValueError('warm start requires a legacy context value net')
     new=ValueNet(width=old.conv[0].out_channels,context=True,encoder_version=2)
     state=old.state_dict();weight=state['scalar.0.weight'];expanded=torch.zeros((len(weight),SCALARS+6+CONTEXT))
@@ -145,39 +188,55 @@ def train(args):
     if not len(fit_idx) or not len(val_idx):raise ValueError('episode seed split is empty')
     paths=[f for p in map(Path,args.branches.split(',')) for f in (sorted(p.glob('*.pt')) if p.is_dir() else [p])]
     branches=Branches(paths,set(meta['excluded_audit_seeds']))
+    decisions=None
+    if args.decision_data:
+        dpaths=[f for p in map(Path,args.decision_data.split(',')) for f in (sorted(p.glob('*.pt')) if p.is_dir() else [p])]
+        decisions=Decisions(dpaths,set(meta['excluded_audit_seeds']),args.decision_prefix)
+        print(f'decision rows: fit {len(decisions.fit)}, held out {len(decisions.val)} from {len(decisions.seeds)} seeds',flush=True)
+    elif args.decision_fraction>0:raise ValueError('--decision-fraction needs --decision-data')
+    if decisions is not None and args.decision_fraction<=0:raise ValueError('--decision-data needs --decision-fraction > 0')
     init_seeds=set(torch.load(args.init,map_location='cpu',weights_only=False).get('trained_on',[]))
     if init_seeds&set(meta['excluded_audit_seeds']):raise ValueError('initial checkpoint saw external audit seeds')
     net=initialize(args.init).to(args.device);opt=torch.optim.AdamW(net.parameters(),lr=args.lr,weight_decay=1e-4)
-    def batch(branch_indices,episode_indices):
+    def batch(branch_indices,episode_indices,decision_indices=None):
         b,s,y=branches.batch(branch_indices)
+        if decision_indices is not None and len(decision_indices):
+            db,ds,dy=decisions.batch(decision_indices);b=torch.cat([b,db]);s=torch.cat([s,ds]);y=torch.cat([y,dy])
         if len(episode_indices):
             b=torch.cat([b,torch.from_numpy(np.array(boards[episode_indices],dtype=np.float32))]);s=torch.cat([s,torch.from_numpy(np.array(scalars[episode_indices]))]);y=torch.cat([y,torch.from_numpy(labels[episode_indices])])
         return b.to(args.device),s.to(args.device),y.to(args.device)
     val_b=rng.choice(branches.val,min(len(branches.val),8192),replace=False)
     val_e=rng.choice(val_idx,min(len(val_idx),8192),replace=False)
+    val_d=rng.choice(decisions.val,min(len(decisions.val),8192),replace=False) if decisions is not None else None
     best=float('inf');patience=0;history=[]
     for epoch in range(args.epochs):
         net.train();losses=[]
-        nb=int(args.batch_size*args.branch_fraction);ne=args.batch_size-nb
+        nd=int(args.batch_size*args.decision_fraction) if decisions is not None else 0
+        nb=int((args.batch_size-nd)*args.branch_fraction);ne=args.batch_size-nd-nb
         for _ in range(args.steps):
-            b,s,y=batch(rng.choice(branches.fit,nb),rng.choice(fit_idx,ne))
+            b,s,y=batch(rng.choice(branches.fit,nb),rng.choice(fit_idx,ne),
+                       rng.choice(decisions.fit,nd) if decisions is not None else None)
             logits=net(b,s);loss=F.binary_cross_entropy_with_logits(logits,y)
             opt.zero_grad();loss.backward();opt.step();losses.append(loss.item())
         net.eval();validation={}
         with torch.inference_mode():
-            for name,indices in [('branch',val_b),('episode',val_e)]:
+            for name,indices in [('branch',val_b),('episode',val_e),('decision',val_d)]:
+                if indices is None:continue
                 total=count=0
                 for ii in range(0,len(indices),args.batch_size):
                     pick=indices[ii:ii+args.batch_size];empty=np.array([],dtype=np.int64)
-                    b,s,y=batch(pick,empty) if name=='branch' else batch(empty,pick)
+                    b,s,y=(batch(pick,empty) if name=='branch' else batch(empty,pick) if name=='episode'
+                           else batch(empty,empty,pick))
                     total+=F.binary_cross_entropy_with_logits(net(b,s),y,reduction='sum').item();count+=len(y)
                 validation[name]=total/count
-        val_loss=args.branch_fraction*validation['branch']+(1-args.branch_fraction)*validation['episode']
+        core=args.branch_fraction*validation['branch']+(1-args.branch_fraction)*validation['episode']
+        val_loss=(args.decision_fraction*validation['decision']+(1-args.decision_fraction)*core
+                  if decisions is not None else core)
         entry=dict(epoch=epoch,fit=float(np.mean(losses)),validation=val_loss,validation_components=validation)
         history.append(entry);print(entry,flush=True)
         if val_loss<best-1e-4:
             best=val_loss;patience=0
-            used=sorted(init_seeds|branches.seeds|set(map(int,seeds)))
+            used=sorted(init_seeds|branches.seeds|set(map(int,seeds))|(decisions.seeds if decisions is not None else set()))
             # Includes stopping seeds: no later audit may treat them as untouched.
             checkpoint=dict(state_dict={k:v.detach().cpu().clone() for k,v in net.state_dict().items()},
                             encoder=ENCODER_V2,width=net.conv[0].out_channels,context=True,trained_on=used,
@@ -185,13 +244,30 @@ def train(args):
                             audit_manifest=str(args.audit_manifest),branches=[str(p) for p in paths],epoch=epoch,
                             code_commit=__import__('subprocess').check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip(),
                             branch_fit_rows=len(branches.fit),branch_validation_rows=len(branches.val),
-                            episode_fit_rows=len(fit_idx),episode_validation_rows=len(val_idx))
+                            episode_fit_rows=len(fit_idx),episode_validation_rows=len(val_idx),
+                            decision_data=str(args.decision_data),decision_fraction=args.decision_fraction,
+                            decision_fit_rows=(len(decisions.fit) if decisions is not None else 0),
+                            decision_validation_rows=(len(decisions.val) if decisions is not None else 0),
+                            decision_seeds=(len(decisions.seeds) if decisions is not None else 0))
             torch.save(checkpoint,args.out/'model.pt')
         else:
             patience+=1
         (args.out/'training.json').write_text(json.dumps(dict(history=history,config=vars(args)|{'out':str(args.out),'data':str(args.data),'audit_manifest':str(args.audit_manifest),'supplement':str(args.supplement),'init':str(args.init)},
             branch_fit_rows=len(branches.fit),branch_validation_rows=len(branches.val),episode_fit_rows=len(fit_idx),episode_validation_rows=len(val_idx),episode_summary=meta['summary']),indent=1))
         if patience>=4:break
+    if decisions is not None:
+        # The number the branch corpus is judged by (train_value_branches.pair_accuracy), on the
+        # held-out decision seeds, split into leaves and the board right after planting.
+        from train_value_branches import pair_accuracy
+        rows=decisions.rows(val_d);db,ds,_=decisions.batch(val_d)
+        report={}
+        for name,model in (('v5',net),('init',load_value_net(args.init))):
+            model=model.to(args.device).eval()
+            with torch.inference_mode():
+                pred=torch.sigmoid(model(db.to(args.device),ds.to(args.device))).cpu()
+            report[name]=dict(leaves=pair_accuracy(pred,rows,(rows['kind']==0).nonzero().flatten(),args.pair_min_gap),
+                              cells=pair_accuracy(pred,rows,(rows['kind']==1).nonzero().flatten(),args.pair_min_gap,by_packet=True))
+        (args.out/'pair_accuracy.json').write_text(json.dumps(report,indent=1));print(json.dumps(report,indent=1),flush=True)
 
 
 def main():
@@ -205,6 +281,11 @@ def main():
     p.add_argument('--epochs',type=int,default=24);p.add_argument('--steps',type=int,default=256)
     p.add_argument('--batch-size',type=int,default=512);p.add_argument('--branch-fraction',type=float,default=.75)
     p.add_argument('--lr',type=float,default=1e-4)
+    p.add_argument('--decision-data',help='value_ranking_check dumps or shard dirs, comma separated')
+    p.add_argument('--decision-prefix',default='pool_',help='only dumps whose task_id starts with this')
+    p.add_argument('--decision-fraction',type=float,default=0.0,
+                   help='share of every minibatch taken from the decision dumps (0 = old behaviour)')
+    p.add_argument('--pair-min-gap',type=float,default=0.25)
     args=p.parse_args()
     if args.stage=='prepare':prepare(args)
     elif args.stage=='append':append_supplement(args)
