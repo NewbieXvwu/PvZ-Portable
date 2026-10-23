@@ -1,0 +1,314 @@
+{
+  "schema_version": 1,
+  "completed_at": "2026-10-23T23:16:56.875953+08:00",
+  "code_revision": "fafc99b3d49bb0d11d87c16a80d95a6f8c13bde2",
+  "code_sha256": {
+    "python/pvz_training_pack.py": "5d85293ddd7c367d275b62152c19e1a6f121052dfef0006e5227dbd9d174cf10",
+    "scripts/pack_training_rows.py": "3b28a2bb13063ca471c2c485500ae321282cba04ffefb155bd3c8e650c6495e6",
+    "scripts/train_rollout_policy.py": "48bd578f8f7c374ecbf0a7717a70fac179abaed38ac17f7952848e8eb16075b0",
+    "scripts/curriculum_queue.py": "a32c47406939c7c06d986f62a015cf67b2399b8a7148a72b44dcdb213877b896",
+    "scripts/verify_training_segments.py": "d8fb43cd14322147392d421d4f14b3b3bd5e4666355bc0f880b8e727e91d35b2",
+    "scripts/verify_curriculum_overlap.py": "b85ff9d0079a445a3c0b51cfdb76bfe39b7386be2acacbbe23b03228808cdb3a"
+  },
+  "artifact_directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49",
+  "pack_version": 2,
+  "sampling": "Independent seed=0 RNG per label; changes v1 cross-label wait selection.",
+  "acceptance": {
+    "passed": true,
+    "games": 32,
+    "rounds": 2,
+    "groups": [
+      {
+        "round": 1,
+        "label": "c1d1d7m100",
+        "games": 8,
+        "start": 1792767341.6250908,
+        "end": 1792767559.926297,
+        "student_round": 0,
+        "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+        "workers": 2
+      },
+      {
+        "round": 1,
+        "label": "c1d3d7m100",
+        "games": 8,
+        "start": 1792767559.927374,
+        "end": 1792767906.3960297,
+        "student_round": 0,
+        "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+        "workers": 2
+      },
+      {
+        "round": 2,
+        "label": "c2d1d7m100",
+        "games": 8,
+        "start": 1792767906.4301863,
+        "end": 1792768233.627336,
+        "student_round": 0,
+        "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+        "workers": 2
+      },
+      {
+        "round": 2,
+        "label": "c2d3d7m100",
+        "games": 8,
+        "start": 1792768233.6318088,
+        "end": 1792768322.5435834,
+        "student_round": 1,
+        "student": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/acceptance/state.pipeline/round_000001/student/model.pt",
+        "workers": 2
+      }
+    ],
+    "phases": [
+      {
+        "round": 1,
+        "phase": "pack",
+        "seconds": 13.316919088363647,
+        "overlaps": [
+          {
+            "label": "c2d1d7m100",
+            "seconds": 13.288726806640625
+          }
+        ],
+        "start": 1792767906.401994,
+        "end": 1792767919.718913
+      },
+      {
+        "round": 1,
+        "phase": "train",
+        "seconds": 4.467141151428223,
+        "overlaps": [
+          {
+            "label": "c2d1d7m100",
+            "seconds": 4.467141151428223
+          }
+        ],
+        "start": 1792767919.7192824,
+        "end": 1792767924.1864235
+      },
+      {
+        "round": 2,
+        "phase": "pack",
+        "seconds": 11.571084260940552,
+        "overlaps": [],
+        "start": 1792768322.552777,
+        "end": 1792768334.1238613
+      },
+      {
+        "round": 2,
+        "phase": "train",
+        "seconds": 5.916027307510376,
+        "overlaps": [],
+        "start": 1792768334.1245909,
+        "end": 1792768340.0406182
+      }
+    ],
+    "round_gap_seconds": 0.03415656089782715,
+    "incremental_round_2": {
+      "built": 2,
+      "reused": 2
+    },
+    "state_sha256": "85d9c1ac1ef28cdff50981334133bf037af82d6a40f2ff58604b36016dd46396"
+  },
+  "game_cpu_during_background": {
+    "passed": true,
+    "round": 1,
+    "phases": {
+      "pack": {
+        "seconds": 13.316919088363647,
+        "samples": 52,
+        "samples_with_live_games": 47,
+        "game_cpu_seconds": 18.95,
+        "game_pids": [
+          "161313",
+          "161314"
+        ]
+      },
+      "train": {
+        "seconds": 4.467141151428223,
+        "samples": 17,
+        "samples_with_live_games": 17,
+        "game_cpu_seconds": 6.62,
+        "game_pids": [
+          "161313",
+          "161314"
+        ]
+      }
+    }
+  },
+  "process_monitor": {
+    "controller_pid": 157083,
+    "samples": 2081,
+    "max_game_processes": 2,
+    "min_available_bytes": 3309428736,
+    "max_tree_rss_bytes": 2963197952,
+    "started": 1792767290.0095437,
+    "finished": 1792768340.6795843,
+    "returncode": 0
+  },
+  "parity": {
+    "passed": true,
+    "epochs": 2,
+    "steps": 84,
+    "max_loss_error": 0,
+    "model_tensors": 21,
+    "source_rows_identical": true,
+    "rows": 5832,
+    "device": "cpu",
+    "losses_sha256": "96bb6b0c839cd2d9d0728388072230bf04949337ea68c9a91db932283b0a409d",
+    "source_rows_sha256": "ac7c85e33447da65f4ce2a29772ef8ccdbd5282579ee4dfe974b082bc9e537d1",
+    "seed": 1,
+    "model_tensors_sha256": "882e5a473da89e976b2b544bed2fea940e2ee352a0f0da9218c9cc8a1e9df748"
+  },
+  "segments": [
+    {
+      "label": "c1d1d7m100_fast_search",
+      "archives": 8,
+      "rows": 1582,
+      "sha256": "850a4b4577d9fc186fb328e06a056e8294dd6f658b0a04a3dd23db9a35a5c31d"
+    },
+    {
+      "label": "c1d3d7m100_fast_search",
+      "archives": 8,
+      "rows": 1783,
+      "sha256": "e4a08ea5c15d03350442a48da36625bfee65743f672e127a85407a5fc5cbb5de"
+    },
+    {
+      "label": "c2d1d7m100_fast_search",
+      "archives": 8,
+      "rows": 1635,
+      "sha256": "81861bcb33d1cfcd4d3735af679ccd4b1abca731920016f628321f56a7648225"
+    },
+    {
+      "label": "c2d3d7m100_fast_search",
+      "archives": 8,
+      "rows": 832,
+      "sha256": "f3c398096c866d79b2c4411d3894826f5eace675f66ec9860d19b179dcaa9f28"
+    }
+  ],
+  "pytest": {
+    "passed": 356,
+    "subtests_passed": 133,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 49.6
+  },
+  "pack_benchmark": {
+    "passed": true,
+    "archives": 16,
+    "runs": [
+      {
+        "name": "warmup",
+        "requested_workers": 1,
+        "wall_seconds": 12.99929309500294,
+        "pack": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/pack_bench/warmup/data/packs/2722eaa522b935f1.npz",
+        "rows": 3365,
+        "built": 2,
+        "reused": 0,
+        "workers": 1,
+        "seconds": 10.733
+      },
+      {
+        "name": "serial",
+        "requested_workers": 1,
+        "wall_seconds": 2.2615243189939065,
+        "pack": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/pack_bench/serial/data/packs/2722eaa522b935f1.npz",
+        "rows": 3365,
+        "built": 2,
+        "reused": 0,
+        "workers": 1,
+        "seconds": 0.792
+      },
+      {
+        "name": "parallel",
+        "requested_workers": 2,
+        "wall_seconds": 2.375304216002405,
+        "pack": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/pack_bench/parallel/data/packs/2722eaa522b935f1.npz",
+        "rows": 3365,
+        "built": 2,
+        "reused": 0,
+        "workers": 1,
+        "seconds": 0.795
+      }
+    ]
+  },
+  "cleanup": {
+    "removed_regenerable_caches": [
+      {
+        "path": "smoke/state.pipeline/cache",
+        "bytes": 1219243
+      },
+      {
+        "path": "acceptance/state.pipeline/cache",
+        "bytes": 1988906
+      },
+      {
+        "path": "parity/cache",
+        "bytes": 1988906
+      },
+      {
+        "path": "pack_bench/cache",
+        "bytes": 1219243
+      }
+    ],
+    "bytes_freed": 6416298
+  },
+  "artifact_facts": {
+    "acceptance/state.json": {
+      "bytes": 9451,
+      "sha256": "85d9c1ac1ef28cdff50981334133bf037af82d6a40f2ff58604b36016dd46396"
+    },
+    "acceptance/overlap.json": {
+      "bytes": 2353,
+      "sha256": "63168f7995625624ef1b8b80fdff91f99b476704c208140aebea79812a2aef4e"
+    },
+    "acceptance/process_limit.json": {
+      "bytes": 236,
+      "sha256": "4a685c9e9f52f597f9925c2b2abdfeda8af1a408f6e4433ac62ddd6515f3d1d4"
+    },
+    "acceptance/overlap_samples.jsonl": {
+      "bytes": 11347,
+      "sha256": "3cab8b73ee6df402d02f8f0784dde6769d97f538a26dbf94b3f1f200a202486a"
+    },
+    "acceptance/phase_cpu_evidence.json": {
+      "bytes": 478,
+      "sha256": "ea7bdda72626f7ef555eb65f917672c6f8070aedd961da65fd66427b8f4ccf41"
+    },
+    "parity/parity.json": {
+      "bytes": 344,
+      "sha256": "a8f95148401c7a34c7c3f073e464b3c7905f42ae1ba672043e43d3395e2fd7f0"
+    },
+    "pytest.log": {
+      "bytes": 453,
+      "sha256": "9acc64c84441f9c7779ea56d7b6a4bb7730030b3c4a3f8c5750e99a9d074fbff"
+    }
+  },
+  "limitations": [
+    "32-game smoke uses width=8, CPU, two epochs; it is not a student quality evaluation.",
+    "Global MemAvailable dipped below 6 GiB between group boundaries; group admission is not a continuous global reserve.",
+    "Production restart and deployment are left to the controller owner; qc was not restarted."
+  ],
+  "group_admission": {
+    "reserve_bytes": 6442450944,
+    "background_peak_formula": "3 * compact_segment_bytes + 2 GiB",
+    "lowest_controller_metric": {
+      "time": "2026-10-23T15:02:51.893522+00:00",
+      "mem_available_bytes": 4785782784,
+      "rss_bytes": 52056064,
+      "children_rss_bytes": 2039603200,
+      "progress": {
+        "games": 8,
+        "decisions": 5852,
+        "round": 1
+      }
+    }
+  },
+  "legacy_label_audit": {
+    "pid": 115381,
+    "actual_command_labels": 202,
+    "recipe_labels": 170,
+    "state_log_labels": 32,
+    "extra_or_missing_state_labels": [],
+    "taskbook_initial_reported_labels": 235
+  }
+}

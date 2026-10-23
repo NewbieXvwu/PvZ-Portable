@@ -1,8 +1,8 @@
 """Where the training packs live and what makes two of them the same (task33).
 
-A pack holds the exact rows one training run needs, so its identity is the whole option
-tuple that changes those rows. Both the packer and the trainer derive the same path from
-the same tuple, which is why neither has to be told where a pack is.
+A corpus index pins immutable per-label segments. Its identity is the whole row option
+tuple; a segment excludes unrelated labels and weights. Both packer and trainer derive
+the same index path, so neither needs an explicit pack path.
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
-PACK_VERSION = 1
+PACK_VERSION = 2  # label-local wait sampling; immutable segments + small corpus index
 
 
 def archive_fingerprint(data: Path, labels) -> str:
@@ -26,9 +26,23 @@ def archive_fingerprint(data: Path, labels) -> str:
     """
     from pvz_frame_store import frame_paths
     data = Path(data)
-    lines = sorted(f"{path.relative_to(data)}:{path.stat().st_size}"
-                   for path in frame_paths(data) if path.parent.name in labels)
+    return fingerprint_paths(data, [path for path in frame_paths(data) if path.parent.name in labels])
+
+
+def fingerprint_paths(data: Path, paths) -> str:
+    lines = sorted(f"{path.relative_to(data)}:{path.stat().st_size}" for path in paths)
     return hashlib.sha1("|".join(lines).encode()).hexdigest()[:16]
+
+
+def segment_options(options: dict, label: str, sources: str) -> dict:
+    """Unrelated labels/weights never invalidate an immutable label segment."""
+    return {**options, 'labels': [label], 'sources': sources,
+            'label_weight': {label: options['label_weight'][label]}
+            if label in options['label_weight'] else {}}
+
+
+def segment_path(data: Path, options: dict) -> Path:
+    return Path(data) / 'packs' / 'segments' / pack_path(data, options).name
 
 
 def pack_options(labels, wait_keep: float = 1.0, obs: str = "v1", cells: bool = False,

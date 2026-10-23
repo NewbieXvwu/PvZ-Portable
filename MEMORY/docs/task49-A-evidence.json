@@ -1,0 +1,416 @@
+{
+  "schema_version": 1,
+  "completed_at": "2026-10-24T03:27:17.882195+08:00",
+  "preregistration_commit": "65714e6ee428a8c1cc68b781594a9ba2b59c80ec",
+  "implementation_commit": "cdb13752730f55de021d819138b5b7f98edcc92e",
+  "policy": {
+    "version": 1,
+    "alpha": 0.05,
+    "noninferiority_margin": 0.03,
+    "overall_interval": "Newcombe paired method 10, two-sided 95%",
+    "zone_veto": "one-sided exact McNemar p < 0.05 in any panel group",
+    "pair_count": 64,
+    "episode_count": 128,
+    "seeds_per_task": 8,
+    "tasks": [
+      {
+        "zone": "day",
+        "task_id": "day_l7_eval_d7"
+      },
+      {
+        "zone": "day",
+        "task_id": "day_l10_orig_eval"
+      },
+      {
+        "zone": "heldout",
+        "task_id": "day_l7_eval_d7p_holdout1"
+      },
+      {
+        "zone": "heldout",
+        "task_id": "day_l9_eval_d7p_holdout1"
+      },
+      {
+        "zone": "night",
+        "task_id": "night_l12_eval_n10"
+      },
+      {
+        "zone": "night",
+        "task_id": "night_l18_eval_n10"
+      },
+      {
+        "zone": "pool",
+        "task_id": "pool_l21_eval_p9k"
+      },
+      {
+        "zone": "pool",
+        "task_id": "pool_l26_eval_p9k"
+      }
+    ]
+  },
+  "code_sha256": {
+    "python/pvz_promotion.py": "dcc4b53435e09688628743426ad5e6e8a9c96ab33ca530382f83fec9788f4905",
+    "scripts/promotion_gate.py": "2bf0ec0142f5df4d4aeb16ddb7fd446d20e0d23b07b876802c8094e43268043a",
+    "scripts/curriculum_queue.py": "5e7c551070550204be5ec518969853eccf6a36709a05f5902c64f1e47b36f3e3",
+    "scripts/verify_promotion_demo.py": "dd945889fb798920936afe7ccfabee8acf01cfe2bb5349ed60e4033d45656291",
+    "python/test_promotion.py": "95118066d3c15b66b0c225511cdb8b99b54e3ba2e10805d6ede17b0afafb6f8c",
+    "python/test_promotion_evaluation.py": "0f7ecd7acf4d1ad0d45f1c37e96b0354e912db8a271a2a9b62915cd11bb56b57",
+    "python/test_curriculum_pipeline.py": "d0ba9883ec69eb16ba57fd6de92ab8e9f122a15e870effe0fd67055ad9ea55d8"
+  },
+  "artifact_directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49",
+  "cases": {
+    "reject_final": {
+      "approved": false,
+      "models": {
+        "candidate": {
+          "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/acceptance/state.pipeline/round_000001/student/model.pt",
+          "sha256": "749a250abc3a1b0e66ce4202bf62dc1cd5548472723490c47dda4c4d4a9c623c",
+          "width": 8,
+          "obs": "v2",
+          "packet_head": "identity"
+        },
+        "incumbent": {
+          "source": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+          "width": 64,
+          "obs": "v2",
+          "packet_head": "identity"
+        }
+      },
+      "overall": {
+        "pairs": 64,
+        "candidate_wins": 0,
+        "incumbent_wins": 37,
+        "gain": 0,
+        "harm": 37,
+        "both_win": 0,
+        "both_lose": 27,
+        "delta_rate": -0.578125,
+        "ci95": [
+          -0.691302175256545,
+          -0.44360248218626613
+        ],
+        "mcnemar_worse_p": 7.275957614183426e-12
+      },
+      "zones": {
+        "day": {
+          "pairs": 16,
+          "candidate_wins": 0,
+          "incumbent_wins": 16,
+          "gain": 0,
+          "harm": 16,
+          "both_win": 0,
+          "both_lose": 0,
+          "delta_rate": -1.0,
+          "ci95": [
+            -1.0,
+            -0.7261973924086025
+          ],
+          "mcnemar_worse_p": 1.52587890625e-05
+        },
+        "heldout": {
+          "pairs": 16,
+          "candidate_wins": 0,
+          "incumbent_wins": 8,
+          "gain": 0,
+          "harm": 8,
+          "both_win": 0,
+          "both_lose": 8,
+          "delta_rate": -0.5,
+          "ci95": [
+            -0.7200043638967398,
+            -0.206937115800152
+          ],
+          "mcnemar_worse_p": 0.00390625
+        },
+        "night": {
+          "pairs": 16,
+          "candidate_wins": 0,
+          "incumbent_wins": 13,
+          "gain": 0,
+          "harm": 13,
+          "both_win": 0,
+          "both_lose": 3,
+          "delta_rate": -0.8125,
+          "ci95": [
+            -0.9340840092857186,
+            -0.5021239949437981
+          ],
+          "mcnemar_worse_p": 0.0001220703125
+        },
+        "pool": {
+          "pairs": 16,
+          "candidate_wins": 0,
+          "incumbent_wins": 0,
+          "gain": 0,
+          "harm": 0,
+          "both_win": 0,
+          "both_lose": 16,
+          "delta_rate": 0.0,
+          "ci95": [
+            -0.19360768053443644,
+            0.19360768053443644
+          ],
+          "mcnemar_worse_p": 1.0
+        }
+      },
+      "reasons": [
+        "overall_ci_lower_not_above_minus_3pp",
+        "significant_zone_regression:day",
+        "significant_zone_regression:heldout",
+        "significant_zone_regression:night"
+      ],
+      "evaluation_started": 1792782658.440934,
+      "evaluation_finished": 1792782742.6347892,
+      "publication_boundary": 1792782997.4616635,
+      "student_before": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/A/reject_final/incumbent/model.pt",
+      "student_after": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/A/reject_final/incumbent/model.pt",
+      "student_round": 0,
+      "collection_groups": [
+        {
+          "label": "Agroup000",
+          "start": 1792782658.3394976,
+          "end": 1792782997.3950818,
+          "student": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/A/reject_final/incumbent/model.pt",
+          "games": 4,
+          "seeds": [
+            2100128,
+            2100129,
+            2100130,
+            2100131
+          ],
+          "workers": 1
+        }
+      ],
+      "collection_games": 4,
+      "concurrent_game_samples": 220,
+      "collection_cpu_seconds_during_evaluation": 41.39,
+      "process_monitor": {
+        "case": "reject_final",
+        "pid": 217927,
+        "samples": 666,
+        "max_game_processes": 2,
+        "max_tree_rss_bytes": 2813059072,
+        "min_available_bytes": 9720504320,
+        "started": 1792782658.2541914,
+        "finished": 1792782997.624633,
+        "returncode": 0
+      },
+      "certificate_sha256": "86c7836b35c578aa0e93fb96bd4b97c12986b8eae1d3e3a6372b2808d4f16fd2"
+    },
+    "approve": {
+      "approved": true,
+      "models": {
+        "candidate": {
+          "source": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+          "width": 64,
+          "obs": "v2",
+          "packet_head": "identity"
+        },
+        "incumbent": {
+          "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/acceptance/state.pipeline/round_000001/student/model.pt",
+          "sha256": "749a250abc3a1b0e66ce4202bf62dc1cd5548472723490c47dda4c4d4a9c623c",
+          "width": 8,
+          "obs": "v2",
+          "packet_head": "identity"
+        }
+      },
+      "overall": {
+        "pairs": 64,
+        "candidate_wins": 37,
+        "incumbent_wins": 0,
+        "gain": 37,
+        "harm": 0,
+        "both_win": 0,
+        "both_lose": 27,
+        "delta_rate": 0.578125,
+        "ci95": [
+          0.44360248218626613,
+          0.691302175256545
+        ],
+        "mcnemar_worse_p": 1.0
+      },
+      "zones": {
+        "day": {
+          "pairs": 16,
+          "candidate_wins": 16,
+          "incumbent_wins": 0,
+          "gain": 16,
+          "harm": 0,
+          "both_win": 0,
+          "both_lose": 0,
+          "delta_rate": 1.0,
+          "ci95": [
+            0.7261973924086025,
+            1.0
+          ],
+          "mcnemar_worse_p": 1.0
+        },
+        "heldout": {
+          "pairs": 16,
+          "candidate_wins": 8,
+          "incumbent_wins": 0,
+          "gain": 8,
+          "harm": 0,
+          "both_win": 0,
+          "both_lose": 8,
+          "delta_rate": 0.5,
+          "ci95": [
+            0.206937115800152,
+            0.7200043638967398
+          ],
+          "mcnemar_worse_p": 1.0
+        },
+        "night": {
+          "pairs": 16,
+          "candidate_wins": 13,
+          "incumbent_wins": 0,
+          "gain": 13,
+          "harm": 0,
+          "both_win": 0,
+          "both_lose": 3,
+          "delta_rate": 0.8125,
+          "ci95": [
+            0.5021239949437981,
+            0.9340840092857186
+          ],
+          "mcnemar_worse_p": 1.0
+        },
+        "pool": {
+          "pairs": 16,
+          "candidate_wins": 0,
+          "incumbent_wins": 0,
+          "gain": 0,
+          "harm": 0,
+          "both_win": 0,
+          "both_lose": 16,
+          "delta_rate": 0.0,
+          "ci95": [
+            -0.19360768053443644,
+            0.19360768053443644
+          ],
+          "mcnemar_worse_p": 1.0
+        }
+      },
+      "reasons": [],
+      "evaluation_started": 1792782997.8788986,
+      "evaluation_finished": 1792783123.2873662,
+      "publication_boundary": 1792783197.7389703,
+      "student_before": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/A/approve/incumbent/model.pt",
+      "student_after": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/A/approve/checkpoint/student/model.pt",
+      "student_round": 1,
+      "collection_groups": [
+        {
+          "label": "Agroup000",
+          "start": 1792782997.741326,
+          "end": 1792783098.5713956,
+          "student": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/A/approve/incumbent/model.pt",
+          "games": 4,
+          "seeds": [
+            2100128,
+            2100129,
+            2100130,
+            2100131
+          ],
+          "workers": 1
+        },
+        {
+          "label": "Agroup001",
+          "start": 1792783098.5812342,
+          "end": 1792783197.7055428,
+          "student": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/artifacts/task49/A/approve/incumbent/model.pt",
+          "games": 4,
+          "seeds": [
+            2100132,
+            2100133,
+            2100134,
+            2100135
+          ],
+          "workers": 1
+        }
+      ],
+      "collection_games": 8,
+      "concurrent_game_samples": 305,
+      "collection_cpu_seconds_during_evaluation": 34.53,
+      "process_monitor": {
+        "case": "approve",
+        "pid": 219357,
+        "samples": 393,
+        "max_game_processes": 2,
+        "max_tree_rss_bytes": 2689511424,
+        "min_available_bytes": 9354403840,
+        "started": 1792782997.6267564,
+        "finished": 1792783198.0446274,
+        "returncode": 0
+      },
+      "certificate_sha256": "e5b7e8aa513b540ef5c9275cb2a682885c666bdb0e03e20b9d3cd2b43f791c86"
+    }
+  },
+  "independent_direction_replay_identical": true,
+  "episode_count": 256,
+  "collection_games": 12,
+  "pytest": {
+    "passed": 367,
+    "subtests_passed": 133,
+    "failed": 0,
+    "skipped": 0,
+    "seconds": 72.17,
+    "log_sha256": "c53d28e0e19e6ea22f5acd5230e143cc40f5ed0d8fe61bdfb9570a0d136faade"
+  },
+  "artifact_facts": {
+    "A/reject_final/demonstration.json": {
+      "bytes": 19639,
+      "sha256": "5983823027d2749b1e93c3a98cb45a0250ce383c45150bd4e9c6a0c316368469"
+    },
+    "A/reject_final/state.json": {
+      "bytes": 18795,
+      "sha256": "38a65ad43c18600248ec4bb2da18d4e935dfcc516c78c7367ff0d9ca9eaefe9d"
+    },
+    "A/reject_final/process_limit.json": {
+      "bytes": 249,
+      "sha256": "0fe9e6841e82a96202ffcb66dd41b809fe816b11686dcdcdbdb87c569616e853"
+    },
+    "A/reject_final/overlap_samples.jsonl": {
+      "bytes": 106226,
+      "sha256": "338b496a2851d25e612b1d26542c5fab097e12d437a1b36ab64a1aeaf5b72de9"
+    },
+    "A/reject_final/checkpoint/evaluations/bb179447ff761f20ba69/decision.json": {
+      "bytes": 16678,
+      "sha256": "86c7836b35c578aa0e93fb96bd4b97c12986b8eae1d3e3a6372b2808d4f16fd2"
+    },
+    "A/reject_final/checkpoint/evaluations/bb179447ff761f20ba69/registration.json": {
+      "bytes": 2329,
+      "sha256": "3500489a79bffe6847d11a430588148feab94981650eed829e84723fdc9ff672"
+    },
+    "A/approve/demonstration.json": {
+      "bytes": 19732,
+      "sha256": "46fbb41b3e6d7714503b14b717fa7181bfca834faa631d4c40d8e84253618b01"
+    },
+    "A/approve/state.json": {
+      "bytes": 18475,
+      "sha256": "ee2c3befe5a9731e7e4c64d0f60fb91ed9246719ee445e3bfd8d87a08c28ee40"
+    },
+    "A/approve/process_limit.json": {
+      "bytes": 245,
+      "sha256": "b9d05290106522a0d738ec9729196badd72aa2e5351ccd00ee8d52b87f851ba3"
+    },
+    "A/approve/overlap_samples.jsonl": {
+      "bytes": 64029,
+      "sha256": "e63ea3048e4e63abe907fae3ea4d45236424f6d880ae934d448c1da9a578834f"
+    },
+    "A/approve/checkpoint/evaluations/b34c11bd58e4aa6d2bb6/decision.json": {
+      "bytes": 16436,
+      "sha256": "e5b7e8aa513b540ef5c9275cb2a682885c666bdb0e03e20b9d3cd2b43f791c86"
+    },
+    "A/approve/checkpoint/evaluations/b34c11bd58e4aa6d2bb6/registration.json": {
+      "bytes": 2319,
+      "sha256": "2f6e979a25d0bf54991b8585c61b68cd8566a71fd1fddec091c6c5381f5ad95d"
+    }
+  },
+  "limitations": [
+    "Both candidates are existing real trained checkpoints; these tests exercise evaluation and publication, not new training superiority.",
+    "The passing positive control uses a weak private incumbent and the existing dw4i candidate; production qc is unchanged.",
+    "Pool was 0/16 for both checkpoints; lack of detected pool regression does not establish adequate pool play.",
+    "Noninferiority is not inferred from a nonsignificant test; the overall paired confidence lower bound must pass separately."
+  ]
+}
