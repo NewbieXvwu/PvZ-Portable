@@ -1,6 +1,6 @@
 {
- "status": "incomplete",
- "as_of": "2026-10-24T05:24:33.750777+08:00",
+ "status": "complete",
+ "as_of": "2026-10-24T05:35:16.462812+08:00",
  "qc_as_of": "2026-10-24T05:03:35.490319+08:00",
  "status_method": "current dw4i original-task panel observed >=95% and n>=32; not population confidence or whole-adventure proof",
  "sources": {
@@ -8,13 +8,15 @@
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/engine-inventory.json",
    "sha256": "b8041ae889e572c24e2aa73643917d965f21934f2e62259b4b58aa136eb99880",
    "date": "2026-10-24",
-   "note": "one process; 50 reset + one wait tick; not complete games"
+   "note": "one process; 50 reset + one wait tick; not complete games",
+   "captured_at": "2026-10-24T05:35:15.871063+08:00"
   },
   "Q": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/curriculum_state.json",
    "sha256": "83e91abb3552beda3eaa37a9d79500b9eab2c8f9b4f23af4f9bcfe2caf91d100",
    "date": "2026-10-24T05:03:35.490319+08:00",
    "note": "frozen controller membership/window state",
+   "captured_at": "2026-10-24T05:35:15.877231+08:00",
    "original_path": "/home/newbiexvwu/pvz-logs/curriculum_state.json"
   },
   "QL": {
@@ -22,6 +24,7 @@
    "sha256": "2983c0630ce9659aa787fa86c8f816c1a81548e49586db8219f42c67f9caea27",
    "date": "2026-10-24T05:03:35.490319+08:00",
    "note": "beta0 collection execution, not teacher strength",
+   "captured_at": "2026-10-24T05:35:15.878125+08:00",
    "original_path": "/home/newbiexvwu/pvz-logs/curriculum.log"
   },
   "QP": {
@@ -29,25 +32,40 @@
    "sha256": "878f996e7657f3b5f6d3c3393530c2903d8a31e48b49d2570cf18af750968420",
    "date": "2026-10-24T05:03:35.490319+08:00",
    "note": "414 multiplier variants; only state.cells are active",
+   "captured_at": "2026-10-24T05:35:15.915466+08:00",
    "original_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+  },
+  "RUN": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/c3d9d7qm100_48/config.json",
+   "sha256": "ee0542e84ab70ea256a6413c9fbb41395f6848533861c606c4058546977d17b0",
+   "date": "2026-10-24T05:03:35.490319+08:00",
+   "note": "configuration of the group running at the qc snapshot; beta0 actual execution",
+   "captured_at": "2026-10-24T05:35:16.092570+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/RUN.json"
   },
   "S27": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task27-results.json",
    "sha256": "0719db6a75e4ae008e96b9b3eb3a78a2f02f068cd9052d8a281d9206038b4a2b",
    "date": "2026-10-23",
-   "note": "completed task27 v2; dw4i production reference, dw5i comparison"
+   "note": "completed task27 v2; dw4i production reference, dw5i comparison",
+   "captured_at": "2026-10-24T05:35:16.093692+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/S27.json"
   },
   "SA0": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/complete_A.json",
    "sha256": "59b1518fea0139c6fa2d4ce1814b060dea6db3fe11a7060b8f82dfb4db438586",
    "date": "2026-10-24 00:41:40+0800",
-   "note": "latest completed candidate A; not deployed"
+   "note": "latest completed candidate A; not deployed",
+   "captured_at": "2026-10-24T05:35:16.094676+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/SA0.json"
   },
   "SA": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/paired_dw4i_vs_A.json",
    "sha256": "0e5ace3beb6b8338ed8675a01a9fc8e428395e91dbfc7bc4009edc1680c164f1",
    "date": "2026-10-24T00:41:40+0800",
    "note": "34 paired tasks, 3264 games; raw files rechecked below",
+   "captured_at": "2026-10-24T05:35:16.095205+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/SA.json",
    "raw_directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/panel_dw5i_A_v2",
    "raw_sha256": {
     "day_l10_eval_d7p_holdout1/games.jsonl": "b21d02c47052ba697f0287d1c661df010e33ed77f9d5e8e64e0960e1b8ac5ddc",
@@ -90,151 +108,239 @@
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task45-fog-results.json",
    "sha256": "4a84b593512c253428926003931949eb42e478c5375f3e65a6a968c8a30bf2c2",
    "date": "2026-10-23",
-   "note": "cold-start human f8; separate fast and beta1 fast_search"
+   "note": "cold-start human f8; separate fast and beta1 fast_search",
+   "captured_at": "2026-10-24T05:35:16.220445+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/TF.json"
   },
   "TR": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task46-roof-cold-start.json",
    "sha256": "eed699c15ffda537ef6a92ab905709b7c37fdae44f9b1de9c7c7cd34d2574c68",
    "date": "2026-10-23",
-   "note": "r7 original difficulty; L45 has overridden initial hand"
+   "note": "r7 original difficulty; L45 has overridden initial hand",
+   "captured_at": "2026-10-24T05:35:16.233723+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/TR.json"
   },
   "TR2": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/task46-roof-timelines.json",
    "sha256": "f99ca8ef985f3c73abdd5bb95e4b911b2697e77fff235a000d25848575aa4bc3",
    "date": "2026-10-24",
-   "note": "fixed four-seed teacher diagnostic, not a full evaluation panel; L42-45 overlap old panel seeds"
+   "note": "fixed four-seed teacher diagnostic, not a full evaluation panel; L42-45 overlap old panel seeds",
+   "captured_at": "2026-10-24T05:35:16.235340+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/TR2.json"
   },
   "TRh": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task46-roof-half-results.json",
    "sha256": "b164bf14b6e0ad2ac0e3f0bd5020a982968decedd140b851ba5d4569afa9f5dc",
    "date": "2026-10-23",
-   "note": "diagnostic multiplier .5; not current qc nor original completion"
+   "note": "diagnostic multiplier .5; not current qc nor original completion",
+   "captured_at": "2026-10-24T05:35:16.255496+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/TRh.json"
   },
   "TV4": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/value-widen-paired.json",
    "sha256": "3136b94b4ccaf23917c950679f2c649efdca4a85b4459ef33db9c2581a622cd6",
    "date": "2026-10-23",
-   "note": "beta1 v4 paired evaluation; new_wins is v4"
+   "note": "beta1 v4 paired evaluation; new_wins is v4",
+   "captured_at": "2026-10-24T05:35:16.256153+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/TV4.json"
+  },
+  "D30": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/value-widen-dispersion.json",
+   "sha256": "9730da2f7966b6bc2f52da03a7dd26f5db6a895fe1c9fbc06c085f101933e52c",
+   "date": "2026-10-23 12:20+0800",
+   "note": "L24/L26 each4 games; all480 search decisions per arm, not only sampled200",
+   "captured_at": "2026-10-24T05:35:16.256543+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D30.json"
+  },
+  "D30d": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/value-widen.md",
+   "sha256": "db7a8245ebf8e8d761e90afe287ba32a379de147f397719e82ffb658b5aefccb",
+   "date": "2026-10-23 12:20+0800",
+   "note": "step5-b: eight games per arm all lost; specific L24/L26 dispersion evidence",
+   "captured_at": "2026-10-24T05:35:16.257292+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D30d.md"
   },
   "T50": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher32-v4/comparison.json",
    "sha256": "c213eb11251636e2d8b3d805eead342d660dbf8ad5efcb378f4558093965cfce",
    "date": "2026-10-24",
-   "note": "fresh deployed teacher gate; training-task seeds"
+   "note": "fresh deployed teacher gate; training-task seeds",
+   "captured_at": "2026-10-24T05:35:16.257769+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/T50.json"
   },
   "T52": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/summary.json",
    "sha256": "22a67979d553af1d905f99fa6ab888df1082872f1fed28e5c9e2f4f51d9d26d2",
    "date": "2026-10-24",
-   "note": "144 complete games; arm A is unaugmented beta1 teacher"
+   "note": "144 complete games; arm A is unaugmented beta1 teacher",
+   "captured_at": "2026-10-24T05:35:16.260580+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/T52.json"
   },
   "D": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/day-panel.md",
    "sha256": "fa4f2ea63880751b11d2d8c4cbcc4d36fd38bb70b0fd068828e37ab7413a0af1",
    "date": "2026-10-21",
-   "note": "task17 table archived 2026-10-21 00:51+08; old v32 teacher; task20 original L10"
+   "note": "task17 table archived 2026-10-21 00:51+08; old v32 teacher; task20 original L10",
+   "captured_at": "2026-10-24T05:35:16.261533+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D.md"
   },
   "N": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/night-panel.md",
    "sha256": "a455c0d8fd68a171a3dd3bdcd6b69ac34aef919816fd6a838e5b7ea0edc20184",
    "date": "2026-10-22",
-   "note": "old identity n9 teacher; NOT current n10"
+   "note": "old identity n9 teacher; NOT current n10",
+   "captured_at": "2026-10-24T05:35:16.262423+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/N.md"
   },
   "P": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/pool-panel.md",
    "sha256": "95933fad948ce97815365254941a8290aafe5e26186cbc5257361af53de5de4b",
    "date": "2026-10-22",
-   "note": "old identity p9k teacher; no modern same-model comparison"
+   "note": "old identity p9k teacher; no modern same-model comparison",
+   "captured_at": "2026-10-24T05:35:16.262876+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/P.md"
   },
   "D43": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/MEMORY/docs/task43-value-v5-pool.md",
-   "sha256": "7827dbf7bada11c57237be85cfcd4ac95d1d322ccedf0dc774293fb758802e78",
+   "sha256": "697910b7b680c692136a86929d769293000757a5656aedbbb03b58e6c8714f5b",
    "date": "2026-10-24",
-   "note": "first v5 rejected; round2 teacher-continuation labels in progress"
+   "note": "first v5 rejected; round2 teacher-continuation labels in progress",
+   "captured_at": "2026-10-24T05:35:16.263385+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D43.md"
   },
   "D45": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/MEMORY/docs/task45-fog-terminal-diagnosis.md",
    "sha256": "70c649db46c920c78defc3d6ac1ee85cb783ec308065f22d1c7f84212c381a86",
    "date": "2026-10-24",
-   "note": "complete64-root terminal audit; local failure-delay improvements, no wins"
+   "note": "complete64-root terminal audit; local failure-delay improvements, no wins",
+   "captured_at": "2026-10-24T05:35:16.267534+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D45.md"
   },
   "D46": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/teacher-diag-roof-review.md",
    "sha256": "a418c8d0aef80f45bf7b714a71063d8e93fc63380734edd4e7c4f1da0b0cd47e",
    "date": "2026-10-24",
-   "note": "independent phase2 roof diagnosis, not raw LLM conclusions"
+   "note": "independent phase2 roof diagnosis, not raw LLM conclusions",
+   "captured_at": "2026-10-24T05:35:16.268198+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D46.md"
   },
   "D46c": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/task46-roof-training-coverage.json",
    "sha256": "b9db5ee9b34ff8cdcf7c828916f82c05840567fdf73492b4a7ae2e05e0eaa49c",
    "date": "2026-10-24",
-   "note": "dw4 frozen 48816 archives; no pool/fog/roof archives"
+   "note": "dw4 frozen 48816 archives; no pool/fog/roof archives",
+   "captured_at": "2026-10-24T05:35:16.268688+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D46c.json"
   },
   "D46b": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/task46-roof-terminal-root-smoke.json",
    "sha256": "d9ba0d879b29cc03306bd4f769bae4450ae0add26da5d85071afc212d776d476",
    "date": "2026-10-24",
-   "note": "only four complete roots; not the full17-root panel"
+   "note": "only four complete roots; not the full17-root panel",
+   "captured_at": "2026-10-24T05:35:16.269149+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D46b.json"
   },
   "D49": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task49-A-evidence.json",
    "sha256": "954b6a2603e3623b2074453fb6c6b4fbf85cd45abef04c3f4adb1c4dd71e6217",
    "date": "2026-10-24",
-   "note": "candidate promotion quality gate; two controlled demonstrations"
+   "note": "candidate promotion quality gate; two controlled demonstrations",
+   "captured_at": "2026-10-24T05:35:16.269684+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D49.json"
   },
   "D53": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/MEMORY/docs/task53-critical-forks.md",
-   "sha256": "3682fc7e4610b43ad501831bc8937e0b8052b890695b402ac3916557648b9aa2",
+   "sha256": "2934d9d33844d848acf7014c27e08fc7b142e5603185bd0545633742acda1245",
    "date": "2026-10-24",
-   "note": "screen47 roots complete; independent16-future confirmation7 actions; training/paired evaluation not yet complete"
+   "note": "screen47 roots complete; independent16-future confirmation7 actions; training/paired evaluation not yet complete",
+   "captured_at": "2026-10-24T05:35:16.270196+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D53.md"
   },
   "D48": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/task48-human-demo.md",
    "sha256": "1d7e325f8d25ecf7dc15a3792f76c78585998289247dac1e77328e01b2627dbf",
    "date": "2026-10-24",
-   "note": "human demonstration tools; ten L31-34 games planned, recordings not evidenced here"
+   "note": "human demonstration tools; ten L31-34 games planned, recordings not evidenced here",
+   "captured_at": "2026-10-24T05:35:16.270517+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D48.md"
+  },
+  "H48": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/human-demo-plan.md",
+   "sha256": "e0fcb457ad0b1df5ff7a68f595fdc858fe5b1bfc7ad90eb9ce51553a3465e57a",
+   "date": "2026-10-24",
+   "note": "frozen origin/demo 206cc403ec98ef292ecde601303de1ca7bc200a9:MEMORY/docs/human-demo.md; plan, not actual recordings",
+   "captured_at": "2026-10-24T05:35:16.271050+08:00"
+  },
+  "D53c": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/MEMORY/docs/task53-critical-forks-deploy3-cost.json",
+   "sha256": "2160971334c97c985b74ecdaa410d9439eafef6c1d97b45d182a295dd6a4fa4b",
+   "date": "2026-10-24",
+   "note": "48-game current-engine night projection only, not a complete mixed-terrain round",
+   "captured_at": "2026-10-24T05:35:16.271372+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/D53c.json"
   },
   "PLAN": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/MEMORY/docs/student-bottleneck-plan.md",
    "sha256": "8f0887b88074bbcb6b4e8b9050fa5240a7624ec98ed686d6c2f2c41051c79d78",
    "date": "2026-10-24",
-   "note": "controller timeline through04:15; qc only packed before task49 pipeline deployment"
+   "note": "controller timeline through04:15; qc only packed before task49 pipeline deployment",
+   "captured_at": "2026-10-24T05:35:16.272114+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/PLAN.md"
   },
   "R0": {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
    "sha256": "861826360161c2762c66093c93b42c992b2395db8f36f2bdd199c1f14862c8dd",
    "date": "2026-10-24T05:03:35.490319+08:00",
-   "note": "registered tasks; does not imply qc admission or measured wins"
+   "note": "registered tasks; does not imply qc admission or measured wins",
+   "captured_at": "2026-10-24T05:35:16.277383+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/R0.json"
   },
   "R1": {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
    "sha256": "f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f",
    "date": "2026-10-24T05:03:35.490319+08:00",
-   "note": "registered tasks; does not imply qc admission or measured wins"
+   "note": "registered tasks; does not imply qc admission or measured wins",
+   "captured_at": "2026-10-24T05:35:16.303122+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/R1.json"
   },
   "R2": {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
    "sha256": "10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb",
    "date": "2026-10-24T05:03:35.490319+08:00",
-   "note": "registered tasks; does not imply qc admission or measured wins"
+   "note": "registered tasks; does not imply qc admission or measured wins",
+   "captured_at": "2026-10-24T05:35:16.360635+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/R2.json"
   },
   "R3": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task45/fog_panel.json",
    "sha256": "df38c21db20506c14c33c99b1759e2340e6ad319ffdc39501482c8f6eebc351f",
    "date": "2026-10-24T05:03:35.490319+08:00",
-   "note": "registered tasks; does not imply qc admission or measured wins"
+   "note": "registered tasks; does not imply qc admission or measured wins",
+   "captured_at": "2026-10-24T05:35:16.392716+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/R3.json"
   },
   "R4": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task46/roof_panel.json",
    "sha256": "393004fbe47b372bb18a94aa8688166ccdffb226618b9becbc77714a7e4534d1",
    "date": "2026-10-24T05:03:35.490319+08:00",
-   "note": "registered tasks; does not imply qc admission or measured wins"
+   "note": "registered tasks; does not imply qc admission or measured wins",
+   "captured_at": "2026-10-24T05:35:16.445226+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/R4.json"
   },
   "R5": {
    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor/artifacts/stage4/day_panel.json",
    "sha256": "01e3ae4f437b7673b3278280e3891bfcb0f65e92ba8bddaeb7b6321713fcdc27",
    "date": "2026-10-24T05:03:35.490319+08:00",
-   "note": "registered tasks; does not imply qc admission or measured wins"
+   "note": "registered tasks; does not imply qc admission or measured wins",
+   "captured_at": "2026-10-24T05:35:16.459437+08:00",
+   "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/sources/R5.json"
+  },
+  "EP": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/artifacts/task55/protocol-probes.json",
+   "sha256": "cfda3799713b45ff751d5285e1cc666775806dbeb6bc3f8785ce6c765e793a72",
+   "date": "2026-10-24",
+   "note": "two single actions, L5 and L50 accepted; no full games",
+   "captured_at": "2026-10-24T05:35:16.467820+08:00"
   }
  },
  "engine_predicates": {
@@ -615,10 +721,11 @@
   "reset_and_one_tick_passed": 50
  },
  "runtime": {
-  "student": "dw4i_s1",
-  "value": "v4",
-  "static": "branch1",
-  "dagger_beta": 0
+  "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+  "value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+  "static": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+  "dagger_beta": 0,
+  "source": "RUN"
  },
  "summary": {
   "levels": 50,
@@ -653,6 +760,7 @@
     0,
     1
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l1_eval_d7",
     "deck": [
@@ -754,6 +862,7 @@
     0,
     1
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l2_eval_d7",
     "deck": [
@@ -808,6 +917,7 @@
     1,
     2
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l3_eval_d7",
     "deck": [
@@ -911,6 +1021,7 @@
     1,
     2
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l4_eval_d7",
     "deck": [
@@ -1015,6 +1126,7 @@
     4,
     5
    ],
+   "scripted_roster_supplement": null,
    "task_family": null,
    "qc": [],
    "student_latest": null,
@@ -1053,6 +1165,7 @@
     2,
     3
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l6_eval_d7",
     "deck": [
@@ -1153,6 +1266,7 @@
     2,
     3
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l7_eval_d7",
     "deck": [
@@ -1294,6 +1408,7 @@
     2,
     4
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l8_eval_d7",
     "deck": [
@@ -1417,6 +1532,7 @@
     3,
     4
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l9_eval_d7",
     "deck": [
@@ -1540,6 +1656,7 @@
     3,
     4
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "day_l10_orig_eval",
     "deck": [],
@@ -1647,6 +1764,7 @@
     1,
     5
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l11_eval_n10",
     "deck": [
@@ -1753,6 +1871,7 @@
     4,
     5
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l12_eval_n10",
     "deck": [
@@ -1862,6 +1981,7 @@
     2,
     6
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l13_eval_n10",
     "deck": [
@@ -1968,6 +2088,7 @@
     3,
     6
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l14_eval_n10",
     "deck": [
@@ -2115,6 +2236,7 @@
     4,
     5
    ],
+   "scripted_roster_supplement": null,
    "task_family": null,
    "qc": [],
    "student_latest": null,
@@ -2153,6 +2275,7 @@
     2,
     7
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l16_eval_n10",
     "deck": [
@@ -2269,6 +2392,7 @@
     6,
     7
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l17_eval_n10",
     "deck": [
@@ -2393,6 +2517,7 @@
     2,
     8
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l18_eval_n10",
     "deck": [
@@ -2503,6 +2628,7 @@
     6,
     8
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l19_eval_n10",
     "deck": [
@@ -2595,6 +2721,7 @@
     7,
     8
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "night_l20_eval_n10_orig",
     "deck": [],
@@ -2676,6 +2803,7 @@
     1,
     2
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l21_eval_p9k",
     "deck": [
@@ -2788,6 +2916,7 @@
     5,
     7
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l22_eval_p9k",
     "deck": [
@@ -2884,6 +3013,7 @@
     2,
     11
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l23_eval_p9k",
     "deck": [
@@ -2986,6 +3116,7 @@
     5,
     11
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l24_eval_p9k",
     "deck": [
@@ -3029,13 +3160,15 @@
     "multiplier": 1.0
    },
    "teacher_latest": {
-    "wins": 3,
-    "games": 32,
+    "wins": 0,
+    "games": 4,
     "task": "pool_l24_eval_p9k",
     "model": "dw4i_s1 + v4",
-    "source": "TV4",
-    "date": "2026-10-23",
-    "multiplier": 1.0
+    "source": "D30d",
+    "date": "2026-10-23 12:20+0800",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "diagnostic_kind": "leaf dispersion probe"
    },
    "teacher_panel": {
     "wins": 3,
@@ -3049,8 +3182,10 @@
    "teacher_other_tasks": [],
    "status": "在练",
    "bottleneck": "叶值压平",
-   "bottleneck_certainty": "v4 dispersion diagnosis covers these levels",
+   "bottleneck_certainty": "direct task30 L24/L26 dispersion probe; not a proof of sole cause",
    "bottleneck_sources": [
+    "D30",
+    "D30d",
     "TV4",
     "D43"
    ],
@@ -3083,6 +3218,7 @@
     7,
     11
    ],
+   "scripted_roster_supplement": null,
    "task_family": null,
    "qc": [],
    "student_latest": null,
@@ -3123,6 +3259,7 @@
     12,
     13
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l26_eval_p9k",
     "deck": [
@@ -3166,13 +3303,15 @@
     "multiplier": 1.0
    },
    "teacher_latest": {
-    "wins": 2,
-    "games": 16,
+    "wins": 0,
+    "games": 4,
     "task": "pool_l26_eval_p9k",
-    "model": "identity + search (old)",
-    "source": "P",
-    "date": "2026-10-22",
-    "multiplier": 1.0
+    "model": "dw4i_s1 + v4",
+    "source": "D30d",
+    "date": "2026-10-23 12:20+0800",
+    "multiplier": 1.0,
+    "diagnostic": true,
+    "diagnostic_kind": "leaf dispersion probe"
    },
    "teacher_panel": {
     "wins": 2,
@@ -3186,8 +3325,10 @@
    "teacher_other_tasks": [],
    "status": "在练",
    "bottleneck": "叶值压平",
-   "bottleneck_certainty": "v4 dispersion diagnosis covers these levels",
+   "bottleneck_certainty": "direct task30 L24/L26 dispersion probe; not a proof of sole cause",
    "bottleneck_sources": [
+    "D30",
+    "D30d",
     "TV4",
     "D43"
    ],
@@ -3224,6 +3365,7 @@
     12,
     13
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l27_eval_p9k",
     "deck": [
@@ -3288,6 +3430,7 @@
     2,
     14
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l28_eval_p9k",
     "deck": [
@@ -3360,6 +3503,7 @@
     13,
     14
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l29_eval_p9k",
     "deck": [
@@ -3432,6 +3576,7 @@
     13,
     14
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "pool_l30_eval_p9k",
     "deck": [
@@ -3485,6 +3630,7 @@
     2,
     15
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l31_eval_f8",
     "deck": [
@@ -3586,6 +3732,7 @@
     7,
     15
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l32_eval_f8",
     "deck": [
@@ -3675,6 +3822,7 @@
     2,
     16
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l33_eval_f8",
     "deck": [
@@ -3766,6 +3914,7 @@
     14,
     16
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l34_eval_f8",
     "deck": [
@@ -3853,6 +4002,17 @@
     1,
     2
    ],
+   "scripted_roster_supplement": {
+    "types": [
+     0,
+     4,
+     7,
+     8,
+     15
+    ],
+    "note": "three Adventure vase stages; Dancer can summon9; Board allowed roster is not the pot roster",
+    "code": "src/Lawn/Challenge.cpp:3801"
+   },
    "task_family": null,
    "qc": [],
    "student_latest": null,
@@ -3891,6 +4051,7 @@
     2,
     17
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l36_eval_f8",
     "deck": [
@@ -3951,6 +4112,7 @@
     15,
     17
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l37_eval_f8",
     "deck": [
@@ -4007,6 +4169,7 @@
     2,
     18
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l38_eval_f8",
     "deck": [
@@ -4067,6 +4230,7 @@
     16,
     18
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l39_eval_f8",
     "deck": [
@@ -4133,6 +4297,7 @@
     18,
     19
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "fog_l40_eval_f8",
     "deck": [
@@ -4187,6 +4352,7 @@
     2,
     20
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l41_eval_r7",
     "deck": [
@@ -4299,6 +4465,7 @@
     4,
     20
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l42_eval_r7",
     "deck": [
@@ -4392,6 +4559,7 @@
     2,
     21
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l43_eval_r7",
     "deck": [
@@ -4489,6 +4657,7 @@
     18,
     21
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l44_eval_r7",
     "deck": [
@@ -4585,6 +4754,13 @@
     20,
     21
    ],
+   "scripted_roster_supplement": {
+    "types": [
+     20
+    ],
+    "note": "scripted bungee carrier, additional to allowed ground roster",
+    "code": "src/Lawn/Board.cpp:4800"
+   },
    "task_family": {
     "task_id": "roof_l45_eval_r7",
     "deck": [
@@ -4674,6 +4850,7 @@
     2,
     22
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l46_eval_r7",
     "deck": [
@@ -4744,6 +4921,7 @@
     21,
     22
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l47_eval_r7",
     "deck": [
@@ -4810,6 +4988,7 @@
     2,
     23
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l48_eval_r7",
     "deck": [
@@ -4886,6 +5065,7 @@
     22,
     23
    ],
+   "scripted_roster_supplement": null,
    "task_family": {
     "task_id": "roof_l49_eval_r7",
     "deck": [
@@ -4963,6 +5143,13 @@
     23,
     25
    ],
+   "scripted_roster_supplement": {
+    "types": [
+     25
+    ],
+    "note": "scripted Boss, additional to ordinary spawn definitions",
+    "code": "src/Lawn/Zombie.cpp:10169"
+   },
    "task_family": null,
    "qc": [],
    "student_latest": null,
@@ -4977,9 +5164,618 @@
    "notes": "No registered native task family; probe deck/reset is diagnostic only."
   }
  ],
- "pending": [
-  "special action/observation audit",
-  "evidence-linked bottleneck notes and priority proposal",
-  "completion verification"
- ]
+ "pending": [],
+ "special_mechanisms": [
+  {
+   "kind": "mini_boss",
+   "levels": [
+    10,
+    20,
+    30
+   ],
+   "headless": "L10/L20有完整老师结果；L30仅reset+1tick，不证明终局链",
+   "actions_sufficient": "plant/shovel/wait足以表达出牌、落点、等待；L20学生0/128但v4老师29/32",
+   "observation_gaps": "现有packets含重复牌/空槽/冷却，需保留原生出牌与槽位语义；L30当前p9k覆盖初始手牌，原生开局族尚缺",
+   "effort": "小",
+   "scope": "协议盘点；学习与面板验收另计",
+   "sources": [
+    "D",
+    "TV4",
+    "R2",
+    "R5"
+   ],
+   "code": [
+    "src/Lawn/Board.cpp:8577",
+    "src/LawnApp.cpp:1407",
+    "src/Lawn/Challenge.cpp:1649"
+   ]
+  },
+  {
+   "kind": "little_trouble",
+   "levels": [
+    25
+   ],
+   "headless": "reset+1tick通过，未跑完整关",
+   "actions_sufficient": "已有种植可选择传送带卡与水陆格，无证据需要新动作",
+   "observation_gaps": "核对小僵尸的可见尺寸/碰撞及编码；生命值虽公开，当前编码不显式标识此变体；需原生传送带任务与数据",
+   "effort": "中",
+   "scope": "原生牌为睡莲/坚果/豌豆/樱桃；不可套普通p9k手牌",
+   "sources": [
+    "E"
+   ],
+   "code": [
+    "src/LawnApp.cpp:3122",
+    "src/Lawn/Challenge.cpp:1781",
+    "src/Lawn/Zombie.cpp:871"
+   ]
+  },
+  {
+   "kind": "stormy_night",
+   "levels": [
+    40
+   ],
+   "headless": "reset+1tick通过，未跑完整关",
+   "actions_sufficient": "种植/等待可表达牌与格，不需要新增点选种类",
+   "observation_gaps": "StageHasFog=false，human fog屏蔽不覆盖暴风雨黑屏/闪电；缺与可见光照一致的观测及闪电阶段输入，不能声称人类等价可见性",
+   "effort": "中",
+   "scope": "原生牌含睡莲/仙人掌/豌豆/小喷菇/樱桃；当前f8覆盖初始手牌，另立原生族才可比较",
+   "sources": [
+    "E",
+    "R3"
+   ],
+   "code": [
+    "src/Lawn/Board.cpp:8710",
+    "src/Lawn/Challenge.cpp:1965",
+    "src/LawnApp.cpp:1643"
+   ]
+  },
+  {
+   "kind": "bowling",
+   "levels": [
+    5
+   ],
+   "headless": "原生reset+1tick通过；packet0,col0,row0种坚果被接受，未完成一局",
+   "actions_sufficient": "现有plant已经能选行并在合法c0-c2放球；不必先加专用bowling动作",
+   "observation_gaps": "滚动植物mX/mY及弹跳轨迹未在完整plants公开；只有初始col、当前row/state不足以完整表示连续运动，学生编码需审查",
+   "effort": "中",
+   "scope": "动作部分小；轨迹/编码/新族/面板合计中，按用户要求后置",
+   "sources": [
+    "E",
+    "EP"
+   ],
+   "code": [
+    "src/Lawn/Challenge.cpp:2453",
+    "src/Lawn/Plant.cpp:2361",
+    "src/LawnApp.cpp:2063"
+   ]
+  },
+  {
+   "kind": "whack",
+   "levels": [
+    15
+   ],
+   "headless": "reset+1tick通过；当前deck覆盖原生3槽，不是原样原生reset",
+   "actions_sufficient": "不够：缺锤子点击僵尸；plant不能调用MouseDownWhackAZombie",
+   "observation_gaps": "需原生锤子/点击目标/节奏与原生三槽语义；当前观测不是已验收的打地鼠输入",
+   "effort": "中",
+   "scope": "用户明确不做；只记录缺口，不建议排期",
+   "sources": [
+    "E"
+   ],
+   "code": [
+    "src/Lawn/Challenge.cpp:1329",
+    "src/Lawn/Board.cpp:8590",
+    "python/pvz_env.py:536"
+   ]
+  },
+  {
+   "kind": "vasebreaker",
+   "levels": [
+    35
+   ],
+   "headless": "reset+1tick通过且有罐；当前reset覆盖原生1槽，完整玩法未验证",
+   "actions_sufficient": "不够：缺点罐、拾取/使用掉落植物卡；种植只从seedbank取卡",
+   "observation_gaps": "grid_items直接公开封闭罐的zombie_type/seed_type，存在信息泄漏；需屏蔽隐藏内容并保留合法可见提示。coins只给type/x/y，缺掉落卡mUsableSeedType与使用状态；还需原生bank及点击合法动作",
+   "effort": "大",
+   "scope": "新交互/可见性/编码/动作头与数据；按用户要求后置",
+   "sources": [
+    "E"
+   ],
+   "code": [
+    "src/Lawn/Challenge.cpp:1346",
+    "src/Lawn/Challenge.cpp:4057",
+    "src/LawnApp.cpp:2099",
+    "src/LawnApp.cpp:2133",
+    "src/Lawn/Board.cpp:8590"
+   ]
+  },
+  {
+   "kind": "bungee",
+   "levels": [
+    45
+   ],
+   "headless": "原生reset+1tick通过；现有完整r7诊断/面板是初始手牌变体",
+   "actions_sufficient": "基本够：传送带种植与铲子/等待可防守空投，没有必须点击蹦极的新动作",
+   "observation_gaps": "已有generic phase/target_row/target_col及植物bungee_state，须核对编码是否保留可见空投落点、被抓植物与高度阶段；原生初始语义及数据缺口未补",
+   "effort": "中",
+   "scope": "原生牌花盆/大嘴花/南瓜/樱桃；r7面板不能宣称原生开局通过，按用户要求后置",
+   "sources": [
+    "E",
+    "TR",
+    "TR2",
+    "D46"
+   ],
+   "code": [
+    "src/Lawn/Board.cpp:4800",
+    "src/Lawn/Challenge.cpp:1807",
+    "src/LawnApp.cpp:2088"
+   ]
+  },
+  {
+   "kind": "boss",
+   "levels": [
+    50
+   ],
+   "headless": "原生reset+1tick通过；首张卷心菜种植接受，尚无完整Boss终局证据",
+   "actions_sufficient": "基础种植/等待可表达原生牌使用；未发现必须新增瞄准动作的证据，仍需完整链验证",
+   "observation_gaps": "通用僵尸血量/phase不充分代表Boss露头与冰火球；mBossMode/mBossHeadCounter/mBossFireBallReanimID未序列化，需从中提取人类可见状态而非盲目暴露隐藏计时。还缺传送带、终局判定及编码/数据验收",
+   "effort": "大",
+   "scope": "原生6种牌没有玉米加农炮；不能把玉米炮瞄准协议缺口当L50必备，按用户要求后置",
+   "sources": [
+    "E",
+    "EP"
+   ],
+   "code": [
+    "src/Lawn/Challenge.cpp:1741",
+    "src/Lawn/Zombie.h:150",
+    "src/Lawn/Zombie.cpp:10169",
+    "src/LawnApp.cpp:2088"
+   ]
+  },
+  {
+   "kind": "cob_cannon",
+   "levels": [],
+   "headless": "非独立冒险关类型；本次未做玉米炮交互探针",
+   "actions_sufficient": "不够：需选择ready炮后指定像素落点；plant/shovel/wait均不能触发该点击链",
+   "observation_gaps": "需炮ID/ready/选中状态/落点的可见输入与动作头，并保留30tick误触保护语义；不影响当前无炮任务",
+   "effort": "中",
+   "scope": "跨关机制；若含搜索、回放、动作头/编码验收，整体可升大；不作为L50前置",
+   "sources": [
+    "E"
+   ],
+   "code": [
+    "src/Lawn/Plant.cpp:4207",
+    "src/Lawn/Board.cpp:3581",
+    "python/pvz_env.py:536"
+   ]
+  }
+ ],
+ "bottleneck_groups": [
+  {
+   "levels": [
+    1,
+    2,
+    3,
+    7,
+    8,
+    9,
+    12,
+    14,
+    17,
+    18,
+    19
+   ],
+   "category": "工程",
+   "confidence": "排查入口，非已证实模拟器错误",
+   "evidence": "现役面板有缺口；L14老师32/32而学生87/128，L17老师31/32而学生65/128；旧qc只打包未训练、流水线刚上线；A改善泳池却伤夜间/heldout，不能直接换。L2仅缺独立现代证据。",
+   "sources": [
+    "S27",
+    "SA",
+    "T50",
+    "TV4",
+    "PLAN",
+    "D49"
+   ],
+   "needed": "确认新纠正数据实际进入训练/质量门禁，并补同族评估；不要把缺证当输局或改引擎"
+  },
+  {
+   "levels": [
+    21,
+    22,
+    23,
+    27,
+    28,
+    29
+   ],
+   "category": "冷启动无数据",
+   "confidence": "现役训练来源缺口有直接证据；27-29正式面板缺证",
+   "evidence": "dw4冻结48816档案只含白天/夜草；qc历史pool窗口不等于dw4已经学到。A在21-23为42/64、33/64、27/64，说明数据/配比有潜力，但仍非稳定通关。",
+   "sources": [
+    "D46c",
+    "SA",
+    "Q",
+    "D53"
+   ],
+   "needed": "接task43老师终局信号与task53纠正，完成质量门禁；27-29先取得正式基线"
+  },
+  {
+   "levels": [
+    24,
+    26
+   ],
+   "category": "叶值压平",
+   "confidence": "task30直接覆盖两关的候选离散度实证，非唯一路径",
+   "evidence": "现役各0/64；v4 L24正式老师3/32。task30另对L24/L26各4局、每臂480决策做探针，v4候选std约.0007，100% gap落入.02门槛且8局0推翻、两臂均0胜。task43第一轮v5已否决，第二轮真实老师续走标签尚在采集。",
+   "sources": [
+    "D30",
+    "D30d",
+    "S27",
+    "TV4",
+    "P",
+    "D43"
+   ],
+   "needed": "保留真实root/续走分布与可排序终局标签，重训后按原三项验收；不堆同样全零学生续走"
+  },
+  {
+   "levels": [
+    31,
+    32,
+    33,
+    34
+   ],
+   "category": "叶值压平",
+   "confidence": "已证实低分差与局部反序；学习冷启动也是直接缺口",
+   "evidence": "human/xray双臂均全败；D诊断16局0射手0香蒲、候选gap≤0.011、执行合法且Python/native一致。E完成64根/12372筛查+512确认均无胜，末波/终tick一致率.600/.548，两个土豆雷仅确认延后失败。射手/香蒲在根中不可种，不能评价优劣。",
+   "sources": [
+    "TF",
+    "D45",
+    "T52"
+   ],
+   "needed": "在可支付且底座满足的早期状态补老师/人类示范起点数据；先建立胜负可分信号，不能直接调0.02或以降倍率替代诊断"
+  },
+  {
+   "levels": [
+    36,
+    37,
+    38,
+    39
+   ],
+   "category": "冷启动无数据",
+   "confidence": "缺独立现代面板；不宣称全败",
+   "evidence": "已登记f8且有地形覆盖，但尚无本关独立结果；新增矿工/跳跳构成对策风险，未有实证证明其为当前主因。",
+   "sources": [
+    "E",
+    "R3",
+    "D45"
+   ],
+   "needed": "复核对策覆盖/新族必要性后再预登记小面板；不能从31-34外推胜率"
+  },
+  {
+   "levels": [
+    41,
+    42,
+    43,
+    44,
+    46,
+    47,
+    48,
+    49
+   ],
+   "category": "冷启动无数据",
+   "confidence": "现役屋顶训练0份；具体搜索问题强弱分根",
+   "evidence": "r7有32卷心菜，笼统缺投掷已被反驳。L41老师13/16、学生8/16；L46诊断1/4胜，非结构性全败。42-49有4seed老师诊断；候选遗漏/halving/低分差已在少数根发现，完整17根审计尚未完成。",
+   "sources": [
+    "TR",
+    "TR2",
+    "T52",
+    "D46c",
+    "D46",
+    "D46b"
+   ],
+   "needed": "先让L41有效标签进训练；L42-49等待全候选终局归因和独立未来后补数据，不自动换卡或降倍率"
+  }
+ ],
+ "priority_proposal": [
+  {
+   "order": 1,
+   "levels": [
+    1,
+    3,
+    7,
+    8,
+    9,
+    12,
+    14,
+    17,
+    18,
+    19,
+    20
+   ],
+   "action": "先闭合现有数据→训练→质量门禁，保住已过关，吸收普通夜间与原生L20纠正",
+   "evidence": "L14/L17老师接近全胜而学生约半数，L20老师29/32对学生0/128；旧qc仅打包问题已修。A不是可直接全局替换的净改进。",
+   "depends": [
+    "task49A流水线与晋升门禁",
+    "task36配比/候选B排期",
+    "主控批准部署与数据配方"
+   ],
+   "sources": [
+    "T50",
+    "TV4",
+    "S27",
+    "SA",
+    "PLAN",
+    "D49"
+   ],
+   "exit": "逐来源确认新标签入训；候选通过现有配对质量门禁，再看各关原版独立面板是否稳定",
+   "limits": "不承诺增加关数；task55不换生产模型/门槛"
+  },
+  {
+   "order": 2,
+   "levels": [
+    41
+   ],
+   "action": "优先兑现L41准入后的屋顶数据，作为新增区的低成本入口",
+   "evidence": "老师15/16冷启动、最近13/16，学生8/16；屋顶训练来源为0；已登记qc但冻结时尚0窗口局。",
+   "depends": [
+    "task46已完成准入",
+    "task50已部署deploy3",
+    "task49训练门禁",
+    "task53可区分纠正标签（若正式验收通过）"
+   ],
+   "sources": [
+    "TR",
+    "T52",
+    "D46c",
+    "Q"
+   ],
+   "exit": "获得实际完整采集/训练/配对评估证据，不把state注册当完成",
+   "limits": "两组16样本非总体≥95%证明，须按既有准入/晋升程序推进"
+  },
+  {
+   "order": 3,
+   "levels": [
+    21,
+    22,
+    23,
+    24,
+    26,
+    27,
+    28,
+    29,
+    42,
+    43,
+    44,
+    46,
+    47,
+    48,
+    49
+   ],
+   "action": "合并现有终局标签工作：先完成task43/46B/53再决定数据配比与换值网",
+   "evidence": "A泳池126/320显示迁移机会；task43第一轮已否决，第二轮真实老师标签未验收；task46B少数根分别暴露候选遗漏、halving与小分差；不能只改某一阈值。",
+   "depends": [
+    "task43真实老师续走64seed+重训三门",
+    "task46B完整17根审计",
+    "task53独立确认/微调/192对评估/成本门禁"
+   ],
+   "sources": [
+    "SA",
+    "D43",
+    "D46b",
+    "D53",
+    "D53c"
+   ],
+   "exit": "看原版胜负而非单纯末波/存活时间；保留不同来源与任务族后训练",
+   "limits": "task53已筛查9723标签、确认7动作，但微调/192对仍待验；15%成本基准旧完整轮与新引擎单组投影不同，不宣布预算已在现行混合轮通过"
+  },
+  {
+   "order": 4,
+   "levels": [
+    31,
+    32,
+    33,
+    34,
+    36,
+    37,
+    38,
+    39
+   ],
+   "action": "雾区先补可赢的合法早期状态/人类示范起点；胜负有信号后才量记忆",
+   "evidence": "E筛查/确认均无胜，部分延寿不足以教会稳定通关；K4与无记忆都落在0胜地板，尚不能判断记忆收益；对策牌和可支付时机需分开验证。",
+   "depends": [
+    "task45E固定基线",
+    "task48用户十局示范/verified重放与HF交付",
+    "task53纠正数据",
+    "新卡组族由主控登记"
+   ],
+   "sources": [
+    "TF",
+    "D45",
+    "D48",
+    "H48",
+    "T52"
+   ],
+   "exit": "验证示范/老师接管能产生胜负可分的合法状态，再做无记忆/历史输入同数据对照",
+   "limits": "task55未取得实际十局示范；不写规则打法，不把记忆当已证实根因；task52 LLM候选无胜负收益，暂不生产接入"
+  },
+  {
+   "order": 5,
+   "levels": [
+    2,
+    25,
+    27,
+    28,
+    29,
+    30,
+    36,
+    37,
+    38,
+    39,
+    40,
+    46,
+    47,
+    48,
+    49
+   ],
+   "action": "分批补未知关证据，并补传送带原生任务；不把传送带整体后置",
+   "evidence": "L2、27-29及雾后半缺独立面板；屋顶后半只有4seed诊断。L30/40当前为覆盖初始手牌变体，L25原生族未注册；L40还缺闪电可见性审计。",
+   "depends": [
+    "已有源清单/引擎谓词",
+    "task43/45/46的可教信号",
+    "任务族登记与主控小规模排期"
+   ],
+   "sources": [
+    "E",
+    "R2",
+    "R3",
+    "TR2"
+   ],
+   "exit": "先核实deck×地形/可见性，再预登记原版同族小面板和独立保留种子",
+   "limits": "本任务不采批量对局；不静默覆盖现行deck或历史档案"
+  },
+  {
+   "order": 6,
+   "levels": [
+    5,
+    35,
+    45,
+    50
+   ],
+   "action": "按用户顺序最后处理保龄球/砸罐/蹦极/僵王；打地鼠不做",
+   "evidence": "保龄球种植选行已有单步证明，蹦极基础动作可表达；砸罐有点击/掉落卡/信息泄漏缺口，Boss有可见状态与终局链缺证。",
+   "depends": [
+    "本报告特殊机制清单",
+    "新任务族/编码/动作协议各自验收",
+    "主控排期"
+   ],
+   "sources": [
+    "E",
+    "EP",
+    "D46"
+   ],
+   "exit": "每类单独通过原生reset、合法动作/公开观测、回放与整局结果门禁后再建学习数据",
+   "limits": "玉米炮瞄准若另立任务再做；原生L50没有玉米炮，不作为前置"
+  }
+ ],
+ "proposal_authority": "建议，主控决定；未更改生产任务、模型、倍率、门槛或qc",
+ "secondary_risks": {
+  "deck": "现行p9k/f8/r7覆盖地形；未证实其为普通关主因。对策不足需新族对照，先查牌再归因策略。",
+  "counter_zombies": "潜水/冰车/海豚/小丑/气球/矿工/跳跳/梯子/投石车/巨人均需对策数据；引擎名单仅定位风险，不足以归因输局。",
+  "memory": "human/xray皆全败、K4全败地板；记忆潜在价值未定，不列当前主因。"
+ },
+ "audit_code_sha256": {
+  "python/pvz_env.py": "4383428452d034b024a4dfb1ebf9dbb4f670174934dba6dda788c80c6a3eec18",
+  "src/Lawn/Board.cpp": "78090f4bf3cdd66e6145dfa40fdb8ff22abffd0906d491ef7be4893d8e9194c7",
+  "src/Lawn/Challenge.cpp": "1fa09f39ac464b3bcb726b766e1f2dd7264b22284ce2b05097d6d58ea2975e5a",
+  "src/Lawn/Plant.cpp": "8ae7a5d360792a7d7a19e9d139f41a3eccde318e840681c424a620c266667a90",
+  "src/Lawn/Zombie.cpp": "bc7c5edff8158def4f9e787fdf6c64ccca23c365941344d9402ae0e719f8d6ad",
+  "src/Lawn/Zombie.h": "75193faaa8f001750854da00cc87ac0af734ef15857cceb5beefe2a2384d0837",
+  "src/LawnApp.cpp": "e7362bda1dd29307032d06d6e13641958e5f5d627176b3e478eac2a75c6a7c51"
+ },
+ "protocol_probes": {
+  "method": "single-action protocol facts, not matches or policy evaluation",
+  "probes": [
+   {
+    "level": 5,
+    "original_conveyor": true,
+    "initial_packets": [
+     3,
+     -1,
+     -1,
+     -1,
+     -1,
+     -1,
+     -1,
+     -1,
+     -1,
+     -1
+    ],
+    "action": {
+     "packet": 0,
+     "col": 0,
+     "row": 0
+    },
+    "accepted": true,
+    "plant_types_after": [
+     3
+    ],
+    "terminal": false
+   },
+   {
+    "level": 50,
+    "original_conveyor": true,
+    "initial_packets": [
+     32,
+     20,
+     32,
+     14,
+     -1,
+     -1,
+     -1,
+     -1,
+     -1,
+     -1
+    ],
+    "action": {
+     "packet": 0,
+     "col": 0,
+     "row": 0
+    },
+    "accepted": true,
+    "plant_types_after": [
+     32,
+     33
+    ],
+    "terminal": false
+   }
+  ]
+ },
+ "completion_audit": {
+  "all_requirements_verified": true,
+  "verified_at": "2026-10-24T05:36:24.937542+08:00",
+  "scope": "task55 inventory/report only; no implementation or new match evaluation",
+  "checks": {
+   "passed": true,
+   "levels": 50,
+   "ordinary_unpassed_classified": 35,
+   "special_mechanisms": 9,
+   "qc_cells": 38,
+   "qc_levels": 26,
+   "student_a_games": 3264,
+   "student_a_wins": 2203,
+   "source_files": 38,
+   "live_sources_advanced_after_snapshot": [],
+   "scope": "evidence/report audit only; not a claim that 50 levels are cleared"
+  },
+  "requirements": {
+   "1_fifty_level_table": {
+    "passed": true,
+    "evidence": "levels[1..50]; engine_predicates/engine fingerprints; per-row task_family/qc/dated source metrics/status; 50 Markdown rows; script and special-roster distinctions"
+   },
+   "2_special_mechanisms": {
+    "passed": true,
+    "evidence": "special_mechanisms: all 10 special levels plus cross-level cob cannon; headless proof limits, action sufficiency, visible observation gaps, scope and small/medium/large effort; exact source locations and two accepted action probes"
+   },
+   "3_ordinary_bottlenecks": {
+    "passed": true,
+    "evidence": "all35 unpassed ordinary rows have one category and sources; six groups exactly cover these rows; task30/43/45/46/52 facts separated from causal hypotheses"
+   },
+   "4_priority_proposal": {
+    "passed": true,
+    "evidence": "six ordered proposals with rationale, tasks43/45/46/53/human-demo dependencies, exit evidence and limitations; controller decides; whack excluded and deferred special types respected"
+   },
+   "5_delivery": {
+    "passed": true,
+    "evidence": "MEMORY/docs/adventure-gap.md and adventure-gap.json; scripts/verify_adventure_gap.py; taskbook result and append-only daily log; advgap commits/push required before goal completion"
+   }
+  },
+  "invariants": {
+   "game_process_limit": "single engine only during initial reset/tick and two individual-action probes; no games during final assembly/audit",
+   "no_batch_matches": true,
+   "no_qc_or_other_session_operations": true,
+   "no_gameplay_or_production_changes": true,
+   "no_large_binary_deliverables": true
+  },
+  "report_sha256": "682c90bc4f2511c850cd5f1804671d3bdd1146f0f1dacd6ba8d36fbf840c89cb",
+  "verifier_sha256": "3eb89c207fa7021e5972affd01b8977d21fb1271ea3cd512bf51ed1e563c8a6e"
+ }
 }
