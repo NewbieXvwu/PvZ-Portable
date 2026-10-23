@@ -94,17 +94,27 @@ print(json.dumps(c.command_for(a,Path(d['manifest']),d['task'],d['offset'],8,d['
     return json.loads(output)
 
 
-def plan(out: Path) -> dict:
+def plan(out: Path, current_executable: Path | None = None, reference_plan: Path | None = None) -> dict:
     target = out / 'collection-plan.json'
     if target.exists():
-        return json.loads(target.read_text())
+        existing = json.loads(target.read_text())
+        if current_executable is not None or reference_plan is not None:
+            raise ValueError('plan already frozen; run/report without planning overrides')
+        return existing
     sources = json.loads((out / 'sources.json').read_text())
     panel = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json')
-    panel_data = json.loads(panel.read_text())
+    reference = None
+    if reference_plan is not None:
+        reference = json.loads(reference_plan.read_text())
+        require_complete_design(reference)
+        require_inputs(reference)
+        panel_data = json.loads(Path(reference['manifest']).read_text())
+    else:
+        panel_data = json.loads(panel.read_text())
     tasks = []
     for name in TASKS:
         task = next(t for t in panel_data['tasks'] if t['task_id'] == name)
-        seeds = task['seeds'][64:80]
+        seeds = task['seeds'] if reference is not None else task['seeds'][64:80]
         if len(seeds) != 16 or len(set(seeds)) != 16:
             raise ValueError(f'{name}: insufficient distinct seeds')
         tasks.append({**task, 'seeds': seeds})
@@ -115,9 +125,12 @@ def plan(out: Path) -> dict:
                     old_value=MAIN / 'artifacts/value_net/v3/model.pt',
                     cq_value=MAIN / 'artifacts/value_net/v4/model.pt',
                     old_engine=ROOT / 'build-old/pvz-portable',
-                    cq_engine=Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable'))
+                    cq_engine=current_executable or Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable'))
     fingerprints = {str(p): sha(p) for p in controls.values()}
     fingerprints[str(manifest)] = sha(manifest)
+    if reference_plan is not None:
+        fingerprints[str(reference_plan)] = sha(reference_plan)
+        fingerprints[reference['manifest']] = sha(Path(reference['manifest']))
     source_shas = {arm: tree_sha(Path(data['source'])) for arm, data in sources.items()}
     stages = []
     for index, task in enumerate(tasks):
@@ -142,7 +155,8 @@ def plan(out: Path) -> dict:
                                output=command[command.index('--out') + 1]))
     result = dict(protocol='task51 formal collection wall time including frame archives',
                   workers=2, games_per_arm_per_task=16, manifest=str(manifest),
-                  original_panel_sha256=sha(panel), original_seed_offset=64,
+                  original_panel_sha256=reference['original_panel_sha256'] if reference else sha(panel),
+                  original_seed_offset=64, reference_plan=str(reference_plan) if reference_plan else None,
                   sources=sources, source_python_sha256=source_shas,
                   input_sha256=fingerprints, stages=stages)
     write_json(target, result)
@@ -332,9 +346,14 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('phase',choices=('plan','run','report'))
     parser.add_argument('--out',type=Path,default=ROOT/'artifacts/task51')
+    parser.add_argument('--current-executable',type=Path,help='plan only: engine for the comparison arm')
+    parser.add_argument('--reference-plan',type=Path,help='plan only: reuse the exact frozen task/seed set')
     args=parser.parse_args()
-    if not args.out.is_absolute():parser.error('--out must be absolute')
-    document=plan(args.out)
+    if not all(p.is_absolute() for p in (args.out,args.current_executable,args.reference_plan) if p is not None):
+        parser.error('paths must be absolute')
+    if args.phase!='plan' and (args.current_executable or args.reference_plan):
+        parser.error('planning overrides are only accepted by plan')
+    document=plan(args.out,args.current_executable,args.reference_plan)
     if args.phase=='run':collect(args.out,document)
     if args.phase=='report':
         result=report(args.out,document)

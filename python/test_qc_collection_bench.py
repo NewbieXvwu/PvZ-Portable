@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import json
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -80,6 +81,36 @@ class EvidenceGateTest(unittest.TestCase):
             timing.update(games=1, samples=[dict(engine_processes=3)])
             with self.assertRaisesRegex(ValueError, 'two game processes'):
                 bench.stage_evidence(timing, self.rows([10]), file)
+
+    def test_followup_plan_reuses_frozen_tasks_seeds_and_selects_engine(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); out = root/'followup'; out.mkdir()
+            reference = self.design()
+            manifest = root/'original-manifest.json'
+            tasks = [dict(task_id=t, seeds=list(range(100, 116)), deck=[0, 1, 2, 3, 4, 5])
+                     for t in bench.TASKS]
+            manifest.write_text(json.dumps(dict(tasks=tasks)))
+            for s in reference['stages']:
+                s['seeds'] = list(range(100+s['block']*8, 108+s['block']*8))
+            reference.update(manifest=str(manifest), original_panel_sha256='panel-sha',
+                             input_sha256={}, source_python_sha256={})
+            ref = root/'reference.json'; ref.write_text(json.dumps(reference))
+            (out/'sources.json').write_text(json.dumps({a:dict(source=str(root)) for a in ('old','cq')}))
+            def command(source, values, task, offset, label):
+                return ['python', '--workers', '2', '--dagger-beta', '0', '--executable', values['executable'],
+                        '--out', str(out/'runs'/label)]
+            engine = root/'new-engine'
+            with patch.object(bench, 'sha', return_value='fixture-sha'), patch.object(bench, 'command_from_source', command):
+                result = bench.plan(out, engine, ref)
+            self.assertEqual(json.loads(Path(result['manifest']).read_text())['tasks'], tasks)
+            self.assertEqual(result['input_sha256'][str(ref)], 'fixture-sha')
+            self.assertEqual(result['original_panel_sha256'], 'panel-sha')
+            for stage in result['stages']:
+                if stage['arm'] == 'cq':
+                    self.assertEqual(stage['command'][stage['command'].index('--executable')+1], str(engine))
+            bench.require_complete_design(result)
+            with self.assertRaisesRegex(ValueError, 'already frozen'):
+                bench.plan(out, engine, ref)
 
     def test_metadata_alone_cannot_prove_a_complete_archive(self):
         with tempfile.TemporaryDirectory() as tmp:

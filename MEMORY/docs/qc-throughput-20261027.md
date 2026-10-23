@@ -63,6 +63,12 @@
 
 受控采集及完整轮间比值待补齐。判据保持 ≥2.0 / 1.5–2.0 / <1.5，不因现有单项基准提前判档。
 
+### task50 通过后的追加对照准备
+
+`bench_qc_collection.py plan` 现支持 `--reference-plan` 与 `--current-executable`。追加对照使用新的隔离目录（`artifacts/task51-deploy3/`），其 `sources.json` 的旧臂仍引用已冻结的1b89bfa9，比较臂冻结通过完整门禁的 zones 提交及 Python 快照；内部比较臂键仍叫 `cq`，实际版本以该清单的 `sources` 和引擎SHA为准。
+
+准备顺序：先复核 task50 追加A的完整老师比较、strict审计与最终[A]结果均完成，再冻结zones源码与deploy3引擎；随后以原 `artifacts/task51/collection-plan.json` 作 reference、deploy3作 current executable 生成新清单。工具精确复用原任务定义/卡组/倍率和16种子，不读取届时可能再生成的生产panel，并将原清单及manifest哈希纳入输入门禁。新清单仍为16块128局交替对照，旧臂也重测以配对当时负载；不复用旧计时。现存冻结计划拒绝planning参数覆盖，run/report只读取该计划。相关夹具验证了任务/种子不漂移、引擎选择和禁止覆盖；相关门禁合计29项通过。此处仅完成工具准备，未提前启动deploy3采集。
+
 
 ### 接管复核（2026-10-24 02:15 +08:00）
 
