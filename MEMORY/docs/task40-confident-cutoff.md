@@ -43,4 +43,12 @@
 
 ## 结果
 
+- 2026-10-23 11:46 清单（Qoder，cutoff）：`~/.venvs/ml/bin/python3 scripts/confident_cutoff.py manifest --scan-seeds 100000` → `artifacts/task40/roots.json`（sha256 `7ef100b49de30be214dc8421451db4ecc87a8a3bf7867fb2e72254de7b06d3cf`）。4 族各 16 档 × 4 个决策点 = 每族 64 root：day L7 seeds 1800000–1800015（卡组 0,1,2,3,4,5,7）、night L14 seeds 1930000–1930015（0,1,2,3,4,5,7,8,9）、pool L24 seeds 2030000–2030015（0,1,2,3,4,5,7,16,19）、conveyor L10 orig seeds 1880258–1880273（原版传送带，无卡组）。决策点取每档帧数的 15/40/65/85%。
+- 2026-10-23 11:46 前缀校验：`confident_cutoff.py prefix`，4 族 × 每族 1 档 × 2 个未来 seed × t∈{500,1000,1500,2000}（32 例）。t 推演的引擎 trace 与 2500 推演的前缀逐决策行一致 32/32；t 叶观测与 2500 推演在叶 tick 的下一决策观测一致 32/32（`artifacts/task40/prefix.log`、`prefix.json`）。结论：同 root 同 seed 下 t 推演是 2500 推演的前缀，可以按 (root, seed) 配对。
+- 2026-10-23 11:46 输入 SHA256：学生 dw4i_s1 `122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375`、价值网 v3 `5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a`、分叉网 value_branch1 `2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314`、引擎 `/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build/pvz-portable` `7508e840ec19d0ef6f91d55f4052cf17846a82df7eb24e235fab2aa9b1aefe65`。
+- 2026-10-23 11:46 全量测量已启动（后台）：每 root 9 个未来 seed、t∈{500,1000,1500,2000,2500}，共 256×45=11520 条推演；叶值用 v3 打分（分叉网同时记录作对照），终端叶按 `_score_terminal_or_value` 取 0/1。
+
 ## 问题
+
+- 夜间族按任务书取 L14，而不是 bench_engine 的 L12–14 合并族。frames_v2 的 n14 档 meta 没有卡组，按首帧 packets 重建为 `[0,1,2,3,4,5,7,8,9]`（9 张，没有墓碑吞噬者 11；与 queue103 注释里的 n10 十卡组不同）——本测量按存档实际卡组回放，不自造卡组。
+- 前缀校验第一次实现按 “trace 行 observation.tick == 叶 tick” 配对，32 例中 1 例误报：植物动作不推进 tick，同一 tick 会有多个决策点，按 tick 取到了后一个决策。改成按决策序号（t 推演最后一个动作之后的下一决策）配对后 32/32 通过——这是测量脚本配对口径的问题，不是引擎前缀性质的问题。
