@@ -54,6 +54,11 @@ MULT_STRIDE = 700_000
 SLOTS_PER_FAMILY = 32
 SEEDS_PER_TASK = 2048
 
+# task46: roof levels exceed the legacy 32-level slot width. Give them an independent
+# range rather than shifting any existing family's seeds (also independent of task45 fog).
+ROOF_MULT_SEED_BASE = 48_000_000
+ROOF_MULT_STRIDE = 100_000
+
 DAY_D7_LEVELS = (1, 3, 4, 6, 7, 8, 9)
 NIGHT_N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 POOL_P9K_LEVELS = (21, 22, 23, 24, 26, 27, 28, 29)
@@ -83,6 +88,10 @@ def variant_id(base_id: str, suffix: str) -> str:
 
 
 def seed_start(mult_index: int, family_index: int, level: int) -> int:
+    if FAMILIES[family_index][0] == 'roof':
+        if not 41 <= level <= 49:
+            raise ValueError('roof multiplier level must be 41..49')
+        return ROOF_MULT_SEED_BASE + mult_index * ROOF_MULT_STRIDE + (level - 41) * SEEDS_PER_TASK
     slot = family_index * SLOTS_PER_FAMILY + (level - 1)
     return SEED_BASE + mult_index * MULT_STRIDE + slot * SEEDS_PER_TASK
 
@@ -97,6 +106,7 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'day_d7q': overrides.get('day_d7q') or MAIN / 'artifacts/stage4/day_panel_d7q.json',
         'night_n10p': overrides.get('night_n10p') or MAIN / 'artifacts/stage4/night_panel_n10p.json',
         'night_n10q': overrides.get('night_n10q') or MAIN / 'artifacts/stage4/night_panel_n10q.json',
+        'roof': overrides.get('roof') or ROOT / 'artifacts/task46/roof_panel.json',
     }
 
 
@@ -213,6 +223,7 @@ def main() -> None:
     parser.add_argument('--day-d7q-manifest', type=Path)
     parser.add_argument('--night-n10p-manifest', type=Path)
     parser.add_argument('--night-n10q-manifest', type=Path)
+    parser.add_argument('--roof-manifest', type=Path)
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -220,7 +231,7 @@ def main() -> None:
     paths = source_paths({'day': args.day_manifest, 'day_orig': args.day_orig_manifest,
                           'night': args.night_manifest, 'pool': args.pool_manifest,
                           'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
-                          'night_n10q': args.night_n10q_manifest})
+                          'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests()

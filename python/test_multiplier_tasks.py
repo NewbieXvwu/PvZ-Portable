@@ -5,6 +5,7 @@
 """
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,6 +14,7 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 from make_multiplier_tasks import (FAMILIES, MULT_STRIDE, MULTIPLIERS, SEEDS_PER_TASK,
                                    SLOTS_PER_FAMILY, build_variants, seed_start, variant_id)
 from pvz_tasks import deck_for_seed
+import make_multiplier_tasks as generator
 
 
 def source_task(level, deck, perturb=False, conveyor=False, tag=''):
@@ -61,7 +63,27 @@ class MultiplierTasksTest(unittest.TestCase):
         # 每档倍率的块宽 = 族数 * 32 槽 * 每任务种子数，必须小于档间距。
         block = len(FAMILIES) * SLOTS_PER_FAMILY * SEEDS_PER_TASK
         self.assertLess(block, MULT_STRIDE)
-        self.assertGreater(seed_start(1, 0, 1), seed_start(0, len(FAMILIES) - 1, 30))
+        for family_index, (_name, _key, _pattern, levels, _terrain) in enumerate(FAMILIES):
+            self.assertGreater(min(seed_start(1, family_index, level) for level in levels),
+                               max(seed_start(0, family_index, level) + SEEDS_PER_TASK - 1 for level in levels))
+
+    def test_roof_allocation_preserves_every_existing_seed_block(self):
+        old = {(m, f, level): seed_start(m, f, level)
+               for m in range(len(MULTIPLIERS))
+               for f, entry in enumerate(FAMILIES) for level in entry[3]}
+        roof = ('roof', 'roof', 'roof_l{level}_train_r7', (41, 42, 43, 44, 46, 47, 48, 49), 'roof')
+        families = tuple(f for f in FAMILIES if f[0] != 'roof') + (roof,)
+        with patch.object(generator, 'FAMILIES', families):
+            for key, value in old.items():
+                if FAMILIES[key[1]][0] != 'roof':
+                    self.assertEqual(seed_start(*key), value)
+            starts = [seed_start(m, len(families) - 1, level)
+                      for m in range(len(MULTIPLIERS)) for level in roof[3]]
+            self.assertEqual(min(starts), 48000000)
+            for left, right in zip(sorted(starts), sorted(starts)[1:]):
+                self.assertGreaterEqual(right - left, SEEDS_PER_TASK)
+            self.assertGreater(min(starts), max(v for k, v in old.items()
+                                                if FAMILIES[k[1]][0] != 'roof') + SEEDS_PER_TASK)
 
     def test_fields_copied_and_perturbation_kept(self):
         tasks = build_variants(self.sources, seeds=32)
