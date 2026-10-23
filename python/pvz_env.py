@@ -246,6 +246,7 @@ class PvZEnv:
         self._sun_production_history: deque[tuple[int, int]] = deque()
         self._sun_history_start_tick: int | None = None
         self._sun_history_snapshots: dict[int, tuple[list[tuple[int, int]], int | None]] = {}
+        self._snapshot_ticks: dict[int, int] = {}
 
     def _annotate_observation(self, observation: dict[str, Any],
                               events: dict[str, Any] | None = None,
@@ -257,6 +258,7 @@ class PvZEnv:
             self._sun_production_history.clear()
             self._sun_history_start_tick = tick
             self._sun_history_snapshots.clear()
+            self._snapshot_ticks.clear()
         if self._sun_history_start_tick is None:
             self._sun_history_start_tick = tick
         # A reset observation begins a new episode; events from the old board
@@ -573,6 +575,28 @@ class PvZEnv:
             raise RuntimeError(f"environment returned invalid critic inputs: {response}")
         return response
 
+    def snapshot_fast(self) -> int:
+        """Search-only snapshot: preserve wrapper income/time without exporting the root again."""
+        response = self._command("SNAPSHOT_FAST")
+        if not response.get("ok") or "snapshot_id" not in response:
+            raise RuntimeError(f"environment could not save a snapshot: {response}")
+        snapshot_id = int(response["snapshot_id"])
+        self._sun_history_snapshots[snapshot_id] = (list(self._sun_production_history), self._sun_history_start_tick)
+        self._snapshot_ticks[snapshot_id] = self._tick
+        return snapshot_id
+
+    def restore_fast(self, snapshot_id: int) -> None:
+        """Restore a search root and its wrapper state; no redundant observation or replay operation."""
+        if snapshot_id not in self._snapshot_ticks:
+            raise ValueError("restore_fast requires a live snapshot_fast root")
+        response = self._command(f"RESTORE_FAST {snapshot_id}")
+        if not response.get("ok"):
+            raise ValueError(f"environment could not restore snapshot {snapshot_id}: {response}")
+        history, start = self._sun_history_snapshots[snapshot_id]
+        self._sun_production_history = deque(history)
+        self._sun_history_start_tick = start
+        self._tick = self._snapshot_ticks[snapshot_id]
+
     def snapshot(self) -> int:
         response = self._command("SNAPSHOT")
         if not response.get("ok") or "snapshot_id" not in response:
@@ -607,6 +631,7 @@ class PvZEnv:
         if not response.get("ok"):
             raise ValueError(f"environment could not release snapshot {snapshot_id}: {response}")
         self._sun_history_snapshots.pop(snapshot_id, None)
+        self._snapshot_ticks.pop(snapshot_id, None)
 
     def reseed(self, seed: int) -> None:
         """Draw a fresh, equally plausible future from the current state.

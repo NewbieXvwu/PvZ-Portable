@@ -19,13 +19,13 @@ class SearchScheduleTest(unittest.TestCase):
                                   margin=0.02, halving=True)
 
         class Root:
-            def snapshot(self):
+            def snapshot_fast(self):
                 return 1
 
             def branch_snapshot(self, root, chunk, retain_snapshots):
                 return [{"ok": True, "observation": {"packet": a["packet"]}} for a in chunk]
 
-            def restore(self, root):
+            def restore_fast(self, root):
                 pass
 
             def release_snapshot(self, root):

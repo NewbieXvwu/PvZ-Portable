@@ -21,7 +21,7 @@ class StudentCandidatesTest(unittest.TestCase):
                                    halving=True, samples=3, margin=.02,
                                    cuda_speculative_halving=speculate, rollout_backend=backend)
             env = Mock()
-            env.snapshot.return_value = 7
+            env.snapshot_fast.return_value = 7
             env.branch_snapshot.side_effect = lambda root, actions, **kw: [
                 {"ok": True, "observation": {"static": 1.0 - a["col"] / 10}} for a in actions]
             stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
@@ -53,7 +53,7 @@ class StudentCandidatesTest(unittest.TestCase):
             self.assertEqual(stats["student_candidate_override"], 1)
             records.append(json.dumps({"action": action, "targets": stats["last_targets"],
                                        "batches": batches}, sort_keys=True).encode())
-            env.restore.assert_called_with(7)
+            env.restore_fast.assert_called_with(7)
             env.release_snapshot.assert_called_once_with(7)
         self.assertEqual(len(set(records)), 1)
 

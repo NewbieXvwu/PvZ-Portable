@@ -18,6 +18,22 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(os.environ.get("PVZ_TEST_RESOURCE_DIR"), "set PVZ_TEST_RESOURCE_DIR to run engine oracle")
 class EngineValueTest(unittest.TestCase):
+    def test_fast_snapshot_restores_board_clock_and_income_history(self):
+        with PvZEnv(os.environ["PVZ_TEST_RESOURCE_DIR"], executable=os.environ.get(
+                "PVZ_TEST_EXECUTABLE", str(ROOT / "build/pvz-portable"))) as env:
+            env.reset(level=7, seed=3717)
+            before, *_ = env.step(dict(type="wait", ticks=3000))
+            history = list(env._sun_production_history)
+            root = env.snapshot_fast()
+            env.step(dict(type="wait", ticks=600))
+            env.restore_fast(root)
+            self.assertEqual(env._tick, before["tick"])
+            self.assertEqual(list(env._sun_production_history), history)
+            self.assertEqual(env.observe(), before)
+            env.release_snapshot(root)
+            with self.assertRaises(ValueError):
+                env.restore_fast(root)
+
     def test_scored_rollout_matches_python_leaf_and_preserves_state(self):
         from pvz_rollout_policy import load_student, export_student
         from pvz_value_net import load_value_net

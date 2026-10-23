@@ -424,7 +424,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         return policy_action
     stats["last_search_tick"] = obs["tick"]
     stats["searched"] += 1
-    root = env.snapshot()
+    root = env.snapshot_fast()
     income = obs.get("sun_income_rate")
     try:
         plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
@@ -535,7 +535,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         return _verified_choice(env, obs, root, candidates, totals, [args.samples] * len(candidates),
                                 best, keys.index(policy_key), policy_action, args, decision_seed, stats)
     finally:
-        env.restore(root)
+        env.restore_fast(root)
         env.release_snapshot(root)
 
 

@@ -19,7 +19,7 @@ class CoverageTest(unittest.TestCase):
         args=SimpleNamespace(min_gap=0,shovel_candidates=0,per_card=1,student_candidates=2,halving=True)
         outputs=[]
         for enabled in (False,True):
-            env=Mock();env.snapshot.return_value=7
+            env=Mock();env.snapshot_fast.return_value=7
             stats={'searched':0,'overrides':0,'override_kinds':Counter()}
             def capture(*pos):
                 outputs.append(list(pos[3]))
@@ -37,7 +37,7 @@ class CoverageTest(unittest.TestCase):
                 teacher._search(env,{'tick':0,'legal_actions':{'plants':actions}},actions[0],args,1,stats)
                 self.assertEqual(proposer.call_count,int(enabled))
                 self.assertEqual(rank.call_count,1)
-                env.restore.assert_called_with(7)
+                env.restore_fast.assert_called_with(7)
                 env.release_snapshot.assert_called_once_with(7)
         self.assertEqual(outputs[0],[actions[0],teacher.NOOP,actions[1],actions[2]])
         self.assertEqual(outputs[1],outputs[0]+[actions[3]])
