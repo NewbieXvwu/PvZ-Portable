@@ -1,0 +1,38 @@
+# task50：雾区与屋顶区的代码合进主线，构建新部署引擎，让 qc 能采屋顶 L41
+
+> 主控 2026-10-23 22:30（台式机时间）写。执行者：台式机 Codex（Business，codex6）。工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/zones`（分支 `zones`，从 pvz-env 拉出，主控已建好）。最多 2 个游戏进程；**不碰 tmux `qc`**、`deploy` 与 `deploy2` 工作树。
+
+## 背景
+- **task46 屋顶**（分支 `roof`，codex4 已完成）：老师在 L41 原版 15/16，可直接进课程；L43 在 0.5 倍为 14/16。详见 `roof` 分支的 `MEMORY/docs/task46-roof-zone.md`。
+- **task45 雾区**（分支 `fog`，codex3 仍在做诊断）：已有雾观测（human / xray 族属性）、雾量编码、三种开雾植物、推演输入屏蔽，**改了引擎观测**；非雾存档 16.6 万帧 0 差异。目前雾区没有可进课程的关。
+- qc 现在用 `deploy2` 的 PGO 二进制（f2ae755a）与 `cq` 工作树的 Python。要让 qc 采屋顶，就得把两边代码合进主线，并在新目录构建部署二进制。
+
+## 要做的
+1. 在 zones 里依次 `git merge --no-ff origin/roof`、`git merge --no-ff origin/fog`。冲突主要在 `make_multiplier_tasks.py` 的 `FAMILIES`、DESIGN §14.x 编号、`curriculum_queue.py` / `unified_panel.py`、日志。规则：
+   - 两边的族都保留，既有族顺序、档距与种子起点不变；
+   - DESIGN 编号顺延，修正文中所有引用；
+   - 日志两侧全保留，按时间排。
+2. 跑 `python -m pytest python -q` 要求全过。用本工作树 build，`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources`。
+3. **新部署工作树**：
+   - `git -C /home/newbiexvwu/PvZ-search worktree add --detach /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3 <zones HEAD>`；
+   - 拷 `artifacts/perf/engine_roots.json`，跑 `scripts/build_pgo.sh bench`；
+   - `grep -c fprofile-generate build/build.ninja` 必须是 0。
+4. **门禁**，deploy3 对 deploy2：
+   - 4 个非雾存档整局逐帧重放 0 差异；
+   - 64 root 叶摘要逐位相同；
+   - 配对吞吐在噪声内。
+5. **课程**：
+   - 屋顶 L41 原版按 task46 的建议进 `FAMILIES` 或任务清单；雾区不进；
+   - zones 工作树里 `curriculum_queue.py` dry run 能列出 L41 的 cell 与完整命令，命令里的引擎是 deploy3；
+   - 写清 qc 重启命令。
+6. 推 `zones`，在"结果"写：合并提交号、测试数字、deploy3 SHA、门禁数字、dry run 输出摘要。主控审后快进 pvz-env 并切 qc。
+
+## 规则
+- 只用绝对路径；不 `cd` 进别的工作树。
+- fog 分支之后还会有新提交（诊断），你合的是当前状态；之后的增量由主控再合。
+- 禁止 `git add -f`；`.pt` `.npz` `.log` 不进 git；不写字面密钥。
+- 每完成一小步就提交、push，在"结果"记一行；疑问写"问题"，按最佳判断继续。
+
+## 结果
+
+## 问题
