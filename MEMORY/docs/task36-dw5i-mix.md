@@ -92,6 +92,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，29 A/B 行权重可比性核对：两份清单的 `row_identity_sha256`（c61042a2…）、`split_sha256`（f81e12bc…）、`positive_weight_rows`（15,788,614）**完全相同**，只有 `multipliers_sha256` 不同（A be036941… / B 89024fa1…）——满足任务书“训练配方与种子不变，只有 `--row-weights` 不同”的前提，B 与 A 的差异可归到配比本身。B 定义里的早关份额为 A 的 2 倍（0.0034 vs 0.0017），其余组按比例微降。
 
+- 2026-10-24，30 B 流水线在 12.5 GiB 门禁下启动：03:26:47 空闲 **13,322,544 KiB（12.70 GiB）** 触发，03:27:07 起 `run_task36_mix.py --plan B --workers 2`（pid 221689，日志 `/home/newbiexvwu/pvz-logs/mix_B2.out`，训练输出 `artifacts/task36/train_B.txt`）。启动后空闲 12.6 GiB，预留的 2.1 GiB 训练开销使其仍高于 10 GiB 地板。启动器已退出，pack 步命中缓存，训练完自动接 panel v2（2 游戏进程）。
+
 
 
 ## 问题
