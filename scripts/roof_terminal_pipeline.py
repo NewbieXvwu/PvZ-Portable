@@ -62,6 +62,21 @@ def timing_forecast(jobs,times):
     return forecast
 
 
+def timing_samples(plan):
+    times=defaultdict(list);pilot_jobs=[]
+    for manifest in plan['spec'].get('timing_job_manifests',['pilot-jobs.json']):
+        pilot_jobs.extend(d.load(d.OUT/manifest)['jobs'])
+    for job in pilot_jobs:
+        stage=job.get('stage','pilot')
+        folder=d.OUT/'episodes'/job['cell']['id']/f"root_{job['point']['decision']}"
+        if not (folder/f'{stage}-complete.json').exists():raise ValueError('pilot is incomplete')
+        root=d.load(folder/'root.json')
+        for path in folder.glob(f'{stage}_[0-9]*_0.json'):
+            row=d.load(path)
+            times[(job['cell']['level'],job['point']['tick'],action_kind(row['identity']['action'],root))].append(row['cpu_seconds'])
+    return times
+
+
 def select():
     destination=d.OUT/'selection-active.json'
     if destination.exists():
@@ -72,14 +87,7 @@ def select():
             if d.sha(d.OUT/'episodes'/cell/'trajectory.json')!=digest:raise ValueError('frozen root trajectory changed')
         d.check_plan()
         return summary
-    plan=d.check_plan();times=defaultdict(list);pilot=d.load(d.OUT/'pilot-jobs.json')
-    for job in pilot['jobs']:
-        folder=d.OUT/'episodes'/job['cell']['id']/f"root_{job['point']['decision']}"
-        if not (folder/'pilot-complete.json').exists():raise ValueError('pilot is incomplete')
-        root=d.load(folder/'root.json')
-        for path in folder.glob('pilot_[0-9]*_0.json'):
-            row=d.load(path)
-            times[(job['cell']['level'],job['point']['tick'],action_kind(row['identity']['action'],root))].append(row['cpu_seconds'])
+    plan=d.check_plan();times=timing_samples(plan)
     options=[];selected=None
     for count,samples in [(2,3),(2,2),(1,3),(1,2)]:
         jobs=selections(plan,count,samples);forecast=timing_forecast(jobs,times)

@@ -1,11 +1,11 @@
 {
-  "status": "partial_pilot_only",
+  "status": "pilot_complete",
   "validated_terminal_labels": 99,
   "completed_pilot_roots": 11,
   "frozen_model_and_engine_inputs_match": true,
   "terminal_identity_future_and_full_trace_verified": true,
-  "cpu_seconds_metered": 4935.742385,
-  "scope": "interim pilot evidence only, not a complete full-candidate panel",
+  "cpu_seconds_metered": 7791.324473000001,
+  "scope": "complete timing pilot only; full-candidate screen not started",
   "pilot_collector_source_sha256": "f74c9d473ef970533a30d1df6534df5451f6f797d4deabb98bcdea48f6a01bba",
   "current_terminal_label_functions_ast_equal_to_running_pilot": true,
   "terminal_label_function_ast_sha256": {
@@ -19,5 +19,9 @@
     "root_identity": "4e757e59118070e2afc31096ed5bb230999b15cfe0cc7665f4e48a0df25069a0",
     "init_worker": "2ff4a79d15d6a34a889d1a28fcaffcede14ec97dff7ea4b2905209db02787983"
   },
-  "frozen_source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/frozen/pilot_collector.py"
+  "frozen_source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/frozen/pilot_collector.py",
+  "roots": 19,
+  "labels": 167,
+  "all_terminal_traces_and_future_identity_valid": true,
+  "terminal_teacher_starts_at_candidate_step": true
 }

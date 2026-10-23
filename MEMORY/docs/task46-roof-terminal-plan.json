@@ -68,5 +68,15 @@
     }
   },
   "production_changes": false,
-  "qc_changes": false
+  "qc_changes": false,
+  "timing_job_manifests": [
+    "pilot-jobs.json",
+    "pilot-end-jobs.json"
+  ],
+  "timing_amendment": {
+    "reason": "all four projections exceeded 20h; original two-root choice includes near10000 but original timing pilot covered initial/near5000 only; measure already-inspected end roots before declaring infeasible",
+    "previous_plan_sha256": "f7d418e69ce4fc5c62261a234a45cdfc85ce6cab2ecf2a312873088497481c9d",
+    "scope_changed": false,
+    "outcomes_used_for_selection": false
+  }
 }

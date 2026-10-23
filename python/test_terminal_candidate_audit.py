@@ -76,3 +76,22 @@ def test_frozen_selection_resume_ignores_later_cpu_usage(tmp_path,monkeypatch):
     assert pipeline.select()==summary
     d.save(trajectory,dict(prefix=[1,2,4]))
     with pytest.raises(ValueError,match='trajectory changed'):pipeline.select()
+
+
+def test_timing_amendment_keeps_both_stages_and_requires_completion(tmp_path,monkeypatch):
+    import roof_terminal_pipeline as pipeline
+    monkeypatch.setattr(d,'OUT',tmp_path)
+    manifests=[]
+    for stage,tick,cpu in [('pilot',5000,50),('pilot-end',10000,5)]:
+        job=dict(cell=dict(id='cell',level=42),point=dict(decision=tick//60,tick=tick),stage=stage)
+        name=stage+'-jobs.json';manifests.append(name);d.save(tmp_path/name,dict(jobs=[job]))
+        folder=tmp_path/'episodes'/'cell'/f'root_{tick//60}'
+        d.save(folder/'root.json',dict(root_frame=dict(packets=[[0,33]])))
+        d.save(folder/f'{stage}_0_0.json',dict(identity=dict(action=dict(type='plant',packet=0)),cpu_seconds=cpu))
+        d.save(folder/f'{stage}-complete.json',dict(labels=1))
+    plan={'spec':{'timing_job_manifests':manifests}}
+    times=pipeline.timing_samples(plan)
+    assert times[(42,5000,'plant:33')]==[50]
+    assert times[(42,10000,'plant:33')]==[5]
+    (folder/'pilot-end-complete.json').unlink()
+    with pytest.raises(ValueError,match='incomplete'):pipeline.timing_samples(plan)
