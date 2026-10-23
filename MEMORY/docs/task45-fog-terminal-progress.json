@@ -3055,6 +3055,15 @@
    "cpu_seconds_metered": 50758.299283,
    "conservative_cpu_hours": 14.232860911944444,
    "artifact_bytes": 154363386
+  },
+  "delivery-validation": {
+   "status": "complete",
+   "pytest_passed": 383,
+   "subtests_passed": 133,
+   "repro_cases": 9,
+   "cpu_seconds_metered": 50965.499554,
+   "conservative_cpu_hours": 14.290416542777779,
+   "active_engine_pids": []
   }
  }
 }

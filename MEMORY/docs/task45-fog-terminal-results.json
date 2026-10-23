@@ -4639,9 +4639,9 @@
   "significance": "one-sided paired sign test; zeros omitted; Holm across all candidates/metrics/eight selected roots",
   "seed_independence": "fresh 16 futures disjoint from 3 screening futures; selected roots/candidates remain a diagnostic subset"
  },
- "cpu_seconds_metered": 50758.299283,
+ "cpu_seconds_metered": 50965.499554,
  "cpu_seconds_setup_test_reporting_allowance": 480,
- "artifact_bytes": 154363386,
+ "artifact_bytes": 154728336,
  "raw_screen_report_sha256": "ff918851ba49bba32e1062a21a380534d0f604b4324fc911ffe1d454e94c8cf9",
  "ranking_note": "Reported agreements compare noisy 3-future candidate means; strict/thresholded/true-nonterminal leaf pairs separated. Cluster bootstrap samples paired base seeds, never individual candidate pairs.",
  "raw_data": "artifacts/task45/phase-e/episodes/<level-observation-seed>/root_<decision>/{root.json,screen|confirm_<candidate>_<future>.json,.jsonl.gz}",
@@ -23886,5 +23886,11 @@
     }
    }
   }
- ]
+ ],
+ "delivery_validation": {
+  "repro_cases": 9,
+  "pytest_passed": 383,
+  "subtests_passed": 133,
+  "audit": "task45-fog-terminal-audit.json"
+ }
 }
