@@ -132,5 +132,218 @@
       "per_group_wall_time_present": false
     }
   ],
-  "conclusion": "No matched historical old/new cycle for any of the four exact controlled task IDs at multiplier 1.5; backups do not recover absent pool/night task runs or timings."
+  "conclusion": "No matched historical old/new cycle for any of the four exact controlled task IDs at multiplier 1.5; backups do not recover absent pool/night task runs or timings.",
+  "production_rollout_0554": {
+    "snapshot": "2026-10-24T05:54:51+08:00",
+    "controller": {
+      "pid": 232026,
+      "ppid": 232023,
+      "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/curriculum_queue.py",
+        "--rounds",
+        "100",
+        "--workers",
+        "16",
+        "--round-games",
+        "768",
+        "--games-per-group",
+        "48",
+        "--manifest",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/dw4i.json",
+        "--executable",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable"
+      ],
+      "started_at": 1792786289.55,
+      "cpu_seconds": 51.92,
+      "rss_bytes": 81551360,
+      "script": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/curriculum_queue.py",
+      "source_sha256": "b23d5e5eb529120d0ec87a9f567e6db401fad337caea8d2a9caded826c06f084",
+      "matches_frozen_cq_source": false
+    },
+    "cq_head": "c84ad7d14df103698d0e758a01da704e641fcf9f",
+    "controller_git_blob_matches": true,
+    "history_file_sha256": "61be054cd3b4eaf3045030f61f4d2488b06863907e96b1b3c92bb59296228071",
+    "history_sources": {
+      "qc.out": {
+        "bytes": 54207458,
+        "sha256": "5cca6d85560ed7c7dc91edbd7f75f8197ec6e641ba4de3482a2503675f620056"
+      },
+      "curriculum.log": {
+        "bytes": 19682,
+        "sha256": "cb1b0d0f47a1593565bf000056fb98dc56ffc5e758a28ed09a8e52c489b69307"
+      },
+      "curriculum_state.json": {
+        "bytes": 82162,
+        "sha256": "61abb2911bbe792a43c5b687278587731c15a298c8626a9f1c23a01cc3106347"
+      }
+    },
+    "metrics_sources": {
+      "curriculum_queue-232026.jsonl": {
+        "bytes": 253958,
+        "sha256": "d18ed154edeb3299afc1e19c62fe5771e2a2f898c3a1c6a8ccc13227755bff70"
+      }
+    },
+    "completed_invocations": 88,
+    "new_games": 4224,
+    "naive_cumulative_games": 9462,
+    "prior_two_closed_round_metrics_unchanged": true,
+    "boundary_evidence_update": "Round2 next-worker timestamp is now corroborated by its completed command; numerical results unchanged.",
+    "new_controller_windows": [
+      {
+        "task_id": "night_l18_train_n10q",
+        "label": "c3n18n10qm100",
+        "workers": 4,
+        "mem_available_before_launch_gib": 11.5,
+        "worker_formula": {
+          "available": true,
+          "actual": 4,
+          "predicted_min": 4,
+          "predicted_max": 5,
+          "consistent": true,
+          "background_headroom_gib": 1.27,
+          "note": "Range accounts for rounded log fields; reserve is 6 GiB plus logged unconsumed background headroom."
+        },
+        "telemetry": {
+          "window_seconds": 1334.0,
+          "observed_seconds": 1334.0,
+          "coverage": 1.0,
+          "memory_coverage": 1.0,
+          "cpu_coverage": 1.0,
+          "mem_available_mean_gib": 8.835979538657066,
+          "mem_available_min_gib": 8.03274154663086,
+          "mem_available_max_gib": 10.283443450927734,
+          "tree_cpu_mean_percent": 439.81134956999534,
+          "sampled_tree_rss_peak_gib": 4.2147216796875
+        }
+      },
+      {
+        "task_id": "day_l9_train_d7q",
+        "label": "c3d9d7qm100",
+        "workers": 2,
+        "mem_available_before_launch_gib": 10.1,
+        "worker_formula": {
+          "available": true,
+          "actual": 2,
+          "predicted_min": 2,
+          "predicted_max": 2,
+          "consistent": true,
+          "background_headroom_gib": 1.64,
+          "note": "Range accounts for rounded log fields; reserve is 6 GiB plus logged unconsumed background headroom."
+        },
+        "telemetry": {
+          "window_seconds": 2601.0,
+          "observed_seconds": 2601.0,
+          "coverage": 1.0,
+          "memory_coverage": 1.0,
+          "cpu_coverage": 1.0,
+          "mem_available_mean_gib": 11.546463651777847,
+          "mem_available_min_gib": 8.898685455322266,
+          "mem_available_max_gib": 13.874076843261719,
+          "tree_cpu_mean_percent": 291.996191942083,
+          "sampled_tree_rss_peak_gib": 2.7991600036621094
+        }
+      },
+      {
+        "task_id": "day_l7_train_d7q",
+        "label": "c3d7d7qm100",
+        "workers": 5,
+        "mem_available_before_launch_gib": 13.2,
+        "worker_formula": {
+          "available": true,
+          "actual": 5,
+          "predicted_min": 5,
+          "predicted_max": 5,
+          "consistent": true,
+          "background_headroom_gib": 2.49,
+          "note": "Range accounts for rounded log fields; reserve is 6 GiB plus logged unconsumed background headroom."
+        },
+        "telemetry": {
+          "window_seconds": 1126.0,
+          "observed_seconds": 1126.0,
+          "coverage": 1.0,
+          "memory_coverage": 1.0,
+          "cpu_coverage": 1.0,
+          "mem_available_mean_gib": 11.984349629943313,
+          "mem_available_min_gib": 10.246788024902344,
+          "mem_available_max_gib": 12.701202392578125,
+          "tree_cpu_mean_percent": 565.1955199876343,
+          "sampled_tree_rss_peak_gib": 4.950008392333984
+        }
+      }
+    ],
+    "live_pack": {
+      "pid": 232620,
+      "ppid": 232026,
+      "script": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/pack_training_rows.py",
+      "started_at": 1792786394.36,
+      "observed_live_at": 1792792491.4788833,
+      "elapsed_seconds": 6097.118883371353,
+      "cpu_seconds": 5848.97,
+      "rss_gib": 0.683807373046875,
+      "note": "Child process CPU and elapsed time are right censored. Controller-wide telemetry overlaps collection and is not attributed to packing."
+    },
+    "new_cohorts": [
+      {
+        "task_id": "night_l18_train_n10q",
+        "multiplier": 1.0,
+        "build_numbers": [
+          2504
+        ],
+        "runs": 1,
+        "games": 48,
+        "wall_seconds": 1334,
+        "worker_hours": 1.4822222222222223,
+        "workers": [
+          4
+        ],
+        "mem_available_gib": [
+          11.5
+        ],
+        "games_per_hour": 129.5352323838081,
+        "games_per_worker_hour": 32.38380809595202
+      },
+      {
+        "task_id": "day_l9_train_d7q",
+        "multiplier": 1.0,
+        "build_numbers": [
+          2504
+        ],
+        "runs": 1,
+        "games": 48,
+        "wall_seconds": 2601,
+        "worker_hours": 1.445,
+        "workers": [
+          2
+        ],
+        "mem_available_gib": [
+          10.1
+        ],
+        "games_per_hour": 66.43598615916954,
+        "games_per_worker_hour": 33.21799307958477
+      },
+      {
+        "task_id": "day_l7_train_d7q",
+        "multiplier": 1.0,
+        "build_numbers": [
+          2504
+        ],
+        "runs": 1,
+        "games": 48,
+        "wall_seconds": 1126,
+        "worker_hours": 1.5638888888888889,
+        "workers": [
+          5
+        ],
+        "mem_available_gib": [
+          13.2
+        ],
+        "games_per_hour": 153.46358792184725,
+        "games_per_worker_hour": 30.69271758436945
+      }
+    ],
+    "scope": "New deployed qcpipe+deploy3 production; incomplete round, no closed cycle or causal ratio. Separate from frozen zones controlled comparison."
+  }
 }

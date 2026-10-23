@@ -33,6 +33,12 @@ class TelemetryEvidenceTest(unittest.TestCase):
         row=dict(argv=['python','/x/curriculum_queue.py','--state','/tmp/smoke_state.json'])
         with self.assertRaisesRegex(ValueError,'nonproduction state'):m.verify_production(row)
 
+    def test_background_unconsumed_headroom_reduces_worker_budget(self):
+        meta=dict(memory='10.1',per_worker='0.86',upper='16',workers='2',background='1.64')
+        d=m.worker_formula(meta,2)
+        self.assertTrue(d['consistent']);self.assertEqual(d['background_headroom_gib'],1.64)
+        self.assertFalse(m.worker_formula({**meta,'background':None},2)['consistent'])
+
     def test_collection_rss_peak_is_not_misattributed_to_the_following_pack(self):
         rows=[dict(timestamp=0,rss_bytes=12*m.GIB,children_rss_bytes=0,mem_available_bytes=8*m.GIB,tree_cpu_percent=1600),
               dict(timestamp=30,rss_bytes=m.GIB,children_rss_bytes=0,mem_available_bytes=20*m.GIB,tree_cpu_percent=100),

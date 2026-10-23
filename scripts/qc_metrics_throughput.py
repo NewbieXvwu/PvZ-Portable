@@ -22,13 +22,16 @@ def worker_formula(meta: dict | None, actual: int) -> dict:
     if not meta or meta.get('upper') is None or meta['memory']=='n/a' or meta['per_worker']=='unmeasured':
         return dict(available=False)
     available=float(meta['memory']);rss=float(meta['per_worker']);cap=int(meta['upper'])
+    background=float(meta.get('background') or 0)
+    background_rounding=.005 if meta.get('background') is not None else 0
     if rss<=.005:return dict(available=False)
     clamp=lambda n:max(1,min(cap,n))
-    low=clamp(math.floor((available-.05-6)/(rss+.005)))
-    high=clamp(math.floor((available+.05-6)/(rss-.005)))
+    low=clamp(math.floor((available-.05-6-background-background_rounding)/(rss+.005)))
+    high=clamp(math.floor((available+.05-6-background+background_rounding)/(rss-.005)))
     return dict(available=True,actual=actual,predicted_min=low,predicted_max=high,
                 consistent=low<=actual<=high and int(meta['workers'])==actual,
-                note='Range accounts for rounded log fields; reserve is 6 GiB.')
+                background_headroom_gib=background,
+                note='Range accounts for rounded log fields; reserve is 6 GiB plus logged unconsumed background headroom.')
 
 
 def weighted_window(rows: list[dict], start: float, end: float) -> dict:
@@ -134,7 +137,8 @@ def main():
             window=weighted_window(rows,record['started_at'],cutoff)
             children.append(dict(pid=pid,ppid=record['ppid'],script=script,started_at=record['started_at'],
                 observed_live_at=cutoff,elapsed_seconds=cutoff-record['started_at'],cpu_seconds=record['cpu_seconds'],
-                rss_gib=record['rss_bytes']/GIB,telemetry=window))
+                rss_gib=record['rss_bytes']/GIB,telemetry=window,
+                telemetry_scope='Entire production controller tree during this child window; overlapping phases are not separable.'))
     active_training=[]
     for pid,record in table.items():
         if pid not in owned and any(s.endswith('/train_rollout_policy.py') for s in record['argv']):

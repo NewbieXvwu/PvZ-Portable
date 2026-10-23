@@ -24,6 +24,15 @@ class ReconstructionTest(unittest.TestCase):
         self.assertEqual([r['workers'] for r in d['runs']],[2,8])
         self.assertAlmostEqual(log.aggregate(d['runs'])[0]['worker_hours'],6000/3600)
 
+    def test_background_headroom_log_preserves_memory_and_live_start_boundary(self):
+        worker='2026-10-23T11:00:00 round 2 next: workers=2/16 (MemAvailable 10.1 GiB, per-worker 0.86 GiB, background headroom 1.64 GiB)'
+        lines=self.segment()+['2026-10-23T10:10:00 round 1 done: 1 groups, 48 games, changes=0',
+                              worker,'48 games on 2 workers']
+        d=log.parse(lines,log.stamp('2026-10-23T12:00:00'))
+        self.assertEqual(d['orphan_starts'][0]['worker_log']['background'],'1.64')
+        self.assertTrue(d['rounds'][0]['cycle_complete'])
+        self.assertEqual(d['rounds'][0]['cycle_wall_seconds'],3600)
+
     def test_failed_partial_is_not_complete(self):
         d=log.parse(self.segment(rc=1,final=30),0)
         self.assertFalse(d['runs'][0]['complete']);self.assertEqual(log.aggregate(d['runs']),[])
