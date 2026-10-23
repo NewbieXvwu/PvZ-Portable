@@ -385,5 +385,33 @@
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/scripts/value_teacher_context_audit.py": "65891b115e81618755cf750a1ee536af7fee8d04cd859d2cab9d99e36cfd41cf"
  },
  "disk_bytes": 4610052,
- "decision": "Teacher-label signal exists; full-decision 64-seed collection is too expensive for the original one-day expectation. Propose sparse roots, pending controller approval; no training/default change."
+ "decision": "Teacher-label signal exists; full-decision 64-seed collection is too expensive for the original one-day expectation. Propose sparse roots, pending controller approval; no training/default change.",
+ "expansion_proposal": {
+  "status": "proposed_pending_controller_approval",
+  "approved": false,
+  "executed": false,
+  "root_seeds": 64,
+  "max_games": 4,
+  "roots_per_seed": 12,
+  "task": "pool_l21_train_p9k, unchanged deck and task semantics",
+  "selection": "Two passes: archive the full frozen-teacher root trajectory; select 12 equally spaced actual search ordinals before reading candidate terminal labels; replay recorded root actions and verify original states before collecting the actual search first-future leaves.",
+  "seed_isolation": "Before collection, freeze 64 training seeds disjoint from external A6 audit, model selection and A/B seeds; reserve at least 8 by seed for held-out validation. Pilot seeds remain diagnostic and are not silently added to training.",
+  "teacher": "same dw4i_s1 + static value_branch1 + leaf v4; same search config and actual first shared future",
+  "estimate": {
+   "candidate_terminal_labels": 3532.8,
+   "nonterminal_effective_pairs": 1382.4,
+   "cpu_hours": 45.41313728800001,
+   "elapsed_hours_at_observed_four_slots": 11.748350855788308,
+   "initial_eight_seed_cpu_hours": 5.676642161000001,
+   "initial_eight_seed_wall_hours": 1.4685438569735385,
+   "root_extra_replay_cost": "not yet measured; 60 CPU-hour hard budget provides headroom over the point estimate"
+  },
+  "gates": [
+   "First 8 new seeds: verify all native states/histories, all candidates and actual terminals; at least 125 nonterminal effective pairs before considering remaining seeds.",
+   "Pause expansion and diagnose if labels become almost all negative or projected total exceeds 60 CPU hours; do not fill quota with the same failed data.",
+   "Only continue to 64 within approved 60 CPU-hour budget; report total and per-seed/per-phase pairs, CPU and exact seed isolation.",
+   "No automatic training, acceptance run, upload, default change, or exhaustive 64-seed collection. Controller approval is required before expansion."
+  ],
+  "caveat": "Only four pilot games and one shared future per root. Pair counts are correlated and projected yield may fail; this proposal tests scale, not value-model effectiveness."
+ }
 }
