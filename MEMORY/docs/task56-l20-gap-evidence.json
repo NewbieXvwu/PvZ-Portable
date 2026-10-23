@@ -1,5 +1,5 @@
 {
-  "status": "incomplete",
+  "status": "complete",
   "inventory_source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/inventory.json",
   "inventory_sha256": "7cd23c114192a8366ea0f7226041229f0da8e3d3136bb3c4387c64369a71b8c8",
   "captured_at": "2026-10-24T06:02:46.786616+08:00",
@@ -33,6 +33,31 @@
       "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/dataset_inventory.json",
       "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/dw4-inventory.json",
       "sha256": "3b1892381f3ef424e565ce1cf6e3aa5cd6d6d1bcbe91b9d6ddb352bce1f82426"
+    },
+    "task27.md": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/MEMORY/docs/task27-dw5i.md",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task27.md",
+      "sha256": "956fb9a50b621a76c12637944001105bc652620ebed7ce496112c2f49190b5aa"
+    },
+    "task36.md": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/MEMORY/docs/task36-dw5i-mix.md",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task36.md",
+      "sha256": "0e573114d11bb5cbefe355ca7c2cf534de721a27830b35aedba29312ee269e5c"
+    },
+    "task36-family.py": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/scripts/task36_data_ledger.py",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task36-family.py",
+      "sha256": "b498b905e49b57a1d1630a399863c9e0e368fa88fedab6627e052c99117f8b4b"
+    },
+    "task36-weights.py": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/scripts/task36_row_weights.py",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task36-weights.py",
+      "sha256": "ee3220945f352280fad5f932fbdca247b18625022d87d4abc049720ea9d5ab2a"
+    },
+    "task49-promotion.py": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_promotion.py",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task49-promotion.py",
+      "sha256": "dcc4b53435e09688628743426ad5e6e8a9c96ab33ca530382f83fec9788f4905"
     }
   },
   "qc": {
@@ -125,9 +150,7 @@
     "waits_with_ready_card": 8567,
     "invalid_label_packets": 0
   },
-  "pending": [
-    "final root-cause classification, required-data proposal and delivery audit"
-  ],
+  "pending": [],
   "packing": {
     "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/packing.json",
     "sha256": "e239f3855827c68906f7e04cd9a9609bc15ec82c63d97166edda2b7ff4441ce6",
@@ -1081,5 +1104,98 @@
     "sha256": "ea40edeac0309b872f0f631765cfc13c46cf5391269d4f5d210fdc2dfb864a0f",
     "labels": 202,
     "L20_labels": []
+  },
+  "production_code_sha256": {
+    "scripts/search_play.py": "e3b4b943b4579bb93e62b511048a54fde93d462cdc23c4da754c948de037805c",
+    "scripts/pack_training_rows.py": "c02bd0305ea74802890d659fd5aa3adbec37d3c1db543710ec58dbf602bb995e",
+    "python/pvz_frame_store.py": "e32cc260b9e0251539dadce75b4ea054d40c9711c9a241b2bc58d6e72ee7c5e4",
+    "python/pvz_rollout_policy.py": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+    "python/pvz_student_observation.py": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5",
+    "python/pvz_training_pack.py": "5d85293ddd7c367d275b62152c19e1a6f121052dfef0006e5227dbd9d174cf10",
+    "scripts/train_rollout_policy.py": "2490b586c88e874b70856a028eb1d20435dd3fd695c09a3a3adc7c2e00dedb20",
+    "scripts/curriculum_queue.py": "b23d5e5eb529120d0ec87a9f567e6db401fad337caea8d2a9caded826c06f084",
+    "src/EnvironmentRollout.cpp": "75913f5c8ab8cf96adbedeede2b69ec81e13ce289f738f1140b40c211ca9b85f",
+    "src/LawnApp.cpp": "e7362bda1dd29307032d06d6e13641958e5f5d627176b3e478eac2a75c6a7c51"
+  },
+  "diagnosis": {
+    "classification": "training-corpus coverage gap before packing; no engineering fault found in audited encoding/label/continuation paths",
+    "proven": [
+      "Both completed models have zero direct L20 supervision",
+      "qc L20 is a32-game bootstrap cell with no subsequent collected group at the frozen time",
+      "All575 L20 plant labels survive an explicit current-v2 pack and reach supervised batch tensors with correct identity/slot/cell/weight",
+      "Free-card eligibility, selected native predictions, full public replay and2500tick continuations match"
+    ],
+    "inference": "Zero L20 direct training exposure explains why these results do not demonstrate failure to learn supplied L20 labels; an inclusive retrain is still needed to test sufficiency.",
+    "unproven": [
+      "L20-inclusive retraining will produce wins",
+      "Current architecture has sufficient capacity/duplicate-count representation",
+      "Any new candidate passes cross-zone promotion"
+    ],
+    "task4_branch": "non-engineering/data-requirements branch: report required data; no unjustified encoder or packer patch",
+    "new_candidate_trained": false,
+    "new_promotion_gate_run": false,
+    "production_changes": false
+  },
+  "required_data": [
+    {
+      "step": 1,
+      "action": "Include n20o1_fast_search32 bootstrap archives explicitly; preserve575 teacher plant labels despite losing executed trajectories",
+      "acceptance": "nonzero retained L20 source rows, correct train/validation split and batch weight receipt"
+    },
+    {
+      "step": 2,
+      "action": "Collect frozen-v4 beta1 trajectories on training seeds to cover planted, late-wave and conveyor-flow states; retain wins and losses",
+      "acceptance": "fixed source teacher/seed/task metadata and full replay; diagnostic eval30000..30003 excluded from training"
+    },
+    {
+      "step": 3,
+      "action": "New corpus version and regenerated row weights; explicitly classify L20 original conveyor",
+      "acceptance": "n20o1 cannot silently become unclassified night family with zero share; do not reuse oldA row-vector identity"
+    },
+    {
+      "step": 4,
+      "action": "Preregister small dw4-initialised fine-tune plus old-zone replay, changing data/mix only",
+      "acceptance": "actual optimiser rows and weight updates; independent paired L20 planting and full-game wins"
+    },
+    {
+      "step": 5,
+      "action": "Run existing task49 unified-subset promotion gate for any new candidate; controller decides deployment",
+      "acceptance": "overall paired Newcombe95% lower bound strictly > -0.03 and no zone exact one-sided McNemar regression p<.05; rejection keeps incumbent"
+    }
+  ],
+  "completion_audit": {
+    "verified_at": "2026-10-24T06:26:39.083848+08:00",
+    "scope": "task56 diagnosis and required-data deliverable, not a training or promotion success",
+    "requirements": {
+      "1_quantitative": {
+        "passed": true,
+        "evidence": "32 bootstrap games/575 labels and8 fresh paired diagnostic games; per-game planting types, waits with cards and exact legality; training-head and legal-mask logits/ranks/probabilities in packing/native sources"
+      },
+      "2_pipeline_trace": {
+        "passed": true,
+        "evidence": "explicit current-v2 segments load4428 rows/36 archives with correct per-row input/packet/cell/base weight;575/575 L20 positives retained; actual dw4/A exposure0, L14 actual source counts and batch control included"
+      },
+      "3_student_and_native": {
+        "passed": true,
+        "evidence": "free-card/duplicate/empty-slot facts and identity-code review; all4634 replay frames,128 selected prediction pairs and8 native/Python2500tick continuations/2077152 bit-exact float32 inputs"
+      },
+      "4_followup_branch": {
+        "passed": true,
+        "evidence": "Pinned historical corpus definitions explain zero L20 exposure; no encoding/packer/execution fault found in exercised paths. Required-data proposal specifies source inclusion, teacher trajectories, nonzero batch weights, retraining and task49 gate; no candidate or promotion claimed"
+      },
+      "5_delivery": {
+        "passed": true,
+        "evidence": "Report is inside task56-l20-student-gap.md Results; KB JSON and read-only audit tool; append-only daily memory; l20gap commits/push before goal completion"
+      }
+    },
+    "invariants": {
+      "max_game_processes": 2,
+      "no_qc_or_other_session_operations": true,
+      "no_external_worktree_writes": true,
+      "no_training_or_gpu_job": true,
+      "no_gameplay_rules_or_formulas_added": true,
+      "eval_archives_never_used_for_training": true
+    },
+    "report_sha256": "edeaa5e2c05a200917b7ce3d973c559a3d304aaa2f064d67280b8839e7806f4e"
   }
 }

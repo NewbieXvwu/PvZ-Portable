@@ -354,10 +354,71 @@ def continuations():
     print(json.dumps(dict(root_model_pairs=8,decisions=sum(r['decisions'] for r in rows),encoded_float32_compared=total_bits),ensure_ascii=False))
 
 
+def verify():
+    """Read-only final evidence audit; never opens a game or starts optimisation."""
+    import numpy as np
+    import torch
+    from train_rollout_policy import read_pack
+    d=read(ROOT/'MEMORY/docs/task56-l20-gap-evidence.json')
+    for s in d['sources'].values():assert sha(s['snapshot'])==s['sha256']
+    for path,digest in d.get('production_code_sha256',{}).items():assert sha(ROOT/path)==digest
+    inventory=read(OUT/'inventory.json');assert sha(OUT/'inventory.json')==d['inventory_sha256']
+    ledger=read(d['sources']['ledger.json']['snapshot'])
+    assert all(sum(x['levels'].get('20',0) for x in ledger[model]['labels'])==0 for model in ('dw4i','dw5i'))
+    command=read(d['sources']['A-command.json']['snapshot'])['command'];labels=command[command.index('--labels')+1].split(',')
+    assert len(labels)==281 and 'n20o1_fast_search' not in labels
+    for x in inventory['n20o1']:assert sha(x['archive'])==x['sha256']
+    assert len(inventory['n20o1'])==32 and sum(x['labelled_plantings'] for x in inventory['n20o1'])==575
+    assert not inventory['qc']['collected_groups'] and inventory['qc']['matching_log_lines']==0
+    assert inventory['qc']['offsets']=={'night_l20_train_n10_orig':32}
+    for key in ('packing','native','continuations','diagnostic_plan'):
+        s=d[key];assert sha(s['source'])==s.get('source_sha256',s.get('sha256'))
+    plan=read(d['diagnostic_plan']['source'])
+    for path,h in plan['sha256'].items():assert sha(path)==h,path
+    assert plan['workers']==2 and plan['seeds']==[30000,30001,30002,30003]
+    native_result=read(d['native']['source']);assert len(native_result['games'])==8 and len(native_result['rows'])==128
+    for g in native_result['games']:assert sha(g['archive'])==g['sha256']
+    groups={arm:[g for g in native_result['games'] if g['arm']==arm] for arm in ('fast','fast_search')}
+    assert sum(g['won'] for g in groups['fast'])==0 and sum(g['plantings'] for g in groups['fast'])==0
+    assert sum(g['won'] for g in groups['fast_search'])==4 and sum(g['plantings'] for g in groups['fast_search'])==231
+    assert all(x['python_action']==x['native_action'] for x in native_result['rows'])
+    assert sum(g['decisions']+1 for g in native_result['games'])==4634
+    continuation=read(d['continuations']['source']);assert continuation['root_model_pairs']==8
+    assert sum(x['student_decisions'] for x in continuation['rows'])==328
+    assert continuation['encoded_float32_compared']==2077152
+    for x in continuation['rows']:
+        assert x['all_float32_inputs_bit_exact'] and x['full_trajectory_and_leaf_exact']
+        assert sha(x['trace'])==x['trace_sha256']
+    keys=[]
+    def observer(path,rows):keys.extend((path,int(row)) for row in rows)
+    packed=read_pack(Path(d['packing']['index']),OUT/'pack_view',observer)
+    plant,packet,cell,weight=packed[2:6];packets=packed[-1]
+    selected=np.array([j for j,(p,i) in enumerate(keys) if p.parent.name=='n20o1_fast_search' and plant[j]],np.int64)
+    assert len(plant)==4428 and len(selected)==575
+    slots=packet[selected].long().numpy()
+    assert (packets.columns[0][selected,slots]>=0).all()
+    assert (packets.columns[1][selected,slots]==1).all() and (packets.columns[3][selected,slots]==1).all()
+    assert torch.equal(weight[selected],torch.ones(575)) and (cell[selected]>=0).all() and (cell[selected]<54).all()
+    if d['status']=='complete':
+        assert not d['pending'] and all(x['passed'] for x in d['completion_audit']['requirements'].values())
+        assert d['diagnosis']['new_candidate_trained'] is False
+        report=ROOT/'MEMORY/docs/task56-l20-student-gap.md'
+        assert sha(report)==d['completion_audit']['report_sha256']
+        import re
+        for link in re.findall(r'\]\(([^)]+)\)',report.read_text()):
+            path=re.sub(r':\d+$','',link.strip('<>').split('#',1)[0])
+            if path and not path.startswith(('https://','http://')):assert (report.parent/Path(path)).is_file(),path
+    return dict(passed=True,original_L20_training_rows=0,retained_L20_plants=575,matched_games=8,
+                teacher_wins=4,student_wins=0,replayed_frames=4634,prediction_pairs=128,
+                continuation_pairs=8,student_continuation_decisions=328,float32_inputs=2077152,
+                scope='diagnosis/data-coverage branch; no new candidate or promotion claim')
+
+
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('phase',choices=['inventory','packing','native','continuations'])
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('phase',choices=['inventory','packing','native','continuations','verify'])
     args=parser.parse_args()
     if args.phase=='inventory':inventory()
     elif args.phase=='packing':packing()
     elif args.phase=='native':native()
     elif args.phase=='continuations':continuations()
+    elif args.phase=='verify':print(json.dumps(verify(),ensure_ascii=False))
