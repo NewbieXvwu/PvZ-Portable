@@ -1,6 +1,6 @@
 # task39：课程控制器换上 n10q（夜间扰动族），并让已有状态能增删格子
 
-> 主控 2026-10-23 09:30 写。执行者：Qoder（DeepSeek-Flash），工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/curr39`（分支 `curr39`，从 pvz-env c02924e7 拉出）。
+> 主控 2026-10-23 09:20 写。执行者：Qoder（DeepSeek-Flash），工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/curr39`（分支 `curr39`，从 pvz-env c02924e7 拉出）。
 > 只做代码 + 单测 + 干跑；**正式队列 qc 的停 / 换 / 重启由主控做**，你不要碰 tmux 会话 `qc`、`~/pvz-logs/curriculum_state.json`、`~/pvz-logs/stop_curr`、cq 工作树。
 
 ## 背景（先读，不用再查）
