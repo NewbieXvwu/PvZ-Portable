@@ -326,6 +326,241 @@
         "student_candidate_best": 14,
         "student_candidate_override": 0
       },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 31,
+        "max_advantage": 0.0112,
+        "max_leaf": 0.0264,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0194,
+            "best_value": 0.0194,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 300,
+            "student_value": 0.0247,
+            "best_value": 0.0247,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 600,
+            "student_value": 0.0204,
+            "best_value": 0.0244,
+            "best_minus_student": 0.004,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 900,
+            "student_value": 0.022,
+            "best_value": 0.0264,
+            "best_minus_student": 0.0044,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1200,
+            "student_value": 0.0115,
+            "best_value": 0.0227,
+            "best_minus_student": 0.0112,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1500,
+            "student_value": 0.0145,
+            "best_value": 0.0184,
+            "best_minus_student": 0.0039,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1800,
+            "student_value": 0.0131,
+            "best_value": 0.0131,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 2040,
+            "student_value": 0.0119,
+            "best_value": 0.0119,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 2700,
+            "student_value": 0.0035,
+            "best_value": 0.0057,
+            "best_minus_student": 0.0022,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 5220,
+            "student_value": 0.0036,
+            "best_value": 0.0122,
+            "best_minus_student": 0.0086,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 5280,
+            "student_value": 0.0033,
+            "best_value": 0.0034,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 7607,
+            "student_value": 0.0013,
+            "best_value": 0.0044,
+            "best_minus_student": 0.0031,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 10007,
+            "student_value": 0.0006,
+            "best_value": 0.0009,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 10067,
+            "student_value": 0.0006,
+            "best_value": 0.001,
+            "best_minus_student": 0.0004,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 13512,
+            "student_value": 0.0006,
+            "best_value": 0.0007,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 15941,
+            "student_value": 0.0004,
+            "best_value": 0.0005,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 16661,
+            "student_value": 0.0003,
+            "best_value": 0.0004,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 18401,
+            "student_value": 0.0001,
+            "best_value": 0.0003,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 18701,
+            "student_value": 0.0001,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 19001,
+            "student_value": 0.0002,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 19301,
+            "student_value": 0.0001,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 19601,
+            "student_value": 0.0001,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 19901,
+            "student_value": 0.0,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 20201,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 20321,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 8
+          },
+          {
+            "tick": 20321,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 20696,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 21416,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 21716,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 22060,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 22381,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 13,
+        "4": 23,
+        "5": 0,
+        "9": 81,
+        "16": 95,
+        "43": 0
+      },
       "affordable_pea_decisions": [],
       "paired_student_all_actions_identical": true
     },
@@ -645,6 +880,23 @@
         "student_candidate_best": 0,
         "student_candidate_override": 0
       },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 13,
+        "4": 23,
+        "5": 0,
+        "9": 81,
+        "16": 95,
+        "43": 0
+      },
       "affordable_pea_decisions": []
     },
     {
@@ -807,6 +1059,94 @@
         "student_candidate_added": 20,
         "student_candidate_best": 2,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 10,
+        "max_advantage": 0.0084,
+        "max_leaf": 0.0212,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0106,
+            "best_value": 0.012,
+            "best_minus_student": 0.0014,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 300,
+            "student_value": 0.0188,
+            "best_value": 0.0188,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 600,
+            "student_value": 0.0107,
+            "best_value": 0.0146,
+            "best_minus_student": 0.0039,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 900,
+            "student_value": 0.0135,
+            "best_value": 0.0187,
+            "best_minus_student": 0.0052,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1200,
+            "student_value": 0.0128,
+            "best_value": 0.0212,
+            "best_minus_student": 0.0084,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1500,
+            "student_value": 0.0139,
+            "best_value": 0.0172,
+            "best_minus_student": 0.0033,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1800,
+            "student_value": 0.007,
+            "best_value": 0.0143,
+            "best_minus_student": 0.0073,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 2460,
+            "student_value": 0.0058,
+            "best_value": 0.0087,
+            "best_minus_student": 0.0029,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 5160,
+            "student_value": 0.0022,
+            "best_value": 0.0051,
+            "best_minus_student": 0.0029,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 7522,
+            "student_value": 0.002,
+            "best_value": 0.0051,
+            "best_minus_student": 0.0031,
+            "candidates_scored": 7
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 3,
+        "5": 0,
+        "9": 21,
+        "16": 35,
+        "43": 0
       },
       "affordable_pea_decisions": [],
       "paired_student_all_actions_identical": true
@@ -971,6 +1311,23 @@
         "student_candidate_added": 0,
         "student_candidate_best": 0,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 3,
+        "5": 0,
+        "9": 21,
+        "16": 35,
+        "43": 0
       },
       "affordable_pea_decisions": []
     },
@@ -1366,6 +1723,430 @@
         "student_candidate_added": 116,
         "student_candidate_best": 14,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 58,
+        "max_advantage": 0.0053,
+        "max_leaf": 0.0196,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0061,
+            "best_value": 0.0061,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 60,
+            "student_value": 0.0118,
+            "best_value": 0.0118,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 360,
+            "student_value": 0.0049,
+            "best_value": 0.0049,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 660,
+            "student_value": 0.0047,
+            "best_value": 0.0047,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 840,
+            "student_value": 0.0047,
+            "best_value": 0.01,
+            "best_minus_student": 0.0053,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 1260,
+            "student_value": 0.0196,
+            "best_value": 0.0196,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 1560,
+            "student_value": 0.0106,
+            "best_value": 0.0106,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 1860,
+            "student_value": 0.0075,
+            "best_value": 0.0075,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 2040,
+            "student_value": 0.0074,
+            "best_value": 0.0074,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 3480,
+            "student_value": 0.0034,
+            "best_value": 0.0081,
+            "best_minus_student": 0.0047,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 3660,
+            "student_value": 0.003,
+            "best_value": 0.004,
+            "best_minus_student": 0.001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 5220,
+            "student_value": 0.0009,
+            "best_value": 0.0022,
+            "best_minus_student": 0.0013,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 6840,
+            "student_value": 0.0012,
+            "best_value": 0.0024,
+            "best_minus_student": 0.0012,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 8282,
+            "student_value": 0.0022,
+            "best_value": 0.0028,
+            "best_minus_student": 0.0006,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 8600,
+            "student_value": 0.0022,
+            "best_value": 0.0024,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 8900,
+            "student_value": 0.0022,
+            "best_value": 0.0022,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 9200,
+            "student_value": 0.0021,
+            "best_value": 0.0021,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 9500,
+            "student_value": 0.002,
+            "best_value": 0.002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 9810,
+            "student_value": 0.002,
+            "best_value": 0.002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 9870,
+            "student_value": 0.002,
+            "best_value": 0.002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 10830,
+            "student_value": 0.0025,
+            "best_value": 0.0025,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 13230,
+            "student_value": 0.0011,
+            "best_value": 0.0014,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 13230,
+            "student_value": 0.0012,
+            "best_value": 0.0012,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 13770,
+            "student_value": 0.001,
+            "best_value": 0.001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 14070,
+            "student_value": 0.0018,
+            "best_value": 0.0019,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 14370,
+            "student_value": 0.0013,
+            "best_value": 0.0013,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 14670,
+            "student_value": 0.0006,
+            "best_value": 0.0011,
+            "best_minus_student": 0.0005,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 14970,
+            "student_value": 0.0005,
+            "best_value": 0.0008,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 15329,
+            "student_value": 0.0005,
+            "best_value": 0.0008,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 15629,
+            "student_value": 0.0005,
+            "best_value": 0.001,
+            "best_minus_student": 0.0005,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 15976,
+            "student_value": 0.0005,
+            "best_value": 0.0009,
+            "best_minus_student": 0.0004,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 16276,
+            "student_value": 0.0005,
+            "best_value": 0.0011,
+            "best_minus_student": 0.0006,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 16509,
+            "student_value": 0.0005,
+            "best_value": 0.0011,
+            "best_minus_student": 0.0006,
+            "candidates_scored": 8
+          },
+          {
+            "tick": 16509,
+            "student_value": 0.0005,
+            "best_value": 0.0009,
+            "best_minus_student": 0.0004,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 16569,
+            "student_value": 0.0005,
+            "best_value": 0.0005,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 16989,
+            "student_value": 0.0003,
+            "best_value": 0.0005,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 17343,
+            "student_value": 0.0003,
+            "best_value": 0.0004,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 17643,
+            "student_value": 0.0001,
+            "best_value": 0.0003,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 17943,
+            "student_value": 0.0001,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 18243,
+            "student_value": 0.0002,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 18543,
+            "student_value": 0.0002,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 18843,
+            "student_value": 0.0002,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 19143,
+            "student_value": 0.0002,
+            "best_value": 0.0004,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 19443,
+            "student_value": 0.0002,
+            "best_value": 0.0003,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 19623,
+            "student_value": 0.0001,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 9
+          },
+          {
+            "tick": 19623,
+            "student_value": 0.0001,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 19923,
+            "student_value": 0.0001,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 20223,
+            "student_value": 0.0001,
+            "best_value": 0.0003,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 20523,
+            "student_value": 0.0001,
+            "best_value": 0.0003,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 20881,
+            "student_value": 0.0001,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 21181,
+            "student_value": 0.0,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 21531,
+            "student_value": 0.0,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 21831,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 22131,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 22431,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 22671,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 22671,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 22731,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 4,
+        "2": 0,
+        "3": 117,
+        "4": 23,
+        "5": 0,
+        "9": 182,
+        "16": 193,
+        "43": 0
       },
       "affordable_pea_decisions": [
         {
@@ -1805,6 +2586,23 @@
         "student_candidate_best": 0,
         "student_candidate_override": 0
       },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 4,
+        "2": 0,
+        "3": 117,
+        "4": 23,
+        "5": 0,
+        "9": 182,
+        "16": 193,
+        "43": 0
+      },
       "affordable_pea_decisions": [
         {
           "tick": 19443,
@@ -2198,6 +2996,192 @@
         "student_candidate_best": 5,
         "student_candidate_override": 0
       },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 24,
+        "max_advantage": 0.0041,
+        "max_leaf": 0.0116,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0055,
+            "best_value": 0.0055,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 60,
+            "student_value": 0.0087,
+            "best_value": 0.0087,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 360,
+            "student_value": 0.0042,
+            "best_value": 0.0042,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 660,
+            "student_value": 0.004,
+            "best_value": 0.004,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 840,
+            "student_value": 0.0043,
+            "best_value": 0.0082,
+            "best_minus_student": 0.0039,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 1260,
+            "student_value": 0.0116,
+            "best_value": 0.0116,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 1560,
+            "student_value": 0.0062,
+            "best_value": 0.0062,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 1860,
+            "student_value": 0.0036,
+            "best_value": 0.0053,
+            "best_minus_student": 0.0017,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 2040,
+            "student_value": 0.0035,
+            "best_value": 0.0052,
+            "best_minus_student": 0.0017,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 3480,
+            "student_value": 0.0017,
+            "best_value": 0.0058,
+            "best_minus_student": 0.0041,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 3660,
+            "student_value": 0.0015,
+            "best_value": 0.0028,
+            "best_minus_student": 0.0013,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 5220,
+            "student_value": 0.0014,
+            "best_value": 0.0019,
+            "best_minus_student": 0.0005,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 8259,
+            "student_value": 0.0015,
+            "best_value": 0.002,
+            "best_minus_student": 0.0005,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 10668,
+            "student_value": 0.0014,
+            "best_value": 0.0014,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 13087,
+            "student_value": 0.0004,
+            "best_value": 0.0007,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 13496,
+            "student_value": 0.0006,
+            "best_value": 0.0009,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 15591,
+            "student_value": 0.0002,
+            "best_value": 0.0005,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 15951,
+            "student_value": 0.0002,
+            "best_value": 0.0004,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 16011,
+            "student_value": 0.0002,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 18446,
+            "student_value": 0.0001,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 18746,
+            "student_value": 0.0001,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 19046,
+            "student_value": 0.0,
+            "best_value": 0.0002,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 20896,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 21016,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 15,
+        "5": 0,
+        "9": 32,
+        "16": 52,
+        "43": 0
+      },
       "affordable_pea_decisions": [],
       "paired_student_all_actions_identical": true
     },
@@ -2549,6 +3533,23 @@
         "student_candidate_added": 0,
         "student_candidate_best": 0,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 15,
+        "5": 0,
+        "9": 32,
+        "16": 52,
+        "43": 0
       },
       "affordable_pea_decisions": []
     },
@@ -3042,6 +4043,206 @@
         "student_candidate_added": 52,
         "student_candidate_best": 5,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 26,
+        "max_advantage": 0.0131,
+        "max_leaf": 0.0381,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0262,
+            "best_value": 0.0262,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 300,
+            "student_value": 0.0223,
+            "best_value": 0.0223,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 600,
+            "student_value": 0.0379,
+            "best_value": 0.0379,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 900,
+            "student_value": 0.025,
+            "best_value": 0.0381,
+            "best_minus_student": 0.0131,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1200,
+            "student_value": 0.0216,
+            "best_value": 0.0328,
+            "best_minus_student": 0.0112,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1500,
+            "student_value": 0.0201,
+            "best_value": 0.0222,
+            "best_minus_student": 0.0021,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1800,
+            "student_value": 0.0152,
+            "best_value": 0.0204,
+            "best_minus_student": 0.0052,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 2040,
+            "student_value": 0.0215,
+            "best_value": 0.0225,
+            "best_minus_student": 0.001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 2880,
+            "student_value": 0.0193,
+            "best_value": 0.0317,
+            "best_minus_student": 0.0124,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 3780,
+            "student_value": 0.0063,
+            "best_value": 0.0103,
+            "best_minus_student": 0.004,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 5040,
+            "student_value": 0.0061,
+            "best_value": 0.0061,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 5520,
+            "student_value": 0.0022,
+            "best_value": 0.0026,
+            "best_minus_student": 0.0004,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 6196,
+            "student_value": 0.0036,
+            "best_value": 0.0036,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 7396,
+            "student_value": 0.0033,
+            "best_value": 0.0033,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 8643,
+            "student_value": 0.0033,
+            "best_value": 0.0033,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 9795,
+            "student_value": 0.0025,
+            "best_value": 0.0025,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 10095,
+            "student_value": 0.0027,
+            "best_value": 0.0033,
+            "best_minus_student": 0.0006,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 11557,
+            "student_value": 0.0015,
+            "best_value": 0.0026,
+            "best_minus_student": 0.0011,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 12640,
+            "student_value": 0.0038,
+            "best_value": 0.0051,
+            "best_minus_student": 0.0013,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 13540,
+            "student_value": 0.002,
+            "best_value": 0.002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 15067,
+            "student_value": 0.0015,
+            "best_value": 0.0016,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 15926,
+            "student_value": 0.0009,
+            "best_value": 0.0019,
+            "best_minus_student": 0.001,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 16946,
+            "student_value": 0.0003,
+            "best_value": 0.0015,
+            "best_minus_student": 0.0012,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 17786,
+            "student_value": 0.0004,
+            "best_value": 0.0004,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 18878,
+            "student_value": 0.0003,
+            "best_value": 0.0003,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 19373,
+            "student_value": 0.0001,
+            "best_value": 0.0001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 19,
+        "5": 0,
+        "9": 39,
+        "16": 52,
+        "43": 0
       },
       "affordable_pea_decisions": [],
       "paired_student_all_actions_identical": true
@@ -3537,6 +4738,23 @@
         "student_candidate_best": 0,
         "student_candidate_override": 0
       },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 19,
+        "5": 0,
+        "9": 39,
+        "16": 52,
+        "43": 0
+      },
       "affordable_pea_decisions": []
     },
     {
@@ -3732,6 +4950,108 @@
         "student_candidate_added": 24,
         "student_candidate_best": 4,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 12,
+        "max_advantage": 0.022,
+        "max_leaf": 0.0351,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0199,
+            "best_value": 0.0219,
+            "best_minus_student": 0.002,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 300,
+            "student_value": 0.0244,
+            "best_value": 0.0244,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 600,
+            "student_value": 0.0176,
+            "best_value": 0.0224,
+            "best_minus_student": 0.0048,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 900,
+            "student_value": 0.0131,
+            "best_value": 0.0351,
+            "best_minus_student": 0.022,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1200,
+            "student_value": 0.0171,
+            "best_value": 0.0247,
+            "best_minus_student": 0.0076,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1500,
+            "student_value": 0.0098,
+            "best_value": 0.0244,
+            "best_minus_student": 0.0146,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1800,
+            "student_value": 0.0085,
+            "best_value": 0.0194,
+            "best_minus_student": 0.0109,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 2040,
+            "student_value": 0.0126,
+            "best_value": 0.0222,
+            "best_minus_student": 0.0096,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 2880,
+            "student_value": 0.0074,
+            "best_value": 0.0133,
+            "best_minus_student": 0.0059,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 3780,
+            "student_value": 0.0038,
+            "best_value": 0.0106,
+            "best_minus_student": 0.0068,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 5040,
+            "student_value": 0.0026,
+            "best_value": 0.0042,
+            "best_minus_student": 0.0016,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 7951,
+            "student_value": 0.0012,
+            "best_value": 0.0023,
+            "best_minus_student": 0.0011,
+            "candidates_scored": 7
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 5,
+        "5": 0,
+        "9": 27,
+        "16": 40,
+        "43": 0
       },
       "affordable_pea_decisions": [],
       "paired_student_all_actions_identical": true
@@ -3929,6 +5249,23 @@
         "student_candidate_added": 0,
         "student_candidate_best": 0,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 0,
+        "4": 5,
+        "5": 0,
+        "9": 27,
+        "16": 40,
+        "43": 0
       },
       "affordable_pea_decisions": []
     },
@@ -4324,6 +5661,381 @@
         "student_candidate_added": 102,
         "student_candidate_best": 13,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 51,
+        "max_advantage": 0.0155,
+        "max_leaf": 0.0287,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0173,
+            "best_value": 0.0173,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 60,
+            "student_value": 0.0149,
+            "best_value": 0.0149,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 360,
+            "student_value": 0.0152,
+            "best_value": 0.0152,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 660,
+            "student_value": 0.018,
+            "best_value": 0.0218,
+            "best_minus_student": 0.0038,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 960,
+            "student_value": 0.0145,
+            "best_value": 0.023,
+            "best_minus_student": 0.0085,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1260,
+            "student_value": 0.0166,
+            "best_value": 0.0197,
+            "best_minus_student": 0.0031,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1560,
+            "student_value": 0.0184,
+            "best_value": 0.0184,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1860,
+            "student_value": 0.02,
+            "best_value": 0.02,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 2040,
+            "student_value": 0.0108,
+            "best_value": 0.0108,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 2940,
+            "student_value": 0.0072,
+            "best_value": 0.0092,
+            "best_minus_student": 0.002,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 3960,
+            "student_value": 0.0069,
+            "best_value": 0.0118,
+            "best_minus_student": 0.0049,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 5100,
+            "student_value": 0.0132,
+            "best_value": 0.0287,
+            "best_minus_student": 0.0155,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 5520,
+            "student_value": 0.0134,
+            "best_value": 0.0248,
+            "best_minus_student": 0.0114,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 6444,
+            "student_value": 0.0035,
+            "best_value": 0.0171,
+            "best_minus_student": 0.0136,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 6744,
+            "student_value": 0.0032,
+            "best_value": 0.0071,
+            "best_minus_student": 0.0039,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 7044,
+            "student_value": 0.0016,
+            "best_value": 0.0043,
+            "best_minus_student": 0.0027,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 7344,
+            "student_value": 0.0015,
+            "best_value": 0.0032,
+            "best_minus_student": 0.0017,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 7537,
+            "student_value": 0.0018,
+            "best_value": 0.0029,
+            "best_minus_student": 0.0011,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 7837,
+            "student_value": 0.0021,
+            "best_value": 0.0022,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 7897,
+            "student_value": 0.0021,
+            "best_value": 0.0022,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 8317,
+            "student_value": 0.0019,
+            "best_value": 0.0019,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 8557,
+            "student_value": 0.0022,
+            "best_value": 0.0024,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 8857,
+            "student_value": 0.0027,
+            "best_value": 0.0027,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 9157,
+            "student_value": 0.0039,
+            "best_value": 0.0045,
+            "best_minus_student": 0.0006,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 9457,
+            "student_value": 0.0027,
+            "best_value": 0.0029,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 9795,
+            "student_value": 0.0024,
+            "best_value": 0.0024,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 10095,
+            "student_value": 0.002,
+            "best_value": 0.002,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 10395,
+            "student_value": 0.0017,
+            "best_value": 0.0017,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 10695,
+            "student_value": 0.002,
+            "best_value": 0.0027,
+            "best_minus_student": 0.0007,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 10995,
+            "student_value": 0.0025,
+            "best_value": 0.0025,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 11302,
+            "student_value": 0.0016,
+            "best_value": 0.0024,
+            "best_minus_student": 0.0008,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 11602,
+            "student_value": 0.0012,
+            "best_value": 0.0023,
+            "best_minus_student": 0.0011,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 11602,
+            "student_value": 0.0012,
+            "best_value": 0.0019,
+            "best_minus_student": 0.0007,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 12082,
+            "student_value": 0.0009,
+            "best_value": 0.0011,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 12262,
+            "student_value": 0.001,
+            "best_value": 0.0011,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 12562,
+            "student_value": 0.001,
+            "best_value": 0.001,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 12862,
+            "student_value": 0.0007,
+            "best_value": 0.0007,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 13042,
+            "student_value": 0.0005,
+            "best_value": 0.0008,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 13342,
+            "student_value": 0.0005,
+            "best_value": 0.0006,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 13462,
+            "student_value": 0.0005,
+            "best_value": 0.0006,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 13822,
+            "student_value": 0.0005,
+            "best_value": 0.0007,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 14122,
+            "student_value": 0.0005,
+            "best_value": 0.0007,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 14422,
+            "student_value": 0.0003,
+            "best_value": 0.0007,
+            "best_minus_student": 0.0004,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 14662,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 8
+          },
+          {
+            "tick": 14662,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 15262,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 15572,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 15878,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 16178,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 16478,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 16778,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 1,
+        "2": 0,
+        "3": 51,
+        "4": 10,
+        "5": 0,
+        "9": 136,
+        "16": 169,
+        "43": 0
       },
       "affordable_pea_decisions": [
         {
@@ -4733,6 +6445,23 @@
         "student_candidate_best": 0,
         "student_candidate_override": 0
       },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 1,
+        "2": 0,
+        "3": 51,
+        "4": 10,
+        "5": 0,
+        "9": 136,
+        "16": 169,
+        "43": 0
+      },
       "affordable_pea_decisions": [
         {
           "tick": 11302,
@@ -5140,6 +6869,248 @@
         "student_candidate_best": 7,
         "student_candidate_override": 0
       },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 32,
+        "max_advantage": 0.0122,
+        "max_leaf": 0.0292,
+        "roots": [
+          {
+            "tick": 0,
+            "student_value": 0.0127,
+            "best_value": 0.015,
+            "best_minus_student": 0.0023,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 60,
+            "student_value": 0.0138,
+            "best_value": 0.0138,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 360,
+            "student_value": 0.0072,
+            "best_value": 0.0072,
+            "best_minus_student": 0.0,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 660,
+            "student_value": 0.0095,
+            "best_value": 0.0104,
+            "best_minus_student": 0.0009,
+            "candidates_scored": 4
+          },
+          {
+            "tick": 960,
+            "student_value": 0.0085,
+            "best_value": 0.0207,
+            "best_minus_student": 0.0122,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1260,
+            "student_value": 0.0122,
+            "best_value": 0.0184,
+            "best_minus_student": 0.0062,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1560,
+            "student_value": 0.0138,
+            "best_value": 0.0138,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 1860,
+            "student_value": 0.0142,
+            "best_value": 0.0142,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 2040,
+            "student_value": 0.0108,
+            "best_value": 0.0108,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 2940,
+            "student_value": 0.0074,
+            "best_value": 0.0096,
+            "best_minus_student": 0.0022,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 3960,
+            "student_value": 0.0023,
+            "best_value": 0.0065,
+            "best_minus_student": 0.0042,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 5400,
+            "student_value": 0.0292,
+            "best_value": 0.0292,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 6444,
+            "student_value": 0.012,
+            "best_value": 0.0142,
+            "best_minus_student": 0.0022,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 7837,
+            "student_value": 0.0214,
+            "best_value": 0.0214,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 8017,
+            "student_value": 0.0161,
+            "best_value": 0.0243,
+            "best_minus_student": 0.0082,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 8797,
+            "student_value": 0.0135,
+            "best_value": 0.0167,
+            "best_minus_student": 0.0032,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 10297,
+            "student_value": 0.0065,
+            "best_value": 0.0067,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 10417,
+            "student_value": 0.0014,
+            "best_value": 0.002,
+            "best_minus_student": 0.0006,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 12577,
+            "student_value": 0.0008,
+            "best_value": 0.0011,
+            "best_minus_student": 0.0003,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 12890,
+            "student_value": 0.0007,
+            "best_value": 0.0017,
+            "best_minus_student": 0.001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 13190,
+            "student_value": 0.0008,
+            "best_value": 0.0015,
+            "best_minus_student": 0.0007,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 13430,
+            "student_value": 0.0007,
+            "best_value": 0.0014,
+            "best_minus_student": 0.0007,
+            "candidates_scored": 8
+          },
+          {
+            "tick": 13430,
+            "student_value": 0.0009,
+            "best_value": 0.0009,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 14603,
+            "student_value": 0.0005,
+            "best_value": 0.0006,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 14941,
+            "student_value": 0.0003,
+            "best_value": 0.0005,
+            "best_minus_student": 0.0002,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 15234,
+            "student_value": 0.0003,
+            "best_value": 0.0003,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 17525,
+            "student_value": 0.0004,
+            "best_value": 0.0005,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 17825,
+            "student_value": 0.0003,
+            "best_value": 0.0004,
+            "best_minus_student": 0.0001,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 18125,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 5
+          },
+          {
+            "tick": 18245,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          },
+          {
+            "tick": 19913,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 7
+          },
+          {
+            "tick": 20393,
+            "student_value": 0.0,
+            "best_value": 0.0,
+            "best_minus_student": 0.0,
+            "candidates_scored": 6
+          }
+        ]
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 10,
+        "4": 18,
+        "5": 0,
+        "9": 63,
+        "16": 77,
+        "43": 0
+      },
       "affordable_pea_decisions": [],
       "paired_student_all_actions_identical": true
     },
@@ -5535,6 +7506,23 @@
         "student_candidate_added": 0,
         "student_candidate_best": 0,
         "student_candidate_override": 0
+      },
+      "rounded_leaf_scores": {
+        "source": "archive targets rounded to 4dp; finite candidates only",
+        "searched_roots_with_anchor": 0,
+        "max_advantage": null,
+        "max_leaf": null,
+        "roots": []
+      },
+      "legal_packet_decisions": {
+        "0": 0,
+        "2": 0,
+        "3": 10,
+        "4": 18,
+        "5": 0,
+        "9": 63,
+        "16": 77,
+        "43": 0
       },
       "affordable_pea_decisions": []
     }

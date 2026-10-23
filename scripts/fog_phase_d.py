@@ -79,6 +79,25 @@ def summarize():
         assert old['planted_types']=={str(k):v for k,v in summary['types'].items()}
         summary['original_cold_match']=dict(wave_tick_decisions_planted_types=True,source=str(source),sha256=sha(source))
         summary['search_stats']={k:old[k] for k in ('searched','overrides','student_candidate_added','student_candidate_best','student_candidate_override')}
+        gaps=[]
+        for before,after in zip(rows,frames[1:]):
+            targets=after.get('targets') or []
+            a=before['student_action']
+            identity=(a.get('packet',-1),a.get('row',-1),a.get('col',-1)) if a['type']=='plant' else (-1,-1,-1)
+            anchor=next((t[3] for t in targets if tuple(t[:3])==identity),None)
+            if anchor is not None:
+                gaps.append(dict(tick=before['tick'],student_value=anchor,
+                    best_value=max(t[3] for t in targets),
+                    best_minus_student=round(max(t[3] for t in targets)-anchor,4),
+                    candidates_scored=len(targets)))
+        summary['rounded_leaf_scores']=dict(source='archive targets rounded to 4dp; finite candidates only',
+            searched_roots_with_anchor=len(gaps),max_advantage=max((x['best_minus_student'] for x in gaps),default=None),
+            max_leaf=max((x['best_value'] for x in gaps),default=None),roots=gaps)
+        legal_counts=Counter()
+        for row in rows:
+            hand={p['index']:p['type'] for p in row['packets']}
+            legal_counts.update({hand[p['packet']] for p in row['legal_plants']})
+        summary['legal_packet_decisions']={str(k):legal_counts[k] for k in sorted({p['type'] for p in rows[0]['packets']})}
         summary['affordable_pea_decisions']=[dict(tick=x['tick'],sun=x['sun'],action=x['action'],
             legal_cells=sum(p['packet']==0 for p in x['legal_plants'])) for x in rows if x['sun']>=100]
         summaries.append(summary)
