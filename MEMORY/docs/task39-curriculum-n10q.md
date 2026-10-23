@@ -64,4 +64,6 @@ SUPERSEDED = {'night_n10p': 'night_n10q'}
 
 ## 结果
 
+- 第 1 步：`make_multiplier_tasks.py` 加 `SUPERSEDED = {'night_n10p': 'night_n10q'}`，FAMILIES 未改；修正种子段注释（档距 500k→700k 后种子平移，控制器按 task_id 偏移续采不会重复，`games.jsonl` 记录种子值本身）。
+
 ## 问题
