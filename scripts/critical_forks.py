@@ -352,10 +352,14 @@ def collect_job(job):
                 if (env._debug_state_sha256() != engine_hash or list(env._sun_production_history) != income
                         or env._sun_history_start_tick != income_start):
                     raise ValueError('root restore/history mismatch')
-                short = TEACHER._rollout_policy(env, obs, action, obs['tick']+args.horizon, root, expected['future'])
+                # Formal score-only rollouts omit the public leaf and Python income history.
+                # Request the same native student continuation with its full diagnostic reply.
+                short = env.rollout(action, obs['tick']+args.horizon,
+                    sim_skip=PLAN['teacher']['rollout_sim_skip'], snapshot_id=root,
+                    seed=expected['future'], student_history=TEACHER._W.get('student_history'))
                 short_value = TEACHER._score_terminal_or_value(short)
                 if short_value is None:
-                    short_value = short['value']
+                    short_value = env.leaf_values(income=short['sun_income_rate'])[0]
                 short_frame = _frame(short)
                 env.restore(root); env.reseed(expected['future'])
                 TEACHER._W.clear(); TEACHER._W.update(baseline)

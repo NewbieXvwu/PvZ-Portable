@@ -51,6 +51,50 @@ def register_training():
     print('REGISTERED',sum(len(r['rows']) for r in replay),'old replay rows;',len(evaluation),'paired evaluation seeds')
 
 
+def refine_selection():
+    """Separate the two root mechanisms using archive timing alone, before outcome analysis."""
+    from pvz_frame_store import frame_path,read_frames
+    plan=forks.load(OUT/'plan.json');jobs=[];per_episode=[]
+    if (OUT/'plan-keypoints-v2.json').exists():
+        raise RuntimeError('v2 selection already frozen')
+    for episode in plan['episodes']:
+        frames=read_frames(frame_path(Path(episode['archive'])))
+        # The loss is the final breach. The previous N decisions form its lookback window;
+        # take the beginning of that window instead of the already-doomed final move.
+        decision=max(1,len(frames)-16)
+        reasons={decision:[dict(kind='before_loss_breach',lookback_decisions=16,
+                                breach_decision=len(frames)-1)]}
+        flat=[]
+        for i in range(1,len(frames)):
+            targets=frames[i].get('targets',[])
+            vals=[a[3] for a in targets]
+            if len(vals)>=2 and max(vals)-min(vals)<.02 and frames[-1]['tick']-frames[i-1]['tick']<=6000:
+                flat.append((i,max(vals)-min(vals)))
+        if flat:
+            i,spread=flat[len(flat)//2]
+            reasons.setdefault(i,[]).append(dict(kind='flat_archived_leaf',spread=spread,
+                                                position='median in final 6000 ticks'))
+        points=[dict(decision=i,tick=frames[i-1]['tick'],reasons=reasons[i]) for i in sorted(reasons)]
+        for point in points:
+            base={k:v for k,v in episode.items() if k not in ('id','points','original_outcome')}
+            jobs.append(dict(**base,**point,id=f"v2-{episode['id']}-d{point['decision']}"))
+        per_episode.append(dict(episode=episode['id'],points=points))
+    plan['jobs']=jobs
+    plan['sampling_refinement']=dict(version=2,source_plan_sha256=forks.sha(OUT/'plan.json'),
+        rule='16th decision before loss; median archived-flat search point in final 6000 ticks',
+        reason='Initial structural inspection showed adjacent last decisions and no plant options at some final roots.',
+        candidate_outcome_analysis_before_refinement=False,off_panel_pilot_labels=543,
+        initial_pilot_cpu_access='cpu_seconds only; original pilot labels retained and charged',
+        episodes=per_episode)
+    forks.save(OUT/'plan-keypoints-v2.json',plan)
+    pilot=[next(j for j in jobs if j['terrain']==t) for t in ('day','night','pool')]
+    forks.save(OUT/'pilot-v2.json',dict(jobs=pilot))
+    forks.save(ROOT/'MEMORY/docs/task53-critical-forks-sampling-v2.json',dict(
+        **plan['sampling_refinement'],inputs=plan['inputs'],jobs=jobs,
+        plan_sha256=forks.sha(OUT/'plan-keypoints-v2.json')))
+    print('FROZEN V2',len(jobs),'roots; pilot',[(j['terrain'],j['decision'],j['tick']) for j in pilot])
+
+
 def prepare():
     from pvz_frame_store import frame_path, read_frames
     from render_episode import load_training_task, training_task_kwargs
@@ -144,12 +188,14 @@ def prepare():
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training'])
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training','refine-selection'])
     args=p.parse_args()
     if args.stage=='prepare':
         prepare()
     elif args.stage=='register-training':
         register_training()
+    elif args.stage=='refine-selection':
+        refine_selection()
     else:
         if list((OUT/'roots').glob('*/screen_[0-9]*.json')) or list((OUT/'roots').glob('*/confirm_[0-9]*.json')):
             raise RuntimeError('terminal labels exist; frozen inputs cannot be changed')
