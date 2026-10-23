@@ -19,6 +19,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 TASKS = ('pool_l24_eval_p9k', 'pool_l26_eval_p9k')
+# search_play.py's own override margin: a top1-top2 gap at or below this means the two
+# best candidates are inside the threshold the search itself requires to switch choices.
+MARGIN = 0.02
 
 
 def run(args) -> None:
