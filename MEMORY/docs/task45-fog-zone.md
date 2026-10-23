@@ -53,6 +53,8 @@
 
 ## 结果
 
+- 2026-10-24 追加E复现核验：在隔离目录重新计算四关×两臂8个固定分叉，并加首个合法坚果分叉，9/9终局、v4/公开叶、终态物理SHA、完整解压老师动作链精确一致，原证据只读；见 [复现证明](task45-fog-terminal-repro.json) 与 `scripts/fog_terminal_repro_check.py`。最终整套测试及含复现的CPU总账随后补记。
+
 <!-- 追加E-complete -->
 - 2026-10-24 追加E终局诊断交付：独立16未来确认找到3项Holm校正后p≤0.05且均值改善的候选/指标；全量分区排序、逐根最优及确认结果见 [终局诊断](task45-fog-terminal-diagnosis.md) 和 [结果JSON](task45-fog-terminal-results.json)。计量+480秒保守开销共14.233CPU小时≤20，自有产物0.154GB。原始输入/每局动作链/终局标签可复现，未改v5或生产策略。
 
