@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import re
+import statistics
 import subprocess
 import sys
 
@@ -142,21 +143,29 @@ def run():
 
 
 def summarize():
+    from pvz_frame_store import read_frames, frame_path
     summaries = []
     for cell in cells():
         out = folder(*cell)
         meta = json.loads((out / 'meta.json').read_text())
         rows = [json.loads(x) for x in (out / 'timeline.jsonl').read_text().splitlines()]
+        frames = read_frames(frame_path(out))
+        assert len(frames) == len(rows) + 1 == meta['frame_count']
+        assert [f['action'] for f in frames[1:]] == [x['action'] for x in rows]
         plants = [dict(decision=x['decision'], tick=x['tick'], wave=x['wave'], sun=x['sun'],
                        **x['planting']) for x in rows if x.get('planting')]
         accepted = [p for p in plants if p['accepted']]
         produced = sum(x['events'].get('sun_produced', 0) for x in rows)
         spent = sum(x['events'].get('sun_spent', 0) for x in rows)
-        assert rows[0]['sun'] + produced - spent == rows[-1]['after_sun']
+        # Board::AddCoin increments produced before Coin::Update credits the bank.
+        # A terminal frame can still contain a newly generated, uncredited sun.
+        credited = rows[-1]['after_sun'] - rows[0]['sun'] + spent
+        assert 0 <= credited <= produced
         entry = dict(level=cell[0], seed=cell[1], policy=cell[2], outcome=meta['outcome'],
             archive=str(out), archive_sha256=sha(out / 'frames.npz'),
             timeline_sha256=sha(out / 'timeline.jsonl'), decisions=len(rows),
             initial_sun=rows[0]['sun'], final_sun=rows[-1]['after_sun'], produced=produced, spent=spent,
+            credited_by_bank_balance=credited, generated_minus_credited=produced-credited,
             sun_max=max(max(x['sun'], x['after_sun']) for x in rows),
             native_mismatches=[x['decision'] for x in rows if not x['native_matches']],
             types=dict(Counter(p['type'] for p in accepted)), plantings=plants,
@@ -165,6 +174,21 @@ def summarize():
                 shooters=x['row_shooters'], pults=x['row_pults']) for i, x in enumerate(rows)
                 if i == 0 or x['row_shooters'] != rows[i-1]['row_shooters']],
             max_pults=max(sum(x['row_pults']) for x in rows))
+        leaves = [json.loads(line) for path in out.glob('leaves.*.jsonl')
+                  for line in path.read_text().splitlines()]
+        assert len({x['decision'] for x in leaves}) == len(leaves)
+        if leaves:
+            entry['leaf_dispersion'] = dict(roots=len(leaves),
+                scope='finite candidate means after halving; not variance across rollout futures',
+                mean_value=statistics.mean(x['mean'] for x in leaves),
+                mean_std=statistics.mean(x['std'] for x in leaves),
+                median_top_gap=statistics.median(x['top1_top2'] for x in leaves),
+                share_top_gap_at_most_002=sum(x['top1_top2'] <= .02 for x in leaves) / len(leaves))
+        entry['terminal_outside_zombies'] = [z for z in meta['outcome']['final_zombies'] if z['x'] < 0]
+        entry['sun_at_each_wave'] = [dict(tick=x['tick'], wave=x['wave'], sun=x['sun'])
+            for i, x in enumerate(rows) if i == 0 or x['wave'] != rows[i-1]['wave']]
+        entry['legal_decisions_by_type'] = dict(Counter(str(t) for x in rows for t in
+            {p['type'] for p in x['packets'] if any(a['packet'] == p['index'] for a in x['legal_plants'])}))
         # Compare existing cold start only where the original formal cell exists.
         old = ROOT / f'artifacts/task46/runs/roof_l{cell[0]}_eval_r7_{cell[2]}_16/games.jsonl'
         if old.exists():
@@ -174,11 +198,19 @@ def summarize():
             assert all(original[k] == meta['outcome'][k] for k in keys), (cell, original, meta['outcome'])
             entry['cold_start_match'] = dict(source=str(old), sha256=sha(old), fields=keys)
         summaries.append(entry)
-    result = dict(schema_version=1, resolution='actual engine decision tick; no interpolated intermediate state',
+    columns = dict(plantings=['decision', 'tick', 'wave', 'sun', 'type', 'row', 'col', 'cost',
+                             'occupants', 'on_pot', 'accepted'],
+                   row_firepower_changes=['tick', 'wave', 'sun', 'shooters', 'pults'],
+                   sun_at_each_wave=['tick', 'wave', 'sun'])
+    for game in summaries:
+        for field, names in columns.items():
+            game[field] = [[row[name] for name in names] for row in game[field]]
+    result = dict(schema_version=1, columns=columns,
+        resolution='actual engine decision tick; no interpolated intermediate state',
         firepower='engine SUBCLASS_SHOOTER live counts; pults=32/34/39 separately; counts are not DPS',
         games=summaries)
     (ROOT / 'MEMORY/docs/task46-roof-timelines.json').write_text(
-        json.dumps(result, ensure_ascii=False, indent=1) + '\n')
+        json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n')
     print(json.dumps([dict(level=x['level'], seed=x['seed'], policy=x['policy'],
         won=x['outcome']['won'], wave=x['outcome']['final_wave'], types=x['types'],
         max_pults=x['max_pults'], mismatches=len(x['native_mismatches'])) for x in summaries]))
