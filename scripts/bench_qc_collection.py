@@ -44,6 +44,31 @@ def validate_rows(rows: list[dict], seeds: list[int]) -> None:
         raise ValueError('invalid game outcome or arm')
 
 
+def audit_archive(archive: Path, row: dict, task: dict, reader=None) -> dict:
+    meta_file=archive/'meta.json';frame_file=archive/'frames.npz'
+    meta=json.loads(meta_file.read_text())
+    if meta['task']['seed']!=row['seed'] or any(meta['outcome'][k]!=row[k] for k in ('won','final_wave')):
+        raise ValueError(f'archive outcome/seed does not match game: {archive}')
+    if meta['context']['level']!=task['level'] or meta['context']['multiplier']!=task['zombie_count_multiplier']:
+        raise ValueError(f'archive task context does not match frozen task: {archive}')
+    if reader is None:
+        sys.path.insert(0,str(ROOT/'python'))
+        from pvz_frame_store import read_frames
+        reader=read_frames
+    frames=reader(frame_file)
+    # Production archives contain every decision frame plus the final observation.
+    if (len(frames)!=row['decisions']+1 or
+            sum('action' in f for f in frames)!=row['decisions'] or
+            sum('label' in f for f in frames)!=row['decisions']):
+        raise ValueError(f'archive is missing decision frames/actions/labels: {archive}')
+    if task['deck'] and [p[1] for p in frames[0]['packets']]!=task['deck']:
+        raise ValueError(f'archive initial deck differs from frozen task: {archive}')
+    if frames[-1]['wave']!=row['final_wave']:
+        raise ValueError(f'archive final observation differs from game: {archive}')
+    return dict(seed=row['seed'],frames=len(frames),meta_sha256=sha(meta_file),
+                frames_sha256=sha(frame_file),archive=str(archive))
+
+
 def tree_sha(source: Path) -> str:
     digest = hashlib.sha256()
     for path in sorted([*(source / 'scripts').rglob('*.py'), *(source / 'python').rglob('*.py')]):
@@ -219,7 +244,8 @@ def collect(out: Path, document: dict) -> None:
 
 def report(out: Path, document: dict) -> dict:
     require_inputs(document)
-    groups = {}
+    groups = {};archives=[]
+    frozen={t['task_id']:t for t in json.loads(Path(document['manifest']).read_text())['tasks']}
     for task in TASKS:
         groups[task] = {}
         for arm in ('old', 'cq'):
@@ -231,7 +257,11 @@ def report(out: Path, document: dict) -> dict:
                 if not timing['complete'] or timing['returncode'] != 0 or sha(file) != timing['rows_sha256']:
                     raise ValueError(f'incomplete or changed stage: {stage["id"]}')
                 part = [json.loads(s) for s in file.read_text().splitlines()]
-                validate_rows(part, stage['seeds']); rows.extend(part); total += timing['wall_seconds']
+                validate_rows(part, stage['seeds'])
+                for row in part:
+                    archive=Path(stage['frames'])/f'seed_{row["seed"]}'/(stage['label']+'_fast_search')
+                    archives.append(audit_archive(archive,row,frozen[task]))
+                rows.extend(part); total += timing['wall_seconds']
             seeds = [seed for s in stages for seed in s['seeds']]
             validate_rows(rows, seeds)
             groups[task][arm] = dict(games=len(rows), wall_seconds=total, games_per_hour=len(rows) * 3600 / total,
@@ -244,7 +274,8 @@ def report(out: Path, document: dict) -> dict:
                        wall_seconds=sum(g[arm]['wall_seconds'] for g in groups.values())) for arm in ('old','cq')}
     for d in overall.values():d['games_per_hour']=d['games']*3600/d['wall_seconds']
     ratio=overall['cq']['games_per_hour']/overall['old']['games_per_hour']
-    result=dict(complete=True,workers=2,results=groups,overall=overall,throughput_ratio_cq_over_old=ratio,
+    result=dict(complete=True,workers=2,results=groups,overall=overall,archive_audit=archives,
+                throughput_ratio_cq_over_old=ratio,
                 classification='>=2.0' if ratio>=2 else '<1.5' if ratio<1.5 else '1.5-2.0',
                 note='Collection wall time only, including archives; cycle/pack/training results are separate.')
     write_json(out/'collection-results.json',result)
@@ -261,7 +292,7 @@ def main():
     if args.phase=='run':collect(args.out,document)
     if args.phase=='report':
         result=report(args.out,document)
-        print(json.dumps({k:v for k,v in result.items() if k!='results'},indent=2))
+        print(json.dumps({k:v for k,v in result.items() if k not in ('results','archive_audit')},indent=2))
     if args.phase=='plan':print(json.dumps(dict(stages=len(document['stages']),workers=document['workers'])))
 
 

@@ -30,6 +30,8 @@
 
 清单已冻结：四族均 **1.5 倍率**，原 multiplier panel offset64 起16种子，8局×两块，每臂每族16局，共128局；工具 [bench_qc_collection.py](../../scripts/bench_qc_collection.py)。旧引擎 SHA256 `dd03838136240fc4c1af36205ce3a8a4a486fc54ca5e1ba82ed23b796e36e2cb`，deploy2 SHA256 `bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef`。命令、种子与全部输入 SHA 在 ignored `artifacts/task51/collection-plan.json`；6项证据门禁测试通过。每条子命令记录墙钟、CPU、MemAvailable/RSS/load，等待采用进程终止事件，不把2秒遥测轮询间隔加成尾部耗时。
 
+离线报告进一步要求逐份解码真实帧归档：精确 D 个 action/label 决策帧 + 1 个末帧、种子/关卡/倍率/初始卡组/终局与冻结任务和逐局记录相符，并保存 NPZ/meta SHA。首个旧L7块的8份实际归档已完整解码通过。该检查在计时之外，不改正在运行的采集；最终 report 使用带 numpy 的 `/home/newbiexvwu/.venvs/ml/bin/python3`。受控夹具8项、日志10项，合计18项相关门禁通过，全部区块完成前不发布受控成功结果。
+
 ## 结果
 
 ### 历史快照（2026-10-24 00:07:28 +08:00，非最终判档）

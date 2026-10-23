@@ -3,6 +3,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+import json
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('qc_collection_bench', ROOT / 'scripts/bench_qc_collection.py')
@@ -41,6 +42,29 @@ class EvidenceGateTest(unittest.TestCase):
             p.write_bytes(b'new')
             with self.assertRaisesRegex(ValueError, 'frozen input changed'):
                 bench.require_inputs(frozen)
+
+    def test_metadata_alone_cannot_prove_a_complete_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/'meta.json').write_text(json.dumps(dict(task=dict(seed=10),outcome=dict(won=False,final_wave=3),
+                                                          context=dict(level=7,multiplier=1.5))))
+            (root/'frames.npz').write_bytes(b'test reader supplies frames')
+            row=dict(seed=10,won=False,final_wave=3,decisions=2)
+            task=dict(level=7,zombie_count_multiplier=1.5,deck=[0])
+            with self.assertRaisesRegex(ValueError,'missing decision frames'):
+                bench.audit_archive(root,row,task,reader=lambda p:[dict(action={},label={},packets=[[0,0]])])
+
+    def test_readable_complete_archive_retains_seed_and_hashes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/'meta.json').write_text(json.dumps(dict(task=dict(seed=10),outcome=dict(won=False,final_wave=3),
+                                                          context=dict(level=7,multiplier=1.5))))
+            (root/'frames.npz').write_bytes(b'test reader supplies frames')
+            frames=[dict(action={},label={},packets=[[0,0]]),dict(wave=3)]
+            r=bench.audit_archive(root,dict(seed=10,won=False,final_wave=3,decisions=1),
+                                 dict(level=7,zombie_count_multiplier=1.5,deck=[0]),reader=lambda p:frames)
+            self.assertEqual(r['frames'],2);self.assertEqual(r['seed'],10)
+            self.assertEqual(r['frames_sha256'],bench.sha(root/'frames.npz'))
 
 
 if __name__=='__main__':unittest.main()
