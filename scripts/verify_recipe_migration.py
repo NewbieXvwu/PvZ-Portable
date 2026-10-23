@@ -2,8 +2,9 @@
 """Compare original training CLI and recipe losses on the same full historical corpus.
 
 No shortened schedule, subset, or max_steps override: interrupt after observing
-200 losses, retaining the original full-run cosine length. Only outputs, caches,
-and feature-preparation worker count are relocated/limited. One trainer at a time.
+200 losses, retaining the original full-run cosine length. Only outputs and caches
+are relocated. Preparation uses the recipe's worker count; its pool exits before
+packed tensors are loaded. One trainer at a time.
 """
 import argparse
 import ast
@@ -178,8 +179,7 @@ def verify(recipe_path, out):
     current.Metrics = QuietMetrics
     command = record['command'][1:]
     command[0] = str(ROOT/'scripts/train_rollout_policy.py')
-    for flag, value in {'--out':str(out/'legacy'), '--cache-dir':recipe['cache_dir'],
-                        '--precompute-workers':'1'}.items():
+    for flag, value in {'--out':str(out/'legacy'), '--cache-dir':recipe['cache_dir']}.items():
         command[command.index(flag)+1] = value
     if '--source-row-report' in command:
         command[command.index('--source-row-report')+1] = str(out/'legacy/source_rows.json')
@@ -219,7 +219,7 @@ def verify(recipe_path, out):
             # A restart never trusts an incomplete pack; build to a temporary name,
             # then publish only after np.savez has closed it successfully.
             temporary = out / 'rows.building.npz'
-            pack(data, options, Path(recipe['cache_dir']), 1,
+            pack(data, options, Path(recipe['cache_dir']), recipe['precompute_workers'],
                  Path(recipe['read_cache_dir']) if recipe['read_cache_dir'] else None, temporary)
             os.replace(temporary, packed)
             def capture(path, rows):
@@ -272,7 +272,7 @@ def verify(recipe_path, out):
                 if step == 200:
                     raise TraceComplete
             sys.argv = command if name == 'legacy' else [str(ROOT/'scripts/train_rollout_policy.py'),
-                '--recipe',str(recipe_path),'--out',str(out/'recipe'),'--precompute-workers','1']
+                '--recipe',str(recipe_path),'--out',str(out/'recipe')]
             started = time.monotonic()
             try:
                 if name == 'legacy':
@@ -294,7 +294,8 @@ def verify(recipe_path, out):
             loader_call_sha256=hashlib.sha256(repr(payload_key).encode()).hexdigest(),
             labels=dict(Counter(path.parent.name for path,_ in observations)),
             full_corpus=True,original_schedule=True,corpus_audit=corpus_audit,
-            shared_storage='task33 compact pack; historical tensor views restored',field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
+            shared_storage='task33 compact pack; historical tensor views restored',
+            precompute_workers=recipe['precompute_workers'],field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
             maximum_loss_error=max(errors),passed=max(errors)<=1e-6,
             torch_version=str(torch.__version__),cuda_version=torch.version.cuda,traces=traces)
         (out/'parity.json').write_text(json.dumps(result,indent=2)+'\n')
