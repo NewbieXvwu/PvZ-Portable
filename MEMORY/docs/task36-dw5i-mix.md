@@ -48,6 +48,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，7交接回 Qoder（GLM 收尾）：恢复后的 A 流水线仍在跑（run_task36_mix 7233 / pack 组 7259，stdout /home/newbiexvwu/pvz-logs/mix_A.out，v2 缓存 45.9k/56.8k，包 packs/e39ba7cbc076380a.npz 未生成，train/panel 自动接续），不要杀；pack 门禁守护继续有效（pack_gate.sh 运行中 pid 39606，日志 artifacts/task36/pack_gate.jsonl：<10 GiB SIGSTOP 组 7259、≥10.5 GiB 恢复，pack 进程退出后自行结束）——跑方案 B 时需照它为新 pack pid 重写一份。我的巡检 cron 4172c080 已删除（无双主控）。
 
+- 2026-10-23，8 Qoder 再接手：GLM 的 pack 门禁随其会话退出而消失（日志最后一条 15:18、无 gate_done；pack 7233/7259 未受影响，v2 缓存 48.6k/56.8k 仍在增长），已用 setsid nohup 重启同一脚本（pid 48633，10 GiB 门限不变，续写 artifacts/task36/pack_gate.jsonl）。包 packs/e39ba7cbc076380a.npz 仍未生成。当前 MemAvailable 约 11.8 GiB、swap 已用约 3.9 GB；C: 余 44 GB（比 12:17 少 25 GB，缓存补齐所致），/ 余 831 GB。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
