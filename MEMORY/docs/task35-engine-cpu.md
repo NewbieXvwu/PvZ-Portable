@@ -107,6 +107,8 @@
 
 33. **B 锁步批量推演实测（三臂，64 root × 9 未来）**：正确性全过——64/64 root 的 native / batch1 / batch9 叶观测与逻辑统计逐条相同，16 个存档整局逐帧重放 0 差异。但**锁步在这份原型里是净亏**：总 CPU native 12.52 s、batch1 36.11 s、batch9 34.87 s（batch9 = native 的 2.79 倍）。主因是每 lane 独立快照/还原 37.1 ms（占 batch9 的 61%），模拟段 13.7 ms/lane 完全不因合批变小。批量本身有效但幅度有限：batch1 → batch9 网络段 1.214×，而两条 batch 臂的每 lane 网络仍比 native 串行慢 19%（im2col 仍按 lane 做）。结论写进 `engine-cpu.md` 的 B 节交给 task33：收益上限是网络段的 34%，必须共享快照 + im2col 合批才值得做，**单靠 B 到不了 2.0×**。
 
+34. **无活轨道的 reanim 跳过稀疏扫描 + 附件矩阵不再白建 identity**：剖面里 `Reanimation::NextEnvTrack` 3.5%、`SexyMatrix3::LoadIdentity` 2.0%。① 给 Reanimation 加 `mEnvTrackActiveAny`（RememberEnvTrack/BuildEnvTrackCache 置位，循环结束时按四个字重算），没有有活轨道时 `Update` 直接返回——大多数植物/僵尸每 tick 本来就要扫一遍位图却什么也不做。② `updateTrack` 在 `ENV_SKIP_ATTACHMENT_MATRIX` 下既不计算也不应用叠加矩阵，却仍然构造了一个 `SexyTransform2D`（LoadIdentity）；改成一个文件级静态实例，该路径从不读它。**配对 A/B 4 轮比值中位数 0.9596（+4.2%）**；验收：64 root 全部叶观测与逻辑统计相同、四族整局逐帧重放 953/877/531/464 帧 **0 差异**、同种子重复推演 4/4 一致。PGO 已按两阶段重生成（`fprofile-generate` 计数 0）。
+
 ## 问题
 
 - **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。
