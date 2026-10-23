@@ -133,7 +133,7 @@ def spent_cpu():
     for folder in (OUT/'runs').glob('*'):
         receipts=sum(load(p)['cpu_seconds'] for p in folder.glob('usage-*.json'))
         final=folder/'complete.json'
-        if final.exists():receipts=max(receipts,load(final)['controller_children_cpu_seconds'])
+        if final.exists():receipts=max(receipts,load(final).get('controller_children_cpu_seconds',0.))
         total+=receipts
     return total
 

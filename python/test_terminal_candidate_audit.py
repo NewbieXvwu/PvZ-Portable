@@ -57,3 +57,22 @@ def test_cpu_receipts_do_not_double_count_waited_children(tmp_path,monkeypatch):
     (folder/'usage-controller.json').write_text(json.dumps(dict(cpu_seconds=2)))
     (folder/'complete.json').write_text(json.dumps(dict(controller_children_cpu_seconds=15)))
     assert d.spent_cpu()==15
+    (folder/'complete.json').write_text(json.dumps(dict(cases=8)))
+    assert d.spent_cpu()==14
+
+
+def test_frozen_selection_resume_ignores_later_cpu_usage(tmp_path,monkeypatch):
+    import roof_terminal_pipeline as pipeline
+    monkeypatch.setattr(d,'OUT',tmp_path/'artifacts')
+    monkeypatch.setattr(pipeline,'ROOT',tmp_path)
+    monkeypatch.setattr(d,'check_plan',lambda:{'inputs':'unchanged'})
+    trajectory=d.OUT/'episodes'/'cell'/'trajectory.json'
+    d.save(trajectory,dict(prefix=[1,2,3]))
+    selection=d.OUT/'selection-active.json'
+    d.save(selection,dict(jobs=[],root_trajectory_sha256={'cell':d.sha(trajectory)}))
+    summary=dict(root_selection_sha256=d.sha(selection),cpu_seconds_before_screen=100)
+    d.save(tmp_path/'MEMORY/docs/task46-roof-terminal-sampling.json',summary)
+    monkeypatch.setattr(d,'spent_cpu',lambda:9999)
+    assert pipeline.select()==summary
+    d.save(trajectory,dict(prefix=[1,2,4]))
+    with pytest.raises(ValueError,match='trajectory changed'):pipeline.select()
