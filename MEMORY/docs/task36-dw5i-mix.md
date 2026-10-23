@@ -74,6 +74,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，20 A 训练完成：12 epoch、3220 s、rc=0。末轮 train_loss 2.9307、val_loss 3.7911、type_acc 0.9158、plant_recall 0.7247、packet_acc 0.7387、cell_acc 0.4425（逐轮见 `train_A.txt`）。guard 采样峰值 RSS 11.68 GB（映射页，可回收）、**最低 MemAvailable 11.15 GiB**，全程未触发 `<10 GiB` 暂停。产物 `artifacts/task36/dw5i_A_s1/model.pt`（706 KB）与 `metrics.json`。panel_v2 已自动开始（2 游戏进程）；完成后 autostart_B 启动方案 B。
 
+- 2026-10-24，21 A 统一面板 v2 完成（00:41，`complete_A.json`，model SHA256 32724b8e…，row_weights SHA256 b006fbee…）：day 919/1024 = **89.7%**、heldout 403/768 = **52.5%**、night 755/1152 = **65.5%**、pool 126/320 = **39.4%**（逐关见 `panel_v2_A.txt` / `panel_dw5i_A_v2`）。与 dw5i_s1 的夜间 711/1152 相比多 44 胜（+3.8pp，待配对检验）。B 自动接续已启动（pid 188328，`mix_B.out`）；启动时外部 zones/qcbench 占内存，MemAvailable 9.0–9.5 GiB，B 的 train 步按 `<10 GiB` 门禁自行 SIGSTOP 等待（日志 `train_B.resources.jsonl`，paused=true），回升后自动继续。
+
 
 
 ## 问题
