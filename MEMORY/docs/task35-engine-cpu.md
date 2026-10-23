@@ -109,6 +109,10 @@
 
 34. **无活轨道的 reanim 跳过稀疏扫描 + 附件矩阵不再白建 identity**：剖面里 `Reanimation::NextEnvTrack` 3.5%、`SexyMatrix3::LoadIdentity` 2.0%。① 给 Reanimation 加 `mEnvTrackActiveAny`（RememberEnvTrack/BuildEnvTrackCache 置位，循环结束时按四个字重算），没有有活轨道时 `Update` 直接返回——大多数植物/僵尸每 tick 本来就要扫一遍位图却什么也不做。② `updateTrack` 在 `ENV_SKIP_ATTACHMENT_MATRIX` 下既不计算也不应用叠加矩阵，却仍然构造了一个 `SexyTransform2D`（LoadIdentity）；改成一个文件级静态实例，该路径从不读它。**配对 A/B 4 轮比值中位数 0.9596（+4.2%）**；验收：64 root 全部叶观测与逻辑统计相同、四族整局逐帧重放 953/877/531/464 帧 **0 差异**、同种子重复推演 4/4 一致。PGO 已按两阶段重生成（`fprofile-generate` 计数 0）。
 
+35. **两项 <2% 的尝试：观察序列化回退、等待循环去重保留**。① 用 `perf record -g` 首次拿到真实调用栈（`build-prof/`，10,294 样本）：`FindCollisionTarget` 217 样本全部来自 `CheckForCollision`、`EnvironmentPublicWaitState` 156 样本全部来自等待循环、观察序列化的 `ostream`/`num_put`/`xsputn` 约 3% 引擎样本。② 据此把观察序列化换成 `to_chars` 的 `JsonSink`（先证明 598,816 个 int/float 与 ostream **逐字节相同**），整引擎配对 6 轮中位数 **1.0116**——**无收益，已回退**，并写进 `engine-cpu.md` 的“试过但没有收益”。③ 等待循环的僵尸 ID 查重从排序 vector（每 tick 每僵尸两次二分 + memmove）换成 thread_local 代际戳表：6 轮中位数 1.06（load 35，单轮 0.876–1.239，测不出），剖面份额仍 <1%，按规则属“2% 以下不能靠吞吐判定”，**保留**（机制上严格更少工作，逐位等价）。验收：四族整局逐帧重放 953/877/531/464 帧 0 差异、64 root 叶状态全同。
+
+36. **停止条件已满足**（详见 `engine-cpu.md` 的“停止条件评估”）：连续三项 <2%（坐标 ≈1%、观察序列化 1.0116 已回退、等待去重测不出），且前 15 名逐项查过没有可证明“不影响逻辑”的无用功。本机 load 从 22 涨到 35，2% 以下已无法用吞吐判定。引擎内 CPU 累计 82.0k → 152.9k tick/CPU-s（约 1.86×），整局四族几何平均 1.67×；距 2.0× 只剩搜索预算、锁步+共享快照（上限 +10%）、GPU 三条路，都不属于引擎微优化。
+
 ## 问题
 
 - **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。
