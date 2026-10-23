@@ -91,6 +91,8 @@
 
 25. **恢复真正的调用栈剖析能力**：从 Ubuntu 官方源取包并仅解包到 perf 的 ignored 工具目录，`perf version` 与 `perf record -e cpu-clock:u -g -- /usr/bin/true` 均成功（未改系统安装/权限）。valgrind 3.26.0 同样可运行。`prof_symbolize.py --debug-root` 按 ELF build ID 匹配解包的 libc 调试符号，旧 5752 点剖面里误显示为 `_dl_mcount_wrapper` 的份额已拆为 memset/strcmp 等，报告保留新前 15；这些是历史样本重解析，正式当前构建调用栈采样将在 A2 结束后跑。
 
+26. **A2 泳池恢复重跑完成（3/4 族）**：L24 p9k m150 新旧各 8 局，完整 `RUSAGE_CHILDREN` CPU 220.988 / 402.321 秒，即 27.624 / 50.290 秒/局、旧/新 **1.8206×**，CPU 工作量口径 130.32 / 71.58 games/h。8/8 种子胜负、末波、决策数相同（全负，平均 425.875 决策）。已从 recovery 日志保存完整单族条目；传送带两臂继续运行，未重用重启前缺失配对的旧计时。
+
 ## 问题
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。
