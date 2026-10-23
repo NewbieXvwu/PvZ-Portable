@@ -182,6 +182,42 @@ def require_inputs(document: dict) -> None:
             raise ValueError(f'frozen Python changed: {arm}')
 
 
+def require_complete_design(document: dict) -> None:
+    if document['workers'] != 2 or document['games_per_arm_per_task'] != 16:
+        raise ValueError('controlled design requires two workers and 16 games per arm/task')
+    stages = document['stages']
+    if len(stages) != 16 or len({s['id'] for s in stages}) != 16:
+        raise ValueError('controlled design requires 16 distinct stages')
+    for task in TASKS:
+        paired = {}
+        for arm in ('old', 'cq'):
+            group = [s for s in stages if s['task_id'] == task and s['arm'] == arm]
+            if len(group) != 2 or {s['block'] for s in group} != {0, 1}:
+                raise ValueError('controlled design requires both blocks for every arm/task')
+            seeds = [seed for s in group for seed in s['seeds']]
+            if any(len(s['seeds']) != 8 for s in group) or len(set(seeds)) != 16:
+                raise ValueError('controlled design requires 16 distinct seeds per arm/task')
+            paired[arm] = {s['block']: s['seeds'] for s in group}
+        if paired['old'] != paired['cq']:
+            raise ValueError('controlled arms must use identical seeds in each paired block')
+
+
+def stage_evidence(timing: dict, rows: list[dict], timing_path: Path) -> dict:
+    if timing['wall_seconds'] <= 0 or timing['games'] != len(rows):
+        raise ValueError('invalid timing duration or game count')
+    samples = timing['samples']
+    if any(s['engine_processes'] > 2 for s in samples):
+        raise ValueError('controlled stage exceeded two game processes')
+    bounds = lambda key: (dict(min=min(s[key] for s in samples), max=max(s[key] for s in samples))
+                          if samples else None)
+    return dict(stage=timing['stage'], wall_seconds=timing['wall_seconds'],
+                cpu_seconds=timing['cpu_seconds'], wins=sum(r['won'] for r in rows),
+                samples=len(samples), mem_available_bytes=bounds('mem_available_bytes'),
+                tree_rss_bytes=bounds('tree_rss_bytes'), load1=bounds('load1'),
+                max_sampled_engine_processes=max((s['engine_processes'] for s in samples), default=None),
+                timing_sha256=sha(timing_path))
+
+
 def collect(out: Path, document: dict) -> None:
     for stage in document['stages']:
         require_inputs(document)
@@ -243,6 +279,7 @@ def collect(out: Path, document: dict) -> None:
 
 
 def report(out: Path, document: dict) -> dict:
+    require_complete_design(document)
     require_inputs(document)
     groups = {};archives=[]
     frozen={t['task_id']:t for t in json.loads(Path(document['manifest']).read_text())['tasks']}
@@ -250,14 +287,18 @@ def report(out: Path, document: dict) -> dict:
         groups[task] = {}
         for arm in ('old', 'cq'):
             stages = [s for s in document['stages'] if s['arm'] == arm and s['task_id'] == task]
-            total = 0.; rows = []
+            total = 0.; rows = []; evidence = []
             for stage in stages:
-                timing = json.loads((out / 'timing' / (stage['id'] + '.json')).read_text())
+                timing_path = out / 'timing' / (stage['id'] + '.json')
+                timing = json.loads(timing_path.read_text())
                 file = Path(stage['output']) / 'games.jsonl'
                 if not timing['complete'] or timing['returncode'] != 0 or sha(file) != timing['rows_sha256']:
                     raise ValueError(f'incomplete or changed stage: {stage["id"]}')
                 part = [json.loads(s) for s in file.read_text().splitlines()]
                 validate_rows(part, stage['seeds'])
+                if any(timing[k] != stage[k] for k in ('task_id', 'arm')) or timing['stage'] != stage['id']:
+                    raise ValueError('timing identity differs from frozen stage')
+                evidence.append(dict(block=stage['block'], **stage_evidence(timing, part, timing_path)))
                 for row in part:
                     archive=Path(stage['frames'])/f'seed_{row["seed"]}'/(stage['label']+'_fast_search')
                     archives.append(audit_archive(archive,row,frozen[task]))
@@ -265,11 +306,16 @@ def report(out: Path, document: dict) -> dict:
             seeds = [seed for s in stages for seed in s['seeds']]
             validate_rows(rows, seeds)
             groups[task][arm] = dict(games=len(rows), wall_seconds=total, games_per_hour=len(rows) * 3600 / total,
-                                     games_per_worker_hour=len(rows) * 3600 / (2 * total), rows=rows)
+                                     games_per_worker_hour=len(rows) * 3600 / (2 * total), rows=rows,
+                                     stages=evidence, wins=sum(r['won'] for r in rows))
         old, new = groups[task]['old'], groups[task]['cq']
         a={r['seed']:r for r in old['rows']}; b={r['seed']:r for r in new['rows']}
         groups[task]['trajectory_differences'] = [s for s in sorted(a) if any(a[s][k] != b[s][k] for k in ('won','final_wave','decisions'))]
         groups[task]['throughput_ratio_cq_over_old'] = old['wall_seconds'] / new['wall_seconds']
+        blocks = {arm: {s['block']: s for s in groups[task][arm]['stages']} for arm in ('old', 'cq')}
+        groups[task]['paired_block_ratios'] = [dict(block=b,
+            throughput_ratio_cq_over_old=blocks['old'][b]['wall_seconds']/blocks['cq'][b]['wall_seconds'])
+            for b in (0, 1)]
     overall = {arm:dict(games=sum(g[arm]['games'] for g in groups.values()),
                        wall_seconds=sum(g[arm]['wall_seconds'] for g in groups.values())) for arm in ('old','cq')}
     for d in overall.values():d['games_per_hour']=d['games']*3600/d['wall_seconds']

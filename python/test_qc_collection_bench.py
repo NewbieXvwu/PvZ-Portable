@@ -43,6 +43,44 @@ class EvidenceGateTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'frozen input changed'):
                 bench.require_inputs(frozen)
 
+    def design(self):
+        return dict(workers=2, games_per_arm_per_task=16, stages=[
+            dict(id=f'{t}_{a}_{b}', task_id=t, arm=a, block=b, seeds=list(range(b*8, b*8+8)))
+            for t in bench.TASKS for a in ('old', 'cq') for b in (0, 1)])
+
+    def test_incomplete_design_cannot_be_reported_as_complete(self):
+        design = self.design()
+        bench.require_complete_design(design)
+        design['stages'].pop()
+        with self.assertRaisesRegex(ValueError, '16 distinct stages'):
+            bench.require_complete_design(design)
+
+    def test_same_count_with_unpaired_seeds_cannot_be_reported(self):
+        design = self.design()
+        design['stages'][-1]['seeds'][-1] = 100
+        with self.assertRaisesRegex(ValueError, 'identical seeds'):
+            bench.require_complete_design(design)
+
+    def test_repeated_block_cannot_replace_the_other_block(self):
+        design = self.design()
+        design['stages'][-1]['block'] = 0
+        with self.assertRaisesRegex(ValueError, 'both blocks'):
+            bench.require_complete_design(design)
+
+    def test_stage_resource_evidence_checks_duration_count_and_concurrency(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            file = Path(tmp)/'timing.json'; file.write_text('{}')
+            timing = dict(stage='stage', wall_seconds=5, cpu_seconds=8, games=1, samples=[])
+            evidence = bench.stage_evidence(timing, self.rows([10]), file)
+            self.assertIsNone(evidence['mem_available_bytes'])
+            self.assertEqual(evidence['wins'], 0)
+            timing['games'] = 2
+            with self.assertRaisesRegex(ValueError, 'game count'):
+                bench.stage_evidence(timing, self.rows([10]), file)
+            timing.update(games=1, samples=[dict(engine_processes=3)])
+            with self.assertRaisesRegex(ValueError, 'two game processes'):
+                bench.stage_evidence(timing, self.rows([10]), file)
+
     def test_metadata_alone_cannot_prove_a_complete_archive(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)
