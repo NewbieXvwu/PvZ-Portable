@@ -44,6 +44,8 @@
 
 - 2026-10-23：dw5i 完整语料 200 步对拍**通过，误差 0**（15788614 行、56784 档案、两侧 source_rows 报告 SHA 相同）；identity 对拍已在上一步通过后自动接续启动。
 
+- 2026-10-23：identity_dw3_s1 完整语料 200 步对拍**通过，误差 0**（11051782 行、38271 档案）；三份历史配方（dw4i/dw5i/identity）现已全部按完整语料、原余弦长度、同种子、确定性内核验证一致，本任务书的对拍验收项完成。
+
 ## 问题
 - 本分支缺 hotpath-audit.md；已 fetch 并完整读取 origin/audit 对应报告（含 §6），依据 task33 批准清单删除训练 EMA/全候选软目标入口，保留 cell soft temperature、width 与旧模型元数据。退役前标记 retire-recipe-training-flags-20261023。
 
