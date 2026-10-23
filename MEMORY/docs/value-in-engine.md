@@ -71,3 +71,17 @@
 | 决策 / 搜索 / 胜负 | 1256 / 239 / 胜 | 全同 |
 
 1256个根状态SHA256、未来种子、动作全部相同；改前额外30次换未来复测27次动作相同（90%），额外worker/引擎CPU 1.9551/25.6200s，已从表内扣除。该pilot支持继续正式门禁，不代替三任务各32局。原始日志与trace留在忽略的artifacts/task37，git只存结论与复跑工具。
+
+最终全套测试：314项，304通过、10跳过，耗时156.5s。资源/torch依赖显式配置，启用训练v3叶值oracle；旧稀疏能力用例没有可用的旧参考，按用例自身条件跳过，其余跳过为未配置的CUDA/外部能力。单独的v4真实叶值oracle也通过。未改引擎学生前向或其他工作树。
+
+Python剩余开销原型（`scripts/bench_value_python.py`）：按现有pressure-sparse cProfile定位，剩下最大可合并工作在学生执行与学生候选的重复特征/encode，而非已停止投入的静态网。分别验证候选身份相等关系、32个真实帧的特征逐位相同、学生encode输出逐位相同。微基准用process_time、5次中位数，按pilot的239个搜索点与218.332s总CPU折算：
+
+| 原型 | 乐观节省CPU s/局 | 占总CPU | 处置 |
+|---|---:|---:|---|
+| 候选键由排序JSON改为tuple（保守计8次候选遍历） | 0.0473 | 0.0217% | 不采纳 |
+| act与ranked_plants复用学生特征 | 0.0474 | 0.0217% | 不采纳 |
+| act与ranked_plants复用学生encode | 0.1407 | 0.0644% | 不采纳 |
+
+后两项假定缓存命中零成本，是样本耗时外推的乐观上限，不是整局A/B加速。原cProfile里整个ranked_plants也仅2.068s CPU（约0.95%总CPU），进一步支撑“不值得引入状态缓存”的判断。没有为小于2%的收益改动生产实现。等正式同工具数据回来，再核对三项停止条件。
+
+正式验收正在运行：忽略目录 `artifacts/task37/teacher32-recovery`，before阶段2个worker，按种子交错跑三任务，共96局。对应日志 `artifacts/task37/teacher32-recovery-before.log`。脚本完整参数以before-plan.json与任务工具为准；完成后同样参数跑 `--phase after`、`--phase shadow`（无轨迹分歧自动跳过影子游戏）、`--phase compare`。不要与其他引擎测试并行。所有结论仍以最终完整comparison.json为准。
