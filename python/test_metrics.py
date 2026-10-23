@@ -3,11 +3,13 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import subprocess
+import sys
 import time
 import unittest
 from unittest.mock import patch
 
-from pvz_metrics import ActiveWindow, Metrics, summarize
+from pvz_metrics import ActiveWindow, Metrics, process_tree, summarize
 
 
 class MetricsTests(unittest.TestCase):
@@ -25,6 +27,31 @@ class MetricsTests(unittest.TestCase):
             self.assertGreater(last['rates']['rows_per_second'], 0)
             self.assertGreaterEqual(last['io']['read_bytes'], first['io']['read_bytes'])
             self.assertEqual(len(metrics.path.read_text().splitlines()), 2)
+
+    def test_owned_child_is_in_rss_tree(self):
+        child = subprocess.Popen([sys.executable, '-c',
+            "import sys; print('ready', flush=True); sys.stdin.readline()"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+        try:
+            self.assertEqual(child.stdout.readline().strip(), 'ready')
+            rss, children_rss, clocks = process_tree(os.getpid())
+            self.assertGreater(children_rss, 0)
+            self.assertTrue(any(pid == child.pid for pid, _ in clocks))
+        finally:
+            child.communicate('done\n', timeout=5)
+
+    def test_warning_written_to_jsonl_and_report(self):
+        with tempfile.TemporaryDirectory() as folder:
+            metrics = Metrics('warn', training=True, directory=folder)
+            gpu = [dict(utilization_percent=0)]
+            with patch('pvz_metrics.gpu_sample', return_value=gpu):
+                for stamp in range(0, 630, 30):
+                    with patch('pvz_metrics.time.monotonic', return_value=stamp):
+                        metrics.sample()
+            rows = [json.loads(line) for line in metrics.path.read_text().splitlines()]
+            self.assertEqual(rows[-1]['level'], 'WARN')
+            self.assertEqual(summarize(rows)['warnings'], 1)
+            self.assertEqual(summarize(rows)['training_effective_ratio'], 0)
 
     def test_warning_requires_ten_minutes_and_known_gpu(self):
         window = ActiveWindow()

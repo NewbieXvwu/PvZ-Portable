@@ -195,8 +195,9 @@ class Metrics:
                 seconds = monotonic - previous_time
                 delta = {key: max(0, value - previous_clocks.get(key, value))
                          for key, value in clocks.items()}
-                row['cpu_percent'] = sum(v for (pid, _), v in delta.items() if pid == self.pid) / seconds * 100
-                row['tree_cpu_percent'] = sum(delta.values()) / seconds * 100
+                if clocks and previous_clocks:
+                    row['cpu_percent'] = sum(v for (pid, _), v in delta.items() if pid == self.pid) / seconds * 100
+                    row['tree_cpu_percent'] = sum(delta.values()) / seconds * 100
                 row['interval_s'] = seconds
                 row['rates'] = {key + '_per_second': (value - previous_progress[key]) / seconds
                     for key, value in progress.items() if isinstance(value, (int, float))
