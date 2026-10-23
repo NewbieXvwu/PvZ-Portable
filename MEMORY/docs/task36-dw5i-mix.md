@@ -44,6 +44,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，3打包前体检：12:17 的 A 运行只留下 training_A.command.json，没有全量包；首次打包 27 s 失败于 cache/v2 截断（EOFError）。原因是 11:26 旧装载运行被杀时留下 9,948 个 0 字节 v2 缓存（磁盘写满）。用 zip 中央目录扫描 203,239 个非空缓存，全部结构完好（v2 32,887 / cells 56,784 / packets 56,784 / identity_scene 56,784）；按明确路径删除这 9,948 个 0 字节文件（可再生），v2 缺的 23,897 份在打包时补算。全量包按验收包 475 B/行估算约 7.5 GB（>5 GB，启动前已查：/ 余 848 G，C: 余 69 G）。旧装载产物 dw5i_A_s1 为空目录，作废。
 
+- 2026-10-23，6主控再接手（GLM 接替 Qoder）：14:45 查明 Qoder 遗留进程——run_task36_mix.py --plan A（pid 7233）与 pack_training_rows.py（pid 7259，进程组 7259）在 14:21 被 SIGSTOP 停住（额度用完前的手动暂停），未杀。pack 目标 artifacts/task27/training_frames/packs/e39ba7cbc076380a.npz 尚未生成，v2 缓存 45129/56784（缺 11655）。SIGCONT 恢复流水线；并补上 pack 步内存门禁（本机 artifacts/task36/pack_gate.sh，不入 git）：MemAvailable <10 GiB 时 SIGSTOP 进程组 7259，≥10.5 GiB 连续 2 次采样后 SIGCONT，与 train 步 guard 同机制；日志 artifacts/task36/pack_gate.jsonl。为什么需要：run_task36_mix.py 只给 train 步挂了 pause_when，pack 步只有 guard 的 2 GiB 紧急暂停，实测 pack 运行时 MemAvailable 跌到 5.7 GiB（违反 10 GiB 地板）。此后 A 打包 → train（内置门禁）→ panel 自动接续。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
