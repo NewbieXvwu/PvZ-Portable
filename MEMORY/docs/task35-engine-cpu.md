@@ -76,6 +76,11 @@
 
 13. **边界坐标只在真正需要时做十进制渲染**：`EnvironmentPublicWaitState` 对 `|x-160| < 1` 的僵尸调 `RenderedPublicCoordinate`（`std::ostringstream` + `std::stod`），剖面里 stream/locale/printf 相关合计 **2.6%**（`parse_printf_format` 1.0% + libstdc++ locale 1.7% 的一部分 + `strtof64`）。六位有效数字在 [100,1000) 上只保留到千分位，四舍五入最多移动 0.0005，所以窗口从 1.0 收窄到 0.001 之后判定结果不变（窗口外的值不可能被舍入跨过 160）。**剖面：stream/locale/printf 相关条目全部掉出前 22**；配对 A/B 9 轮中位数 1.010（噪声内，见“问题”）。验收：4 个存档整局逐帧重放 0 差异。
 
+
+17. **A1 合并 origin/pvz-env（70 个提交）并重新走完 PGO**。冲突只有 `CMakeLists.txt`（CUDA 选项删除 vs 本分支的 LTO/PGO 块相邻）与当天记忆 add/add；按任务书以 pvz-env 的删除为准，LTO/PGO/mimalloc 保留。合并后 `scripts/build_pgo.sh bench` 重生成 profile（本机 load 26，约 15 分钟），`grep -c fprofile-generate build/build.ninja` = 0。验收：192/192 条完整叶观测与逻辑统计与 step9 二进制相同（`compare` 内置断言）；四族整局逐帧重放 953/877/531/464 帧 **0 差异**；4/4 同种子重复推演一致；`unittest discover` 281 项里 5 项 `test_cpp_rollout` 需要 `PVZ_RESOURCE_DIR`（设置后 5/5 通过）、`test_rowpool_aux` 需要 pytest（venv 未装）、`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在 pvz-env 侧就失败（相关文件与 pvz-env 逐字节相同，属主干既有问题）。构建相对 step9 的配对比值中位数 0.92（4 轮）。
+18. **A3 部署说明**写进 `engine-cpu.md`：cq 工作树上 `merge` → `JOBS=8 bash scripts/build_pgo.sh bench` → 检查 `fprofile-generate` 计数为 0；mimalloc 首次 configure 需联网；profile 由 `artifacts/perf/engine_roots.json` 的 64 个真实 root 生成；换学生模型必须重生成，只换价值网不必。
+19. **C 项 int8（AVX-VNNI）核级实测：不进入生产**。独立夹具上与 SSE 实验同一批 192 个真实输入：int8 核耗时是 BLAS 的 0.38–0.53 倍（首层 15.8→8.4 µs、第二层 57.9→22.3、第三层 32.5→14.3），且与“量化后反量化再算”的参考实现**逐位相同**（`kernel_vs_quant_ref = 0`），说明核本身正确。但按层标定的 u8 激活误差把 trunk 输出推到 8.9% 相对 rms、全局嵌入 5.4%，而收益上限只有整体 1.15–1.19 倍，且需要为无 AVX-VNNI 的机器保留 BLAS 后备路径。数字与判断写进 `engine-cpu.md`，代码只留独立实验脚本。
+
 ## 问题
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。

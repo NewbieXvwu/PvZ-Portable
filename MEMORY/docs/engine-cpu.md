@@ -66,6 +66,112 @@ void AdvanceToDecision(RolloutLane&);                  // existing tick/event-wa
 
 最终 lane 上下文必须同时隔离 Board、全局 effects、共享 RNG 与静态缓存失效代数；只换 Board 指针不够。按决策轮次压紧仍存活且可种植的 lane，保留 seed/lane 顺序回填结果；不能让无合法动作的 lane 产生多余网络调用，也不能让 batch 的活动通道改变可见观测。工作区和固定权重应复用；首层并集扩大 K 的成本、尾部稀疏存活数以及细粒度快照成本都要由实测决定，不能用矩阵核上限代替整条推演收益。批量浮点结果若导致决策分叉，应按任务书统计验收，不能悄悄降低逐动作重放门槛。
 
+## 降精度（int8 / AVX-VNNI）：核级快 3 倍，但 8 位激活误差太大，未进入生产
+
+任务书 C 项。本机 i7-12700F 有 `avx_vnni`（`/proc/cpuinfo` 确认），但没有 AVX-512，所以 bf16 GEMM 不可用
+（`vdpbf16ps` 属 AVX512-BF16），只试 int8。
+
+`scripts/bench_int8_kernel.cpp` 是独立实验，不链接进游戏：读与 SSE 对照**同一份**固定夹具
+（`scripts/bench_conv_kernels.py` 生成的 64 个真实 v2 root × 三层卷积，共 192 个输入），共享同一套稀疏通道选择与
+im2col，只比矩阵核。激活按层标定（整张输入张量一个 u8 尺度），权重逐输出通道对称 s8；权重按
+“8 输出通道 × 4 k 值 = 32 字节”预先打包（静态权重，一次打包，热路径零成本），激活按 cell 主序存放，
+`vpdpbusd` 的操作数一个广播、一个整块加载。8 个累加器并行，避免 5 拍延迟串行化 k 循环。
+
+| 卷积 | BLAS μs/次（中位数） | int8 μs/次（中位数） | 耗时比 |
+|---|---:|---:|---:|
+| 稀疏首层 3×3 | 15.8 | 8.4 | 0.53× |
+| 稠密第二层 3×3 | 57.9 | 22.3 | 0.38× |
+| 稠密第三层 1×5 | 32.5 | 14.3 | 0.44× |
+
+（3 轮 × 30 次重复 × 交替先后顺序；本机 load 26，单轮抖动大，取中位数。证据 `artifacts/perf/int8_kernel_compare.json`。）
+
+**核本身是对的**：与“把量化值反量化回 float 再算”的参考实现逐位相同（`kernel_vs_quant_ref = 0`），
+所以剩下的差全是量化误差，不是实现 bug。
+
+误差（相对 BLAS 的 fp32 结果）：首层 rms 0.030 / 最大 1.97；第二层 rms 0.012；第三层 rms 0.025。
+把同样的量化套进整条 trunk（`scripts/int8_emulate.py`，64 个真实 root，torch 里先量化再反量化，
+与核的数学完全一致）后：
+
+| 指标 | 值 |
+|---|---:|
+| trunk 输出相对 rms | 8.9% |
+| 全局嵌入 g（plant/packet 头的输入）相对 rms | 5.4% |
+| g 的余弦相似度 | 0.995 – 0.999 |
+| plant logit 最大绝对偏差 | 0.297 |
+| plant 正负号（种/等）一致率 | 64/64 |
+
+结论：**不进入生产**。理由是收益与风险不匹配，而不是“没测”：
+
+- 收益上限是卷积栈的 3 倍。剖面里 BLAS 全家（sgemm 核 17.7% + 打包 4.4% + dgemm 1.8%）约 24%，
+  打三折后整体约 **1.15–1.19 倍**。
+- 代价是每层 5% 量级的嵌入误差，而策略头在 54 个格子里挑动作，logit 间距经常小于 0.3；
+  验收要求“老师决策一致率不低于 72%”，这需要一次 64 局统计跑才能证明，
+  而为了跑它必须先把它接进生产路径。
+- 还有实现代价：本机有 AVX-VNNI，Mac/clang 没有，必须保留一条 BLAS 后备路径（CPU 派发），
+  与“有效优化直接成为唯一实现”的约定冲突。
+
+如果以后要继续这条路，正确的下一步是**逐输入通道的激活尺度**：把激活尺度折进权重尺度
+（`q_w[c][k] = round(w[c][k] * s_a[c] / S)`），这样单个累加器仍然成立，而首层那种
+“少数通道量级远大于其余”的输入不会再被一个全局尺度压扁。当前实现只做了任务书要求的“按层标定”。
+## 合并 origin/pvz-env（2026-10-23，A1）
+
+`perf` 落后主干 70 个提交。冲突只有两处，按任务书裁决：
+
+- `CMakeLists.txt`：pvz-env 删掉了 `PVZ_CUDA_ROLLOUT` 选项与 `CMake/CudaRollout.cmake`，本分支新增的
+  LTO / PGO 编译块紧挨着它，所以成了文本冲突。**保留 LTO/PGO/mimalloc，删除 CUDA 选项**；`cuda/`、
+  `src/CudaExport.*`、`python/pvz_cuda_*.py` 等按对方删除。
+- `MEMORY/2026-10-23.md`：两边都新建了当天日志，add/add 冲突，按 append-only 保留双方条目。
+
+合并后重新走完 `scripts/build_pgo.sh`（源码变了，旧 profile 失效），再做验收：
+
+| 验收 | 结果 |
+|---|---|
+| 64 root × 3 推演的完整叶观测/统计（对比 step9 二进制，4 轮配对） | 192/192 相同（`compare` 自带断言，差异会直接失败） |
+| 整局逐帧重放（四族各 1 局） | 953 / 877 / 531 / 464 帧，**0 差异** |
+| 同 root 同种子连跑两次 | 4/4 相同 |
+| `python -m unittest discover python`（281 项） | 见下 |
+
+`python/` 与 `scripts/train_rollout_policy.py` 相对 `origin/pvz-env` 只多了两个测试文件，所以下面这些不是合并引入的：
+
+- `test_cpp_rollout`（5 项）：默认资源目录写死 Mac 路径 `/Users/...`，设 `PVZ_RESOURCE_DIR` 后 **5/5 通过**。
+- `test_rowpool_aux`：模块级 `import pytest`，而 `~/.venvs/ml` 里没装 pytest（系统 python3 装了但没 torch）。
+- `test_identity_training.test_cpu_training_checkpoint_is_loadable`：`train_rollout_policy.py` 的 cell gather
+  越界（`index -9223372036854775808`）。这个文件在本分支与 pvz-env **逐字节相同**，属主干既有问题，
+  归 task33/32 线处理，不在本任务范围。
+
+合并后构建相对 step9 二进制的配对比值中位数 **0.92**（4 轮，单轮 1.175 / 0.785 / 0.933 / 0.909，噪声大），
+即合并+第 11–13 项之后比 step9 快约 8%。
+## 部署（给主控：在 cq 工作树上一次做完）
+
+本分支的引擎加速全部是**默认构建**的一部分，没有新增运行开关：LTO、PGO、mimalloc、
+以及每一项引擎/前向优化都在源码里。部署只有“合并 + 重新生成 profile + 重编”三步。
+
+```bash
+# 1. 合并（perf 已 push 到 origin/perf）
+git -C /home/newbiexvwu/PvZ-search/.claude/worktrees/cq merge origin/pvz-env   # 若落后先合主干
+git -C /home/newbiexvwu/PvZ-search/.claude/worktrees/cq merge perf
+
+# 2. 两阶段 PGO + 最终构建（同一个 build 目录，GCC 按目标文件路径找 .gcda）
+cd /home/newbiexvwu/PvZ-search/.claude/worktrees/cq
+JOBS=8 bash scripts/build_pgo.sh bench
+
+# 3. 必须为 0：为 1 说明构建停在了 PGO 第一阶段（会慢约 1.8 倍）
+grep -c fprofile-generate build/build.ninja
+```
+
+- **mimalloc 首次 configure 需要联网**（CMake `FetchContent` 从 github 拉取，`MI_OVERRIDE` 全局接管
+  malloc）。之后检出留在 `build/_deps/`，断网也能重编。若首次 configure 失败，`cmake --build` 会直接报错，
+  不会静默降级成系统 malloc。
+- **`build_pgo.sh` 不会删 build 目录**（只清 `artifacts/perf/pgo`），因为删掉就要重新联网 clone mimalloc。
+- **profile 用哪批 root 生成**：`artifacts/perf/engine_roots.json` 的 64 个真实决策点（白天 L7 / 原版传送带 L10 /
+  夜间 L12 / 泳池 L24 四族各 16），每个 root 跑 3 条推演（horizon 2500、sim-skip 61、学生 `dw4i_s1`）。
+  这就是正式采集的形状：每个决策 = 候选 × 验证样本条推演。
+- **换学生模型后要重生成 profile**。profile 记录的是分支与调用频次，而首层卷积的稀疏通道集合、
+  权重转置缓存是否命中都由权重决定；换权重后热点分布会变，重跑一次 `build_pgo.sh` 即可（本机负载 26 时约 15 分钟）。
+  只换价值网（`--value`）不需要：价值网在 Python 侧，不进引擎进程。
+- 换机器要各自重编：`-march=native` 已测过无收益并删除，但 PGO profile 是**本机生成、本机使用**的产物，
+  不要跨机器拷贝 `artifacts/perf/pgo/`（目标文件路径不同，GCC 会静默找不到）。
+
 ## 仍需完成
 
 ### 分块手写 SIMD 对照：拒绝替换 BLAS

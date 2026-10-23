@@ -33,6 +33,7 @@ import hashlib
 import json
 import os
 import re
+import resource
 import signal
 import subprocess
 import sys
@@ -538,26 +539,77 @@ def summarize_games(rows: list[dict], expected_games: int) -> dict:
     return report
 
 
-def search(args) -> dict:
-    """Whole-game metric: the queue's search_play parameters, seconds per decision."""
+def run_games(args, task_id: str, executable: Path, out: Path) -> tuple[list[dict], dict]:
+    """One search_play run of ``args.games`` games; returns its rows and the CPU it burned.
+
+    The collection queue keeps this machine's load high, so wall clock is a poor metric.
+    CPU time comes from RUSAGE_CHILDREN: search_play runs its games in a process pool and
+    the pool workers reap their own engine subprocesses, so that CPU is included too.
+    """
     if not 1 <= args.workers <= 2:
         raise ValueError("task35 permits at most two game workers")
-    out = args.out
     out.mkdir(parents=True, exist_ok=True)
     command = [sys.executable, str(ROOT / "scripts" / "search_play.py"),
                "--rollout-policy", str(STUDENT), *QUEUE_ARGS,
-               "--manifest", str(args.manifest), "--task-id", args.task_id,
+               "--manifest", str(args.manifest), "--task-id", task_id,
                "--seed-offset", str(args.seed_offset), "--seeds", str(args.games),
-               "--executable", str(args.executable), "--workers", str(args.workers),
+               "--executable", str(executable), "--workers", str(args.workers),
                "--resource-dir", str(RESOURCES), "--out", str(out)]
     print(" ".join(command), flush=True)
+    before = resource.getrusage(resource.RUSAGE_CHILDREN)
+    started = time.time()
     subprocess.run(command, check=True, cwd=str(ROOT))
+    wall = time.time() - started
+    after = resource.getrusage(resource.RUSAGE_CHILDREN)
+    cpu = (after.ru_utime - before.ru_utime) + (after.ru_stime - before.ru_stime)
     rows = [json.loads(line) for line in (out / "games.jsonl").read_text().splitlines() if line.strip()]
+    return rows, {"cpu_seconds": cpu, "wall_seconds": wall}
+
+
+def search(args) -> dict:
+    """Whole-game metric: the queue's search_play parameters, seconds per decision."""
+    rows, spent = run_games(args, args.task_id, args.executable, args.out)
     report = summarize_games(rows, args.games)
-    (out / "engine_search.json").write_text(json.dumps(report, indent=1) + "\n")
+    report.update(spent)
+    (args.out / "engine_search.json").write_text(json.dumps(report, indent=1) + "\n")
     print(json.dumps(report, indent=1))
     return report
 
+
+def games(args) -> dict:
+    """Old build against the new one, same seeds, same task: CPU seconds per game.
+
+    Task35's acceptance number is whole-game throughput of the production collection, not
+    the 64-root tick rate, so this pairs the two binaries task by task and reports the
+    ratio of the CPU each one spends per game.
+    """
+    out = args.out
+    out.mkdir(parents=True, exist_ok=True)
+    report = {"benchmark_version": 2, "manifest": str(args.manifest), "games": args.games,
+              "seed_offset": args.seed_offset, "workers": args.workers, "tasks": []}
+    for task_id in args.task:
+        entry = {"task_id": task_id}
+        for label, executable in (("new", args.executable), ("old", args.compare)):
+            rows, spent = run_games(args, task_id, executable, out / task_id / label)
+            summary = summarize_games(rows, args.games)
+            summary.update(spent)
+            summary["cpu_seconds_per_game"] = round(spent["cpu_seconds"] / args.games, 3)
+            summary["rows"] = [{key: row.get(key) for key in ("seed", "won", "final_wave", "decisions")}
+                               for row in sorted(rows, key=lambda row: row["seed"])]
+            entry[label] = summary
+        new_cpu, old_cpu = entry["new"]["cpu_seconds"], entry["old"]["cpu_seconds"]
+        entry["cpu_ratio_old_over_new"] = round(old_cpu / new_cpu, 4) if new_cpu else None
+        entry["games_per_hour_new"] = round(3600 * args.games / new_cpu, 2) if new_cpu else None
+        entry["games_per_hour_old"] = round(3600 * args.games / old_cpu, 2) if old_cpu else None
+        new_seeds = {int(row["seed"]): row for row in entry["new"]["rows"]}
+        old_seeds = {int(row["seed"]): row for row in entry["old"]["rows"]}
+        entry["differing_seeds"] = [seed for seed in sorted(new_seeds) if new_seeds[seed] != old_seeds.get(seed)]
+        report["tasks"].append(entry)
+        print(json.dumps({key: entry[key] for key in ("task_id", "cpu_ratio_old_over_new",
+                          "games_per_hour_new", "games_per_hour_old", "differing_seeds")}), flush=True)
+    (out / "engine_games.json").write_text(json.dumps(report, indent=1) + "\n")
+    print(f"-> {out / 'engine_games.json'}")
+    return report
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -609,8 +661,18 @@ def main() -> None:
     p.add_argument("--executable", type=Path, default=EXECUTABLE)
     p.add_argument("--out", type=Path, default=ROOT / "artifacts" / "perf" / "engine_search")
 
+    p = sub.add_parser("games", help="whole-game CPU seconds of two binaries on the same seeds")
+    p.add_argument("--manifest", type=Path, default=Path.home() / "PvZ-search" / "artifacts" / "stage4" / "multiplier_panel.json")
+    p.add_argument("--task", action="append", required=True, help="task id, repeatable")
+    p.add_argument("--seed-offset", type=int, default=0)
+    p.add_argument("--games", type=int, default=8)
+    p.add_argument("--workers", type=int, default=2)
+    p.add_argument("--executable", type=Path, default=EXECUTABLE)
+    p.add_argument("--compare", type=Path, required=True, help="the older binary to pair against")
+    p.add_argument("--out", type=Path, default=ROOT / "artifacts" / "perf" / "engine_games")
+
     args = parser.parse_args()
-    {"manifest": build_manifest, "bench": bench, "replay": replay, "search": search,
+    {"manifest": build_manifest, "bench": bench, "replay": replay, "search": search, "games": games,
      "compare": compare}[args.command](args)
 
 
