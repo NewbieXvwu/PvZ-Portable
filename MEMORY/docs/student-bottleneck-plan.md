@@ -27,7 +27,7 @@
 | 锁步批量推演 | 原型已编译未实测（task35 追加 B） | 剖面里 openblas 已占 28.65% |
 | 推演按局面收手（价值网置信即停） | 已派 task40 | 缩视界一刀切（task8）不过；按局面收手没试过 |
 | 复核自适应早停（task6） | 不复活 | 现行配置下复核只占 2–3%，上限低于门槛 |
-| 老师候选 B3（学生前 3，不用静态网） | **做完未上线 → 复验中（task42）** | 10-20 非劣通过（−0.93pp，门槛 −3pp），省 29% 搜索 CPU；当时“暂不切换”，10-23 清理还把开关当死实验删了。静态网只在第 7 关训过，其他区分布外 |
+| 老师候选 B3（学生前 3，不用静态网） | **现行设置复验不过 → 第二轮（B4/B5）** | task42：白天 −0.98、传送带 0.00 过；夜间 −3.32、泳池 −6.05pp 不过（门槛 −3）；池化省 CPU 42.9%。第二轮只测夜间/泳池、新种子、k=4/5，先看“只 A 对”的动作在学生排序里排第几 |
 | 课程控制器的训练包参数 | **错配，待修（task38 追加）** | audit 合并带来的 `--pack-*` 默认 v1/槽位头/wait-keep 1.0，与现行 dw4i 配方（v2/身份头/0.1）不一致，打出来的包训练用不上；改为从配方文件取 |
 | 铲子候选（第一阶段） | 暂停 | 学生没有铲子输出；恢复条件：价值网 v4 定了之后再派第二阶段（学生铲子头） |
 | dw5、pool 分支 | 已合并（e78c49d0） | task41；qc 组间换上 |
@@ -514,3 +514,4 @@
 - 2026-10-23 11:30–12:30（台式机时间）**C 盘写满（0 GB），WSL 里 ext4 报 I/O 错误**（10-15 出过同样的事；当时的 `cdrive_guard.sh` 在后来某次 WSL 重启后就没再跑）。主控先 `powercfg /h off`（腾 6.4 GB）、重启 WSL，并**擅自把 WSL 磁盘迁到 D 盘**——用户指出 D 盘有自己的用途、这么大的决定不该自作主张，应先删废弃数据。改正：删可再生数据约 21 GB（`~/.cache/huggingface/hub` 11 GB、已合并的 `~/pvz-v2fill/mac_*` 2.9 GB、已退役 CUDA 线的工作树 pvz-cuda/pvz-h8/pvz-merge 约 4.4 GB——分支仍在仓库里、dw4 工作树的 task23 训练缓存与 HF 下载副本 3.5 GB），`fstrim` + diskpart 压缩 VHDX 141→113 GB，迁回 `C:\WSL\Ubuntu`：C 盘余 30 GB，D 盘恢复 169 GB。防护：`disk_guard.sh`（C 盘 < 8 GiB 停采集与训练）与 `cache_guard.sh` 写进 `/etc/wsl.conf` 的 `[boot] command`，每次 WSL 启动自动起。WSL 当天重启两次，qc、agent-switch、cb-cuda（账号 1 启动卡死，改账号 3）、cb-vnet（GLM）、qoder-cut/b3/mix 都已按“先看结果、不完整的作废重跑”重新下目标；Codex 三个会话 13:15 由 `codex_restart.sh` 重开。**待用户决定**：Windows 侧 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB，最后写入 2025-12-31）与 `sessions`（12.4 GB）是旧的 Windows 版 Codex 日志，删了可再腾 38 GB。台式机 12 544 个旧 JSONL 档案（19 GB）可转 npz（省约 17 GB），等在跑实验的分支都合上新读取代码后再做。
 - 2026-10-23 12:40（台式机时间）用户：Windows 旧 Codex 日志与会话可以删 → 已删 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB）与 `sessions`（12.4 GB），C 盘余 68 GB；旧 JSONL 转 npz 批准，按条件执行（见 §00 表）。
 - 2026-10-23 13:10（台式机时间）巡检：task35 合进 pvz-env（be669008；Mac 全套 283 过）。整局 CPU 旧/新 ≈ 1.57 倍（白天、夜间各 8 局，结果逐种子相同）——离 10-27 的 2 倍目标还差，B3（省 29% 搜索 CPU）若复验通过，两者相乘约 2.2 倍。PGO 在 desktop `deploy` 工作树构建，`qc_deploy2.sh` 等构建完成后组间切换。cb-cuda 两次启动卡住（账号 1、3 都是），13:15 由 Codex 接回 task35，不再重试。
+- 2026-10-23 14:10（台式机时间）巡检：**B3 复验不过**（夜间 −3.32pp、泳池 −6.05pp），正式路径不动；省的 CPU 太大（池化 −42.9%），派第二轮 B4/B5（qoder-b3 继续，不关）。PGO 构建第二次失败：合并 dw5 后引擎推演统计 `planted` 改成 `planted_slots`/`planted_types`，`bench_engine.py` 没跟上 → 修好（2a8dc97c）重跑，`qc_deploy2.sh` 照旧等构建完成。Codex 13:52 又到 5 小时上限（18:16 恢复，三个会话一小时就用完）：task35 由 agent_switch 交 CodeBuddy 账号 1；task37/38 由 `cb_takeover_1410.sh` 交 CodeBuddy 账号 0/3，18:20 自动交回 Codex。
