@@ -384,8 +384,9 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None):
         counts = np.bincount(archive, minlength=len(sources))
         start = 0
         for index, count in enumerate(counts):
-            if count:
-                row_observer(Path(data) / sources[index], row[start:start + count])
+            # every archive gets its callback, empty ones included: a row-weight manifest hashes the
+            # (path, rows) sequence of the archive pass, and that pass has an entry per archive
+            row_observer(Path(data) / sources[index], row[start:start + count])
             start += count
     result = (boards, scalars, plant, packet, cell, weight, seed_of, values, cands)
     if "aux" in stored.files:
