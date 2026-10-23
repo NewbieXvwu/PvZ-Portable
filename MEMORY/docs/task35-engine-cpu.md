@@ -124,9 +124,11 @@
   - 没有差异需要归因到 v4 合并。
 - **未触碰** `deploy` 工作树（只执行了它的二进制）与 tmux `qc`。切换由主控做。
 
+[E 最终复核（Codex，2026-10-23）] 自动续接时重新核对原始证据，而非只依赖上述结论：`pytest_final.log` 为 **315 passed / 111 subtests passed**；deploy2 HEAD 仍为 `f2ae755a`，二进制 SHA 与记录一致，Release 构建有 `fprofile-use`、无 `fprofile-generate`，140 个 `.gcda`，PGO 日志以成功完成收尾。四轮两臂共 **8 份**报告逐一对照冻结清单，均精确覆盖 64 root × 3 未来，全部 192 条叶观测/逻辑统计摘要跨臂跨轮一致；两个 gate-v2 重放文件各有 953/877/531/464 帧、0 差异、重复推演 4/4 一致；配对比值独立重算为 0.981154。perf 在合并后只有文档/记忆改动，远端此前与本地 `7e4e42fd` 一致。本次不重跑完整产物、不启动游戏、不修改其他工作树。按末尾主控 E 第 4 条“写完本任务结束，`/goal` 可以清掉”结束本任务；**整局 1.67× 并不代表已达到 2.0×**，后续路线仍由主控决定。
+
 ## 问题
 
-- **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。
+- **A1 的历史训练失败已在 E 收尾中解决**：结果 29 曾复现 `test_identity_training.test_cpu_training_checkpoint_is_loadable` 的 cell gather 非法 long 索引，确实不是环境缺包。E 合并 `e6c68f3a` 的 NaN 修复后，原始 `pytest_final.log` 证明全套 **315 passed / 111 subtests passed**，没有 Mac 专属跳过；此项不再是待办。
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。
 
