@@ -29,5 +29,11 @@
 - **不加新开关**（主控 10-22 规则：重构直接替换旧实现）。每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。
 
 ## 结果
+- 10-22 23:51 OOM 分数落地：`python/pvz_common.py` 加 `set_oom_score_adj` 与三个角色常量（worker/引擎 1000、控制器 500、训练 300）；`search_play._init_worker`、`pvz_env` 引擎 Popen 的 `preexec_fn`、`curriculum_queue.main`、三个训练脚本 `main` 均已写入；`python/test_oom_guard.py` 3 项在 Linux 子进程里实测通过（Mac 跳过）。
+- 10-22 23:53 用户态守护：系统 apt 镜像（bfsu）对 pools 返回 403，改从清华镜像取同版本 deb 用 dpkg 安装 earlyoom 1.9.0（systemd 已启用，`active` + `enabled`）。`/etc/default/earlyoom` = `-m 5 -s 50 -r 300 --prefer '(pvz-portable|search_play|python3)' --avoid '(init|sshd|tmux|codex|codebuddy|qodercli|node)'`。earlyoom 只匹配 comm（15 字节），`search_play` 的 comm 是 `python3`，故 prefer 里补 `python3`；worker 自身分数 1000 仍是第一顺位。当前 MemAvailable 约 31%，未触发。
+- 10-22 23:55 课程控制器自动并发：`--workers` 默认 16、语义改为上限；每开一组前读 `/proc/meminfo` 的 MemAvailable，`workers = clamp(⌊(available − 6 GiB) / 单 worker 实测 RSS⌋, 1, --workers)`，每组日志先写 `workers=k/16 (MemAvailable …, per-worker …)`。单 worker 估计在控制器启动时实测：以 `--workers 1 --seeds 1` 跑一局真实任务（临时 out/帧目录，不动状态偏移、不进档案），0.2 s 轮询 search_play 的全部后代（worker + pvz-portable）取峰值 RSS；失败退回 1 GiB；没有 /proc（Mac）不缩放。停止标志在探测前也检查。`python/test_curriculum_queue.py` 新增 3 项（11 项全过）。
+- 10-22 23:56 压力测试脚本 `scripts/oom_stress_test.py`（未运行）：默认拒绝（退出码 2）；`--i-know` 下仍先拒绝训练在跑 / 采集在跑 / 可用内存 < 12 GiB。起 2 个假 worker（`oom_score_adj=1000`，64 MiB 块 / 50 ms）把 MemAvailable 压到 5% 以下，期间量 `tmux new-session -d` 与 `bash -c true` 延迟；验证两个假 worker 被信号杀死、init/sshd/tmux/earlyoom 都存活、无强制 kill、延迟 < 2 s。当前 dw5i 训练在跑，已在“问题”请示。
+- 10-22 23:57 报告写入 `MEMORY/notes/desktop.md` 新节“内存打满时的防护（2026-10-23）”：分数表、earlyoom 安装与参数、控制器并发公式与实测方法；压力测试结果待批准后补。
 
 ## 问题
+- 请批准在训练结束后跑压力测试：`python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/oom/scripts/oom_stress_test.py --i-know`。当前 dw5i 训练（PID 1962）在跑，脚本此刻会拒绝；计划在 `pgrep -f train_rollout_policy` 为空且 MemAvailable ≥ 12 GiB 时跑一次（预计 20–30 s），把 JSON 结果记回本文与 `desktop.md`。主控若想自己跑或换时间，请直接说明。

@@ -43,3 +43,57 @@
 - 15:13:55 和 17:28:11 两次 WSL 停机，journal 里都是 systemd **正常 poweroff**，不是崩溃。当时都有进程把 WSL 内存吃满（17:23 还有一次 OOM kill，16.6 GB 的价值网络训练）。推测内存打满时 `wsl.exe` 会话（守护任务 PvZWSLKeeper、ssh 进来的命令）连不上（报 `Wsl/Service/0x8007274c`），WSL 认为没人在用，就自动关机；setsid 起的后台任务不算“在用”。
 - 已在 `C:\Users\newbiexvwu\.wslconfig` 加 `[wsl2] vmIdleTimeout=-1` 和 `[general] instanceIdleTimeout=-1`（备份为 `.wslconfig.bak_20261015`）。
 - 教训：WSL 只有 24 GB，**同一时间只跑一个吃内存的任务**；队列脚本一律串行（`~/pvz-logs/queue3.sh`）。
+
+## 内存打满时的防护（2026-10-23）
+
+起因：10-22 21:18 内存打满后 `wsl.exe` 会话（`0x8007274c`）连不上，业务进程还在跑；
+内核先杀掉了 WSL 的接入进程而不是吃内存的业务进程。上限已提到 28 GB（`.wslconfig`），
+另加 `[experimental] autoMemoryReclaim=gradual`。防护分三层，**任何一层都不碰 init / sshd / tmux**。
+
+### 1. 进程分（`/proc/self/oom_score_adj`，内核先杀分数最高的）
+
+| 角色 | 分数 | 写在哪里 |
+|---|---|---|
+| 采集 worker（`search_play` 池进程） | **1000** | `search_play._init_worker` |
+| 采集引擎子进程（`pvz-portable`） | **1000** | `pvz_env.PvZEnv._start` 的 `preexec_fn` |
+| 课程控制器（`curriculum_queue`） | **500** | `main()` 开头 |
+| 训练（`train_rollout_policy` / `train_value_net` / `train_value_branches`） | **300** | 各自 `main()` 开头 |
+| WSL 接入 / init / sshd / tmux / 代理 | 0 或负（系统默认） | 不改 |
+
+共享实现在 `python/pvz_common.py` 的 `set_oom_score_adj`：只写自己的分数，不需要 root；
+没有 `/proc` 的平台（macOS）静默跳过。单测 `python/test_oom_guard.py`（Linux 子进程实测，Mac 跳过）。
+后果：内存再紧时先死采集，其次训练；控制器比训练晚死，接入通道默认不会被选中。
+
+### 2. 用户态守护 earlyoom（比内核 OOM 早一步，留出回收时间）
+
+2026-10-22 装：系统 apt 源（bfsu）对 pool 返回 403，改从清华镜像下载同版本 deb：
+`earlyoom 1.9.0-1`，`sudo dpkg -i` 安装；WSL 的 systemd 已开，服务 `enabled` + `active`。
+
+`/etc/default/earlyoom`：
+```
+EARLYOOM_ARGS="-m 5 -s 50 -r 300 --prefer '(pvz-portable|search_play|python3)' --avoid '(init|sshd|tmux|codex|codebuddy|qodercli|node)'"
+```
+- `-m 5`：MemAvailable ≤ 5% 时发 SIGTERM（≤2.5% 时 SIGKILL）；`-s 50`：swap 空闲 ≤50% 才动手。
+- earlyoom 只匹配 `/proc/pid/comm`（15 字节），`search_play` 的 comm 是 `python3`，所以 prefer 里
+  补了 `python3`；worker 自身分数 1000 仍然是第一顺位，prefer 只是双保险。
+- `--avoid` 保住 init / sshd / tmux / 各代理（codex、codebuddy、qodercli、node）。
+- `-r 300` 只是把状态行改成 5 分钟一条，避免刷 journal。
+
+查状态：`systemctl status earlyoom`、`journalctl -u earlyoom -n 50`。重启 WSL 后由 systemd 自动拉起，
+无需 keeper；**不要**再用 tmux 起第二份，否则两个守护会抢着杀。
+
+### 3. 采集并发按可用内存自动缩放（`scripts/curriculum_queue.py`）
+
+- `--workers` 默认 16，语义是**上限**（不是实际进程数）。
+- 每开一组前读 `/proc/meminfo` 的 MemAvailable：
+  `workers = clamp(⌊(MemAvailable − 6 GiB) / 单 worker RSS⌋, 1, --workers)`。
+  6 GiB 留给 WSL 接入、控制器和训练；训练在跑时自然降到个位数，训练结束自动加回去。
+- 单 worker RSS 在控制器启动时实测：用 `--workers 1 --seeds 1` 跑一局真实任务（临时 out / 帧目录，
+  不动状态偏移、不进档案），每 0.2 s 采样 `search_play` 的全部后代（Python worker + 引擎）取峰值；
+  实测失败退回 1 GiB；没有 `/proc`（Mac）不缩放。每组日志先写
+  `workers=k/16 (MemAvailable …, per-worker …)`，实际用了几个一眼可见。
+- 压力测试脚本 `scripts/oom_stress_test.py`：默认拒绝，必须 `--i-know`；即使给了也再拒绝
+  训练在跑 / 采集在跑 / 可用 < 12 GiB。它起 2 个分数 1000 的假 worker 把 MemAvailable 压到 5%，
+  量 `tmux new-session -d` 和 `bash -c true` 的延迟（<2 s 为通过），并验证死的是假 worker、
+  init/sshd/tmux/earlyoom 都活着。**待主控批准后运行，结果补在这一节。**
+

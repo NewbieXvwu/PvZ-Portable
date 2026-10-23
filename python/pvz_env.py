@@ -16,10 +16,12 @@ from typing import Any, Iterator, Sequence
 
 from pvz_common import (
     ENV_PROTOCOL_VERSION,
+    OOM_SCORE_WORKER,
     REPLAY_FORMAT_VERSION,
     canonical_digest,
     git_metadata,
     is_generated_artifact,
+    set_oom_score_adj,
     sha256_bytes,
     sha256_file,
 )
@@ -202,6 +204,11 @@ def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]],
                                 imitater_owned=imitater_owned, first_aid_owned=bool(first_aid_owned))
 
 
+def _oom_score_engine() -> None:
+    """preexec_fn for the simulator: under memory pressure the engine dies before its worker's driver."""
+    set_oom_score_adj(OOM_SCORE_WORKER)
+
+
 class PvZEnv:
     def __init__(
         self,
@@ -312,6 +319,8 @@ class PvZEnv:
             # one simulator per worker process: a threaded BLAS would oversubscribe the cores
             # PVZ_NO_POPUP: report fatal errors on stderr instead of a modal dialog that would hang the run
             env={**os.environ, "OPENBLAS_NUM_THREADS": os.environ.get("OPENBLAS_NUM_THREADS", "1"), "PVZ_NO_POPUP": "1"},
+            # task34: never let a full WSL take the simulator's WSL access path down with it
+            preexec_fn=_oom_score_engine if os.name == "posix" else None,
         )
         ready = self._read_message()
         self._rollout_version = ready.get("rollout_version", 0)

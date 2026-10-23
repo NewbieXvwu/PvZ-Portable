@@ -32,6 +32,7 @@ import torch.nn.functional as F
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_value_net import ValueNet, context_vector, featurize, potential_phi  # noqa: E402
 
 SHOOTER_TYPES = {0, 5, 7, 40}
@@ -223,6 +224,8 @@ def per_wave_report(games, rows, scores_by_name: dict[str, np.ndarray], boot: in
 
 def main() -> None:
     global FRAME_STRIDE, CONTEXT
+    # task34: train after collection, but before the controller and the WSL access path.
+    set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
