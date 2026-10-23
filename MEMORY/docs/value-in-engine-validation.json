@@ -796,5 +796,24 @@
       ]
     }
   },
+  "final_independent_review": {
+    "date": "2026-10-23",
+    "reviewed_head": "8e1f91f76b56c690b4b3a5c3134594a8b5f16d5b",
+    "findings": [],
+    "frozen_source_files_sha256_reverified": 64,
+    "formal_results_rechecked": 192,
+    "formal_result_and_trace_files_rechecked": 386,
+    "shadow_games_rechecked": 1,
+    "teacher_noise_wins_cpu_independently_recomputed": true,
+    "profile_paired_roots_futures_actions_rechecked": 1098,
+    "tests": {
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/codex-final-review-tests.log",
+      "sha256": "d92840948b4fb3f54244b3ff11a5b094e0c3d347eac9c633c273f580033666ce",
+      "ran": 11,
+      "passed": 11,
+      "skipped": 0,
+      "scope": "current reviewed HEAD: both Board encoders, trained v4 leaf/state, fast snapshot, gate and archive semantics"
+    }
+  },
   "pending": []
 }
