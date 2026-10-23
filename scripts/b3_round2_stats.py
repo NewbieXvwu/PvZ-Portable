@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 import numpy as np  # noqa: E402
-from b3_noninferiority import MARGIN, key  # noqa: E402
+from b3_noninferiority import MARGIN, correctness_difference, key  # noqa: E402
 from b3_round2_arms import FAMILIES, SEED_BASE, TOPKS  # noqa: E402
 from teacher_audit_stats import t_critical  # noqa: E402
 
