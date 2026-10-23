@@ -103,6 +103,8 @@
 
 31. **公开坐标十进制往返接入生产**：`RenderedPublicCoordinate` 从 `ostringstream` + `stod` 改成 `to_chars(general, 6)` + `from_chars`，旧的流路径删除（不加开关）。新增逐位回归在 `tests/test_environment_wait_events.cpp`：20 万个有限 float 位型 + 1011×21 个整数/边界邻点，共 **220,490** 个值与旧流实现逐位相同（含负零）。整引擎收益待 A2 传送带槽位释放后配对测；改动会改变 PGO 覆盖，保留时须重生成 profile。
 
+32. **A2 整局基准 4/4 族完成（上线验收数字）**：传送带 L10 `day_l10_orig_train_m150` 新旧各 8 局，CPU 1442.708 vs 2475.173 秒，180.339 vs 309.397 秒/局，旧/新 **1.7156×**，CPU 工作口径 19.96 vs 11.64 games/h；8/8 种子胜负、末波、决策数相同。四族：白天 L7 1.586×、夜间 L14 1.561×、泳池 L24 1.821×、传送带 L10 1.716×，**几何平均 1.67×**。表在 `engine-cpu.md` 的 A2 节。对照 10-27 的 2.0× 判据仍差约 20%——缺口在 BLAS 28%，不是微调能填的。四族的新构建都是 09:51 的二进制（早于等待缓冲修复与 to_chars），比值偏保守，最终上线需按部署节重走 PGO。
+
 ## 问题
 
 - **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。
