@@ -122,6 +122,7 @@ def cache_candidates(path: Path, directory: Path) -> Path:
     return target
 
 
+# LEGACY(aux-labels): side cache of the auxiliary damage head (task16 experiment).
 def cache_aux(path: Path, directory: Path, horizon: int) -> Path:
     source = frame_bytes(path)
     signature = inspect.getsource(row_damage_labels) + inspect.getsource(cache_aux) + str(horizon)
@@ -190,6 +191,7 @@ def encode_student_frames(frames: list[dict], source: bytes, obs: str) -> dict:
     return encoded
 
 
+# LEGACY(obs-versions): the signature freezes which encoder wrote an archive, so v1/v2lite/v2 stay readable.
 @lru_cache(maxsize=3)
 def encoder_signature(obs: str = "v1") -> str:
     import pvz_rollout_policy

@@ -36,6 +36,7 @@ import torch.nn.functional as F
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
+from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_value_net import SCALARS, ValueNet, load_value_net  # noqa: E402
 from train_rollout_policy import _spilled_array  # noqa: E402
 
@@ -69,6 +70,8 @@ def pair_accuracy(pred, d, idx, min_gap: float, by_packet: bool = False) -> dict
 
 
 def main() -> None:
+    # task34: train after collection, but before the controller and the WSL access path.
+    set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", required=True, help="torch dumps or shard directories of value_ranking_check.py, comma separated")
     p.add_argument("--out", type=Path, required=True)

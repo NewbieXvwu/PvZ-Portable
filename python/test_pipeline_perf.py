@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 
+import numpy as np
 import torch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,8 +13,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from render_episode import _frame
-from train_rollout_policy import CandidateStore, CompactBoards, ValueStore, load
+from train_rollout_policy import CandidateStore, CompactBoards, ValueStore
 from pvz_frame_store import cache_episode, frame_paths, read_frames, write_frames
+from pack_training_rows import packed_load
 from value_ranking_check import _save_dump
 
 RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"))
@@ -64,10 +66,16 @@ class PipelinePerfTest(unittest.TestCase):
                 right = right.batch(torch.arange(right.shape[0]), "cpu").to(left.dtype if isinstance(left, torch.Tensor) else torch.half)
             if isinstance(left, torch.Tensor):
                 torch.testing.assert_close(left, right, rtol=0, atol=0, equal_nan=True)
+            elif isinstance(left, np.ndarray):
+                np.testing.assert_array_equal(left, right)
             else:
                 self.assertEqual(left, right)
 
-    def test_incremental_cache_and_dump(self):
+    def packed(self, fraction, weight=None, cache=None, rebuild=False):
+        return packed_load(self.directory / "data", {"teacher"}, fraction, weight,
+                           cache_dir=cache, rebuild=rebuild)
+
+    def test_pack_round_trip_and_dump(self):
         frames = [_frame(self.obs)]
         for decision in range(80):
             legal = self.obs["legal_actions"]["plants"]
@@ -82,40 +90,37 @@ class PipelinePerfTest(unittest.TestCase):
         source.write_text("".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames))
         cache = self.directory / "cache"
         for fraction in (.1, .5, 1.0):
-            expected = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5})
+            expected = self.packed(fraction, {"teacher": 2.5}, cache, rebuild=True)
             for _ in range(2):
-                actual = load(self.directory / "data", {"teacher"}, fraction, {"teacher": 2.5}, cache)
+                actual = self.packed(fraction, {"teacher": 2.5}, cache)
                 self.assert_rows_equal(expected, actual)
         cached = next(cache.glob("*.npz"))
         modified = cached.stat().st_mtime_ns
         extra = self.directory / "data/seed_29999/teacher/frames.jsonl"
         extra.parent.mkdir(parents=True)
         extra.write_bytes(source.read_bytes())
-        self.assert_rows_equal(load(self.directory / "data", {"teacher"}, .3),
-                               load(self.directory / "data", {"teacher"}, .3, cache_dir=cache))
+        self.assert_rows_equal(self.packed(.3), self.packed(.3, cache=cache))
         self.assertEqual(modified, cached.stat().st_mtime_ns)
         frames[0]["sun"] += 25
         source.write_text("".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames))
-        self.assert_rows_equal(load(self.directory / "data", {"teacher"}),
-                               load(self.directory / "data", {"teacher"}, cache_dir=cache))
+        self.assert_rows_equal(self.packed(1.0, cache=cache, rebuild=True), self.packed(1.0, cache=cache))
         self.assertNotEqual(modified, cached.stat().st_mtime_ns)
         frames[-2]["targets"] = [[-1, -1, -1, .25], [0, 0, 0, .5], [0, 1, 1, .4]]
         source.write_text("".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames))
-        expected = load(self.directory / "data", {"teacher"}, .3)
+        expected = self.packed(.3)
         binary = source.with_suffix(".npz")
         write_frames(binary, frames)
         self.assertEqual(read_frames(source), read_frames(binary))
         self.assertEqual(2, len(frame_paths(self.directory / "data")))
         self.assertEqual(binary, cache_episode(binary, cache))
-        self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3, cache_dir=cache))
-        self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3))
+        self.assert_rows_equal(expected, self.packed(.3, cache=cache, rebuild=True))
         import numpy as np
         with np.load(binary, allow_pickle=False) as stored:
             arrays = dict(stored)
         arrays["encoder"] = "old encoder"
         np.savez_compressed(binary, **arrays)
         self.assertNotEqual(binary, cache_episode(binary, cache))
-        self.assert_rows_equal(expected, load(self.directory / "data", {"teacher"}, .3, cache_dir=cache))
+        self.assert_rows_equal(expected, self.packed(.3, cache=cache, rebuild=True))
         boards, scalars = actual[:2]
         boards = boards.batch(torch.arange(boards.shape[0]), "cpu").half()
         scalars = scalars.batch(torch.arange(scalars.shape[0]), "cpu")

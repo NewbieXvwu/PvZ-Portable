@@ -1,8 +1,8 @@
 """Summarize anchored A/B/H labels from JSONL, without running the simulator.
 
 Collect with sim_skip_agreement.py search --label-noise --base-halving
---base-cpp-rollouts --cpp-rollouts --base-mask 61 --mask 61 --samples 3
---horizon 2500 --dagger-beta 0.5 --jsonl-dir OUT (plus model/task paths).
+--base-mask 61 --mask 61 --samples 3 --horizon 2500 --dagger-beta 0.5
+--jsonl-dir OUT (plus model/task paths).
 Then: python3 scripts/label_noise.py OUT/seed_*.jsonl --out OUT/summary.json
 """
 from __future__ import annotations

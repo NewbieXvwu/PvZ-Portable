@@ -10,8 +10,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
-from make_multiplier_tasks import (FAMILIES, MULTIPLIERS, SEEDS_PER_TASK, SLOTS_PER_FAMILY,
-                                   build_variants, seed_start, variant_id)
+from make_multiplier_tasks import (FAMILIES, MULT_STRIDE, MULTIPLIERS, SEEDS_PER_TASK,
+                                   SLOTS_PER_FAMILY, build_variants, seed_start, variant_id)
 from pvz_tasks import deck_for_seed
 
 
@@ -37,7 +37,7 @@ class MultiplierTasksTest(unittest.TestCase):
             self.sources.setdefault(key, {})
             for level in levels:
                 name = pattern.format(level=level)
-                perturb = key in ('day_d7q', 'night_n10p')
+                perturb = key in ('day_d7q', 'night_n10p', 'night_n10q')
                 self.sources[key][name] = source_task(
                     level, () if key.endswith('_orig') else (0, 1, 2, 3, 4, 5, 7),
                     perturb=perturb, conveyor=key.endswith('_orig'), tag='_' + key)
@@ -60,7 +60,7 @@ class MultiplierTasksTest(unittest.TestCase):
                 owner[seed] = task['task_id']
         # 每档倍率的块宽 = 族数 * 32 槽 * 每任务种子数，必须小于档间距。
         block = len(FAMILIES) * SLOTS_PER_FAMILY * SEEDS_PER_TASK
-        self.assertLess(block, 500_000)
+        self.assertLess(block, MULT_STRIDE)
         self.assertGreater(seed_start(1, 0, 1), seed_start(0, len(FAMILIES) - 1, 30))
 
     def test_fields_copied_and_perturbation_kept(self):
