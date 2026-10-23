@@ -1329,7 +1329,7 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 		deck.size() > SEEDBANK_MAX ||
 		task.playthrough != 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
 		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || !std::isfinite(task.zombieCountMultiplier) ||
-		task.zombieCountMultiplier < 1.0 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
+		task.zombieCountMultiplier < 0.1 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
 		task.waveCap < 0 || task.waveCap > FINAL_LEVEL)
 		return false;
 	for (const EnvironmentPreplanted& plant : task.preplanted)
@@ -1579,7 +1579,7 @@ void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& res
 	}
 	for (Zombie* zombie : mBoard->mZombies)
 	{
-		if (zombie->mDead) continue;
+		if (zombie->mDead || !EnvironmentZombieVisible(zombie)) continue;
 		const int identity = static_cast<int>(mBoard->ZombieGetID(zombie));
 		if (identity == 0 || identity == -1 || !std::isfinite(zombie->mPosX))
 			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
@@ -1631,12 +1631,62 @@ bool LawnApp::EnvironmentTerminal() const
 // grid items as positional arrays.  Every number is printed exactly as in the full observation,
 // so render_episode._frame gives the identical frame from either form (scripts/perf_rollout_check.py
 // compares the two on live states).  About a quarter of the bytes, and no shovel hit tests.
-static void WriteObservationV2(std::ostream& out, Board* board)
+// Cell-wise visibility uses the engine's own shifted fog grid (ClearFogAroundPlant).
+// No Board state is changed; both arms play precisely the same underlying game.
+int LawnApp::EnvironmentFogAmount(int row, int col) const
 {
+	if (!mBoard || !mBoard->StageHasFog() || row < 0 || row >= MAX_GRID_SIZE_Y) return 0;
+	const int fogCol = col - static_cast<int>((mBoard->mFogOffset + 50) / 100);
+	return fogCol >= 0 && fogCol < MAX_GRID_SIZE_X ? mBoard->mGridCelFog[fogCol][row] : 0;
+}
+
+bool LawnApp::EnvironmentFogMasked() const
+{
+	return mEnvironmentTaskSpec.humanFogObservation && mBoard && mBoard->StageHasFog();
+}
+
+bool LawnApp::EnvironmentZombieVisible(const Zombie* zombie) const
+{
+	if (!EnvironmentFogMasked()) return true;
+	const int col = std::clamp(static_cast<int>(std::floor((zombie->mPosX - 40.0) / 80.0)), 0, 8);
+	return EnvironmentFogAmount(zombie->mRow, col) == 0;
+}
+
+bool LawnApp::EnvironmentVisibleEnemies() const
+{
+	if (!EnvironmentFogMasked()) return mBoard->AreEnemyZombiesOnScreen();
+	for (Zombie* zombie : mBoard->mZombies)
+		if (!zombie->mDead && zombie->IsOnBoard() && EnvironmentZombieVisible(zombie)) return true;
+	return false;
+}
+
+static void WriteObservationFog(std::ostream& out, const LawnApp* app)
+{
+	// Omit on non-fog boards: every historical non-fog observation stays byte-identical.
+	if (!app->mBoard->StageHasFog()) return;
+	out << ",\"fog_amount\":[";
+	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+	{
+		if (row) out << ',';
+		out << '[';
+		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+		{
+			if (col) out << ',';
+			out << app->EnvironmentFogAmount(row, col);
+		}
+		out << ']';
+	}
+	out << ']';
+}
+
+static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged = false)
+{
+	Board* board = app->mBoard;
+	const bool masked = !privileged && app->EnvironmentFogMasked();
 	out << ",\"v2\":{\"wave_timer\":" << board->mZombieCountDown
 		<< ",\"huge_wave_countdown\":" << board->mHugeWaveCountDown
-		<< ",\"wave_health\":" << board->TotalZombiesHealthInWave(board->mCurrentWave - 1)
-		<< ",\"wave_start_health\":" << board->mZombieHealthWaveStart
+		<< ",\"wave_health\":" << (masked ? 0 : board->TotalZombiesHealthInWave(board->mCurrentWave - 1))
+		<< ",\"wave_start_health\":" << (masked ? 0 : board->mZombieHealthWaveStart)
 		<< ",\"sun_countdown\":" << board->mSunCountDown << ",\"sun_pending\":";
 	int pending = 0;
 	for (Coin* coin : board->mCoins)
@@ -1656,7 +1706,7 @@ static void WriteObservationV2(std::ostream& out, Board* board)
 	first = true;
 	for (const Zombie* zombie : board->mZombies)
 	{
-		if (zombie->mDead) continue;
+		if (zombie->mDead || (!privileged && !app->EnvironmentZombieVisible(zombie))) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << (zombie->mHasObject ? 1 : 0) << ',' << zombie->mHelmHealth << ',' << zombie->mShieldHealth << ']';
@@ -1665,7 +1715,8 @@ static void WriteObservationV2(std::ostream& out, Board* board)
 	first = true;
 	for (Projectile* projectile : board->mProjectiles)
 	{
-		if (projectile->mDead) continue;
+		if (projectile->mDead || (masked && app->EnvironmentFogAmount(projectile->mRow,
+			std::clamp(static_cast<int>((projectile->mPosX - 40) / 80), 0, 8)) > 0)) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << projectile->mRow << ',' << projectile->mPosX << ',' << projectile->GetProjectileDef().mDamage << ']';
@@ -1693,7 +1744,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 		<< ",\"wave_timer\":" << mBoard->mZombieCountDown
 		<< ",\"terminal\":" << (EnvironmentTerminal() ? "true" : "false")
 		<< ",\"result\":" << static_cast<int>(mBoardResult)
-		<< ",\"enemy_zombies_on_screen\":" << (mBoard->AreEnemyZombiesOnScreen() ? "true" : "false") << ",\"grid\":[";
+		<< ",\"enemy_zombies_on_screen\":" << (EnvironmentVisibleEnemies() ? "true" : "false") << ",\"grid\":[";
 	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
 	{
 		if (row) out << ',';
@@ -1731,7 +1782,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 	first = true;
 	for (Zombie* zombie : mBoard->mZombies)
 	{
-		if (zombie->mDead) continue;
+		if (zombie->mDead || !EnvironmentZombieVisible(zombie)) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << zombie->mRow << ',' << static_cast<int>(zombie->mZombieType) << ',' << zombie->mPosX
@@ -1777,7 +1828,8 @@ std::string LawnApp::EnvironmentLeanObservation()
 				}
 	}
 	out << "]}";
-	WriteObservationV2(out, mBoard);
+	WriteObservationV2(out, this);
+	WriteObservationFog(out, this);
 	out << '}';
 	return out.str();
 }
@@ -1815,6 +1867,9 @@ std::string LawnApp::EnvironmentDeckOptions()
 			first = false;
 			out << type;
 		}
+	out << "],\"first_adventure_available\":[";
+	for (int type = 0; type < static_cast<int>(GetAwardSeedForLevel(mBoard->mLevel)); ++type)
+		out << (type ? "," : "") << type;
 	out << "],\"not_recommended\":[";
 	first = true;
 	for (int type = 0; type < SeedType::NUM_SEED_TYPES; ++type)
@@ -1906,7 +1961,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		<< ",\"wave_timer\":" << mBoard->mZombieCountDown
 		<< ",\"terminal\":" << (EnvironmentTerminal() ? "true" : "false")
 		<< ",\"result\":" << static_cast<int>(mBoardResult)
-		<< ",\"enemy_zombies_on_screen\":" << (mBoard->AreEnemyZombiesOnScreen() ? "true" : "false") << ",\"grid\":[";
+		<< ",\"enemy_zombies_on_screen\":" << ((privileged ? mBoard->AreEnemyZombiesOnScreen() : EnvironmentVisibleEnemies()) ? "true" : "false") << ",\"grid\":[";
 	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
 	{
 		if (row) out << ',';
@@ -2016,14 +2071,14 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"launch_rate\":" << plant->mLaunchRate << ",\"shooting_counter\":" << plant->mShootingCounter
 				<< ",\"wake_up_counter\":" << plant->mWakeUpCounter << ",\"asleep\":" << (plant->mIsAsleep ? "true" : "false")
 				<< ",\"squished\":" << (plant->mSquished ? "true" : "false")
-				<< ",\"target_zombie_id\":" << static_cast<int>(plant->mTargetZombieID)
+				<< ",\"target_zombie_id\":" << (EnvironmentFogMasked() && !privileged ? -1 : static_cast<int>(plant->mTargetZombieID))
 				<< ",\"bungee_state\":" << static_cast<int>(plant->mOnBungeeState) << '}';
 	}
 	out << "],\"zombies\":[";
 	first = true;
 	for (Zombie* zombie : mBoard->mZombies)
 	{
-		if (zombie->mDead) continue;
+		if (zombie->mDead || (!privileged && !EnvironmentZombieVisible(zombie))) continue;
 		if (!first) out << ',';
 			first = false;
 			out << "{\"type\":" << static_cast<int>(zombie->mZombieType) << ",\"row\":" << zombie->mRow
@@ -2053,14 +2108,15 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	first = true;
 	for (Projectile* projectile : mBoard->mProjectiles)
 	{
-		if (projectile->mDead) continue;
+		if (projectile->mDead || (!privileged && EnvironmentFogMasked() && EnvironmentFogAmount(projectile->mRow,
+			std::clamp(static_cast<int>((projectile->mPosX - 40) / 80), 0, 8)) > 0)) continue;
 		if (!first) out << ',';
 			first = false;
 			out << "{\"type\":" << static_cast<int>(projectile->mProjectileType) << ",\"row\":" << projectile->mRow
 				<< ",\"x\":" << projectile->mPosX << ",\"y\":" << projectile->mPosY << ",\"z\":" << projectile->mPosZ
 				<< ",\"vx\":" << projectile->mVelX << ",\"vy\":" << projectile->mVelY << ",\"vz\":" << projectile->mVelZ
 				<< ",\"motion\":" << static_cast<int>(projectile->mMotionType) << ",\"damage\":" << projectile->GetProjectileDef().mDamage
-				<< ",\"target_zombie_id\":" << static_cast<int>(projectile->mTargetZombieID)
+				<< ",\"target_zombie_id\":" << (EnvironmentFogMasked() && !privileged ? -1 : static_cast<int>(projectile->mTargetZombieID))
 				<< ",\"age\":" << projectile->mProjectileAge << '}';
 	}
 	out << "],\"defenses\":[";
@@ -2114,9 +2170,25 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				out << '[' << col << ',' << row << ']';
 			}
 	out << "],\"wait\":true}";
-	WriteObservationV2(out, mBoard);
+	WriteObservationV2(out, this, privileged);
+	WriteObservationFog(out, this);
 	if (privileged)
 	{
+		// Loss attribution is diagnostic only; it never reaches either policy arm.
+		if (mBoard->StageHasFog())
+		{
+			out << ",\"fog_loss\":";
+			bool found = false;
+			for (Zombie* zombie : mBoard->mZombies)
+				if (!zombie->mDead && zombie->mFromWave == Zombie::ZOMBIE_WAVE_WINNER)
+				{
+					out << "{\"id\":" << static_cast<int>(mBoard->ZombieGetID(zombie))
+						<< ",\"row\":" << zombie->mRow << ",\"type\":" << static_cast<int>(zombie->mZombieType) << '}';
+					found = true;
+					break;
+				}
+			if (!found) out << "null";
+		}
 		const std::string aRandState = GetRandState();
 		constexpr char aHex[] = "0123456789abcdef";
 		out << ",\"hidden\":{\"app_counter\":" << mAppCounter << ",\"wave_timer\":" << mBoard->mZombieCountDown << ",\"app_rand_seed\":" << mAppRandSeed

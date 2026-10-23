@@ -1,0 +1,272 @@
+{
+ "selected": "roof_pilot_c02_l41",
+ "deck": [
+  0,
+  1,
+  2,
+  3,
+  32,
+  35,
+  33
+ ],
+ "wins": 2,
+ "games": 2,
+ "rule": "teacher wins desc, mean final_wave/wave_count desc, id asc; preregistered",
+ "evidence": [
+  {
+   "task_id": "roof_pilot_c00_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.475
+  },
+  {
+   "task_id": "roof_pilot_c01_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    20,
+    4,
+    38,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.35
+  },
+  {
+   "task_id": "roof_pilot_c02_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "wins": 2,
+   "games": 2,
+   "mean_wave_fraction": 1.0
+  },
+  {
+   "task_id": "roof_pilot_c03_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    29,
+    38,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.275
+  },
+  {
+   "task_id": "roof_pilot_c04_l41",
+   "deck": [
+    0,
+    1,
+    29,
+    3,
+    38,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.225
+  },
+  {
+   "task_id": "roof_pilot_c05_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    29,
+    4,
+    32,
+    33
+   ],
+   "wins": 2,
+   "games": 2,
+   "mean_wave_fraction": 1.0
+  },
+  {
+   "task_id": "roof_pilot_c06_l41",
+   "deck": [
+    18,
+    1,
+    2,
+    3,
+    38,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.2
+  },
+  {
+   "task_id": "roof_pilot_c07_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    32,
+    4,
+    38,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.225
+  },
+  {
+   "task_id": "roof_pilot_c08_l41",
+   "deck": [
+    6,
+    1,
+    35,
+    3,
+    4,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.375
+  },
+  {
+   "task_id": "roof_pilot_c09_l41",
+   "deck": [
+    20,
+    1,
+    26,
+    3,
+    4,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.275
+  },
+  {
+   "task_id": "roof_pilot_c10_l41",
+   "deck": [
+    23,
+    1,
+    2,
+    3,
+    4,
+    36,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.175
+  },
+  {
+   "task_id": "roof_pilot_c11_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    20,
+    4,
+    36,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.2
+  },
+  {
+   "task_id": "roof_pilot_c12_l41",
+   "deck": [
+    0,
+    1,
+    36,
+    39,
+    4,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.275
+  },
+  {
+   "task_id": "roof_pilot_c13_l41",
+   "deck": [
+    34,
+    1,
+    2,
+    35,
+    4,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.35
+  },
+  {
+   "task_id": "roof_pilot_c14_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    6,
+    35,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.275
+  },
+  {
+   "task_id": "roof_pilot_c15_l41",
+   "deck": [
+    20,
+    1,
+    2,
+    36,
+    4,
+    5,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.325
+  },
+  {
+   "task_id": "roof_pilot_c16_l41",
+   "deck": [
+    0,
+    1,
+    2,
+    30,
+    4,
+    34,
+    33
+   ],
+   "wins": 0,
+   "games": 2,
+   "mean_wave_fraction": 0.575
+  }
+ ]
+}

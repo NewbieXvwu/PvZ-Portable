@@ -1,0 +1,239 @@
+{
+  "schema_version": 1,
+  "requested_model": "gemini-3.8-flash-high",
+  "credential_source": "$GEMINI_API_KEY; no literal key stored",
+  "transport": "isolated CLIProxyAPI generateContent with episode_query tools; no DSH deployment changes",
+  "skills": {
+    "dsh/pvz-teacher/skills/avoid-economic-expansion-under-threat/SKILL.md": "2fba0e0b36e93d1403365d5cd4b01cde38b4d00364d92d4d3c4febe08a572c46",
+    "dsh/pvz-teacher/skills/avoid-rear-shooters-blind-spot/SKILL.md": "df7be57109d7b44e2652e0861286808e7fba1db126cd5b72c2e160f3fb2be15f",
+    "dsh/pvz-teacher/skills/emergency-cherry-bomb-clearance/SKILL.md": "30e6d30aea3f25304b447ff34cc1cb03e1f03aec391c4a72edfbf4480912babf",
+    "dsh/pvz-teacher/skills/emergency-wallnut-containment/SKILL.md": "fe135bd67658c1c50094e6e69c18c77f6d8b21507ea8809becbc9fef5ec5062c",
+    "dsh/pvz-teacher/skills/prioritize-effective-firepower-placement/SKILL.md": "a8f5d1ffbd2cfe83b270d1a34ff23e7d51722333d6aeee4863d38d54c838ba82",
+    "dsh/pvz-teacher/skills/pvz-episode-diagnosis/SKILL.md": "8dffd6ba0e4c90fa4e829f428d093ffdbaaf8e7b7d9524accc3fc229b9d907f2",
+    "dsh/pvz-teacher/skills/threatened-lane-priority/SKILL.md": "9448814f66eb21d48b9a7abd3f11f49150e078a9dd3b31f3fee1112f8799fde6"
+  },
+  "sessions": {
+    "human": {
+      "report": "MEMORY/docs/teacher-diag-fog-l31-human.md",
+      "report_sha256": "fb247ad5726342a5c2c760823ceeefaacb83efb5de2dac3614dd575269931987",
+      "verbatim_final_verified": true,
+      "response_count": 20,
+      "returned_model_versions": [
+        "gemini-3.8-flash-n"
+      ],
+      "prompt_sha256": "56a26b68b23ecb12956d363ffed92f470820a4ccfae7447d9a0cb7deb8e61837",
+      "tool_outputs": [
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-00-0.txt",
+          "sha256": "a144c0f6ecdf54c28d69d3becfd4aaa96a7cf7151073c50216fbb65eb833bbbc"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-01-0.txt",
+          "sha256": "0de9444b2be1aa159d02a0adc1cbb1baa0816644fbcb38b97b21102d05bd3270"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-02-0.txt",
+          "sha256": "da957e3330dcde4ad698b62f866362fc6af913ab2cf6f1a96f8ecfdbb5c065c5"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-03-0.txt",
+          "sha256": "b62620494a43b190a074a6804649e6bdc61a7d00e2312b8177c49104f8729951"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-04-0.txt",
+          "sha256": "9c0922de02273be7a7694af5014d010761971239b6d5cb3d9f71e0af3a2db275"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-05-0.txt",
+          "sha256": "f0d99f8e96e4c151cb539ea5a0e4eeb4bb4ce2da85c42fe280a70b1ed3152c46"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-06-0.txt",
+          "sha256": "3df1de927fe41bad33291352d1ac3a7b5f160db8d1eaa39d6d513ad156170d6d"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-07-0.txt",
+          "sha256": "28426e602694ab804e108ac4e0aada3dd0132350e8d6c3dffa9af573f37e6d8a"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-08-0.txt",
+          "sha256": "582412a3445cb278c074e53f1500722c70cd714265d86002ff5cd95100a5ca3f"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-09-0.txt",
+          "sha256": "ed561ca90dc8c5e7fcb78645e56d8eacce14c11e68459b91dba5eb8623bd916b"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-10-0.txt",
+          "sha256": "94f96d0a139ea7cc41f1d68826ee4ea44e4ec3b8fc5a0c78403dfe2b1b17cc37"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-11-0.txt",
+          "sha256": "da957e3330dcde4ad698b62f866362fc6af913ab2cf6f1a96f8ecfdbb5c065c5"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-12-0.txt",
+          "sha256": "eec23d7e643b8676e79143dc7c10e449b06cc1f26317431ab0b4150998aa748b"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-13-0.txt",
+          "sha256": "9e590adccb010c675ca64a3ca41cf5bfc7a8757a2484ace135169e4dfadedeef"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-14-0.txt",
+          "sha256": "2e1686a3da3e6bced5057b96c4eaba383afb4ced215dbb15499d71803bb0a400"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-15-0.txt",
+          "sha256": "8c0e160c16b70fe37e17aac86892684874d61820c2311a41737871f01e2170f7"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-16-0.txt",
+          "sha256": "6f4a4300719bcb001bb468801c40e58f6b497779f26a7adc11639e9bac8d8025"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-17-0.txt",
+          "sha256": "927b51bbfcf9a311912b9d74c5d650b2c41b241cdfb29396f3f38bec1fe596ce"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-human/tool-18-0.txt",
+          "sha256": "a2cc07942da20018754d24a7b3d5e7057d8a03464145fe0e8dd3a650e6455554"
+        }
+      ],
+      "recovered_transport_timeout": true,
+      "continuation": "original teacher prefix + one replacement + paired same-student continuation"
+    },
+    "xray": {
+      "report": "MEMORY/docs/teacher-diag-fog-l31-xray.md",
+      "report_sha256": "c9c8c9ab90ed12e73778c2a82638ffa2e0f7505ef792d9555b8b7837dd75a269",
+      "verbatim_final_verified": true,
+      "response_count": 26,
+      "returned_model_versions": [
+        "gemini-3.8-flash-n"
+      ],
+      "prompt_sha256": "7edcfce0e888c35426af39b4de667d92cc98319c75e1904ee5a7eada522af285",
+      "tool_outputs": [
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-00-0.txt",
+          "sha256": "a144c0f6ecdf54c28d69d3becfd4aaa96a7cf7151073c50216fbb65eb833bbbc"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-00-1.txt",
+          "sha256": "a144c0f6ecdf54c28d69d3becfd4aaa96a7cf7151073c50216fbb65eb833bbbc"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-01-0.txt",
+          "sha256": "b62620494a43b190a074a6804649e6bdc61a7d00e2312b8177c49104f8729951"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-02-0.txt",
+          "sha256": "49e7ece6bfb27cfe1a9bd63c47cac770ae79859003999d4d32c9bfb4e114c103"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-03-0.txt",
+          "sha256": "9c0922de02273be7a7694af5014d010761971239b6d5cb3d9f71e0af3a2db275"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-04-0.txt",
+          "sha256": "76d558365f08a08e848ad35320080e8fdda2059a82bb7029a3c158386d778a80"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-05-0.txt",
+          "sha256": "da957e3330dcde4ad698b62f866362fc6af913ab2cf6f1a96f8ecfdbb5c065c5"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-06-0.txt",
+          "sha256": "f0d99f8e96e4c151cb539ea5a0e4eeb4bb4ce2da85c42fe280a70b1ed3152c46"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-07-0.txt",
+          "sha256": "3df1de927fe41bad33291352d1ac3a7b5f160db8d1eaa39d6d513ad156170d6d"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-08-0.txt",
+          "sha256": "dc499e81799d611b96d88b187cd1cc08a73a6dbc956b5e799ecc8a13d43cf749"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-09-0.txt",
+          "sha256": "5c28cc2e764dfcb710940943a7c475d9b50586d4c7107c074977fd9fc3a63762"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-10-0.txt",
+          "sha256": "2d114e2f368a62aad2ad94932fbd69ab57637cfb6b52ab62e7455eeb1a7568bc"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-11-0.txt",
+          "sha256": "031bbadc1a46732a9f0f001a1f291f6784486f46089f615c00b0beda39cadfda"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-12-0.txt",
+          "sha256": "1a753c858a2c89dc6b1dafe35b2a2432777e8e1ff8bba02f3e9d379aeb482fb6"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-13-0.txt",
+          "sha256": "173632db1af9fd4238f296aacfe98e0eb8ac0c017b35ed1fbabca6889e35584b"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-14-0.txt",
+          "sha256": "0715ed311bb7d0192713aab96cccda9127293572f1875dde7d303b9bd0125296"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-15-0.txt",
+          "sha256": "704dfa1debbf1885dd5992014f7dcb27eda1691429ecdfe5a8cb9bad3a76fbcc"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-16-0.txt",
+          "sha256": "8e8037d91d06b5ce13e3f991cfd6f700c34bf516ec1e49fd4b6215d49685a1ad"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-17-0.txt",
+          "sha256": "edea71bcc1ac76ac0dfdba4f9f2ea4429b64f0fb00b2a85b6d995bc078f5f9f1"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-18-0.txt",
+          "sha256": "4bf5d222852fe64f9201c4fb3269624f9b79109e60bc974ed2ee1ced215e5710"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-19-0.txt",
+          "sha256": "517c18210316312740ec649687c421c4dc25c515d1c5e14771a248de7564eebb"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-20-0.txt",
+          "sha256": "3269ca8d0707efd3ea4c8783893adb6d423ecb8448915d0f5cca9e8c20051b1a"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-21-0.txt",
+          "sha256": "ed561ca90dc8c5e7fcb78645e56d8eacce14c11e68459b91dba5eb8623bd916b"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-22-0.txt",
+          "sha256": "536c55e73629440453fd9225edb6e2f04433f63fbc3487fb85a9dcad20b0eaef"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-23-0.txt",
+          "sha256": "5939aed3a4b48417e3cf418b912de72d74b2c313b6b71ac5706606be11514eec"
+        },
+        {
+          "file": "artifacts/task45/phase-d/gemini-xray/tool-24-0.txt",
+          "sha256": "87e915cafe557d57cf1d2921898c4c0f7b88516131bf59f7688e640b97c33a20"
+        }
+      ],
+      "recovered_transport_timeout": false,
+      "continuation": "original teacher prefix + one replacement + paired same-student continuation"
+    }
+  },
+  "verification": {
+    "python": "370 passed, 133 subtests passed",
+    "counterfactual_variants": 13,
+    "engine_changed": false
+  },
+  "source_sha256": {
+    "scripts/episode_query.py": "f3d5c687fd34f98f2ed8d16e9fdc62fabd36d55931845f8182f48fd367338e5f",
+    "scripts/search_play.py": "d6f33cbfdb33479401877d8097ecf79df500aa11b11c64f7a73807ba71467f37",
+    "scripts/search_episode.py": "fea862fcd662111a6a57ddb69a1da43f24b371b5c5ff644d90e0bee9355a01e4",
+    "scripts/fog_timeline.py": "e905899d8f57b1eda0fee2f420892e1695f475ba3922065913050dcb34eeb5f7",
+    "scripts/fog_phase_d.py": "e2fa01c2612e2c6e06331e66df645a1652da13fa918a33f6d3439bee8c83f9e5",
+    "scripts/fog_verify_whatif.py": "4093f42f40e6e0e9b623a8788a6b72977182f1c33a22b7824cf1cf234b61b227",
+    "scripts/fog_teacher_diagnosis.py": "e49a8d9f5609d854d4b67e0736a0136bded63e59182280b8244294960e89a49b"
+  }
+}

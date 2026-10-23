@@ -60,6 +60,19 @@ MAX_ACTIONS = 3000
 _W: dict = {}
 
 
+def _export_values(value_path: str, static_value_path: str | None):
+    """Export once in the driver; workers keep paths instead of torch value networks."""
+    import tempfile
+    from export_value_net import export_value_net
+    from pvz_value_net import load_value_net
+    keep = tempfile.TemporaryDirectory(prefix="pvz-values-")
+    paths = []
+    for index, path in enumerate((value_path, static_value_path or value_path)):
+        output = str(Path(keep.name) / f"value{index}.bin")
+        export_value_net(load_value_net(path), output)
+        paths.append(output)
+    return keep, paths
+
 def _close_worker_env():
     env = _W.pop("env", None)
     if env is not None:
@@ -79,10 +92,7 @@ def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None
     import torch
     torch.set_num_threads(1)
     from pvz_rollout_policy import load_student
-    from pvz_value_net import load_value_net
-    _W["vnet"] = load_value_net(value_path)
-    if static_value_path:
-        _W["static_vnet"] = load_value_net(static_value_path)
+    _W["value_files"] = (value_path, static_value_path or value_path)
     _W["fast"] = load_student(rollout_path)
     import tempfile
     from pvz_rollout_policy import export_student
@@ -159,30 +169,6 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     return action
 
 
-# Frames per value-net forward. The net scores each row independently, so the batch size does not
-# change a single number -- but it does change the worker's peak: a final-wave candidate set is
-# ~240 frames of 122 channels, and scoring them in one stack was the tallest allocation a
-# collection worker ever held (task18). A fixed batch also keeps every forward the same shape,
-# so the allocator reuses one buffer instead of growing a new one per candidate count.
-VALUE_BATCH = 32
-
-
-def _values(frames: list[dict], static: bool = False) -> list[float]:
-    import torch
-    from pvz_value_net import encode_frame
-    net = _W.get("static_vnet", _W["vnet"]) if static else _W["vnet"]
-    values: list[float] = []
-    for start in range(0, len(frames), VALUE_BATCH):
-        part = frames[start:start + VALUE_BATCH]
-        boards, scalars = zip(*(encode_frame(f, net.encoder_version) for f in part))
-        scalars = torch.stack(scalars)
-        if net.context:      # the game's multiplier and zombie roster, set by _play at reset
-            scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(part), -1)], dim=1)
-        with torch.inference_mode():
-            values.extend(torch.sigmoid(net(torch.stack(boards), scalars)).tolist())
-    return values
-
-
 def _score_terminal_or_value(obs: dict) -> float | None:
     if "rollout_result" in obs:
         return float(obs["rollout_result"])
@@ -196,7 +182,7 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
     """Play ``first`` and then let the student continue until ``until_tick`` (0 = to the end of the game) in C++."""
     student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
     leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed,
-                       student_history=student_history)
+                       student_history=student_history, score_value=True)
     metrics = _W.setdefault("rollout_metrics", {})
     for key in ("decisions", "simulation_seconds", "network_seconds"):
         metrics[key] = metrics.get(key, 0) + env._last_response[key]
@@ -265,44 +251,16 @@ def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args
             for candidate, seed in jobs]
 
 
-def _leaf_values(handles: list) -> list[float | None]:
-    """Terminal results and value-net scores, in job order; ``None`` for a lane that never ran."""
-    from render_episode import _frame
-    values: list[float | None] = [None] * len(handles)
-    frames, frame_slots = [], []
-    for slot, handle in enumerate(handles):
-        terminal = _score_terminal_or_value(handle)
-        if terminal is None:
-            frames.append(_frame(handle))
-            frame_slots.append(slot)
-        else:
-            values[slot] = terminal
-    if frames:
-        for slot, value in zip(frame_slots, _values(frames)):
-            values[slot] = value
-    return values
+def _leaf_values(handles: list) -> list[float]:
+    """Terminal results or engine value scores, in continuation order."""
+    return [handle["value"] if (terminal := _score_terminal_or_value(handle)) is None else terminal
+            for handle in handles]
 
 
-# Branches per BRANCH_SNAPSHOT request. The simulator answers with one full observation per branch,
-# so 128 at once held 128 of them in the worker at the same moment -- the second tallest allocation
-# a collection worker made after the value-net batch (task18). Eight is the same work in the same
-# order, just spread over more requests: the measured peak fell 301.9 -> 277.3 MB, wall time flat.
-BRANCH_SNAPSHOT = 8
-
-
-def _static_frames(env, root: int, actions: list[dict], income) -> list[tuple[dict, dict]]:
-    """Apply every action from ``root`` and return the frames the static value net scores."""
-    from render_episode import _frame
-    out = []
-    for start in range(0, len(actions), BRANCH_SNAPSHOT):
-        chunk = actions[start:start + BRANCH_SNAPSHOT]
-        for action, record in zip(chunk, env.branch_snapshot(root, chunk, retain_snapshots=False)):
-            if record.get("ok") and record.get("observation"):
-                frame = _frame(record["observation"])
-                frame["sun_income_rate"] = income
-                out.append((action, frame))
-    return out
-
+def _static_scores(env, root: int, actions: list[dict], income) -> list[tuple[float, dict]]:
+    """Score candidates in engine order; rejected branches do not enter the candidate set."""
+    return [(score, action) for score, action in zip(env.static_scores(root, actions, income or 0.0), actions)
+            if score is not None]
 
 def _student_topk_candidates(legal: list[dict], k: int) -> tuple[list[dict], set[str]]:
     """The student's global top-k legal plants, best first (``ranked_plants``).
@@ -370,7 +328,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         return policy_action
     stats["last_search_tick"] = obs["tick"]
     stats["searched"] += 1
-    root = env.snapshot()
+    root = env.snapshot_fast()
     income = obs.get("sun_income_rate")
     try:
         plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
@@ -386,9 +344,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                 candidates.append(policy_action)
             stats["last_student_keys"] = student_keys
         elif mode == "static":
-            static = _static_frames(env, root, plants, income)
-            scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
-                            key=lambda item: -item[0]) if static else []
+            scored = sorted(_static_scores(env, root, plants, income), key=lambda item: -item[0])
             # The best cells of *every* card, not the overall top-k: the static value net was trained on
             # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
             # against shooters right after planting -- only the rollout can show what they are worth.
@@ -432,7 +388,6 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
         # One candidate at a time, terminal futures first: the order the labels were produced in.
         totals = []
-        from render_episode import _frame
         for cand in candidates:
             fixed, frames = [], []
             for k in range(args.samples):
@@ -440,17 +395,17 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                                        root, (decision_seed * 1000 + k) % 2 ** 32)
                 terminal = _score_terminal_or_value(leaf)
                 if terminal is None:
-                    frames.append(_frame(leaf))
+                    frames.append(leaf)
                 else:
                     fixed.append(terminal)
-            scored_values = fixed + (_values(frames) if frames else [])
+            scored_values = fixed + _leaf_values(frames)
             totals.append(sum(scored_values) / len(scored_values))
         best = max(range(len(candidates)), key=lambda i: totals[i])
         keys = [json.dumps(c, sort_keys=True) for c in candidates]
         return _verified_choice(env, obs, root, candidates, totals, [args.samples] * len(candidates),
                                 best, keys.index(policy_key), policy_action, args, decision_seed, stats)
     finally:
-        env.restore(root)
+        env.restore_fast(root)
         env.release_snapshot(root)
 
 
@@ -515,7 +470,6 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
         started = time.perf_counter()
         # The original value batches and terminal-first sum order: a different order can change the
         # last bits even though the continuation jobs are identical.
-        from render_episode import _frame
         stats["rollout_batches"] = stats.get("rollout_batches", 0) + 1
         stats["rollout_lanes"] = stats.get("rollout_lanes", 0) + 2 * samples
         for index in (policy_index, best):
@@ -525,10 +479,10 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
                                        root, (decision_seed * 1000 + future) % 2 ** 32)
                 terminal = _score_terminal_or_value(leaf)
                 if terminal is None:
-                    leaves.append(_frame(leaf))
+                    leaves.append(leaf)
                 else:
                     fixed.append(terminal)
-            added = fixed + (_values(leaves) if leaves else [])
+            added = fixed + _leaf_values(leaves)
             totals[index] = (totals[index] * counts[index] + sum(added)) / (counts[index] + samples)
         stats["last_verification"] = {
             "samples": samples, "student": policy_action, "challenger": candidates[best],
@@ -560,7 +514,14 @@ def _frame_json(frame: dict) -> str:
     return json.dumps(frame, separators=(",", ":")) + "\n"
 
 
-def _play(job: dict) -> dict:
+def _final_zombies(obs: dict) -> list[dict]:
+    # ROLLOUT returns a lean board even when ordinary root observations are full.
+    from render_episode import _frame
+    return [dict(row=z[0], type=z[1], x=z[2], health=z[4])
+            for z in _frame(obs)['zombies'] if z[5]]
+
+
+def _play(job: dict, observer=None) -> dict:
     args = job["args"]
     from collections import Counter
     import torch
@@ -577,6 +538,10 @@ def _play(job: dict) -> dict:
     if env is None:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
         env.load_rollout_net(_W["rollout_file"])
+    if job["arm"] == "fast_search" and not getattr(env, "_teacher_value_loaded", False):
+        env.load_value_net(_W["value_files"][0])
+        env.load_value_net(_W["value_files"][1], static=True)
+        env._teacher_value_loaded = True
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
@@ -586,6 +551,11 @@ def _play(job: dict) -> dict:
              "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+        fog_diagnostics = None
+        if task_definition.get('fog_observation') and obs.get('fog'):
+            from pvz_fog import FogEpisodeDiagnostics
+            fog_diagnostics = FogEpisodeDiagnostics()
+            fog_diagnostics.sample(env, obs)
         from pvz_value_net import observation_context
         _W["context"] = observation_context(obs)
         task_context = {"level": kw["level"], "multiplier": obs.get("zombie_count_multiplier", 1.0),
@@ -607,7 +577,7 @@ def _play(job: dict) -> dict:
         planted_by_type: dict[int, int] = {}
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
-        if job["arm"] == "fast" and not args.frames:
+        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None:
             obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
@@ -616,12 +586,17 @@ def _play(job: dict) -> dict:
             if planted_by_type is None or planted is None:
                 raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
         while not obs["terminal"] and decisions < MAX_ACTIONS:
+            if observer is not None:
+                observer.before(env, obs, fast_state, decisions)
             action = policy_choice = _fast_action(obs, fast_state)
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
+                searched_before = stats['searched']
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
+                if fog_diagnostics is not None:
+                    fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
                 if action["type"] == "shovel":
                     stats["shovels"] += 1
                     cell = next((p for p in obs.get("plants") or []
@@ -655,8 +630,14 @@ def _play(job: dict) -> dict:
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
                 planted_by_type[planted_type] = planted_by_type.get(planted_type, 0) + 1
+                if fog_diagnostics is not None:
+                    fog_diagnostics.planted(planted_type, action)
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
+            if observer is not None:
+                observer.after(obs, action, policy_choice, rejected, info)
+            if fog_diagnostics is not None:
+                fog_diagnostics.sample(env, obs)
             if frames is not None:
                 frame = _frame(obs)
                 if stats.get("last_targets"):
@@ -670,6 +651,8 @@ def _play(job: dict) -> dict:
                                         if abs(v) != float("inf") and c["type"] != "shovel"]
                 frame["action"] = action          # what was executed (after the search), like render_episode
                 frame["action_rejected"] = rejected
+                if observer is not None:
+                    frame["eaten"] = int((info.get("events") or {}).get("plants_eaten", 0))
                 if stats.get("last_verification"):
                     # Wall time is not part of the label: keeping it in the archive makes two runs of
                     # the same arm differ byte for byte (and the GPU schedule comparison impossible).
@@ -699,7 +682,8 @@ def _play(job: dict) -> dict:
                                  "".join(frames).encode())
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
-        if 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original':
+        if ('deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original'
+                or task_definition.get('fog_observation')):
             import hashlib
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
                                 policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
@@ -716,7 +700,14 @@ def _play(job: dict) -> dict:
             "context": task_context,
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
+            **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),
+                'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
+            "final_tick": obs["tick"], "terminal": bool(obs.get("terminal")),
+            "wave_count": obs.get("wave_count"),
+            # Public final-board evidence, including the row/type of a house breach.
+            # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.
+            "final_zombies": _final_zombies(obs),
             "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
             "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],
@@ -737,7 +728,7 @@ def _play(job: dict) -> dict:
     return result
 
 
-def main() -> None:
+def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
@@ -779,6 +770,11 @@ def main() -> None:
                    help="probability of executing the search's decision (1 = the teacher plays; < 1 = DAgger: "
                         "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
+    return p
+
+
+def main() -> None:
+    p = parser()
     args = p.parse_args()
     if args.verify_samples < 0:
         p.error("--verify-samples must be nonnegative")
@@ -806,12 +802,12 @@ def main() -> None:
             if (arm, s) not in done_keys]
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
     print(f"{len(jobs)} games on {args.workers} workers", flush=True)
-    # Where the platform can fork, the parent loads the nets once and the pool children inherit
-    # the pages copy-on-write (_init_worker then finds them already in place): torch and the three
-    # checkpoints cost one copy per run instead of one per worker (task18).
+    value_keep, value_files = _export_values(args.value, args.static_value)
+    _release_freed_memory()
+    # Student weights remain shared on fork; value weights live only in engine processes.
     start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
     if start_method == "fork":
-        _load_nets(args.value, args.rollout_policy, args.static_value)
+        _load_nets(value_files[0], args.rollout_policy, value_files[1])
         _freeze_startup()
     started = time.time()
     counters = mp.get_context(start_method).RawArray("q", len(jobs) * 2)
@@ -821,7 +817,7 @@ def main() -> None:
     try:
         with results_path.open("a") as out, mp.get_context(start_method).Pool(
                 args.workers, initializer=_init_worker, maxtasksperchild=None,
-                initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.static_value, counters)) as pool:
+                initargs=(value_files[0], args.rollout_policy, args.rollout_sim_skip, value_files[1], counters)) as pool:
             from pvz_metrics import Metrics
             metrics = Metrics("search_play", progress_source=lambda: dict(
                 games=sum(counters[::2]), decisions=sum(counters[1::2]))).start()
@@ -836,6 +832,7 @@ def main() -> None:
     finally:
         if metrics is not None:
             metrics.close()
+        value_keep.cleanup()
     summarize(results_path)
 
 

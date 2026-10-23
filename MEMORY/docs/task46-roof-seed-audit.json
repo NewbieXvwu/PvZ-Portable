@@ -1,0 +1,32 @@
+{
+ "manifests": 329186,
+ "existing_unique_seeds": 572552,
+ "maximum": 7083999,
+ "reserved": [
+  [
+   44000000,
+   44099999
+  ],
+  [
+   45000000,
+   45000031
+  ],
+  [
+   46000000,
+   46089999
+  ]
+ ],
+ "clashes": [],
+ "derived_multiplier_audit": {
+  "paths": [
+   "/home/newbiexvwu/PvZ-search/artifacts/stage4/multiplier_panel.json",
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/curr39/artifacts/stage4/multiplier_panel.json",
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/keep/artifacts/stage4/multiplier_panel.json",
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/curr/artifacts/stage4/multiplier_panel.json"
+  ],
+  "unique_seeds": 884160,
+  "maximum": 8997663,
+  "clashes": []
+ }
+}

@@ -29,5 +29,43 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。持续压榨：做完上面几项后，用 profile 找 Python 侧剩下的最大项继续，连续 3 项收益 < 2% 才停。
 
 ## 结果
+- 2026-10-23（Business最终交付）：v4同局cProfile完成，1098根/未来/动作、219搜索、3757推演完全相同；Python `_values`/`_static_frames`消失，叶子inclusive CPU2.329→0.0176s；同工具hotpath、RSS/HWM及前15项已写报告。改后最大self仅0.235%总CPU，学生候选整段仅0.52%；结合三项跨场景原型均<0.08%，连续三项<2%且无≥2%可删Python热点，停止条件满足。正式三任务32对全过，Board双编码逐位/容差门禁及1028帧重放证据齐备，复用全套304通过/10跳过和舍入修复后11项复核。最终JSON完整记录SHA与证据范围，status=complete、pending=[]；原链/profile均正常退出，未动tmux/其他会话，task37完成。
+- 2026-10-23（Business正式门禁）：原v4链22:32正常完成；三任务各32对全部passed。同root老师一致率100%/99.9918%/100%，均≥本机噪声91.64%/85.17%/92%；胜局32→32、32→32、17→17，全部胜负配对相同；总CPU/局191.59→155.39s、243.49→198.97s、112.59→87.95s，比值0.8110/0.8172/0.7811，均过102%硬门。独立核验192份完整结果/轨迹、噪声扣除及冻结SHA；唯一夜间影子1699决策/411搜索逐点同root、执行基线动作，老师仅1次分歧。已记录RSS/HWM与386证据文件集合SHA；还差v4同局cProfile/top15/停止条件最终复核，等待器已自动开跑，task37暂不宣告完成。
+- 2026-10-23（Business半程审计）：v4改后48/96（每任务前16种子）完整结果/trace、配对种子/搜索计数及全部冻结SHA通过；白天/夜间/泳池胜16→16、16→16、9→9，CPU/局186.93→139.94s、238.44→177.51s、116.64→81.07s（仅中期统计）。只有night index1需影子，首差异为同root动作选择，未发现动作相同却先状态漂移。原runner86895/after110445及profile等待器116851均存活，继续原链；总体incomplete，不重跑，不将半程当最终验收。
+- 2026-10-23（Business串行profile补项）：启动本工作树等待器PID116851（artifacts/task37/run_v4_profile_when_gate_done.py，日志v4-profile-continuation.log）；只在原runner86895退出且本分支游戏数为0、96+96局/全长trace/冻结SHA/comparison均齐备后，串行跑v4同一L7×1.5 seed0的改前/改后CPU cProfile，结果独立放artifacts/task37/v4-cprofile，不回写正式CPU门禁。当前等待器未启动游戏，原after链继续；后续不要重复启动等待器。
+- 2026-10-23（Business停止条件补核）：在原after链运行期间只跑CPU离线原型，按v4已完成局的搜索数外推候选键/学生特征/encode三项，白天/夜间/泳池最大乐观节省0.0362%/0.0548%/0.0734%，等价性检查全过，不引入缓存或生产改动。新增KB级value-in-engine-validation.json，汇集已核实Board双编码/完整before/原型结论及SHA，整体明确incomplete；原两worker链继续，正式老师/CPU验收未结束。
+- 2026-10-23（Business新会话接手）：核对git干净且HEAD=origin/vcpp=3a65eff3；保留原runner PID86895及after PID110445（仅2游戏），未操作tmux/其他会话。v4 before已完整96/96，逐份核验trace长度、搜索/噪声计数及before/after冻结输入SHA256均通过；三任务胜32/32、32/32、17/32，噪声822/897、1315/1544、529/575。after首批同root，但总CPU暂高于基线；完整门禁未结束，不宣布通过，不重跑已完成局。
+- 2026-10-23（Codex复核接回）：逐提交复核cf55d1d3..c375a489，唯一生产代码变更为4fd750d5的植物/僵尸逐项float32舍入，符合当前NumPy语义；独立核对Board门禁JSON与当前引擎/corpus/模型SHA256一致，v3/v4各四场景256帧全过。确认旧交接PID均已消失，v4当前完整37/96、输入SHA全部未变；保留37份全长trace/result，作废night/pool index12的中断输出，从原串行脚本续跑before→after→shadow→compare（最多2游戏）。v4叶值/状态、Board、快照与门禁等11项复核测试通过；正式CPU/老师验收尚未完成。
+- 2026-10-23（GLM 18:25 移交）：v4整臂门禁链 before→after→shadow→compare 运行中，改前34/96（截至18:19 day/night基本全胜、pool约半数），预计改前~21:20完成；期间修复board-replay门禁1 ULP特征舍入差异（numpy逐项f32舍入vs double累加），修复后1024帧×v3/v4全过（特征0.0、logit≤3.82e-6，提交4fd750d5）。全部代码改动已提交推送（HEAD=a6572fac），工作区干净。
+- 移交注意：后台链不要杀——入口 bash artifacts/task37/run_teacher32_v4.sh（PID 75751）→ check_value_teacher.py --phase before（PID 75754）→ 2个 profile_value_engine.py 驱动（PID 84548、84553）+ 2个 baseline-engine（PID 84968、84970，短暂存续随局更换）；日志 artifacts/task37/teacher32-v4.log，输出 artifacts/task37/teacher32-v4/。改前完成后自动接 after（build/pvz-portable 已含ULP修复）→ shadow → compare，比较门禁自动落 comparison.json（三硬门：一致率≥噪声底线、胜负配对二项、CPU≤基线×1.02）。
+- 下一步（Codex 接手）：compare 完成后核验 teacher32-v4/comparison.json 三任务全 passed，把结果写进 MEMORY/docs/value-in-engine.md 与本任务书；若 shadow 阶段触发（同root分歧局）确认其 roots 与改前逐点配对；v3 的 teacher32-recovery 改前96局保留为过渡证据，不再投入。
+- 2026-10-23（GLM 17:24）：遵主控追加D启动v4整臂门禁：baseline_search._values 从硬编码 featurize 改为 encode_frame(f, net.encoder_version)（v1网行为逐位不变，仅新增v4/编码2与既有context支持；baseline_search为不入git的SHA锁定证据件），新配置 teacher32-v4-profile（value=vnet工作树v4、static仍branch1）、全新输出目录 teacher32-v4 防证据混合；runner的契约防护确认会拒绝旧目录复用。串行链 before→after→shadow→compare（2 worker）已后台运行，首批2局（day/night seed0）完成且获胜，v2编码在baseline真实叶子观测无异常。v3的96局改前结果保留为过渡证据，v3 after不再单独投入。
+- 2026-10-23（GLM 17:15）：改前96局完成（day31/32胜、night30/32、pool9/32；噪声一致率905/956、1323/1533、567/624）。board-replay门禁首次失败：5668特征中1个差1 ULP——numpy逐项先把h/200舍入float32再float32累加，C++用double累加后一次舍入（同格两个同型僵尸时double舍入差1 ULP，数值实验以(500,197)复现）。修复EnvironmentValueNet.cpp两处累加（植物、僵尸血量先static_cast<float>再+=），重建后1024帧×v3/v4重跑通过：特征误差0.0、logit≤3.82e-6。管线此后接续after→shadow→compare。
+- 2026-10-23（GLM 接管 14:40）：核查全部后台链路健康——改前 runner（check_value_teacher --phase before，2 worker）21/96 进行中、续跑管线 continue_teacher_gate.py 存活且将自动执行 board-replay 门禁→after→shadow→compare（phase 参数与 before-summary 契约已对源码核验）、管线输入 build/pvz-portable 与 frame-oracle-sparse.json 均在。未杀任何进程，未新增游戏进程。
+- 2026-10-23（覆盖审计）：确认四场景各256帧现有测试是Python特征→C++前向，直接Board编码只覆盖128个早期局面，不能把两者合称全局面端到端验收。新增check_value_board_replay.py：按原固定corpus档案动作重放，先证明输入与档案相同，再比较Board特征逐位一致及v3/v4 logit<1e-5；3项档案语义测试通过，真实校验待现有96局改前阶段结束后串行执行。正式改前首个白天/夜间局均完成且获胜，进程仍正常，未重启或复制游戏任务。
+- 2026-10-23（恢复第三步）：全套最终314项完成（304通过、10跳过；不伪造缺失的旧稀疏参考），新增门禁测试包含在内。Python剩余三项离线原型：候选键tuple、复用学生特征、复用学生encode，在真实帧/239搜索次数折算下的乐观CPU节省分别0.0473/0.0474/0.1407s（0.0217%/0.0217%/0.0644%），不采纳、不冒充整局A/B；待正式计时复核停止条件。正式96局改前阶段已以2个worker启动，输入锁定，完成后继续改后/必要影子/汇总；task37保持未完成。
+- 2026-10-23（恢复第二步）：修复无profile验收在pstats崩溃、原子提交结果并锁定输入SHA256，新增同root/噪声/胜负/CPU汇总门禁（5测试通过）；补入origin的task33 hotpath_profile原工具并在同一worker复用，双端真实命令冒烟通过。v3/v4训练权重叶值/完整状态对拍重过。压力seed5712288的1256决策/239搜索根与动作全同、两端胜；扣除30次噪声搜索的CPU后总CPU231.85→218.33s（-5.83%，仅pilot），噪声27/30。正式三任务各32局改前/改后及必要同root影子验收接续执行，未宣布最终通过。
+- 2026-10-23（重启后恢复）：核查 fe2a5aff 及未提交改动；三模型真实帧与1028帧重放结论完整。接回 search 的 SNAPSHOT_FAST / RESTORE_FAST，保留包装层时钟和收入历史，增加真实Board恢复测试；全套309项中298通过、10跳过，唯一失败是旧稀疏能力测试把新引擎同时当成旧参考（环境配置，不是价值路径）。老师旧96局全部在pstats处失败、无result，已作废，修复后重跑；尚未通过老师/CPU最终门槛。
+- 2026-10-23：首层im2col仅保留非零通道（保留顺序），900候选首层0.144→0.022s、总前向0.311→0.258s；真实v3/branch1/v4门禁重过（最大3.82e-6）。四场景各257帧动作序列在基线/新引擎的完整公开状态逐帧相同。v4推演与Board oracle两项通过。全套308测试只余fast测试无价值网路径问题，已改按需加载，相关3测试通过；最终全套待重跑。首局195搜索决策逐点相同，改前随机未来噪声pilot25/25相同，压力局噪声与对照在跑。
+- 2026-10-23：真实 frames_v2 四场景各256帧 × v3/branch1/v4 全部通过 logit<1e-5（最大3.82e-6）；新增可复跑 corpus 校验与单worker CPU profile 工具。5项既有推演测试通过。价值网加无开关分项计时：900候选初始局面，特征0.0012s、前向0.311s，卷积约46%/38%/12%；下一步先压缩首层零通道。
+- 2026-10-23：搜索路径改用 STATIC_SCORES / ROLLOUT_VALUE；driver 只导出一次权重，worker 不持有 torch 价值网；删除 `_values` / `_static_frames` 并迁移诊断调用。32 项搜索测试通过；训练 v3 四场景、mask0/61 的叶值误差 <1e-5 且完整叶状态相同。首局 seed1800000 的997决策/195搜索/6覆盖/胜负/种植统计与基线相同。发现朴素前向性能回退（worker CPU16.46→3.74s，引擎100.58→174.57s），下一步先定位并消除回退，未验收为加速。
+- 2026-10-23：完成 PVZVN001 导出、独立 C++ 价值网络（im2col+CBLAS）、直接 Board 编码及 LOAD_VALUE_NET / STATIC_SCORES / LEAF_VALUES 和 Python 包装。双编码 × 四场景 × 16 时点 oracle 通过：特征逐位相同，随机 width64 网络最大 logit 差 7.48e-9、静态概率差 6.01e-8；拒绝动作保持空值、快照恢复一致。真实档案各 256 帧与训练模型门禁仍待执行。
+- 2026-10-23：补齐 task30 已有的版本化价值编码（来源 14713bd4，仅取编码与测试）；学生冻结 v1 编码不变，v3 对应编码 1、v4 对应编码 2。开始独立 Release 构建，后续 A/B 固定本分支基线 c790588d。
 
 ## 问题
+- 已解决：最初缺少task33报告/工具；恢复时已读origin/pvz-env的hotpath-audit全文，并在b306875a补入原版hotpath_profile，正式三任务同工具对照正在执行。
+- 已解决：最初缺少task30的v4编码，已从14713bd4移入必要依赖，不另造编码。
+- 源码确认：EnvironmentPlant / EnvironmentShovel 本身推进 0 tick，STATIC_SCORES 不额外等待。旧编码须保留 SEED_NONE=-1 写入 scalar[4]/[58] 的历史行为；新编码跳过空槽并按植物身份聚合重复卡。
+- 已解决：1024个固定档案采样点的端到端Board重放在4fd750d5修复逐项float32舍入后通过（v3/v4各1024帧，特征逐位相同、logit最大3.82e-6），Codex接回复核了当前二进制/模型/corpus哈希。
+
+## 主控追加（2026-10-23 09:50）：总 CPU 硬门槛
+- task33 的 cb-audit（audit 分支 `scripts/hotpath_branch.py`、`hotpath-audit.md` §17 第 10 项）实测：torch 批 18 的价值网前向 93–107 µs/分支，单线程朴素 C++ 卷积比 torch（MKL 多线程）慢 3–6 倍；你自己也测到引擎 100.58→174.57 s。
+- 验收加一条硬门槛：同一组种子，**单局总 CPU（worker + 引擎，含所有线程）不得比基线 c790588d 多 2% 以上**（采集是 16 进程并行，CPU 是瓶颈，墙钟单局快不算数）。
+- 压不到就把 C++ 前向改成批量 GEMM：一次 STATIC_SCORES / LEAF_VALUES 的全部候选拼成一个矩阵，调 OpenBLAS/MKL sgemm（单进程线程数 ≤ 2）；卷积 im2col 只做一次。
+- 仍做不到就如实写进“问题”，附两边的 CPU 数字；主控决定是否保留 Python 侧。不要为了过门槛去改搜索的参数或候选数。
+- 合并提示（主控 10:20）：pvz-env 已合并 audit（b95d2cf7）——整条 CUDA 推演线退役（tag `retire-cuda-20261023`），`python/test_cuda_*.py`、`test_candidate_coverage.py` 等已删除。你合回 pvz-env 前先 `git merge origin/pvz-env`，对这些已删文件的改动直接丢弃；`--rollout-backend` 等开关已不存在。
+- 主控追加（10:10）：task42 在复验“老师候选改用学生前 3、不用静态网”（B3，10-20 已非劣通过、省 29% 搜索 CPU）。若通过，静态候选打分（`STATIC_SCORES`）整条会删掉。所以**先把 `LEAF_VALUES`（叶子价值）做完并过总 CPU 门槛**——它还是 task40“推演胜负已定就收手”的前提；`STATIC_SCORES` 已做的部分保留在分支上，不再继续投入。
+
+## 主控追加 D（2026-10-23 15:45）：价值网换 v4
+主控已决定整臂换价值网 v4（task30 第 6 步，分支 `vnet`，合进主线后 `DEFAULT_VALUE` 指 `artifacts/value_net/v4/model.pt`）。v4 用**编码 v2**（`pvz_value_net.encode_frame(frame, net.encoder_version)`，见 `origin/vnet` 的 `python/pvz_value_net.py`），不是现在的 `featurize`。
+`LEAF_VALUES` 进引擎要按 v2 编码实现，并且以 v4 做逐位/容差一致性门禁。v1/v3 只在过渡期需要，旧编码能顺手兼容就兼容，不能就只做 v2。v4 checkpoint 在 `/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/v4/model.pt`；合并后也会出现在主检出的 `artifacts/value_net/v4/`。

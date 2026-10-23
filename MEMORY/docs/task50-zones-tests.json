@@ -1,0 +1,8 @@
+{
+  "source_commit": "7a67066a",
+  "tests": 382,
+  "subtests": 133,
+  "skipped": 0,
+  "seconds": 66.31,
+  "binary_sha256": "64a3d1fee3e8e39c97e519ef88faae9760fb3b44ac9210741fde9b6920e2ee63"
+}

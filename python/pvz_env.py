@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import math
 import os
 from collections import deque
 from contextlib import contextmanager
@@ -133,6 +134,7 @@ class TaskSpec:
     # "original": conveyor levels keep the engine's own seed bank (10 empty packets, cards dealt
     # by Challenge::UpdateConveyorBelt) instead of writing the task deck into it.
     conveyor_start: str | None = None
+    fog_observation: str | None = None  # task family: human / xray; None preserves legacy tasks
 
 
 def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -> TaskSpec:
@@ -257,6 +259,7 @@ class PvZEnv:
         self._sun_production_history: deque[tuple[int, int]] = deque()
         self._sun_history_start_tick: int | None = None
         self._sun_history_snapshots: dict[int, tuple[list[tuple[int, int]], int | None]] = {}
+        self._snapshot_ticks: dict[int, int] = {}
 
     def _annotate_observation(self, observation: dict[str, Any],
                               events: dict[str, Any] | None = None,
@@ -268,6 +271,7 @@ class PvZEnv:
             self._sun_production_history.clear()
             self._sun_history_start_tick = tick
             self._sun_history_snapshots.clear()
+            self._snapshot_ticks.clear()
         if self._sun_history_start_tick is None:
             self._sun_history_start_tick = tick
         # A reset observation begins a new episode; events from the old board
@@ -421,6 +425,8 @@ class PvZEnv:
             raise ValueError("preplanted seed_type, row and col must be in range")
         if task.conveyor_start not in (None, "original"):
             raise ValueError("conveyor_start must be None or 'original'")
+        if task.fog_observation not in (None, "human", "xray"):
+            raise ValueError("fog_observation must be None, 'human' or 'xray'")
         if type(task.playthrough) is not int or task.playthrough != 2:
             raise ValueError("only replay semantics (playthrough=2) are supported")
         if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:
@@ -485,6 +491,8 @@ class PvZEnv:
         # message (and therefore its replay) stays byte-identical.
         if task.conveyor_start == "original":
             command += " conveyor_original"
+        if task.fog_observation is not None:
+            command += f" fog_{task.fog_observation}"
         response = self._command(command)
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
@@ -514,6 +522,7 @@ class PvZEnv:
                 "wave_cap": task.wave_cap,
                 "preplanted": [list(plant) for plant in task.preplanted],
                 **({"conveyor_start": task.conveyor_start} if task.conveyor_start else {}),
+                **({"fog_observation": task.fog_observation} if task.fog_observation else {}),
             },
             "initial_state": self._state_record(observation),
             "operations": [],
@@ -584,6 +593,28 @@ class PvZEnv:
             raise RuntimeError(f"environment returned invalid critic inputs: {response}")
         return response
 
+    def snapshot_fast(self) -> int:
+        """Search-only snapshot: preserve wrapper income/time without exporting the root again."""
+        response = self._command("SNAPSHOT_FAST")
+        if not response.get("ok") or "snapshot_id" not in response:
+            raise RuntimeError(f"environment could not save a snapshot: {response}")
+        snapshot_id = int(response["snapshot_id"])
+        self._sun_history_snapshots[snapshot_id] = (list(self._sun_production_history), self._sun_history_start_tick)
+        self._snapshot_ticks[snapshot_id] = self._tick
+        return snapshot_id
+
+    def restore_fast(self, snapshot_id: int) -> None:
+        """Restore a search root and its wrapper state; no redundant observation or replay operation."""
+        if snapshot_id not in self._snapshot_ticks:
+            raise ValueError("restore_fast requires a live snapshot_fast root")
+        response = self._command(f"RESTORE_FAST {snapshot_id}")
+        if not response.get("ok"):
+            raise ValueError(f"environment could not restore snapshot {snapshot_id}: {response}")
+        history, start = self._sun_history_snapshots[snapshot_id]
+        self._sun_production_history = deque(history)
+        self._sun_history_start_tick = start
+        self._tick = self._snapshot_ticks[snapshot_id]
+
     def snapshot(self) -> int:
         response = self._command("SNAPSHOT")
         if not response.get("ok") or "snapshot_id" not in response:
@@ -618,6 +649,7 @@ class PvZEnv:
         if not response.get("ok"):
             raise ValueError(f"environment could not release snapshot {snapshot_id}: {response}")
         self._sun_history_snapshots.pop(snapshot_id, None)
+        self._snapshot_ticks.pop(snapshot_id, None)
 
     def reseed(self, seed: int) -> None:
         """Draw a fresh, equally plausible future from the current state.
@@ -665,6 +697,51 @@ class PvZEnv:
         if not self._command(f"OBS_LEAN {1 if lean else 0}").get("ok"):
             raise RuntimeError("simulator rejected OBS_LEAN (binary older than this wrapper?)")
 
+    def load_value_net(self, path: str | os.PathLike[str], *, static: bool = False) -> None:
+        filename = str(Path(path).resolve())
+        if "\n" in filename or "\r" in filename:
+            raise ValueError("value network path must not contain newlines")
+        if not self._command(f"LOAD_VALUE_NET {int(static)} {json.dumps(filename)}").get("ok"):
+            raise RuntimeError(f"simulator rejected value network: {filename}")
+
+    def leaf_values(self, *, income: float | None = None, static: bool = False,
+                    trace_path: str | os.PathLike[str] | None = None) -> list[float]:
+        """Score the current Board without exporting an observation; optional feature trace for tests."""
+        if income is None:
+            income = self._annotate_observation({"tick": self._tick, "wave_timer": 0})["sun_income_rate"]
+        if not math.isfinite(income):
+            raise ValueError("income must be finite")
+        suffix = f" {json.dumps(str(Path(trace_path).resolve()))}" if trace_path is not None else ""
+        response = self._command(f"LEAF_VALUES {int(static)} BOARD {income:.17g}" + suffix)
+        if not response.get("ok") or len(response.get("values", [])) != 1:
+            raise RuntimeError(f"simulator rejected LEAF_VALUES: {response}")
+        return response["values"]
+
+    def leaf_feature_values(self, path: str | os.PathLike[str], count: int, *, static: bool = False) -> list[float]:
+        """Score a float32 feature file produced by an external simulator or an oracle test."""
+        if type(count) is not int or not 1 <= count <= 4096:
+            raise ValueError("feature count must be from 1 to 4096")
+        response = self._command(f"LEAF_VALUES {int(static)} FEATURES {count} {json.dumps(str(Path(path).resolve()))}")
+        if not response.get("ok") or len(response.get("values", [])) != count:
+            raise RuntimeError(f"simulator rejected LEAF_VALUES: {response}")
+        return response["values"]
+
+    def static_scores(self, snapshot_id: int, actions: list[dict[str, Any]], income: float) -> list[float | None]:
+        """Restore, act, score each branch in the engine; rejected actions return None in place."""
+        if type(snapshot_id) is not int or snapshot_id not in self._sun_history_snapshots:
+            raise ValueError("snapshot_id must refer to a live snapshot")
+        if not math.isfinite(income):
+            raise ValueError("income must be finite")
+        if not actions:
+            return []
+        if len(actions) > 1024:
+            raise ValueError("STATIC_SCORES accepts at most 1024 actions")
+        tokens = " ".join(branch_action_token(action) for action in actions)
+        response = self._command(f"STATIC_SCORES {snapshot_id} {income:.17g} {len(actions)} {tokens}")
+        if not response.get("ok") or len(response.get("values", [])) != len(actions):
+            raise RuntimeError(f"simulator rejected STATIC_SCORES: {response}")
+        return response["values"]
+
     def load_rollout_net(self, path: str | os.PathLike[str]) -> None:
         """Load weights exported by pvz_rollout_policy.export_student in this simulator process."""
         filename = str(Path(path).expanduser().resolve())
@@ -682,6 +759,8 @@ class PvZEnv:
             raise RuntimeError("v2lite requires a rebuilt simulator with rollout_version >= 2")
         if observation == 3 and self._rollout_version < 3:
             raise RuntimeError("v2 requires a rebuilt simulator with rollout_version >= 3")
+        if observation == 4 and self._rollout_version < 4:
+            raise RuntimeError("v2fog requires a rebuilt simulator with rollout_version >= 4")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")
@@ -749,7 +828,7 @@ class PvZEnv:
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
                 sim_skip: int = 0, max_actions: int = 1000000,
                 snapshot_id: int | None = None, seed: int | None = None,
-                student_history=None, trace_path=None) -> dict[str, Any]:
+                student_history=None, trace_path=None, score_value: bool = False) -> dict[str, Any]:
         """Run the greedy student entirely in C++ and return its leaf (0 = whole game).
 
         None selects the first action with the student, with fresh previous-action context.
@@ -793,7 +872,8 @@ class PvZEnv:
             saved = self._sun_history_snapshots[snapshot_id]
             history, history_start = saved[0], saved[1]
         samples = " ".join(f"{tick} {amount}" for tick, amount in history)
-        response = self._command(f"ROLLOUT {snapshot_id or 0} {seed if seed is not None else -1} "
+        command = "ROLLOUT_VALUE" if score_value else "ROLLOUT"
+        response = self._command(f"{command} {snapshot_id or 0} {seed if seed is not None else -1} "
                                  f"{until_tick} {sim_skip} {max_actions} {int(event_wait)} {token} "
                                  f"{history_start} {len(history)} {samples}".rstrip()
                                  + self._student_options(student_history, trace_path))
@@ -802,6 +882,9 @@ class PvZEnv:
             raise RuntimeError(f"simulator rejected ROLLOUT (binary older than this wrapper?): {response}")
         if response.get("estimated_result", -1) >= 0:
             observation["rollout_result"] = response["estimated_result"]
+        if score_value:
+            # Search immediately restores a root; no exported leaf or Python income history is needed.
+            return observation
         self._sun_production_history = deque(history)
         self._sun_history_start_tick = history_start
         for tick, produced in response["substeps"]:

@@ -1,0 +1,38 @@
+{
+ "generation_audit": {
+  "tasks": 318,
+  "seeds": 651264,
+  "decks_checked": 651264,
+  "scanned_manifests": 329397,
+  "scanned_seeds": 835018,
+  "seed_overlap": 0,
+  "seed_base": 5000000,
+  "mult_stride": 700000,
+  "slots_per_family": 32,
+  "seeds_per_task": 2048,
+  "multipliers": [
+   1.25,
+   1.5,
+   1.75,
+   2.0,
+   2.5,
+   3.0
+  ]
+ },
+ "roof_tasks": 48,
+ "roof_seeds": 98304,
+ "roof_seed_range": [
+  48000000,
+  48518431
+ ],
+ "derived_panels_checked": [
+  "/home/newbiexvwu/PvZ-search/artifacts/stage4/multiplier_panel.json",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/curr39/artifacts/stage4/multiplier_panel.json",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/multiplier_panel.json",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/keep/artifacts/stage4/multiplier_panel.json",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/curr/artifacts/stage4/multiplier_panel.json"
+ ],
+ "derived_roof_clashes": [],
+ "unchanged_legacy_tasks": 270
+}

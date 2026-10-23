@@ -62,13 +62,14 @@ def _init(args) -> None:
     _W["env"].load_rollout_net(binary)
     if args.mode == "search":
         import search_play
-        from pvz_value_net import load_value_net
-        search_play._W.update(fast=net, vnet=load_value_net(args.value), lean_rollouts=True, batch_waits=True)
-        if args.static_value:
-            search_play._W['static_vnet'] = load_value_net(args.static_value)
+        keep, paths = search_play._export_values(args.value, args.static_value)
+        _W['value_keep'] = keep
+        search_play._W.update(fast=net, value_files=paths, env=_W['env'], lean_rollouts=True, batch_waits=True)
+        _W['env'].load_value_net(paths[0])
+        _W['env'].load_value_net(paths[1], static=True)
         if args.approx_static_value:
-            _W['reference_static_vnet'] = search_play._W.get('static_vnet', search_play._W['vnet'])
-            _W['approx_static_vnet'] = load_value_net(args.approx_static_value)
+            approx_keep, approx_paths = search_play._export_values(args.value, args.approx_static_value)
+            _W.update(reference_static_file=paths[1], approx_static_file=approx_paths[1], approx_value_keep=approx_keep)
 
 
 def _reset(seed: int):
@@ -185,7 +186,7 @@ def _search_decisions(seed: int) -> list[dict]:
         stats = {"searched": 0, "overrides": 0, "override_kinds": Counter()}
         search_play._W["rollout_sim_skip"] = mask
         if args.approx_static_value:
-            search_play._W['static_vnet'] = _W['approx_static_vnet'] if config is approx_sargs else _W['reference_static_vnet']
+            env.load_value_net(_W['approx_static_file'] if config is approx_sargs else _W['reference_static_file'], static=True)
         started = time.perf_counter()
         try:
             chosen = search_play._search(env, obs, policy_action, config, decision_seed, stats)

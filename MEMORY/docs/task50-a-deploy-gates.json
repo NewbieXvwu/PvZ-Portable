@@ -1,0 +1,124 @@
+{
+  "status": "passed",
+  "baseline": {
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable",
+    "sha256": "bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef"
+  },
+  "candidate": {
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+    "sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327"
+  },
+  "replay": {
+    "frames_per_engine": 166138,
+    "differences": 0,
+    "episodes": [
+      {
+        "level": 7,
+        "frames": 68517,
+        "final": {
+          "tick": 68464,
+          "wave": 30,
+          "result": 1
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "eb8ce774c99db68348d02ce686d722a06c3bb2f9e76238e36d84ee62f4fc52f9",
+        "historical_digest_differences": 0,
+        "tape_sha256": "f88b48afed74a89edc4c0f7b0d5d228d7e1ab8c78842eaace13b45ab2b62ba53"
+      },
+      {
+        "level": 12,
+        "frames": 22666,
+        "final": {
+          "tick": 22651,
+          "wave": 9,
+          "result": 2
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "24e5d410442fbce01f785236899ece7c089e2443860d093a0b5ec3df11e2b9db",
+        "historical_digest_differences": 22666,
+        "tape_sha256": "e34dc978220fa570dc86d22cb699c64d574f695c62a23e4b011db57fa9720a30"
+      },
+      {
+        "level": 21,
+        "frames": 22786,
+        "final": {
+          "tick": 22734,
+          "wave": 10,
+          "result": 2
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "c164ca06ff93c7ed1fa3ecf9ed39f406f863c01b6a80b6d0682fc5508534f15b",
+        "historical_digest_differences": 0,
+        "tape_sha256": "167963ab46a752a6c7e01e575d39df804a58343de12627178f3ab1c4158edd75"
+      },
+      {
+        "level": 10,
+        "frames": 52169,
+        "final": {
+          "tick": 52120,
+          "wave": 20,
+          "result": 1
+        },
+        "terminal": true,
+        "differences": 0,
+        "observation_stream_sha256": "350016aee2545416a67d8d261a00bb80f9292e1f12a2471aef8a39b9f4a177b8",
+        "historical_digest_differences": 0,
+        "tape_sha256": "528b19fb7455a2cde7b65bc3b0ef4e7c1569dafd9886cda389d29cb4d58d32a9"
+      }
+    ]
+  },
+  "rollouts": {
+    "roots": 64,
+    "leaves_per_binary_per_round": 192,
+    "rounds": 5,
+    "all_full_states_and_logical_stats_identical": true
+  },
+  "same_v4_value_gate": {
+    "value_sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+    "student_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "manifest_sha256": "a5c2e1c14606b642a838fc8e6a37b1b5ab1f489b086232fbb83accf87d891a39",
+    "encoder_version": 2,
+    "identical": true,
+    "runs": [
+      {
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/build/pvz-portable",
+        "executable_sha256": "a584efb5509ba626a47e7addbc05e7bbd57dbdb27b04465f302bf35ba8a87a01",
+        "roots": 64,
+        "leaves": 192,
+        "max_python_value_error": 1.1968539426199243e-07,
+        "full_and_scored_digest": "2bcb1dc376d9cfb15e78fb2772eaba9f7ee65bd16b427266fd318e68e945c408"
+      },
+      {
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+        "executable_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+        "roots": 64,
+        "leaves": 192,
+        "max_python_value_error": 1.1968539426199243e-07,
+        "full_and_scored_digest": "2bcb1dc376d9cfb15e78fb2772eaba9f7ee65bd16b427266fd318e68e945c408"
+      }
+    ]
+  },
+  "paired_throughput": {
+    "a": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable",
+    "b": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+    "a_median": 171243.8,
+    "b_median": 172462.6,
+    "ratios": [
+      1.0,
+      1.0106385418669848,
+      1.0183153524162234,
+      1.0071173379707763,
+      1.0734267218306224
+    ],
+    "ratio_median": 1.0106385418669848,
+    "correctness": "all rollout states and logical statistics identical",
+    "evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/paired-throughput_rounds",
+    "approx_log_ratio_t95_interval": [
+      0.9861159805335095,
+      1.0582889276137784
+    ]
+  }
+}

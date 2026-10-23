@@ -43,7 +43,7 @@ class VerifyOverrideTest(unittest.TestCase):
                 patch.object(search_play, "_rollout_policy", side_effect=mixed), \
                 patch.object(search_play, "_continuations") as gpu, \
                 patch("render_episode._frame", side_effect=lambda frame: frame.copy()), \
-                patch.object(search_play, "_values", side_effect=values):
+                patch.object(search_play, "_leaf_values", side_effect=values):
             search_play._verified_choice(None, {"tick": 60}, 7, [WAIT, PLANT],
                 [.4, .8], [3, 3], 1, 0, WAIT, args, 123, stats)
         self.assertEqual(batches, [[{"value": .2}, {"value": .4}]] * 2)

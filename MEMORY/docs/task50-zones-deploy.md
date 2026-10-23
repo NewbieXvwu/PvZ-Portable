@@ -35,4 +35,63 @@
 
 ## 结果
 
+- 步骤1a：合入 origin/roof 当前快照 2dcaef33；自动合并无冲突，保留屋顶全部族与种子映射，默认课程只准入 L41 r7 原版。
+
+- 步骤1b：roof 合并 a12ca704；合入 origin/fog 快照 f1dce346。雾族保留原索引8/9，roof置末且沿用独立48M段；DESIGN 雾18/19、屋顶顺延20；双方日志按提交时间交错保留。课程显式禁入全部fog族，仅准入屋顶L41。
+
+- 步骤1c：fog 合并 e9ff587a 已推送；课程/倍率定向28 passed + 4 subtests。修复种子宽度测试将独立roof误算进700k段的假设，新增所有旧族固定种子起点与roof/fog准入回归。
+
+- 步骤2：本工作树Release构建完成；PVZ_RESOURCE_DIR指定缓存资源，全套Python **382 passed + 133 subtests passed**（66.31秒、零跳过）。分支任务逐字段审计roof318/fog366项全同，合并414项，见task50-zones-registry.json。
+
+- 步骤3a：新建detached deploy3于7a67066a，复制perf的64-root engine_roots.json；未改deploy/deploy2。
+
+- 步骤3b：deploy3 PGO两阶段成功，源7a67066a5e62cec47432eaef87c542f6782270c3；二进制SHA256 `e231cdb9f872e50a7eec55180c8ca2b156076e2f0ffaba41a4100ab10d39a12d`，140份profile，最终ninja generate=0/use=161。构建证据task50-zones-build.json。
+
+- 步骤4：门禁证据提交31697972；deploy3/deploy2四存档整局逐tick完整观测 **166138帧/引擎、0差异**；64 root×3续走=192叶摘要及逻辑统计在五轮/十次运行全部逐位相同。配对CPU吞吐比中位1.04437×，范围0.98294–1.08156×，log比值t近似95%区间0.99496–1.08425含1，噪声内无退化；见task50-zones-gates.json。新增zones_replay_gate.py可复跑当前部署对照。
+
+- 步骤5：本树清单414任务/847872种子逐卡组合法；扫描330494份JSON、835020个既有种子，重叠0。隔离状态dry run列出38组/1824局，含 `roof_l41_train_r7 mult=1 games=48` 与deploy3完整collect命令，fog cell=0；摘要task50-zones-course.json。
+
+- 步骤6：交付审计通过：两次no-ff父链、双方日志全保留、DESIGN编号唯一、部署二进制/清单哈希、测试/门禁/课程证据均已复核。所有步骤新增二进制0字节、受跟踪忽略文件0；本任务游戏进程已归零，qc/deploy/deploy2未修改。审计task50-zones-completion-audit.json；提交并推送zones交主控审核。
+
+- [A.1] 合入pvz-env快照9b8ae8b13a7389104e474b7d19534f229c601c96，保留Mac clang PGO与原GCC路径；日志双方按提交时间保留。下一步合vcpp并重跑完整老师门禁。
+
+- [A.2] pvz-env合并8df7fa90；合入vcpp实际快照8e1f91f76b56c690b4b3a5c3134594a8b5f16d5b。保留CPU专用路径、雾human/xray、指标与worker复用，价值叶子/静态候选改用引擎实现，旧CUDA文件保持删除。直接Board价值编码补接雾可见性，新增双编码/双观测/静态/推演真实引擎回归。
+
+- [A.3] vcpp合并6b840b1e已推送；本树Release重建完成，全套 **395 passed + 133 subtests passed**（85.71秒，零跳过），含双编码×human/xray直接Board逐位特征、静态与叶值回归。诊断/重标注调用已迁移到导出价值权重接口；老师门禁冻结原task37配置、旧源码/旧二进制，三任务各32局两臂全部新跑，不复用旧局。见task50-a-validation.json。
+
+- [A.4] deploy3重建PGO成功，源2b743c62；SHA256 `0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327`，141份profile，generate=0/use=162。部署门禁正在重新执行。新dry run仍38组/1824局，L41原版48局、引擎deploy3，fog cell=0；见task50-a-build.json / task50-a-dry-run.json。
+
+- [A.5] 新after首局L7×1.5完整获胜，1098决策/219搜索，worker/engine CPU=6.209/104.330秒；root/future/动作序列与vcpp正式after首局全同。适配后门禁/基准19项单测通过。独立后台runner PID167609等待部署门禁PID165726完成后，自动串行before→after→shadow→compare，每阶段最多2游戏；三任务各32局两臂全新证据尚未完成，不作通过结论。状态与待办见task50-a-progress.json。
+
+- [A.6] 新deploy3部署门禁全过：四存档 **166138帧/引擎、0差异**；64 root×3完整叶状态/逻辑统计五轮全同；同一v4/编码2权重下Release与PGO的192个完整叶/叶值摘要逐位相同，Python概率最大误差1.197e-7。配对CPU吞吐比中位1.01064×（1.00000–1.07343×），无退化；见task50-a-deploy-gates.json。正式老师门禁已自动转before、2 worker；三任务完整32局一致率/CPU结论仍待完成。
+
+- [A.7] 正式门禁runner现为PID169780、before子进程169781；已确认两个旧基线游戏实际运行。配置/源码/模型/任务哈希冻结不变，目标before96+after96有效局及所需shadow，部署门禁已过。追加A仍在进行，完整一致率/CPU验收与最终[A]汇总待实际完成后补写。
+
+- [A.8] 首个完整配对L7 seed5712288复核：1098个root/future/搜索标记全同，老师选择219/219一致；扣噪声CPU比0.58300，两臂均赢；17份冻结输入/实现哈希现态全匹配。仅首种子审计，不代替每任务32对验收；原runner169780与before子进程169781持续存活，继续原链，不重启。
+
+- [A.9] 新增只读独立审计audit_zones_teacher.py：逐份校验冻结哈希、配对种子/全长trace/噪声计数/扣噪声CPU，要求所需shadow及原task37 comparison通过后才接受完整96对。当前部分证据审计通过，strict模式按预期拒绝尚缺的全量证据；未改运行中的门禁脚本或输入。
+
+主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
+
+```bash
+/usr/bin/tmux new-session -d -s qc '/usr/bin/env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/scripts/curriculum_queue.py --rounds 100 --workers 2 --round-games 768 --games-per-group 48 --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/stage4/multiplier_panel.json --state /home/newbiexvwu/pvz-logs/curriculum_state.json --log /home/newbiexvwu/pvz-logs/curriculum.log --out /home/newbiexvwu/PvZ-search/artifacts/hard --frames /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2 --recipe /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/recipes/dw4i.json --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable --resource-dir /home/newbiexvwu/.cache/pvz-research-resources 2>&1 | /usr/bin/tee -a /home/newbiexvwu/pvz-logs/qc.out'
+```
+
+沿用生产state/偏移和dw4i配方、v4/branch1，控制器自动加入L41、暂缓所有fog；主控须先确认旧控制器已退出、现有组间停止标志已清理，再执行上述命令。
+
 ## 问题
+
+- 历史fog四存档的摘要不能直接充当deploy2参考：deploy2重放L7通过，但L12第0帧已与历史摘要不同；保留原始动作/摘要，使用当前deploy2重生成完整逐tick参考，再由deploy3严格比对全字段。
+
+- 最终父链核验更正：初读origin/fog为15e947b3，merge执行时共享ref已更新为f1dce346；实际e9ff587a第二父节点为f1dce346，额外含追加D报告及诊断脚本。测试、PGO、门禁均基于该实际合并内容；任务字段审计也已对实际父节点重算，366项全同。
+
+## 主控追加 A（2026-10-23 23:05）：一并合 task37（价值网进引擎）与 pvz-env 新提交，重建 deploy3
+task37（分支 `vcpp`，codex2-b 已完成）：老师一致率 100% / 99.99% / 100%，**整局 CPU 降到 0.78–0.82**；报告见 `vcpp` 分支的 `MEMORY/docs/value-in-engine.md`。qc 只切一次，所以合在一起：
+1. 在 zones 依次 `git merge --no-ff origin/pvz-env`（含 task47 Mac clang PGO，GCC 路径不变）和 `git merge --no-ff origin/vcpp`。冲突两边功能都留。`search_play.py` 的叶值路径以 vcpp 的引擎内实现为准；要与 v4（编码 v2）、雾观测（human / xray）都对上。
+2. 全套测试全过。task37 的老师一致率门禁在 zones 上重跑一遍（三任务各 32 局，用 vcpp 的同一脚本）。
+3. **重建 deploy3**：它还没被 qc 用，可以重建。把 deploy3 快进 / 检出到新的 zones HEAD，`scripts/build_pgo.sh bench`，`fprofile-generate` 计数为 0。门禁同前：4 个非雾存档逐帧 0 差异、叶摘要逐位相同（同一价值网口径）、吞吐在噪声内或更快。
+4. 重新 dry run（L41 进课程），在"结果"写 `[A]` 一行：合并提交号、测试与门禁数字、deploy3 SHA、qc 重启命令。
+
+- [A] 门禁工具适配：现行采集不再返回旧measure_cpu字段，首个after试跑终局后在结果落盘失败，未计有效局；profile_value_engine改为对两臂在同一边界统一读取worker getrusage与engine /proc CPU，再单独扣除换未来噪声，不恢复生产开关。正式配置及192局规模不变。
+
+- [A] 已修复本地旧基线副本未保留执行权限的问题：恢复原0755且SHA256不变；首轮96项均在启动前失败、无有效游戏，原runner终态failed后才重新执行同一计划，失败启动不计入任何门禁数字。

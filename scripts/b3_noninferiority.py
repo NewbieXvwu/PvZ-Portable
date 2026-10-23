@@ -80,7 +80,9 @@ def correctness_difference(a, b, heavy=None):
 
 def init(args):
     import search_play as t
-    t._init_worker(args.value, args.student, 61, args.static_value)
+    keep, paths = t._export_values(args.value, args.static_value)
+    t._W["value_keep"] = keep
+    t._init_worker(paths[0], args.student, 61, paths[1])
 
 
 def open_game(seed, family, args):
@@ -97,6 +99,8 @@ def open_game(seed, family, args):
     try:
         obs, _ = env.reset(deck=tuple(kw['deck']), task=task)
         env.load_rollout_net(t._W['rollout_file'])
+        env.load_value_net(t._W['value_files'][0])
+        env.load_value_net(t._W['value_files'][1], static=True)
     except BaseException:
         env.close()
         raise
@@ -237,10 +241,8 @@ def heavy_reference(env, obs, policy, args, decision_seed, arms):
     try:
         plants = [{'type': 'plant', **{k: a[k] for k in ('packet', 'row', 'col')}}
                   for a in obs['legal_actions']['plants']]
-        frames = t._static_frames(env, root, plants, obs.get('sun_income_rate'))
-        assert len(frames) == len(plants)
-        scores = list(zip(t._values([f for _a, f in frames], static=True),
-                          [a for a, _f in frames]))
+        scores = t._static_scores(env, root, plants, obs.get('sun_income_rate'))
+        assert len(scores) == len(plants)
         actions = pool_actions(scores, arms, plants, SAMPLE_SEED + decision_seed)
         merged = {key(a): a for a in actions}
         for arm in arms.values():
