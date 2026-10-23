@@ -22,6 +22,8 @@ def summarize(manifest, runs, arms, count):
                 raise ValueError(f'{path}: unexpected seed/arm')
             if len({row['seed'] for row in rows}) != len(rows):
                 raise ValueError(f'{path}: duplicate game')
+            if any(row.get('terminal') is not True for row in rows):
+                raise ValueError(f'{path}: nonterminal game cannot be counted as completed evaluation')
             losses = []
             for row in rows:
                 if row['won']:

@@ -83,7 +83,7 @@ FAMILIES = (
 # Registry coverage and curriculum admission are separate: unmeasured roof levels have
 # reproducible tasks/multipliers, but cannot enter collection before the cold-start gate.
 # Filled from the complete, preregistered teacher evaluation (>=50% at original difficulty).
-CURRICULUM_LEVELS = {'roof': ()}
+CURRICULUM_LEVELS = {'roof': (41,)}  # task46-roof-admission.json: r7 teacher L41 = 15/16
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
 # 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。

@@ -1,0 +1,10 @@
+{
+ "original": {
+  "cell": "roof_l41_train_r7                      1      -     0      1  c1roofl41r7m100",
+  "command": "/home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/scripts/search_play.py --rollout-policy /home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt --verify-samples 9 --student-candidates 2 --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/roof_panel.json --task-id roof_l41_train_r7 --seed-offset 0 --seeds 1 --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/build/pvz-portable --dagger-beta 0 --workers 4 --resource-dir /home/newbiexvwu/.cache/pvz-research-resources --frames /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/course_frames --frames-label c1roofl41r7m100 --out /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/course_runs/c1roofl41r7m100_1"
+ },
+ "multiplier": {
+  "cell": "roof_l41_train_r7                   1.25      -     0      1  c1roofl41r7m125",
+  "command": "/home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/scripts/search_play.py --rollout-policy /home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt --verify-samples 9 --student-candidates 2 --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/multiplier_panel.json --task-id roof_l41_train_r7_m125 --seed-offset 0 --seeds 1 --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/build/pvz-portable --dagger-beta 0 --workers 4 --resource-dir /home/newbiexvwu/.cache/pvz-research-resources --frames /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/course_frames --frames-label c1roofl41r7m125 --out /home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/course_runs/c1roofl41r7m125_1"
+ }
+}

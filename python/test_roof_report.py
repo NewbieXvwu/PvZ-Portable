@@ -57,6 +57,10 @@ class RoofReportTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.report(rows)
 
+    def test_nonterminal_game_cannot_be_completed_evidence(self):
+        with self.assertRaises(ValueError):
+            self.report([dict(self.game, terminal=False)])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -860,3 +860,6 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 - roof 倍率种子预登记为独立段：`48,000,000 + multiplier_index×100,000 + (N−41)×2048`，六档 1.25/1.5/1.75/2/2.5/3，每任务2048；九关上界48,518,431。旧族5M起点/700k档距/32槽映射逐一保持不变，不把41–49直接塞进旧32槽，也不依赖fog族的序号。控制器 dry run 展示 collect 完整命令；最终 FAMILIES 屋顶准入关卡待正式老师结果冻结，未触动运行中的 qc。
 
 - `FAMILIES` 已登记 roof 八个普通关卡（41–44、46–49）的六档倍率，共48任务；课程使用独立 `CURRICULUM_LEVELS` 准入表，待完整原版老师胜率≥50%才放行，未测46–49暂缓，45传送带排除。低于20%的普通关卡按 [task46-roof-followup-plan.json](MEMORY/docs/task46-roof-followup-plan.json) 先用既有筛选赢家c05复核卡组，再做r7的0.5倍率配对诊断，不覆盖原族。
+
+- L41 r7 原版老师正式16局已齐：**15/16**，学生 **8/16**，因此 `CURRICULUM_LEVELS["roof"]=(41,)`。其余正在评估或未测的关卡暂缓；后续若过线按完整证据补表。准入数据见 [task46-roof-admission.json](MEMORY/docs/task46-roof-admission.json)。
+- 屋顶倍率清单实际生成318任务（旧270+roof48）、651264个种子，329397个JSON/835018个既有种子穷举零冲突；另比对6份派生倍率清单（含fog工作树）屋顶种子零冲突，270个旧任务种子逐一等于原分配公式。摘要见 [task46-roof-multiplier-audit.json](MEMORY/docs/task46-roof-multiplier-audit.json)。本地两份隔离状态的 dry run 都显示roof L41原版/1.25倍率的cell与collect命令，[命令证据](MEMORY/docs/task46-roof-course-check.json)；未写生产状态、未启动采集。

@@ -1,5 +1,6 @@
 """Roof registry contract: terrain, independent seeds, frozen legacy tasks, special level scope."""
 from pathlib import Path
+import json
 import sys
 from types import SimpleNamespace
 import unittest
@@ -9,9 +10,22 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 from make_roof_panel import EVAL_COUNT, EVAL_START, ROOF, TRAIN_LEVELS
 from pvz_tasks import deck_for_level, deck_for_seed, profile_for_deck, terrain_covered
 from zone_panel import build_document
+from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES
+from curriculum_queue import training_base_ids
 
 
 class RoofPanelTest(unittest.TestCase):
+    def test_curriculum_admission_matches_completed_teacher_evidence(self):
+        evidence = json.loads((ROOT / 'MEMORY/docs/task46-roof-admission.json').read_text())
+        eligible = {cell['level'] for cell in evidence['measured']
+                    if cell['complete'] and cell['teacher_games'] == 16
+                    and cell['teacher_wins'] / cell['teacher_games'] >= 0.5
+                    and cell['level'] in TRAIN_LEVELS}
+        self.assertEqual(set(CURRICULUM_LEVELS['roof']), eligible)
+        self.assertEqual({t for t in training_base_ids() if t.startswith('roof_')},
+                         {f'roof_l{level}_train_r7' for level in eligible})
+        self.assertEqual(next(f[3] for f in FAMILIES if f[0] == 'roof'), TRAIN_LEVELS)
+
     def setUp(self):
         args = SimpleNamespace(deck='', suffix='', combined=True, skip=[], include=[],
                                seed_start=EVAL_START, seeds=EVAL_COUNT, train_seeds=8192)
