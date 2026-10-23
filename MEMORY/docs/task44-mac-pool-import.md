@@ -44,6 +44,8 @@
 
 - 2026-10-23，步骤6：`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest /home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/python -q` 全过：333 passed / 111 subtests passed，62.39 秒，无跳过。使用与本分支 `src/`、`CMakeLists.txt` 无差异的 `f2ae755a` deploy2 二进制副本（仅复制到本工作树 ignored build，未修改 deploy2）。
 
+- 2026-10-23，步骤5：已在 `MEMORY/notes/desktop.md` 登记通用入口的绝对路径用法、环境变量、共享账本位置与磁盘门禁。下一次运行：Mac 第 5–8 轮每上传完一个标签后的下一次主控巡检即可运行同一入口；不新建定时任务、不改 qc。当前 HF 观察到前四轮外还有 p21/p22/p23/p24 的第 5 轮上传，前四轮导入完成后用同一入口补入并验证复用。
+
 ## 问题
 
 - task23/task27 的历史 study-plan JSON 仍记录原脚本名及其 SHA256，这是冻结证据，保留原样；可执行调用方全部迁移到统一入口，旧脚本已删。统一入口只读取导出的 `HF_TOKEN` / `PVZ_HF_REPO`，不再自行读取 shell 配置。
