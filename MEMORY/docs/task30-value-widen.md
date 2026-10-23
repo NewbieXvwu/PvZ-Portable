@@ -86,3 +86,26 @@
 - 2026-10-23 13:05 [restart-resume] 12:40 重启杀掉了 m250 两臂；核对 v3 L7 已落盘 16/32 局（JSON 逐行完整、0 胜，与 m250 压力预期一致），search_play 按 (arm, seed) 去重原生续跑，无需作废。磁盘充足（848G）。v3 臂已用 run_in_background 后台续跑（workers=4，qc 队列未动），随后 v4 臂同种子补齐后出 paired.json。
 - 2026-10-23 18:20 [step5-c] m250 v3 臂两关 32/32 完成（断点续跑计入原有 16 局）：L7 0/32 胜（m250 压穿老师，两臂预计都顶不住，配对只能证等劣）、L10 32/32 全胜（m250 仍有余力）。v4 臂同种子已启动（workers=4）。
 - 2026-10-23 23:30 [step5-d] m250 配对完成（两臂各 32/32，complete=true）：L7 v3 0/32 vs v4 2/32（净 +2，p=0.5，无 v4 受损局）、L10 两臂 32/32 顶格（净 0，p=1.0）。m150+m250 判据全部满足，白天压力验证通过，value-widen.md 结论节已补记并移除回退条款。第 5 步三项验证全部完成，建议不变：整臂换 v4。
+
+## 第 6 步：采用 v4 并合进主线（主控 2026-10-23 15:40 追加）
+
+**主控决定：整臂换 v4**（不分区）。依据是 value-widen.md 第 5 步：白天 m150/m250 不掉，夜间 96 对净 +20，泳池 L21 +9，L24 净 0。泳池全败区叶值压平是已知限制，修法另开 v5（见第 4 条），不挡这次换。
+
+1. **合主线**：在本工作树 `git merge --no-ff origin/pvz-env`。冲突四处：`MEMORY/2026-10-22.md`、`MEMORY/2026-10-23.md`、`task30-value-widen.md`、`scripts/search_play.py`。规则：
+   - 日志两侧条目全保留，按时间排；
+   - `search_play.py` 以主线结构为准：主线已删 CUDA（`_leaf_values` 的 CUDA 路径、`--rollout-backend`）和判死开关（`--margin` 已成常量、`--candidate-generator` 等），这些位置不要加回来。只把 vnet 的功能落在主线结构上：`encode_frame(f, net.encoder_version)` 和 `--leaf-probe` 诊断。`--leaf-probe` 保留，v5 要用它验收；它只写诊断行，不改决策。
+   - CUDA 的 `encoder_version != 1` 保护随 CUDA 一起删。
+2. **v4 成为唯一默认**：
+   - `scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 改指 `artifacts/value_net/v4/model.pt`。
+   - 把 `artifacts/task30/v4/model.pt` 复制到主检出 `/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt`，不进 git；复制后核对 SHA256 与 HF 回验值一致。
+   - `git grep -n "value_net/v3"` 找出其余默认值（`search_play.py`、面板/评估脚本、DESIGN 的现行配置描述），凡是"现行默认"的都改 v4。历史报告里记录当时用 v3 的句子不改。
+   - DESIGN.md 现行方案里价值网的描述改成 v4，并写一行依据（链 value-widen.md 第 5 步）。
+3. **测试**：用本工作树自己的 `build/` 跑 `python3 -m pytest python -q -p no:cacheprovider`，与合并前主线比不得多出失败。另做一次冒烟：用 v4 跑 `search_play.py` 一局 day_l7（≤2 个游戏进程），确认 C++ 推演路径能用 v4（编码 v2）。
+4. **v5 立项**：只写，不跑。在 value-widen.md 末尾新节"v5：泳池决策级标签"写一页计划，内容包括：
+   - 标签来源：泳池可赢关的老师同局候选结果，用分叉采集通道；
+   - 需要多少点；
+   - 验收：泳池 L24/L26 用 `--leaf-probe` 量离散度，要回到 v3 量级，同时 L21 配对不掉。
+   - 主控之后另派。
+5. 提交，`git push origin vnet`，在本任务书"结果"写 `[step6]` 一行：合并提交号、冲突怎么解、测试数字、v4 SHA256。**不推 pvz-env**，主控审后快进并在 qc 两轮之间切换。
+
+规则照旧：≤2 个游戏进程；不碰 tmux `qc`；只用绝对路径；禁止 `git add -f`；`.pt` 不进 git。
