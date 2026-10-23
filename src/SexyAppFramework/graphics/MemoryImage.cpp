@@ -1156,11 +1156,13 @@ uint32_t* MemoryImage::GetBits()
 			if (!mFilePath.empty())
 				aLoadedImage.reset(ImageLib::GetImage(mFilePath, true));
 
-			if (aLoadedImage != nullptr && aLoadedImage->GetWidth() == mWidth && aLoadedImage->GetHeight() == mHeight)
-				memcpy(mBits.get(), aLoadedImage->GetBits(), aSize*sizeof(uint32_t));
+			// Headless decodes images for their size only, so there are no pixels to recover (task32).
+			uint32_t* aLoadedBits = (aLoadedImage != nullptr) ? aLoadedImage->GetBits() : nullptr;
+			if (aLoadedBits != nullptr && aLoadedImage->GetWidth() == mWidth && aLoadedImage->GetHeight() == mHeight)
+				memcpy(mBits.get(), aLoadedBits, aSize*sizeof(uint32_t));
 			else
 			{
-				if (mRenderData != nullptr || !mFilePath.empty())
+				if (aLoadedBits != nullptr && (mRenderData != nullptr || !mFilePath.empty()))
 					LogErrorLn("failed to recover bits for image '{}'", mFilePath);
 				memset(mBits.get(), 0, aSize*sizeof(uint32_t));
 			}

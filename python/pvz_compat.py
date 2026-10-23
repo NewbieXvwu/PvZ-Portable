@@ -56,13 +56,6 @@ LEGACY: dict[str, dict] = {
         "remove_when": "传送带任务族退役",
         "where": ["python/pvz_rollout_policy.py:free_cards"],
     },
-    "dense-boards": {
-        "what": "训练器的稠密棋盘装载路径（--dense-boards）",
-        "kept_for": "python/test_frame_store_chunks.py 等对拍 CSR 与稠密两条路径",
-        "since": "2026-10-19",
-        "remove_when": "CSR 路径有了独立的逐元素测试",
-        "where": ["scripts/train_rollout_policy.py:_board_store"],
-    },
     "aux-labels": {
         "what": "辅助标签（row_damage_labels / cache_aux / aux_weight）",
         "kept_for": "task16 的辅助头实验数据与训练配方",
