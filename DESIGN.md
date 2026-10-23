@@ -846,3 +846,36 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 ### 14.17 价值网络叶子默认换 v4（task30，2026-10-23）
 
 老师叶子价值网络默认由 `value_net/v3` 改为 `value_net/v4`（编码 v2：空槽跳过、传送带免费与同类手牌聚合、公开场景/坟头标量；`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 与 `scripts/unified_panel.py` 的 `--value` 默认同步改）。依据：[value-widen.md 第 5 步](MEMORY/docs/value-widen.md)——同种子配对下白天 m150/m250 不掉（m250 L7 净 +2、L10 净 0）、夜间 96 对净 +20、泳池 L21 净 +9、L24 净 0；静态估值仍用 `value_branch1`。已知限制：全败泳池区叶值压平（修法另立 v5）；v4 不入 git，走 HF `transfer/value_v4.pt`（SHA256 回验一致）。
+
+### 14.18 屋顶区 roof 任务族与冷启动验收（task46，2026-10-23）
+
+**范围与卡组**：L41–L49，排除L50/Boss。引擎实测九关均白天；花盆为L41每行c0–4、L42每行c0–3、其余每行c0–2。L45是Bungee Blitz传送带，deck只描述初始手牌，保留评估、排除普通训练。观测已有植物类型/行列/屋顶标志；玉米加农炮落点仍是动作缺口，本阶段没有新增动作头。
+
+- 对照 `roof_lN_eval` 保留旧 `deck_for_level` 的 `[0,1,2,3,4,5,33]`；新族 `roof_lN_eval_r7` / `roof_lN_train_r7` 为 `[0,1,2,3,32,35,33]`，唯一实现 `pvz_tasks.deck_for_level(N,family="roof_r7")`。旧默认和存档显式deck不变。
+- 选卡按 [原预登记](MEMORY/docs/task46-roof-plan.json)：九关共同Crazy Dave池上替换原卡组恰1/2张，`Random(46)`打乱，取前16个地形覆盖且九关整组零警告的候选。L41老师每套2局，按胜局→平均终局波数/总波数→id排序。c02/c05各2/2，其余0/2，依规则选c02；[筛选证据](MEMORY/docs/task46-roof-selection.json)。二周目真实DECK_OPTIONS显示32/34/39全解锁；生成时逐关复查解锁与整组警告，不按首轮奖励猜测。
+- `scripts/make_roof_panel.py` 复用 `zone_panel.Family/Zone`，本地清单 `artifacts/task46/roof_panel.json`：9对照评估+9r7评估+8r7训练=26任务。训练只含41–44、46–49，L45特殊语义单列。`make_multiplier_tasks.FAMILIES` 已登记roof八关六档倍率，共48个新变体；本地 `artifacts/task46/multiplier_panel.json` 总318任务（旧270+roof48）。
+
+| 用途 | 种子段 |
+|---|---|
+| 卡组筛选 | 44000000、44000001；低胜率c05复核44000100、44000101 |
+| 原版评估 | 45000000–45000031，每关每卡组32种子；本阶段老师/学生各取前16做配对比较 |
+| r7训练 | 46000000+(N−41)×10000，每关8192 |
+| 六档倍率训练 | 48000000+档序号×100000+(N−41)×2048，每任务2048，最高48518431 |
+
+倍率独立于旧5M/700k/32槽映射，也不依赖fog族序号。[倍率审计](MEMORY/docs/task46-roof-multiplier-audit.json)验证651264个派生种子、270个旧任务分配不变；[最终全仓审计](MEMORY/docs/task46-roof-final-seed-audit.json)重扫329884个JSON，其他工作树/主目录1830824个唯一种子（含六份派生倍率面板）与全部预留段冲突0。
+
+**正式冷启动**：dw4i_s1（本机无dw5i_s1）+叶值v4+静态branch1，模型/引擎哈希与原预登记相同。参数照 `curriculum_queue.command_for`（verify=9、student-candidates=2），老师beta=1执行搜索，学生beta=0/fast；两卡组×五关×两种策略×16局=320局，全部terminal且种子/参数/身份核验通过。[逐输局波数/路/僵尸及原文件哈希](MEMORY/docs/task46-roof-cold-start.json)。
+
+| 关 | 原卡组老师/学生 | r7老师/学生 | 原版课程决定 |
+|---|---|---|---|
+| L41 | 0/16、0/16 | 15/16、8/16 | 准入 |
+| L42 | 0/16、0/16 | 4/16、0/16 | 暂缓 |
+| L43 | 0/16、0/16 | 2/16、0/16 | 先查卡组与低倍率 |
+| L44 | 0/16、0/16 | 0/16、0/16 | 先查卡组与低倍率 |
+| L45 | 0/16、1/16 | 2/16、0/16 | 传送带，排除普通训练 |
+
+**低胜率诊断**：[条件预登记](MEMORY/docs/task46-roof-followup-plan.json)先查既有筛选赢家c05，L43/L44真实引擎均零警告/全解锁，老师各0/2（[证据](MEMORY/docs/task46-roof-deck-recheck.json)，不作不可赢断言）；之后r7倍率0.5老师分别14/16、4/16，学生7/16、1/16，同原版种子配对净增且无丢失原胜局（[完整64局证据](MEMORY/docs/task46-roof-half-results.json)）。数据支持后续考虑L43独立0.5起步；L44仍弱。0.5评估不覆盖原版训练任务，现行控制器档位仍从1.0起，低倍率训练起点由主控后续决定。
+
+**课程可用性**：`CURRICULUM_LEVELS['roof']=(41,)`，原版老师完整16局≥50%才放行。L42–44及未测胜率的L46–49暂缓，L45不入普通课程；[准入表](MEMORY/docs/task46-roof-admission.json)。两份隔离状态dry run已列出L41原版与m125的cell及collect命令（[命令证据](MEMORY/docs/task46-roof-course-check.json)）。本分支没有启动qc采集、修改tmux或生产队列状态；何时采由主控决定。
+
+**引擎与测试**：0.5诊断发现Python允许0.1–10而C++ reset最低1.0，仅将 `EnvironmentReset` 下限对齐0.1。原版320局仍按旧引擎身份冻结，新引擎按 [修订](MEMORY/docs/task46-roof-engine-amendment.json) 在门禁后才用于低倍率。L1–49逐决策公开/隐藏状态共28999帧零差，其中非屋顶25113帧；L35砸罐比较2001状态后达上限，其他48关到终局（[重放证据](MEMORY/docs/task46-roof-engine-gate.json)）。已有C++12契约场景/220490坐标逐位测试通过，全Python360项+133子测试通过，实际0.5 reset/波次计数回归通过（[验收记录](MEMORY/docs/task46-roof-validation.json)）。
