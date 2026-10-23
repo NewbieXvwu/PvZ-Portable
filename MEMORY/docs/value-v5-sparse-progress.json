@@ -204,5 +204,73 @@
     "approved_to_continue": true
    }
   }
- ]
+ ],
+ "bootstrap_v4_pair_accuracy": {
+  "protocol": "same 96 frozen teacher roots, actual first-future nonterminal leaves, fp16 board/v2 scalars as upcoming training shards",
+  "diagnostic_fit_seeds_only": true,
+  "held_out_validation": false,
+  "seeds": [
+   2000068,
+   2000069,
+   2000070,
+   2000072,
+   2000073,
+   2000074,
+   2000076,
+   2000082
+  ],
+  "rows": 489,
+  "wins": 269.0,
+  "win_rate": 0.5501022494887525,
+  "mean_v4_prediction": 0.15343603491783142,
+  "v4": {
+   "pair_accuracy": 0.5645756457564576,
+   "pairs": 271,
+   "positions": 88
+  },
+  "by_seed": {
+   "2000068": {
+    "pair_accuracy": 0.6285714285714286,
+    "pairs": 35,
+    "positions": 11
+   },
+   "2000069": {
+    "pair_accuracy": 0.6296296296296297,
+    "pairs": 54,
+    "positions": 11
+   },
+   "2000070": {
+    "pair_accuracy": 0.5454545454545454,
+    "pairs": 33,
+    "positions": 11
+   },
+   "2000072": {
+    "pair_accuracy": 0.0,
+    "pairs": 4,
+    "positions": 10
+   },
+   "2000073": {
+    "pair_accuracy": 0.4897959183673469,
+    "pairs": 49,
+    "positions": 11
+   },
+   "2000074": {
+    "pair_accuracy": 0.8292682926829268,
+    "pairs": 41,
+    "positions": 12
+   },
+   "2000076": {
+    "pair_accuracy": 0.3448275862068966,
+    "pairs": 29,
+    "positions": 11
+   },
+   "2000082": {
+    "pair_accuracy": 0.4230769230769231,
+    "pairs": 26,
+    "positions": 11
+   }
+  },
+  "model_sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+  "gate_sha256": "45901f229f8f2bce5bdd8bc34e310ba3945c23e02d810ddb6721cbb900d58b12"
+ }
 }
