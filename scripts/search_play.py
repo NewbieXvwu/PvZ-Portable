@@ -164,12 +164,12 @@ VALUE_BATCH = 32
 
 def _values(frames: list[dict], static: bool = False) -> list[float]:
     import torch
-    from pvz_value_net import featurize
+    from pvz_value_net import encode_frame
     net = _W.get("static_vnet", _W["vnet"]) if static else _W["vnet"]
     values: list[float] = []
     for start in range(0, len(frames), VALUE_BATCH):
         part = frames[start:start + VALUE_BATCH]
-        boards, scalars = zip(*(featurize(f) for f in part))
+        boards, scalars = zip(*(encode_frame(f, net.encoder_version) for f in part))
         scalars = torch.stack(scalars)
         if net.context:      # the game's multiplier and zombie roster, set by _play at reset
             scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(part), -1)], dim=1)
@@ -297,6 +297,41 @@ def _static_frames(env, root: int, actions: list[dict], income) -> list[tuple[di
                 frame["sun_income_rate"] = income
                 out.append((action, frame))
     return out
+
+
+_LEAF_PROBE_COUNT = 0
+
+
+def _probe_decision(args, obs: dict, candidates: list[dict], totals: list[float], chosen: dict,
+                    decision_seed: int, policy_action: dict, best: int, policy_index: int) -> None:
+    """Opt-in diagnostic: one JSON line per search decision with candidate-leaf dispersion.
+
+    Off unless --leaf-probe is given, so default behaviour and every recorded result stay
+    unchanged. Writes per worker process (<path>.<pid>.jsonl) to avoid cross-process locking.
+    Pruned halving candidates carry -inf and are excluded; candidates vs scored keeps that
+    visible instead of silently shrinking the set.
+    """
+    global _LEAF_PROBE_COUNT
+    path = getattr(args, "leaf_probe", None)
+    if not path:
+        return
+    limit = getattr(args, "leaf_probe_limit", 0)
+    if limit and _LEAF_PROBE_COUNT >= limit:
+        return
+    import math
+    finite = sorted((float(v) for v in totals if math.isfinite(v)), reverse=True)
+    if len(finite) < 2:
+        return
+    mean = sum(finite) / len(finite)
+    std = (sum((v - mean) ** 2 for v in finite) / len(finite)) ** 0.5
+    row = dict(task=args.task_id, seed=decision_seed // 10000, decision=decision_seed % 10000,
+               tick=int(obs.get("tick", -1)), candidates=len(candidates), scored=len(finite),
+               mean=round(mean, 6), std=round(std, 6), top1_top2=round(finite[0] - finite[1], 6),
+               best=best, policy_index=policy_index, overridden=chosen is not policy_action,
+               chosen=json.dumps(chosen, sort_keys=True), policy=json.dumps(policy_action, sort_keys=True))
+    with open(f"{path}.{os.getpid()}.jsonl", "a") as stream:
+        stream.write(json.dumps(row) + "\n")
+    _LEAF_PROBE_COUNT += 1
 
 
 def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
@@ -472,8 +507,11 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
     if totals[best] - totals[policy_index] > MARGIN and best != policy_index:
         stats["overrides"] += 1
         stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
-        return candidates[best]
-    return policy_action
+        chosen = candidates[best]
+    else:
+        chosen = policy_action
+    _probe_decision(args, obs, candidates, totals, chosen, decision_seed, policy_action, best, policy_index)
+    return chosen
 
 
 def _frame_json(frame: dict) -> str:
@@ -525,12 +563,17 @@ def _play(job: dict) -> dict:
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
         planted: dict[int, int] = {}
+        planted_by_type: dict[int, int] = {}
+        from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
         if job["arm"] == "fast" and not args.frames:
             obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
-            planted = {index: count for index, count in enumerate(details["planted"]) if count}
+            planted = planted_slots(details)
+            planted_by_type = read_types(details,task_definition)
+            if planted_by_type is None or planted is None:
+                raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
         while not obs["terminal"] and decisions < MAX_ACTIONS:
             action = policy_choice = _fast_action(obs, fast_state)
             _W["student_history"] = fast_state.get("history")
@@ -555,6 +598,7 @@ def _play(job: dict) -> dict:
             # wall-nut takes another nut of the same type, Board::CanPlantAt) -- record what stood
             # there, so the report can say how often the teacher actually used it. Harmless for
             # ordinary plants: the legal list never offers an occupied cell without first aid.
+            planted_type = plant_type_before_action(obs,action['packet']) if action['type']=='plant' else None
             if action["type"] == "plant":
                 occupant = next((p for p in obs.get("plants") or []
                                  if p["row"] == action["row"] and p["col"] == action["col"]), None)
@@ -563,11 +607,13 @@ def _play(job: dict) -> dict:
                         "tick": obs["tick"], "row": action["row"], "col": action["col"],
                         "packet": action["packet"], "occupant": occupant.get("type"),
                         "occupant_health": occupant.get("health"),
-                        "same_type": occupant.get("type") == action["packet"]})
+                        "plant_type":planted_type,"same_type": occupant.get("type") == planted_type})
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
             if not rejected and action["type"] == "plant":
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
+                assert planted_type is not None and planted_type >= 0
+                planted_by_type[planted_type] = planted_by_type.get(planted_type, 0) + 1
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
             if frames is not None:
@@ -627,7 +673,8 @@ def _play(job: dict) -> dict:
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
-            "mowers_used": mowers_start - mowers_left, "planted": planted,
+            "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
+            "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],
             **{name: stats.get(name, 0) for name in ("rollout_batches", "rollout_lanes",
                 "halving_candidates", "halving_rollouts", "halving_selected_lanes")},
@@ -665,6 +712,10 @@ def main() -> None:
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
     p.add_argument("--horizon", type=int, default=2500)
+    p.add_argument("--leaf-probe", help="diagnostic: write one JSON line per search decision with "
+                   "candidate-leaf mean/std/top1-top2 to <path>.<pid>.jsonl; off by default")
+    p.add_argument("--leaf-probe-limit", type=int, default=0,
+                   help="per worker decision cap for --leaf-probe; 0 = unlimited")
     p.add_argument("--verify-samples", type=int, default=0,
                    help="extra independent futures for student and challenger before an override (0 = disabled)")
     p.add_argument("--min-gap", type=int, default=300,

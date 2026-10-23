@@ -182,3 +182,85 @@ PVZ_NO_POPUP=1 python3 scripts/engine_replay_compare.py \
    与贴图相比不值得改，且 `PoolEffect` 在 `Board::Update` 里每帧建粒子，要跳过它得动更新循环。
 3. **训练现场的 1.6 GB**（torch + 一次 2048 行前向/反向的激活）没动：它不随数据量增长，
    再压要改 batch 或做检查点，前者改配方、后者实测无收益（见 5.3）。
+
+## 7. 磁盘存量（档案与日志，2026-10-23）
+
+内存账本之外的存量账。两项都**不丢字节**：转换后的 npz 里存着原始 JSON 文本，轮转后的
+`.gz` + 明文尾巴拼起来就是完整日志。
+
+### 7.1 旧 JSONL 档案 → frames.npz
+
+```bash
+# Mac（全量，先 --dry-run 看清单）
+python3 scripts/convert_frames_npz.py --data /Users/newbiexvwu/PvZAgent/artifacts --jobs 4 --dry-run
+python3 scripts/convert_frames_npz.py --data /Users/newbiexvwu/PvZAgent/artifacts --jobs 4 --delete \
+    --report MEMORY/docs/frames-npz-report.json --manifest MEMORY/docs/frames-npz-converted.txt.gz
+
+# 台式机（WSL）：同一条命令，换 --data
+python3 scripts/convert_frames_npz.py --data ~/PvZAgent/artifacts --jobs 4 --dry-run
+```
+
+删原文件前逐档过五道校验：npz 里存的字节与 JSONL 原文逐字节相同、每一帧解析出的 dict 全等、
+行索引恰好等于有标签且未被拒的帧号、`encoder` 签名是当前版本、六个数组的行数与行索引一致。
+默认跳过 60 分钟内改过的档案（不碰正在写的采集）。`--delete` 只删已通过校验的那些，
+每个删掉的文件（原大小 / npz 大小 / 状态 / 路径）记在 manifest 里。
+
+### 7.2 日志轮转
+
+```bash
+# Mac
+python3 scripts/rotate_logs.py --root /Users/newbiexvwu/PvZAgent/artifacts --dry-run
+python3 scripts/rotate_logs.py --root /Users/newbiexvwu/PvZAgent/artifacts
+
+# 台式机（WSL）
+python3 scripts/rotate_logs.py --root ~/PvZAgent/artifacts
+```
+
+默认 `--min-mb 2 --keep-mb 1`：超过 2 MB 的日志把"除最后 1 MB 之外"的部分压进
+`<name>.log.gz`（每次轮转追加一个 gzip member，所以长期写的日志最终是一个 .gz），
+最后 1 MB 留明文给 `tail`/`grep`，切点对齐到行首。改过 120 分钟内的文件跳过（可能还在写）。
+2026-10-23 实测：104 个文件 463.3 MB → 明文 109.0 MB + gz 28.8 MB，**省 325.5 MB（70%）**，
+9 个正在写的跳过。
+
+**2026-10-23 实测（Mac，`--jobs 4 --delete`）**：6 658 个档案（另有 1 个教师诊断档在第 13 步冒烟时已转换删除，
+共 6 659）全部通过五道校验后删原文件，**失败 0**；7 509 703 263 B JSONL（7.00 GiB）→ 563 481 079 B npz（537 MiB），
+**7.50%**，省 6.95 GB，耗时 196 s。`artifacts` 从 11 GB 降到 6.2 GB（含 §7.2 的日志轮转）。转换后 Mac 上
+`frames.jsonl` 剩 0 个；读取端实测：`read_frames(npz)` 与原文逐帧全等（577 帧样本）、`frame_path` 优先选 npz、
+`cache_episode` 直接复用 npz 里的行缓存不再重算。逐档清单（原大小 / npz 大小 / 状态 / 路径）在
+`MEMORY/docs/frames-npz-converted.txt.gz`（6 658 行，sha256 见 `MEMORY/docs/frames-npz-report.json`）。
+台式机尚未转换，命令同上。
+
+### 7.3 档案容器：zlib → LZMA
+
+`python/pvz_frame_store.py:_save` 现在写 `ZIP_LZMA`（原来 `np.savez_compressed` 是 zlib）。
+一局档案里 72% 的字节是 frames JSON（每帧一行状态），LZMA 能跨整局建模重复，12 档样本上
+**235 KB → 140 KB（59.6%）**。`np.load` 不用改（zipfile 解码），训练包保持 `np.savez` 的
+`ZIP_STORED`（`read_pack` 要 `mmap_mode`），`python/test_frame_store_container.py` 钉住这两条。
+
+```bash
+# 存量一次性重压（逐档把所有数组读出来重写，逐个数组 dtype/形状/值全等才原子替换）
+python3 scripts/convert_frames_npz.py --data /Users/newbiexvwu/PvZAgent/artifacts --recompress --jobs 8
+```
+
+**2026-10-23 实测**：30 120 个 npz 里 22 205 个被重压（7 915 个跳过：训练包是 ZIP_STORED、
+已重压过的、120 分钟内改过的），**5 195 921 622 B → 3 105 601 019 B（59.8%），省 2.09 GB，失败 0**，
+8 并发 1 970 s。代价：写一局档案 0.055 → 0.63 s、读一档 4.4 → 12 ms（一局游戏几十秒到几分钟）。
+`artifacts` 总计 **11 GB → 4.3 GB**（7.1 转换 + 7.2 日志 + 7.3 LZMA）。
+
+### 7.4 当前分布与停止条件（存储）
+
+`artifacts` 4.3 GB：`hard_mac` 3.5 GB（其中 frames 档案 3.1 GB、日志约 40 MB、`value_self1` 12 MB）、
+`value_net` 356 MB、`student` 273 MB、`relabel` 128 MB、`papers` 9.9 MB。
+
+单个档案（10 档样本，LZMA 后 134 KB）：**frames JSON 73.0%**、boards 9.1%、scalars 7.2%、
+values 2.2%、rows 0.6%，cell/packet/plant/hints/encoder 各 0.2–0.3%。
+
+试过但收益 <2%（各一次，已放弃）：
+
+- **帧间 delta + LZMA**：4 档样本上只省 **0.3%**（LZMA 已经吃到跨帧重复），不做。
+- **完全重复的档案**：按 `frames` 内容 sha256 比对，151 组 153 个副本、14.5 MB（0.3%），而且是不同标签
+  跑出同一条游戏（`u0_greedy` 与 `u16_greedy` 一致），删了会改价值网络的数据构成，不删。
+- **hints / encoder / rows 这些小数组**：合起来 0.8%，不值得动格式。
+
+还剩两项要主控拍板（都写进任务书「问题」）：档案里预计算的编码数组（20%，约 600 MB，可从 `frames` 重算）、
+每局一个的 `meta.json`（119 MB 块浪费）。

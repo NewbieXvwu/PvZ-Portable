@@ -1,4 +1,5 @@
 """task29 第 2 步：课程控制器的元规则单测（不跑引擎、不读真实清单）。"""
+import copy
 import sys
 import tempfile
 import unittest
@@ -10,11 +11,13 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
                               MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              command_for, label_for, pack_command, pack_labels, parse_task_id,
-                              plan_round, rate, startup_worker_estimate, worker_count)
+                              command_for, label_for, make_state, pack_command, pack_labels,
+                              parse_task_id, plan_round, rate, reconcile_cells,
+                              startup_worker_estimate, training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
+N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 
 
 def cell(wins, games, mult_index=0, last_round=0):
@@ -140,6 +143,98 @@ class CurriculumRulesTest(unittest.TestCase):
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')
         self.assertEqual(label_for(1, 'night_l12_train_n10', 1.0), 'c1n12n10m100')
+
+
+class ReconcileCellsTest(unittest.TestCase):
+    """task39：已有状态按当前训练集合增删格子（不上真实状态）。"""
+
+    def panel_tasks(self, families=('n10p', 'n10q')):
+        tasks = {}
+        for family in families:
+            for level in N10_LEVELS:
+                tasks[f'night_l{level}_train_{family}'] = dict(
+                    task_id=f'night_l{level}_train_{family}', level=level, zombie_count_multiplier=1.0)
+                tasks[f'night_l{level}_train_{family}_m125'] = dict(
+                    task_id=f'night_l{level}_train_{family}_m125', level=level,
+                    zombie_count_multiplier=1.25)
+        return tasks
+
+    def n10p_state(self):
+        cells = {}
+        for index, level in enumerate(N10_LEVELS):
+            base = f'night_l{level}_train_n10p'
+            multiplier = VALUES[index % len(VALUES)]
+            cells[base] = dict(family=f'night_l{level}', level=level, mult_index=index % len(VALUES),
+                               last_round=index,
+                               windows={str(multiplier): {'recent': [1] * index + [0] * (index % 3),
+                                                          'wins': index, 'games': index + index % 3}})
+        return dict(schema_version=1, panel='panel.json', round=2, cells=cells,
+                    offsets={'night_l11_train_n10p_m125': 96, 'day_l7_train_d7_m125': 48}, log=[])
+
+    def test_adds_n10q_and_retires_n10p(self):
+        tasks = self.panel_tasks()
+        state = self.n10p_state()
+        original_cells = copy.deepcopy(state['cells'])
+        original_offsets = copy.deepcopy(state['offsets'])
+        bucket = {'1.0': {'recent': [1, 0], 'wins': 1, 'games': 2}}
+        lines = reconcile_cells(state, tasks, NAMES, {'night_l11_train_n10q': bucket})
+        self.assertEqual(len(lines), 16)                                   # 8 retired + 8 added
+        self.assertFalse(any(base.endswith('_n10p') for base in state['cells']))
+        self.assertEqual(sum(base.endswith('_n10q') for base in state['cells']), 8)
+        for level in N10_LEVELS:
+            base = f'night_l{level}_train_n10p'
+            self.assertEqual(state['retired_cells'][base], original_cells[base])   # 原样保存
+        self.assertTrue(any(line == 'cell retired: night_l11_train_n10p (superseded by night_n10q)'
+                            for line in lines))
+        added = state['cells']['night_l12_train_n10q']
+        self.assertEqual(added, dict(family='night_l12', level=12, mult_index=0, last_round=0, windows={}))
+        self.assertEqual(state['cells']['night_l11_train_n10q']['windows'], bucket)
+        self.assertEqual(state['offsets'], original_offsets)
+
+    def test_idempotent(self):
+        tasks = self.panel_tasks()
+        state = self.n10p_state()
+        reconcile_cells(state, tasks, NAMES, {})
+        snapshot = copy.deepcopy(state)
+        self.assertEqual(reconcile_cells(state, tasks, NAMES, {}), [])
+        self.assertEqual(state, snapshot)
+
+    def test_restore_when_superseded_is_cleared(self):
+        import curriculum_queue as queue
+        tasks = self.panel_tasks()
+        state = self.n10p_state()
+        reconcile_cells(state, tasks, NAMES, {})
+        retired_before = copy.deepcopy(state['retired_cells'])
+        original = queue.SUPERSEDED
+        queue.SUPERSEDED = {}
+        try:
+            lines = reconcile_cells(state, tasks, NAMES, {})
+        finally:
+            queue.SUPERSEDED = original
+        self.assertEqual(len(lines), 8)
+        self.assertTrue(all(line.startswith('cell restored: ') for line in lines))
+        self.assertEqual(state['retired_cells'], {})
+        for base, cell in retired_before.items():
+            self.assertEqual(state['cells'][base], cell)
+        self.assertEqual(sum(base.endswith('_n10q') for base in state['cells']), 8)   # n10q 不动
+
+    def test_make_state_equals_empty_state_plus_reconcile(self):
+        tasks = self.panel_tasks(('n10q',))
+        tasks['day_l7_train_d7'] = dict(task_id='day_l7_train_d7', level=7, zombie_count_multiplier=1.0)
+        windows = {'night_l11_train_n10q': {'1.0': {'recent': [1], 'wins': 1, 'games': 1}}}
+        offsets = {'night_l11_train_n10q_m125': 48}
+        made = make_state(tasks, NAMES, windows, dict(offsets), 'panel.json')
+        manual = dict(schema_version=1, panel='panel.json', round=0, cells={},
+                      offsets=dict(offsets), log=[])
+        reconcile_cells(manual, tasks, NAMES, windows)
+        self.assertEqual(made, manual)
+        self.assertIn('day_l7_train_d7', made['cells'])
+        self.assertEqual(len(made['cells']), 9)
+
+    def test_training_ids_drop_n10p_keep_n10q(self):
+        ids = training_base_ids()
+        self.assertFalse(any(base.endswith('_n10p') for base in ids))
+        self.assertEqual(sum(base.endswith('_n10q') for base in ids), 8)
 
 
 class WorkerCountTest(unittest.TestCase):

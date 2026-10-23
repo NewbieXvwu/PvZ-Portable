@@ -1,6 +1,6 @@
 # task40：老师推演“胜负已定就收手”——先量清能省多少，再按噪声底线验收
 
-> 主控 2026-10-23 11:05 写。执行者：Qoder（DeepSeek-Flash），工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff`（分支 `cutoff`，从 pvz-env fcc1b039 拉出）。
+> 主控 2026-10-23 09:40 写。执行者：Qoder（DeepSeek-Flash），工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff`（分支 `cutoff`，从 pvz-env fcc1b039 拉出）。
 > 同时最多 **2** 个你自己的游戏进程（qc 采集 16 进程在跑，task35/37 也在测）。不碰 tmux `qc` 与别的代理会话，不重启 WSL。
 
 ## 为什么做

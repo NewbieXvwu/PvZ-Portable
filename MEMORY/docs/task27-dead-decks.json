@@ -1,0 +1,974 @@
+{
+  "day_l7_eval_d7p_holdout3": {
+    "task": "day_l7_eval_d7p_holdout3",
+    "deck": [
+      5,
+      3,
+      36,
+      7,
+      4,
+      2,
+      0
+    ],
+    "games": 16,
+    "won": 0,
+    "loss_waves": {
+      "10": 2,
+      "9": 7,
+      "11": 1,
+      "12": 3,
+      "7": 1,
+      "6": 1,
+      "13": 1
+    },
+    "nearest_terminal_zombie_types": {
+      "3": 2,
+      "0": 9,
+      "2": 4,
+      "1": 1
+    },
+    "rosters": {
+      "[0, 2, 3]": 16
+    },
+    "per_game": [
+      {
+        "seed": 30000,
+        "won": false,
+        "final_wave": 10,
+        "nearest_terminal_zombie": [
+          4,
+          3,
+          -150.223,
+          0.237051,
+          500,
+          true,
+          false,
+          0,
+          0,
+          67108867
+        ],
+        "frames_sha256": "4678382e9d79af9642aaadf1fcbe3cc1d54c07f0958d432a52c40a8470dd611b"
+      },
+      {
+        "seed": 30001,
+        "won": false,
+        "final_wave": 9,
+        "nearest_terminal_zombie": [
+          2,
+          0,
+          -100.74,
+          0.363235,
+          270,
+          true,
+          false,
+          0,
+          0,
+          66781191
+        ],
+        "frames_sha256": "53dab3385477656d7631456345f57543a633be9ab945b9552325c9df5173afd5"
+      },
+      {
+        "seed": 30002,
+        "won": false,
+        "final_wave": 11,
+        "nearest_terminal_zombie": [
+          0,
+          0,
+          -100.493,
+          0.328587,
+          270,
+          true,
+          false,
+          0,
+          0,
+          67174407
+        ],
+        "frames_sha256": "cfb7a08996c81f42e817d1929d64802211875b89d72647b8f1c428fb64c9fe81"
+      },
+      {
+        "seed": 30003,
+        "won": false,
+        "final_wave": 9,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.219,
+          0.271193,
+          270,
+          true,
+          false,
+          0,
+          0,
+          66781190
+        ],
+        "frames_sha256": "222998394c272533849c575b0a7ff9b3c121998b1668fea80ade89620826a914"
+      },
+      {
+        "seed": 30004,
+        "won": false,
+        "final_wave": 12,
+        "nearest_terminal_zombie": [
+          3,
+          3,
+          -150.224,
+          0.336925,
+          500,
+          true,
+          false,
+          0,
+          0,
+          67698695
+        ],
+        "frames_sha256": "99f474df2aaaf85eab5834938c6b17fc6652fd819f6c11985135251d2684f599"
+      },
+      {
+        "seed": 30005,
+        "won": false,
+        "final_wave": 9,
+        "nearest_terminal_zombie": [
+          4,
+          2,
+          -100.318,
+          0.336763,
+          640,
+          true,
+          false,
+          0,
+          0,
+          66781189
+        ],
+        "frames_sha256": "8138c26c75f19344879db6fbf785ad19bd44d27cff59200af5b7c16a7b2b781f"
+      },
+      {
+        "seed": 30006,
+        "won": false,
+        "final_wave": 7,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.339,
+          0.282846,
+          270,
+          true,
+          false,
+          0,
+          0,
+          66519048
+        ],
+        "frames_sha256": "7627ab1ad81cf96a82bbb42fe3c88798e3cacdb3097dcb3ea34b0c774516cb27"
+      },
+      {
+        "seed": 30007,
+        "won": false,
+        "final_wave": 6,
+        "nearest_terminal_zombie": [
+          2,
+          0,
+          -100.248,
+          0.338023,
+          270,
+          true,
+          false,
+          0,
+          0,
+          66322438
+        ],
+        "frames_sha256": "b774178241cf88b80aa14aaf7cd65965a992d4409b87f5f81e77b2f1c8f58302"
+      },
+      {
+        "seed": 30008,
+        "won": false,
+        "final_wave": 9,
+        "nearest_terminal_zombie": [
+          4,
+          0,
+          -100.314,
+          0.364276,
+          270,
+          true,
+          false,
+          0,
+          0,
+          66715656
+        ],
+        "frames_sha256": "6798677aac3a91b8b7947697f0d05025bdaac8a0b5626324ab19b2e5ee3d8dde"
+      },
+      {
+        "seed": 30009,
+        "won": false,
+        "final_wave": 9,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.159,
+          0.255291,
+          270,
+          true,
+          false,
+          0,
+          0,
+          66584582
+        ],
+        "frames_sha256": "abf0f98ffb6d32aee29fb89ada1ecaabe69189c7bc4a9e7863b7cd35dd4824e9"
+      },
+      {
+        "seed": 30010,
+        "won": false,
+        "final_wave": 13,
+        "nearest_terminal_zombie": [
+          4,
+          0,
+          -100.307,
+          0.270512,
+          270,
+          true,
+          false,
+          0,
+          0,
+          67829772
+        ],
+        "frames_sha256": "4ad4cbc0d7e2c1adffd0db59b8c94d1525029990f939e4d29295a5020de14950"
+      },
+      {
+        "seed": 30011,
+        "won": false,
+        "final_wave": 9,
+        "nearest_terminal_zombie": [
+          1,
+          0,
+          -100.427,
+          0.334956,
+          270,
+          true,
+          false,
+          0,
+          0,
+          66846723
+        ],
+        "frames_sha256": "ce23b69b247bdf821c5a727c515157d265c8edee2915adf62508d4554cb6ef8e"
+      },
+      {
+        "seed": 30012,
+        "won": false,
+        "final_wave": 10,
+        "nearest_terminal_zombie": [
+          3,
+          2,
+          -100.243,
+          0.329865,
+          640,
+          true,
+          false,
+          0,
+          0,
+          66912264
+        ],
+        "frames_sha256": "f1102986b091762a2dcde9d035bfcdaf02a33c34186e4c412d0e5a13dc84eba5"
+      },
+      {
+        "seed": 30013,
+        "won": false,
+        "final_wave": 12,
+        "nearest_terminal_zombie": [
+          2,
+          2,
+          -100.297,
+          0.289114,
+          640,
+          true,
+          false,
+          0,
+          0,
+          67436545
+        ],
+        "frames_sha256": "6d1cebc89f084ec8bf48e5ec31f04636c4a7ab2803920cf5d8284f0d06334088"
+      },
+      {
+        "seed": 30014,
+        "won": false,
+        "final_wave": 9,
+        "nearest_terminal_zombie": [
+          2,
+          2,
+          -100.027,
+          0.334896,
+          640,
+          true,
+          false,
+          0,
+          0,
+          66650118
+        ],
+        "frames_sha256": "3ed391a3ebdc7602dd65e84e8bbcb44b3671aecda0f909dd03dd6a0fcd3daf01"
+      },
+      {
+        "seed": 30015,
+        "won": false,
+        "final_wave": 12,
+        "nearest_terminal_zombie": [
+          4,
+          1,
+          -100.581,
+          0.45,
+          270,
+          true,
+          false,
+          0,
+          0,
+          67371008
+        ],
+        "frames_sha256": "f7aa4486f86f1851e261c5f947556f96fa1c86dfaee512042301d075a2162c6e"
+      }
+    ],
+    "games_sha256": "b7ecc26c22f5ea2bc8c9ec59ffa37e2626f665f6cc17b6043788def55c770bb7",
+    "conclusion": "\u672c\u8001\u5e0816\u5c40\u4ecd\u5168\u8d25\uff1a\u7ed3\u6784\u6027\u5f31\u5361\u7ec4\u5acc\u7591\uff0c\u4ea4\u4e3b\u63a7\u51b3\u5b9a\uff1b\u6709\u9650\u6837\u672c\u4e0d\u662f\u6570\u5b66\u4e0a\u7684\u4e0d\u53ef\u8d62\u8bc1\u660e",
+    "caveat": "Nearest surviving zombie at terminal is descriptive, not an instrumented killer ID."
+  },
+  "day_l8_eval_d7p_holdout1": {
+    "task": "day_l8_eval_d7p_holdout1",
+    "deck": [
+      3,
+      22,
+      4,
+      2,
+      7,
+      5,
+      32
+    ],
+    "games": 16,
+    "won": 0,
+    "loss_waves": {
+      "16": 1,
+      "20": 6,
+      "18": 1,
+      "19": 4,
+      "17": 3,
+      "13": 1
+    },
+    "nearest_terminal_zombie_types": {
+      "0": 7,
+      "4": 6,
+      "2": 3
+    },
+    "rosters": {
+      "[0, 2, 4]": 16
+    },
+    "per_game": [
+      {
+        "seed": 30000,
+        "won": false,
+        "final_wave": 16,
+        "nearest_terminal_zombie": [
+          1,
+          0,
+          -100.445,
+          0.363726,
+          270,
+          true,
+          false,
+          0,
+          0,
+          68747274
+        ],
+        "frames_sha256": "63a1a2964ddee975273fce2db1f85e8f73c27ce18ad8d72855ef6ff7c4dd530c"
+      },
+      {
+        "seed": 30001,
+        "won": false,
+        "final_wave": 20,
+        "nearest_terminal_zombie": [
+          0,
+          0,
+          -100.29,
+          0.252928,
+          270,
+          true,
+          false,
+          0,
+          0,
+          69402627
+        ],
+        "frames_sha256": "6220eb7781f43b98a52e7afe06de8f5f5fc1f40f11307f1d685c0cbbf3b0d393"
+      },
+      {
+        "seed": 30002,
+        "won": false,
+        "final_wave": 18,
+        "nearest_terminal_zombie": [
+          3,
+          4,
+          -100.326,
+          0.311381,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          68616202
+        ],
+        "frames_sha256": "e9deeb6c02d79f039d08668c20bb69fa8e2a0230458cfdc86b8c38992c989c6d"
+      },
+      {
+        "seed": 30003,
+        "won": false,
+        "final_wave": 19,
+        "nearest_terminal_zombie": [
+          0,
+          0,
+          -100.415,
+          0.334057,
+          270,
+          true,
+          false,
+          0,
+          0,
+          68681729
+        ],
+        "frames_sha256": "e7d6b8a24fa27b3b72b414455f63c27fff942e01054ab6482a106f95b25fba4a"
+      },
+      {
+        "seed": 30004,
+        "won": false,
+        "final_wave": 20,
+        "nearest_terminal_zombie": [
+          4,
+          0,
+          -100.391,
+          0.357919,
+          270,
+          true,
+          false,
+          0,
+          0,
+          69926919
+        ],
+        "frames_sha256": "a414dfc1c2c55cf309fc1f0ce1b26551a48e45bf9ddbceeb277e44c3e6ced445"
+      },
+      {
+        "seed": 30005,
+        "won": false,
+        "final_wave": 19,
+        "nearest_terminal_zombie": [
+          1,
+          4,
+          -100.205,
+          0.266725,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          68616192
+        ],
+        "frames_sha256": "3433d970eae19569c7c0ca646ac305525267011fdac3b99030e32f064148352a"
+      },
+      {
+        "seed": 30006,
+        "won": false,
+        "final_wave": 17,
+        "nearest_terminal_zombie": [
+          3,
+          2,
+          -100.152,
+          0.293349,
+          640,
+          true,
+          false,
+          0,
+          0,
+          68157440
+        ],
+        "frames_sha256": "f099aa5a371b49c9e409bd20aee549e3929f147d3ec711cc5abeea11c07352a1"
+      },
+      {
+        "seed": 30007,
+        "won": false,
+        "final_wave": 17,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.337,
+          0.331163,
+          270,
+          true,
+          false,
+          0,
+          0,
+          68354057
+        ],
+        "frames_sha256": "9dffb6709fac498c971191668bc94e453c2bab6ca251dea24dcabdbeb4c40779"
+      },
+      {
+        "seed": 30008,
+        "won": false,
+        "final_wave": 13,
+        "nearest_terminal_zombie": [
+          2,
+          0,
+          -100.376,
+          0.303061,
+          270,
+          true,
+          false,
+          0,
+          0,
+          67239937
+        ],
+        "frames_sha256": "13bf308ff260e3f7965943b8cb896cd0732b80f87a9c80517fe07786b84c80e9"
+      },
+      {
+        "seed": 30009,
+        "won": false,
+        "final_wave": 20,
+        "nearest_terminal_zombie": [
+          2,
+          4,
+          -100.277,
+          0.27082,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          70451212
+        ],
+        "frames_sha256": "56c5b826be8b47665597eb40061e3bdfd71c5e8b748247dec23013c1b789d217"
+      },
+      {
+        "seed": 30010,
+        "won": false,
+        "final_wave": 20,
+        "nearest_terminal_zombie": [
+          3,
+          2,
+          -100.497,
+          0.342022,
+          640,
+          true,
+          false,
+          0,
+          0,
+          69795840
+        ],
+        "frames_sha256": "f834ccbc3d79a9b2677cd2afd3430cf1745a7dcde8fa24bb5df6a39427b39a9e"
+      },
+      {
+        "seed": 30011,
+        "won": false,
+        "final_wave": 20,
+        "nearest_terminal_zombie": [
+          2,
+          4,
+          -100.255,
+          0.320218,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          68681731
+        ],
+        "frames_sha256": "7bb8d8423336d8044f898f675989f2d825d72f7a4566c41601edd62e5e2ccffe"
+      },
+      {
+        "seed": 30012,
+        "won": false,
+        "final_wave": 19,
+        "nearest_terminal_zombie": [
+          2,
+          4,
+          -100.309,
+          0.269548,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          69009408
+        ],
+        "frames_sha256": "1783db88404662ac08e6f941b06d77453d851b2fa6e9dbe39064adb7d684c511"
+      },
+      {
+        "seed": 30013,
+        "won": false,
+        "final_wave": 20,
+        "nearest_terminal_zombie": [
+          4,
+          0,
+          -100.396,
+          0.247017,
+          270,
+          true,
+          false,
+          0,
+          0,
+          70254601
+        ],
+        "frames_sha256": "8e182738b5b6c4656f0f01d8ed058cf587eec691dd280e9eca8197a3692d7818"
+      },
+      {
+        "seed": 30014,
+        "won": false,
+        "final_wave": 17,
+        "nearest_terminal_zombie": [
+          3,
+          4,
+          -100.193,
+          0.336791,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          68222983
+        ],
+        "frames_sha256": "b51254879a019d4bf3b77fdf619f857950df77e3d208add0a8845c8a0c62eb12"
+      },
+      {
+        "seed": 30015,
+        "won": false,
+        "final_wave": 19,
+        "nearest_terminal_zombie": [
+          2,
+          2,
+          -100.196,
+          0.25202,
+          640,
+          true,
+          false,
+          0,
+          0,
+          68812809
+        ],
+        "frames_sha256": "5beb8bceb7a8c46a31e8edbe9b6193ea89763cf5bf5583501d9b49ed6c368b71"
+      }
+    ],
+    "games_sha256": "1a6fa3acf22066bd1f30cf6225b3f75b91482410926b824915166a0f42f19572",
+    "conclusion": "\u672c\u8001\u5e0816\u5c40\u4ecd\u5168\u8d25\uff1a\u7ed3\u6784\u6027\u5f31\u5361\u7ec4\u5acc\u7591\uff0c\u4ea4\u4e3b\u63a7\u51b3\u5b9a\uff1b\u6709\u9650\u6837\u672c\u4e0d\u662f\u6570\u5b66\u4e0a\u7684\u4e0d\u53ef\u8d62\u8bc1\u660e",
+    "caveat": "Nearest surviving zombie at terminal is descriptive, not an instrumented killer ID."
+  },
+  "day_l9_eval_d7p_holdout1": {
+    "task": "day_l9_eval_d7p_holdout1",
+    "deck": [
+      0,
+      3,
+      1,
+      7,
+      37,
+      2,
+      4
+    ],
+    "games": 16,
+    "won": 1,
+    "loss_waves": {
+      "27": 1,
+      "25": 3,
+      "22": 3,
+      "30": 3,
+      "29": 4,
+      "26": 1
+    },
+    "nearest_terminal_zombie_types": {
+      "4": 5,
+      "0": 5,
+      "3": 4,
+      "2": 1
+    },
+    "rosters": {
+      "[0, 2, 3, 4]": 16
+    },
+    "per_game": [
+      {
+        "seed": 30000,
+        "won": false,
+        "final_wave": 27,
+        "nearest_terminal_zombie": [
+          4,
+          4,
+          -100.094,
+          0.240994,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          72351744
+        ],
+        "frames_sha256": "3c4bd23ff51e433379f13ebda9fdf85af1268868b617f8015efa0ae6ecb000cc"
+      },
+      {
+        "seed": 30001,
+        "won": true,
+        "final_wave": 30,
+        "nearest_terminal_zombie": [
+          2,
+          0,
+          238.652,
+          0.277138,
+          270,
+          true,
+          false,
+          0,
+          0,
+          73859087
+        ],
+        "frames_sha256": "73cc070be079a0a59bc81f0d8fb85239b058b4422807f1c7526e3908277119f9"
+      },
+      {
+        "seed": 30002,
+        "won": false,
+        "final_wave": 25,
+        "nearest_terminal_zombie": [
+          4,
+          4,
+          -100.285,
+          0.319757,
+          610,
+          true,
+          false,
+          0,
+          0,
+          70778886
+        ],
+        "frames_sha256": "6abca80aaf2bc35ef3f104fc1abb84f8c11b90c89365f3e192369b141a6de728"
+      },
+      {
+        "seed": 30003,
+        "won": false,
+        "final_wave": 22,
+        "nearest_terminal_zombie": [
+          1,
+          0,
+          -100.24,
+          0.353165,
+          270,
+          true,
+          false,
+          0,
+          0,
+          70909968
+        ],
+        "frames_sha256": "bc68d03aaabe8849ca38a4dd50b77bf4892e6448fc9558cddbd72d0127ac5cc1"
+      },
+      {
+        "seed": 30004,
+        "won": false,
+        "final_wave": 30,
+        "nearest_terminal_zombie": [
+          2,
+          3,
+          -150.184,
+          0.231812,
+          500,
+          true,
+          false,
+          0,
+          0,
+          74186764
+        ],
+        "frames_sha256": "e40a0a5c9e834a20f9adb1c8005c45079e37c3fa4b0e56f667a420eaf8bd7ff7"
+      },
+      {
+        "seed": 30005,
+        "won": false,
+        "final_wave": 29,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.295,
+          0.340425,
+          150,
+          true,
+          false,
+          0,
+          0,
+          73203724
+        ],
+        "frames_sha256": "d6dc2bad7b347e822f9bb9fcf0abb573822cb23ee1ca4c9a3fbcf319223f5b8c"
+      },
+      {
+        "seed": 30006,
+        "won": false,
+        "final_wave": 30,
+        "nearest_terminal_zombie": [
+          1,
+          3,
+          -150.297,
+          0.366015,
+          500,
+          true,
+          false,
+          0,
+          0,
+          74448901
+        ],
+        "frames_sha256": "298465d451494e2dd634f2a936fd583934291300ebfd2b4cc351a402dc99929f"
+      },
+      {
+        "seed": 30007,
+        "won": false,
+        "final_wave": 25,
+        "nearest_terminal_zombie": [
+          0,
+          3,
+          -107.243,
+          0.326344,
+          500,
+          true,
+          false,
+          0,
+          0,
+          71303175
+        ],
+        "frames_sha256": "af14dcc561bed0df34fea40673de6fd712ef2b2ebd06aed3030fc03250f785af"
+      },
+      {
+        "seed": 30008,
+        "won": false,
+        "final_wave": 29,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.232,
+          0.35974,
+          270,
+          true,
+          false,
+          0,
+          0,
+          72679428
+        ],
+        "frames_sha256": "703eda691e70e29124732de9404aeba18341b65853ff71c1a7ff588cab1b821c"
+      },
+      {
+        "seed": 30009,
+        "won": false,
+        "final_wave": 22,
+        "nearest_terminal_zombie": [
+          3,
+          4,
+          -100.299,
+          0.29709,
+          830,
+          true,
+          false,
+          0,
+          0,
+          69206017
+        ],
+        "frames_sha256": "2cd178cb3a88c23914e104ad50afc3bee6735226edca1d80155d8a98864037f1"
+      },
+      {
+        "seed": 30010,
+        "won": false,
+        "final_wave": 22,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.387,
+          0.25816,
+          250,
+          true,
+          false,
+          0,
+          0,
+          69861386
+        ],
+        "frames_sha256": "bc5e152407f2665c2e2a4a0363875f4f8e6e4736418d1d10a412ccf99e525767"
+      },
+      {
+        "seed": 30011,
+        "won": false,
+        "final_wave": 25,
+        "nearest_terminal_zombie": [
+          3,
+          0,
+          -100.336,
+          0.318906,
+          270,
+          true,
+          false,
+          0,
+          0,
+          71434246
+        ],
+        "frames_sha256": "0c7008979dc7c9c4bab593f0ea9365fa0dc36346452003bf69d5b7ee69fb3b70"
+      },
+      {
+        "seed": 30012,
+        "won": false,
+        "final_wave": 30,
+        "nearest_terminal_zombie": [
+          3,
+          4,
+          -100.165,
+          0.298907,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          74055680
+        ],
+        "frames_sha256": "5500ab27da8a563272bbb3b22afe4f9f4fb964e4cf6615d150c573cb5ca30efc"
+      },
+      {
+        "seed": 30013,
+        "won": false,
+        "final_wave": 29,
+        "nearest_terminal_zombie": [
+          4,
+          4,
+          -100.354,
+          0.343542,
+          1370,
+          true,
+          false,
+          0,
+          0,
+          73072645
+        ],
+        "frames_sha256": "d51a1f5d5ab082732a1beae189ebd7d5900ac67c833d2ba3ed8003578fa3b920"
+      },
+      {
+        "seed": 30014,
+        "won": false,
+        "final_wave": 29,
+        "nearest_terminal_zombie": [
+          4,
+          2,
+          -100.404,
+          0.329965,
+          360,
+          true,
+          false,
+          0,
+          0,
+          72744964
+        ],
+        "frames_sha256": "abdda92e9c69ff98198d63337a87be5a7728e02ce97602db8c1659d80ab0de09"
+      },
+      {
+        "seed": 30015,
+        "won": false,
+        "final_wave": 26,
+        "nearest_terminal_zombie": [
+          2,
+          3,
+          -150.336,
+          0.238079,
+          500,
+          true,
+          false,
+          0,
+          0,
+          71696391
+        ],
+        "frames_sha256": "f1896bc672a6fa2275348bead9a3948f7da8fbf242cf0069f3b2b602384e2f1b"
+      }
+    ],
+    "games_sha256": "4e7e2f09f69b875ce593ebcfa7a1396cc541f50f178685e59cbfaec656e61fa8",
+    "conclusion": "\u8001\u5e08\u53ef\u8d62\uff0c\u5b58\u5728\u5b66\u751f\u6cdb\u5316\u7f3a\u53e3",
+    "caveat": "Nearest surviving zombie at terminal is descriptive, not an instrumented killer ID."
+  }
+}
