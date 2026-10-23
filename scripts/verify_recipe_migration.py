@@ -141,6 +141,23 @@ class QuietMetrics:
     def close(self): pass
 
 
+def audit_corpus(recipe, out, rows):
+    """Pin corpus size and per-source splits to the completed historical run."""
+    original = Path(recipe['provenance']['original_out'])
+    expected_rows = json.loads((original/'metrics.json').read_text())['data_memory']['rows']
+    assert rows == expected_rows, (rows, expected_rows)
+    source_report = original/'source_rows.json'
+    reports = {}
+    if recipe['source_row_report']:
+        expected = json.loads(source_report.read_text())
+        for phase in ('legacy', 'recipe'):
+            path = out/phase/'source_rows.json'
+            actual = json.loads(path.read_text())
+            assert actual == expected, f'{phase}: source counts or validation split changed'
+            reports[phase] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return dict(expected_rows=expected_rows, rows_match=True, source_reports=reports)
+
+
 def verify(recipe_path, out):
     foreign = foreign_trainers()
     if foreign:
@@ -270,12 +287,14 @@ def verify(recipe_path, out):
             gc.collect()
             torch.cuda.empty_cache()
         errors = [abs(a-b) for a,b in zip(traces['legacy']['losses'],traces['recipe']['losses'])]
+        corpus_audit = audit_corpus(recipe, out, len(payload[2]))
         result = dict(recipe=str(recipe_path), recipe_sha256=hashlib.sha256(recipe_path.read_bytes()).hexdigest(),
             legacy_revision='6fdee2af', source_command_sha256=recipe['provenance']['source_sha256'],
             steps=200,rows=len(payload[2]),archives=len(observations),
             loader_call_sha256=hashlib.sha256(repr(payload_key).encode()).hexdigest(),
             labels=dict(Counter(path.parent.name for path,_ in observations)),
-            full_corpus=True,original_schedule=True,shared_storage='task33 compact pack; historical tensor views restored',field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
+            full_corpus=True,original_schedule=True,corpus_audit=corpus_audit,
+            shared_storage='task33 compact pack; historical tensor views restored',field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
             maximum_loss_error=max(errors),passed=max(errors)<=1e-6,
             torch_version=str(torch.__version__),cuda_version=torch.version.cuda,traces=traces)
         (out/'parity.json').write_text(json.dumps(result,indent=2)+'\n')
