@@ -390,7 +390,15 @@ static void RunEnvironment(LawnApp* app)
 		{
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true"
 				<< ",\"action_seconds\":" << actionSeconds << ",\"observation_seconds\":" << observationSeconds
-				<< ",\"control_seconds\":" << controlSeconds << '}' << std::endl;
+				<< ",\"control_seconds\":" << controlSeconds << ",\"value\":[";
+			for (int slot = 0; slot < 2; ++slot)
+			{
+				const auto& net = valueNets[slot];
+				std::cout << (slot ? "," : "") << "{\"calls\":" << net.calls << ",\"features\":" << net.featureSeconds
+					<< ",\"forward\":" << net.forwardSeconds << ",\"conv\":[" << net.convolutionSeconds[0] << ','
+					<< net.convolutionSeconds[1] << ',' << net.convolutionSeconds[2] << "]}";
+			}
+			std::cout << "]}" << std::endl;
 			continue;
 		}
 		else if (command == "DECK_OPTIONS")
