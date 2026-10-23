@@ -119,9 +119,9 @@ class CurriculumRulesTest(unittest.TestCase):
     def test_pack_labels_union_the_log_and_the_base_corpus(self):
         state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
                          {'groups': [{'label': 'c2d7m125'}, {'label': 'c1d7m150'}]}]}
-        self.assertEqual(pack_labels(state), ['c1d7m150', 'c2d7m125'])
+        self.assertEqual(pack_labels(state), ['c1d7m150_fast_search', 'c2d7m125_fast_search'])
         self.assertEqual(pack_labels(state, 'base_b,base_a'),
-                         ['base_a', 'base_b', 'c1d7m150', 'c2d7m125'])
+                         ['base_a', 'base_b', 'c1d7m150_fast_search', 'c2d7m125_fast_search'])
 
     def test_recipe_pack_command_matches_actual_trainer_load_request(self):
         import argparse
