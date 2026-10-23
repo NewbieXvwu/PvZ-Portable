@@ -56,15 +56,23 @@ def audit_archive(archive: Path, row: dict, task: dict, reader=None) -> dict:
         from pvz_frame_store import read_frames
         reader=read_frames
     frames=reader(frame_file)
-    # Production archives contain every decision frame plus the final observation.
+    # Frame 0 is the initial observation. Frame i carries the action/label from
+    # the preceding state, including the final transition into a terminal state.
     if (len(frames)!=row['decisions']+1 or
             sum('action' in f for f in frames)!=row['decisions'] or
             sum('label' in f for f in frames)!=row['decisions']):
         raise ValueError(f'archive is missing decision frames/actions/labels: {archive}')
+    if 'action' in frames[0] or 'label' in frames[0]:
+        raise ValueError(f'archive initial observation has an action/label: {archive}')
     if task['deck'] and [p[1] for p in frames[0]['packets']]!=task['deck']:
         raise ValueError(f'archive initial deck differs from frozen task: {archive}')
     if frames[-1]['wave']!=row['final_wave']:
         raise ValueError(f'archive final observation differs from game: {archive}')
+    final=frames[-1]
+    if final.get('terminal') is not True or final.get('result') not in (1,2):
+        raise ValueError(f'archive does not end with a terminal game outcome: {archive}')
+    if (final['result']==1)!=row['won']:
+        raise ValueError(f'archive terminal result differs from recorded outcome: {archive}')
     return dict(seed=row['seed'],frames=len(frames),meta_sha256=sha(meta_file),
                 frames_sha256=sha(frame_file),archive=str(archive))
 

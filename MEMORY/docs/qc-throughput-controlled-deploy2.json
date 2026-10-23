@@ -918,5 +918,25 @@
     "complete": true,
     "seed_pairs": 64,
     "full_audit_sha256": "2223e614e65a5fc54bd2511a1e1f659861bc4d0726043b8b9010384b09808c22"
+  },
+  "terminal_endpoint_audit": {
+    "scope": "Supplement to prior full D+1 archive audit: frozen input hashes, initial-frame alignment and genuine terminal outcomes",
+    "prior_full_result_sha256": "46e603d56631d3240a3e845bb7dee691de2d107b2603cdfcd5d5fcd54147d69c",
+    "archives": 128,
+    "terminal_results": {
+      "1": 60,
+      "2": 68
+    },
+    "all_initial_frames_unlabelled": true,
+    "all_terminal_results_match_metadata": true,
+    "timing_function_unchanged_from": "f83a1b07",
+    "audit_script_sha256": "e52d7300acb33d4e6a523208c0cfe8f217e763ffaa7aec3b43aaab41702d8af8"
+  },
+  "historical_action_budget_screen": {
+    "history": "20261024T024638",
+    "rows": 3888,
+    "max_decisions": 1916,
+    "at_or_over_default_budget": [],
+    "note": "Budget-hit screening only; does not claim every historical NPZ was decoded."
   }
 }

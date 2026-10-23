@@ -129,11 +129,41 @@ class EvidenceGateTest(unittest.TestCase):
             (root/'meta.json').write_text(json.dumps(dict(task=dict(seed=10),outcome=dict(won=False,final_wave=3),
                                                           context=dict(level=7,multiplier=1.5))))
             (root/'frames.npz').write_bytes(b'test reader supplies frames')
-            frames=[dict(action={},label={},packets=[[0,0]]),dict(wave=3)]
+            frames=[dict(packets=[[0,0]]),dict(action={},label={},wave=3,terminal=True,result=2)]
             r=bench.audit_archive(root,dict(seed=10,won=False,final_wave=3,decisions=1),
                                  dict(level=7,zombie_count_multiplier=1.5,deck=[0]),reader=lambda p:frames)
             self.assertEqual(r['frames'],2);self.assertEqual(r['seed'],10)
             self.assertEqual(r['frames_sha256'],bench.sha(root/'frames.npz'))
+
+    def endpoint_case(self, root):
+        (root/'meta.json').write_text(json.dumps(dict(task=dict(seed=10),outcome=dict(won=False,final_wave=3),
+                                                      context=dict(level=7,multiplier=1.5))))
+        (root/'frames.npz').write_bytes(b'endpoint fixture')
+        row=dict(seed=10,won=False,final_wave=3,decisions=1)
+        task=dict(level=7,zombie_count_multiplier=1.5,deck=[0])
+        frames=[dict(packets=[[0,0]]),dict(action={},label={},wave=3,terminal=True,result=2)]
+        return row,task,frames
+
+    def test_action_budget_cutoff_is_not_a_completed_game(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);row,task,frames=self.endpoint_case(root)
+            frames[-1].update(terminal=False,result=0)
+            with self.assertRaisesRegex(ValueError,'terminal game outcome'):
+                bench.audit_archive(root,row,task,reader=lambda p:frames)
+
+    def test_terminal_win_cannot_be_recorded_as_loss(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);row,task,frames=self.endpoint_case(root)
+            frames[-1]['result']=1
+            with self.assertRaisesRegex(ValueError,'terminal result'):
+                bench.audit_archive(root,row,task,reader=lambda p:frames)
+
+    def test_initial_frame_cannot_replace_final_action_annotation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);row,task,frames=self.endpoint_case(root)
+            frames[0].update(action=frames[-1].pop('action'),label=frames[-1].pop('label'))
+            with self.assertRaisesRegex(ValueError,'initial observation'):
+                bench.audit_archive(root,row,task,reader=lambda p:frames)
 
 
 if __name__=='__main__':unittest.main()
