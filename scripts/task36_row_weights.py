@@ -32,7 +32,7 @@ WAIT_KEEP = 0.1
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--plan", choices=["A", "B"], required=True)
+    parser.add_argument("--plan", required=True, help="comma-separated: A and/or B")
     parser.add_argument("--data", type=Path, default=ROOT / "artifacts/task27/training_frames")
     parser.add_argument("--command", type=Path,
                         default=ROOT / "artifacts/task27/training_s1.command.json")
@@ -105,74 +105,84 @@ def main() -> None:
     zones = sorted({name[0] for name in group_names})
     zone_total = {z: sum(totals[i] for i, name in enumerate(group_names) if name[0] == z) for z in zones}
 
-    multiplier = np.ones(capacity, np.float32)
-    factors = {}
-    for z in zones:
-        members = [i for i, name in enumerate(group_names) if name[0] == z]
-        weight_sum = sum(totals[i] for i in members)
-        zone_factor = (1.0 / len(zones)) / weight_sum if weight_sum else 0.0
-        for i in members:
-            if not totals[i]:
-                continue
-            factor = zone_factor
-            if z == "night" and group_names[i][1] == "night_n10":
-                factor = (2.0 / 3.0) / totals[i]
-            elif z == "night" and group_names[i][1] == "night_n9":
-                factor = (1.0 / 3.0) / totals[i]
-            factors[group_names[i]] = factor
-            multiplier[group == i] = factor
-    if args.plan == "B":
-        for i, name in enumerate(group_names):
-            if name[1] == "day_early_d7":
-                factors[name] *= 2.0
-                multiplier[group == i] *= 2.0
-    # keep the overall loss scale where it was: mean multiplier over training rows == 1
-    training = ~is_val
-    mean = float((multiplier[training] * base[training]).sum() / base[training].sum())
-    multiplier /= mean
-    for name in factors:
-        factors[name] /= mean
-    multiplier[is_val] = 1.0
+    plans = args.plan.split(",")
+    outputs = {}
+    for plan in plans:
+        multiplier = np.ones(capacity, np.float32)
+        factors = {}
+        for z in zones:
+            members = [i for i, name in enumerate(group_names) if name[0] == z]
+            weight_sum = sum(totals[i] for i in members)
+            if z == "night":
+                # zone share 1/3, split inside the night zone n10:n9 = 2:1
+                for i in members:
+                    if not totals[i]:
+                        continue
+                    share = {"night_n10": 2.0 / 3.0, "night_n9": 1.0 / 3.0}.get(group_names[i][1], 0.0)
+                    factors[group_names[i]] = (share / len(zones)) / totals[i]
+            else:
+                for i in members:
+                    if not totals[i]:
+                        continue
+                    factors[group_names[i]] = (1.0 / len(zones)) / weight_sum
+            for i in members:
+                if group_names[i] in factors:
+                    multiplier[group == i] = factors[group_names[i]]
+        if plan == "B":
+            for i, name in enumerate(group_names):
+                if name[1] == "day_early_d7":
+                    factors[name] *= 2.0
+                    multiplier[group == i] *= 2.0
+        # keep the overall loss scale where it was: mean multiplier over training rows == 1
+        training = ~is_val
+        mean = float((multiplier[training] * base[training]).sum() / base[training].sum())
+        multiplier /= mean
+        for name in factors:
+            factors[name] /= mean
+        multiplier[is_val] = 1.0
+        outputs[plan] = (multiplier, mean)
 
-    result = {}
-    for i, name in enumerate(group_names):
-        sel = (group == i) & training
-        result["%s/%s" % name] = dict(
-            base_weight=float(base[sel].sum()),
-            final_weight=float((base[sel] * multiplier[sel]).sum()),
-            rows=int(sel.sum()),
+    summary = {}
+    for plan, (multiplier, mean) in outputs.items():
+        result = {}
+        for i, name in enumerate(group_names):
+            sel = (group == i) & ~is_val
+            result["%s/%s" % name] = dict(
+                base_weight=float(base[sel].sum()),
+                final_weight=float((base[sel] * multiplier[sel]).sum()),
+                rows=int(sel.sum()),
+            )
+        total_final = sum(v["final_weight"] for v in result.values())
+        for key, value in result.items():
+            value["share"] = value["final_weight"] / total_final if total_final else 0.0
+        summary[plan] = dict(plan=plan, rows=int(capacity), training_rows=int((~is_val).sum()),
+                             validation_rows=int(is_val.sum()), groups=result,
+                             zone_share={z: sum(v["final_weight"] for k, v in result.items()
+                                                 if k.startswith(z + "/")) / total_final for z in zones},
+                             normalisation=mean)
+        print(json.dumps(summary[plan], indent=2))
+        if args.dry_run:
+            continue
+        out = (args.out.parent / ("row_weights_%s.json" % plan)) if args.out else \
+            ROOT / ("artifacts/task36/row_weights_%s.json" % plan)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        values_path = out.parent / ("row_weights_%s.npy" % plan)
+        np.save(values_path, multiplier.astype(np.float32))
+        spec = dict(
+            name="task36_plan_%s" % plan,
+            multipliers=values_path.name,
+            rows=int(capacity),
+            multipliers_sha256=hashlib.sha256(multiplier.astype(np.float32).tobytes()).hexdigest(),
+            row_identity_sha256=digest.hexdigest(),
+            split_sha256=hashlib.sha256(np.packbits(is_val).tobytes()).hexdigest(),
+            plan=plan,
+            definition=("zone-equal total weight over day/night/pool; night n10:n9 = 2:1"
+                        + ("; day early L1/L3/L4/L6 x2" if plan == "B" else "")),
+            group_shares={k: round(v["share"], 6) for k, v in result.items()},
+            normalisation=mean,
         )
-    total_final = sum(v["final_weight"] for v in result.values())
-    for key, value in result.items():
-        value["share"] = value["final_weight"] / total_final if total_final else 0.0
-    report = dict(plan=args.plan, rows=int(capacity), training_rows=int(training.sum()),
-                  validation_rows=int(is_val.sum()), groups=result,
-                  zone_share={z: sum(v["final_weight"] for k, v in result.items()
-                                      if k.startswith(z + "/")) / total_final for z in zones},
-                  normalisation=mean)
-    print(json.dumps(report, indent=2))
-    if args.dry_run:
-        return
-    out = args.out or ROOT / ("artifacts/task36/row_weights_%s.json" % args.plan)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    values_path = out.parent / ("row_weights_%s.npy" % args.plan)
-    np.save(values_path, multiplier.astype(np.float32))
-    split = hashlib.sha256(np.packbits(is_val).tobytes()).hexdigest()
-    spec = dict(
-        name="task36_plan_%s" % args.plan,
-        multipliers=values_path.name,
-        rows=int(capacity),
-        multipliers_sha256=hashlib.sha256(multiplier.astype(np.float32).tobytes()).hexdigest(),
-        row_identity_sha256=digest.hexdigest(),
-        split_sha256=split,
-        plan=args.plan,
-        definition=("zone-equal total weight over day/night/pool; night n10:n9 = 2:1"
-                    + ("; day early L1/L3/L4/L6 x2" if args.plan == "B" else "")),
-        group_shares={k: round(v["share"], 6) for k, v in result.items()},
-        normalisation=mean,
-    )
-    out.write_text(json.dumps(spec, indent=2) + "\n")
-    print("wrote", out, values_path)
+        out.write_text(json.dumps(spec, indent=2) + "\n")
+        print("wrote", out, values_path)
 
 
 if __name__ == "__main__":
