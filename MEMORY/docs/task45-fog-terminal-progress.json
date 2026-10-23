@@ -138,6 +138,508 @@
    },
    "cpu_seconds_metered": 9968.791473,
    "raw_report_sha256": "bdd0d71bad428950779114e25d8b13aca80c972131dae4fc0155322ece5673f7"
+  },
+  "interim-l31-paired": {
+   "human": {
+    "roots": 8,
+    "episodes": 4,
+    "base_seed_units": 4,
+    "candidates": 525,
+    "labels": 1575,
+    "terminal_wins": 0,
+    "separable_roots": {
+     "won": 0,
+     "wave": 8,
+     "tick": 8
+    },
+    "available_root_types": {
+     "16": 8,
+     "9": 7,
+     "4": 4
+    },
+    "v4_favourite_types": {
+     "9": 5,
+     "4": 3
+    },
+    "wave_favourite_types": {
+     "9": 6,
+     "4": 2
+    },
+    "metrics": {
+     "won": {
+      "v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_strict": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_nonterminal": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "teacher_path_v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      }
+     },
+     "wave": {
+      "v4": {
+       "pairs": 3275,
+       "accuracy": 0.7149618320610687,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.6610042468148888,
+        0.7766393442622951
+       ]
+      },
+      "v4_strict": {
+       "pairs": 13912,
+       "accuracy": 0.6319005175388154,
+       "value_ties": 10,
+       "cluster_bootstrap_95": [
+        0.6021057786483839,
+        0.655342923195479
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 3275,
+       "accuracy": 0.7149618320610687,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.6610042468148888,
+        0.7766393442622951
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 3275,
+       "accuracy": 0.7181679389312977,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.6627529352985261,
+        0.7795081967213114
+       ]
+      }
+     },
+     "tick": {
+      "v4": {
+       "pairs": 13310,
+       "accuracy": 0.6359504132231405,
+       "value_ties": 11,
+       "cluster_bootstrap_95": [
+        0.6025349590135703,
+        0.657984740857669
+       ]
+      },
+      "v4_strict": {
+       "pairs": 17742,
+       "accuracy": 0.600326907902153,
+       "value_ties": 14,
+       "cluster_bootstrap_95": [
+        0.5651594055633177,
+        0.6283818016009728
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 13310,
+       "accuracy": 0.6359504132231405,
+       "value_ties": 11,
+       "cluster_bootstrap_95": [
+        0.6025349590135703,
+        0.657984740857669
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 13310,
+       "accuracy": 0.6397069872276484,
+       "value_ties": 11,
+       "cluster_bootstrap_95": [
+        0.6034304608390163,
+        0.6640357800578796
+       ]
+      }
+     }
+    }
+   },
+   "xray": {
+    "roots": 8,
+    "episodes": 4,
+    "base_seed_units": 4,
+    "candidates": 534,
+    "labels": 1602,
+    "terminal_wins": 0,
+    "separable_roots": {
+     "won": 0,
+     "wave": 7,
+     "tick": 8
+    },
+    "available_root_types": {
+     "16": 8,
+     "9": 7,
+     "4": 4
+    },
+    "v4_favourite_types": {
+     "9": 6,
+     "4": 2
+    },
+    "wave_favourite_types": {
+     "9": 4,
+     "4": 3,
+     "None": 1
+    },
+    "metrics": {
+     "won": {
+      "v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_strict": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_nonterminal": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "teacher_path_v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      }
+     },
+     "wave": {
+      "v4": {
+       "pairs": 1664,
+       "accuracy": 0.6844951923076923,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.5,
+        0.7813620071684588
+       ]
+      },
+      "v4_strict": {
+       "pairs": 13200,
+       "accuracy": 0.6089015151515151,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.5590031931139803,
+        0.6688344172086043
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 1664,
+       "accuracy": 0.6844951923076923,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.5,
+        0.7813620071684588
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 1664,
+       "accuracy": 0.6844951923076923,
+       "value_ties": 0,
+       "cluster_bootstrap_95": [
+        0.5,
+        0.7813620071684588
+       ]
+      }
+     },
+     "tick": {
+      "v4": {
+       "pairs": 11751,
+       "accuracy": 0.5786316058207812,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.4887450345740768,
+        0.7149923896499238
+       ]
+      },
+      "v4_strict": {
+       "pairs": 18273,
+       "accuracy": 0.5564220434520878,
+       "value_ties": 5,
+       "cluster_bootstrap_95": [
+        0.4889705882352941,
+        0.6625048233283722
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 11751,
+       "accuracy": 0.5786316058207812,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.4887450345740768,
+        0.7149923896499238
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 11751,
+       "accuracy": 0.5788018041017786,
+       "value_ties": 1,
+       "cluster_bootstrap_95": [
+        0.48903928203619246,
+        0.7149923896499238
+       ]
+      }
+     }
+    }
+   },
+   "root_favourites": {
+    "human": {
+     "won": {
+      "None": 8
+     },
+     "wave": {
+      "9": 6,
+      "4": 2
+     },
+     "tick": {
+      "9": 5,
+      "4": 3
+     }
+    },
+    "xray": {
+     "won": {
+      "None": 8
+     },
+     "wave": {
+      "9": 4,
+      "4": 3,
+      "None": 1
+     },
+     "tick": {
+      "9": 5,
+      "4": 3
+     }
+    }
+   },
+   "largest_wave_gain_vs_student": {
+    "human": [
+     {
+      "cell": "l31-human-39000001",
+      "point": {
+       "decision": 126,
+       "tick": 7012,
+       "wave": 2,
+       "sun": 30,
+       "candidate_count": 79,
+       "candidate_sha256": "799476687573bd5159845dfc3536dfe44741530fccf7535a2046fe148e88ab74",
+       "state_sha256": "913baf28f27f891d43160379a29af3cc3982293642a865bc28a340cb8deef9c2",
+       "public_history_sha256": "aea38891b0834436f3167fcce3314018e15bdae505d8415a9eaccda036fe1f5b"
+      },
+      "action": {
+       "type": "plant",
+       "packet": 4,
+       "row": 5,
+       "col": 0
+      },
+      "plant_type": 4,
+      "mean_wave_gain": 2,
+      "candidate": {
+       "won": 0,
+       "wave": 9,
+       "tick": 25252.333333333332,
+       "mowers_used": 5.333333333333333
+      },
+      "student": {
+       "won": 0,
+       "wave": 7,
+       "tick": 18721.333333333332,
+       "mowers_used": 3.3333333333333335
+      }
+     },
+     {
+      "cell": "l31-human-39000002",
+      "point": {
+       "decision": 0,
+       "tick": 0,
+       "wave": 0,
+       "sun": 50,
+       "candidate_count": 55,
+       "candidate_sha256": "d9af1a51432a63373014b85b2522512991103bbd6d729dc9e64c7e3a5281bf7c",
+       "state_sha256": "bdbce8279769edffbd72ed1ddaad4ed03f4fa84e93773ef37e11db9b57f82059",
+       "public_history_sha256": "dff2b0961db174922f1ae6ee876abac71adade74d0bd980525b4a0667f9acdba"
+      },
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 0,
+       "col": 3
+      },
+      "plant_type": 9,
+      "mean_wave_gain": 2.0,
+      "candidate": {
+       "won": 0,
+       "wave": 10.333333333333334,
+       "tick": 29720.333333333332,
+       "mowers_used": 5.333333333333333
+      },
+      "student": {
+       "won": 0,
+       "wave": 8.333333333333334,
+       "tick": 23964.333333333332,
+       "mowers_used": 4.666666666666667
+      }
+     },
+     {
+      "cell": "l31-human-39000003",
+      "point": {
+       "decision": 0,
+       "tick": 0,
+       "wave": 0,
+       "sun": 50,
+       "candidate_count": 55,
+       "candidate_sha256": "d9af1a51432a63373014b85b2522512991103bbd6d729dc9e64c7e3a5281bf7c",
+       "state_sha256": "0b28784cb57610e874c3a6f57f065e2189a19e9ba5ce03cce588cbfc92bdc498",
+       "public_history_sha256": "dff2b0961db174922f1ae6ee876abac71adade74d0bd980525b4a0667f9acdba"
+      },
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 1,
+       "col": 7
+      },
+      "plant_type": 9,
+      "mean_wave_gain": 2.0,
+      "candidate": {
+       "won": 0,
+       "wave": 10.333333333333334,
+       "tick": 29687,
+       "mowers_used": 5
+      },
+      "student": {
+       "won": 0,
+       "wave": 8.333333333333334,
+       "tick": 21471.666666666668,
+       "mowers_used": 3.6666666666666665
+      }
+     }
+    ],
+    "xray": [
+     {
+      "cell": "l31-xray-39000002",
+      "point": {
+       "decision": 135,
+       "tick": 7745,
+       "wave": 3,
+       "sun": 30,
+       "candidate_count": 89,
+       "candidate_sha256": "9d37e860335dceb1aa8c9c7aa1a680c41e7d133ddd459a932dc67d6e65d02467",
+       "state_sha256": "c105f8ab6496719e43e231e445a3368894f75a5433395e7feca8dfaa562cc573",
+       "public_history_sha256": "dc5063a72f3a033cb1c198bc097dcd3f0b6423ba444f5ba48663c08d28d48406"
+      },
+      "action": {
+       "type": "plant",
+       "packet": 4,
+       "row": 0,
+       "col": 4
+      },
+      "plant_type": 4,
+      "mean_wave_gain": 1.333333333333333,
+      "candidate": {
+       "won": 0,
+       "wave": 9,
+       "tick": 25184.333333333332,
+       "mowers_used": 5.333333333333333
+      },
+      "student": {
+       "won": 0,
+       "wave": 7.666666666666667,
+       "tick": 21200,
+       "mowers_used": 4
+      }
+     },
+     {
+      "cell": "l31-xray-39000001",
+      "point": {
+       "decision": 0,
+       "tick": 0,
+       "wave": 0,
+       "sun": 50,
+       "candidate_count": 55,
+       "candidate_sha256": "d9af1a51432a63373014b85b2522512991103bbd6d729dc9e64c7e3a5281bf7c",
+       "state_sha256": "4e41ff18ca0621629299247e99fb84e3b472ac0a2c5a8b54387399770efb98d3",
+       "public_history_sha256": "dff2b0961db174922f1ae6ee876abac71adade74d0bd980525b4a0667f9acdba"
+      },
+      "action": {
+       "type": "plant",
+       "packet": 1,
+       "row": 1,
+       "col": 5
+      },
+      "plant_type": 9,
+      "mean_wave_gain": 1,
+      "candidate": {
+       "won": 0,
+       "wave": 9,
+       "tick": 23442,
+       "mowers_used": 5.333333333333333
+      },
+      "student": {
+       "won": 0,
+       "wave": 8,
+       "tick": 20935.333333333332,
+       "mowers_used": 4.333333333333333
+      }
+     },
+     {
+      "cell": "l31-xray-39000000",
+      "point": {
+       "decision": 130,
+       "tick": 7522,
+       "wave": 3,
+       "sun": 25,
+       "candidate_count": 89,
+       "candidate_sha256": "377dccc17f36e1aa47ee918d42ded7d72624e5de9523f554150a15f65b594480",
+       "state_sha256": "bbdb2cf835d55710f4d7db5617ea22b0a3cee75cd8a8367d2abdcb2dfe02c073",
+       "public_history_sha256": "44aa140a64b02ae04aaaefa7525117ecd51667109d95986731c3fe63828875df"
+      },
+      "action": {
+       "type": "plant",
+       "packet": 4,
+       "row": 4,
+       "col": 7
+      },
+      "plant_type": 4,
+      "mean_wave_gain": 0.9999999999999991,
+      "candidate": {
+       "won": 0,
+       "wave": 8.666666666666666,
+       "tick": 23412.333333333332,
+       "mowers_used": 5
+      },
+      "student": {
+       "won": 0,
+       "wave": 7.666666666666667,
+       "tick": 21910.333333333332,
+       "mowers_used": 4.333333333333333
+      }
+     }
+    ]
+   },
+   "screen_labels_saved": 4340,
+   "screen_labels_planned": 12372,
+   "cpu_seconds_metered": 16185.850853,
+   "artifact_bytes": 60107150,
+   "raw_audit_sha256": "af82cf94e0382ffdd3286f0c3779204c681a92b25ca0ca5433fc8df109a6ea07",
+   "status": "interim_not_confirmation"
   }
  }
 }
