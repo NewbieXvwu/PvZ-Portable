@@ -59,13 +59,14 @@
 - 11:30 第 4 步（静态候选下沉）设计完成：`hotpath-audit.md` §16——`VALUE_LOAD` / `BRANCH_VALUE` 两条命令（复用 `BRANCH_OBSERVE` 的循环体，只把输出从 observation 换成分数）、`PVZVN001` 权重格式、`src/ValueNet.{h,cpp}` 新文件里的特征化与卷积、五项等价性验收（权重按位、特征逐元素、分数 1e-6、决策逐字段、−7.9 s/局）。**没动 `src/EnvironmentRollout.cpp`**。要 task35 确认 `main.cpp` 分发与分支循环是否会被重写，写进“问题”。
 - 11:50 压榨第二轮：三项尝试都 < 2%，Python 侧压到停止条件。① step 改用 lean 观测（现役二进制已有，不用重编）：每步 −23…−26%、400 步 × 2 关的 `_frame` 逐条相同，但搜索局 step 只占 1.2 s → **0.26%**；② 价值网批 32→128：`_values` 实际每批只有 18 帧，**收益 0**；③ 静态候选跳过 `_frame`：上限 **0.2%**。测法固化成 `scripts/hotpath_lean.py`。剩下的 >2% 项（静态候选 7%、旧 JSONL 档案）各有外部前置，见“问题”。`hotpath-audit.md` §17。
 - 12:10 生产配方的打包链路也验过（默认选项之外）：`--wait-keep 0.1 --obs v2 --packet-head identity --cells --aux-horizon 8` 打同一份 11 标签数据 → 17 069 行 / 10.0 MB / 23.2 s，`--verify` **12 个数组全 same**；再用 `--cell-soft-weight 3 --aux-weight 0.5` 从包里训 1 epoch 正常跑通（`cand_bytes`/`packet_bytes` 非零，证明候选与 identity packet 都来自包）。`hotpath-audit.md` §15。
+- 13:30 第 4 步**实测复核后撤回**：把 §13 第 6 项的“8 s/局（7%）”逐项拆开（`scripts/hotpath_branch.py`，现役二进制、L7 倍率 3、最坏 lean 观测 3 825 B）——每分支 220–280 µs 里，引擎还原快照 61–90 µs、往返 73–120 µs 是**候选真的在仿真**，价值网前向 93–107 µs 是 torch（MKL 多线程）本身；可回收的只有 json 解析 21–23 µs + `_frame` 4–6 µs + `featurize` 8–10 µs ≈ 35–50 µs/分支 = **0.7–1.0 s/局（0.6–0.85%）**，而单线程 C++ 卷积比 torch 慢 3–6 倍，搬过去反而倒亏。结论：**不实施**，接口需求撤回。`hotpath-audit.md` §16.0 与 §13 第 6 项已改口径。
 
 ## 问题
 
 - **包的键包含 `cells`，而它跟着 `--cell-soft-weight` 走**（`load()` 里 `cells=bool(args.cell_soft_weight)`）。生产配方带 `--cell-soft-weight 3`，所以采集端起 `curriculum_queue` 时必须给 `--pack-cells`，其余行选项（`--pack-wait-keep 0.1 --pack-obs v2 --pack-packet-head identity`）也要与训练命令一致；不一致时训练端会打印该跑的打包命令，不会静默用错包。
 
-- **旧 JSONL 档案转 npz（7.54 GB → 约 0.6 GB）要主控批**：这是 §13 第 3 项、也是前 15 项里最后一条可证明的冗余，但它在主工作区 `artifacts/` 里，且 13 个采集进程正在往同一个根目录写。要做就等一个停采窗口（与重编 `build/pvz-portable` 同一个窗口），我可以一次跑完并逐帧核对。
-- **第 4 步（静态候选下沉）需要 task35 先给个结论**：价值网是新文件，不碰学生前向；唯一共享的是 `src/main.cpp` 的命令分发与 `BRANCH_OBSERVE` 的循环体。他若正在改这两处，请他先落地（或把分发抽成表），我按新结构接，避免同一段代码二次冲突。另外 `VALUE_LOAD` / `BRANCH_VALUE` 要重编 `build/pvz-portable`，与 §13 第 4 项（lean 观测）共用同一个停采窗口。
+- **旧 JSONL 档案（1.7 GB / 6 659 个）不再算热路径冗余**：打包落地（批复第 3 条）之后训练只读包，档案的唯一读者是打包器；转换它只剩磁盘 1.5 GB 与价值网训练（`train_value_net.py` 仍逐档案读）的解析时间。要做仍需停采窗口（在主工作区 `artifacts/` 里），但不影响本任务的停止条件。
+- **静态候选下沉的接口需求撤回**：§16.0 实测可回收 0.6–0.85%，且 C++ 前向比 torch 慢 3–6 倍，本项不实施，不需要占用 task35 的时间。留档的 `VALUE_LOAD` / `BRANCH_VALUE` / `PVZVN001` 设计等价值网换小结构或引擎有多线程卷积时再用。
 
 ## 追加（主控 2026-10-22 23:55，用户两点 + 主控决定）
 1. **采集去掉 Python ↔ 引擎的进程间通信**（用户提议“干掉它、重写成 C++”，主控同意方向）。目标形态：**每个采集 worker 是一个 C++ 进程**，整局决策循环（学生前向——已有 C++ PVZRN006；
