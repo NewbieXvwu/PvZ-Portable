@@ -365,7 +365,7 @@ static void RunEnvironment(LawnApp* app)
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
-		<< ",\"rollout_version\":3,\"sparse_tracks_version\":1}" << std::endl;
+		<< ",\"rollout_version\":4,\"sparse_tracks_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -649,12 +649,12 @@ static void RunEnvironment(LawnApp* app)
 				// Optional trailing token, absent in every pre-task20 task: the command text of
 				// those tasks therefore stays byte-identical.
 				std::string extra;
-				if (input >> extra)
+				while (input >> extra)
 				{
 					if (extra == "conveyor_original") task.originalConveyorStart = true;
+					else if (extra == "fog_human") task.humanFogObservation = true;
+					else if (extra == "fog_xray") task.humanFogObservation = false;
 					else parsed = false;
-					std::string trailing;
-					if (input >> trailing) parsed = false;
 				}
 			}
 			if (parsed && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&

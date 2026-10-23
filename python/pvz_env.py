@@ -133,6 +133,7 @@ class TaskSpec:
     # "original": conveyor levels keep the engine's own seed bank (10 empty packets, cards dealt
     # by Challenge::UpdateConveyorBelt) instead of writing the task deck into it.
     conveyor_start: str | None = None
+    fog_observation: str | None = None  # task family: human / xray; None preserves legacy tasks
 
 
 def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -> TaskSpec:
@@ -421,6 +422,8 @@ class PvZEnv:
             raise ValueError("preplanted seed_type, row and col must be in range")
         if task.conveyor_start not in (None, "original"):
             raise ValueError("conveyor_start must be None or 'original'")
+        if task.fog_observation not in (None, "human", "xray"):
+            raise ValueError("fog_observation must be None, 'human' or 'xray'")
         if type(task.playthrough) is not int or task.playthrough != 2:
             raise ValueError("only replay semantics (playthrough=2) are supported")
         if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:
@@ -485,6 +488,8 @@ class PvZEnv:
         # message (and therefore its replay) stays byte-identical.
         if task.conveyor_start == "original":
             command += " conveyor_original"
+        if task.fog_observation is not None:
+            command += f" fog_{task.fog_observation}"
         response = self._command(command)
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
@@ -514,6 +519,7 @@ class PvZEnv:
                 "wave_cap": task.wave_cap,
                 "preplanted": [list(plant) for plant in task.preplanted],
                 **({"conveyor_start": task.conveyor_start} if task.conveyor_start else {}),
+                **({"fog_observation": task.fog_observation} if task.fog_observation else {}),
             },
             "initial_state": self._state_record(observation),
             "operations": [],
@@ -682,6 +688,8 @@ class PvZEnv:
             raise RuntimeError("v2lite requires a rebuilt simulator with rollout_version >= 2")
         if observation == 3 and self._rollout_version < 3:
             raise RuntimeError("v2 requires a rebuilt simulator with rollout_version >= 3")
+        if observation == 4 and self._rollout_version < 4:
+            raise RuntimeError("v2fog requires a rebuilt simulator with rollout_version >= 4")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")

@@ -77,13 +77,15 @@ FAMILIES = (
     ('day_d7q', 'day_d7q', 'day_l{level}_train_d7q', DAY_D7Q_LEVELS, 'day'),
     ('night_n10p', 'night_n10p', 'night_l{level}_train_n10p', NIGHT_N10P_LEVELS, 'night'),
     ('night_n10q', 'night_n10q', 'night_l{level}_train_n10q', NIGHT_N10Q_LEVELS, 'night'),
+    ('fog_f8', 'fog', 'fog_l{level}_train_f8', (31, 32, 33, 34, 36, 37, 38, 39), 'fog'),
+    ('fog_f8p', 'fog', 'fog_l{level}_train_f8p', (31, 32, 33, 34, 36, 37, 38, 39), 'fog'),
     ('roof', 'roof', 'roof_l{level}_train_r7', ROOF_LEVELS, 'roof'),
 )
 
 # Registry coverage and curriculum admission are separate: unmeasured roof levels have
 # reproducible tasks/multipliers, but cannot enter collection before the cold-start gate.
 # Filled from the complete, preregistered teacher evaluation (>=50% at original difficulty).
-CURRICULUM_LEVELS = {'roof': (41,)}  # task46-roof-admission.json: r7 teacher L41 = 15/16
+CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': ()}  # task46-roof-admission.json: r7 teacher L41 = 15/16
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
 # 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。
@@ -114,6 +116,7 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'night_n10p': overrides.get('night_n10p') or MAIN / 'artifacts/stage4/night_panel_n10p.json',
         'night_n10q': overrides.get('night_n10q') or MAIN / 'artifacts/stage4/night_panel_n10q.json',
         'roof': overrides.get('roof') or ROOT / 'artifacts/task46/roof_panel.json',
+        'fog': overrides.get('fog') or ROOT / 'artifacts/task45/fog_panel.json',
     }
 
 
@@ -231,6 +234,7 @@ def main() -> None:
     parser.add_argument('--night-n10p-manifest', type=Path)
     parser.add_argument('--night-n10q-manifest', type=Path)
     parser.add_argument('--roof-manifest', type=Path)
+    parser.add_argument('--fog-manifest', type=Path)
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -238,7 +242,7 @@ def main() -> None:
     paths = source_paths({'day': args.day_manifest, 'day_orig': args.day_orig_manifest,
                           'night': args.night_manifest, 'pool': args.pool_manifest,
                           'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
-                          'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest})
+                          'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest, 'fog': args.fog_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests()

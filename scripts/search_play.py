@@ -567,7 +567,7 @@ def _final_zombies(obs: dict) -> list[dict]:
             for z in _frame(obs)['zombies'] if z[5]]
 
 
-def _play(job: dict) -> dict:
+def _play(job: dict, observer=None) -> dict:
     args = job["args"]
     from collections import Counter
     import torch
@@ -593,6 +593,11 @@ def _play(job: dict) -> dict:
              "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
     try:
         obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+        fog_diagnostics = None
+        if task_definition.get('fog_observation') and obs.get('fog'):
+            from pvz_fog import FogEpisodeDiagnostics
+            fog_diagnostics = FogEpisodeDiagnostics()
+            fog_diagnostics.sample(env, obs)
         from pvz_value_net import observation_context
         _W["context"] = observation_context(obs)
         task_context = {"level": kw["level"], "multiplier": obs.get("zombie_count_multiplier", 1.0),
@@ -614,7 +619,7 @@ def _play(job: dict) -> dict:
         planted_by_type: dict[int, int] = {}
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
-        if job["arm"] == "fast" and not args.frames:
+        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None:
             obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
@@ -623,12 +628,17 @@ def _play(job: dict) -> dict:
             if planted_by_type is None or planted is None:
                 raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
         while not obs["terminal"] and decisions < MAX_ACTIONS:
+            if observer is not None:
+                observer.before(env, obs, fast_state, decisions)
             action = policy_choice = _fast_action(obs, fast_state)
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
+                searched_before = stats['searched']
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
                 action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
+                if fog_diagnostics is not None:
+                    fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
                 if action["type"] == "shovel":
                     stats["shovels"] += 1
                     cell = next((p for p in obs.get("plants") or []
@@ -662,8 +672,14 @@ def _play(job: dict) -> dict:
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
                 planted_by_type[planted_type] = planted_by_type.get(planted_type, 0) + 1
+                if fog_diagnostics is not None:
+                    fog_diagnostics.planted(planted_type, action)
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
+            if observer is not None:
+                observer.after(obs, action, policy_choice, rejected, info)
+            if fog_diagnostics is not None:
+                fog_diagnostics.sample(env, obs)
             if frames is not None:
                 frame = _frame(obs)
                 if stats.get("last_targets"):
@@ -677,6 +693,8 @@ def _play(job: dict) -> dict:
                                         if abs(v) != float("inf") and c["type"] != "shovel"]
                 frame["action"] = action          # what was executed (after the search), like render_episode
                 frame["action_rejected"] = rejected
+                if observer is not None:
+                    frame["eaten"] = int((info.get("events") or {}).get("plants_eaten", 0))
                 if stats.get("last_verification"):
                     # Wall time is not part of the label: keeping it in the archive makes two runs of
                     # the same arm differ byte for byte (and the GPU schedule comparison impossible).
@@ -706,7 +724,8 @@ def _play(job: dict) -> dict:
                                  "".join(frames).encode())
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
-        if 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original':
+        if ('deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original'
+                or task_definition.get('fog_observation')):
             import hashlib
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
                                 policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
@@ -723,6 +742,8 @@ def _play(job: dict) -> dict:
             "context": task_context,
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
+            **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),
+                'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "final_tick": obs["tick"], "terminal": bool(obs.get("terminal")),
             "wave_count": obs.get("wave_count"),
@@ -749,7 +770,7 @@ def _play(job: dict) -> dict:
     return result
 
 
-def main() -> None:
+def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
@@ -791,6 +812,11 @@ def main() -> None:
                    help="probability of executing the search's decision (1 = the teacher plays; < 1 = DAgger: "
                         "the student plays the rest, every frame still records the search's label)")
     p.add_argument("--resource-dir", default=DEFAULT_RESOURCE_DIR)
+    return p
+
+
+def main() -> None:
+    p = parser()
     args = p.parse_args()
     if args.verify_samples < 0:
         p.error("--verify-samples must be nonnegative")
