@@ -201,8 +201,30 @@ bool Projectile::PeaAboutToHitTorchwood()
 	if (mProjectileType != ProjectileType::PROJECTILE_PEA && mProjectileType != ProjectileType::PROJECTILE_SNOWPEA)
 		return false;
 
-	for (Plant* aPlant : mBoard->mPlants)
+	// Asked for every pea every tick, and the answer needs a walk over all plants.  Almost
+	// always there is no torchwood at all, so remember which slots hold one.  That can only go
+	// stale when a plant is allocated (mPlants.mNextKey moves) or the arrays are replaced
+	// (gBoardContentEpoch); a torchwood that dies merely makes the memo pessimistic.
+	static const Board* sBoard = nullptr;
+	static unsigned int sEpoch = 0, sNextKey = 0;
+	static std::vector<int> sTorchwoodSlots;
+	if (sBoard != mBoard || sEpoch != gBoardContentEpoch || sNextKey != mBoard->mPlants.mNextKey)
 	{
+		sBoard = mBoard;
+		sEpoch = gBoardContentEpoch;
+		sNextKey = mBoard->mPlants.mNextKey;
+		sTorchwoodSlots.clear();
+		for (unsigned int index = 0; index < mBoard->mPlants.mMaxUsedCount; ++index)
+			if ((mBoard->mPlants.DataArrayGetIDAt(index) & DATA_ARRAY_KEY_MASK) &&
+				mBoard->mPlants.DataArrayGetItemAt(index).mSeedType == SeedType::SEED_TORCHWOOD)
+				sTorchwoodSlots.push_back(static_cast<int>(index));
+	}
+	if (sTorchwoodSlots.empty())
+		return false;
+
+	for (int index : sTorchwoodSlots)
+	{
+		Plant* aPlant = &mBoard->mPlants.DataArrayGetItemAt(index);
 		if (aPlant->mDead)
 			continue;
 		if (aPlant->mSeedType == SeedType::SEED_TORCHWOOD && aPlant->mRow == mRow && !aPlant->NotOnGround() && mHitTorchwoodGridX != aPlant->mPlantCol)

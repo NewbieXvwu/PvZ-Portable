@@ -1,0 +1,16 @@
+{
+  "archives": 6658,
+  "by_status": {
+    "converted+deleted": 6657,
+    "already+deleted": 1
+  },
+  "jsonl_bytes": 7509703263,
+  "npz_bytes": 563481079,
+  "ratio": 0.07503373425901502,
+  "deleted": true,
+  "dry_run": false,
+  "seconds": 196.3,
+  "failures": [],
+  "manifest": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/mem/MEMORY/docs/frames-npz-converted.txt.gz",
+  "manifest_sha256": "a7c10fe96658c2a82b6e1fab4f679c4a3998254671a97122ac7e92e2a6d696be"
+}

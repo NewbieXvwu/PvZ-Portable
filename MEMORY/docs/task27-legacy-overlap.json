@@ -1,0 +1,139 @@
+{
+  "complete_common_day_heldout": true,
+  "tasks": 21,
+  "games": 1920,
+  "mismatches": 0,
+  "checks": [
+    {
+      "task": "day_l10_eval_d7p_holdout1",
+      "games": 64,
+      "legacy_sha256": "fd6083fecca1a0043dd1b8f5229b0495afcf791211551755016f06b8d04b58ab",
+      "new_sha256": "5f159355271428d89d49c328aac696097e02f47f459557137057ce14a6430f22"
+    },
+    {
+      "task": "day_l10_eval_d7p_holdout2",
+      "games": 64,
+      "legacy_sha256": "13d5922624309f92f9975b97c5859f5e24175d5f8f27e8e4d5fa623a0e1b9b37",
+      "new_sha256": "c47179ecb245b4adeb3bb1148174f64711581c7fc58273960efdbdcd7d95cb16"
+    },
+    {
+      "task": "day_l10_eval_d7p_holdout3",
+      "games": 64,
+      "legacy_sha256": "9fd57f40510a54bb9a235ed11a72ef6ef3fd618fa77d9d5e4d7bad689adb37b2",
+      "new_sha256": "df690d231ad6595a84b4a99bae038e54014cf3213e40fb32359df7566e3b3690"
+    },
+    {
+      "task": "day_l10_orig_eval",
+      "games": 128,
+      "legacy_sha256": "e0e6eecc49141992ce29914701cef2db615285e8ee7744b00c194795f894c65f",
+      "new_sha256": "ba2884a0da237024a2b97e11134d2d1990740875a09964dd6f7f6b5b6e0d264d"
+    },
+    {
+      "task": "day_l1_eval_d7",
+      "games": 128,
+      "legacy_sha256": "2af0580037b51336ebf8425ef768af4c981bb416cd4d1f0692c611a8dbcf822c",
+      "new_sha256": "ff06d25c116e930d74c8bfd5a9fa40fbe69df95801792c82623837415ba0e89d"
+    },
+    {
+      "task": "day_l3_eval_d7",
+      "games": 128,
+      "legacy_sha256": "1fbf8e309d73b46b40bb044caa7511eb1827716fe8bd20c6ce930bd947bad63f",
+      "new_sha256": "72dd46a5f6566ce72904d3547393d498f0bf3f7fb046f1a2ae01174497b11a4a"
+    },
+    {
+      "task": "day_l4_eval_d7",
+      "games": 128,
+      "legacy_sha256": "7c791d7e091ed8b3f49d7549e4fcfd670f72847d48e1f92af4bd4f702c143fb3",
+      "new_sha256": "8e6feb9a64cd7ffd295e85aa7721d74e5ce351cccd8a46c1225ef9ce72b650d8"
+    },
+    {
+      "task": "day_l6_eval_d7",
+      "games": 128,
+      "legacy_sha256": "f55e35c625cc596b9aad8036a4a8a52a7731c0aabf23efc4cd0c4d2d1c394892",
+      "new_sha256": "29817e0908d96db071f9e4cace5dfec55aa11957ca5b09a65e3c7636f95d7ee2"
+    },
+    {
+      "task": "day_l7_eval_d7",
+      "games": 128,
+      "legacy_sha256": "83e9375eedb7e9c81717deafe216584a63db9d52b87e4285d5daa4d1f243aa77",
+      "new_sha256": "9fd5c3cc5d0231b5d582a0a595a329fbf1dc615484b5e9be6b6926f5c5abea0e"
+    },
+    {
+      "task": "day_l7_eval_d7p_holdout1",
+      "games": 64,
+      "legacy_sha256": "76cfc3d8aa7a86bc9410aa98601abe05442716e3b4d497f556d0314d174a48f7",
+      "new_sha256": "80d8fc43d8fe4ee038e0cde26d5b2dc2d333b632910041a4e22ddd8d5cc518eb"
+    },
+    {
+      "task": "day_l7_eval_d7p_holdout2",
+      "games": 64,
+      "legacy_sha256": "b2c49f6571977c18ab4f1c6ebe24e3aad995b4b7f292d82ea839263866f4d096",
+      "new_sha256": "5697afb28e04b4b13a482854fffa1b7b2e567086fcf3240fc31ef426fcd3e9ec"
+    },
+    {
+      "task": "day_l7_eval_d7p_holdout3",
+      "games": 64,
+      "legacy_sha256": "205fae7d310f1a5668f9d89ff967cbd549f71a5aaf18ce0a33115012773a6a11",
+      "new_sha256": "31778bb5cd525b776850da9e328d60cf9483075128da49963d576b03e3cf6efc"
+    },
+    {
+      "task": "day_l8_eval_d7",
+      "games": 128,
+      "legacy_sha256": "c3df9dded64e37d291a8890a4e5305014262857d12bd11c4e0fc352fa290ac5d",
+      "new_sha256": "869abce56d6a6b0f2d8e787f614543fbdd1b0503e0900036ed03ec0d0c8564f3"
+    },
+    {
+      "task": "day_l8_eval_d7p_holdout1",
+      "games": 64,
+      "legacy_sha256": "26e517a6d39ef9dfd701cad8a98517f54c1e43a67f2e291c93071f5f4aab4f3f",
+      "new_sha256": "8dbb468293326b62e6044ddb6fd9909660ace3309b3c859aed7000bd7e6a659e"
+    },
+    {
+      "task": "day_l8_eval_d7p_holdout2",
+      "games": 64,
+      "legacy_sha256": "945981f84668c9b8dfcfddc04904bf26ae46e54524ab202a2770e4b7ec595a9d",
+      "new_sha256": "7b851e330dd747d9af1e5e21c6783224a353a8826f7c5e43810f7db473992998"
+    },
+    {
+      "task": "day_l8_eval_d7p_holdout3",
+      "games": 64,
+      "legacy_sha256": "3e03b2234347b66b966e947b4e20a44d82e15807e371e7ed4ef127f802820689",
+      "new_sha256": "576543a546b5ba525b6863f0cd036daa306ef6e832b78f7009bbc0c39263727d"
+    },
+    {
+      "task": "day_l9_eval_d7",
+      "games": 128,
+      "legacy_sha256": "76fc1f652b0fa56165871fbeab309d027ccf39d11062b6c265ce72575a613b34",
+      "new_sha256": "b6019fc0cd45b24c265fc1de2edccc45a2f13ee2a3972e20bc9aa00a2f6330ee"
+    },
+    {
+      "task": "day_l9_eval_d7p_holdout1",
+      "games": 64,
+      "legacy_sha256": "21bf6eaeda854c6cb0d198a60e5603b8cf0be25952df368796869ec45658e9a6",
+      "new_sha256": "a3f2f6304fc38acfa4c43c21d9d221860ee9bc89066017ed1da47869d5b8716c"
+    },
+    {
+      "task": "day_l9_eval_d7p_holdout2",
+      "games": 64,
+      "legacy_sha256": "4387704832d3394cdded35f1e99d4eb3380febf0035fa9a188fccacd69536022",
+      "new_sha256": "f330d1368893929b77f4da3d0642e0ed4d0e43e1a14030fb55feb6e9482ebcc8"
+    },
+    {
+      "task": "day_l9_eval_d7p_holdout3",
+      "games": 64,
+      "legacy_sha256": "044b786c7609e399f2b53bce7f5fdbb364dd3f3ca024e65d8609045db5b2457e",
+      "new_sha256": "31660d99b9d8da31008690345433ddcdfe0b114f8d1f31230189b1bfe5ed1802"
+    },
+    {
+      "task": "night_l20_eval_n10_orig",
+      "legacy_task": "night_l20_eval_n9_orig",
+      "games": 128,
+      "legacy_sha256": "3b44f06c7ad09eb2a523ea7211d2f3a6cbe3f68f2a92599e942920594d1401ad",
+      "new_sha256": "05c2d1968b22a5f94ba101fd9f7b7f944001428c4275893ae95f62318d5af7b0"
+    }
+  ],
+  "note": "All 21 semantically identical tasks (day, heldout, original L20) match. No-version CLI also reproduces exact historical29 manifest; new n10 decks/pool are separate measurements.",
+  "complete_common_tasks": true,
+  "default_cli_manifest_sha256": "c17daf9a2ded971f51e6af53642badb4969cc17b234583aa7d3630409fe00b32",
+  "default_cli_version": "v1"
+}

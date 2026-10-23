@@ -35,6 +35,52 @@
 
 ## 问题
 
+**第 15 步（小 json 并包头）的接口提案，等主控确认再动。**
+
+现状：30 521 个小 json、13.9 MiB 数据、119.6 MiB 块；其中 22 116 个是 `hard_mac/frames` 下 npz 档案旁的
+`meta.json`（每局一个，平均 388 B）。真正的浪费是**每文件 4 KB 的块**，不是数据。
+
+建议形态（与 task33 第 3 项“打包成顺序大文件”对齐，分两级）：
+
+1. **档案级**：`frames.npz` 增加一个 `meta` 键（uint8 的 JSON 字节，与 `frames` 同一写法）。写入端
+   `write_frames` / `write_frames_from_source` 接受可选 `meta: dict`；`meta.json` 仍写，直到转换工具
+   确认过；读取端新增 `pvz_frame_store.frame_meta(archive) -> dict`：npz 里有 `meta` 就用它，否则读
+   `meta.json`（按 `LEGACY(jsonl-archives)` 的方式登记）。收益：22 116 × 4 KB ≈ 86 MiB 的块浪费 +
+   8 MiB 数据 → npz 内压缩后约 +2 MiB。
+2. **包级**（task33 的 pack）：包头放一张 `meta` 表 —— `meta_offsets: int64[n_episodes+1]` +
+   `meta_bytes: uint8[...]`（每局一个 JSON 对象，顺序与档案表一致），`pack_meta(pack, i)` 取第 i 局。
+   包里的局不再需要任何旁挂文件；未打包的旧档案走第 1 级。
+3. `config.json`（218 个）/ `summary.json`（215 个）是**每轮一个**，不是每局一个，并入包头只省
+   0.3 MiB 数据 + 1.7 MiB 块，建议保持独立文件（人要看、要 grep），不做。
+
+需要主控拍三件事：
+
+- (a) 转换完成后是否**删除**已嵌入 npz 的 `meta.json`（Mac 上 22 116 + 其余约 8 000 个，删了省
+  ~119 MiB 块）；台式机按同一条命令由主控择时执行。
+- (b) 包头 `meta` 表由 task33 的 pack 工具实现，还是我这边先做档案级、包级留给 task33？两边都动
+  `pvz_frame_store.py` 的写入端，需要定一个归属，避免冲突。
+- (c) `meta` 键会不会破坏现有 npz 的 `encoder` 签名判定（`cache_episode` 比对签名后直接复用档案）；
+  我的实现里签名不覆盖 `meta`，只覆盖编码器源码 —— 若 task33 要求签名覆盖包头字段，需要一起改。
+**主控决定（2026-10-23）：不做。** 119 MB 的块浪费可以忽略，而 `episode_query` / `lint_skills` / 老师工具 / `analyze_keep_cards` 都直接读 `meta.json`，改接口不划算。
+
+
+未做任何改动；等确认。
+
+**第 18 步（档案里预计算的编码数组）一并请示。**
+
+一局档案 134 KB（LZMA 后）：frames JSON 73.0%，预计算的编码数组 20.3%（boards 9.1 + scalars 7.2 +
+values 2.2 + rows 0.6 + 其余 1.2）。这些数组完全由 `frames` 算出（`encode_frames_from_source`），
+存它们是为了让 `cache_episode` 直接复用、避免每局重算（task18 的设计）。
+
+合并 task33 之后训练只读包（`read_pack`），档案里的数组只在**建包**时被读一次。若确认包是唯一训练入口，
+可以从档案里去掉这 20%（约 600 MB），建包时重算（实测 0.9 s/档，22 130 档单线程约 5.5 h、8 并发约 40 min，
+一次性）。代价：任何直接读档案的旧工具（`cache_episode` 的非包路径）会退化成每档重算 0.9 s。
+
+要主控拍：包是否已经是唯一训练入口？若是，我按"档案只存 frames JSON + 少量索引、编码数组在建包时重算"改，
+`encoder` 签名改成记录"无预计算"版本；若不是，保持现状（600 MB 换重算时间，不划算）。
+**主控决定（2026-10-23）：不做。** 打包时 `cache_episode` 直接复用档案里的编码数组，删了每次打包都要重算 CPU，省下的约 600 MB 磁盘不值。
+
+
 ## 追加（主控 2026-10-22 23:05，用户的两点）
 1. **“结果不变”放宽**：此前实验已明确模型与搜索本身噪声很大（同一老师换随机未来只有约 75% 的决策相同），所以**不必逐位相同**。
    收益足够大、代价不大的改法可以接受：训练侧要求同数据同配方下验证损失与面板胜率在种子噪声内（给出对照数字）；采集侧要求同种子对局的胜率 / 到达波数在噪声内，
@@ -60,3 +106,12 @@
 2. **日志轮转**：`artifacts/**/*.log`（221 个、0.49 GB、无轮转）与 `artifacts/hard_mac/*.out`：写 `scripts/rotate_logs.py`（超过 N MB 的压缩成 .gz 留最后 1 MB 明文），给出 Mac 与台式机各自的调用方式。
 3. **每局一个的小 json**（29 679 个 config/meta/summary）：评估能否在打包时并入包头（与 task33 第 2 / 5 项对齐，接口在“问题”里和主控确认后再动）。
 4. 完成后把本分支与最新 `origin/pvz-env` 合并、全量测试、push。仍按停止条件持续压榨。
+- 第 13 步（档案转 npz·工具）：`scripts/convert_frames_npz.py` —— 逐档转换 + 五道校验后才删原文件：①npz 里存的字节与 jsonl 原文逐字节相同；②每一帧解析出的 dict 全等；③行索引恰好等于有标签且未被拒的帧号；④`encoder` 签名是当前版本；⑤boards/scalars/plant/packet/cell/values 的行数与行索引一致。写盘走临时文件 + 原子 rename，默认跳过 60 分钟内改过的档案（不碰正在写的采集）。冒烟：教师诊断档 1.4 MB→9.5%、value_net 档 636 016→58 764 B（9.2%），577 帧逐帧全等，`cache_episode` 直接复用 npz 里的行缓存不再重算。`python/pvz_compat.py` 建最小版（只登记 `jsonl-archives`，合并 task33 时以它的完整版为准），`pvz_frame_store.py` 两处加 `LEGACY(jsonl-archives)` 标记（与 task33 措辞逐字一致，便于合并）；`scripts/pack_frames.py` 改走 `frame_paths`（jsonl/npz 都收）、`scripts/early_fix_check.py` 改走 `frame_path`，避免转换后读不到。
+- 第 14 步（日志轮转）：`scripts/rotate_logs.py` —— 超过 `--min-mb 2` 的日志把除最后 1 MB 以外的部分压进 `<name>.log.gz`（每次轮转追加一个 gzip member，长期日志最终是一个 .gz），最后 1 MB 留明文、切点对齐行首；120 分钟内改过的文件跳过（可能还在写），改写走同一 inode 的 seek/write/truncate 不 rename。回环测试：5.9 MB 日志轮转后 gz+明文尾巴**逐字节等于原文**；追加后再轮转仍等于完整历史。Mac 实测 104 个文件 463.3 MB → 明文 109.0 + gz 28.8 MB，**省 325.5 MB（70%）**，9 个正在写的跳过。命令与数字进 `MEMORY/docs/memory-budget.md` §7.2。
+- 第 15 步（小 json 并包头·只评估未动）：`artifacts` 下 ≤64 KB 的小 json 共 30 521 个、13.9 MiB 数据，但占 **119.6 MiB 块**（4 KB 一块，平均每文件 460 B，块浪费 105.7 MiB）。分布：`hard_mac/frames` 22 116 个 meta.json（8.19 MiB，已是 npz 档案的旁挂文件）、`value_net/episodes` 2 048（2.92 MiB）、`value_net/episodes_search` 2 048（0.43）、`student/frames` 2 048（0.43）、`relabel/z15dag1{2,3}bv` 1 280（1.08）、`student/frames_deep_mac` 512（0.11），其余零散；`config.json` 218 个 / 0.23 MiB、`summary.json` 215 个 / 0.07 MiB 是**每轮一个**不是每局一个。键：每个 meta 都有 `task`+`outcome`，2 051 个有 `totals`/`policy_revision`/`frame_count`/`checkpoint`/`checkpoint_sha256`/`simulator_build`，1 280 个有 `relabel`。**按主控要求只做评估，接口写进「问题」等确认，未改任何读写路径。**
+- 第 16 步（档案转 npz·全量）：6 658 个档案（+ 第 13 步冒烟已转的 1 个）**全部通过五道校验后删原文件，失败 0**：7 509 703 263 B JSONL（7.00 GiB）→ 563 481 079 B npz（537 MiB），**7.50%**，省 6.95 GB，196 s（`--jobs 4`）。Mac 上 `frames.jsonl` 剩 0 个，`artifacts` 11 GB → 6.2 GB（含日志轮转）。逐档清单 `MEMORY/docs/frames-npz-converted.txt.gz`（6 658 行、70 KB、sha256 见 report），数字进 `MEMORY/docs/memory-budget.md` §7.1。合并 `origin/pvz-env`（task33 打包装载转正 + CUDA 线退役 + task34 OOM）：冲突只有任务书与 `pvz_compat.py`（取 task33 完整版，`jsonl-archives` 的移除条件改成"所有机器与 HF 上都不再"）；`train_rollout_policy.py` 自动合并为 task33 的包装载 + 本任务的紧凑数组。全量测试：**253 passed / 1 failed / 23 skipped**，失败的是 task34 的 `test_dagger_experiment_runner.py::test_low_memory_pauses_and_resumes_only_own_parent_and_child`，在 `origin/pvz-env` 原样代码上同样失败（已用 pvz-env 版本的两文件单独复现），不是本次合并引入。
+- 第 17 步（档案容器改 LZMA）：`pvz_frame_store._save` 从 `np.savez_compressed`（zlib）改成 `zipfile.ZIP_LZMA` —— 12 档样本上**只要 59.6% 的体积**（235 KB → 140 KB/局），因为 72% 的字节是 frames JSON，LZMA 能跨整局建模重复。代价：写 0.055→0.63 s/局、读 4.4→12 ms/局（一局游戏几十秒到几分钟，均可忽略）。`np.load` 无需改动（zipfile 解码），实测 LZMA 与 deflate 档案都能被 `read_frames`/`cache_episode` 读，且 `cache_episode` 仍直接复用档案（签名命中）。**训练包必须保持 ZIP_STORED**（`pack_training_rows.py` 用 `np.savez`，`read_pack` 走 `mmap_mode`），`python/test_frame_store_container.py` 三项测试钉住：LZMA 容器、0 维字符串、包不被 LZMA 污染。转换工具加 `--recompress`：逐档把所有数组成员读出来重写，**逐个数组 dtype/形状/值全等**才原子替换，ZIP_STORED 的包与 120 分钟内改过的文件跳过。
+- 第 18 步（LZMA 存量重压）：30 120 个 npz 里 22 205 个重压成功、失败 0，**5 195 921 622 B → 3 105 601 019 B（59.8%），省 2.09 GB**，8 并发 1 970 s；7 915 个跳过（训练包 ZIP_STORED、已重压、120 分钟内改过）。`artifacts` **11 GB → 4.3 GB**（转换 6.95 GB + 日志 0.33 GB + LZMA 2.09 GB）。数字与命令进 `MEMORY/docs/memory-budget.md` §7.3。
+- 第 19 步（存储分布与停止条件）：`artifacts` **11 GB → 4.3 GB**。档案单档（LZMA 后 134 KB）分布：frames JSON **73.0%**、boards 9.1、scalars 7.2、values 2.2、rows 0.6，其余各 0.2–0.3。三项试过即放弃（都 <2%）：帧间 delta + LZMA 只省 **0.3%**（LZMA 已吃到跨帧重复）、内容完全相同的档案只有 151 组 153 个副本 14.5 MB（0.3%，且删了会改价值网络数据构成）、hints/encoder/rows 合计 0.8%。剩两项要主控拍板，已写进「问题」：档案里预计算的编码数组（20%、约 600 MB，可从 frames 重算，取决于包是否已是唯一训练入口）、每局一个的 `meta.json`（119 MB 块浪费）。全量测试 **256 passed / 1 failed（task34 既有的 Mac 上失败）/ 23 skipped**。数字进 `MEMORY/docs/memory-budget.md` §7.4。
+- 第 20 步（合并后的引擎门槛 + 存储侧停止条件）：用合并前（44803a3d）与合并后的二进制对拍 —— 固定动作序列第 7 关 300 决策 digest `7c5e1291…` **完全相同**（301 帧、第 6 波、峰值 59.6/60.3 MB、启动 0.296/0.303 s），同种子 8 局整局（学生 `dw4i_s1`、每局 400 决策、最深第 11 波）**每局 digest 全同**，峰值约 59 MB。存储侧三项连续 <2%（帧间 delta 0.3%、完全重复档案 0.3%、小数组/压缩档位 0.8%/0%）且分布前 15 项里除两项待拍板的缓存外没有可证明的冗余，按停止条件收工。
+- 第 21 步（收工）：主控 2026-10-23 对两项请示的批复 —— **两项都决定不做**。① 档案里预计算的编码数组**保留**：打包时 `cache_episode` 直接复用它们，删了每次打包都要重算 CPU，省下的约 600 MB 磁盘不值；② `meta.json` **不并进档案**：119 MB 的块浪费可以忽略，而 `episode_query` / `lint_skills` / 老师工具 / `analyze_keep_cards` 都直接读它，改接口不划算。task32 到此收工，不再开新项。

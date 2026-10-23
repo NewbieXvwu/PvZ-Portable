@@ -44,8 +44,10 @@ MULTIPLIERS = ((1.25, 'm125'), (1.5, 'm150'), (1.75, 'm175'),
 #   slot = family_index * 32 + (level - 1)，每槽 SEEDS_PER_TASK 个种子。
 # 8 个族 × 32 槽 × 2048 = 524_288 < 700_000，档与档之间留 175k 空隙（够再加一个族：
 # 9 个族是 589_824）。task31 加第 8 个族 n10q 时 524_288 已经超过原来的 500_000 档距，
-# 会串到下一档，所以整档加宽。加宽后旧倍率种子全部平移 —— 这些族还没开过采集局
-# （task29 明确未开正式采集），没有数据要迁移。
+# 会串到下一档，所以整档加宽。加宽后旧倍率种子整体平移：课程控制器 10-22 起已经用
+# 500k 档距的清单跑过 _m125 / _m150 的局（`curriculum_state.json` 的 offsets 里记着，
+# 例如 day_l7_train_d7_m125: 96）。控制器按 task_id 记偏移、按偏移往后取新种子，
+# 不会重复；只是同一 task_id 的前后两段种子来自不同档距的段，游戏记录里存的是种子值本身。
 # 与仓库里所有现有清单（最高约 3.4M 的 n10q 段）以及 DESIGN 登记的 DAgger 段都不相交。
 SEED_BASE = 5_000_000
 MULT_STRIDE = 700_000
@@ -70,6 +72,10 @@ FAMILIES = (
     ('night_n10p', 'night_n10p', 'night_l{level}_train_n10p', NIGHT_N10P_LEVELS, 'night'),
     ('night_n10q', 'night_n10q', 'night_l{level}_train_n10q', NIGHT_N10Q_LEVELS, 'night'),
 )
+
+# 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
+# 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。
+SUPERSEDED = {'night_n10p': 'night_n10q'}
 
 
 def variant_id(base_id: str, suffix: str) -> str:

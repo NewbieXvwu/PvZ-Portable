@@ -1,0 +1,80 @@
+{
+ "groups": [
+  {
+   "label": "task30_pool24",
+   "student": "dw4i_s1",
+   "games": 32,
+   "wins": 1,
+   "seed_start": 2036144,
+   "seed_end": 2036175,
+   "mean_seconds": 142.1
+  },
+  {
+   "label": "task30_pool21",
+   "student": "identity_dw3_s1",
+   "games": 16,
+   "wins": 8,
+   "seed_start": 2006144,
+   "seed_end": 2006159,
+   "mean_seconds": 114.1
+  },
+  {
+   "label": "task30_night20",
+   "student": "dw4i_s1",
+   "games": 32,
+   "wins": 19,
+   "seed_start": 2296144,
+   "seed_end": 2296175,
+   "mean_seconds": 507.8
+  },
+  {
+   "label": "task30_day10",
+   "student": "dw4i_s1",
+   "games": 32,
+   "wins": 32,
+   "seed_start": 1886144,
+   "seed_end": 1886175,
+   "mean_seconds": 178.0
+  }
+ ],
+ "complete": true,
+ "episode_rows": 84736,
+ "episode_summary": {
+  "day_d7": {
+   "games": 512,
+   "wins": 361,
+   "rows": 16384
+  },
+  "day_d7p": {
+   "games": 512,
+   "wins": 346,
+   "rows": 16384
+  },
+  "day_l7_control": {
+   "games": 512,
+   "wins": 386,
+   "rows": 16384
+  },
+  "night_n9_n10": {
+   "games": 512,
+   "wins": 79,
+   "rows": 16384
+  },
+  "pool_p9k": {
+   "games": 546,
+   "wins": 5,
+   "rows": 17472
+  },
+  "day_original_conveyor": {
+   "games": 25,
+   "wins": 25,
+   "rows": 800
+  },
+  "night_original_conveyor": {
+   "games": 29,
+   "wins": 16,
+   "rows": 928
+  }
+ },
+ "external_games": 1384
+}
