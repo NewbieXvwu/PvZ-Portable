@@ -384,6 +384,18 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         else:
             raise ValueError(f"unknown candidate mode {mode!r}")
 
+        # task52 comparison harness alone installs this callable. No CLI or model/network
+        # dependency enters collection; returned legal proposals use the ordinary search.
+        proposer = _W.get("llm_proposer")
+        if proposer is not None:
+            additions = proposer(env, obs, root, candidates, policy_action, args, decision_seed, stats)
+            present = {json.dumps(c, sort_keys=True) for c in candidates}
+            for action in additions:
+                key = json.dumps(action, sort_keys=True)
+                if key not in present:
+                    candidates.append(action)
+                    present.add(key)
+
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
         # One candidate at a time, terminal futures first: the order the labels were produced in.
