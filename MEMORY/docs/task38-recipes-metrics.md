@@ -46,6 +46,16 @@
 
 - 2026-10-23：identity_dw3_s1 完整语料 200 步对拍**通过，误差 0**（11051782 行、38271 档案）；三份历史配方（dw4i/dw5i/identity）现已全部按完整语料、原余弦长度、同种子、确定性内核验证一致，本任务书的对拍验收项完成。
 
+- 2026-10-23 **[close]**：合并 `origin/pvz-env`（`--no-ff`，合并提交 `ecf2dddb`，合并基 `29fd6896`）。
+  冲突两处：`MEMORY/2026-10-23.md` 双侧保留；`scripts/unified_panel.py` 以本分支的 `panel_args` 配方入口为准（对方那段是同一 CLI 的旧 argparse 版本，已被配方入口取代）。
+  自动合并处逐项核对两边功能都在：课程 `DEFAULT_VALUE` 已是 v4、`--pack-*` 仍不存在、包参数仍只来自配方；`train_rollout_policy` 同时保留配方 CLI 与 x86 `nan_to_num(0)` 修复；`search_play` 保留 `--leaf-probe` 与 `encode_frame(..., encoder_version)` 的编码 v2。
+  构建引擎（`cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -G Ninja`、`cmake --build build -j8`）后跑
+  `PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources python -m pytest python -q`：**339 passed / 133 subtests passed / 0 failed / 0 skipped**。
+  未建引擎时同一命令是 5 failed / 314 passed / 20 skipped，5 项全是 `test_cpp_rollout` 找不到 `build/pvz-portable`，属环境前置，建好后全过。
+  课程控制器 dry run（`--manifest .../cq/artifacts/stage4/multiplier_panel.json --round-games 768 --games-per-group 48 --dry-run`，16 组 / 768 局）打印的 pack 命令与 `recipes/dw4i.json` 逐项相同，唯一额外参数是控制器自己的 `--prune`：
+  `.../scripts/pack_training_rows.py --data /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2 --labels <186 个标签> --wait-keep 0.1 --obs v2 --packet-head identity --aux-horizon 0 --cells --label-weight <33 个 z13–z16 标签=1.5> --prune`。
+  dry run 现在会打印这条命令（此前只打印分配表），便于在一轮开跑前核对行参数。已 push `origin/recipe`。
+
 ## 问题
 - 本分支缺 hotpath-audit.md；已 fetch 并完整读取 origin/audit 对应报告（含 §6），依据 task33 批准清单删除训练 EMA/全候选软目标入口，保留 cell soft temperature、width 与旧模型元数据。退役前标记 retire-recipe-training-flags-20261023。
 
