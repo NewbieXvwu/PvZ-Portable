@@ -101,6 +101,8 @@
 
 30. **补强逐帧重放门禁**：发现旧 `_state_of` 漏比逐帧 `v2`（波计时、发射进度、投射物等）、收入与终局字段；完整叶摘要虽包含这些内容，但只能验证推演终点。新增“仅 v2 不同”回归修复前失败，现比较档案里存在的全部这些公开状态字段，并拒绝早于最后待重放帧的终局；13 项夹具回归通过。新证据标记 `replay_gate_version: 2`（与 horizon 的 benchmark_version 2 区分），B 也复用此强门禁；既有逐帧结果不冒充新增字段已验过，槽位释放后对候选与基线补跑。
 
+31. **公开坐标十进制往返接入生产**：`RenderedPublicCoordinate` 从 `ostringstream` + `stod` 改成 `to_chars(general, 6)` + `from_chars`，旧的流路径删除（不加开关）。新增逐位回归在 `tests/test_environment_wait_events.cpp`：20 万个有限 float 位型 + 1011×21 个整数/边界邻点，共 **220,490** 个值与旧流实现逐位相同（含负零）。整引擎收益待 A2 传送带槽位释放后配对测；改动会改变 PGO 覆盖，保留时须重生成 profile。
+
 ## 问题
 
 - **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。
