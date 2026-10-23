@@ -2911,6 +2911,150 @@
    },
    "cpu_seconds_metered": 48232.944241000005,
    "source_report_sha256": "ff918851ba49bba32e1062a21a380534d0f604b4324fc911ffe1d454e94c8cf9"
+  },
+  "complete": {
+   "status": "complete",
+   "overall": {
+    "roots": 64,
+    "episodes": 32,
+    "base_seed_units": 16,
+    "candidates": 4124,
+    "labels": 12372,
+    "terminal_wins": 0,
+    "separable_roots": {
+     "won": 0,
+     "wave": 61,
+     "tick": 64
+    },
+    "available_root_types": {
+     "16": 63,
+     "9": 57,
+     "4": 28,
+     "3": 1
+    },
+    "v4_favourite_types": {
+     "9": 42,
+     "4": 16,
+     "None": 2,
+     "16": 3,
+     "3": 1
+    },
+    "wave_favourite_types": {
+     "9": 42,
+     "4": 18,
+     "None": 3,
+     "3": 1
+    },
+    "metrics": {
+     "won": {
+      "v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_strict": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "v4_nonterminal": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      },
+      "teacher_path_v4": {
+       "pairs": 0,
+       "accuracy": null,
+       "value_ties": 0,
+       "cluster_bootstrap_95": null
+      }
+     },
+     "wave": {
+      "v4": {
+       "pairs": 19113,
+       "accuracy": 0.5996442212106943,
+       "value_ties": 6,
+       "cluster_bootstrap_95": [
+        0.5579043538529393,
+        0.6442016552280985
+       ]
+      },
+      "v4_strict": {
+       "pairs": 101740,
+       "accuracy": 0.5490662472970317,
+       "value_ties": 32,
+       "cluster_bootstrap_95": [
+        0.5249623544001063,
+        0.5736606517087028
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 19113,
+       "accuracy": 0.5996442212106943,
+       "value_ties": 6,
+       "cluster_bootstrap_95": [
+        0.5579043538529393,
+        0.6442016552280985
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 19113,
+       "accuracy": 0.6012399937215508,
+       "value_ties": 5,
+       "cluster_bootstrap_95": [
+        0.5595064498037017,
+        0.6462911321807028
+       ]
+      }
+     },
+     "tick": {
+      "v4": {
+       "pairs": 95563,
+       "accuracy": 0.5482979814363299,
+       "value_ties": 26,
+       "cluster_bootstrap_95": [
+        0.5220637772288345,
+        0.5761678652845825
+       ]
+      },
+      "v4_strict": {
+       "pairs": 137496,
+       "accuracy": 0.5366992494327107,
+       "value_ties": 50,
+       "cluster_bootstrap_95": [
+        0.5173123630116699,
+        0.5573800550861013
+       ]
+      },
+      "v4_nonterminal": {
+       "pairs": 95563,
+       "accuracy": 0.5482979814363299,
+       "value_ties": 26,
+       "cluster_bootstrap_95": [
+        0.5220637772288345,
+        0.5761678652845825
+       ]
+      },
+      "teacher_path_v4": {
+       "pairs": 95563,
+       "accuracy": 0.549239768529661,
+       "value_ties": 26,
+       "cluster_bootstrap_95": [
+        0.5227864018732113,
+        0.5771313470965206
+       ]
+      }
+     }
+    }
+   },
+   "confirmation_status": "complete",
+   "significant_confirmed_tests": 3,
+   "cpu_seconds_metered": 50758.299283,
+   "conservative_cpu_hours": 14.232860911944444,
+   "artifact_bytes": 154363386
   }
  }
 }
