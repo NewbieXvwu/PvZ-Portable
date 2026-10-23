@@ -44,7 +44,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from make_multiplier_tasks import FAMILIES, load_tasks, source_paths  # noqa: E402
+from make_multiplier_tasks import FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
 FRONTIER_LOW = 0.5
@@ -199,7 +199,9 @@ def parse_task_id(task_id: str, names: dict[str, float]) -> tuple[str, float]:
 
 def training_base_ids() -> set[str]:
     ids = set()
-    for _family, _key, pattern, levels, _terrain in FAMILIES:
+    for family, _key, pattern, levels, _terrain in FAMILIES:
+        if family in SUPERSEDED:
+            continue
         for level in levels:
             ids.add(pattern.format(level=level))
     return ids
