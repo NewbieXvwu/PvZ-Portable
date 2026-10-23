@@ -1,0 +1,23 @@
+{
+  "status": "in_progress",
+  "teacher_runner_pid": 167609,
+  "teacher_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-status.json",
+  "deploy_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/deploy-gate-status.json",
+  "new_after_first_game": {
+    "seed": 5712288,
+    "won": true,
+    "decisions": 1098,
+    "searched": 219,
+    "host_cpu_excluding_noise_s": {
+      "worker": 6.209484,
+      "simulator": 104.33
+    }
+  },
+  "first_game_roots_futures_actions_match_original_vcpp_after": true,
+  "post_adapter_unit_tests": 19,
+  "pending": [
+    "three tasks x32 fresh before/after teacher gate plus needed shadows and comparison",
+    "finish redeployed engine replay, paired throughput, same-v4 leaf gates",
+    "final A delivery audit and summary"
+  ]
+}

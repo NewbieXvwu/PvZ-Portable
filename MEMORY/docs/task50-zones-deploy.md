@@ -61,6 +61,8 @@
 
 - [A.4] deploy3重建PGO成功，源2b743c62；SHA256 `0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327`，141份profile，generate=0/use=162。部署门禁正在重新执行。新dry run仍38组/1824局，L41原版48局、引擎deploy3，fog cell=0；见task50-a-build.json / task50-a-dry-run.json。
 
+- [A.5] 新after首局L7×1.5完整获胜，1098决策/219搜索，worker/engine CPU=6.209/104.330秒；root/future/动作序列与vcpp正式after首局全同。适配后门禁/基准19项单测通过。独立后台runner PID167609等待部署门禁PID165726完成后，自动串行before→after→shadow→compare，每阶段最多2游戏；三任务各32局两臂全新证据尚未完成，不作通过结论。状态与待办见task50-a-progress.json。
+
 主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
 
 ```bash
