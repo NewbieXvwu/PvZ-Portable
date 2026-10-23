@@ -29,5 +29,9 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。持续压榨：做完上面几项后，用 profile 找 Python 侧剩下的最大项继续，连续 3 项收益 < 2% 才停。
 
 ## 结果
+- 2026-10-23：补齐 task30 已有的版本化价值编码（来源 14713bd4，仅取编码与测试）；学生冻结 v1 编码不变，v3 对应编码 1、v4 对应编码 2。开始独立 Release 构建，后续 A/B 固定本分支基线 c790588d。
 
 ## 问题
+- 本分支与本地全部 refs 没有 `MEMORY/docs/hotpath-audit.md` 和 `scripts/hotpath_profile.py`，已读 task33 任务书及当前进度中的体检数字；暂按原始 cProfile/协议计时采基线，工具到位后补同工具对照。
+- 本分支缺少 task30 的 v4 编码，历史提交 14713bd4 已实现，先移入必要依赖；不会猜测或另造编码。
+- 源码确认：EnvironmentPlant / EnvironmentShovel 本身推进 0 tick，STATIC_SCORES 不额外等待。旧编码须保留 SEED_NONE=-1 写入 scalar[4]/[58] 的历史行为；新编码跳过空槽并按植物身份聚合重复卡。
