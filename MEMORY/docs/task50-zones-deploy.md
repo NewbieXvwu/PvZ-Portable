@@ -99,3 +99,9 @@ task37（分支 `vcpp`，codex2-b 已完成）：老师一致率 100% / 99.99% /
 - [A] 门禁工具适配：现行采集不再返回旧measure_cpu字段，首个after试跑终局后在结果落盘失败，未计有效局；profile_value_engine改为对两臂在同一边界统一读取worker getrusage与engine /proc CPU，再单独扣除换未来噪声，不恢复生产开关。正式配置及192局规模不变。
 
 - [A] 已修复本地旧基线副本未保留执行权限的问题：恢复原0755且SHA256不变；首轮96项均在启动前失败、无有效游戏，原runner终态failed后才重新执行同一计划，失败启动不计入任何门禁数字。
+
+- [A.12] 接管只做监控复核：before 96/96 完成（day 32/32、night 32/32、pool 17/32），17 份冻结哈希全匹配，after 首批行级不变量通过；未重启、未改脚本、未动 qc。
+
+- [A.12] 交接时工作区无未提交改动（3cf05630 已推）；本行随交接一并提交推送。
+
+- [A.12] 下一步（交回 Codex）：runner 169780／after 子进程 199578 继续，日志 artifacts/task50-a/teacher-after.log；after 完成后自动 shadow→compare，再跑 strict 审计与最终 [A] 汇总。
