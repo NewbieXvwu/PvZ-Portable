@@ -32,4 +32,6 @@
 
 ## 结果
 
+- 步骤1（pool）：合并 1a99cff9。冲突三处：`make_night_panel.py` 保留主线（含 task25 n10 族与 L20 原版开局），pool 的 zone_panel 薄包装重构整份丢弃（属旧版重构，会丢后续功能）；`DESIGN.md` 主线 §14.10–14.14 不动，pool 泳池族登记改为 §14.15，`MEMORY/docs/pool-panel.md`、`task22-pool-panel.md` 里的 §14.10 引用一并改 §14.15；`MEMORY/2026-10-22.md` 两侧条目全保留，task22 两条按时间插在 task25 之后。测试（无 build/）：245 passed / 6 failed（5 个 test_cpp_rollout 因缺引擎、1 个 test_dagger_experiment_runner 环境性）/ 26 skipped，与合并前基线逐项相同。
+
 ## 问题
