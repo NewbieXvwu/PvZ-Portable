@@ -290,6 +290,26 @@ def validate_label(row,identity,trace):
     return row
 
 
+def inspect_job(job):
+    """Materialize exact candidate identities for timing forecasts, without terminal labels."""
+    cell,point=job['cell'],job['point'];env=None
+    folder=OUT/'episodes'/cell['id']/f"root_{point['decision']}";folder.mkdir(parents=True,exist_ok=True)
+    try:
+        env,obs,state,args=replay_root(cell,point)
+        cands=all_candidates(obs)
+        if digest_value(cands)!=point['candidate_sha256']:raise ValueError('candidate set changed')
+        value=dict(cell=cell,point=point,candidates=cands,student_action=state['action'],
+            root_frame=_frame(obs),history=REF.history_record(state),income=list(env._sun_production_history),
+            income_start=env._sun_history_start_tick,context=teacher._W['context'].tolist(),inputs_sha256=PLAN['sha256'])
+        path=folder/'root.json'
+        if path.exists() and load(path)!=json.loads(json.dumps(value)):raise ValueError('inspected root changed')
+        save(path,value)
+        if not (folder/'search-trace.json').exists():save(folder/'search-trace.json',audit_search(env,obs,state,args,point,cell['seed']))
+        return dict(cell=cell['id'],root=point['decision'],candidates=len(cands))
+    finally:
+        teacher._close_worker_env();progress(force=True)
+
+
 def labels_job(job):
     cell,point=job['cell'],job['point'];env=None
     folder=OUT/'episodes'/cell['id']/f"root_{point['decision']}";folder.mkdir(parents=True,exist_ok=True)
@@ -308,6 +328,8 @@ def labels_job(job):
             for packet in sorted({a['packet'] for a in cands if a['type']=='plant'}):
                 ids=[i for i,a in enumerate(cands) if a.get('packet')==packet]
                 indices+=sorted({ids[0],ids[len(ids)//2],ids[-1]})
+            shovels=[i for i,a in enumerate(cands) if a['type']=='shovel']
+            if shovels:indices.append(shovels[0])
         root_info=dict(cell=cell,point=point,candidates=cands,student_action=state['action'],
             root_frame=_frame(obs),history=REF.history_record(state),income=income,income_start=history_start,
             context=teacher._W['context'].tolist(),inputs_sha256=PLAN['sha256'])
@@ -409,7 +431,8 @@ def run_jobs(phase,jobs):
         started=process_cpu()
         save(run/'controller.json',dict(pid=os.getpid(),phase=phase,jobs=len(jobs),started=time.time(),source_sha256=sha(Path(__file__))))
         with mp.get_context('fork').Pool(4,initializer=init_worker,initargs=(plan,str(run),stop)) as pool:
-            pending=pool.imap_unordered(roots_job if phase=='roots' else labels_job,jobs)
+            function=roots_job if phase=='roots' else inspect_job if phase=='inspect' else labels_job
+            pending=pool.imap_unordered(function,jobs)
             results=[]
             try:
                 while len(results)<len(jobs):
@@ -432,7 +455,7 @@ def run_jobs(phase,jobs):
 def main():
     global OUT
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('phase',choices=['roots','pilot','screen','trace'])
+    p.add_argument('phase',choices=['roots','pilot','screen','inspect'])
     p.add_argument('--plan',type=Path,default=OUT/'plan.json')
     p.add_argument('--jobs',type=Path)
     a=p.parse_args()
