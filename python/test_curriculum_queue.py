@@ -1,5 +1,6 @@
 """task29 第 2 步：课程控制器的元规则单测（不跑引擎、不读真实清单）。"""
 import copy
+import json
 import sys
 import tempfile
 import unittest
@@ -9,10 +10,10 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
-from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
+from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
                               MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              command_for, label_for, make_state, pack_command, pack_labels,
-                              parse_task_id, plan_round, rate, reconcile_cells,
+                              command_for, label_for, load_teacher_rates, make_state, pack_command,
+                              pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
                               startup_worker_estimate, training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
@@ -20,8 +21,8 @@ NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm30
 N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 
 
-def cell(wins, games, mult_index=0, last_round=0):
-    return dict(family='f', level=7, mult_index=mult_index, last_round=last_round,
+def cell(wins, games, mult_index=0, last_round=0, level=7):
+    return dict(family='f', level=level, mult_index=mult_index, last_round=last_round,
                 windows={str(VALUES[mult_index]): {'recent': [1] * wins + [0] * (games - wins),
                                                    'wins': wins, 'games': games}})
 
@@ -59,31 +60,71 @@ class CurriculumRulesTest(unittest.TestCase):
         self.assertAlmostEqual(rate(cells['c'], 1.0), 56 / 256)
         self.assertLessEqual(len(bucket['recent']), WINDOW)
 
-    def test_allocate_guard_share_and_budget(self):
-        # 全部格已经升到 1.25，这样第二阶段的“当前倍率”不会是 1.0，能单独看防遗忘那 12%。
-        cells = {f'c{i}': cell(6, 10, mult_index=1, last_round=i) for i in range(10)}
-        picks = allocate(cells, VALUES, budget=100, per_group=10, guard_ratio=0.12, round_index=1)
-        self.assertLessEqual(sum(p[2] for p in picks), 100)
-        at_one = [p for p in picks if p[1] == 1.0]
-        self.assertEqual(len(at_one), 1)                       # 12% -> 至少 1 组，但只有 1 组
-        self.assertEqual(at_one[0][0], 'c0')                   # 最久没采的优先
-        self.assertEqual(len([p for p in picks if p[1] == 1.25]), 9)
-        self.assertGreater(len(picks), 1)
+    def test_floor_serves_starved_cells_first(self):
+        # last_round=0 的格（从未采过）最先轮到；保底组局数减半；预算封顶。
+        cells = {f'c{i}': cell(6, 10, mult_index=1, last_round=1) for i in range(4)}
+        cells.update({f's{i}': cell(0, 10, mult_index=0, last_round=0) for i in range(4)})
+        picks = allocate(cells, VALUES, budget=60, per_group=10, round_index=5)
+        floor_games = 10 // FLOOR_SHARE
+        self.assertEqual([p[0] for p in picks[:2]], ['s0', 's1'])   # 饿死格按字母序先轮到
+        self.assertEqual([p[2] for p in picks[:2]], [floor_games] * 2)   # 保底组是小局数
+        self.assertTrue(all(p[2] == 10 for p in picks[2:]))    # 其余组按整组局数
+        self.assertEqual([p[0] for p in picks[2:4]], ['s2', 's3'])  # 没轮到保底的饿死格在可教排序里最前
+        self.assertLessEqual(sum(p[2] for p in picks), 60)
         for base, multiplier, games in picks:
-            self.assertEqual(games, 10)
             self.assertIn(multiplier, VALUES)
 
-    def test_frontier_preferred_over_resolved(self):
+    def test_floor_bounds_starvation_over_rounds(self):
+        # 预算紧张下连续模拟多轮：任何格两次被采的间隔不超过 FLOOR_ROUNDS + 1 轮。
+        cells = {f'c{i:02d}': cell(5, 10, last_round=0) for i in range(20)}
+        last_seen = {name: 0 for name in cells}
+        for round_index in range(1, 13):
+            allocate(cells, VALUES, budget=50, per_group=10, round_index=round_index)
+            for name, picked in cells.items():
+                if picked['last_round'] == round_index:
+                    gap = round_index - last_seen[name]
+                    self.assertLessEqual(gap, FLOOR_ROUNDS + 1, name)
+                    last_seen[name] = round_index
+        self.assertEqual(max(last_seen.values()), 12)          # 每个格都真的被轮到过
+
+    def test_starved_cell_gets_floor_even_with_tight_budget(self):
+        # 预算只够一个保底组时，最久没采的格拿到保底局数（减半），不为零。
+        cells = {'old': cell(5, 10, last_round=0), 'new': cell(5, 10, last_round=1)}
+        picks = allocate(cells, VALUES, budget=6, per_group=10, round_index=9)
+        self.assertEqual([(p[0], p[2]) for p in picks], [('old', 10 // FLOOR_SHARE)])
+
+    def test_teacher_wins_student_loses_ranks_first(self):
+        # L20 情形：学生 0/10、老师 0.9 -> 排在中难度格前面（task57 的核心诉求）。
         cells = {
-            'edge': cell(6, 10),            # 0.6 -> frontier
-            'easy': cell(10, 10),           # 1.0 -> 会先升档，当前倍率无数据
-            'hard': cell(1, 10),            # 0.1 -> 1.0 的难关照样采
+            'l20': cell(0, 10, level=20),   # 学生全败，老师 0.9 -> 差距 0.9
+            'mid': cell(6, 10, level=17),   # 0.6，老师未知按可教 -> 差距 0.4
+            'l24': cell(0, 10, level=24),   # 学生全败，老师 0.1 -> 差距 0.1，沉底
         }
-        adjust(cells, VALUES)
-        picks = allocate(cells, VALUES, budget=40, per_group=10, guard_ratio=0.0, round_index=1)
+        teacher = {'level:20': 0.9, 'level:24': 0.1}
+        picks = allocate(cells, VALUES, budget=20, per_group=10, round_index=1, teacher=teacher)
         bases = [p[0] for p in picks]
-        self.assertIn('edge', bases)
-        self.assertIn('hard', bases)
+        self.assertEqual(bases, ['l20', 'mid'])            # 预算只够两组，l24 被挤出
+
+    def test_unknown_teacher_and_student_gap_tiebreaks_by_age(self):
+        # 老师都未知时按 1 - 学生胜率排；同分时最久没采的先。
+        cells = {
+            'fresh_hard': cell(0, 10, last_round=1),        # 差距 1.0
+            'old_hard': cell(0, 10, last_round=0),          # 差距 1.0，更久没采
+            'easy': cell(9, 10),                            # 差距 0.1
+        }
+        picks = allocate(cells, VALUES, budget=30, per_group=10, round_index=1)
+        self.assertEqual([p[0] for p in picks], ['old_hard', 'fresh_hard', 'easy'])
+
+    def test_load_teacher_rates_missing_file_and_shapes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(load_teacher_rates(Path(tmp) / 'absent.json'), {})
+            path = Path(tmp) / 'rates.json'
+            path.write_text(json.dumps({'levels': {'20': {'wins': 29, 'games': 32}, '24': 0.1},
+                                        'bases': {'pool_l21_train_p9k': 0.5}}))
+            rates = load_teacher_rates(path)
+            self.assertAlmostEqual(rates['level:20'], 29 / 32)
+            self.assertAlmostEqual(rates['level:24'], 0.1)
+            self.assertAlmostEqual(rates['pool_l21_train_p9k'], 0.5)
 
     def test_plan_round_offsets_and_exhaustion(self):
         tasks = {}
@@ -94,14 +135,14 @@ class CurriculumRulesTest(unittest.TestCase):
         state = dict(round=0, offsets={}, cells={'day_l7_train_d7': cell(5, 10)})
         manifests = {task_id: Path('/tmp/panel.json') for task_id in tasks}
         plan, _ = plan_round(state, tasks, NAMES, VALUES, manifests,
-                             budget=10, per_group=10, guard_ratio=1.0)
+                             budget=10, per_group=10)
         self.assertEqual(len(plan), 1)
         self.assertEqual(plan[0]['task_id'], 'day_l7_train_d7')
         self.assertEqual(plan[0]['offset'], 0)
         state['offsets']['day_l7_train_d7'] = 15
         with self.assertRaises(SystemExit):
             plan_round(state, tasks, NAMES, VALUES, manifests,
-                       budget=10, per_group=10, guard_ratio=1.0)
+                       budget=10, per_group=10)
 
     def test_stop_flag_stops_before_any_group(self):
         import curriculum_queue as queue
