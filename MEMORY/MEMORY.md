@@ -92,3 +92,7 @@
 - [task23-dw4i-unified-panel.md](docs/task23-dw4i-unified-panel.md)
 
 - [unified-panel.md](docs/unified-panel.md)
+
+- [llm-candidates.md](docs/llm-candidates.md)
+- [llm-candidates-results.json](docs/llm-candidates-results.json)
+- [task52-llm-candidates.md](docs/task52-llm-candidates.md)

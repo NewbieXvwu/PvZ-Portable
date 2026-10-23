@@ -1,0 +1,854 @@
+{
+ "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084",
+ "study": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1",
+ "audit": {
+  "status": "complete",
+  "games_verified": 144,
+  "llm_events_verified": 312,
+  "evidence_files": 445,
+  "evidence_bundle_sha256": "7553b8ff312700e9bf1842a4c8be1a394d8d6d9d391c735064f88f3f892a2865",
+  "auditor_sha256": "7bd063867d1077f62df2eaf436f970b2496ca65b4234f1b3cf655c70b92287c1"
+ },
+ "frozen_files": {
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/scripts/llm_candidate_experiment.py": "0aa52e3620705ab2f58847ef30a20512518d1667df9792eee5e1c2d9de7081e6",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/scripts/llm_candidates.py": "da5b170ce71e83b4abf7e3e7eceae45e0328eb6e8ab105b6f01a519e304a06eb",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/scripts/search_play.py": "94f1d6c2e900bc5a97e714f49d6df48d72c511ed5e22da6f6a7cdc4697d8b5cf",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/scripts/render_episode.py": "5968edbacc59e5d077fffa55961cd5f8869558e5c795479b3ca78502a5b4fb47",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/scripts/episode_query.py": "f3d5c687fd34f98f2ed8d16e9fdc62fabd36d55931845f8182f48fd367338e5f",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/scripts/pvz_tasks.py": "61279b49f572a4b1232d4b39a6b7349a36385e2b8e3e7081d61826c1096519bf",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/python/pvz_env.py": "4383428452d034b024a4dfb1ebf9dbb4f670174934dba6dda788c80c6a3eec18",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/python/pvz_event_env.py": "027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/python/pvz_value_net.py": "32d015ce28466cab7b71ecaecc3a5c3fadf8d98260740e49d2d3a4a5107cb9e7",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/python/pvz_rollout_policy.py": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/python/pvz_student_observation.py": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/python/pvz_fog.py": "22056d232519da1376f4cd9a689fe8d0a801b2a672a10668370964cc32107df0",
+  "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+  "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/build/pvz-portable": "6f0aa2e3b4de25516aea17188ef82079a1b0d31e5da7e0e7d81db247f3242f25",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/manifest.json": "fdb350a3ed10d3dbfd469965e34d425b05850fc3d33e75d9a5984cede6aea79c"
+ },
+ "preregistration_sha256": "b5a79c25533568c49f6f1be8dd158a55ab41f2f682521dd3c53d402dba0c670c",
+ "families": {
+  "day": {
+   "B_low": {
+    "games": 16,
+    "before_wins": 16,
+    "after_wins": 16,
+    "net_wins": 0,
+    "improved": 0,
+    "regressed": 0,
+    "paired_binomial_p": 1.0,
+    "wave_deltas": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "mean_wave_delta": 0,
+    "wave_delta_range": [
+     0,
+     0
+    ],
+    "queries": 64,
+    "queries_per_game": 4.0,
+    "counts": {
+     "returned": 170,
+     "malformed": 0,
+     "illegal": 0,
+     "excess": 0,
+     "duplicates": 0,
+     "valid": 170
+    },
+    "cache_hits": 15,
+    "actual_api_attempts": 49,
+    "logical_tokens": {
+     "promptTokenCount": 116976,
+     "candidatesTokenCount": 7109,
+     "totalTokenCount": 143867,
+     "thoughtsTokenCount": 19782
+    },
+    "actual_tokens_from_completed_games": {
+     "promptTokenCount": 97311,
+     "candidatesTokenCount": 5249,
+     "totalTokenCount": 120707,
+     "thoughtsTokenCount": 18147
+    },
+    "monetary_cost": null,
+    "monetary_cost_reason": "gateway tariff not provided",
+    "selected_queries": 27,
+    "selected_novel_queries": 1,
+    "novel_proposals": 105,
+    "selected_leaf_advantages": [
+     0.035220007166666734
+    ],
+    "terminal_diagnostic_pairs": 2,
+    "terminal_diagnostic_complete": 2,
+    "terminal_diagnostic_net_wins": 0,
+    "terminal_diagnostic_wave_deltas": [
+     0,
+     0
+    ],
+    "legal_proposal_plant_types": {
+     "1": 134,
+     "0": 9,
+     "3": 23,
+     "4": 4
+    },
+    "raw_resolvable_proposal_plant_types": {
+     "1": 134,
+     "0": 9,
+     "3": 23,
+     "4": 4
+    },
+    "search_points": 3261,
+    "cpu_s_including_diagnostics": 1624.716397,
+    "diagnostic_cpu_s": 2.44102599999999,
+    "selected_query_rate": 0.421875,
+    "selected_novel_query_rate": 0.015625,
+    "selected_novel_proposal_rate": 0.009523809523809525,
+    "selected_legal_proposal_rate": 0.1588235294117647,
+    "selected_search_rate": 0.00827966881324747,
+    "illegal_rate": 0.0,
+    "legal_clear_fog_proportion": 0.0,
+    "legal_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    },
+    "raw_resolvable_clear_fog_proportion": 0.0,
+    "raw_resolvable_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    }
+   },
+   "B_novel": {
+    "games": 16,
+    "before_wins": 16,
+    "after_wins": 16,
+    "net_wins": 0,
+    "improved": 0,
+    "regressed": 0,
+    "paired_binomial_p": 1.0,
+    "wave_deltas": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "mean_wave_delta": 0,
+    "wave_delta_range": [
+     0,
+     0
+    ],
+    "queries": 63,
+    "queries_per_game": 3.9375,
+    "counts": {
+     "returned": 173,
+     "malformed": 0,
+     "illegal": 0,
+     "excess": 0,
+     "duplicates": 0,
+     "valid": 173
+    },
+    "cache_hits": 1,
+    "actual_api_attempts": 62,
+    "logical_tokens": {
+     "promptTokenCount": 272475,
+     "candidatesTokenCount": 7581,
+     "totalTokenCount": 326714,
+     "thoughtsTokenCount": 46658
+    },
+    "actual_tokens_from_completed_games": {
+     "promptTokenCount": 270777,
+     "candidatesTokenCount": 7494,
+     "totalTokenCount": 324716,
+     "thoughtsTokenCount": 46445
+    },
+    "monetary_cost": null,
+    "monetary_cost_reason": "gateway tariff not provided",
+    "selected_queries": 6,
+    "selected_novel_queries": 1,
+    "novel_proposals": 113,
+    "selected_leaf_advantages": [
+     0.026821062083333236
+    ],
+    "terminal_diagnostic_pairs": 2,
+    "terminal_diagnostic_complete": 2,
+    "terminal_diagnostic_net_wins": 0,
+    "terminal_diagnostic_wave_deltas": [
+     0,
+     0
+    ],
+    "legal_proposal_plant_types": {
+     "4": 57,
+     "3": 27,
+     "1": 25,
+     "5": 19,
+     "7": 21,
+     "2": 5,
+     "0": 19
+    },
+    "raw_resolvable_proposal_plant_types": {
+     "4": 57,
+     "3": 27,
+     "1": 25,
+     "5": 19,
+     "7": 21,
+     "2": 5,
+     "0": 19
+    },
+    "search_points": 3255,
+    "cpu_s_including_diagnostics": 1611.044177,
+    "diagnostic_cpu_s": 2.042752,
+    "selected_query_rate": 0.09523809523809523,
+    "selected_novel_query_rate": 0.015873015873015872,
+    "selected_novel_proposal_rate": 0.008849557522123894,
+    "selected_legal_proposal_rate": 0.03468208092485549,
+    "selected_search_rate": 0.0018433179723502304,
+    "illegal_rate": 0.0,
+    "legal_clear_fog_proportion": 0.0,
+    "legal_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    },
+    "raw_resolvable_clear_fog_proportion": 0.0,
+    "raw_resolvable_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    }
+   }
+  },
+  "roof": {
+   "B_low": {
+    "games": 16,
+    "before_wins": 13,
+    "after_wins": 13,
+    "net_wins": 0,
+    "improved": 0,
+    "regressed": 0,
+    "paired_binomial_p": 1.0,
+    "wave_deltas": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "mean_wave_delta": 0,
+    "wave_delta_range": [
+     0,
+     0
+    ],
+    "queries": 52,
+    "queries_per_game": 3.25,
+    "counts": {
+     "returned": 116,
+     "malformed": 0,
+     "illegal": 0,
+     "excess": 0,
+     "duplicates": 0,
+     "valid": 116
+    },
+    "cache_hits": 15,
+    "actual_api_attempts": 38,
+    "logical_tokens": {
+     "promptTokenCount": 219711,
+     "candidatesTokenCount": 4991,
+     "totalTokenCount": 250256,
+     "thoughtsTokenCount": 25554,
+     "cachedContentTokenCount": 2681
+    },
+    "actual_tokens_from_completed_games": {
+     "promptTokenCount": 161496,
+     "candidatesTokenCount": 3146,
+     "totalTokenCount": 187946,
+     "thoughtsTokenCount": 23304,
+     "cachedContentTokenCount": 2681
+    },
+    "monetary_cost": null,
+    "monetary_cost_reason": "gateway tariff not provided",
+    "selected_queries": 4,
+    "selected_novel_queries": 1,
+    "novel_proposals": 98,
+    "selected_leaf_advantages": [
+     0.025070452758333337
+    ],
+    "terminal_diagnostic_pairs": 2,
+    "terminal_diagnostic_complete": 2,
+    "terminal_diagnostic_net_wins": 1,
+    "terminal_diagnostic_wave_deltas": [
+     13,
+     0
+    ],
+    "legal_proposal_plant_types": {
+     "1": 82,
+     "33": 13,
+     "3": 19,
+     "32": 2
+    },
+    "raw_resolvable_proposal_plant_types": {
+     "1": 82,
+     "33": 13,
+     "3": 19,
+     "32": 2
+    },
+    "search_points": 2389,
+    "cpu_s_including_diagnostics": 775.537967,
+    "diagnostic_cpu_s": 0.7220469999999981,
+    "selected_query_rate": 0.07692307692307693,
+    "selected_novel_query_rate": 0.019230769230769232,
+    "selected_novel_proposal_rate": 0.01020408163265306,
+    "selected_legal_proposal_rate": 0.034482758620689655,
+    "selected_search_rate": 0.0016743407283382169,
+    "illegal_rate": 0.0,
+    "legal_clear_fog_proportion": 0.0,
+    "legal_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    },
+    "raw_resolvable_clear_fog_proportion": 0.0,
+    "raw_resolvable_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    }
+   },
+   "B_novel": {
+    "games": 16,
+    "before_wins": 13,
+    "after_wins": 13,
+    "net_wins": 0,
+    "improved": 0,
+    "regressed": 0,
+    "paired_binomial_p": 1.0,
+    "wave_deltas": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "mean_wave_delta": 0,
+    "wave_delta_range": [
+     0,
+     0
+    ],
+    "queries": 60,
+    "queries_per_game": 3.75,
+    "counts": {
+     "returned": 108,
+     "malformed": 0,
+     "illegal": 0,
+     "excess": 0,
+     "duplicates": 0,
+     "valid": 108
+    },
+    "cache_hits": 4,
+    "actual_api_attempts": 57,
+    "logical_tokens": {
+     "promptTokenCount": 367319,
+     "candidatesTokenCount": 5170,
+     "totalTokenCount": 420142,
+     "thoughtsTokenCount": 47653,
+     "cachedContentTokenCount": 6003
+    },
+    "actual_tokens_from_completed_games": {
+     "promptTokenCount": 350288,
+     "candidatesTokenCount": 4818,
+     "totalTokenCount": 399806,
+     "thoughtsTokenCount": 44700,
+     "cachedContentTokenCount": 6003
+    },
+    "monetary_cost": null,
+    "monetary_cost_reason": "gateway tariff not provided",
+    "selected_queries": 14,
+    "selected_novel_queries": 4,
+    "novel_proposals": 51,
+    "selected_leaf_advantages": [
+     0.08364884675,
+     0.024288209833333407,
+     0.025070452758333337,
+     0.06266716866666669
+    ],
+    "terminal_diagnostic_pairs": 8,
+    "terminal_diagnostic_complete": 8,
+    "terminal_diagnostic_net_wins": 4,
+    "terminal_diagnostic_wave_deltas": [
+     0,
+     4,
+     0,
+     0,
+     13,
+     0,
+     0,
+     0
+    ],
+    "legal_proposal_plant_types": {
+     "33": 72,
+     "32": 4,
+     "1": 16,
+     "0": 2,
+     "3": 14
+    },
+    "raw_resolvable_proposal_plant_types": {
+     "33": 72,
+     "32": 4,
+     "1": 16,
+     "0": 2,
+     "3": 14
+    },
+    "search_points": 2409,
+    "cpu_s_including_diagnostics": 702.742836,
+    "diagnostic_cpu_s": 2.918169999999995,
+    "selected_query_rate": 0.23333333333333334,
+    "selected_novel_query_rate": 0.06666666666666667,
+    "selected_novel_proposal_rate": 0.0784313725490196,
+    "selected_legal_proposal_rate": 0.12962962962962962,
+    "selected_search_rate": 0.005811540058115401,
+    "illegal_rate": 0.0,
+    "legal_clear_fog_proportion": 0.0,
+    "legal_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    },
+    "raw_resolvable_clear_fog_proportion": 0.0,
+    "raw_resolvable_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    }
+   }
+  },
+  "fog": {
+   "B_low": {
+    "games": 16,
+    "before_wins": 0,
+    "after_wins": 0,
+    "net_wins": 0,
+    "improved": 0,
+    "regressed": 0,
+    "paired_binomial_p": 1.0,
+    "wave_deltas": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "mean_wave_delta": 0,
+    "wave_delta_range": [
+     0,
+     0
+    ],
+    "queries": 44,
+    "queries_per_game": 2.75,
+    "counts": {
+     "returned": 105,
+     "malformed": 0,
+     "illegal": 0,
+     "excess": 0,
+     "duplicates": 0,
+     "valid": 105
+    },
+    "cache_hits": 0,
+    "actual_api_attempts": 44,
+    "logical_tokens": {
+     "promptTokenCount": 144727,
+     "candidatesTokenCount": 4542,
+     "totalTokenCount": 189221,
+     "thoughtsTokenCount": 39952
+    },
+    "actual_tokens_from_completed_games": {
+     "promptTokenCount": 144727,
+     "candidatesTokenCount": 4542,
+     "totalTokenCount": 189221,
+     "thoughtsTokenCount": 39952
+    },
+    "monetary_cost": null,
+    "monetary_cost_reason": "gateway tariff not provided",
+    "selected_queries": 5,
+    "selected_novel_queries": 0,
+    "novel_proposals": 77,
+    "selected_leaf_advantages": [],
+    "terminal_diagnostic_pairs": 0,
+    "terminal_diagnostic_complete": 0,
+    "terminal_diagnostic_net_wins": 0,
+    "terminal_diagnostic_wave_deltas": [],
+    "legal_proposal_plant_types": {
+     "9": 63,
+     "3": 20,
+     "4": 19,
+     "16": 3
+    },
+    "raw_resolvable_proposal_plant_types": {
+     "9": 63,
+     "3": 20,
+     "4": 19,
+     "16": 3
+    },
+    "search_points": 694,
+    "cpu_s_including_diagnostics": 117.86377100000004,
+    "diagnostic_cpu_s": 0.0,
+    "selected_query_rate": 0.11363636363636363,
+    "selected_novel_query_rate": 0.0,
+    "selected_novel_proposal_rate": 0.0,
+    "selected_legal_proposal_rate": 0.047619047619047616,
+    "selected_search_rate": 0.007204610951008645,
+    "illegal_rate": 0.0,
+    "legal_clear_fog_proportion": 0.0,
+    "legal_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    },
+    "raw_resolvable_clear_fog_proportion": 0.0,
+    "raw_resolvable_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    }
+   },
+   "B_novel": {
+    "games": 16,
+    "before_wins": 0,
+    "after_wins": 0,
+    "net_wins": 0,
+    "improved": 0,
+    "regressed": 0,
+    "paired_binomial_p": 1.0,
+    "wave_deltas": [
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0,
+     0
+    ],
+    "mean_wave_delta": 0,
+    "wave_delta_range": [
+     0,
+     0
+    ],
+    "queries": 29,
+    "queries_per_game": 1.8125,
+    "counts": {
+     "returned": 77,
+     "malformed": 0,
+     "illegal": 0,
+     "excess": 0,
+     "duplicates": 0,
+     "valid": 77
+    },
+    "cache_hits": 2,
+    "actual_api_attempts": 27,
+    "logical_tokens": {
+     "promptTokenCount": 83409,
+     "candidatesTokenCount": 3086,
+     "totalTokenCount": 108998,
+     "thoughtsTokenCount": 22503
+    },
+    "actual_tokens_from_completed_games": {
+     "promptTokenCount": 77241,
+     "candidatesTokenCount": 2936,
+     "totalTokenCount": 99767,
+     "thoughtsTokenCount": 19590
+    },
+    "monetary_cost": null,
+    "monetary_cost_reason": "gateway tariff not provided",
+    "selected_queries": 2,
+    "selected_novel_queries": 1,
+    "novel_proposals": 66,
+    "selected_leaf_advantages": [
+     0.02024552837166667
+    ],
+    "terminal_diagnostic_pairs": 2,
+    "terminal_diagnostic_complete": 2,
+    "terminal_diagnostic_net_wins": 0,
+    "terminal_diagnostic_wave_deltas": [
+     0,
+     1
+    ],
+    "legal_proposal_plant_types": {
+     "9": 60,
+     "3": 5,
+     "4": 11,
+     "16": 1
+    },
+    "raw_resolvable_proposal_plant_types": {
+     "9": 60,
+     "3": 5,
+     "4": 11,
+     "16": 1
+    },
+    "search_points": 684,
+    "cpu_s_including_diagnostics": 101.95295500000005,
+    "diagnostic_cpu_s": 0.34200000000000685,
+    "selected_query_rate": 0.06896551724137931,
+    "selected_novel_query_rate": 0.034482758620689655,
+    "selected_novel_proposal_rate": 0.015151515151515152,
+    "selected_legal_proposal_rate": 0.025974025974025976,
+    "selected_search_rate": 0.0029239766081871343,
+    "illegal_rate": 0.0,
+    "legal_clear_fog_proportion": 0.0,
+    "legal_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    },
+    "raw_resolvable_clear_fog_proportion": 0.0,
+    "raw_resolvable_counter_proportions": {
+     "31": 0.0,
+     "26": 0.0,
+     "27": 0.0,
+     "23": 0.0
+    }
+   }
+  }
+ },
+ "api_ledger": {
+  "attempts": 278,
+  "failed_attempts": 2,
+  "tokens": {
+   "candidatesTokenCount": 28317,
+   "promptTokenCount": 1104956,
+   "thoughtsTokenCount": 192469,
+   "totalTokenCount": 1325742,
+   "cachedContentTokenCount": 8684
+  }
+ },
+ "intervention_dose": {
+  "pairs": 96,
+  "diverged": 9,
+  "rows": [
+   {
+    "family": "day",
+    "arm": "B_low",
+    "seed": 52000009,
+    "first_diff_index": 92,
+    "first_diff_tick": 5040,
+    "differing_decisions": 66,
+    "decisions_a": 1020,
+    "decisions_b": 994,
+    "final_tick_a": 58574,
+    "final_tick_b": 56782,
+    "final_wave_a": 30,
+    "final_wave_b": 30,
+    "won_a": true,
+    "won_b": true
+   },
+   {
+    "family": "day",
+    "arm": "B_novel",
+    "seed": 52000004,
+    "first_diff_index": 249,
+    "first_diff_tick": 13560,
+    "differing_decisions": 34,
+    "decisions_a": 1026,
+    "decisions_b": 991,
+    "final_tick_a": 58525,
+    "final_tick_b": 57079,
+    "final_wave_a": 30,
+    "final_wave_b": 30,
+    "won_a": true,
+    "won_b": true
+   },
+   {
+    "family": "roof",
+    "arm": "B_low",
+    "seed": 52001000,
+    "first_diff_index": 927,
+    "first_diff_tick": 49462,
+    "differing_decisions": 9,
+    "decisions_a": 1109,
+    "decisions_b": 963,
+    "final_tick_a": 59025,
+    "final_tick_b": 51312,
+    "final_wave_a": 20,
+    "final_wave_b": 20,
+    "won_a": false,
+    "won_b": false
+   },
+   {
+    "family": "roof",
+    "arm": "B_low",
+    "seed": 52001005,
+    "first_diff_index": 181,
+    "first_diff_tick": 10140,
+    "differing_decisions": 140,
+    "decisions_a": 1444,
+    "decisions_b": 857,
+    "final_tick_a": 77495,
+    "final_tick_b": 46177,
+    "final_wave_a": 20,
+    "final_wave_b": 20,
+    "won_a": true,
+    "won_b": true
+   },
+   {
+    "family": "roof",
+    "arm": "B_novel",
+    "seed": 52001003,
+    "first_diff_index": 491,
+    "first_diff_tick": 26505,
+    "differing_decisions": 109,
+    "decisions_a": 901,
+    "decisions_b": 898,
+    "final_tick_a": 47413,
+    "final_tick_b": 47340,
+    "final_wave_a": 20,
+    "final_wave_b": 20,
+    "won_a": true,
+    "won_b": true
+   },
+   {
+    "family": "roof",
+    "arm": "B_novel",
+    "seed": 52001004,
+    "first_diff_index": 433,
+    "first_diff_tick": 23400,
+    "differing_decisions": 106,
+    "decisions_a": 807,
+    "decisions_b": 829,
+    "final_tick_a": 42328,
+    "final_tick_b": 43271,
+    "final_wave_a": 20,
+    "final_wave_b": 20,
+    "won_a": true,
+    "won_b": true
+   },
+   {
+    "family": "roof",
+    "arm": "B_novel",
+    "seed": 52001005,
+    "first_diff_index": 181,
+    "first_diff_tick": 10140,
+    "differing_decisions": 140,
+    "decisions_a": 1444,
+    "decisions_b": 857,
+    "final_tick_a": 77495,
+    "final_tick_b": 46177,
+    "final_wave_a": 20,
+    "final_wave_b": 20,
+    "won_a": true,
+    "won_b": true
+   },
+   {
+    "family": "roof",
+    "arm": "B_novel",
+    "seed": 52001008,
+    "first_diff_index": 461,
+    "first_diff_tick": 25080,
+    "differing_decisions": 90,
+    "decisions_a": 829,
+    "decisions_b": 809,
+    "final_tick_a": 43872,
+    "final_tick_b": 43094,
+    "final_wave_a": 20,
+    "final_wave_b": 20,
+    "won_a": true,
+    "won_b": true
+   },
+   {
+    "family": "fog",
+    "arm": "B_novel",
+    "seed": 52002007,
+    "first_diff_index": 63,
+    "first_diff_tick": 3600,
+    "differing_decisions": 35,
+    "decisions_a": 407,
+    "decisions_b": 369,
+    "final_tick_a": 22824,
+    "final_tick_b": 20549,
+    "final_wave_a": 8,
+    "final_wave_b": 8,
+    "won_a": false,
+    "won_b": false
+   }
+  ]
+ },
+ "monetary_cost_reason": "gateway tariff not provided"
+}
