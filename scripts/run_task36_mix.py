@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -18,6 +17,10 @@ ROOT = Path(__file__).resolve().parent.parent
 TASK27 = ROOT / "artifacts/task27"
 OUT = ROOT / "artifacts/task36"
 PYTHON = "/home/newbiexvwu/.venvs/ml/bin/python3"
+
+sys.path.insert(0, str(ROOT / "scripts"))
+import dagger_experiment_runner as guard  # noqa: E402  validated process-tree memory guard
+guard.OUT = ROOT / "artifacts/task36"
 
 
 def sha(path: Path) -> str:
@@ -56,19 +59,15 @@ def main() -> None:
             "--out", str(OUT / ("panel_dw5i_%s_v2" % args.plan)),
         ], OUT / ("panel_dw5i_%s_v2" % args.plan)))
     for name, argv, target in stages:
-        log = OUT / ("%s_%s.log" % (name, args.plan))
-        print(json.dumps(dict(stage=name, argv=argv, log=str(log))), flush=True)
+        print(json.dumps(dict(stage=name, argv=argv,
+                              log=str(OUT / ("%s_%s.txt" % (name, args.plan))))), flush=True)
         if args.dry_run:
             continue
-        started = time.time()
-        with log.open("w") as handle:
-            process = subprocess.run(argv, cwd=str(ROOT), stdout=handle, stderr=subprocess.STDOUT)
-        result = dict(stage=name, plan=args.plan, returncode=process.returncode,
-                      seconds=round(time.time() - started, 1), log=str(log))
-        (OUT / ("%s_%s.result.json" % (name, args.plan))).write_text(json.dumps(result, indent=2) + "\n")
+        result = guard.run(argv, "%s_%s" % (name, args.plan), cwd=ROOT)
+        result.update(stage=name, plan=args.plan)
         print(json.dumps(result), flush=True)
-        if process.returncode:
-            raise SystemExit(process.returncode)
+        if result["returncode"]:
+            raise SystemExit(result["returncode"])
     if not args.dry_run:
         model = out / "model.pt"
         complete = dict(plan=args.plan, model=str(model),
