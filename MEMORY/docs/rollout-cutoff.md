@@ -103,3 +103,25 @@ PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/workt
 
 > 11:10 第二次跑被 12:00 WSL 重启打断（0 局、仅 0 字节残件，日志 `agreement_run2_wsl_restart.log`）；12:17 第三次跑被 12:20 前后的第二次重启打断（日志止于预热、0 part，`agreement_run3_wsl_restart.log`）。两次都不进入统计。12:34 第四次跑用冻结引擎、同样参数与断点续跑启动；完成的局以 `agreement_parts/<family>_<seed>.json` 为准。
 
+## 第 4 步：强度关（预登记 2026-10-23 18:45，质量关通过后才跑）
+
+- 目的：确认收手版不降低老师的实际胜率，而不只是决策一致。`beta=1`：老师（搜索）执行自己的决策；学生只提供 fast 动作来触发表搜索，与生产 `search_play` 的 `fast_search` 循环一致（`search_play.py:302-310`：有合法植物且学生想种植或距上次 ≥300 tick 才搜索）。
+- 两臂：`exact`（生产搜索、视界 2500）与 `cutoff`（θ=0.98、检查点 500/1000/1500/2000、首次自信收手；与第 2 步同一个 Python 慢版本）。每局同种子、同 `decision_seed = seed*10000+decisions`，各执行本臂决策；两臂轨迹会分叉，按种子配对（不共用一局）。
+- 族与种子：同第 3 步 4 族，每族 `seeds` 30000–30063 共 64 局（4×64 = 256 对，512 次对局），2 workers。
+- 判据：按种子配对的胜负差（cutoff − exact），整局（种子）成组 bootstrap 20000 次、seed 20261019；**95% 区间下界 ≥ −3pp** 且 256 对齐全；分族 64 对只报告。脚本 `scripts/cutoff_strength.py`（静态检查通过，尚未实战）。
+- 成本实测估计：历史 beta=1 老师跑（`artifacts/day_panel/teacher_l7_d7_64`，64 局）决策 1,054/局、实际搜索 203/局；第 3 步 33 局 part 实测 exact 0.96 s/搜索、cutoff 2.40 s/搜索（qc 满载下）。按搜索点估 4 族 × 64 seed 约 60–65 h 游戏时间，2 workers ≈ 30–33 h 墙钟。
+- 输入 SHA256：`scripts/cutoff_strength.py` `048b48cc279bbd67444d676f0d0b0226390c5c5813e094310d3dd09c310d9ab9`；学生/价值网/分叉网/引擎/清单同第 3 步表（引擎 `7508e8…`）。
+
+```bash
+# 校准（质量关结束后先跑 1 个种子 = 2 局，量单局耗时；临时 parts 不污染正式结果）
+PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/scripts/cutoff_strength.py \
+  --families day_l7 --seeds 1 --workers 1 \
+  --parts /tmp/strength_calib_parts --out /tmp/strength_calib.json \
+  --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/artifacts/task40/engine/pvz-portable
+# 正式（2 个游戏进程）
+PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/scripts/cutoff_strength.py \
+  --workers 2 \
+  --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/artifacts/task40/engine/pvz-portable
+# -> artifacts/task40/strength.json、artifacts/task40/strength_parts/
+```
+
