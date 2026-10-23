@@ -91,9 +91,15 @@ cd /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff
 | 学生 / 价值网 / 分叉网 / 引擎 | 同第 1 步表（`122703…` / `5171db…` / `248584…` / `7508e8…`） |
 
 ```bash
-cd /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff
-PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 scripts/cutoff_agreement.py --workers 2
+PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/scripts/cutoff_agreement.py \
+  --workers 2 \
+  --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/artifacts/task40/engine/pvz-portable
 # -> artifacts/task40/agreement.json、artifacts/task40/agreement.log
 ```
 
+> 引擎必须用本工作树冻结的 `artifacts/task40/engine/pvz-portable`（`7508e8…`，BuildNum 2101）：共享路径 `cq/build/pvz-portable` 已于 10:55 被重编为 `b64261…`。跑前按 SHA 校验，别只信路径。
+
 > 2026-10-23 11:02 首跑在第 6 局因引擎瞬时退出（`SimulatorExited` → `BrokenPipe`）整池失败，前 5 局明细未落盘（汇总见 `artifacts/task40/agreement_run1_crash.log`）。11:09 起加固为单局重试（`--retries 2`）+ 每局落盘 `artifacts/task40/agreement_parts/` + 断点续跑；三臂、种子、参数、判据均不变。上表脚本 SHA 为新版本。
+
+> 11:10 第二次跑被 12:00 WSL 重启打断（0 局、仅 0 字节残件，日志 `agreement_run2_wsl_restart.log`）；12:17 第三次跑被 12:20 前后的第二次重启打断（日志止于预热、0 part，`agreement_run3_wsl_restart.log`）。两次都不进入统计。12:34 第四次跑用冻结引擎、同样参数与断点续跑启动；完成的局以 `agreement_parts/<family>_<seed>.json` 为准。
+
