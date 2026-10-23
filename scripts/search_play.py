@@ -846,8 +846,7 @@ def _play(job: dict) -> dict:
             decisions += 1
             counters = _W.get("metrics_counters")
             if counters is not None and decisions % 32 == 0:
-                with counters.get_lock():
-                    counters[1] += 32
+                counters[job['metrics_index'] * 2 + 1] = decisions
             if not obs["terminal"]:      # a won level fires the remaining mowers; count before that
                 mowers_left = ready_mowers(obs)
             if done:
@@ -914,9 +913,9 @@ def _play(job: dict) -> dict:
     _release_freed_memory()      # this game's archives are written; its buffers are garbage now
     counters = _W.get("metrics_counters")
     if counters is not None:
-        with counters.get_lock():
-            counters[0] += 1
-            counters[1] += decisions if job["arm"] == "fast" and not args.frames and args.cpp_rollouts else decisions % 32
+        # Each job owns its slots. A killed worker cannot strand a shared lock.
+        counters[job['metrics_index'] * 2] = 1
+        counters[job['metrics_index'] * 2 + 1] = decisions
     return result
 
 
@@ -1069,7 +1068,9 @@ def main() -> None:
     # platform can fork, recycle the process after each game: the next one starts from the parent's
     # copy-on-write baseline instead of on top of the last game's peak. Same games, same bytes.
     recycle = 1 if start_method == "fork" else None
-    counters = mp.get_context(start_method).Array("q", [0, 0])
+    counters = mp.get_context(start_method).RawArray("q", len(jobs) * 2)
+    for index, job in enumerate(jobs):
+        job['metrics_index'] = index
     metrics = None
     try:
         with results_path.open("a") as out, mp.get_context(start_method).Pool(
@@ -1079,7 +1080,7 @@ def main() -> None:
                           args.candidate_coverage_budget, counters)) as pool:
             from pvz_metrics import Metrics
             metrics = Metrics("search_play", progress_source=lambda: dict(
-                games=counters[0], decisions=counters[1])).start()
+                games=sum(counters[::2]), decisions=sum(counters[1::2]))).start()
             for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
                 out.write(json.dumps(res) + "\n"); out.flush()
                 if i % 10 == 0 or i == len(jobs):

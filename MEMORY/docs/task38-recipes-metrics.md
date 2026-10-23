@@ -23,6 +23,7 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。
 
 ## 结果
+- 2026-10-23：采集进度改为每任务独占无锁共享槽，避免 worker 被 OOM 杀死时留下计数锁；2 worker 真实冒烟完成2局，2240决策与指标末行逐项一致（同时自有游戏进程未超过2）。
 - 2026-10-23：新增 recipes-metrics.md（schema/命令迁移/指标字段/真实摘要）与完整语料200步对拍工具；三份历史命令各34字段逐项核对通过；指标扩展到6项测试，覆盖真实子进程RSS与WARN落盘。dw4i对拍进程仍在全量装载，未重复启动。
 - 2026-10-23：study/identity/conveyor/dilution 等训练调用方改为引用冻结配方，面板改为 recipe 入口并新增 v1/v2/pressure 配方；schema 5 项、面板 7 项、数据行 6 项通过；v2 单任务真实冒烟 1/1，结果标为 incomplete。
 - 2026-10-23：新增严格版本化配方 schema，反写 dw4i（170 标签）、dw5i（281）、identity_dw3_s1（82）；训练 CLI 收敛为 recipe/out/device/threads/precompute-workers，保存 resolved recipe；schema 4 项与 identity 训练 5 项测试通过。200 步历史对拍及调用方迁移待做。

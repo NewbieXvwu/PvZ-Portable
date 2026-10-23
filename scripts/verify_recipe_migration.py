@@ -153,6 +153,7 @@ def verify(recipe_path, out):
     baseline['load'] = current.load = cached_load
     traces = {}
     sampler = Metrics('recipe_parity_'+recipe_path.stem, training=True).start()
+    sampler.update(step=0, phase='loading')
     try:
         for name in ('legacy','recipe'):
             values = []
