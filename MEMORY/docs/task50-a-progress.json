@@ -16,11 +16,12 @@
   "first_game_roots_futures_actions_match_original_vcpp_after": true,
   "post_adapter_unit_tests": 19,
   "pending": [
-    "three tasks x32 fresh before/after teacher gate plus needed shadows and comparison",
-    "final A delivery audit and summary"
+    "finish 96 fresh after games",
+    "required identical-root shadows and passing comparison",
+    "strict independent audit and final A delivery summary"
   ],
   "deploy_gate_status": "passed",
-  "teacher_gate_status": "running before, two live baseline game processes",
+  "teacher_gate_status": "running after, original runner retained",
   "teacher_resume_command_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-command.json",
   "teacher_expected_valid_games": {
     "before": 96,
@@ -48,5 +49,35 @@
     "cpu_ratio": 0.5830021370063552
   },
   "independent_audit_tool": "scripts/audit_zones_teacher.py",
-  "strict_audit_rejects_current_incomplete_evidence": true
+  "strict_audit_rejects_current_incomplete_evidence": true,
+  "reviewed_takeover_commits": [
+    "1cc97265",
+    "3cf05630",
+    "f0fc4d3a"
+  ],
+  "takeover_changes_only_documentation": true,
+  "before_complete": true,
+  "fresh_before_reproduction": [
+    {
+      "task": "day_l7_train_d7_m150",
+      "games": 32,
+      "decision_roots": 36463,
+      "teacher_points": 7042,
+      "all_roots_futures_flags_choices_match_original": true
+    },
+    {
+      "task": "night_l14_train_n10",
+      "games": 32,
+      "decision_roots": 51880,
+      "teacher_points": 12236,
+      "all_roots_futures_flags_choices_match_original": true
+    },
+    {
+      "task": "pool_l21_train_p9k",
+      "games": 32,
+      "decision_roots": 21138,
+      "teacher_points": 4495,
+      "all_roots_futures_flags_choices_match_original": true
+    }
+  ]
 }

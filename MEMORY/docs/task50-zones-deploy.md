@@ -75,6 +75,8 @@
 
 - [A.11] before臂96/96有效局完成（day 32/32、night 32/32、pool 17/32；噪声点3016、噪声一致2666，before-summary已落盘），原runner169780自动转after（子进程199578）并已开局；17份冻结输入哈希复验仍全匹配，未重启、未改脚本。
 
+- [A.13] Business接回复核1cc97265/3cf05630/f0fc4d3a，均仅文档变更，原runner169780及after子进程199578继续。96份新before与vcpp原正式before逐决策核对：三任务全部root/future/搜索标记/选择完全相同；新after已完成18/96时独立审计228份result/trace及冻结哈希通过，夜间1对待自动shadow。保留现有进程，不重跑已过门禁；完整after/shadow/compare及最终[A]仍待完成。
+
 主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
 
 ```bash
