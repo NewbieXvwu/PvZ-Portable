@@ -236,6 +236,31 @@ def _state_of(frame: dict) -> dict:
     return {key: frame.get(key) for key in COMPARE_KEYS if key in frame}
 
 
+ROLLOUT_STAT_KEYS = ("estimated_result", "decisions", "mowers_left", "planted", "net_calls",
+                     "ticks", "substeps")
+
+
+def _rollout_digest(observation: dict, response: dict) -> str:
+    # Timers vary between runs; the leaf, outcome and every logical statistic must agree.
+    return _digest({"state": observation,
+                    "stats": {key: response[key] for key in ROLLOUT_STAT_KEYS}})
+
+
+def _require_identical(a: dict, b: dict) -> None:
+    if not a["families"] or not b["families"]:
+        raise RuntimeError("correctness gate: empty benchmark")
+    if a["families"].keys() != b["families"].keys():
+        raise RuntimeError("correctness gate: benchmark families differ")
+    for family, left in a["families"].items():
+        right = b["families"][family]
+        for value in (left, right):
+            if (value["rollouts"] <= 0 or value["replay_mismatches"] or
+                    len(value["rollout_digests"]) != value["rollouts"]):
+                raise RuntimeError(f"correctness gate: incomplete or invalid evidence for {family}")
+        if left["rollout_digests"] != right["rollout_digests"]:
+            raise RuntimeError(f"correctness gate: rollout state/statistics differ for {family}")
+
+
 def _export_student(path: Path) -> None:
     from pvz_rollout_policy import export_student, load_student
     export_student(load_student(str(STUDENT)), path)
@@ -323,7 +348,7 @@ def bench(args) -> dict:
             for family, entries in manifest["families"].items():
                 ticks = simulated = network = wall = process_cpu = 0.0
                 rollouts = decisions = roots = 0
-                leaves = []
+                leaves, rollout_digests = [], []
                 for entry in entries:
                     archive = Path(entry["archive"])
                     rows = _archive_rows(archive / ("frames.npz" if (archive / "frames.npz").is_file()
@@ -333,7 +358,9 @@ def bench(args) -> dict:
                     snapshots, mismatches = replay_episode(env, entry, rows, entry["decisions"])
                     if mismatches:
                         replay_failures += len(mismatches)
-                        print(f"  !! replay mismatch {archive}: {mismatches[0]}", flush=True)
+                        raise RuntimeError(f"correctness gate: replay mismatch {archive}: {mismatches[0]}")
+                    if len(snapshots) != len(entry["decisions"]):
+                        raise RuntimeError(f"correctness gate: missing decision snapshots for {archive}")
                     _arm(env, True)
                     cpu_before = _process_cpu(env._process.pid)
                     for index, snapshot in snapshots.items():
@@ -354,6 +381,9 @@ def bench(args) -> dict:
                             rollouts += 1
                             decisions += last.get("decisions", 0)
                             leaves.append(_digest([_state_of(observation), observation.get("tick")]))
+                            rollout_digests.append({"archive": str(archive), "frame": index,
+                                                    "seed": args.seed_base + repeat,
+                                                    "digest": _rollout_digest(observation, last)})
                         env.release_snapshot(snapshot)
                     process_cpu += _process_cpu(env._process.pid) - cpu_before
                     _arm(env, False)
@@ -370,9 +400,11 @@ def bench(args) -> dict:
                     "network_share": round(network / cpu, 4) if cpu else None,
                     "decisions_per_second": round(decisions / cpu, 1) if cpu else None,
                     "replay_mismatches": replay_failures,
-                    "leaf_digests": leaves[:4],
+                    "leaf_digests": leaves,
+                    "rollout_digests": rollout_digests,
                 }
-                print(f"{family}: {report['families'][family]}", flush=True)
+                print(f"{family}: " + json.dumps({key: value for key, value in report['families'][family].items()
+                                                 if key not in ('leaf_digests', 'rollout_digests')}), flush=True)
             aggregate = {"ticks": sum(v["ticks"] for v in report["families"].values()),
                          "cpu_seconds": sum(v["simulation_seconds"] + v["network_seconds"]
                                             for v in report["families"].values()),
@@ -407,13 +439,23 @@ def compare(args) -> dict:
     round here runs both binaries back to back and the result is the median of the ratios.
     """
     import statistics
+    if args.executable.resolve() == args.compare.resolve():
+        raise ValueError("compare requires two different executable paths")
     ratios, per_binary = [], {str(args.executable): [], str(args.compare): []}
+    evidence = args.out.parent / (args.out.stem + "_rounds")
+    reference = None
     for _round in range(args.rounds):
         round_values = {}
-        for binary in (args.executable, args.compare):
+        # Alternate which binary runs first to reduce ordering bias.
+        order = (args.executable, args.compare) if _round % 2 == 0 else (args.compare, args.executable)
+        for binary in order:
+            arm = "a" if binary == args.executable else "b"
             namespace = argparse.Namespace(**{**vars(args), "executable": binary,
-                                              "out": Path(tempfile.gettempdir()) / "bench_compare.json"})
+                                              "out": evidence / f"round_{_round + 1}_{arm}.json"})
             report = bench(namespace)
+            _require_identical(report if reference is None else reference, report)
+            if reference is None:
+                reference = report
             value = report["total"]["ticks_per_cpu_second"]
             per_binary[str(binary)].append(value)
             round_values[str(binary)] = value
@@ -422,7 +464,11 @@ def compare(args) -> dict:
     summary = {"a": str(args.executable), "b": str(args.compare),
                "a_median": statistics.median(per_binary[str(args.executable)]),
                "b_median": statistics.median(per_binary[str(args.compare)]),
-               "ratios": ratios, "ratio_median": statistics.median(ratios)}
+               "ratios": ratios, "ratio_median": statistics.median(ratios),
+               "correctness": "all rollout states and logical statistics identical",
+               "evidence": str(evidence)}
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(json.dumps(summary, indent=1) + "\n")
     print(json.dumps(summary, indent=1))
     return summary
 
@@ -460,7 +506,7 @@ def replay(args) -> dict:
                             observation = env.rollout(None, int(rows[index]["tick"]) + args.horizon,
                                                       sim_skip=args.sim_skip, max_actions=args.max_actions,
                                                       snapshot_id=snapshot, seed=args.seed_base)
-                            digests.append(_digest([_state_of(observation), observation.get("tick")]))
+                            digests.append(_rollout_digest(observation, env._last_response))
                         env.release_snapshot(snapshot)
                         report["determinism"].append({"family": family, "archive": entry["archive"],
                                                       "frame": index, "identical": digests[0] == digests[1],
@@ -471,11 +517,16 @@ def replay(args) -> dict:
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(report, indent=1) + "\n")
     print(f"-> {args.out}")
+    if any(entry["mismatches"] for entry in report["episodes"]) or any(
+            not entry["identical"] for entry in report["determinism"]):
+        raise RuntimeError(f"correctness gate failed: {args.out}")
     return report
 
 
 def search(args) -> dict:
     """Whole-game metric: the queue's search_play parameters, seconds per decision."""
+    if not 1 <= args.workers <= 2:
+        raise ValueError("task35 permits at most two game workers")
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     command = [sys.executable, str(ROOT / "scripts" / "search_play.py"),
@@ -486,7 +537,9 @@ def search(args) -> dict:
                "--resource-dir", str(RESOURCES), "--out", str(out)]
     print(" ".join(command), flush=True)
     subprocess.run(command, check=True, cwd=str(ROOT))
-    rows = [json.loads(line) for line in (out / "results.jsonl").read_text().splitlines() if line.strip()]
+    rows = [json.loads(line) for line in (out / "games.jsonl").read_text().splitlines() if line.strip()]
+    if len(rows) != args.games or len({row["seed"] for row in rows}) != args.games:
+        raise RuntimeError(f"incomplete whole-game benchmark: {len(rows)} rows for {args.games} games")
     report = {"games": len(rows), "won": sum(1 for row in rows if row.get("won")),
               "mean_seconds": sum(row["seconds"] for row in rows) / len(rows),
               "mean_decisions": sum(row["decisions"] for row in rows) / len(rows),
@@ -546,7 +599,7 @@ def main() -> None:
     p.add_argument("--task-id", default="day_l7_eval")
     p.add_argument("--seed-offset", type=int, default=0)
     p.add_argument("--games", type=int, default=8)
-    p.add_argument("--workers", type=int, default=8)
+    p.add_argument("--workers", type=int, default=2)
     p.add_argument("--executable", type=Path, default=EXECUTABLE)
     p.add_argument("--out", type=Path, default=ROOT / "artifacts" / "perf" / "engine_search")
 
