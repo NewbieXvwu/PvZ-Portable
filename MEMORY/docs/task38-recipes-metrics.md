@@ -34,3 +34,8 @@
 
 ## 问题
 - 本分支缺 hotpath-audit.md；已 fetch 并完整读取 origin/audit 对应报告（含 §6），依据 task33 批准清单删除训练 EMA/全候选软目标入口，保留 cell soft temperature、width 与旧模型元数据。退役前标记 retire-recipe-training-flags-20261023。
+
+## 主控追加（2026-10-23 10:10）：课程控制器的训练包参数改从配方取（优先做）
+- pvz-env 合进了 task33 的打包装载（b95d2cf7）。`scripts/curriculum_queue.py` 每轮结束会调 `pack_training_rows.py` 打训练包，包参数来自 7 个新开关 `--pack-wait-keep/--pack-obs/--pack-packet-head/--pack-aux-horizon/--pack-cells/--pack-context/--pack-label-weight`，**默认是 v1 / 槽位头 / wait-keep 1.0**，与现行 dw4i 配方（v2 / 身份头 / 0.1 / 按行汇总…）不一致——照默认打出来的包，训练根本用不上（`train_rollout_policy.py` 要求包参数逐项相同）。
+- 改法：`git merge origin/pvz-env` 后，课程控制器只收一个 `--recipe recipes/<名>.json`（默认指向现行采集学生对应的配方），包参数全部从配方解析（与训练用同一个解析函数，不复制字段表）；删掉这 7 个 `--pack-*` 开关。单测：配方 → `pack_command` 的参数与 `train_rollout_policy` 对同一配方要求的包键逐项相同。
+- 这条做完再继续原来的“调用方迁移”。
