@@ -226,6 +226,9 @@ public:
 	std::array<uint64_t, 4>         mEnvTrackPermanent{};
 	std::array<uint64_t, 4>         mEnvTrackActive{};
 	bool                            mEnvTrackCacheValid = false;
+	// Cheap gate: most reanimations have no track with work this tick, and the sparse loop
+	// would otherwise scan the bitmap on every Update (3.5% of the rollout CPU on 2026-10-23).
+	bool                            mEnvTrackActiveAny = false;
 
 public:
 	void                            ResetEnvTrackCache();

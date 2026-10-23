@@ -217,7 +217,8 @@ static void PrototypeBatchCommand(LawnApp* app, EnvironmentRollout& net,
         }
     }
     const double total = PrototypeCpu() - start;
-    std::cout << "PVZENV {\"ok\":true,\"prototype_version\":1,\"cpu_seconds\":" << total
+    std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+        << ",\"ok\":true,\"prototype_version\":1,\"cpu_seconds\":" << total
         << ",\"network_cpu_seconds\":" << network << ",\"simulation_cpu_seconds\":" << simulation
         << ",\"snapshot_cpu_seconds\":" << snapshotsCpu << ",\"feature_cpu_seconds\":" << features << ",\"lanes\":[";
     for (int i = 0; i < count; ++i)

@@ -1,6 +1,11 @@
 #include "EnvironmentWaitEvents.h"
+#include <bit>
 #include <cassert>
+#include <cmath>
+#include <cstdint>
 #include <iostream>
+#include <random>
+#include <sstream>
 
 using namespace EnvironmentWaitEvents;
 
@@ -53,5 +58,42 @@ int main()
 	try { Run(1, 0, [&](PublicState& out) { out = state; }, [&] { --state.tick; }); }
 	catch (const std::runtime_error&) { rejected = true; }
 	assert(rejected);
-	std::cout << "native wait reducer: 11 contract scenarios passed\n";
+	// Mirror EnvironmentPublicWaitState's in-place refill, including reuse after
+	// two reads. Assignment-only readers above conceal stale scalar counters.
+	int tick = 0;
+	result = Run(5, 5, [&](PublicState& out) {
+		out.clear();
+		out.tick = tick;
+		for (int plant = 0; plant < (tick < 2 ? 3 : 2); ++plant) ++out.plantCount;
+	}, [&] { ++tick; });
+	assert(result.reason == "condition" && result.logicSteps == 2);
+	// The public encoder's six-digit rendering must stay bit-identical to the
+	// stream it replaced, or the left-zone boundary could move.
+	{
+		std::uint32_t pattern = 0;
+		int checked = 0;
+		for (int i = 0; i < 200000; ++i)
+		{
+			pattern = pattern * 1664525u + 1013904223u;
+			const float value = std::bit_cast<float>(pattern);
+			if (!std::isfinite(value)) continue;
+			std::ostringstream text;
+			text << static_cast<double>(value);
+			assert(std::bit_cast<std::uint64_t>(RenderedPublicCoordinate(value)) ==
+				std::bit_cast<std::uint64_t>(std::stod(text.str())));
+			++checked;
+		}
+		for (int boundary = -10; boundary <= 1000; ++boundary)
+			for (int offset = -10; offset <= 10; ++offset)
+			{
+				const float value = static_cast<float>(boundary + offset * 0.0001);
+				std::ostringstream text;
+				text << static_cast<double>(value);
+				assert(std::bit_cast<std::uint64_t>(RenderedPublicCoordinate(value)) ==
+					std::bit_cast<std::uint64_t>(std::stod(text.str())));
+				++checked;
+			}
+		std::cout << "public coordinate bit-exact vs stream: " << checked << " finite values\n";
+	}
+	std::cout << "native wait reducer: 12 contract scenarios passed\n";
 }

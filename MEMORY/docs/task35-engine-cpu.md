@@ -80,8 +80,53 @@
 17. **A1 合并 origin/pvz-env（70 个提交）并重新走完 PGO**。冲突只有 `CMakeLists.txt`（CUDA 选项删除 vs 本分支的 LTO/PGO 块相邻）与当天记忆 add/add；按任务书以 pvz-env 的删除为准，LTO/PGO/mimalloc 保留。合并后 `scripts/build_pgo.sh bench` 重生成 profile（本机 load 26，约 15 分钟），`grep -c fprofile-generate build/build.ninja` = 0。验收：192/192 条完整叶观测与逻辑统计与 step9 二进制相同（`compare` 内置断言）；四族整局逐帧重放 953/877/531/464 帧 **0 差异**；4/4 同种子重复推演一致；`unittest discover` 281 项里 5 项 `test_cpp_rollout` 需要 `PVZ_RESOURCE_DIR`（设置后 5/5 通过）、`test_rowpool_aux` 需要 pytest（venv 未装）、`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在 pvz-env 侧就失败（相关文件与 pvz-env 逐字节相同，属主干既有问题）。构建相对 step9 的配对比值中位数 0.92（4 轮）。
 18. **A3 部署说明**写进 `engine-cpu.md`：cq 工作树上 `merge` → `JOBS=8 bash scripts/build_pgo.sh bench` → 检查 `fprofile-generate` 计数为 0；mimalloc 首次 configure 需联网；profile 由 `artifacts/perf/engine_roots.json` 的 64 个真实 root 生成；换学生模型必须重生成，只换价值网不必。
 19. **C 项 int8（AVX-VNNI）核级实测：不进入生产**。独立夹具上与 SSE 实验同一批 192 个真实输入：int8 核耗时是 BLAS 的 0.38–0.53 倍（首层 15.8→8.4 µs、第二层 57.9→22.3、第三层 32.5→14.3），且与“量化后反量化再算”的参考实现**逐位相同**（`kernel_vs_quant_ref = 0`），说明核本身正确。但按层标定的 u8 激活误差把 trunk 输出推到 8.9% 相对 rms、全局嵌入 5.4%，而收益上限只有整体 1.15–1.19 倍，且需要为无 AVX-VNNI 的机器保留 BLAS 后备路径。数字与判断写进 `engine-cpu.md`，代码只留独立实验脚本。
+20. **A2 整局基准 2/4 族**（`bench_engine.py games`，CPU 秒/局，新旧构建同种子各 8 局）：白天 L7 149.3 vs 236.7 = **1.586×**、夜间 L14 88.5 vs 138.2 = **1.561×**，逐种子胜/负、末波、决策数 8/8 相同；泳池 L24 与传送带 L10 仍待填（表在 `engine-cpu.md` 的 A2 节）。
+21. **进度与下一步**：A1（合并 pvz-env + 重生成 PGO）、A3（部署说明）、C（int8 判定不入生产）已完成入库，B 原型已编译未实测；下一步先补完 A2 剩余两族整局对照，再跑 B 的 native / batch 1 / batch 9 三臂与 64×9 全量叶摘要比对。停止条件未满足，本任务交回 Codex。
+
+22. **重启后恢复与 B 夹具修复**：核对 status/log 后保留 A2 已完成两族；泳池只有新臂 8 局、旧臂 2 局，缺完整配对 CPU 计时，整对作废并在独立 recovery 目录从头重跑，随后接传送带。旧 B 日志实际为响应缺 `protocol_version` 而中止；已补成功/异常响应的版本、原生臂 CPU 分项和差异失败门禁，12 项无引擎回归通过。原型在当前提交源码副本上重建，尚未声称 B 验收通过。
+
+23. **修复事件等待复用计数**：`PublicState::clear()` 只清容器、未清 `plantCount`，两块缓冲复用后植物数量被重复累加，可能漏掉条件 5 的植物减少事件。新增与真实读取器相同的原地清空/累加回归（第 2 tick 从 3 株减到 2 株），修复前失败、修复后通过；12 项 C++ 契约与 20 项 Python 等待测试通过。清空全部标量并保留 vector 容量；当前 A2 只用 timeout，不受条件 5 影响，正式引擎补验安排在该配对运行结束后。
+
+24. **下一个热点候选：公开坐标的十进制往返**。独立 `scripts/prototypes/bench_public_coordinate.cpp` 用固定随机浮点位型与边界邻点共 1,017,346 个有限坐标，`to_chars/general/6 + from_chars` 与旧 stream/stod 的 double 结果逐位相同。三轮交替进程 CPU 秒中位数 0.5763 → 0.1340（单函数 4.30×）；尚未接入正式引擎，不计整体收益，待 A2 结束后做整条推演配对与逐帧验收。另已从可用的 Ubuntu 官方源下载并在 perf ignored 目录解包 valgrind（未改系统或其他工作树），版本 3.26.0 可执行。
+
+25. **恢复真正的调用栈剖析能力**：从 Ubuntu 官方源取包并仅解包到 perf 的 ignored 工具目录，`perf version` 与 `perf record -e cpu-clock:u -g -- /usr/bin/true` 均成功（未改系统安装/权限）。valgrind 3.26.0 同样可运行。`prof_symbolize.py --debug-root` 按 ELF build ID 匹配解包的 libc 调试符号，旧 5752 点剖面里误显示为 `_dl_mcount_wrapper` 的份额已拆为 memset/strcmp 等，报告保留新前 15；这些是历史样本重解析，正式当前构建调用栈采样将在 A2 结束后跑。
+
+26. **A2 泳池恢复重跑完成（3/4 族）**：L24 p9k m150 新旧各 8 局，完整 `RUSAGE_CHILDREN` CPU 220.988 / 402.321 秒，即 27.624 / 50.290 秒/局、旧/新 **1.8206×**，CPU 工作量口径 130.32 / 71.58 games/h。8/8 种子胜负、末波、决策数相同（全负，平均 425.875 决策）。已从 recovery 日志保存完整单族条目；传送带两臂继续运行，未重用重启前缺失配对的旧计时。
+
+27. **后续运行检查点（不代表完成）**：传送带恢复任务仍活着（`artifacts/perf/games_recovery.log`，父进程 `bench_engine.py games`，输出 `engine_games_recovery/`）；必须先核实活进程和完整 `engine_games.json`，不能因日志暂时不增而重启。B 的协议/CPU 修复已在 adcf9b3f 源码副本编译成功，build.json 的 helper/builder SHA 与当前脚本相同，待 A2 后运行 `scripts/prototypes/bench_batch_rollout.py`。完整 pytest 已用 ml Python + 追加 `/usr/lib/python3/dist-packages` 成功收集 290 项（未执行），可避开原来缺 pytest 的环境问题。坐标候选已编译到 `artifacts/perf/coordinate-candidate/pvz-portable`，正式 `build/pvz-portable` 的 SHA256 保持不变，A/B 旧臂副本为 `artifacts/perf/pvz-portable-before-coordinate`；CMake 输出目录已恢复默认（只 configure、未覆盖正式旧二进制）。两处候选源码改动（EnvironmentWaitEvents.h、bench_public_coordinate.cpp）仍未提交，百万坐标和原生契约通过，但须在槽位释放后跑候选 compare / 四族重放 / 真 perf 调用栈，再按整引擎收益决定保留；现 profile 对该函数存在 coverage-mismatch，最终保留时须重生成 PGO。
+
+28. **首层格子稀疏卷积独立实测**：`scripts/prototypes/bench_sparse_conv.cpp` 使用既有 64 个真实 root 的首层输入（仅 1.788% 格子非零），比较完整 im2col+BLAS 与直接非零输入累加（含输出布局转换，静态权重/活动通道准备均不计时）。同 CPU0、逐 root 三臂轮换九轮：BLAS / AVX2 / 普通 C++ 中位数 18.240 / 10.422 / 14.854 µs，配对耗时比中位数 0.580 / 0.824；稀疏两臂逐位相同，相对 BLAS 最大误差 5.72e-6、相对 RMS 6.62e-8。只留独立实验，未并入正式引擎，不将首层收益外推整体；可与坐标候选之后的真实剖面结合决定是否接入。传送带 A2 活进程仍在继续，未新增游戏进程。
+
+29. **A1 无引擎训练侧补验**：ml Python 追加系统 pytest 包后，`test_identity_training.py` + `test_rowpool_aux.py` 实测 **8 passed / 1 failed**（12.65 秒）。rowpool 不再因缺 pytest 无法执行；identity CPU 训练仍复现 `train_rollout_policy.py:549` 的 cell gather `-9223372036854775808` 越界。这四个训练/打包/测试相关文件与当前已合入的 origin/pvz-env 无差异，未修改 task32/33 代码；A1“完整 pytest 全过”仍有既有训练失败，不能标成全绿。传送带新臂继续推进，未占额外游戏槽位。
+
+30. **补强逐帧重放门禁**：发现旧 `_state_of` 漏比逐帧 `v2`（波计时、发射进度、投射物等）、收入与终局字段；完整叶摘要虽包含这些内容，但只能验证推演终点。新增“仅 v2 不同”回归修复前失败，现比较档案里存在的全部这些公开状态字段，并拒绝早于最后待重放帧的终局；13 项夹具回归通过。新证据标记 `replay_gate_version: 2`（与 horizon 的 benchmark_version 2 区分），B 也复用此强门禁；既有逐帧结果不冒充新增字段已验过，槽位释放后对候选与基线补跑。
+
+31. **公开坐标十进制往返接入生产**：`RenderedPublicCoordinate` 从 `ostringstream` + `stod` 改成 `to_chars(general, 6)` + `from_chars`，旧的流路径删除（不加开关）。新增逐位回归在 `tests/test_environment_wait_events.cpp`：20 万个有限 float 位型 + 1011×21 个整数/边界邻点，共 **220,490** 个值与旧流实现逐位相同（含负零）。整引擎收益待 A2 传送带槽位释放后配对测；改动会改变 PGO 覆盖，保留时须重生成 profile。
+
+32. **A2 整局基准 4/4 族完成（上线验收数字）**：传送带 L10 `day_l10_orig_train_m150` 新旧各 8 局，CPU 1442.708 vs 2475.173 秒，180.339 vs 309.397 秒/局，旧/新 **1.7156×**，CPU 工作口径 19.96 vs 11.64 games/h；8/8 种子胜负、末波、决策数相同。四族：白天 L7 1.586×、夜间 L14 1.561×、泳池 L24 1.821×、传送带 L10 1.716×，**几何平均 1.67×**。表在 `engine-cpu.md` 的 A2 节。对照 10-27 的 2.0× 判据仍差约 20%——缺口在 BLAS 28%，不是微调能填的。四族的新构建都是 09:51 的二进制（早于等待缓冲修复与 to_chars），比值偏保守，最终上线需按部署节重走 PGO。
+
+33. **B 锁步批量推演实测（三臂，64 root × 9 未来）**：正确性全过——64/64 root 的 native / batch1 / batch9 叶观测与逻辑统计逐条相同，16 个存档整局逐帧重放 0 差异。但**锁步在这份原型里是净亏**：总 CPU native 12.52 s、batch1 36.11 s、batch9 34.87 s（batch9 = native 的 2.79 倍）。主因是每 lane 独立快照/还原 37.1 ms（占 batch9 的 61%），模拟段 13.7 ms/lane 完全不因合批变小。批量本身有效但幅度有限：batch1 → batch9 网络段 1.214×，而两条 batch 臂的每 lane 网络仍比 native 串行慢 19%（im2col 仍按 lane 做）。结论写进 `engine-cpu.md` 的 B 节交给 task33：收益上限是网络段的 34%，必须共享快照 + im2col 合批才值得做，**单靠 B 到不了 2.0×**。
+
+34. **无活轨道的 reanim 跳过稀疏扫描 + 附件矩阵不再白建 identity**：剖面里 `Reanimation::NextEnvTrack` 3.5%、`SexyMatrix3::LoadIdentity` 2.0%。① 给 Reanimation 加 `mEnvTrackActiveAny`（RememberEnvTrack/BuildEnvTrackCache 置位，循环结束时按四个字重算），没有有活轨道时 `Update` 直接返回——大多数植物/僵尸每 tick 本来就要扫一遍位图却什么也不做。② `updateTrack` 在 `ENV_SKIP_ATTACHMENT_MATRIX` 下既不计算也不应用叠加矩阵，却仍然构造了一个 `SexyTransform2D`（LoadIdentity）；改成一个文件级静态实例，该路径从不读它。**配对 A/B 4 轮比值中位数 0.9596（+4.2%）**；验收：64 root 全部叶观测与逻辑统计相同、四族整局逐帧重放 953/877/531/464 帧 **0 差异**、同种子重复推演 4/4 一致。PGO 已按两阶段重生成（`fprofile-generate` 计数 0）。
+
+35. **两项 <2% 的尝试：观察序列化回退、等待循环去重保留**。① 用 `perf record -g` 首次拿到真实调用栈（`build-prof/`，10,294 样本）：`FindCollisionTarget` 217 样本全部来自 `CheckForCollision`、`EnvironmentPublicWaitState` 156 样本全部来自等待循环、观察序列化的 `ostream`/`num_put`/`xsputn` 约 3% 引擎样本。② 据此把观察序列化换成 `to_chars` 的 `JsonSink`（先证明 598,816 个 int/float 与 ostream **逐字节相同**），整引擎配对 6 轮中位数 **1.0116**——**无收益，已回退**，并写进 `engine-cpu.md` 的“试过但没有收益”。③ 等待循环的僵尸 ID 查重从排序 vector（每 tick 每僵尸两次二分 + memmove）换成 thread_local 代际戳表：6 轮中位数 1.06（load 35，单轮 0.876–1.239，测不出），剖面份额仍 <1%，按规则属“2% 以下不能靠吞吐判定”，**保留**（机制上严格更少工作，逐位等价）。验收：四族整局逐帧重放 953/877/531/464 帧 0 差异、64 root 叶状态全同。
+
+36. **停止条件已满足**（详见 `engine-cpu.md` 的“停止条件评估”）：连续三项 <2%（坐标 ≈1%、观察序列化 1.0116 已回退、等待去重测不出），且前 15 名逐项查过没有可证明“不影响逻辑”的无用功。本机 load 从 22 涨到 35，2% 以下已无法用吞吐判定。引擎内 CPU 累计 82.0k → 152.9k tick/CPU-s（约 1.86×），整局四族几何平均 1.67×；距 2.0× 只剩搜索预算、锁步+共享快照（上限 +10%）、GPU 三条路，都不属于引擎微优化。
+
+[E] **上线二进制已构建并过门禁（2026-10-23 16:34）**
+
+- **perf 合并提交 `f2ae755a`**（第一父 `cf50eb86`，合入 `origin/pvz-env` = `e6c68f3a`，131 个提交：vnet 价值网 v4 / 编码 v2 / `train_rollout_policy` NaN 修复）。唯一冲突 `MEMORY/2026-10-23.md`（append-only 日志），两侧条目都保留；本分支的 LTO/PGO/mimalloc、reanim 空轨道跳过、等待循环代际戳表、公开坐标 `to_chars`、`replay_gate_version 2` 全部保留。已 push 到 `origin/perf`。
+- **pytest**：`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources PYTHONPATH=/usr/lib/python3/dist-packages /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest python -q` → **315 passed, 0 failed**。不设 `PVZ_RESOURCE_DIR` 时 5 项 `test_cpp_rollout` 失败（引擎找不到资源），设上即全过；**没有 Mac 专属跳过**。
+- **deploy2 工作树**：`/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2`，detached `f2ae755ab0fc2e4b617ebf56b5bcea491a89cf0d`；`artifacts/perf/engine_roots.json` 已从 perf 拷入；`JOBS=8 bash scripts/build_pgo.sh bench` 两阶段跑完，`grep -c fprofile-generate build/build.ninja` = **0**，140 个 `.gcda`。二进制 `/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable`，sha256 `bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef`。
+- **门禁（deploy2 对 `deploy` 的二进制 `2a8dc97c`）**：
+  - 整局逐帧重放（gate v2）：**两边各自 0 差异** —— 白天 L7 953 帧、原版传送带 L10 877 帧、夜间 L12 531 帧、泳池 L24 464 帧；同种子重复推演 4/4 一致。
+  - 64 root 叶摘要：`compare` 内置断言通过，`correctness: all rollout states and logical statistics identical`；配对 4 轮比值中位数 **0.9812**（a 126,204 vs b 123,831 tick/CPU-s，噪声内，deploy2 略快）。
+  - 没有差异需要归因到 v4 合并。
+- **未触碰** `deploy` 工作树（只执行了它的二进制）与 tmux `qc`。切换由主控做。
 
 ## 问题
+
+- **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。
 
@@ -103,3 +148,17 @@ A. **上线准备（最优先）**
 B. **锁步批量推演的原型实测**（第 16 条只编译了，没量）：batch=1/9 与原生串行比，分开报快照 / 前向 / 模拟；最新剖面里 libopenblas 已占 **28.65%**，是现在单项最大，这条路的上限比你当初估的高。
 C. **推演里的学生前向降精度（没派过的路）**：本机 i7-12700F 支持 AVX-VNNI。试 int8（逐通道对称量化权重、激活按层标定）或 bf16 的 GEMM，取快的。这是近似，按**统计验收**：老师决策与 fp32 的一致率不低于老师自身噪声底线（同老师换随机未来约 75%）减 3pp，64 局同种子胜率在噪声内；过了就成为唯一实现（不加开关），不过就把数字写进报告后删掉。
 D. 停止条件不变；A 做完立刻在“结果”里记一行，主控要拿它去上线。
+
+## 主控追加 E（2026-10-23 16:25）：停止条件已认可，收尾上线
+
+主控认可第 36 条的停止条件。引擎内 CPU 这条线到此为止；锁步、搜索预算、GPU 由主控另行决定，本任务不再做。剩下只有把 qc 上线后的提交（第 34/35 条：reanim 跳过空轨道 +4.2% 等）送上 qc：
+
+1. `git -C /home/newbiexvwu/PvZ-search/.claude/worktrees/perf merge --no-ff origin/pvz-env`。pvz-env 新合了 vnet（价值网 v4、编码 v2）和 `train_rollout_policy.py` 的 NaN 修复，冲突按"两边功能都留"解。用本工作树的 build 跑 `python -m pytest python -q`，要求全过；Mac 专属的除外，写清。然后 `git push origin perf:perf`。
+2. **新建部署工作树，不要碰 `deploy`**，qc 正在用它的二进制：
+   - `git -C /home/newbiexvwu/PvZ-search worktree add --detach /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2 <perf 的 HEAD>`；
+   - 把 `artifacts/perf/engine_roots.json` 从 perf 拷过去，mimalloc 的 FetchContent 若要联网就让它联；
+   - 在 deploy2 里跑 `scripts/build_pgo.sh bench`，完成后 `grep -c fprofile-generate build/build.ninja` 必须是 0。
+3. **门禁**：deploy2 的二进制对 `deploy` 的二进制，4 个存档整局逐帧重放 0 差异，64 root 叶摘要逐位相同。若有差异，先查是不是 v4 合并带来的：v4 只换叶子网络，引擎不变，叶摘要按同一个价值网比。
+4. 在"结果"写 `[E]` 一行：perf 合并提交号、deploy2 的提交号、门禁数字、二进制路径。写完本任务结束，`/goal` 可以清掉。**不碰 tmux `qc`**，切换由主控做。
+
+最多 2 个游戏进程；只用绝对路径。

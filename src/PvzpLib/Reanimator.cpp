@@ -38,6 +38,11 @@
 #include <format>
 #include <unordered_map>
 
+// Under ENV_SKIP_ATTACHMENT_MATRIX the attachment overlay matrix is neither computed nor
+// applied; constructing the local identity matrix anyway was LoadIdentity at 2.0% of the
+// rollout CPU (2026-10-23 profile).  Nothing reads this instance on that path.
+static SexyTransform2D gUnusedOverlayMatrix;
+
 constexpr const int NO_BASE_POSE = -2;
 
 unsigned int gReanimatorDefCount;
@@ -431,6 +436,7 @@ void Reanimation::ResetEnvTrackCache()
 	mEnvTrackPermanent.fill(0);
 	mEnvTrackActive.fill(0);
 	mEnvTrackCacheValid = false;
+	mEnvTrackActiveAny = false;
 }
 
 void Reanimation::RememberEnvTrack(int theTrackIndex)
@@ -440,6 +446,7 @@ void Reanimation::RememberEnvTrack(int theTrackIndex)
 		const uint64_t aBit = uint64_t{1} << (theTrackIndex % 64);
 		mEnvTrackPermanent[theTrackIndex / 64] |= aBit;
 		mEnvTrackActive[theTrackIndex / 64] |= aBit;
+		mEnvTrackActiveAny = true;
 	}
 }
 
@@ -455,6 +462,7 @@ void Reanimation::BuildEnvTrackCache()
 			mEnvTrackActive[i / 64] |= uint64_t{1} << (i % 64);
 	}
 	mEnvTrackCacheValid = true;
+	mEnvTrackActiveAny = (mEnvTrackActive[0] | mEnvTrackActive[1] | mEnvTrackActive[2] | mEnvTrackActive[3]) != 0;
 }
 
 int Reanimation::NextEnvTrack(int theStart) const
@@ -575,10 +583,19 @@ void Reanimation::Update()
 
 		if (aTrack->mAttachmentID != AttachmentID::ATTACHMENTID_NULL)
 		{
-			SexyTransform2D aOverlayMatrix;
-			if (!(gEnvSimSkip & ENV_SKIP_ATTACHMENT_MATRIX))
+			if (gEnvSimSkip & ENV_SKIP_ATTACHMENT_MATRIX)
+			{
+				// The matrix is not computed and SetMatrix is skipped, so the identity default
+				// constructor (LoadIdentity, 2.0% of the rollout CPU on 2026-10-23) was pure
+				// per-track-per-tick work.  One shared matrix, never read on this path.
+				AttachmentUpdateAndSetMatrix(aTrack->mAttachmentID, gUnusedOverlayMatrix);
+			}
+			else
+			{
+				SexyTransform2D aOverlayMatrix;
 				GetAttachmentOverlayMatrix(aTrackIndex, aOverlayMatrix);
-			AttachmentUpdateAndSetMatrix(aTrack->mAttachmentID, aOverlayMatrix);
+				AttachmentUpdateAndSetMatrix(aTrack->mAttachmentID, aOverlayMatrix);
+			}
 		}
 	};
 	// Sparse tracks used to be opt-in behind ENV_SPARSE_TRACKS.  With ENV_LIGHT_ANIMATION the
@@ -591,6 +608,9 @@ void Reanimation::Update()
 	{
 		if (!mEnvTrackCacheValid)
 			BuildEnvTrackCache();
+		// Nothing to update: skip the bitmap scan and the prefetch pair entirely.
+		if (!mEnvTrackActiveAny)
+			return;
 		// Read the live mask after each callback: newly attached higher tracks must
 		// still run this frame, while lower tracks wait until the next, as before.
 		for (int i = NextEnvTrack(0); i < mDefinition->mTracks.count; )
@@ -611,6 +631,7 @@ void Reanimation::Update()
 				mEnvTrackActive[i / 64] &= ~aBit;
 			i = NextEnvTrack(i + 1);  // after the callback: it may have activated a higher track
 		}
+		mEnvTrackActiveAny = (mEnvTrackActive[0] | mEnvTrackActive[1] | mEnvTrackActive[2] | mEnvTrackActive[3]) != 0;
 	}
 	else
 	{

@@ -225,7 +225,9 @@ def _digest(value) -> str:
 
 
 COMPARE_KEYS = ("tick", "wave", "sun", "plants", "zombies", "mowers", "packets", "graves",
-                "lanes", "row_terrain", "scene")
+                "lanes", "row_terrain", "scene", "v2", "sun_income_rate", "totals",
+                "result", "terminal", "enemy_on_screen", "conveyor_start")
+REPLAY_GATE_VERSION = 2
 
 
 def _frame(observation: dict) -> dict:
@@ -293,6 +295,9 @@ def replay_episode(env, spec: dict, rows: list[dict], decisions: list[int]):
                                    "expected": expected[key], "actual": actual.get(key)})
                 break
         if terminal:
+            if index < last:
+                mismatches.append({"frame": index, "key": "terminal_before_last_frame",
+                                   "expected": last, "actual": index})
             break
     return snapshots, mismatches
 
@@ -342,7 +347,8 @@ def bench(args) -> dict:
             # The replay phase is not the workload being measured, and it must not skew the
             # profile: run every replay first, then arm the sampler for the rollouts only.
             env.set_sim_skip(args.sim_skip)
-            report = {"benchmark_version": 2, "executable": str(args.executable), "student": str(STUDENT),
+            report = {"benchmark_version": 2, "replay_gate_version": REPLAY_GATE_VERSION,
+                      "executable": str(args.executable), "student": str(STUDENT),
                       "sim_skip": args.sim_skip, "horizon": args.horizon,
                       "rollouts_per_root": args.rollouts, "families": {}}
             replay_failures = 0
@@ -478,7 +484,8 @@ def compare(args) -> dict:
 def replay(args) -> dict:
     """Correctness fixture: whole-episode replay vs the archive, and rollout reproducibility."""
     manifest = json.loads(args.manifest.read_text())
-    report = {"executable": str(args.executable), "episodes": [], "determinism": []}
+    report = {"executable": str(args.executable), "replay_gate_version": REPLAY_GATE_VERSION,
+              "episodes": [], "determinism": []}
     env = _open_env(str(args.executable))
     try:
         with tempfile.TemporaryDirectory(prefix="pvz-bench-replay-") as directory:
