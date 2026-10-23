@@ -225,3 +225,19 @@ deploy2受控采集与生产日历窗口终态见下文；zones/deploy3与同四
 | 固定共同组合（每臂288局） | 3.2176× | 0.9069× |
 
 受控四族的1.5倍与生产共同任务的1.0倍/不同卡组不可互换。四个受控族的匹配轮间比值尚缺完整同任务证据，不能把全局0.7942×或六任务分摊比值填成它们的实测结果；该项和zones/deploy3追加对照继续保留未完成。
+
+
+### 历史轮间缺口的来源审计（10-24追加核验）
+
+逐一检查了日志目录内非空的 `qc.out`、`qc_setup.log`、`qc_dryrun.txt`、`curriculum.log`，以及 `qc16.out`、`qc_deploy1.out`至`qc_deploy5.out`、`qc_restart_0245.out`等备份。部署备份为空；setup/dryrun没有实际采集段。当前state保存32组，deploy1备份保存16组，两者均无pool组及night L14×1.5组，且state组记录不带逐组墙钟。仅有清单、cell或计划不能证明实际运行过。
+
+冻结02:46历史中的完整采集段覆盖矩阵如下，按精确task_id与BuildNum匹配，不合并d7/d7q或不同倍率：
+
+| 受控任务（1.5倍） | 旧2074完整段 | 新2345完整段 | 旧/新同任务生产周期可配对 |
+|---|---:|---:|---|
+| day_l7_train_d7_m150 | 0 | 1 | 否 |
+| night_l14_train_n10_m150 | 0 | 0 | 否 |
+| pool_l24_train_p9k_m150 | 0 | 0 | 否 |
+| day_l10_orig_train_m150 | 1 | 0 | 否 |
+
+因此，受控四族的匹配轮间指标仍需新测，不能从现有日志或state备份还原；已完成的六个共同生产任务分摊表继续单列。来源指纹、备份状态与覆盖矩阵见 [qc-throughput-source-audit.json](qc-throughput-source-audit.json)。

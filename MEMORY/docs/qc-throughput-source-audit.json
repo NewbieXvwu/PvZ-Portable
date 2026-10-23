@@ -1,0 +1,136 @@
+{
+  "observed_at": "2026-10-24T02:58:46.287880+08:00",
+  "scope": "Historical source availability only; not a substitute for missing controlled-cycle measurements",
+  "source_files": [
+    {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum.log",
+      "bytes": 17879,
+      "sha256": "fbbf21a8e49d7d57bb19d38f5b6d157f0eb6463052a82cb13790f960ee46518a",
+      "completed_runs": 0,
+      "rounds": 2
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc.out",
+      "bytes": 53749456,
+      "sha256": "2b8746077adddcabe40d533da23dce24221249674495454343162f5e0f79c958",
+      "completed_runs": 82,
+      "rounds": 2
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc16.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_deploy1.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_deploy2.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_deploy3.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_deploy4.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_deploy5.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_dryrun.txt",
+      "bytes": 1667,
+      "sha256": "e5f5fb7f0907a2ef4c899bc5548e009dd2f0094ceeed41666ec900881fd721f8",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_restart_0245.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_setup.log",
+      "bytes": 3541,
+      "sha256": "ea107abe709221ccf6dc3c655924dde04bf57dd90d7bef3bf4e75f5e05168b65",
+      "completed_runs": 0,
+      "rounds": 0
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/qc_setup.out",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "completed_runs": 0,
+      "rounds": 0
+    }
+  ],
+  "frozen_history": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51/history/20261024T024638/analysis.json",
+    "sha256": "6d2aeebafb21bc31cfd4b11aab1eff7f3c3ee4abd8f77a988f847d3a739d74b6",
+    "completed_runs": 81
+  },
+  "target_collection_segments": {
+    "day_l7_train_d7_m150": {
+      "2074": 0,
+      "2345": 1
+    },
+    "night_l14_train_n10_m150": {
+      "2074": 0,
+      "2345": 0
+    },
+    "pool_l24_train_p9k_m150": {
+      "2074": 0,
+      "2345": 0
+    },
+    "day_l10_orig_train_m150": {
+      "2074": 1,
+      "2345": 0
+    }
+  },
+  "state_sources": [
+    {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum_state.json",
+      "sha256": "ced451f3b7283dc48df205c8f253e95292831fcdcba80451d67bdc3aef5cf4ec",
+      "round": 2,
+      "saved_rounds": 2,
+      "saved_groups": 32,
+      "pool_groups": 0,
+      "target_night_m150_groups": 0,
+      "per_group_wall_time_present": false
+    },
+    {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum_state.json.bak_deploy1",
+      "sha256": "f4638213be48ae2e3fdd42abc7007bce7b3639392cc0b8ab5629a2182c9c350a",
+      "round": 1,
+      "saved_rounds": 1,
+      "saved_groups": 16,
+      "pool_groups": 0,
+      "target_night_m150_groups": 0,
+      "per_group_wall_time_present": false
+    }
+  ],
+  "conclusion": "No matched historical old/new cycle for any of the four exact controlled task IDs at multiplier 1.5; backups do not recover absent pool/night task runs or timings."
+}
