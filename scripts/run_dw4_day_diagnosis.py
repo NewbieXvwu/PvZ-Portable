@@ -196,7 +196,7 @@ def upload_capacity():
     marker = OUT/'upload128.json'; model = OUT/'width128_s1/model.pt'; digest = sha(model)
     if marker.exists():
         assert read(marker)['model_sha256'] == digest; return
-    from import_dw4_transfer import hf_environment
+    from import_mac_labels import hf_environment
     from huggingface_hub import HfApi, hf_hub_download
     repo = hf_environment(); api = HfApi(); remote = 'transfer/dw4i_w128_s1_model.pt'
     info = api.model_info(repo,files_metadata=True)

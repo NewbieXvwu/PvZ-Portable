@@ -8,7 +8,7 @@ import subprocess
 import time
 from zoneinfo import ZoneInfo
 from task27_common import ROOT, MAIN, OUT, PYTHON, guard, trainers, read, write, sha, record, run_stage
-from import_task27_mac import refresh
+from import_mac_labels import refresh
 
 OLD = MAIN/'.claude/worktrees/dw4/artifacts/task23'
 
@@ -42,7 +42,8 @@ def freeze():
     path = OUT/'study_plan.json'
     if path.exists(): return read(path)
     wait_gate()
-    refresh()
+    mac = refresh()
+    write(OUT/'mac_import.json', mac)
     previous = read(ROOT/'MEMORY/docs/task23-study-plan.json')
     assert sha(OLD/'study_plan.json') == sha(ROOT/'MEMORY/docs/task23-study-plan.json')
     original = read(OLD/'dataset_inventory.json')
@@ -111,7 +112,7 @@ def freeze():
                        '--cache-dir':str(OUT/'cache'),'--source-row-report':str(OUT/'dw5i_s1/source_rows.json')}.items():
         command[command.index(flag)+1]=value
     assert '--init' not in command and '--max-steps' not in command and '--width' not in command
-    source_paths = ['scripts/run_dw5_study.py','scripts/import_task27_mac.py','scripts/report_dw5_study.py',
+    source_paths = ['scripts/run_dw5_study.py','scripts/import_mac_labels.py','scripts/report_dw5_study.py',
                     'scripts/train_rollout_policy.py','python/pvz_frame_store.py','python/pvz_rollout_policy.py',
                     'python/pvz_training_rows.py','python/pvz_student_observation.py','scripts/check_capacity_native.py']
     from run_task27_pretraining import plan as evaluation_plan, verify as verify_evaluation
@@ -182,7 +183,7 @@ def train(data):
 def upload():
     marker=OUT/'upload.json';model=OUT/'dw5i_s1/model.pt';digest=sha(model)
     if marker.exists(): assert read(marker)['model_sha256']==digest;return
-    from import_dw4_transfer import hf_environment
+    from import_mac_labels import hf_environment
     from huggingface_hub import HfApi,hf_hub_download
     repo=hf_environment();api=HfApi();name='transfer/dw5i_s1_model.pt'
     info=api.model_info(repo,files_metadata=True)

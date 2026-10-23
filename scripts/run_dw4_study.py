@@ -17,7 +17,7 @@ OUT = ROOT/'artifacts/task23'
 sys.path[:0] = [str(ROOT/'python'),str(ROOT/'scripts')]
 import dagger_experiment_runner as guard
 from run_identity_validation import descendants, trainers
-from import_dw4_transfer import hf_environment, sha
+from import_mac_labels import hf_environment, sha
 from unified_panel import read, write
 
 guard.OUT = OUT
@@ -90,7 +90,7 @@ def freeze():
     assert 'Ran 5 tests' in checks.read_text() and checks.read_text().rstrip().endswith('OK')
     assert read(OUT/'training_yield_check.json')['paused_when_external_busy']
     with (OUT/'mac_refresh.txt').open('w') as log:
-        subprocess.run([guard.PYTHON,str(ROOT/'scripts/import_dw4_transfer.py')],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True)
+        subprocess.run([guard.PYTHON,str(ROOT/'scripts/import_mac_labels.py'),'--report',str(OUT/'mac_import.json')],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True)
     old=read(ROOT/'MEMORY/docs/task19-validation-amended-plan.json');base=old['labels']
     candidates={}
     for source in (MAIN/'artifacts/student/frames_v2',MAIN/'.claude/worktrees/conveyor/artifacts/task20/frames'):
@@ -130,7 +130,7 @@ def freeze():
     write(OUT/'dataset_inventory.json',inventory)
     labels=base+sorted(set(counts)-set(base))
     models=dict(identity=str(MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt'),v34=str(MAIN/'artifacts/student/v34/model.pt'))
-    sources=['scripts/run_dw4_study.py','scripts/report_dw4_study.py','scripts/import_dw4_transfer.py',
+    sources=['scripts/run_dw4_study.py','scripts/report_dw4_study.py','scripts/import_mac_labels.py',
              'scripts/unified_panel.py','scripts/train_rollout_policy.py',
              'scripts/dagger_experiment_runner.py','scripts/run_identity_validation.py',
              'python/pvz_rollout_policy.py','python/pvz_frame_store.py','python/pvz_student_observation.py',

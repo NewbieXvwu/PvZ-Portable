@@ -40,4 +40,8 @@
 
 - 2026-10-23，步骤1：读完 task23/task27 导入器和两份历史报告及 journal；主检出以 `seed_*/<label>_fast_search/{frames.npz,meta.json}` 落地，HF LFS SHA256 对账后复用，独占写入且同名异内容拒绝覆盖；旧 z 轮次的冻结选择继续保留。`df -h /mnt/c` 可用约 28 GB（高于 15 GB）。下一步统一入口并迁移调用方，不动历史配方。
 
+- 2026-10-23，步骤2：统一入口 `/home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/scripts/import_mac_labels.py` 已实现 z/d/n/p 标签表、历史账本迁移、LFS SHA256 校验、原子独占写入、逐标签 journal、冻结 z 选择与 15 GiB 磁盘余量门禁；调用方已迁移，旧 task23/task27 导入脚本删除。假 HF + 小 tgz 单测 11 过，调用方编译检查通过。
+
 ## 问题
+
+- task23/task27 的历史 study-plan JSON 仍记录原脚本名及其 SHA256，这是冻结证据，保留原样；可执行调用方全部迁移到统一入口，旧脚本已删。统一入口只读取导出的 `HF_TOKEN` / `PVZ_HF_REPO`，不再自行读取 shell 配置。
