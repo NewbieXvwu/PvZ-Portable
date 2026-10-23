@@ -62,6 +62,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，14 撤销第 13 条的等待，并行启动 A：外部 pack 要为主库 84,369 帧建 feature_cache，20:39 起 37 分钟只建 3,124 份（约 1.4 帧/s，全量约 16 h），等它会把 A 拖到明天。task40 已完成、MemAvailable 18.4 GiB，交接条件（task40 跑完 + ≥10.5 GiB）已满足。已停 autostart_A(120967)；21:17 直接启动 `run_task36_mix.py --plan A --workers 2`（pid 127487，日志 `/home/newbiexvwu/pvz-logs/mix_A3.out`）并挂 pack_gate2（pid 127542，<10 GiB SIGSTOP 我方 pack，≥10.5 GiB 恢复）。两个 pack 并行期间靠 gate 守 10 GiB 地板；外部 pack 约 0.8 GB RSS、单核。
 
+- 2026-10-23，15 修正 pack_gate2 误挂外部进程：首次重启的 gate 用 `pgrep -f 'scripts/pack_training_rows.py' | head -1`，匹配到外部 cq pack（115381，组 84627）而非本分支 pack（127572）。日志显示只 attach、未 stop（av 13.8 GiB > 10 GiB）；已停 gate(127542)，模式收窄为 `/worktrees/dw5/scripts/pack_training_rows.py`，重启（pid 129627）后 attach 到 127572（组 127572）。外部 pack 仍为 R 状态，未被触碰。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
