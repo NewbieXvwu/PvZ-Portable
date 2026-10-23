@@ -245,6 +245,8 @@
 
 ### 问题 2：交接时的下一步（3 行）
 
+> 以下是 cb 在尚未训练时留下的历史交接，不是当前执行指令。训练、外部校准、离散度已经完成，正式配对使用结果 §9 的 31000–31031 新清单，当前状态见结果 §11–§12；不要按此处旧 offset 992 重跑。
+
 - 训练：`train_value_widen.py train --out artifacts/task43/v5 --data .../student/frames_v2 --audit-manifest .../vnet/artifacts/task30/full_audit_manifest.json --init artifacts/value_net/v4/model.pt --decision-data artifacts/task43/l21_dump --decision-fraction 0.5 --device cuda`（语料 memmap 已软链进 `artifacts/task43/v5/`；MemAvailable 现约 12 GiB，过 10 GiB 门禁）。
 - 验收：先 (a) `value_leaf_dispersion.py run --v3 v4 --v4 v5 --seed-offset 992 --games 4 --workers 4 --executable .../deploy2/build/pvz-portable`，再 (b)(c) 用已冻结的 `artifacts/task43/ab_{l21,day,night}/plan.json` 跑 `value_widen_ab.py v3|v4|report`。
 - 若 (a) 不过：问题在标签源（学生续走只有 0.6% 胜率、94% 局面候选无差），下一步补**老师续走**的标签或波次次级真值，不要靠加关加种子。
