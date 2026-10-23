@@ -57,5 +57,25 @@ class ReconstructionTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'durable game rows'):
                 log.audit_raw_rows(runs,Path(tmp))
 
+    def test_next_live_group_start_closes_prior_cycle_without_waiting_for_its_end(self):
+        lines=self.segment()+['2026-10-23T10:10:00 round 1 done: 1 groups, 48 games, changes=0',
+                              '2026-10-23T11:00:00 round 2 next: workers=2/16 (MemAvailable 8.0 GiB, per-worker 0.5 GiB)',
+                              '48 games on 2 workers']
+        r=log.parse(lines,log.stamp('2026-10-23T11:10:00'))['rounds'][0]
+        self.assertTrue(r['cycle_complete']);self.assertEqual(r['cycle_wall_seconds'],3600)
+        self.assertEqual(r['cycle_end_source'],'next_worker_log')
+
+    def test_unmatched_game_start_inside_round_invalidates_whole_round_claim(self):
+        lines=['48 games on 2 workers']+self.segment()+[
+            '2026-10-23T10:10:00 round 1 done: 1 groups, 48 games, changes=0']
+        # An unmatched attempt predating the selected first group is outside this round.
+        self.assertTrue(log.parse(lines,log.stamp('2026-10-23T11:00:00'))['rounds'][0]['complete_collection'])
+        lines=self.segment()+['48 games on 2 workers','48 games on 2 workers',
+            '48/48 (600s)',
+            '2026-10-23T10:20:00 round 1 second day_l7_train_d7 mult=1 offset=48 games=48 wins=1 rate=0.5 rc=0 600s',
+            '2026-10-23T10:20:00 round 1 done: 2 groups, 96 games, changes=0']
+        r=log.parse(lines,log.stamp('2026-10-23T11:00:00'))['rounds'][0]
+        self.assertFalse(r['complete_collection'])
+
 
 if __name__=='__main__':unittest.main()

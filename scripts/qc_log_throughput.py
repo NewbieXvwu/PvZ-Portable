@@ -64,7 +64,8 @@ def parse(lines, cutoff: float) -> dict:
                              workers=None if pending is None else pending['workers'],
                              mem_available_gib=(None if meta is None or meta['memory']=='n/a' else float(meta['memory'])),
                              worker_log=meta,build_numbers=[] if pending is None else pending['build_numbers'],
-                             finish_progress=None if pending is None else pending['progress'],line=index))
+                             finish_progress=None if pending is None else pending['progress'],line=index,
+                             start_line=index if pending is None else pending['start_line']))
             pending=None;workers=None;continue
         if match:=ROUND.match(line):
             raw=match.groupdict();count=int(raw['groups']);group=runs[-count:]
@@ -77,13 +78,26 @@ def parse(lines, cutoff: float) -> dict:
     for round_ in rounds:
         if not round_['complete_collection']:continue
         group=[r for r in runs if r['line'] in round_['groups']]
-        start=group[0]['started_at'];following=next((r for r in runs if r['line']>round_['line']),None)
-        end=following['started_at'] if following else cutoff
+        if any(group[0]['start_line']<=x['start_line']<round_['line'] for x in orphans):
+            round_['complete_collection']=False
+            round_['cycle_invalid']='unmatched invocation inside proposed round';continue
+        start=group[0]['started_at'];following=[]
+        for r in runs:
+            if r['start_line']>round_['line']:following.append((r['start_line'],r['started_at'],'next_completion_start'))
+        for item in orphans:
+            if item['start_line']>round_['line']:
+                meta=item['worker_log']
+                following.append((item['start_line'],stamp(meta['time']) if meta else None,'next_worker_log'))
+        next_start=min(following,key=lambda x:x[0]) if following else None
+        if next_start is not None and next_start[1] is None:
+            round_['cycle_invalid']='next invocation has no recoverable start timestamp';continue
+        end=next_start[1] if next_start else cutoff
         if end<round_['ended_at'] or end<=start:
             round_['cycle_invalid']='overlapping or invalid chronology';continue
         collection=sum(r['wall_seconds'] for r in group)
         worker_hours=sum(r['workers']*r['wall_seconds'] for r in group)/3600
-        round_.update(started_at=start,cycle_end=end,cycle_complete=following is not None,
+        round_.update(started_at=start,cycle_end=end,cycle_complete=next_start is not None,
+                      cycle_end_source=next_start[2] if next_start else 'right_censor_cutoff',
                       cycle_wall_seconds=end-start,collection_wall_seconds=collection,
                       new_valid_games=sum(r['new_valid_games'] for r in group),worker_hours=worker_hours,
                       collection_games_per_hour=sum(r['new_valid_games'] for r in group)*3600/collection,
