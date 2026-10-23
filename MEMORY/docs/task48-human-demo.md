@@ -45,6 +45,7 @@
 ## 结果
 
 - 2026-10-23：已拉取并纳入追加 A；修复 Mac 上 mimalloc 与 libc++ 分配/释放冲突导致的启动 SIGABRT，Mac 使用系统分配器。`-j4` 编译成功，基线测试 323 passed / 26 skipped / 1 failed（既有 `test_low_memory_pauses_and_resumes_only_own_parent_and_child`，Mac 缺少其 Linux 进程内存统计）。
+- 2026-10-23：原生窗口录制、逐 tick 哈希重放与 frames_v2 导出贯通，备注仅存 meta；来源权重由配方 `source_weight` 指定。相关测试30通过；可见窗口180 tick（含种植/铲除）重放一致，4份既有整局动作带在修改前后完整观测摘要一致（1298/1242/1121/1313帧）。
 
 ## 问题
 

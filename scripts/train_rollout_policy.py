@@ -336,7 +336,7 @@ def _pack_flags(options: dict) -> str:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
-         row_observer=None, packet_head: str = "slot"):
+         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     One sequential pass over one file, with the CSR already built, instead of decompressing 21 056
@@ -350,10 +350,10 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
         raise SystemExit(f"no training pack for these options: {path} -- run: "
                          f"python3 scripts/pack_training_rows.py --data {data} "
                          f"--labels {','.join(sorted(labels))} {_pack_flags(options)}")
-    return read_pack(path, data, row_observer)
+    return read_pack(path, data, row_observer, source_weight)
 
 
-def read_pack(path: Path, data: Path | None = None, row_observer=None):
+def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None):
     """The tuple load has always returned, from one packed file."""
     stored = np.load(path, mmap_mode="r", allow_pickle=False)
     _OPEN_PACKS.append(stored)
@@ -364,17 +364,25 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None):
     packet = torch.from_numpy(np.asarray(stored["packet"]))
     cell = torch.from_numpy(np.asarray(stored["cell"]))
     weight = torch.from_numpy(np.asarray(stored["weight"]))
+    if source_weight:
+        weight = weight.clone()
     seed_of = np.asarray(stored["seed"])
     values = ValueStore.from_arrays(stored)
     cands = CandidateStore.from_arrays(stored) if "cand_counts" in stored.files else None
-    if row_observer is not None and data is not None:
+    if (row_observer is not None or source_weight) and data is not None:
         archive, row = np.asarray(stored["source_archive"]), np.asarray(stored["source_row"])
         sources = [str(name) for name in np.asarray(stored["source"])]
         counts = np.bincount(archive, minlength=len(sources))
         start = 0
         for index, count in enumerate(counts):
             if count:
-                row_observer(Path(data) / sources[index], row[start:start + count])
+                source = Path(data) / sources[index]
+                if row_observer is not None:
+                    row_observer(source, row[start:start + count])
+                if source_weight:
+                    meta_path = source.parent / 'meta.json'
+                    meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
+                    weight[start:start + count] *= source_weight.get(meta.get('label_source', 'teacher'), 1.0)
             start += count
     result = (boards, scalars, plant, packet, cell, weight, seed_of, values, cands)
     if "aux" in stored.files:

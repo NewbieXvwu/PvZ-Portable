@@ -222,6 +222,8 @@ def verify(recipe_path, out, device=None):
         request.apply_defaults()
         fields = dict(request.arguments)
         observer = fields.pop('row_observer', None)
+        if fields.pop('source_weight', None):
+            raise ValueError('historical trainer has no source weighting to compare')
         # Compare every semantic loader argument across both interfaces. Cache and
         # representation controls disappeared with task33; they do not select rows.
         for field in ('cache_dir', 'read_cache_dir', 'precompute_workers', 'dense_boards'):

@@ -24,6 +24,9 @@
 #include "Lawn/Coin.h"
 #include "Lawn/Plant.h"
 #include "Lawn/SeedPacket.h"
+#include "Lawn/CursorObject.h"
+#include "SexyAppFramework/widget/WidgetManager.h"
+#include <SDL.h>
 #include "Lawn/System/SaveGame.h"
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
@@ -46,6 +49,7 @@
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <tuple>
 #include <vector>
 using namespace Sexy;
 
@@ -263,6 +267,99 @@ static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& 
 	return true;
 }
 
+static uint64_t StableEnvironmentHash(LawnApp* app)
+{
+	Board* board = app->mBoard;
+	auto presentation = std::make_tuple(board->mDrawCount, board->mStartDrawTime,
+		board->mIntervalDrawTime, board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime);
+	std::tie(board->mDrawCount, board->mStartDrawTime, board->mIntervalDrawTime,
+		board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime) = std::make_tuple(0U, 0LL, 0LL, 0U, 0.0f, 0);
+	EnvironmentSnapshot snapshot{};
+	bool saved = SaveEnvironmentSnapshot(app, snapshot);
+	std::tie(board->mDrawCount, board->mStartDrawTime, board->mIntervalDrawTime,
+		board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime) = presentation;
+	return saved ? EnvironmentSnapshotHash(snapshot) : 0;
+}
+
+struct HumanInput
+{
+	int packet = -1;
+	bool shovel = false;
+	bool paused = false;
+	bool closed = false;
+	int mouseX = 0;
+	int mouseY = 0;
+
+	std::string Poll(LawnApp* app)
+	{
+		SDL_Event event;
+		std::string action = "{\"type\":\"wait\",\"ticks\":1}";
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_QUIT || (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)) closed = true;
+			if (event.type == SDL_KEYDOWN && !event.key.repeat)
+			{
+				if (event.key.keysym.sym == SDLK_ESCAPE) closed = true;
+				if (event.key.keysym.sym == SDLK_SPACE) paused = !paused;
+			}
+			if (event.type != SDL_MOUSEMOTION && event.type != SDL_MOUSEBUTTONDOWN) continue;
+			mouseX = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
+			mouseY = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
+			app->mWidgetManager->RemapMouse(mouseX, mouseY);
+			if (event.type != SDL_MOUSEBUTTONDOWN || paused) continue;
+			if (event.button.button == SDL_BUTTON_RIGHT) { packet = -1; shovel = false; continue; }
+			if (event.button.button != SDL_BUTTON_LEFT) continue;
+			Board* board = app->mBoard;
+			const int x = mouseX - board->mX, y = mouseY - board->mY;
+			HitResult hit;
+			board->MouseHitTest(x, y, &hit);
+			if (hit.mObjectType == GameObjectType::OBJECT_TYPE_SEEDPACKET)
+			{
+				packet = static_cast<SeedPacket*>(hit.mObject)->mIndex;
+				shovel = false;
+			}
+			else if (hit.mObjectType == GameObjectType::OBJECT_TYPE_SHOVEL) { packet = -1; shovel = true; }
+			else if (hit.mObjectType == GameObjectType::OBJECT_TYPE_COIN)
+			{
+				action = "{\"type\":\"collect\",\"x\":" + std::to_string(x) + ",\"y\":" + std::to_string(y) + "}";
+				break;
+			}
+			else if (packet >= 0 || shovel)
+			{
+				SeedType type = packet >= 0 ? board->mSeedBank->mSeedPackets[packet].mPacketType : SeedType::SEED_NONE;
+				if (type == SeedType::SEED_IMITATER) type = board->mSeedBank->mSeedPackets[packet].mImitaterType;
+				int col = board->PlantingPixelToGridX(x, y, type), row = board->PlantingPixelToGridY(x, y, type);
+				action = "{\"type\":\"" + std::string(shovel ? "shovel" : "plant") + "\",\"col\":" + std::to_string(col) + ",\"row\":" + std::to_string(row);
+				if (!shovel) action += ",\"packet\":" + std::to_string(packet);
+				action += "}";
+				break;
+			}
+		}
+		EnvironmentSnapshot snapshot{};
+		if (!SaveEnvironmentSnapshot(app, snapshot)) throw std::runtime_error("could not save presentation state");
+		auto* manager = app->mWidgetManager.get();
+		auto mouse = std::make_tuple(manager->mLastMouseX, manager->mLastMouseY, manager->mMouseIn);
+		manager->mLastMouseX = mouseX;
+		manager->mLastMouseY = mouseY;
+		manager->mMouseIn = true;
+		auto* cursor = app->mBoard->mCursorObject.get();
+		if (packet >= 0)
+		{
+			cursor->mCursorType = CursorType::CURSOR_TYPE_PLANT_FROM_BANK;
+			cursor->mType = app->mBoard->mSeedBank->mSeedPackets[packet].mPacketType;
+			cursor->mImitaterType = app->mBoard->mSeedBank->mSeedPackets[packet].mImitaterType;
+			cursor->mSeedBankIndex = packet;
+		}
+		if (shovel) cursor->mCursorType = CursorType::CURSOR_TYPE_SHOVEL;
+		cursor->Update();
+		app->mBoard->MarkDirty();
+		app->EnvironmentPresent();
+		std::tie(manager->mLastMouseX, manager->mLastMouseY, manager->mMouseIn) = mouse;
+		if (!RestoreEnvironmentSnapshot(app, snapshot)) throw std::runtime_error("could not restore presentation state");
+		return action;
+	}
+};
+
 // Search must not peek at the real future (DESIGN.md §13.3).  A restored snapshot carries the
 // exact RNG state *and* the whole wave table drawn at level start, so every rollout from it
 // would replay the true spawns.  Reseeding draws a fresh, equally plausible future instead:
@@ -306,6 +403,21 @@ static bool ExecuteEnvironmentAction(LawnApp* app, const std::string& command,
 			return false;
 		app->EnvironmentWait(ticks);
 		return true;
+	}
+	if (command == "COLLECT")
+	{
+		int x = -1, y = -1;
+		input >> x >> y;
+		if (input.fail() || !app->mBoard) return false;
+		for (Coin* coin : app->mBoard->mCoins)
+		{
+			HitResult hit;
+			if (!coin->mDead && (coin->IsSun() || coin->IsMoney()) && coin->MouseHitTest(x, y, &hit))
+			{
+				coin->ScoreCoin();
+				return true;
+			}
+		}
 	}
 	return false;
 }
@@ -362,6 +474,9 @@ static void RunEnvironment(LawnApp* app)
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
 	EnvironmentRollout rollout;
+	HumanInput human;
+	bool demo = false;
+	const bool visible = !app->mHeadlessMode;
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
@@ -383,7 +498,32 @@ static void RunEnvironment(LawnApp* app)
 		bool hasSubsteps = false;
 		int previousTick = 0;
 		std::vector<std::pair<int, uint32_t>> substeps;
-		if (command == "ENV_PROFILE")
+		if (command == "DEMO_BEGIN")
+		{
+			demo = true;
+			if (visible) SDL_GL_SetSwapInterval(0);
+			app->mHeadlessMode = true;
+			app->mWidgetManager->mMouseIn = false;
+			app->mWidgetManager->mLastMouseX = app->mWidgetManager->mLastMouseY = 0;
+			minimalResponse = ok = true;
+		}
+		else if (command == "HUMAN_POLL")
+		{
+			ok = demo && visible && app->mBoard;
+			const std::string action = ok ? human.Poll(app) : "null";
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
+				<< ",\"action\":" << action << ",\"paused\":" << (human.paused ? "true" : "false")
+				<< ",\"closed\":" << (human.closed ? "true" : "false") << '}' << std::endl;
+			continue;
+		}
+		else if (command == "STATE_HASH")
+		{
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (app->mBoard ? "true" : "false");
+			if (app->mBoard) std::cout << ",\"state_hash\":\"" << std::hex << StableEnvironmentHash(app) << std::dec << '"';
+			std::cout << '}' << std::endl;
+			continue;
+		}
+		else if (command == "ENV_PROFILE")
 		{
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true"
 				<< ",\"action_seconds\":" << actionSeconds << ",\"observation_seconds\":" << observationSeconds
@@ -680,7 +820,7 @@ static void RunEnvironment(LawnApp* app)
 				before = ReadCounters(app);
 			}
 		}
-		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT")
+		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "COLLECT")
 		{
 			ok = ExecuteEnvironmentAction(app, command, input);
 		}
@@ -969,6 +1109,7 @@ static void RunEnvironment(LawnApp* app)
 		const std::string observation = app->EnvironmentObservation(privileged);
 		observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
 		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << observation;
+		if (demo && app->mBoard) std::cout << ",\"state_hash\":\"" << std::hex << StableEnvironmentHash(app) << std::dec << '"';
 		if (hasWaitResult)
 		{
 			std::cout << ",\"wait_result\":{\"version\":" << EnvironmentWaitEvents::Version

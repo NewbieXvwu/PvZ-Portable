@@ -1,0 +1,216 @@
+"""Record native-window demonstrations, verify every tick, and export training archives."""
+from __future__ import annotations
+
+import argparse
+from dataclasses import asdict
+import hashlib
+import json
+from pathlib import Path
+import sys
+import time
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
+
+from pvz_env import PlayerProfileContext, TaskSpec
+from pvz_event_env import EventWaitEnv
+from pvz_frame_store import frame_path, read_frames, write_frames
+from pvz_tasks import profile_for_deck
+from render_episode import _frame
+
+
+def reset_archive(env, meta):
+    config = dict(meta['environment_task'])
+    config['profile'] = PlayerProfileContext(**config['profile'])
+    config['preplanted'] = tuple(tuple(plant) for plant in config.get('preplanted', ()))
+    env.begin_demo()
+    return env.reset(deck=meta['task']['deck'], task=TaskSpec(**config))[0]
+
+
+class Recorder:
+    def __init__(self, env, archive: Path, task_id: str, deck, task: TaskSpec, note: str = ''):
+        archive.mkdir(parents=True, exist_ok=False)
+        self.env, self.archive = env, archive
+        env.begin_demo()
+        self.observation, _ = env.reset(deck=deck, task=task)
+        self.operations = 0
+        self.events = {}
+        self.last_tick = self.observation['tick']
+        self.last_operation = 0
+        self.frame_count = 0
+        self.meta = dict(schema='episode_archive_v1', label_source='human', note=note,
+                         task=dict(id=task_id, level=task.level, seed=task.seed, deck=list(deck),
+                                   policy='human', playthrough=task.playthrough,
+                                   zombie_count_multiplier=task.zombie_count_multiplier,
+                                   wave_cap=task.wave_cap, preplanted=list(task.preplanted)),
+                         environment_task=asdict(task),
+                         engine_sha=env.episode['source_revision'],
+                         engine_dirty=env.episode['source_dirty'],
+                         executable_sha256=hashlib.sha256(env.executable.read_bytes()).hexdigest(),
+                         resource_sha256=env.episode['resource_sha256'],
+                         properties_partner_sha256=env.episode['properties_partner_sha256'],
+                         hash_schema='portable_snapshot_v1_without_draw_statistics',
+                         initial_state_hash=env._last_response['state_hash'],
+                         sun_collection='environment_auto', verified=False)
+        self.tape = (archive / 'ticks.jsonl').open('w', encoding='utf-8', buffering=1)
+        self.frames = (archive / 'frames.jsonl').open('w', encoding='utf-8', buffering=1)
+        self._frame(None)
+        self._save_meta()
+
+    def _frame(self, action, rejected=False):
+        frame = _frame(self.observation)
+        frame.update(action=action, action_rejected=rejected, label_source='human', operation=self.operations)
+        if action and action['type'] not in ('plant', 'wait'):
+            frame['input_action'] = frame['action']
+            frame['action'] = None
+        self.frames.write(json.dumps(frame, separators=(',', ':')) + '\n')
+        self.frame_count += 1
+        self.last_tick = self.observation['tick']
+        self.last_operation = self.operations
+
+    def _save_meta(self):
+        obs = self.observation
+        result = int(obs.get('result') or 0)
+        self.meta.update(frame_count=self.frame_count, operations=self.operations, totals=self.events,
+                         outcome=dict(result=result, won=result == 1, reason='通关' if result == 1 else
+                                      '僵尸进屋' if obs['terminal'] else '中途结束',
+                                      final_wave=obs['wave'], wave_count=obs['wave_count'],
+                                      final_tick=obs['tick'], actions=self.frame_count - 1,
+                                      plants_eaten=self.events.get('plants_eaten', 0)))
+        (self.archive / 'meta.json').write_text(json.dumps(self.meta, ensure_ascii=False, indent=2) + '\n')
+
+    def step(self, action):
+        if action['type'] == 'wait' and 'until' not in action:
+            for _ in range(action['ticks']):
+                if self.observation['terminal']:
+                    break
+                self._step(dict(type='wait', ticks=1))
+        else:
+            if self.observation['tick'] != self.last_tick:
+                self._frame(dict(type='wait', ticks=self.observation['tick'] - self.last_tick))
+            self._step(action)
+        return self.observation
+
+    def _step(self, action):
+        before = self.observation['tick']
+        self.observation, _, _, _, info = self.env.step(action)
+        self.operations += 1
+        self.tape.write(json.dumps(dict(action=action, tick=before, end_tick=self.observation['tick'],
+                                        ok=info['ok'], state_hash=self.env._last_response['state_hash']),
+                                   separators=(',', ':')) + '\n')
+        for name, value in info['events'].items():
+            self.events[name] = self.events.get(name, 0) + value
+        if action['type'] != 'wait':
+            self._frame(action, rejected=not info['ok'])
+        elif self.observation['tick'] - self.last_tick >= 60 or self.observation['terminal']:
+            self._frame(dict(type='wait', ticks=self.observation['tick'] - self.last_tick))
+
+    def close(self):
+        if self.last_operation != self.operations:
+            self._frame(dict(type='wait', ticks=self.observation['tick'] - self.last_tick))
+        self.tape.close()
+        self.frames.close()
+        self._save_meta()
+
+
+def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None):
+    meta = json.loads((archive / 'meta.json').read_text())
+    frames = read_frames(frame_path(archive))
+    if decision is not None and not 1 <= decision <= len(frames):
+        raise ValueError(f'decision must be between 1 and {len(frames)}')
+    stop = frames[decision - 1]['operation'] if decision is not None else meta['operations']
+    obs = reset_archive(env, meta)
+    if env._last_response['state_hash'] != meta['initial_state_hash']:
+        raise RuntimeError('demonstration initial state hash differs')
+    replacements = {frames[index]['operation']: action for index, action in (overrides or {}).items()}
+    diverged = False
+    with (archive / 'ticks.jsonl').open() as stream:
+        for operation, line in enumerate(stream, 1):
+            if operation > stop:
+                break
+            entry = json.loads(line)
+            if not diverged and obs['tick'] != entry['tick']:
+                raise RuntimeError(f'demonstration tick differs at operation {operation}')
+            action = replacements.get(operation, entry['action'])
+            diverged |= operation in replacements
+            obs, _, _, _, info = env.step(action)
+            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick'] or
+                                 env._last_response['state_hash'] != entry['state_hash']):
+                raise RuntimeError(f'demonstration state hash differs at operation {operation}, tick {obs["tick"]}')
+            if obs['terminal'] and diverged:
+                break
+    if decision is None and not diverged:
+        outcome = meta['outcome']
+        if (obs['tick'], obs['wave'], obs['result']) != (outcome['final_tick'], outcome['final_wave'], outcome['result']):
+            raise RuntimeError('demonstration terminal outcome differs')
+    return obs, meta, frames[:decision] if decision is not None else frames
+
+
+def verify(archive: Path, resource_dir, executable=None):
+    with EventWaitEnv(resource_dir, executable=executable) as env:
+        obs, meta, _ = replay(env, archive)
+    meta['verified'] = True
+    (archive / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
+    return dict(verified=True, operations=meta['operations'], tick=obs['tick'], wave=obs['wave'], result=obs['result'])
+
+
+def export(archive: Path, data: Path):
+    meta = json.loads((archive / 'meta.json').read_text())
+    if not meta.get('verified'):
+        raise ValueError('verify the demonstration before exporting training data')
+    target = data / f'seed_{meta["task"]["seed"]}' / meta['task']['id']
+    target.mkdir(parents=True, exist_ok=False)
+    write_frames(target / 'frames.npz', read_frames(frame_path(archive)))
+    (target / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
+    return target
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--resource-dir', type=Path, default=Path('/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'))
+    parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
+    commands = parser.add_subparsers(dest='command', required=True)
+    record = commands.add_parser('record')
+    record.add_argument('--manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json')
+    record.add_argument('--task', required=True)
+    record.add_argument('--seed', type=int)
+    record.add_argument('--note', default='')
+    record.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/raw')
+    check = commands.add_parser('verify')
+    check.add_argument('--archive', type=Path, required=True)
+    convert = commands.add_parser('export')
+    convert.add_argument('--archive', type=Path, required=True)
+    convert.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/frames_v2')
+    args = parser.parse_args()
+    if args.command == 'verify':
+        print(json.dumps(verify(args.archive, args.resource_dir, args.executable)))
+        return
+    if args.command == 'export':
+        print(export(args.archive, args.out))
+        return
+    spec = next(task for task in json.loads(args.manifest.read_text())['tasks'] if task['id'] == args.task)
+    deck = spec['deck']
+    seed = spec['seeds'][0] if args.seed is None else args.seed
+    task = TaskSpec(level=spec['level'], seed=seed, playthrough=2, profile=profile_for_deck(deck),
+                    zombie_count_multiplier=spec.get('zombie_count_multiplier', 1.0))
+    archive = args.out / f'seed_{seed}' / args.task
+    with EventWaitEnv(args.resource_dir, executable=args.executable, headless=False) as env:
+        recorder = Recorder(env, archive, args.task, deck, task, args.note)
+        print(f'录制中：{archive}。空格暂停，右键取消选卡，Esc 结束。', flush=True)
+        try:
+            while not recorder.observation['terminal']:
+                event = env.human_input()
+                if event['closed']:
+                    break
+                if event['paused']:
+                    time.sleep(.05)
+                    continue
+                recorder.step(event['action'])
+        finally:
+            recorder.close()
+    print(json.dumps(verify(archive, args.resource_dir, args.executable)))
+    print(f'存档：{archive}')
+
+
+if __name__ == '__main__':
+    main()
