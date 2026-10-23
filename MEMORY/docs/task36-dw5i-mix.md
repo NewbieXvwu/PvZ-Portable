@@ -58,6 +58,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，12 B 自动接续就位：artifacts/task36/autostart_B.sh（setsid，pid 64717）只在 complete_A.json 写出且 A 流水线（含 panel）完全退出后启动 run_task36_mix.py --plan B --workers 2（复用同一个包，日志 /home/newbiexvwu/pvz-logs/mix_B.out）；A 失败（流水线消失且无 complete_A.json）则不启动。panel 串行避免超过 2 个游戏进程。
 
+- 2026-10-23，13 task40 完成但让位外部 pack：20:54 task40 第四跑到 64/64（agreement.json 已写出，cutoff_agreement 进程全部退出）。但 tmux `qc` 的父进程 84633 在 20:39 起了 cq 自己的 `scripts/pack_training_rows.py`（pid 115381，cq 工作区、主工作区 frames_v2、另一套标签），会与 A 打包形成双 pack 并行、逼近 10 GiB 地板。我已 kill 尚未触发的 autostart_A(64205)，并给 autostart_A.sh 加条件：任何 `pack_training_rows.py` 在跑就清零采样继续等（最终采样后若外部 pack 才出现，用 `exec "$0"` 重新等）；重新 armed（pid 120967）。外部 pack 退出 + MemAvailable 连续 4 次 ≥10.5 GiB + C: ≥15 GiB 后自动启动 A。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
