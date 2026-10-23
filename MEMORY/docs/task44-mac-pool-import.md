@@ -38,4 +38,20 @@
 
 ## 结果
 
+- 2026-10-23，步骤1：读完 task23/task27 导入器和两份历史报告及 journal；主检出以 `seed_*/<label>_fast_search/{frames.npz,meta.json}` 落地，HF LFS SHA256 对账后复用，独占写入且同名异内容拒绝覆盖；旧 z 轮次的冻结选择继续保留。`df -h /mnt/c` 可用约 28 GB（高于 15 GB）。下一步统一入口并迁移调用方，不动历史配方。
+
+- 2026-10-23，步骤2：统一入口 `/home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/scripts/import_mac_labels.py` 已实现 z/d/n/p 标签表、历史账本迁移、LFS SHA256 校验、原子独占写入、逐标签 journal、冻结 z 选择与 15 GiB 磁盘余量门禁；调用方已迁移，旧 task23/task27 导入脚本删除。假 HF + 小 tgz 单测 11 过，调用方编译检查通过。
+
+- 2026-10-23，步骤6：`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest /home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/python -q` 全过：333 passed / 111 subtests passed，62.39 秒，无跳过。使用与本分支 `src/`、`CMakeLists.txt` 无差异的 `f2ae755a` deploy2 二进制副本（仅复制到本工作树 ignored build，未修改 deploy2）。
+
+- 2026-10-23，步骤5：已在 `MEMORY/notes/desktop.md` 登记通用入口的绝对路径用法、环境变量、共享账本位置与磁盘门禁。下一次运行：Mac 第 5–8 轮每上传完一个标签后的下一次主控巡检即可运行同一入口；不新建定时任务、不改 qc。当前 HF 观察到前四轮外还有 p21/p22/p23/p24 的第 5 轮上传，前四轮导入完成后用同一入口补入并验证复用。
+
+- 2026-10-23，步骤3：32 个 `p{21,22,23,24,26,27,28,29}w{1..4}m` 全部导入主检出，共 1536 局 / 1536 个 npz 档案 / 1,724,858 行（wait_keep=1，采样与训练/验证切分前）；新增 3072 个 frame/meta 文件。逐标签局数、档案数、行数及 HF 包 SHA256 写入 `MEMORY/docs/task44-mac-import.json`（11,247 字节）。独立重扫全部元数据、NPZ rows 和文件 SHA256，与原始帧计数及经 LFS 校验的包账本全一致，1536 局均为 dw5i_s1、对应泳池关。C 盘仍约 28 GB。
+
+- 2026-10-23，步骤5实跑：同一入口第二次选取当前 HF 的 37 个泳池标签，前四轮 32 包全部 SHA 对账复用、零重下 / 零新增；仅补入 `p21w5m,p22w5m,p23w5m,p24w5m,p26w5m`，240 局 / 240 档案 / 258,196 行、新增 480 文件。新增包也逐文件、元数据、NPZ rows 独立核验，证据补进同一 JSON。累计 37 标签 / 1776 局 / 1,983,054 行。下一次主控巡检：关注 p27/p28/p29 的第 5 轮及后续第 6–8 轮，上传完就重跑笔记中的统一入口。
+
+- 2026-10-23，步骤4：仅在本分支 `MEMORY/docs/task36-dw5i-mix.md` 的“问题”节追加 Mac 数据段（字节前缀核对原文完全不变），登记前四轮与已上传第五轮的标签、局数、行数、p9k 所属区、dw5i_s1 采集学生及证据位置，交主控转给 task36 决定配比；现有 recipes 全部未改。
+
 ## 问题
+
+- task23/task27 的历史 study-plan JSON 仍记录原脚本名及其 SHA256，这是冻结证据，保留原样；可执行调用方全部迁移到统一入口，旧脚本已删。统一入口只读取导出的 `HF_TOKEN` / `PVZ_HF_REPO`，不再自行读取 shell 配置。

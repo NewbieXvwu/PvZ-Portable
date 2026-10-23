@@ -88,7 +88,7 @@ def main():
     upload=read(OUT/'upload.json')
     assert upload['download_verified'] and upload['model_sha256']==sha(model)
     assert upload['path']=='transfer/dw5i_s1_model.pt'
-    from import_dw4_transfer import hf_environment
+    from import_mac_labels import hf_environment
     from huggingface_hub import HfApi
     hf_environment()
     remote=next(e for e in HfApi().model_info(upload['repo'],revision=upload['revision'],files_metadata=True).siblings

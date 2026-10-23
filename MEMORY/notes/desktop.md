@@ -105,3 +105,5 @@ EARLYOOM_ARGS="-m 5 -s 50 -r 300 --prefer '(pvz-portable|search_play|python3)' -
   没有被误杀；运行前的 12 个其他采集进程记录在压测输出的 `other_collection`。
   （sshd 在 WSL 内未运行，接入验证以 tmux 新会话为准。）
 
+- Mac 标签持续导入（task44）：先导出 `$HF_TOKEN` / `$PVZ_HF_REPO`，运行 `/home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/scripts/import_mac_labels.py`；自动识别 z/d/n/p（含 `p数字w轮次m`），只补缺失或 SHA 变化包（异内容拒绝覆盖），历史账本只读，当前账本和逐包 journal 在 `/home/newbiexvwu/PvZ-search/artifacts/mac_import/`；每次 Mac 上传完成后或主控下一次巡检运行，不挂新定时任务、不动 qc，C 盘保留至少 15 GiB。
+

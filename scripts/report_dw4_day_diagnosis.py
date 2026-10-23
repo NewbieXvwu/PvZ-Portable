@@ -23,7 +23,7 @@ def main():
     assert metrics['data_memory']['rows'] == 13643901
     uploaded = read(OUT/'upload128.json')
     assert uploaded['download_verified'] and uploaded['model_sha256'] == sha(model)
-    from import_dw4_transfer import hf_environment
+    from import_mac_labels import hf_environment
     from huggingface_hub import HfApi
     hf_environment()
     remote = next(entry for entry in HfApi().model_info(uploaded['repo'],revision=uploaded['revision'],files_metadata=True).siblings

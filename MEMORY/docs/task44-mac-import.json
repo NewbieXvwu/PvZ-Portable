@@ -1,0 +1,392 @@
+{
+  "task": 44,
+  "audited_at": "2026-10-23T18:39:23.592249+08:00",
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "revision": "f46b4a66338949bf8dc1529993237ac099e665e1",
+  "destination": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2",
+  "task_family": "p9k",
+  "region": "day_pool",
+  "collection_student": "dw5i_s1",
+  "metadata_policy": "artifacts/student/dw5i_s1/model.pt",
+  "row_scope": "Full training rows (wait_keep=1.0), before sampling or train/validation split: frame i-1 -> label/action at i; first frame and rejected/missing actions excluded. Raw-frame import counts independently agree with stored rows arrays.",
+  "labels": 32,
+  "episodes": 1536,
+  "archives": 1536,
+  "rows": 1724858,
+  "rounds": [
+    {
+      "label": "p21w1m",
+      "level": 21,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 40970,
+      "archive_sha256": "f0097ee9e5330115274c1b3c967c73c2960b6878cfb425124d9d4d67f903803d",
+      "local_ledger_sha256": "288ed559314e122923961664de000a147f6a1ca89bacc67daef9c5e71172f8b9"
+    },
+    {
+      "label": "p21w2m",
+      "level": 21,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 40272,
+      "archive_sha256": "9e179c38733216c6d3bf85696d41c65f810c211bfee6dd81d792e75663fef3d4",
+      "local_ledger_sha256": "7c0e2de77cb5c96f87ce47689130f2a2874a985351e66f0f7504b97088fcb259"
+    },
+    {
+      "label": "p21w3m",
+      "level": 21,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 42297,
+      "archive_sha256": "51b03c3153f0cf416089a315b04548ba43a1705d9e24d66082bd1bc2d9bd5b88",
+      "local_ledger_sha256": "acfb24bd780c7dfbdadf0e29ac20ab703adf923b2b12e749a86288c4b530bfd8"
+    },
+    {
+      "label": "p21w4m",
+      "level": 21,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 41669,
+      "archive_sha256": "5cc321e2bef980cc1ffc6296c2db1420951fe732313c027c1eadfa10d7dedc84",
+      "local_ledger_sha256": "9e38c43b3163d2c6ce3c10ae968dd153e57555417d53d5dd95d74d20c4340bef"
+    },
+    {
+      "label": "p22w1m",
+      "level": 22,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 49992,
+      "archive_sha256": "47823c408ac7463f6ba78e914e52e93b7f9b8528fa1b1e5c1025412e02ee1a4f",
+      "local_ledger_sha256": "0ba3b9e0e0a7e5e059ea42a8e9100dd036ffec30a206858d7395d02b8c78c286"
+    },
+    {
+      "label": "p22w2m",
+      "level": 22,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 52921,
+      "archive_sha256": "4c19a7e6e9c27d12ed1274fb8f8acb5424a92f14e8d30f7a9eb7b8429a83a594",
+      "local_ledger_sha256": "efff45157fa495da07192cacc8ab2facdd42b556f92870a74fe471af6ba4b3ff"
+    },
+    {
+      "label": "p22w3m",
+      "level": 22,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 56630,
+      "archive_sha256": "603f9d57fcb9a2540d8af3eecd5d35171266ae5f11117e4f18746dbf2dc8b517",
+      "local_ledger_sha256": "78accbb6171018887bd9ecc2de4eff558aff2f57afd8882b94462b3c95ac6aea"
+    },
+    {
+      "label": "p22w4m",
+      "level": 22,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 53795,
+      "archive_sha256": "d08b93f8a295c3f5e7f531642a38585bc5a2e27b462ce7bfdba364587fdcc143",
+      "local_ledger_sha256": "4aa16910dc7d08b96ee9106fd7c29b0f77ebe472bd1c7c78e451100a6ec6d266"
+    },
+    {
+      "label": "p23w1m",
+      "level": 23,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 54181,
+      "archive_sha256": "9640626cb969e364ea6e97547b31ece6b9aabe6261b4da2d44fc821438952f45",
+      "local_ledger_sha256": "5ab2aa7c47d6cc07dfef396a5353a7bce01fca60cbfd4e9bc8957b18e8837a17"
+    },
+    {
+      "label": "p23w2m",
+      "level": 23,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 56300,
+      "archive_sha256": "f6b7c5be025fd25faa7f09ac92f289f7d8eaebab246d0386ab650413f607e47c",
+      "local_ledger_sha256": "4440173958befa9050b6b3fffd08f7235d612970603b281f73bd58b16a7ba459"
+    },
+    {
+      "label": "p23w3m",
+      "level": 23,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 53620,
+      "archive_sha256": "6a89667808d8b13d2fad402cc3ff60b76e27409ee18c40cac0413f0e3f73b5c5",
+      "local_ledger_sha256": "3eca95c0e7a994ecba20ff4422f2a11144fb3f226f0dea875c051b78367c43a7"
+    },
+    {
+      "label": "p23w4m",
+      "level": 23,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 53833,
+      "archive_sha256": "e002e3578244446562d1d90819a0947eba90261046039bf5b9110e8ebeb93046",
+      "local_ledger_sha256": "8e7f2af954a94e0f128c99b2328917712c4e10ec0add63f0532ab898efbe5375"
+    },
+    {
+      "label": "p24w1m",
+      "level": 24,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 60321,
+      "archive_sha256": "e28e8af142a50a57b3ee6c65847c7b768aa4724b1c609d114b9ac47a0f95f9d5",
+      "local_ledger_sha256": "4be242f17219a8b42cb40e6df48e0893c05eeffaf617fe9b81ae640e7e346e36"
+    },
+    {
+      "label": "p24w2m",
+      "level": 24,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 61643,
+      "archive_sha256": "cc80f36de34e390a238b29985af67e5dbd2530a5ca07d8921a1039ebc11f6fd2",
+      "local_ledger_sha256": "c4ca7f989a99cf7cdab8d818b85e81e697c36cad4f008e6dec5a05e5bfd64afe"
+    },
+    {
+      "label": "p24w3m",
+      "level": 24,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 67809,
+      "archive_sha256": "e0bf53db90e469db9430e27ef99103bf7c3938ce2757ab513f3f092dac306233",
+      "local_ledger_sha256": "af8ee8a3bb51fbb5dabee8518e7a1cdfb1ac4cf412e88a6c7dbd0bcdd651b017"
+    },
+    {
+      "label": "p24w4m",
+      "level": 24,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 64903,
+      "archive_sha256": "02ce4fdcdc3499e0da600bc2f1256146301708b7fa833912962c211ae491b8ea",
+      "local_ledger_sha256": "1ff2cb626793bc2fa0f1c4973dce2926891818177766a9de6e4151fd30b9eb79"
+    },
+    {
+      "label": "p26w1m",
+      "level": 26,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 44944,
+      "archive_sha256": "2d9fa5678ba582211b04125d7cf8323905f90c88d38d66eb9749e9f775ffd013",
+      "local_ledger_sha256": "ea450cc1d94fa02340bc1ead848830902f6908619d42def0d153539ee067360b"
+    },
+    {
+      "label": "p26w2m",
+      "level": 26,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 45427,
+      "archive_sha256": "cd7642a4f8a2315495f82229aa8cf727bee70007329fbcbfab272823deb45149",
+      "local_ledger_sha256": "09688072922c158723e148676cf12711673e2663223921c1dec006e34ab64dc6"
+    },
+    {
+      "label": "p26w3m",
+      "level": 26,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 45551,
+      "archive_sha256": "f38be98131e5431ea0b45e82c96dcbaf2f13805b3c8a6fe6e3f15a437e0d81c1",
+      "local_ledger_sha256": "56b26f2e3bae4ad2429864d14f9448e32161f2bdd6a8d69a76164654d6f9ef43"
+    },
+    {
+      "label": "p26w4m",
+      "level": 26,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 46985,
+      "archive_sha256": "26528c8b2bff9442e01598bf7aa80fd87d0e1463f12619794130a3e616778a08",
+      "local_ledger_sha256": "081b3dae66ffde457421dc3e07aeb8dd5e784a65b6c447ff4b8ca0545917f25f"
+    },
+    {
+      "label": "p27w1m",
+      "level": 27,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 61424,
+      "archive_sha256": "7fdf15018649ba90cdfff505b5dd3c9a2b23512a2a69c3b2c0bc90a5bb1eeebf",
+      "local_ledger_sha256": "6a0ccd076a6d9b5880c9a633a83f0a515ae5f7fb3c680321c616d121429dd3f2"
+    },
+    {
+      "label": "p27w2m",
+      "level": 27,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 61367,
+      "archive_sha256": "536fd07f59b8d4ff3f823296b1fff4d1d92902d35edc82f979337df73ebd2c0f",
+      "local_ledger_sha256": "543a4cd3121e2376d410046afc03b3333888ff034593535c0a46571bf1fe76bf"
+    },
+    {
+      "label": "p27w3m",
+      "level": 27,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 55279,
+      "archive_sha256": "5ab1f11e264a30bc654456edf25f190cfdb41ee1ce9c6d52fae45493b0827c3a",
+      "local_ledger_sha256": "a64c1e539b631076a4aa3b5c0bfab5ac922a0b33e868fcfda98923ad572c0d41"
+    },
+    {
+      "label": "p27w4m",
+      "level": 27,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 58120,
+      "archive_sha256": "4ff34ab9b1d7938304b33c0f24993682b3917daa938f174c8d894327a3e8adde",
+      "local_ledger_sha256": "75d3747214d4a70c2a444d9b38c8dde5a1eb2d0bc57c9b9ac5044711ea5744a8"
+    },
+    {
+      "label": "p28w1m",
+      "level": 28,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 57824,
+      "archive_sha256": "5bac6d2fe8804f81ab349abfcf63708de9884a68d4f3f73d0278fb584cdcef13",
+      "local_ledger_sha256": "14617d257b216cecf4f9fa61ead6b53d08bbc8dc428fcaf48edfb7e8517f13e2"
+    },
+    {
+      "label": "p28w2m",
+      "level": 28,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 56838,
+      "archive_sha256": "4364761bb4867cd4dff045f0910864ec688a274a7cc8a78149f244f73d6e4138",
+      "local_ledger_sha256": "0daeaba77c58aae7a5e4779905f9e66e462947fd0ff4253433dd18f073b53330"
+    },
+    {
+      "label": "p28w3m",
+      "level": 28,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 54352,
+      "archive_sha256": "eac06bd02eb0ea594081576fc03d6c982dc40518704b4201ec5fbb45f9ff04b7",
+      "local_ledger_sha256": "acc67409baf9ac7d6b918128a038781edd1c8b745e1bef1574309e204bf2025c"
+    },
+    {
+      "label": "p28w4m",
+      "level": 28,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 55688,
+      "archive_sha256": "5fe92e58299ca346ebd487c790f99c95bca463926589f5c154d62955ce35d682",
+      "local_ledger_sha256": "313e135878ac0b773328386d05b5bef3dc28a7fb1785c375491a8f9e947102c5"
+    },
+    {
+      "label": "p29w1m",
+      "level": 29,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 56828,
+      "archive_sha256": "30396474a982d2ace5f88f32b5c9a9bb8c17967e04a9f590c71c99790381330c",
+      "local_ledger_sha256": "0e3d07d3d44f778bd8407426a21615e49d78cddcbae65d1c11c2b7d8a5ff2388"
+    },
+    {
+      "label": "p29w2m",
+      "level": 29,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 60317,
+      "archive_sha256": "ee5d502ddceef5065f760f2d63f003417ef7a3cae07d0d7ac1481a82aafe8f98",
+      "local_ledger_sha256": "4e68d9616c653be6b43623325e3285560351e9dd2698561001fcf8eaea98e87e"
+    },
+    {
+      "label": "p29w3m",
+      "level": 29,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 56727,
+      "archive_sha256": "d06fb946e2b1586f4e61895e3fd8f9414c6e4e9aefadc5a5435c6553536c60bc",
+      "local_ledger_sha256": "4bb4b537defa7722f3ca4e522d935f47631942bb5c8957586d711f1b8edaa38d"
+    },
+    {
+      "label": "p29w4m",
+      "level": 29,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 56031,
+      "archive_sha256": "01dd39f304f26435cd9b1425d5869408cd39f36c2d038d5277be94389b522f4c",
+      "local_ledger_sha256": "2b2d010a6d38efdb8a7a202453fd8be1537718ed5d2eb4a68a9aa0e17bf0306e"
+    }
+  ],
+  "checks": {
+    "required_labels_complete": true,
+    "each_label_48_episodes": true,
+    "all_metadata_student_and_level_verified": true,
+    "all_npz_row_arrays_readable": true,
+    "raw_frame_counts_match_npz_rows": true,
+    "all_local_hashes_match_verified_package_ledgers": true
+  },
+  "tests": {
+    "passed": 333,
+    "subtests_passed": 111,
+    "skipped": 0,
+    "seconds": 62.39,
+    "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+    "engine_sha256": "bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef",
+    "engine_source_ref": "f2ae755a"
+  },
+  "additional_rounds": [
+    {
+      "label": "p21w5m",
+      "level": 21,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 43469,
+      "archive_sha256": "f3b7a5e437a1ba2f15e6b84135e43c6f85be38b0012e013e9417ffac684f4ebc",
+      "local_ledger_sha256": "26f742d1b28f21a968d96354e64a492be01e45d2d4c21bbfc40f9169645ac90b"
+    },
+    {
+      "label": "p22w5m",
+      "level": 22,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 54909,
+      "archive_sha256": "26f89efbe3884e5a7fa115bde9d5ba694c4a6d971ea98b3d4cc42bcc77977dea",
+      "local_ledger_sha256": "dfb4ea1f93a109827c816fbe004f42ce55535aab277ff12d4cb4239bf96cf114"
+    },
+    {
+      "label": "p23w5m",
+      "level": 23,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 51789,
+      "archive_sha256": "8194e5a129bf1187eca42c1ea64d2e013cfba99185b01eb2618bfc7e508d99bd",
+      "local_ledger_sha256": "1350762ef90d203ff91e27b71d06a10b653ddc24ef226b78e8e67b93777cb25c"
+    },
+    {
+      "label": "p24w5m",
+      "level": 24,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 61402,
+      "archive_sha256": "369ff012ae56cb08367468227bbcbc4c55a23742d5c0352d45b1a800f71c24e8",
+      "local_ledger_sha256": "6d5d4f734b84c8099f2166aac0c391d0f50273d6cf69971417d5c56a1229dd6e"
+    },
+    {
+      "label": "p26w5m",
+      "level": 26,
+      "episodes": 48,
+      "archives": 48,
+      "rows": 46627,
+      "archive_sha256": "eb35a82f663d78e268523fd6b7a31786be892b8fb82d96c1699f3516b18b4dd2",
+      "local_ledger_sha256": "f596b1e64f5eda3aa6031b8a2c97fd86d15b2cd82d91fd3206906f8fb716b8cd"
+    }
+  ],
+  "additional_totals": {
+    "labels": 5,
+    "episodes": 240,
+    "archives": 240,
+    "rows": 258196
+  },
+  "incremental_check": {
+    "checked_at": "2026-10-23T18:42:58.792446+08:00",
+    "revision": "3ab8fffa77134f3bbf5040c91a6aa35ca981f12f",
+    "selected_labels": 37,
+    "reused_verified_labels": 32,
+    "existing_labels_redownloaded": 0,
+    "added_labels": [
+      "p21w5m",
+      "p22w5m",
+      "p23w5m",
+      "p24w5m",
+      "p26w5m"
+    ],
+    "added_files": 480,
+    "additional_metadata_rows_and_sha256_independently_verified": true
+  }
+}

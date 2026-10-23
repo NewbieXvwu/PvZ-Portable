@@ -6,7 +6,7 @@ import torch
 
 from run_dw4_study import ROOT, OUT, read, write, sha, verify, record
 from unified_panel import summarize
-from import_dw4_transfer import hf_environment
+from import_mac_labels import hf_environment
 
 
 def main():
