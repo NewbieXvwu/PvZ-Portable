@@ -452,11 +452,12 @@ class TrainingPipeline:
 
     def estimate_peak(self):
         # Loading segments plus merging compact CSR peaks near twice the compact corpus;
-        # allow a third copy and 2 GiB for Python, optimizer and host batches. At least 4 GiB
-        # also covers two parallel pack builders (2 GiB each). MemAvailable already reflects
+        # allow a third copy and 2 GiB for Python, optimizer and host batches. At least 2 GiB
+        # covers one cold label builder; concurrency grows with the corpus budget (2 GiB each).
+        # MemAvailable already reflects
         # any current backend RSS; only its unconsumed headroom is subtracted from collection.
         compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
-        return max(4 * GIB, 3 * compact_bytes + 2 * GIB)
+        return 3 * compact_bytes + 2 * GIB
 
     def reservation(self):
         if not any(not future.done() for _, future in self.futures):

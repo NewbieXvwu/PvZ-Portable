@@ -125,8 +125,8 @@ def test_memory_forecast_counts_only_background_headroom():
             pending = SimpleNamespace(done=lambda: False)
             pipeline.futures.append(({}, pending))
             pipeline.process = SimpleNamespace(pid=123)
-            with patch.object(queue, '_proc_table', return_value={123: (1, queue.GIB), 124: (123, queue.GIB)}):
-                assert pipeline.reservation() == 2 * queue.GIB
+            with patch.object(queue, '_proc_table', return_value={123: (1, queue.GIB // 2), 124: (123, queue.GIB // 2)}):
+                assert pipeline.reservation() == queue.GIB
             pipeline.futures.clear()
         finally:
             pipeline.close()

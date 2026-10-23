@@ -33,7 +33,7 @@ def options(data, labels, **kwargs):
     return pack_options(labels, sources=archive_fingerprint(data, labels), **kwargs)
 
 
-def test_incremental_reuses_segments_and_parallel_matches_full():
+def test_incremental_reuses_segments_and_parallel_matches_full(capsys):
     with tempfile.TemporaryDirectory() as folder:
         root = Path(folder)
         data = root / 'data'
@@ -45,7 +45,17 @@ def test_incremental_reuses_segments_and_parallel_matches_full():
         stamp = [(p, p.stat().st_mtime_ns, p.read_bytes()) for p in segments]
         fixture(data, ['a', 'c'])  # a interleaves BEFORE b in every seed
         contract = options(data, ['a', 'b', 'c'], **settings)
-        index = pack(data, contract, root / 'cache', precompute_workers=2)
+        # Tiny fixtures use well below 2 GiB for both children. Exercise the real spawn
+        # branch even when unrelated production jobs make the conservative cap choose 1.
+        original_read = Path.read_text
+        def meminfo(path, *args, **kwargs):
+            if path == Path('/proc/meminfo'):
+                return 'MemAvailable: 67108864 kB\n'
+            return original_read(path, *args, **kwargs)
+        with patch.object(Path, 'read_text', meminfo):
+            index = pack(data, contract, root / 'cache', precompute_workers=2)
+        summaries = [json.loads(line) for line in capsys.readouterr().out.splitlines() if line.startswith('{')]
+        assert summaries[-1]['workers'] == 2 and summaries[-1]['built'] == 2
         assert all(p.stat().st_mtime_ns == t and p.read_bytes() == content for p, t, content in stamp)
         full = pack_monolithic(data, contract, out=root / 'full.npz')
         assert_payload_equal(trainer.read_pack(full), trainer.read_pack(index))
