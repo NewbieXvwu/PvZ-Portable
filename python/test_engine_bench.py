@@ -27,7 +27,7 @@ class EngineBenchGateTest(unittest.TestCase):
             manifest.write_text(json.dumps({'families': {'day': [
                 {'archive': str(root / 'archive'), 'decisions': [1]}]}}))
             response = dict(ticks=2500, decisions=42, estimated_result=-1, mowers_left=5,
-                            net_calls=42, planted=[0] * 10, substeps=[[2600, 0]],
+                            net_calls=42, planted_slots=[0] * 10, planted_types={}, substeps=[[2600, 0]],
                             simulation_seconds=1, network_seconds=1)
             from unittest.mock import Mock
             env = Mock()
@@ -63,7 +63,7 @@ class EngineBenchGateTest(unittest.TestCase):
                 bench._require_identical(report(), bad)
 
     def test_digest_includes_logical_stats_but_ignores_timers(self):
-        stats = dict(estimated_result=-1, decisions=1, mowers_left=5, planted=[0] * 10,
+        stats = dict(estimated_result=-1, decisions=1, mowers_left=5, planted_slots=[0] * 10, planted_types={},
                      net_calls=1, ticks=60, substeps=[[60, 0]], simulation_seconds=1)
         baseline = bench._rollout_digest({"tick": 60, "wave": 1}, stats)
         stats["simulation_seconds"] = 999

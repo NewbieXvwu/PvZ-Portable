@@ -237,7 +237,7 @@ def _state_of(frame: dict) -> dict:
     return {key: frame.get(key) for key in COMPARE_KEYS if key in frame}
 
 
-ROLLOUT_STAT_KEYS = ("estimated_result", "decisions", "mowers_left", "planted", "net_calls",
+ROLLOUT_STAT_KEYS = ("estimated_result", "decisions", "mowers_left", "planted_slots", "planted_types", "net_calls",
                      "ticks", "substeps")
 
 
