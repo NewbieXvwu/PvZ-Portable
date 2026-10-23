@@ -186,6 +186,7 @@
 - 2026-10-23 12:34 第四次正式跑启动（判据、种子、三臂轮换与预登记相同；断点续跑：启动时扫 `agreement_parts/`，当前为空）：`PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/scripts/cutoff_agreement.py --workers 2 --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff/artifacts/task40/engine/pvz-portable`，`setsid` 脱离会话，输出 `artifacts/task40/agreement.log`（2 个游戏进程）。`/` 余量 848 GB、C: 余量 31 GB；qc 的 16 worker 同时在跑。
 - 2026-10-23 12:49 第四跑前 2 局完成（`2/64`，每局约 13.5 min）：day_l7 seed 30001 胜（254 搜索点、809.4 s，cutoff 有 1928 条在 500 tick 收手）、seed 30000 负（206 搜索点、813.2 s，3658 条跑满 2500）。part 文件 `agreement_parts/day_l7_30001.json` / `day_l7_30000.json` JSON 校验通过（rows 254/206、无 error）。
 - 2026-10-23 14:46 第四跑进度（GLM 接手核查）：`14/64` 完成（全部 day_l7，part 文件齐全且 JSON 可解析），12:34 启动以来无引擎崩溃、无 WSL 重启；近 8 局每局 10–25 min，预计还需约 5 h。cutoff 早停分布与第 1 步同向：胜局大量在 500–1000 tick 收手（如 seed 30009：500 tick 收手 1224 条），负局多数跑满（seed 30011：2500 跑满 4614 条）。跑完脚本会自动算整局成组 bootstrap 区间并写 `agreement.json`。
+- 2026-10-23 15:00 交接回 Qoder（主控指令）：GLM 期间未改任何代码，仅核查第四跑（15:00 时 16/64，12:34 启动以来零中断）并记录进度（commit `e57b3561`）；**后台进程全部保留未杀**——验收跑 PIDs 2351/2352/2353（`cutoff_agreement.py --workers 2`）、引擎 2360/2362、`tail -F` 2621，输出 `artifacts/task40/agreement.log` 与 `agreement_parts/`。下一步：跑完（预计 ~19:30）后核对 `agreement.json` 门禁（cutoff−noise 整局成组 bootstrap 95% 下界 ≥ −0.03、64 局齐全），过质量关再按预登记启动强度关（每族 64 局 beta=1 配对）。
 
 ## 问题
 
