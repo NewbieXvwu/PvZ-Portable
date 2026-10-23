@@ -99,6 +99,8 @@
 
 29. **A1 无引擎训练侧补验**：ml Python 追加系统 pytest 包后，`test_identity_training.py` + `test_rowpool_aux.py` 实测 **8 passed / 1 failed**（12.65 秒）。rowpool 不再因缺 pytest 无法执行；identity CPU 训练仍复现 `train_rollout_policy.py:549` 的 cell gather `-9223372036854775808` 越界。这四个训练/打包/测试相关文件与当前已合入的 origin/pvz-env 无差异，未修改 task32/33 代码；A1“完整 pytest 全过”仍有既有训练失败，不能标成全绿。传送带新臂继续推进，未占额外游戏槽位。
 
+30. **补强逐帧重放门禁**：发现旧 `_state_of` 漏比逐帧 `v2`（波计时、发射进度、投射物等）、收入与终局字段；完整叶摘要虽包含这些内容，但只能验证推演终点。新增“仅 v2 不同”回归修复前失败，现比较档案里存在的全部这些公开状态字段，并拒绝早于最后待重放帧的终局；13 项夹具回归通过。新证据标记 `replay_gate_version: 2`（与 horizon 的 benchmark_version 2 区分），B 也复用此强门禁；既有逐帧结果不冒充新增字段已验过，槽位释放后对候选与基线补跑。
+
 ## 问题
 
 - **A1 测试门槛仍有非 Mac 既有失败**：`test_identity_training.test_cpu_training_checkpoint_is_loadable` 在配备 torch+pytest 的环境仍失败，`train_rollout_policy.py:549` 把 cell 候选索引转 long 后出现 `-9223372036854775808`。训练/打包/测试文件与合入的 origin/pvz-env 相同；按 task35 分工不修改 task32/33 的训练代码。8 项相关测试通过，但 A1 全套 pytest 尚未满足，不能以“环境缺包”概括这个失败。

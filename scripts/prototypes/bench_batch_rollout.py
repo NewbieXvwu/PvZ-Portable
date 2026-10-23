@@ -64,6 +64,7 @@ def main():
     model = out / 'student.bin'
     bench._export_student(model)
     report = {'build': build, 'horizon': 2500, 'lanes': 9, 'sim_skip': 61,
+              'replay_gate_version': bench.REPLAY_GATE_VERSION,
               'complete': False, 'roots': [], 'replays': []}
     (out / 'results.json').write_text(json.dumps(report, indent=1) + '\n')
     env = bench._open_env(build['binary'])

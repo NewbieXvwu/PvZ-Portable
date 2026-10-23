@@ -19,6 +19,20 @@ def report():
 
 
 class EngineBenchGateTest(unittest.TestCase):
+    def test_replay_checks_v2_state_and_rejects_early_terminal(self):
+        from unittest.mock import Mock
+        rows = [{}, {'action': {'type': 'wait', 'ticks': 60}, 'tick': 60, 'v2': {'wave_timer': 10}},
+                {'action': {'type': 'wait', 'ticks': 60}, 'tick': 120, 'v2': {'wave_timer': 9}}]
+        spec = {'deck': [0, 1, 2, 3, 4, 5]}
+        for early in (False, True):
+            env = Mock()
+            env.step.return_value = ({'tick': 60, 'v2': {'wave_timer': 10 if early else 11}},
+                                     0, early, False, {})
+            with patch.object(bench, '_task_spec'), patch.object(bench, '_frame', side_effect=lambda v: v):
+                _, errors = bench.replay_episode(env, spec, rows, [2] if early else [1])
+            self.assertTrue(errors)
+            self.assertEqual(errors[0]['key'], 'terminal_before_last_frame' if early else 'v2')
+
     def test_batch_prototype_requires_all_roots_and_identical_leaves(self):
         sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/prototypes'))
         import bench_batch_rollout as batch
