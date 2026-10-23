@@ -72,6 +72,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，19 重跑 A 流水线：23:13 启动 `run_task36_mix.py --plan A --workers 2`（pid 167275，日志 `/home/newbiexvwu/pvz-logs/mix_A4.out`；train 步输出 `artifacts/task36/train_A.txt`，资源采样 `train_A.resources.jsonl`）。pack 步命中缓存（`build: cached`），训练器读已解包的 `.npz.d/`。train 步仍挂 `<10 GiB` 暂停门禁，panel 随后串行执行；B 自动接续（autostart_B pid 64717）保持待命。
 
+- 2026-10-24，20 A 训练完成：12 epoch、3220 s、rc=0。末轮 train_loss 2.9307、val_loss 3.7911、type_acc 0.9158、plant_recall 0.7247、packet_acc 0.7387、cell_acc 0.4425（逐轮见 `train_A.txt`）。guard 采样峰值 RSS 11.68 GB（映射页，可回收）、**最低 MemAvailable 11.15 GiB**，全程未触发 `<10 GiB` 暂停。产物 `artifacts/task36/dw5i_A_s1/model.pt`（706 KB）与 `metrics.json`。panel_v2 已自动开始（2 游戏进程）；完成后 autostart_B 启动方案 B。
+
 
 
 ## 问题
