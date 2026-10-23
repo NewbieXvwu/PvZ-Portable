@@ -131,6 +131,7 @@ def group(job,stage='screen',samples=3,indices=None):
 def attribution(group):
     folder=OUT/'episodes'/group['cell']['id']/f"root_{group['point']['decision']}"
     trace=diag.load(folder/'search-trace.json')
+    if len(trace['static_values'])!=len(trace['static_actions']):raise ValueError('incomplete static scoring trace')
     per_card=defaultdict(list)
     for value,action in sorted(zip(trace['static_values'],trace['static_actions']),key=lambda x:-x[0]):
         per_card[action['packet']].append(action)
@@ -147,6 +148,8 @@ def attribution(group):
             if gain+1e-12<threshold:continue
             action=candidate['action'];key=diag.jkey(action);index=generated.get(key)
             counts['observed_improvers']+=1
+            if action['type']=='plant':counts['improving_plant_actions']+=1
+            if action['type']!='shovel':counts['production_representable_improvers']+=1
             if key in static:counts['static_retained']+=1
             if index is None:
                 cause='outside_production_action_space' if action['type']=='shovel' else 'candidate_generation_omission'
