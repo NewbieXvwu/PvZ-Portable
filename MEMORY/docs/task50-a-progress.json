@@ -26,5 +26,25 @@
     "before": 96,
     "after": 96
   },
-  "deployment_gates": "MEMORY/docs/task50-a-deploy-gates.json"
+  "deployment_gates": "MEMORY/docs/task50-a-deploy-gates.json",
+  "first_pair_audit": {
+    "task": "day_l7_train_d7_m150",
+    "seed": 5712288,
+    "decisions": 1098,
+    "same_teacher_points": 219,
+    "teacher_points": 219,
+    "before_noise_agreement": 25,
+    "before_noise_points": 28,
+    "wins": {
+      "before": true,
+      "after": true
+    },
+    "cpu_excluding_noise_s": {
+      "before": 189.60390877399996,
+      "after": 110.539484
+    },
+    "frozen_input_files_revalidated": 17,
+    "evidence_scope": "first seed only; not a substitute for 32 paired seeds per task",
+    "cpu_ratio": 0.5830021370063552
+  }
 }
