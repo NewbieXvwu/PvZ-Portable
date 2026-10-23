@@ -82,3 +82,19 @@
 
 - **吞吐基准的分辨率**（2026-10-23 实测）：采集队列让 load 长期在 22–27（12 核 20 线程）。同一份二进制自比（`compare --rollouts 3 --rounds 5`）比值 1.005 / 0.943 / 1.015 / 1.090 / 1.093，中位数 1.015；`--rollouts 9` 3 轮为 1.038 / 1.011 / 1.000。也就是说单轮 ±9%、3–5 轮中位数约 ±2%。**2% 以下的改动不能靠吞吐判定**，改用剖面份额变化（`prof_symbolize`）与机制计数，并把吞吐数字如实标为“噪声内”。
 - `build/` 曾被留在 PGO 第一阶段（`-fprofile-generate`）而没人发现，量出来比 step9 慢 1.77×。换手/重测前先查 `grep -c fprofile-generate build/build.ninja` 应为 0。
+
+## 主控追加（2026-10-23 11:00）：上线优先，然后三条没做透的路
+
+背景：用户决定 GPU（CUDA）方案**暂缓决策、不复活也不放弃**，决策日 **2026-10-27**——到那天看纯 CPU 能不能达到目标：
+**正式课程采集的整局吞吐（局/小时，同任务族同倍率对比）≥ 10-22 旧构建的 2.0 倍**。所以本任务的成绩最终按**正式采集里的整局吞吐**算，
+不是按 64 root 的 tick/CPU-s 算。另：本分支此前从未 push 过，主控 11:00 已代为 push 到 `origin/perf`；以后每次提交都 push（本地 `refs/remotes/origin/perf` 因与 `perf/attention-fusion` 重名建不出来，push 用 `git push origin perf:perf`）。
+
+按顺序做：
+
+A. **上线准备（最优先）**
+   1. `git merge origin/pvz-env`（落后 69 个提交；pvz-env 已退役整条 CUDA 线，`CMake/CudaRollout.cmake`、`cuda/`、`src/CudaExport.*` 已删，冲突一律以 pvz-env 的删除为准）。合并后重跑：64 root 叶摘要与合并前逐位相同、4 个存档整局逐帧重放 0 差异、`python -m pytest python -q` 全过（Mac 专属的除外，写清）。
+   2. 整局基准（这是验收用的数字）：`bench_engine.py` 的整局模式，旧构建（pvz-env 合并前的 cq 二进制 `/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build/pvz-portable`，只读，不要重编它）对新构建，同种子、同参数（照 qc 的 `command_for`），每族 8 局：白天 L7 d7、夜间 L14 n10、泳池 L24 p9k、传送带 L10 orig，报每局 CPU 秒与比值。机器负载高时按“配对 + 多轮中位数”。
+   3. 部署说明写进 `engine-cpu.md`：主控要在 cq 工作树上一次做完的命令（`scripts/build_pgo.sh` 的两阶段、mimalloc 首次联网、检查 `fprofile-generate` 计数为 0），以及“PGO profile 用哪批 root 生成、换学生模型后要不要重生成”。
+B. **锁步批量推演的原型实测**（第 16 条只编译了，没量）：batch=1/9 与原生串行比，分开报快照 / 前向 / 模拟；最新剖面里 libopenblas 已占 **28.65%**，是现在单项最大，这条路的上限比你当初估的高。
+C. **推演里的学生前向降精度（没派过的路）**：本机 i7-12700F 支持 AVX-VNNI。试 int8（逐通道对称量化权重、激活按层标定）或 bf16 的 GEMM，取快的。这是近似，按**统计验收**：老师决策与 fp32 的一致率不低于老师自身噪声底线（同老师换随机未来约 75%）减 3pp，64 局同种子胜率在噪声内；过了就成为唯一实现（不加开关），不过就把数字写进报告后删掉。
+D. 停止条件不变；A 做完立刻在“结果”里记一行，主控要拿它去上线。

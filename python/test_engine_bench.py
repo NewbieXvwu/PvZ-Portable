@@ -124,6 +124,8 @@ class EngineBenchGateTest(unittest.TestCase):
                 result = bench.search(args)
                 self.assertEqual(result["games"], 2)
                 self.assertEqual(result["milliseconds_per_decision"], 200)
+                self.assertIsNone(result['mean_network_seconds'])
+                self.assertIsNone(result['mean_simulation_seconds'])
                 args.workers = 3
                 with self.assertRaises(ValueError):
                     bench.search(args)
@@ -132,6 +134,14 @@ class EngineBenchGateTest(unittest.TestCase):
             args.games = 8
             with patch.object(bench.subprocess, "run"), self.assertRaisesRegex(RuntimeError, "incomplete"):
                 bench.search(args)
+
+    def test_missing_game_timers_are_not_reported_as_zero(self):
+        rows = [dict(seed=i, seconds=2, decisions=10) for i in range(2)]
+        rows[0]['network_seconds'] = 1
+        self.assertIsNone(bench.summarize_games(rows, 2)['mean_network_seconds'])
+        for row in rows:
+            row['network_seconds'] = 0
+        self.assertEqual(bench.summarize_games(rows, 2)['mean_network_seconds'], 0)
 
 
 if __name__ == "__main__":

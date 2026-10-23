@@ -524,6 +524,20 @@ def replay(args) -> dict:
     return report
 
 
+def summarize_games(rows: list[dict], expected_games: int) -> dict:
+    if not rows or len(rows) != expected_games or len({row["seed"] for row in rows}) != expected_games:
+        raise RuntimeError(f"incomplete whole-game benchmark: {len(rows)} rows for {expected_games} games")
+    report = {"games": len(rows), "won": sum(1 for row in rows if row.get("won")),
+              "mean_seconds": sum(row["seconds"] for row in rows) / len(rows),
+              "mean_decisions": sum(row["decisions"] for row in rows) / len(rows)}
+    for key in ("simulation_seconds", "network_seconds"):
+        report["mean_" + key] = sum(row[key] for row in rows) / len(rows) if all(key in row for row in rows) else None
+    report["milliseconds_per_decision"] = round(
+        1000 * report["mean_seconds"] / report["mean_decisions"], 3) if report["mean_decisions"] else None
+    report["games_per_hour"] = round(3600 * len(rows) / sum(row["seconds"] for row in rows), 2)
+    return report
+
+
 def search(args) -> dict:
     """Whole-game metric: the queue's search_play parameters, seconds per decision."""
     if not 1 <= args.workers <= 2:
@@ -539,16 +553,7 @@ def search(args) -> dict:
     print(" ".join(command), flush=True)
     subprocess.run(command, check=True, cwd=str(ROOT))
     rows = [json.loads(line) for line in (out / "games.jsonl").read_text().splitlines() if line.strip()]
-    if len(rows) != args.games or len({row["seed"] for row in rows}) != args.games:
-        raise RuntimeError(f"incomplete whole-game benchmark: {len(rows)} rows for {args.games} games")
-    report = {"games": len(rows), "won": sum(1 for row in rows if row.get("won")),
-              "mean_seconds": sum(row["seconds"] for row in rows) / len(rows),
-              "mean_decisions": sum(row["decisions"] for row in rows) / len(rows),
-              "mean_simulation_seconds": sum(row.get("simulation_seconds", 0.0) for row in rows) / len(rows),
-              "mean_network_seconds": sum(row.get("network_seconds", 0.0) for row in rows) / len(rows)}
-    report["milliseconds_per_decision"] = round(
-        1000 * report["mean_seconds"] / report["mean_decisions"], 3) if report["mean_decisions"] else None
-    report["games_per_hour"] = round(3600 * len(rows) / sum(row["seconds"] for row in rows), 2)
+    report = summarize_games(rows, args.games)
     (out / "engine_search.json").write_text(json.dumps(report, indent=1) + "\n")
     print(json.dumps(report, indent=1))
     return report
