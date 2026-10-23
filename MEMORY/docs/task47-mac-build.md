@@ -48,6 +48,8 @@
 
 7. 白天 L7 d7 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 7 胜）。CPU 秒/局由旧 view **102.263** 降至 PGO **44.019**，吞吐 **2.323×**。证据 `artifacts/perf/task47/pgo_games_day/engine_games.json`。
 
+8. 普通 Release 对旧 view 的整局基线三轮完成（每轮四族各 1 局，同种子）。按白天 / 夜间 / 泳池 / 传送带顺序，CPU 秒/局中位数为 **84.414→58.532 / 139.205→66.140 / 26.668→13.846 / 172.266→105.846**，配对吞吐比中位数为 **1.454× / 2.055× / 1.932× / 1.628×**。三轮所有种子的胜负、最终波次与决策数一致。证据 `artifacts/perf/task47/release_games_r{1,2,3}/engine_games.json`、`release_games_summary.json`。
+
 ## 问题
 
 - Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。task35 的四族基准清单与全部存档已经 HF 同步完成。
