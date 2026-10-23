@@ -1,0 +1,34 @@
+{
+  "generation_audit": {
+    "tasks": 414,
+    "seeds": 847872,
+    "decks_checked": 847872,
+    "scanned_manifests": 330494,
+    "scanned_seeds": 835020,
+    "seed_overlap": 0,
+    "seed_base": 5000000,
+    "mult_stride": 700000,
+    "slots_per_family": 32,
+    "seeds_per_task": 2048,
+    "multipliers": [
+      1.25,
+      1.5,
+      1.75,
+      2.0,
+      2.5,
+      3.0
+    ]
+  },
+  "dry_run": {
+    "roof_cell": "roof_l41_train_r7                      1      -     0     48  c1roofl41r7m100",
+    "roof_collect_command": "collect: /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/scripts/search_play.py --rollout-policy /home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt --verify-samples 9 --student-candidates 2 --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task46/roof_panel.json --task-id roof_l41_train_r7 --seed-offset 0 --seeds 48 --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable --dagger-beta 0 --workers 2 --resource-dir /home/newbiexvwu/.cache/pvz-research-resources --frames /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/dry-frames --frames-label c1roofl41r7m100 --out /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50/dry-runs/c1roofl41r7m100_48",
+    "summary": "total groups 38, games 1824",
+    "fog_cells": 0,
+    "writes_production_state": false
+  },
+  "manifests": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/stage4/multiplier_panel.json": "878f996e7657f3b5f6d3c3393530c2903d8a31e48b49d2570cf18af750968420",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task46/roof_panel.json": "393004fbe47b372bb18a94aa8688166ccdffb226618b9becbc77714a7e4534d1",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task45/fog_panel.json": "df38c21db20506c14c33c99b1759e2340e6ad319ffdc39501482c8f6eebc351f"
+  }
+}

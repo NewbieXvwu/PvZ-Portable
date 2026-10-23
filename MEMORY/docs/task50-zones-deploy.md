@@ -44,4 +44,16 @@
 
 - 步骤1a：合入 origin/roof 当前快照 2dcaef33；自动合并无冲突，保留屋顶全部族与种子映射，默认课程只准入 L41 r7 原版。
 
+- 步骤5：本树清单414任务/847872种子逐卡组合法；扫描330494份JSON、835020个既有种子，重叠0。隔离状态dry run列出38组/1824局，含 `roof_l41_train_r7 mult=1 games=48` 与deploy3完整collect命令，fog cell=0；摘要task50-zones-course.json。
+
+主控审核并快进pvz-env、让旧qc在组间正常结束后，重启命令如下（本文仅记录，未执行；上限2游戏进程）：
+
+```bash
+/usr/bin/tmux new-session -d -s qc '/usr/bin/env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/scripts/curriculum_queue.py --rounds 100 --workers 2 --round-games 768 --games-per-group 48 --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/stage4/multiplier_panel.json --state /home/newbiexvwu/pvz-logs/curriculum_state.json --log /home/newbiexvwu/pvz-logs/curriculum.log --out /home/newbiexvwu/PvZ-search/artifacts/hard --frames /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2 --recipe /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/recipes/dw4i.json --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable --resource-dir /home/newbiexvwu/.cache/pvz-research-resources 2>&1 | /usr/bin/tee -a /home/newbiexvwu/pvz-logs/qc.out'
+```
+
+沿用生产state/偏移和dw4i配方、v4/branch1，控制器自动加入L41、暂缓所有fog；主控须先确认旧控制器已退出、现有组间停止标志已清理，再执行上述命令。
+
 ## 问题
+
+- 历史fog四存档的摘要不能直接充当deploy2参考：deploy2重放L7通过，但L12第0帧已与历史摘要不同；保留原始动作/摘要，使用当前deploy2重生成完整逐tick参考，再由deploy3严格比对全字段。
