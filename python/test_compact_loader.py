@@ -17,6 +17,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_frame_store import write_frames  # noqa: E402
+from pack_training_rows import packed_load  # noqa: E402
 from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, ValueStore,
                                   constant_plane, load)  # noqa: E402
 
@@ -107,28 +108,21 @@ class CompactLoaderTest(unittest.TestCase):
             write_frames(path, game_frames(60))
 
     def load(self, **extra):
-        return load(self.data, {"fast"}, cache_dir=self.cache, cells=True, packet_head="identity",
-                    obs="v2", wait_keep=.5, **extra)
+        return packed_load(self.data, {"fast"}, cache_dir=self.cache, cells=True, packet_head="identity",
+                           obs="v2", wait_keep=.5, rebuild=True, **extra)
 
     @staticmethod
     def dense(value, rows):
         return value.batch(torch.arange(rows), "cpu") if hasattr(value, "batch") else value
 
-    def test_cached_and_plain_rows_agree(self):
-        cached = self.load()
-        plain = load(self.data, {"fast"}, cells=True, packet_head="identity", obs="v2", wait_keep=.5)
-        rows = len(cached[2])
-        self.assertGreater(rows, 40)
-        for index in (0, 1):
-            self.assertTrue(torch.equal(self.dense(cached[index], rows).view(torch.int32),
-                                        self.dense(plain[index], rows).view(torch.int32)))
-        for index in (2, 3, 4, 5):
-            torch.testing.assert_close(cached[index].float(), plain[index].float(), rtol=0, atol=0, equal_nan=True)
-        rows_range = torch.arange(rows)
-        torch.testing.assert_close(cached[7][rows_range], plain[7][rows_range], rtol=0, atol=0, equal_nan=True)
-        torch.testing.assert_close(cached[8][rows_range], plain[8][rows_range], rtol=0, atol=0, equal_nan=True)
-        torch.testing.assert_close(cached[9][rows_range], plain[9][rows_range], rtol=0, atol=0, equal_nan=True)
-        self.assertEqual(cached[6], plain[6])
+    def test_pack_reproduces_the_archives(self):
+        """Every array of the pack equals a fresh build from the archives (the converter's own check)."""
+        from pack_training_rows import archive_fingerprint, pack_options, pack_path, verify
+        loaded = self.load()
+        self.assertGreater(len(loaded[2]), 40)
+        options = pack_options({"fast"}, .5, "v2", True, 0, "identity", False, None,
+                               sources=archive_fingerprint(self.data, {"fast"}))
+        verify(self.data, options, pack_path(self.data, options))
 
     def test_the_store_hoists_the_constant_plane(self):
         rows = self.load()

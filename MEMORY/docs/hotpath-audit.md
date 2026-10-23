@@ -402,3 +402,63 @@ Tag：`retire-cuda-20261023`（整条 CUDA 线）、`retire-flags-20261023`（�
 **验收**：`python3 -m pytest python -q` → 229 passed / 24 skipped / 56 subtests，6 failed 全部是环境性
 （5 个 `test_cpp_rollout` 需要 `build/pvz-portable`，工作树里没有；1 个 `test_dagger_experiment_runner` 的导入顺序）。
 `python/test_compat_registry.py` 5 项全过。`compileall scripts python` 通过。
+
+## 15. 打包装载转正为唯一路径（第 3 项执行记录，2026-10-23）
+
+### 改了什么
+
+| 位置 | 之前 | 现在 |
+|---|---|---|
+| `train_rollout_policy.load()` | 逐档案解压 `frames.npz` + 重算 CSR，**每次训练都做一遍** | 只读包：`pack_path(data, options)` 命中就直接 mmap 读回；缺包时报错并打印该跑的打包命令 |
+| 谁读档案 | 训练端 + 打包原型 | 只有 `scripts/pack_training_rows.py`（`build_from_archives`）。jsonl 旧档案的读取仍在 `pvz_frame_store.frame_bytes`，标 `LEGACY(jsonl-archives)` |
+| 采集端 | 只写档案 | `curriculum_queue.run_round` 每轮结束调 `write_pack`：把“本队列写过的全部标签 + `--pack-labels`”打成包，并 `--prune` 删掉被它取代的旧包 |
+| 开关 | — | 无。没有“读档案 / 读包”的开关，旧路径已删除 |
+
+包键 = 所有改变行的选项：`labels`、`wait_keep`、`obs`、`cells`、`aux_horizon`、`packet_head`、`context`、`label_weight`、
+以及 `sources`（档案相对路径 + 大小的 sha1[:16]，不含 mtime）。`pack_options()` 一处定义，打包器与训练端各自算出同一个
+`<data>/packs/<key>.npz`，谁都不用被告知包在哪。**注意 `cells` 跟着 `--cell-soft-weight` 走**（`load()` 里
+`cells=bool(args.cell_soft_weight)`），生产配方带 `--cell-soft-weight 3` 时采集端必须用 `--pack-cells`。
+
+包内容（npz 顺序大文件，不压缩）：board / scalar 两套 CSR（常数平面已从棋盘里提出去）、`plant`/`packet`/`cell`/`weight`/`seed`、
+`values`（稀疏）、`cands`（可选）、`aux`（可选）、`source`/`source_archive`/`source_row`（逐行来源，`--source-row-report` 要用）。
+即 task32 的紧凑数组是常驻形态，打包只是把它落盘。
+
+### 验收一：同一批数据，改前改后训练前 200 步逐位相同
+
+`artifacts/audit_bench/frames`（11 标签、88 692 行、7 509 个种植决策、47 个种子、16 917 验证行），
+`--epochs 6 --max-steps 200 --seed 1 --device cpu --width 32`：
+
+| epoch | train_loss（逐档案 / 读包） | val_loss（逐档案 / 读包） |
+|---|---|---|
+| 1 | 6.405445768169641 / **相同** | 5.994540454296029 / **相同** |
+| 2 | 5.413421458825962 / **相同** | 5.055646445316126 / **相同** |
+| 3 | 4.381605839548274 / **相同** | 4.21451249065964 / **相同** |
+| 4 | 3.5603428646049116 / **相同** | 3.653569811292593 / **相同** |
+| 5 | 3.118014608646926 / **相同** | 3.271407952903116 / **相同** |
+| 6 | 1.602656311226489 / **相同** | 3.14441666852824 / **相同** |
+
+对照侧用 tag `retire-flags-20261023` 的独立工作树（`git worktree add --detach /tmp/audit-prepack`），两边的
+`type_acc` / `plant_recall` / `packet_acc` / `cell_acc` 也逐位相同——差 0，不是 1e-6 以内。
+
+### 验收二：装载耗时与峰值内存
+
+同一份数据、`wait_keep=1.0`、`aux_horizon=0`（训练不带 `--aux-weight` 时的实际取值），各跑两次：
+
+| 装载路径 | 行数 | 耗时 | 峰值 RSS | 行/s |
+|---|---|---|---|---|
+| 逐档案（tag `retire-flags-20261023`） | 88 692 | 8.23 s / 8.10 s | 305.4 MB / 304.3 MB | 10 900 |
+| 读包（本次） | 88 692 | **0.009 s / 0.009 s** | **227.5 MB / 226.8 MB** | 9 650 000 |
+
+打包成本（一次性，之后每轮只重打并集）：冷缓存 6.5 s、热缓存 2.1 s（88 692 行），产物 23 207 118 B = **262 B/行**
+（不压缩的 npz；13.6 M 行约 3.5 GB）。13.6 M 行按 10 900 行/s 的旧路径要 **21 分钟**，读包仍是毫秒级。
+
+### 采集端接线
+
+`scripts/curriculum_queue.py`：`pack_labels()`（本队列 `state['log']` 里出现过的标签 + `--pack-labels`）、
+`pack_command()`（argv）、`write_pack()`（子进程跑打包器、把输出 JSON 写进队列日志、失败则 `SystemExit`——
+放在状态落盘之后，采到的局不会因为打包失败丢掉）。打包器新增 `--prune`：删掉标签集是本包子集的旧包
+（每轮的并集都包含上一轮，13.6 M 行时一个包 3.5 GB，不删会按轮数线性堆）。
+
+单测：`python/test_curriculum_queue.py` 加 `test_pack_labels_union_the_log_and_the_base_corpus`、
+`test_pack_command_carries_the_row_options`。全量 `pytest python -q` → **231 passed / 24 skipped / 56 subtests**，
+6 failed 全是环境性（同 §14：5 个 `test_cpp_rollout` 缺 `build/`，1 个 `test_dagger_experiment_runner` 导入顺序）。

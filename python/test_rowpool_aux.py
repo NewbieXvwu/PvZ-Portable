@@ -13,7 +13,7 @@ from pvz_frame_store import (cache_aux, cache_episode, encode_student_frames, en
                              frame_bytes, row_damage_labels, write_frames)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from train_rollout_policy import load
+from pack_training_rows import packed_load
 
 
 def test_rowpool_checkpoint_and_export_without_aux():
@@ -68,10 +68,8 @@ def test_three_frame_aux_labels_and_sampled_cache(obs):
             assert cache_aux(archive, cache, horizon) == cached
             assert cached.stat().st_mtime_ns == timestamp
             for fraction, workers in ((1.0, 1), (0.5, 2)):
-                direct = load(data, {"teacher"}, wait_keep=fraction, obs=obs, aux_horizon=horizon)
-                actual = load(data, {"teacher"}, wait_keep=fraction, cache_dir=cache,
-                              obs=obs, precompute_workers=workers, aux_horizon=horizon)
-                torch.testing.assert_close(direct[-1], actual[-1], rtol=0, atol=0)
+                actual = packed_load(data, {"teacher"}, wait_keep=fraction, obs=obs, aux_horizon=horizon,
+                                     cache_dir=cache, rebuild=True)
                 np.testing.assert_array_equal(actual[-1], expected[1:2] if fraction < 1 else expected[:-1])
             assert cache_episode(archive, cache, obs) == old
             assert old.stat().st_mtime_ns == modified
@@ -85,8 +83,8 @@ def test_three_frame_aux_labels_and_sampled_cache(obs):
                                 **encode_student_frames(frames, source, obs))
         with patch("pvz_frame_store.encode_frames", side_effect=AssertionError("unexpected feature encoding")):
             assert cache_episode(binary, cache, obs) == binary
-            before = load(data, {"teacher"}, cache_dir=cache, obs=obs)
-            actual = load(data, {"teacher"}, cache_dir=cache, obs=obs, aux_horizon=1)
+            before = packed_load(data, {"teacher"}, cache_dir=cache, obs=obs, rebuild=True)
+            actual = packed_load(data, {"teacher"}, cache_dir=cache, obs=obs, aux_horizon=1, rebuild=True)
             for plain, auxiliary in zip(before[:6], actual[:6]):
                 if hasattr(plain, "batch"):
                     plain = plain.batch(np.arange(plain.shape[0]), "cpu")
@@ -100,7 +98,7 @@ def test_three_frame_aux_labels_and_sampled_cache(obs):
         arrays["rows"] = arrays["rows"][::-1]
         np.savez_compressed(side, **arrays)
         with pytest.raises(AssertionError):
-            load(data, {"teacher"}, cache_dir=cache, obs=obs, aux_horizon=1)
+            packed_load(data, {"teacher"}, cache_dir=cache, obs=obs, aux_horizon=1, rebuild=True)
 
 
 def test_aux_excludes_executed_shovel():
