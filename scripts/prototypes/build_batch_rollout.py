@@ -50,9 +50,29 @@ def main():
               '\t\t\ttry { PrototypeBatchCommand(app, rollout, snapshots, input); }\n'
               '\t\t\tcatch (const std::exception& error) {\n'
               '\t\t\t\tstd::cerr << error.what() << std::endl;\n'
-              '\t\t\t\tstd::cout << "PVZENV {\\"ok\\":false}" << std::endl;\n'
+              '\t\t\t\tstd::cout << "PVZENV {\\"protocol_version\\":" << kEnvironmentProtocolVersion << ",\\"ok\\":false}" << std::endl;\n'
               '\t\t\t}\n\t\t\tcontinue;\n\t\t}\n')
-    main_file.write_text(text.replace(marker, branch + marker, 1))
+    text = text.replace(marker, branch + marker, 1)
+    # Measure the native arm with the same process CPU clock as the lockstep arm.
+    # Production uses steady_clock for these diagnostics; only the exported copy changes.
+    first = text.index(marker)
+    last = text.index('\t\telse if (command == "RESET_V2")', first)
+    native = text[first:last]
+    native = native.replace('const auto start = std::chrono::steady_clock::now();',
+                            'const auto start = PrototypeCpu();')
+    native = native.replace('std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count()',
+                            '(PrototypeCpu() - start)')
+    restore = '\t\t\tif (ok && rootId) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));'
+    assert native.count(restore) == 1
+    native = native.replace(restore, '\t\t\tconst auto snapshotStart = PrototypeCpu();\n' + restore +
+                            '\n\t\t\tconst double snapshotCpu = PrototypeCpu() - snapshotStart;')
+    output = '\t\t\t\t<< ",\\"net_calls\\":" << rollout.NetworkCalls()'
+    assert native.count(output) == 1
+    native = native.replace(output,
+        '\t\t\t\t<< ",\\"network_cpu_seconds\\":" << networkSeconds'
+        '\n\t\t\t\t<< ",\\"simulation_cpu_seconds\\":" << simulationSeconds'
+        '\n\t\t\t\t<< ",\\"snapshot_cpu_seconds\\":" << snapshotCpu\n' + output)
+    main_file.write_text(text[:first] + native + text[last:])
     build = OUT / revision / 'build'
     subprocess.run(['cmake', '-S', str(source), '-B', str(build), '-G', 'Ninja',
                     '-DCMAKE_BUILD_TYPE=Release', '-DFETCHCONTENT_UPDATES_DISCONNECTED=ON',

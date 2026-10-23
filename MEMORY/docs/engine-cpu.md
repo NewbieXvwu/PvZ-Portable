@@ -172,6 +172,8 @@ wall 会被抢占放大，CPU 秒才是能跨构建比较的量。
 
 三条路径的叶观测/逻辑统计逐条比对，任何一条不同即失败；CPU 分别记 network / simulation / snapshot / feature。
 
+恢复检查发现旧日志在首个 batch 响应因缺少 `protocol_version` 中断；已修复成功/异常响应，原生臂改用与 batch 一致的进程 CPU 钟，补 network / simulation / snapshot 分项。报告显式区分完整覆盖与正确性通过，叶摘要差异直接非零退出；12 项无引擎回归通过，正重建当前提交的独立副本。
+
 待填：三臂总 CPU 秒、`native/batch9` 与 `serial/batch9` 比值、前向加速比、逐 root 一致性计数。
 ## 部署（给主控：在 cq 工作树上一次做完）
 

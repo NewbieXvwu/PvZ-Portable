@@ -30,6 +30,30 @@ def identity(response):
     return bench._rollout_digest(response['observation'], response)
 
 
+def summarize(report, expected_roots):
+    roots = report['roots']
+    if len(roots) != expected_roots or not roots:
+        raise RuntimeError('incomplete root coverage')
+    totals = {arm: sum(root['arms'][arm]['process_cpu_seconds'] for root in roots)
+              for arm in ('native', '1', '9')}
+    components = {arm: {key: sum(root['arms'][arm][key] for root in roots)
+                       for key in ('network_cpu_seconds', 'simulation_cpu_seconds', 'snapshot_cpu_seconds')}
+                  for arm in ('native', '1', '9')}
+    for arm in ('1', '9'):
+        components[arm]['feature_cpu_seconds'] = sum(root['arms'][arm]['feature_cpu_seconds'] for root in roots)
+    return {'cpu_seconds': totals, 'components': components,
+            'prototype_serial_over_batch': totals['1'] / totals['9'],
+            'native_over_batch': totals['native'] / totals['9'],
+            'serial_batch_identical_roots': sum(r['serial_batch_identical'] for r in roots),
+            'native_batch_identical_roots': sum(r['native_batch_identical'] for r in roots),
+            'network_speedup': components['1']['network_cpu_seconds'] / components['9']['network_cpu_seconds']}
+
+
+def require_identical(report):
+    if any(not root['serial_batch_identical'] or not root['native_batch_identical'] for root in report['roots']):
+        raise RuntimeError('prototype leaf observations/logical statistics differ; timings are diagnostic only')
+
+
 def main():
     if running_games() >= 2:
         raise RuntimeError('two perf game processes are live; wait for an existing job to finish')
@@ -39,7 +63,9 @@ def main():
     expected_roots = sum(len(entry['decisions']) for entries in manifest['families'].values() for entry in entries)
     model = out / 'student.bin'
     bench._export_student(model)
-    report = {'build': build, 'horizon': 2500, 'lanes': 9, 'sim_skip': 61, 'roots': []}
+    report = {'build': build, 'horizon': 2500, 'lanes': 9, 'sim_skip': 61,
+              'complete': False, 'roots': [], 'replays': []}
+    (out / 'results.json').write_text(json.dumps(report, indent=1) + '\n')
     env = bench._open_env(build['binary'])
     try:
         env.load_rollout_net(model)
@@ -52,6 +78,7 @@ def main():
                 whole, errors = bench.replay_episode(env, entry, rows, recorded[-1:])
                 if errors:
                     raise RuntimeError(f'whole-episode replay gate failed: {archive}')
+                report['replays'].append({'archive': str(archive), 'frames': len(recorded), 'mismatches': 0})
                 for snapshot in whole.values():
                     env.release_snapshot(snapshot)
                 snapshots, mismatches = bench.replay_episode(env, entry, rows, entry['decisions'])
@@ -71,13 +98,16 @@ def main():
                         before_wall = time.perf_counter()
                         if arm == 'native':
                             leaves = []
+                            metrics = {key: 0 for key in ('network_cpu_seconds', 'simulation_cpu_seconds',
+                                                         'snapshot_cpu_seconds')}
                             for seed in range(9):
                                 response = env._command(f'ROLLOUT {root} {seed} {root_tick + 2500} '
                                                         f'61 1000 0 A {suffix}')
                                 if not response.get('ok'):
                                     raise RuntimeError('native rollout failed')
                                 leaves.append(identity(response))
-                            metrics = {}
+                                for key in metrics:
+                                    metrics[key] += response[key]
                         else:
                             response = env._command(f'PROTOTYPE_BATCH {root} 2500 61 9 {arm} 0 {suffix}')
                             if not response.get('ok') or len(response['lanes']) != 9:
@@ -97,19 +127,13 @@ def main():
                     env.release_snapshot(root)
     finally:
         env.close()
-    if len(report['roots']) != expected_roots:
-        raise RuntimeError('incomplete root coverage')
-    totals = {arm: sum(root['arms'][arm]['process_cpu_seconds'] for root in report['roots'])
-              for arm in ('native', '1', '9')}
-    report['summary'] = {'cpu_seconds': totals,
-        'prototype_serial_over_batch': totals['1'] / totals['9'],
-        'native_over_batch': totals['native'] / totals['9'],
-        'serial_batch_identical_roots': sum(r['serial_batch_identical'] for r in report['roots']),
-        'native_batch_identical_roots': sum(r['native_batch_identical'] for r in report['roots']),
-        'network_speedup': sum(r['arms']['1']['network_cpu_seconds'] for r in report['roots']) /
-                           sum(r['arms']['9']['network_cpu_seconds'] for r in report['roots'])}
+    report['summary'] = summarize(report, expected_roots)
+    report['complete'] = True
+    report['correctness_passed'] = all(r['serial_batch_identical'] and r['native_batch_identical']
+                                       for r in report['roots'])
     (out / 'results.json').write_text(json.dumps(report, indent=1) + '\n')
     print(json.dumps(report['summary'], indent=1))
+    require_identical(report)
 
 
 if __name__ == '__main__':

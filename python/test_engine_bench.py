@@ -19,6 +19,24 @@ def report():
 
 
 class EngineBenchGateTest(unittest.TestCase):
+    def test_batch_prototype_requires_all_roots_and_identical_leaves(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/prototypes'))
+        import bench_batch_rollout as batch
+        metrics = dict(process_cpu_seconds=2, network_cpu_seconds=1,
+                       simulation_cpu_seconds=0.5, snapshot_cpu_seconds=0.2, feature_cpu_seconds=0.1)
+        root = {'arms': {arm: dict(metrics) for arm in ('native', '1', '9')},
+                'serial_batch_identical': True, 'native_batch_identical': True}
+        data = {'roots': [root]}
+        with self.assertRaisesRegex(RuntimeError, 'incomplete'):
+            batch.summarize(data, 64)
+        summary = batch.summarize(data, 1)
+        self.assertEqual(summary['components']['native']['snapshot_cpu_seconds'], 0.2)
+        self.assertEqual(summary['network_speedup'], 1)
+        batch.require_identical(data)
+        root['native_batch_identical'] = False
+        with self.assertRaisesRegex(RuntimeError, 'statistics differ'):
+            batch.require_identical(data)
+
     def test_horizon_starts_at_restored_snapshot_not_archive_post_action(self):
         from types import SimpleNamespace
         with tempfile.TemporaryDirectory() as folder:
