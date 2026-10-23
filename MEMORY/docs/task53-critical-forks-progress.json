@@ -231,6 +231,10 @@
    "roots": 12,
    "labels": 384,
    "corrections": 7
+  },
+  "export-complete": {
+   "student_corrections": 7,
+   "value_rows": 11211
   }
  }
 }

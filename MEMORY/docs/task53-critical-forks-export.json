@@ -1,0 +1,477 @@
+{
+ "status": "complete",
+ "student_corrections": [
+  {
+   "root": "v2-night-3320126-c2n13n10qm100-d733",
+   "label": "fork_v2-night-3320126-c2n13n10qm100-d733",
+   "row": 733,
+   "confidence": 1.0
+  },
+  {
+   "root": "v2-pool-2020151-p23dag3-d487",
+   "label": "fork_v2-pool-2020151-p23dag3-d487",
+   "row": 487,
+   "confidence": 1.0
+  },
+  {
+   "root": "v2-pool-2070134-p28dag3-d445",
+   "label": "fork_v2-pool-2070134-p28dag3-d445",
+   "row": 445,
+   "confidence": 1.0
+  },
+  {
+   "root": "v2-day-2510303-c2d8d7qm100-d779",
+   "label": "fork_v2-day-2510303-c2d8d7qm100-d779",
+   "row": 779,
+   "confidence": 1.0
+  },
+  {
+   "root": "v2-day-2510303-c2d8d7qm100-d777",
+   "label": "fork_v2-day-2510303-c2d8d7qm100-d777",
+   "row": 777,
+   "confidence": 1.0
+  },
+  {
+   "root": "v2-pool-2010165-p22dag3-d581",
+   "label": "fork_v2-pool-2010165-p22dag3-d581",
+   "row": 581,
+   "confidence": 1.0
+  },
+  {
+   "root": "v2-pool-2050149-p26dag3-d468",
+   "label": "fork_v2-pool-2050149-p26dag3-d468",
+   "row": 468,
+   "confidence": 1.0
+  }
+ ],
+ "labels": [
+  "fork_v2-day-2510303-c2d8d7qm100-d777",
+  "fork_v2-day-2510303-c2d8d7qm100-d779",
+  "fork_v2-night-3320126-c2n13n10qm100-d733",
+  "fork_v2-pool-2010165-p22dag3-d581",
+  "fork_v2-pool-2020151-p23dag3-d487",
+  "fork_v2-pool-2050149-p26dag3-d468",
+  "fork_v2-pool-2070134-p28dag3-d445",
+  "replay_day",
+  "replay_night",
+  "replay_pool"
+ ],
+ "label_weight": {
+  "fork_v2-night-3320126-c2n13n10qm100-d733": 1.0,
+  "fork_v2-pool-2020151-p23dag3-d487": 1.0,
+  "fork_v2-pool-2070134-p28dag3-d445": 1.0,
+  "fork_v2-day-2510303-c2d8d7qm100-d779": 1.0,
+  "fork_v2-day-2510303-c2d8d7qm100-d777": 1.0,
+  "fork_v2-pool-2010165-p22dag3-d581": 1.0,
+  "fork_v2-pool-2050149-p26dag3-d468": 1.0
+ },
+ "recipe": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/recipe.json",
+ "value_files": [
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-2520360-c2d9d7qm100-d1012.pt",
+   "sha256": "b93d42922aa1400f0ba7a2bbafb08eeb643f53198f2ad076a895e11ad2991215",
+   "rows": 146,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138,
+    "teacher_horizon_leaf": 8
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-2500356-c2d7d7qm100-d1097.pt",
+   "sha256": "2782b5f8f8e128af81271873b34f533341aa60c6cf3a2212d9a55c5ccd24d63d",
+   "rows": 162,
+   "state_kinds": {
+    "teacher_horizon_leaf": 24,
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-2500356-c2d7d7qm100-d1127.pt",
+   "sha256": "3fd34615ce970403322b5b135086df761c44bfe3e1cdd6fcbb5472db1b0bffef",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-2510303-c2d8d7qm100-d777.pt",
+   "sha256": "4b227eed7af64998117accb81ac734498fbc7082e6b0c0e71910b34bb636069d",
+   "rows": 147,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138,
+    "teacher_horizon_leaf": 9
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-2510303-c2d8d7qm100-d779.pt",
+   "sha256": "870452c58e24d459afdb28ada7e0f201d23a3714ff2e72b102acfb39ea51d0e2",
+   "rows": 215,
+   "state_kinds": {
+    "post_candidate_teacher_start": 213,
+    "teacher_horizon_leaf": 2
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6046147-c2d10d7qm150-d891.pt",
+   "sha256": "d504c439abfed83e683b752e5dd59a0b7f2ba91889cfad9490bd1a5e9794c82c",
+   "rows": 840,
+   "state_kinds": {
+    "teacher_horizon_leaf": 282,
+    "post_candidate_teacher_start": 558
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6046147-c2d10d7qm150-d928.pt",
+   "sha256": "faae87a53706471cf9f796ffd56a88e0215326954b78cdef330bd63981b3706a",
+   "rows": 318,
+   "state_kinds": {
+    "post_candidate_teacher_start": 294,
+    "teacher_horizon_leaf": 24
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6400020-c2d1d7m175-d957.pt",
+   "sha256": "1f489cf4948b9c77b94a2bd9d165800116256ba2d951c7c8bc12a8b0f07d0702",
+   "rows": 234,
+   "state_kinds": {
+    "post_candidate_teacher_start": 234
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6400020-c2d1d7m175-d962.pt",
+   "sha256": "cf24acfd0daa377787d0279fd497533128925923e6e55a56f84bc2a27c9b193f",
+   "rows": 45,
+   "state_kinds": {
+    "post_candidate_teacher_start": 45
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6404126-c2d3d7m175-d891.pt",
+   "sha256": "5c63c88a4cc390d54403e227e915f0305dfea27b31c3e5b657af63b6144f3fb5",
+   "rows": 440,
+   "state_kinds": {
+    "teacher_horizon_leaf": 212,
+    "post_candidate_teacher_start": 228
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6404126-c2d3d7m175-d959.pt",
+   "sha256": "9d4128a04b69b7fd7140b1fdd25c368b2867d4d7e9c24092f0d08c72374bc8a9",
+   "rows": 619,
+   "state_kinds": {
+    "post_candidate_teacher_start": 603,
+    "teacher_horizon_leaf": 16
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6406158-c2d4d7m175-d824.pt",
+   "sha256": "84f8e299e2d4c190e6e534c0f7a05bca6a27ae0424b8548a75a8d7de74479539",
+   "rows": 275,
+   "state_kinds": {
+    "teacher_horizon_leaf": 137,
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6406158-c2d4d7m175-d864.pt",
+   "sha256": "1b96d4d315bd2701d592efd28b7ca5c74523fa9406cb69f0ab292b5e713debc9",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6410241-c2d6d7m175-d830.pt",
+   "sha256": "fa5c298022f01132eff17bc771beab254f683c98d086b498bb9399bffdd119dd",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-day-6410241-c2d6d7m175-d844.pt",
+   "sha256": "bef39b21753a20a420712e6176395423d32596cda1a8605e84a0c7fa93d2c1ea",
+   "rows": 245,
+   "state_kinds": {
+    "post_candidate_teacher_start": 222,
+    "teacher_horizon_leaf": 23
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3360022-c2n17n10qm100-d1715.pt",
+   "sha256": "e3614d7a639bc9477f8c25ded0d484e4e4eddf5bbf035ee476ce0cec7a6a1d27",
+   "rows": 139,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138,
+    "teacher_horizon_leaf": 1
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3360022-c2n17n10qm100-d1744.pt",
+   "sha256": "8aea11b0df07dd9e4955fda82fff595255c1b7cf0de932a0bc187be339594f3c",
+   "rows": 60,
+   "state_kinds": {
+    "post_candidate_teacher_start": 60
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2230527-c2n14n10m100-d1464.pt",
+   "sha256": "d7f6fbd285da96a6f175931fa9bddaa6ca963873600ffa67b18a6ff74df90a7c",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2230527-c2n14n10m100-d1472.pt",
+   "sha256": "652fc2192ae18cd56d4c73df5aca086fd00278167e7196b67100fa36bc5ed9f2",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2210487-c2n12n10m100-d1776.pt",
+   "sha256": "8a0169fddcd427022777c97d477f4077a1755777637cf0cb2fff7748e2523f1c",
+   "rows": 168,
+   "state_kinds": {
+    "post_candidate_teacher_start": 168
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2210487-c2n12n10m100-d1798.pt",
+   "sha256": "1b37533e1bc027132f668a9cec89ac4a023e6e606c5b1bf50bf7e93d0e89a0bb",
+   "rows": 186,
+   "state_kinds": {
+    "post_candidate_teacher_start": 186
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3350052-c2n16n10qm100-d1137.pt",
+   "sha256": "1f309aa17586336babcc7b7207b4af27cf3a523e3974c3681967942fbb107f18",
+   "rows": 216,
+   "state_kinds": {
+    "post_candidate_teacher_start": 216
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3350052-c2n16n10qm100-d1160.pt",
+   "sha256": "8949ec689e3fae16543d48eb854325104003f680d8b412bb670d5690f2faf164",
+   "rows": 228,
+   "state_kinds": {
+    "post_candidate_teacher_start": 228
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3320126-c2n13n10qm100-d706.pt",
+   "sha256": "4f2ac7baa524dd166ed33c91f9f47a0228d3256412f1175cdd93940f0a97ed02",
+   "rows": 384,
+   "state_kinds": {
+    "post_candidate_teacher_start": 348,
+    "teacher_horizon_leaf": 36
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3320126-c2n13n10qm100-d733.pt",
+   "sha256": "387a5cda931deef24e13199efea0dccf7b8798e4686a482da8498e9f163f2416",
+   "rows": 348,
+   "state_kinds": {
+    "post_candidate_teacher_start": 348
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2260425-c2n17n10m100-d1539.pt",
+   "sha256": "f2862025f4216a7b2665701c732d84a13279e3c21352844ed6b3fcbafb051c94",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2260425-c2n17n10m100-d1542.pt",
+   "sha256": "49c56a39c33b25ad2cb1cae5e0c64c1a1abc39ce0c6635444cb8eda8cd78cffb",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3360021-c2n17n10qm100-d1354.pt",
+   "sha256": "929198d0d4f0cf65f22b8a3ae2c2c8417d1b84d7cc493ace87175e1fb5087c66",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-3360021-c2n17n10qm100-d1362.pt",
+   "sha256": "358b28fccc26b946895d8aadd68686c0342d4a76a0da86526f3435e4e87a2d43",
+   "rows": 138,
+   "state_kinds": {
+    "post_candidate_teacher_start": 138
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2230559-c2n14n10m100-d1622.pt",
+   "sha256": "77692586961d0d18058eba272ca8e01bd9770d8c2fa0007eb9e19c380e5241ab",
+   "rows": 210,
+   "state_kinds": {
+    "post_candidate_teacher_start": 210
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-night-2230559-c2n14n10m100-d1624.pt",
+   "sha256": "1495418b6fd026d153def35c26b72c8d9895b35feff0a5aa9374486efea76b16",
+   "rows": 210,
+   "state_kinds": {
+    "post_candidate_teacher_start": 210
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2000170-p21dag3-d414.pt",
+   "sha256": "33d0d65eea8b3cd6d62ac1bee6b1ee88b0e936f96932c1950fc9d696700e00f5",
+   "rows": 189,
+   "state_kinds": {
+    "post_candidate_teacher_start": 189
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2000170-p21dag3-d419.pt",
+   "sha256": "e61eab0536bbc6c9b32e1f2d8c49a1695d73f54700ff2f44cd27edf4b92dbcd4",
+   "rows": 108,
+   "state_kinds": {
+    "post_candidate_teacher_start": 108
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2010165-p22dag3-d581.pt",
+   "sha256": "5c34094f4122eba6c220da59d46167a8116fcd910f53055aba54145d4157db11",
+   "rows": 366,
+   "state_kinds": {
+    "post_candidate_teacher_start": 363,
+    "teacher_horizon_leaf": 3
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2010165-p22dag3-d590.pt",
+   "sha256": "e6e51a618e3ed54eb11ef3e3a222041d244196ad358c12a6a115f9bd6ac0ef1b",
+   "rows": 174,
+   "state_kinds": {
+    "post_candidate_teacher_start": 174
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2020151-p23dag3-d487.pt",
+   "sha256": "b825ef1f5ce6be07d0e1a2aaff59b5c634129c9a53cc01c3a61e69013b73580f",
+   "rows": 258,
+   "state_kinds": {
+    "post_candidate_teacher_start": 255,
+    "teacher_horizon_leaf": 3
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2020151-p23dag3-d494.pt",
+   "sha256": "ddf7b9ead59092d876b3549f2452eccd530043a5dca4316a18431a267c94c1cb",
+   "rows": 165,
+   "state_kinds": {
+    "post_candidate_teacher_start": 165
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2030167-p24dag3-d424.pt",
+   "sha256": "9ffc0d193249b46d9ac946a525ad3d6165876661e2388240481c897e68074c05",
+   "rows": 165,
+   "state_kinds": {
+    "post_candidate_teacher_start": 165
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2030167-p24dag3-d432.pt",
+   "sha256": "4ebd0d7d127971a9a8871d712c99eec35a39f6498dd1852f333d58d40d82a55e",
+   "rows": 186,
+   "state_kinds": {
+    "post_candidate_teacher_start": 186
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2050149-p26dag3-d468.pt",
+   "sha256": "d61d3688b0d68982d946e70683a326fbe39d834055b41eb64e89184db2d4c157",
+   "rows": 570,
+   "state_kinds": {
+    "teacher_horizon_leaf": 285,
+    "post_candidate_teacher_start": 285
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2050149-p26dag3-d515.pt",
+   "sha256": "4a168f9f285925a7f3862815a82f1a562dfbebdd034de3feed831a9209a97441",
+   "rows": 168,
+   "state_kinds": {
+    "post_candidate_teacher_start": 168
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2060144-p27dag3-d605.pt",
+   "sha256": "19eab4f9ae4f9ad981e7571b43d47299bed7886bd2b0c5ca4f1e5925e05af4b1",
+   "rows": 336,
+   "state_kinds": {
+    "teacher_horizon_leaf": 168,
+    "post_candidate_teacher_start": 168
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2060144-p27dag3-d654.pt",
+   "sha256": "6a711122cc945a76e6a81360ca0f31f8f93fe16875cbbaa7514caa41958b6808",
+   "rows": 195,
+   "state_kinds": {
+    "post_candidate_teacher_start": 195
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2070134-p28dag3-d445.pt",
+   "sha256": "981e9e6585cb14e6b2c242d9a765bfd92dc854ddc2d946d325e16f0aeb8c64d5",
+   "rows": 333,
+   "state_kinds": {
+    "post_candidate_teacher_start": 333
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2070134-p28dag3-d458.pt",
+   "sha256": "0b014f9e4eacd4684cbabfa3cfa8e4560a4fa67a1d3827a5c31182970b6018dd",
+   "rows": 183,
+   "state_kinds": {
+    "post_candidate_teacher_start": 183
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2080175-p29dag3-d384.pt",
+   "sha256": "3389f8b0214b6ede75df88d662021ce114e38fe93d1ef4b789b4b2988a968b25",
+   "rows": 510,
+   "state_kinds": {
+    "teacher_horizon_leaf": 255,
+    "post_candidate_teacher_start": 255
+   }
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/v2-pool-2080175-p29dag3-d424.pt",
+   "sha256": "e2bfcffb6c00623b1699e6e63cc86a5561de7fd6d9464a64beed90df7a89821e",
+   "rows": 228,
+   "state_kinds": {
+    "post_candidate_teacher_start": 228
+   }
+  }
+ ],
+ "ranking_pairs": {
+  "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/pairs.jsonl.gz",
+  "sha256": "cf71a2672b9d34fa3e3413597da5f765080b00e3f7288bde0f53f03da6c7fad6",
+  "by_metric": {
+   "wave": 22933,
+   "tick": 18388,
+   "won": 21383,
+   "mowers_used": 659
+  },
+  "note": "same seed/root/future/kind; metrics kept separate; wave/tick/mower preferences are never substituted for binary won labels"
+ },
+ "value_contract": "task43 Decisions keys; group by kind+seed+position (root decision and common future); kind0 teacher horizon leaf, kind1 immediate candidate cell state; terminal network-bypass states excluded",
+ "confirmation_sha256": "47173f222ae89e3f6d6f24f7c5a574fcb72099bc8f28792084998804b3afb443"
+}
