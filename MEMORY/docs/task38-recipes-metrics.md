@@ -53,3 +53,10 @@
 - pvz-env 合进了 task33 的打包装载（b95d2cf7）。`scripts/curriculum_queue.py` 每轮结束会调 `pack_training_rows.py` 打训练包，包参数来自 7 个新开关 `--pack-wait-keep/--pack-obs/--pack-packet-head/--pack-aux-horizon/--pack-cells/--pack-context/--pack-label-weight`，**默认是 v1 / 槽位头 / wait-keep 1.0**，与现行 dw4i 配方（v2 / 身份头 / 0.1 / 按行汇总…）不一致——照默认打出来的包，训练根本用不上（`train_rollout_policy.py` 要求包参数逐项相同）。
 - 改法：`git merge origin/pvz-env` 后，课程控制器只收一个 `--recipe recipes/<名>.json`（默认指向现行采集学生对应的配方），包参数全部从配方解析（与训练用同一个解析函数，不复制字段表）；删掉这 7 个 `--pack-*` 开关。单测：配方 → `pack_command` 的参数与 `train_rollout_policy` 对同一配方要求的包键逐项相同。
 - 这条做完再继续原来的“调用方迁移”。
+
+## 主控收尾（2026-10-23 17:20）
+三份配方对拍都过了（误差 0），task38 验收完成。主控已删除 `artifacts/task38/parity_parallel` 与 `artifacts/task38/cache`：33 GB，可再生，C 盘紧张。
+最后一步：
+1. `git -C /home/newbiexvwu/PvZ-search/.claude/worktrees/recipe merge --no-ff origin/pvz-env`，解冲突。pvz-env 新合了 v4（`DEFAULT_VALUE`→v4、`search_play.py` 编码 v2 / `--leaf-probe`）、task35、task42 和 `train_rollout_policy.py` 的 NaN 修复，两边功能都留。`curriculum_queue.py` 以本分支"打包参数从配方取"为准，同时保住主线的 v4 默认值。
+2. 用 `PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources` 跑 `python -m pytest python -q`，要求全过。再跑一次课程控制器 dry run，打印出的 pack 命令要与 qc 现行配方一致。
+3. `git push origin recipe`，在"结果"写 `[close]` 一行：合并提交号、测试数字、dry run 的 pack 命令。不碰 tmux `qc`，切换由主控做。
